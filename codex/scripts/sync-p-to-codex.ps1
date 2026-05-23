@@ -1,7 +1,7 @@
 param(
   [string]$RulesRoot = "P:\agent-rules",
   [string]$CodexHome = "$env:USERPROFILE\.codex",
-  [switch]$Backup = $true
+  [switch]$Backup = $false
 )
 
 $ErrorActionPreference = "Stop"

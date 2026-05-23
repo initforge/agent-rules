@@ -1,90 +1,91 @@
-# Core Runtime Rules
+﻿# Quy Táº¯c LÃµi Khi Cháº¡y Codex
 
-## Trigger
+## KÃ­ch Hoáº¡t
 
-Always active.
+LuÃ´n Ã¡p dá»¥ng.
 
-## Purpose
+## Má»¥c ÄÃ­ch
 
-Defines baseline behavior for all Codex coding work.
+Äá»‹nh nghÄ©a hÃ nh vi ná»n cho má»i viá»‡c láº­p trÃ¬nh, sá»­a lá»—i, nghiÃªn cá»©u, láº­p káº¿ hoáº¡ch vÃ  rÃ  soÃ¡t báº±ng Codex.
 
-## Language
+## NgÃ´n Ngá»¯
 
-- Answer in Vietnamese by default.
-- User-facing Vietnamese must use full diacritics by default.
-- Do not write non-accented Vietnamese such as `tieng Viet khong dau` unless the user explicitly asks for ASCII-only text or the target file already has a deliberate ASCII-only convention.
-- Preserve Vietnamese diacritics when editing existing Vietnamese content.
-- Keep code symbols, commands, paths, APIs, package names, and file names in English.
-- Be concise for routine status updates and final reports.
-- Expand only for debugging, architecture, risky changes, ambiguity, or planning.
-- Do not use praise, marketing language, or long self-narration in final reports.
+- Tráº£ lá»i ngÆ°á»i dÃ¹ng báº±ng tiáº¿ng Viá»‡t cÃ³ dáº¥u Ä‘áº§y Ä‘á»§ theo máº·c Ä‘á»‹nh.
+- KhÃ´ng viáº¿t tiáº¿ng Viá»‡t khÃ´ng dáº¥u nhÆ° `tieng Viet khong dau`, trá»« khi ngÆ°á»i dÃ¹ng yÃªu cáº§u rÃµ vÄƒn báº£n ASCII-only hoáº·c file Ä‘Ã­ch Ä‘Ã£ cÃ³ quy Æ°á»›c ASCII-only tháº­t.
+- Khi chá»‰nh ná»™i dung tiáº¿ng Viá»‡t Ä‘ang cÃ³ sáºµn, pháº£i giá»¯ dáº¥u tiáº¿ng Viá»‡t.
+- KhÃ´ng dÃ¹ng tiáº¿ng Anh trong cÃ¢u tráº£ lá»i hoáº·c tÃ i liá»‡u váº­n hÃ nh náº¿u cÃ³ thá»ƒ viáº¿t tá»± nhiÃªn báº±ng tiáº¿ng Viá»‡t.
+- ÄÆ°á»£c giá»¯ tiáº¿ng Anh cho thuáº­t ngá»¯ ká»¹ thuáº­t, tÃªn model, tÃªn lá»‡nh, Ä‘Æ°á»ng dáº«n, API, package, schema key, mÃ£ nguá»“n, tÃªn file, tÃªn tool, tÃªn giao thá»©c, tÃªn sáº£n pháº©m vÃ  trÃ­ch dáº«n nguyÃªn vÄƒn.
+- Náº¿u má»™t thuáº­t ngá»¯ tiáº¿ng Anh cÃ³ thá»ƒ lÃ m ngÆ°á»i Ä‘á»c khÃ´ng chuyÃªn bá»‹ káº¹t, thÃªm giáº£i thÃ­ch tiáº¿ng Viá»‡t ngáº¯n á»Ÿ láº§n xuáº¥t hiá»‡n Ä‘áº§u.
+- Cáº­p nháº­t thÆ°á»ng ngÃ y vÃ  bÃ¡o cÃ¡o cuá»‘i nÃªn gá»n, Ã­t filler.
+- Chá»‰ má»Ÿ rá»™ng khi debug, kiáº¿n trÃºc, thay Ä‘á»•i rá»§i ro, nháº­p nháº±ng hoáº·c láº­p káº¿ hoáº¡ch cáº§n Ä‘á»™ rÃµ cao.
 
-## Baseline execution contract
+## Há»£p Äá»“ng Thá»±c Thi
 
-When the user asks to implement, fix, refactor, create, migrate, or change code:
+Khi ngÆ°á»i dÃ¹ng yÃªu cáº§u triá»ƒn khai, sá»­a lá»—i, refactor, táº¡o má»›i, migrate hoáº·c thay Ä‘á»•i code:
 
-1. Inspect the codebase first.
-2. Check whether `plan/` exists.
-3. If `plan/` exists, read `plan/00-index.md` if present, then the active plan file.
-4. Do not stop at proposal unless the user explicitly asked for planning or discussion only.
-5. Do not auto-commit.
-6. Do not auto-push.
-7. Do not force-push.
-8. Do not bypass hooks without explicit permission.
-9. Do not revert user changes unless explicitly asked.
-10. Keep diffs small.
-11. Explain scope expansion before doing it.
-12. Verify before saying done.
+1. Äá»c ngá»¯ cáº£nh code trÆ°á»›c.
+2. Kiá»ƒm tra cÃ³ thÆ° má»¥c `plan/` khÃ´ng.
+3. Náº¿u cÃ³ `plan/`, Ä‘á»c `plan/00-index.md` náº¿u tá»“n táº¡i, rá»“i Ä‘á»c file káº¿ hoáº¡ch Ä‘ang hoáº¡t Ä‘á»™ng.
+4. KhÃ´ng dá»«ng á»Ÿ Ä‘á» xuáº¥t náº¿u ngÆ°á»i dÃ¹ng khÃ´ng yÃªu cáº§u chá»‰ tháº£o luáº­n hoáº·c láº­p káº¿ hoáº¡ch.
+5. KhÃ´ng tá»± commit.
+6. KhÃ´ng tá»± push.
+7. KhÃ´ng force-push.
+8. KhÃ´ng bá» qua hook náº¿u chÆ°a Ä‘Æ°á»£c phÃ©p rÃµ.
+9. KhÃ´ng revert thay Ä‘á»•i cá»§a ngÆ°á»i dÃ¹ng náº¿u chÆ°a Ä‘Æ°á»£c yÃªu cáº§u rÃµ.
+10. Giá»¯ diff nhá».
+11. BÃ¡o rÃµ trÆ°á»›c khi má»Ÿ rá»™ng pháº¡m vi.
+12. Verify trÆ°á»›c khi nÃ³i xong.
 
-## Docs skill guard
+## Quy Táº¯c Skill Docs
 
-When the target path is under `/docs/**`, use the `docs-style` skill.
-Do not apply that skill to `README.md`, `AGENTS.md`, `CHANGELOG.md`, or markdown outside `/docs/**` unless the user explicitly asks for that style there.
+Khi Ä‘Æ°á»ng dáº«n Ä‘Ã­ch náº±m dÆ°á»›i `/docs/**`, dÃ¹ng skill `docs-style`.
 
-## Research skill guard
+KhÃ´ng Ã¡p dá»¥ng skill Ä‘Ã³ cho `README.md`, `AGENTS.md`, `CHANGELOG.md` hoáº·c markdown ngoÃ i `/docs/**` náº¿u ngÆ°á»i dÃ¹ng khÃ´ng yÃªu cáº§u rÃµ.
 
-Use the `codex-research` skill when the task is primarily research, comparison, platform-doc reading, changelog review, or when a bug fix has stalled and needs evidence before another implementation attempt.
+## Quy Táº¯c Codex Research
 
-## Reference style
+DÃ¹ng skill `codex-research` khi task chá»§ yáº¿u lÃ  nghiÃªn cá»©u, so sÃ¡nh lá»±a chá»n, Ä‘á»c tÃ i liá»‡u ná»n táº£ng, Ä‘á»c changelog, hoáº·c khi sá»­a bug bá»‹ káº¹t vÃ  cáº§n báº±ng chá»©ng trÆ°á»›c khi thá»­ cÃ¡ch sá»­a tiáº¿p theo.
 
-- Long-lived plans and notes: use `path:symbol` or `path/dir`.
-- Exact review comments and bug reports: use `path:line`.
-- Do not use `path:line` inside long-lived plan files unless it is temporary evidence.
+## CÃ¡ch Ghi Tham Chiáº¿u
 
-## Default state machine
+- Káº¿ hoáº¡ch vÃ  ghi chÃº dÃ i háº¡n: dÃ¹ng `path:symbol` hoáº·c `path/dir`.
+- Nháº­n xÃ©t review vÃ  bug cáº§n chÃ­nh xÃ¡c: dÃ¹ng `path:line`.
+- KhÃ´ng dÃ¹ng `path:line` trong plan dÃ i háº¡n trá»« khi Ä‘Ã³ lÃ  báº±ng chá»©ng táº¡m thá»i.
+
+## MÃ¡y Tráº¡ng ThÃ¡i Máº·c Äá»‹nh
 
 ```text
 REQUEST
--> classify risk
--> choose workflow
--> inspect targeted context
--> plan if needed
--> implement if authorized
+-> phÃ¢n loáº¡i rá»§i ro
+-> chá»n workflow
+-> Ä‘á»c ngá»¯ cáº£nh má»¥c tiÃªu
+-> láº­p plan náº¿u cáº§n
+-> triá»ƒn khai náº¿u Ä‘Æ°á»£c phÃ©p
 -> verify
--> review if needed
--> record evidence/notes
--> final PASS/PARTIAL/BLOCKED report
+-> review náº¿u cáº§n
+-> ghi báº±ng chá»©ng/ghi chÃº
+-> bÃ¡o cÃ¡o PASS/PARTIAL/BLOCKED
 ```
 
-## Runtime source
+## Nguá»“n Runtime
 
-Runtime source is:
+Nguá»“n runtime:
 
 ```text
 C:\Users\DELL\.codex
 ```
 
-Sync and backup source is:
+Báº£n sync vÃ  bootstrap:
 
 ```text
 P:\agent-rules\codex
 ```
 
-Do not require `P:\agent-rules` to exist during normal Codex work.
+KhÃ´ng báº¯t buá»™c `P:\agent-rules` pháº£i tá»“n táº¡i trong cÃ´ng viá»‡c Codex háº±ng ngÃ y.
 
-## Final report rule
+## BÃ¡o CÃ¡o Cuá»‘i
 
-Final reports must be short and structured:
+BÃ¡o cÃ¡o cuá»‘i pháº£i ngáº¯n vÃ  cÃ³ cáº¥u trÃºc:
 
 ```text
 Status: PASS | PARTIAL | BLOCKED

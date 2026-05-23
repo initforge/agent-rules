@@ -1,4 +1,4 @@
-@C:\Users\DELL\.codex\RTK.md
+﻿@C:\Users\DELL\.codex\RTK.md
 @C:\Users\DELL\.codex\rules\core.md
 @C:\Users\DELL\.codex\rules\planning.md
 @C:\Users\DELL\.codex\rules\execution.md
@@ -8,38 +8,52 @@
 @C:\Users\DELL\.codex\rules\clean-code.md
 @C:\Users\DELL\.codex\rules\codex-overlay.md
 
-# Codex Runtime Loader
+# Bá»™ Náº¡p Runtime Codex
 
-This is the global runtime instruction file for Codex.
+File nÃ y lÃ  Ä‘iá»ƒm vÃ o global cho Codex.
 
-## Runtime source
+## Nguá»“n Runtime
 
-Use local files under:
+DÃ¹ng file local dÆ°á»›i:
 
 ```text
 C:\Users\DELL\.codex\
 ```
 
-Do not depend on `P:\agent-rules` during daily runtime.
+KhÃ´ng phá»¥ thuá»™c vÃ o `P:\agent-rules` khi lÃ m viá»‡c háº±ng ngÃ y.
 
-`P:\agent-rules` is only for:
+`P:\agent-rules` chá»‰ dÃ¹ng cho:
 - backup
 - sync
-- new-machine bootstrap
-- sharing rules with other agents/tools
-- storing long setup docs
+- bootstrap mÃ¡y má»›i
+- chia sáº» rule vá»›i agent/tool khÃ¡c
+- lÆ°u tÃ i liá»‡u setup dÃ i
 
-## Operating summary
+## Quy Táº¯c NgÃ´n Ngá»¯
 
-Small obvious task -> direct edit + minimal verify.
-Medium task -> inspect + plan when multi-slice + implement + verify.
-High-risk task -> locked plan + risk register + reviewer gate + deep verify.
-Codex Research -> primary research layer; output notes into `plan/<feature>/research/` or `plan/<feature>/review/`.
-GitNexus -> gated context / impact tool, not auto-indexed every turn.
-RTK -> command compression layer; PowerShell cmdlets require `rtk proxy powershell`.
-Skills/MCP/tools -> inventory and document under `.codex\docs` and `.codex\inventory`.
-Final status must be `PASS`, `PARTIAL`, or `BLOCKED`.
+- Giao tiáº¿p vá»›i ngÆ°á»i dÃ¹ng báº±ng tiáº¿ng Viá»‡t cÃ³ dáº¥u Ä‘áº§y Ä‘á»§.
+- KhÃ´ng dÃ¹ng tiáº¿ng Viá»‡t khÃ´ng dáº¥u.
+- KhÃ´ng dÃ¹ng tiáº¿ng Anh náº¿u cÃ³ cÃ¡ch nÃ³i tiáº¿ng Viá»‡t tá»± nhiÃªn.
+- Giá»¯ tiáº¿ng Anh cho thuáº­t ngá»¯ ká»¹ thuáº­t, tÃªn model, lá»‡nh, Ä‘Æ°á»ng dáº«n, API, package, schema key, tÃªn tool, tÃªn sáº£n pháº©m vÃ  mÃ£ nguá»“n.
 
-## Hard rule
+## TÃ³m Táº¯t Váº­n HÃ nh
 
-Codex is the final implementation owner.
+Task nhá» rÃµ rÃ ng -> sá»­a trá»±c tiáº¿p + verify tá»‘i thiá»ƒu.
+
+Task vá»«a -> Ä‘á»c ngá»¯ cáº£nh + láº­p plan khi cÃ³ nhiá»u lÃ¡t cáº¯t + triá»ƒn khai + verify.
+
+Task rá»§i ro cao -> locked plan + risk register + reviewer gate + verify sÃ¢u.
+
+`Codex Research` -> lá»›p nghiÃªn cá»©u chÃ­nh; ghi note vÃ o `plan/<feature>/research/` hoáº·c `plan/<feature>/review/`.
+
+`GitNexus` -> cÃ´ng cá»¥ context/impact cÃ³ kiá»ƒm soÃ¡t, khÃ´ng tá»± index má»—i lÆ°á»£t.
+
+`RTK` -> lá»›p nÃ©n lá»‡nh; PowerShell cmdlet cáº§n `rtk proxy powershell`.
+
+Skill/MCP/tool -> ghi inventory vÃ  tÃ i liá»‡u dÆ°á»›i `.codex\docs` vÃ  `.codex\inventory`.
+
+Tráº¡ng thÃ¡i cuá»‘i pháº£i lÃ  `PASS`, `PARTIAL`, hoáº·c `BLOCKED`.
+
+## Quy Táº¯c Cá»©ng
+
+Codex lÃ  chá»§ sá»Ÿ há»¯u triá»ƒn khai cuá»‘i cÃ¹ng.

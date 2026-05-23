@@ -1,7 +1,0 @@
-interface:
-  display_name: "Docs Style"
-  short_description: "Semi-technical style for /docs/** only"
-  default_prompt: "Use $docs-style to create or update documentation files under /docs/** only."
-
-policy:
-  allow_implicit_invocation: true

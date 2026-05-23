@@ -1,7 +1,7 @@
 param(
   [string]$CodexHome = "$env:USERPROFILE\.codex",
   [string]$RulesRoot = "P:\agent-rules",
-  [switch]$Backup = $true,
+  [switch]$Backup = $false,
   [int]$KeepBackups = 3
 )
 

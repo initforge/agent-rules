@@ -1,18 +1,18 @@
-# Global Runtime Loader
+# Bộ Nạp Runtime Chung
 
-This file is a compatibility entrypoint for projects that still import:
+File này là điểm tương thích cho các project vẫn import:
 
 ```text
 @P:\agent-rules\global-rules.md
 ```
 
-The maintained Codex runtime now lives under:
+Runtime Codex đang được bảo trì nằm tại:
 
 ```text
 P:\agent-rules\codex
 ```
 
-Load and obey these files:
+Đọc và tuân thủ các file sau:
 
 ```text
 @P:\agent-rules\codex\rules\core.md
@@ -23,9 +23,10 @@ Load and obey these files:
 @P:\agent-rules\codex\rules\tool-inventory.md
 ```
 
-## Language Compatibility Rule
+## Quy Tắc Ngôn Ngữ
 
-- Answer in Vietnamese with full diacritics by default.
-- Do not write non-accented Vietnamese unless the user explicitly requests ASCII-only text or the target file already has a deliberate ASCII-only convention.
-- Keep commands, paths, APIs, package names, model names, and code symbols in English.
+- Trả lời bằng tiếng Việt có dấu đầy đủ theo mặc định.
+- Không viết tiếng Việt không dấu, trừ khi người dùng yêu cầu rõ văn bản ASCII-only hoặc file đích đã có quy ước ASCII-only thật.
+- Không dùng tiếng Anh nếu có cách nói tiếng Việt tự nhiên.
+- Giữ tiếng Anh cho thuật ngữ kỹ thuật, tên model, lệnh, đường dẫn, API, package, schema key, tên tool, tên sản phẩm và mã nguồn.
 

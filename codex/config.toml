@@ -64,7 +64,7 @@ NODE_REPL_TRUSTED_CODE_PATHS = 'C:\Users\DELL\.codex'
 NODE_REPL_UNTRUSTED_ENV_ALLOWLIST = "BROWSER_USE_MARKETPLACE_NAME"
 
 [marketplaces.openai-bundled]
-last_updated = "2026-05-22T03:10:41Z"
+last_updated = "2026-05-23T00:25:57Z"
 source_type = "local"
 source = '\\?\C:\Users\DELL\.codex\.tmp\bundled-marketplaces\openai-bundled'
 
@@ -125,9 +125,6 @@ enabled = true
 enabled = true
 
 [plugins."build-web-apps@openai-curated"]
-enabled = true
-
-[plugins."browser@openai-bundled"]
 enabled = true
 
 [plugins."chrome@openai-bundled"]

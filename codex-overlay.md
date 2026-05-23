@@ -1,34 +1,35 @@
-# Codex Overlay Loader
+# Bộ Nạp Overlay Codex
 
-This file is a compatibility entrypoint for projects that still import:
+File này là điểm tương thích cho các project vẫn import:
 
 ```text
 @P:\agent-rules\codex-overlay.md
 ```
 
-The maintained Codex overlay now lives in:
+Overlay Codex đang được bảo trì nằm tại:
 
 ```text
 @P:\agent-rules\codex\rules\codex-overlay.md
 ```
 
-Runtime source:
+Nguồn runtime:
 
 ```text
 C:\Users\DELL\.codex
 ```
 
-Sync/bootstrap mirror:
+Bản sync/bootstrap:
 
 ```text
 P:\agent-rules\codex
 ```
 
-## Compatibility Summary
+## Tóm Tắt Tương Thích
 
-- Use Vietnamese with full diacritics for user-facing text by default.
-- Use `codex-research` for structured research.
-- Use `workflow-router` and plan metadata for phase/profile routing.
-- Use GitNexus for broad impact and shared-code refactor checks when indexed.
-- Keep project-level `AGENTS.md` thin and project-specific.
+- Dùng tiếng Việt có dấu đầy đủ cho mọi nội dung hướng tới người dùng.
+- Không dùng tiếng Anh nếu có cách nói tiếng Việt tự nhiên.
+- Dùng `codex-research` cho nghiên cứu có cấu trúc.
+- Dùng `workflow-router` và metadata trong plan để route phase/profile.
+- Dùng GitNexus cho kiểm tra impact và refactor code dùng chung khi repo đã index.
+- Giữ `AGENTS.md` cấp project thật mỏng, chỉ chứa thông tin riêng của project.
 
