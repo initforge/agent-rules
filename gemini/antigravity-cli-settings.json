@@ -1,0 +1,26 @@
+{
+    "colorScheme":  "dark",
+    "permissions":  {
+                        "allow":  [
+                                      "mcp(pencil/get_editor_state)",
+                                      "mcp(pencil/get_variables)",
+                                      "mcp(pencil/batch_design)",
+                                      "mcp(pencil/get_screenshot)",
+                                      "command(powershell)",
+                                      "command(npm run)",
+                                      "command(Copy-Item)",
+                                      "command(Start-Process)",
+                                      "command(explorer.exe)",
+                                      "command(Get-ChildItem)",
+                                      "command(Get-Content)",
+                                      "command(Get-Command)",
+                                      "command($path)"
+                                  ],
+                        "defaultMode":  "bypassPermissions"
+                    },
+    "trustedWorkspaces":  [
+                              "C:\\Users\\DELL",
+                              "P:\\ecoupon",
+                              "P:\\contentsocial"
+                          ]
+}

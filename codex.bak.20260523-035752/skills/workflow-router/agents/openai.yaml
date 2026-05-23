@@ -1,0 +1,7 @@
+interface:
+  display_name: "Workflow Router"
+  short_description: "Route tasks to the right Codex phase"
+  default_prompt: "Use $workflow-router to choose the correct phase and profile for this task."
+
+policy:
+  allow_implicit_invocation: true

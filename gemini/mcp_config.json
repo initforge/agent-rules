@@ -1,0 +1,49 @@
+﻿{
+    "mcpServers":  {
+                       "stitch":  {
+                                      "serverUrl":  "https://stitch.googleapis.com/mcp",
+                                      "headers":  {
+                                                      "X-Goog-Api-Key":  "YOUR_API_KEY_HERE",
+                                                      "X-Backup-Key-1":  "YOUR_BACKUP_KEY_1_HERE",
+                                                      "X-Backup-Key-2":  "YOUR_BACKUP_KEY_2_HERE"
+                                                  }
+                                  },
+                       "pencil":  {
+                                      "command":  "C:\\Program Files\\Pencil\\resources\\app.asar.unpacked\\out\\mcp-server-windows-x64.exe",
+                                      "args":  [
+                                                   "--app",
+                                                   "desktop"
+                                               ],
+                                      "env":  {
+
+                                              }
+                                  },
+                       "notebooklm-mcp-server":  {
+                                                     "command":  "python",
+                                                     "args":  [
+                                                                  "-u",
+                                                                  "-W",
+                                                                  "ignore",
+                                                                  "p:\\recommendsystem\\notebooklm-mcp-antigravity\\run_mcp.py"
+                                                              ],
+                                                     "env":  {
+                                                                 "PYTHONUNBUFFERED": "1",
+                                                                 "PYTHONWARNINGS": "ignore"
+                                                             }
+                                                 },
+                       "gitnexus":  {
+                                        "args":  [
+                                                     "mcp"
+                                                 ],
+                                        "command":  "C:\\Users\\DELL\\AppData\\Roaming\\npm\\gitnexus.cmd"
+                                    },
+                       "obsidian":  {
+                                        "args":  [
+                                                     "-y",
+                                                     "@bitbonsai/mcpvault@latest",
+                                                     "C:\\Users\\DELL\\Documents\\ObsidianVault"
+                                                 ],
+                                        "command":  "npx.cmd"
+                                    }
+                   }
+}

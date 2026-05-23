@@ -1,0 +1,7 @@
+interface:
+  display_name: "Codex Research"
+  short_description: "Structured local and external research"
+  default_prompt: "Use $codex-research to gather evidence, compare options, and write a research note before coding."
+
+policy:
+  allow_implicit_invocation: true

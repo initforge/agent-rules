@@ -1,0 +1,10 @@
+{
+  "sync-rules": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\Users\\DELL\\.gemini\\config\\scripts\\sync-p-to-gemini.ps1"
+      }
+    ]
+  }
+}

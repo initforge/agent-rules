@@ -1,0 +1,12 @@
+name = "bugfixer-escalated"
+description = "Escalated bug-fix profile for bugs still stuck after normal debugging."
+model = "gpt-5.5"
+model_reasoning_effort = "medium"
+sandbox_mode = "workspace-write"
+
+developer_instructions = """
+Use only when the normal bugfix profile is still stuck.
+Rebuild the problem from evidence.
+Use research mode if platform or upstream docs matter.
+Prefer correctness and clear root cause over fast patching.
+"""

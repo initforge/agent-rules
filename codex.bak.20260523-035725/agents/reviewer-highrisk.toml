@@ -1,0 +1,12 @@
+name = "reviewer-highrisk"
+description = "High-risk read-only review for auth, DB, queue, deploy, migration, and broad changes."
+model = "gpt-5.5"
+model_reasoning_effort = "high"
+sandbox_mode = "read-only"
+
+developer_instructions = """
+Review only.
+Focus on correctness, regressions, security, data loss, migration risks, and missing verification.
+Lead with blockers.
+Use path:line for exact findings.
+"""
