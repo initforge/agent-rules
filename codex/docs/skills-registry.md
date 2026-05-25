@@ -67,7 +67,7 @@ Runtime:
 - Codex
 
 Purpose:
-- Apply strict semi-technical Vietnamese documentation style only to `/docs/**`.
+- Create, review, and rewrite source-grounded project documentation for `README.md`, `README-vi.md`, technical specs, tech stack badges, screenshots, and `/docs/**`.
 
 Path:
 - `C:\Users\DELL\.codex\skills\docs-style`
@@ -79,22 +79,26 @@ Verify:
 - `python C:\Users\DELL\.codex\skills\.system\skill-creator\scripts\quick_validate.py C:\Users\DELL\.codex\skills\docs-style`
 
 Trigger:
-- create/edit/review/restructure docs under `/docs/**`
-- architecture docs
-- bottleneck docs
-- system docs
-- documentation folder work
+- README or README-vi rewrite
+- technical specification work
+- source-grounded docs cleanup
+- tech stack badge/table accuracy
+- screenshots in docs
+- architecture, workflow, operations, risk, and roadmap docs
 
 Inputs:
-- target files under `/docs/**`
-- repo facts and existing docs
+- target repo and documentation files
+- source evidence from manifests, routes, schemas, configs, runtime files, screenshots, and existing docs
 
 Outputs:
-- rewritten or newly created `/docs/**` files
-- compact docs change summary
+- rewritten README/README-vi or `/docs/**`
+- deep technical specification
+- verified stack badge/table presentation
+- docs cleanup summary
 
 Notes:
-- must not apply to `README.md`, `AGENTS.md`, `CHANGELOG.md`, or markdown outside `/docs/**` unless explicitly requested
+- current quality bar is why-first technical literature, equal to or stronger than `vhdg-conhon/SPECS.md`
+- must not claim full source grounding unless source evidence was actually inspected
 - category: self-authored
 
 ### codex-research

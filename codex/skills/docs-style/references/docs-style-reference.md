@@ -1,659 +1,861 @@
 # Docs Style Reference
 
-## 0. Activation Scope
+This reference defines the editorial and verification standard for README.md, README-vi.md, and `/docs/**`.
 
-This style applies only to:
+## 1. Target Standard
+
+The target is not a pretty template. The target is documentation that proves the writer understands the project.
+
+Strong project documentation should:
+
+- explain the product/domain before naming implementation details
+- describe the real runtime system, not an idealized version
+- connect technical decisions to business rules, user flows, data constraints, or operational pressure
+- name current limitations without making the project look unfinished by accident
+- distinguish active code paths from old experiments, unused adapters, archived setup files, and migration leftovers
+- keep source evidence available without making the reader parse a file inventory
+
+The closest benchmark is a strong project spec such as `vhdg-conhon/SPECS.md`: it has a concrete domain, important technical challenges, design reasons, database shape, business logic, API surface, page surface, and appendices. For other repos, match that depth in the repo's own context. Do not copy its exact structure blindly.
+
+A good result must also look organized on GitHub. Documentation is not only text correctness; it is reading design. Heading rhythm, badge placement, screenshot size, table density, and diagram shape all affect whether a human trusts and finishes the document.
+
+The highest bar is "why-first technical literature": every major section should answer why the system exists, why the design is shaped this way, what breaks when assumptions fail, and how a maintainer should think before changing it.
+
+## 2. Repository Classification
+
+Classify first. The documentation shape follows the project type.
+
+| Repo type | README focus | Deep docs focus |
+|---|---|---|
+| Full product/app | product, users, live state, capabilities, tech stack, run path | architecture, workflows, data, integrations, operations, risks |
+| Frontend-only app | user experience, pages, state model, assets, build/deploy | routing, component structure, content model, API assumptions, screenshots |
+| Backend/API | domain, API responsibilities, data model, integration contracts | endpoints, schemas, auth, jobs, error handling, observability |
+| Library/tooling | problem solved, install/use, API or CLI surface | internals, extension points, compatibility, failure modes |
+| Agent/rules repo | runtime model, load order, rule precedence, sync model | skills, hooks, tools, bootstrap, context policy, operational guardrails |
+| Data/AI project | input/output, model/provider, data flow, evaluation | prompts, embeddings, provider switch history, validation, fallback |
+| Profile repo | identity and selected links | usually no deep docs unless explicitly requested |
+| Demo/prototype | what is real, what is mocked, what is intentionally incomplete | setup, assumptions, next production steps |
+
+If a repo is mixed, document the dominant product first and the supporting tooling second.
+
+## 3. Source Study Checklist
+
+Before rewriting, inspect enough source to defend every important claim.
+
+Minimum inspection:
+
+- Manifests and package managers: `package.json`, `pnpm-lock.yaml`, `package-lock.json`, `yarn.lock`, `requirements.txt`, `pyproject.toml`, `go.mod`, `pubspec.yaml`, etc.
+- Entry points: `src/main.*`, `src/App.*`, `app/**`, `pages/**`, server bootstrap, CLI entry, worker entry.
+- Routing/API: controllers, route handlers, server actions, API folders, RPC/tool maps.
+- Data layer: models, migrations, schemas, SQL, ORM config, seed files, storage adapters.
+- Auth and permissions: middleware, guards, session/JWT providers, role checks.
+- Integrations: AI providers, payments, email, object storage, CMS, analytics, external APIs.
+- Runtime config: `.env.example`, Docker, Compose, Vercel, Cloudflare, Pages, Nginx, GitHub Actions.
+- UI surface: home/landing, dashboard, admin, forms, public pages, screenshots, live URLs.
+- Tests/scripts: test, lint, build, seed, deploy, maintenance commands.
+
+Keep private notes while reading:
 
 ```text
-/docs/**
+Claim: active AI provider is OpenRouter.
+Evidence: src/lib/ai/openrouter.ts is imported by src/app/api/chat/route.ts.
+Legacy trace: src/lib/ai/cloudflare.ts exists but is not imported by active route.
+Doc wording: "OpenRouter is the active provider; a Cloudflare Worker AI adapter remains as a legacy trace."
 ```
 
-Examples:
-- `/docs/01-start-here.md`
-- `/docs/02-glossary.md`
-- `/docs/03-project-overview.md`
-- `/docs/04-system-map.md`
-- `/docs/05-data-flow.md`
-- `/docs/06-components.md`
-- `/docs/07-core-workflows.md`
-- `/docs/08-setup-and-run.md`
-- `/docs/09-testing-debugging.md`
-- `/docs/10-roadmap.md`
+Only the final wording belongs in docs. The evidence note is for the writer.
 
-Do not apply this style to:
-- `README.md`
-- `AGENTS.md`
-- `CHANGELOG.md`
-- `CONTRIBUTING.md`
-- `.github/**`
-- `.vscode/**`
-- any markdown outside `/docs/**`
-- code comments
-- inline JSDoc/TSDoc/Python docstrings
-- issue templates
-- pull request templates
-- commit messages
+## 4. Fact Discipline
 
-If the task targets both `/docs/**` and markdown outside `/docs/**`, apply this style only to `/docs/**` unless the user explicitly asks for the same style elsewhere.
+Use four labels internally:
 
-## 1. Core Goal
+| Label | Meaning | Documentation treatment |
+|---|---|---|
+| Current | active path imported or used at runtime | write as present behavior |
+| Legacy | old code/config remains but is not active | label as legacy trace |
+| Planned | TODO/roadmap or partially wired feature | put in limitations/roadmap |
+| Unknown | cannot prove from source | omit or mark `TODO: xác minh ...` |
 
-Produce documentation that is:
-- clear enough for non-technical readers
-- still serious enough for developers
-- structured enough for future maintenance
-- easy to scan
-- not overly casual
-- not overly academic
-- not written like a beginner tutorial
+Do not use ambiguous wording such as "supports X" when X is only a dependency, unused component, stale branch, or config leftover.
 
-Preferred:
+## 5. Editorial Thesis and Reader Journey
 
-Redis cache *(bo nho tam toc do cao)* duoc dung de giam latency *(thoi gian cho phan hoi)* cho cac truy van du lieu lap lai. Nhung du lieu duoc goi nhieu lan se duoc luu tam trong Redis, giup backend khong phai truy van database lien tuc.
+Every serious README or technical spec needs a thesis. The thesis is the controlling idea that makes the document more than a list.
 
-Avoid:
+Good thesis examples:
 
-Co mot so du lieu duoc hoi di hoi lai rat nhieu lan. Neu lan nao he thong cung di hoi database thi se cham. Vi vay he thong dung mot "bo nho tam" de nho san cau tra loi trong thoi gian ngan. Bo nho tam nay goi la Redis cache.
+```md
+This system digitizes a seasonal folk-game workflow where the hard problem is not rendering a grid, but protecting session capacity, payment state, draw timing, and admin control under a short high-traffic operating window.
+```
 
-## 2. Documentation Tone
+```md
+This rules repo is a runtime control layer for agents. Its value is not in one prompt file, but in how it orders rules, skills, local overrides, tool inventory, and sync boundaries so multiple agents can behave consistently across machines.
+```
 
-Use this tone:
-- ro
-- gon
-- co thuat ngu
-- co mo ngoac giai thich khi can
-- khong binh dan hoa qua muc
-- khong viet nhu bai giang nhap mon
-- khong viet nhu system design interview
-- khong pho ky thuat
-- khong giau ky thuat
+Weak thesis examples:
 
-Use analogies only when:
-- the concept is difficult
-- the file is explicitly a glossary or concept note
-- the user asks for a non-technical explanation
-- a short analogy prevents a long explanation
+```md
+This is a fullstack application built with React and Node.js.
+```
 
-Keep analogies short.
+```md
+This repo contains rules and documentation.
+```
 
-## 2a. Vietnamese Writing Rules
+Reader journey:
 
-Write Vietnamese with diacritics by default.
+1. Identity: what is this project?
+2. Domain pressure: what real constraint makes it non-trivial?
+3. System shape: how is it divided?
+4. Core decisions: why were the main choices made?
+5. Data/workflow: how does state move?
+6. Failure: where can it break?
+7. Operation: how do maintainers run, debug, and change it?
+8. Future: what should be improved next?
 
-Rules:
-- use natural, fully accented Vietnamese unless the file or repo already has a deliberate ASCII-only convention
-- do not mix accented and non-accented Vietnamese in the same file without a strong reason
-- do not use sloppy shorthand, chat-style wording, or half-English filler
-- keep technical terms in English when they are the clearer industry term, but explain them in Vietnamese on first use if needed
+If a document jumps straight from project name to commands, it is usually too shallow for a serious repo.
 
-Preferred:
+## 6. README.md and README-vi.md
 
-`Dữ liệu được đọc từ Redis trước. Nếu cache không có, backend truy vấn PostgreSQL rồi ghi lại vào cache.`
+README is the front door. It should be short enough to read, but specific enough to establish credibility.
 
-Avoid:
+Recommended structure:
 
-`Du lieu doc tu Redis truoc. Neu khong co thi backend query Postgres roi cache lai, no se nhanh hon.`
+```md
+# Project Name
 
-## 3. Technical Term Policy
+One direct paragraph: what it is, who it serves, and current state.
 
-Use this pattern for terms that may block readers:
+## Preview
 
-`technical term *(short Vietnamese explanation)*`
+Verified screenshot or live URL if available.
 
-Examples:
-- `latency *(thoi gian cho phan hoi)*`
-- `response time *(thoi gian API tra ket qua)*`
-- `throughput *(so request xu ly moi giay)*`
-- `bottleneck *(diem nghẽn lam he thong cham)*`
-- `cache *(bo nho tam)*`
-- `Redis cache *(bo nho tam toc do cao)*`
-- `TTL *(thoi gian cache con hieu luc)*`
-- `queue *(hang doi xu ly nen)*`
-- `worker *(tien trinh xu ly job nen)*`
-- `job *(tac vu duoc dua vao queue)*`
-- `backlog *(job ton dong chua xu ly kip)*`
-- `timeout *(qua thoi gian cho nen request bi huy)*`
-- `retry *(thu lai sau khi loi)*`
-- `fallback *(phuong an du phong khi loi)*`
-- `rate limit *(gioi han so request trong mot khoang thoi gian)*`
-- `index *(muc luc giup database tim nhanh hon)*`
-- `pagination *(chia du lieu thanh tung trang nho)*`
-- `schema *(cau truc du lieu chuan)*`
-- `migration *(thay doi cau truc database co kiem soat)*`
-- `webhook *(callback tu he thong ngoai)*`
-- `idempotency *(chong xu ly trung request)*`
-- `observability *(kha nang quan sat he thong khi chay that)*`
-- `monitoring *(theo doi chi so he thong)*`
-- `logging *(ghi log de tra loi)*`
-- `trace *(dau vet luong xu ly qua nhieu service)*`
-- `alert *(canh bao khi vuot nguong loi)*`
+## What it does
+
+Concrete capabilities, written as product behavior.
+
+## Technical shape
+
+Short architecture explanation and verified stack.
+
+## Why it is built this way
+
+Only the 2-4 decisions that matter.
+
+## Run locally
+
+Minimal commands that match scripts/config.
+
+## Read next
+
+Links to the most useful docs.
+```
 
 Rules:
-- explain on first occurrence in a file
-- do not explain repeatedly in the same file
-- prefer glossary for repeated terms
-- keep explanations short
 
-## 4. Sentence Style
+- `README-vi.md` may be primary for Vietnamese projects.
+- `README.md` and `README-vi.md` must describe the same current facts.
+- Do not overload README with every endpoint, table, component, or migration.
+- Do not add shield badges unless every badge is verified.
+- Do not include broken screenshots. If no valid image exists, omit the image and say where screenshots should be added later only when useful.
 
-Use short, controlled sentences.
+## 7. Visual Presentation and Tech Badges
 
-Preferred patterns:
-- `He thong dung [ky thuat] de [muc dich].`
-- `[Ky thuat] giup [tac dong cu the], dac biet khi [tinh huong].`
-- `[Component] chiu trach nhiem [nhiem vu].`
-- `Diem can chu y la [rui ro / gioi han / bottleneck].`
+README should have a deliberate visual surface on GitHub. It should not look like raw notes.
 
-Avoid:
-- too many clauses in one sentence
-- vague words like `toi uu`, `manh me`, `linh hoat` without evidence
-- marketing phrasing
+Recommended visual order:
 
-## 5. File Naming and Numbering
+```md
+# Project Name — Short, concrete category
 
-Use numeric prefixes to make reading order clear.
+![Primary](...)
+![Stack](...)
+![Stack](...)
 
-Default rule:
+Live: https://...
 
-- prefer sequential numbering that follows the actual reading order of the project
-- use `01-`, `02-`, `03-` ... by default for project docs
-- only use spaced numbering such as `10`, `20`, `30` when the project already has that convention, the gaps are useful, and the files still read in a clear linear order from top to bottom
-- if the existing numbering is confusing, duplicated, or inconsistent, refactor file names into a clearer sequence
+One or two strong paragraphs.
 
-Recommended compact structure for most repos:
+## Preview
+
+![Screenshot](docs/assets/homepage.png)
+
+## What it does
+...
+
+## Tech Stack
+...
+```
+
+### Badge rules
+
+Use Shields.io badges for stack items when the project has a clear stack.
+
+Preferred format:
+
+```md
+![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=white)
+```
+
+Rules:
+
+- Use `style=flat-square`.
+- Use real logos when Shields.io supports them.
+- Use readable brand colors or high-contrast neutral colors.
+- Keep header badges to primary stack items only: framework, language, runtime, database/cache, deploy/runtime.
+- Put detailed stack in a table by layer.
+- Do not use a badge for a stale dependency, old adapter, copied config, or unused package.
+- Do not add 20 badges in the header. If it wraps into a noisy block, move details to the stack table.
+- Badges must render on GitHub. Broken badge URLs fail the docs.
+
+### Layered tech stack table
+
+Use a table like this for substantial apps:
+
+```md
+## Tech Stack
+
+| Layer | Stack |
+|---|---|
+| Frontend | ![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwindcss&logoColor=white) |
+| Backend | ![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?style=flat-square&logo=cloudflare&logoColor=white) ![D1 SQLite](https://img.shields.io/badge/D1_SQLite-003B57?style=flat-square) |
+| AI | ![OpenRouter](https://img.shields.io/badge/OpenRouter-111111?style=flat-square) |
+| Auth | ![JWT](https://img.shields.io/badge/JWT-000000?style=flat-square&logo=jsonwebtokens&logoColor=white) |
+| Data Fetching | ![SWR](https://img.shields.io/badge/SWR-000000?style=flat-square) |
+```
+
+Layer table rules:
+
+- Layer names must reflect the real architecture.
+- Each stack item must be verified from source.
+- If a layer is absent, omit it.
+- If a layer is legacy only, mark it as legacy in prose below the table instead of presenting it as active.
+- Do not mix active and legacy providers in the same row without labels.
+
+### Badge color guidance
+
+Use stable, recognizable colors:
+
+| Stack | Badge color |
+|---|---|
+| React | `61DAFB` |
+| TypeScript | `3178C6` |
+| JavaScript | `F7DF1E` with dark text only if manually handled; otherwise use neutral |
+| Vite | `646CFF` |
+| Next.js | `000000` |
+| Tailwind CSS | `38B2AC` |
+| Node.js | `339933` |
+| NestJS | `E0234E` |
+| Express | `000000` |
+| PostgreSQL | `4169E1` |
+| SQLite/D1 | `003B57` |
+| Redis | `DC382D` |
+| Docker | `2496ED` |
+| Nginx | `009639` |
+| Cloudflare | `F38020` |
+| Vercel | `000000` |
+| JWT | `000000` |
+| Prisma | `2D3748` |
+| Supabase | `3ECF8E` |
+| Firebase | `FFCA28` |
+| OpenRouter | `111111` |
+| Workers AI | `F38020` |
+
+The exact color can vary, but the badge set must look coherent.
+
+## 8. Technical Specification Depth
+
+For non-trivial repos, create or maintain a deep technical specification. It can be `SPECS.md` at root if the repo already uses that style, or a clear `/docs` file such as:
 
 ```text
 docs/
-  01-start-here.md
-  02-glossary.md
-  03-project-overview.md
-  04-system-map.md
-  05-data-flow.md
-  06-components.md
-  07-core-workflows.md
-  08-setup-and-run.md
-  09-testing-debugging.md
-  10-roadmap.md
-  11-archive.md
+  01-technical-specification.md
 ```
 
-Numbering rules:
-- `01` = entry point
-- `02` = glossary / shared terms
-- `03` = project overview
-- `04` = system map
-- `05` = data flow
-- `06` = components
-- `07` = workflows
-- `08` = setup and run
-- `09` = testing and debugging
-- `10` = roadmap and limitations
-- `11+` = archive, appendix, or project-specific extensions
+The spec should be deep enough that a new maintainer can understand the system before opening source.
 
-Do not force this exact map if the project has a better local reading order. The important rule is that the numbering must remain linear, clear, and consistent from top to bottom, regardless of whether it uses `01/02/03` or `10/20/30`.
+Minimum sections for a full app:
 
-## 6. Required Reading Flow
+1. Overview: product, domain, users, current status.
+2. Domain model: key entities, rules, state transitions, terms.
+3. Technical challenges: race conditions, provider failures, auth, data consistency, latency, deployment constraints.
+4. Architecture: runtime pieces and why they exist.
+5. Tech stack: verified layer table with badges or compact names.
+6. Data model: schema, important tables/collections, indexes, constraints, storage ownership.
+7. Business logic: main workflows with normal path and failure path.
+8. API/reference surface: grouped routes/endpoints/actions, not every trivial handler unless useful.
+9. UI/page surface: public, user, admin, or operator screens.
+10. Operations: env, local run, deployment, logs, maintenance.
+11. Limitations and roadmap: current gaps, risks, and concrete next work.
 
-Readers should be able to move in this order:
+Add these when relevant:
 
-1. What is this project?
-2. Who uses it?
-3. What problem does it solve?
-4. What are the main parts?
-5. How does data move?
-6. What workflows matter most?
-7. Which techniques are important?
-8. Where can the system become slow or fragile?
-9. How do developers run it?
-10. How do maintainers debug and operate it?
+12. Decision log: important decisions, alternatives rejected, tradeoffs.
+13. Operational playbook: common incidents, symptoms, checks, recovery.
+14. Change safety notes: what must be verified before touching core flows.
+15. Glossary/domain appendix: project-specific terms that cannot be inferred from code.
 
-Never organize docs only by technology names.
+For smaller repos, compress the same thinking into fewer sections. Do not write a shallow spec just to satisfy a file name.
 
-## 7. Standard File Template
-
-For most `/docs/**` files, use:
+Strong spec writing pattern:
 
 ```md
-# [Title]
+## Race condition in purchase limits
 
-## 1. Muc dich
+The risk appears when two requests attempt to reserve the same remaining capacity at the same time. The system must treat the reservation as an atomic operation; otherwise the UI can show a valid slot while the backend has already accepted another request.
 
-## 2. Tom tat
+Current handling: ...
 
-## 3. Noi dung chinh
+Why this matters: ...
 
-## 4. Luong xu ly / So do
-
-## 5. Diem can chu y
-
-## 6. Lien quan
+Where to verify: ...
 ```
 
-Do not force every section if it adds noise, but architecture, workflow, bottleneck, setup, and operations docs should usually follow it.
-
-## 8. Technique Section Template
+Avoid:
 
 ```md
-## [Technique Name]
+## Race Condition
 
-**Muc dich:** [What problem it solves.]
-
-**Cach hoat dong:** [How it works in this project.]
-
-**Tac dong:** [What changes because of this technique.]
-
-**Diem can chu y:** [Risk, tradeoff, limit, or failure mode.]
+The project may have race conditions. Need to optimize.
 ```
 
-## 9. Bottleneck Template
+## 9. Design Decision Standard
 
-Every bottleneck should answer:
-- cham o dau?
-- cham khi nao?
-- dau hieu la gi?
-- nguyen nhan thuong gap la gi?
-- anh huong toi user hoac he thong la gi?
-- huong xu ly la gi?
-- danh doi la gi?
-
-Use:
-
-```md
-## Bottleneck: [Name]
-
-**Vi tri:** [Component A] -> [Component B]
-
-**Dau hieu:** [Observable symptoms.]
-
-**Nguyen nhan chinh:** [Likely causes.]
-
-**Anh huong:** [Impact on user/system.]
-
-**Huong xu ly:** [Fixes or mitigations.]
-
-**Danh doi:** [Cost or tradeoff of the fix.]
-```
-
-## 10. Workflow Template
-
-For each workflow, document normal flow and failure flow.
-
-```md
-# [Workflow Name]
-
-## 1. Muc dich
-
-## 2. Luong thanh cong
-
-```txt
-[User] -> [Frontend] -> [Backend API] -> [Database] => [Response]
-```
-
-## 3. Cac buoc xu ly
-
-| Buoc | Thanh phan | Viec xay ra |
-|---|---|---|
-| 1 | User | Gui request |
-| 2 | Frontend | Thu thap input va goi API |
-| 3 | Backend API | Validate input va xu ly logic |
-| 4 | Database | Luu hoac doc du lieu |
-| 5 | Backend API | Tra response |
-
-## 4. Luong loi
-
-```txt
-[Backend API] -> [External API] --x timeout
-[Backend API] -> [Fallback] => [Response]
-```
-
-## 5. Diem can chu y
-- [Bottleneck]
-- [Security risk]
-- [Data consistency risk]
-- [Retry/fallback behavior]
-```
-
-Always show the happy path first, then error path.
-
-## 11. Component Template
-
-Use for `06-components.md`.
-
-```md
-## [Component Name]
-
-**Vai tro:** [What it does.]
-
-**Input:** [What it receives.]
-
-**Output:** [What it returns or produces.]
-
-**Phu thuoc:** [Database, external API, queue, storage, etc.]
-
-**Diem can chu y:** [Bottleneck, failure mode, scaling issue.]
-```
-
-## 12. Key Decision Template
-
-Use for a project-specific decision file such as `11-key-decisions.md` or another clear sequential slot.
-
-```md
-## Decision: [Decision Name]
-
-**Chon:** [Chosen option.]
-
-**Ly do:** [Why this option was chosen.]
-
-**Khong chon:** [Alternatives.]
-
-**Danh doi:** [What became harder because of this choice.]
-
-**Khi nao can xem lai:** [Condition that may invalidate the decision.]
-```
-
-## 13. Glossary Template
-
-`02-glossary.md` should be short and practical.
-
-```md
-# Glossary
-
-| Thuat ngu | Nghia ngan | Dung trong du an |
-|---|---|---|
-| Latency | Thoi gian cho phan hoi | Dung de danh gia API tra ket qua nhanh hay cham |
-| Cache | Bo nho tam | Luu du lieu hay duoc goi de tra nhanh hon |
-| TTL | Thoi gian cache con hieu luc | Dung de tranh cache giu du lieu qua cu |
-```
-
-Rules:
-- one row per term
-- no long explanations
-- only terms actually used
-
-## 14. Table Rules
-
-Use tables for comparison, summary, component list, bottleneck list, decision list, and error list.
-
-Rules:
-- maximum 4 columns by default
-- prefer 3 columns when possible
-- avoid long paragraphs inside cells
-- keep column names concrete
-- keep cells short
-
-## 15. Diagram Rules
-
-Use plain text diagrams. Avoid emojis and decorative symbols.
-
-Allowed labels:
-- `[User]`
-- `[Frontend]`
-- `[Backend]`
-- `[API]`
-- `[DB]`
-- `[Cache]`
-- `[Queue]`
-- `[Worker]`
-- `[Storage]`
-- `[3rd-party]`
-
-Allowed symbols:
-- `->`
-- `=>`
-- `<-`
-- `--x`
-- `...`
-- `()`
-
-Rules:
-- every diagram must be followed by a short explanation
-- avoid diagrams with more than 8 nodes unless necessary
-- split large flows into smaller diagrams
-- prefer one normal-flow diagram and one error-flow diagram
-
-## 16. Start Here Template
-
-Use for `/docs/01-start-here.md`:
-
-```md
-# Start Here
-
-## 1. Du an nay la gi?
-
-## 2. Ai nen doc docs nay?
-
-| Nguoi doc | Nen doc phan nao |
-|---|---|
-| Nguoi moi vao du an | Tong quan, system map, data flow |
-| Dev | Workflows, key techniques, setup, debugging |
-| PM / non-tech | Overview, user journey, bottlenecks |
-| Nguoi van hanh | Operations, monitoring, common errors |
-
-## 3. Thu tu doc de xuat
-
-| Thu tu | File | Doc de hieu |
-|---|---|---|
-| 1 | 03-project-overview.md | Du an lam gi |
-| 2 | 04-system-map.md | He thong gom nhung phan nao |
-| 3 | 05-data-flow.md | Du lieu di qua he thong ra sao |
-| 4 | 06-components.md | Cac module chinh co vai tro gi |
-| 5 | 07-core-workflows.md | Cac luong xu ly chinh |
-| 6 | 08-setup-and-run.md | Cach chay du an |
-| 7 | 09-testing-debugging.md | Cach test va debug |
-| 8 | 10-roadmap.md | Cai gi da co va cai gi con thieu |
-
-## 4. Cach doc docs
-```
-
-## 17. Core Overview Templates
-
-Use the templates from your spec for:
-- `/docs/03-project-overview.md`
-- `/docs/04-system-map.md`
-- `/docs/05-data-flow.md`
-- project-specific bottleneck docs if the repo has them
-- project-specific error docs if the repo has them
-
-Keep:
-- clear purpose
-- summary
-- diagrams and short tables
-- failure points
-- operational notes
-
-## 18. Setup Docs Rules
-
-For setup files such as:
-- `08-setup-and-run.md`
-- `09-env-config.md`
-- `10-local-dev.md`
-- `11-deploy.md`
-
-Rules:
-- show command first
-- then explain what it does
-- then explain common failure
-- do not bury commands inside long prose
-- do not write setup like an essay
-
-## 19. Security Docs Rules
-
-Security docs must be concrete and non-alarmist.
-
-Rules:
-- never include real secrets
-- use placeholders
-- explicitly mark sensitive values as examples
-- do not document quick hacks that bypass security unless clearly internal and temporary
-
-Use placeholders:
-- `DATABASE_URL=postgres://user:password@localhost:5432/app`
-- `API_KEY=<replace-with-your-api-key>`
-- `JWT_SECRET=<replace-with-local-secret>`
-
-## 20. Performance Docs Rules
-
-Connect metric to user impact.
-
-Performance sections should include:
-- `Chi so`
-- `Y nghia`
-- `Anh huong`
-- `Nguyen nhan thuong gap`
-- `Huong xu ly`
-
-## 21. AI / Agent Docs Rules
-
-Avoid vague magic language.
-
-Always mention:
-- Input
-- Context
-- Tool access
-- Output
-- Failure mode
-- Evaluation / checking method
+Every important technical decision should be written as a mini-argument.
 
 Template:
 
 ```md
-## AI Agent Flow
+### Decision: [Name]
 
-**Input:** [What the user/system sends.]
+**Problem:** What pressure forced a decision?
 
-**Context:** [What documents/data the agent can see.]
+**Chosen approach:** What is the current design?
 
-**Tool access:** [What tools the agent can call.]
+**Why this works here:** Why does it fit this repo's domain, traffic, team, cost, or deployment model?
 
-**Output:** [What the agent returns.]
+**Rejected alternatives:** What was not chosen, and why?
 
-**Failure mode:** [Where it can be wrong.]
+**Tradeoff:** What became harder because of this choice?
 
-**Cach kiem tra:** [How to validate result.]
+**Revisit when:** What future condition may invalidate the decision?
 ```
 
-## 22. Rewrite Rules
+Good decisions are specific:
 
-When rewriting existing `/docs/**` files:
-- preserve factual meaning
-- improve structure before wording
-- remove duplicated ideas when two sections say the same thing
-- refactor headings and file names when the current structure makes the reading order unclear
-- do not add unsupported claims
-- do not invent architecture
-- mark unknowns as `TODO` instead of guessing
-- keep existing commands and paths unless clearly wrong
-- keep code blocks intact unless the task is to fix them
-- do not restyle markdown outside `/docs/**`
+- "SSE instead of WebSocket because the app only needs server-to-client updates."
+- "PostgreSQL instead of MongoDB because order/session state needs ACID and row-level locking."
+- "Docker Compose instead of Kubernetes because the app is seasonal and expected load does not justify cluster complexity."
 
-Use TODO format:
+Bad decisions are generic:
 
-`> TODO: Xac nhan lai service nao chiu trach nhiem gui email trong production.`
+- "React was chosen because it is popular."
+- "Docker is used for scalability."
+- "PostgreSQL is robust."
 
-## 23. Review Checklist
+## 10. Operating Reality
 
-When reviewing a `/docs/**` file, check:
+High-end docs show how the system behaves when reality is imperfect.
 
-- [ ] File nam duoi `/docs/**`
-- [ ] Ten file co prefix so neu thuoc docs chinh
-- [ ] So thu tu doc tu tren xuong ro rang, khong nhay bat quy luat neu khong co ly do
-- [ ] Tieu de ro rang
-- [ ] Co muc dich file
-- [ ] Co tom tat ngan
-- [ ] Tieng Viet co dau va thong nhat trong toan file
-- [ ] Khong lap y giua tieu de, doan van, va bang tom tat
-- [ ] Thuat ngu kho co mo ngoac ngan
-- [ ] Khong giai thich qua dai nhu tutorial nhap mon
-- [ ] Co so do neu luong kho hinh dung
-- [ ] Bang khong qua 4 cot
-- [ ] Bottleneck co dau hieu, nguyen nhan, anh huong, huong xu ly
-- [ ] Workflow co happy path va error path neu can
-- [ ] Co link den docs lien quan neu phu hop
-- [ ] Khong co secret that
-- [ ] Khong claim qua muc so voi code/docs hien co
+Include operating reality when applicable:
 
-## 24. Hard Rules
+- concurrency: simultaneous writes, oversell, duplicate actions
+- idempotency: repeated webhook, retry, double-submit
+- payment expiry: reserved state that must be released
+- provider failure: AI/payment/email/storage outages
+- auth and permission: role boundaries, admin-only actions, guest/user split
+- deployment split: CDN, reverse proxy, container, worker, database
+- stale data: cache TTL, invalidation, optimistic UI, polling/SSE
+- manual recovery: admin correction, database check, log path, replay path
+- seasonal/traffic pattern: launch windows, peak hours, low-traffic periods
 
-Mandatory:
+Write this as practical documentation, not fear-driven warnings.
 
-1. Never apply this style to markdown outside `/docs/**` unless explicitly requested.
-2. Never rewrite `README.md` using this style by default.
-3. Never rewrite `AGENTS.md` using this style by default.
-4. Never rewrite `CHANGELOG.md` using this style by default.
-5. Never treat all `.md` files as documentation files.
-6. Never add emojis or decorative icons by default.
-7. Never over-explain technical concepts with long analogies.
-8. Never remove technical terms just to make text easier.
-9. Never invent architecture, dependencies, metrics, or workflows.
-10. Never include real secrets, keys, tokens, or credentials.
-11. Never create wide tables with more than 4 columns unless necessary.
-12. Never create huge diagrams that are harder to read than prose.
-13. Never mix setup, architecture, workflow, debugging, and roadmap into one giant file if they deserve separate docs.
-14. Never force `10/20/30` numbering onto a project that reads better with `01/02/03`.
-15. Never leave duplicate sections or repeated ideas just because they existed in the source docs.
-16. Never default to non-accented Vietnamese unless the project explicitly requires it.
+Example:
 
-## 25. Preferred Writing Patterns
+```md
+Payment expiry is not a UI detail. It protects capacity from being reserved forever by abandoned orders. The system must either receive a cancellation signal or run a cleanup path that releases reserved capacity after the payment window.
+```
+
+## 11. Professional Information Architecture
+
+Organize docs by reader need, not by what files happened to exist.
+
+Recommended reader paths:
+
+| Reader | First read | Then read |
+|---|---|---|
+| New maintainer | README, technical spec | operations, risks |
+| Product/domain reviewer | README, domain rules, workflows | page overview |
+| Backend developer | architecture, data model, API, workflows | operations |
+| Frontend developer | README, UI/page overview, API contract | screenshots, state model |
+| Operator/admin | operations, incidents, deployment | risks |
+| Future agent | README, spec, source anchors | TODO/unknown facts |
+
+Documentation folder rules:
+
+- Put the strongest system explanation first.
+- Keep operational docs separate from conceptual docs when both are substantial.
+- Keep appendices for reference tables, constants, route lists, or domain lists.
+- Do not create `01-start-here.md` if README already performs that role well.
+- Do not split a coherent spec into many files only to satisfy a template.
+
+## 12. /docs Organization
+
+Use `/docs` for depth. Prefer fewer strong files over many thin files.
+
+Default product/app map:
+
+```text
+docs/
+  01-product-and-domain.md
+  02-architecture.md
+  03-data-and-integrations.md
+  04-workflows.md
+  05-operations.md
+  06-risks-and-roadmap.md
+  assets/
+```
+
+Default tooling/agent map:
+
+```text
+docs/
+  01-runtime-model.md
+  02-installation-and-sync.md
+  03-rule-and-skill-system.md
+  04-tooling-and-automation.md
+  05-maintenance-and-risks.md
+```
+
+Default API/backend map:
+
+```text
+docs/
+  01-domain-and-contracts.md
+  02-architecture.md
+  03-api-and-auth.md
+  04-data-model.md
+  05-operations.md
+  06-risks-and-roadmap.md
+```
+
+Use another map when the repo demands it. The reading order must remain clear.
+
+## 13. What Deep Docs Must Contain
+
+Architecture docs should explain:
+
+- system boundary
+- runtime pieces
+- data stores
+- external services
+- active deployment path
+- why the chosen shape fits the project
+- what would break first under load or failure
+
+Workflow docs should explain:
+
+- trigger
+- normal path
+- failure path
+- persistence or side effects
+- user/admin/system-visible result
+- retry, rollback, fallback, or manual recovery where relevant
+
+Operations docs should explain:
+
+- local run commands
+- build/deploy path
+- environment variables
+- logs and debugging
+- known failure modes
+- what not to touch casually
+
+Risks/roadmap docs should explain:
+
+- current limitations
+- why they matter
+- evidence from source or runtime
+- reasonable next work
+- tradeoffs, not wishlists
+
+## 14. Diagrams
+
+Use diagrams only when they clarify a real structure or flow.
+
+Good diagram qualities:
+
+- names the real system pieces
+- shows direction of data or control
+- stays small enough to verify
+- is followed by explanation
+
+Use Mermaid when GitHub rendering helps, otherwise use plain text. Avoid decorative diagrams.
+
+Example:
+
+```mermaid
+flowchart LR
+  User["User"]
+  Web["Frontend"]
+  API["API route"]
+  DB["Database"]
+  User --> Web --> API --> DB
+```
+
+After the diagram, explain the important boundary:
+
+```md
+The frontend owns form state and validation feedback. The API route owns persistence and external provider calls, so provider failures should be handled there instead of leaking provider-specific behavior into UI components.
+```
+
+## 15. Screenshots and Assets
+
+Screenshot rules:
+
+- Use live screenshots when a live URL exists and the user asks for visual proof.
+- Use Playwright or a real browser capture for web apps when possible.
+- Store docs images under `/docs/assets/` or a project's existing docs asset folder.
+- Link screenshots with paths that render on GitHub.
+- Verify the file exists after moving or renaming.
+- Do not include placeholder screenshots, broken links, or images from another project.
+- Prefer one strong homepage/landing screenshot plus 1-2 workflow/admin screenshots when available and safe.
+- Keep screenshot filenames descriptive: `homepage.png`, `admin-dashboard.png`, `checkout-flow.png`.
+
+For admin screenshots, avoid leaking sensitive data. Use demo/local data or crop/redact if needed.
+
+## 16. Tech Stack Accuracy
+
+Tech stack must come from source:
+
+- Frameworks from manifests and entry points.
+- Database from schema/config/client usage.
+- AI provider from active call path, not stale adapter files.
+- Deployment from actual config and repository settings when available.
+- Styling from config/imports/components, not visual guess.
+
+Write nuanced stack statements:
+
+- Good: "The app is a Next.js project using Prisma with PostgreSQL; the Docker setup also provisions Redis for queue/cache behavior."
+- Bad: "Modern fullstack app with AI, database, and scalable backend."
+
+## 17. Document Aesthetics
+
+Documentation should be visually controlled:
+
+- Use one H1 per file.
+- Use short H2 headings that describe the section.
+- Avoid deep nesting beyond H3 unless the spec genuinely needs it.
+- Prefer compact tables for stack, routes, pages, and decisions.
+- Avoid wide tables that force horizontal scrolling.
+- Put screenshots near the sections they explain.
+- Leave enough whitespace between major sections.
+- Use code blocks only for commands, config examples, API examples, or diagrams.
+- Use blockquotes only for warnings, TODOs, or operational notes.
+
+Bad aesthetics:
+
+- long unbroken paragraphs
+- repeated generic section headings
+- badge walls
+- screenshot links that render as broken icons
+- huge diagrams that cannot be read on GitHub
+- many tiny docs files with 10-20 lines each
+
+Good aesthetics:
+
+- strong README header
+- small verified badge row
+- one clean preview image
+- layered stack table
+- purposeful diagrams
+- deep spec sections with concrete examples
+
+## 18. Stronger Communication
+
+Professional docs can be inspiring without becoming marketing copy. The rule is: inspiration must come from clarity, specificity, and stakes.
 
 Use:
-- `Noi ngan gon, ...`
-- `Muc dich cua phan nay la ...`
-- `He thong dung [X] de [Y].`
-- `[X] giup [Y], dac biet khi [Z].`
-- `Diem can chu y la ...`
-- `Dau hieu thuong thay la ...`
-- `Nguyen nhan thuong gap la ...`
-- `Huong xu ly la ...`
-- `Danh doi cua cach nay la ...`
-- `Trong luong thanh cong, ...`
-- `Trong luong loi, ...`
+
+- domain stakes: why the project matters in its setting
+- engineering stakes: what can go wrong if implemented poorly
+- design confidence: why the chosen shape is appropriate
+- maintained restraint: no hype, no vague greatness
+
+Strong:
+
+```md
+The hard part is not displaying the animal grid; it is preserving trust in a short seasonal window where many users act at the same time and every accepted order must map to a consistent payment, capacity, and draw result.
+```
+
+Weak:
+
+```md
+This is a powerful and modern platform with a robust architecture.
+```
+
+Use rhythm:
+
+1. Short statement of the problem.
+2. Concrete failure if it is handled badly.
+3. Current design.
+4. Tradeoff.
+5. Where to verify or how to operate it.
+
+## 19. Cleanup Rules
+
+When organizing docs:
+
+- Move useful scattered markdown into `/docs`.
+- Merge files that repeat the same setup or architecture content.
+- Delete obsolete task files only when their content is superseded or stale.
+- Keep migration notes only if they still explain current production state or historical decisions.
+- Put raw images, exported screenshots, and visual assets under `/docs/assets/`.
+- Do not touch core source files during docs cleanup unless the user explicitly asks.
+
+If deleting a file, know why:
+
+| Delete reason | Allowed? |
+|---|---|
+| Duplicated by newer docs | yes |
+| Stale setup that contradicts current scripts | yes, after preserving needed facts |
+| Temporary migration checklist already completed | yes |
+| Only because the folder looks cluttered | no |
+| You did not read it | no |
+
+## 20. Tone and Language
+
+Use Vietnamese with full diacritics for Vietnamese docs.
+
+Preferred style:
+
+- direct
+- specific
+- edited
+- calm
+- technically literate
+- domain-aware
 
 Avoid:
-- `Nhu chung ta da biet...`
-- `Ve co ban thi...`
-- `Rat don gian...`
-- `Cuc ky manh me...`
-- `Toi uu toan dien...`
-- `Dam bao scale tot...`
-- `AI tu hieu...`
-- `Khong co van de gi...`
 
-## 26. Minimal First Pass
+- chat tone
+- sales tone
+- beginner tutorial tone
+- internal reasoning tone
+- excessive code/path references
+- "có vẻ", "dường như", "mình thấy" in final docs
 
-If creating docs from scratch, start with:
+Use English technical terms when they are the natural term: `route`, `middleware`, `schema`, `migration`, `webhook`, `queue`, `worker`, `cache`, `provider`, `deployment`. Explain only when needed.
+
+## 21. Good vs Bad Writing
+
+Bad:
+
+```md
+The project has frontend and backend folders. The frontend contains components and pages. The backend has routes and services. There is also Docker.
+```
+
+Good:
+
+```md
+The product is split into a browser-facing client and a backend API because the UI needs fast iteration while payment, persistence, and administrative actions must stay server-side. Docker is used to keep the local runtime close to deployment: the app, database, and supporting services start with one command instead of relying on manually installed services.
+```
+
+Bad:
+
+```md
+AI is handled by multiple providers.
+```
+
+Good:
+
+```md
+OpenRouter is the active AI provider in the chat request path. A Cloudflare Worker AI adapter still exists in the repository as a legacy trace, but it is not part of the current runtime unless the route imports it again.
+```
+
+## 22. Regression Traps
+
+These are the outputs that caused the previous documentation quality failure. Treat them as hard regressions.
+
+### Trap 1: Source inventory instead of explanation
+
+Bad:
+
+```md
+The frontend is in `src`, the backend is in `backend`, and Docker files are at root. The app uses React and Node.js.
+```
+
+Better:
+
+```md
+The project is split into a browser client and a backend API because user-facing workflows need fast UI state while payment, persistence, and administrative actions must stay server-side. The backend owns the irreversible operations; the frontend only prepares input, displays state, and reacts to API responses.
+```
+
+### Trap 2: Generic stack with no operating meaning
+
+Bad:
+
+```md
+Tech stack: React, TypeScript, Node.js, Docker.
+```
+
+Better:
+
+```md
+React and TypeScript define the UI layer. Node.js owns API behavior and server-side business rules. Docker is not just packaging; it is the local/runtime contract that keeps the app, database, and supporting services aligned across machines.
+```
+
+### Trap 3: Pretty badges but wrong facts
+
+Bad:
+
+```md
+![Cloudflare](...) ![OpenRouter](...) ![Redis](...)
+```
+
+when Cloudflare is only legacy, OpenRouter is active, and Redis is not configured.
+
+Better:
+
+```md
+The active AI path uses OpenRouter. A Cloudflare Worker AI adapter remains in the repository as legacy code, but it is not shown as active stack in the badge row.
+```
+
+### Trap 4: Thin specs
+
+Bad:
+
+```md
+## Architecture
+
+The app has frontend, backend, and database.
+```
+
+Better:
+
+```md
+## Architecture
+
+The UI collects intent and renders state; the API turns that intent into validated domain operations. This split matters because the backend is the only layer allowed to mutate durable state. It also means UI failures are usually recoverable by retrying a request, while backend failures can leave partial external side effects that require explicit handling.
+```
+
+### Trap 5: Workflow without failure path
+
+Bad:
+
+```md
+User submits form, backend saves data, UI shows success.
+```
+
+Better:
+
+```md
+The normal path is submit -> validate -> persist -> return success -> refresh UI state. The failure path matters more: validation errors return directly to the form; persistence errors must not show success; external provider failures need a retry or manual recovery note depending on whether a side effect may already have happened.
+```
+
+### Trap 6: Docs that sound like an agent thinking
+
+Bad:
+
+```md
+I found that the project appears to use several technologies. It seems the backend may be responsible for API logic.
+```
+
+Better:
+
+```md
+The backend owns API logic. It validates incoming requests, coordinates persistence, and hides provider-specific behavior from the UI.
+```
+
+### Trap 7: Over-fragmented `/docs`
+
+Bad:
 
 ```text
 docs/
   01-start-here.md
-  02-glossary.md
-  03-project-overview.md
-  04-system-map.md
-  05-data-flow.md
-  06-components.md
-  07-core-workflows.md
-  08-setup-and-run.md
-  09-testing-debugging.md
-  10-roadmap.md
+  02-project-overview.md
+  03-architecture.md
+  04-core-workflows.md
+  05-operations.md
+  06-risks-and-roadmap.md
 ```
 
-Add more files only when:
-- one file becomes too long
-- a workflow needs dedicated explanation
-- a bottleneck is important enough
-- setup/deploy/debugging require separate treatment
-- security/performance needs dedicated ownership
+where every file has only short repeated paragraphs.
 
-## 27. Final Quality Bar
+Better:
 
-A good `/docs/**` file should let a reader answer:
-- file nay noi ve gi?
-- phan nay nam o dau trong he thong?
-- no giai quyet van de gi?
-- luong binh thuong chay ra sao?
-- khi loi thi loi o dau?
-- dau hieu nhan biet la gi?
-- sua hoac kiem tra the nao?
-- co danh doi gi khong?
-- doc tiep file nao?
+```text
+docs/
+  01-technical-specification.md
+  02-operations.md
+  03-risks-and-roadmap.md
+  assets/
+```
 
-If the file cannot answer these questions, improve structure before wording.
+when the repo is small enough that one strong spec is clearer than six weak files.
+
+### Trap 8: Beautiful structure but no real project understanding
+
+Bad:
+
+```md
+## Business Logic
+
+The system handles business logic through services.
+```
+
+Better:
+
+```md
+## Business Logic
+
+Document the actual business rule: what state changes, who is allowed to trigger it, what must be atomic, what external systems are involved, what happens on failure, and how the user/admin sees the result.
+```
+
+If a generated document matches any bad pattern above, rewrite before reporting completion.
+
+## 23. Documentation Scorecard
+
+Use this scorecard before reporting completion. A serious repo should target 8/10 or higher. A flagship repo should target 9/10 or higher.
+
+| Area | 0 | 1 | 2 |
+|---|---|---|---|
+| Domain understanding | Generic project description | Some domain facts | Domain rules drive technical explanation |
+| Source grounding | Claims not verified | Main stack verified | Stack, flows, config, data, and legacy/current paths verified |
+| Technical challenges | Missing | Named but shallow | Explained with failure mode, solution, tradeoff |
+| Architecture rationale | Component list | Some reasons | Clear why, alternatives, boundaries |
+| Data/workflow depth | Surface flow | Normal path only | Normal path, failure path, state changes |
+| Operating reality | Missing | Basic setup | Debugging, incidents, recovery, deploy constraints |
+| Visual organization | Raw markdown | Acceptable | Badges, screenshots, tables, diagrams balanced |
+| Writing quality | Agent/checklist tone | Clear but plain | Edited, precise, memorable, technically restrained |
+| Cleanup | Clutter remains | Some cleanup | Docs/assets organized, stale files removed or archived |
+| Reader usefulness | Hard to onboard | Helps one reader type | Supports maintainer, operator, reviewer, future agent |
+
+Do not ship if any critical area is `0`.
+
+## 24. Final Review Checklist
+
+Before finishing, verify:
+
+- [ ] Repo type is classified correctly.
+- [ ] README answers product, user, state, capabilities, stack, run path, and docs links.
+- [ ] `README.md` and `README-vi.md` agree on facts if both exist.
+- [ ] `/docs` contains depth, not repeated README fragments.
+- [ ] Every important stack claim is backed by manifests/config/imports.
+- [ ] Badge rows and tech stack tables are accurate, readable, and visually coherent.
+- [ ] A technical spec exists for non-trivial repos and reaches the repo's real complexity.
+- [ ] The spec has a clear thesis and explains why the system is designed this way.
+- [ ] Important decisions include rejected alternatives and tradeoffs.
+- [ ] Operating reality is documented: failure modes, recovery, debugging, deploy constraints.
+- [ ] Every important workflow has a trigger, normal path, and failure path.
+- [ ] Current and legacy code paths are separated.
+- [ ] Screenshots and badges render on GitHub or are removed.
+- [ ] Commands match actual scripts/config.
+- [ ] Diagrams match real runtime boundaries.
+- [ ] No secrets are exposed.
+- [ ] No doc reads like agent reasoning, source inventory, or template filler.
+- [ ] Unknowns are marked as `TODO: xác minh ...`.
+
+If any item fails, continue editing before reporting completion.
