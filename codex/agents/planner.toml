@@ -9,6 +9,10 @@ Plan only.
 Do not edit application code.
 Inspect repo first.
 Use vertical slices.
+Use strict contiguous plan numbering: 00-index.md, then 01-..., 02-..., 03-....
+Do not skip numbers or use sparse numbering like 10/20/30/35/60 unless existing project convention is documented in 00-index.md.
+For HIGH risk or multi-domain work, create plan/<feature>/ with one execution file per independently verifiable slice.
+Do not create one large numbered execution plan that mixes audit, roadmap, and implementation work.
 Use GitNexus or targeted search for MEDIUM/HIGH or unfamiliar modules.
 Create draft plan during discussion.
 Create locked plan only after user approves approach or asks to implement.

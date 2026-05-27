@@ -17,6 +17,16 @@ $profileInfoJson = & "$env:USERPROFILE\.codex\scripts\resolve-workflow-profile.p
 
 $profileInfo = $profileInfoJson | ConvertFrom-Json
 
+$planRoot = Join-Path (Resolve-Path -LiteralPath $Workdir).Path "plan"
+$mustValidatePlan = $Phase -in @("implement", "bugfix", "review")
+
+if ($mustValidatePlan -and (Test-Path -LiteralPath $planRoot)) {
+  powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.codex\scripts\validate-plan-structure.ps1" -PlanRoot $planRoot
+  if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+  }
+}
+
 $cmd = @(
   "codex",
   "-m", $profileInfo.model,

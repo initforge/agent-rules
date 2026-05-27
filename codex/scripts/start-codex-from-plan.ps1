@@ -15,6 +15,26 @@ $resolvedJson = & "$env:USERPROFILE\.codex\scripts\resolve-plan-profile.ps1" `
 
 $resolved = $resolvedJson | ConvertFrom-Json
 
+$resolvedPlanPath = Resolve-Path -LiteralPath $PlanFile
+$planDir = Split-Path -Parent $resolvedPlanPath.Path
+$planRoot = $null
+$current = Get-Item -LiteralPath $planDir
+
+while ($null -ne $current) {
+  if ($current.Name -eq "plan") {
+    $planRoot = $current.FullName
+    break
+  }
+  $current = $current.Parent
+}
+
+if ($null -ne $planRoot) {
+  powershell -NoProfile -ExecutionPolicy Bypass -File "$env:USERPROFILE\.codex\scripts\validate-plan-structure.ps1" -PlanRoot $planRoot
+  if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+  }
+}
+
 $finalPrompt = if ([string]::IsNullOrWhiteSpace($Prompt)) {
   switch ($resolved.phase) {
     "plan" { "Continue planning using the active plan file and keep scope locked." }

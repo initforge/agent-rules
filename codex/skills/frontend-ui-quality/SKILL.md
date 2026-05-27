@@ -37,6 +37,7 @@ Use this skill to ship frontend work that has real visual direction and has been
    - Start the local dev server when the UI needs one.
    - Use Playwright or browser screenshots for at least desktop and mobile widths when feasible.
    - Inspect screenshots for alignment, clipping, text overflow, overlapping elements, awkward whitespace, broken wrapping, unreadable contrast, and unintended scrollbars.
+   - Treat crowded mobile toolbars, dense dashboard headers, bottom navigation, tabs, filters, badges, counters, and status chips as high-risk areas that require close inspection.
    - Verify visual assets load, icons/logos are not distorted, motion does not cover content, and 3D/canvas scenes are non-empty and framed.
    - Check representative interaction states: hover/focus/active, empty/loading/error states, selected tabs, open menus, long labels, and data-heavy rows.
 
@@ -45,9 +46,32 @@ Use this skill to ship frontend work that has real visual direction and has been
    - Treat "build passes" as insufficient when visual verification is possible.
    - In the final response, state the browser/viewports checked and any residual risk if verification could not be run.
 
+## Immediate Defect Protocol
+
+If a screenshot, browser check, or user-provided image shows any visible UI defect, stop feature work and fix the visual issue immediately before continuing. This applies even when the build passes.
+
+Common release-blocking defects:
+
+- Text is jammed into numbers, icons, badges, counters, or adjacent controls.
+- Header/status bars compress until labels, logos, metrics, or pause/kill controls touch or overlap.
+- Tabs, filter chips, segmented controls, or buttons wrap into broken rows, lose padding, or look like default browser controls.
+- Cards, rows, bottom navigation, sticky bars, or floating controls overlap content or hide the active workflow.
+- Long labels such as platform names, dates, prices, statuses, command names, or autonomy levels overflow instead of wrapping, truncating, or reflowing intentionally.
+- Mobile screenshots show cramped spacing, inconsistent card widths, clipped content, accidental horizontal scroll, or controls too small to tap comfortably.
+- The screen falls back to raw HTML styling, unstyled form controls, or inconsistent typography after a responsive breakpoint.
+
+Required response to a visible defect:
+
+1. Identify the failing component and viewport.
+2. Fix the layout with constraints, responsive structure, stable control sizing, better wrapping/truncation, or reduced copy.
+3. Re-run the app and capture the affected viewport again.
+4. Do not mark the task complete until the new screenshot no longer shows the defect, or explicitly report why verification is blocked.
+
 ## Required Visual QA
 
 For every UI change, read `references/visual-qa-checklist.md` before final verification. Use it as the acceptance checklist while reviewing screenshots.
+
+When working on dense product tools, admin dashboards, mobile web apps, bottom-tab apps, or autonomous-agent consoles, also apply the checklist's "Dense Mobile App Gate". That gate is mandatory for screens with many controls above the fold.
 
 Skip browser verification only when no runnable UI exists, dependencies cannot be installed or started, or the user explicitly asks for code-only output. If skipped, explain why and provide the best static checks performed.
 

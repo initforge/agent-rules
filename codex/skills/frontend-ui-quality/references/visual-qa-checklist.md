@@ -22,6 +22,33 @@ Check at least:
 - Dense tools keep useful information above the fold instead of using marketing-style empty space.
 - Hero sections, when appropriate, reveal a hint of the next section on mobile and desktop.
 
+## Dense Mobile App Gate
+
+Apply this gate to dashboards, agent consoles, command centers, kanban views, CRM tools, trading desks, admin apps, bottom-tab apps, and any mobile/narrow viewport with many controls above the fold.
+
+Release-blocking failures:
+
+- A top status/header strip contains more items than it can comfortably hold; labels, icons, counters, prices, or pause/kill controls touch, overlap, or become hard to read.
+- Brand marks, logos, and status dots are squeezed into unreadable clusters.
+- Metric text such as "today", counts, costs, percentages, dates, or statuses wraps awkwardly or collides with neighboring controls.
+- Circular or pill controls shrink below a comfortable tap target, clip their text, or dominate the header while other content is cramped.
+- Tabs and filters render as raw browser buttons, broken table-like cells, uneven chip rows, or controls with inconsistent heights.
+- Kanban/card titles run into counts, for example "Draft3" or "Ready1"; counts need spacing, badges, or separate alignment.
+- Cards extend under sticky bottom navigation, workspace toggles, or floating toolbars.
+- Bottom navigation labels/icons overlap page content, have insufficient safe-area padding, or hide the focused card.
+- Dense chips wrap into too many rows without clear grouping, causing the main workflow to start too low or become visually noisy.
+- Any control row requires pinch-zoom to read or tap accurately on a 375px wide viewport.
+
+Preferred fixes:
+
+- Collapse secondary metrics into a menu, popover, detail drawer, or second line with intentional hierarchy.
+- Use grid areas or wrapping groups instead of one long flex row.
+- Give compact controls fixed min sizes, `min-width: 0`, `flex-wrap`, and explicit gaps.
+- Convert crowded text buttons into icon buttons with accessible labels when the icon is familiar.
+- Separate labels and counts with badges, right-aligned metadata, or clear spacing.
+- Add bottom padding equal to sticky navigation height plus safe area.
+- Re-test at 375px width after every fix.
+
 ## Typography
 
 - Heading sizes match the surface: large only for true heroes, smaller inside dashboards, panels, cards, and sidebars.

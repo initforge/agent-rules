@@ -67,7 +67,7 @@ Runtime:
 - Codex
 
 Purpose:
-- Create, review, and rewrite source-grounded project documentation for `README.md`, `README-vi.md`, technical specs, tech stack badges, screenshots, and `/docs/**`.
+- Apply the initforge README/docs house style: short portfolio-ready README, real screenshots when available, numbered linear docs, SPECS-style technical depth, safe cleanup, and CI/CD-aware documentation changes.
 
 Path:
 - `C:\Users\DELL\.codex\skills\docs-style`
@@ -76,29 +76,29 @@ Install/copy:
 - copied with the standard Codex sync into `P:\agent-rules\codex\skills\docs-style`
 
 Verify:
-- `python C:\Users\DELL\.codex\skills\.system\skill-creator\scripts\quick_validate.py C:\Users\DELL\.codex\skills\docs-style`
+- `$env:PYTHONUTF8='1'; python C:\Users\DELL\.codex\skills\.system\skill-creator\scripts\quick_validate.py C:\Users\DELL\.codex\skills\docs-style`
 
 Trigger:
-- README or README-vi rewrite
-- technical specification work
-- source-grounded docs cleanup
-- tech stack badge/table accuracy
-- screenshots in docs
-- architecture, workflow, operations, risk, and roadmap docs
+- create/edit/review/restructure docs under `/docs/**`
+- README/README-vi standardization when the user explicitly asks
+- splitting large `SPECS.md`-style docs into numbered docs
+- docs screenshots and README preview cleanup
+- architecture docs
+- bottleneck docs
+- system docs
+- documentation folder work
 
 Inputs:
-- target repo and documentation files
-- source evidence from manifests, routes, schemas, configs, runtime files, screenshots, and existing docs
+- target files under `/docs/**`
+- repo facts and existing docs
 
 Outputs:
-- rewritten README/README-vi or `/docs/**`
-- deep technical specification
-- verified stack badge/table presentation
-- docs cleanup summary
+- rewritten or newly created `/docs/**` files
+- compact docs change summary
 
 Notes:
-- current quality bar is why-first technical literature, equal to or stronger than `vhdg-conhon/SPECS.md`
-- must not claim full source grounding unless source evidence was actually inspected
+- must not apply to `AGENTS.md`, `CHANGELOG.md`, `.github/**`, `.vscode/**`, or markdown outside `/docs/**` unless explicitly requested
+- README is in scope only when the user asks for README/docs standardization
 - category: self-authored
 
 ### codex-research
@@ -181,6 +181,7 @@ Runtime:
 
 Purpose:
 - Raise implementation and QA bar for frontend UI/UX work.
+- Includes an immediate defect protocol and Dense Mobile App Gate for crowded headers, chips, kanban cards, and bottom navigation defects.
 
 Path:
 - `C:\Users\DELL\.codex\skills\frontend-ui-quality`
@@ -189,7 +190,7 @@ Install/copy:
 - local custom skill; include in Codex sync bundle
 
 Verify:
-- inspect `SKILL.md` and run a frontend task that requires visual QA
+- inspect `SKILL.md`, read `references/visual-qa-checklist.md`, and run a frontend task that requires visual QA
 
 Trigger:
 - frontend screens

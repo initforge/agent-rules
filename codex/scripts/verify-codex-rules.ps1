@@ -27,7 +27,9 @@ $required = @(
   "scripts\resolve-workflow-profile.ps1",
   "scripts\start-codex-phase.ps1",
   "scripts\resolve-plan-profile.ps1",
-  "scripts\start-codex-from-plan.ps1"
+  "scripts\start-codex-from-plan.ps1",
+  "scripts\validate-plan-structure.ps1",
+  "scripts\cleanup-plans.ps1"
 )
 
 Write-Host "== Codex home =="

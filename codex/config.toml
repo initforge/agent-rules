@@ -1,7 +1,7 @@
 model_provider = "openai"
 model = "gpt-5.5"
 review_model = "gpt-5.4"
-model_reasoning_effort = "high"
+model_reasoning_effort = "medium"
 plan_mode_reasoning_effort = "medium"
 model_verbosity = "medium"
 disable_response_storage = false
@@ -10,10 +10,11 @@ web_search = "live"
 windows_wsl_setup_acknowledged = true
 approval_policy = "on-request"
 sandbox_mode = "workspace-write"
-model_context_window = 1000000
-model_auto_compact_token_limit = 850000
-tool_output_token_limit = 12000
+model_context_window = 1_000_000
+model_auto_compact_token_limit = 850_000
+tool_output_token_limit = 12_000
 service_tier = "fast"
+cli_auth_credentials_store = "file"
 
 [sandbox_workspace_write]
 network_access = true
@@ -23,7 +24,6 @@ fast_mode = true
 enable_request_compression = false
 remote_compaction = false
 browser_use = true
-js_repl = false
 
 [windows]
 sandbox = "elevated"
@@ -40,38 +40,25 @@ args = [ "mcp" ]
 
 [mcp_servers.obsidian]
 command = "npx"
-args = [ "-y", "@bitbonsai/mcpvault@latest", "C:\\Users\\DELL\\Documents\\ObsidianVault" ]
+args = [
+  "-y",
+  "@bitbonsai/mcpvault@latest",
+  "C:\\Users\\DELL\\Documents\\ObsidianVault"
+]
 
 [mcp_servers.pencil]
 command = "C:\\Program Files\\Pencil\\resources\\app.asar.unpacked\\out\\mcp-server-windows-x64.exe"
 args = [ "--app", "desktop", "--agent", "codexCLI" ]
 
-[mcp_servers.node_repl]
-args = []
-command = 'C:\Users\DELL\AppData\Local\OpenAI\Codex\bin\3c238e29bbc930ff\node_repl.exe'
-startup_timeout_sec = 120
-
-[mcp_servers.node_repl.env]
-BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
-BROWSER_USE_MARKETPLACE_NAME = "openai-bundled"
-CODEX_CLI_PATH = 'C:\Users\DELL\AppData\Local\OpenAI\Codex\bin\3f4fb8cdd344abc7\codex.exe'
-CODEX_HOME = 'C:\Users\DELL\.codex'
-NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
-NODE_REPL_NODE_MODULE_DIRS = ""
-NODE_REPL_NODE_PATH = 'C:\Users\DELL\AppData\Local\OpenAI\Codex\bin\5b9024f90663758b\node.exe'
-NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "167fdf579477181fba1773c1efb067b00c5a64fe85dafb50a2001bde198dc739"
-NODE_REPL_TRUSTED_CODE_PATHS = 'C:\Users\DELL\.codex'
-NODE_REPL_UNTRUSTED_ENV_ALLOWLIST = "BROWSER_USE_MARKETPLACE_NAME"
-
 [marketplaces.openai-bundled]
-last_updated = "2026-05-23T00:25:57Z"
+last_updated = "2026-05-28T06:54:45Z"
 source_type = "local"
 source = '\\?\C:\Users\DELL\.codex\.tmp\bundled-marketplaces\openai-bundled'
 
 [marketplaces.openai-primary-runtime]
-last_updated = "2026-05-21T22:34:41Z"
+last_updated = "2026-05-26T05:41:57Z"
 source_type = "local"
-source = "\\\\?\\C:\\Users\\DELL\\.cache\\codex-runtimes\\codex-primary-runtime\\plugins\\openai-primary-runtime"
+source = '\\?\C:\Users\DELL\.cache\codex-runtimes\codex-primary-runtime\plugins\openai-primary-runtime'
 
 [projects."p:\\open-claw-setup"]
 trust_level = "trusted"
@@ -106,13 +93,49 @@ trust_level = "trusted"
 [projects."c:\\users\\dell\\documents\\codex\\2026-05-22\\c-p-agent-rules-v-so"]
 trust_level = "trusted"
 
-[projects.'p:\webshop']
+[projects."p:\\webshop"]
 trust_level = "trusted"
 
-[projects.'c:\users\dell\documents\codex\2026-05-23\xu-t-tri-n-khai-h']
+[projects."c:\\users\\dell\\documents\\codex\\2026-05-23\\xu-t-tri-n-khai-h"]
 trust_level = "trusted"
 
-[projects.'p:\fabsolution']
+[projects."p:\\fabsolution"]
+trust_level = "trusted"
+
+[projects."c:\\users\\dell\\documents\\codex\\2026-05-23\\c-i-workflow-m-t-o"]
+trust_level = "trusted"
+
+[projects."c:\\users\\dell\\documents\\codex\\2026-05-23\\leonxlnx-taste-skill-https-github-com"]
+trust_level = "trusted"
+
+[projects."c:\\users\\dell\\documents\\codex\\2026-05-23\\qu-t-x-a-s-ch"]
+trust_level = "trusted"
+
+[projects."c:\\users\\dell\\documents\\codex\\2026-05-24\\initforge-devconnect-https-github-com-initforge"]
+trust_level = "trusted"
+
+[projects."c:\\users\\dell\\documents\\codex\\2026-05-24\\sao-t-c-m-gi-c"]
+trust_level = "trusted"
+
+[projects."c:\\users\\dell\\documents\\codex\\2026-05-24\\m-web-netacad-t-auth-d"]
+trust_level = "trusted"
+
+[projects."p:\\smartai"]
+trust_level = "trusted"
+
+[projects."c:\\users\\dell\\documents\\codex\\2026-05-24\\m-netacade-t-auth-s-n"]
+trust_level = "trusted"
+
+[projects."p:\\internaltools"]
+trust_level = "trusted"
+
+[projects."c:\\users\\dell\\documents\\codex\\2026-05-25\\xem-d-a-c-b-c"]
+trust_level = "trusted"
+
+[projects.'c:\users\dell\documents\codex\2026-05-26\l-nh-n-o-gi-p']
+trust_level = "trusted"
+
+[projects.'c:\users\dell\documents\codex\2026-05-27\sync-h-t-hi-n-t']
 trust_level = "trusted"
 
 [plugins."documents@openai-primary-runtime"]
@@ -127,8 +150,12 @@ enabled = true
 [plugins."build-web-apps@openai-curated"]
 enabled = true
 
-[plugins."chrome@openai-bundled"]
+[plugins."google-drive@openai-curated"]
 enabled = true
 
 [desktop]
 conversationDetailMode = "STEPS_COMMANDS"
+
+[codex_keyring]
+managed_by = "codex-keyring"
+updated_at = "2026-05-25T10:21:26.640Z"

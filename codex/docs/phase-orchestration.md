@@ -13,6 +13,7 @@ This setup adds a practical orchestration layer that chooses the correct phase p
 - plan templates record the intended profile per slice
 - scripts can resolve the correct phase profile automatically
 - scripts can launch Codex with the mapped model and effort
+- implement, bugfix, and review phase launchers validate `plan/` structure before starting Codex
 
 ## What is not native
 
@@ -82,6 +83,26 @@ powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\DELL\.codex\scripts
   -PlanFile plan\feature\01-slice.md `
   -DryRun
 ```
+
+Validate plan structure:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\DELL\.codex\scripts\validate-plan-structure.ps1 `
+  -PlanRoot P:\open-claw-setup\plan
+```
+
+Cleanup old completed plans:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\DELL\.codex\scripts\cleanup-plans.ps1 `
+  -PlanRoot P:\open-claw-setup\plan `
+  -DryRun
+```
+
+Cleanup policy:
+- default cleanup deletes only files with `Status: done` or `Status: obsolete`
+- `-All` is allowed only when the user explicitly asks to delete all plans
+- cleanup prints paths and statuses before deletion
 
 Auto lane selection rules:
 - if `Current phase: review` -> use review lane

@@ -24,6 +24,10 @@ Last updated: <ISO timestamp>
 2. 02-<slice>.md - status: todo - last updated: <ts>
 3. 03-<slice>.md - status: todo - last updated: <ts>
 
+Numbering rule:
+- Keep slice files contiguous: `01`, `02`, `03`, no skipped or sparse numbers.
+- If this plan replaces a large audit or roadmap file, link that source under Shared context and keep execution in these slice files.
+
 ## Dependencies
 - 02 depends on 01.
 - 03 depends on 02.

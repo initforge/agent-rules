@@ -26,15 +26,21 @@ Activate execution when the user says:
    - read relevant `handoff.md`
    - read linked `research/*.md`
    - read linked `review/*.md`
-3. Mark active plan file `Status: doing`.
-4. Implement only the allowed scope.
-5. Run the plan's verification commands.
-6. If verification fails, classify failure before fixing:
+3. Validate the active plan shape before editing:
+   - numbered execution files must use contiguous `01`, `02`, `03` order under a feature folder when the task has multiple slices
+   - do not execute a large multi-domain plan stored as one numbered file
+   - HIGH risk work must have per-slice scope, acceptance criteria, verification contract, red flags, evidence, and iteration log
+   - when a repo has `plan/`, run `C:\Users\DELL\.codex\scripts\validate-plan-structure.ps1 -PlanRoot <repo>\plan` before executing plan-driven work
+   - if the plan shape is invalid, restructure or report `BLOCKED` before implementation
+4. Mark active plan file `Status: doing`.
+5. Implement only the allowed scope.
+6. Run the plan's verification commands.
+7. If verification fails, classify failure before fixing:
    - my code caused it -> fix and retry
    - test, env, or flaky issue -> do not change code blindly; report
    - plan wrong or insufficient -> update plan and stop unless minor amendment
-7. Mark `done` only when acceptance criteria, verification contract, and evidence pass.
-8. Update `00-index.md`, `handoff.md`, and `Iteration log`.
+8. Mark `done` only when acceptance criteria, verification contract, and evidence pass.
+9. Update `00-index.md`, `handoff.md`, and `Iteration log`.
 
 ## Done means verified
 
@@ -62,6 +68,7 @@ If verification cannot be run:
 
 Stop without further auto-fix if:
 
+- active plan shape violates planning rules and cannot be corrected as a minor amendment
 - diff exceeds estimated diff size by about 150%
 - no estimate and diff exceeds 500 changed lines
 - red flag from plan is triggered

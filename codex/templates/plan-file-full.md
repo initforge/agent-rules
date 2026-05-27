@@ -12,6 +12,7 @@ Current phase: plan | research | implement | bugfix | review
 
 ## Goal
 - <Specific outcome for this slice>
+- This file must represent one independently verifiable vertical slice, not a multi-domain roadmap.
 
 ## Context Packet
 - Current behavior:

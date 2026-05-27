@@ -77,6 +77,15 @@ plan/<feature>/
 └─ handoff.md
 ```
 
+Numbering rules:
+- Use strict contiguous two-digit numbering: `00-index.md`, then `01-...md`, `02-...md`, `03-...md`.
+- Do not skip numbers.
+- Do not use sparse numbering such as `10`, `20`, `30`, `35`, or `60` unless the existing project already has that convention and the reason is documented in `00-index.md`.
+- Do not create a single large numbered plan like `60-production-readiness-audit.md` for multi-domain work.
+- If the work has more than 3 independently verifiable vertical slices, create a plan folder with `00-index.md` and one numbered file per slice.
+- If an existing large plan must be kept for historical context, move or treat it as an audit/research note and create a fresh contiguous execution plan from it.
+- To check plan layout mechanically, use `C:\Users\DELL\.codex\scripts\validate-plan-structure.ps1 -PlanRoot <repo>\plan`.
+
 For one small plan:
 
 ```text
@@ -98,8 +107,17 @@ Bad:
 - `02-repository.md`
 - `03-ui.md`
 - `04-tests.md`
+- `60-production-readiness-audit.md` as the only execution plan for Git, secrets, database, CI, infra, API, frontend, and go-live work
 
 Each plan file should be independently verifiable or clearly explain why not.
+
+High-risk and multi-domain work must be split before execution:
+- HIGH risk plans must not be one large execution file when they cover multiple domains.
+- Split by reviewable, independently verifiable vertical slices.
+- Keep audit findings, readiness scoring, and broad roadmap material in `00-index.md`, `research/`, or `review/`.
+- Keep executable work in `01-...md`, `02-...md`, and later slice files.
+- Each slice must have its own scope, acceptance criteria, verification contract, red flags, evidence, and iteration log.
+- A slice should be small enough to mark `done`, `blocked`, or `obsolete` without misrepresenting unrelated work.
 
 ## Locked plan must include
 
@@ -185,6 +203,24 @@ Before ending a turn that touched a plan:
 - update `Last updated:`
 - update `Evidence`
 - update `Iteration log`
+
+## Plan cleanup
+
+Old plans are retained by default.
+
+When the user says to delete plans without saying "delete all" or "xóa hết":
+- record the candidate path and `Status:` first
+- delete only plan files with `Status: done` or `Status: obsolete`
+- keep `todo`, `doing`, `blocked`, and files without a clear status
+- do not delete `research/`, `review/`, `decisions.md`, or `handoff.md` unless the user explicitly includes them
+
+When the user explicitly says "delete all plans", "xóa hết plan", or equivalent:
+- record the plan paths and statuses first
+- delete all requested plan files/folders within the named `plan/` scope
+- still do not delete application code, docs outside `plan/`, or unrelated files
+
+Use `C:\Users\DELL\.codex\scripts\cleanup-plans.ps1 -PlanRoot <repo>\plan -DryRun` before cleanup when possible.
+Use `-All` only when the user explicitly asks to delete all plans.
 
 ## Compact resilience
 

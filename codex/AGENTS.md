@@ -1,4 +1,4 @@
-﻿@C:\Users\DELL\.codex\RTK.md
+@C:\Users\DELL\.codex\RTK.md
 @C:\Users\DELL\.codex\rules\core.md
 @C:\Users\DELL\.codex\rules\planning.md
 @C:\Users\DELL\.codex\rules\execution.md
@@ -8,52 +8,54 @@
 @C:\Users\DELL\.codex\rules\clean-code.md
 @C:\Users\DELL\.codex\rules\codex-overlay.md
 
-# Bá»™ Náº¡p Runtime Codex
+# Bộ Nạp Runtime Codex
 
-File nÃ y lÃ  Ä‘iá»ƒm vÃ o global cho Codex.
+File này là điểm vào global cho Codex.
 
-## Nguá»“n Runtime
+## Nguồn Runtime
 
-DÃ¹ng file local dÆ°á»›i:
+Dùng file local dưới:
 
 ```text
 C:\Users\DELL\.codex\
 ```
 
-KhÃ´ng phá»¥ thuá»™c vÃ o `P:\agent-rules` khi lÃ m viá»‡c háº±ng ngÃ y.
+Không phụ thuộc vào `P:\agent-rules` khi làm việc hằng ngày.
 
-`P:\agent-rules` chá»‰ dÃ¹ng cho:
+`P:\agent-rules` chỉ dùng cho:
 - backup
 - sync
-- bootstrap mÃ¡y má»›i
-- chia sáº» rule vá»›i agent/tool khÃ¡c
-- lÆ°u tÃ i liá»‡u setup dÃ i
+- bootstrap máy mới
+- chia sẻ rule với agent/tool khác
+- lưu tài liệu setup dài
 
-## Quy Táº¯c NgÃ´n Ngá»¯
+## Quy Tắc Ngôn Ngữ
 
-- Giao tiáº¿p vá»›i ngÆ°á»i dÃ¹ng báº±ng tiáº¿ng Viá»‡t cÃ³ dáº¥u Ä‘áº§y Ä‘á»§.
-- KhÃ´ng dÃ¹ng tiáº¿ng Viá»‡t khÃ´ng dáº¥u.
-- KhÃ´ng dÃ¹ng tiáº¿ng Anh náº¿u cÃ³ cÃ¡ch nÃ³i tiáº¿ng Viá»‡t tá»± nhiÃªn.
-- Giá»¯ tiáº¿ng Anh cho thuáº­t ngá»¯ ká»¹ thuáº­t, tÃªn model, lá»‡nh, Ä‘Æ°á»ng dáº«n, API, package, schema key, tÃªn tool, tÃªn sáº£n pháº©m vÃ  mÃ£ nguá»“n.
+- Giao tiếp với người dùng bằng tiếng Việt có dấu đầy đủ.
+- Không dùng tiếng Việt không dấu.
+- Không dùng tiếng Anh nếu có cách nói tiếng Việt tự nhiên.
+- Giữ tiếng Anh cho thuật ngữ kỹ thuật, tên model, lệnh, đường dẫn, API, package, schema key, tên tool, tên sản phẩm và mã nguồn.
 
-## TÃ³m Táº¯t Váº­n HÃ nh
+## Tóm Tắt Vận Hành
 
-Task nhá» rÃµ rÃ ng -> sá»­a trá»±c tiáº¿p + verify tá»‘i thiá»ƒu.
+Task nhỏ rõ ràng -> sửa trực tiếp + verify tối thiểu.
 
-Task vá»«a -> Ä‘á»c ngá»¯ cáº£nh + láº­p plan khi cÃ³ nhiá»u lÃ¡t cáº¯t + triá»ƒn khai + verify.
+Task vừa -> đọc ngữ cảnh + lập plan khi có nhiều lát cắt + triển khai + verify.
 
-Task rá»§i ro cao -> locked plan + risk register + reviewer gate + verify sÃ¢u.
+Task rủi ro cao -> locked plan + risk register + reviewer gate + verify sâu.
 
-`Codex Research` -> lá»›p nghiÃªn cá»©u chÃ­nh; ghi note vÃ o `plan/<feature>/research/` hoáº·c `plan/<feature>/review/`.
+HIGH risk hoặc multi-domain -> phải băm thành `plan/<feature>/00-index.md` và các slice liên tục `01-...md`, `02-...md`, `03-...md`; không dùng mega-plan hoặc số nhảy như `30`, `35`, `60` nếu không có convention được ghi rõ.
 
-`GitNexus` -> cÃ´ng cá»¥ context/impact cÃ³ kiá»ƒm soÃ¡t, khÃ´ng tá»± index má»—i lÆ°á»£t.
+`Codex Research` -> lớp nghiên cứu chính; ghi note vào `plan/<feature>/research/` hoặc `plan/<feature>/review/`.
 
-`RTK` -> lá»›p nÃ©n lá»‡nh; PowerShell cmdlet cáº§n `rtk proxy powershell`.
+`GitNexus` -> công cụ context/impact có kiểm soát, không tự index mỗi lượt.
 
-Skill/MCP/tool -> ghi inventory vÃ  tÃ i liá»‡u dÆ°á»›i `.codex\docs` vÃ  `.codex\inventory`.
+`RTK` -> lớp nén lệnh; PowerShell cmdlet cần `rtk proxy powershell`.
 
-Tráº¡ng thÃ¡i cuá»‘i pháº£i lÃ  `PASS`, `PARTIAL`, hoáº·c `BLOCKED`.
+Skill/MCP/tool -> ghi inventory và tài liệu dưới `.codex\docs` và `.codex\inventory`.
 
-## Quy Táº¯c Cá»©ng
+Trạng thái cuối phải là `PASS`, `PARTIAL`, hoặc `BLOCKED`.
 
-Codex lÃ  chá»§ sá»Ÿ há»¯u triá»ƒn khai cuá»‘i cÃ¹ng.
+## Quy Tắc Cứng
+
+Codex là chủ sở hữu triển khai cuối cùng.

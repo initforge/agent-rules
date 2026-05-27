@@ -21,6 +21,22 @@ A good result must also look organized on GitHub. Documentation is not only text
 
 The highest bar is "why-first technical literature": every major section should answer why the system exists, why the design is shaped this way, what breaks when assumptions fail, and how a maintainer should think before changing it.
 
+## 1.1 Enforcement Standard
+
+Treat documentation work as implementation work. A docs rewrite is not done when files have been edited; it is done when the written system model is defensible against source, runtime behavior, and GitHub rendering.
+
+Required enforcement:
+
+- Write only after source study. If source study is incomplete, say what was not inspected instead of implying full understanding.
+- Prefer one strong technical spec over many thin files. Split only when each file carries a distinct reader job.
+- When current code contains old providers, old folders, copied configs, or partially deleted features, document the active path first and legacy traces second.
+- If screenshots are requested, verify the image file locally and ensure the Markdown path will render on GitHub.
+- If badges are used, verify every badge is active stack. Dependencies alone are not evidence.
+- If a repo is a profile, rules repo, demo, or library, adapt the shape. Do not force product-app docs onto a non-product repo.
+- Do not stop at "what". Every important section needs a "why", a failure mode, and a maintainer implication.
+
+The strongest docs create confidence through specificity: a reader should understand not only what exists, but why the system would fail if a key boundary, transaction, provider, or operational assumption is handled casually.
+
 ## 2. Repository Classification
 
 Classify first. The documentation shape follows the project type.

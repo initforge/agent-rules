@@ -52,6 +52,8 @@ Examples:
 
 Behavior:
 - locked plan required before edit
+- locked plan must be split into contiguous vertical-slice files when the work spans more than one domain
+- do not execute a single large HIGH risk plan file that mixes audit, roadmap, and implementation work
 - Risk Register required
 - Verification Contract required
 - reviewer gate required
@@ -166,6 +168,13 @@ Every MEDIUM or HIGH plan must identify:
 - planned risks
 - existing risks
 - emergent risks
+
+Every HIGH plan must also identify:
+
+- execution slices and their order
+- what can be marked `done` independently
+- what requires user approval before the next slice
+- stop conditions that block the whole release versus only the current slice
 
 ## Evidence requirement
 
