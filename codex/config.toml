@@ -1,7 +1,7 @@
 model_provider = "openai"
 model = "gpt-5.5"
 review_model = "gpt-5.4"
-model_reasoning_effort = "medium"
+model_reasoning_effort = "high"
 plan_mode_reasoning_effort = "medium"
 model_verbosity = "medium"
 disable_response_storage = false
@@ -35,23 +35,15 @@ sandbox = "elevated"
 fast_default_opt_out = true
 
 [mcp_servers.gitnexus]
-command = "C:\\Users\\DELL\\AppData\\Roaming\\npm\\gitnexus"
-args = [ "mcp" ]
-
-[mcp_servers.obsidian]
-command = "npx"
-args = [
-  "-y",
-  "@bitbonsai/mcpvault@latest",
-  "C:\\Users\\DELL\\Documents\\ObsidianVault"
-]
+command = 'C:\Users\DELL\AppData\Roaming\npm\gitnexus'
+args = ["mcp"]
 
 [mcp_servers.pencil]
-command = "C:\\Program Files\\Pencil\\resources\\app.asar.unpacked\\out\\mcp-server-windows-x64.exe"
-args = [ "--app", "desktop", "--agent", "codexCLI" ]
+command = 'C:\Program Files\Pencil\resources\app.asar.unpacked\out\mcp-server-windows-x64.exe'
+args = ["--app", "desktop", "--agent", "codexCLI"]
 
 [marketplaces.openai-bundled]
-last_updated = "2026-05-28T06:54:45Z"
+last_updated = "2026-05-28T23:58:06Z"
 source_type = "local"
 source = '\\?\C:\Users\DELL\.codex\.tmp\bundled-marketplaces\openai-bundled'
 
@@ -136,6 +128,12 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects.'c:\users\dell\documents\codex\2026-05-27\sync-h-t-hi-n-t']
+trust_level = "trusted"
+
+[projects.'p:\hienchina']
+trust_level = "trusted"
+
+[projects.'c:\users\dell\documents\codex\2026-05-28\pnpm-store-c-a-th-m']
 trust_level = "trusted"
 
 [plugins."documents@openai-primary-runtime"]

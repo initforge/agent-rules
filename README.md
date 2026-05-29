@@ -9,7 +9,7 @@
 
 `agent-rules` is the portable operating bundle for Codex: rules, agent profiles, skills, templates, scripts, and inventory snapshots. Its core purpose is not storing prompts; it keeps a reproducible working contract for planning, research, implementation, review, tool inventory, and machine bootstrap.
 
-Daily work uses `C:\Users\DELL\.codex`. The `P:\agent-rules\codex` copy is the backup/bootstrap layer used for restore, sync, and sharing with other local agents.
+Daily work uses `C:\Users\DELL\.codex`. The `P:\agent-rules\codex` copy is the backup/bootstrap layer used for restore, sync, and sharing with other local agents. Local agent ecosystem skills such as Caveman and Cavecrew are backed up separately under `P:\agent-rules\agents-skills`.
 
 ## Main Areas
 
@@ -19,6 +19,7 @@ Daily work uses `C:\Users\DELL\.codex`. The `P:\agent-rules\codex` copy is the b
 | `codex/rules/` | Core, planning, execution, quality, context, and inventory rules |
 | `codex/agents/` | TOML profiles for planner, researcher, implementer, reviewer, and bugfixer |
 | `codex/skills/` | Local and bundled skills |
+| `agents-skills/` | Backup of `C:\Users\DELL\.agents\skills`, including Caveman, Cavecrew, and GitNexus helper skills |
 | `codex/scripts/` | Sync, bootstrap, inventory, and phase orchestration scripts |
 | `codex/docs/` | Runtime registries and setup docs copied into `.codex/docs` |
 | `codex/templates/` | Plan, research, review, handoff, and final report templates |

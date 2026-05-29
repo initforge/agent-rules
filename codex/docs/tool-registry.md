@@ -60,6 +60,9 @@ Codex usage:
 Purpose:
 - Command compression / token-saving wrapper.
 
+Source:
+- https://github.com/rtk-ai/rtk
+
 Verify:
 - `rtk --version`
 - `rtk gain`
@@ -72,6 +75,9 @@ Codex usage:
 
 Purpose:
 - Code graph / impact analysis / symbol context.
+
+Source:
+- https://github.com/nxpatterns/gitnexus
 
 Verify:
 - `npx gitnexus --help`

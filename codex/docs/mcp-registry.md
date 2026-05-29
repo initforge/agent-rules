@@ -56,6 +56,9 @@ Fallback:
 Purpose:
 - Code graph / impact analysis if configured.
 
+Source:
+- https://github.com/nxpatterns/gitnexus
+
 Install/Add:
 - Binary present via npm global install:
   - `C:\Users\DELL\AppData\Roaming\npm\gitnexus.cmd`
@@ -84,37 +87,6 @@ Current machine note:
 - indexing is now verified on at least two local repos
 - current Codex MCP session may still be stale until the session or MCP server is restarted
 - when multiple repos are indexed, repo-qualified queries are required
-
-### Obsidian MCP
-
-Purpose:
-- Read and write notes in `C:\Users\DELL\Documents\ObsidianVault`.
-
-Install/Add:
-- Uses `npx` package:
-  - `@bitbonsai/mcpvault@latest`
-
-Config TOML:
-
-```toml
-[mcp_servers.obsidian]
-command = "npx"
-args = [ "-y", "@bitbonsai/mcpvault@latest", "C:\\Users\\DELL\\Documents\\ObsidianVault" ]
-```
-
-Verify:
-- `codex mcp list`
-
-Secrets:
-- none required in current config
-
-Usage:
-- note lookup
-- vault search
-- note patching and structured note maintenance
-
-Fallback:
-- local file access outside MCP if the vault is directly reachable and the task does not require vault-specific APIs
 
 ### Pencil MCP
 

@@ -38,6 +38,7 @@ Current self-authored skills:
 
 Separate local agent ecosystem:
 - `C:\Users\DELL\.agents\skills`
+- backup copy: `P:\agent-rules\agents-skills`
 
 Current self-authored ecosystem examples:
 - `caveman*`

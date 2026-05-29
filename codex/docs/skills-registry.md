@@ -234,20 +234,27 @@ Runtime:
 Purpose:
 - compressed communication, compressed delegation, and GitNexus-specific helper workflows
 
+Sources:
+- Caveman: https://github.com/JuliusBrussee/caveman
+- GitNexus: https://github.com/nxpatterns/gitnexus
+
 Path:
 - `C:\Users\DELL\.agents\skills\`
+- backup copy: `P:\agent-rules\agents-skills\`
 
 Install/copy:
-- maintain separately from `C:\Users\DELL\.codex\skills`
+- copy from `C:\Users\DELL\.agents\skills` to `P:\agent-rules\agents-skills`
 
 Verify:
 - inspect corresponding `SKILL.md` files
+- `Get-ChildItem C:\Users\DELL\.agents\skills -Directory`
 
 Trigger:
 - explicit user requests or system rules that reference those skills
 
 Notes:
 - these are local authored skills, but they are not stored inside the main Codex runtime folder
+- Caveman is installed and discoverable from `.agents\skills`; it is not a default always-on response mode unless a user or rule triggers it
 
 ### Vendor-installed local skills
 
