@@ -99,6 +99,13 @@ Every full table should have:
 
 Ask for a sample SQL/table when the "hàm index" convention is not clear.
 
+Hard owner-feedback gate:
+
+- App table `id` must be `int8` and auto-incrementing, using identity/bigserial in Supabase/PostgreSQL.
+- Do not use `uuid` or `text` as primary key for normal app tables unless a sheet/owner explicitly confirms the exception.
+- Foreign keys to app tables must match `int8`.
+- Verify schema with `information_schema.columns` after migration.
+
 ## Auth And Permissions
 
 - Login uses fake email: user enters `admin`, app uses `admin@gmail.com`.
@@ -106,6 +113,8 @@ Ask for a sample SQL/table when the "hàm index" convention is not clear.
 - Default account: username `admin`, password `5fedu.com`.
 - Employee module fields should stay lean: `id`, `ho_va_ten`, `avatar`, `trang_thai`, `id_phong_ban`, `id_chuc_vu`, `so_dien_thoai`, `email`, `ten_dang_nhap`.
 - Creating or renaming `ten_dang_nhap` should create/delete a Supabase Auth account as `<ten_dang_nhap>@gmail.com` with default password `123456`, only after the secure implementation path is confirmed.
+- Login must use `ten_dang_nhap`, not `ma_nhan_vien`.
+- Employee create/update/delete of `ten_dang_nhap` must sync Supabase Auth through a server/admin path; never put service role in frontend.
 - Permissions are app-controlled by default for business data unless the user asks for Supabase RLS enforcement.
 - Module key stored in Supabase should be the module slug only, for example `nhan-vien`, not `he-thong/nhan-vien`.
 

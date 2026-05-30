@@ -13,7 +13,7 @@ Do not require the user to call `/5fedu` for ordinary implementation. In a repo 
 First:
 1. Read `AGENTS.md`.
 2. If `AGENTS.md` or `.codex/5fedu/` is missing, scaffold the project-local context from `C:\Users\ADMIN\.codex\skills\5fedu-project\assets\project-context`.
-3. If context exists, follow the loading policy in `AGENTS.md`: always read `.codex/5fedu/00-index.md`, `.codex/5fedu/06-decision-status.md`, and `.codex/5fedu/questions.md`; read other files only when relevant to the requested work. Read `.codex/5fedu/07-working-format.md` when the request is about default format/how-to.
+3. If context exists, follow the loading policy in `AGENTS.md`: always read `.codex/5fedu/00-index.md`, `.codex/5fedu/06-decision-status.md`, and `.codex/5fedu/questions.md`; read other files only when relevant to the requested work. Read `.codex/5fedu/07-working-format.md` when the request is about default format/how-to. When the work touches database, auth, employee, migration, seed, or Supabase Auth sync, also read `.codex/5fedu/10-owner-feedback-lessons.md`.
 4. Summarize what is `DA_CHOT`, `CHUA_CHOT`, and `CAN_HOI_THEM` for the requested work.
 5. Ask the minimum clear questions needed to chốt the current slice.
 
@@ -23,3 +23,4 @@ Rules:
 - Do not guess module mapping, credentials, database schema, auth behavior, permissions, or screen flow.
 - Do not store secret values.
 - If the user asks to implement auth/database/permissions, create a locked HIGH-risk plan first.
+- Never repeat the known 5fedu owner-feedback mistakes: app table ids must be `int8` auto-increment, employee tables must stay lean, login uses `ten_dang_nhap` not `ma_nhan_vien`, and username create/update/delete syncs Supabase Auth through a server/admin path.

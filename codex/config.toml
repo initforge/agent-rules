@@ -7,7 +7,7 @@ source_type = "local"
 source = '\\?\C:\Users\ADMIN\.codex\.tmp\bundled-marketplaces\openai-bundled'
 
 [marketplaces.openai-primary-runtime]
-last_updated = "2026-05-30T10:57:52Z"
+last_updated = "2026-05-30T11:30:41Z"
 source_type = "local"
 source = '\\?\C:\Users\ADMIN\.cache\codex-runtimes\codex-primary-runtime\plugins\openai-primary-runtime'
 
@@ -53,6 +53,7 @@ global = "antigravity"
 
 [desktop.open-in-target-preferences.perPath]
 'P:\Fabsolution' = "antigravity"
+'P:\tah-app-5f' = "antigravity"
 
 [windows]
 sandbox = "elevated"

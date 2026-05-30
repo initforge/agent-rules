@@ -37,6 +37,7 @@ AGENTS.md
 |- 07-working-format.md
 |- 08-source-examples.md
 |- 09-coverage-audit.md
+|- 10-owner-feedback-lessons.md
 `- questions.md
 ```
 
@@ -45,6 +46,7 @@ Treat `06-decision-status.md` as the source of truth for what is confirmed, unco
 Treat `07-working-format.md` as the source of truth for default 5fedu format/how-to when concrete app-specific values are not yet confirmed.
 Treat `08-source-examples.md` as concrete examples extracted from the original prompt/images; use it to infer style, not to replace app-specific confirmation.
 Use `09-coverage-audit.md` to verify whether the current context covers the original 5fedu prompt and to avoid losing requirements during future updates.
+Use `10-owner-feedback-lessons.md` as a hard gate for repeated owner feedback: database ids must be `int8` auto-increment, employee tables must stay lean, login must use `ten_dang_nhap`, and username create/update/delete must sync Supabase Auth through a server/admin path.
 
 ## Implementation Discipline
 
@@ -57,3 +59,4 @@ Use `09-coverage-audit.md` to verify whether the current context covers the orig
 - End delivery with verification evidence and a Supabase Egress + Vercel Edge Function optimization reminder/plan when the app is near completion.
 - Before implementation, read `06-decision-status.md`; do not implement any area marked `CHUA_CHOT` or `CAN_HOI_THEM` until the user confirms it.
 - If a concrete value is unconfirmed, still follow the format/how-to in `07-working-format.md`; ask only for the missing value.
+- Before database/auth/employee/migration/seed work, read `10-owner-feedback-lessons.md`; stop if the code/schema uses text/uuid ids, HR-style extra employee fields, `ma_nhan_vien` login, or frontend-only service role auth.

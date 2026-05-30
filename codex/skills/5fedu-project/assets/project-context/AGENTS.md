@@ -20,6 +20,7 @@ Người dùng không cần gọi `/5fedu` để cấp context mỗi lần làm 
 - `.codex/5fedu/07-working-format.md`: khi cần hiểu format/cách làm mặc định của 5fedu cho app, template, credentials, database, permission, hoặc khi một dữ kiện cụ thể chưa chốt.
 - `.codex/5fedu/08-source-examples.md`: khi cần ví dụ cụ thể đã rút từ ảnh/spec ban đầu để tự suy luận đúng kiểu 5fedu.
 - `.codex/5fedu/09-coverage-audit.md`: khi cần kiểm tra rule/context hiện đã phủ các yêu cầu gốc nào và còn chỗ nào cần chốt.
+- `.codex/5fedu/10-owner-feedback-lessons.md`: bắt buộc đọc khi làm database, auth, bảng nhân viên, migration, seed, service hoặc UI form liên quan.
 
 ## Quy tắc cứng
 

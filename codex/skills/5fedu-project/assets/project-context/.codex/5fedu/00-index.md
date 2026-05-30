@@ -13,6 +13,7 @@ Người dùng không cần gọi `/5fedu` để cấp context mỗi lần. `/5f
 - Khi bắt đầu task, mapping theo chuỗi: spec -> domain/submenu -> module -> view/tab -> route -> source path -> database table -> service/handler.
 - Với auth, permission, database, credentials, migration hoặc tài khoản người dùng: coi là HIGH risk, lập locked plan trước khi sửa.
 - Không lưu secret thật vào file. Chỉ lưu tên biến môi trường và checklist xác thực.
+- Trước database/auth/bảng nhân viên/migration/seed, đọc `10-owner-feedback-lessons.md` để chặn các lỗi đã bị owner phản hồi: `id int8` tự tăng, bảng nhân viên tối giản, login theo `ten_dang_nhap`, và Supabase Auth sync qua server/admin path.
 
 ## Nguồn cần nhớ
 
