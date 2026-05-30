@@ -1,4 +1,4 @@
-# Profile Matrix
+﻿# Profile Matrix
 
 ## Purpose
 
@@ -38,7 +38,7 @@ This keeps profile selection visible inside the markdown artifact, not only in t
 ## Orchestration helpers
 
 Use:
-- `C:\Users\DELL\.codex\scripts\resolve-workflow-profile.ps1`
-- `C:\Users\DELL\.codex\scripts\start-codex-phase.ps1`
+- `C:\Users\ADMIN\.codex\scripts\resolve-workflow-profile.ps1`
+- `C:\Users\ADMIN\.codex\scripts\start-codex-phase.ps1`
 
 These scripts make the profile map executable instead of purely documentary.

@@ -11,7 +11,7 @@ P:\agent-rules\codex
 into:
 
 ```text
-C:\Users\DELL\.codex
+C:\Users\ADMIN\.codex
 ```
 
 ## Steps

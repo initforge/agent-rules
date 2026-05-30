@@ -1,94 +1,94 @@
-# Quy Tắc Lõi Khi Chạy Codex
+# Quy Táº¯c LÃµi Khi Cháº¡y Codex
 
-## Kích Hoạt
+## KÃ­ch Hoáº¡t
 
-Luôn áp dụng.
+LuÃ´n Ã¡p dá»¥ng.
 
-## Mục Đích
+## Má»¥c ÄÃ­ch
 
-Định nghĩa hành vi nền cho mọi việc lập trình, sửa lỗi, nghiên cứu, lập kế hoạch và rà soát bằng Codex.
+Äá»‹nh nghÄ©a hÃ nh vi ná»n cho má»i viá»‡c láº­p trÃ¬nh, sá»­a lá»—i, nghiÃªn cá»©u, láº­p káº¿ hoáº¡ch vÃ  rÃ  soÃ¡t báº±ng Codex.
 
-## Ngôn Ngữ
+## NgÃ´n Ngá»¯
 
-- Trả lời người dùng bằng tiếng Việt có dấu đầy đủ theo mặc định.
-- Không viết tiếng Việt không dấu như `tieng Viet khong dau`, trừ khi người dùng yêu cầu rõ văn bản ASCII-only hoặc file đích đã có quy ước ASCII-only thật.
-- Khi chỉnh nội dung tiếng Việt đang có sẵn, phải giữ dấu tiếng Việt.
-- Không dùng tiếng Anh trong câu trả lời hoặc tài liệu vận hành nếu có thể viết tự nhiên bằng tiếng Việt.
-- Được giữ tiếng Anh cho thuật ngữ kỹ thuật, tên model, tên lệnh, đường dẫn, API, package, schema key, mã nguồn, tên file, tên tool, tên giao thức, tên sản phẩm và trích dẫn nguyên văn.
-- Nếu một thuật ngữ tiếng Anh có thể làm người đọc không chuyên bị kẹt, thêm giải thích tiếng Việt ngắn ở lần xuất hiện đầu.
-- Cập nhật thường ngày và báo cáo cuối nên gọn, ít filler.
-- Chỉ mở rộng khi debug, kiến trúc, thay đổi rủi ro, nhập nhằng hoặc lập kế hoạch cần độ rõ cao.
+- Tráº£ lá»i ngÆ°á»i dÃ¹ng báº±ng tiáº¿ng Viá»‡t cÃ³ dáº¥u Ä‘áº§y Ä‘á»§ theo máº·c Ä‘á»‹nh.
+- KhÃ´ng viáº¿t tiáº¿ng Viá»‡t khÃ´ng dáº¥u nhÆ° `tieng Viet khong dau`, trá»« khi ngÆ°á»i dÃ¹ng yÃªu cáº§u rÃµ vÄƒn báº£n ASCII-only hoáº·c file Ä‘Ã­ch Ä‘Ã£ cÃ³ quy Æ°á»›c ASCII-only tháº­t.
+- Khi chá»‰nh ná»™i dung tiáº¿ng Viá»‡t Ä‘ang cÃ³ sáºµn, pháº£i giá»¯ dáº¥u tiáº¿ng Viá»‡t.
+- KhÃ´ng dÃ¹ng tiáº¿ng Anh trong cÃ¢u tráº£ lá»i hoáº·c tÃ i liá»‡u váº­n hÃ nh náº¿u cÃ³ thá»ƒ viáº¿t tá»± nhiÃªn báº±ng tiáº¿ng Viá»‡t.
+- ÄÆ°á»£c giá»¯ tiáº¿ng Anh cho thuáº­t ngá»¯ ká»¹ thuáº­t, tÃªn model, tÃªn lá»‡nh, Ä‘Æ°á»ng dáº«n, API, package, schema key, mÃ£ nguá»“n, tÃªn file, tÃªn tool, tÃªn giao thá»©c, tÃªn sáº£n pháº©m vÃ  trÃ­ch dáº«n nguyÃªn vÄƒn.
+- Náº¿u má»™t thuáº­t ngá»¯ tiáº¿ng Anh cÃ³ thá»ƒ lÃ m ngÆ°á»i Ä‘á»c khÃ´ng chuyÃªn bá»‹ káº¹t, thÃªm giáº£i thÃ­ch tiáº¿ng Viá»‡t ngáº¯n á»Ÿ láº§n xuáº¥t hiá»‡n Ä‘áº§u.
+- Cáº­p nháº­t thÆ°á»ng ngÃ y vÃ  bÃ¡o cÃ¡o cuá»‘i nÃªn gá»n, Ã­t filler.
+- Chá»‰ má»Ÿ rá»™ng khi debug, kiáº¿n trÃºc, thay Ä‘á»•i rá»§i ro, nháº­p nháº±ng hoáº·c láº­p káº¿ hoáº¡ch cáº§n Ä‘á»™ rÃµ cao.
 
-## Hợp Đồng Thực Thi
+## Há»£p Äá»“ng Thá»±c Thi
 
-Khi người dùng yêu cầu triển khai, sửa lỗi, refactor, tạo mới, migrate hoặc thay đổi code:
+Khi ngÆ°á»i dÃ¹ng yÃªu cáº§u triá»ƒn khai, sá»­a lá»—i, refactor, táº¡o má»›i, migrate hoáº·c thay Ä‘á»•i code:
 
-1. Đọc ngữ cảnh code trước.
-2. Kiểm tra có thư mục `plan/` không.
-3. Nếu có `plan/`, đọc `plan/00-index.md` nếu tồn tại, rồi đọc file kế hoạch đang hoạt động.
-4. Trước khi sửa code theo plan, kiểm tra plan có đúng cấu trúc, số thứ tự liên tục và đúng mức băm nhỏ theo vertical slice không.
-5. Không execute một mega-plan HIGH risk hoặc multi-domain nếu nó chưa được tách thành các slice có thể verify riêng.
-6. Không dừng ở đề xuất nếu người dùng không yêu cầu chỉ thảo luận hoặc lập kế hoạch.
-7. Không tự commit.
-8. Không tự push.
-9. Không force-push.
-10. Không bỏ qua hook nếu chưa được phép rõ.
-11. Không revert thay đổi của người dùng nếu chưa được yêu cầu rõ.
-12. Giữ diff nhỏ.
-13. Báo rõ trước khi mở rộng phạm vi.
-14. Verify trước khi nói xong.
+1. Äá»c ngá»¯ cáº£nh code trÆ°á»›c.
+2. Kiá»ƒm tra cÃ³ thÆ° má»¥c `plan/` khÃ´ng.
+3. Náº¿u cÃ³ `plan/`, Ä‘á»c `plan/00-index.md` náº¿u tá»“n táº¡i, rá»“i Ä‘á»c file káº¿ hoáº¡ch Ä‘ang hoáº¡t Ä‘á»™ng.
+4. TrÆ°á»›c khi sá»­a code theo plan, kiá»ƒm tra plan cÃ³ Ä‘Ãºng cáº¥u trÃºc, sá»‘ thá»© tá»± liÃªn tá»¥c vÃ  Ä‘Ãºng má»©c bÄƒm nhá» theo vertical slice khÃ´ng.
+5. KhÃ´ng execute má»™t mega-plan HIGH risk hoáº·c multi-domain náº¿u nÃ³ chÆ°a Ä‘Æ°á»£c tÃ¡ch thÃ nh cÃ¡c slice cÃ³ thá»ƒ verify riÃªng.
+6. KhÃ´ng dá»«ng á»Ÿ Ä‘á» xuáº¥t náº¿u ngÆ°á»i dÃ¹ng khÃ´ng yÃªu cáº§u chá»‰ tháº£o luáº­n hoáº·c láº­p káº¿ hoáº¡ch.
+7. KhÃ´ng tá»± commit.
+8. KhÃ´ng tá»± push.
+9. KhÃ´ng force-push.
+10. KhÃ´ng bá» qua hook náº¿u chÆ°a Ä‘Æ°á»£c phÃ©p rÃµ.
+11. KhÃ´ng revert thay Ä‘á»•i cá»§a ngÆ°á»i dÃ¹ng náº¿u chÆ°a Ä‘Æ°á»£c yÃªu cáº§u rÃµ.
+12. Giá»¯ diff nhá».
+13. BÃ¡o rÃµ trÆ°á»›c khi má»Ÿ rá»™ng pháº¡m vi.
+14. Verify trÆ°á»›c khi nÃ³i xong.
 
-## Quy Tắc Skill Docs
+## Quy Táº¯c Skill Docs
 
-Khi đường dẫn đích nằm dưới `/docs/**`, dùng skill `docs-style`.
+Khi Ä‘Æ°á»ng dáº«n Ä‘Ã­ch náº±m dÆ°á»›i `/docs/**`, dÃ¹ng skill `docs-style`.
 
-Không áp dụng skill đó cho `README.md`, `AGENTS.md`, `CHANGELOG.md` hoặc markdown ngoài `/docs/**` nếu người dùng không yêu cầu rõ.
+KhÃ´ng Ã¡p dá»¥ng skill Ä‘Ã³ cho `README.md`, `AGENTS.md`, `CHANGELOG.md` hoáº·c markdown ngoÃ i `/docs/**` náº¿u ngÆ°á»i dÃ¹ng khÃ´ng yÃªu cáº§u rÃµ.
 
-## Quy Tắc Codex Research
+## Quy Táº¯c Codex Research
 
-Dùng skill `codex-research` khi task chủ yếu là nghiên cứu, so sánh lựa chọn, đọc tài liệu nền tảng, đọc changelog, hoặc khi sửa bug bị kẹt và cần bằng chứng trước khi thử cách sửa tiếp theo.
+DÃ¹ng skill `codex-research` khi task chá»§ yáº¿u lÃ  nghiÃªn cá»©u, so sÃ¡nh lá»±a chá»n, Ä‘á»c tÃ i liá»‡u ná»n táº£ng, Ä‘á»c changelog, hoáº·c khi sá»­a bug bá»‹ káº¹t vÃ  cáº§n báº±ng chá»©ng trÆ°á»›c khi thá»­ cÃ¡ch sá»­a tiáº¿p theo.
 
-## Cách Ghi Tham Chiếu
+## CÃ¡ch Ghi Tham Chiáº¿u
 
-- Kế hoạch và ghi chú dài hạn: dùng `path:symbol` hoặc `path/dir`.
-- Nhận xét review và bug cần chính xác: dùng `path:line`.
-- Không dùng `path:line` trong plan dài hạn trừ khi đó là bằng chứng tạm thời.
+- Káº¿ hoáº¡ch vÃ  ghi chÃº dÃ i háº¡n: dÃ¹ng `path:symbol` hoáº·c `path/dir`.
+- Nháº­n xÃ©t review vÃ  bug cáº§n chÃ­nh xÃ¡c: dÃ¹ng `path:line`.
+- KhÃ´ng dÃ¹ng `path:line` trong plan dÃ i háº¡n trá»« khi Ä‘Ã³ lÃ  báº±ng chá»©ng táº¡m thá»i.
 
-## Máy Trạng Thái Mặc Định
+## MÃ¡y Tráº¡ng ThÃ¡i Máº·c Äá»‹nh
 
 ```text
 REQUEST
--> phân loại rủi ro
--> chọn workflow
--> đọc ngữ cảnh mục tiêu
--> lập plan nếu cần
--> kiểm tra plan shape nếu có plan
--> triển khai nếu được phép
+-> phÃ¢n loáº¡i rá»§i ro
+-> chá»n workflow
+-> Ä‘á»c ngá»¯ cáº£nh má»¥c tiÃªu
+-> láº­p plan náº¿u cáº§n
+-> kiá»ƒm tra plan shape náº¿u cÃ³ plan
+-> triá»ƒn khai náº¿u Ä‘Æ°á»£c phÃ©p
 -> verify
--> review nếu cần
--> ghi bằng chứng/ghi chú
--> báo cáo PASS/PARTIAL/BLOCKED
+-> review náº¿u cáº§n
+-> ghi báº±ng chá»©ng/ghi chÃº
+-> bÃ¡o cÃ¡o PASS/PARTIAL/BLOCKED
 ```
 
-## Nguồn Runtime
+## Nguá»“n Runtime
 
-Nguồn runtime:
+Nguá»“n runtime:
 
 ```text
-C:\Users\DELL\.codex
+C:\Users\ADMIN\.codex
 ```
 
-Bản sync và bootstrap:
+Báº£n sync vÃ  bootstrap:
 
 ```text
 P:\agent-rules\codex
 ```
 
-Không bắt buộc `P:\agent-rules` phải tồn tại trong công việc Codex hằng ngày.
+KhÃ´ng báº¯t buá»™c `P:\agent-rules` pháº£i tá»“n táº¡i trong cÃ´ng viá»‡c Codex háº±ng ngÃ y.
 
-## Báo Cáo Cuối
+## BÃ¡o CÃ¡o Cuá»‘i
 
-Báo cáo cuối phải ngắn và có cấu trúc:
+BÃ¡o cÃ¡o cuá»‘i pháº£i ngáº¯n vÃ  cÃ³ cáº¥u trÃºc:
 
 ```text
 Status: PASS | PARTIAL | BLOCKED

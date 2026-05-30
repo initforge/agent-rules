@@ -1,4 +1,4 @@
-# Execution Rules
+﻿# Execution Rules
 
 ## Trigger
 
@@ -30,11 +30,14 @@ Activate execution when the user says:
    - numbered execution files must use contiguous `01`, `02`, `03` order under a feature folder when the task has multiple slices
    - do not execute a large multi-domain plan stored as one numbered file
    - HIGH risk work must have per-slice scope, acceptance criteria, verification contract, red flags, evidence, and iteration log
-   - when a repo has `plan/`, run `C:\Users\DELL\.codex\scripts\validate-plan-structure.ps1 -PlanRoot <repo>\plan` before executing plan-driven work
+   - when a repo has `plan/`, run `C:\Users\ADMIN\.codex\scripts\validate-plan-structure.ps1 -PlanRoot <repo>\plan` before executing plan-driven work
    - if the plan shape is invalid, restructure or report `BLOCKED` before implementation
 4. Mark active plan file `Status: doing`.
 5. Implement only the allowed scope.
 6. Run the plan's verification commands.
+   - If verification is incomplete, tự mở rộng kiểm tra trong phạm vi quyền hiện có.
+   - Chỉ hỏi người dùng khi thiếu quyền, credentials, dữ liệu thật, môi trường nhạy cảm, hoặc approval cho hành động rủi ro.
+   - Không báo done chỉ vì code đã sửa; phải verify behavior sau sửa bằng test/tool/browser/log/check phù hợp.
 7. If verification fails, classify failure before fixing:
    - my code caused it -> fix and retry
    - test, env, or flaky issue -> do not change code blindly; report

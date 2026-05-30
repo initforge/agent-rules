@@ -5,27 +5,27 @@
 Document Codex skills, native profiles, and local skill taxonomy so new machines can rebuild them.
 
 See also:
-- `C:\Users\DELL\.codex\docs\skills-taxonomy.md`
-- `C:\Users\DELL\.codex\docs\profile-matrix.md`
-- `C:\Users\DELL\.codex\docs\clean-code-reference.md`
-- `C:\Users\DELL\.codex\docs\phase-orchestration.md`
+- `C:\Users\ADMIN\.codex\docs\skills-taxonomy.md`
+- `C:\Users\ADMIN\.codex\docs\profile-matrix.md`
+- `C:\Users\ADMIN\.codex\docs\clean-code-reference.md`
+- `C:\Users\ADMIN\.codex\docs\phase-orchestration.md`
 
 ## Codex skills
 
 Codex skills live under:
 
 ```text
-C:\Users\DELL\.codex\skills\
+C:\Users\ADMIN\.codex\skills\
 ```
 
 A skill is usually:
 
 ```text
 skill-name\
-├─ SKILL.md
-├─ scripts\
-├─ references\
-└─ assets\
+â”œâ”€ SKILL.md
+â”œâ”€ scripts\
+â”œâ”€ references\
+â””â”€ assets\
 ```
 
 ## Required format
@@ -61,6 +61,47 @@ Notes:
 
 ## Current skills
 
+### 5fedu-project
+
+Runtime:
+- Codex
+
+Purpose:
+- Scaffold and maintain project-local 5fedu conventions for frontend template usage, Supabase/database rules, auth, permissions, Vietnamese module mapping, decision status, and delivery verification.
+
+Path:
+- `C:\Users\ADMIN\.codex\skills\5fedu-project`
+
+Install/copy:
+- local custom skill; include in Codex sync bundle
+
+Verify:
+- `python C:\Users\ADMIN\.codex\skills\.system\skill-creator\scripts\quick_validate.py C:\Users\ADMIN\.codex\skills\5fedu-project`
+
+Trigger:
+- setup or update project `AGENTS.md` for a 5fedu repo
+- scaffold a new 5fedu project context
+- add or revise `.codex/5fedu/*.md`
+- update decision status or unresolved questions
+- record new 5fedu Supabase/AppSheet, Vietnamese module mapping, auth, permissions, or database conventions into project context
+
+Inputs:
+- target repo path
+- optional project spec, screenshots, Google Sheet, credentials names, and module mapping
+
+Outputs:
+- project-local `AGENTS.md`
+- `.codex/5fedu/*.md`
+- mapping questions and implementation guardrails
+- `06-decision-status.md` with `DA_CHOT`, `CHUA_CHOT`, and `CAN_HOI_THEM`
+- `07-working-format.md` describing default 5fedu format/how-to separately from app-specific values
+
+Notes:
+- category: self-authored
+- keep 5fedu rules project-local; do not bloat global `AGENTS.md`
+- use only one slash/custom prompt: `/5fedu`
+- `/5fedu` is for setup/context maintenance, not a required prompt for every ordinary implementation turn
+
 ### docs-style
 
 Runtime:
@@ -70,13 +111,13 @@ Purpose:
 - Apply the initforge README/docs house style: short portfolio-ready README, real screenshots when available, numbered linear docs, SPECS-style technical depth, safe cleanup, and CI/CD-aware documentation changes.
 
 Path:
-- `C:\Users\DELL\.codex\skills\docs-style`
+- `C:\Users\ADMIN\.codex\skills\docs-style`
 
 Install/copy:
 - copied with the standard Codex sync into `P:\agent-rules\codex\skills\docs-style`
 
 Verify:
-- `$env:PYTHONUTF8='1'; python C:\Users\DELL\.codex\skills\.system\skill-creator\scripts\quick_validate.py C:\Users\DELL\.codex\skills\docs-style`
+- `$env:PYTHONUTF8='1'; python C:\Users\ADMIN\.codex\skills\.system\skill-creator\scripts\quick_validate.py C:\Users\ADMIN\.codex\skills\docs-style`
 
 Trigger:
 - create/edit/review/restructure docs under `/docs/**`
@@ -110,13 +151,13 @@ Purpose:
 - Run structured research inside Codex using local context, GitNexus, and web, then write a reusable research note before implementation.
 
 Path:
-- `C:\Users\DELL\.codex\skills\codex-research`
+- `C:\Users\ADMIN\.codex\skills\codex-research`
 
 Install/copy:
 - local custom skill; include in Codex sync bundle
 
 Verify:
-- `python C:\Users\DELL\.codex\skills\.system\skill-creator\scripts\quick_validate.py C:\Users\DELL\.codex\skills\codex-research`
+- `python C:\Users\ADMIN\.codex\skills\.system\skill-creator\scripts\quick_validate.py C:\Users\ADMIN\.codex\skills\codex-research`
 
 Trigger:
 - external docs
@@ -146,13 +187,13 @@ Purpose:
 - Route a task into the correct native workflow phase and matching model/profile.
 
 Path:
-- `C:\Users\DELL\.codex\skills\workflow-router`
+- `C:\Users\ADMIN\.codex\skills\workflow-router`
 
 Install/copy:
 - local custom skill; include in Codex sync bundle
 
 Verify:
-- `python C:\Users\DELL\.codex\skills\.system\skill-creator\scripts\quick_validate.py C:\Users\DELL\.codex\skills\workflow-router`
+- `python C:\Users\ADMIN\.codex\skills\.system\skill-creator\scripts\quick_validate.py C:\Users\ADMIN\.codex\skills\workflow-router`
 
 Trigger:
 - task must move between plan, research, implement, bugfix, and review
@@ -184,7 +225,7 @@ Purpose:
 - Includes an immediate defect protocol and Dense Mobile App Gate for crowded headers, chips, kanban cards, and bottom navigation defects.
 
 Path:
-- `C:\Users\DELL\.codex\skills\frontend-ui-quality`
+- `C:\Users\ADMIN\.codex\skills\frontend-ui-quality`
 
 Install/copy:
 - local custom skill; include in Codex sync bundle
@@ -210,7 +251,7 @@ Purpose:
 - Design system and UI/UX ideation support.
 
 Path:
-- `C:\Users\DELL\.codex\skills\ui-ux-pro-max`
+- `C:\Users\ADMIN\.codex\skills\ui-ux-pro-max`
 
 Install/copy:
 - local custom skill; include in Codex sync bundle
@@ -239,15 +280,15 @@ Sources:
 - GitNexus: https://github.com/nxpatterns/gitnexus
 
 Path:
-- `C:\Users\DELL\.agents\skills\`
+- `C:\Users\ADMIN\.agents\skills\`
 - backup copy: `P:\agent-rules\agents-skills\`
 
 Install/copy:
-- copy from `C:\Users\DELL\.agents\skills` to `P:\agent-rules\agents-skills`
+- copy from `C:\Users\ADMIN\.agents\skills` to `P:\agent-rules\agents-skills`
 
 Verify:
 - inspect corresponding `SKILL.md` files
-- `Get-ChildItem C:\Users\DELL\.agents\skills -Directory`
+- `Get-ChildItem C:\Users\ADMIN\.agents\skills -Directory`
 
 Trigger:
 - explicit user requests or system rules that reference those skills
@@ -265,7 +306,7 @@ Purpose:
 - Provide installed utility workflows that are not self-authored.
 
 Path:
-- `C:\Users\DELL\.codex\skills`
+- `C:\Users\ADMIN\.codex\skills`
 
 Members:
 - `pdf`
@@ -289,8 +330,8 @@ Purpose:
 - Create/execute locked `plan/` workflows with verification evidence.
 
 Path:
-- `C:\Users\DELL\.codex\rules\planning.md`
-- future skill candidate: `C:\Users\DELL\.codex\skills\plan-execution\SKILL.md`
+- `C:\Users\ADMIN\.codex\rules\planning.md`
+- future skill candidate: `C:\Users\ADMIN\.codex\skills\plan-execution\SKILL.md`
 
 Trigger:
 - MEDIUM/HIGH task
@@ -306,7 +347,7 @@ Purpose:
 - Review risks, missing verification, regressions, and scope creep.
 
 Path:
-- future skill candidate: `C:\Users\DELL\.codex\skills\risk-review\SKILL.md`
+- future skill candidate: `C:\Users\ADMIN\.codex\skills\risk-review\SKILL.md`
 
 Trigger:
 - HIGH risk task

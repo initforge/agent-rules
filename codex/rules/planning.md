@@ -1,4 +1,4 @@
-# Planning Rules
+﻿# Planning Rules
 
 ## Trigger
 
@@ -67,14 +67,14 @@ For multi-stage work:
 
 ```text
 plan/<feature>/
-├─ 00-index.md
-├─ 01-<vertical-slice>.md
-├─ 02-<vertical-slice>.md
-├─ 03-<vertical-slice>.md
-├─ research/
-├─ review/
-├─ decisions.md
-└─ handoff.md
+â”œâ”€ 00-index.md
+â”œâ”€ 01-<vertical-slice>.md
+â”œâ”€ 02-<vertical-slice>.md
+â”œâ”€ 03-<vertical-slice>.md
+â”œâ”€ research/
+â”œâ”€ review/
+â”œâ”€ decisions.md
+â””â”€ handoff.md
 ```
 
 Numbering rules:
@@ -84,7 +84,7 @@ Numbering rules:
 - Do not create a single large numbered plan like `60-production-readiness-audit.md` for multi-domain work.
 - If the work has more than 3 independently verifiable vertical slices, create a plan folder with `00-index.md` and one numbered file per slice.
 - If an existing large plan must be kept for historical context, move or treat it as an audit/research note and create a fresh contiguous execution plan from it.
-- To check plan layout mechanically, use `C:\Users\DELL\.codex\scripts\validate-plan-structure.ps1 -PlanRoot <repo>\plan`.
+- To check plan layout mechanically, use `C:\Users\ADMIN\.codex\scripts\validate-plan-structure.ps1 -PlanRoot <repo>\plan`.
 
 For one small plan:
 
@@ -208,18 +208,18 @@ Before ending a turn that touched a plan:
 
 Old plans are retained by default.
 
-When the user says to delete plans without saying "delete all" or "xóa hết":
+When the user says to delete plans without saying "delete all" or "xÃ³a háº¿t":
 - record the candidate path and `Status:` first
 - delete only plan files with `Status: done` or `Status: obsolete`
 - keep `todo`, `doing`, `blocked`, and files without a clear status
 - do not delete `research/`, `review/`, `decisions.md`, or `handoff.md` unless the user explicitly includes them
 
-When the user explicitly says "delete all plans", "xóa hết plan", or equivalent:
+When the user explicitly says "delete all plans", "xÃ³a háº¿t plan", or equivalent:
 - record the plan paths and statuses first
 - delete all requested plan files/folders within the named `plan/` scope
 - still do not delete application code, docs outside `plan/`, or unrelated files
 
-Use `C:\Users\DELL\.codex\scripts\cleanup-plans.ps1 -PlanRoot <repo>\plan -DryRun` before cleanup when possible.
+Use `C:\Users\ADMIN\.codex\scripts\cleanup-plans.ps1 -PlanRoot <repo>\plan -DryRun` before cleanup when possible.
 Use `-All` only when the user explicitly asks to delete all plans.
 
 ## Compact resilience

@@ -1,140 +1,15 @@
-model_provider = "openai"
 model = "gpt-5.5"
-review_model = "gpt-5.4"
 model_reasoning_effort = "high"
-plan_mode_reasoning_effort = "medium"
-model_verbosity = "medium"
-disable_response_storage = false
-network_access = "enabled"
-web_search = "live"
-windows_wsl_setup_acknowledged = true
-approval_policy = "on-request"
-sandbox_mode = "workspace-write"
-model_context_window = 1_000_000
-model_auto_compact_token_limit = 850_000
-tool_output_token_limit = 12_000
-service_tier = "fast"
-cli_auth_credentials_store = "file"
-
-[sandbox_workspace_write]
-network_access = true
-
-[features]
-fast_mode = true
-enable_request_compression = false
-remote_compaction = false
-browser_use = true
-
-[windows]
-sandbox = "elevated"
-
-[tui.model_availability_nux]
-"gpt-5.5" = 4
-
-[notice]
-fast_default_opt_out = true
-
-[mcp_servers.gitnexus]
-command = 'C:\Users\DELL\AppData\Roaming\npm\gitnexus'
-args = ["mcp"]
-
-[mcp_servers.pencil]
-command = 'C:\Program Files\Pencil\resources\app.asar.unpacked\out\mcp-server-windows-x64.exe'
-args = ["--app", "desktop", "--agent", "codexCLI"]
 
 [marketplaces.openai-bundled]
-last_updated = "2026-05-28T23:58:06Z"
+last_updated = "2026-05-30T10:54:18Z"
 source_type = "local"
-source = '\\?\C:\Users\DELL\.codex\.tmp\bundled-marketplaces\openai-bundled'
+source = '\\?\C:\Users\ADMIN\.codex\.tmp\bundled-marketplaces\openai-bundled'
 
 [marketplaces.openai-primary-runtime]
-last_updated = "2026-05-26T05:41:57Z"
+last_updated = "2026-05-30T10:57:52Z"
 source_type = "local"
-source = '\\?\C:\Users\DELL\.cache\codex-runtimes\codex-primary-runtime\plugins\openai-primary-runtime'
-
-[projects."p:\\open-claw-setup"]
-trust_level = "trusted"
-
-[projects."c:\\users\\dell\\documents\\codex\\2026-05-13\\setup-cavesman-cho-m-i-case"]
-trust_level = "trusted"
-
-[projects."p:\\midterm-mobile"]
-trust_level = "trusted"
-
-[projects."c:\\users\\dell\\documents\\codex\\2026-05-13\\c-i-gi-p-t-codex"]
-trust_level = "trusted"
-
-[projects."c:\\users\\dell\\documents\\codex\\2026-05-13\\set-cho-codex-lu-n-tr"]
-trust_level = "trusted"
-
-[projects."c:\\users\\dell\\documents\\codex\\2026-05-13\\m-c-i-step-cho-agents"]
-trust_level = "trusted"
-
-[projects."c:\\users\\dell\\documents\\codex\\2026-05-13\\codex-c-i-mcp-ch-a"]
-trust_level = "trusted"
-
-[projects."p:\\ecoupon"]
-trust_level = "trusted"
-
-[projects."c:\\users\\dell\\documents\\codex\\2026-05-22\\c-c-c-ch-ti-t"]
-trust_level = "trusted"
-
-[projects."c:\\users\\dell\\documents\\codex\\2026-05-22\\research-tr-n-c-ng-ng"]
-trust_level = "trusted"
-
-[projects."c:\\users\\dell\\documents\\codex\\2026-05-22\\c-p-agent-rules-v-so"]
-trust_level = "trusted"
-
-[projects."p:\\webshop"]
-trust_level = "trusted"
-
-[projects."c:\\users\\dell\\documents\\codex\\2026-05-23\\xu-t-tri-n-khai-h"]
-trust_level = "trusted"
-
-[projects."p:\\fabsolution"]
-trust_level = "trusted"
-
-[projects."c:\\users\\dell\\documents\\codex\\2026-05-23\\c-i-workflow-m-t-o"]
-trust_level = "trusted"
-
-[projects."c:\\users\\dell\\documents\\codex\\2026-05-23\\leonxlnx-taste-skill-https-github-com"]
-trust_level = "trusted"
-
-[projects."c:\\users\\dell\\documents\\codex\\2026-05-23\\qu-t-x-a-s-ch"]
-trust_level = "trusted"
-
-[projects."c:\\users\\dell\\documents\\codex\\2026-05-24\\initforge-devconnect-https-github-com-initforge"]
-trust_level = "trusted"
-
-[projects."c:\\users\\dell\\documents\\codex\\2026-05-24\\sao-t-c-m-gi-c"]
-trust_level = "trusted"
-
-[projects."c:\\users\\dell\\documents\\codex\\2026-05-24\\m-web-netacad-t-auth-d"]
-trust_level = "trusted"
-
-[projects."p:\\smartai"]
-trust_level = "trusted"
-
-[projects."c:\\users\\dell\\documents\\codex\\2026-05-24\\m-netacade-t-auth-s-n"]
-trust_level = "trusted"
-
-[projects."p:\\internaltools"]
-trust_level = "trusted"
-
-[projects."c:\\users\\dell\\documents\\codex\\2026-05-25\\xem-d-a-c-b-c"]
-trust_level = "trusted"
-
-[projects.'c:\users\dell\documents\codex\2026-05-26\l-nh-n-o-gi-p']
-trust_level = "trusted"
-
-[projects.'c:\users\dell\documents\codex\2026-05-27\sync-h-t-hi-n-t']
-trust_level = "trusted"
-
-[projects.'p:\hienchina']
-trust_level = "trusted"
-
-[projects.'c:\users\dell\documents\codex\2026-05-28\pnpm-store-c-a-th-m']
-trust_level = "trusted"
+source = '\\?\C:\Users\ADMIN\.cache\codex-runtimes\codex-primary-runtime\plugins\openai-primary-runtime'
 
 [plugins."documents@openai-primary-runtime"]
 enabled = true
@@ -145,15 +20,58 @@ enabled = true
 [plugins."presentations@openai-primary-runtime"]
 enabled = true
 
-[plugins."build-web-apps@openai-curated"]
+[plugins."browser@openai-bundled"]
 enabled = true
 
-[plugins."google-drive@openai-curated"]
-enabled = true
+[features]
+js_repl = false
+
+[mcp_servers.node_repl]
+args = []
+command = 'C:\Users\ADMIN\AppData\Local\OpenAI\Codex\bin\34ab3e1324cc55b5\node_repl.exe'
+startup_timeout_sec = 120
+
+[mcp_servers.node_repl.env]
+NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
+NODE_REPL_NODE_MODULE_DIRS = ""
+NODE_REPL_NODE_PATH = 'C:\Users\ADMIN\AppData\Local\OpenAI\Codex\bin\5b9024f90663758b\node.exe'
+NODE_REPL_TRUSTED_CODE_PATHS = 'C:\Users\ADMIN\.codex'
+CODEX_HOME = 'C:\Users\ADMIN\.codex'
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "0b0d41e7a14a4903d2f95b0b3f427ed796b12c8edca2fa392a03df43997075ae,e13c388c2427308a68dffc803e1f28316077b719672e4518a621ae6ab56ad7cf"
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
+NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
+BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
+CODEX_CLI_PATH = 'C:\Users\ADMIN\AppData\Local\OpenAI\Codex\bin\7dea4a003bc76627\codex.exe'
 
 [desktop]
 conversationDetailMode = "STEPS_COMMANDS"
+ambient-suggestions-enabled = false
+default-service-tier = "priority"
 
-[codex_keyring]
-managed_by = "codex-keyring"
-updated_at = "2026-05-25T10:21:26.640Z"
+[desktop.open-in-target-preferences]
+global = "antigravity"
+
+[desktop.open-in-target-preferences.perPath]
+'P:\Fabsolution' = "antigravity"
+
+[windows]
+sandbox = "elevated"
+
+[projects.'c:\users\admin\documents\codex\2026-05-29\hello']
+trust_level = "trusted"
+
+[projects.'p:\fabsolution']
+trust_level = "trusted"
+
+[projects.'c:\users\admin\documents\codex\2026-05-29\initforge-agent-rules-https-github-com']
+trust_level = "trusted"
+
+[projects.'p:\tah-app-5f']
+trust_level = "trusted"
+
+[projects.'c:\users\admin\documents\codex\2026-05-30\setup-behavior-c-a-chatgpt-sao']
+trust_level = "trusted"
+
+[projects.'c:\users\admin\documents\codex\2026-05-30\check-c-c-b-n-commit']
+trust_level = "trusted"

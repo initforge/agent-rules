@@ -2,79 +2,79 @@
     {
         "name":  "codex",
         "found":  true,
-        "path":  "C:\\Users\\DELL\\AppData\\Roaming\\npm\\codex.ps1",
-        "version":  "codex-cli 0.130.0"
+        "path":  "C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\codex.ps1",
+        "version":  "codex-cli 0.133.0"
     },
     {
         "name":  "rtk",
         "found":  true,
-        "path":  "C:\\Users\\DELL\\.local\\bin\\rtk.exe",
-        "version":  "rtk 0.39.0"
+        "path":  "C:\\Users\\ADMIN\\AppData\\Local\\Microsoft\\WinGet\\Packages\\rtk-ai.rtk_Microsoft.Winget.Source_8wekyb3d8bbwe\\rtk.exe",
+        "version":  "rtk 0.42.0"
     },
     {
         "name":  "git",
         "found":  true,
         "path":  "C:\\Program Files\\Git\\cmd\\git.exe",
-        "version":  "git version 2.53.0.windows.1"
+        "version":  "git version 2.52.0.windows.1"
     },
     {
         "name":  "node",
         "found":  true,
         "path":  "C:\\Program Files\\nodejs\\node.exe",
-        "version":  "v24.13.0"
+        "version":  "v24.16.0"
     },
     {
         "name":  "npm",
         "found":  true,
         "path":  "C:\\Program Files\\nodejs\\npm.ps1",
-        "version":  "11.6.2"
+        "version":  "11.13.0"
     },
     {
         "name":  "pnpm",
         "found":  true,
-        "path":  "C:\\Users\\DELL\\AppData\\Roaming\\npm\\pnpm.ps1",
+        "path":  "C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\pnpm.ps1",
         "version":  "10.33.4"
     },
     {
         "name":  "python",
         "found":  true,
-        "path":  "C:\\Users\\DELL\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "path":  "C:\\Users\\ADMIN\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
         "version":  "Python 3.12.10"
     },
     {
         "name":  "rg",
         "found":  true,
-        "path":  "C:\\Users\\DELL\\AppData\\Local\\OpenAI\\Codex\\bin\\ada252862d154cdd\\rg.exe",
+        "path":  "C:\\Users\\ADMIN\\AppData\\Local\\OpenAI\\Codex\\bin\\ada252862d154cdd\\rg.exe",
         "version":  "ripgrep 15.1.0 (rev af60c2de9d)"
     },
     {
         "name":  "fd",
         "found":  true,
-        "path":  "C:\\Users\\DELL\\AppData\\Local\\Microsoft\\WinGet\\Links\\fd.exe",
+        "path":  "C:\\Users\\ADMIN\\AppData\\Local\\Microsoft\\WinGet\\Packages\\sharkdp.fd_Microsoft.Winget.Source_8wekyb3d8bbwe\\fd-v10.4.2-x86_64-pc-windows-msvc\\fd.exe",
         "version":  "fd 10.4.2"
     },
     {
         "name":  "jq",
         "found":  true,
-        "path":  "C:\\Users\\DELL\\AppData\\Local\\Microsoft\\WinGet\\Links\\jq.exe",
+        "path":  "C:\\Users\\ADMIN\\AppData\\Local\\Microsoft\\WinGet\\Packages\\jqlang.jq_Microsoft.Winget.Source_8wekyb3d8bbwe\\jq.exe",
         "version":  "jq-1.8.1"
     },
     {
         "name":  "flutter",
-        "found":  true,
-        "path":  "C:\\flutter\\bin\\flutter.bat",
-        "version":  "Flutter 3.29.2 • channel stable • https://github.com/flutter/flutter.git"
+        "found":  false,
+        "path":  null,
+        "version":  null
     },
     {
         "name":  "dart",
-        "found":  true,
-        "path":  "C:\\flutter\\bin\\dart.bat",
-        "version":  "Dart SDK version: 3.7.2 (stable) (Tue Mar 11 04:27:50 2025 -0700) on \"windows_x64\""
+        "found":  false,
+        "path":  null,
+        "version":  null
     },
     {
         "name":  "npx",
         "found":  true,
         "path":  "C:\\Program Files\\nodejs\\npx.ps1",
-        "version":  "11.6.2"
+        "version":  "11.13.0"
     }
 ]

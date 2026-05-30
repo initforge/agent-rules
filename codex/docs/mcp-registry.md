@@ -1,4 +1,4 @@
-# MCP Registry
+﻿# MCP Registry
 
 ## Purpose
 
@@ -9,7 +9,7 @@ Document all MCP servers configured for Codex so they can be reinstalled on a ne
 User-level:
 
 ```text
-C:\Users\DELL\.codex\config.toml
+C:\Users\ADMIN\.codex\config.toml
 ```
 
 Project-level:
@@ -61,12 +61,12 @@ Source:
 
 Install/Add:
 - Binary present via npm global install:
-  - `C:\Users\DELL\AppData\Roaming\npm\gitnexus.cmd`
+  - `C:\Users\ADMIN\AppData\Roaming\npm\gitnexus.cmd`
 - Configured through:
 
 ```toml
 [mcp_servers.gitnexus]
-command = "C:\\Users\\DELL\\AppData\\Roaming\\npm\\gitnexus"
+command = "C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\gitnexus"
 args = [ "mcp" ]
 ```
 

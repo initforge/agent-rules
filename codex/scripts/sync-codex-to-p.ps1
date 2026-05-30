@@ -24,6 +24,7 @@ New-Item -ItemType Directory -Force -Path $target | Out-Null
 
 foreach ($item in @(
   "AGENTS.md",
+  "AGENTS.core.md",
   "config.toml",
   "RTK.md",
   "rules",

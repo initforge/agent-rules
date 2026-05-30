@@ -186,6 +186,12 @@ Do not say done without evidence:
 - manual or visual artifacts if relevant
 - remaining risks
 
+Verification must be proactive:
+
+- tự chạy mọi kiểm tra khả thi trong phạm vi quyền hiện có trước khi hỏi người dùng hoặc báo thiếu verify;
+- không báo `PASS` khi phần verification cốt lõi vẫn chưa được kiểm tra dù agent có thể tự kiểm tra;
+- nếu thiếu quyền, credential, dữ liệu thật, hoặc môi trường nhạy cảm, nói rõ check bị chặn và cần quyền gì.
+
 ## Reviewer gate
 
 Use review when:

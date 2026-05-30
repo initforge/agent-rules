@@ -9,7 +9,7 @@ Active only inside Codex.
 Use local runtime under:
 
 ```text
-C:\Users\DELL\.codex\
+C:\Users\ADMIN\.codex\
 ```
 
 `P:\agent-rules` is backup, sync, and bootstrap, not daily runtime dependency.
@@ -29,7 +29,7 @@ C:\Users\DELL\.codex\
 User config:
 
 ```text
-C:\Users\DELL\.codex\config.toml
+C:\Users\ADMIN\.codex\config.toml
 ```
 
 Project config:
@@ -55,7 +55,7 @@ Call explicitly:
 Custom agents live in:
 
 ```text
-C:\Users\DELL\.codex\agents\
+C:\Users\ADMIN\.codex\agents\
 ```
 
 Useful roles:
@@ -79,7 +79,7 @@ Do not put long workflow docs into `AGENTS.md` if they can become a skill.
 Codex skills live in:
 
 ```text
-C:\Users\DELL\.codex\skills\
+C:\Users\ADMIN\.codex\skills\
 ```
 
 Each skill should have:
@@ -107,7 +107,7 @@ Do not create plugin before:
 Configure MCP in:
 
 ```text
-C:\Users\DELL\.codex\config.toml
+C:\Users\ADMIN\.codex\config.toml
 ```
 
 or via:
@@ -119,7 +119,7 @@ codex mcp
 Record all MCP servers in:
 
 ```text
-C:\Users\DELL\.codex\docs\mcp-registry.md
+C:\Users\ADMIN\.codex\docs\mcp-registry.md
 ```
 
 ## Project AGENTS.md
