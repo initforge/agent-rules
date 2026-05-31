@@ -11,13 +11,19 @@ Mục tiêu là làm Antigravity nhạy và nhanh: nạp ít rule nền, đọc 
 
 ## Trigger Map
 
-| Người dùng nói | Hành động |
+| Ngữ cảnh / Từ khóa trong prompt | Kỹ năng (Skill) tự động kích hoạt |
 |---|---|
-| "setup 5fedu", "scaffold 5fedu", "cập nhật context 5fedu" | Gọi `/5fedu-project` |
-| "research", "tìm trên internet", "xác minh mới nhất" | Gọi `/codex-research` hoặc chạy research có citation |
-| "sync codex", "runtime lệch backup không" | Gọi `/runtime-sync-audit` |
-| "review" | Review theo bug/risk/test gap trước, summary sau |
-| "UI", "frontend", "responsive", "ảnh chụp màn hình" | Áp dụng visual QA và browser verification |
+| "setup 5fedu", "scaffold 5fedu", "cập nhật context 5fedu" | Gọi `/5fedu-project` để bảo trì hoặc tạo mới nghiệp vụ dự án |
+| "research", "tìm trên internet", "xác minh mới nhất" | Gọi `/codex-research` để thu thập bằng chứng và nguồn đáng tin cậy |
+| "sync codex", "runtime lệch backup không" | Gọi `/runtime-sync-audit` để so sánh và đồng bộ |
+| "review", "audit", "kiểm tra lỗi" | Review theo bug/risk/regression/test gap trước, summary sau |
+| "viết docs", "readme", "spec", "tài liệu", "badges", "hướng dẫn" | Đọc và tuân thủ `docs-style` ( README, spec, badge chuẩn ) |
+| "frontend", "UI/UX", "giao diện", "responsive", "css", "layout", "bento" | Kích hoạt `frontend-ui-quality` kết hợp `taste-skill` (hoặc `soft-skill`) |
+| "logo", "identity", "brand", "guidelines", "visual board" | Áp dụng `brandkit` để dựng thiết kế thương hiệu cao cấp |
+| "chụp ảnh màn hình", "screenshot", "browser verify", "playwright" | Kích hoạt `screenshot` hoặc `playwright` để tương tác và chụp kiểm thử giao diện |
+| "security", "threat model", "lỗ hổng", "bảo mật", "phân quyền" | Kích hoạt `security-best-practices` hoặc `security-threat-model` |
+| "PDF", "xuất file PDF", "đọc file PDF" | Sử dụng `pdf` (ReportLab / Poppler) để sinh hoặc kiểm tra PDF |
+| "tối giản", "minimalist", "brutalist", "blueprints" | Kích hoạt `minimalist-skill` hoặc `brutalist-skill` tương ứng |
 
 ## Stop Conditions
 
