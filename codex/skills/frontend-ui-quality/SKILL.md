@@ -1,4 +1,4 @@
-﻿---
+---
 name: frontend-ui-quality
 description: Build, refine, and verify professional frontend UI/UX with art direction, real or generated visual assets, icons/logos, advanced layout, motion, 3D where useful, and visual quality gates. Use when Codex creates or changes frontend screens, web apps, dashboards, landing pages, games, product pages, branded pages, component layouts, CSS, responsive behavior, typography, spacing, imagery, animations, 3D scenes, or any user-facing interface where aesthetics, polish, alignment, overflow, usability, or layout correctness matter.
 ---
@@ -90,6 +90,9 @@ Skip browser verification only when no runnable UI exists, dependencies cannot b
 - Respect `prefers-reduced-motion`; keep motion purposeful and avoid hiding primary content behind animation.
 - Keep letter spacing at `0` unless matching an existing system.
 - Use concise in-app copy; do not add instructional text that explains the UI itself.
+- **Localize Dynamic Table Headers**: When rendering dynamic tabular data from DB or API keys, map raw keys to localized, human-friendly terms rather than rendering raw keys (e.g., `tai_xe` -> `Tài xế`, `tien_luong` -> `Tiền lương` in Vietnamese sites).
+- **Icon-Only Secondary Actions**: Secondary actions (such as CSV/Excel export, print, copy, download) in table toolbars and headers should be rendered as icon-only buttons with descriptive `title` and `aria-label` attributes to save space.
+- **Contextual Summary/Metrics Cards**: Summary metrics cards must be dynamic and relevant to the selected view context rather than hardcoding a generic set of metrics. Programmatically calculate totals and hide irrelevant fields (e.g., avoid showing "Remaining: 0" in views where it is not computed).
 
 ## Final Response Standard
 
