@@ -92,13 +92,15 @@ Whenever the user provides correction, design guidance, or owner feedback during
 ### A. Local Learning (Workspace Level - First Priority)
 - Identify if the feedback relates to project-specific requirements, custom modules, or local UI tweaks.
 - **Immediately update or append** the lessons learned to the project-local context files at `.agents/5fedu/10-owner-feedback-lessons.md` or `.agents/5fedu/12-owner-feedback-transport-ui.md` in the active workspace.
+- **Promote core structural constraints** (like the `id int8` auto-incrementing schema rule, or auth fake email stack) directly into the project-local `AGENTS.md` file under the `## Owner Feedback Gate` section, elevating them to strict project-level rules.
 - Run the workspace preflight script (`antigravity-preflight.ps1` or similar hook) to automatically trigger the bidirectional sync: this ensures `.codex/5fedu/` and `.agents/5fedu/` folders in the workspace are identical.
 
 ### B. Global Learning (Base Knowledge - Master level `P:\agent-rules`)
 - Determine if the feedback represents a **universal programming rule** or a **standard platform convention** that should apply to all current and future 5fedu projects (such as DB constraints, default credentials, or core architectural gates).
 - If it is global:
   1. Update the master skill files under `P:\agent-rules\antigravity\.agents\skills\5fedu-project\assets\project-context\.agents\5fedu\10-owner-feedback-lessons.md` (or `12-...md`).
-  2. Update this `SKILL.md` under `## 4. Developer Lessons Learned`.
-  3. Run `P:\agent-rules\scripts\sync-platform-skills.ps1` to sync the updated rules to `~/.codex` and other local runtime locations.
-  4. Notify the user of the new global baseline and commit changes to the master repository.
+  2. Promote the core rules (like `id int8`) into the master template's `AGENTS.md` file under `## Owner Feedback Gate`.
+  3. Update this `SKILL.md` under `## 4. Developer Lessons Learned`.
+  4. Run `P:\agent-rules\scripts\sync-platform-skills.ps1` to sync the updated rules to `~/.codex` and other local runtime locations.
+  5. Notify the user of the new global baseline and commit changes to the master repository.
 
