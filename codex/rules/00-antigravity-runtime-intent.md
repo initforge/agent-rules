@@ -1,6 +1,6 @@
-# Codex Runtime Intent
+# Antigravity Runtime Intent
 
-Luật này là adapter cho Antigravity. Nguồn chuẩn vẫn là `~/.codex` (thư mục Codex local) khi chạy hằng ngày và `P:\agent-rules\codex` khi backup/bootstrap.
+Luật này là bộ quy tắc cốt lõi cho Antigravity. Nguồn chuẩn nằm tại thư mục master `P:\agent-rules\antigravity\.agents\rules\` và được tự động đồng bộ hóa xuống các dự án.
 
 ## Ngôn ngữ
 
@@ -43,7 +43,7 @@ Luật này là adapter cho Antigravity. Nguồn chuẩn vẫn là `~/.codex` (t
 Khi người dùng yêu cầu chuyển hóa một phản hồi (feedback) hoặc bài học kinh nghiệm mới thành luật vận hành nền (người dùng không cần làm thủ công):
 1. **Phân loại & Định vị**: Phân tích nội dung kinh nghiệm để xác định nhóm quy tắc liên quan (ví dụ: Database, UI/Frontend, Auth, Clean Code...) và xác định tệp luật nền tương ứng trong `.agents/rules/` (hoặc tạo mới nếu cần).
 2. **Cập nhật Luật của Dự án**: Chèn điều khoản quy tắc mới này trực tiếp vào tệp luật đó dưới dạng quy định bắt buộc, ngắn gọn và có tính hành động cao.
-3. **Cập nhật Bản mẫu Codex**: Đồng thời chèn quy tắc này vào tệp rules/skills tương ứng trong local runtime tại `~/.codex/` (ví dụ: `~/.codex/rules/` hoặc thư mục assets của skill mẫu).
-4. **Đồng bộ hóa ngược Master**: Chạy tự động script `P:\agent-rules\codex\scripts\sync-codex-to-p.ps1` để đồng bộ ngược về `P:\agent-rules\codex` và cập nhật thư mục master `antigravity/.agents/rules/` tương ứng.
+3. **Cập nhật Bản mẫu Antigravity**: Đồng thời chèn quy tắc này vào tệp rules/skills tương ứng trong master tại `P:\agent-rules\antigravity\.agents\` (ví dụ: `P:\agent-rules\antigravity\.agents\rules\` hoặc thư mục `skills/`).
+4. **Đồng bộ hóa chéo sang Codex**: Chạy tự động script `P:\agent-rules\scripts\sync-platform-skills.ps1` để đồng bộ chéo luật/kỹ năng mới này sang Codex (cả `P:\agent-rules\codex\` và local runtime `~/.codex/` của máy).
 5. **Lưu trữ phiên bản**: Tự động chạy `git add -A` và `git commit` tại thư mục `P:\agent-rules` để lưu vết lịch sử thay đổi.
 6. **Báo cáo**: Kết thúc và liệt kê cụ thể các tệp luật đã cập nhật kèm theo trạng thái cuối là `PASS`.

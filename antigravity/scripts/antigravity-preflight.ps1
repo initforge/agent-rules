@@ -43,17 +43,20 @@ if ((Test-Path $masterRoot) -and ($currentPath -notlike "*agent-rules*")) {
   }
 }
 
-# 2. Dynamic Codex Skills generator
-$codexSkillsPath = "$env:USERPROFILE\.codex\skills"
-if (Test-Path $codexSkillsPath) {
-  $skills = Get-ChildItem $codexSkillsPath -Directory
+# 2. Dynamic Antigravity Skills generator
+$antigravitySkillsPath = Join-Path $masterRoot "skills"
+if (-not (Test-Path $antigravitySkillsPath)) {
+  $antigravitySkillsPath = Join-Path $localAgents "skills"
+}
+if (Test-Path $antigravitySkillsPath) {
+  $skills = Get-ChildItem $antigravitySkillsPath -Directory
   foreach ($skill in $skills) {
     if ($skill.Name -like ".*") { continue }
     
     $wfContent = @'
 # {0} Skill
 
-1. Read the skill file in the master rules repository at P:\agent-rules\codex\skills\{0}\SKILL.md or the local runtime at ~/.codex/skills/{0}/SKILL.md.
+1. Read the skill file in the project-local adapter at `.agents/skills/{0}/SKILL.md` or the master backup at `P:\agent-rules\antigravity\.agents\skills\{0}\SKILL.md`.
 2. Inspect the current project files or request relevant context before starting work.
 3. Execute the skill instructions to fulfill the user's request.
 4. If this is a design/UI/UX skill, check and follow the visual examples and templates if referenced.
