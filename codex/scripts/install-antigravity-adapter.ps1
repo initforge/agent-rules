@@ -27,14 +27,22 @@ $scriptTarget = Join-Path $project "scripts"
 New-Item -ItemType Directory -Force -Path $scriptTarget | Out-Null
 Copy-Item (Join-Path $adapterRoot "scripts\antigravity-preflight.ps1") $scriptTarget -Force
 
-if ($IncludeDisabledHook) {
-  Copy-Item (Join-Path $adapterRoot "hooks.json") (Join-Path $agentsTarget "hooks.json") -Force
-}
-
 if ($LegacyAgentSingular) {
   $legacyTarget = Join-Path $project ".agent"
   New-Item -ItemType Directory -Force -Path $legacyTarget | Out-Null
   Copy-Item "$agentsSource\*" $legacyTarget -Recurse -Force
+}
+
+# Copy and enable preflight hook
+$hooksSource = Join-Path $adapterRoot "hooks.json"
+if (Test-Path $hooksSource) {
+  $hooksContent = Get-Content $hooksSource -Raw
+  $hooksContent = $hooksContent -replace '"enabled":\s*false', '"enabled": true'
+  
+  Set-Content -Path (Join-Path $agentsTarget "hooks.json") -Value $hooksContent -Force
+  if ($LegacyAgentSingular) {
+    Set-Content -Path (Join-Path $legacyTarget "hooks.json") -Value $hooksContent -Force
+  }
 }
 
 # Dynamic Antigravity Skills generator

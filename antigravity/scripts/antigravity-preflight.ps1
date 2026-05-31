@@ -85,7 +85,7 @@ if (Test-Path $antigravitySkillsPath) {
 
 # 3. Check if required files are present
 $required = @(
-  ".agents\rules\00-codex-runtime-intent.md",
+  ".agents\rules\00-antigravity-runtime-intent.md",
   ".agents\rules\01-intent-contract.md",
   ".agents\rules\10-fast-context.md",
   ".agents\workflows\5fedu-project.md",
