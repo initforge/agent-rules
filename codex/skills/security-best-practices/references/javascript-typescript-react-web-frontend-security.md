@@ -1,11 +1,11 @@
-# React (JavaScript/TypeScript) Web Security Spec (React 19.x, TypeScript 5.x)
+﻿# React (JavaScript/TypeScript) Web Security Spec (React 19.x, TypeScript 5.x)
 
 This document is designed as a **security spec** that supports:
 
 1. **Secure-by-default code generation** for new React code.
-2. **Security review / vulnerability hunting** in existing React code (passive “notice issues while working” and active “scan the repo and report findings”).
+2. **Security review / vulnerability hunting** in existing React code (passive â€œnotice issues while workingâ€ and active â€œscan the repo and report findingsâ€).
 
-It is intentionally written as a set of **normative requirements** (“MUST/SHOULD/MAY”) plus **audit rules** (what bad patterns look like, how to detect them, and how to fix/mitigate them).
+It is intentionally written as a set of **normative requirements** (â€œMUST/SHOULD/MAYâ€) plus **audit rules** (what bad patterns look like, how to detect them, and how to fix/mitigate them).
 
 ---
 
@@ -13,11 +13,11 @@ It is intentionally written as a set of **normative requirements** (“MUST/SHOU
 
 * MUST NOT request, output, log, or commit secrets (API keys, OAuth client secrets, private keys, session cookies, JWTs, signing keys).
 
-  * Frontend note: anything shipped to the browser is observable by end users and attackers (view-source, devtools, proxies); never treat client code or “env vars in the bundle” as secret. ([create-react-app.dev][1])
-* MUST NOT “fix” security by disabling protections (e.g., turning off CSP to “make it work”, adding `unsafe-inline`/`unsafe-eval` without a documented, constrained plan, disabling CSRF protections when using cookies, widening CORS, skipping sanitization, or “temporary” bypasses that ship). ([OWASP Cheat Sheet Series][2])
+  * Frontend note: anything shipped to the browser is observable by end users and attackers (view-source, devtools, proxies); never treat client code or â€œenv vars in the bundleâ€ as secret. ([create-react-app.dev][1])
+* MUST NOT â€œfixâ€ security by disabling protections (e.g., turning off CSP to â€œmake it workâ€, adding `unsafe-inline`/`unsafe-eval` without a documented, constrained plan, disabling CSRF protections when using cookies, widening CORS, skipping sanitization, or â€œtemporaryâ€ bypasses that ship). ([OWASP Cheat Sheet Series][2])
 * MUST provide **evidence-based findings** during audits: cite file paths, code snippets, and configuration values that justify the claim.
-* MUST treat uncertainty honestly: if a protection might exist in infra (CDN/WAF/reverse proxy), report it as “not visible in app code; verify via runtime headers / edge config”.
-* MUST assume any data that crosses a trust boundary (URL, storage, network, postMessage, third-party scripts) can be attacker-influenced unless proven otherwise (see §2.1).
+* MUST treat uncertainty honestly: if a protection might exist in infra (CDN/WAF/reverse proxy), report it as â€œnot visible in app code; verify via runtime headers / edge configâ€.
+* MUST assume any data that crosses a trust boundary (URL, storage, network, postMessage, third-party scripts) can be attacker-influenced unless proven otherwise (see Â§2.1).
 
 ---
 
@@ -30,21 +30,21 @@ When asked to write new React code or modify existing code:
 * MUST follow every **MUST** requirement in this spec.
 * SHOULD follow every **SHOULD** requirement unless the user explicitly says otherwise.
 * MUST prefer safe-by-default APIs and proven libraries over custom security code.
-* MUST avoid introducing new risky sinks (raw HTML insertion, direct DOM sinks like `innerHTML`, dynamic code execution, untrusted redirects/navigation, third‑party script injection, unsafe token storage, etc.). ([MDN Web Docs][3])
+* MUST avoid introducing new risky sinks (raw HTML insertion, direct DOM sinks like `innerHTML`, dynamic code execution, untrusted redirects/navigation, thirdâ€‘party script injection, unsafe token storage, etc.). ([MDN Web Docs][3])
 
 ### 1.2 Passive review mode (always on while editing)
 
 While working anywhere in a React repo (even if the user did not ask for a security scan):
 
-* MUST “notice” violations of this spec in touched/nearby code.
+* MUST â€œnoticeâ€ violations of this spec in touched/nearby code.
 * SHOULD mention issues as they come up, with a brief explanation + safe fix.
 
 ### 1.3 Active audit mode (explicit scan request)
 
-When the user asks to “scan”, “audit”, or “hunt for vulns”:
+When the user asks to â€œscanâ€, â€œauditâ€, or â€œhunt for vulnsâ€:
 
 * MUST systematically search the codebase for violations of this spec.
-* MUST output findings in a structured format (see §2.3).
+* MUST output findings in a structured format (see Â§2.3).
 
 Recommended audit order:
 
@@ -68,7 +68,7 @@ Recommended audit order:
 Examples include:
 
 * URL-derived data: `window.location`, query params, hash fragments, route params.
-* Any data from browser storage: `localStorage`, `sessionStorage`, `IndexedDB` (including data previously written by the app—because XSS or extensions can tamper with it). ([OWASP Cheat Sheet Series][4])
+* Any data from browser storage: `localStorage`, `sessionStorage`, `IndexedDB` (including data previously written by the appâ€”because XSS or extensions can tamper with it). ([OWASP Cheat Sheet Series][4])
 * Any data from cross-window messaging: `window.postMessage` payloads. ([OWASP Cheat Sheet Series][4])
 * Any data from remote APIs, webhooks proxied to the client, GraphQL responses, CMS content, feature flag services.
 * Any persisted user content (profiles, comments, rich text, markdown) rendered in the UI.
@@ -80,7 +80,7 @@ A request is state-changing if it can create/update/delete data, change auth/ses
 
 Frontend-specific note:
 
-* State changes are often triggered by `fetch/axios` calls or form submissions. If authentication is cookie-based, these calls can be CSRF-relevant (§4 REACT-CSRF-001). ([OWASP Cheat Sheet Series][6])
+* State changes are often triggered by `fetch/axios` calls or form submissions. If authentication is cookie-based, these calls can be CSRF-relevant (Â§4 REACT-CSRF-001). ([OWASP Cheat Sheet Series][6])
 
 ### 2.3 Required audit finding format
 
@@ -99,15 +99,15 @@ For each issue found, output:
 
 ## 3) Secure baseline: minimum production configuration (MUST in production)
 
-This is the smallest “production baseline” that prevents common React frontend misconfigurations.
+This is the smallest â€œproduction baselineâ€ that prevents common React frontend misconfigurations.
 
 ### 3.1 Production build and configuration hygiene (MUST)
 
 * MUST ship a production build (minified, no dev-only overlays/tools, correct mode flags).
-* MUST ensure build-time configuration does not embed secrets into the shipped JS/HTML/CSS. Build-time “environment variables” are not secret; treat them as public. ([create-react-app.dev][1])
+* MUST ensure build-time configuration does not embed secrets into the shipped JS/HTML/CSS. Build-time â€œenvironment variablesâ€ are not secret; treat them as public. ([create-react-app.dev][1])
 * SHOULD treat source maps as sensitive operational artifacts:
 
-  * Either don’t publish them publicly, or publish them only where intended (e.g., behind auth or to an error-reporting provider), because they can reveal code structure and internal URLs.
+  * Either donâ€™t publish them publicly, or publish them only where intended (e.g., behind auth or to an error-reporting provider), because they can reveal code structure and internal URLs.
 
 ### 3.2 Browser-enforced protections (SHOULD, but baseline expectation for modern apps)
 
@@ -183,7 +183,7 @@ Required:
 Insecure patterns:
 
 * `<div dangerouslySetInnerHTML={{ __html: userHtml }} />` where `userHtml` is from API/URL/storage.
-* “Sanitization” done with regexes, ad-hoc stripping, or incomplete allowlists.
+* â€œSanitizationâ€ done with regexes, ad-hoc stripping, or incomplete allowlists.
 
 Detection hints:
 
@@ -201,12 +201,12 @@ Fix:
 Notes:
 
 * React explicitly warns that `dangerouslySetInnerHTML` is dangerous and can introduce XSS if misused. ([React][12])
-* OWASP explicitly calls out React’s `dangerouslySetInnerHTML` without sanitization as a common framework “escape hatch” pitfall. ([OWASP Cheat Sheet Series][9])
+* OWASP explicitly calls out Reactâ€™s `dangerouslySetInnerHTML` without sanitization as a common framework â€œescape hatchâ€ pitfall. ([OWASP Cheat Sheet Series][9])
 * DOMPurify describes itself as an XSS sanitizer for HTML/SVG/MathML. ([GitHub][13])
 
 ---
 
-### REACT-XSS-002: Rely on React’s escaping-by-default behavior; do not bypass it
+### REACT-XSS-002: Rely on Reactâ€™s escaping-by-default behavior; do not bypass it
 
 Severity: High (when bypassed)
 
@@ -214,7 +214,7 @@ Required:
 
 * MUST render untrusted strings via normal JSX interpolation (`{value}`) and React props, which are escaped by default.
 * MUST NOT build HTML strings from untrusted data and then inject them into the DOM via any means.
-* SHOULD treat any “escape hatch” as high risk and require review.
+* SHOULD treat any â€œescape hatchâ€ as high risk and require review.
 
 Insecure patterns:
 
@@ -288,7 +288,7 @@ Required:
   * Typically allow only `https:` (and maybe `http:` for localhost/dev) and relative URLs for in-app navigation.
   * MUST explicitly block `javascript:` and dangerous `data:` uses unless you have specialized validation and a clear use case.
 * SHOULD prefer same-site relative paths (e.g., `/settings`) over absolute URLs.
-* MUST validate “returnTo/next/redirect” parameters (see REACT-REDIRECT-001).
+* MUST validate â€œreturnTo/next/redirectâ€ parameters (see REACT-REDIRECT-001).
 
 Insecure patterns:
 
@@ -314,7 +314,7 @@ Fix:
 
 Notes:
 
-* OWASP explicitly notes React’s `dangerouslySetInnerHTML` risk and also states React cannot safely handle `javascript:` or `data:` URLs without specialized validation. ([OWASP Cheat Sheet Series][9])
+* OWASP explicitly notes Reactâ€™s `dangerouslySetInnerHTML` risk and also states React cannot safely handle `javascript:` or `data:` URLs without specialized validation. ([OWASP Cheat Sheet Series][9])
 
 ---
 
@@ -334,7 +334,7 @@ Required:
 
 Insecure patterns:
 
-* Markdown rendering with “raw HTML passthrough” enabled (e.g., options/plugins that allow HTML).
+* Markdown rendering with â€œraw HTML passthroughâ€ enabled (e.g., options/plugins that allow HTML).
 * Rendering user-provided SVG/MathML/HTML inline without sanitization.
 
 Detection hints:
@@ -342,7 +342,7 @@ Detection hints:
 * Search for common libraries and risky options:
 
   * `marked`, `markdown-it`, `react-markdown`, `rehype-raw`, `sanitize: false`, `allowDangerousHtml`, etc.
-* Look for `dangerouslySetInnerHTML` used with “markdown output”.
+* Look for `dangerouslySetInnerHTML` used with â€œmarkdown outputâ€.
 
 Fix:
 
@@ -363,7 +363,7 @@ Required:
 
 * SHOULD consider enabling Trusted Types in report-only mode first, then enforce once violations are addressed.
 * SHOULD centralize Trusted Types policies and treat them as high-risk code requiring review.
-* MUST NOT create permissive policies that simply “pass through” untrusted strings.
+* MUST NOT create permissive policies that simply â€œpass throughâ€ untrusted strings.
 
 Insecure patterns:
 
@@ -415,7 +415,7 @@ Detection hints:
 * Look for CSP configuration:
 
   * Server/CDN config, headers in `index.html` responses, or framework config.
-* If absent in repo, mark as “verify at edge”.
+* If absent in repo, mark as â€œverify at edgeâ€.
 
 Fix:
 
@@ -424,7 +424,7 @@ Fix:
 
 Notes:
 
-* OWASP describes CSP as “defense in depth” against XSS and notes it can help enforce SRI even on static sites, but should not be the only defense. ([OWASP Cheat Sheet Series][2])
+* OWASP describes CSP as â€œdefense in depthâ€ against XSS and notes it can help enforce SRI even on static sites, but should not be the only defense. ([OWASP Cheat Sheet Series][2])
 
 ---
 
@@ -438,7 +438,7 @@ Required:
 * If loading from a CDN or third party:
 
   * SHOULD use SRI (`integrity=...`) and `crossorigin` where applicable.
-  * SHOULD pin exact versions (avoid “latest” URLs).
+  * SHOULD pin exact versions (avoid â€œlatestâ€ URLs).
   * SHOULD prefer self-hosting for critical code.
 
 Insecure patterns:
@@ -461,7 +461,7 @@ Fix:
 
 Notes:
 
-* MDN describes SRI as a security feature enabling browsers to verify fetched resources (e.g., from a CDN) haven’t been manipulated by checking a cryptographic hash. ([MDN Web Docs][7])
+* MDN describes SRI as a security feature enabling browsers to verify fetched resources (e.g., from a CDN) havenâ€™t been manipulated by checking a cryptographic hash. ([MDN Web Docs][7])
 * OWASP CSP guidance notes CSP can enforce SRI and is useful even on static sites. ([OWASP Cheat Sheet Series][2])
 
 ---
@@ -531,7 +531,7 @@ Insecure patterns:
 Detection hints:
 
 * Grep for: `localStorage.`, `sessionStorage.`, `setItem(`, `getItem(`, `token`, `jwt`, `refresh`
-* Search auth code for “remember me” storing tokens persistently.
+* Search auth code for â€œremember meâ€ storing tokens persistently.
 
 Fix:
 
@@ -570,7 +570,7 @@ Detection hints:
 
   * Is `credentials: 'include'` or `withCredentials: true` used?
   * Is a CSRF token header included (e.g., `X-CSRF-Token`)?
-* Search for “csrf” utilities; if absent, treat as suspicious.
+* Search for â€œcsrfâ€ utilities; if absent, treat as suspicious.
 
 Fix:
 
@@ -597,13 +597,13 @@ Required:
 
 Insecure patterns:
 
-* “Protected” actions hidden in UI but callable by API without server checks.
+* â€œProtectedâ€ actions hidden in UI but callable by API without server checks.
 * Client checks like `if (user.isAdmin) { showAdminPanel(); }` with no server-side enforcement.
 
 Detection hints:
 
 * Look for UI gating around sensitive actions and verify server endpoints enforce authorization.
-* In a frontend-only audit, report as “client checks are not security; verify backend”.
+* In a frontend-only audit, report as â€œclient checks are not security; verify backendâ€.
 
 Fix:
 
@@ -634,7 +634,7 @@ Insecure patterns:
 
 * `fetch(userProvidedUrl, { credentials: 'include' })`
 * `axios.create({ baseURL: userProvidedBase })`
-* “URL fetch/preview” features in the client that hit arbitrary domains with sensitive headers.
+* â€œURL fetch/previewâ€ features in the client that hit arbitrary domains with sensitive headers.
 
 Detection hints:
 
@@ -696,7 +696,7 @@ Required:
 
 Insecure patterns:
 
-* Registering a service worker for an authenticated app and caching “everything” indiscriminately.
+* Registering a service worker for an authenticated app and caching â€œeverythingâ€ indiscriminately.
 * Long-lived caches containing PII or user-specific content shared across accounts.
 
 Detection hints:
@@ -716,7 +716,7 @@ Fix:
 Notes:
 
 * MDN notes service workers require HTTPS for security reasons and act like a proxy for requests/responses. ([MDN Web Docs][10])
-* “Secure contexts” exist to prevent MITM attackers from accessing powerful APIs; service workers are an example of such a powerful feature. ([MDN Web Docs][18])
+* â€œSecure contextsâ€ exist to prevent MITM attackers from accessing powerful APIs; service workers are an example of such a powerful feature. ([MDN Web Docs][18])
 
 ---
 
@@ -743,12 +743,12 @@ Insecure patterns:
 Detection hints:
 
 * Check server/CDN config in repo (nginx, Cloudflare, Vercel config, etc.).
-* If absent, flag as “verify at runtime/edge”.
+* If absent, flag as â€œverify at runtime/edgeâ€.
 
 Fix:
 
 * Set headers centrally at the edge.
-* Keep CSP realistic and iterative (report-only → enforce).
+* Keep CSP realistic and iterative (report-only â†’ enforce).
 
 Notes:
 
@@ -820,7 +820,7 @@ Fix:
 
 Notes:
 
-* OWASP file upload guidance highlights allowlisting extensions, validating file type, generating filenames, limiting size, storing outside webroot, and considering “client-side active content (XSS, CSRF, etc.)” when files are publicly retrievable. ([OWASP Cheat Sheet Series][19])
+* OWASP file upload guidance highlights allowlisting extensions, validating file type, generating filenames, limiting size, storing outside webroot, and considering â€œclient-side active content (XSS, CSRF, etc.)â€ when files are publicly retrievable. ([OWASP Cheat Sheet Series][19])
 
 ---
 
@@ -868,7 +868,7 @@ Notes:
 
 ---
 
-## 5) Practical scanning heuristics (how to “hunt”)
+## 5) Practical scanning heuristics (how to â€œhuntâ€)
 
 When actively scanning, use these high-signal patterns:
 
@@ -919,47 +919,47 @@ Always try to confirm:
 
 Primary React documentation:
 
-* React 19 stable announcement — `https://react.dev/blog/2024/12/05/react-19` ([React][23])
-* React DOM docs: `dangerouslySetInnerHTML` warning — `https://react.dev/reference/react-dom/components/common#dangerouslysetting-the-inner-html` ([React][12])
-* React (legacy) JSX escaping statement — `https://legacy.reactjs.org/docs/introducing-jsx.html` ([React][14])
+* React 19 stable announcement â€” `https://react.dev/blog/2024/12/05/react-19` ([React][23])
+* React DOM docs: `dangerouslySetInnerHTML` warning â€” `https://react.dev/reference/react-dom/components/common#dangerouslysetting-the-inner-html` ([React][12])
+* React (legacy) JSX escaping statement â€” `https://legacy.reactjs.org/docs/introducing-jsx.html` ([React][14])
 
 OWASP Cheat Sheet Series:
 
-* Cross Site Scripting Prevention (framework escape hatches; React `dangerouslySetInnerHTML`; URL validation notes) — `https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html` ([OWASP Cheat Sheet Series][9])
-* Content Security Policy — `https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html` ([OWASP Cheat Sheet Series][2])
-* Cross-Site Request Forgery Prevention — `https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html` ([OWASP Cheat Sheet Series][6])
-* HTML5 Security (Web Storage, postMessage, tabnabbing, sandboxed frames) — `https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html` ([OWASP Cheat Sheet Series][4])
-* Third Party JavaScript Management — `https://cheatsheetseries.owasp.org/cheatsheets/Third_Party_Javascript_Management_Cheat_Sheet.html` ([OWASP Cheat Sheet Series][5])
-* File Upload — `https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html` ([OWASP Cheat Sheet Series][19])
-* NPM Security best practices — `https://cheatsheetseries.owasp.org/cheatsheets/NPM_Security_Cheat_Sheet.html` ([OWASP Cheat Sheet Series][22])
+* Cross Site Scripting Prevention (framework escape hatches; React `dangerouslySetInnerHTML`; URL validation notes) â€” `https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html` ([OWASP Cheat Sheet Series][9])
+* Content Security Policy â€” `https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html` ([OWASP Cheat Sheet Series][2])
+* Cross-Site Request Forgery Prevention â€” `https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html` ([OWASP Cheat Sheet Series][6])
+* HTML5 Security (Web Storage, postMessage, tabnabbing, sandboxed frames) â€” `https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html` ([OWASP Cheat Sheet Series][4])
+* Third Party JavaScript Management â€” `https://cheatsheetseries.owasp.org/cheatsheets/Third_Party_Javascript_Management_Cheat_Sheet.html` ([OWASP Cheat Sheet Series][5])
+* File Upload â€” `https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html` ([OWASP Cheat Sheet Series][19])
+* NPM Security best practices â€” `https://cheatsheetseries.owasp.org/cheatsheets/NPM_Security_Cheat_Sheet.html` ([OWASP Cheat Sheet Series][22])
 
 Browser / platform references (MDN, W3C):
 
-* Trusted Types API — `https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API` ([MDN Web Docs][3])
-* W3C Trusted Types spec — `https://www.w3.org/TR/trusted-types/` ([W3C][15])
-* Subresource Integrity — `https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity` ([MDN Web Docs][7])
-* Clickjacking defenses overview — `https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/Clickjacking` ([MDN Web Docs][8])
-* Using Service Workers (HTTPS requirement; proxy-like behavior) — `https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers` ([MDN Web Docs][10])
-* Secure contexts (powerful APIs restricted to HTTPS) — `https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Secure_Contexts` ([MDN Web Docs][18])
-* Link `rel` values (noopener/noreferrer) — `https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel` ([MDN Web Docs][17])
+* Trusted Types API â€” `https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API` ([MDN Web Docs][3])
+* W3C Trusted Types spec â€” `https://www.w3.org/TR/trusted-types/` ([W3C][15])
+* Subresource Integrity â€” `https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity` ([MDN Web Docs][7])
+* Clickjacking defenses overview â€” `https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/Clickjacking` ([MDN Web Docs][8])
+* Using Service Workers (HTTPS requirement; proxy-like behavior) â€” `https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers` ([MDN Web Docs][10])
+* Secure contexts (powerful APIs restricted to HTTPS) â€” `https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Secure_Contexts` ([MDN Web Docs][18])
+* Link `rel` values (noopener/noreferrer) â€” `https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel` ([MDN Web Docs][17])
 
 Build tooling / env exposure references:
 
-* Create React App env variables warning — `https://create-react-app.dev/docs/adding-custom-environment-variables/` ([create-react-app.dev][1])
-* Vite env variables security notes — `https://vite.dev/guide/env-and-mode` ([vitejs][11])
+* Create React App env variables warning â€” `https://create-react-app.dev/docs/adding-custom-environment-variables/` ([create-react-app.dev][1])
+* Vite env variables security notes â€” `https://vite.dev/guide/env-and-mode` ([vitejs][11])
 
 Auth/token storage guidance:
 
-* OAuth 2.0 for Browser-Based Apps (token storage discussion) — `https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps` ([IETF Datatracker][16])
+* OAuth 2.0 for Browser-Based Apps (token storage discussion) â€” `https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps` ([IETF Datatracker][16])
 
 Dependency tooling references:
 
-* npm audit docs — `https://docs.npmjs.com/cli/v10/commands/npm-audit/` ([npm Docs][20])
-* npm ci docs — `https://docs.npmjs.com/cli/v10/commands/npm-ci/` ([npm Docs][21])
+* npm audit docs â€” `https://docs.npmjs.com/cli/v10/commands/npm-audit/` ([npm Docs][20])
+* npm ci docs â€” `https://docs.npmjs.com/cli/v10/commands/npm-ci/` ([npm Docs][21])
 
 Sanitizer reference:
 
-* DOMPurify — `https://github.com/cure53/DOMPurify` ([GitHub][13])
+* DOMPurify â€” `https://github.com/cure53/DOMPurify` ([GitHub][13])
 
 [1]: https://create-react-app.dev/docs/adding-custom-environment-variables/ "Adding Custom Environment Variables | Create React App"
 [2]: https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html "Content Security Policy - OWASP Cheat Sheet Series"
@@ -972,9 +972,9 @@ Sanitizer reference:
 [9]: https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html "Cross Site Scripting Prevention - OWASP Cheat Sheet Series"
 [10]: https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers "Using Service Workers - Web APIs | MDN"
 [11]: https://vite.dev/guide/env-and-mode "Env Variables and Modes | Vite"
-[12]: https://react.dev/reference/react-dom/components/common "Common components (e.g. <div>) – React"
+[12]: https://react.dev/reference/react-dom/components/common "Common components (e.g. <div>) â€“ React"
 [13]: https://github.com/cure53/DOMPurify "GitHub - cure53/DOMPurify: DOMPurify - a DOM-only, super-fast, uber-tolerant XSS sanitizer for HTML, MathML and SVG. DOMPurify works with a secure default, but offers a lot of configurability and hooks. Demo:"
-[14]: https://legacy.reactjs.org/docs/introducing-jsx.html "Introducing JSX – React"
+[14]: https://legacy.reactjs.org/docs/introducing-jsx.html "Introducing JSX â€“ React"
 [15]: https://www.w3.org/TR/trusted-types/ "Trusted Types"
 [16]: https://datatracker.ietf.org/doc/html/draft-ietf-oauth-browser-based-apps "
             
@@ -987,4 +987,4 @@ Sanitizer reference:
 [20]: https://docs.npmjs.com/cli/v10/commands/npm-audit "npm-audit | npm Docs"
 [21]: https://docs.npmjs.com/cli/v10/commands/npm-ci "npm-ci | npm Docs"
 [22]: https://cheatsheetseries.owasp.org/cheatsheets/NPM_Security_Cheat_Sheet.html "NPM Security - OWASP Cheat Sheet Series"
-[23]: https://react.dev/blog/2024/12/05/react-19 "React v19 – React"
+[23]: https://react.dev/blog/2024/12/05/react-19 "React v19 â€“ React"

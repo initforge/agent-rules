@@ -1,4 +1,4 @@
-# Tool / MCP / Skills Inventory Rules
+﻿# Tool / MCP / Skills Inventory Rules
 
 ## Trigger
 
@@ -6,7 +6,7 @@ Activate when:
 
 - user installs a new CLI, tool, MCP, skill, or plugin
 - Codex discovers a useful installed tool
-- setup changes in `C:\Users\ADMIN\.codex\config.toml`
+- setup changes in `C:\Users\DELL\.codex\config.toml`
 - Codex Research, GitNexus, RTK, Node, Python, Flutter, etc. changes
 - user asks to prepare for new machine setup
 - user asks to document current machine setup
@@ -19,8 +19,8 @@ Keep machine knowledge reproducible.
 A new machine should be restorable by reading docs and inventory under:
 
 ```text
-C:\Users\ADMIN\.codex\docs
-C:\Users\ADMIN\.codex\inventory
+C:\Users\DELL\.codex\docs
+C:\Users\DELL\.codex\inventory
 ```
 
 Then syncing from:
@@ -34,24 +34,24 @@ P:\agent-rules\codex
 Maintain:
 
 ```text
-C:\Users\ADMIN\.codex\docs\
-â”œâ”€ machine-profile.md
-â”œâ”€ tool-registry.md
-â”œâ”€ mcp-registry.md
-â”œâ”€ skills-registry.md
-â”œâ”€ bootstrap-new-machine.md
-â””â”€ troubleshooting.md
+C:\Users\DELL\.codex\docs\
+Ã¢â€Å“Ã¢â€â‚¬ machine-profile.md
+Ã¢â€Å“Ã¢â€â‚¬ tool-registry.md
+Ã¢â€Å“Ã¢â€â‚¬ mcp-registry.md
+Ã¢â€Å“Ã¢â€â‚¬ skills-registry.md
+Ã¢â€Å“Ã¢â€â‚¬ bootstrap-new-machine.md
+Ã¢â€â€Ã¢â€â‚¬ troubleshooting.md
 ```
 
 Maintain machine-readable inventory:
 
 ```text
-C:\Users\ADMIN\.codex\inventory\
-â”œâ”€ tools.json
-â”œâ”€ env.json
-â”œâ”€ paths.json
-â”œâ”€ codex-config.snapshot.toml
-â””â”€ mcp-list.txt
+C:\Users\DELL\.codex\inventory\
+Ã¢â€Å“Ã¢â€â‚¬ tools.json
+Ã¢â€Å“Ã¢â€â‚¬ env.json
+Ã¢â€Å“Ã¢â€â‚¬ paths.json
+Ã¢â€Å“Ã¢â€â‚¬ codex-config.snapshot.toml
+Ã¢â€â€Ã¢â€â‚¬ mcp-list.txt
 ```
 
 Sync the full `.codex` setup to:
@@ -144,11 +144,11 @@ When the user says:
 Run:
 
 ```powershell
-C:\Users\ADMIN\.codex\scripts\inventory-current-machine.ps1
+C:\Users\DELL\.codex\scripts\inventory-current-machine.ps1
 ```
 
 Then update docs and sync:
 
 ```powershell
-C:\Users\ADMIN\.codex\scripts\sync-codex-to-p.ps1
+C:\Users\DELL\.codex\scripts\sync-codex-to-p.ps1
 ```

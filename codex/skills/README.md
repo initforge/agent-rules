@@ -15,7 +15,7 @@ skill-name\
 Use skills for reusable workflows that are too long for `AGENTS.md`.
 
 Taxonomy reference:
-- `C:\Users\ADMIN\.codex\docs\skills-taxonomy.md`
+- `C:\Users\DELL\.codex\docs\skills-taxonomy.md`
 
 Current self-authored skills in this folder:
 - `docs-style`

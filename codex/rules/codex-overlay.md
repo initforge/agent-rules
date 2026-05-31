@@ -1,4 +1,4 @@
-# Codex Overlay
+﻿# Codex Overlay
 
 ## Trigger
 
@@ -9,7 +9,7 @@ Active only inside Codex.
 Use local runtime under:
 
 ```text
-C:\Users\ADMIN\.codex\
+C:\Users\DELL\.codex\
 ```
 
 `P:\agent-rules` is backup, sync, and bootstrap, not daily runtime dependency.
@@ -29,7 +29,7 @@ C:\Users\ADMIN\.codex\
 User config:
 
 ```text
-C:\Users\ADMIN\.codex\config.toml
+C:\Users\DELL\.codex\config.toml
 ```
 
 Project config:
@@ -55,7 +55,7 @@ Call explicitly:
 Custom agents live in:
 
 ```text
-C:\Users\ADMIN\.codex\agents\
+C:\Users\DELL\.codex\agents\
 ```
 
 Useful roles:
@@ -79,7 +79,7 @@ Do not put long workflow docs into `AGENTS.md` if they can become a skill.
 Codex skills live in:
 
 ```text
-C:\Users\ADMIN\.codex\skills\
+C:\Users\DELL\.codex\skills\
 ```
 
 Each skill should have:
@@ -107,7 +107,7 @@ Do not create plugin before:
 Configure MCP in:
 
 ```text
-C:\Users\ADMIN\.codex\config.toml
+C:\Users\DELL\.codex\config.toml
 ```
 
 or via:
@@ -119,7 +119,7 @@ codex mcp
 Record all MCP servers in:
 
 ```text
-C:\Users\ADMIN\.codex\docs\mcp-registry.md
+C:\Users\DELL\.codex\docs\mcp-registry.md
 ```
 
 ## Project AGENTS.md

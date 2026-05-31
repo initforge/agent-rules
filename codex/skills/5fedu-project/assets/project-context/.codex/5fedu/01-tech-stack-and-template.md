@@ -18,7 +18,15 @@
 https://github.com/tahdieuphoi-ctrl/TAH_app
 ```
 
-Người dùng đã có quyền qua GitHub CLI. Khi repo hiện tại chưa có frontend, hỏi trước khi clone/adapt template.
+Người dùng đã có quyền qua GitHub CLI. Dự án này đã chốt clone/adapt template.
+
+Template source local đã clone để tham chiếu:
+
+```text
+P:\tah-app-5f\.codex\template-source\TAH_app
+```
+
+Khi implement app root, đọc template source local trước, lấy/adapt đúng phần cần, và báo người dùng nếu phải chỉnh sửa phần template.
 
 ## Nguyên tắc dùng template
 

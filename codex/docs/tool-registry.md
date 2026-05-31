@@ -46,8 +46,8 @@ Verify:
 - `codex --help`
 
 Config:
-- `C:\Users\ADMIN\.codex\config.toml`
-- `C:\Users\ADMIN\.codex\AGENTS.md`
+- `C:\Users\DELL\.codex\config.toml`
+- `C:\Users\DELL\.codex\AGENTS.md`
 
 Codex usage:
 - code implementation
@@ -93,8 +93,8 @@ Notes:
 - Use preflight first.
 - Fallback to `rg` if stale.
 - Current machine has verified usable indexing on:
-  - `C:\Users\ADMIN\Documents\Codex\open-claw-setup`
-  - `C:\Users\ADMIN\Documents\Codex\midterm-mobile`
+  - `C:\Users\DELL\Documents\Codex\open-claw-setup`
+  - `C:\Users\DELL\Documents\Codex\midterm-mobile`
 - When multiple repos are indexed, CLI query/context/impact commands require explicit `--repo`.
 - Current machine still shows two non-fatal caveats:
   - FTS can be missing or degraded until a force rebuild recreates indexes

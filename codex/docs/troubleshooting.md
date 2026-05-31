@@ -76,7 +76,7 @@ npx gitnexus --help
 Then update:
 
 ```text
-C:\Users\ADMIN\.codex\scripts\run-codex-research.ps1
+C:\Users\DELL\.codex\scripts\run-codex-research.ps1
 ```
 
 If a bug fix keeps looping:

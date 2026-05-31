@@ -43,7 +43,7 @@ This workflow solves that by:
 Resolve a phase:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\ADMIN\.codex\scripts\resolve-workflow-profile.ps1 `
+powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\DELL\.codex\scripts\resolve-workflow-profile.ps1 `
   -Phase research `
   -Risk medium
 ```
@@ -51,9 +51,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\ADMIN\.codex\script
 Preview launch command:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\ADMIN\.codex\scripts\start-codex-phase.ps1 `
+powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\DELL\.codex\scripts\start-codex-phase.ps1 `
   -Phase implement `
-  -Workdir C:\Users\ADMIN\Documents\Codex\open-claw-setup `
+  -Workdir C:\Users\DELL\Documents\Codex\open-claw-setup `
   -Prompt "Execute the active plan file." `
   -DryRun
 ```
@@ -61,9 +61,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\ADMIN\.codex\script
 Launch a phase:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\ADMIN\.codex\scripts\start-codex-phase.ps1 `
+powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\DELL\.codex\scripts\start-codex-phase.ps1 `
   -Phase review `
-  -Workdir C:\Users\ADMIN\Documents\Codex\open-claw-setup `
+  -Workdir C:\Users\DELL\Documents\Codex\open-claw-setup `
   -Prompt "Review the uncommitted changes." `
   -Risk high `
   -LargeArchitecture
@@ -72,14 +72,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\ADMIN\.codex\script
 Resolve directly from a plan file:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\ADMIN\.codex\scripts\resolve-plan-profile.ps1 `
+powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\DELL\.codex\scripts\resolve-plan-profile.ps1 `
   -PlanFile plan\feature\01-slice.md
 ```
 
 Launch directly from a plan file:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\ADMIN\.codex\scripts\start-codex-from-plan.ps1 `
+powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\DELL\.codex\scripts\start-codex-from-plan.ps1 `
   -PlanFile plan\feature\01-slice.md `
   -DryRun
 ```
@@ -87,15 +87,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\ADMIN\.codex\script
 Validate plan structure:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\ADMIN\.codex\scripts\validate-plan-structure.ps1 `
-  -PlanRoot C:\Users\ADMIN\Documents\Codex\open-claw-setup\plan
+powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\DELL\.codex\scripts\validate-plan-structure.ps1 `
+  -PlanRoot C:\Users\DELL\Documents\Codex\open-claw-setup\plan
 ```
 
 Cleanup old completed plans:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\ADMIN\.codex\scripts\cleanup-plans.ps1 `
-  -PlanRoot C:\Users\ADMIN\Documents\Codex\open-claw-setup\plan `
+powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\DELL\.codex\scripts\cleanup-plans.ps1 `
+  -PlanRoot C:\Users\DELL\Documents\Codex\open-claw-setup\plan `
   -DryRun
 ```
 

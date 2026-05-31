@@ -1,4 +1,4 @@
-# Bootstrap New Machine
+﻿# Bootstrap New Machine
 
 ## Goal
 
@@ -11,7 +11,7 @@ P:\agent-rules\codex
 into:
 
 ```text
-C:\Users\ADMIN\.codex
+C:\Users\DELL\.codex
 ```
 
 ## Steps

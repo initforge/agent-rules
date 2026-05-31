@@ -1,4 +1,4 @@
-# Docs Style Reference
+﻿# Docs Style Reference
 
 This reference defines the editorial and verification standard for README.md, README-vi.md, and `/docs/**`.
 
@@ -90,7 +90,7 @@ Use four labels internally:
 | Current | active path imported or used at runtime | write as present behavior |
 | Legacy | old code/config remains but is not active | label as legacy trace |
 | Planned | TODO/roadmap or partially wired feature | put in limitations/roadmap |
-| Unknown | cannot prove from source | omit or mark `TODO: xác minh ...` |
+| Unknown | cannot prove from source | omit or mark `TODO: xÃ¡c minh ...` |
 
 Do not use ambiguous wording such as "supports X" when X is only a dependency, unused component, stale branch, or config leftover.
 
@@ -182,7 +182,7 @@ README should have a deliberate visual surface on GitHub. It should not look lik
 Recommended visual order:
 
 ```md
-# Project Name — Short, concrete category
+# Project Name â€” Short, concrete category
 
 ![Primary](...)
 ![Stack](...)
@@ -660,7 +660,7 @@ Avoid:
 - beginner tutorial tone
 - internal reasoning tone
 - excessive code/path references
-- "có vẻ", "dường như", "mình thấy" in final docs
+- "cÃ³ váº»", "dÆ°á»ng nhÆ°", "mÃ¬nh tháº¥y" in final docs
 
 Use English technical terms when they are the natural term: `route`, `middleware`, `schema`, `migration`, `webhook`, `queue`, `worker`, `cache`, `provider`, `deployment`. Explain only when needed.
 
@@ -872,6 +872,6 @@ Before finishing, verify:
 - [ ] Diagrams match real runtime boundaries.
 - [ ] No secrets are exposed.
 - [ ] No doc reads like agent reasoning, source inventory, or template filler.
-- [ ] Unknowns are marked as `TODO: xác minh ...`.
+- [ ] Unknowns are marked as `TODO: xÃ¡c minh ...`.
 
 If any item fails, continue editing before reporting completion.

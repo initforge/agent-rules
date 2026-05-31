@@ -84,7 +84,7 @@ Numbering rules:
 - Do not create a single large numbered plan like `60-production-readiness-audit.md` for multi-domain work.
 - If the work has more than 3 independently verifiable vertical slices, create a plan folder with `00-index.md` and one numbered file per slice.
 - If an existing large plan must be kept for historical context, move or treat it as an audit/research note and create a fresh contiguous execution plan from it.
-- To check plan layout mechanically, use `C:\Users\ADMIN\.codex\scripts\validate-plan-structure.ps1 -PlanRoot <repo>\plan`.
+- To check plan layout mechanically, use `C:\Users\DELL\.codex\scripts\validate-plan-structure.ps1 -PlanRoot <repo>\plan`.
 
 For one small plan:
 
@@ -219,7 +219,7 @@ When the user explicitly says "delete all plans", "xÃ³a háº¿t plan", or equ
 - delete all requested plan files/folders within the named `plan/` scope
 - still do not delete application code, docs outside `plan/`, or unrelated files
 
-Use `C:\Users\ADMIN\.codex\scripts\cleanup-plans.ps1 -PlanRoot <repo>\plan -DryRun` before cleanup when possible.
+Use `C:\Users\DELL\.codex\scripts\cleanup-plans.ps1 -PlanRoot <repo>\plan -DryRun` before cleanup when possible.
 Use `-All` only when the user explicitly asks to delete all plans.
 
 ## Compact resilience

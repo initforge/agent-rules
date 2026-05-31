@@ -93,7 +93,7 @@ Codex Research outputs should become concise notes under:
 Preferred helper script:
 
 ```powershell
-rtk proxy powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\ADMIN\.codex\scripts\run-codex-research.ps1 `
+rtk proxy powershell -NoProfile -ExecutionPolicy Bypass -File C:\Users\DELL\.codex\scripts\run-codex-research.ps1 `
   -Task "<task>" `
   -Out "plan\<feature>\research\<note>.md"
 ```

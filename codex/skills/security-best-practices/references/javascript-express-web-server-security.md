@@ -1,21 +1,21 @@
-# Express (Node.js) Web Security Spec (Express 5.x / 4.19.2+, Node.js LTS)
+﻿# Express (Node.js) Web Security Spec (Express 5.x / 4.19.2+, Node.js LTS)
 
 This document is designed as a **security spec** that supports:
 
 1. **Secure-by-default code generation** for new Express apps and routes.
-2. **Security review / vulnerability hunting** in existing Express code (passive “notice issues while working” and active “scan the repo and report findings”).
+2. **Security review / vulnerability hunting** in existing Express code (passive â€œnotice issues while workingâ€ and active â€œscan the repo and report findingsâ€).
 
-It is intentionally written as a set of **normative requirements** (“MUST/SHOULD/MAY”) plus **audit rules** (what bad patterns look like, how to detect them, and how to fix/mitigate them).
+It is intentionally written as a set of **normative requirements** (â€œMUST/SHOULD/MAYâ€) plus **audit rules** (what bad patterns look like, how to detect them, and how to fix/mitigate them).
 
 ---
 
 ## 0) Safety, boundaries, and anti-abuse constraints (MUST FOLLOW)
 
 * MUST NOT request, output, log, or commit secrets (API keys, passwords, private keys, session secrets, cookies, tokens).
-* MUST NOT “fix” security by disabling protections (e.g., weakening cookie flags, disabling CSRF defenses for cookie-authenticated apps, enabling permissive CORS, trusting proxy headers from the open internet, turning on debugging/stack traces in production, disabling TLS without a replacement).
+* MUST NOT â€œfixâ€ security by disabling protections (e.g., weakening cookie flags, disabling CSRF defenses for cookie-authenticated apps, enabling permissive CORS, trusting proxy headers from the open internet, turning on debugging/stack traces in production, disabling TLS without a replacement).
 * MUST provide **evidence-based findings** during audits: cite file paths, code snippets, middleware/config values, and runtime assumptions that justify the claim.
-* MUST treat uncertainty honestly: if a protection might exist in infrastructure (reverse proxy, gateway, WAF, CDN), report it as “not visible in app code; verify at runtime/config.”
-* MUST prefer vetted libraries and platform controls over “roll your own” crypto/auth/session/CSRF. Express explicitly expects the application to validate/handle user input correctly; it does not do this automatically. ([Express][1])
+* MUST treat uncertainty honestly: if a protection might exist in infrastructure (reverse proxy, gateway, WAF, CDN), report it as â€œnot visible in app code; verify at runtime/config.â€
+* MUST prefer vetted libraries and platform controls over â€œroll your ownâ€ crypto/auth/session/CSRF. Express explicitly expects the application to validate/handle user input correctly; it does not do this automatically. ([Express][1])
 
 ---
 
@@ -34,15 +34,15 @@ When asked to write new Express code or modify existing code:
 
 While working anywhere in an Express repo (even if the user did not ask for a security scan):
 
-* MUST “notice” violations of this spec in touched/nearby code.
+* MUST â€œnoticeâ€ violations of this spec in touched/nearby code.
 * SHOULD mention issues as they come up, with a brief explanation + safe fix.
 
 ### 1.3 Active audit mode (explicit scan request)
 
-When the user asks to “scan”, “audit”, or “hunt for vulns”:
+When the user asks to â€œscanâ€, â€œauditâ€, or â€œhunt for vulnsâ€:
 
 * MUST systematically search the codebase for violations of this spec.
-* MUST output findings in a structured format (see §2.3).
+* MUST output findings in a structured format (see Â§2.3).
 
 Recommended audit order:
 
@@ -100,7 +100,7 @@ For each issue found, output:
 
 ## 3) Secure baseline: minimum production configuration (MUST in production)
 
-This is the smallest “production baseline” that prevents common Express misconfigurations.
+This is the smallest â€œproduction baselineâ€ that prevents common Express misconfigurations.
 
 Minimum baseline targets:
 
@@ -140,7 +140,7 @@ Insecure patterns:
 
 Detection hints:
 
-* Identify “untrusted-to-sink” flows: request → sink (`res.redirect`, SQL execution, `sendFile`, `child_process`, template render, outbound fetch).
+* Identify â€œuntrusted-to-sinkâ€ flows: request â†’ sink (`res.redirect`, SQL execution, `sendFile`, `child_process`, template render, outbound fetch).
 * Search for direct usage of `req.query.*`, `req.body.*`, `req.params.*` in sensitive calls.
 
 Fix:
@@ -150,7 +150,7 @@ Fix:
 
 Notes:
 
-* Express production security guidance explicitly says input validation/handling is the application’s responsibility. ([Express][1])
+* Express production security guidance explicitly says input validation/handling is the applicationâ€™s responsibility. ([Express][1])
 
 ---
 
@@ -208,7 +208,7 @@ Detection hints:
 
 * Search for `helmet(` usage; check if CSP is configured or disabled.
 * Search for `res.setHeader(` / `res.set(` for security header setting.
-* If not visible in app code, check nginx/CDN config; otherwise flag “verify at edge.”
+* If not visible in app code, check nginx/CDN config; otherwise flag â€œverify at edge.â€
 
 Fix:
 
@@ -270,7 +270,7 @@ Required:
   * `Secure` when HTTPS (production) IMPORTANT NOTE: Only set `Secure` in production environment if TLS is configured. When running in a local dev environment over HTTP, do not set `Secure` property on cookies. You should do this conditionally based on if the app is running in production mode. You should also include a property like `SESSION_COOKIE_SECURE` which can be used to disable `Secure` cookies when testing over HTTP.
   * `HttpOnly` for auth/session cookies
   * `SameSite` set deliberately (`Lax` is a common baseline; `Strict` if compatible; `None` only with `Secure` and a justified cross-site need)
-* SHOULD avoid setting `domain` broadly (avoid “all subdomains” unless required).
+* SHOULD avoid setting `domain` broadly (avoid â€œall subdomainsâ€ unless required).
 * SHOULD set bounded expiry appropriate to risk and UX.
 
 Insecure patterns:
@@ -344,7 +344,7 @@ Insecure patterns:
 Detection hints:
 
 * Search for `express-session` and look for `MemoryStore` usage or missing `store`.
-* Search for `secret:` in session config and check if it’s hard-coded.
+* Search for `secret:` in session config and check if itâ€™s hard-coded.
 * Look for `req.session = ...` patterns and whether sensitive data is stored.
 
 Fix:
@@ -371,7 +371,7 @@ Required:
 
 * MUST protect all state-changing endpoints (POST/PUT/PATCH/DELETE) that rely on cookies for authentication.
 * SHOULD use a well-understood CSRF mitigation (token-based is the typical baseline).
-* MAY add defense-in-depth: Origin/Referer validation, Fetch Metadata enforcement, SameSite cookies, custom header requirements for XHR/fetch—**but do not treat these as a full replacement** unless explicitly designed and justified.
+* MAY add defense-in-depth: Origin/Referer validation, Fetch Metadata enforcement, SameSite cookies, custom header requirements for XHR/fetchâ€”**but do not treat these as a full replacement** unless explicitly designed and justified.
 * MUST use at a minimum require a custom HTTP header if form based CRSF tokens are not practical, as this is the second strongest method.
 
 IMPORTANT NOTE:
@@ -382,7 +382,7 @@ Insecure patterns:
 
 * Cookie-authenticated endpoints that change state with no CSRF protection.
 * Using GET for state-changing actions (amplifies CSRF risk).
-* “CSRF protection” that only checks a user-controlled field.
+* â€œCSRF protectionâ€ that only checks a user-controlled field.
 
 Detection hints:
 
@@ -412,7 +412,7 @@ Required:
 
   * MUST allowlist trusted origins (do not reflect arbitrary `Origin` without validation).
   * MUST NOT combine broad origins with credentialed cookies (`Access-Control-Allow-Credentials: true`).
-  * SHOULD restrict methods, headers, and exposed headers to what’s required.
+  * SHOULD restrict methods, headers, and exposed headers to whatâ€™s required.
 
 Insecure patterns:
 
@@ -465,7 +465,7 @@ Fix:
 
 Notes:
 
-* Express explicitly warns that when `trust proxy` is `true`, the client IP is derived from `X-Forwarded-For`, and if proxies don’t overwrite forwarded headers, the client can provide any value. It also describes that enabling trust proxy impacts `req.hostname` and `req.protocol` derived from forwarded headers. ([Express][2])
+* Express explicitly warns that when `trust proxy` is `true`, the client IP is derived from `X-Forwarded-For`, and if proxies donâ€™t overwrite forwarded headers, the client can provide any value. It also describes that enabling trust proxy impacts `req.hostname` and `req.protocol` derived from forwarded headers. ([Express][2])
 
 ---
 
@@ -551,13 +551,13 @@ Required:
 Insecure patterns:
 
 * `res.send("<div>" + req.query.q + "</div>")`
-* Passing untrusted HTML through “safe” template flags/filters.
+* Passing untrusted HTML through â€œsafeâ€ template flags/filters.
 * Writing untrusted strings into `res.locals` and then rendering without escaping.
 
 Detection hints:
 
 * Search for `res.send(` with strings containing user input.
-* Search for template “safe” flags (engine-specific) and trace data origin.
+* Search for template â€œsafeâ€ flags (engine-specific) and trace data origin.
 * Search for assignments to `res.locals` and whether they might contain untrusted data.
 
 Fix:
@@ -568,7 +568,7 @@ Fix:
 
 Notes:
 
-* Express API docs explicitly warn that `res.locals` “should not contain user-controlled input” and is often used to expose things like CSRF tokens to templates. ([Express][5])
+* Express API docs explicitly warn that `res.locals` â€œshould not contain user-controlled inputâ€ and is often used to expose things like CSRF tokens to templates. ([Express][5])
 * OWASP XSS prevention guidance provides standard output-encoding and policy recommendations. ([OWASP Cheat Sheet Series][4])
 * Helmet can mitigate some XSS classes via headers such as CSP. ([Express][1])
 
@@ -582,7 +582,7 @@ Required:
 
 * MUST NOT render templates whose contents or template path/name is influenced by untrusted input.
 * MUST NOT load templates from user-controlled filesystem locations.
-* SHOULD treat “email template editors”, “theme engines”, and “CMS-like template storage” as high-risk designs requiring sandboxing and isolation.
+* SHOULD treat â€œemail template editorsâ€, â€œtheme enginesâ€, and â€œCMS-like template storageâ€ as high-risk designs requiring sandboxing and isolation.
 
 Insecure patterns:
 
@@ -602,7 +602,7 @@ Fix:
 
 Notes:
 
-* Express’s template system depends on the chosen engine; assume unsafe if user input influences template selection or source.
+* Expressâ€™s template system depends on the chosen engine; assume unsafe if user input influences template selection or source.
 
 ---
 
@@ -634,7 +634,7 @@ Fix:
 
 Notes:
 
-* Express’s `res.sendFile` docs show using a `root` option and `dotfiles: 'deny'` as part of a safe serving configuration. ([Express][5])
+* Expressâ€™s `res.sendFile` docs show using a `root` option and `dotfiles: 'deny'` as part of a safe serving configuration. ([Express][5])
 * `res.download` transfers the file as an attachment, but you still must control/validate the underlying `path`. ([Express][5])
 
 ---
@@ -825,7 +825,7 @@ Required:
 Insecure patterns:
 
 * `fetch(req.query.url)`
-* “URL preview” / “import from URL” endpoints that accept arbitrary URLs.
+* â€œURL previewâ€ / â€œimport from URLâ€ endpoints that accept arbitrary URLs.
 
 Detection hints:
 
@@ -852,7 +852,7 @@ Required:
 * SHOULD define a centralized error handler (`app.use((err, req, res, next) => ...)`) at the end of middleware.
 * MUST avoid returning stack traces, internal error messages, or secrets to clients in production.
 * SHOULD log errors server-side with appropriate redaction.
-* SHOULD ensure the app runs with production settings so default behavior doesn’t leak details.
+* SHOULD ensure the app runs with production settings so default behavior doesnâ€™t leak details.
 * MUST avoid logging or returning sensitive information such as secrets, env vars, sessions, cookies in error messages in production.
 
 Insecure patterns:
@@ -979,7 +979,7 @@ Fix:
 
 Notes:
 
-* Node’s security guidance for HTTP DoS discusses using reverse proxies and correctly configuring server timeouts. ([Node.js][15])
+* Nodeâ€™s security guidance for HTTP DoS discusses using reverse proxies and correctly configuring server timeouts. ([Node.js][15])
 
 ---
 
@@ -1023,7 +1023,7 @@ NOTE: Ensure that this detection is actually in the production path, and not jus
 
 Required:
 
-* MUST NOT use Node’s `insecureHTTPParser` in production.
+* MUST NOT use Nodeâ€™s `insecureHTTPParser` in production.
 * MAY suggest configuring front-end proxies to normalize ambiguous requests to reduce request smuggling risk.
 
 Insecure patterns:
@@ -1044,7 +1044,7 @@ Notes:
 
 ---
 
-## 5) Practical scanning heuristics (how to “hunt”)
+## 5) Practical scanning heuristics (how to â€œhuntâ€)
 
 When actively scanning an Express repo, these patterns are high-signal:
 
@@ -1072,7 +1072,7 @@ When actively scanning an Express repo, these patterns are high-signal:
   * `res.redirect(req.query.next)` or similar ([Express][1])
 * XSS / HTML output:
 
-  * `res.send(` building HTML with user input; template “safe” flags; untrusted values in `res.locals` ([Express][5])
+  * `res.send(` building HTML with user input; template â€œsafeâ€ flags; untrusted values in `res.locals` ([Express][5])
 * File handling:
 
   * `res.sendFile(` / `res.download(` where path originates from request; `express.static('uploads')` ([Express][5])
@@ -1106,7 +1106,7 @@ Always try to confirm:
 
 Primary Express documentation:
 
-* Express: Production Best Practices — Security: `https://expressjs.com/en/advanced/best-practice-security.html` ([Express][1])
+* Express: Production Best Practices â€” Security: `https://expressjs.com/en/advanced/best-practice-security.html` ([Express][1])
 * Express: Behind Proxies (`trust proxy`): `https://expressjs.com/en/guide/behind-proxies.html` ([Express][2])
 * Express 5.x API Reference (parsers, static, sendFile, redirect, cookies): `https://expressjs.com/en/5x/api.html` ([Express][5])
 * Express: Error Handling: `https://expressjs.com/en/guide/error-handling.html` ([Express][11])
@@ -1117,8 +1117,8 @@ Session middleware documentation:
 
 Node.js and npm official references:
 
-* Node.js — Security Best Practices (DoS, proxy guidance, inspector risks, request smuggling notes): `https://nodejs.org/en/learn/getting-started/security-best-practices` ([Node.js][15])
-* npm Docs — `npm audit`: `https://docs.npmjs.com/cli/v9/commands/npm-audit/` ([npm Docs][16])
+* Node.js â€” Security Best Practices (DoS, proxy guidance, inspector risks, request smuggling notes): `https://nodejs.org/en/learn/getting-started/security-best-practices` ([Node.js][15])
+* npm Docs â€” `npm audit`: `https://docs.npmjs.com/cli/v9/commands/npm-audit/` ([npm Docs][16])
 
 OWASP Cheat Sheet Series:
 
@@ -1152,7 +1152,7 @@ Versioning / advisories:
 [12]: https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html "Session Management - OWASP Cheat Sheet Series"
 [13]: https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html "File Upload - OWASP Cheat Sheet Series"
 [14]: https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html "OS Command Injection Defense - OWASP Cheat Sheet Series"
-[15]: https://nodejs.org/en/learn/getting-started/security-best-practices "Node.js — Security Best Practices"
+[15]: https://nodejs.org/en/learn/getting-started/security-best-practices "Node.js â€” Security Best Practices"
 [16]: https://docs.npmjs.com/cli/v9/commands/npm-audit/ "npm-audit | npm Docs"
 [17]: https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html "Input Validation - OWASP Cheat Sheet Series"
 [18]: https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html "Unvalidated Redirects and Forwards - OWASP Cheat Sheet Series"

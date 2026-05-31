@@ -70,3 +70,12 @@ Quy tắc: đứng ở đâu quay lại đó.
 - List view -> sửa -> form -> lưu/hủy -> quay lại list view.
 - Detail view -> sửa -> form -> lưu/hủy -> quay lại detail view.
 - Detail bảng cha -> thêm dòng con -> form -> lưu/hủy -> quay lại detail bảng cha.
+## Owner Feedback Gate 2026-05-31
+
+- Phần đăng nhập phải làm chuẩn trước khi mở rộng module khác.
+- Login dùng `ten_dang_nhap`, không dùng `ma_nhan_vien`.
+- Bảng nhân viên chỉ giữ các trường chính đã chốt; không tự thêm trường hồ sơ nhân sự rườm rà.
+- Khi thêm nhân viên có `ten_dang_nhap`, phải tạo Supabase Auth user `<ten_dang_nhap>@gmail.com`.
+- Khi sửa `ten_dang_nhap`, phải đồng bộ Supabase Auth user sang email giả mới hoặc dùng flow admin đã chốt để thay user cũ.
+- Khi xóa nhân viên hoặc xóa username, phải xóa/vô hiệu hóa Supabase Auth user tương ứng.
+- Flow auth/admin này là HIGH risk: bắt buộc chạy qua server/admin path, không đưa service role key vào frontend, và phải có smoke test create/update/delete auth user.

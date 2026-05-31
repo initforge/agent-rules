@@ -1,94 +1,94 @@
-# Quy Táº¯c LÃµi Khi Cháº¡y Codex
+﻿# Quy TÃ¡ÂºÂ¯c LÃƒÂµi Khi ChÃ¡ÂºÂ¡y Codex
 
-## KÃ­ch Hoáº¡t
+## KÃƒÂ­ch HoÃ¡ÂºÂ¡t
 
-LuÃ´n Ã¡p dá»¥ng.
+LuÃƒÂ´n ÃƒÂ¡p dÃ¡Â»Â¥ng.
 
-## Má»¥c ÄÃ­ch
+## MÃ¡Â»Â¥c Ã„ÂÃƒÂ­ch
 
-Äá»‹nh nghÄ©a hÃ nh vi ná»n cho má»i viá»‡c láº­p trÃ¬nh, sá»­a lá»—i, nghiÃªn cá»©u, láº­p káº¿ hoáº¡ch vÃ  rÃ  soÃ¡t báº±ng Codex.
+Ã„ÂÃ¡Â»â€¹nh nghÃ„Â©a hÃƒÂ nh vi nÃ¡Â»Ân cho mÃ¡Â»Âi viÃ¡Â»â€¡c lÃ¡ÂºÂ­p trÃƒÂ¬nh, sÃ¡Â»Â­a lÃ¡Â»â€”i, nghiÃƒÂªn cÃ¡Â»Â©u, lÃ¡ÂºÂ­p kÃ¡ÂºÂ¿ hoÃ¡ÂºÂ¡ch vÃƒÂ  rÃƒÂ  soÃƒÂ¡t bÃ¡ÂºÂ±ng Codex.
 
-## NgÃ´n Ngá»¯
+## NgÃƒÂ´n NgÃ¡Â»Â¯
 
-- Tráº£ lá»i ngÆ°á»i dÃ¹ng báº±ng tiáº¿ng Viá»‡t cÃ³ dáº¥u Ä‘áº§y Ä‘á»§ theo máº·c Ä‘á»‹nh.
-- KhÃ´ng viáº¿t tiáº¿ng Viá»‡t khÃ´ng dáº¥u nhÆ° `tieng Viet khong dau`, trá»« khi ngÆ°á»i dÃ¹ng yÃªu cáº§u rÃµ vÄƒn báº£n ASCII-only hoáº·c file Ä‘Ã­ch Ä‘Ã£ cÃ³ quy Æ°á»›c ASCII-only tháº­t.
-- Khi chá»‰nh ná»™i dung tiáº¿ng Viá»‡t Ä‘ang cÃ³ sáºµn, pháº£i giá»¯ dáº¥u tiáº¿ng Viá»‡t.
-- KhÃ´ng dÃ¹ng tiáº¿ng Anh trong cÃ¢u tráº£ lá»i hoáº·c tÃ i liá»‡u váº­n hÃ nh náº¿u cÃ³ thá»ƒ viáº¿t tá»± nhiÃªn báº±ng tiáº¿ng Viá»‡t.
-- ÄÆ°á»£c giá»¯ tiáº¿ng Anh cho thuáº­t ngá»¯ ká»¹ thuáº­t, tÃªn model, tÃªn lá»‡nh, Ä‘Æ°á»ng dáº«n, API, package, schema key, mÃ£ nguá»“n, tÃªn file, tÃªn tool, tÃªn giao thá»©c, tÃªn sáº£n pháº©m vÃ  trÃ­ch dáº«n nguyÃªn vÄƒn.
-- Náº¿u má»™t thuáº­t ngá»¯ tiáº¿ng Anh cÃ³ thá»ƒ lÃ m ngÆ°á»i Ä‘á»c khÃ´ng chuyÃªn bá»‹ káº¹t, thÃªm giáº£i thÃ­ch tiáº¿ng Viá»‡t ngáº¯n á»Ÿ láº§n xuáº¥t hiá»‡n Ä‘áº§u.
-- Cáº­p nháº­t thÆ°á»ng ngÃ y vÃ  bÃ¡o cÃ¡o cuá»‘i nÃªn gá»n, Ã­t filler.
-- Chá»‰ má»Ÿ rá»™ng khi debug, kiáº¿n trÃºc, thay Ä‘á»•i rá»§i ro, nháº­p nháº±ng hoáº·c láº­p káº¿ hoáº¡ch cáº§n Ä‘á»™ rÃµ cao.
+- TrÃ¡ÂºÂ£ lÃ¡Â»Âi ngÃ†Â°Ã¡Â»Âi dÃƒÂ¹ng bÃ¡ÂºÂ±ng tiÃ¡ÂºÂ¿ng ViÃ¡Â»â€¡t cÃƒÂ³ dÃ¡ÂºÂ¥u Ã„â€˜Ã¡ÂºÂ§y Ã„â€˜Ã¡Â»Â§ theo mÃ¡ÂºÂ·c Ã„â€˜Ã¡Â»â€¹nh.
+- KhÃƒÂ´ng viÃ¡ÂºÂ¿t tiÃ¡ÂºÂ¿ng ViÃ¡Â»â€¡t khÃƒÂ´ng dÃ¡ÂºÂ¥u nhÃ†Â° `tieng Viet khong dau`, trÃ¡Â»Â« khi ngÃ†Â°Ã¡Â»Âi dÃƒÂ¹ng yÃƒÂªu cÃ¡ÂºÂ§u rÃƒÂµ vÃ„Æ’n bÃ¡ÂºÂ£n ASCII-only hoÃ¡ÂºÂ·c file Ã„â€˜ÃƒÂ­ch Ã„â€˜ÃƒÂ£ cÃƒÂ³ quy Ã†Â°Ã¡Â»â€ºc ASCII-only thÃ¡ÂºÂ­t.
+- Khi chÃ¡Â»â€°nh nÃ¡Â»â„¢i dung tiÃ¡ÂºÂ¿ng ViÃ¡Â»â€¡t Ã„â€˜ang cÃƒÂ³ sÃ¡ÂºÂµn, phÃ¡ÂºÂ£i giÃ¡Â»Â¯ dÃ¡ÂºÂ¥u tiÃ¡ÂºÂ¿ng ViÃ¡Â»â€¡t.
+- KhÃƒÂ´ng dÃƒÂ¹ng tiÃ¡ÂºÂ¿ng Anh trong cÃƒÂ¢u trÃ¡ÂºÂ£ lÃ¡Â»Âi hoÃ¡ÂºÂ·c tÃƒÂ i liÃ¡Â»â€¡u vÃ¡ÂºÂ­n hÃƒÂ nh nÃ¡ÂºÂ¿u cÃƒÂ³ thÃ¡Â»Æ’ viÃ¡ÂºÂ¿t tÃ¡Â»Â± nhiÃƒÂªn bÃ¡ÂºÂ±ng tiÃ¡ÂºÂ¿ng ViÃ¡Â»â€¡t.
+- Ã„ÂÃ†Â°Ã¡Â»Â£c giÃ¡Â»Â¯ tiÃ¡ÂºÂ¿ng Anh cho thuÃ¡ÂºÂ­t ngÃ¡Â»Â¯ kÃ¡Â»Â¹ thuÃ¡ÂºÂ­t, tÃƒÂªn model, tÃƒÂªn lÃ¡Â»â€¡nh, Ã„â€˜Ã†Â°Ã¡Â»Âng dÃ¡ÂºÂ«n, API, package, schema key, mÃƒÂ£ nguÃ¡Â»â€œn, tÃƒÂªn file, tÃƒÂªn tool, tÃƒÂªn giao thÃ¡Â»Â©c, tÃƒÂªn sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m vÃƒÂ  trÃƒÂ­ch dÃ¡ÂºÂ«n nguyÃƒÂªn vÃ„Æ’n.
+- NÃ¡ÂºÂ¿u mÃ¡Â»â„¢t thuÃ¡ÂºÂ­t ngÃ¡Â»Â¯ tiÃ¡ÂºÂ¿ng Anh cÃƒÂ³ thÃ¡Â»Æ’ lÃƒÂ m ngÃ†Â°Ã¡Â»Âi Ã„â€˜Ã¡Â»Âc khÃƒÂ´ng chuyÃƒÂªn bÃ¡Â»â€¹ kÃ¡ÂºÂ¹t, thÃƒÂªm giÃ¡ÂºÂ£i thÃƒÂ­ch tiÃ¡ÂºÂ¿ng ViÃ¡Â»â€¡t ngÃ¡ÂºÂ¯n Ã¡Â»Å¸ lÃ¡ÂºÂ§n xuÃ¡ÂºÂ¥t hiÃ¡Â»â€¡n Ã„â€˜Ã¡ÂºÂ§u.
+- CÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t thÃ†Â°Ã¡Â»Âng ngÃƒÂ y vÃƒÂ  bÃƒÂ¡o cÃƒÂ¡o cuÃ¡Â»â€˜i nÃƒÂªn gÃ¡Â»Ân, ÃƒÂ­t filler.
+- ChÃ¡Â»â€° mÃ¡Â»Å¸ rÃ¡Â»â„¢ng khi debug, kiÃ¡ÂºÂ¿n trÃƒÂºc, thay Ã„â€˜Ã¡Â»â€¢i rÃ¡Â»Â§i ro, nhÃ¡ÂºÂ­p nhÃ¡ÂºÂ±ng hoÃ¡ÂºÂ·c lÃ¡ÂºÂ­p kÃ¡ÂºÂ¿ hoÃ¡ÂºÂ¡ch cÃ¡ÂºÂ§n Ã„â€˜Ã¡Â»â„¢ rÃƒÂµ cao.
 
-## Há»£p Äá»“ng Thá»±c Thi
+## HÃ¡Â»Â£p Ã„ÂÃ¡Â»â€œng ThÃ¡Â»Â±c Thi
 
-Khi ngÆ°á»i dÃ¹ng yÃªu cáº§u triá»ƒn khai, sá»­a lá»—i, refactor, táº¡o má»›i, migrate hoáº·c thay Ä‘á»•i code:
+Khi ngÃ†Â°Ã¡Â»Âi dÃƒÂ¹ng yÃƒÂªu cÃ¡ÂºÂ§u triÃ¡Â»Æ’n khai, sÃ¡Â»Â­a lÃ¡Â»â€”i, refactor, tÃ¡ÂºÂ¡o mÃ¡Â»â€ºi, migrate hoÃ¡ÂºÂ·c thay Ã„â€˜Ã¡Â»â€¢i code:
 
-1. Äá»c ngá»¯ cáº£nh code trÆ°á»›c.
-2. Kiá»ƒm tra cÃ³ thÆ° má»¥c `plan/` khÃ´ng.
-3. Náº¿u cÃ³ `plan/`, Ä‘á»c `plan/00-index.md` náº¿u tá»“n táº¡i, rá»“i Ä‘á»c file káº¿ hoáº¡ch Ä‘ang hoáº¡t Ä‘á»™ng.
-4. TrÆ°á»›c khi sá»­a code theo plan, kiá»ƒm tra plan cÃ³ Ä‘Ãºng cáº¥u trÃºc, sá»‘ thá»© tá»± liÃªn tá»¥c vÃ  Ä‘Ãºng má»©c bÄƒm nhá» theo vertical slice khÃ´ng.
-5. KhÃ´ng execute má»™t mega-plan HIGH risk hoáº·c multi-domain náº¿u nÃ³ chÆ°a Ä‘Æ°á»£c tÃ¡ch thÃ nh cÃ¡c slice cÃ³ thá»ƒ verify riÃªng.
-6. KhÃ´ng dá»«ng á»Ÿ Ä‘á» xuáº¥t náº¿u ngÆ°á»i dÃ¹ng khÃ´ng yÃªu cáº§u chá»‰ tháº£o luáº­n hoáº·c láº­p káº¿ hoáº¡ch.
-7. KhÃ´ng tá»± commit.
-8. KhÃ´ng tá»± push.
-9. KhÃ´ng force-push.
-10. KhÃ´ng bá» qua hook náº¿u chÆ°a Ä‘Æ°á»£c phÃ©p rÃµ.
-11. KhÃ´ng revert thay Ä‘á»•i cá»§a ngÆ°á»i dÃ¹ng náº¿u chÆ°a Ä‘Æ°á»£c yÃªu cáº§u rÃµ.
-12. Giá»¯ diff nhá».
-13. BÃ¡o rÃµ trÆ°á»›c khi má»Ÿ rá»™ng pháº¡m vi.
-14. Verify trÆ°á»›c khi nÃ³i xong.
+1. Ã„ÂÃ¡Â»Âc ngÃ¡Â»Â¯ cÃ¡ÂºÂ£nh code trÃ†Â°Ã¡Â»â€ºc.
+2. KiÃ¡Â»Æ’m tra cÃƒÂ³ thÃ†Â° mÃ¡Â»Â¥c `plan/` khÃƒÂ´ng.
+3. NÃ¡ÂºÂ¿u cÃƒÂ³ `plan/`, Ã„â€˜Ã¡Â»Âc `plan/00-index.md` nÃ¡ÂºÂ¿u tÃ¡Â»â€œn tÃ¡ÂºÂ¡i, rÃ¡Â»â€œi Ã„â€˜Ã¡Â»Âc file kÃ¡ÂºÂ¿ hoÃ¡ÂºÂ¡ch Ã„â€˜ang hoÃ¡ÂºÂ¡t Ã„â€˜Ã¡Â»â„¢ng.
+4. TrÃ†Â°Ã¡Â»â€ºc khi sÃ¡Â»Â­a code theo plan, kiÃ¡Â»Æ’m tra plan cÃƒÂ³ Ã„â€˜ÃƒÂºng cÃ¡ÂºÂ¥u trÃƒÂºc, sÃ¡Â»â€˜ thÃ¡Â»Â© tÃ¡Â»Â± liÃƒÂªn tÃ¡Â»Â¥c vÃƒÂ  Ã„â€˜ÃƒÂºng mÃ¡Â»Â©c bÃ„Æ’m nhÃ¡Â»Â theo vertical slice khÃƒÂ´ng.
+5. KhÃƒÂ´ng execute mÃ¡Â»â„¢t mega-plan HIGH risk hoÃ¡ÂºÂ·c multi-domain nÃ¡ÂºÂ¿u nÃƒÂ³ chÃ†Â°a Ã„â€˜Ã†Â°Ã¡Â»Â£c tÃƒÂ¡ch thÃƒÂ nh cÃƒÂ¡c slice cÃƒÂ³ thÃ¡Â»Æ’ verify riÃƒÂªng.
+6. KhÃƒÂ´ng dÃ¡Â»Â«ng Ã¡Â»Å¸ Ã„â€˜Ã¡Â»Â xuÃ¡ÂºÂ¥t nÃ¡ÂºÂ¿u ngÃ†Â°Ã¡Â»Âi dÃƒÂ¹ng khÃƒÂ´ng yÃƒÂªu cÃ¡ÂºÂ§u chÃ¡Â»â€° thÃ¡ÂºÂ£o luÃ¡ÂºÂ­n hoÃ¡ÂºÂ·c lÃ¡ÂºÂ­p kÃ¡ÂºÂ¿ hoÃ¡ÂºÂ¡ch.
+7. KhÃƒÂ´ng tÃ¡Â»Â± commit.
+8. KhÃƒÂ´ng tÃ¡Â»Â± push.
+9. KhÃƒÂ´ng force-push.
+10. KhÃƒÂ´ng bÃ¡Â»Â qua hook nÃ¡ÂºÂ¿u chÃ†Â°a Ã„â€˜Ã†Â°Ã¡Â»Â£c phÃƒÂ©p rÃƒÂµ.
+11. KhÃƒÂ´ng revert thay Ã„â€˜Ã¡Â»â€¢i cÃ¡Â»Â§a ngÃ†Â°Ã¡Â»Âi dÃƒÂ¹ng nÃ¡ÂºÂ¿u chÃ†Â°a Ã„â€˜Ã†Â°Ã¡Â»Â£c yÃƒÂªu cÃ¡ÂºÂ§u rÃƒÂµ.
+12. GiÃ¡Â»Â¯ diff nhÃ¡Â»Â.
+13. BÃƒÂ¡o rÃƒÂµ trÃ†Â°Ã¡Â»â€ºc khi mÃ¡Â»Å¸ rÃ¡Â»â„¢ng phÃ¡ÂºÂ¡m vi.
+14. Verify trÃ†Â°Ã¡Â»â€ºc khi nÃƒÂ³i xong.
 
-## Quy Táº¯c Skill Docs
+## Quy TÃ¡ÂºÂ¯c Skill Docs
 
-Khi Ä‘Æ°á»ng dáº«n Ä‘Ã­ch náº±m dÆ°á»›i `/docs/**`, dÃ¹ng skill `docs-style`.
+Khi Ã„â€˜Ã†Â°Ã¡Â»Âng dÃ¡ÂºÂ«n Ã„â€˜ÃƒÂ­ch nÃ¡ÂºÂ±m dÃ†Â°Ã¡Â»â€ºi `/docs/**`, dÃƒÂ¹ng skill `docs-style`.
 
-KhÃ´ng Ã¡p dá»¥ng skill Ä‘Ã³ cho `README.md`, `AGENTS.md`, `CHANGELOG.md` hoáº·c markdown ngoÃ i `/docs/**` náº¿u ngÆ°á»i dÃ¹ng khÃ´ng yÃªu cáº§u rÃµ.
+KhÃƒÂ´ng ÃƒÂ¡p dÃ¡Â»Â¥ng skill Ã„â€˜ÃƒÂ³ cho `README.md`, `AGENTS.md`, `CHANGELOG.md` hoÃ¡ÂºÂ·c markdown ngoÃƒÂ i `/docs/**` nÃ¡ÂºÂ¿u ngÃ†Â°Ã¡Â»Âi dÃƒÂ¹ng khÃƒÂ´ng yÃƒÂªu cÃ¡ÂºÂ§u rÃƒÂµ.
 
-## Quy Táº¯c Codex Research
+## Quy TÃ¡ÂºÂ¯c Codex Research
 
-DÃ¹ng skill `codex-research` khi task chá»§ yáº¿u lÃ  nghiÃªn cá»©u, so sÃ¡nh lá»±a chá»n, Ä‘á»c tÃ i liá»‡u ná»n táº£ng, Ä‘á»c changelog, hoáº·c khi sá»­a bug bá»‹ káº¹t vÃ  cáº§n báº±ng chá»©ng trÆ°á»›c khi thá»­ cÃ¡ch sá»­a tiáº¿p theo.
+DÃƒÂ¹ng skill `codex-research` khi task chÃ¡Â»Â§ yÃ¡ÂºÂ¿u lÃƒÂ  nghiÃƒÂªn cÃ¡Â»Â©u, so sÃƒÂ¡nh lÃ¡Â»Â±a chÃ¡Â»Ân, Ã„â€˜Ã¡Â»Âc tÃƒÂ i liÃ¡Â»â€¡u nÃ¡Â»Ân tÃ¡ÂºÂ£ng, Ã„â€˜Ã¡Â»Âc changelog, hoÃ¡ÂºÂ·c khi sÃ¡Â»Â­a bug bÃ¡Â»â€¹ kÃ¡ÂºÂ¹t vÃƒÂ  cÃ¡ÂºÂ§n bÃ¡ÂºÂ±ng chÃ¡Â»Â©ng trÃ†Â°Ã¡Â»â€ºc khi thÃ¡Â»Â­ cÃƒÂ¡ch sÃ¡Â»Â­a tiÃ¡ÂºÂ¿p theo.
 
-## CÃ¡ch Ghi Tham Chiáº¿u
+## CÃƒÂ¡ch Ghi Tham ChiÃ¡ÂºÂ¿u
 
-- Káº¿ hoáº¡ch vÃ  ghi chÃº dÃ i háº¡n: dÃ¹ng `path:symbol` hoáº·c `path/dir`.
-- Nháº­n xÃ©t review vÃ  bug cáº§n chÃ­nh xÃ¡c: dÃ¹ng `path:line`.
-- KhÃ´ng dÃ¹ng `path:line` trong plan dÃ i háº¡n trá»« khi Ä‘Ã³ lÃ  báº±ng chá»©ng táº¡m thá»i.
+- KÃ¡ÂºÂ¿ hoÃ¡ÂºÂ¡ch vÃƒÂ  ghi chÃƒÂº dÃƒÂ i hÃ¡ÂºÂ¡n: dÃƒÂ¹ng `path:symbol` hoÃ¡ÂºÂ·c `path/dir`.
+- NhÃ¡ÂºÂ­n xÃƒÂ©t review vÃƒÂ  bug cÃ¡ÂºÂ§n chÃƒÂ­nh xÃƒÂ¡c: dÃƒÂ¹ng `path:line`.
+- KhÃƒÂ´ng dÃƒÂ¹ng `path:line` trong plan dÃƒÂ i hÃ¡ÂºÂ¡n trÃ¡Â»Â« khi Ã„â€˜ÃƒÂ³ lÃƒÂ  bÃ¡ÂºÂ±ng chÃ¡Â»Â©ng tÃ¡ÂºÂ¡m thÃ¡Â»Âi.
 
-## MÃ¡y Tráº¡ng ThÃ¡i Máº·c Äá»‹nh
+## MÃƒÂ¡y TrÃ¡ÂºÂ¡ng ThÃƒÂ¡i MÃ¡ÂºÂ·c Ã„ÂÃ¡Â»â€¹nh
 
 ```text
 REQUEST
--> phÃ¢n loáº¡i rá»§i ro
--> chá»n workflow
--> Ä‘á»c ngá»¯ cáº£nh má»¥c tiÃªu
--> láº­p plan náº¿u cáº§n
--> kiá»ƒm tra plan shape náº¿u cÃ³ plan
--> triá»ƒn khai náº¿u Ä‘Æ°á»£c phÃ©p
+-> phÃƒÂ¢n loÃ¡ÂºÂ¡i rÃ¡Â»Â§i ro
+-> chÃ¡Â»Ân workflow
+-> Ã„â€˜Ã¡Â»Âc ngÃ¡Â»Â¯ cÃ¡ÂºÂ£nh mÃ¡Â»Â¥c tiÃƒÂªu
+-> lÃ¡ÂºÂ­p plan nÃ¡ÂºÂ¿u cÃ¡ÂºÂ§n
+-> kiÃ¡Â»Æ’m tra plan shape nÃ¡ÂºÂ¿u cÃƒÂ³ plan
+-> triÃ¡Â»Æ’n khai nÃ¡ÂºÂ¿u Ã„â€˜Ã†Â°Ã¡Â»Â£c phÃƒÂ©p
 -> verify
--> review náº¿u cáº§n
--> ghi báº±ng chá»©ng/ghi chÃº
--> bÃ¡o cÃ¡o PASS/PARTIAL/BLOCKED
+-> review nÃ¡ÂºÂ¿u cÃ¡ÂºÂ§n
+-> ghi bÃ¡ÂºÂ±ng chÃ¡Â»Â©ng/ghi chÃƒÂº
+-> bÃƒÂ¡o cÃƒÂ¡o PASS/PARTIAL/BLOCKED
 ```
 
-## Nguá»“n Runtime
+## NguÃ¡Â»â€œn Runtime
 
-Nguá»“n runtime:
+NguÃ¡Â»â€œn runtime:
 
 ```text
-C:\Users\ADMIN\.codex
+C:\Users\DELL\.codex
 ```
 
-Báº£n sync vÃ  bootstrap:
+BÃ¡ÂºÂ£n sync vÃƒÂ  bootstrap:
 
 ```text
 P:\agent-rules\codex
 ```
 
-KhÃ´ng báº¯t buá»™c `P:\agent-rules` pháº£i tá»“n táº¡i trong cÃ´ng viá»‡c Codex háº±ng ngÃ y.
+KhÃƒÂ´ng bÃ¡ÂºÂ¯t buÃ¡Â»â„¢c `P:\agent-rules` phÃ¡ÂºÂ£i tÃ¡Â»â€œn tÃ¡ÂºÂ¡i trong cÃƒÂ´ng viÃ¡Â»â€¡c Codex hÃ¡ÂºÂ±ng ngÃƒÂ y.
 
-## BÃ¡o CÃ¡o Cuá»‘i
+## BÃƒÂ¡o CÃƒÂ¡o CuÃ¡Â»â€˜i
 
-BÃ¡o cÃ¡o cuá»‘i pháº£i ngáº¯n vÃ  cÃ³ cáº¥u trÃºc:
+BÃƒÂ¡o cÃƒÂ¡o cuÃ¡Â»â€˜i phÃ¡ÂºÂ£i ngÃ¡ÂºÂ¯n vÃƒÂ  cÃƒÂ³ cÃ¡ÂºÂ¥u trÃƒÂºc:
 
 ```text
 Status: PASS | PARTIAL | BLOCKED

@@ -1,4 +1,4 @@
----
+﻿---
 name: docs-style
 description: Use this skill when creating, reviewing, rewriting, or restructuring high-quality project documentation for README.md, README-vi.md, technical specs, tech stack badges, screenshots, documentation cleanup, or /docs/**. Trigger for source-grounded docs, repo documentation architecture, docs quality complaints, README style, Vietnamese/English README parity, current-vs-legacy tech stack accuracy, or docs that must match/exceed a strong hand-written spec such as vhdg-conhon/SPECS.md.
 ---
@@ -21,7 +21,7 @@ Documentation must:
 - look deliberate on GitHub: coherent badges, verified screenshots, readable tables, useful diagrams, and no broken assets;
 - read like edited technical documentation, not agent reasoning, source inventory, audit notes, or a generated checklist.
 
-If a fact cannot be proven, omit it or write `TODO: xác minh ...`. Never fill gaps with plausible guesses.
+If a fact cannot be proven, omit it or write `TODO: xÃ¡c minh ...`. Never fill gaps with plausible guesses.
 
 ## Required Workflow
 
@@ -45,7 +45,7 @@ For substantial rewrites, read `references/docs-style-reference.md` for the full
 
 ## Source Reading Standard
 
-Do not claim "source-grounded" or "đã đọc full" unless these areas were inspected where they exist:
+Do not claim "source-grounded" or "Ä‘Ã£ Ä‘á»c full" unless these areas were inspected where they exist:
 
 - package/framework manifests and lockfiles;
 - app/server/worker/CLI entry points;
@@ -64,7 +64,7 @@ Use current/legacy/planned/unknown labels internally:
 | Current | imported, routed, configured, or executed by current runtime | write as present behavior |
 | Legacy | old code/config remains but is not active | label as legacy trace with location |
 | Planned | TODO, roadmap, placeholder, partial scaffold | put in limitations/roadmap |
-| Unknown | cannot prove from source/runtime | omit or mark `TODO: xác minh ...` |
+| Unknown | cannot prove from source/runtime | omit or mark `TODO: xÃ¡c minh ...` |
 
 Example current-vs-legacy wording:
 
@@ -90,7 +90,7 @@ A strong README answers quickly:
 Recommended shape:
 
 ```md
-# Project Name — concrete category
+# Project Name â€” concrete category
 
 ![Stack](...)
 ![Stack](...)
@@ -291,7 +291,7 @@ When reporting work, state:
 - evidence inspected;
 - screenshots or links verified;
 - commands/tests run;
-- facts left as `TODO: xác minh ...`;
+- facts left as `TODO: xÃ¡c minh ...`;
 - whether CI/CD was skipped, avoided by branch/workflow rules, or impossible to guarantee.
 
-Do not claim "đã đọc full codebase" unless the source reading standard was actually completed.
+Do not claim "Ä‘Ã£ Ä‘á»c full codebase" unless the source reading standard was actually completed.

@@ -2,14 +2,14 @@ model = "gpt-5.5"
 model_reasoning_effort = "high"
 
 [marketplaces.openai-bundled]
-last_updated = "2026-05-30T10:54:18Z"
+last_updated = "2026-05-31T03:49:27Z"
 source_type = "local"
-source = '\\?\C:\Users\ADMIN\.codex\.tmp\bundled-marketplaces\openai-bundled'
+source = '\\?\C:\Users\DELL\.codex\.tmp\bundled-marketplaces\openai-bundled'
 
 [marketplaces.openai-primary-runtime]
 last_updated = "2026-05-30T11:30:41Z"
 source_type = "local"
-source = '\\?\C:\Users\ADMIN\.cache\codex-runtimes\codex-primary-runtime\plugins\openai-primary-runtime'
+source = '\\?\C:\Users\DELL\.cache\codex-runtimes\codex-primary-runtime\plugins\openai-primary-runtime'
 
 [plugins."documents@openai-primary-runtime"]
 enabled = true
@@ -24,25 +24,14 @@ enabled = true
 enabled = true
 
 [features]
-js_repl = false
 
-[mcp_servers.node_repl]
-args = []
-command = 'C:\Users\ADMIN\AppData\Local\OpenAI\Codex\bin\34ab3e1324cc55b5\node_repl.exe'
-startup_timeout_sec = 120
+[mcp_servers.pencil]
+command = 'C:\Program Files\Pencil\resources\app.asar.unpacked\out\mcp-server-windows-x64.exe'
+args = ["--app", "desktop", "--agent", "codexCLI"]
 
-[mcp_servers.node_repl.env]
-NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
-NODE_REPL_NODE_MODULE_DIRS = ""
-NODE_REPL_NODE_PATH = 'C:\Users\ADMIN\AppData\Local\OpenAI\Codex\bin\5b9024f90663758b\node.exe'
-NODE_REPL_TRUSTED_CODE_PATHS = 'C:\Users\ADMIN\.codex'
-CODEX_HOME = 'C:\Users\ADMIN\.codex'
-NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "0b0d41e7a14a4903d2f95b0b3f427ed796b12c8edca2fa392a03df43997075ae,e13c388c2427308a68dffc803e1f28316077b719672e4518a621ae6ab56ad7cf"
-BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
-NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
-NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
-BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
-CODEX_CLI_PATH = 'C:\Users\ADMIN\AppData\Local\OpenAI\Codex\bin\7dea4a003bc76627\codex.exe'
+[mcp_servers.gitnexus]
+command = 'C:\Users\DELL\AppData\Roaming\npm\gitnexus.cmd'
+args = ["mcp"]
 
 [desktop]
 conversationDetailMode = "STEPS_COMMANDS"
@@ -58,20 +47,23 @@ global = "antigravity"
 [windows]
 sandbox = "elevated"
 
-[projects.'c:\users\admin\documents\codex\2026-05-29\hello']
+[projects.'c:\users\dell\documents\codex\2026-05-29\hello']
 trust_level = "trusted"
 
 [projects.'p:\fabsolution']
 trust_level = "trusted"
 
-[projects.'c:\users\admin\documents\codex\2026-05-29\initforge-agent-rules-https-github-com']
+[projects.'c:\users\dell\documents\codex\2026-05-29\initforge-agent-rules-https-github-com']
 trust_level = "trusted"
 
 [projects.'p:\tah-app-5f']
 trust_level = "trusted"
 
-[projects.'c:\users\admin\documents\codex\2026-05-30\setup-behavior-c-a-chatgpt-sao']
+[projects.'c:\users\dell\documents\codex\2026-05-30\setup-behavior-c-a-chatgpt-sao']
 trust_level = "trusted"
 
-[projects.'c:\users\admin\documents\codex\2026-05-30\check-c-c-b-n-commit']
+[projects.'c:\users\dell\documents\codex\2026-05-30\check-c-c-b-n-commit']
+trust_level = "trusted"
+
+[projects.'p:\tahdieuphoi']
 trust_level = "trusted"

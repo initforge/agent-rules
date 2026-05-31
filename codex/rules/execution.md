@@ -30,7 +30,7 @@ Activate execution when the user says:
    - numbered execution files must use contiguous `01`, `02`, `03` order under a feature folder when the task has multiple slices
    - do not execute a large multi-domain plan stored as one numbered file
    - HIGH risk work must have per-slice scope, acceptance criteria, verification contract, red flags, evidence, and iteration log
-   - when a repo has `plan/`, run `C:\Users\ADMIN\.codex\scripts\validate-plan-structure.ps1 -PlanRoot <repo>\plan` before executing plan-driven work
+   - when a repo has `plan/`, run `C:\Users\DELL\.codex\scripts\validate-plan-structure.ps1 -PlanRoot <repo>\plan` before executing plan-driven work
    - if the plan shape is invalid, restructure or report `BLOCKED` before implementation
 4. Mark active plan file `Status: doing`.
 5. Implement only the allowed scope.

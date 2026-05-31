@@ -11,15 +11,23 @@ Nguyên tắc: format có thể đã chốt, nhưng giá trị cụ thể vẫn 
 Format đã chốt:
 
 - Ưu tiên dùng template `https://github.com/tahdieuphoi-ctrl/TAH_app`.
+- Với dự án này: clone/adapt template là `DA_CHOT`; app name là `TAH APP`; scope là full app A-Z theo ảnh/spec đã gửi.
+- Template source local nằm ở `P:\tah-app-5f\.codex\template-source\TAH_app`.
 - Khi scaffold/adapt, đọc cấu trúc template trước rồi map spec vào domain/module/view có sẵn.
 - Ưu tiên thêm hoặc adapt, hạn chế sửa/xóa module template.
 - Nếu cần sửa/xóa lớn, báo lý do, rủi ro, file bị ảnh hưởng và xin chốt trước.
 
-Dữ kiện cần hỏi theo app:
+Không hỏi lại:
 
-- Có clone/adapt template vào repo hiện tại không.
-- App name chính xác.
-- Module nào dùng nguyên template, module nào cần sửa theo spec.
+- Có clone template không.
+- App name là gì.
+- Làm module đầu tiên/phase đầu nào.
+
+Thay vào đó:
+
+- Tự đọc template/source.
+- Map toàn bộ ảnh/spec đã có.
+- Báo cáo chỗ nào giữ nguyên, chỗ nào cần adapt, chỗ nào cần hỏi thêm vì thiếu dữ kiện quyết định.
 
 Nếu người dùng đưa ít instruction:
 
@@ -37,12 +45,11 @@ Format đã chốt:
 - Form theo React Hook Form + Zod.
 - Backend theo Supabase PostgreSQL + Auth.
 - Media theo Cloudinary nếu app có upload/ảnh.
-- Google Sheets/AppSheet chỉ coi là khả năng thường gặp, không tự bật nếu spec không nói.
+- Với dự án này, stack ảnh 1 đã `DA_CHOT`; Google Sheets/AppSheet chỉ coi là khả năng thường gặp, không tự bật nếu spec không nói.
 
-Dữ kiện cần hỏi theo app:
+Chỉ hỏi thêm nếu phát hiện template/source khác ảnh/spec:
 
-- Stack thật trong repo/spec có đúng mặc định không.
-- App có dùng mock tạm hay phải nối thật ngay.
+- Stack thật trong repo mâu thuẫn ảnh/spec.
 - Có Google Sheets/AppSheet không.
 
 ## Credentials
@@ -63,6 +70,8 @@ Checklist credentials thường gặp:
 - Cloudinary cloud name/upload preset/API credentials.
 - Google Sheets/AppSheet credentials nếu dự án dùng.
 - Vercel token/project/env nếu deploy hoặc Edge Function.
+
+Với dự án này: Supabase thật là `DA_CHOT`; không mặc định mock backend. Nếu chưa có credential values thì ghi blocker đúng tên credential, không hỏi lại "có dùng Supabase thật không".
 
 ## Database
 
@@ -134,6 +143,7 @@ AI được phép tự suy luận trong phạm vi format đã chốt:
 - Đề xuất mapping spec -> module/view/table.
 - Đề xuất schema draft theo format 5fedu.
 - Đề xuất service/handler tách riêng để dễ debug.
+- Tự lập thứ tự triển khai full app theo dependency, ví dụ template -> env -> schema -> auth -> services -> UI mapping -> QA, nhưng không hỏi người dùng chọn "phase đầu".
 
 AI không được tự chốt:
 
@@ -143,3 +153,31 @@ AI không được tự chốt:
 - permission rule cụ thể nếu người dùng chưa đưa
 - bật RLS thay cho app-side permission
 - dùng mock khi người dùng yêu cầu nối thật
+- thu hẹp scope thành một module đầu tiên khi người dùng đã chốt làm full app A-Z
+## Owner Feedback Gate 2026-05-31
+
+Khi làm database/auth/nhân viên, phải chạy checklist này trước khi code:
+
+- `id` bảng app đã là `int8` auto increment chưa?
+- Có dùng nhầm `uuid` cho `id` không?
+- Foreign key tới bảng app đã là `int8` chưa?
+- Bảng nhân viên có đang bị thêm trường linh tinh ngoài source không?
+- Login có dùng đúng `ten_dang_nhap` thay vì `ma_nhan_vien` không?
+- Thêm/sửa/xóa `ten_dang_nhap` đã đồng bộ Supabase Auth qua server/admin path chưa?
+- Đã đọc `.codex/5fedu/10-owner-feedback-lessons.md` chưa?
+
+Nếu câu trả lời nào là chưa, dừng triển khai và sửa mapping/schema/plan trước.
+
+## Format UI/Nghiệp Vụ Vận Tải
+
+Format đã chốt từ owner feedback ngày 2026-05-31:
+
+- Trang chủ hiển thị module theo thứ tự `Quản lý vận tải` -> `Hệ thống` -> `Thông tin bản quyền`.
+- Mỗi module vận tải phải map đủ: list view desktop, card view mobile, detail drawer, form drawer, row action, bulk action, print/export/approve action nếu có.
+- `Tài xế`, `Địa điểm`, `Danh sách xe`, `Chuyến xe`, `Bảng lương` không được chỉ dùng CRUD generic nếu nghiệp vụ cần form/detail riêng.
+- Relation field có nhiều lựa chọn phải dùng `Combobox`/`AsyncCombobox` theo template, không dùng `<select>` thô.
+- Tổng tiền/tổng chuyến/tổng lương/tổng còn lại phải phân loại rõ là field nhập tay hay field tự tính; nếu tính được từ bảng con hoặc dữ liệu thực tế thì không cho nhập tay.
+- Action `duyệt` không nằm trong form nhập liệu. Duyệt là action riêng trên detail/list/row/bulk theo nghiệp vụ.
+- Action `in` bảng lương phải có khi làm module bảng lương.
+- Detail tài xế cần lịch sử chuyến xe và lịch sử lương; detail địa điểm/xe cần lịch sử chuyến liên quan khi có dữ liệu.
+- Trước khi sửa giao diện, đối chiếu `.codex/template-source/TAH_app` commit `47947e6eea0b1b7dc6723356f37f604e30ac690b`.

@@ -1,4 +1,4 @@
-# 5fedu Context Map
+﻿# 5fedu Context Map
 
 ## Decision
 
@@ -46,20 +46,20 @@ The template usually contains most frontend modules. Prefer adding/adapting. Avo
 
 Default domains seen in the template:
 
-- Trang chủ
-- Hành chính
-- Nhân sự
-- Vận hành
+- Trang chá»§
+- HÃ nh chÃ­nh
+- NhÃ¢n sá»±
+- Váº­n hÃ nh
 - Kinh doanh
 - Marketing
-- Tài chính
-- Mua hàng
-- Sản xuất
-- Kho vận
-- Điều hành
-- Hệ thống
-- Trợ lý AI
-- Thông tin bản quyền
+- TÃ i chÃ­nh
+- Mua hÃ ng
+- Sáº£n xuáº¥t
+- Kho váº­n
+- Äiá»u hÃ nh
+- Há»‡ thá»‘ng
+- Trá»£ lÃ½ AI
+- ThÃ´ng tin báº£n quyá»n
 
 Mapping must be exact:
 
@@ -86,7 +86,7 @@ Baseline columns:
 - `mo_ta` or `dien_giai`
 - `ghi_chu`
 - `trang_thai`
-- `id_nguoi_tao` for most business tables; may be omitted for some system master tables such as phòng ban/chức vụ if the owner confirms
+- `id_nguoi_tao` for most business tables; may be omitted for some system master tables such as phÃ²ng ban/chá»©c vá»¥ if the owner confirms
 - `tg_tao`
 - `tg_cap_nhat`
 
@@ -97,7 +97,7 @@ Every full table should have:
 - index/function/indexing convention required by the project
 - trigger for `tg_cap_nhat`
 
-Ask for a sample SQL/table when the "hàm index" convention is not clear.
+Ask for a sample SQL/table when the "hÃ m index" convention is not clear.
 
 Hard owner-feedback gate:
 

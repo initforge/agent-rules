@@ -1,4 +1,4 @@
-# Skills Taxonomy
+﻿# Skills Taxonomy
 
 ## Purpose
 
@@ -15,7 +15,7 @@ On this machine, taxonomy is tracked by documentation first, not by physically r
 ### System
 
 Location:
-- `C:\Users\ADMIN\.codex\skills\.system`
+- `C:\Users\DELL\.codex\skills\.system`
 
 Examples:
 - `imagegen`
@@ -27,7 +27,7 @@ Examples:
 ### Self-authored
 
 Primary local Codex location:
-- `C:\Users\ADMIN\.codex\skills`
+- `C:\Users\DELL\.codex\skills`
 
 Current self-authored skills:
 - `docs-style`
@@ -37,7 +37,7 @@ Current self-authored skills:
 - `workflow-router`
 
 Separate local agent ecosystem:
-- `C:\Users\ADMIN\.agents\skills`
+- `C:\Users\DELL\.agents\skills`
 - backup copy: `P:\agent-rules\agents-skills`
 
 Current self-authored ecosystem examples:
@@ -57,7 +57,7 @@ Current vendor-installed skills left in place for runtime safety:
 - `security-threat-model`
 
 Location:
-- `C:\Users\ADMIN\.codex\skills`
+- `C:\Users\DELL\.codex\skills`
 
 Reason they are not physically moved yet:
 - moving them may break auto-discovery unless runtime behavior is verified after relocation

@@ -119,3 +119,87 @@ Không được tự chốt:
 - SQL/migration production.
 - Permission cụ thể từng module.
 - Credentials hoặc secret.
+
+## Ảnh Sheet 2 ngày 2026-05-30: dự án và quy tắc triển khai
+
+Nguồn: ảnh người dùng gửi trong chat ngày 2026-05-30, sheet `5f edu - Xuân Lĩnh`.
+
+### Dự án
+
+- Tên dự án: `TAH app`.
+- Trạng thái: `Mới`.
+- Deadline 80%: `03/06/2026`.
+- Nghiệm thu: `18/06/2026`.
+- Tổng tiền: `3.000.000`.
+- Còn lại: `3.000.000`.
+
+### Quy tắc source/code
+
+- Code sạch, dùng lại tốt, dễ mở rộng.
+- Cấu trúc thư mục chia theo từng chức năng, ví dụ `Hệ thống`, `Nhân sự`.
+- Cây thư mục tham khảo app template.
+- File trong từng module tham khảo template.
+- Tên submenu và thư mục module dùng tiếng Việt để người không biết tiếng Anh vẫn dễ tra cứu.
+- Tên view dùng dạng hybrid tiếng Việt + English suffix, ví dụ `nhan-vien-form`.
+
+### Quy tắc database chi tiết
+
+- Tên bảng viết theo toàn bộ submenu + tên module bằng dạng slug/prefix đã chốt theo app.
+- Ví dụ đúng: `var_nhan_su`, `hc_phieu_hanh_chinh`.
+- Ví dụ sai: `nhan-su`, `1.nhan-su`.
+- Cấu trúc bảng chung gồm: `id int8`, cột label/name, cột nhóm/phân loại, cột liên kết dạng `id_<doi_tuong>`, mô tả/diễn giải, ghi chú, trạng thái, `id_nguoi_tao`, `tg_tao`, `tg_cap_nhat`.
+- Bảng đầy đủ phải có cấu trúc cột, policy authenticated, hàm index/convention search, trigger cho `tg_cap_nhat`.
+- Lỗi thường gặp cần tránh: dùng `uuid` cho `id`, sai cấu trúc tên cột liên kết.
+
+### Auth, tài khoản và nhân viên
+
+- Đăng nhập theo fake email: nhập `admin` thì app tự hiểu là `admin@gmail.com`.
+- Bỏ tính năng đăng ký.
+- Tài khoản mặc định để test: `admin` / `5fedu.com`.
+- Module nhân viên giữ trường chính: `id`, `ho_va_ten`, `avatar`, `trang_thai`, `id_phong_ban`, `id_chuc_vu`, `so_dien_thoai`, `email`, `ten_dang_nhap`.
+- Khi tạo mới hoặc đổi `ten_dang_nhap`, Supabase cần tạo/xóa tài khoản theo `<ten_dang_nhap>@gmail.com`, mật khẩu mặc định `123456`. Flow này cần xử lý bằng server/admin path, không đưa service role vào frontend.
+
+### Flow, UI, search, notification
+
+- Flow thao tác chuẩn: đang ở detail bảng cha -> bấm thêm dòng con -> mở form -> lưu hoặc hủy -> quay lại detail bảng cha.
+- Module có nhiều tab phải lưu tab hiện tại bằng router query `?tab=<tab>`.
+- Search box phải tìm được tất cả trường trong bảng và trường liên kết hiển thị. Ví dụ bảng chỉ có `id_nguoi_tao` nhưng người dùng tìm theo tên nhân viên vẫn phải ra kết quả.
+- Notification mặc định là demo: trên icon có dấu demo, bấm vào báo chức năng không sẵn có để người dùng không đòi hỏi notification thật ở giai đoạn này.
+
+### Permission chi tiết
+
+- Mặc định module có quyền `xem`, `them`, `sua`, `xoa`, `quan_tri`.
+- Có thể có nút chọn tất cả trên UI, nhưng khi lưu vẫn lưu từng quyền thật.
+- Có quyền module thì hiển thị module/submenu; không có quyền thì bị chặn khi truy cập route.
+- `quan_tri` luôn được xem, thêm, sửa, xóa toàn bộ bất kể rule chi tiết.
+- Rule xem có thể phụ thuộc cấp bậc/phòng/nhóm:
+  - `cap_bac=1`: xem hết.
+  - `cap_bac=2`: xem trong phòng.
+  - `cap_bac=3`: xem trong nhóm.
+  - còn lại: chỉ xem dữ liệu của chính nhân sự đó.
+- `them`: nhân sự có chức vụ `cap_bac=1`, hoặc có quyền `quan_tri`, hoặc có quyền `them`.
+- `sua`: nhân sự có chức vụ `cap_bac=1`, hoặc có quyền `quan_tri`, hoặc có quyền `sua`.
+- `xoa`: nhân sự có chức vụ `cap_bac=1`, hoặc có quyền `quan_tri`, hoặc có quyền `xoa`.
+- Module key lưu trên Supabase phải là tiếng Việt không dấu của tên module, ví dụ đúng `nhan-vien`, sai `he-thong/nhan-vien`.
+- Với module như bảng lương, dữ liệu có thể chỉ cho phép xem của chính người đó theo app-side permission. Không tự thêm RLS Supabase nếu chưa được chốt.
+
+### Delivery
+
+- Giao diện desktop dùng list view, mobile dùng card view; form/detail view theo template.
+- Làm xong dự án phải có plan tối ưu tránh quá tải Supabase Egress và Vercel Edge Function, tham khảo tài liệu chính thức mới nhất của Supabase/Vercel.
+- Khi push cần push GitHub theo quy trình repo hiện tại.
+## Ảnh phản hồi owner ngày 2026-05-31
+
+Nguồn: ảnh chat người dùng gửi ngày 2026-05-31.
+
+Các ý đã chốt từ phản hồi:
+
+- Owner nhắc: `id` các bảng phải là `int8` và tự động tăng dần.
+- Supabase có tính năng auto increment cho `int8`; không được bỏ qua hoặc nói không có.
+- Owner yêu cầu đọc lại note/sheet kỹ vì đang sai nhiều, nhất là phần đăng nhập.
+- Bảng nhân viên phải bỏ các trường linh tinh.
+- Phần login phải làm chuẩn trước: không phải mã nhân viên, mà là `ten_dang_nhap`.
+- Khi thêm/sửa `ten_dang_nhap` phải tự sửa Supabase Auth user; khi xóa phải xóa Supabase Auth user tương ứng.
+- Người dùng sẽ đăng nhập Google trong browser để cấp quyền đọc 2 Google Sheets làm source tham chiếu chính.
+
+Các ý này đã được chuẩn hóa thành gate chi tiết ở `.codex/5fedu/10-owner-feedback-lessons.md`.

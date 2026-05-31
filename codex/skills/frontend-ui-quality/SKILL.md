@@ -1,4 +1,4 @@
----
+﻿---
 name: frontend-ui-quality
 description: Build, refine, and verify professional frontend UI/UX with art direction, real or generated visual assets, icons/logos, advanced layout, motion, 3D where useful, and visual quality gates. Use when Codex creates or changes frontend screens, web apps, dashboards, landing pages, games, product pages, branded pages, component layouts, CSS, responsive behavior, typography, spacing, imagery, animations, 3D scenes, or any user-facing interface where aesthetics, polish, alignment, overflow, usability, or layout correctness matter.
 ---

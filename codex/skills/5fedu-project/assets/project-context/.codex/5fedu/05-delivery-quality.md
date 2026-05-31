@@ -26,3 +26,10 @@ Lên kế hoạch tối ưu để tránh làm quá tải Supabase Egress và Ver
 ```
 
 Vì tài liệu nền tảng có thể thay đổi, khi làm bước này phải tra tài liệu chính thức mới nhất.
+
+## Vercel và npm install
+
+- Clean install trên CI/Vercel phải chạy được bằng npm bình thường, không dùng `--force` hoặc `--legacy-peer-deps` để né lỗi peer dependency.
+- Trước khi nâng major version của toolchain build/lint như ESLint, Vite, TypeScript, React plugin, phải kiểm tra peer dependency của các plugin chính.
+- Với cấu hình hiện tại, giữ `eslint` và `@eslint/js` ở major 9 cho tới khi `eslint-plugin-jsx-a11y` hỗ trợ ESLint 10.
+- Build/deploy log không dùng `npm audit` làm gate cài đặt dependency; audit bảo mật là backlog/gate riêng để xử lý có kiểm soát.

@@ -1,4 +1,4 @@
----
+﻿---
 name: "security-threat-model"
 description: "Repository-grounded threat modeling that enumerates trust boundaries, assets, attacker capabilities, abuse paths, and mitigations, and writes a concise Markdown threat model. Trigger only when the user explicitly asks to threat model a codebase or path, enumerate threats/abuse paths, or perform AppSec threat modeling. Do not trigger for general architecture summaries, code review, or non-security design work."
 ---
@@ -48,9 +48,9 @@ Deliver an actionable AppSec-grade threat model that is specific to the reposito
 
 ### 6) Validate service context and assumptions with the user
 - Summarize key assumptions that materially affect threat ranking or scope, then ask the user to confirm or correct them.
-- Ask 1–3 targeted questions to resolve missing context (service owner and environment, scale/users, deployment model, authn/authz, internet exposure, data sensitivity, multi-tenancy).
+- Ask 1â€“3 targeted questions to resolve missing context (service owner and environment, scale/users, deployment model, authn/authz, internet exposure, data sensitivity, multi-tenancy).
 - Pause and wait for user feedback before producing the final report.
-- If the user declines or can’t answer, state which assumptions remain and how they influence priority.
+- If the user declines or canâ€™t answer, state which assumptions remain and how they influence priority.
 
 ### 7) Recommend mitigations and focus paths
 - Distinguish existing mitigations (with evidence) from recommended mitigations.

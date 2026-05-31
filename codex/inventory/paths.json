@@ -1,7 +1,7 @@
 ﻿{
-    "CodexHome":  "C:\\Users\\ADMIN\\.codex",
+    "CodexHome":  "C:\\Users\\DELL\\.codex",
     "AgentRules":  "P:\\agent-rules",
-    "CodexConfig":  "C:\\Users\\ADMIN\\.codex\\config.toml",
-    "CodexAgents":  "C:\\Users\\ADMIN\\.codex\\agents",
-    "CodexSkills":  "C:\\Users\\ADMIN\\.codex\\skills"
+    "CodexConfig":  "C:\\Users\\DELL\\.codex\\config.toml",
+    "CodexAgents":  "C:\\Users\\DELL\\.codex\\agents",
+    "CodexSkills":  "C:\\Users\\DELL\\.codex\\skills"
 }
