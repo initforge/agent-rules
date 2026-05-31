@@ -37,3 +37,13 @@ Luật này là adapter cho Antigravity. Nguồn chuẩn vẫn là `C:\Users\DEL
 - Không dùng profile/model config trong adapter Antigravity; model và effort do Antigravity runtime tự quản.
 - Hooks chỉ dùng cho guard/preflight, không thay thế review của người dùng.
 - Nếu workflow chuyên biệt tồn tại, ưu tiên gọi workflow thay vì diễn giải lại bằng lời dài.
+
+## Quy trình Tự động hóa Chuyển hóa Kinh nghiệm (Auto-evolving Rules)
+
+Khi người dùng yêu cầu chuyển hóa một phản hồi (feedback) hoặc bài học kinh nghiệm mới thành luật vận hành nền (người dùng không cần làm thủ công):
+1. **Phân loại & Định vị**: Phân tích nội dung kinh nghiệm để xác định nhóm quy tắc liên quan (ví dụ: Database, UI/Frontend, Auth, Clean Code...) và xác định tệp luật nền tương ứng trong `.agents/rules/` (hoặc tạo mới nếu cần).
+2. **Cập nhật Luật của Dự án**: Chèn điều khoản quy tắc mới này trực tiếp vào tệp luật đó dưới dạng quy định bắt buộc, ngắn gọn và có tính hành động cao.
+3. **Cập nhật Bản mẫu Codex**: Đồng thời chèn quy tắc này vào tệp rules/skills tương ứng trong `C:\Users\DELL\.codex\` (ví dụ: `C:\Users\DELL\.codex\rules\` hoặc thư mục assets của skill mẫu).
+4. **Đồng bộ hóa ngược Master**: Chạy tự động script `P:\agent-rules\codex\scripts\sync-codex-to-p.ps1` để đồng bộ ngược về `P:\agent-rules\codex` và cập nhật thư mục master `antigravity/.agents/rules/` tương ứng.
+5. **Lưu trữ phiên bản**: Tự động chạy `git add -A` và `git commit` tại thư mục `P:\agent-rules` để lưu vết lịch sử thay đổi.
+6. **Báo cáo**: Kết thúc và liệt kê cụ thể các tệp luật đã cập nhật kèm theo trạng thái cuối là `PASS`.
