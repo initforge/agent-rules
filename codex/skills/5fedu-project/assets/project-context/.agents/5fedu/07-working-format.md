@@ -12,7 +12,7 @@ Format đã chốt:
 
 - Ưu tiên dùng template `https://github.com/tahdieuphoi-ctrl/TAH_app`.
 - Với dự án này: clone/adapt template là `DA_CHOT`; app name là `TAH APP`; scope là full app A-Z theo ảnh/spec đã gửi.
-- Template source local nằm ở `P:\tah-app-5f\.codex\template-source\TAH_app`.
+- Template source local nằm ở `P:\tah-app-5f\.agents\template-source\TAH_app`.
 - Khi scaffold/adapt, đọc cấu trúc template trước rồi map spec vào domain/module/view có sẵn.
 - Ưu tiên thêm hoặc adapt, hạn chế sửa/xóa module template.
 - Nếu cần sửa/xóa lớn, báo lý do, rủi ro, file bị ảnh hưởng và xin chốt trước.
@@ -107,7 +107,7 @@ spec -> submenu/domain -> module -> view -> tab -> route -> source path -> datab
 - Desktop ưu tiên list view, mobile ưu tiên card view.
 - Module nhiều tab phải giữ tab hiện tại trên router query `?tab=...`.
 
-Ví dụ mapping và schema rút từ ảnh/spec ban đầu nằm ở `.codex/5fedu/08-source-examples.md`.
+Ví dụ mapping và schema rút từ ảnh/spec ban đầu nằm ở `.agents/5fedu/08-source-examples.md`.
 
 ## Auth và permission
 
@@ -164,7 +164,7 @@ Khi làm database/auth/nhân viên, phải chạy checklist này trước khi co
 - Bảng nhân viên có đang bị thêm trường linh tinh ngoài source không?
 - Login có dùng đúng `ten_dang_nhap` thay vì `ma_nhan_vien` không?
 - Thêm/sửa/xóa `ten_dang_nhap` đã đồng bộ Supabase Auth qua server/admin path chưa?
-- Đã đọc `.codex/5fedu/10-owner-feedback-lessons.md` chưa?
+- Đã đọc `.agents/5fedu/10-owner-feedback-lessons.md` chưa?
 
 Nếu câu trả lời nào là chưa, dừng triển khai và sửa mapping/schema/plan trước.
 
@@ -180,4 +180,5 @@ Format đã chốt từ owner feedback ngày 2026-05-31:
 - Action `duyệt` không nằm trong form nhập liệu. Duyệt là action riêng trên detail/list/row/bulk theo nghiệp vụ.
 - Action `in` bảng lương phải có khi làm module bảng lương.
 - Detail tài xế cần lịch sử chuyến xe và lịch sử lương; detail địa điểm/xe cần lịch sử chuyến liên quan khi có dữ liệu.
-- Trước khi sửa giao diện, đối chiếu `.codex/template-source/TAH_app` commit `47947e6eea0b1b7dc6723356f37f604e30ac690b`.
+- Trước khi sửa giao diện, đối chiếu `.agents/template-source/TAH_app` commit `47947e6eea0b1b7dc6723356f37f604e30ac690b`.
+

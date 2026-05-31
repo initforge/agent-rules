@@ -23,7 +23,7 @@ Người dùng đã có quyền qua GitHub CLI. Dự án này đã chốt clone/
 Template source local đã clone để tham chiếu:
 
 ```text
-P:\tah-app-5f\.codex\template-source\TAH_app
+P:\tah-app-5f\.agents\template-source\TAH_app
 ```
 
 Khi implement app root, đọc template source local trước, lấy/adapt đúng phần cần, và báo người dùng nếu phải chỉnh sửa phần template.
@@ -34,3 +34,4 @@ Khi implement app root, đọc template source local trước, lấy/adapt đún
 - Hạn chế sửa/xóa phần template đang hoạt động.
 - Trước khi sửa module có sẵn, đọc flow, route, state, service và component liên quan.
 - Nếu cần thay đổi lớn, báo cáo lý do và rủi ro trước.
+

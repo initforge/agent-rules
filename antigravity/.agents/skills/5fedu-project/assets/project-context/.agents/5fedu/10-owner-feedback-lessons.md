@@ -130,7 +130,7 @@ Với auth, smoke test tối thiểu:
 
 ## UI/Vận Tải Owner Feedback Gate 2026-05-31
 
-Khi làm trang chủ, module vận tải, list/detail/form, combobox, thống kê, in/xuất/duyệt hoặc trường tổng hợp, phải đọc thêm `.codex/5fedu/12-owner-feedback-transport-ui.md`.
+Khi làm trang chủ, module vận tải, list/detail/form, combobox, thống kê, in/xuất/duyệt hoặc trường tổng hợp, phải đọc thêm `.agents/5fedu/12-owner-feedback-transport-ui.md`.
 
 Các lỗi mới đã chốt không được lặp lại:
 
@@ -146,10 +146,11 @@ Các lỗi mới đã chốt không được lặp lại:
 
 Checklist bổ sung trước khi báo xong UI vận tải:
 
-1. Đối chiếu template `.codex/template-source/TAH_app` commit `47947e6eea0b1b7dc6723356f37f604e30ac690b`.
+1. Đối chiếu template `.agents/template-source/TAH_app` commit `47947e6eea0b1b7dc6723356f37f604e30ac690b`.
 2. Kiểm tra list/detail/form theo template, không chỉ render field từ config.
 3. Kiểm tra field tổng hợp là read-only/tự tính hoặc được sync đúng.
 4. Kiểm tra combobox cho field relation lớn.
 5. Kiểm tra action in/xuất/duyệt đúng vị trí.
 6. Kiểm tra dữ liệu thật trong browser bằng Supabase env hiện tại.
 7. Chụp hoặc verify UI bằng Playwright/browser trước khi báo PASS.
+

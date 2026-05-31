@@ -144,4 +144,5 @@ Các điểm dưới đây là owner feedback bổ sung sau khi đối chiếu a
 - Chuyến xe: bảng cha tự tính tổng chuyến/tổng tiền từ chi tiết, không nhập tay các tổng nếu có dữ liệu con.
 - Thống kê chuyến đi: phải làm giao diện report/dashboard đúng nghiệp vụ, không dùng giao diện tạm.
 
-Chi tiết gate nằm ở `.codex/5fedu/12-owner-feedback-transport-ui.md`.
+Chi tiết gate nằm ở `.agents/5fedu/12-owner-feedback-transport-ui.md`.
+

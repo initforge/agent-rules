@@ -202,4 +202,5 @@ Các ý đã chốt từ phản hồi:
 - Khi thêm/sửa `ten_dang_nhap` phải tự sửa Supabase Auth user; khi xóa phải xóa Supabase Auth user tương ứng.
 - Người dùng sẽ đăng nhập Google trong browser để cấp quyền đọc 2 Google Sheets làm source tham chiếu chính.
 
-Các ý này đã được chuẩn hóa thành gate chi tiết ở `.codex/5fedu/10-owner-feedback-lessons.md`.
+Các ý này đã được chuẩn hóa thành gate chi tiết ở `.agents/5fedu/10-owner-feedback-lessons.md`.
+

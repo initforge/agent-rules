@@ -9,7 +9,7 @@ File này là gate bắt buộc trước khi làm trang chủ, module Quản lý
 Template giao diện local:
 
 ```text
-.codex/template-source/TAH_app
+.agents/template-source/TAH_app
 ```
 
 Commit chốt:
@@ -50,7 +50,7 @@ Không được tự dựng form/detail/list thô nếu template đã có patter
 - `ten_dang_nhap` chỉ dùng để sinh fake email đăng nhập Supabase Auth dạng `<ten_dang_nhap>@gmail.com`.
 - Cần có trường email thực tế của nhân viên để họ điền email thật.
 - Không trộn email thật với fake email auth.
-- Ảnh owner đã chốt lại: `id int8`, login dùng `ten_dang_nhap`, thêm/sửa/xóa username phải sync Supabase Auth user. Các rule này vẫn nằm ở `.codex/5fedu/10-owner-feedback-lessons.md`.
+- Ảnh owner đã chốt lại: `id int8`, login dùng `ten_dang_nhap`, thêm/sửa/xóa username phải sync Supabase Auth user. Các rule này vẫn nằm ở `.agents/5fedu/10-owner-feedback-lessons.md`.
 
 ### Phòng Ban Và Chức Vụ
 
@@ -137,3 +137,4 @@ Dừng và sửa plan trước khi code tiếp nếu gặp một trong các dấ
 - Select thô được dùng cho danh sách quan hệ lớn như tài xế.
 - Duyệt nằm trong form thay vì action riêng.
 - UI không được verify bằng dữ liệu thật.
+

@@ -97,4 +97,5 @@ Mặc định lọc quyền trên app cho dữ liệu nghiệp vụ, không tự
 - Foreign key trỏ tới bảng có `id int8` cũng phải là `int8`.
 - Trước khi chạy migration thật, phải kiểm tra `information_schema.columns` để xác nhận `id` là `bigint` và có identity/default sequence.
 - Bảng `var_nhan_vien` là bảng tối giản cho cơ cấu/login; không tự thêm trường hồ sơ nhân sự mở rộng ngoài source.
-- Checklist chi tiết nằm ở `.codex/5fedu/10-owner-feedback-lessons.md` và là gate bắt buộc cho schema/migration.
+- Checklist chi tiết nằm ở `.agents/5fedu/10-owner-feedback-lessons.md` và là gate bắt buộc cho schema/migration.
+

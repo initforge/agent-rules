@@ -1,34 +1,34 @@
 ---
 name: 5fedu-project
-description: Scaffold or maintain project-local 5fedu context for Codex work. Use when the user asks to set up a 5fedu repo, create/refresh AGENTS.md, add or update .codex/5fedu/*.md rules, update decision status/questions, record new 5fedu conventions, or preserve owner feedback gates for Supabase/auth/database/UI/transport modules. Do not use as a required context-loading ritual for ordinary implementation; normal work should read the repo's AGENTS.md and relevant project-local context automatically.
+description: Scaffold or maintain project-local 5fedu context for Codex/Antigravity work. Use when the user asks to set up a 5fedu repo, create/refresh AGENTS.md, add or update .agents/5fedu/*.md rules, update decision status/questions, record new 5fedu conventions, or preserve owner feedback gates for Supabase/auth/database/UI/transport modules.
 ---
 
-# 5fedu Project
+# 5fedu Project Skill
 
-## Core Rule
+## 1. Core Rule
 
 Keep 5fedu rules project-local by default. Do not expand the global `AGENTS.md` with long customer-specific rules. Use this skill as the reusable setup entry and write concise project context into the target repo.
 
-`/5fedu` is for setup and context maintenance only. Once a repo has `AGENTS.md` and `.codex/5fedu/`, ordinary coding work should rely on those project-local files without the user needing to call `/5fedu` again.
+`/5fedu` is for setup and context maintenance only. Once a repo has `AGENTS.md` and `.agents/5fedu/`, ordinary coding work should rely on those project-local files without the user needing to call `/5fedu` again.
 
-## Workflow
+## 2. Workflow
 
-1. Inspect the target repo first. If `AGENTS.md` or `.codex/5fedu/` already exists, read it before changing anything.
+1. Inspect the target repo first. If `AGENTS.md` or `.agents/5fedu/` already exists, read it before changing anything.
 2. If the user wants setup, run or adapt `scripts/install-5fedu-context.ps1` to scaffold the project-local context files.
 3. Load `references/5fedu-context-map.md` when writing or updating project rules.
 4. Ask for missing spec, credentials, database rules, or module mapping before implementation. Never invent table names, fields, permissions, or screen mappings.
 5. For real implementation work, map every requested feature from spec -> domain -> module -> view/tab -> source path -> database table -> handler/service. Record uncertain mappings before coding.
 6. Treat Supabase/auth/permission/database work as HIGH risk: create a locked plan, require credentials or mocks explicitly, verify behavior, and do not store secret values in docs.
 7. Treat owner feedback about UI/business flows as reusable gates, not one-off fixes. For transport apps, record list/detail/form/action/totals/combobox/print/approve requirements in project context before coding.
-8. When a template commit is provided, clone or update it under `.codex/template-source/` and record the exact commit in project context. Use it as the UI reference for list, detail, form, dashboard, toolbar, combobox, drawer, table, and mobile card patterns.
+8. When a template commit is provided, clone or update it under `.agents/template-source/` and record the exact commit in project context. Use it as the UI reference for list, detail, form, dashboard, toolbar, combobox, drawer, table, and mobile card patterns.
 
-## Project Files
+## 3. Project Files Layout
 
 Recommended target layout:
 
 ```text
 AGENTS.md
-.codex/5fedu/
+.agents/5fedu/
 |- 00-index.md
 |- 01-tech-stack-and-template.md
 |- 02-frontend-mapping.md
@@ -45,29 +45,43 @@ AGENTS.md
 `- questions.md
 ```
 
-`AGENTS.md` should be a lightweight pointer/loading policy, not an `@` include list for every file. Put detailed rules under `.codex/5fedu/`.
-Treat `06-decision-status.md` as the source of truth for what is confirmed, unconfirmed, blocked, or paused.
-Treat `07-working-format.md` as the source of truth for default 5fedu format/how-to when concrete app-specific values are not yet confirmed.
-Treat `08-source-examples.md` as concrete examples extracted from the original prompt/images; use it to infer style, not to replace app-specific confirmation.
-Use `09-coverage-audit.md` to verify whether the current context covers the original 5fedu prompt and to avoid losing requirements during future updates.
-Use `10-owner-feedback-lessons.md` as a hard gate for repeated owner feedback: database ids must be `int8` auto-increment, employee tables must stay lean, login must use `ten_dang_nhap`, and username create/update/delete must sync Supabase Auth through a server/admin path.
-Use `11-current-sheets-source-map.md` as the source map for current Google Sheets/spec exports.
-Use `12-owner-feedback-transport-ui.md` as a hard gate for repeated transport/UI feedback: homepage order, real employee email vs fake auth email, external drivers, proper list/detail/form, combobox relation fields, derived totals, print/approve actions, and report UI quality.
+- `AGENTS.md` should be a lightweight pointer/loading policy, not an `@` include list for every file. Put detailed rules under `.agents/5fedu/`.
+- Treat `06-decision-status.md` as the source of truth for what is confirmed, unconfirmed, blocked, or paused.
+- Treat `07-working-format.md` as the source of truth for default 5fedu format/how-to when concrete app-specific values are not yet confirmed.
+- Treat `08-source-examples.md` as concrete examples extracted from the original prompt/images; use it to infer style.
+- Use `09-coverage-audit.md` to verify whether the current context covers the original 5fedu prompt.
+- Use `10-owner-feedback-lessons.md` as a hard gate for repeated owner feedback: database ids must be `int8` auto-increment, employee tables must stay lean, login must use `ten_dang_nhap`, and username create/update/delete must sync Supabase Auth through a server/admin path.
+- Use `11-current-sheets-source-map.md` as the source map for current Google Sheets/spec exports.
+- Use `12-owner-feedback-transport-ui.md` as a hard gate for repeated transport/UI feedback: homepage order, real employee email vs fake auth email, external drivers, proper list/detail/form, combobox relation fields, derived totals, print/approve actions, and report UI quality.
 
-## Implementation Discipline
+## 4. Developer Lessons Learned (Anti-Patterns & Hard Gates)
 
-- Prefer adding/adapting modules from `https://github.com/tahdieuphoi-ctrl/TAH_app`; avoid deleting or broadly rewriting template code unless approved.
+Before writing database, auth, staff tables, migration, or UI components, the AI MUST strictly apply these parsed owner feedback lessons:
+
+### A. Database & Schema Design
+- **Primary Key Constraint**: Every table's primary key `id` MUST be `int8` (bigint) auto-incrementing (`id int8 generated by default as identity primary key`). Using `uuid` or `text` is strictly BANNED unless explicitly required by sheets/spec.
+- **Foreign Key Constraint**: Any foreign key column linking to an `id int8` table must also be typed `int8` (e.g., `id_tai_xe int8`, `id_chuc_vu int8`).
+- **Lean Staff Bounded Context**: The staff table `var_nhan_vien` must remain strictly lean. Banned HR fields include: `ngay_sinh`, `ngay_vao_lam`, `gioi_tinh`, `dia_chi`, `cccd`, `ngan_hang`, `so_tai_khoan`, `muc_luong`, `loai_hop_dong` etc., unless explicitly written in the latest sheet/spec.
+
+### B. Login, Authentication & Supabase Sync
+- **Credentials Stack**: Default credentials are `admin` / `5fedu.com` using the username login `ten_dang_nhap` = `admin` (mapping internally to a fake email `admin@gmail.com`).
+- **Sync Username to Supabase Auth**: When creating/updating/deleting a staff account with a `ten_dang_nhap`, the corresponding fake email `<ten_dang_nhap>@gmail.com` must be synchronized in Supabase Auth.
+- **Service Role Restriction**: The Supabase service role key must NEVER be exposed to the client. Auth admin actions must exclusively run on server/admin paths (e.g. Edge Functions, API).
+
+### C. Transport UI & Derived Fields
+- **Derived Fields Constraint**: Fields like `so_chuyen`, `tong_tien_luong`, `tong_phi`, `tong_luong_chuyen` must NEVER be editable by users on the UI. They must be read-only and automatically calculated from child rows or database syncs.
+- **Large Dataset Selection**: Do NOT use native `<select>` dropdowns for fields with large relation lists (like driver, vehicle, location, trip). Use `Combobox` or `AsyncCombobox` searchable pickers.
+- **Clean Action Segregation**: Banned placing "Duyệt" (Approval) or "In" (Print) buttons inside the main form. Approval and Print actions must be separate buttons outside the form context.
+- **Detail Sections History**: Detail pages for entities like vehicle, location, or driver should include dynamic sections displaying their related historical logs (e.g., historical trips).
+
+## 5. Implementation Discipline
+
+- Prefer adding/adapting modules from `P:\agent-rules\antigravity\.agents\template-source/` (or similar templates); avoid deleting or broadly rewriting template code unless approved.
 - Keep Vietnamese names for submenu/module folders and labels where the source app convention uses Vietnamese.
 - Keep route/view keys predictable, usually lowercase kebab Vietnamese without accents for route/module keys.
 - Use real Supabase/frontend integration once credentials are provided; avoid dead buttons, placeholder-only flows, or missing handlers.
 - Search must cover direct table fields and linked display fields.
 - On mobile use card view; on desktop use list view unless the project spec says otherwise.
-- Do not treat a business module as complete merely because generic CRUD exists. Verify list/detail/form/action/history/report behavior against the template and source spec.
-- For transport/payroll/trip modules, do not allow manual entry for totals that should be derived from child rows or real trip data.
-- Use Combobox/AsyncCombobox for relation fields with many options, especially drivers, locations, vehicles, trips, employees.
-- Keep approval/print/export as explicit actions in the correct surface; approval must not be embedded as a form submit button unless the owner explicitly says so.
 - End delivery with verification evidence and a Supabase Egress + Vercel Edge Function optimization reminder/plan when the app is near completion.
 - Before implementation, read `06-decision-status.md`; do not implement any area marked `CHUA_CHOT` or `CAN_HOI_THEM` until the user confirms it.
 - If a concrete value is unconfirmed, still follow the format/how-to in `07-working-format.md`; ask only for the missing value.
-- Before database/auth/employee/migration/seed work, read `10-owner-feedback-lessons.md`; stop if the code/schema uses text/uuid ids, HR-style extra employee fields, `ma_nhan_vien` login, or frontend-only service role auth.
-- Before homepage, transport modules, list/detail/form/action, combobox, report, payroll, or derived-total work, read `12-owner-feedback-transport-ui.md`; stop if the code only renders generic fields, uses select for large relations, lets users type derived totals, misses history sections, or puts approval inside a form.

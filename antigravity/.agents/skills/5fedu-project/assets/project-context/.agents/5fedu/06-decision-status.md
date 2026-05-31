@@ -19,7 +19,7 @@ Chỉ cập nhật một mục sang `DA_CHOT` khi người dùng xác nhận rõ
 | Format/cách làm mặc định của 5fedu phải được ghi rõ dù giá trị từng app chưa chốt | DA_CHOT | User prompt ngày 2026-05-30 | Xem `07-working-format.md` |
 | Scope dự án là full app A-Z, không hỏi "module đầu tiên/phase đầu" | DA_CHOT | User prompt ngày 2026-05-30 | AI tự chia plan nội bộ nếu cần |
 | Clone/adapt template `https://github.com/tahdieuphoi-ctrl/TAH_app` vào repo này | DA_CHOT | User prompt ngày 2026-05-30 | Dùng template làm nền; chỉnh sửa thì báo người dùng |
-| Template source local | DA_CHOT | Clone thành công qua GitHub CLI | `P:\tah-app-5f\.codex\template-source\TAH_app`, branch `main` |
+| Template source local | DA_CHOT | Clone thành công qua GitHub CLI | `P:\tah-app-5f\.agents\template-source\TAH_app`, branch `main` |
 | App name hiện tại | DA_CHOT | User prompt ngày 2026-05-30 + ảnh 1 | `TAH APP` |
 | Spec source hiện tại | DA_CHOT | User prompt ngày 2026-05-30 + ảnh đã gửi | Dùng ảnh/spec đã gửi làm nguồn hiện tại; nếu có sheet/link mới thì cập nhật sau |
 | Tech stack app hiện tại | DA_CHOT | Ảnh 1 + user xác nhận | React Vite TS, Tailwind, internal `components/ui`, TanStack Query, Zustand, React Hook Form, Zod, Supabase, Cloudinary |
@@ -64,13 +64,13 @@ Chỉ cập nhật một mục sang `DA_CHOT` khi người dùng xác nhận rõ
 | Google Sheets cần đọc bằng browser đã đăng nhập Google khi link cần auth | DA_CHOT | User yêu cầu ngày 2026-05-31 | Playwright headed đã mở để user đăng nhập, sau đó đọc sheet làm nguồn chính |
 | Google Sheet app/data/spec hiện tại | DA_CHOT | User gửi link public ngày 2026-05-31 | `1NY4sVW2GZaOjtZ-Mivq-B5PlXZPL_QEhbJjAJe_0ddg`, đã export vào `output/sheets/current/` |
 | Google Sheet dự án/quy tắc hiện tại | DA_CHOT | User gửi link public ngày 2026-05-31 | `1KF3Pe-N7S4DJm_6TKi9QXy4jXPKzqDmeLVHxgiuGoZY`, đã export vào `output/sheets/current/` |
-| Source map từ 2 Google Sheets | DA_CHOT | Phân tích export ngày 2026-05-31 | `.codex/5fedu/11-current-sheets-source-map.md` là tài liệu đối chiếu chính |
+| Source map từ 2 Google Sheets | DA_CHOT | Phân tích export ngày 2026-05-31 | `.agents/5fedu/11-current-sheets-source-map.md` là tài liệu đối chiếu chính |
 
 ## Cập Nhật Owner Feedback UI/Vận Tải 2026-05-31
 
 | Mục | Trạng thái | Nguồn/xác nhận | Ghi chú |
 | --- | --- | --- | --- |
-| Template giao diện tham chiếu local | DA_CHOT | User yêu cầu ngày 2026-05-31 | `.codex/template-source/TAH_app` tại commit `47947e6eea0b1b7dc6723356f37f604e30ac690b` |
+| Template giao diện tham chiếu local | DA_CHOT | User yêu cầu ngày 2026-05-31 | `.agents/template-source/TAH_app` tại commit `47947e6eea0b1b7dc6723356f37f604e30ac690b` |
 | Thứ tự trang chủ | DA_CHOT | User yêu cầu ngày 2026-05-31 | `Quản lý vận tải` -> `Hệ thống` -> `Thông tin bản quyền` |
 | Nhân viên có email thực tế riêng | DA_CHOT | User yêu cầu ngày 2026-05-31 | Email thật khác fake email auth sinh từ `ten_dang_nhap@gmail.com` |
 | Không kết luận phòng ban/chức vụ rỗng nếu chưa kiểm tra Supabase thật | DA_CHOT | User phản hồi ngày 2026-05-31 + kiểm tra REST ngày 2026-05-31 | DB hiện có dữ liệu; nếu UI trắng phải kiểm tra env/query/filter/permission/render |
@@ -83,3 +83,4 @@ Chỉ cập nhật một mục sang `DA_CHOT` khi người dùng xác nhận rõ
 | Bảng lương có nút in và duyệt tách khỏi form | DA_CHOT | User yêu cầu ngày 2026-05-31 | Nút duyệt không nằm trong form |
 | Chuyến xe cha tự tính tổng chuyến/tổng tiền từ chi tiết | DA_CHOT | User yêu cầu ngày 2026-05-31 | Không nhập tay nếu có chi tiết |
 | Thống kê chuyến đi phải làm chuẩn dashboard/report nghiệp vụ | DA_CHOT | User yêu cầu ngày 2026-05-31 | Lọc theo ngày, chuyến, tài xế, địa điểm, xe; có lương/chi phí |
+
