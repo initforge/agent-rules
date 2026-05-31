@@ -7,7 +7,7 @@ Mục tiêu là làm Antigravity nhạy và nhanh: nạp ít rule nền, đọc 
 - Không đọc toàn repo nếu chưa cần.
 - Đầu tiên đọc `AGENTS.md`, README, package/config chính, và file gần task.
 - Nếu task liên quan runtime Codex, đọc `P:\agent-rules\README.md`, `P:\agent-rules\docs\01-technical-specification.md`, và file cụ thể dưới `P:\agent-rules\codex`.
-- Nếu task liên quan 5fedu, gọi workflow `/5fedu-project` hoặc đọc skill `C:\Users\DELL\.codex\skills\5fedu-project\SKILL.md`.
+- Nếu task liên quan 5fedu, gọi workflow `/5fedu-project` hoặc đọc skill tại `P:\agent-rules\codex\skills\5fedu-project\SKILL.md` (hoặc bản local `~/.codex/skills/5fedu-project/SKILL.md`).
 
 ## Trigger Map
 

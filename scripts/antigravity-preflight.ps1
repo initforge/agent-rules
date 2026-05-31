@@ -50,15 +50,15 @@ if (Test-Path $codexSkillsPath) {
   foreach ($skill in $skills) {
     if ($skill.Name -like ".*") { continue }
     
-    $wfContent = @"
-# $($skill.Name) Skill
+    $wfContent = @'
+# {0} Skill
 
-1. Read `$codexSkillsPath\$($skill.Name)\SKILL.md`.
+1. Read the skill file in the master rules repository at P:\agent-rules\codex\skills\{0}\SKILL.md or the local runtime at ~/.codex/skills/{0}/SKILL.md.
 2. Inspect the current project files or request relevant context before starting work.
 3. Execute the skill instructions to fulfill the user's request.
 4. If this is a design/UI/UX skill, check and follow the visual examples and templates if referenced.
 5. End with files modified, verification details, and final status `PASS`, `PARTIAL`, or `BLOCKED`.
-"@
+'@ -f $skill.Name
     
     $wfFile = Join-Path $localAgents "workflows\$($skill.Name).md"
     if (-not (Test-Path $wfFile)) {
