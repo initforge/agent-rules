@@ -8,7 +8,7 @@ $updated = $false
 
 # 1. Auto-update from master P:\agent-rules if available and not inside P:\agent-rules itself
 $currentPath = (Get-Location).Path
-if (Test-Path $masterRoot -and $currentPath -notlike "*agent-rules*") {
+if ((Test-Path $masterRoot) -and ($currentPath -notlike "*agent-rules*")) {
   $masterAgents = Join-Path $masterRoot ".agents"
   if (Test-Path $masterAgents) {
     # Check and sync .agents (modern)
@@ -43,7 +43,44 @@ if (Test-Path $masterRoot -and $currentPath -notlike "*agent-rules*") {
   }
 }
 
-# 2. Check if required files are present
+# 2. Dynamic Codex Skills generator
+$codexSkillsPath = "$env:USERPROFILE\.codex\skills"
+if (Test-Path $codexSkillsPath) {
+  $skills = Get-ChildItem $codexSkillsPath -Directory
+  foreach ($skill in $skills) {
+    if ($skill.Name -like ".*") { continue }
+    
+    $wfContent = @"
+# $($skill.Name) Skill
+
+1. Read `$codexSkillsPath\$($skill.Name)\SKILL.md`.
+2. Inspect the current project files or request relevant context before starting work.
+3. Execute the skill instructions to fulfill the user's request.
+4. If this is a design/UI/UX skill, check and follow the visual examples and templates if referenced.
+5. End with files modified, verification details, and final status `PASS`, `PARTIAL`, or `BLOCKED`.
+"@
+    
+    $wfFile = Join-Path $localAgents "workflows\$($skill.Name).md"
+    if (-not (Test-Path $wfFile)) {
+      $wfFolder = Split-Path $wfFile -Parent
+      New-Item -ItemType Directory -Force -Path $wfFolder | Out-Null
+      Set-Content -Path $wfFile -Value $wfContent -Force
+      $updated = $true
+    }
+    
+    if (Test-Path $localLegacy) {
+      $legacyWfFile = Join-Path $localLegacy "workflows\$($skill.Name).md"
+      if (-not (Test-Path $legacyWfFile)) {
+        $legacyWfFolder = Split-Path $legacyWfFile -Parent
+        New-Item -ItemType Directory -Force -Path $legacyWfFolder | Out-Null
+        Set-Content -Path $legacyWfFile -Value $wfContent -Force
+        $updated = $true
+      }
+    }
+  }
+}
+
+# 3. Check if required files are present
 $required = @(
   ".agents\rules\00-codex-runtime-intent.md",
   ".agents\rules\01-intent-contract.md",

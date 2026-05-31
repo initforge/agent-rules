@@ -37,6 +37,38 @@ if ($LegacyAgentSingular) {
   Copy-Item "$agentsSource\*" $legacyTarget -Recurse -Force
 }
 
+# Dynamic Codex Skills generator
+$codexSkillsPath = "$env:USERPROFILE\.codex\skills"
+if (Test-Path $codexSkillsPath) {
+  $skills = Get-ChildItem $codexSkillsPath -Directory
+  foreach ($skill in $skills) {
+    if ($skill.Name -like ".*") { continue }
+    
+    $wfContent = @"
+# $($skill.Name) Skill
+
+1. Read `$codexSkillsPath\$($skill.Name)\SKILL.md`.
+2. Inspect the current project files or request relevant context before starting work.
+3. Execute the skill instructions to fulfill the user's request.
+4. If this is a design/UI/UX skill, check and follow the visual examples and templates if referenced.
+5. End with files modified, verification details, and final status `PASS`, `PARTIAL`, or `BLOCKED`.
+"@
+    
+    $wfFile = Join-Path $agentsTarget "workflows\$($skill.Name).md"
+    $wfFolder = Split-Path $wfFile -Parent
+    New-Item -ItemType Directory -Force -Path $wfFolder | Out-Null
+    Set-Content -Path $wfFile -Value $wfContent -Force
+    
+    if ($LegacyAgentSingular) {
+      $legacyWfFile = Join-Path $legacyTarget "workflows\$($skill.Name).md"
+      $legacyWfFolder = Split-Path $legacyWfFile -Parent
+      New-Item -ItemType Directory -Force -Path $legacyWfFolder | Out-Null
+      Set-Content -Path $legacyWfFile -Value $wfContent -Force
+    }
+  }
+  Write-Host "[Antigravity] Dynamically generated slash commands for all installed Codex skills."
+}
+
 Write-Host "[Antigravity] Installed adapter into $project"
 Write-Host "[Antigravity] Primary rules/workflows: $agentsTarget"
 Write-Host "[Antigravity] No profile/model config installed; Antigravity runtime manages model/effort."
