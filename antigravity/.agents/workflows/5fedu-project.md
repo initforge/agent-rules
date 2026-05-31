@@ -5,9 +5,13 @@ description: Scaffold or update project-local 5fedu context using the Codex 5fed
 # 5fedu Project
 
 1. Read `C:\Users\DELL\.codex\skills\5fedu-project\SKILL.md`.
-2. Inspect the target repo first. Read existing `AGENTS.md` and `.codex/5fedu/` if present.
-3. If setup is requested, adapt or run `C:\Users\DELL\.codex\skills\5fedu-project\scripts\install-5fedu-context.ps1`.
-4. Load `C:\Users\DELL\.codex\skills\5fedu-project\references\5fedu-context-map.md` before writing or updating project rules.
+2. Phân biệt rõ vai trò hệ thống:
+   - **Nền (Global Base rules)**: Bộ quy tắc chung (`agent-rules`) được cài đặt để Agent làm việc chuẩn mực trên nhiều dự án.
+   - **Nghiệp vụ dự án (Workspace Context)**: Các tệp `.codex/5fedu/*.md` và `AGENTS.md` cục bộ chứa kiến thức đặc thù, thiết kế database, phân quyền và phản hồi của chính dự án đó.
+3. Kiểm tra Repo hiện tại để xác định chế độ xử lý:
+   - **Chưa có Context (New Project Setup)**: Chạy script `C:\Users\DELL\.codex\skills\5fedu-project\scripts\install-5fedu-context.ps1` để tạo cấu trúc mẫu. Thực hiện thích ứng (Adapt) cấu trúc và thuật ngữ phù hợp với loại hình dự án (ví dụ: app vận tải, webshop, ERP).
+   - **Đã có Context (Context Maintenance & Update)**: KHÔNG chạy lại script cài đặt. Tự động chuyển sang chế độ **Cập nhật & Bổ sung**. Đọc các tệp `.codex/5fedu/` hiện có để hiểu bối cảnh, bổ sung bài học kinh nghiệm mới vào `10-owner-feedback-lessons.md`, cập nhật các đầu việc/quyết định vào `06-decision-status.md` hoặc giải đáp ở `questions.md` dựa theo phản hồi thực tế của khách hàng hoặc prompt của người dùng.
+4. Load `C:\Users\DELL\.codex\skills\5fedu-project\references\5fedu-context-map.md` trước khi viết hoặc cập nhật các quy tắc nghiệp vụ dự án.
 5. Preserve the intended project-local layout:
 
 ```text
