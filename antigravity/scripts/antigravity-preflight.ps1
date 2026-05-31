@@ -79,6 +79,88 @@ if (Test-Path $antigravitySkillsPath) {
         Set-Content -Path $legacyWfFile -Value $wfContent -Force
         $updated = $true
       }
+  }
+}
+
+# 2.5 Bidirectional synchronization of project context (.codex/5fedu and .agents/5fedu)
+function Sync-FileContent ($sourceFile, $destFile, $direction) {
+  $content = Get-Content $sourceFile -Raw
+  if ($direction -eq "codex-to-agents") {
+    $content = $content -replace "\.codex/5fedu/", ".agents/5fedu/"
+    $content = $content -replace "\.codex/template-source/", ".agents/template-source/"
+    $content = $content -replace "\.codex\\5fedu\\", ".agents\5fedu\"
+    $content = $content -replace "\.codex\\template-source\\", ".agents\template-source\"
+  } elseif ($direction -eq "agents-to-codex") {
+    $content = $content -replace "\.agents/5fedu/", ".codex/5fedu/"
+    $content = $content -replace "\.agents/template-source/", ".codex/template-source/"
+    $content = $content -replace "\.agents\\5fedu\\", ".codex\5fedu\"
+    $content = $content -replace "\.agents\\template-source\\", ".codex\template-source\"
+  }
+  
+  $parent = Split-Path $destFile -Parent
+  if (-not (Test-Path $parent)) {
+    New-Item -ItemType Directory -Force -Path $parent | Out-Null
+  }
+  
+  Set-Content -Path $destFile -Value $content -Force
+  (Get-Item $destFile).LastWriteTime = (Get-Item $sourceFile).LastWriteTime
+}
+
+$codex5fedu = ".codex\5fedu"
+$agents5fedu = ".agents\5fedu"
+$legacy5fedu = ".agent\5fedu"
+
+if ((Test-Path $codex5fedu) -or (Test-Path $agents5fedu)) {
+  # If agents/5fedu exists but codex/5fedu does not, copy it
+  if (-not (Test-Path $codex5fedu)) {
+    Get-ChildItem $agents5fedu -File | ForEach-Object {
+      $dst = Join-Path $codex5fedu $_.Name
+      Sync-FileContent $_.FullName $dst "agents-to-codex"
+    }
+    $updated = $true
+  }
+  # If codex/5fedu exists but agents/5fedu does not, copy it
+  elseif (-not (Test-Path $agents5fedu)) {
+    Get-ChildItem $codex5fedu -File | ForEach-Object {
+      $dst = Join-Path $agents5fedu $_.Name
+      Sync-FileContent $_.FullName $dst "codex-to-agents"
+    }
+    $updated = $true
+  }
+  # Sync bidirectionally by timestamp
+  else {
+    $codexFiles = Get-ChildItem $codex5fedu -File
+    $agentsFiles = Get-ChildItem $agents5fedu -File
+    
+    foreach ($cFile in $codexFiles) {
+      $aFilePath = Join-Path $agents5fedu $cFile.Name
+      if (-not (Test-Path $aFilePath) -or $cFile.LastWriteTime -gt (Get-Item $aFilePath).LastWriteTime) {
+        Sync-FileContent $cFile.FullName $aFilePath "codex-to-agents"
+        $updated = $true
+      }
+    }
+    
+    foreach ($aFile in $agentsFiles) {
+      $cFilePath = Join-Path $codex5fedu $aFile.Name
+      if (-not (Test-Path $cFilePath) -or $aFile.LastWriteTime -gt (Get-Item $cFilePath).LastWriteTime) {
+        Sync-FileContent $aFile.FullName $cFilePath "agents-to-codex"
+        $updated = $true
+      }
+    }
+  }
+  
+  # Update legacy mirror
+  if (Test-Path $localLegacy) {
+    if (-not (Test-Path $legacy5fedu)) {
+      New-Item -ItemType Directory -Force -Path $legacy5fedu | Out-Null
+    }
+    $agentsFiles = Get-ChildItem $agents5fedu -File
+    foreach ($aFile in $agentsFiles) {
+      $lFilePath = Join-Path $legacy5fedu $aFile.Name
+      if (-not (Test-Path $lFilePath) -or $aFile.LastWriteTime -gt (Get-Item $lFilePath).LastWriteTime) {
+        Copy-Item $aFile.FullName $lFilePath -Force
+        (Get-Item $lFilePath).LastWriteTime = $aFile.LastWriteTime
+      }
     }
   }
 }
