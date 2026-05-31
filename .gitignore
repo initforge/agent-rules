@@ -30,3 +30,7 @@ Thumbs.db
 
 # MCP local configs
 *mcp_config*.json
+
+# Antigravity local workspace rules
+.agents/
+.agent/

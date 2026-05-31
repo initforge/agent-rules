@@ -24,6 +24,7 @@ Daily work uses `C:\Users\DELL\.codex`. The `P:\agent-rules\codex` copy is the b
 | `codex/docs/` | Runtime registries and setup docs copied into `.codex/docs` |
 | `codex/templates/` | Plan, research, review, handoff, and final report templates |
 | `codex/inventory/` | Machine/tool/MCP/config snapshots |
+| `antigravity/` | Adapter for Google Antigravity rules, workflows, and preflight |
 
 ## Tech Stack
 
@@ -59,3 +60,4 @@ Restore from backup to local runtime:
 - [Technical specification](docs/01-technical-specification.md)
 - [Operations and sync](docs/02-operations-and-sync.md)
 - [Maintenance and risks](docs/03-maintenance-and-risks.md)
+- [Antigravity adapter](docs/04-antigravity-adapter.md)

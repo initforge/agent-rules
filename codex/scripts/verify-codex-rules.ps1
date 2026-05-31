@@ -29,7 +29,8 @@ $required = @(
   "scripts\resolve-plan-profile.ps1",
   "scripts\start-codex-from-plan.ps1",
   "scripts\validate-plan-structure.ps1",
-  "scripts\cleanup-plans.ps1"
+  "scripts\cleanup-plans.ps1",
+  "scripts\install-antigravity-adapter.ps1"
 )
 
 Write-Host "== Codex home =="

@@ -26,6 +26,7 @@ Repo này phân biệt rõ hai vai trò:
 | `codex/docs/` | Registry và tài liệu runtime được copy vào `.codex/docs` |
 | `codex/templates/` | Mẫu plan, research note, review report, handoff, final report |
 | `codex/inventory/` | Snapshot tool, MCP, path, env và config |
+| `antigravity/` | Adapter cho Google Antigravity: rules, workflows, preflight |
 
 ## Tech Stack
 
@@ -67,3 +68,4 @@ Khôi phục từ backup về runtime local:
 - [Đặc tả kỹ thuật](docs/01-technical-specification.md)
 - [Vận hành và đồng bộ](docs/02-operations-and-sync.md)
 - [Bảo trì và rủi ro](docs/03-maintenance-and-risks.md)
+- [Antigravity adapter](docs/04-antigravity-adapter.md)
