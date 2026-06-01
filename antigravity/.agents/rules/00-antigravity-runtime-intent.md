@@ -42,18 +42,19 @@ Luật này là bộ quy tắc cốt lõi cho Antigravity. Nguồn chuẩn nằm
 - Hooks chỉ dùng cho guard/preflight, không thay thế review của người dùng.
 - Nếu workflow chuyên biệt tồn tại, ưu tiên gọi workflow thay vì diễn giải lại bằng lời dài.
 
-## Quy trình Tự động hóa Chuyển hóa Kinh nghiệm (Auto-evolving Rules)
+## Quy trình Chủ động Tự học hỏi & Auto-Sync (Không cần nhắc)
 
-Khi người dùng yêu cầu chuyển hóa một phản hồi (feedback) hoặc bài học kinh nghiệm mới thành luật vận hành nền (người dùng không cần làm thủ công):
-1. **Phân loại & Định vị**: Phân tích nội dung kinh nghiệm để xác định nhóm quy tắc liên quan (ví dụ: Database, UI/Frontend, Auth, Clean Code...) và xác định tệp luật nền tương ứng trong `.agents/rules/` (hoặc tạo mới nếu cần).
-2. **Cập nhật Luật của Dự án**: Chèn điều khoản quy tắc mới này trực tiếp vào tệp luật đó dưới dạng quy định bắt buộc, ngắn gọn và có tính hành động cao.
-3. **Cập nhật Bản mẫu Antigravity & Đồng bộ 100% với KI**: 
-   - Chèn quy tắc này vào tệp rules/skills tương ứng trong master tại `P:\agent-rules\antigravity\.agents\` (ví dụ: `P:\agent-rules\antigravity\.agents\rules\` hoặc thư mục `skills/`).
-   - **Bắt buộc đồng bộ trực tiếp sang KI của Antigravity**: Sao chép/ghi đè các file luật đã cập nhật từ master sang thư mục KI cục bộ tại `C:\Users\DELL\.gemini\antigravity\knowledge\agent-rules-runtime\artifacts\` để đảm bảo KI và master luôn giống nhau 100%.
-4. **Xử lý Ngoại lệ Dự án 5fedu (File 10-12)**: 
-   - Các file từ `10-owner-feedback-lessons.md` đến `12-owner-feedback-transport-ui.md` trong dự án 5fedu chứa các mapping đến link sheets hoặc feedback đặc thù của dự án đó.
-   - Nếu feedback/bài học có tính tổng quát cao, mang giá trị chung (như quy chuẩn xuất Excel, catch lỗi Auth Sync), hãy tự động chuyển hóa thành luật nền toàn cục ở bước 1-3.
-   - Nếu feedback hoàn toàn đặc thù cho riêng dự án đó (như link sheets hoặc logic nghiệp vụ cá biệt), giữ nguyên tại file dự án đó và KHÔNG chuyển hóa về global.
-5. **Đồng bộ hóa chéo sang Codex**: Chạy tự động script `P:\agent-rules\scripts\sync-platform-skills.ps1` để đồng bộ chéo luật/kỹ năng mới này sang Codex (cả `P:\agent-rules\codex\` và local runtime `~/.codex/` của máy).
-6. **Lưu trữ phiên bản**: Tự động chạy `git add -A` và `git commit` tại thư mục `P:\agent-rules` để lưu vết lịch sử thay đổi.
-7. **Báo cáo**: Kết thúc và liệt kê cụ thể các tệp luật đã cập nhật kèm theo trạng thái cuối là `PASS`.
+AI bắt buộc phải chủ động kích hoạt quy trình tự tiến hóa luật nền ngay khi hoàn thành bất kỳ tác vụ sửa lỗi (bug), điều chỉnh giao diện (UI) lệch chuẩn, hoặc nhận bất kỳ phản hồi chỉnh sửa nào từ người dùng, mà KHÔNG cần người dùng phải yêu cầu hay nhắc nhở:
+
+1. **Tự phát hiện & Phân loại bài học**: Khi giải quyết xong một vấn đề/sai sót, AI tự động phân tích xem lỗi/yêu cầu đó có tính chất tổng quát và lặp lại hay không. Phân loại bài học thành các chủ đề tương ứng (Database, UI/Frontend, Auth, Clean Code...).
+2. **Tự động Cập nhật Luật nền**: Cập nhật trực tiếp quy tắc hành vi mới vào tệp luật tương ứng tại `.agents/rules/` của dự án (hoặc tạo mới nếu chưa có).
+3. **Đồng bộ về Master & KI cục bộ**:
+   - Cập nhật quy tắc tương ứng vào thư mục master `P:\agent-rules\antigravity\.agents\`.
+   - **Bắt buộc tự động copy** các tệp luật vừa cập nhật sang thư mục KI cục bộ của Antigravity tại `C:\Users\DELL\.gemini\antigravity\knowledge\agent-rules-runtime\artifacts\` để đảm bảo bộ nhớ đệm hoạt động của tác tử luôn ở trạng thái mới nhất.
+4. **Xử lý Ngoại lệ 5fedu (Tệp 10-12)**:
+   - Các file từ `10` đến `12` của dự án `.agents/5fedu/` chỉ dùng để ghi nhận log phản hồi thô hoặc thông tin đặc thù (link sheet, credential mock).
+   - Nếu phát hiện bài học trong đó có tính chất dùng chung (như định dạng Excel, catch lỗi API, footer phân trang), AI bắt buộc phải tự động chuyển hóa (promote) lên các file luật chung (05, 07 hoặc global rules) và xóa bỏ dạng thô trong log phản hồi để tránh làm nhiễu context.
+5. **Đồng bộ hóa chéo & Git Commit**:
+   - Tự động chạy script `P:\agent-rules\scripts\sync-platform-skills.ps1` để cập nhật chéo sang Codex runtime (`~/.codex/`).
+   - Tự động thực hiện `git add -A` và `git commit` tại thư mục master `P:\agent-rules` để lưu vết lịch sử phiên bản của luật.
+6. **Báo cáo hành động**: Trong kết quả trả về, AI chủ động liệt kê rõ ràng bài học nào đã tự học và các tệp luật nào đã được cập nhật đồng bộ.
