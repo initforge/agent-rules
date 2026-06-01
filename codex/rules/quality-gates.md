@@ -161,6 +161,17 @@ Shared module or refactor:
 - public API compatibility
 - regression suite
 
+Excel Export:
+- download file and verify cell types (numeric fields must be actual Number type, not String)
+- verify no green triangle warnings (Number stored as text)
+- verify `=SUM()` or similar functions work on exported columns
+- verify styling (header color, white bold text, center/right alignment, zebra striping)
+
+Build and deploy:
+- run local build compilation (`npm run build` or equivalent pre-flight build check) before commit
+- verify behavior on actual staging/production live environment (Verify-on-Production) instead of just local
+
+
 ## Risk register requirements
 
 Every MEDIUM or HIGH plan must identify:
