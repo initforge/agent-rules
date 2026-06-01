@@ -49,7 +49,8 @@ P:\agent-rules\codex
   - Header của file Excel phải có font chữ, in đậm, màu chữ trắng (`#FFFFFF`) và nền ô là màu thương hiệu đậm (ví dụ: màu Navy `#1E3A8A`). Các ô header phải có viền mỏng và căn giữa.
   - Các cột số liệu (tiền lương, chi phí, doanh thu, số lượng...) bắt buộc phải được xuất dưới dạng **Number thực tế (cell type 'n')**, không được xuất dưới dạng String/Text (cell type 's') để tránh lỗi cảnh báo của Excel (green triangle) và cho phép người dùng sử dụng các hàm tính toán (SUM, AVERAGE, v.v.). Đồng thời, định dạng hiển thị số phải áp dụng `numFmt: "#,##0"`.
   - Các ô dữ liệu thông thường phải được căn chỉnh (align) hợp lý: cột số căn lề phải (right), cột ngày tháng/trạng thái/biển số căn giữa (center), các cột chữ khác căn lề trái (left). Các dòng xen kẽ có thể tô màu nền xám rất nhẹ (`#F8FAFC` và `#FFFFFF`) để tăng độ tương phản.
-
-
-
-
+- **Thiết kế các Module Dùng chung dữ liệu (Shared Data Modules Pattern)**: Đối với các module nghiệp vụ có sự chồng chéo hoặc liên quan chặt chẽ đến nhau về mặt thông tin (ví dụ: Nhân sự & Tài xế, Khách hàng & Nhà cung cấp...):
+  - **Dữ liệu (Database)**: Sử dụng một bảng dữ liệu gốc duy nhất (ví dụ: `var_nhan_vien` hoặc `partner`) để làm Single Source of Truth và dùng cờ boolean để phân loại vai trò đối tượng thay vì tách bảng, giúp tránh trùng lặp thông tin.
+  - **Giao diện (UI)**: Vẫn duy trì các module/giao diện quản lý riêng biệt cho từng vai trò nghiệp vụ nhằm đảm bảo trải nghiệm sâu của chuyên môn đó (ví dụ: chi tiết tài xế có lịch sử chuyến xe, lịch sử lương; nhân sự thì không cần). Module chuyên môn sẽ filter tự động từ bảng gốc.
+  - **Điều hướng (Navigation)**: Trong form của module gốc, khi người dùng kích hoạt cờ vai trò, phải hiển thị link điều hướng trực quan đến trang chuyên môn tương ứng.
+  - **Xóa mềm vai trò (Soft Delete Role)**: Khi thực hiện hành động xóa ở module chuyên môn, chỉ tắt cờ phân loại về `false` chứ không xóa vật lý bản ghi gốc để bảo toàn thông tin hồ sơ chung.
