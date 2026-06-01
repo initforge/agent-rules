@@ -30,3 +30,11 @@ P:\agent-rules\codex
 - Không dùng tiếng Anh nếu có cách nói tiếng Việt tự nhiên.
 - Giữ tiếng Anh cho thuật ngữ kỹ thuật, tên model, lệnh, đường dẫn, API, package, schema key, tên tool, tên sản phẩm và mã nguồn.
 
+## Quy Tắc Giao Diện (UI) & An Toàn Biên Dịch (Build Safety)
+
+- **Ngăn ngừa rò rỉ Credential**: Không bao giờ được hardcode tài khoản, mật khẩu test hoặc API tokens vào mã nguồn giao diện. Nếu cần ghi nhớ để tiện test, hãy dùng `localStorage` động hoặc đọc qua biến môi trường.
+- **Ẩn thông tin kỹ thuật thô**: Không hiển thị các tên bảng cơ sở dữ liệu thô (ví dụ: `vt_tai_xe`), ID thô hoặc các ký hiệu kỹ thuật trên tiêu đề, nhãn, Drawer của người dùng cuối. Hãy sử dụng ngôn ngữ tự nhiên đã bản địa hóa.
+- **Đồng bộ Icon và Nhãn nút**: Đảm bảo các nút có cùng tính năng trên toàn hệ thống phải dùng đồng bộ một loại Icon (ví dụ: dùng thống nhất `Edit` thay vì trộn lẫn với `Pencil`, dùng thống nhất `Download` cho xuất báo cáo).
+- **Kiểm thử biên dịch bắt buộc (Pre-flight Build Check)**: Trước khi commit bất kỳ thay đổi nào liên quan đến các file cấu hình dùng chung (như `vite.config.ts`, `tsconfig.json`, `package.json`), bắt buộc phải chạy thử lệnh build biên dịch (`npm run build` hoặc lệnh tương đương) tại local để đảm bảo không bị lỗi cú pháp làm hỏng pipeline CI/CD (như Vercel/GitHub Actions).
+
+
