@@ -18,6 +18,9 @@ Luật này là bộ quy tắc cốt lõi cho Antigravity. Nguồn chuẩn nằm
 ## Quy tắc sửa file
 
 - Khi sửa code giao diện (UI/frontend), bắt buộc đối chiếu trực tiếp với mã nguồn mẫu gốc đặt tại thư mục `/template` của dự án để đảm bảo tính nhất quán.
+  - **Nguyên tắc tham chiếu thư mục `/template`**: Trước khi sửa/viết bất kỳ component FE nào, AI bắt buộc phải đọc code mẫu trong `/template` để lấy mẫu chuẩn về cấu trúc, style, và pattern. Tuyệt đối không tự ý viết code thô hoặc bỏ qua bước tham chiếu.
+  - **Đa dạng hóa Icon**: Tham chiếu và sử dụng linh hoạt các icon Lucide có sẵn trong `/template`. Hạn chế tối đa việc lặp lại 1-2 icon giống nhau cho các nhãn/trường dữ liệu khác nhau. Mỗi nhãn/hành động phải có icon tương ứng mô tả đúng ý nghĩa trực quan.
+  - **Footer Bảng Phân Trang**: Mọi bảng dữ liệu danh sách và báo cáo của các module đều phải sử dụng component footer phân trang chuẩn (bao gồm: hiển thị số dòng dạng `1-X/Tổng: Y`, dropdown số dòng `/ trang` ở bên trái, và các nút điều hướng phân trang ở góc bên phải) đúng như thiết kế đã thống nhất.
 - Không revert thay đổi của người dùng nếu không được yêu cầu.
 - Không dùng lệnh destructive như `git reset --hard` hoặc checkout đè file khi chưa được yêu cầu rõ.
 - Khi cần tìm file hoặc chuỗi ký tự, ưu tiên sử dụng tool `grep_search` của hệ thống để đạt hiệu năng tối ưu mà không cần xin quyền chạy terminal.
