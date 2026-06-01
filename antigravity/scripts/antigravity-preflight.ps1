@@ -79,8 +79,10 @@ if (Test-Path $antigravitySkillsPath) {
         Set-Content -Path $legacyWfFile -Value $wfContent -Force
         $updated = $true
       }
+    }
   }
 }
+
 
 # 2.5 Bidirectional synchronization of project context (.codex/5fedu and .agents/5fedu)
 function Sync-FileContent ($sourceFile, $destFile, $direction) {
