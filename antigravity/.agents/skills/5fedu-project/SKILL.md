@@ -24,11 +24,16 @@ Keep 5fedu rules project-local by default. Do not expand the global `AGENTS.md` 
 
 ## 3. Project Files Layout
 
+### Platform Target Paths (Do Not Confuse)
+A repository can contain both configuration folders, but they belong to independent platforms and must be treated as completely separate:
+* **Codex Platform (CLI runtime)**: Target path is `.codex/5fedu/`.
+* **Antigravity Platform (Agent runtime)**: Target path is `.agents/5fedu/`.
+
 Recommended target layout:
 
 ```text
 AGENTS.md
-.agents/5fedu/
+.agents/5fedu/ (or .codex/5fedu/ for Codex)
 |- 00-index.md
 |- 01-tech-stack-and-template.md
 |- 02-frontend-mapping.md
@@ -45,14 +50,16 @@ AGENTS.md
 `- questions.md
 ```
 
-- `AGENTS.md` should be a lightweight pointer/loading policy, not an `@` include list for every file. Put detailed rules under `.agents/5fedu/`.
+- `AGENTS.md` should be a lightweight pointer/loading policy, not an `@` include list for every file. Put detailed rules under the respective platform folder.
 - Treat `06-decision-status.md` as the source of truth for what is confirmed, unconfirmed, blocked, or paused.
 - Treat `07-working-format.md` as the source of truth for default 5fedu format/how-to when concrete app-specific values are not yet confirmed.
 - Treat `08-source-examples.md` as concrete examples extracted from the original prompt/images; use it to infer style.
 - Use `09-coverage-audit.md` to verify whether the current context covers the original 5fedu prompt.
-- Use `10-owner-feedback-lessons.md` as a hard gate for repeated owner feedback: database ids must be `int8` auto-increment, employee tables must stay lean, login must use `ten_dang_nhap`, and username create/update/delete must sync Supabase Auth through a server/admin path.
+- Use `10-owner-feedback-lessons.md` and `12-owner-feedback-transport-ui.md` strictly as:
+  1. Historical logs of raw user feedbacks.
+  2. Project-specific mappings or sheet links.
+  * **CRITICAL RULES EVOLUTION**: All resolved bugs or universal architectural lessons (e.g. `int8` primary keys, `ten_dang_nhap` logins, pagination footer, excel cell type `'n'`) MUST be promoted/moved to the global rule files (`00-antigravity-runtime-intent.md` / `07-working-format.md` / `global-rules.md`). Do not keep them raw in the feedback files to prevent context confusion.
 - Use `11-current-sheets-source-map.md` as the source map for current Google Sheets/spec exports.
-- Use `12-owner-feedback-transport-ui.md` as a hard gate for repeated transport/UI feedback: homepage order, real employee email vs fake auth email, external drivers, proper list/detail/form, combobox relation fields, derived totals, print/approve actions, and report UI quality.
 
 ## 4. Developer Lessons Learned (Anti-Patterns & Hard Gates)
 
