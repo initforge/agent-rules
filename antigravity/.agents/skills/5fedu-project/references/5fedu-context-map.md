@@ -5,7 +5,7 @@
 Use a two-layer setup:
 
 - Global layer: one `/5fedu` prompt, this `5fedu-project` skill, reusable templates, and optional install script.
-- Project layer: repo-local `AGENTS.md` plus `.agents/5fedu/*.md`, including `06-decision-status.md`.
+- Project layer: repo-local `AGENTS.md` plus synced `.agents/5fedu/*.md` and `.codex/5fedu/*.md` mirrors, including `06-decision-status.md` when the legacy expanded layout exists.
 
 Do not put all 5fedu rules into global `AGENTS.md`; that would load customer-specific context for unrelated work.
 
@@ -13,7 +13,7 @@ Do not require `/5fedu` for ordinary implementation. `/5fedu` is only for initia
 
 ## Confirmation State
 
-Every 5fedu repo should track decisions in `.agents/5fedu/06-decision-status.md`.
+Every 5fedu repo should track decisions in `.agents/5fedu/04-decision-status-and-backlog.md` and mirror the state to `.codex/5fedu/04-decision-status-and-backlog.md`; when legacy expanded files exist, keep `06-decision-status.md` synchronized too.
 
 Allowed statuses:
 

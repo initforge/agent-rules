@@ -2,12 +2,12 @@
 
 ## Owner Feedback Gate 2026-05-31
 
-- Luôn đọc `.agents/5fedu/10-owner-feedback-lessons.md` trước khi làm database, auth, bảng nhân viên, migration, seed, service hoặc UI form liên quan.
+- Luôn đọc `.agents/5fedu/10-owner-feedback-lessons.md` và mirror `.codex/5fedu/10-owner-feedback-lessons.md` trước khi làm database, auth, bảng nhân viên, migration, seed, service hoặc UI form liên quan.
 - Các lỗi đã bị owner phản hồi và không được lặp lại: `id` bảng app phải là `int8` tự động tăng, Supabase có hỗ trợ identity/bigserial, bảng nhân viên phải tối giản, login dùng `ten_dang_nhap` chứ không dùng `ma_nhan_vien`, và thêm/sửa/xóa username phải đồng bộ Supabase Auth user qua server/admin path.
-- Luôn đọc `.agents/5fedu/12-owner-feedback-transport-ui.md` trước khi làm trang chủ, module vận tải, list/detail/form, combobox, in/xuất/duyệt, hoặc các trường tổng hợp tự tính.
+- Luôn đọc `.agents/5fedu/12-owner-feedback-transport-ui.md` và mirror `.codex/5fedu/12-owner-feedback-transport-ui.md` trước khi làm trang chủ, module vận tải, list/detail/form, combobox, in/xuất/duyệt, hoặc các trường tổng hợp tự tính.
 - Các lỗi UI/nghiệp vụ đã bị owner phản hồi và không được lặp lại: không dùng CRUD generic hời hợt cho module nghiệp vụ, không cho nhập tay tổng tiền/tổng chuyến phải tự tính, dropdown dữ liệu lớn phải dùng combobox, form/detail phải theo template, action in/duyệt phải tách khỏi form, detail tài xế/địa điểm/xe phải có lịch sử liên quan khi nghiệp vụ cần.
 
-Repo này dùng bộ context dự án 5fedu. File này chỉ là con trỏ nhẹ để tránh nạp toàn bộ context mỗi lượt.
+Repo này dùng bộ context dự án 5fedu. File này chỉ là con trỏ nhẹ để tránh nạp toàn bộ context mỗi lượt. `.agents/5fedu` và `.codex/5fedu` là hai mirror phải được giữ đồng bộ; ưu tiên đọc `.agents/5fedu` khi chạy Antigravity và `.codex/5fedu` khi chạy Codex.
 
 Người dùng không cần gọi `/5fedu` để cấp context mỗi lần làm việc. Khi làm trong repo này, AI phải tự đọc file này và các tài liệu liên quan theo chính sách bên dưới. `/5fedu` chỉ dùng để scaffold ban đầu hoặc bổ sung/sửa bộ rule/docs/status của dự án.
 
@@ -39,6 +39,6 @@ Người dùng không cần gọi `/5fedu` để cấp context mỗi lần làm 
 - Không đoán module, route, bảng, cột, credentials, quyền hoặc flow khi trạng thái còn `CHUA_CHOT` hoặc `CAN_HOI_THEM`.
 - Khi dữ kiện cụ thể chưa chốt, vẫn phải follow khung format/cách làm trong `.agents/5fedu/07-working-format.md`; chỉ không được tự chọn giá trị cụ thể.
 - Khi người dùng đưa ít instruction, dùng `.agents/5fedu/07-working-format.md` làm khung và `.agents/5fedu/08-source-examples.md` làm ví dụ tham chiếu; vẫn hỏi nếu thiếu dữ kiện quyết định.
-- Khi người dùng chốt hoặc bổ sung rule mới, cập nhật file `.agents/5fedu/*.md` phù hợp và cập nhật `.agents/5fedu/06-decision-status.md`.
+- Khi người dùng chốt hoặc bổ sung rule mới, cập nhật file `.agents/5fedu/*.md` phù hợp, cập nhật `.agents/5fedu/06-decision-status.md`, rồi sync mirror sang `.codex/5fedu`.
 - Không lưu secret thật vào repo hoặc tài liệu. Chỉ ghi tên biến môi trường, nơi cần cấu hình, và cách kiểm tra không in giá trị secret.
 

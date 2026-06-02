@@ -67,7 +67,10 @@
 
 ### D. Quy Trình CI/CD & Deploy Tự Động Trên Vercel
 1. **Tự động hóa CI/CD**: Mỗi khi AI chạy lệnh `git push` lên GitHub, hệ thống Vercel sẽ tự động deploy bản mới. AI không tự ý chạy các lệnh deploy thủ công khác.
-2. **Kiểm tra trạng thái từ xa (Remote Auditing)**: Thay vì đoán mò, AI bắt buộc sử dụng `browser_subagent` truy cập trang GitHub Commits (e.g. `https://github.com/tahdieuphoi-ctrl/TAH_app/commits/main/`) hoặc Dashboard Vercel để trực tiếp xác minh trạng thái build thành công (tích xanh) hay thất bại (nhân đỏ) trước khi báo cáo hoàn thành.
+2. **Tuyệt Đối Cấm Deploy Bừa Bãi (No-Unverified-Pushes)**:
+   - Do mỗi commit push lên GitHub sẽ ngay lập tức kích hoạt bản cập nhật ứng dụng thật, AI **tuyệt đối không được phép push code** khi chưa chạy biên dịch cục bộ thành công (`npm run build` không lỗi) và kiểm thử thực tế trên trình duyệt cục bộ ổn định (localhost).
+   - Nghiêm cấm push code dở dang, code chứa mock ảo, hoặc code lỗi TypeScript/import làm đỏ/đổ vỡ ứng dụng trên live.
+3. **Kiểm tra trạng thái từ xa (Remote Auditing)**: Thay vì đoán mò, AI bắt buộc sử dụng `browser_subagent` truy cập trang GitHub Commits (e.g. `https://github.com/tahdieuphoi-ctrl/TAH_app/commits/main/`) hoặc Dashboard Vercel để trực tiếp xác minh trạng thái build thành công (tích xanh) hay thất bại (nhân đỏ) trước khi báo cáo hoàn thành.
 
 
 ---

@@ -1,6 +1,6 @@
 ---
 name: 5fedu-project
-description: Scaffold or maintain project-local 5fedu context for Codex/Antigravity work. Use when the user asks to set up a 5fedu repo, create/refresh AGENTS.md, add or update .agents/5fedu/*.md rules, update decision status/questions, record new 5fedu conventions, or preserve owner feedback gates for Supabase/auth/database/UI/transport modules.
+description: Scaffold or maintain project-local 5fedu context for Codex/Antigravity work. Use when the user asks to set up a 5fedu repo, create/refresh AGENTS.md, add or update .agents/5fedu/*.md and .codex/5fedu/*.md rules, update decision status/questions, record new 5fedu conventions, or preserve owner feedback gates for Supabase/auth/database/UI/transport modules.
 ---
 
 # 5fedu Project Skill
@@ -9,11 +9,11 @@ description: Scaffold or maintain project-local 5fedu context for Codex/Antigrav
 
 Keep 5fedu rules project-local by default. Do not expand the global `AGENTS.md` with long customer-specific rules. Use this skill as the reusable setup entry and write concise project context into the target repo.
 
-`/5fedu` is for setup and context maintenance only. Once a repo has `AGENTS.md` and `.agents/5fedu/`, ordinary coding work should rely on those project-local files without the user needing to call `/5fedu` again.
+`/5fedu` is for setup and context maintenance only. Once a repo has `AGENTS.md`, `.agents/5fedu/`, and `.codex/5fedu/`, ordinary coding work should rely on those project-local files without the user needing to call `/5fedu` again.
 
 ## 2. Workflow
 
-1. Inspect the target repo first. If `AGENTS.md` or `.agents/5fedu/` already exists, read it before changing anything.
+1. Inspect the target repo first. If `AGENTS.md`, `.agents/5fedu/`, or `.codex/5fedu/` already exists, read it before changing anything.
 2. If the user wants setup, run or adapt `scripts/install-5fedu-context.ps1` to scaffold the project-local context files.
 3. Load `references/5fedu-context-map.md` when writing or updating project rules.
 4. Ask for missing spec, credentials, database rules, or module mapping before implementation. Never invent table names, fields, permissions, or screen mappings.
@@ -33,7 +33,7 @@ Recommended target layout:
 
 ```text
 AGENTS.md
-.agents/5fedu/ (or .codex/5fedu/ for Codex)
+.agents/5fedu/ and .codex/5fedu/
 |- 00-index.md
 |- 01-architecture-and-specs.md
 |- 02-database-and-auth-rules.md
@@ -42,9 +42,27 @@ AGENTS.md
 `- 05-source-specs-and-coverage.md
 ```
 
+Legacy expanded context files may also exist and should be preserved when present:
+
+```text
+|- 01-tech-stack-and-template.md
+|- 02-frontend-mapping.md
+|- 03-database-supabase.md
+|- 04-auth-permissions-and-flows.md
+|- 05-delivery-quality.md
+|- 06-decision-status.md
+|- 07-working-format.md
+|- 08-source-examples.md
+|- 09-coverage-audit.md
+|- 10-owner-feedback-lessons.md
+|- 11-current-sheets-source-map.md
+|- 12-owner-feedback-transport-ui.md
+`- questions.md
+```
+
 - `AGENTS.md` should be a lightweight pointer/loading policy, not an `@` include list for every file. Put detailed rules under the respective platform folder.
 - Treat `00-index.md` as the entry point and the source of truth for the **Strict Execution Contract** (Compile Check, Browser Click-through check, Anti-Lỏ code policies).
-- Treat `04-decision-status-and-backlog.md` as the source of truth for what is confirmed, unconfirmed, blocked, or paused, open questions, and the temporary raw owner feedback logs.
+- Treat `04-decision-status-and-backlog.md` or legacy `06-decision-status.md` as the source of truth for what is confirmed, unconfirmed, blocked, or paused, open questions, and the temporary raw owner feedback logs.
 - Treat `02-database-and-auth-rules.md` and `03-ui-ux-and-delivery-standards.md` as the active system rules.
   * **CRITICAL RULES EVOLUTION**: All resolved bugs or universal architectural lessons (e.g., `id int8` primary keys, `ten_dang_nhap` logins, pagination footer, Excel cell type `'n'`, PDF Unicode base64 fonts, TDZ hoisting prevention) MUST be promoted/moved to the respective Pillar 2 or Pillar 3 rule files. Do not keep them raw in the feedback backlog file to prevent context confusion.
 - Use `05-source-specs-and-coverage.md` to map Google Sheets columns and verify whether the current context covers the original 5fedu prompt/images.
@@ -87,7 +105,7 @@ Before writing database, auth, staff tables, migration, or UI components, the AI
 - Use real Supabase/frontend integration once credentials are provided; avoid dead buttons, placeholder-only flows, or missing handlers.
 - Search must cover direct table fields and linked display fields.
 - On mobile use card view; on desktop use list view unless the project spec says otherwise.
-- Before implementation, read `06-decision-status.md`; do not implement any area marked `CHUA_CHOT` or `CAN_HOI_THEM` until the user confirms it.
+- Before implementation, read `04-decision-status-and-backlog.md` and legacy `06-decision-status.md` when present; do not implement any area marked `CHUA_CHOT` or `CAN_HOI_THEM` until the user confirms it.
 - If a concrete value is unconfirmed, still follow the format/how-to in `07-working-format.md`; ask only for the missing value.
 
 ## 6. Feedback Evolution & Learning Loop Workflow
@@ -96,16 +114,15 @@ Whenever the user provides correction, design guidance, or owner feedback during
 
 ### A. Local Learning (Workspace Level - First Priority)
 - Identify if the feedback relates to project-specific requirements, custom modules, or local UI tweaks.
-- **Immediately update or append** the lessons learned to the project-local context files at `.agents/5fedu/10-owner-feedback-lessons.md` or `.agents/5fedu/12-owner-feedback-transport-ui.md` in the active workspace.
+- **Immediately update or append** the lessons learned to the project-local context files at `.agents/5fedu/10-owner-feedback-lessons.md` / `.codex/5fedu/10-owner-feedback-lessons.md` or `.agents/5fedu/12-owner-feedback-transport-ui.md` / `.codex/5fedu/12-owner-feedback-transport-ui.md` in the active workspace.
 - **Promote core structural constraints** (like the `id int8` auto-incrementing schema rule, or auth fake email stack) directly into the project-local `AGENTS.md` file under the `## Owner Feedback Gate` section, elevating them to strict project-level rules.
 - Run the workspace preflight script (`antigravity-preflight.ps1` or similar hook) to automatically trigger the bidirectional sync: this ensures `.codex/5fedu/` and `.agents/5fedu/` folders in the workspace are identical.
 
 ### B. Global Learning (Base Knowledge - Master level `P:\agent-rules`)
 - Determine if the feedback represents a **universal programming rule** or a **standard platform convention** that should apply to all current and future 5fedu projects (such as DB constraints, default credentials, or core architectural gates).
 - If it is global:
-  1. Update the master skill files under `P:\agent-rules\antigravity\.agents\skills\5fedu-project\assets\project-context\.agents\5fedu\10-owner-feedback-lessons.md` (or `12-...md`).
+  1. Update the master skill files under `P:\agent-rules\antigravity\.agents\skills\5fedu-project\assets\project-context\.agents\5fedu\10-owner-feedback-lessons.md` and the `.codex\5fedu` mirror when the file exists (or `12-...md`).
   2. Promote the core rules (like `id int8`) into the master template's `AGENTS.md` file under `## Owner Feedback Gate`.
   3. Update this `SKILL.md` under `## 4. Developer Lessons Learned`.
   4. Run `P:\agent-rules\scripts\sync-platform-skills.ps1` to sync the updated rules to `~/.codex` and other local runtime locations.
   5. Notify the user of the new global baseline and commit changes to the master repository.
-
