@@ -1,70 +1,139 @@
-# Bài học kinh nghiệm: Tránh lỗi giao diện không chuẩn hóa & Lỗi khởi tạo trên Production
+# Owner Feedback: Transport UI And Business Flow
 
-> [!IMPORTANT]
-> Tài liệu này đúc rút bài học sâu sắc từ việc nâng cấp phân hệ Quản lý vận tải nhằm đạt parity với phân hệ Nhân viên chuẩn. Các lỗi này phát sinh do sự thiếu linh hoạt khi tiếp nhận yêu cầu, không so sánh đối chiếu kỹ cả 2 bên và thiếu sót khi kiểm tra thứ tự khởi tạo/import.
+Nguồn: phản hồi trực tiếp của owner/user ngày 2026-05-31 trong chat Codex, kèm ảnh phản hồi trước đó về `id int8`, `ten_dang_nhap`, và Supabase Auth sync.
 
-## 1. Nguyên nhân cốt lõi của các lỗi vừa qua
+File này là gate bắt buộc trước khi làm trang chủ, module Quản lý vận tải, list/detail/form, combobox, in/xuất/duyệt, thống kê, hoặc các trường tổng hợp. Mục tiêu là không lặp lại lỗi "có CRUD nhưng chưa đúng nghiệp vụ".
 
-1. **Thiếu linh hoạt & Chưa đối chiếu cẩn thận cả 2 phía**:
-   - Khi tiếp nhận yêu cầu chuẩn hóa, ta chỉ tập trung làm theo cấu trúc Nhân viên nhưng không rà soát kỹ các cấu hình hiện có của Vận tải (ví dụ: các giá trị Trạng thái, các trường thông tin ẩn/hiện, cách hiển thị avatar).
-   - Dẫn đến việc bỏ sót nút "Sửa 1 dòng" trên Bulk Actions và ghi sai nhãn nút từ "Ngừng hoạt động" thành "Tắt" (làm lệch chuẩn so với thiết kế ban đầu).
-2. **Lỗi biên dịch & Lỗi Runtime trên Production**:
-   - **Lỗi thiếu import**: Sử dụng icon mới `<Power />` trong giao diện nhưng quên không import từ thư viện `lucide-react` ở đầu file.
-   - **Lỗi Temporal Dead Zone (TDZ) / `ReferenceError`**: Khai báo hàm `const askApprove = ...` ở phía cuối component, nhưng lại đưa nó vào mảng dependency của `useMemo` (`bulkStatusActions`) được khai báo ở phía trước. Khi React render component lần đầu, `bulkStatusActions` được tính toán trước khi biến `askApprove` được gán giá trị, gây ra lỗi crash trắng màn hình trên môi trường production.
+## Template Tham Chiếu
 
----
+Template giao diện local:
 
-## 2. Bài học và Quy trình kiểm soát chất lượng bắt buộc (Quality Gates)
+```text
+.codex/template-source/TAH_app
+```
 
-Để không bao giờ lặp lại các lỗi trên, mọi thay đổi giao diện hoặc logic phải tuân thủ nghiêm ngặt:
+Commit chốt:
 
-### Quy tắc 1: Luôn đối chiếu side-by-side với Template gốc
-- Trước khi chỉnh sửa bất kỳ module nghiệp vụ nào, phải mở mã nguồn của **Nhân viên (Golden Reference)** và file cần sửa để so sánh từng phần:
-  - **Toolbar**: Có đầy đủ các nút bulk actions chưa? Khi chọn 1 dòng và nhiều dòng thì nút nào hiện/ẩn?
-  - **Detail View Drawer**: Có đầy đủ Profile Card và `DetailToolbar` quick actions (Đổi trạng thái, Call, Mail...) chưa?
-  - **Footer Drawer**: Có tuân thủ quy tắc `DETAIL_FOOTER_ORDER` (`Đóng` bên trái, `Sửa` và `Xóa` bên phải) không?
-  - **Bộ lọc**: Cột nào có bộ lọc MultiSelect đầu cột (`ColumnHeaderFilter`), cột nào có tìm kiếm đầu cột (`ColumnHeaderSearch`)?
+```text
+47947e6eea0b1b7dc6723356f37f604e30ac690b
+```
 
-### Quy tắc 2: Kiểm tra thứ tự khai báo (Hoisting & TDZ)
-- Khi định nghĩa các hàm Callback (`useCallback`, `useMemo` hoặc hàm arrow function thường):
-  - **Tất cả các hàm xử lý hành động (action handlers)** như `askApprove`, `askDelete`, `handleSave`, `handleBulkEdit` **bắt buộc phải được khai báo ngay sau các React Query mutation** ở đầu component.
-  - Tuyệt đối không khai báo hàm xử lý hành động ở giữa hoặc cuối component rồi truyền lên các Hook `useMemo` hoặc component con khai báo ở phía trên.
+Khi làm giao diện phải đối chiếu template trước, đặc biệt:
 
-### Quy tắc 3: Xác thực bắt buộc bằng Browser Automation trên Live Production
-- Sau khi thực hiện bất kỳ thay đổi nào và đẩy code lên:
-  - Phải đợi Vercel/môi trường Live hoàn thành deploy.
-  - Phải chạy script tự động hóa trình duyệt (`browser_subagent` hoặc Playwright) truy cập trực tiếp trang live, thực hiện **chuỗi kiểm thử CRUD đầy đủ**:
-    1. Nhấp `Thêm` -> Điền thông tin -> `Lưu` -> Kiểm tra dữ liệu mới xuất hiện trên bảng.
-    2. Tích chọn checkbox -> Kiểm tra hiển thị Bulk Actions -> Bấm `Sửa 1 dòng` -> Sửa thông tin -> `Lưu` -> Kiểm tra bảng được cập nhật.
-    3. Nhấp xem chi tiết bản ghi mới -> Kiểm tra Drawer chi tiết có đủ Profile Card, Quick actions và footer đúng vị trí -> Nhấp `Xóa` -> Xác nhận xóa -> Kiểm tra bản ghi đã biến mất khỏi bảng.
-    4. Thử click mở popover lọc/tìm kiếm ở tiêu đề cột.
+- `components/shared/GenericTable.tsx`
+- `components/shared/GenericToolbar.tsx`
+- `components/shared/GenericDrawer.tsx`
+- `components/shared/DetailSection.tsx`
+- `components/shared/DetailFieldGrid.tsx`
+- `components/shared/FormSection.tsx`
+- `components/shared/FormGrid.tsx`
+- `components/shared/FormDrawerFooter.tsx`
+- `components/shared/MobileListCard.tsx`
+- `components/ui/Combobox.tsx`
+- `components/ui/AsyncCombobox.tsx`
+- `components/ui/NumericFormatInput.tsx`
+- module mẫu trong `features/he-thong/`
 
-### Quy tắc 4: Cấm lồng ghép class h-page gây tràn chiều cao và ẩn footer
-- **Bài học thực tế**: Class `.h-page` quy định chiều cao tuyệt đối khớp với view-port (ví dụ: `100dvh - header - footer`). Khi trang cha (như `ChuyenXePage` hay `BangLuongPage`) đã có chiều cao `h-page` và chứa thêm tiêu đề/tab (`TabGroup` chiếm 48px), nếu component con bên trong (`TransportModulePage`) cũng dùng `.h-page`, chiều cao của con sẽ tự vẽ bằng viewport, cộng với 48px của tab tạo ra hiện tượng tràn trang (overflow). Hậu quả là phần chân trang của bảng (Table pagination footer) bị đẩy xuống dưới cùng và biến mất khỏi màn hình.
-- **Tiêu chuẩn thiết kế bắt buộc**:
-  - Chỉ thẻ wrapper ngoài cùng cấp Router của trang mới được sử dụng `.h-page`.
-  - Tất cả các component con, phân hệ dùng chung hoặc sub-view nhúng bên trong **bắt buộc phải sử dụng `h-full min-h-0`** thay vì `h-page` để co dãn chính xác theo chiều cao phân bổ của `flex-1 min-h-0` của cha.
+Không được tự dựng form/detail/list thô nếu template đã có pattern phù hợp.
 
----
+## Chốt Theo Owner
 
-## 3. Tiêu chuẩn thiết kế mô hình Master-Detail (Bảng Cha - Bảng Con)
+### Trang chủ
 
-Khi nâng cấp hoặc thiết kế bất kỳ màn hình nghiệp vụ nào theo mô hình Master-Detail (như Chuyến xe - Chi tiết chuyến, Phòng ban - Phòng ban con):
+- Thứ tự module trên trang chủ phải là:
+  1. `Quản lý vận tải`
+  2. `Hệ thống`
+  3. `Thông tin bản quyền`
 
-1. **Giao diện bảng con nhúng (Embedded Sub-Grid)**:
-   - Sử dụng cặp bài trùng `DetailSection` (định nghĩa trong `Section.tsx`) và `EmbeddedChildDataGrid` để đảm bảo giao diện đồng bộ 100% về viền, bóng, khoảng cách padding, sticky header, và chiều cao tự cuộn dọc (`maxVisibleBodyRows`).
-2. **Ngăn chặn lỗi sai lệch dữ liệu liên kết**:
-   - Khi mở form con từ chi tiết cha, **bắt buộc điền sẵn (prefill) ID của cha và khóa cứng (disabled) trường liên kết đó** để tránh việc người dùng chọn sai bản ghi cha liên kết.
-3. **Stacked Drawers (Drawer xếp chồng)**:
-   - Quản lý chồng các Drawer lồng nhau bằng `AnimatePresence` và biến `nestedViewingRow`/`nestedFormConfig` ở cấp trang cha.
-   - Khi Drawer con mở ra, sử dụng thuộc tính `stackLevel` để tự động thụt lề và đổ bóng chuẩn theo template của hệ thống.
-4. **Quy trình Nghiệp vụ hóa thay vì CRUD generic**:
-   - Thay thế việc sửa trạng thái hời hợt bằng các nút hành động mang tính cam kết cao:
-     - Nút **"Báo tiến độ OK"** trên toolbar dòng con (cập nhật trạng thái `'Đã thực hiện'`).
-     - Nút **"Duyệt Chuyến"** trên `DetailToolbar` dòng cha (cập nhật trạng thái `'Đã duyệt'`).
-5. **Kế thừa trạng thái khóa (Cascading Locks)**:
-   - Khi dòng cha đã được Duyệt (`Đã duyệt`), toàn bộ các dòng con đi kèm phải tự động được tính toán khóa (`isParentLocked = parent.trang_thai === 'Đã duyệt'`), ẩn các nút Sửa, Xóa và Báo tiến độ ở cả sub-grid lẫn drawer chi tiết con.
-6. **Deep Linking / Lịch sử liên quan**:
-   - Sử dụng `useSearchParams` để bắt các tham số `id_tai_xe`, `id_xe`, `id_dia_diem`, `trang_thai` từ URL để khởi tạo bộ lọc/tìm kiếm tương ứng. Điều này cho phép chuyển hướng thông minh từ các màn hình chi tiết (tài xế, xe, địa điểm) sang danh sách chuyến xe được lọc sẵn.
+### Nhân viên Và Auth Email
 
+- `ten_dang_nhap` chỉ dùng để sinh fake email đăng nhập Supabase Auth dạng `<ten_dang_nhap>@gmail.com`.
+- Cần có trường email thực tế của nhân viên để họ điền email thật.
+- Không trộn email thật với fake email auth.
+- Ảnh owner đã chốt lại: `id int8`, login dùng `ten_dang_nhap`, thêm/sửa/xóa username phải sync Supabase Auth user. Các rule này vẫn nằm ở `.codex/5fedu/10-owner-feedback-lessons.md`.
 
+### Phòng Ban Và Chức Vụ
+
+- Nếu app không hiển thị dữ liệu phòng ban/chức vụ, không được kết luận database rỗng khi chưa kiểm tra Supabase thật.
+- Phải kiểm tra đủ: env frontend, query/select, permission/filter UI, response từ Supabase, và console/browser.
+- Với repo hiện tại ngày 2026-05-31: Supabase có dữ liệu `var_phong_ban` và `var_chuc_vu`; nếu UI trắng thì nguyên nhân nằm ở đường đọc/render/filter/permission chứ không phải mặc định do DB rỗng.
+
+### Tài Xế
+
+- List view bỏ text kiểu "Tiêu đề tài xế"; action `Xuất` chỉ icon only khi owner yêu cầu.
+- Tài xế có thể là người ngoài công ty, không chỉ là nhân viên nội bộ. Schema/form phải lưu được thông tin tài xế bên ngoài.
+- Form tài xế phải đủ thông tin nghiệp vụ cần thiết, ví dụ họ tên, số điện thoại, email, ngày sinh/tuổi nếu cần quản lý, địa chỉ, giấy phép lái xe, hạng bằng, ngày hết hạn, xe thường chạy, ghi chú, trạng thái.
+- Nếu liên kết nhân viên nội bộ thì là optional, không được bắt buộc mọi tài xế phải có `id_nhan_vien`.
+- Detail tài xế phải có lịch sử chuyến xe.
+- Detail tài xế phải có lịch sử lương.
+- Form/detail tài xế phải theo chuẩn template, không render field thô từ config nếu nghiệp vụ cần layout riêng.
+
+### Địa Điểm
+
+- Địa điểm không chỉ là CRUD thô. Form/detail/list phải theo chuẩn template và đủ nghiệp vụ vận tải.
+- Cần thể hiện nhóm/tuyến, tên, mô tả, tiền lương mặc định, chi phí mặc định nếu có, định vị/địa chỉ, ghi chú, trạng thái.
+- Detail địa điểm nên có lịch sử chuyến xe/chuyến chi tiết liên quan khi có dữ liệu.
+
+### Danh Sách Xe
+
+- Danh sách xe không chỉ là CRUD thô. Form/detail/list phải theo chuẩn template và đủ thông tin xe.
+- Cần thể hiện biển số, hãng, model, đời xe, loại xe/tải trọng nếu cần, bảo hiểm/đăng kiểm/bảo trì nếu app cần, ghi chú, trạng thái.
+- Detail xe nên có lịch sử chuyến xe liên quan khi có dữ liệu.
+
+### Bảng Lương
+
+- Tên tài xế trong form/filter phải dùng combobox/searchable picker, không dùng select thô.
+- Form và detail phải theo chuẩn template.
+- `tong_luong_chuyen` không được điền tay; phải lấy/tính từ chuyến đi thực tế.
+- Cần thêm cột trừ tiền khác, ví dụ tiền ứng.
+- Cần có cột tổng tiền còn lại.
+- Cần có nút in bảng lương.
+- Nút duyệt không được nằm trong form. Duyệt phải là action riêng ngoài form/detail/list tùy ngữ cảnh.
+- Không được cho sửa các giá trị đã duyệt nếu rule nghiệp vụ khóa sau duyệt.
+
+### Chuyến Xe
+
+- Chuyến xe cũng phải theo chuẩn form/detail/list template, không chỉ CRUD generic.
+- Ở bảng cha, các cột tổng tiền và tổng chuyến phải tính tự động từ dòng chi tiết.
+- Không được nhập tay `so_chuyen`, `tong_tien_luong`, `tong_phi` nếu đã có chi tiết chuyến xe để tính.
+- Dòng chi tiết đã duyệt thì không cho chỉnh sửa nếu rule đã chốt.
+
+### Thống Kê Chuyến Đi
+
+- Giao diện thống kê chuyến đi phải làm lại theo chuẩn dashboard/report, không dùng giao diện tạm hoặc chart/table chung chung.
+- Bộ lọc phải bám nghiệp vụ: ngày, chuyến, tài xế, địa điểm, xe.
+- Thống kê phải thể hiện được lương và chi phí, không chỉ đếm dòng.
+
+## Nguyên Nhân Gốc Cần Tránh
+
+- Không được nhầm "có bảng + CRUD" là đã xong module nghiệp vụ.
+- Không được dùng một `generic config` cho nhiều module nếu form/detail/action/tổng hợp của mỗi module khác nhau rõ ràng.
+- Nếu nhiều module sai giống nhau, phải kiểm tra shared page/config/service trước khi vá từng màn.
+- Mọi field tổng hợp phải được phân loại: user nhập, hệ thống tính, hay hệ thống sync từ bảng khác.
+- Mọi relation field có nhiều dòng phải dùng combobox/searchable picker.
+- Mọi action nghiệp vụ phải được phân loại: form action, row action, bulk action, approval action, print/export action. Không nhét tất cả vào form.
+
+## Checklist Bắt Buộc Trước Khi Báo Xong
+
+- Đã đối chiếu template commit `47947e6eea0b1b7dc6723356f37f604e30ac690b`.
+- Đã kiểm tra trang chủ đúng thứ tự module.
+- Đã kiểm tra list view desktop và card view mobile.
+- Đã kiểm tra form theo template, có validation, label rõ, field không bị thiếu.
+- Đã kiểm tra detail theo template, có section nghiệp vụ và lịch sử liên quan khi cần.
+- Đã kiểm tra relation field dùng combobox/searchable picker khi dữ liệu có thể nhiều.
+- Đã kiểm tra tổng hợp không nhập tay nếu tính được từ dữ liệu con.
+- Đã kiểm tra action in/xuất/duyệt nằm đúng vị trí, không nằm sai trong form.
+- Đã kiểm tra dữ liệu thật Supabase hiển thị trên UI bằng browser, không chỉ kiểm tra REST/script.
+- Đã verify bằng Playwright hoặc browser screenshot cho các màn UI bị sửa.
+
+## Stop Conditions
+
+Dừng và sửa plan trước khi code tiếp nếu gặp một trong các dấu hiệu:
+
+- Module vận tải đang dùng generic form/detail không đủ nghiệp vụ.
+- Tổng tiền/tổng chuyến/tổng còn lại đang cho nhập tay.
+- Tài xế/địa điểm/xe thiếu detail lịch sử liên quan.
+- Tài xế bắt buộc phải là nhân viên nội bộ trong khi owner cần lưu tài xế bên ngoài.
+- Select thô được dùng cho danh sách quan hệ lớn như tài xế.
+- Duyệt nằm trong form thay vì action riêng.
+- UI không được verify bằng dữ liệu thật.
