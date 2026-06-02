@@ -63,6 +63,7 @@ AI bắt buộc phải chủ động kích hoạt quy trình tự tiến hóa lu
 4. **Xử lý Ngoại lệ 5fedu (Tệp 10-12)**:
    - Các file từ `10` đến `12` của dự án `.agents/5fedu/` chỉ dùng để ghi nhận log phản hồi thô hoặc thông tin đặc thù (link sheet, credential mock).
    - Nếu phát hiện bài học trong đó có tính chất dùng chung (như định dạng Excel, catch lỗi API, footer phân trang), AI bắt buộc phải tự động chuyển hóa (promote) lên các file luật chung (05, 07 hoặc global rules) và xóa bỏ dạng thô trong log phản hồi để tránh làm nhiễu context.
+   - **Bảo toàn ngữ cảnh riêng**: Các file thô 10-12 này tuyệt đối **không được đồng bộ ngược (sync) về repository tổng `P:\agent-rules`** nhằm tránh làm nhiễm bẩn hoặc sai lệch ngữ cảnh cho các dự án 5fedu khác. Chúng chỉ được lưu trữ, bảo toàn và cập nhật trực tiếp tại repository riêng của chính dự án đó.
 5. **Đồng bộ hóa chéo & Git Commit**:
    - Tự động chạy script `P:\agent-rules\scripts\sync-platform-skills.ps1` để cập nhật chéo sang Codex runtime (`~/.codex/`).
    - Tự động thực hiện `git add -A` và `git commit` tại thư mục master `P:\agent-rules` để lưu vết lịch sử phiên bản của luật.
