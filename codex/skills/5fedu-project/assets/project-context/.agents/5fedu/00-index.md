@@ -67,10 +67,10 @@
 
 ### D. Quy Trình CI/CD & Deploy Tự Động Trên Vercel
 1. **Tự động hóa CI/CD**: Dự án đã được liên kết trực tiếp với repository GitHub để Vercel tự động build và deploy mỗi khi có commit mới trên nhánh `main`.
-2. **Cấm Deploy Thủ Công Qua Vercel CLI (No-CLI-Manual-Deployments)**:
-   - Nghiêm cấm AI chạy các lệnh deploy trực tiếp (như `vercel` không tham số, `vercel deploy` hoặc `vercel --prod`) để tự ý tạo ra các bản build độc lập trùng lặp ngoài luồng kiểm soát của GitHub.
-   - **Ngoại lệ được phép**: AI được phép chạy các lệnh quản lý cấu hình và đồng bộ như `vercel env pull` (để lấy biến môi trường) hoặc `vercel link` (khi cần liên kết/đồng bộ với một dự án được chia sẻ mới) dưới sự yêu cầu hoặc cho phép của người dùng.
-   - AI thực hiện `git push` như bình thường để cập nhật mã nguồn lên môi trường chạy thực tế.
+2. **Cấm Khởi Tạo Dự Án / Site Mới Trên Vercel (No-New-Vercel-Sites)**:
+   - Vì hầu hết các dự án khi push lên GitHub đã được liên kết tự động với Vercel, AI **tuyệt đối không được khởi tạo dự án mới** hoặc tạo bản deploy ngoài luồng làm phát sinh thêm site trùng lặp vô nghĩa trên Vercel.
+   - AI chỉ sử dụng kết nối dự án có sẵn, thực hiện `git push` như bình thường và để Vercel tự động build.
+   - **Ngoại lệ**: Chỉ chạy `vercel env pull` để đồng bộ biến môi trường cục bộ hoặc `vercel link` để kết nối vào đúng dự án đã có sẵn nếu được yêu cầu.
 3. **Kiểm tra trạng thái từ xa (Remote Auditing)**: Sau khi `git push`, AI bắt buộc sử dụng `browser_subagent` truy cập trang GitHub Commits hoặc Dashboard Vercel để trực tiếp xác minh trạng thái build thành công (tích xanh) trước khi báo cáo hoàn thành.
 
 
