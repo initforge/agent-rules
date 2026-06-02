@@ -35,31 +35,19 @@ Recommended target layout:
 AGENTS.md
 .agents/5fedu/ (or .codex/5fedu/ for Codex)
 |- 00-index.md
-|- 01-tech-stack-and-template.md
-|- 02-frontend-mapping.md
-|- 03-database-supabase.md
-|- 04-auth-permissions-and-flows.md
-|- 05-delivery-quality.md
-|- 06-decision-status.md
-|- 07-working-format.md
-|- 08-source-examples.md
-|- 09-coverage-audit.md
-|- 10-owner-feedback-lessons.md
-|- 11-current-sheets-source-map.md
-|- 12-owner-feedback-transport-ui.md
-`- questions.md
+|- 01-architecture-and-specs.md
+|- 02-database-and-auth-rules.md
+|- 03-ui-ux-and-delivery-standards.md
+|- 04-decision-status-and-backlog.md
+`- 05-source-specs-and-coverage.md
 ```
 
 - `AGENTS.md` should be a lightweight pointer/loading policy, not an `@` include list for every file. Put detailed rules under the respective platform folder.
-- Treat `06-decision-status.md` as the source of truth for what is confirmed, unconfirmed, blocked, or paused.
-- Treat `07-working-format.md` as the source of truth for default 5fedu format/how-to when concrete app-specific values are not yet confirmed.
-- Treat `08-source-examples.md` as concrete examples extracted from the original prompt/images; use it to infer style.
-- Use `09-coverage-audit.md` to verify whether the current context covers the original 5fedu prompt.
-- Use `10-owner-feedback-lessons.md` and `12-owner-feedback-transport-ui.md` strictly as:
-  1. Historical logs of raw user feedbacks.
-  2. Project-specific mappings or sheet links.
-  * **CRITICAL RULES EVOLUTION**: All resolved bugs or universal architectural lessons (e.g. `int8` primary keys, `ten_dang_nhap` logins, pagination footer, excel cell type `'n'`) MUST be promoted/moved to the global rule files (`00-antigravity-runtime-intent.md` / `07-working-format.md` / `global-rules.md`). Do not keep them raw in the feedback files to prevent context confusion.
-- Use `11-current-sheets-source-map.md` as the source map for current Google Sheets/spec exports.
+- Treat `00-index.md` as the entry point and the source of truth for the **Strict Execution Contract** (Compile Check, Browser Click-through check, Anti-Lỏ code policies).
+- Treat `04-decision-status-and-backlog.md` as the source of truth for what is confirmed, unconfirmed, blocked, or paused, open questions, and the temporary raw owner feedback logs.
+- Treat `02-database-and-auth-rules.md` and `03-ui-ux-and-delivery-standards.md` as the active system rules.
+  * **CRITICAL RULES EVOLUTION**: All resolved bugs or universal architectural lessons (e.g., `id int8` primary keys, `ten_dang_nhap` logins, pagination footer, Excel cell type `'n'`, PDF Unicode base64 fonts, TDZ hoisting prevention) MUST be promoted/moved to the respective Pillar 2 or Pillar 3 rule files. Do not keep them raw in the feedback backlog file to prevent context confusion.
+- Use `05-source-specs-and-coverage.md` to map Google Sheets columns and verify whether the current context covers the original 5fedu prompt/images.
 
 ## 4. Developer Lessons Learned (Anti-Patterns & Hard Gates)
 

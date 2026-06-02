@@ -19,11 +19,8 @@ $targetContext = Join-Path $repo ".agents\5fedu"
 # Separate project-specific custom files vs shared rules/lessons
 $sharedFiles = @(
   "00-index.md",
-  "05-delivery-quality.md",
-  "07-working-format.md",
-  "09-coverage-audit.md",
-  "10-owner-feedback-lessons.md",
-  "12-owner-feedback-transport-ui.md"
+  "02-database-and-auth-rules.md",
+  "03-ui-ux-and-delivery-standards.md"
 )
 
 $isAlreadyScaffolded = (Test-Path $targetContext)
