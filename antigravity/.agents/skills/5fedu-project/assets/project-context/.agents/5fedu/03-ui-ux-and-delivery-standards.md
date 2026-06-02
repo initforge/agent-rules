@@ -29,6 +29,8 @@ Tài liệu này quy định các quy chuẩn thiết kế giao diện (UI/UX), 
 - **Chân Trang Phân Trang (`TablePaginationFooter`)**: Tất cả các bảng dữ liệu (kể cả bảng báo cáo, thống kê tùy chỉnh) bắt buộc phải có footer phân trang chuẩn. Không để bảng trần.
 - **Bảo Vệ Hành Động Phá Hủy**: Các nút Xóa (destructive) hoặc Duyệt phải đưa vào dropdown menu ẩn (`DataTableRowActions`), không hiển thị lộ thiên trên dòng dữ liệu hoặc chân Mobile Card.
 - **Icon Trong Ô Bảng (Cell Icons)**: Các giá trị chính trong ô bảng (họ tên, sđt, biển số, tiền lương, ngày tháng, trạng thái) render kèm icon Lucide tương ứng (dùng `getFieldIcon(colId)`).
+- **Phân tách Icon Tài chính (Financial Icons differentiation)**: Để tăng tính trực quan cho giao diện và tránh lặp lại biểu tượng `$` gây đơn điệu (Visual Noise) trong form/chi tiết, các trường tài chính của Bảng lương bắt buộc phải dùng các biểu tượng chuyên biệt: Lương chuyến dùng `Banknote`, Chi phí chuyến dùng `Receipt`, Trừ tiền khác dùng `MinusCircle`, Chi phí khác dùng `CreditCard`, và Tổng còn lại dùng `Wallet`.
+
 
 ### Form & Detail Drawer Layout
 - **Footer Drawer Chi Tiết**: Sử dụng split-layout compact (`h-8 px-3 text-xs`): nút Đóng (ghost button) nằm bên trái, nút Sửa (primary) và nút Xóa (destructive/outline) nằm bên phải. Sử dụng hàm nhãn nút chuẩn từ `lib/button-labels.ts` (`BTN_CLOSE()`, `BTN_EDIT()`, `BTN_DELETE()`).

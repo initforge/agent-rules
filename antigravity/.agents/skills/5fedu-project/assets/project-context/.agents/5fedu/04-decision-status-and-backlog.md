@@ -117,3 +117,19 @@ Khi có phản hồi mới từ owner hoặc thay đổi nghiệp vụ phát sin
 *   **Phạm vi ảnh hưởng (Target Area)**: `global-rules.md`, `02-database-and-auth-rules.md`, `03-ui-ux-and-delivery-standards.md`, `05-source-specs-and-coverage.md`
 *   **Đối chiếu Trụ cột (Pillar Map)**: Toàn bộ 5 Pillars + Global Rules
 *   **Trạng thái áp dụng (Enforcement)**: `DA_AP_DUNG`
+
+---
+
+#### EVO-20260602-04: Phân tách Icon Tài chính Bảng lương
+*   **Mô tả Quy tắc (Rule Spec)**:
+    1. Tránh lặp lại biểu tượng `$` gây đơn điệu (Visual Noise) và giảm hiệu quả nhận diện trường trong các form chi tiết tài chính.
+    2. Sử dụng các biểu tượng chuyên biệt cho từng trường:
+       - Lương chuyến: `Banknote` (hoặc `Coins`)
+       - Chi phí chuyến: `Receipt`
+       - Trừ tiền khác: `MinusCircle`
+       - Chi phí khác: `CreditCard`
+       - Tổng còn lại: `Wallet`
+*   **Phạm vi ảnh hưởng (Target Area)**: `features/quan-ly-van-tai/shared/TransportModulePage.tsx`, `.agents/5fedu/03-ui-ux-and-delivery-standards.md`
+*   **Đối chiếu Trụ cột (Pillar Map)**: [03-ui-ux-and-delivery-standards.md#1-quy-chuan-thiet-ke-giao-dien-uiux-parity](file:///p:/tahdieuphoi/.agents/5fedu/03-ui-ux-and-delivery-standards.md)
+*   **Trạng thái áp dụng (Enforcement)**: `DA_AP_DUNG`
+

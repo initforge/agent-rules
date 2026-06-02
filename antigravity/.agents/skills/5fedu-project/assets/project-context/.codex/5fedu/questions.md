@@ -50,5 +50,7 @@ Không hỏi lại các điểm owner đã chốt:
 Chỉ hỏi lại khi:
 
 - Google Sheet/source có thêm cột nhân viên ngoài danh sách tối giản và cần xác nhận có dùng thật không.
-- Cần chọn server/admin path cụ thể cho Supabase Auth sync, ví dụ Edge Function hay backend riêng.
 - Cần xử lý dữ liệu production đã lỡ tạo sai schema: hỏi phương án migrate/drop/recreate vì có thể mất dữ liệu.
+- (ĐÃ GIẢI QUYẾT) Đồng bộ Supabase Auth 2 chiều: Sử dụng kết hợp serverless API `/api/employee-auth-sync` (từ App sang Auth) và Database triggers (từ Auth sang App) hoạt động đồng bộ hoàn chỉnh trên live production.
+
+

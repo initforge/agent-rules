@@ -19,7 +19,7 @@ Chỉ cập nhật một mục sang `DA_CHOT` khi người dùng xác nhận rõ
 | Format/cách làm mặc định của 5fedu phải được ghi rõ dù giá trị từng app chưa chốt | DA_CHOT | User prompt ngày 2026-05-30 | Xem `07-working-format.md` |
 | Scope dự án là full app A-Z, không hỏi "module đầu tiên/phase đầu" | DA_CHOT | User prompt ngày 2026-05-30 | AI tự chia plan nội bộ nếu cần |
 | Clone/adapt template `https://github.com/tahdieuphoi-ctrl/TAH_app` vào repo này | DA_CHOT | User prompt ngày 2026-05-30 | Dùng template làm nền; chỉnh sửa thì báo người dùng |
-| Template source local | DA_CHOT | Clone thành công qua GitHub CLI | `P:\tah-app-5f\.codex\template-source\TAH_app`, branch `main` |
+| Template source local | DA_CHOT | Clone thành công qua GitHub CLI | `P:\tah-app-5f\.agents\template-source\TAH_app`, branch `main` |
 | App name hiện tại | DA_CHOT | User prompt ngày 2026-05-30 + ảnh 1 | `TAH APP` |
 | Spec source hiện tại | DA_CHOT | User prompt ngày 2026-05-30 + ảnh đã gửi | Dùng ảnh/spec đã gửi làm nguồn hiện tại; nếu có sheet/link mới thì cập nhật sau |
 | Tech stack app hiện tại | DA_CHOT | Ảnh 1 + user xác nhận | React Vite TS, Tailwind, internal `components/ui`, TanStack Query, Zustand, React Hook Form, Zod, Supabase, Cloudinary |
@@ -64,13 +64,13 @@ Chỉ cập nhật một mục sang `DA_CHOT` khi người dùng xác nhận rõ
 | Google Sheets cần đọc bằng browser đã đăng nhập Google khi link cần auth | DA_CHOT | User yêu cầu ngày 2026-05-31 | Playwright headed đã mở để user đăng nhập, sau đó đọc sheet làm nguồn chính |
 | Google Sheet app/data/spec hiện tại | DA_CHOT | User gửi link public ngày 2026-05-31 | `1NY4sVW2GZaOjtZ-Mivq-B5PlXZPL_QEhbJjAJe_0ddg`, đã export vào `output/sheets/current/` |
 | Google Sheet dự án/quy tắc hiện tại | DA_CHOT | User gửi link public ngày 2026-05-31 | `1KF3Pe-N7S4DJm_6TKi9QXy4jXPKzqDmeLVHxgiuGoZY`, đã export vào `output/sheets/current/` |
-| Source map từ 2 Google Sheets | DA_CHOT | Phân tích export ngày 2026-05-31 | `.codex/5fedu/11-current-sheets-source-map.md` là tài liệu đối chiếu chính |
+| Source map từ 2 Google Sheets | DA_CHOT | Phân tích export ngày 2026-05-31 | `.agents/5fedu/11-current-sheets-source-map.md` là tài liệu đối chiếu chính |
 
 ## Cập Nhật Owner Feedback UI/Vận Tải 2026-05-31
 
 | Mục | Trạng thái | Nguồn/xác nhận | Ghi chú |
 | --- | --- | --- | --- |
-| Template giao diện tham chiếu local | DA_CHOT | User yêu cầu ngày 2026-05-31 | `.codex/template-source/TAH_app` tại commit `47947e6eea0b1b7dc6723356f37f604e30ac690b` |
+| Template giao diện tham chiếu local | DA_CHOT | User yêu cầu ngày 2026-05-31 | `.agents/template-source/TAH_app` tại commit `47947e6eea0b1b7dc6723356f37f604e30ac690b` |
 | Thứ tự trang chủ | DA_CHOT | User yêu cầu ngày 2026-05-31 | `Quản lý vận tải` -> `Hệ thống` -> `Thông tin bản quyền` |
 | Nhân viên có email thực tế riêng | DA_CHOT | User yêu cầu ngày 2026-05-31 | Email thật khác fake email auth sinh từ `ten_dang_nhap@gmail.com` |
 | Không kết luận phòng ban/chức vụ rỗng nếu chưa kiểm tra Supabase thật | DA_CHOT | User phản hồi ngày 2026-05-31 + kiểm tra REST ngày 2026-05-31 | DB hiện có dữ liệu; nếu UI trắng phải kiểm tra env/query/filter/permission/render |
@@ -82,4 +82,37 @@ Chỉ cập nhật một mục sang `DA_CHOT` khi người dùng xác nhận rõ
 | Bảng lương có trừ tiền khác và tổng tiền còn lại | DA_CHOT | User yêu cầu ngày 2026-05-31 | Ví dụ tiền ứng |
 | Bảng lương có nút in và duyệt tách khỏi form | DA_CHOT | User yêu cầu ngày 2026-05-31 | Nút duyệt không nằm trong form |
 | Chuyến xe cha tự tính tổng chuyến/tổng tiền từ chi tiết | DA_CHOT | User yêu cầu ngày 2026-05-31 | Không nhập tay nếu có chi tiết |
-| Thống kê chuyến đi phải làm chuẩn dashboard/report nghiệp vụ | DA_CHOT | User yêu cầu ngày 2026-05-31 | Lọc theo ngày, chuyến, tài xế, địa điểm, xe; có lương/chi phí |
+| Thống kê chuyến đi phải làm chuẩn dashboard/report nghiệp vụ | DA_CHOT | User yêu cầu ngày 2026-05-31 | Đã hoàn thành: bộ lọc chuẩn, thẻ thống kê động tách biệt (Chuyến đi vs Lương), tiêu đề cột Việt hóa chuẩn, nút xuất icon-only |
+
+## Cập Nhật Mới Nhất 2026-06-01
+
+| Mục | Trạng thái | Nguồn/xác nhận | Ghi chú |
+| --- | --- | --- | --- |
+| Chuẩn hóa footer Drawer Form | DA_CHOT | User feedback 2026-06-01 | Đã chuyển sang tái sử dụng component `FormDrawerFooter` có thuộc tính `compact` và icon |
+| Chuẩn hóa footer Drawer Chi tiết | DA_CHOT | User feedback 2026-06-01 | Footer split-layout compact, các nút sử dụng hàm nhãn nút chuẩn (`BTN_CLOSE()`, `BTN_EDIT()`, `BTN_DELETE()`) |
+| Icon trong ô bảng (Cell Icons) | DA_CHOT | User feedback 2026-06-01 | Các giá trị chính trong ô bảng (họ tên, sđt, biển số, tiền lương, trạng thái...) render kèm icon Lucide tương ứng |
+| Đồng bộ lỗi Auth Sync mềm dẻo | DA_CHOT | User feedback 2026-06-01 | Khi API đồng bộ Auth lỗi hoặc thiếu biến môi trường, catch lỗi ở service để cho phép CRUD database hoàn thành bình thường |
+| Thiết kế Module Dùng chung dữ liệu (Shared Data Modules Pattern) | DA_CHOT | User feedback 2026-06-01 | Gộp Database gốc, tách biệt Module giao diện chuyên môn (như Nhân sự vs Tài xế), liên kết điều hướng và soft delete role |
+| Kích hoạt Đổi mật khẩu | DA_CHOT | User feedback 2026-06-01 | Đã triển khai gọi API `supabase.auth.updateUser` và cập nhật form Profile |
+| Đồng bộ Dropdown Tài xế | DA_CHOT | User feedback 2026-06-01 | Dropdown Chuyến xe & Bảng lương lọc động từ bảng Nhân viên có cờ `la_tai_xe` |
+| Xây dựng cây phân cấp động & Chuẩn hóa kiểu ID (Hierarchy Traversal) | DA_CHOT | User feedback 2026-06-01 | Thực hiện đệ quy ở service layer, bắt buộc ép kiểu chuỗi cho ID/khoá ngoại cha trước khi dựng cây để tránh lỗi lệch kiểu. |
+
+## Cập Nhật Mới Nhất 2026-06-02
+
+| Mục | Trạng thái | Nguồn/xác nhận | Ghi chú |
+| --- | --- | --- | --- |
+| Mô hình Master-Detail chuẩn 5fedu | DA_CHOT | User feedback 2026-06-02 | Chi tiết bảng con nhúng bằng `DetailSection` & `EmbeddedChildDataGrid`. Mở form con tự prefill/disable liên kết cha. Stacked drawers quản lý đè bằng AnimatePresence và stackLevel. |
+| Khóa kế thừa dữ liệu (Cascading Locks) | DA_CHOT | User feedback 2026-06-02 | Khi dòng cha ở trạng thái đã phê duyệt/hoàn thành thì toàn bộ dòng con tự động bị khóa và ẩn các nút sửa/xóa/cập nhật. |
+| Deep Linking / Lọc theo tham số URL | DA_CHOT | User feedback 2026-06-02 | Đọc `searchParams` (`id_tai_xe`, `id_xe`, `id_dia_diem`, `trang_thai`) để khởi tạo bộ lọc của danh sách, giúp liên kết chuyển hướng từ màn hình khác sang mượt mà. |
+| Đồng bộ 2 chiều (Bidirectional Sync) | DA_CHOT | User prompt 2026-06-02 + Verify live | Đã deploy trigger DDL đầy đủ trên database production. Đồng bộ tự động 2 chiều giữa Supabase Auth và public.var_nhan_vien hoàn thành. |
+| Đồng bộ Drawer Chi tiết với cache React Query | DA_CHOT | User feedback 2026-06-02 | Dùng `useMemo` để tìm dòng mới nhất trong cache thay vì truyền state tĩnh thô. |
+| Chuẩn hóa decode base64 cho data URI | DA_CHOT | User feedback 2026-06-02 | decodeURIComponent chuỗi base64 trước khi gọi atob() để tránh sập luồng tải file sang UUID. |
+| Phân tách biểu tượng tài chính bảng lương | DA_CHOT | User feedback 2026-06-02 | Thay đổi $ trùng lặp bằng các icon chuyên biệt (Banknote, Receipt, MinusCircle, CreditCard, Wallet) |
+| Quy tắc phân quyền chi tiết (xem/them/sua/xoa) theo cấp bậc, quan_tri, kiem_tra | DA_CHOT | User prompt 2026-06-03 | Đã hoàn thành cập nhật can() và filterRowsByPermissions() khớp 100% luật check |
+| Chuẩn hóa cây phân cấp và gom Thực thể con mồ côi (Orphaned Nodes rendering) | DA_CHOT | User prompt 2026-06-03 | Bắt buộc chọn phòng ban khi tạo chức vụ và gom các chức vụ mồ côi (không thuộc phòng ban) vào một nhóm giả lập cuối cùng trên UI để hiển thị và dọn dẹp. |
+| Tối ưu hóa Phòng ban cấp 2 (Sub-department Limits) | DA_CHOT | User prompt 2026-06-03 | Ẩn phần tạo phòng ban con đối với phòng ban đã ở cấp 2; ẩn ô nhập thứ tự đối với phòng ban con và gán mặc định bằng 1. |
+
+
+
+
+

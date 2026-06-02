@@ -71,3 +71,4 @@ Khi module có nhiều tab, tab đang mở phải có router query:
 - Các view chuẩn: list view, card view, detail view, form view.
 - Search box phải tìm được tất cả trường trong bảng và trường liên kết hiển thị. Ví dụ bảng chỉ có `id_nguoi_tao` nhưng người dùng tìm theo tên nhân viên vẫn phải ra kết quả.
 - Notification mặc định là demo: icon có dấu demo, bấm vào báo chức năng chưa sẵn có.
+

@@ -70,12 +70,27 @@ Quy tắc: đứng ở đâu quay lại đó.
 - List view -> sửa -> form -> lưu/hủy -> quay lại list view.
 - Detail view -> sửa -> form -> lưu/hủy -> quay lại detail view.
 - Detail bảng cha -> thêm dòng con -> form -> lưu/hủy -> quay lại detail bảng cha.
-## Owner Feedback Gate 2026-05-31
+## Quy Tắc Thiết Kế Đăng Nhập & Đồng Bộ Supabase Auth (Quy Tắc Cứng)
 
-- Phần đăng nhập phải làm chuẩn trước khi mở rộng module khác.
-- Login dùng `ten_dang_nhap`, không dùng `ma_nhan_vien`.
-- Bảng nhân viên chỉ giữ các trường chính đã chốt; không tự thêm trường hồ sơ nhân sự rườm rà.
-- Khi thêm nhân viên có `ten_dang_nhap`, phải tạo Supabase Auth user `<ten_dang_nhap>@gmail.com`.
-- Khi sửa `ten_dang_nhap`, phải đồng bộ Supabase Auth user sang email giả mới hoặc dùng flow admin đã chốt để thay user cũ.
-- Khi xóa nhân viên hoặc xóa username, phải xóa/vô hiệu hóa Supabase Auth user tương ứng.
-- Flow auth/admin này là HIGH risk: bắt buộc chạy qua server/admin path, không đưa service role key vào frontend, và phải có smoke test create/update/delete auth user.
+1. **Thông Tin Đăng Nhập**:
+   - Sử dụng thống nhất `ten_dang_nhap` để thực hiện xác thực, tuyệt đối không dùng `ma_nhan_vien` để đăng nhập.
+   - Tài khoản kiểm thử mặc định:
+     - Tên đăng nhập: `admin` (app tự động chuyển hóa thành fake email `admin@gmail.com`).
+     - Mật khẩu mặc định: `5fedu.com`.
+
+2. **Cơ Chế Đồng Bộ Supabase Auth Cho Tài Khoản Nhân Viên**:
+   - **Khi Thêm Mới**: Tạo tài khoản nhân viên đồng thời phải tạo tài khoản Supabase Auth tương ứng bằng fake email `<ten_dang_nhap>@gmail.com` với mật khẩu mặc định là `123456`.
+   - **Khi Chỉnh Sửa `ten_dang_nhap`**: Thực hiện cập nhật tài khoản Auth tương ứng bằng cách đổi email sang `<ten_dang_nhap_moi>@gmail.com` hoặc dùng API quản trị để thay thế.
+   - **Khi Xóa Nhân Viên / Xóa `ten_dang_nhap`**: Bắt buộc phải xóa hoặc vô hiệu hóa tài khoản Supabase Auth tương ứng để ngăn chặn truy cập trái phép.
+
+3. **Bảo Mật Quyền Quản Trị**:
+   - Tất cả các tác vụ quản lý user trong Supabase Auth (tạo, cập nhật, xóa) là HIGH risk, bắt buộc phải thực hiện thông qua backend server/admin path (ví dụ: Supabase Edge Functions, database triggers hoặc admin APIs).
+   - Tuyệt đối không được nhúng `service_role_key` của Supabase vào client-side/frontend code.
+
+4. **Xử Lý Lỗi Đồng Bộ Auth Bất Lập Trình (Graceful Auth Sync Degradation)**:
+   - Khi thực hiện CRUD Nhân viên, nếu API đồng bộ Auth (`/api/employee-auth-sync`) trả về lỗi hoặc thiếu các biến môi trường cấu hình Supabase Admin Keys trên môi trường Production/Vercel (gây ra lỗi `Supabase admin env is missing`), luồng nghiệp vụ chính vẫn phải được tiếp tục thực thi thành công ở tầng database.
+   - Riêng tác vụ xóa nhân viên (`operation === 'delete'`), hoặc bất kỳ tác vụ nào gặp lỗi thiếu cấu hình (`env is missing`), tầng service phải tự động catch lỗi, ghi log cảnh báo và tiếp tục thực hiện lệnh xóa/chỉnh sửa database mà không được phép ném lỗi (throw error) chặn thao tác của người dùng.
+
+
+
+
