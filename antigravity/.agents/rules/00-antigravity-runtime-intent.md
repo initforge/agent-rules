@@ -35,6 +35,11 @@ Luật này là bộ quy tắc cốt lõi cho Antigravity. Nguồn chuẩn nằm
   1. Tệp sửa đổi trực tiếp.
   2. Các tệp liên quan gián tiếp (bao gồm API, component UI, cấu trúc type liên quan).
   3. Mối tương quan giữa: **Skill** (chỉ dẫn hành vi toàn cục), **Templates/Assets** (mẫu nguồn dùng chung), và **Active Context** (ngữ cảnh thực tế của dự án hiện hành). Khi cập nhật một quy tắc mới, Agent phải rà soát và cập nhật đồng thời ở cả 3 tầng này để tránh đứt gãy tri thức.
+- **Giao Thức Phân Tích Ý Đồ & Rà Soát Ngoài Đề (Intent & Out-of-Prompt Audit Protocol)**:
+  - Khi tiếp nhận yêu cầu từ người dùng, Agent cấm chỉ đọc bề nổi (literal text). Agent bắt buộc phải thực hiện phân tích 3 tầng:
+    1. **Ý đồ ẩn sau (Hidden Intent)**: Xác định mục tiêu thực sự đằng sau yêu cầu (ví dụ: người dùng hỏi lỗi A, ý đồ thực tế có thể là muốn cải thiện tính ổn định của toàn hệ thống/ngăn chặn regressions).
+    2. **Rà soát Ngoài Đề (Out-of-Prompt Risks)**: Chủ động truy lùng các nguy cơ/vấn đề không được nhắc trực tiếp trong prompt nhưng có khả năng bị ảnh hưởng (ví dụ: sửa đổi rule làm lệch pha giữa các dự án cục bộ, hoặc thay đổi DB làm hỏng phân quyền).
+    3. **Brainstorm & Bàn luận**: Phải chủ động đề xuất và thảo luận các vấn đề phát hiện ngoài đề này với người dùng, thay vì chỉ làm thụ động đúng những gì được ghi trong prompt.
 - **Kiểm tra UI/Frontend**: Phải kiểm tra responsive, overflow, spacing, state và browser screenshot khi có thể.
 - **Database/Auth/Secret/Permission**: Coi là HIGH risk, hỏi rõ thiếu gì và không bịa schema.
 
