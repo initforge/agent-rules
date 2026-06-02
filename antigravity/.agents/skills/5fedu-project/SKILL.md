@@ -63,7 +63,17 @@ Before writing database, auth, staff tables, migration, or UI components, the AI
 - **Sync Username to Supabase Auth**: When creating/updating/deleting a staff account with a `ten_dang_nhap`, the corresponding fake email `<ten_dang_nhap>@gmail.com` must be synchronized in Supabase Auth.
 - **Service Role Restriction**: The Supabase service role key must NEVER be exposed to the client. Auth admin actions must exclusively run on server/admin paths (e.g. Edge Functions, API).
 
-### C. Transport UI & Derived Fields
+### C. CI/CD Auto-Deployment & Live Dashboards
+- **Vercel Auto-Deployment**: AI must understand that pushing to GitHub automatically triggers a Vercel build and deploy. Never attempt manual/terminal deployment unless requested.
+- **Remote Status Auditing**: Proactively use `browser_subagent` to check the GitHub Commits status or Vercel dashboard to verify build outcomes.
+- **Database Verification**: Proactively view Supabase Dashboard or logs to inspect the real production database schema, RLS policies, and queries rather than guessing.
+
+### D. Regression Prevention & Query Protection
+- **Dependency Checking**: Before modifying any database column, API endpoint, or TypeScript type, the AI MUST run `grep_search` across the codebase to identify and update all files referencing them.
+- **Query Cache Invalidation**: When modifying data, always invalidate the relevant React Query / SWR cache keys (e.g., calling `queryClient.invalidateQueries(['transport'])`) to prevent UI/query synchronization failures.
+- **Local E2E Verification**: Run a quick local build (`npm run build`) or visual E2E check after modifications to guarantee no query regression.
+
+### E. Transport UI & Derived Fields
 - **Derived Fields Constraint**: Fields like `so_chuyen`, `tong_tien_luong`, `tong_phi`, `tong_luong_chuyen` must NEVER be editable by users on the UI. They must be read-only and automatically calculated from child rows or database syncs.
 - **Large Dataset Selection**: Do NOT use native `<select>` dropdowns for fields with large relation lists (like driver, vehicle, location, trip). Use `Combobox` or `AsyncCombobox` searchable pickers.
 - **Clean Action Segregation**: Banned placing "Duyệt" (Approval) or "In" (Print) buttons inside the main form. Approval and Print actions must be separate buttons outside the form context.
