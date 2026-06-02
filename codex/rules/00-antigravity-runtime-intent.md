@@ -58,3 +58,13 @@ AI bắt buộc phải chủ động kích hoạt quy trình tự tiến hóa lu
    - Tự động chạy script `P:\agent-rules\scripts\sync-platform-skills.ps1` để cập nhật chéo sang Codex runtime (`~/.codex/`).
    - Tự động thực hiện `git add -A` và `git commit` tại thư mục master `P:\agent-rules` để lưu vết lịch sử phiên bản của luật.
 6. **Báo cáo hành động**: Trong kết quả trả về, AI chủ động liệt kê rõ ràng bài học nào đã tự học và các tệp luật nào đã được cập nhật đồng bộ.
+
+## Quy trình Đọc đầu tiên (First-Read Entry Point)
+
+Khi bắt đầu tiếp nhận bất kỳ phiên làm việc hoặc nhiệm vụ nào, Agent bắt buộc phải tuân thủ thứ tự ưu tiên đọc tài liệu sau để định hướng ngữ cảnh chính xác, tránh đọc tràn lan gây loãng bộ nhớ (ngáo context):
+
+1. **Bước 1 (Định vị bản đồ)**: Đọc tóm tắt **KI Summary** (ở đầu prompt khởi tạo) để nắm danh sách các kỹ năng (skills) đang được đăng ký trên máy.
+2. **Bước 2 (Nắm ngữ cảnh dự án)**: Đọc tệp **`10-fast-context.md`** nằm tại `.agents/rules/10-fast-context.md` cục bộ của dự án hiện tại để hiểu ngay cấu trúc mã nguồn, vị trí file nghiệp vụ quan trọng.
+3. **Bước 3 (Đọc quy tắc đặc thù)**: Quét thư mục `.agents/rules/` để tìm và đọc các tệp quy tắc đặc thù của riêng dự án đó (ví dụ: `devconnect-xml-drawing.md`, `local-rules.md`, hoặc `.agents/5fedu/AGENTS.md`) liên quan trực tiếp đến Task.
+4. **Bước 4 (Lazy-load Skills)**: Chỉ khi cần dùng đến công cụ kiểm thử hoặc tài liệu thiết kế cụ thể, mới gọi `view_file` trên các tệp `SKILL.md` tương ứng. Tuyệt đối không đọc chéo hoặc chèn ép ngữ cảnh của dự án này vào dự án khác.
+

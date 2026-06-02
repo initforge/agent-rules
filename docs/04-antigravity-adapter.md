@@ -52,11 +52,14 @@ Nguồn:
 & "P:\agent-rules\codex\scripts\install-antigravity-adapter.ps1" -ProjectRoot "P:\repo"
 ```
 
-2. Nếu Antigravity build cũ không nhận `.agents`, cài thêm mirror:
+*Lưu ý:* Hệ thống hiện tại thống nhất sử dụng duy nhất thư mục `.agents`. Mọi cấu hình cũ dạng `.agent` sẽ tự động bị xóa bởi preflight script để tránh trùng lặp tài nguyên.
 
-```powershell
-& "P:\agent-rules\codex\scripts\install-antigravity-adapter.ps1" -ProjectRoot "P:\repo" -LegacyAgentSingular
-```
+2. Giao thức Đọc Đầu tiên (First-Read Entry Point):
+Khi tiếp nhận task, Agent tuân thủ thứ tự ưu tiên đọc tài liệu:
+* **Bước 1**: Đọc KI Summary.
+* **Bước 2**: Đọc tệp `.agents/rules/10-fast-context.md` cục bộ của dự án.
+* **Bước 3**: Đọc các tệp quy tắc đặc thù dự án (nếu có, e.g. `devconnect-xml-drawing.md`).
+* **Bước 4**: Chỉ tải (lazy-load) tệp `SKILL.md` chi tiết của Skill cần thiết khi bắt tay vào triển khai.
 
 3. Trong Antigravity, dùng slash command:
 
@@ -76,6 +79,8 @@ Sau đó vào `.agents/hooks.json`, đổi `"enabled": false` thành `true` nế
 
 - Khi thêm skill Codex có ý đồ riêng, thêm workflow Antigravity tương ứng.
 - Khi rule chỉ là hành vi nền, thêm vào `.agents/rules` nhưng giữ dưới 12,000 ký tự mỗi file.
+- **Tách biệt tuyệt đối rules**: Cấm chèn quy tắc đặc thù của riêng dự án vào các file rules dùng chung (như `00-antigravity-runtime-intent.md` hay `core.md`). Quy tắc của dự án nào phải viết thành file riêng trong `.agents/rules/` của dự án đó.
 - Không thêm profile/model config vào adapter Antigravity trừ khi Antigravity có cơ chế chính thức cần dùng.
 - Khi workflow có thể phá dữ liệu, không dùng turbo/auto-run.
 - Khi source runtime thay đổi, cập nhật README và doc này cùng lúc.
+

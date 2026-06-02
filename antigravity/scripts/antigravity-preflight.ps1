@@ -26,19 +26,11 @@ if ((Test-Path $masterRoot) -and ($currentPath -notlike "*agent-rules*")) {
       }
     }
     
-    # Check and sync .agent (legacy mirror) if present
+    # Clean up legacy .agent folder if present to keep workspace simplified and avoid context bloat
     if (Test-Path $localLegacy) {
-      foreach ($mFile in $masterFiles) {
-        $relative = $mFile.FullName.Substring($masterAgents.Length + 1)
-        $lFile = Join-Path $localLegacy $relative
-        
-        if (-not (Test-Path $lFile) -or (Get-FileHash $mFile.FullName).Hash -ne (Get-FileHash $lFile).Hash) {
-          $parent = Split-Path $lFile -Parent
-          New-Item -ItemType Directory -Force -Path $parent | Out-Null
-          Copy-Item $mFile.FullName $lFile -Force
-          $updated = $true
-        }
-      }
+      Write-Host "[Antigravity] Cleaning up legacy '.agent' folder..."
+      Remove-Item $localLegacy -Recurse -Force
+      $updated = $true
     }
   }
 }
@@ -71,15 +63,7 @@ if (Test-Path $antigravitySkillsPath) {
       $updated = $true
     }
     
-    if (Test-Path $localLegacy) {
-      $legacyWfFile = Join-Path $localLegacy "workflows\$($skill.Name).md"
-      if (-not (Test-Path $legacyWfFile)) {
-        $legacyWfFolder = Split-Path $legacyWfFile -Parent
-        New-Item -ItemType Directory -Force -Path $legacyWfFolder | Out-Null
-        Set-Content -Path $legacyWfFile -Value $wfContent -Force
-        $updated = $true
-      }
-    }
+    # Removed legacy .agent workflow generation
   }
 }
 
@@ -110,7 +94,7 @@ function Sync-FileContent ($sourceFile, $destFile, $direction) {
 
 $codex5fedu = ".codex\5fedu"
 $agents5fedu = ".agents\5fedu"
-$legacy5fedu = ".agent\5fedu"
+# Removed legacy5fedu reference
 
 if ((Test-Path $codex5fedu) -or (Test-Path $agents5fedu)) {
   # If agents/5fedu exists but codex/5fedu does not, copy it
@@ -151,20 +135,7 @@ if ((Test-Path $codex5fedu) -or (Test-Path $agents5fedu)) {
     }
   }
   
-  # Update legacy mirror
-  if (Test-Path $localLegacy) {
-    if (-not (Test-Path $legacy5fedu)) {
-      New-Item -ItemType Directory -Force -Path $legacy5fedu | Out-Null
-    }
-    $agentsFiles = Get-ChildItem $agents5fedu -File
-    foreach ($aFile in $agentsFiles) {
-      $lFilePath = Join-Path $legacy5fedu $aFile.Name
-      if (-not (Test-Path $lFilePath) -or $aFile.LastWriteTime -gt (Get-Item $lFilePath).LastWriteTime) {
-        Copy-Item $aFile.FullName $lFilePath -Force
-        (Get-Item $lFilePath).LastWriteTime = $aFile.LastWriteTime
-      }
-    }
-  }
+  # Removed legacy mirror 5fedu sync
 }
 
 # 3. Check if required files are present

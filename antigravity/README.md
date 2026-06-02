@@ -24,19 +24,15 @@ Adapter này cố ý không cài profile/model config cho Antigravity. Model, ef
   -ProjectRoot "P:\du-an-cua-ban"
 ```
 
-Nếu Antigravity trên máy đang dùng layout cũ `.agent`, mirror thêm:
+*Lưu ý:* Hệ thống hiện tại thống nhất sử dụng duy nhất thư mục `.agents` làm chuẩn chung để tránh trùng lặp tài nguyên. Mọi thư mục `.agent` (số ít) cũ sẽ được kịch bản preflight tự động dọn dẹp để đảm bảo tính tinh gọn.
 
-```powershell
-& "P:\agent-rules\codex\scripts\install-antigravity-adapter.ps1" `
-  -ProjectRoot "P:\du-an-cua-ban" `
-  -LegacyAgentSingular
-```
+## Quy trình Đọc đầu tiên (First-Read Entry Point)
 
-## Cách dùng trong Antigravity
-
-- Dùng `/5fedu-project` khi muốn scaffold hoặc cập nhật context 5fedu cho repo.
-- Dùng `/codex-research` khi cần nghiên cứu có bằng chứng trước khi code.
-- Dùng `/runtime-sync-audit` khi cần kiểm tra `C:\Users\DELL\.codex` và `P:\agent-rules\codex` có lệch không.
+Khi bắt đầu một phiên làm việc, Agent không tự ý đọc toàn bộ các tệp cấu hình mà đi qua các cổng ưu tiên sau để tránh loãng ngữ cảnh:
+1. **KI Summary**: Nắm tổng quan các kịch bản/skills có sẵn.
+2. **`10-fast-context.md`**: Đọc nhanh cấu trúc nghiệp vụ của dự án cục bộ hiện tại.
+3. **Quy tắc đặc thù dự án**: Đọc riêng các file rules đặc thù (nếu có, ví dụ: `devconnect-xml-drawing.md` hoặc `.agents/5fedu/AGENTS.md`).
+4. **Lazy-load Skills**: Chỉ nạp chi tiết các skill tương ứng qua `view_file` khi thực sự cần chạy test hoặc cấu hình đặc biệt.
 
 ## Nguồn nghiên cứu
 
@@ -47,8 +43,10 @@ Nếu Antigravity trên máy đang dùng layout cũ `.agent`, mirror thêm:
 
 ## Ghi chú vận hành
 
-- Không đưa secret vào rule, workflow hoặc inventory.
-- Không gitignore `.agents/` nếu muốn Antigravity đọc workspace rules/workflows ổn định.
-- Không port `codex/agents/*.toml` sang Antigravity.
-- Rule phải ngắn. Workflow mới là nơi chứa quy trình nhiều bước.
-- Project nhiều repo nên cấu hình Antigravity Project với đủ folder liên quan thay vì bắt agent tự mò ngoài workspace.
+- **Không đưa secret** vào rule, workflow hoặc inventory.
+- **Không gitignore `.agents/`** để đảm bảo Antigravity đọc rules ổn định.
+- **Tách biệt tuyệt đối rules**: Mọi quy tắc đặc thù của dự án phải được viết thành file riêng (như `local-rules.md`), cấm chèn trực tiếp vào các file rules toàn cầu để tránh bị preflight đè dữ liệu.
+- **Không port `codex/agents/*.toml`** sang Antigravity.
+- **Rule phải ngắn**. Workflow mới là nơi chứa quy trình nhiều bước.
+- **Project nhiều repo** nên cấu hình Antigravity Project với đủ folder liên quan thay vì bắt agent tự mò ngoài workspace.
+
