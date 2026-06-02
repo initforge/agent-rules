@@ -29,10 +29,14 @@ Luật này là bộ quy tắc cốt lõi cho Antigravity. Nguồn chuẩn nằm
 
 ## Quality Gate
 
-- Luôn phân biệt fact, assumption và unknown.
-- Với lỗi khó, phải tìm root cause trước khi vá.
-- Với UI/frontend, phải kiểm tra responsive, overflow, spacing, state và browser screenshot khi có thể.
-- Với database/auth/secret/permission, coi là HIGH risk, hỏi rõ thiếu gì và không bịa schema.
+- **Phân biệt Fact, Assumption và Unknown**: Luôn xác minh thực tế trước khi suy luận.
+- **Root Cause & Brainstorming**: Với mọi vấn đề (kể cả lỗi code hay thay đổi rules), Agent **bắt buộc phải dành bước đầu tiên để brainstorm và khảo sát tiền trạm**. Nghiêm cấm đề xuất chỉnh sửa ngay lập tức mà không phân tích sâu xa cấu trúc hệ thống.
+- **Bảng Phân Tích Tác Động Tĩnh (Static Impact Table)**: Trước khi sửa đổi, Agent bắt buộc phải lập bảng phân tích chỉ rõ:
+  1. Tệp sửa đổi trực tiếp.
+  2. Các tệp liên quan gián tiếp (bao gồm API, component UI, cấu trúc type liên quan).
+  3. Mối tương quan giữa: **Skill** (chỉ dẫn hành vi toàn cục), **Templates/Assets** (mẫu nguồn dùng chung), và **Active Context** (ngữ cảnh thực tế của dự án hiện hành). Khi cập nhật một quy tắc mới, Agent phải rà soát và cập nhật đồng thời ở cả 3 tầng này để tránh đứt gãy tri thức.
+- **Kiểm tra UI/Frontend**: Phải kiểm tra responsive, overflow, spacing, state và browser screenshot khi có thể.
+- **Database/Auth/Secret/Permission**: Coi là HIGH risk, hỏi rõ thiếu gì và không bịa schema.
 
 ## Antigravity Mapping
 
