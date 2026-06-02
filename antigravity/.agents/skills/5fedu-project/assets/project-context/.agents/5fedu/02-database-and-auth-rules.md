@@ -139,3 +139,22 @@ Khi các thực thể nghiệp vụ có sự chồng chéo thông tin (như Nhâ
   - Bản ghi bảng lương (`vt_luong`): Cột `trang_thai` bằng `'Đã duyệt'`.
   - Bản ghi chuyến xe cha (`vt_chuyen_xe`): Cột `trang_thai` bằng `'Đã thực hiện'`.
   - **Khóa kế thừa (Cascading Lock)**: Nếu bản ghi chuyến xe cha (`vt_chuyen_xe`) đã ở trạng thái `'Đã thực hiện'`, toàn bộ các bản ghi chuyến con (`vt_chuyen_xe_ct`) liên kết với nó cũng tự động bị khóa (read-only) và không được phép sửa hay xóa, bất kể quyền hạn của người dùng đăng nhập là gì (trừ khi người dùng đó có `cap_bac = 1` hoặc quyền `quan_tri`).
+
+---
+
+## 5. Phòng Ngừa Lỗi Phát Sinh Chéo & Bảo Vệ Truy Vấn Dữ Liệu (Regression Protection)
+
+Để giảm thiểu tối đa hiện tượng "sửa chỗ này hỏng chỗ kia" và bảo đảm tính ổn định của các truy vấn dữ liệu:
+
+1. **Phân Tích Tác Động Tĩnh (Dependency Check)**:
+   - Trước khi thay đổi bất kỳ trường cơ sở dữ liệu nào, sửa API endpoint, hoặc cấu trúc dữ liệu truyền nhận, AI bắt buộc phải chạy `grep_search` trên toàn dự án để tìm tất cả các vị trí đang gọi/tham chiếu đến thực thể đó và cập nhật đồng loạt.
+
+2. **Đối Chiếu Schema Trực Tiếp (Remote DB Verification)**:
+   - AI bắt buộc sử dụng công cụ `browser_subagent` truy cập thẳng vào trang Supabase Dashboard hoặc chạy truy vấn SQL Editor trực tiếp để xác minh cấu trúc thực tế của bảng (bao gồm cột, kiểu dữ liệu, các chính sách RLS) trước khi thay đổi, tuyệt đối cấm đoán mò hoặc bịa cấu trúc DB.
+
+3. **Hủy Cache Đồng Bộ (Query Cache Invalidation)**:
+   - Khi thực hiện các hành động CRUD (Thêm, Sửa, Xóa) dữ liệu, AI bắt buộc phải invalidate cache tương ứng ở phía Frontend (ví dụ: gọi `queryClient.invalidateQueries(['key-dung-chung'])` hoặc trigger invalidate theo cache keys) để đồng bộ trạng thái mới ngay lập tức, tránh lỗi dữ liệu cũ đè lên dữ liệu mới.
+
+4. **Kiểm Tra Build & E2E**:
+   - Sau khi chỉnh sửa, AI phải tự chạy thử lệnh build (`npm run build`) cục bộ và dùng browser subagent để kiểm tra thực tế giao diện và các luồng CRUD cơ bản trên trang web đã được Vercel tự động build xong, đảm bảo không có bất kỳ regression nào gây hỏng trang.
+

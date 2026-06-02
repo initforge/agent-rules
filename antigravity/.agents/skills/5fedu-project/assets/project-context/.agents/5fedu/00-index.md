@@ -63,7 +63,12 @@
 2. **Bước 2: Cài đặt & Phòng vệ Hoisting**: Định nghĩa các callback handler ngay sau state ở đầu component. Cấm tham chiếu callback trong `useMemo`/`useCallback` trước dòng định nghĩa handler (tránh lỗi Temporal Dead Zone - TDZ).
 3. **Bước 3: Biên dịch Cục bộ (Local Compile Check)**: Trước khi commit, bắt buộc phải chạy `npm run build` hoặc `npm run type-check` cục bộ. Mọi lỗi biên dịch, TypeScript, hoặc import thiếu Lucide icons phải được sửa triệt để.
 4. **Bước 4: Browser Automation Test**: Dùng browser subagent/Playwright mở localhost, đăng nhập `admin` / `5fedu.com`, thực hiện chuỗi kiểm thử CRUD đầy đủ trên tính năng vừa sửa. Chụp ảnh/quay video màn hình làm bằng chứng.
-5. **Bước 5: Hậu kiểm Production (Verify-on-Production)**: Sau khi CI/CD tự động deploy lên Vercel, lặp lại Bước 4 trên live link để phát hiện các lỗi chặn cookie/bảo mật đặc thù của môi trường.
+5. **Bước 5: Hậu kiểm Production (Verify-on-Production)**: Sau khi Vercel tự động build và deploy từ GitHub push, lặp lại Bước 4 trên live link để phát hiện các lỗi chặn cookie/bảo mật đặc thù của môi trường.
+
+### D. Quy Trình CI/CD & Deploy Tự Động Trên Vercel
+1. **Tự động hóa CI/CD**: Mỗi khi AI chạy lệnh `git push` lên GitHub, hệ thống Vercel sẽ tự động deploy bản mới. AI không tự ý chạy các lệnh deploy thủ công khác.
+2. **Kiểm tra trạng thái từ xa (Remote Auditing)**: Thay vì đoán mò, AI bắt buộc sử dụng `browser_subagent` truy cập trang GitHub Commits (e.g. `https://github.com/tahdieuphoi-ctrl/TAH_app/commits/main/`) hoặc Dashboard Vercel để trực tiếp xác minh trạng thái build thành công (tích xanh) hay thất bại (nhân đỏ) trước khi báo cáo hoàn thành.
+
 
 ---
 
