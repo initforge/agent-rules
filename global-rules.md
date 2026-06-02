@@ -73,5 +73,9 @@ P:\agent-rules\codex
   - **Phân cấp Hành động (Action Hierarchies)**: Cấp Cha nắm giữ các hành động phê duyệt, chốt sổ (ví dụ: "Duyệt Chuyến", "Chốt Lương"). Cấp Con nắm giữ hành động báo cáo tiến độ thực thi thực tế (ví dụ: "Báo tiến độ OK", "Hoàn thành nhiệm vụ").
   - **Khóa kế thừa (Cascading Lock)**: Khi thực thể Cha được duyệt/chốt, toàn bộ các thực thể Con liên kết bắt buộc phải tự động rơi vào trạng thái Chỉ đọc (Read-only). Giao diện của dòng con (ở cả tab danh sách con lẫn bảng con nhúng bên trong Drawer cha) phải tự động ẩn/vô hiệu hóa các nút `Thêm`, `Sửa`, `Xóa`.
   - **Đồng bộ tính toán Reactive (Reactive Auto-Calculation)**: Mọi thao tác ghi/sửa/xóa ở dòng con phải lập tức trigger cập nhật các trường tổng hợp (số lượng, tổng tiền, tổng phí...) của dòng cha ở database, và UI của dòng cha phải lập tức reload dữ liệu (thông qua React Query invalidate) để hiển thị kết quả tính toán mới nhất mà không yêu cầu reload trang thủ công.
+- **Kỷ Luật Cấm Deploy Thủ Công Trên Production (No Manual Terminal Deployment Rule)**:
+  - *Bản chất quy tắc*: Hệ thống của 5fedu tuân theo cơ chế tích hợp liên tục (CI/CD) thông qua kết nối Git tự động (Vercel Git Integration) hoặc do lập trình viên/owner trực tiếp kiểm soát việc phát hành. Việc tự ý chạy lệnh deploy trực tiếp từ terminal (như `vercel --prod` hay tương đương) từ phía AI có thể gây xung đột trạng thái build, ghi đè không mong muốn các bản phân phối ổn định, hoặc lộ bí mật môi trường.
+  - *Quy tắc cứng*: AI tuyệt đối không bao giờ được tự chạy lệnh deploy ứng dụng lên production thông qua terminal. AI chỉ thực hiện sửa code, kiểm thử local để đảm bảo chất lượng, commit và push mã nguồn lên repository và báo cáo kết quả để hệ thống CI/CD tự động xử lý hoặc người dùng kiểm tra độc lập.
+
 
 
