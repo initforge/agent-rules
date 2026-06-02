@@ -66,11 +66,11 @@
 5. **Bước 5: Hậu kiểm Production (Verify-on-Production)**: Sau khi Vercel tự động build và deploy từ GitHub push, lặp lại Bước 4 trên live link để phát hiện các lỗi chặn cookie/bảo mật đặc thù của môi trường.
 
 ### D. Quy Trình CI/CD & Deploy Tự Động Trên Vercel
-1. **Tự động hóa CI/CD**: Mỗi khi AI chạy lệnh `git push` lên GitHub, hệ thống Vercel sẽ tự động deploy bản mới. AI không tự ý chạy các lệnh deploy thủ công khác.
-2. **Tuyệt Đối Cấm Deploy Bừa Bãi (No-Unverified-Pushes)**:
-   - Do mỗi commit push lên GitHub sẽ ngay lập tức kích hoạt bản cập nhật ứng dụng thật, AI **tuyệt đối không được phép push code** khi chưa chạy biên dịch cục bộ thành công (`npm run build` không lỗi) và kiểm thử thực tế trên trình duyệt cục bộ ổn định (localhost).
-   - Nghiêm cấm push code dở dang, code chứa mock ảo, hoặc code lỗi TypeScript/import làm đỏ/đổ vỡ ứng dụng trên live.
-3. **Kiểm tra trạng thái từ xa (Remote Auditing)**: Thay vì đoán mò, AI bắt buộc sử dụng `browser_subagent` truy cập trang GitHub Commits (e.g. `https://github.com/tahdieuphoi-ctrl/TAH_app/commits/main/`) hoặc Dashboard Vercel để trực tiếp xác minh trạng thái build thành công (tích xanh) hay thất bại (nhân đỏ) trước khi báo cáo hoàn thành.
+1. **Tự động hóa CI/CD**: Dự án đã được liên kết trực tiếp với repository GitHub để Vercel tự động build và deploy mỗi khi có commit mới trên nhánh `main`.
+2. **Tuyệt Đối Cấm Sử Dụng Vercel CLI (No-Vercel-CLI-Deployments)**:
+   - Nghiêm cấm AI chạy bất kỳ lệnh Vercel CLI nào (như `vercel`, `vercel link`, `vercel deploy`, `vercel --prod`). Việc sử dụng CLI sẽ tạo ra các bản deploy độc lập/trùng lặp ngoài luồng kiểm soát của GitHub, gây lãng phí tài nguyên và sai lệch môi trường.
+   - AI thực hiện `git push` như bình thường để cập nhật code. Trước khi push, nên chạy biên dịch cục bộ (`npm run build`) để tự tin mã nguồn không có lỗi cú pháp.
+3. **Kiểm tra trạng thái từ xa (Remote Auditing)**: Sau khi `git push`, AI bắt buộc sử dụng `browser_subagent` truy cập trang GitHub Commits hoặc Dashboard Vercel để trực tiếp xác minh trạng thái build thành công (tích xanh) trước khi báo cáo hoàn thành.
 
 
 ---
