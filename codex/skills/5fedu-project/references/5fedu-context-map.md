@@ -111,6 +111,7 @@ Hard owner-feedback gate:
 - Login uses fake email: user enters `admin`, app uses `admin@gmail.com`.
 - Disable registration by default.
 - Default account: username `admin`, password `5fedu.com`.
+- **Hard credential rule**: Admin password is ALWAYS `5fedu.com` — never change it, never use `123456` or any other value for admin. Regular user accounts default to `123456`. When writing seed/test scripts or browser subagent login: MUST use the correct password per this rule. When testing password-change features: use a dedicated test account, NEVER test on the main admin account.
 - Employee module fields should stay lean: `id`, `ho_va_ten`, `avatar`, `trang_thai`, `id_phong_ban`, `id_chuc_vu`, `so_dien_thoai`, `email`, `ten_dang_nhap`.
 - Creating or renaming `ten_dang_nhap` should create/delete a Supabase Auth account as `<ten_dang_nhap>@gmail.com` with default password `123456`, only after the secure implementation path is confirmed.
 - Login must use `ten_dang_nhap`, not `ma_nhan_vien`.
@@ -139,6 +140,16 @@ Default permission names:
 - If a module has tabs, the active tab must be represented in the router query as `?tab=<tab>`.
 - Search must cover all table fields and linked display fields. Example: searching creator name must work even if the table stores only `id_nguoi_tao`.
 - Notification is demo by default: icon shows demo state and clicking explains the feature is unavailable.
+
+## File Export / Download Convention (Chrome-hardened)
+
+- **Never use data URIs** for client-side file downloads. Chrome ignores the `download` attribute on data URIs and blob URLs created from them, resulting in UUID filenames.
+- **Never use library-native download methods** (`XLSX.writeFile()`, `jsPDF.save()`). Chrome may show the file in its download manager but NOT persist it to the Downloads folder.
+- **Always use `saveBlobAs()`** from `lib/utils.ts`:
+  - XLSX: `XLSX.write(wb, { type: 'array' })` → `new Blob([wbout])` → `saveBlobAs(blob, filename)`
+  - PDF: `doc.output('blob')` → `saveBlobAs(pdfBlob, filename)`
+  - CSV: `new Blob(['\uFEFF' + csvContent])` → `saveBlobAs(blob, filename)`
+- `saveBlobAs` uses anchor element + `dispatchEvent(new MouseEvent('click'))` + 15s cleanup delay. This makes Chrome treat it as a real user-initiated download → correct filename + persisted to disk.
 
 ## Required Questions Before Build
 

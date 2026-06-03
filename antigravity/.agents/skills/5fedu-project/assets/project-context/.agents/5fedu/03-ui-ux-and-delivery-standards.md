@@ -43,6 +43,19 @@ Tài liệu này quy định các quy chuẩn thiết kế giao diện (UI/UX), 
 - **Drawers Xếp Chồng (Stacked Drawers)**: Quản lý qua `nestedFormConfig` ở cấp trang cha. Khi Drawer con mở ra, sử dụng thuộc tính `stackLevel` để tự động thụt lề và đổ bóng chuẩn.
 - **Kế Thừa Trạng Thái Khóa (Cascading Locks)**: Khi dòng cha ở trạng thái đã phê duyệt/hoàn thành, toàn bộ các dòng con đi kèm phải tự động bị khóa (ẩn các nút sửa, xóa, báo tiến độ ở cả grid lẫn drawer chi tiết con).
 
+### Tối Ưu Hóa Trải Nghiệm Thao Tác & Quản Lý Tab (Interaction & Navigation Guard)
+- **Triệt Tiêu Tab Mini Trùng Lặp (No Duplicate Mini-Tabs)**:
+  - Các tính năng đã được quy hoạch ở phân hệ riêng (ví dụ: Báo cáo Thống kê Chuyến xe, Báo cáo Thống kê Lương đã có trong các module thống kê chuyên biệt) thì **tuyệt đối không được nhúng lại thành các tab phụ (mini-tabs) trong trang danh sách của phân hệ chính** (như Chuyến xe, Bảng lương).
+  - Tránh trùng lặp chức năng, làm rối loạn luồng đi của người dùng và làm giảm hiệu năng load trang.
+  - Nếu một phân hệ chỉ còn một tab danh sách duy nhất sau khi loại bỏ tab trùng lặp, phải loại bỏ hoàn toàn `TabGroup` để trực tiếp hiển thị bảng dữ liệu chính (tương tự trang Địa điểm).
+- **Cơ Chế Xác Nhận Tuyệt Đối Trước Khi Thao Tác (Absolute Action Confirmation Gate)**:
+  - Mọi nút hành động thay đổi dữ liệu hoặc thay đổi trạng thái trực tiếp trên giao diện (ví dụ: "Báo tiến độ OK" trong bảng con, "Báo tiến độ OK" trên toolbar chi tiết, hoặc các nút đổi trạng thái hàng loạt "Chưa thực hiện", "Đã thực hiện", "Hủy chuyến", "Kích hoạt", "Ngừng hoạt động") **bắt buộc phải đi kèm popup xác nhận (`confirm` dialog)**.
+  - Tuyệt đối không bao giờ cho phép thực thi thay đổi ngay lập tức (instant mutation) chỉ bằng một click chuột mà không có bước xác nhận an toàn từ phía người dùng.
+  - Sử dụng hàm `confirm` từ `useConfirmStore` của hệ thống để hiển thị popup xác nhận với các nhãn nút và thông điệp tiếng Việt tường minh rõ ràng (ví dụ: "Đồng ý", "Xóa", "Hủy").
+- **Cơ Chế Một Nút Thao Tác Trạng Thái Trên Toolbar Chi Tiết (Single Status Toolbar Button)**:
+  - Trên thanh toolbar chi tiết (`DetailToolbar`) của các thực thể chính (như Chuyến xe), nếu có các hành động thay đổi trạng thái tương đương nhau (như "Báo cáo" và "Đổi trạng thái" đều dẫn đến cập nhật trạng thái chuyến), **chỉ hiển thị một nút hành động chính, linh hoạt và đầy đủ nhất (ưu tiên nút "Báo cáo")**.
+  - Làm gọn toolbar chi tiết, tránh gây nhiễu và bối rối cho người dùng khi chọn giữa hai nút có bản chất tương tự nhau.
+
 ---
 
 ## 2. Kỷ Luật Biên Dịch & Code Hygiene

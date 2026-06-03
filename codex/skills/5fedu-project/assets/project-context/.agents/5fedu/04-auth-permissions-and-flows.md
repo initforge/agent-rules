@@ -91,6 +91,16 @@ Quy tắc: đứng ở đâu quay lại đó.
    - Khi thực hiện CRUD Nhân viên, nếu API đồng bộ Auth (`/api/employee-auth-sync`) trả về lỗi hoặc thiếu các biến môi trường cấu hình Supabase Admin Keys trên môi trường Production/Vercel (gây ra lỗi `Supabase admin env is missing`), luồng nghiệp vụ chính vẫn phải được tiếp tục thực thi thành công ở tầng database.
    - Riêng tác vụ xóa nhân viên (`operation === 'delete'`), hoặc bất kỳ tác vụ nào gặp lỗi thiếu cấu hình (`env is missing`), tầng service phải tự động catch lỗi, ghi log cảnh báo và tiếp tục thực hiện lệnh xóa/chỉnh sửa database mà không được phép ném lỗi (throw error) chặn thao tác của người dùng.
 
+## Checklist Triển Khai Phân Quyền (Implementation Verification — QUY TẮC CỨNG)
 
+**Mỗi khi viết hoặc sửa code liên quan đến phân quyền, AI bắt buộc phải tự kiểm tra toàn bộ pipeline dữ liệu sau:**
+
+- [ ] **Store đã khai báo đủ trường?** — `usePermissionGrantStore` phải có: `matrixActive`, `grantsByModule`, `capBac`, `employeeRecord` (bản ghi nhân viên từ `var_nhan_vien` khớp với user đang đăng nhập).
+- [ ] **Hook hydrate đã tải đủ dữ liệu?** — `use-hydrate-position-permissions.ts` phải tải: (1) quyền theo chức vụ từ `var_phan_quyen`, (2) `cap_bac` từ `var_chuc_vu`, (3) bản ghi nhân viên từ `var_nhan_vien` theo `ten_dang_nhap`.
+- [ ] **`lib/permissions.ts` có dùng biến nào chưa được populate không?** — Grep tất cả các biến được sử dụng trong các hàm `can()`, `filterRowsByPermissions()`, `canEditRow()`, `canDeleteRow()`, `canApproveRow()`, `canAddChildRow()` và đối chiếu với Store.
+- [ ] **Các Module Factory đã truyền đúng tham số?** — `createFeatureModule`, `createFlatListFeatureModule`, `createHierarchyFeatureModule` phải lấy `employeeRecord` từ store và truyền vào `filterRowsByPermissions`.
+- [ ] **Đã test/trace cho cả 3 cấp bậc?** — Admin (cap_bac=1), Trưởng phòng (cap_bac=2), Nhân viên (cap_bac≥3).
+
+**Nếu bất kỳ mục nào FAIL → KHÔNG được báo hoàn thành task.**
 
 
