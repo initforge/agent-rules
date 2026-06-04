@@ -50,6 +50,8 @@ Tài liệu này quy định các quy chuẩn thiết kế giao diện (UI/UX), 
 - **Ngăn Chặn Sai Lệch Dữ Liệu**: Khi mở form con từ chi tiết cha, bắt buộc điền sẵn ID của cha và khóa cứng (disabled) trường liên kết đó.
 - **Drawers Xếp Chồng (Stacked Drawers)**: Quản lý qua `nestedFormConfig` ở cấp trang cha. Khi Drawer con mở ra, sử dụng thuộc tính `stackLevel` để tự động thụt lề và đổ bóng chuẩn.
 - **Kế Thừa Trạng Thái Khóa (Cascading Locks)**: Khi dòng cha ở trạng thái đã phê duyệt/hoàn thành, toàn bộ các dòng con đi kèm phải tự động bị khóa (ẩn các nút sửa, xóa, báo tiến độ ở cả grid lẫn drawer chi tiết con).
+- **Không Bỏ Sót Bảng Con Nghiệp Vụ**: Nếu spec/database có quan hệ cha-con thật (ví dụ `vt_chuyen_xe` -> `vt_chuyen_xe_ct`), detail drawer của bản ghi cha bắt buộc có section bảng con để end user xem và thao tác chi tiết liên quan. Form thêm/sửa bản ghi cha phải có section con phù hợp: nếu chưa thể thêm con trước khi có ID cha thì hiển thị hướng dẫn rõ và cho thêm con ngay sau khi lưu/mở detail, không được bỏ trống như chỉ có form cha.
+- **Verify Master-Detail Theo Dữ Liệu Thật**: Khi sửa module cha-con phải test bằng record cha có ít nhất 2 dòng con trong database, đối chiếu tổng hợp/rollup ở cha và danh sách con trên FE. Không kết luận PASS chỉ vì CRUD cha chạy được.
 
 ### Tối Ưu Hóa Trải Nghiệm Thao Tác & Quản Lý Tab (Interaction & Navigation Guard)
 - **Triệt Tiêu Tab Mini Trùng Lặp (No Duplicate Mini-Tabs)**:
