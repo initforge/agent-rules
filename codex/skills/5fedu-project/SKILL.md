@@ -11,6 +11,13 @@ Keep 5fedu rules project-local by default. Do not expand the global `AGENTS.md` 
 
 `/5fedu` is for setup and context maintenance only. Once a repo has `AGENTS.md`, `.agents/5fedu/`, and `.codex/5fedu/`, ordinary coding work should rely on those project-local files without the user needing to call `/5fedu` again.
 
+Default loading policy:
+- Always read only the project entry/index first: `AGENTS.md`, `00-index.md`, decision/status file, `questions.md`, and source/spec map when available.
+- Read detailed context only when the task touches that domain.
+- Treat `10-owner-feedback-lessons.md` and `12-owner-feedback-transport-ui.md` as raw or semi-raw logs. Do not rely on them as the final rule layer if the lesson can be promoted.
+- When feedback creates a reusable rule, immediately promote it into the correct living rule file and sync both `.agents/5fedu` and `.codex/5fedu`.
+- Push is not automatic. For 5fedu, production verification normally requires code to be pushed and deployed, but push still requires a clear user request in the current session.
+
 ## 2. Workflow
 
 1. Inspect the target repo first. If `AGENTS.md`, `.agents/5fedu/`, or `.codex/5fedu/` already exists, read it before changing anything.
@@ -21,6 +28,7 @@ Keep 5fedu rules project-local by default. Do not expand the global `AGENTS.md` 
 6. Treat Supabase/auth/permission/database work as HIGH risk: create a locked plan, require credentials or mocks explicitly, verify behavior, and do not store secret values in docs.
 7. Treat owner feedback about UI/business flows as reusable gates, not one-off fixes. For transport apps, record list/detail/form/action/totals/combobox/print/approve requirements in project context before coding.
 8. When a template commit is provided, clone or update it under `.agents/template-source/` and record the exact commit in project context. Use it as the UI reference for list, detail, form, dashboard, toolbar, combobox, drawer, table, and mobile card patterns.
+9. Before reporting done, check whether new feedback or a repeated mistake requires context updates. If yes, update local context first, then sync mirrors.
 
 ## 3. Project Files Layout
 
@@ -66,6 +74,14 @@ Legacy expanded context files may also exist and should be preserved when presen
 - Treat `02-database-and-auth-rules.md` and `03-ui-ux-and-delivery-standards.md` as the active system rules.
   * **CRITICAL RULES EVOLUTION**: All resolved bugs or universal architectural lessons (e.g., `id int8` primary keys, `ten_dang_nhap` logins, pagination footer, Excel cell type `'n'`, PDF Unicode base64 fonts, TDZ hoisting prevention) MUST be promoted/moved to the respective Pillar 2 or Pillar 3 rule files. Do not keep them raw in the feedback backlog file to prevent context confusion.
 - Use `05-source-specs-and-coverage.md` to map Google Sheets columns and verify whether the current context covers the original 5fedu prompt/images.
+
+Living rule files:
+- `00-index.md`: execution contract, loading policy, production/local test policy.
+- `02-database-and-auth-rules.md`: database, schema, auth, permission, RLS, triggers, rollups.
+- `03-ui-ux-and-delivery-standards.md`: UI, UX, list/detail/form, toolbar, filter, export, responsive behavior.
+- `04-decision-status-and-backlog.md` and legacy `06-decision-status.md`: confirmed/unconfirmed/blockers.
+- `05-source-specs-and-coverage.md`: spec/source coverage.
+- `10` and `12`: logs only unless a project intentionally keeps archived evidence there.
 
 ## 4. Developer Lessons Learned (Anti-Patterns & Hard Gates)
 
@@ -114,9 +130,10 @@ Whenever the user provides correction, design guidance, or owner feedback during
 
 ### A. Local Learning (Workspace Level - First Priority)
 - Identify if the feedback relates to project-specific requirements, custom modules, or local UI tweaks.
-- **Immediately update or append** the lessons learned to the project-local context files at `.agents/5fedu/10-owner-feedback-lessons.md` / `.codex/5fedu/10-owner-feedback-lessons.md` or `.agents/5fedu/12-owner-feedback-transport-ui.md` / `.codex/5fedu/12-owner-feedback-transport-ui.md` in the active workspace.
-- **Promote core structural constraints** (like the `id int8` auto-incrementing schema rule, or auth fake email stack) directly into the project-local `AGENTS.md` file under the `## Owner Feedback Gate` section, elevating them to strict project-level rules.
-- Run the workspace preflight script (`antigravity-preflight.ps1` or similar hook) to automatically trigger the bidirectional sync: this ensures `.codex/5fedu/` and `.agents/5fedu/` folders in the workspace are identical.
+- Append raw wording only when useful to `10-owner-feedback-lessons.md` or `12-owner-feedback-transport-ui.md`.
+- Promote reusable lessons immediately into the correct living rule file. Do not leave important guidance only in `10` or `12`.
+- Promote core structural constraints into the project-local entry/index so every future task sees them.
+- Run a mirror sync script or preflight to keep `.codex/5fedu/` and `.agents/5fedu/` aligned. If both sides changed differently, stop and report the conflict instead of silently choosing the newer timestamp.
 
 ### B. Global Learning (Base Knowledge - Master level `P:\agent-rules`)
 - Determine if the feedback represents a **universal programming rule** or a **standard platform convention** that should apply to all current and future 5fedu projects (such as DB constraints, default credentials, or core architectural gates).
@@ -125,4 +142,16 @@ Whenever the user provides correction, design guidance, or owner feedback during
   2. Promote the core rules (like `id int8`) into the master template's `AGENTS.md` file under `## Owner Feedback Gate`.
   3. Update this `SKILL.md` under `## 4. Developer Lessons Learned`.
   4. Run `P:\agent-rules\scripts\sync-platform-skills.ps1` to sync the updated rules to `~/.codex` and other local runtime locations.
-  5. Notify the user of the new global baseline and commit changes to the master repository.
+  5. Notify the user of the new global baseline.
+  6. Do not commit or push unless the user explicitly requested it in the current session.
+
+### C. Universal Learning
+
+If feedback applies across tech stacks, promote it to the Codex global runtime rules under `P:\agent-rules\codex\rules\`, not into 5fedu-only files. Examples:
+- verification depth;
+- permission E2E discipline;
+- cleanup/gitignore policy;
+- root-cause evidence rules;
+- no secret values in docs.
+
+Keep 5fedu-only conventions in 5fedu context, such as admin password, Supabase fake-email login mapping, table naming conventions, TAH template parity, production-first verification, and transport module behavior.

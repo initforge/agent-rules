@@ -4,6 +4,8 @@
 
 Activate when writing, reviewing, refactoring, or testing code.
 
+These rules apply across tech stacks and languages. Project-specific rules can add stricter constraints, but cannot weaken the baseline unless the user explicitly approves a trade-off.
+
 ## Philosophy
 
 - Code is written for humans first.
@@ -141,6 +143,40 @@ Before cleanup/refactor, ask:
 - is this still within the requested task scope?
 
 If the answer is mostly "it just looks cleaner", do not prioritize it.
+
+## Cleanup and artifact rules
+
+Cleanup is allowed without asking when all are true:
+- the item is clearly generated, cache, temporary output, stale one-off script, duplicate backup, or unused artifact;
+- removing it cannot affect runtime behavior, build, tests, deploy, docs, or configured tools;
+- references were checked with `rg` or a stronger graph/tool when shared;
+- the cleanup is in the same task scope or happens before a requested push/commit.
+
+Before deleting scripts, configs, migrations, seed files, fixtures, generated clients, or docs:
+- check direct references with `rg`;
+- check package scripts, CI, hooks, workflows, and README/docs;
+- keep the file if it may still be an operational entrypoint;
+- when uncertain, move to a planned cleanup note instead of deleting.
+
+Gitignore policy:
+- ignore secrets, local env, cache, build output, test output, logs, screenshots/videos produced during verification, downloaded export files, and temporary one-off scratch files;
+- do not ignore source scripts that are part of build, test, sync, verification, migration, or runtime operation;
+- do not hide generated files required by the app unless the build regenerates them deterministically and docs say so.
+
+Protected agent/runtime files are not cleanup targets:
+- `AGENTS.md`
+- `.agents/AGENTS.md`
+- `.agents/hooks.json`
+- `.agents/rules/00-hard-activation-contract.md`
+- `.agents/rules/prompt-intent-router.md`
+- `.agents/rules/quality-gates.md`
+- `.agents/rules/technical-debt-control.md`
+- `.agents/workflows/*.md`
+- `.agents/skills/*/SKILL.md`
+- `.agents/5fedu/00-index.md`
+- `.codex/5fedu/00-index.md`
+
+Do not delete or gitignore these files as "unused context" or "duplicate rules". They preserve agent behavior and must only be changed intentionally.
 
 ## Testing
 

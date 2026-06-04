@@ -1,92 +1,66 @@
-﻿# Planning Rules
+# Planning Rules
 
 ## Trigger
 
-Activate planning when:
+Lập plan khi:
 
-- task touches 2 or more modules
-- task is ambiguous
-- task is MEDIUM or HIGH risk
-- task may require multiple turns
-- user asks for plan / "lap plan" / "chia task"
-- repo already has `plan/`
-- implementation must survive context compaction
-- external research or codebase map must be preserved
+- task chạm từ 2 module trở lên;
+- task mơ hồ;
+- task MEDIUM/HIGH risk;
+- task có thể cần nhiều lượt;
+- user yêu cầu plan/chia task;
+- repo đã có `plan/`;
+- cần giữ context qua compaction;
+- cần research hoặc codebase map có thể truy vết.
 
-Do not create locked plan when:
-
-- user is only discussing
-- task is LOW risk and obvious
-- user explicitly asks for a quick direct edit
-- approach is not converged yet
+Không tạo locked plan khi user chỉ thảo luận, task LOW risk rõ ràng, user yêu cầu sửa nhanh trực tiếp, hoặc hướng tiếp cận chưa hội tụ.
 
 ## Purpose
 
-A plan is an executable contract.
+Plan là executable contract: map, scope lock, context packet, risk register, verification contract và handoff memory.
 
-A plan is:
-- map
-- scope lock
-- context packet
-- risk register
-- verification contract
-- handoff memory
+Plan không phải transcript, raw research dump, full design doc, nơi paste full source file hoặc full test log.
 
-A plan is not:
-- transcript
-- raw research dump
-- full design document
-- place to paste full source files
-- place to paste full test logs
+## Draft Vs Locked Plan
 
-## Draft vs locked plan
+Draft plan:
+- dùng khi đang thảo luận;
+- có thể ở chat hoặc `plan/<feature>/draft.md`;
+- không executable;
+- có thể sửa mạnh.
 
-### Draft plan
+Locked plan:
+- dùng khi user đã duyệt hướng hoặc yêu cầu implement;
+- nằm dưới `<project_root>/plan/`;
+- phải có status, scope, acceptance criteria, verification và stop conditions;
+- phải update trước khi implementation lệch hướng.
 
-Use during discussion.
+## Folder Layout
 
-Rules:
-- Can be in chat or `plan/<feature>/draft.md`.
-- Not executable.
-- Implementer must not execute draft plans.
-- Can be heavily revised.
-
-### Locked plan
-
-Use when the user approved the approach or asked to implement.
-
-Rules:
-- Stored under `<project_root>/plan/`.
-- Executable by Codex.
-- Must include status, scope, acceptance criteria, verification, and stop conditions.
-- Must be updated before implementation deviates.
-
-## Folder layout
-
-For multi-stage work:
+Multi-stage work:
 
 ```text
 plan/<feature>/
-â”œâ”€ 00-index.md
-â”œâ”€ 01-<vertical-slice>.md
-â”œâ”€ 02-<vertical-slice>.md
-â”œâ”€ 03-<vertical-slice>.md
-â”œâ”€ research/
-â”œâ”€ review/
-â”œâ”€ decisions.md
-â””â”€ handoff.md
+|- 00-index.md
+|- 01-<vertical-slice>.md
+|- 02-<vertical-slice>.md
+|- 03-<vertical-slice>.md
+|- research/
+|- review/
+|- decisions.md
+`- handoff.md
 ```
 
 Numbering rules:
-- Use strict contiguous two-digit numbering: `00-index.md`, then `01-...md`, `02-...md`, `03-...md`.
-- Do not skip numbers.
-- Do not use sparse numbering such as `10`, `20`, `30`, `35`, or `60` unless the existing project already has that convention and the reason is documented in `00-index.md`.
-- Do not create a single large numbered plan like `60-production-readiness-audit.md` for multi-domain work.
-- If the work has more than 3 independently verifiable vertical slices, create a plan folder with `00-index.md` and one numbered file per slice.
-- If an existing large plan must be kept for historical context, move or treat it as an audit/research note and create a fresh contiguous execution plan from it.
-- To check plan layout mechanically, use `C:\Users\DELL\.codex\scripts\validate-plan-structure.ps1 -PlanRoot <repo>\plan`.
 
-For one small plan:
+- Dùng số hai chữ số liên tục: `00-index.md`, `01-...md`, `02-...md`, `03-...md`.
+- Không skip số.
+- Không dùng sparse numbering như `10`, `20`, `30`, `35`, `60` nếu project chưa có convention ghi rõ.
+- Không dùng một mega-plan cho HIGH risk hoặc multi-domain work.
+- Nếu có hơn 3 vertical slices verify độc lập, tạo folder plan với `00-index.md`.
+- Kiểm tra bằng `C:\Users\DELL\.codex\scripts\validate-plan-structure.ps1 -PlanRoot <repo>\plan`.
+
+One small plan:
 
 ```text
 plan/<slug>.md
@@ -94,36 +68,17 @@ plan/<slug>.md
 
 ## Granularity
 
-Prefer vertical slices, not arbitrary technical layers.
+Ưu tiên vertical slices, không chia tùy tiện theo layer kỹ thuật.
 
-Good:
-- `01-map-current-auth-flow.md`
-- `02-add-reset-request-service.md`
-- `03-add-reset-password-ui.md`
-- `04-regression-and-manual-qa.md`
+Mỗi plan file nên verify độc lập hoặc giải thích vì sao không thể.
 
-Bad:
-- `01-database.md`
-- `02-repository.md`
-- `03-ui.md`
-- `04-tests.md`
-- `60-production-readiness-audit.md` as the only execution plan for Git, secrets, database, CI, infra, API, frontend, and go-live work
+HIGH risk và multi-domain work phải split trước khi execute. Audit findings, readiness scoring và roadmap để trong `00-index.md`, `research/`, hoặc `review/`; executable work để trong `01-...md`, `02-...md`.
 
-Each plan file should be independently verifiable or clearly explain why not.
-
-High-risk and multi-domain work must be split before execution:
-- HIGH risk plans must not be one large execution file when they cover multiple domains.
-- Split by reviewable, independently verifiable vertical slices.
-- Keep audit findings, readiness scoring, and broad roadmap material in `00-index.md`, `research/`, or `review/`.
-- Keep executable work in `01-...md`, `02-...md`, and later slice files.
-- Each slice must have its own scope, acceptance criteria, verification contract, red flags, evidence, and iteration log.
-- A slice should be small enough to mark `done`, `blocked`, or `obsolete` without misrepresenting unrelated work.
-
-## Locked plan must include
+## Locked Plan Must Include
 
 - Goal
 - Context Packet
-- Scope: allowed and not allowed
+- Scope: allowed / not allowed
 - Invariants
 - Risk Register
 - Existing Risks / Test Gaps
@@ -137,100 +92,59 @@ High-risk and multi-domain work must be split before execution:
 - Evidence
 - Iteration log
 
-## Context Packet rule
+## Context Packet Rule
 
-A Context Packet should tell the implementer what to read and why.
+Context Packet nói implementer phải đọc gì và vì sao.
 
-It should include:
-- current behavior summary
-- relevant files and symbols
-- linked research notes
-- prior decisions
-- assumptions
-- non-goals
+Nên có:
+- current behavior summary;
+- relevant files and symbols;
+- linked research notes;
+- prior decisions;
+- assumptions;
+- non-goals.
 
-It should not include:
-- full files
-- raw logs
-- full docs copy
-- large pasted code
+Không chứa full files, raw logs, full docs copy hoặc large pasted code.
 
-## Minor amendment allowed
+## Amendments
 
-Codex may update the active plan and proceed when:
+Minor amendment được phép khi scope không đổi: path/symbol lệch nhẹ, verify command cần chỉnh local, test path khác, diff estimate lệch nhẹ, note path thay đổi, stale filename được sửa. Ghi vào `Iteration log`.
 
-- discovered path or symbol differs but scope is unchanged
-- verify command needs package-manager or local adjustment
-- test path differs but acceptance criteria remain unchanged
-- diff estimate changes slightly but remains under hard-stop budget
-- external research note path changes
-- stale file name is corrected
+Major amendment phải dừng khi behavior/API/schema đổi, thêm dependency production, chạm auth/payment/security/database migration/data deletion ngoài dự kiến, mở rộng file scope lớn, yếu acceptance criteria, red flag triggered, same failure lặp lại, hoặc hướng task đổi.
 
-Must log amendment in `Iteration log`.
-
-## Major amendment requires stop
-
-Stop and report `BLOCKED` when:
-
-- behavior, API, or schema must change
-- production dependency must be added
-- auth, payment, security, database migration, or data deletion is touched unexpectedly
-- allowed files expand materially
-- acceptance criteria must be removed or weakened
-- red flag is triggered
-- same failure repeats after retry budget
-- task direction changes materially
-
-## Plan lifecycle
+## Plan Lifecycle
 
 Status values:
+
 - `todo`
 - `doing`
 - `done`
 - `blocked`
 - `obsolete`
 
-Rules:
-- `todo`: not started
-- `doing`: actively being worked
-- `done`: acceptance + verification + evidence passed
-- `blocked`: needs user decision or environment/tool missing
-- `obsolete`: superseded/canceled, keep file and write reason
+Chỉ mark `done` khi acceptance, verification và evidence pass. Trước khi kết thúc lượt có chạm plan, update `Status`, `Last updated`, `Evidence`, `Iteration log`.
 
-Before ending a turn that touched a plan:
+## Plan Cleanup
 
-- update `Status:`
-- update `Last updated:`
-- update `Evidence`
-- update `Iteration log`
+Old plans giữ lại mặc định.
 
-## Plan cleanup
+Khi user yêu cầu xóa plan nhưng không nói “delete all” hoặc “xóa hết”:
 
-Old plans are retained by default.
+- record candidate path và `Status:` trước;
+- chỉ xóa plan `done` hoặc `obsolete`;
+- giữ `todo`, `doing`, `blocked`, và file không có status rõ;
+- không xóa `research/`, `review/`, `decisions.md`, `handoff.md` nếu user chưa nêu rõ.
 
-When the user says to delete plans without saying "delete all" or "xÃ³a háº¿t":
-- record the candidate path and `Status:` first
-- delete only plan files with `Status: done` or `Status: obsolete`
-- keep `todo`, `doing`, `blocked`, and files without a clear status
-- do not delete `research/`, `review/`, `decisions.md`, or `handoff.md` unless the user explicitly includes them
+Khi user nói “delete all plans”, “xóa hết plan”, hoặc tương đương:
 
-When the user explicitly says "delete all plans", "xÃ³a háº¿t plan", or equivalent:
-- record the plan paths and statuses first
-- delete all requested plan files/folders within the named `plan/` scope
-- still do not delete application code, docs outside `plan/`, or unrelated files
+- record plan paths và statuses trước;
+- xóa đúng scope `plan/` được yêu cầu;
+- không xóa application code, docs ngoài `plan/`, hoặc unrelated files.
 
-Use `C:\Users\DELL\.codex\scripts\cleanup-plans.ps1 -PlanRoot <repo>\plan -DryRun` before cleanup when possible.
-Use `-All` only when the user explicitly asks to delete all plans.
+Ưu tiên dry-run bằng `C:\Users\DELL\.codex\scripts\cleanup-plans.ps1 -PlanRoot <repo>\plan -DryRun`.
 
-## Compact resilience
+## Compact Resilience
 
-Before starting each plan file:
-- re-read `00-index.md`
-- re-read the active plan
-- re-read `decisions.md`
-- re-read `handoff.md`
-- read linked `research/` and `review/` notes
+Trước khi bắt đầu mỗi plan file: đọc lại `00-index.md`, active plan, `decisions.md`, `handoff.md`, linked `research/` và `review/` notes.
 
-After context compaction or long interruption:
-- re-read the active plan's `Iteration log`
-- do not rely on memory alone
+Sau context compaction hoặc gián đoạn dài: đọc lại `Iteration log`, không dựa vào trí nhớ.

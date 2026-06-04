@@ -1,4 +1,4 @@
-# Current Google Sheets Source Map
+﻿# Current Google Sheets Source Map
 
 Nguồn chính đã public và tải ngày 2026-05-31:
 

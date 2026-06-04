@@ -1,4 +1,4 @@
-# Decision Status
+﻿# Decision Status
 
 ## Quy ước trạng thái
 
@@ -64,7 +64,7 @@ Chỉ cập nhật một mục sang `DA_CHOT` khi người dùng xác nhận rõ
 | Google Sheets cần đọc bằng browser đã đăng nhập Google khi link cần auth | DA_CHOT | User yêu cầu ngày 2026-05-31 | Playwright headed đã mở để user đăng nhập, sau đó đọc sheet làm nguồn chính |
 | Google Sheet app/data/spec hiện tại | DA_CHOT | User gửi link public ngày 2026-05-31 | `1NY4sVW2GZaOjtZ-Mivq-B5PlXZPL_QEhbJjAJe_0ddg`, đã export vào `output/sheets/current/` |
 | Google Sheet dự án/quy tắc hiện tại | DA_CHOT | User gửi link public ngày 2026-05-31 | `1KF3Pe-N7S4DJm_6TKi9QXy4jXPKzqDmeLVHxgiuGoZY`, đã export vào `output/sheets/current/` |
-| Source map từ 2 Google Sheets | DA_CHOT | Phân tích export ngày 2026-05-31 | `.agents/5fedu/11-current-sheets-source-map.md` là tài liệu đối chiếu chính |
+| Source map từ 2 Google Sheets | DA_CHOT | Phân tích export ngày 2026-05-31 | `.codex/5fedu/11-current-sheets-source-map.md` là tài liệu đối chiếu chính |
 
 ## Cập Nhật Owner Feedback UI/Vận Tải 2026-05-31
 
@@ -111,6 +111,14 @@ Chỉ cập nhật một mục sang `DA_CHOT` khi người dùng xác nhận rõ
 | Quy tắc phân quyền chi tiết (xem/them/sua/xoa) theo cấp bậc, quan_tri, kiem_tra | DA_CHOT | User prompt 2026-06-03 | Đã hoàn thành cập nhật can() và filterRowsByPermissions() khớp 100% luật check |
 | Chuẩn hóa cây phân cấp và gom Thực thể con mồ côi (Orphaned Nodes rendering) | DA_CHOT | User prompt 2026-06-03 | Bắt buộc chọn phòng ban khi tạo chức vụ và gom các chức vụ mồ côi (không thuộc phòng ban) vào một nhóm giả lập cuối cùng trên UI để hiển thị và dọn dẹp. |
 | Tối ưu hóa Phòng ban cấp 2 (Sub-department Limits) | DA_CHOT | User prompt 2026-06-03 | Ẩn phần tạo phòng ban con đối với phòng ban đã ở cấp 2; ẩn ô nhập thứ tự đối với phòng ban con và gán mặc định bằng 1. |
+| Mật khẩu mặc định (Credentials Convention) | DA_CHOT | User prompt 2026-06-03 | Admin luôn dùng `5fedu.com`, người dùng thường mặc định `123456`. AI tuyệt đối không được đổi password admin hoặc dùng sai credentials khi test/seed. |\r
+| Xuất file Chrome (Download Convention) | DA_CHOT | User feedback 2026-06-03 | KHÔNG dùng data URI, KHÔNG dùng `writeFile()`/`doc.save()`. PHẢI dùng `saveBlobAs()` (Blob + anchor + MouseEvent dispatch + delay 15s). Đây là cách duy nhất Chrome vừa giữ đúng filename vừa persist file ra Downloads folder. |
+| Bảng lương dùng 3 trạng thái duyệt (Chưa duyệt / Đã duyệt / Không duyệt) | DA_CHOT | Owner feedback 2026-06-03 | Khớp template `TRANG_THAI_PHIEU_3`. Phiếu đã duyệt chỉ admin/cấp 1 mới thao tác được (isRowLocked). Có nút Duyệt + Từ chối (đơn lẻ, hàng loạt, drawer). |
+| Triệt tiêu tab mini Thống kê | DA_CHOT | User prompt 2026-06-03 | Loại bỏ tab Thống kê khỏi Chuyến xe và Bảng lương để tránh trùng lặp tính năng đã quy hoạch. |
+| Popup xác nhận đổi trạng thái | DA_CHOT | User prompt 2026-06-03 | Mọi nút hành động thay đổi trạng thái trực tiếp hoặc hàng loạt (Bulk/Single/Sub-grid) đều phải hiển thị popup confirm trước khi thực thi. |
+| Một nút Báo cáo trên toolbar Chuyến xe | DA_CHOT | User prompt 2026-06-03 | Ẩn nút "Đổi trạng thái" và chỉ giữ lại nút "Báo cáo" trên toolbar chi tiết của chuyến xe. |
+| Chuẩn hóa PDF Export & Font Preload | DA_CHOT | User prompt 2026-06-03 | Tránh race condition bằng Promise chung ở preloadRobotoFonts, nâng cấp PDF layout chuyên nghiệp (tiêu đề Navy in hoa, metadata căn giữa, format VND căn phải, footer phân trang) và đổi filename sang tiếng Việt. |
+
 
 
 

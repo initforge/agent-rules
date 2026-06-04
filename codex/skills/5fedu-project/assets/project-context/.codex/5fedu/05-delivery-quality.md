@@ -1,4 +1,4 @@
-# Delivery Và Quality Gates
+﻿# Delivery Và Quality Gates
 
 ## Code và thư mục
 
@@ -121,6 +121,33 @@ Từ feedback của chủ dự án về việc sửa đổi Auth và gộp bản
    - **Bài học rủi ro**: Khi xuất file Excel/PDF từ phía Client dưới dạng `data:` URI, trình duyệt Chrome có thể bỏ qua tên file/extension do chính sách bảo mật sandbox và tải file về dưới tên UUID không định dạng. Để giải quyết, tiện ích `triggerFileDownload` phải chuyển đổi `data:` URI thành Blob URL bằng `URL.createObjectURL`. Tuy nhiên, nếu base64 trong data URI bị URL-encode (ví dụ: chứa `%3D` thay cho `=`, `%2B` cho `+`), hàm `window.atob()` giải mã base64 sẽ quăng lỗi cú pháp, làm sập try-catch và fallback về link `data:` URI gốc, tái diễn lỗi tải file UUID.
    - **Quy tắc sửa đổi**: Trong hàm giải mã base64 của `triggerFileDownload`, bắt buộc phải gọi `decodeURIComponent(rawData)` để chuẩn hóa chuỗi base64 trước khi gọi `window.atob`. Điều này đảm bảo Blob URL luôn được sinh ra thành công đối với tất cả các link Excel/PDF/CSV, giữ nguyên tên file xuất bản.
 
+
+## 8. Kiểm Tra Đối Chiếu Phân Quyền Bắt Buộc (Permission Cross-Reference Gate — QUY TẮC CỨNG)
+
+**Bài học gốc**: Conversation trước đã triển khai row-level filtering bằng cách gọi `employeeRecord` từ store, nhưng store chưa bao giờ được hydrate trường này. Kết quả: tài khoản cấp 2/3/4 đăng nhập thấy bảng trống hoàn toàn. AI không tự phát hiện ra lỗi mà phải đợi owner gửi prompt thô nhắc lại quy tắc phân quyền.
+
+**Quy tắc cứng — AI phải tự thực hiện mỗi khi đụng vào code liên quan đến phân quyền, auth, role, cấp bậc, hoặc row-level filtering:**
+
+1. **Đối chiếu Context → Code (Spec-to-Code Trace)**:
+   - Mở và đọc lại `04-auth-permissions-and-flows.md` và `02-database-and-auth-rules.md`.
+   - Với MỖI quy tắc phân quyền trong context (xem/thêm/sửa/xóa theo `cap_bac`, `phong_id`, `id_nguoi_tao`, `id_tai_xe`, trạng thái duyệt/khóa), phải tìm được dòng code tương ứng trong `lib/permissions.ts` thực hiện đúng logic đó.
+   - Nếu không tìm thấy → báo lỗi thiếu triển khai, KHÔNG được bỏ qua.
+
+2. **Đối chiếu Code → Data Flow (Implementation-to-Runtime Trace)**:
+   - Với mỗi biến/trường mà `lib/permissions.ts` sử dụng (như `capBac`, `employeeRecord`, `id_phong_ban`, `grantsByModule`), phải trace ngược lên xác nhận:
+     - Biến đó được lưu ở đâu (store nào)?
+     - Được hydrate/populate khi nào (hook nào, API nào)?
+     - Có trường hợp nào biến đó bị `undefined`/`null` không?
+   - Nếu phát hiện biến chưa được populate → phải sửa ngay trong cùng PR, KHÔNG được để lại.
+
+3. **Kiểm tra end-to-end cho MỖI cấp bậc**:
+   - Sau khi code xong, phải kiểm thử (hoặc trace logic) cho ít nhất 3 kịch bản:
+     - Admin (`cap_bac=1` hoặc `role='admin'`): xem/sửa/xóa tất cả.
+     - Trưởng phòng (`cap_bac=2`): chỉ thấy dữ liệu cùng `id_phong_ban`, chỉ sửa/xóa khi chưa duyệt/khóa.
+     - Nhân viên (`cap_bac≥3`): chỉ thấy dữ liệu liên quan đến mình (`id_nguoi_tao`, `id_tai_xe`, hoặc `id` chính mình).
+   - Nếu chưa có tài khoản test cho một cấp bậc → phải tạo trước khi kiểm thử.
+
+4. **Không được báo hoàn thành** task liên quan đến phân quyền nếu chưa thực hiện đủ 3 bước trên.
 
 
 

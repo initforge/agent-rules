@@ -1,42 +1,47 @@
 # 5fedu Project Entry
 
-- Luôn đọc `.agents/5fedu/03-database-supabase.md` và `.agents/5fedu/04-auth-permissions-and-flows.md` trước khi làm database, auth, bảng nhân viên, migration, seed, service hoặc UI form liên quan.
-- Các lỗi đã bị owner phản hồi và không được lặp lại: `id` bảng app phải là `int8` tự động tăng, Supabase có hỗ trợ identity/bigserial, bảng nhân viên phải tối giản, login dùng `ten_dang_nhap` chứ không dùng `ma_nhan_vien`, và thêm/sửa/xóa username phải đồng bộ Supabase Auth user qua server/admin path.
-- **Quy tắc mật khẩu cứng**: Admin luôn dùng password `5fedu.com` — KHÔNG BAO GIỜ đổi hoặc dùng giá trị khác. Tài khoản người dùng thường mặc định `123456`. Khi viết script seed/test hoặc browser subagent login: BẮT BUỘC dùng đúng credentials này. Khi test tính năng đổi mật khẩu: dùng tài khoản test riêng, KHÔNG test trên admin.
-- Luôn đọc `.agents/5fedu/07-working-format.md` và `.agents/5fedu/05-delivery-quality.md` trước khi làm trang chủ, module vận tải, list/detail/form, combobox, in/xuất/duyệt, hoặc các trường tổng hợp tự tính.
-- Các lỗi UI/nghiệp vụ đã bị owner phản hồi và không được lặp lại: không dùng CRUD generic hời hợt cho module nghiệp vụ, không cho nhập tay tổng tiền/tổng chuyến phải tự tính, dropdown dữ liệu lớn phải dùng combobox, form/detail phải theo template, action in/duyệt phải tách khỏi form, detail tài xế/địa điểm/xe phải có lịch sử liên quan khi nghiệp vụ cần.
+Repo này dùng context project-local cho 5fedu. File này là con trỏ nhẹ, không phải nơi nhét toàn bộ rule chi tiết.
 
-Repo này dùng bộ context dự án 5fedu. File này chỉ là con trỏ nhẹ để tránh nạp toàn bộ context mỗi lượt.
+Người dùng không cần gọi `/5fedu` mỗi lần làm việc. `/5fedu` chỉ dùng để scaffold hoặc bảo trì context.
 
-Người dùng không cần gọi `/5fedu` để cấp context mỗi lần làm việc. Khi làm trong repo này, AI phải tự đọc file này và các tài liệu liên quan theo chính sách bên dưới. `/5fedu` chỉ dùng để scaffold ban đầu hoặc bổ sung/sửa bộ rule/docs/status của dự án.
+## Luôn Đọc Trước Khi Làm
 
-## Luôn đọc trước khi làm
+Đọc lớp index/mapping nhẹ:
 
-- `.agents/5fedu/00-index.md`: nguyên tắc nền và cách dùng bộ context.
-- `.agents/5fedu/06-decision-status.md`: trạng thái `DA_CHOT`, `CHUA_CHOT`, `CAN_HOI_THEM`.
+- `.agents/5fedu/00-index.md`: cách nạp context, execution contract, verify policy.
+- `.agents/5fedu/04-decision-status-and-backlog.md` hoặc `.agents/5fedu/06-decision-status.md`: trạng thái `DA_CHOT`, `CHUA_CHOT`, `CAN_HOI_THEM`.
 - `.agents/5fedu/questions.md`: câu hỏi còn mở.
-- `.agents/5fedu/11-current-sheets-source-map.md`: source map hiện tại từ 2 Google Sheets public, dùng để đối chiếu spec theo tab/ô.
+- `.agents/5fedu/05-source-specs-and-coverage.md` hoặc `.agents/5fedu/11-current-sheets-source-map.md` khi task cần đối chiếu spec/source.
 
-## Chỉ đọc khi liên quan
+Sau đó chỉ đọc file chi tiết khi task thật sự dính domain đó.
 
-- `.agents/5fedu/01-tech-stack-and-template.md`: khi scaffold app, clone/adapt template, kiểm tra stack, package, build/dev command.
-- `.agents/5fedu/02-frontend-mapping.md`: khi làm domain, submenu, module, route, view, tab, search, responsive UI.
-- `.agents/5fedu/03-database-supabase.md`: khi làm Supabase, schema, credentials, query, service, migration, storage/media, Google Sheets/AppSheet.
-- `.agents/5fedu/04-auth-permissions-and-flows.md`: khi làm đăng nhập, tài khoản, nhân viên, phân quyền, flow thao tác.
-- `.agents/5fedu/05-delivery-quality.md`: trước khi báo hoàn thành, verify, bàn giao, tối ưu Supabase Egress/Vercel Edge Function.
-- `.agents/5fedu/07-working-format.md`: khi cần hiểu format/cách làm mặc định của 5fedu cho app, template, credentials, database, permission, hoặc khi một dữ kiện cụ thể chưa chốt.
-- `.agents/5fedu/08-source-examples.md`: khi cần ví dụ cụ thể đã rút từ ảnh/spec ban đầu để tự suy luận đúng kiểu 5fedu.
-- `.agents/5fedu/09-coverage-audit.md`: khi cần kiểm tra rule/context hiện đã phủ các yêu cầu gốc nào và còn chỗ nào cần chốt.
+## Chỉ Đọc Khi Liên Quan
 
-## Quy tắc cứng
+- Database/auth/schema/permission/RLS/trigger/rollup: đọc `.agents/5fedu/02-database-and-auth-rules.md` và legacy `.agents/5fedu/03-database-supabase.md`, `.agents/5fedu/04-auth-permissions-and-flows.md` nếu có.
+- UI/UX/list/detail/form/toolbar/filter/export/responsive: đọc `.agents/5fedu/03-ui-ux-and-delivery-standards.md`, legacy `.agents/5fedu/05-delivery-quality.md`, `.agents/5fedu/07-working-format.md` nếu có.
+- Feedback cũ, lỗi nhắc lại, vận tải, hoặc owner correction: tìm trong `.agents/5fedu/10-owner-feedback-lessons.md` và `.agents/5fedu/12-owner-feedback-transport-ui.md`, sau đó kiểm tra bài học đã được promote vào rule sống chưa.
+- Template parity: với mọi task UI hoặc khi user nói UI/tính năng/module `chưa chuẩn`, `thiếu`, `không giống`, `chưa đủ`, phải đọc mapping trước, tìm `/template`, rồi đối chiếu golden reference gần nhất trước khi sửa.
 
-- Trước mỗi task trong repo này, xem kỹ `AGENTS.md`, `00-index.md`, `06-decision-status.md`, `questions.md`, rồi mới chọn tài liệu chi tiết cần đọc.
-- Scope dự án là làm full app A-Z theo template và spec đã đưa; không hỏi lại kiểu "làm module đầu tiên nào" hoặc "phase đầu là gì". Nếu cần chia nhỏ để an toàn, AI tự chia plan nội bộ và báo thứ tự thực hiện.
-- Không đoán module, route, bảng, cột, credentials, quyền hoặc flow khi trạng thái còn `CHUA_CHOT` hoặc `CAN_HOI_THEM`.
-- Khi dữ kiện cụ thể chưa chốt, vẫn phải follow khung format/cách làm trong `.agents/5fedu/07-working-format.md`; chỉ không được tự chọn giá trị cụ thể.
-- Khi người dùng đưa ít instruction, dùng `.agents/5fedu/07-working-format.md` làm khung và `.agents/5fedu/08-source-examples.md` làm ví dụ tham chiếu; vẫn hỏi nếu thiếu dữ kiện quyết định.
-- Khi người dùng chốt hoặc bổ sung rule mới, cập nhật file `.agents/5fedu/*.md` phù hợp và cập nhật `.agents/5fedu/06-decision-status.md`.
-- Không lưu secret thật vào repo hoặc tài liệu. Chỉ ghi tên biến môi trường, nơi cần cấu hình, và cách kiểm tra không in giá trị secret.
-- **Quy tắc cứng khi chỉnh sửa Frontend**: Phải suy luận chặt chẽ dựa trên template gốc nằm trong thư mục `/template` (đã checkout tại commit `47947e6eea0b1b7dc6723356f37f604e30ac690b`). Nếu nhận được feedback từ người dùng, bắt buộc phải đối chiếu lại với code của template. Trong trường hợp code hiện tại đã hoàn toàn chuẩn theo template mà người dùng vẫn phản hồi chưa đạt, **phải dừng lại và hỏi ngược người dùng ngay lập tức** kèm theo phân tích/suy luận rõ vị trí đang nói tới là ở đâu. Tuyệt đối cấm tự ý sửa đổi lung tung hay thay đổi sai lệch so với template chỉ để cố hoàn thành task cho xong.
-- **Xác thực bắt buộc trên Production**: Mọi tính năng, sửa đổi UI hoặc sửa lỗi phải được verify trực tiếp trên môi trường production/live thực tế (ví dụ: `https://tah-app.vercel.app`), không được chỉ kiểm tra ở môi trường local (vì môi trường local có thể tự sửa lỗi hoặc bỏ qua lỗi build/runtime như thiếu import hook React, gây sập trang khi lên live).
+## Quy Tắc Cứng
 
+- Không đoán module, route, bảng, cột, credential, quyền hoặc flow khi status còn `CHUA_CHOT` hoặc `CAN_HOI_THEM`.
+- Khi dữ kiện cụ thể chưa chốt, vẫn theo format/cách làm 5fedu đã chốt; chỉ hỏi phần giá trị còn thiếu.
+- Khi user chốt hoặc bổ sung rule mới, ghi log nếu cần, promote thành rule sống, cập nhật decision status, rồi sync `.agents/5fedu` với `.codex/5fedu`.
+- File `10` và `12` là log; không để rule quan trọng chỉ nằm ở đó.
+- Không lưu secret thật vào repo hoặc tài liệu.
+- Không tự push. Với 5fedu, production verification thường cần push/deploy, nhưng chỉ push khi user yêu cầu rõ trong session.
+- Mặc định verify 5fedu trên production sau khi thay đổi đã được push/deploy; nếu user yêu cầu test local thì ưu tiên local.
+- Nếu user yêu cầu `verify production hết`, không nhảy thẳng vào browser. Đọc index/mapping trước, suy ra module/role/database/UI/export/cross-flow, rồi mới nạp context chi tiết và chạy verify.
+- Với task UI, báo cáo cuối phải nêu `Template checked` hoặc lý do không thể kiểm template.
+- Với task vừa/lớn, production, UI, permission, database, export hoặc cleanup, báo cáo cuối phải có `Technical debt check`. Nợ nghiêm trọng trong scope phải sửa trước khi báo `PASS`.
+
+## Owner Feedback Gate
+
+- App table primary key mặc định là `id int8` auto-increment; foreign key tới app table cũng là `int8`.
+- Login dùng `ten_dang_nhap`; admin mặc định là `admin` / `5fedu.com`.
+- Tài khoản thường mặc định `123456`; không test đổi mật khẩu trên admin chính.
+- Supabase service role không bao giờ nằm ở client.
+- CRUD không được mock ảo khi feature đã yêu cầu thật.
+- Permission phải test đa tài khoản, đa cấp bậc, UI và API/database nếu có thể.
+- Dữ liệu liên module phải verify qua lại: module nguồn, module phụ thuộc, báo cáo, dropdown, rollup, cache/query.
+- Toolbar, filter, search, export, drawer, pagination và responsive behavior đều là bề mặt test thật.

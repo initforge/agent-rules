@@ -2,244 +2,72 @@
 
 ## Trigger
 
-Always activate before code changes.
+Áp dụng khi triển khai, sửa lỗi, review, refactor, test, bàn giao hoặc xác nhận production/local behavior.
 
-## Purpose
+## Nguyên Tắc
 
-Decide how much planning, verification, review, and stopping discipline is required.
+- Verify phải phản ánh hành vi thật của hệ thống, không chỉ chứng minh code compile.
+- Test phải bao phủ dữ liệu, quyền, UI, API, database, export, toolbar/filter và flow liên module khi các mặt trận đó liên quan.
+- Không báo `PASS` nếu verification cốt lõi có thể tự làm nhưng chưa làm.
+- Không sửa production/deploy/push nếu user chưa yêu cầu rõ.
 
-## Risk classification
+## Mặc Định Môi Trường Test
 
-### LOW risk
+- Dự án thường: test local mặc định, trừ khi user yêu cầu staging/production.
+- 5fedu: production là môi trường verify mặc định sau khi code đã được push và deploy qua CI/CD, trừ khi user yêu cầu test local.
+- Không tự push để mở production verify nếu user chưa yêu cầu trong session. Khi user đã yêu cầu push hoặc nói workflow này luôn push, được push theo đúng scope và phải kiểm tra CI/deploy sau đó.
 
-Examples:
-- docs or copy changes
-- simple UI text
-- test fixture
-- one-file obvious bug
-- grep or log summary
+## Smart Verification Activation
 
-Behavior:
-- direct edit allowed
-- minimal verification
-- no locked plan required unless user asks
+Khi user yêu cầu verify rộng như `verify production hết`, phải hiểu là verify theo hệ thống liên kết, không phải smoke test:
 
-### MEDIUM risk
+- Trước khi test: đọc context index/mapping để xác định module, role, database table, UI surface, export và cross-module flow liên quan.
+- 5fedu: dùng production sau khi thay đổi đã được push/deploy; nếu chưa được phép push thì dừng ở local/static verification và báo `PARTIAL`.
+- Dự án khác: mặc định local, trừ khi user chỉ định staging/production.
+- Báo cáo cuối phải nêu: context đã nạp, môi trường, URL nếu có, tài khoản/role đã test, database checks, UI/browser checks, export files, cross-module checks và gap còn lại.
 
-Examples:
-- normal feature with clear scope
-- bug across 2-6 files
-- scoped refactor
-- test updates tied to behavior change
-- feature slice with known files
+## Verification Matrix
 
-Behavior:
-- inspect callers and tests first
-- use plan when task has multiple slices or unclear dependencies
-- run relevant verification suite
-- final review before done when behavior changed
+Chọn các gate phù hợp theo rủi ro và bề mặt thay đổi:
 
-### HIGH risk
+- Build/type/lint: chạy lệnh phù hợp với stack.
+- Unit/integration: validators, mappers, services, state logic, permission logic.
+- Browser/UI: click thật qua flow liên quan, kiểm tra không crash, không overlap, không mất footer/pagination.
+- CRUD: create/read/update/delete bằng dữ liệu thật hoặc test data được phép.
+- Database: đối chiếu record trước/sau bằng query, schema, trigger, rollup, cascade, constraint, RLS/policy nếu có.
+- Permission: tạo hoặc dùng đủ account đại diện các cấp quyền; test từng account với full CRUD và truy cập trái phép qua UI/API nếu có thể.
+- Cross-module/cross-flow: dữ liệu thay đổi ở module này phải phản ánh đúng ở module liên quan, bảng tổng hợp, báo cáo, dropdown, cache/query.
+- Toolbar/filter/search: kiểm tra bulk action, row action, filter chip, column filter, reset, search; đối chiếu kết quả lọc với database hoặc source data.
+- Export/download: tải file thật; kiểm tra tên file, extension, nội dung, format, cell type với Excel, font Unicode/layout với PDF.
+- External integrations: nếu không có quyền/không thể kích hoạt thật như Zalo, payment, webhook bên ngoài, đọc code kỹ, kiểm tra config/error path, để lại verification gap rõ ràng cho user test.
 
-Examples:
-- auth, session, OAuth, permissions
-- security, secrets, crypto
-- payment, billing, pricing
-- database schema, migration, data deletion
-- concurrency, race, data loss
-- production incident, deployment, infra
-- broad architecture or refactor
+## Permission Gate
 
-Behavior:
-- locked plan required before edit
-- locked plan must be split into contiguous vertical-slice files when the work spans more than one domain
-- do not execute a single large HIGH risk plan file that mixes audit, roadmap, and implementation work
-- Risk Register required
-- Verification Contract required
-- reviewer gate required
-- max 1 auto-retry
-- pause after each plan file unless user explicitly says continue without pause
-- never skip verification
-- prefer dry-run or preview
-- flag irreversible operations and wait for permission
+Khi task liên quan auth, role, permission, row-level filtering, menu visibility hoặc API authorization:
 
-## Verification tiers
+1. Đọc rule/context permission liên quan.
+2. Trace spec -> code -> store/session -> API/database.
+3. Chuẩn bị account test đại diện các cấp quyền cần thiết.
+4. Với mỗi account, test ít nhất read/list/detail và các action được phép/không được phép.
+5. Đổi quyền hoặc role nếu feature hỗ trợ, đăng nhập lại hoặc refresh session để kiểm tra quyền áp dụng.
+6. Không báo hoàn thành nếu chỉ test admin.
 
-Tier 0 - Static:
-- format
-- lint
-- typecheck
-- analyze
+## Production Gate
 
-Tier 1 - Unit:
-- validators
-- pure functions
-- mappers
-- state notifiers
-- services
+Khi verify production:
 
-Tier 2 - Integration:
-- repository
-- API
-- state
-- database
-- auth flow across modules
+- Xác nhận đúng URL/site chính thức.
+- Xác nhận build/deploy mới nhất đã hoàn tất nếu có push.
+- Kiểm tra console/network lỗi nghiêm trọng.
+- Dùng test data an toàn; không phá dữ liệu thật nếu chưa được phép.
+- Nếu cần credential/MFA/session, hỏi đúng phạm vi và chỉ thao tác read/write đã được phép.
 
-Tier 3 - UI / Widget / E2E:
-- form behavior
-- navigation
-- responsive
-- visual states
-- browser smoke
+## Iteration Rule
 
-Tier 4 - Regression:
-- downstream callers
-- shared modules
-- public API surface
+Nếu verify phát hiện lỗi nghiêm trọng trong scope:
 
-Tier 5 - Risk-specific:
-- migration dry-run
-- rollback
-- race or double-submit
-- permission or security check
-- staging smoke
+1. Sửa tiếp.
+2. Chạy lại gate liên quan.
+3. Lặp cho đến khi đạt hoặc bị chặn bởi quyền/dữ liệu/môi trường.
 
-## Verify matrix examples
-
-Docs or copy:
-- preview or spell check if needed
-
-One-file logic:
-- lint or typecheck
-- unit test for touched function or module
-
-Validator or mapper:
-- valid input
-- invalid input
-- empty or boundary
-- malformed input
-
-Repository or API:
-- success path
-- network or dependency failure
-- auth or permission failure if relevant
-- integration or mock test
-
-UI form:
-- initial state
-- invalid input
-- loading state
-- success state
-- error state
-- double-submit
-- manual or visual smoke if needed
-
-Auth, session, security:
-- success
-- expired token
-- logout
-- route guard
-- no raw error leak
-- no account enumeration
-- regression tests
-
-DB migration:
-- dry-run
-- rollback
-- data integrity
-- idempotency if possible
-
-Concurrency:
-- double-submit
-- parallel request
-- retry behavior
-- idempotency
-
-Shared module or refactor:
-- caller impact
-- downstream tests
-- public API compatibility
-- regression suite
-
-Excel Export:
-- download file and verify cell types (numeric fields must be actual Number type, not String)
-- verify no green triangle warnings (Number stored as text)
-- verify `=SUM()` or similar functions work on exported columns
-- verify styling (header color, white bold text, center/right alignment, zebra striping)
-
-Build and deploy:
-- run local build compilation (`npm run build` or equivalent pre-flight build check) before commit
-- verify behavior on actual staging/production live environment (Verify-on-Production) instead of just local
-
-
-## Risk register requirements
-
-Every MEDIUM or HIGH plan must identify:
-
-- planned risks
-- existing risks
-- emergent risks
-
-Every HIGH plan must also identify:
-
-- execution slices and their order
-- what can be marked `done` independently
-- what requires user approval before the next slice
-- stop conditions that block the whole release versus only the current slice
-
-## Evidence requirement
-
-Do not say done without evidence:
-
-- commands run
-- pass or fail result
-- behavior scenarios verified
-- manual or visual artifacts if relevant
-- remaining risks
-
-Verification must be proactive:
-
-- tự chạy mọi kiểm tra khả thi trong phạm vi quyền hiện có trước khi hỏi người dùng hoặc báo thiếu verify;
-- không báo `PASS` khi phần verification cốt lõi vẫn chưa được kiểm tra dù agent có thể tự kiểm tra;
-- nếu thiếu quyền, credential, dữ liệu thật, hoặc môi trường nhạy cảm, nói rõ check bị chặn và cần quyền gì.
-
-## Reviewer gate
-
-Use review when:
-
-- HIGH risk
-- behavior changed
-- shared module touched
-- plan had major assumptions
-- tests were missing or flaky
-- external docs or API behavior was uncertain
-
-Reviewer focus:
-- correctness
-- regression
-- missing tests
-- security or data loss
-- scope creep
-- plan mismatch
-
-Ignore style-only comments unless they hide real correctness risk.
-
-## PASS / PARTIAL / BLOCKED
-
-PASS:
-- all acceptance criteria verified
-- no red flag
-- remaining risk none or explicitly acceptable
-
-PARTIAL:
-- useful work completed
-- some verification missing
-- environment, test, or tool unavailable
-- non-core risk remains
-
-BLOCKED:
-- user decision needed
-- plan invalid
-- hard stop triggered
-- missing credential or environment prevents core verification
-- destructive or risky action requires confirmation
+Chỉ dừng ở `PARTIAL` hoặc `BLOCKED` khi đã nêu rõ blocker và verification còn thiếu.

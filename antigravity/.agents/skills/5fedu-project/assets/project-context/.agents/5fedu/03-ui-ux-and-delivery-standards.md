@@ -6,6 +6,14 @@ Tài liệu này quy định các quy chuẩn thiết kế giao diện (UI/UX), 
 
 ## 1. Quy Chuẩn Thiết Kế Giao Diện (UI/UX Parity)
 
+### Template Parity Gate Bắt Buộc
+- Áp dụng cho mọi task dính UI 5fedu: list, detail, form, drawer, toolbar, filter, export, responsive, module mới, hoặc feedback kiểu `chưa chuẩn`, `thiếu`, `không giống`, `chưa đủ`.
+- Trước khi sửa hoặc kết luận thiếu: đọc index/mapping để xác định module, route, source file và spec/source map liên quan.
+- Tìm mẫu trong `/template` trước. Nếu có template trực tiếp, đối chiếu template với code hiện tại và chỉ sửa theo khoảng lệch thật.
+- Nếu `/template` không có mẫu trực tiếp, dùng golden reference gần nhất trong app. Mặc định list/detail/form/table/toolbar dùng `features/he-thong/nhan-vien` làm chuẩn tối thiểu.
+- Nếu user nói module/tính năng còn thiếu, phải phân biệt thiếu do template/spec yêu cầu, thiếu do rule sống, hay chỉ là phát hiện mới từ feedback. Phát hiện có giá trị tái sử dụng phải promote khỏi log `10`/`12` thành rule sống.
+- Báo cáo cuối phải nêu `Template checked: <path>` hoặc `Template checked: none, golden reference: <path>`.
+
 ### Nguyên Tắc Tham Chiếu Template Không Để Khoảng Trống (UI Parity - Zero Gaps)
 - **Quy tắc**: Khi phát triển một phân hệ mới (ví dụ: Chuyến xe, Địa điểm, Bảng lương, Xe, v.v.), Agent **bắt buộc phải lấy phân hệ Nhân viên (`features/he-thong/nhan-vien`) làm Golden Reference (Khuôn mẫu vàng)** để đối chiếu trực tiếp.
 - **Yêu cầu Zero Gaps**: Mọi phần tử giao diện trong phân hệ Nhân viên bắt buộc phải có mặt đầy đủ ở phân hệ mới ở mức độ trung thực cao nhất, bao gồm:
@@ -101,3 +109,27 @@ Trước khi bàn giao bất kỳ task nào, Agent bắt buộc phải vượt q
     - Sau khi CI/CD tự động deploy lên Vercel, lặp lại Bước 2 trực tiếp trên môi trường Live để đảm bảo tính năng không bị crash hoặc chặn do cấu hình CDN/cửa sổ bảo mật của trình duyệt.
 4.  **Kỷ Luật Cấm Deploy Thủ Công**:
     - AI tuyệt đối không chạy lệnh deploy trực tiếp ứng dụng lên production qua terminal (`vercel --prod` hoặc tương đương) để tránh xung đột trạng thái build và rò rỉ secrets. Chỉ commit, push mã nguồn để CI/CD xử lý tự động.
+## Universal Verification Gate For 5fedu UI
+
+Mỗi thay đổi UI hoặc flow nghiệp vụ phải verify như một hệ thống liên kết, không chỉ bấm thử nút vừa sửa.
+
+- Kiểm tra toolbar: bulk actions, row actions, dropdown actions, destructive actions, disabled/hidden states.
+- Kiểm tra filter/search: filter chip, column filter, reset, search theo trường trực tiếp và trường liên kết; đối chiếu kết quả với database/source data.
+- Kiểm tra list/detail/form/drawer: create, view, edit, delete, cancel, save, validation, refresh state, drawer state sau mutation.
+- Kiểm tra responsive: desktop list view và mobile card view nếu module có mobile behavior.
+- Kiểm tra export: tải file thật, mở/đọc file, xác nhận tên file, extension, dữ liệu, định dạng Excel/PDF/CSV.
+- Kiểm tra cross-module: dữ liệu thay đổi ở module này phải cập nhật đúng dropdown, báo cáo, bảng tổng hợp, module cha/con, cache/query ở module liên quan.
+- Nếu phát hiện lỗi nghiêm trọng trong scope, tự sửa và test lại cho đến khi đạt hoặc bị chặn bởi quyền/dữ liệu/môi trường.
+
+## Production Verification Default
+
+Với 5fedu, production là môi trường verify mặc định sau khi user đã yêu cầu push và CI/CD deploy xong. Không tự push chỉ để test production nếu user chưa yêu cầu rõ.
+
+Khi verify production:
+
+- xác nhận đúng site production;
+- xác nhận deploy mới nhất đã hoàn tất;
+- dùng dữ liệu test an toàn;
+- kiểm tra console/network lỗi nghiêm trọng;
+- đối chiếu database sau CRUD hoặc export nếu feature ghi dữ liệu;
+- báo `PARTIAL` nếu thiếu credential/MFA/quyền hoặc không thể test external integration thật.

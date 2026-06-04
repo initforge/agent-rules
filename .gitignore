@@ -15,10 +15,15 @@ credentials.json
 # Backup files
 *.bak
 codex.bak*/
+*.tmp
+*.temp
+*.log
 
 # Python cache
 __pycache__/
 *.pyc
+.pytest_cache/
+.ruff_cache/
 
 # OS files
 .DS_Store
@@ -34,3 +39,22 @@ Thumbs.db
 # Antigravity local workspace rules
 /.agents/
 /.agent/
+
+# Runtime/test artifacts
+dist/
+build/
+coverage/
+test-results/
+playwright-report/
+output/
+downloads/
+*.qa.png
+*.qa.jpg
+*.qa.jpeg
+*.qa.webp
+*.qa.mp4
+*.trace.zip
+
+# One-off scratch scripts should live outside tracked runtime scripts.
+scratch/
+tmp/

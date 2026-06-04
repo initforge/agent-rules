@@ -1,4 +1,4 @@
-# Pillar 2: Database Design & Supabase Auth Sync
+﻿# Pillar 2: Database Design & Supabase Auth Sync
 
 Tài liệu này quy định các quy tắc thiết kế cơ sở dữ liệu (schema, primary/foreign keys), phân quyền, và cơ chế đồng bộ tài khoản người dùng với Supabase Auth.
 
@@ -157,4 +157,24 @@ Khi các thực thể nghiệp vụ có sự chồng chéo thông tin (như Nhâ
 
 4. **Kiểm Tra Build & E2E**:
    - Sau khi chỉnh sửa, AI phải tự chạy thử lệnh build (`npm run build`) cục bộ và dùng browser subagent để kiểm tra thực tế giao diện và các luồng CRUD cơ bản trên trang web đã được Vercel tự động build xong, đảm bảo không có bất kỳ regression nào gây hỏng trang.
+## Database, Permission And Cross-Data Verification Gate
+
+Khi task đụng database, auth, permission, role, row-level filtering, trigger, rollup hoặc service ghi dữ liệu:
+
+- Đối chiếu schema thật bằng query hoặc migration/source đáng tin cậy trước khi sửa.
+- Sau CRUD, query lại database để xác nhận record, field, audit column, foreign key và dữ liệu liên quan đúng.
+- Với trigger/rollup/cascade, kiểm tra bảng cha, bảng con, báo cáo và module liên quan sau `INSERT`, `UPDATE`, `DELETE`.
+- Với permission, tạo hoặc dùng đủ account đại diện các cấp quyền. Mỗi account phải test read/list/detail và full action được phép/không được phép trong scope.
+- Test truy cập trái phép qua URL/API nếu hệ thống có bề mặt đó.
+- Không chỉ test admin.
+- Nếu external integration không thể test thật, đọc code/config/error handling kỹ và ghi rõ verification gap.
+
+## 5fedu-Specific Baseline
+
+- App table primary key mặc định là `id int8` auto-increment.
+- Foreign key tới app table cũng dùng `int8`.
+- Login dùng `ten_dang_nhap`; admin mặc định `admin` / `5fedu.com`.
+- Tài khoản thường mặc định `123456`.
+- Supabase service role chỉ được dùng ở server/admin path, không nằm ở client.
+- Dữ liệu tự tính phải nhất quán ở database khi feature/báo cáo/export phụ thuộc vào nó.
 

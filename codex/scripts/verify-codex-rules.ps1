@@ -1,49 +1,37 @@
 $ErrorActionPreference = "Stop"
 
 $codexHome = "$env:USERPROFILE\.codex"
-
-$required = @(
-  "AGENTS.md",
-  "rules\core.md",
-  "rules\planning.md",
-  "rules\execution.md",
-  "rules\quality-gates.md",
-  "rules\context-tools.md",
-  "rules\tool-inventory.md",
-  "rules\clean-code.md",
-  "rules\codex-overlay.md",
-  "docs\tool-registry.md",
-  "docs\mcp-registry.md",
-  "docs\skills-registry.md",
-  "docs\skills-taxonomy.md",
-  "docs\codex-research-workflow.md",
-  "docs\profile-matrix.md",
-  "docs\clean-code-reference.md",
-  "docs\phase-orchestration.md",
-  "scripts\bootstrap-install-tools.ps1",
-  "scripts\verify-toolchain.ps1",
-  "scripts\inventory-current-machine.ps1",
-  "scripts\run-codex-research.ps1",
-  "scripts\resolve-workflow-profile.ps1",
-  "scripts\start-codex-phase.ps1",
-  "scripts\resolve-plan-profile.ps1",
-  "scripts\start-codex-from-plan.ps1",
-  "scripts\validate-plan-structure.ps1",
-  "scripts\cleanup-plans.ps1",
-  "scripts\install-antigravity-adapter.ps1"
-)
+$backupRoot = "P:\agent-rules\codex"
+$validator = Join-Path $codexHome "scripts\validate-runtime-context.ps1"
 
 Write-Host "== Codex home =="
 Write-Host $codexHome
 Write-Host ""
 
-foreach ($r in $required) {
-  $p = Join-Path $codexHome $r
-
-  if (Test-Path $p) {
-    Write-Host "[OK] $r"
+if (Test-Path -LiteralPath $validator) {
+  & $validator -Root $codexHome
+  if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+  }
+} else {
+  $fallback = Join-Path $backupRoot "scripts\validate-runtime-context.ps1"
+  if (Test-Path -LiteralPath $fallback) {
+    & $fallback -Root $codexHome
+    if ($LASTEXITCODE -ne 0) {
+      exit $LASTEXITCODE
+    }
   } else {
-    Write-Host "[MISSING] $r"
+    throw "Missing validate-runtime-context.ps1 in local runtime and backup"
+  }
+}
+
+if (Test-Path -LiteralPath $backupRoot) {
+  $backupValidator = Join-Path $backupRoot "scripts\validate-runtime-context.ps1"
+  if (Test-Path -LiteralPath $backupValidator) {
+    & $backupValidator -Root $backupRoot
+    if ($LASTEXITCODE -ne 0) {
+      exit $LASTEXITCODE
+    }
   }
 }
 

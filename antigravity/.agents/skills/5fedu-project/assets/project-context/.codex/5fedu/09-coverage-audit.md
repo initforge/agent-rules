@@ -1,4 +1,4 @@
-# Coverage Audit
+﻿# Coverage Audit
 
 ## Mục tiêu
 
@@ -20,7 +20,7 @@ Bộ context đã đủ để AI làm việc độc lập theo đúng hướng 5
 | Yêu cầu gốc | Đã phủ ở đâu | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
 | 5fedu có convention/rule/workflow riêng theo dự án | `AGENTS.md`, `00-index.md` | Đã phủ | Context nằm trong repo, không nhét full global |
-| AGENTS.md trong dự án hoặc băm nhỏ file và AGENTS.md kết nối | `AGENTS.md`, `.agents/5fedu/*.md` | Đã phủ | AGENTS là con trỏ nhẹ/loading policy |
+| AGENTS.md trong dự án hoặc băm nhỏ file và AGENTS.md kết nối | `AGENTS.md`, `.codex/5fedu/*.md` | Đã phủ | AGENTS là con trỏ nhẹ/loading policy |
 | Không làm phình global context | `AGENTS.md`, `00-index.md`, skill `5fedu-project` | Đã phủ | Global chỉ giữ `/5fedu` và skill scaffold/bảo trì |
 | Có slash để setup/bảo trì context 5fedu | `C:\Users\ADMIN\.codex\prompts\5fedu.prompt.md` | Đã phủ | Chỉ một slash `/5fedu` |
 | `/5fedu` không phải lệnh cấp context mỗi lần | `AGENTS.md`, `00-index.md`, `06-decision-status.md` | Đã phủ | Normal work tự đọc AGENTS/context |
