@@ -10,6 +10,7 @@
 @C:\Users\DELL\.codex\rules\clean-code.md
 @C:\Users\DELL\.codex\rules\technical-debt-control.md
 @C:\Users\DELL\.codex\rules\codex-overlay.md
+@C:\Users\DELL\.codex\rules\platform-boundary.md
 
 # Bộ Nạp Runtime Codex
 

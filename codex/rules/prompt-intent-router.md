@@ -14,7 +14,7 @@ Nếu prompt có các tín hiệu sau, kích hoạt gate tương ứng:
 
 - `verify production`, `test production`, `kiểm tra live`, `verify hết`: chạy Smart Verification Activation trong `quality-gates.md`.
 - `5fedu` hoặc đang trong repo 5fedu: đọc `AGENTS.md` và index/mapping trước.
-- `UI`, `giao diện`, `chưa chuẩn`, `thiếu`, `không giống`, `module thiếu`, `tính năng thiếu`: kích hoạt Template Parity Gate nếu là 5fedu; với dự án khác thì tìm design system/template/golden reference hiện có.
+- `UI`, `giao diện`, `chưa chuẩn`, `thiếu`, `không giống`, `module thiếu`, `tính năng thiếu`: kích hoạt Template Parity Gate nếu là 5fedu. Với 5fedu phải tìm `/template` trước, chỉ dùng reference pool/golden reference khi template thiếu hoặc không đủ hành vi. Với dự án khác thì tìm design system/template/reference hiện có.
 - `permission`, `phân quyền`, `role`, `account`, `RLS`, `auth`: kích hoạt Permission Gate và database/auth context.
 - `database`, `schema`, `migration`, `Supabase`, `SQL`, `trigger`, `rollup`: kích hoạt database/schema gate và root-cause verification.
 - `export`, `download`, `Excel`, `PDF`, `CSV`: kích hoạt export/download verification.
@@ -40,7 +40,7 @@ Với task MEDIUM/HIGH, production verify, 5fedu UI, permission, database, expor
 
 - `Intent detected`: ý đồ/gate chính.
 - `Context loaded`: entry/index/mapping và context chi tiết đã dùng.
-- `Template checked`: bắt buộc cho UI 5fedu; với dự án khác ghi design system/template/golden reference nếu có.
+- `Template checked`: bắt buộc cho UI 5fedu; với dự án khác ghi design system/template/reference nếu có.
 - `Verification`: lệnh, browser flow, DB/API/export checks.
 - `Technical debt check`: nợ phát sinh, nợ giảm, nợ còn lại, lý do chấp nhận nếu có.
 - `Status`: `PASS`, `PARTIAL`, hoặc `BLOCKED`.
@@ -63,7 +63,7 @@ C:\Users\DELL\.codex\templates\task-evidence-template.md
 
 Chọn mode theo bề mặt thật:
 
-- `5fedu-ui`: bắt buộc khi UI 5fedu cần template/golden reference.
+- `5fedu-ui`: bắt buộc khi UI 5fedu cần template-first/reference-pool evidence.
 - `production`: khi verify live/production.
 - `permission`: khi có role/account/auth/RLS.
 - `database`: khi có schema/query/mutation/trigger/rollup.

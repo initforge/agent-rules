@@ -9,14 +9,36 @@ Tài liệu này quy định các quy chuẩn thiết kế giao diện (UI/UX), 
 ### Template Parity Gate Bắt Buộc
 - Áp dụng cho mọi task dính UI 5fedu: list, detail, form, drawer, toolbar, filter, export, responsive, module mới, hoặc feedback kiểu `chưa chuẩn`, `thiếu`, `không giống`, `chưa đủ`.
 - Trước khi sửa hoặc kết luận thiếu: đọc index/mapping để xác định module, route, source file và spec/source map liên quan.
-- Tìm mẫu trong `/template` trước. Nếu có template trực tiếp, đối chiếu template với code hiện tại và chỉ sửa theo khoảng lệch thật.
-- Nếu `/template` không có mẫu trực tiếp, dùng golden reference gần nhất trong app. Mặc định list/detail/form/table/toolbar dùng `features/he-thong/nhan-vien` làm chuẩn tối thiểu.
+- Tìm mẫu trong `/template` trước. Nếu có template trực tiếp và đủ đáp ứng ngữ cảnh prompt/app, bám sát template đó; chỉ sửa theo khoảng lệch thật, đổi tối thiểu theo domain, không tự sáng tạo thêm UI/flow/behavior ngoài scope.
+- Chỉ dùng fallback/golden reference khi `/template` không có mẫu trực tiếp, mẫu template không đủ đáp ứng hành vi cần làm, hoặc đang đi vào ngõ cụt có bằng chứng. Fallback phải theo cùng loại hành vi, không theo module quen tay.
 - Nếu user nói module/tính năng còn thiếu, phải phân biệt thiếu do template/spec yêu cầu, thiếu do rule sống, hay chỉ là phát hiện mới từ feedback. Phát hiện có giá trị tái sử dụng phải promote khỏi log `10`/`12` thành rule sống.
 - Báo cáo cuối phải nêu `Template checked: <path>` hoặc `Template checked: none, golden reference: <path>`.
 
+### Context-Aware Template Fallback Matrix
+- Template là nguồn ưu tiên cao nhất. Nếu template có mẫu đủ tốt, agent phải bám theo template và không mở rộng giải pháp chỉ vì tìm được golden reference khác.
+- Không fallback một cách máy móc sang bất kỳ module cố định nào, kể cả `features/he-thong/nhan-vien`. Golden reference chỉ dùng khi template thiếu/không đủ/ngõ cụt và phải là tab/module có hành vi tương tự nhất với yêu cầu.
+- Khi cần fallback, agent phải research trong toàn bộ `/template` và app hiện tại theo reference pool: route/tab/module có hành vi giống, shared component, utility, service/query, file cấu hình, test hoặc export liên quan. Không dừng ở một module quen tay.
+- Chọn reference theo mức khớp: cùng behavior/output > cùng surface/layout > cùng data relationship > cùng permission/action pattern > cùng shared primitive. Nếu Nhân viên không có behavior cần tìm, bỏ qua Nhân viên và tìm tab/module khác phù hợp hơn.
+- Nếu task là list/table/toolbar/filter/pagination: ưu tiên `/template` list module, `GenericToolbar`, `GenericTable`, `TablePaginationFooter`, rồi golden reference list đang hoàn chỉnh nhất.
+- Nếu task là form/detail/drawer/master-detail: ưu tiên `/template` form/detail/drawer, `FormDrawerFooter`, `DetailToolbar`, `GenericSubTableSection`, rồi module có quan hệ cha-con tương tự.
+- Nếu task là print/in/PDF/export profile/report: ưu tiên tìm trong `/template` theo từ khóa `print`, `pdf`, `export`, `report`, `profile`, `@media print`, `jspdf`, `autoTable`. Reference tốt gồm `template/features/he-thong/nhan-vien/utils/print-employee-pdf.ts`, `EmployeeProfilePreviewPage`, `EmployeeProfilePreviewContent`, `export-stats-report`, `lib/utils exportToPDF`, `services/print-service`, `index.css @media print`, và cấu hình `jspdf` trong `vite.config/package.json`.
+- Nếu `/template` thiếu mẫu trực tiếp, tìm trong app hiện tại theo cùng hành vi trước khi tự viết mới. Ví dụ in bảng lương phải tìm `features/quan-ly-van-tai/bang-luong/utils/print-payroll-pdf.ts`, `PayrollPreviewPage`, `export-transport-report.ts`, hoặc các utility PDF/export đã có.
+- Nếu task là báo cáo/thống kê: tham chiếu `TransportReportPage`, `export-transport-report.ts`, `export-stats-report`, rules Excel/PDF và source data/database liên quan.
+- Nếu task là permission/menu/action visibility: tham chiếu permission modules, `Can`, `useCan`, `use-resource-permissions`, và test đa role; không chỉ copy layout.
+- Nếu task là import/export dữ liệu bảng: tham chiếu `ExportDialog`, `ImportDialog`, `exportToExcel/exportToPDF`, filtered data behavior, column search/filter và database/source data để đối chiếu.
+- Khi không có reference trực tiếp, agent phải tách task thành các bề mặt nhỏ hơn: trigger UI, data source, business calculation, output format, permission, verification. Chọn reference riêng cho từng bề mặt thay vì tạo một generic implementation.
+- Với ví dụ `in bảng lương`: hiểu là print/export PDF. Phải tham chiếu mẫu PDF/profile/report gần nhất, data/service bảng lương, rules PDF Unicode/font/layout, và verify bằng file PDF thật; không được chỉ thêm nút In hoặc sinh PDF sơ sài.
+
+### Anti-Dead-End Behavior
+- Không kết luận `không có trong template` sau một lần tìm hẹp hoặc sau khi chỉ xem một tab/module. Phải thử theo tên module, tên hành vi, từ đồng nghĩa nghiệp vụ, library/API liên quan, component dùng chung, utility, service, test và file cấu hình liên quan.
+- Không copy nguyên reference khác nếu template đã đủ. Reference ngoài template chỉ để tháo ngõ cụt hoặc bổ sung đúng phần thiếu.
+- Không biến một task nhỏ thành rewrite lớn. Nếu template đã có 80-100% hành vi cần dùng, giữ cấu trúc đó và chỉ thay dữ liệu/label/permission/calculation theo domain.
+- Không dừng ở UI nếu hành vi là data/export/permission. Phải tìm đúng mặt trận bị thiếu: service/query, schema, utility export, generated file, permission gate, toolbar behavior, filter state, database verification.
+- Nếu có nhiều reference phù hợp, chọn theo thứ tự: template trực tiếp -> template cùng behavior -> app hiện tại cùng behavior -> tab/module cùng surface và quan hệ dữ liệu -> utility/shared primitive. Báo rõ reference đã chọn và lý do không chọn reference quen thuộc hơn nếu nó thiếu hành vi cần làm.
+
 ### Nguyên Tắc Tham Chiếu Template Không Để Khoảng Trống (UI Parity - Zero Gaps)
-- **Quy tắc**: Khi phát triển một phân hệ mới (ví dụ: Chuyến xe, Địa điểm, Bảng lương, Xe, v.v.), Agent **bắt buộc phải lấy phân hệ Nhân viên (`features/he-thong/nhan-vien`) làm Golden Reference (Khuôn mẫu vàng)** để đối chiếu trực tiếp.
-- **Yêu cầu Zero Gaps**: Mọi phần tử giao diện trong phân hệ Nhân viên bắt buộc phải có mặt đầy đủ ở phân hệ mới ở mức độ trung thực cao nhất, bao gồm:
+- **Quy tắc**: Khi phát triển một phân hệ mới (ví dụ: Chuyến xe, Địa điểm, Bảng lương, Xe, v.v.), Agent phải lấy `/template` làm nguồn chuẩn đầu tiên. Chỉ khi template thiếu/không đủ/ngõ cụt thì mới dùng tab/module phù hợp nhất trong app để đối chiếu trực tiếp; reference đó phải cùng surface/hành vi/quan hệ dữ liệu, không mặc định Nhân viên.
+- **Yêu cầu Zero Gaps**: Mọi phần tử giao diện trong reference đã chọn bắt buộc phải được đối chiếu với phân hệ mới ở mức độ trung thực cao nhất khi phù hợp với ngữ cảnh, bao gồm:
   - **Thanh Toolbar**: Ô tìm kiếm text, bộ lọc trạng thái dạng Combobox, nút Reset bộ lọc, nút Thêm mới (icon + chữ), nút Xuất Excel (icon-only kèm tooltip), dropdown chọn số dòng hiển thị.
   - **Bảng dữ liệu (Grid)**: Cột STT tự động tăng, cột thông tin chính (kèm avatar hoặc icon), các cột dữ liệu trung gian có icon đại diện đầu cột, badge màu hiển thị trạng thái chuẩn, cột hành động `DataTableRowActions` (nút Sửa/Xóa ẩn trong menu ba chấm).
   - **Chân trang (`TablePaginationFooter`)**: Phân trang có số trang, tổng số bản ghi và các nút chuyển trang.

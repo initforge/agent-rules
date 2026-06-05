@@ -38,7 +38,7 @@ Không được để lại nợ loại này nếu có thể xử lý trong scop
 - permission chỉ test admin khi feature có phân quyền;
 - export không tải/mở file thật;
 - database write không đối chiếu record/policy khi có quyền;
-- UI 5fedu không đối chiếu template/golden reference;
+- UI 5fedu không đối chiếu `/template` trước, hoặc fallback sang reference không cùng behavior/surface khi template thiếu/không đủ;
 - context/rule mới chỉ nằm trong chat mà không promote/sync.
 
 ## Pre-Change Debt Check
@@ -138,7 +138,7 @@ C:\Users\DELL\.codex\templates\technical-debt-register.md
 ## 5fedu-Specific Debt Rules
 
 - Production-first verification là nợ nếu code đã push/deploy nhưng chưa verify production và không có blocker rõ.
-- UI không theo template/golden reference là nợ nghiêm trọng.
+- UI không theo `/template` khi template đủ, hoặc fallback reference không cùng behavior/surface khi template thiếu/không đủ, là nợ nghiêm trọng.
 - Generic CRUD hời hợt cho module nghiệp vụ là nợ kiến trúc và UX.
 - Derived totals cho phép nhập tay là nợ correctness/data.
 - Permission chưa test đa account/đa cấp là nợ permission.

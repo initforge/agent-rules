@@ -20,7 +20,7 @@ Sau đó chỉ đọc file chi tiết khi task thật sự dính domain đó.
 - Database/auth/schema/permission/RLS/trigger/rollup: đọc `.agents/5fedu/02-database-and-auth-rules.md` và legacy `.agents/5fedu/03-database-supabase.md`, `.agents/5fedu/04-auth-permissions-and-flows.md` nếu có.
 - UI/UX/list/detail/form/toolbar/filter/export/responsive: đọc `.agents/5fedu/03-ui-ux-and-delivery-standards.md`, legacy `.agents/5fedu/05-delivery-quality.md`, `.agents/5fedu/07-working-format.md` nếu có.
 - Feedback cũ, lỗi nhắc lại, vận tải, hoặc owner correction: tìm trong `.agents/5fedu/10-owner-feedback-lessons.md` và `.agents/5fedu/12-owner-feedback-transport-ui.md`, sau đó kiểm tra bài học đã được promote vào rule sống chưa.
-- Template parity: với mọi task UI hoặc khi user nói UI/tính năng/module `chưa chuẩn`, `thiếu`, `không giống`, `chưa đủ`, phải đọc mapping trước, tìm `/template`, rồi đối chiếu golden reference gần nhất trước khi sửa.
+- Template parity: với mọi task UI hoặc khi user nói UI/tính năng/module `chưa chuẩn`, `thiếu`, `không giống`, `chưa đủ`, phải đọc mapping trước và tìm `/template` trước. Nếu template đủ đáp ứng prompt/app thì bám sát template và đổi tối thiểu. Chỉ dùng golden reference khi template thiếu/không đủ/ngõ cụt; khi đó phải research nhiều tab/module theo behavior/output/surface/data/permission để chọn reference phù hợp nhất, không mặc định một module cố định.
 
 ## Quy Tắc Cứng
 

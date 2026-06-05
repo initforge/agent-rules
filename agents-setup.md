@@ -1,22 +1,24 @@
-﻿# HÆ°á»›ng Dáº«n Setup Agent Rules
+# Hướng Dẫn Setup Agent Rules
 
-ThÆ° má»¥c nÃ y lÃ  nÆ¡i lÆ°u báº£n sync, backup vÃ  bootstrap dÃ i háº¡n cho há»‡ agent.
+Thư mục này là nơi lưu bản sync, backup và bootstrap dài hạn cho hệ agent.
 
-## MÃ´ HÃ¬nh Chuáº©n
+## Mô Hình Chuẩn
 
-Runtime háº±ng ngÃ y:
+### Codex CLI
+
+Runtime hằng ngày:
 
 ```text
 C:\Users\DELL\.codex
 ```
 
-Báº£n sync vÃ  bootstrap:
+Bản sync và bootstrap:
 
 ```text
 P:\agent-rules\codex
 ```
 
-Loader tÆ°Æ¡ng thÃ­ch:
+Loader tương thích:
 
 ```text
 P:\agent-rules\global-rules.md
@@ -24,13 +26,43 @@ P:\agent-rules\clean-code.md
 P:\agent-rules\codex-overlay.md
 ```
 
-Ã nghÄ©a:
-- Codex cháº¡y tá»« file local dÆ°á»›i `C:\Users\DELL\.codex`.
-- `P:\agent-rules\codex` lÃ  báº£n mirror Ä‘á»ƒ restore mÃ¡y má»›i vÃ  backup.
-- File root dÆ°á»›i `P:\agent-rules` chá»‰ lÃ  loader má»ng Ä‘á»ƒ project cÅ© váº«n import Ä‘Æ°á»£c.
-- KhÃ´ng lÆ°u secret tháº­t trong rule, docs, skill, template hoáº·c inventory.
+Ý nghĩa:
+- Codex chạy từ file local dưới `C:\Users\DELL\.codex`.
+- `P:\agent-rules\codex` là bản mirror để restore máy mới và backup.
+- File root dưới `P:\agent-rules` chỉ là loader mỏng để project cũ vẫn import được.
 
-## Cáº¥u TrÃºc Hiá»‡n Táº¡i
+### Antigravity IDE
+
+Global rules (inject vào MỌI conversation):
+
+```text
+C:\Users\DELL\.gemini\GEMINI.md
+```
+
+Master source cho workspace rules:
+
+```text
+P:\agent-rules\antigravity\.agents\rules\
+```
+
+Workspace-local rules (mỗi project):
+
+```text
+<project-root>\.agents\rules\*.md   (phải có YAML frontmatter)
+```
+
+Ý nghĩa:
+- `~/.gemini/GEMINI.md` là global rules, tự inject vào mọi conversation.
+- Mỗi project có `.agents/rules/*.md` riêng, mỗi file PHẢI có YAML frontmatter (`description` + `alwaysApply`).
+- Không có frontmatter = Antigravity mặc định bỏ qua.
+- `hooks.json` KHÔNG hoạt động trong Antigravity IDE (chỉ cho Codex CLI).
+- Chi tiết kiến trúc: [docs/05-antigravity-activation-architecture.md](docs/05-antigravity-activation-architecture.md)
+
+### Không lưu secret
+
+Không lưu secret thật trong rule, docs, skill, template hoặc inventory.
+
+## Cấu Trúc Hiện Tại
 
 ```text
 P:\agent-rules\
@@ -38,7 +70,22 @@ P:\agent-rules\
 |- clean-code.md
 |- codex-overlay.md
 |- global-rules.md
-|- codex\
+|- .agents\               ← Workspace rules cho Antigravity (có frontmatter)
+|  |- AGENTS.md
+|  |- INTENT.md
+|  |- hooks.json
+|  |- rules\              ← Rules với YAML frontmatter
+|  |- skills\
+|  `- workflows\
+|- antigravity\            ← Master source cho Antigravity adapter
+|  |- .agents\
+|  |  |- rules\           ← Master rules (frontmatter source of truth)
+|  |  |- skills\
+|  |  `- workflows\
+|  |- scripts\
+|  |  `- add-rules-frontmatter.ps1
+|  `- README.md
+|- codex\                  ← Codex CLI runtime backup
 |  |- AGENTS.md
 |  |- RTK.md
 |  |- config.toml
@@ -50,19 +97,21 @@ P:\agent-rules\
 |  |- skills\
 |  |- docs\
 |  `- inventory\
-`- gemini\
+`- docs\
+   |- 01-technical-specification.md
+   |- 02-operations-and-sync.md
+   |- 03-maintenance-and-risks.md
+   |- 04-antigravity-adapter.md
+   `- 05-antigravity-activation-architecture.md
 ```
 
-## Restore TrÃªn MÃ¡y Má»›i
+## Restore Trên Máy Mới
 
-1. Äáº£m báº£o `P:\agent-rules\codex` tá»“n táº¡i.
-2. Copy vÃ o:
+### Codex CLI
 
-```text
-C:\Users\DELL\.codex
-```
-
-3. Cháº¡y:
+1. Đảm bảo `P:\agent-rules\codex` tồn tại.
+2. Copy vào `C:\Users\DELL\.codex`
+3. Chạy:
 
 ```powershell
 & "$env:USERPROFILE\.codex\scripts\verify-codex-rules.ps1"
@@ -70,34 +119,59 @@ C:\Users\DELL\.codex
 & "$env:USERPROFILE\.codex\scripts\inventory-current-machine.ps1"
 ```
 
-4. Äá»c vÃ  bá»• sung pháº§n cÃ²n thiáº¿u tá»«:
+4. Đọc và bổ sung phần còn thiếu từ:
 - `C:\Users\DELL\.codex\docs\bootstrap-new-machine.md`
 - `C:\Users\DELL\.codex\docs\tool-registry.md`
 - `C:\Users\DELL\.codex\docs\mcp-registry.md`
 - `C:\Users\DELL\.codex\docs\skills-registry.md`
 - `C:\Users\DELL\.codex\docs\profile-matrix.md`
 
-## Báº£o TrÃ¬ Háº±ng NgÃ y
+### Antigravity IDE
 
-Khi setup Codex local thay Ä‘á»•i:
+1. Đảm bảo `C:\Users\DELL\.gemini\GEMINI.md` tồn tại và chứa global rules ngắn cho mọi conversation.
+2. Copy/cài workspace rules từ `P:\agent-rules\antigravity\.agents\` vào `<project-root>\.agents\`.
+3. Chạy frontmatter script trên mỗi project:
+
+```powershell
+& "P:\agent-rules\antigravity\scripts\add-rules-frontmatter.ps1" `
+    -RulesDir "P:\du-an-cua-ban\.agents\rules"
+```
+
+4. Mở Antigravity IDE → dropdown "..." → Rules → verify "Always On" hiển thị đúng.
+
+## Bảo Trì Hằng Ngày
+
+Khi setup Codex local thay đổi:
 
 ```powershell
 & "$env:USERPROFILE\.codex\scripts\sync-codex-to-p.ps1"
 ```
 
-Khi restore tá»« báº£n sync:
+Khi restore từ bản sync:
 
 ```powershell
 & "$env:USERPROFILE\.codex\scripts\sync-p-to-codex.ps1"
 ```
 
-## Quy Táº¯c Váº­n HÃ nh
+Khi Antigravity rules thay đổi:
 
-- Runtime logic náº±m trong `C:\Users\DELL\.codex`.
-- Báº£n mirror bootstrap náº±m trong `P:\agent-rules\codex`.
-- File root `P:\agent-rules\*.md` chá»‰ lÃ  loader tÆ°Æ¡ng thÃ­ch.
-- Ná»™i dung hÆ°á»›ng tá»›i ngÆ°á»i dÃ¹ng pháº£i dÃ¹ng tiáº¿ng Viá»‡t cÃ³ dáº¥u Ä‘áº§y Ä‘á»§.
-- DÃ¹ng `codex-research` lÃ m lá»›p nghiÃªn cá»©u chÃ­nh.
-- DÃ¹ng `workflow-router` vÃ  metadata trong plan Ä‘á»ƒ route phase/profile.
-- DÃ¹ng clean-code thá»±c dá»¥ng: cleanup pháº£i giáº£m rá»§i ro, náº¿u khÃ´ng thÃ¬ Ä‘á»ƒ sau.
-- DÃ¹ng GitNexus trÆ°á»›c khi xÃ³a, Ä‘á»•i tÃªn, di chuyá»ƒn hoáº·c refactor code dÃ¹ng chung khi repo Ä‘Ã£ index.
+```powershell
+# Thêm/update frontmatter trên tất cả locations
+& "P:\agent-rules\antigravity\scripts\add-rules-frontmatter.ps1" -RulesDir "P:\agent-rules\antigravity\.agents\rules"
+& "P:\agent-rules\antigravity\scripts\add-rules-frontmatter.ps1" -RulesDir "P:\agent-rules\.agents\rules"
+& "P:\agent-rules\antigravity\scripts\add-rules-frontmatter.ps1" -RulesDir "P:\tahdieuphoi\.agents\rules"
+& "P:\agent-rules\antigravity\scripts\add-rules-frontmatter.ps1" -RulesDir "P:\FaBsolution\.agents\rules"
+```
+
+## Quy Tắc Vận Hành
+
+- Runtime logic Codex nằm trong `C:\Users\DELL\.codex`.
+- Bản mirror bootstrap nằm trong `P:\agent-rules\codex`.
+- Global Antigravity rules nằm trong `C:\Users\DELL\.gemini\GEMINI.md`.
+- Master Antigravity rules nằm trong `P:\agent-rules\antigravity\.agents\rules\`.
+- File root `P:\agent-rules\*.md` chỉ là loader tương thích.
+- Nội dung hướng tới người dùng phải dùng tiếng Việt có dấu đầy đủ.
+- Dùng `codex-research` làm lớp nghiên cứu chính.
+- Dùng `workflow-router` và metadata trong plan để route phase/profile.
+- Dùng clean-code thực dụng: cleanup phải giảm rủi ro, nếu không thì để sau.
+- Dùng GitNexus trước khi xóa, đổi tên, di chuyển hoặc refactor code dùng chung khi repo đã index.

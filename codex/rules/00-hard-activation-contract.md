@@ -44,7 +44,7 @@ Trước khi sửa hoặc verify:
 | Prompt signal | Gate bắt buộc |
 | --- | --- |
 | `verify production`, `verify production hết`, `test production`, `kiểm tra live` | Đọc mapping trước, suy ra module/role/database/UI/export/cross-flow, rồi mới verify production |
-| `UI`, `giao diện`, `chưa chuẩn`, `thiếu`, `không giống`, `module thiếu`, `tính năng thiếu` | Tìm `/template` hoặc golden reference trước khi sửa; với 5fedu phải có `Template checked` |
+| `UI`, `giao diện`, `chưa chuẩn`, `thiếu`, `không giống`, `module thiếu`, `tính năng thiếu` | Tìm `/template` trước; nếu template đủ thì bám sát và đổi tối thiểu, chỉ dùng golden reference khi template thiếu/không đủ/ngõ cụt; với 5fedu phải có `Template checked` |
 | `permission`, `phân quyền`, `role`, `account`, `auth`, `RLS` | Test đa account/đa cấp nếu có quyền; không chỉ test admin |
 | `database`, `schema`, `migration`, `Supabase`, `trigger`, `rollup` | Trace schema/service/query và verify database nếu có quyền |
 | `export`, `download`, `Excel`, `PDF`, `CSV` | Tải file thật và kiểm format/nội dung |
@@ -57,7 +57,8 @@ Khi đang ở 5fedu/TAH app:
 
 - Không phụ thuộc global rule thay cho project-local context.
 - `AGENTS.md` và `.agents/5fedu/00-index.md` là nguồn kích hoạt đầu.
-- UI task phải đi: mapping -> `/template` hoặc golden reference -> code hiện tại -> context rule -> sửa -> verify.
+- UI task phải đi: mapping -> `/template` trực tiếp -> code hiện tại -> context rule -> sửa tối thiểu -> verify. Chỉ thêm golden reference khi template thiếu, không đủ hành vi, hoặc có bằng chứng đang ngõ cụt.
+- Golden reference phải khớp loại hành vi, không fallback máy móc sang một module chung. Khi template thiếu/không đủ, phải research trong nhiều tab/module theo behavior/output/surface/data relationship/permission pattern để chọn reference phù hợp nhất. Ví dụ `in bảng lương` là print/export PDF: nếu `/template` không có payroll thì tìm `print`, `pdf`, `export`, `report`, `profile`, `jspdf`, `autoTable`, mọi tab/module có PDF/report/export tương tự, utility export, rồi mới thiết kế phần còn thiếu. Nếu `/template` đã có mẫu PDF/export đủ dùng thì bám sát mẫu đó, không tự chế luồng mới.
 - Production verify phải đi: mapping -> affected surfaces -> context domain -> deploy/build status -> browser/DB/export/cross-module checks.
 - Nếu user nói “chưa chuẩn” hoặc “thiếu”, phải coi đó là yêu cầu audit khoảng lệch với template/spec, không chỉ sửa một điểm bề mặt.
 

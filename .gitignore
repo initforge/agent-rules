@@ -36,8 +36,7 @@ Thumbs.db
 # MCP local configs
 *mcp_config*.json
 
-# Antigravity local workspace rules
-/.agents/
+# Antigravity workspace rules must be versioned so the IDE can activate them.
 /.agent/
 
 # Runtime/test artifacts

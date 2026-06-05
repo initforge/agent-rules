@@ -36,7 +36,7 @@ if ($missing.Count -gt 0) {
   exit 0
 }
 
-$message = "Antigravity hard activation ready. Read .agents/INTENT.md, .agents/AGENTS.md and .agents/rules/00-hard-activation-contract.md first. Final must include Status: PASS/PARTIAL/BLOCKED. For 5fedu: mapping first; template/golden reference before UI edits; production verify after context/domain gates; include Technical debt check. These guard files are protected runtime context, not cleanup artifacts."
+$message = "Antigravity hard activation ready. Read .agents/INTENT.md, .agents/AGENTS.md and .agents/rules/00-hard-activation-contract.md first. Final must include Status: PASS/PARTIAL/BLOCKED. For 5fedu: mapping first; template-first/reference-pool before UI edits; production verify after context/domain gates; include Technical debt check. These guard files are protected runtime context, not cleanup artifacts."
 
 [pscustomobject]@{
   injectSteps = @(

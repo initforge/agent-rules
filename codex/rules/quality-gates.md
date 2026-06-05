@@ -35,7 +35,7 @@ Chọn các gate phù hợp theo rủi ro và bề mặt thay đổi:
 - Browser/UI: click thật qua flow liên quan, kiểm tra không crash, không overlap, không mất footer/pagination.
 - CRUD: create/read/update/delete bằng dữ liệu thật hoặc test data được phép.
 - Database: đối chiếu record trước/sau bằng query, schema, trigger, rollup, cascade, constraint, RLS/policy nếu có.
-- Permission: tạo hoặc dùng đủ account đại diện các cấp quyền; test từng account với full CRUD và truy cập trái phép qua UI/API nếu có thể.
+- Permission: tạo hoặc dùng đủ account đại diện các cấp quyền; test từng account với full CRUD và truy cập trái phép qua UI/API/database khi có quyền. Nếu không có quyền test thật, phải trace code permission kỹ, nêu rõ phần chưa verify và báo `PARTIAL` hoặc `BLOCKED` theo mức rủi ro.
 - Cross-module/cross-flow: dữ liệu thay đổi ở module này phải phản ánh đúng ở module liên quan, bảng tổng hợp, báo cáo, dropdown, cache/query.
 - Toolbar/filter/search: kiểm tra bulk action, row action, filter chip, column filter, reset, search; đối chiếu kết quả lọc với database hoặc source data.
 - Export/download: tải file thật; kiểm tra tên file, extension, nội dung, format, cell type với Excel, font Unicode/layout với PDF.
@@ -51,6 +51,7 @@ Khi task liên quan auth, role, permission, row-level filtering, menu visibility
 4. Với mỗi account, test ít nhất read/list/detail và các action được phép/không được phép.
 5. Đổi quyền hoặc role nếu feature hỗ trợ, đăng nhập lại hoặc refresh session để kiểm tra quyền áp dụng.
 6. Không báo hoàn thành nếu chỉ test admin.
+7. Nếu không thể tạo/dùng account hoặc truy cập API/database để verify, không báo `PASS`; ghi rõ blocker, phần đã kiểm qua code, và phần cần user test.
 
 ## Production Gate
 

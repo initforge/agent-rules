@@ -103,7 +103,7 @@ Before writing database, auth, staff tables, migration, or UI components, the AI
 - **Database Verification**: Proactively view Supabase Dashboard or logs to inspect the real production database schema, RLS policies, and queries rather than guessing.
 
 ### D. Regression Prevention & Query Protection
-- **Dependency Checking**: Before modifying any database column, API endpoint, or TypeScript type, the AI MUST run `grep_search` across the codebase to identify and update all files referencing them.
+- **Dependency Checking**: Before modifying any database column, API endpoint, or TypeScript type, the AI MUST run `rg`, GitNexus, or the available code-search tool across the codebase to identify and update all files referencing them. Do not depend on a specific search tool name if that tool is not available in the current session.
 - **Query Cache Invalidation**: When modifying data, always invalidate the relevant React Query / SWR cache keys (e.g., calling `queryClient.invalidateQueries(['transport'])`) to prevent UI/query synchronization failures.
 - **Local E2E Verification**: Run a quick local build (`npm run build`) or visual E2E check after modifications to guarantee no query regression.
 

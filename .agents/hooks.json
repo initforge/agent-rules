@@ -1,0 +1,13 @@
+{
+  "codex-runtime-preflight": {
+    "enabled": true,
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/antigravity-preflight.ps1",
+        "timeout": 10
+      }
+    ]
+  }
+}
+

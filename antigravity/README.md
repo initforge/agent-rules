@@ -1,65 +1,85 @@
 # Antigravity Adapter
 
-Adapter này dịch runtime Codex trong `P:\agent-rules\codex` sang cấu trúc mà Google Antigravity đọc nhanh hơn: rules ngắn, workflows gọi được bằng slash command, hook/preflight tùy chọn, và README giải thích ý đồ.
+Adapter này dịch runtime Codex trong `P:\agent-rules\codex` sang cấu trúc mà Google Antigravity đọc: rules với YAML frontmatter, workflows, skills, và global rules file.
 
-## Ý đồ
+## ⚠️ QUAN TRỌNG: Codex vs Antigravity Khác Nhau Hoàn Toàn
 
-Codex runtime là nguồn chuẩn. Antigravity không nên nhận một prompt khổng lồ hoặc bản copy thô của toàn bộ `.codex`, vì như vậy dễ chậm, lệch ngữ cảnh và khó biết khi nào phải dùng skill/workflow nào.
+```text
+CODEX CLI:
+  .codex/AGENTS.md → @import rules/*.md → Đọc nội dung
+  Không cần frontmatter. Chỉ cần import path.
 
-Adapter này chia ý đồ thành ba lớp:
+ANTIGRAVITY IDE:
+  ~/.gemini/GEMINI.md → Tự inject vào MỌI conversation (global)
+  .agents/rules/*.md  → Đọc YAML frontmatter để quyết định kích hoạt
+  Không có frontmatter = agent KHÔNG ĐỌC = rules chết
+```
+
+**Tài liệu kiến trúc chi tiết**: [docs/05-antigravity-activation-architecture.md](../docs/05-antigravity-activation-architecture.md)
+
+## 3 Lớp Kích Hoạt
 
 | Lớp | File | Vai trò |
 |---|---|---|
-| Luật nền | `.agents/rules/*.md` | Luôn nhắc agent cách đọc repo, quản lý rủi ro, verify và không sửa lan |
-| Hợp đồng ý đồ | `.agents/rules/01-intent-contract.md` | Chốt cách Antigravity hiểu request và chọn workflow |
-| Quy trình gọi được | `.agents/workflows/*.md` | Tương đương slash command cho các case lặp lại như `/5fedu-project` |
-| Preflight | `scripts/antigravity-preflight.ps1` | Kiểm tra file bắt buộc trước khi bắt đầu task |
+| Global rules | `~/.gemini/GEMINI.md` | Inject vào MỌI conversation, MỌI workspace |
+| Workspace rules | `.agents/rules/*.md` với YAML frontmatter | `alwaysApply: true` = Always On, `false` = Model Decision |
+| Skills/Workflows | `.agents/skills/*/SKILL.md`, `.agents/workflows/*.md` | Kích hoạt theo trigger/request |
 
-Adapter này cố ý không cài profile/model config cho Antigravity. Model, effort và auto mode thuộc UI/runtime của Antigravity; nếu đang dùng Gemini 3.5 Flash medium thì để Antigravity tự quản. `codex/agents/*.toml` chỉ dành cho Codex CLI orchestration.
+## YAML Frontmatter Bắt Buộc
 
-## Cài vào một project Antigravity
+Mọi file `.agents/rules/*.md` PHẢI có frontmatter:
 
-```powershell
-& "P:\agent-rules\codex\scripts\install-antigravity-adapter.ps1" `
-  -ProjectRoot "P:\du-an-cua-ban"
+```yaml
+---
+description: Mô tả ngắn (1-3 câu) để agent hiểu khi nào cần đọc
+alwaysApply: true   # hoặc false
+---
 ```
 
-*Lưu ý:* Hệ thống hiện tại thống nhất sử dụng duy nhất thư mục `.agents` làm chuẩn chung để tránh trùng lặp tài nguyên. Mọi thư mục `.agent` (số ít) cũ sẽ được kịch bản preflight tự động dọn dẹp để đảm bảo tính tinh gọn.
+**Không có frontmatter = Antigravity mặc định "Model Decision" = thường bỏ qua hoàn toàn.**
 
-## Quy trình Đọc đầu tiên (First-Read Entry Point)
+Script thêm frontmatter: `antigravity/scripts/add-rules-frontmatter.ps1`
 
-Khi bắt đầu một phiên làm việc, Agent không tự ý đọc toàn bộ các tệp cấu hình mà đi qua các cổng ưu tiên sau để tránh loãng ngữ cảnh:
-1. **KI Summary**: Nắm tổng quan các kịch bản/skills có sẵn.
-2. **`10-fast-context.md`**: Đọc nhanh cấu trúc nghiệp vụ của dự án cục bộ hiện tại.
-3. **Quy tắc đặc thù dự án**: Đọc riêng các file rules đặc thù (nếu có, ví dụ: `devconnect-xml-drawing.md` hoặc `.agents/5fedu/AGENTS.md`).
-4. **Lazy-load Skills**: Chỉ nạp chi tiết các skill tương ứng qua `view_file` khi thực sự cần chạy test hoặc cấu hình đặc biệt.
+## Cài Adapter Vào Project
 
-## Nguồn nghiên cứu
+```powershell
+# Cài rules + entrypoints + frontmatter
+& "P:\agent-rules\codex\scripts\install-antigravity-adapter.ps1" `
+    -ProjectRoot "P:\du-an-cua-ban"
 
-- Antigravity Projects: https://www.antigravity.google/docs/projects
-- Antigravity Rules and Workflows: https://antigravity.google/docs/rules-workflows
-- Antigravity Hooks: https://www.antigravity.google/docs/hooks
-- Antigravity Knowledge Items: https://antigravity.google/docs/knowledge
-- Antigravity Permissions: https://antigravity.google/docs/permissions
+# Thêm frontmatter (nếu install script chưa thêm)
+& "P:\agent-rules\antigravity\scripts\add-rules-frontmatter.ps1" `
+    -RulesDir "P:\du-an-cua-ban\.agents\rules"
+```
 
-## Kết Luận Adapter Hiện Tại
+## Files KHÔNG Hoạt Động Trong Antigravity
 
-Antigravity chính thức hỗ trợ workspace rules trong `.agents/rules`, workflows, JSON hooks và Knowledge Items. Adapter này dùng cả bốn lớp, nhưng không đặt niềm tin tuyệt đối vào Knowledge Items vì KI là lớp memory tự động và có thể không kích hoạt đúng mọi lượt.
+| File | Lý do |
+|---|---|
+| `hooks.json` | Antigravity IDE không chạy hook scripts. Đây là format Codex CLI. Giữ cho tương lai nhưng không dựa vào |
+| `agents/*.toml` | Profile/model config chỉ cho Codex CLI orchestration |
+| `.codex/AGENTS.md` | Chỉ Codex CLI đọc `.codex/` |
+| Rules không frontmatter | Antigravity bỏ qua |
 
-Thứ tự ép hành vi:
+## Quy trình Đọc đầu tiên
 
-1. Project-local entrypoints: `AGENTS.md`, `.agents/AGENTS.md`, `.agents/rules/00-hard-activation-contract.md`.
-2. Fast preflight hook: `scripts/antigravity-preflight.ps1`, chỉ kiểm guard files và inject hard activation message.
-3. Workspace rules/workflows: `.agents/rules/*.md`, `.agents/workflows/*.md`.
-4. Knowledge Item cache: `C:\Users\DELL\.gemini\antigravity\knowledge\agent-rules-runtime`, dùng như memory phụ trợ.
-
-Không được dùng KI thay cho rules/hook. KI chỉ giúp Antigravity gợi nhớ; enforcement nằm ở project-local rules và hook.
+1. **Global**: `~/.gemini/GEMINI.md` tự inject
+2. **Always On rules**: 9 files có `alwaysApply: true` tự inject
+3. **Model Decision rules**: 6 files có description, agent tự quyết
+4. **Skills**: `SKILL.md` đọc khi agent thấy relevant
+5. **5fedu context**: `.agents/5fedu/00-index.md` đọc khi task liên quan 5fedu
 
 ## Ghi chú vận hành
 
 - **Không đưa secret** vào rule, workflow hoặc inventory.
 - **Không gitignore `.agents/`** để đảm bảo Antigravity đọc rules ổn định.
-- **Tách biệt tuyệt đối rules**: Mọi quy tắc đặc thù của dự án phải được viết thành file riêng (như `local-rules.md`), cấm chèn trực tiếp vào các file rules toàn cầu để tránh bị preflight đè dữ liệu.
+- **Rule phải ngắn** (< 12,000 ký tự/file). Workflow mới là nơi chứa quy trình nhiều bước.
 - **Không port `codex/agents/*.toml`** sang Antigravity.
-- **Rule phải ngắn**. Workflow mới là nơi chứa quy trình nhiều bước.
-- **Project nhiều repo** nên cấu hình Antigravity Project với đủ folder liên quan thay vì bắt agent tự mò ngoài workspace.
+- **Project nhiều repo** nên cấu hình Antigravity Project với đủ folder liên quan.
+- Nội dung hướng tới người dùng phải dùng tiếng Việt có dấu đầy đủ.
+
+## Nguồn tham khảo
+
+- [Kiến trúc kích hoạt chi tiết](../docs/05-antigravity-activation-architecture.md)
+- [Đặc tả kỹ thuật](../docs/01-technical-specification.md)
+- [Vận hành và đồng bộ](../docs/02-operations-and-sync.md)

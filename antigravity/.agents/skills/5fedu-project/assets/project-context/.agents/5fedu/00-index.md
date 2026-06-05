@@ -33,7 +33,7 @@ Luôn đọc trước:
 Khi prompt có tín hiệu rộng, agent phải tự kích hoạt nhanh gate tương ứng:
 
 - `verify production hết`, `test production`, `kiểm tra live`: đọc index/mapping trước, suy ra module/role/database/UI/export/cross-flow, rồi mới verify production.
-- `UI`, `chưa chuẩn`, `thiếu`, `không giống`, `module thiếu`, `tính năng thiếu`: đọc mapping, tìm `/template`, nếu không có thì dùng golden reference gần nhất trước khi sửa.
+- `UI`, `chưa chuẩn`, `thiếu`, `không giống`, `module thiếu`, `tính năng thiếu`: đọc mapping, tìm `/template` trước. Nếu template có mẫu đủ đáp ứng prompt/app thì bám sát template và đổi tối thiểu; chỉ dùng fallback/golden reference khi template thiếu, không đủ hành vi, hoặc có bằng chứng đang ngõ cụt.
 - `permission`, `phân quyền`, `role`, `RLS`, `auth`: đọc database/auth rules và test đa account/đa cấp.
 - `export`, `download`, `Excel`, `PDF`, `CSV`: tải file thật và kiểm format/nội dung.
 - `cleanup`, `gitignore`, `xóa file`, `trùng chức năng`: kiểm reference bằng `rg`/GitNexus/package scripts/CI/docs trước khi xóa.
