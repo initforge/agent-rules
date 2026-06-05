@@ -1,90 +1,198 @@
+<#
+.SYNOPSIS
+    Cài đặt Antigravity adapter vào một project.
+
+.DESCRIPTION
+    Script này copy toàn bộ cấu trúc Antigravity vào project target:
+    - .agents/rules/     (rules + YAML frontmatter)
+    - .agents/skills/    (tất cả skills: UI, research, security, PDF...)
+    - .agents/workflows/ (slash command wrappers cho mỗi skill)
+    - .agents/AGENTS.md, INTENT.md, README.md
+    - scripts/antigravity-preflight.ps1
+
+    Sau khi copy, script TỰ ĐỘNG:
+    1. Chạy add-rules-frontmatter.ps1 để thêm YAML frontmatter
+    2. Generate workflow files cho mỗi skill
+    3. Verify và báo cáo số lượng
+
+    CHÚ Ý CHO CODEX:
+    Script này CHỈ dành cho Antigravity IDE. Codex CLI không đọc
+    .agents/rules/ hay YAML frontmatter. Codex đọc .codex/ qua AGENTS.md.
+    Xem codex/rules/platform-boundary.md để hiểu ranh giới.
+
+.PARAMETER ProjectRoot
+    Đường dẫn tới project cần cài adapter.
+
+.PARAMETER RulesRoot
+    Đường dẫn tới repo agent-rules. Mặc định: P:\agent-rules
+
+.PARAMETER SkipFrontmatter
+    Bỏ qua bước thêm frontmatter (dùng khi debug).
+
+.PARAMETER KeepExistingSkills
+    Giữ lại skills có sẵn trong project (ví dụ: gitnexus). Mặc định: true.
+
+.EXAMPLE
+    & "P:\agent-rules\codex\scripts\install-antigravity-adapter.ps1" `
+        -ProjectRoot "P:\internaltools"
+#>
 param(
-  [Parameter(Mandatory = $true)]
-  [string]$ProjectRoot,
+    [Parameter(Mandatory = $true)]
+    [string]$ProjectRoot,
 
-  [string]$RulesRoot = "P:\agent-rules",
+    [string]$RulesRoot = "P:\agent-rules",
 
-  [switch]$LegacyAgentSingular = $false,
+    [switch]$SkipFrontmatter = $false,
 
-  [switch]$IncludeDisabledHook = $false
+    [switch]$KeepExistingSkills = $true
 )
 
 $ErrorActionPreference = "Stop"
 
+# === Validate ===
 $adapterRoot = Join-Path $RulesRoot "antigravity"
 if (-not (Test-Path $adapterRoot)) {
-  throw "Missing Antigravity adapter: $adapterRoot"
+    throw "Missing Antigravity adapter source: $adapterRoot"
 }
 
 $project = Resolve-Path $ProjectRoot
 $agentsSource = Join-Path $adapterRoot ".agents"
 $agentsTarget = Join-Path $project ".agents"
 
+Write-Host ""
+Write-Host "=========================================="
+Write-Host " Antigravity Adapter Install"
+Write-Host "=========================================="
+Write-Host "Source:  $agentsSource"
+Write-Host "Target:  $agentsTarget"
+Write-Host ""
+
+# === 1. Copy entrypoints ===
+Write-Host "[1/5] Copying entrypoints..."
 New-Item -ItemType Directory -Force -Path $agentsTarget | Out-Null
-Copy-Item "$agentsSource\*" $agentsTarget -Recurse -Force
 
-$scriptTarget = Join-Path $project "scripts"
-New-Item -ItemType Directory -Force -Path $scriptTarget | Out-Null
-Copy-Item (Join-Path $adapterRoot "scripts\antigravity-preflight.ps1") $scriptTarget -Force
-
-if ($LegacyAgentSingular) {
-  $legacyTarget = Join-Path $project ".agent"
-  New-Item -ItemType Directory -Force -Path $legacyTarget | Out-Null
-  Copy-Item "$agentsSource\*" $legacyTarget -Recurse -Force
+$entrypoints = @("AGENTS.md", "INTENT.md", "README.md")
+foreach ($ep in $entrypoints) {
+    $src = Join-Path $agentsSource $ep
+    if (Test-Path $src) {
+        Copy-Item -LiteralPath $src -Destination (Join-Path $agentsTarget $ep) -Force
+        Write-Host "  [OK] $ep"
+    }
 }
 
-# Copy and enable preflight hook
-$hooksSource = Join-Path $adapterRoot "hooks.json"
-if (Test-Path $hooksSource) {
-  $hooksContent = Get-Content $hooksSource -Raw
-  $hooksContent = $hooksContent -replace '"enabled":\s*false', '"enabled": true'
-  
-  Set-Content -Path (Join-Path $agentsTarget "hooks.json") -Value $hooksContent -Force
-  if ($LegacyAgentSingular) {
-    Set-Content -Path (Join-Path $legacyTarget "hooks.json") -Value $hooksContent -Force
-  }
+# === 2. Copy rules ===
+Write-Host "[2/5] Copying rules..."
+$rulesTarget = Join-Path $agentsTarget "rules"
+New-Item -ItemType Directory -Force -Path $rulesTarget | Out-Null
+
+$rulesSource = Join-Path $agentsSource "rules"
+$rulesFiles = Get-ChildItem -LiteralPath $rulesSource -File
+foreach ($rf in $rulesFiles) {
+    Copy-Item -LiteralPath $rf.FullName -Destination (Join-Path $rulesTarget $rf.Name) -Force
+}
+Write-Host "  [OK] $($rulesFiles.Count) rule files copied"
+
+# === 3. Copy skills (merge, keep existing) ===
+Write-Host "[3/5] Copying skills..."
+$skillsTarget = Join-Path $agentsTarget "skills"
+New-Item -ItemType Directory -Force -Path $skillsTarget | Out-Null
+
+$skillsSource = Join-Path $agentsSource "skills"
+$skillDirs = Get-ChildItem -LiteralPath $skillsSource -Directory
+$skillsCopied = 0
+$skillsKept = 0
+
+foreach ($sd in $skillDirs) {
+    $destSkill = Join-Path $skillsTarget $sd.Name
+    if ($KeepExistingSkills -and (Test-Path $destSkill) -and -not (Test-Path (Join-Path $agentsSource "skills\$($sd.Name)"))) {
+        # Project has a skill that master doesn't — keep it
+        $skillsKept++
+        continue
+    }
+    Copy-Item -LiteralPath $sd.FullName -Destination $destSkill -Recurse -Force
+    $skillsCopied++
 }
 
-# Dynamic Antigravity Skills generator
-$antigravitySkillsPath = Join-Path $agentsSource "skills"
-if (Test-Path $antigravitySkillsPath) {
-  $skills = Get-ChildItem $antigravitySkillsPath -Directory
-  foreach ($skill in $skills) {
-    if ($skill.Name -like ".*") { continue }
-    
-    $wfContent = @'
-# {0} Skill
+# Copy README.md from skills source if exists
+$skillsReadme = Join-Path $skillsSource "README.md"
+if (Test-Path $skillsReadme) {
+    Copy-Item -LiteralPath $skillsReadme -Destination (Join-Path $skillsTarget "README.md") -Force
+}
 
-1. Read the skill file in the project-local adapter at `.agents/skills/{0}/SKILL.md` or the master backup at `P:\agent-rules\antigravity\.agents\skills\{0}\SKILL.md`.
+Write-Host "  [OK] $skillsCopied skills copied, $skillsKept project-specific skills preserved"
+
+# === 4. Generate workflows ===
+Write-Host "[4/5] Generating workflows..."
+$wfTarget = Join-Path $agentsTarget "workflows"
+New-Item -ItemType Directory -Force -Path $wfTarget | Out-Null
+
+# Also copy existing workflow files from source
+$wfSource = Join-Path $agentsSource "workflows"
+if (Test-Path $wfSource) {
+    $wfFiles = Get-ChildItem -LiteralPath $wfSource -File
+    foreach ($wf in $wfFiles) {
+        Copy-Item -LiteralPath $wf.FullName -Destination (Join-Path $wfTarget $wf.Name) -Force
+    }
+}
+
+# Generate workflow stubs for any skill that doesn't have one
+$allSkills = Get-ChildItem -LiteralPath $skillsTarget -Directory | Where-Object { $_.Name -notlike ".*" }
+$wfGenerated = 0
+foreach ($skill in $allSkills) {
+    $wfFile = Join-Path $wfTarget "$($skill.Name).md"
+    if (-not (Test-Path $wfFile)) {
+        $wfContent = @"
+# $($skill.Name) Skill
+
+1. Read the skill file at ``.agents/skills/$($skill.Name)/SKILL.md``.
 2. Inspect the current project files or request relevant context before starting work.
 3. Execute the skill instructions to fulfill the user's request.
-4. If this is a design/UI/UX skill, check and follow the visual examples and templates if referenced.
-5. End with files modified, verification details, and final status `PASS`, `PARTIAL`, or `BLOCKED`.
-'@ -f $skill.Name
-    
-    $wfFile = Join-Path $agentsTarget "workflows\$($skill.Name).md"
-    $wfFolder = Split-Path $wfFile -Parent
-    New-Item -ItemType Directory -Force -Path $wfFolder | Out-Null
-    Set-Content -Path $wfFile -Value $wfContent -Force
-    
-    if ($LegacyAgentSingular) {
-      $legacyWfFile = Join-Path $legacyTarget "workflows\$($skill.Name).md"
-      $legacyWfFolder = Split-Path $legacyWfFile -Parent
-      New-Item -ItemType Directory -Force -Path $legacyWfFolder | Out-Null
-      Set-Content -Path $legacyWfFile -Value $wfContent -Force
+4. End with final status ``PASS``, ``PARTIAL``, or ``BLOCKED``.
+"@
+        Set-Content -LiteralPath $wfFile -Value $wfContent -Force
+        $wfGenerated++
     }
-  }
-  Write-Host "[Antigravity] Dynamically generated slash commands for all installed Antigravity skills."
 }
 
-Write-Host "[Antigravity] Installed adapter into $project"
-Write-Host "[Antigravity] Primary rules/workflows: $agentsTarget"
-Write-Host "[Antigravity] No profile/model config installed; Antigravity runtime manages model/effort."
+$totalWf = (Get-ChildItem -LiteralPath $wfTarget -File).Count
+Write-Host "  [OK] $totalWf workflows total ($wfGenerated newly generated)"
 
-if ($LegacyAgentSingular) {
-  Write-Host "[Antigravity] Legacy mirror: $(Join-Path $project '.agent')"
+# === 5. Add YAML frontmatter ===
+if (-not $SkipFrontmatter) {
+    Write-Host "[5/5] Adding YAML frontmatter to rules..."
+    $fmScript = Join-Path $adapterRoot "scripts\add-rules-frontmatter.ps1"
+    if (Test-Path $fmScript) {
+        & $fmScript -RulesDir $rulesTarget
+    } else {
+        Write-Host "  [WARN] add-rules-frontmatter.ps1 not found at $fmScript"
+        Write-Host "  Rules will work but Antigravity may not auto-activate them."
+    }
+} else {
+    Write-Host "[5/5] Skipping frontmatter (--SkipFrontmatter)"
 }
 
-if ($IncludeDisabledHook) {
-  Write-Host "[Antigravity] Disabled hook template installed at $(Join-Path $agentsTarget 'hooks.json')"
+# === Copy preflight script ===
+$scriptTarget = Join-Path $project "scripts"
+$preflightSrc = Join-Path $adapterRoot "scripts\antigravity-preflight.ps1"
+if (Test-Path $preflightSrc) {
+    New-Item -ItemType Directory -Force -Path $scriptTarget | Out-Null
+    Copy-Item -LiteralPath $preflightSrc -Destination (Join-Path $scriptTarget "antigravity-preflight.ps1") -Force
 }
+
+# === Final summary ===
+$finalSkills = (Get-ChildItem -LiteralPath $skillsTarget -Directory).Count
+$finalRules = (Get-ChildItem -LiteralPath $rulesTarget -File -Filter "*.md").Count
+$finalWf = (Get-ChildItem -LiteralPath $wfTarget -File).Count
+
+Write-Host ""
+Write-Host "=========================================="
+Write-Host " Install Complete"
+Write-Host "=========================================="
+Write-Host "  Project:   $project"
+Write-Host "  Rules:     $finalRules files"
+Write-Host "  Skills:    $finalSkills directories"
+Write-Host "  Workflows: $finalWf files"
+Write-Host ""
+Write-Host "  Next: Reload Antigravity conversation to pick up new skills."
+Write-Host "  Verify: gox '/' in chat to see skill list."
+Write-Host "=========================================="
