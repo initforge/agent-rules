@@ -13,8 +13,8 @@ Hiểu ý đồ thật trong prompt của người dùng, chọn đúng context 
 Nếu prompt có các tín hiệu sau, kích hoạt gate tương ứng:
 
 - `verify production`, `test production`, `kiểm tra live`, `verify hết`: chạy Smart Verification Activation trong `quality-gates.md`.
-- `5fedu` hoặc đang trong repo 5fedu: đọc `AGENTS.md` và index/mapping trước.
-- `UI`, `giao diện`, `chưa chuẩn`, `thiếu`, `không giống`, `module thiếu`, `tính năng thiếu`: kích hoạt Template Parity Gate nếu là 5fedu. Với 5fedu phải tìm `/template` trước, chỉ dùng reference pool/golden reference khi template thiếu hoặc không đủ hành vi. Với dự án khác thì tìm design system/template/reference hiện có.
+- `5fedu` hoặc đang ở dự án 5fedu (có thư mục `.agents/5fedu/` hoặc `.codex/5fedu/`): đọc `AGENTS.md` và index/mapping trước.
+- `UI`, `giao diện`, `chưa chuẩn`, `thiếu`, `không giống`, `module thiếu`, `tính năng thiếu`: NẾU là dự án 5fedu (có thư mục `.agents/5fedu/`), kích hoạt Template Parity Gate và tìm `/template` trước, chỉ dùng reference pool/golden reference khi template thiếu hoặc không đủ hành vi. Với dự án khác, tuyệt đối KHÔNG kích hoạt và KHÔNG tìm kiếm template 5fedu.
 - `permission`, `phân quyền`, `role`, `account`, `RLS`, `auth`: kích hoạt Permission Gate và database/auth context.
 - `database`, `schema`, `migration`, `Supabase`, `SQL`, `trigger`, `rollup`: kích hoạt database/schema gate và root-cause verification.
 - `export`, `download`, `Excel`, `PDF`, `CSV`: kích hoạt export/download verification.

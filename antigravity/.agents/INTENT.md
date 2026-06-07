@@ -8,6 +8,7 @@ Antigravity thường không tự kích hoạt context/gate mạnh như Codex. V
 
 Mục tiêu của lớp này:
 
+- buộc áp dụng luật và status block trong mọi session chat (kể cả thảo luận thiết kế) thông qua cấu hình rules luôn hoạt động (alwaysApply);
 - buộc agent đọc entrypoint/mapping trước khi sửa;
 - buộc agent tự nhận diện ý đồ prompt;
 - buộc 5fedu UI kiểm template/golden reference;

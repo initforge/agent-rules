@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Cài đặt Antigravity adapter vào một project.
+    Cài đặt Antigravity adapter vào một project và đồng bộ hóa sang Codex.
 
 .DESCRIPTION
     Script này copy toàn bộ cấu trúc Antigravity vào project target:
@@ -11,14 +11,11 @@
     - scripts/antigravity-preflight.ps1
 
     Sau khi copy, script TỰ ĐỘNG:
-    1. Chạy add-rules-frontmatter.ps1 để thêm YAML frontmatter
-    2. Generate workflow files cho mỗi skill
-    3. Verify và báo cáo số lượng
-
-    CHÚ Ý CHO CODEX:
-    Script này CHỈ dành cho Antigravity IDE. Codex CLI không đọc
-    .agents/rules/ hay YAML frontmatter. Codex đọc .codex/ qua AGENTS.md.
-    Xem codex/rules/platform-boundary.md để hiểu ranh giới.
+    1. Dọn dẹp các skills và workflows cũ đã bị gộp/deprecated.
+    2. Chạy add-rules-frontmatter.ps1 để thêm YAML frontmatter.
+    3. Generate workflow files cho mỗi skill hiện hoạt.
+    4. Đồng bộ hóa trực tiếp sang Codex runtime (C:\Users\DELL\.codex\) để Codex CLI dùng chung bộ rules/skills mới.
+    5. Verify và báo cáo số lượng.
 
 .PARAMETER ProjectRoot
     Đường dẫn tới project cần cài adapter.
@@ -61,14 +58,25 @@ $agentsTarget = Join-Path $project ".agents"
 
 Write-Host ""
 Write-Host "=========================================="
-Write-Host " Antigravity Adapter Install"
+Write-Host " Antigravity & Codex Adapter Install"
 Write-Host "=========================================="
 Write-Host "Source:  $agentsSource"
 Write-Host "Target:  $agentsTarget"
 Write-Host ""
 
+# Danh sách các skill cũ đã bị gộp và cần xoá bỏ
+$deprecatedSkills = @(
+    "taste-skill",
+    "soft-skill",
+    "gpt-tasteskill",
+    "redesign-skill",
+    "imagegen-frontend-web",
+    "imagegen-frontend-mobile",
+    "playwright-interactive"
+)
+
 # === 1. Copy entrypoints ===
-Write-Host "[1/5] Copying entrypoints..."
+Write-Host "[1/6] Copying entrypoints..."
 New-Item -ItemType Directory -Force -Path $agentsTarget | Out-Null
 
 $entrypoints = @("AGENTS.md", "INTENT.md", "README.md")
@@ -81,7 +89,7 @@ foreach ($ep in $entrypoints) {
 }
 
 # === 2. Copy rules ===
-Write-Host "[2/5] Copying rules..."
+Write-Host "[2/6] Copying rules..."
 $rulesTarget = Join-Path $agentsTarget "rules"
 New-Item -ItemType Directory -Force -Path $rulesTarget | Out-Null
 
@@ -92,9 +100,25 @@ foreach ($rf in $rulesFiles) {
 }
 Write-Host "  [OK] $($rulesFiles.Count) rule files copied"
 
-# === 3. Copy skills (merge, keep existing) ===
-Write-Host "[3/5] Copying skills..."
+# === 3. Cleanup & Copy skills ===
+Write-Host "[3/6] Cleaning up deprecated skills and copying new skills..."
 $skillsTarget = Join-Path $agentsTarget "skills"
+$wfTarget = Join-Path $agentsTarget "workflows"
+
+# Thực hiện dọn dẹp các skill và workflow cũ ở project đích
+foreach ($ds in $deprecatedSkills) {
+    $dsPath = Join-Path $skillsTarget $ds
+    if (Test-Path $dsPath) {
+        Remove-Item -Recurse -Force -LiteralPath $dsPath -ErrorAction SilentlyContinue
+        Write-Host "  [CLEANUP] Removed deprecated skill folder: $ds"
+    }
+    $wfFile = Join-Path $wfTarget "$ds.md"
+    if (Test-Path $wfFile) {
+        Remove-Item -Force -LiteralPath $wfFile -ErrorAction SilentlyContinue
+        Write-Host "  [CLEANUP] Removed deprecated workflow: $ds.md"
+    }
+}
+
 New-Item -ItemType Directory -Force -Path $skillsTarget | Out-Null
 
 $skillsSource = Join-Path $agentsSource "skills"
@@ -122,8 +146,7 @@ if (Test-Path $skillsReadme) {
 Write-Host "  [OK] $skillsCopied skills copied, $skillsKept project-specific skills preserved"
 
 # === 4. Generate workflows ===
-Write-Host "[4/5] Generating workflows..."
-$wfTarget = Join-Path $agentsTarget "workflows"
+Write-Host "[4/6] Generating workflows..."
 New-Item -ItemType Directory -Force -Path $wfTarget | Out-Null
 
 # Also copy existing workflow files from source
@@ -159,7 +182,7 @@ Write-Host "  [OK] $totalWf workflows total ($wfGenerated newly generated)"
 
 # === 5. Add YAML frontmatter ===
 if (-not $SkipFrontmatter) {
-    Write-Host "[5/5] Adding YAML frontmatter to rules..."
+    Write-Host "[5/6] Adding YAML frontmatter to rules..."
     $fmScript = Join-Path $adapterRoot "scripts\add-rules-frontmatter.ps1"
     if (Test-Path $fmScript) {
         & $fmScript -RulesDir $rulesTarget
@@ -168,7 +191,7 @@ if (-not $SkipFrontmatter) {
         Write-Host "  Rules will work but Antigravity may not auto-activate them."
     }
 } else {
-    Write-Host "[5/5] Skipping frontmatter (--SkipFrontmatter)"
+    Write-Host "[5/6] Skipping frontmatter (--SkipFrontmatter)"
 }
 
 # === Copy preflight script ===
@@ -179,6 +202,42 @@ if (Test-Path $preflightSrc) {
     Copy-Item -LiteralPath $preflightSrc -Destination (Join-Path $scriptTarget "antigravity-preflight.ps1") -Force
 }
 
+# === 6. Codex Runtime Sync (Direct Sync to Codex) ===
+$codexHome = "C:\Users\DELL\.codex"
+if (Test-Path $codexHome) {
+    Write-Host "[6/6] Syncing directly to Codex Runtime ($codexHome)..."
+    $codexRules = Join-Path $codexHome "rules"
+    $codexSkills = Join-Path $codexHome "skills"
+    New-Item -ItemType Directory -Force -Path $codexRules | Out-Null
+    New-Item -ItemType Directory -Force -Path $codexSkills | Out-Null
+
+    # Xoá các skill cũ trong Codex
+    foreach ($depSkill in $deprecatedSkills) {
+        $depPath = Join-Path $codexSkills $depSkill
+        if (Test-Path $depPath) {
+            Remove-Item -Recurse -Force -LiteralPath $depPath -ErrorAction SilentlyContinue
+            Write-Host "  [CLEANUP-CODEX] Removed deprecated Codex skill: $depSkill"
+        }
+    }
+
+    # Sync rules
+    $rulesCopiedCodex = 0
+    foreach ($rf in (Get-ChildItem -LiteralPath $rulesTarget -File)) {
+        Copy-Item -LiteralPath $rf.FullName -Destination (Join-Path $codexRules $rf.Name) -Force
+        $rulesCopiedCodex++
+    }
+
+    # Sync skills
+    $skillsCopiedCodex = 0
+    foreach ($sd in (Get-ChildItem -LiteralPath $skillsTarget -Directory)) {
+        Copy-Item -LiteralPath $sd.FullName -Destination (Join-Path $codexSkills $sd.Name) -Recurse -Force
+        $skillsCopiedCodex++
+    }
+    Write-Host "  [OK] Codex sync successful ($rulesCopiedCodex rules, $skillsCopiedCodex skills synced)."
+} else {
+    Write-Host "[6/6] Codex runtime directory not found at $codexHome. Skipping Codex sync."
+}
+
 # === Final summary ===
 $finalSkills = (Get-ChildItem -LiteralPath $skillsTarget -Directory).Count
 $finalRules = (Get-ChildItem -LiteralPath $rulesTarget -File -Filter "*.md").Count
@@ -186,13 +245,13 @@ $finalWf = (Get-ChildItem -LiteralPath $wfTarget -File).Count
 
 Write-Host ""
 Write-Host "=========================================="
-Write-Host " Install Complete"
+Write-Host " Install & Sync Complete"
 Write-Host "=========================================="
 Write-Host "  Project:   $project"
 Write-Host "  Rules:     $finalRules files"
 Write-Host "  Skills:    $finalSkills directories"
 Write-Host "  Workflows: $finalWf files"
 Write-Host ""
-Write-Host "  Next: Reload Antigravity conversation to pick up new skills."
-Write-Host "  Verify: gox '/' in chat to see skill list."
+Write-Host "  All changes synchronized to Codex Runtime."
 Write-Host "=========================================="
+Write-Host ""

@@ -10,7 +10,7 @@ Mục tiêu của lớp này:
 
 - buộc agent đọc entrypoint/mapping trước khi sửa;
 - buộc agent tự nhận diện ý đồ prompt;
-- buộc 5fedu UI kiểm `/template` trước, rồi chỉ dùng reference pool/golden reference khi template thiếu hoặc không đủ hành vi;
+- buộc 5fedu UI kiểm template/golden reference;
 - buộc production verify đi từ mapping/context;
 - buộc task vừa/lớn có `Technical debt check`;
 - buộc final có `Status: PASS`, `Status: PARTIAL`, hoặc `Status: BLOCKED`;

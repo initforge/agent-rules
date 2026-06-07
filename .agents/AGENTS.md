@@ -10,7 +10,7 @@ Lớp `.agents` này tồn tại để ép Antigravity làm việc chặt hơn C
 
 - tự nhận diện ý đồ prompt thay vì chỉ đọc literal text;
 - đọc mapping/context index trước khi làm;
-- tự kích hoạt template-first/reference-pool/production/permission/database/export/cleanup gates;
+- tự kích hoạt template/production/permission/database/export/cleanup gates;
 - không bỏ qua `PASS`, `PARTIAL`, `BLOCKED`;
 - không xóa hoặc ghi đè các file runtime ép chặt trong cleanup.
 
@@ -38,7 +38,7 @@ Nếu agent thấy file này có vẻ "trùng", "dài", "không dùng", hoặc "
 ## Hard Defaults
 
 - Không tự commit/push/deploy nếu user chưa yêu cầu rõ.
-- Với 5fedu UI, luôn kiểm `/template` trước. Nếu template đủ thì bám sát và đổi tối thiểu; chỉ dùng reference pool/golden reference khi template thiếu, không đủ hành vi, hoặc có bằng chứng đang ngõ cụt.
+- Với 5fedu UI, luôn kiểm `/template` hoặc golden reference trước khi sửa.
 - Với production verify, luôn đọc mapping trước khi test.
 - Với task vừa/lớn, final phải có `Technical debt check` và `Status: PASS/PARTIAL/BLOCKED`.
 

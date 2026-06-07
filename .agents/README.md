@@ -4,7 +4,7 @@ Thư mục `.agents` này không phải artifact tạm. Đây là adapter bắt 
 
 - đọc entry/context index trước khi sửa;
 - tự kích hoạt gate theo ý đồ prompt;
-- ép 5fedu UI phải kiểm `/template` trước, chỉ fallback sang reference pool/golden reference khi template thiếu hoặc không đủ hành vi;
+- ép 5fedu UI phải kiểm template/golden reference;
 - ép production verify phải đi từ mapping/context;
 - ép final luôn có `PASS`, `PARTIAL`, hoặc `BLOCKED`;
 - ép task vừa/lớn có `Technical debt check`.

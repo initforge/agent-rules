@@ -26,6 +26,7 @@ P:\agent-rules\codex
 @P:\agent-rules\codex\rules\clean-code.md
 @P:\agent-rules\codex\rules\technical-debt-control.md
 @P:\agent-rules\codex\rules\codex-overlay.md
+@P:\agent-rules\codex\rules\deep-reasoning.md
 ```
 
 ## Ranh Giới Global Và Local

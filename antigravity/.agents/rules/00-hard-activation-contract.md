@@ -46,22 +46,23 @@ Trước khi sửa hoặc verify:
 2. Đọc `.agents/rules/00-hard-activation-contract.md`.
 3. Nếu repo có `.agents/5fedu`, đọc `.agents/5fedu/00-index.md` trước.
 4. Chỉ đọc context chi tiết khi prompt hoặc mapping cho thấy task dính domain đó.
+5. Bắt buộc tuân thủ luật suy luận sâu sắc (deep-reasoning) và xuất Status Block ở cuối phản hồi trong MỌI session chat (kể cả khi chỉ thảo luận nghiệp vụ, thiết kế hoặc QA).
 
 ## Trigger Phải Tự Kích Hoạt
 
 | Prompt signal | Gate bắt buộc |
 | --- | --- |
 | `verify production`, `verify production hết`, `test production`, `kiểm tra live` | Đọc mapping trước, suy ra module/role/database/UI/export/cross-flow, rồi mới verify production |
-| `UI`, `giao diện`, `chưa chuẩn`, `thiếu`, `không giống`, `module thiếu`, `tính năng thiếu` | Tìm `/template` trước; nếu template đủ thì bám sát và đổi tối thiểu, chỉ dùng golden reference khi template thiếu/không đủ/ngõ cụt; với 5fedu phải có `Template checked` |
+| `UI`, `giao diện`, `chưa chuẩn`, `thiếu`, `không giống`, `module thiếu`, `tính năng thiếu` | CHỈ áp dụng cho dự án 5fedu: Tìm `/template` trước, bám sát và đổi tối thiểu, chỉ dùng golden reference khi template thiếu/không đủ/ngõ cụt và ghi `Template checked`. Với dự án KHÔNG PHẢI 5fedu: Bỏ qua hoàn toàn, tập trung vào design system/style mặc định của dự án đó. |
 | `permission`, `phân quyền`, `role`, `account`, `auth`, `RLS` | Test đa account/đa cấp nếu có quyền; không chỉ test admin |
 | `database`, `schema`, `migration`, `Supabase`, `trigger`, `rollup` | Trace schema/service/query và verify database nếu có quyền |
 | `export`, `download`, `Excel`, `PDF`, `CSV` | Tải file thật và kiểm format/nội dung |
 | `cleanup`, `gitignore`, `xóa file`, `trùng chức năng`, `không dùng` | Check references bằng `rg`/GitNexus/package scripts/CI/docs trước khi xóa |
 | `audit`, `review`, `nợ kỹ thuật`, `bất hợp lý` | Findings first, phân loại risk/debt, không chỉ summary |
 
-## 5fedu Hard Mode
+## 5fedu Hard Mode (CHỈ áp dụng khi tồn tại thư mục `.agents/5fedu/`)
 
-Khi đang ở 5fedu/TAH app:
+Quy tắc dưới đây CHỈ được kích hoạt nếu trong thư mục gốc của dự án hiện tại có tồn tại thư mục `.agents/5fedu/`. Nếu không tồn tại thư mục này, tuyệt đối KHÔNG áp dụng các quy tắc sau:
 
 - Không phụ thuộc global rule thay cho project-local context.
 - `AGENTS.md` và `.agents/5fedu/00-index.md` là nguồn kích hoạt đầu.

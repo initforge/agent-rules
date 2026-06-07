@@ -8,6 +8,8 @@ Nếu chưa hiểu vì sao `.agents` tồn tại hoặc đang cân nhắc cleanu
 
 Lớp `.agents` này tồn tại để ép Antigravity làm việc chặt hơn Codex ở các điểm nó thường lỏng:
 
+- **Bắt buộc áp dụng trong mọi Session**: Luật phải được áp dụng cả trong chế độ thảo luận nghiệp vụ (Chat) lẫn lập trình sửa đổi code (Worktree/Plan). Không bỏ qua quy trình suy luận sâu và Status block.
+- **Tránh trôi ngữ cảnh (Context Drift)**: Các file rules trong thư mục `.agents/rules/` phải được khai báo YAML frontmatter `alwaysApply: true` để Antigravity nạp trực tiếp vào System Prompt của mọi session.
 - tự nhận diện ý đồ prompt thay vì chỉ đọc literal text;
 - đọc mapping/context index trước khi làm;
 - tự kích hoạt template/production/permission/database/export/cleanup gates;
