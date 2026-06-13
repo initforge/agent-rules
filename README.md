@@ -25,6 +25,9 @@ Daily work uses `C:\Users\DELL\.codex`. The `P:\agent-rules\codex` copy is the b
 | `codex/templates/` | Plan, research, review, handoff, and final report templates |
 | `codex/inventory/` | Machine/tool/MCP/config snapshots |
 | `antigravity/` | Adapter for Google Antigravity rules, workflows, and preflight |
+| `cursor/` | **Grok CLI / Composer 2.5** harness master (rules + skills) |
+| `.grok/` | Grok CLI live runtime (sync từ `cursor/`) |
+| `shared/` | Shared contracts (`opus-emulation-contract.md`) |
 
 ## Tech Stack
 
@@ -55,9 +58,19 @@ Restore from backup to local runtime:
 & "P:\agent-rules\codex\scripts\sync-p-to-codex.ps1"
 ```
 
+## Grok CLI Harness
+
+```bash
+./cursor/scripts/sync-harness.sh   # master → .grok/rules + .grok/skills
+grok inspect                       # verify rules + skills loaded
+```
+
+Triết lý Opus-emulation: [docs/06-harness-philosophy.md](docs/06-harness-philosophy.md) · [docs/07-cursor-composer-harness.md](docs/07-cursor-composer-harness.md) · [docs/08-opus-emulation-harness.md](docs/08-opus-emulation-harness.md)
+
 ## Read Next
 
 - [Technical specification](docs/01-technical-specification.md)
 - [Operations and sync](docs/02-operations-and-sync.md)
 - [Maintenance and risks](docs/03-maintenance-and-risks.md)
 - [Antigravity adapter](docs/04-antigravity-adapter.md)
+- [Harness philosophy](docs/06-harness-philosophy.md)

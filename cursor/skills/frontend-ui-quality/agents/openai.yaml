@@ -1,0 +1,4 @@
+interface:
+  display_name: "Frontend UI Quality"
+  short_description: "Build polished frontend UI with art direction, assets, motion, 3D, and visual QA."
+  default_prompt: "Use frontend-ui-quality to design, implement, inspect, and visually verify a polished frontend UI before finishing."

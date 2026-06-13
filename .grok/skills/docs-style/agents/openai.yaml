@@ -1,0 +1,7 @@
+interface:
+  display_name: "Docs Style"
+  short_description: "Source-grounded README, specs, badges, and /docs"
+  default_prompt: "Use $docs-style to create, review, or rewrite README.md, README-vi.md, technical specs, tech stack badges, screenshots, and /docs/** with source-grounded, human-readable project documentation."
+
+policy:
+  allow_implicit_invocation: true
