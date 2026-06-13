@@ -36,25 +36,19 @@ C:\Users\DELL\.gemini\GEMINI.md
 ### Lớp 2: Workspace Rules (`.agents/rules/*.md`)
 
 ```text
-<project-root>/.agents/rules/
-├── 00-hard-activation-contract.md    (alwaysApply: true)
-├── 00-antigravity-runtime-intent.md  (alwaysApply: true)
-├── 01-intent-contract.md             (alwaysApply: true)
-├── 10-fast-context.md                (alwaysApply: true)
-├── core.md                           (alwaysApply: true)
-├── quality-gates.md                  (alwaysApply: true)
-├── clean-code.md                     (alwaysApply: true)
-├── technical-debt-control.md         (alwaysApply: true)
-├── prompt-intent-router.md           (alwaysApply: true)
-├── planning.md                       (alwaysApply: false)
-├── execution.md                      (alwaysApply: false)
-├── context-tools.md                  (alwaysApply: false)
-├── root-cause-verification.md        (alwaysApply: false)
-├── tool-inventory.md                 (alwaysApply: false)
-├── codex-overlay.md                  (alwaysApply: false)
-├── 00-codex-runtime-intent.md        (SKIP - Codex only)
-└── default.rules                     (SKIP - binary config)
+<project-root>/.agents/rules/     (Opus-emulation — sync từ grok/)
+├── 00-runtime-and-intent.md        (alwaysApply: true)
+├── 01-agent-workflow-sop.md        (alwaysApply: true)
+├── 02-code-quality-and-debt.md   (alwaysApply: true)
+├── 03-context-and-tools.md         (alwaysApply: true)
+├── 04-skills-and-5fedu.md          (alwaysApply: true)
+├── 05-harness-mutation-gate.md     (alwaysApply: true)
+├── 06-opus-emulation-contract.md   (alwaysApply: true)
+├── antigravity-overlay.md          (alwaysApply: true)
+└── platform-boundary.md            (alwaysApply: true)
 ```
+
+Master: `agent-rules/grok/` → `./grok/scripts/sync-all-harness.sh`
 
 **Ý đồ của YAML frontmatter**:
 

@@ -61,8 +61,9 @@ Restore from backup to local runtime:
 ## Grok CLI Harness
 
 ```bash
-./grok/scripts/sync-all-harness.sh   # grok → .grok + codex/rules + .agents/rules
-grok inspect                         # verify Grok CLI loaded
+./grok/scripts/sync-all-harness.sh   # rules + skills → 3 nền
+./grok/scripts/validate-harness.sh   # fail nếu legacy / drift
+grok inspect
 ```
 
 **Không dùng Cursor** — runtime là Grok CLI. Triết lý: [docs/06](docs/06-harness-philosophy.md) · [docs/07](docs/07-grok-cli-harness.md) · [docs/08](docs/08-opus-emulation-harness.md)

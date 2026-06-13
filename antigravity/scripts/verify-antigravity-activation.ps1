@@ -48,7 +48,18 @@ $locations = @(
     @{ Path = "P:\FaBsolution\.agents\rules"; Label = "FaBsolution" }
 )
 
-$skipFiles = @("00-codex-runtime-intent.md", "default.rules")
+$requiredActive = @(
+  "00-runtime-and-intent.md",
+  "01-agent-workflow-sop.md",
+  "06-opus-emulation-contract.md",
+  "antigravity-overlay.md"
+)
+$legacyFiles = @(
+  "00-hard-activation-contract.md",
+  "prompt-intent-router.md",
+  "quality-gates.md",
+  "core.md"
+)
 
 foreach ($loc in $locations) {
     $dir = $loc.Path
@@ -64,8 +75,18 @@ foreach ($loc in $locations) {
     $ok = 0
     $missing = 0
     
+    foreach ($req in $requiredActive) {
+        if (-not (Test-Path (Join-Path $dir $req))) {
+            $problems.Add("MISSING ACTIVE RULE: $label/$req")
+        }
+    }
+    foreach ($leg in $legacyFiles) {
+        if (Test-Path (Join-Path $dir $leg)) {
+            $problems.Add("LEGACY RULE STILL PRESENT: $label/$leg")
+        }
+    }
+
     foreach ($file in $files) {
-        if ($skipFiles -contains $file.Name) { continue }
         $content = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8
         if ($content.StartsWith("---")) {
             $ok++

@@ -1,29 +1,22 @@
-# Antigravity Runtime Guardrails
+# Antigravity Workspace Runtime
 
-Thư mục `.agents` này không phải artifact tạm. Đây là adapter bắt buộc để Antigravity làm việc chặt hơn:
+Live copy của adapter `antigravity/.agents/`. Đồng bộ từ `grok/` master.
 
-- đọc entry/context index trước khi sửa;
-- tự kích hoạt gate theo ý đồ prompt;
-- ép 5fedu UI phải kiểm template/golden reference;
-- ép production verify phải đi từ mapping/context;
-- ép final luôn có `PASS`, `PARTIAL`, hoặc `BLOCKED`;
-- ép task vừa/lớn có `Technical debt check`.
+## Rules (alwaysApply)
 
-Đọc `.agents/INTENT.md` để nắm ý đồ ngắn nhất.
+1. `00-runtime-and-intent.md`
+2. `06-opus-emulation-contract.md`
+3. `01-agent-workflow-sop.md`
+4. `04-skills-and-5fedu.md`
+5. `antigravity-overlay.md`
+6. `02-code-quality-and-debt.md`, `03-context-and-tools.md`, `05-harness-mutation-gate.md`, `platform-boundary.md`
 
-## Không Được Cleanup
+## Sync
 
-Không xóa các file này nếu user chưa yêu cầu đích danh:
+```bash
+# Từ repo agent-rules
+./grok/scripts/sync-all-harness.sh
+./grok/scripts/validate-harness.sh
+```
 
-- `.agents/AGENTS.md`
-- `.agents/INTENT.md`
-- `.agents/hooks.json`
-- `.agents/rules/00-hard-activation-contract.md`
-- `.agents/rules/prompt-intent-router.md`
-- `.agents/rules/quality-gates.md`
-- `.agents/rules/technical-debt-control.md`
-- `.agents/workflows/*.md`
-- `.agents/skills/*/SKILL.md`
-- `.agents/5fedu/00-index.md`
-
-Nếu cần chỉnh, phải giữ nguyên ý đồ ép chặt và verify marker sau khi sync.
+Đọc `INTENT.md` và `AGENTS.md` trước mọi task.

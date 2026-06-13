@@ -1,16 +1,14 @@
 @C:\Users\DELL\.codex\RTK.md
-@C:\Users\DELL\.codex\rules\core.md
-@C:\Users\DELL\.codex\rules\root-cause-verification.md
-@C:\Users\DELL\.codex\rules\prompt-intent-router.md
-@C:\Users\DELL\.codex\rules\planning.md
-@C:\Users\DELL\.codex\rules\execution.md
-@C:\Users\DELL\.codex\rules\quality-gates.md
-@C:\Users\DELL\.codex\rules\context-tools.md
-@C:\Users\DELL\.codex\rules\tool-inventory.md
-@C:\Users\DELL\.codex\rules\clean-code.md
-@C:\Users\DELL\.codex\rules\technical-debt-control.md
+@C:\Users\DELL\.codex\rules\00-runtime-and-intent.md
+@C:\Users\DELL\.codex\rules\01-agent-workflow-sop.md
+@C:\Users\DELL\.codex\rules\02-code-quality-and-debt.md
+@C:\Users\DELL\.codex\rules\03-context-and-tools.md
+@C:\Users\DELL\.codex\rules\04-skills-and-5fedu.md
+@C:\Users\DELL\.codex\rules\05-harness-mutation-gate.md
+@C:\Users\DELL\.codex\rules\06-opus-emulation-contract.md
 @C:\Users\DELL\.codex\rules\codex-overlay.md
+@C:\Users\DELL\.codex\rules\platform-boundary.md
 
 # Codex Core Entrypoint
 
-Keep this file aligned with `C:\Users\DELL\.codex\AGENTS.md`.
+Giữ file này khớp `C:\Users\DELL\.codex\AGENTS.md`. Lõi Opus-emulation — sync từ `agent-rules/grok/`.

@@ -22,7 +22,7 @@ Codex/Antigravity: cùng master, sync qua `sync-all-harness.sh`. Tham chiếu: `
 grok inspect
 ```
 
-Phải thấy các file trong `.grok/rules/`. Nếu không → chạy `cursor/scripts/sync-harness.sh`.
+Phải thấy các file trong `.grok/rules/`. Nếu không → chạy `grok/scripts/sync-all-harness.sh`.
 
 ## Grok CLI behavior
 

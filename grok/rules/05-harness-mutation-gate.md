@@ -27,7 +27,7 @@ Chỉ khi user nói rõ trong session, ví dụ:
 
 - "sửa harness", "cập nhật rule", "thêm skill", "sync harness"
 - "áp lên toàn bộ hệ thống", "port sang grok/codex"
-- "execute plan" / design doc **chỉ định** đụng `cursor/` hoặc `.grok/`
+- "execute plan" / design doc **chỉ định** đụng `grok/` hoặc `.grok/`
 
 Không đủ: "làm cho chuẩn hơn", "cải tiến thêm", "fix triệt để" (→ sửa **code dự án**, không sửa harness).
 

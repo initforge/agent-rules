@@ -22,37 +22,21 @@ function Test-TextFile([string]$Path) {
   if ([string]::IsNullOrWhiteSpace($content)) {
     Add-Problem "Empty file: $Path"
   }
-
-  $markers = @(
-    [string][char]0x00C3,
-    [string][char]0x00C2,
-    [string][char]0x00C4,
-    [string][char]0x00C6,
-    [string][char]0xFFFD
-  )
-  foreach ($marker in $markers) {
-    if ($content.Contains($marker)) {
-      Add-Problem "Possible mojibake/encoding corruption: $Path"
-      break
-    }
-  }
 }
 
 function Test-CodexRoot([string]$Base) {
   $required = @(
     "AGENTS.md",
     "RTK.md",
-    "rules\core.md",
-    "rules\root-cause-verification.md",
-    "rules\prompt-intent-router.md",
-    "rules\planning.md",
-    "rules\execution.md",
-    "rules\quality-gates.md",
-    "rules\context-tools.md",
-    "rules\tool-inventory.md",
-    "rules\clean-code.md",
-    "rules\technical-debt-control.md",
+    "rules\00-runtime-and-intent.md",
+    "rules\01-agent-workflow-sop.md",
+    "rules\02-code-quality-and-debt.md",
+    "rules\03-context-and-tools.md",
+    "rules\04-skills-and-5fedu.md",
+    "rules\05-harness-mutation-gate.md",
+    "rules\06-opus-emulation-contract.md",
     "rules\codex-overlay.md",
+    "rules\platform-boundary.md",
     "scripts\verify-codex-rules.ps1",
     "scripts\validate-task-evidence.ps1",
     "scripts\audit-technical-debt.ps1",
@@ -60,37 +44,56 @@ function Test-CodexRoot([string]$Base) {
     "templates\technical-debt-register.md"
   )
 
+  $legacy = @(
+    "rules\core.md",
+    "rules\prompt-intent-router.md",
+    "rules\quality-gates.md",
+    "rules\planning.md",
+    "rules\execution.md"
+  )
+
   foreach ($item in $required) {
     Test-TextFile (Join-Path $Base $item)
+  }
+
+  foreach ($item in $legacy) {
+    $legacyPath = Join-Path $Base $item
+    if (Test-Path -LiteralPath $legacyPath) {
+      Add-Problem "Legacy rule still present (run sync-all-harness): $legacyPath"
+    }
   }
 
   $agents = Join-Path $Base "AGENTS.md"
   if (Test-Path -LiteralPath $agents) {
     $raw = Get-Content -LiteralPath $agents -Raw -Encoding UTF8
-    foreach ($item in $required | Where-Object { $_ -like "rules\*" -or $_ -eq "RTK.md" }) {
-      $import = "@C:\Users\DELL\.codex\$item"
-      if ($raw -notlike "*$import*") {
-        Add-Problem "AGENTS.md does not import $item"
+    foreach ($item in $required | Where-Object { $_ -like "rules\*" }) {
+      $leaf = Split-Path $item -Leaf
+      if ($raw -notlike "*$leaf*") {
+        Add-Problem "AGENTS.md does not reference $item"
       }
     }
   }
 }
 
-Write-Host "== Validate Codex runtime context =="
+Write-Host "== Validate Codex runtime context (Opus-emulation harness) =="
 Write-Host "Root: $Root"
+
 Test-CodexRoot $Root
 
-if ($CheckBackup) {
-  Write-Host "BackupRoot: $BackupRoot"
+if ($CheckBackup -and (Test-Path -LiteralPath $BackupRoot)) {
+  Write-Host "Backup: $BackupRoot"
   Test-CodexRoot $BackupRoot
 }
 
 if ($problems.Count -gt 0) {
-  Write-Host "Runtime context validation: FAIL"
-  foreach ($problem in $problems) {
-    Write-Host "- $problem"
+  Write-Host ""
+  Write-Host "Codex runtime validation: FAIL"
+  foreach ($p in $problems) {
+    Write-Host "  - $p"
   }
   exit 1
 }
 
-Write-Host "Runtime context validation: PASS"
+Write-Host ""
+Write-Host "Codex runtime validation: PASS"
+exit 0

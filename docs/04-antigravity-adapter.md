@@ -6,7 +6,7 @@ Nên có README, ý đồ và chú thích rõ ràng cho Antigravity, nhưng khô
 
 - `antigravity/README.md`: giải thích ý đồ và cách cài.
 - `antigravity/.agents/rules/`: rule nền ngắn, luôn hữu ích.
-- `antigravity/.agents/rules/01-intent-contract.md`: hợp đồng ý đồ để Antigravity chọn workflow và tránh hiểu sai request.
+- `antigravity/.agents/rules/00-runtime-and-intent.md` + `06-opus-emulation-contract.md`: intent router và Opus-emulation (thay bộ file rời cũ).
 - `antigravity/.agents/workflows/`: quy trình gọi được bằng slash command.
 - `antigravity/scripts/`: preflight/check nhẹ.
 - `codex/scripts/install-antigravity-adapter.ps1`: cài adapter vào project.
@@ -57,7 +57,7 @@ Nguồn:
 2. Giao thức Đọc Đầu tiên (First-Read Entry Point):
 Khi tiếp nhận task, Agent tuân thủ thứ tự ưu tiên đọc tài liệu:
 * **Bước 1**: Đọc KI Summary.
-* **Bước 2**: Đọc tệp `.agents/rules/10-fast-context.md` cục bộ của dự án.
+* **Bước 2**: Đọc `.agents/rules/03-context-and-tools.md` và `04-skills-and-5fedu.md`.
 * **Bước 3**: Đọc các tệp quy tắc đặc thù dự án (nếu có, e.g. `devconnect-xml-drawing.md`).
 * **Bước 4**: Chỉ tải (lazy-load) tệp `SKILL.md` chi tiết của Skill cần thiết khi bắt tay vào triển khai.
 

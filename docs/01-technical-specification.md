@@ -126,10 +126,11 @@ Registry trong `codex/docs/` giải thích thứ gì đang được cài và cá
 
 | File | Vai trò |
 |---|---|
-| `codex/rules/core.md` | Quy tắc nền và hợp đồng thực thi |
-| `codex/rules/planning.md` | Chuẩn locked plan và slice |
-| `codex/rules/execution.md` | Quy trình thực thi và final report |
-| `codex/rules/quality-gates.md` | Risk tier và verification tier |
+| `grok/rules/` | Master harness (sync → codex + antigravity + .grok) |
+| `codex/rules/01-agent-workflow-sop.md` | Planning, execution, RC, quality matrix |
+| `codex/rules/06-opus-emulation-contract.md` | Outcome Opus, MEDIUM default |
+| `grok/scripts/sync-all-harness.sh` | Sync rules + skills một lệnh |
+| `grok/scripts/validate-harness.sh` | Fail nếu còn legacy / skill drift |
 | `codex/docs/phase-orchestration.md` | Cách map phase sang profile |
 | `codex/docs/bootstrap-new-machine.md` | Cách dựng lại runtime trên máy mới |
 | `codex/scripts/verify-codex-rules.ps1` | Kiểm tra file runtime bắt buộc |

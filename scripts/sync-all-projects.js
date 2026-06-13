@@ -1,38 +1,57 @@
 const fs = require('fs');
 const path = require('path');
 
-const PROJECTS_DIR = '/home/linhnxdeveloper/Projects';
-const MASTER_AGENTS_DIR = '/home/linhnxdeveloper/Projects/agent-rules/antigravity/.agents';
-const PREFLIGHT_SRC = '/home/linhnxdeveloper/Projects/agent-rules/antigravity/scripts/antigravity-preflight.js';
+const PROJECTS_DIR = process.env.PROJECTS_DIR || '/home/linhnxdeveloper/Projects';
+const REPO_ROOT = path.join(__dirname, '..');
+const MASTER_AGENTS_DIR = path.join(REPO_ROOT, 'antigravity', '.agents');
+const MASTER_SKILLS_DIR = path.join(REPO_ROOT, 'grok', 'skills');
+const PREFLIGHT_SRC = path.join(REPO_ROOT, 'antigravity', 'scripts', 'antigravity-preflight.ps1');
 
-// List of allowed rule filenames
 const ACTIVE_RULES = [
   '00-runtime-and-intent.md',
   '01-agent-workflow-sop.md',
   '02-code-quality-and-debt.md',
   '03-context-and-tools.md',
-  'platform-boundary.md'
+  '04-skills-and-5fedu.md',
+  '05-harness-mutation-gate.md',
+  '06-opus-emulation-contract.md',
+  'antigravity-overlay.md',
+  'platform-boundary.md',
 ];
 
-// List of deprecated skills to clean up
+const LEGACY_RULES = [
+  '00-hard-activation-contract.md',
+  '00-antigravity-runtime-intent.md',
+  '01-intent-contract.md',
+  '10-fast-context.md',
+  'prompt-intent-router.md',
+  'quality-gates.md',
+  'core.md',
+  'planning.md',
+  'execution.md',
+  'clean-code.md',
+  'technical-debt-control.md',
+  'codex-overlay.md',
+  'context-tools.md',
+  'tool-inventory.md',
+  'root-cause-verification.md',
+  'default.rules',
+];
+
 const DEPRECATED_SKILLS = [
   'taste-skill',
   'soft-skill',
   'gpt-tasteskill',
   'redesign-skill',
   'imagegen-frontend-web',
-  'imagegen-frontend-mobile'
+  'imagegen-frontend-mobile',
 ];
 
-// Helper to recursively copy directories
 function copyDirSync(src, dest) {
   fs.mkdirSync(dest, { recursive: true });
-  const entries = fs.readdirSync(src, { withFileTypes: true });
-
-  for (const entry of entries) {
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
-
     if (entry.isDirectory()) {
       copyDirSync(srcPath, destPath);
     } else {
@@ -41,7 +60,6 @@ function copyDirSync(src, dest) {
   }
 }
 
-// Helper to delete directory recursively
 function rmDirSync(dirPath) {
   if (fs.existsSync(dirPath)) {
     fs.rmSync(dirPath, { recursive: true, force: true });
@@ -61,9 +79,7 @@ function syncProject(projectDir) {
     return;
   }
 
-  // --- 1. Entrypoints ---
-  const entrypoints = ['AGENTS.md', 'INTENT.md', 'README.md'];
-  for (const ep of entrypoints) {
+  for (const ep of ['AGENTS.md', 'INTENT.md', 'README.md']) {
     const src = path.join(MASTER_AGENTS_DIR, ep);
     const dest = path.join(targetAgentsDir, ep);
     if (fs.existsSync(src)) {
@@ -72,17 +88,21 @@ function syncProject(projectDir) {
     }
   }
 
-  // --- 2. Rules Sync & Cleanup ---
   const rulesSrcDir = path.join(MASTER_AGENTS_DIR, 'rules');
   const rulesDestDir = path.join(targetAgentsDir, 'rules');
   fs.mkdirSync(rulesDestDir, { recursive: true });
 
-  // Delete all non-active rule files in target rules folder
-  const targetRules = fs.readdirSync(rulesDestDir);
   let cleanedRulesCount = 0;
-  for (const file of targetRules) {
+  for (const file of fs.readdirSync(rulesDestDir)) {
     if (!ACTIVE_RULES.includes(file)) {
       fs.unlinkSync(path.join(rulesDestDir, file));
+      cleanedRulesCount++;
+    }
+  }
+  for (const legacy of LEGACY_RULES) {
+    const p = path.join(rulesDestDir, legacy);
+    if (fs.existsSync(p)) {
+      fs.unlinkSync(p);
       cleanedRulesCount++;
     }
   }
@@ -90,114 +110,79 @@ function syncProject(projectDir) {
     console.log(`  [CLEANUP] Deleted ${cleanedRulesCount} obsolete rule files.`);
   }
 
-  // Copy active rule files from master
   for (const rule of ACTIVE_RULES) {
     const src = path.join(rulesSrcDir, rule);
     const dest = path.join(rulesDestDir, rule);
     if (fs.existsSync(src)) {
       fs.copyFileSync(src, dest);
+    } else {
+      console.warn(`  [WARN] Missing master rule: ${rule}`);
     }
   }
-  console.log(`  [OK] Rules synced (5 active rules).`);
+  console.log(`  [OK] Rules synced (${ACTIVE_RULES.length} active rules).`);
 
-  // --- 3. Skills Sync & Cleanup ---
-  const skillsSrcDir = path.join(MASTER_AGENTS_DIR, 'skills');
+  const skillsSrcDir = fs.existsSync(MASTER_SKILLS_DIR)
+    ? MASTER_SKILLS_DIR
+    : path.join(MASTER_AGENTS_DIR, 'skills');
   const skillsDestDir = path.join(targetAgentsDir, 'skills');
   fs.mkdirSync(skillsDestDir, { recursive: true });
 
-  // Cleanup deprecated skills in target project
   for (const ds of DEPRECATED_SKILLS) {
-    const targetDsPath = path.join(skillsDestDir, ds);
-    const targetDsWfPath = path.join(targetAgentsDir, 'workflows', `${ds}.md`);
-    if (fs.existsSync(targetDsPath)) {
-      rmDirSync(targetDsPath);
-      console.log(`  [CLEANUP] Removed deprecated skill folder: ${ds}`);
-    }
-    if (fs.existsSync(targetDsWfPath)) {
-      fs.unlinkSync(targetDsWfPath);
-      console.log(`  [CLEANUP] Removed deprecated workflow: ${ds}.md`);
-    }
+    rmDirSync(path.join(skillsDestDir, ds));
+    const wf = path.join(targetAgentsDir, 'workflows', `${ds}.md`);
+    if (fs.existsSync(wf)) fs.unlinkSync(wf);
   }
 
-  // Copy all skills from master
-  const masterSkills = fs.readdirSync(skillsSrcDir, { withFileTypes: true });
-  let skillsSyncedCount = 0;
-  for (const entry of masterSkills) {
-    if (entry.isDirectory()) {
+  if (fs.existsSync(skillsSrcDir)) {
+    for (const entry of fs.readdirSync(skillsSrcDir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
       const src = path.join(skillsSrcDir, entry.name);
       const dest = path.join(skillsDestDir, entry.name);
-      // Clean target skill folder before copying to avoid lingering files
       rmDirSync(dest);
       copyDirSync(src, dest);
-      skillsSyncedCount++;
-    } else if (entry.isFile() && entry.name === 'README.md') {
-      fs.copyFileSync(path.join(skillsSrcDir, entry.name), path.join(skillsDestDir, entry.name));
     }
+    const count = fs.readdirSync(skillsDestDir, { withFileTypes: true }).filter((e) => e.isDirectory()).length;
+    console.log(`  [OK] Skills synced from ${path.basename(path.dirname(skillsSrcDir))}/${path.basename(skillsSrcDir)} (${count} folders).`);
   }
-  console.log(`  [OK] Synced ${skillsSyncedCount} skills (including restored UI/UX skills).`);
 
-  // --- 4. Workflows ---
   const wfSrcDir = path.join(MASTER_AGENTS_DIR, 'workflows');
   const wfDestDir = path.join(targetAgentsDir, 'workflows');
   fs.mkdirSync(wfDestDir, { recursive: true });
-
-  // Copy workflows from master
   if (fs.existsSync(wfSrcDir)) {
-    const wfFiles = fs.readdirSync(wfSrcDir);
-    for (const file of wfFiles) {
+    for (const file of fs.readdirSync(wfSrcDir)) {
       fs.copyFileSync(path.join(wfSrcDir, file), path.join(wfDestDir, file));
     }
   }
 
-  // Generate workflow stub for each active skill that doesn't have one
-  const targetSkills = fs.readdirSync(skillsDestDir, { withFileTypes: true });
-  let generatedWfCount = 0;
-  for (const entry of targetSkills) {
-    if (entry.isDirectory() && !entry.name.startsWith('.')) {
-      const wfFile = path.join(wfDestDir, `${entry.name}.md`);
-      if (!fs.existsSync(wfFile)) {
-        const wfContent = `# ${entry.name} Skill\n\n1. Read the skill file at \`.agents/skills/${entry.name}/SKILL.md\`.\n2. Inspect the current project files or request relevant context before starting work.\n3. Execute the skill instructions to fulfill the user's request.\n4. End with final status \`PASS\`, \`PARTIAL\`, or \`BLOCKED\`.\n`;
-        fs.writeFileSync(wfFile, wfContent, 'utf8');
-        generatedWfCount++;
-      }
-    }
-  }
-  const totalWfs = fs.readdirSync(wfDestDir).length;
-  console.log(`  [OK] Workflows synced (${totalWfs} total workflows, ${generatedWfCount} newly generated stubs).`);
-
-  // --- 5. Preflight Script ---
-  const preflightDestDir = path.join(projectDir, 'scripts');
+  const scriptsDestDir = path.join(projectDir, 'scripts');
   if (fs.existsSync(PREFLIGHT_SRC)) {
-    fs.mkdirSync(preflightDestDir, { recursive: true });
-    fs.copyFileSync(PREFLIGHT_SRC, path.join(preflightDestDir, 'antigravity-preflight.js'));
+    fs.mkdirSync(scriptsDestDir, { recursive: true });
+    fs.copyFileSync(PREFLIGHT_SRC, path.join(scriptsDestDir, 'antigravity-preflight.ps1'));
     console.log(`  [OK] Synced preflight script.`);
   }
 
-  console.log(`[SUCCESS] Project ${projectName} is fully synchronized!`);
+  console.log(`[SUCCESS] Project ${projectName} synchronized.`);
 }
 
 function main() {
-  console.log('Starting sync for all Projects under: ' + PROJECTS_DIR);
-  
+  console.log('Opus-emulation harness — sync all projects');
+  console.log('Projects dir: ' + PROJECTS_DIR);
+
   if (!fs.existsSync(PROJECTS_DIR)) {
     console.error(`Projects directory not found: ${PROJECTS_DIR}`);
     process.exit(1);
   }
 
-  const dirs = fs.readdirSync(PROJECTS_DIR, { withFileTypes: true });
-  for (const dir of dirs) {
-    if (dir.isDirectory()) {
-      const fullPath = path.join(PROJECTS_DIR, dir.name);
-      const targetAgents = path.join(fullPath, '.agents');
-      if (fs.existsSync(targetAgents)) {
-        syncProject(fullPath);
-      }
+  for (const dir of fs.readdirSync(PROJECTS_DIR, { withFileTypes: true })) {
+    if (!dir.isDirectory()) continue;
+    const fullPath = path.join(PROJECTS_DIR, dir.name);
+    if (dir.name === 'agent-rules') continue;
+    if (fs.existsSync(path.join(fullPath, '.agents'))) {
+      syncProject(fullPath);
     }
   }
 
-  console.log('\n========================================');
-  console.log('ALL PROJECTS SYNCHRONIZATION COMPLETED.');
-  console.log('========================================');
+  console.log('\nALL PROJECTS SYNCHRONIZATION COMPLETED.');
 }
 
 main();

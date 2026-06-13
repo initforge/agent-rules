@@ -17,7 +17,8 @@ Harness cho **Grok CLI** — không liên quan Cursor IDE.
 | Global | `~/.grok/` |
 
 ```bash
-./grok/scripts/sync-all-harness.sh
+./grok/scripts/sync-all-harness.sh   # rules + skills → 3 nền
+./grok/scripts/validate-harness.sh  # fail nếu legacy/drift
 grok inspect
 ```
 

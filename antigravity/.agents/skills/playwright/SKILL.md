@@ -1,269 +1,147 @@
 ---
-name: playwright
-description: Use when the task requires automating a real browser from the terminal (navigation, form filling, snapshots, screenshots, data extraction, UI-flow debugging) via playwright-cli, or using a persistent browser/Electron interaction through js_repl for fast iterative UI debugging.
+name: "playwright"
+description: "Use when the task requires automating a real browser from the terminal (navigation, form filling, snapshots, screenshots, data extraction, UI-flow debugging) via `playwright-cli` or the bundled wrapper script."
 ---
 
-# Master Playwright Skill (CLI & Interactive REPL)
 
-This skill provides comprehensive instructions for browser and Electron automation using Playwright, covering both CLI automation scripts and persistent interactive debugging sessions (`js_repl`).
+# Playwright CLI Skill
 
----
+Drive a real browser from the terminal using `playwright-cli`. Prefer the bundled wrapper script so the CLI works even when it is not globally installed.
+Treat this skill as CLI-first automation. Do not pivot to `@playwright/test` unless the user explicitly asks for test files.
 
-## 1. PRE-REQUISITES & INITIAL SETUP
+## Prerequisite check (required)
 
-Before proposing any commands, check if `npx` is available:
+Before proposing commands, check whether `npx` is available (the wrapper depends on it):
+
 ```bash
 command -v npx >/dev/null 2>&1
 ```
-If missing, request Node.js/npm installation. Once Node.js is present, run:
+
+If it is not available, pause and ask the user to install Node.js/npm (which provides `npx`). Provide these steps verbatim:
+
 ```bash
-npm install playwright
-# For web-only chromium:
-# npx playwright install chromium
-# For Electron app debugging:
-# npm install --save-dev electron
+# Verify Node/npm are installed
+node --version
+npm --version
+
+# If missing, install Node.js/npm, then:
+npm install -g @playwright/cli@latest
+playwright-cli --help
 ```
 
-For persistent interactive session debugging, verify `js_repl` is enabled in `~/.codex/config.toml`:
-```toml
-[features]
-js_repl = true
+Once `npx` is present, proceed with the wrapper script. A global install of `playwright-cli` is optional.
+
+## Skill path (set once)
+
+```bash
+export CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+export PWCLI="$CODEX_HOME/skills/playwright/scripts/playwright_cli.sh"
 ```
 
----
+User-scoped skills install under `$CODEX_HOME/skills` (default: `~/.codex/skills`).
 
-## 2. INTERACTIVE REPL BOOTSTRAP (RUN ONCE IN REPL)
+## Quick start
 
-Use these variables to share Playwright handles across interactive cells. Use `var` for persistent bindings.
+Use the wrapper script:
 
-```javascript
-var chromium;
-var electronLauncher;
-var browser;
-var context;
-var page;
-var mobileContext;
-var mobilePage;
-var electronApp;
-var appWindow;
-
-try {
-  ({ chromium, _electron: electronLauncher } = await import("playwright"));
-  console.log("Playwright loaded successfully");
-} catch (error) {
-  throw new Error(`Could not load playwright. Run NPM setup first. Error: ${error}`);
-}
-
-var resetWebHandles = function () {
-  context = undefined;
-  page = undefined;
-  mobileContext = undefined;
-  mobilePage = undefined;
-};
-
-var ensureWebBrowser = async function () {
-  if (browser && !browser.isConnected()) {
-    browser = undefined;
-    resetWebHandles();
-  }
-  browser ??= await chromium.launch({ headless: false });
-  return browser;
-};
-
-var reloadWebContexts = async function () {
-  for (const currentContext of [context, mobileContext]) {
-    if (!currentContext) continue;
-    for (const p of currentContext.pages()) {
-      await p.reload({ waitUntil: "domcontentloaded" });
-    }
-  }
-  console.log("Reloaded all active tabs");
-};
+```bash
+"$PWCLI" open https://playwright.dev --headed
+"$PWCLI" snapshot
+"$PWCLI" click e15
+"$PWCLI" type "Playwright"
+"$PWCLI" press Enter
+"$PWCLI" screenshot
 ```
 
----
+If the user prefers a global install, this is also valid:
 
-## 3. SESSION CONFIGURATION & LAUNCH
-
-### Desktop Web Context
-```javascript
-var TARGET_URL = "http://127.0.0.1:3000"; // Prefer IP over localhost
-
-if (page?.isClosed()) page = undefined;
-
-await ensureWebBrowser();
-context ??= await browser.newContext({
-  viewport: { width: 1600, height: 900 },
-});
-page ??= await context.newPage();
-await page.goto(TARGET_URL, { waitUntil: "domcontentloaded" });
-console.log("Loaded desktop web:", await page.title());
+```bash
+npm install -g @playwright/cli@latest
+playwright-cli --help
 ```
 
-### Mobile Web Context
-```javascript
-var MOBILE_TARGET_URL = typeof TARGET_URL === "string" ? TARGET_URL : "http://127.0.0.1:3000";
+## Core workflow
 
-if (mobilePage?.isClosed()) mobilePage = undefined;
+1. Open the page.
+2. Snapshot to get stable element refs.
+3. Interact using refs from the latest snapshot.
+4. Re-snapshot after navigation or significant DOM changes.
+5. Capture artifacts (screenshot, pdf, traces) when useful.
 
-await ensureWebBrowser();
-mobileContext ??= await browser.newContext({
-  viewport: { width: 390, height: 844 },
-  isMobile: true,
-  hasTouch: true,
-});
-mobilePage ??= await mobileContext.newPage();
-await mobilePage.goto(MOBILE_TARGET_URL, { waitUntil: "domcontentloaded" });
-console.log("Loaded mobile web:", await mobilePage.title());
+Minimal loop:
+
+```bash
+"$PWCLI" open https://example.com
+"$PWCLI" snapshot
+"$PWCLI" click e3
+"$PWCLI" snapshot
 ```
 
-### Electron Session (Native Windows)
-Set `ELECTRON_ENTRY` to `.` or path to your main process script (e.g. `./main.js`).
-```javascript
-var ELECTRON_ENTRY = ".";
+## When to snapshot again
 
-if (appWindow?.isClosed()) appWindow = undefined;
-if (!appWindow && electronApp) {
-  await electronApp.close().catch(() => {});
-  electronApp = undefined;
-}
+Snapshot again after:
 
-electronApp ??= await electronLauncher.launch({
-  args: [ELECTRON_ENTRY],
-});
-appWindow ??= await electronApp.firstWindow();
-console.log("Loaded Electron window:", await appWindow.title());
+- navigation
+- clicking elements that change the UI substantially
+- opening/closing modals or menus
+- tab switches
+
+Refs can go stale. When a command fails due to a missing ref, snapshot again.
+
+## Recommended patterns
+
+### Form fill and submit
+
+```bash
+"$PWCLI" open https://example.com/form
+"$PWCLI" snapshot
+"$PWCLI" fill e1 "user@example.com"
+"$PWCLI" fill e2 "password123"
+"$PWCLI" click e3
+"$PWCLI" snapshot
 ```
 
----
+### Debug a UI flow with traces
 
-## 4. SCREENSHOT NORMALIZATION (CSS-PIXEL SCALING)
-**CRITICAL FOR EYE COORDINATE ALIGNMENT:** headed native-window screenshots can return device-pixel sized buffers (e.g. Retina displays), mismatching Playwright CSS coordinates. Always scale screenshots to CSS pixels before emitting.
-
-### Web CSS Normalization Helper
-```javascript
-var emitJpeg = async function (bytes) {
-  await codex.emitImage({
-    bytes,
-    mimeType: "image/jpeg",
-    detail: "original",
-  });
-};
-
-var emitWebScreenshotCssScaled = async function ({ page, clip, quality = 0.85 } = {}) {
-  var NodeBuffer = (await import("node:buffer")).Buffer;
-  const target = clip
-    ? { width: clip.width, height: clip.height }
-    : await page.evaluate(() => ({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      }));
-
-  const screenshotBuffer = await page.screenshot({
-    type: "png",
-    ...(clip ? { clip } : {}),
-  });
-
-  const bytes = await page.evaluate(
-    async ({ imageBase64, targetWidth, targetHeight, quality }) => {
-      const image = new Image();
-      image.src = `data:image/png;base64,${imageBase64}`;
-      await image.decode();
-
-      const canvas = document.createElement("canvas");
-      canvas.width = targetWidth;
-      canvas.height = targetHeight;
-
-      const ctx = canvas.getContext("2d");
-      ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
-
-      const blob = await new Promise((resolve) =>
-        canvas.toBlob(resolve, "image/jpeg", quality)
-      );
-      return new Uint8Array(await blob.arrayBuffer());
-    },
-    {
-      imageBase64: NodeBuffer.from(screenshotBuffer).toString("base64"),
-      targetWidth: target.width,
-      targetHeight: target.height,
-      quality,
-    }
-  );
-
-  await emitJpeg(bytes);
-};
+```bash
+"$PWCLI" open https://example.com --headed
+"$PWCLI" tracing-start
+# ...interactions...
+"$PWCLI" tracing-stop
 ```
 
-### Electron CSS Normalization Helper
-```javascript
-var emitElectronScreenshotCssScaled = async function ({ electronApp, clip, quality = 85 } = {}) {
-  const bytes = await electronApp.evaluate(async ({ BrowserWindow }, { clip, quality }) => {
-    const win = BrowserWindow.getAllWindows()[0];
-    const image = clip ? await win.capturePage(clip) : await win.capturePage();
-    const target = clip
-      ? { width: clip.width, height: clip.height }
-      : (() => {
-          const [width, height] = win.getContentSize();
-          return { width, height };
-        })();
+### Multi-tab work
 
-    const resized = image.resize({
-      width: target.width,
-      height: target.height,
-      quality: "best",
-    });
-    return resized.toJPEG(quality);
-  }, { clip, quality });
-
-  await emitJpeg(bytes);
-};
+```bash
+"$PWCLI" tab-new https://example.com
+"$PWCLI" tab-list
+"$PWCLI" tab-select 0
+"$PWCLI" snapshot
 ```
 
----
+## Wrapper script
 
-## 5. QA CHECKLISTS & SIGN-OFF
+The wrapper script uses `npx --package @playwright/cli playwright-cli` so the CLI can run without a global install:
 
-### A. Functional QA Checklist
-- [ ] Establish a QA Inventory listing every user control, route, and interactive state.
-- [ ] Test the full interactive cycle (state change -> verify -> revert to initial state).
-- [ ] Perform a 30-90 second exploratory pass on the running app.
-- [ ] Verify error states, dynamic validation, and dynamic/empty data tables.
-
-### B. Visual QA & Viewport Fit Checklist
-- [ ] Verify that no required UI regions are clipped, cropped, or cut off.
-- [ ] Scroll fit: scrolling is fine for content, but fixed shells/header toolbars must never scroll or clip.
-- [ ] Inspect the layout at minimum supported screen width (e.g. mobile 390px, desktop 1280px).
-- [ ] Check color contrast, typography alignment, icon scaling, and font size stability.
-
-Run this code in REPL to extract page-level viewport and scroll metrics:
-```javascript
-console.log(await page.evaluate(() => ({
-  innerWidth: window.innerWidth,
-  innerHeight: window.innerHeight,
-  scrollWidth: document.documentElement.scrollWidth,
-  scrollHeight: document.documentElement.scrollHeight,
-  canScrollX: document.documentElement.scrollWidth > document.documentElement.clientWidth,
-  canScrollY: document.documentElement.scrollHeight > document.documentElement.clientHeight,
-})));
+```bash
+"$PWCLI" --help
 ```
 
----
+Prefer the wrapper unless the repository already standardizes on a global install.
 
-## 6. CLEANUP COMMAND
-Always close sessions before exiting to avoid leaving orphaned background browser processes running:
-```javascript
-if (electronApp) await electronApp.close().catch(() => {});
-if (mobileContext) await mobileContext.close().catch(() => {});
-if (context) await context.close().catch(() => {});
-if (browser) await browser.close().catch(() => {});
+## References
 
-browser = undefined;
-context = undefined;
-page = undefined;
-mobileContext = undefined;
-mobilePage = undefined;
-electronApp = undefined;
-appWindow = undefined;
-console.log("Playwright session closed cleanly.");
-```
+Open only what you need:
+
+- CLI command reference: `references/cli.md`
+- Practical workflows and troubleshooting: `references/workflows.md`
+
+## Guardrails
+
+- Always snapshot before referencing element ids like `e12`.
+- Re-snapshot when refs seem stale.
+- Prefer explicit commands over `eval` and `run-code` unless needed.
+- When you do not have a fresh snapshot, use placeholder refs like `eX` and say why; do not bypass refs with `run-code`.
+- Use `--headed` when a visual check will help.
+- When capturing artifacts in this repo, use `output/playwright/` and avoid introducing new top-level artifact folders.
+- Default to CLI commands and workflows, not Playwright test specs.

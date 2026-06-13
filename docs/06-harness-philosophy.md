@@ -1,6 +1,6 @@
 # Harness Philosophy — 4 nền, một lõi an toàn
 
-Repo `agent-rules` phục vụ **bốn runtime agent**. Mỗi nền có triết lý độ nặng riêng; **không** copy-paste rule chéo mà không adapt.
+Repo `agent-rules` phục vụ **ba runtime chính** (Codex, Antigravity, Grok CLI). Master harness: `grok/`. **Không** copy-paste rule chéo mà không adapt.
 
 ## Bốn nền
 
@@ -8,8 +8,7 @@ Repo `agent-rules` phục vụ **bốn runtime agent**. Mỗi nền có triết 
 |---|---|---|---|
 | **Codex** | `@import` trong `AGENTS.md` | Nặng vừa | Bù tính literal GPT/Codex |
 | **Antigravity** | `alwaysApply` `.agents/rules/` | Nặng nhất | Ép Gemini verify, context, gates |
-| **Grok/Composer** | scan `.grok/rules/*.md` | **Opus-emulation** | Composer đạt đầu ra Opus, ceremony tối thiểu |
-| **Kiro** | `inclusion` `.kiro/steering/` | Mỏng | Opus thật — không cắt trần reasoning |
+| **Grok CLI** | scan `.grok/rules/*.md` | **Opus-emulation** | Nâng sàn đầu ra Opus, ceremony tối thiểu |
 
 ## Nguyên tắc chung
 
@@ -24,8 +23,8 @@ Repo `agent-rules` phục vụ **bốn runtime agent**. Mỗi nền có triết 
 |---|---|---|
 | L0 | Chat / báo cáo | Mọi lượt |
 | L1 | `AGENTS.md`, `.grok/5fedu/`, `plan/` dự án | Feedback lặp trong dự án |
-| L2 | `cursor/rules/`, `cursor/skills/` | User yêu cầu rõ sửa harness |
-| L3 | `codex/`, `antigravity/`, `kiro/` | User yêu cầu + đúng nền |
+| L2 | `grok/rules/`, `grok/skills/` | User yêu cầu rõ sửa harness |
+| L3 | `codex/`, `antigravity/` adapter | User yêu cầu + đúng nền |
 
 ## Opus-emulation (Composer + Gemini)
 

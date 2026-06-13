@@ -1,45 +1,30 @@
 # Antigravity Runtime Intent Manifest
 
-File này dành cho mọi agent đọc nhanh để hiểu vì sao `.agents` tồn tại.
+`.agents` = lớp ép hành vi bắt buộc cho Gemini. Lõi **Opus-emulation** — đồng bộ từ `grok/` master.
 
-## Ý Đồ
+## Mục tiêu
 
-Antigravity thường không tự kích hoạt context/gate mạnh như Codex. Vì vậy `.agents` là lớp ép hành vi bắt buộc, không phải artifact tạm.
+- Intent audit — không chỉ literal text
+- Index/mapping trước code; skill khi khớp trigger
+- 5fedu: `/template` trước UI; production verify có gates
+- MEDIUM default; final MEDIUM/HIGH đủ status block (`antigravity-overlay`)
+- `PASS` | `PARTIAL` | `BLOCKED`
 
-Mục tiêu của lớp này:
+## Files bắt buộc (protected)
 
-- buộc agent đọc entrypoint/mapping trước khi sửa;
-- buộc agent tự nhận diện ý đồ prompt;
-- buộc 5fedu UI kiểm template/golden reference;
-- buộc production verify đi từ mapping/context;
-- buộc task vừa/lớn có `Technical debt check`;
-- buộc final có `Status: PASS`, `Status: PARTIAL`, hoặc `Status: BLOCKED`;
-- bảo vệ các file rule/hook/workflow khỏi bị cleanup nhầm.
-
-## Files Phải Giữ
-
-- `.agents/AGENTS.md`
-- `.agents/INTENT.md`
-- `.agents/README.md`
-- `.agents/hooks.json`
-- `.agents/rules/00-hard-activation-contract.md`
-- `.agents/rules/prompt-intent-router.md`
-- `.agents/rules/quality-gates.md`
-- `.agents/rules/technical-debt-control.md`
-- `.agents/rules/clean-code.md`
+- `.agents/AGENTS.md`, `INTENT.md`, `README.md`, `hooks.json`
+- `.agents/rules/` — 9 file Opus-emulation + `antigravity-overlay` (alwaysApply)
+- `.agents/skills/5fedu-project/SKILL.md`
 - `.agents/workflows/*.md`
-- `.agents/skills/*/SKILL.md`
-- `.agents/5fedu/00-index.md`
+- `.agents/5fedu/00-index.md` (khi dự án 5fedu)
 
-Không xóa hoặc gitignore các file này nếu user chưa yêu cầu đích danh.
+Không cleanup/gitignore nếu user chưa yêu cầu đích danh.
 
 ## Enforcement
 
-Enforcement chính nằm ở:
-
 1. `.agents/AGENTS.md`
-2. `.agents/rules/00-hard-activation-contract.md`
-3. `.agents/hooks.json`
+2. `.agents/rules/00-runtime-and-intent.md` + `06-opus-emulation-contract.md`
+3. `.agents/rules/antigravity-overlay.md`
 4. `scripts/antigravity-preflight.ps1`
 
-Knowledge Items chỉ là memory phụ trợ. Không dùng KI thay rules/hook.
+Sync master: `agent-rules/grok/scripts/sync-all-harness.sh`

@@ -1,46 +1,7 @@
-# Antigravity Runtime Intent Manifest
+# Antigravity Adapter — Intent Manifest
 
-File này dành cho mọi agent đọc nhanh để hiểu vì sao `.agents` tồn tại.
+Master adapter mirror xuống `.agents/` trên dự án. Cùng nội dung với `.agents/INTENT.md` live.
 
-## Ý Đồ
+Harness: **Opus-emulation** từ `grok/rules/platforms/antigravity/` → sync `sync-all-harness.sh`.
 
-Antigravity thường không tự kích hoạt context/gate mạnh như Codex. Vì vậy `.agents` là lớp ép hành vi bắt buộc, không phải artifact tạm.
-
-Mục tiêu của lớp này:
-
-- buộc áp dụng luật và status block trong mọi session chat (kể cả thảo luận thiết kế) thông qua cấu hình rules luôn hoạt động (alwaysApply);
-- buộc agent đọc entrypoint/mapping trước khi sửa;
-- buộc agent tự nhận diện ý đồ prompt;
-- buộc 5fedu UI kiểm template/golden reference;
-- buộc production verify đi từ mapping/context;
-- buộc task vừa/lớn có `Technical debt check`;
-- buộc final có `Status: PASS`, `Status: PARTIAL`, hoặc `Status: BLOCKED`;
-- bảo vệ các file rule/hook/workflow khỏi bị cleanup nhầm.
-
-## Files Phải Giữ
-
-- `.agents/AGENTS.md`
-- `.agents/INTENT.md`
-- `.agents/README.md`
-- `.agents/hooks.json`
-- `.agents/rules/00-hard-activation-contract.md`
-- `.agents/rules/prompt-intent-router.md`
-- `.agents/rules/quality-gates.md`
-- `.agents/rules/technical-debt-control.md`
-- `.agents/rules/clean-code.md`
-- `.agents/workflows/*.md`
-- `.agents/skills/*/SKILL.md`
-- `.agents/5fedu/00-index.md`
-
-Không xóa hoặc gitignore các file này nếu user chưa yêu cầu đích danh.
-
-## Enforcement
-
-Enforcement chính nằm ở:
-
-1. `.agents/AGENTS.md`
-2. `.agents/rules/00-hard-activation-contract.md`
-3. `.agents/hooks.json`
-4. `scripts/antigravity-preflight.ps1`
-
-Knowledge Items chỉ là memory phụ trợ. Không dùng KI thay rules/hook.
+Protected: `rules/`, `skills/5fedu-project/`, entrypoints, `hooks.json`.
