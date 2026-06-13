@@ -1,1 +1,0 @@
-prefix_rule(pattern=["C:\\flutter\\bin\\flutter.bat"], decision="allow")

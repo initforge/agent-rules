@@ -16,7 +16,7 @@ Repo `agent-rules` phục vụ **bốn runtime agent**. Mỗi nền có triết 
 1. **Harness = hạ tầng**, không phải notepad. Agent mặc định **không** tự sửa harness khi làm task thường (`05-harness-mutation-gate`).
 2. **Rules + Skills + Context** — thiếu một tầng → rule reference chết (vd `5fedu-project` không có trong `.grok/skills/`).
 3. **Emulate outcome, not ceremony** — Opus-emulation: tự chủ, bền, verify; không preflight 8 câu mọi lượt.
-4. **Master → live** — sửa `cursor/` rồi `sync-harness.sh`; không sửa `.grok/` rồi quên master.
+4. **Master → live** — sửa `grok/` rồi `sync-all-harness.sh`; một lệnh sync cả Codex + Antigravity.
 
 ## Learning tiers
 
@@ -29,7 +29,7 @@ Repo `agent-rules` phục vụ **bốn runtime agent**. Mỗi nền có triết 
 
 ## Opus-emulation (Composer + Gemini)
 
-Lõi: `shared/opus-emulation-contract.md` → `cursor/rules/06-*` + `antigravity/.agents/rules/06-*`.
+Lõi: `shared/opus-emulation-contract.md` → `grok/rules/06-*` → sync 3 nền.
 
 - **Mặc định MEDIUM** — đa số task nặng đô, không hạ tier để khỏi verify.
 - **HIGH** khi DB/auth/5fedu UI/production/permission/export.
@@ -37,5 +37,5 @@ Lõi: `shared/opus-emulation-contract.md` → `cursor/rules/06-*` + `antigravity
 
 ## Đọc tiếp
 
-- [Grok harness coverage](07-cursor-composer-harness.md)
+- [Grok CLI harness coverage](07-grok-cli-harness.md)
 - [Opus emulation](08-opus-emulation-harness.md)

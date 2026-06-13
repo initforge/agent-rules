@@ -1,39 +1,52 @@
 ---
-description: "Hợp đồng Opus-emulation — Gemini đạt đầu ra Opus, cùng core với Composer"
 alwaysApply: true
+description: "Hợp đồng Opus-emulation — Composer đạt đầu ra Opus, harness nặng, ceremony tối thiểu"
 ---
 
 # 06-opus-emulation-contract
 
-Nguồn chung: `shared/opus-emulation-contract.md`. **Gemini và Composer cùng đầu ra Opus** — không phân model theo việc.
+Nguồn chung: `shared/opus-emulation-contract.md`. **Composer và Gemini dùng cùng đầu ra Opus** — không phân model theo việc.
 
 ## Mục tiêu
 
-Bắt chước **kết quả** Opus (tự chủ, bền, verify, đúng scope). Gemini thiếu sẵn verify/context → harness **ép** O1–O10. Không thêm ceremony thừa (preflight 8 câu, 2 phương án mọi task).
+Bắt chước **kết quả** Opus (tự chủ, bền, verify, đúng scope), không bắt chước **nghi thức** làm Opus chậm.
 
-## Outcome (alwaysApply)
+## Outcome (luôn áp dụng)
 
-1. **Chạy tới đích** — không dừng ở đề xuất.
-2. **Verify trước PASS** — raw output / screenshot / log.
-3. **Tự làm trước khi hỏi** — blocked mới hỏi.
-4. **Không placeholder / fake CRUD / fake PASS**.
-5. **PARTIAL/BLOCKED** không dùng để trốn việc còn tự làm được.
+1. **Chạy tới đích** — user yêu cầu làm → làm, không dừng ở gợi ý.
+2. **Verify trước PASS** — chạy test/lint/browser/DB phù hợp; không fake PASS.
+3. **Tự làm trước khi hỏi** — hỏi chỉ khi blocked (credential, quyền, approval).
+4. **Không placeholder / mock giả** — code thật, đủ scope.
+5. **PARTIAL/BLOCKED** chỉ khi thật sự không tiến được sau khi đã thử fallback.
 
 ## Mặc định nặng
 
-Task mặc định **MEDIUM**. HIGH: DB, auth, 5fedu UI, production, permission, export → full matrix + skill/context.
+Coi task là **MEDIUM** trừ khi rõ LOW (typo 1 chỗ). Đừng hạ tier để khỏi verify.
 
-## Gemini stress (ép thêm)
+| Tier | Thêm bắt buộc |
+|---|---|
+| MEDIUM | Regression nếu shared code; evidence cuối gọn |
+| HIGH (DB/auth/5fedu UI/production/permission/export) | Full quality matrix; skill + context; `Template checked` nếu 5fedu UI |
 
-- Anti-surface scan: MEDIUM+ phải trace call-sites trước sửa shared.
-- Anti-laziness: không `PASS` không verify (`00-runtime-and-intent` hard contract).
-- Context: intent router + đọc index trước code (`03-context-and-tools`).
+## Domain gates (HIGH)
 
-## Ceremony giảm (tránh bóp Opus khi sau này đổi model)
+- **Bug/debug:** root cause ≥90% evidence (`01-agent-workflow-sop`).
+- **Shared change:** `rg` call-sites (`02-code-quality-and-debt`).
+- **5fedu UI:** `/template` trước (`04-skills-and-5fedu`).
+- **Permission:** đa account, không chỉ admin.
 
-- Status block đầy đủ: chỉ MEDIUM/HIGH, không mọi câu chat thảo luận.
-- Brainstorm 2 phương án: chỉ HIGH.
+## Ceremony cấm
+
+- Preflight 8 câu mọi lượt → nội bộ ≤3 (LOW) / ≤5 (HIGH).
+- 2 phương án mọi task → chỉ HIGH / architecture.
+- Evidence label essay mọi chat → chỉ MEDIUM/HIGH.
+- Explore không mục tiêu → index + file liên quan; HIGH đọc sâu có chỉ đích.
+
+## Composer anti-stuck
+
+- Câu hỏi chiến lược: trả lời trước, không đọc 15+ file.
+- Implement MEDIUM/HIGH: đủ context để **đạt O1–O2**, không cắt verify vì sợ stuck.
 
 ## Final (MEDIUM/HIGH)
 
-`Intent detected` · `Context loaded` · `Template checked` (5fedu UI) · `Verification` · `Technical debt check` · `Status: PASS|PARTIAL|BLOCKED`
+`Intent` · `Context loaded` · `Template checked` (nếu 5fedu UI) · `Verification` · `Technical debt check` · `Status: PASS|PARTIAL|BLOCKED`

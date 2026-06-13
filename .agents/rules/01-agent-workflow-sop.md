@@ -1,4 +1,5 @@
 ---
+alwaysApply: true
 description: "SOP workflow — core, planning, execution, quality gates (Codex gốc, Composer tune)"
 ---
 

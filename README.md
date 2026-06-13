@@ -25,8 +25,8 @@ Daily work uses `C:\Users\DELL\.codex`. The `P:\agent-rules\codex` copy is the b
 | `codex/templates/` | Plan, research, review, handoff, and final report templates |
 | `codex/inventory/` | Machine/tool/MCP/config snapshots |
 | `antigravity/` | Adapter for Google Antigravity rules, workflows, and preflight |
-| `cursor/` | **Grok CLI / Composer 2.5** harness master (rules + skills) |
-| `.grok/` | Grok CLI live runtime (sync từ `cursor/`) |
+| `grok/` | **Grok CLI** harness master (rules + skills) — sync cả Codex + Antigravity |
+| `.grok/` | Grok CLI live runtime |
 | `shared/` | Shared contracts (`opus-emulation-contract.md`) |
 
 ## Tech Stack
@@ -61,11 +61,11 @@ Restore from backup to local runtime:
 ## Grok CLI Harness
 
 ```bash
-./cursor/scripts/sync-harness.sh   # master → .grok/rules + .grok/skills
-grok inspect                       # verify rules + skills loaded
+./grok/scripts/sync-all-harness.sh   # grok → .grok + codex/rules + .agents/rules
+grok inspect                         # verify Grok CLI loaded
 ```
 
-Triết lý Opus-emulation: [docs/06-harness-philosophy.md](docs/06-harness-philosophy.md) · [docs/07-cursor-composer-harness.md](docs/07-cursor-composer-harness.md) · [docs/08-opus-emulation-harness.md](docs/08-opus-emulation-harness.md)
+**Không dùng Cursor** — runtime là Grok CLI. Triết lý: [docs/06](docs/06-harness-philosophy.md) · [docs/07](docs/07-grok-cli-harness.md) · [docs/08](docs/08-opus-emulation-harness.md)
 
 ## Read Next
 

@@ -1,58 +1,41 @@
 @C:\Users\DELL\.codex\RTK.md
-@C:\Users\DELL\.codex\rules\core.md
-@C:\Users\DELL\.codex\rules\root-cause-verification.md
-@C:\Users\DELL\.codex\rules\prompt-intent-router.md
-@C:\Users\DELL\.codex\rules\planning.md
-@C:\Users\DELL\.codex\rules\execution.md
-@C:\Users\DELL\.codex\rules\quality-gates.md
-@C:\Users\DELL\.codex\rules\context-tools.md
-@C:\Users\DELL\.codex\rules\tool-inventory.md
-@C:\Users\DELL\.codex\rules\clean-code.md
-@C:\Users\DELL\.codex\rules\technical-debt-control.md
+@C:\Users\DELL\.codex\rules\00-runtime-and-intent.md
+@C:\Users\DELL\.codex\rules\01-agent-workflow-sop.md
+@C:\Users\DELL\.codex\rules\02-code-quality-and-debt.md
+@C:\Users\DELL\.codex\rules\03-context-and-tools.md
+@C:\Users\DELL\.codex\rules\04-skills-and-5fedu.md
+@C:\Users\DELL\.codex\rules\05-harness-mutation-gate.md
+@C:\Users\DELL\.codex\rules\06-opus-emulation-contract.md
 @C:\Users\DELL\.codex\rules\codex-overlay.md
 @C:\Users\DELL\.codex\rules\platform-boundary.md
 
 # Bộ Nạp Runtime Codex
 
-File này là entrypoint global cho Codex.
+Entrypoint global Codex CLI. Lõi rule **Opus-emulation** — đồng bộ từ `agent-rules/grok/` qua `sync-all-harness.sh`.
 
 ## Nguồn Runtime
 
-Runtime dùng hằng ngày:
-
 ```text
-C:\Users\DELL\.codex
+~/.codex/              ← daily
+agent-rules/codex/     ← backup/bootstrap
+agent-rules/grok/      ← harness master
 ```
-
-Bản backup/bootstrap:
-
-```text
-P:\agent-rules\codex
-```
-
-`P:\agent-rules` chỉ dùng cho backup, sync, bootstrap máy mới, chia sẻ rule với agent/tool khác và lưu tài liệu setup dài hạn. Khi làm việc hằng ngày, Codex không được phụ thuộc trực tiếp vào ổ `P:` nếu runtime local đã có đủ file.
 
 ## Ngôn Ngữ
 
-- Giao tiếp với người dùng bằng tiếng Việt có dấu đầy đủ.
-- Không dùng tiếng Việt không dấu.
-- Không dùng tiếng Anh nếu có cách nói tiếng Việt tự nhiên.
-- Giữ tiếng Anh cho thuật ngữ kỹ thuật, model, lệnh, đường dẫn, API, package, schema key, tool, sản phẩm và mã nguồn.
+Tiếng Việt có dấu; giữ tiếng Anh cho thuật ngữ kỹ thuật, path, code.
 
 ## Vận Hành Mặc Định
 
-- Task nhỏ rõ ràng: đọc đúng ngữ cảnh, sửa trực tiếp, verify tối thiểu.
-- Task vừa: đọc ngữ cảnh, lập plan khi có nhiều lát cắt, triển khai, verify.
-- Task rủi ro cao hoặc multi-domain: locked plan, risk register, reviewer gate, verify sâu.
-- Không tự commit, push, force-push hoặc deploy nếu người dùng chưa yêu cầu rõ trong session hiện tại.
-- Với 5fedu, production là môi trường verify mặc định sau khi đã có thay đổi được push/deploy; vẫn không tự push nếu người dùng chưa yêu cầu rõ.
-- Trạng thái cuối luôn là `PASS`, `PARTIAL`, hoặc `BLOCKED`.
+- Mặc định **MEDIUM** (Opus-emulation).
+- HIGH: DB/auth/5fedu UI/production → locked plan, verify sâu.
+- Không tự commit/push/deploy.
+- Trạng thái: `PASS` | `PARTIAL` | `BLOCKED`.
 
-## Bắt Buộc Luôn Áp Dụng
+## Skills
 
-- Đọc entrypoint/context index trước khi sửa.
-- Không revert thay đổi của người dùng.
-- Giữ diff nhỏ và đúng scope.
-- Clean code là risk-control, không phải cleanup thẩm mỹ.
-- Root cause và verification phải có bằng chứng trực tiếp khi debug/fix/review.
-- Nếu phát hiện rule/context mới có giá trị tái sử dụng, chủ động đề xuất hoặc cập nhật theo learning loop đang áp dụng.
+Đọc `04-skills-and-5fedu.md` — `codex/skills/` hoặc `~/.codex/skills/`.
+
+## 5fedu
+
+Detection: `.codex/5fedu/` — skill `5fedu-project` + `00-index.md`.

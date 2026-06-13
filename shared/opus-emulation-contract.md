@@ -4,7 +4,7 @@
 
 **Không copy** ceremony làm Opus chậm (preflight 8 câu, brainstorm 2 phương án mọi task, status essay mọi lượt). **Copy kết quả** Opus: tự chủ, bền, verify, đúng scope, không dừng non.
 
-Áp dụng: `cursor/rules/06-*`, `antigravity/.agents/rules/06-*`, live `.grok/rules/`, `.agents/rules/`.
+Áp dụng: `grok/rules/06-*` → sync → `.grok/rules/`, `codex/rules/`, `.agents/rules/`, `antigravity/.agents/rules/`.
 
 Kiro chạy Opus thật → giữ harness **mỏng** (`kiro/steering/`). File này **không** port sang Kiro.
 
@@ -83,7 +83,6 @@ LOW: chỉ `Status` + việc đã làm (1–3 câu).
 
 Sửa file này → copy sang:
 
-- `cursor/rules/06-opus-emulation-contract.md`
-- `antigravity/.agents/rules/06-opus-emulation-contract.md` (+ `alwaysApply: true`)
-- `./cursor/scripts/sync-harness.sh` (Grok live)
+- `grok/rules/06-opus-emulation-contract.md`
+- `grok/scripts/sync-all-harness.sh` (Grok + Codex + Antigravity)
 - mirror `antigravity/.agents/rules/` → `.agents/rules/` (Antigravity live)

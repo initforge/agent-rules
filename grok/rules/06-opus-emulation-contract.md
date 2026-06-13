@@ -1,5 +1,4 @@
 ---
-alwaysApply: true
 description: "Hợp đồng Opus-emulation — Composer đạt đầu ra Opus, harness nặng, ceremony tối thiểu"
 ---
 

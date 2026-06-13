@@ -1,4 +1,5 @@
 ---
+alwaysApply: true
 description: "Clean code, regression, permission discipline, technical debt"
 ---
 

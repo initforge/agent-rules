@@ -1,4 +1,5 @@
 ---
+alwaysApply: true
 description: "Ranh giới 3 nền chính — Grok không sửa chéo"
 ---
 
