@@ -1,10 +1,14 @@
 ---
 name: "screenshot"
-description: "Use when the user explicitly asks for a desktop or system screenshot (full screen, specific app or window, or a pixel region), or when tool-specific capture capabilities are unavailable and an OS-level capture is needed."
+description: OS desktop screenshot. ULTRA-SENSITIVE Turn-0 — activate on screenshot, chụp màn hình, capture screen/window/region, or OS-level capture when browser tools unavailable. Read SKILL.md first. Visible Echo required.
 ---
 
 
 # Screenshot Capture
+
+## Skill activation (cực nhạy — Turn-0)
+
+Signal OS screenshot → `Skill scan: … → screenshot` + `Skill activated: screenshot` visible → đọc file này.
 
 Follow these save-location rules every time:
 

@@ -153,6 +153,19 @@ Khi restore từ bản sync:
 & "$env:USERPROFILE\.codex\scripts\sync-p-to-codex.ps1"
 ```
 
+Sync harness đồng bộ (codex master → Antigravity + `.agents` + `.grok` mirror):
+
+```powershell
+& "P:\agent-rules\scripts\sync-platform-skills.ps1"
+# hoặc: bash P:/agent-rules/scripts/sync-all-harness.sh
+```
+
+Grok CLI global (mirror codex, không master `grok/`):
+
+```powershell
+& "P:\agent-rules\scripts\install-grok-global.ps1"
+```
+
 Khi Antigravity rules thay đổi:
 
 ```powershell
@@ -171,7 +184,7 @@ Khi Antigravity rules thay đổi:
 - Master Antigravity rules nằm trong `P:\agent-rules\antigravity\.agents\rules\`.
 - File root `P:\agent-rules\*.md` chỉ là loader tương thích.
 - Nội dung hướng tới người dùng phải dùng tiếng Việt có dấu đầy đủ.
-- Dùng `codex-research` làm lớp nghiên cứu chính.
+- Dùng skill `researcher` làm lớp nghiên cứu chính (Codex + Grok).
 - Dùng `workflow-router` và metadata trong plan để route phase/profile.
 - Dùng clean-code thực dụng: cleanup phải giảm rủi ro, nếu không thì để sau.
 - Dùng GitNexus trước khi xóa, đổi tên, di chuyển hoặc refactor code dùng chung khi repo đã index.

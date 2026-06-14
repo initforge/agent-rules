@@ -1,61 +1,50 @@
 $ErrorActionPreference = "Stop"
 
-$masterAntigravity = "P:\agent-rules\antigravity\.agents"
-$masterCodex = "P:\agent-rules\codex"
+# Codex master → Antigravity → local ~/.codex (một chiều — tránh drift hai chiều)
+$RepoRoot = if ($env:AGENT_RULES_ROOT) { $env:AGENT_RULES_ROOT } else { "P:\agent-rules" }
+$masterCodex = Join-Path $RepoRoot "codex"
+$masterAntigravity = Join-Path $RepoRoot "antigravity\.agents"
 $localCodex = "$env:USERPROFILE\.codex"
 
-function Sync-Folder {
+function Sync-OneWay {
   param(
     [string]$Src,
     [string]$Dst
   )
-  if (-not (Test-Path $Src) -or -not (Test-Path $Dst)) { return }
-  
-  $srcFiles = Get-ChildItem $Src -Recurse -File
-  foreach ($sFile in $srcFiles) {
-    # Skip system files
-    if ($sFile.Name -like ".*") { continue }
-    
-    $relative = $sFile.FullName.Substring($Src.Length + 1)
+  if (-not (Test-Path $Src)) {
+    Write-Host "[Skip] Source missing: $Src"
+    return
+  }
+  New-Item -ItemType Directory -Force -Path $Dst | Out-Null
+
+  Get-ChildItem $Src -Recurse -File | ForEach-Object {
+    if ($_.Name -like ".*") { return }
+    $relative = $_.FullName.Substring($Src.Length + 1)
     $dFile = Join-Path $Dst $relative
-    
-    if (-not (Test-Path $dFile) -or $sFile.LastWriteTime -gt (Get-Item $dFile).LastWriteTime) {
-      $parent = Split-Path $dFile -Parent
-      New-Item -ItemType Directory -Force -Path $parent | Out-Null
-      Copy-Item $sFile.FullName $dFile -Force
-      Write-Host "Synced: $($sFile.FullName) -> $dFile"
-    }
-  }
-
-  $dstFiles = Get-ChildItem $Dst -Recurse -File
-  foreach ($dFile in $dstFiles) {
-    if ($dFile.Name -like ".*") { continue }
-    
-    $relative = $dFile.FullName.Substring($Dst.Length + 1)
-    $sFile = Join-Path $Src $relative
-    
-    if (-not (Test-Path $sFile) -or $dFile.LastWriteTime -gt (Get-Item $sFile).LastWriteTime) {
-      $parent = Split-Path $sFile -Parent
-      New-Item -ItemType Directory -Force -Path $parent | Out-Null
-      Copy-Item $dFile.FullName $sFile -Force
-      Write-Host "Synced: $($dFile.FullName) -> $sFile"
-    }
+    $parent = Split-Path $dFile -Parent
+    New-Item -ItemType Directory -Force -Path $parent | Out-Null
+    Copy-Item $_.FullName $dFile -Force
+    Write-Host "Synced: $relative"
   }
 }
 
-Write-Host "[Platform Sync] Syncing Rules and Skills between Antigravity and Codex..."
+Write-Host "[Platform Sync] codex master -> antigravity + local runtime"
 
-# 1. Sync Rules
-Sync-Folder -Src (Join-Path $masterAntigravity "rules") -Dst (Join-Path $masterCodex "rules")
+# Ưu tiên bash sync đầy đủ (rules + frontmatter + .agents + .grok)
+$syncSh = Join-Path $RepoRoot "scripts\sync-all-harness.sh"
+if (Get-Command bash -ErrorAction SilentlyContinue) {
+  & bash $syncSh
+} else {
+  Sync-OneWay -Src (Join-Path $masterCodex "rules") -Dst (Join-Path $masterAntigravity "rules")
+  Sync-OneWay -Src (Join-Path $masterCodex "skills") -Dst (Join-Path $masterAntigravity "skills")
+  $fm = Join-Path $RepoRoot "antigravity\scripts\add-rules-frontmatter.ps1"
+  if (Test-Path $fm) { & $fm -RulesDir (Join-Path $masterAntigravity "rules") }
+}
 
-# 2. Sync Skills
-Sync-Folder -Src (Join-Path $masterAntigravity "skills") -Dst (Join-Path $masterCodex "skills")
-
-# 3. Sync to local user runtime ~/.codex
 if (Test-Path $localCodex) {
-  Write-Host "[Platform Sync] Propagating master updates to local user runtime $localCodex..."
-  Sync-Folder -Src (Join-Path $masterCodex "rules") -Dst (Join-Path $localCodex "rules")
-  Sync-Folder -Src (Join-Path $masterCodex "skills") -Dst (Join-Path $localCodex "skills")
+  Write-Host "[Platform Sync] codex -> $localCodex"
+  Sync-OneWay -Src (Join-Path $masterCodex "rules") -Dst (Join-Path $localCodex "rules")
+  Sync-OneWay -Src (Join-Path $masterCodex "skills") -Dst (Join-Path $localCodex "skills")
 }
 
-Write-Host "[Platform Sync] Synchronization completed successfully."
+Write-Host "[Platform Sync] Done (one-way, no bidirectional merge)."

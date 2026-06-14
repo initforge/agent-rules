@@ -1,42 +1,143 @@
----
-description: "Codex CLI overlay — runtime locality và behavior"
----
+﻿# Codex Overlay
 
-# Codex Overlay
+## Trigger
 
-Áp **chỉ trong Codex CLI**.
+Active only inside Codex.
 
-## Runtime
+## Runtime locality
+
+Use local runtime under:
 
 ```text
-~/.codex/                    ← daily runtime
-agent-rules/codex/           ← backup/bootstrap
+C:\Users\DELL\.codex\
 ```
 
-Không phụ thuộc backup path khi runtime local đủ file.
+`P:\agent-rules` is backup, sync, and bootstrap, not daily runtime dependency.
 
-## Behavior
+## Codex behavior
 
-- Search trước khi đọc tràn.
-- Patch deterministic; không revert user; không auto-commit/push.
-- Review: `path:line`; plan: `path:symbol`.
+- Use targeted search before large reads.
+- Use deterministic patching for edits when possible.
+- Do not revert user changes unless asked.
+- Do not auto-commit.
+- Do not auto-push.
+- Use `path:line` for exact review findings.
+- Use `path:symbol` in plan files.
 
 ## Config
 
-`~/.codex/config.toml` · `<repo>/.codex/config.toml` (trusted projects)
+User config:
 
-## Subagents
+```text
+C:\Users\DELL\.codex\config.toml
+```
 
-TOML trong `~/.codex/agents/` — gọi explicit (planner, implementer, reviewer, explorer).
+Project config:
+
+```text
+<repo>\.codex\config.toml
+```
+
+Project config applies only in trusted projects.
+
+## Subagents / TOML
+
+Optional only.
+
+No automatic role switch guarantee.
+
+Call explicitly:
+
+- Use planner agent...
+- Use implementer agent...
+- Use reviewer agent...
+
+Custom agents live in:
+
+```text
+C:\Users\DELL\.codex\agents\
+```
+
+Useful roles:
+
+- planner: plan only, no app code edits
+- implementer: execute one locked plan file
+- reviewer: read-only correctness, security, test review
+- explorer: read-only code mapping
 
 ## Skills
 
-`~/.codex/skills/` · `codex/skills/` — workflow dài → skill, không nhồi `AGENTS.md`.
+Skills are preferred for reusable workflows that have:
+
+- instructions
+- scripts
+- references
+- assets
+
+Do not put long workflow docs into `AGENTS.md` if they can become a skill.
+
+Skills live in (same content, two runtimes):
+
+```text
+~/.codex/skills/          # Codex CLI
+~/.grok/skills/           # Grok CLI
+<repo>/.grok/skills/      # Grok project override
+```
+
+**Skill Activation Gate:** task khớp `10-fast-context.md` hoặc skill `description` → đọc `SKILL.md` trước implement; ghi `Skill activated: <name>`. Không chờ user nhắc.
+
+Primary UI: `product-ui-craft` · E2E: `e2e-qa` · CLI debug: `playwright`
+
+Each skill should have:
+
+```text
+<skill-name>\
+|- SKILL.md
+|- scripts\
+|- references\
+`- assets\
+```
+
+## Plugins
+
+Use plugins when packaging skills, MCP, and app integrations for reusable install.
+
+Do not create plugin before:
+
+- runtime rules are stable
+- skills are stable
+- MCP registry is documented
 
 ## MCP
 
-`~/.codex/config.toml` hoặc `codex mcp` — ghi registry `codex/docs/`.
+Configure MCP in:
+
+```text
+C:\Users\DELL\.codex\config.toml
+```
+
+or via:
+
+```text
+codex mcp
+```
+
+Record all MCP servers in:
+
+```text
+C:\Users\DELL\.codex\docs\mcp-registry.md
+```
 
 ## Project AGENTS.md
 
-Chỉ fact dự án (build, test, stack). Global rules ở `codex/rules/`.
+Project-level `AGENTS.md` should contain only project-specific facts:
+
+- build commands
+- test commands
+- stack
+- project conventions
+- directory-specific rules
+- deployment or staging notes
+- known flaky tests
+
+Do not duplicate global runtime rules inside project `AGENTS.md`.

@@ -86,7 +86,7 @@ Codex switches to research mode
 ```
 
 Reference:
-- `docs/codex-research-workflow.md`
+- `docs/researcher-workflow.md`
 - `docs/profile-matrix.md`
 
 ## UI QA

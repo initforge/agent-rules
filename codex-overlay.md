@@ -28,7 +28,7 @@ P:\agent-rules\codex
 
 - Dùng tiếng Việt có dấu đầy đủ cho mọi nội dung hướng tới người dùng.
 - Không dùng tiếng Anh nếu có cách nói tiếng Việt tự nhiên.
-- Dùng `codex-research` cho nghiên cứu có cấu trúc.
+- Dùng skill `researcher` cho nghiên cứu đa nguồn (Codex + Grok).
 - Dùng `workflow-router` và metadata trong plan để route phase/profile.
 - Dùng GitNexus cho kiểm tra impact và refactor code dùng chung khi repo đã index.
 - Giữ `AGENTS.md` cấp project thật mỏng, chỉ chứa thông tin riêng của project.

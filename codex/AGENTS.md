@@ -7,6 +7,7 @@
 @C:\Users\DELL\.codex\rules\05-harness-mutation-gate.md
 @C:\Users\DELL\.codex\rules\06-opus-emulation-contract.md
 @C:\Users\DELL\.codex\rules\codex-overlay.md
+@C:\Users\DELL\.codex\rules\00-universal-frontier-contract.md
 @C:\Users\DELL\.codex\rules\platform-boundary.md
 
 # Bộ Nạp Runtime Codex

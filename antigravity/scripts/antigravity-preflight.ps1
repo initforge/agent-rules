@@ -15,7 +15,7 @@ $required = @(
   ".agents\rules\platform-boundary.md",
   ".agents\skills\5fedu-project\SKILL.md",
   ".agents\workflows\5fedu-project.md",
-  ".agents\workflows\codex-research.md"
+  ".agents\workflows\researcher.md"
 )
 
 $missing = @()

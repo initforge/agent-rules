@@ -142,41 +142,26 @@ Notes:
 - README is in scope only when the user asks for README/docs standardization
 - category: self-authored
 
-### codex-research
+### researcher
 
 Runtime:
-- Codex
+- Codex + Grok CLI
 
 Purpose:
-- Run structured research inside Codex using local context, GitNexus, and web, then write a reusable research note before implementation.
+- Multi-source structured research (≥3 angles) before implementation or when bug stalls. Renamed from `codex-research`.
 
 Path:
-- `C:\Users\DELL\.codex\skills\codex-research`
-
-Install/copy:
-- local custom skill; include in Codex sync bundle
+- `codex/skills/researcher` → `~/.codex/skills/` / `~/.grok/skills/`
 
 Verify:
-- `python C:\Users\DELL\.codex\skills\.system\skill-creator\scripts\quick_validate.py C:\Users\DELL\.codex\skills\codex-research`
+- `scripts/validate-harness.sh` (Multi-source contract in SKILL.md)
 
 Trigger:
-- external docs
-- latest API behavior
-- issue/changelog review
-- broad research and source gathering
-- independent second-pass review
-- bug fix that has stalled and needs evidence before another patch
-
-Inputs:
-- task prompt
-- optional repo path
-
-Outputs:
-- research or review note with Summary, Evidence, Risks, Recommendation, and Unknowns
+- research, compare, latest docs, changelog, stall bug, greenfield UI/E2E prep
 
 Notes:
 - category: self-authored
-- preferred native profile: `researcher`
+- Codex native profile: `researcher`
 
 ### workflow-router
 
@@ -215,57 +200,37 @@ Notes:
 - works with `resolve-workflow-profile.ps1` and `start-codex-phase.ps1`
 - also works with `resolve-plan-profile.ps1` and `start-codex-from-plan.ps1`
 
-### frontend-ui-quality
+### product-ui-craft
 
 Runtime:
-- Codex
+- Codex + Grok CLI
 
 Purpose:
-- Raise implementation and QA bar for frontend UI/UX work.
-- Includes an immediate defect protocol and Dense Mobile App Gate for crowded headers, chips, kanban cards, and bottom navigation defects.
+- Universal UI/UX — any visual direction (not one preset). Deep intake, multi-source research, 5fedu `/template`, browser verify. Replaces `frontend-ui-quality` and archived taste/image skills.
 
 Path:
-- `C:\Users\DELL\.codex\skills\frontend-ui-quality`
-
-Install/copy:
-- local custom skill; include in Codex sync bundle
-
-Verify:
-- inspect `SKILL.md`, read `references/visual-qa-checklist.md`, and run a frontend task that requires visual QA
+- `codex/skills/product-ui-craft` → `~/.codex/skills/` / `~/.grok/skills/`
 
 Trigger:
-- frontend screens
-- responsive behavior
-- visual polish
-- layout correctness
+- UI, frontend, layout, dashboard, landing, greenfield app, redesign, 5fedu FE
 
-Notes:
-- category: self-authored
-
-### ui-ux-pro-max
+### e2e-qa
 
 Runtime:
-- Codex
+- Codex + Grok CLI
 
 Purpose:
-- Design system and UI/UX ideation support.
+- Professional E2E: test matrix, permission matrix, cross-module, maximize coverage. Split from `playwright` CLI debug.
 
 Path:
-- `C:\Users\DELL\.codex\skills\ui-ux-pro-max`
-
-Install/copy:
-- local custom skill; include in Codex sync bundle
-
-Verify:
-- inspect `SKILL.md`
+- `codex/skills/e2e-qa`
 
 Trigger:
-- UI/UX concepting
-- visual direction work
-- style system generation
+- e2e, QA, test phân quyền, regression UI, verify production flows
 
-Notes:
-- category: self-authored
+### Archived (not synced)
+
+`frontend-ui-quality`, `ui-ux-pro-max`, image/taste skills → `codex/skills/_archive/`
 
 ### caveman / cavecrew / gitnexus-* family
 

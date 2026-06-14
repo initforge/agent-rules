@@ -1,7 +1,7 @@
 param(
   [Parameter(Mandatory=$true)][string]$Task,
   [string]$Repo = ".",
-  [string]$Out = "plan\_external\codex-research-note.md",
+  [string]$Out = "plan\_external\researcher-note.md",
   [string]$Mode = "standard"
 )
 
@@ -12,7 +12,7 @@ New-Item -ItemType Directory -Force -Path (Split-Path $Out) | Out-Null
 $repoLabel = if ($Repo -and $Repo -ne ".") { $Repo } else { (Get-Location).Path }
 
 $body = @()
-$body += "# Codex Research Note"
+$body += "# Researcher Note (legacy script — prefer run-researcher.ps1)"
 $body += ""
 $body += "Status: TODO"
 $body += ""
@@ -33,4 +33,4 @@ $body += "- pending"
 
 $body -join "`n" | Set-Content -Encoding UTF8 $Out
 
-Write-Host "[Codex Research] seeded note at $Out"
+Write-Host "[Researcher/legacy] seeded note at $Out"

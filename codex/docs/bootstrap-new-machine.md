@@ -59,7 +59,7 @@ Read:
 - `docs\tool-registry.md`
 - `docs\mcp-registry.md`
 - `docs\skills-registry.md`
-- `docs\codex-research-workflow.md`
+- `docs\researcher-workflow.md`
 - `docs\profile-matrix.md`
 - `docs\clean-code-reference.md`
 - `docs\phase-orchestration.md`

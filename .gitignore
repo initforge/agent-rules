@@ -39,6 +39,9 @@ Thumbs.db
 # Antigravity workspace rules must be versioned so the IDE can activate them.
 /.agent/
 
+# Grok live mirror — use ~/.grok/ global only (install-grok-global.sh)
+.grok/
+
 # Runtime/test artifacts
 dist/
 build/

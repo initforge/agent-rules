@@ -29,12 +29,15 @@ Examples:
 Primary local Codex location:
 - `C:\Users\DELL\.codex\skills`
 
-Current self-authored skills:
+Current self-authored skills (active sync):
+- `5fedu-project`
+- `researcher` (multi-source contract; renamed from codex-research)
+- `product-ui-craft` (universal UI — replaces frontend-ui-quality / taste / image skills)
+- `e2e-qa` (professional E2E — split from playwright CLI)
 - `docs-style`
-- `frontend-ui-quality`
-- `ui-ux-pro-max`
-- `codex-research`
-- `workflow-router`
+- `workflow-router` (Codex phase; disable on Grok via config)
+
+Archived: `codex/skills/_archive/` (image, taste, ui-ux-pro-max, …)
 
 Separate local agent ecosystem:
 - `C:\Users\DELL\.agents\skills`
@@ -50,7 +53,7 @@ Current self-authored ecosystem examples:
 Current vendor-installed skills left in place for runtime safety:
 - `pdf`
 - `playwright`
-- `playwright-interactive`
+- `playwright` (CLI debug; E2E → `e2e-qa`)
 - `screenshot`
 - `security-best-practices`
 - `security-ownership-map`

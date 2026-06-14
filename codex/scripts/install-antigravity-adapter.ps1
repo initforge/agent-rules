@@ -66,13 +66,10 @@ Write-Host ""
 
 # Danh sách các skill cũ đã bị gộp và cần xoá bỏ
 $deprecatedSkills = @(
-    "taste-skill",
-    "soft-skill",
-    "gpt-tasteskill",
-    "redesign-skill",
-    "imagegen-frontend-web",
-    "imagegen-frontend-mobile",
-    "playwright-interactive"
+    "taste-skill", "soft-skill", "gpt-tasteskill", "redesign-skill",
+    "imagegen-frontend-web", "imagegen-frontend-mobile", "image-to-code-skill",
+    "brandkit", "stitch-skill", "minimalist-skill", "brutalist-skill",
+    "frontend-ui-quality", "ui-ux-pro-max", "output-skill", "playwright-interactive"
 )
 
 # === 1. Copy entrypoints ===

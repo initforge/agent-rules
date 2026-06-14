@@ -49,7 +49,36 @@ Quy trình nằm trong `codex/docs/bootstrap-new-machine.md`:
 6. Ghi inventory.
 7. Đọc tool/MCP/skills registry để xử lý phần còn thiếu.
 
-## 7. Phase orchestration
+## 7. Sync harness một nguồn (codex master)
+
+**Master nội dung:** `codex/rules/`, `codex/skills/` — Antigravity và Grok chỉ mirror, không có `grok/` master riêng.
+
+```bash
+# Linux / Git Bash (trong agent-rules)
+./scripts/sync-all-harness.sh
+./scripts/validate-harness.sh
+```
+
+```powershell
+# Windows — gọi bash sync hoặc fallback một chiều
+& "P:\agent-rules\scripts\sync-platform-skills.ps1"
+```
+
+Grok CLI global (mọi repo):
+
+```bash
+./scripts/install-grok-global.sh
+```
+
+```powershell
+& "P:\agent-rules\scripts\install-grok-global.ps1"
+```
+
+Sau install: **session Grok mới** → `grok inspect` phải thấy rules `(global)`.
+
+**Cấm** sync hai chiều theo timestamp giữa Antigravity ↔ Codex — đó là nguồn drift cũ.
+
+## 8. Phase orchestration
 
 Khi một plan đã ghi phase/profile, có thể resolve profile bằng:
 

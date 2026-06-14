@@ -73,14 +73,10 @@ rg --version
 npx gitnexus --help
 ```
 
-Then update:
-
-```text
-C:\Users\DELL\.codex\scripts\run-codex-research.ps1
-```
+Then update legacy helper scripts if present (prefer `researcher` skill + `~/.codex/skills/researcher/SKILL.md`).
 
 If a bug fix keeps looping:
-- switch to `codex-research`
+- switch to `researcher`
 - gather repo facts plus external docs
 - write a research note before patching again
 

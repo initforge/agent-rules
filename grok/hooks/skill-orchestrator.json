@@ -1,0 +1,71 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${GROK_HOME}/hooks/bin/grok-skill-gate.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${GROK_HOME}/hooks/bin/grok-skill-gate.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "run_terminal_command|Bash|Shell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${GROK_HOME}/hooks/bin/grok-skill-gate.sh",
+            "timeout": 8
+          }
+        ]
+      },
+      {
+        "matcher": "search_replace|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${GROK_HOME}/hooks/bin/grok-skill-gate.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "run_terminal_command|Bash|Shell|search_replace|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${GROK_HOME}/hooks/bin/grok-skill-gate.sh",
+            "timeout": 8
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${GROK_HOME}/hooks/bin/grok-skill-gate.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -4,7 +4,7 @@
     "PreInvocation": [
       {
         "type": "command",
-        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/antigravity-preflight.ps1",
+        "command": "bash ./scripts/antigravity-preflight-run.sh",
         "timeout": 10
       }
     ]

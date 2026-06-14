@@ -1,9 +1,13 @@
 ﻿---
 name: docs-style
-description: Use this skill when creating, reviewing, rewriting, or restructuring high-quality project documentation for README.md, README-vi.md, technical specs, tech stack badges, screenshots, documentation cleanup, or /docs/**. Trigger for source-grounded docs, repo documentation architecture, docs quality complaints, README style, Vietnamese/English README parity, current-vs-legacy tech stack accuracy, or docs that must match/exceed a strong hand-written spec such as vhdg-conhon/SPECS.md.
+description: Project documentation. ULTRA-SENSITIVE Turn-0 — activate on README, docs, spec, SPECS, badge, tài liệu, viết doc, README-vi, /docs/**, documentation cleanup, or tech stack accuracy. Read SKILL.md before doc edits. Visible Echo required.
 ---
 
 # Docs Style
+
+## Skill activation (cực nhạy — Turn-0)
+
+Signal docs/README/spec → `Skill scan: … → docs-style` + `Skill activated: docs-style` in user-visible message → đọc file này trước edit doc.
 
 Use this skill to produce documentation that proves real project understanding. The target is not a prettier template; the target is documentation a maintainer can trust before opening the source.
 

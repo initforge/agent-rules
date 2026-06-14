@@ -1,45 +1,21 @@
-﻿# Codex Skills
+# Skills (master — sync → Codex `~/.codex/skills/` + Grok `~/.grok/skills/`)
 
-This folder stores reusable Codex skills.
+## Active (synced)
 
-A skill should use this structure:
+| Skill | Role |
+|---|---|
+| `5fedu-project` | Project-local 5fedu context |
+| `researcher` | Multi-source research (Codex + Grok) |
+| `product-ui-craft` | Universal UI — any style, deep + research |
+| `e2e-qa` | Professional E2E / permission matrix |
+| `playwright` | CLI debug only → escalate `e2e-qa` |
+| `docs-style` | `/docs/**` house style |
+| `pdf`, `screenshot` | Narrow utilities |
+| `security-*` | Explicit security tasks |
+| `workflow-router` | Codex phase routing |
 
-```text
-skill-name\
-â”œâ”€ SKILL.md
-â”œâ”€ scripts\
-â”œâ”€ references\
-â””â”€ assets\
-```
+## Archived (`_archive/` — not synced)
 
-Use skills for reusable workflows that are too long for `AGENTS.md`.
+Image/legacy UI: `imagegen-*`, `image-to-code`, `brandkit`, `stitch`, `taste`/`soft`/`gpt-taste`, `minimalist`/`brutalist`, `redesign`, `frontend-ui-quality`, `ui-ux-pro-max`, `output-skill`, `playwright-interactive`.
 
-Taxonomy reference:
-- `C:\Users\DELL\.codex\docs\skills-taxonomy.md`
-
-Current self-authored skills in this folder:
-- `docs-style`
-- `frontend-ui-quality`
-- `ui-ux-pro-max`
-- `codex-research`
-- `workflow-router`
-
-Current vendor-installed skills kept in place for runtime safety:
-- `pdf`
-- `playwright`
-- `playwright-interactive`
-- `screenshot`
-- `security-best-practices`
-- `security-ownership-map`
-- `security-threat-model`
-
-Candidate skills:
-- plan-execution
-- risk-review
-- flutter-feature
-- docs-writer
-- ui-qa
-- mcp-setup
-- new-machine-bootstrap
-
-Do not put secrets in skills.
+Sync: `scripts/sync-all-harness.sh` · Grok global: `scripts/install-grok-global.sh`

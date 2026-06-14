@@ -1,9 +1,13 @@
 ---
 name: 5fedu-project
-description: Scaffold or maintain project-local 5fedu context for Codex/Antigravity work. Use when the user asks to set up a 5fedu repo, create/refresh AGENTS.md, add or update .agents/5fedu/*.md and .codex/5fedu/*.md rules, update decision status/questions, record new 5fedu conventions, or preserve owner feedback gates for Supabase/auth/database/UI/transport modules.
+description: 5fedu/TAH project context. ULTRA-SENSITIVE Turn-0 — activate on 5fedu, TAH, scaffold, AGENTS.md, .agents/5fedu, .codex/5fedu, transport, Supabase context, owner feedback, decision status, or any task in repo with .agents/5fedu/. Read SKILL.md before context edits. Visible Echo Skill scan + Skill activated required.
 ---
 
 # 5fedu Project Skill
+
+## Skill activation (cực nhạy — Turn-0)
+
+Signal 5fedu/TAH/context scaffold → message user thấy: `Skill scan: … → 5fedu-project` + `Skill activated: 5fedu-project` → đọc file này → mới sửa context.
 
 ## 1. Core Rule
 
