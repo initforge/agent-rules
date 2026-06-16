@@ -29,6 +29,7 @@ Verify: `grok inspect` phải liệt kê skill.
 | security review | `security-best-practices` | `.grok/skills/security-best-practices/SKILL.md` |
 | threat model | `security-threat-model` | `.grok/skills/security-threat-model/SKILL.md` |
 | ownership map | `security-ownership-map` | `.grok/skills/security-ownership-map/SKILL.md` |
+| implement, fix, continue, làm đi, làm hết | `finish-to-completion` | `.grok/skills/finish-to-completion/SKILL.md` |
 | output đầy đủ, không placeholder | `output-skill` | `.grok/skills/output-skill/SKILL.md` |
 
 **Codex-only** (có trong `.grok/skills/` nhưng chỉ chạy đủ trên Codex CLI): `workflow-router`, `playwright-interactive`.

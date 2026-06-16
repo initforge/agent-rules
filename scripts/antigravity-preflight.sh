@@ -41,7 +41,7 @@ print(json.dumps({"injectSteps": [{"ephemeralMessage": msg}]}, ensure_ascii=Fals
   exit 0
 fi
 
-msg="[frontier] Antigravity harness ready — same outcome bar as Grok/Codex (00-universal-frontier-contract). Turn-0: Skill scan + Skill activated before tools. Multi-skill stack + Primary when ≥2 domains. E2E: smoke → -g 1 test after spec edit → deep; self-checkpoint (no hook). Complex project OK on Antigravity alone. Read .agents/AGENTS.md, 00-hard-activation-contract, 10-fast-context. Final: Skill scan, Skills active, Verification, Technical debt check, Status PASS/PARTIAL/BLOCKED. 5fedu: mapping → /template → verify."
+msg="[frontier] Antigravity harness ready — same outcome bar as Grok/Codex (00-universal-frontier-contract). Turn-0: Skill scan + Skill activated before tools. 07-finish-to-completion: scope lock N/N — no GAP footer, no false choice, no handoff. Multi-skill stack + Primary when ≥2 domains. E2E: smoke → -g 1 test after spec edit → deep; self-checkpoint (no hook). Complex project OK on Antigravity alone. Read .agents/AGENTS.md, 07-finish-to-completion, 00-hard-activation-contract, 10-fast-context. Final: Scope lock N/N, Verification, Technical debt check, Status PASS/PARTIAL/BLOCKED. 5fedu: mapping → /template → verify."
 printf '%s' "$msg" | json_escape | python3 -c '
 import json, sys
 msg = json.loads(sys.stdin.read())

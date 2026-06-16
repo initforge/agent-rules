@@ -18,6 +18,7 @@ Nguồn Codex: `P:\agent-rules\codex` · Master harness: `P:\agent-rules\grok`
 @P:\agent-rules\codex\rules\04-skills-and-5fedu.md
 @P:\agent-rules\codex\rules\05-harness-mutation-gate.md
 @P:\agent-rules\codex\rules\06-opus-emulation-contract.md
+@P:\agent-rules\codex\rules\07-finish-to-completion.md
 @P:\agent-rules\codex\rules\codex-overlay.md
 @P:\agent-rules\codex\rules\platform-boundary.md
 ```

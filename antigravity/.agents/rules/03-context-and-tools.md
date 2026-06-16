@@ -1,5 +1,4 @@
 ---
-alwaysApply: true
 description: "Fast context, 5fedu loading, tools, research, inventory"
 ---
 

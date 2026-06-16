@@ -1,27 +1,25 @@
-# Owner Feedback Transport UI Log
+# Owner Feedback Transport UI — Archive Index
 
-File này là log riêng cho feedback vận tải/UI có tính lịch sử. Rule sống phải nằm ở `03-ui-ux-and-delivery-standards.md`, `02-database-and-auth-rules.md`, hoặc decision/status file phù hợp.
+> **Không phải rule file.** Chỉ index truy vết. Rule sống: `02-database-and-auth-rules.md`, `03-ui-ux-and-delivery-standards.md`, `13-trip-execution-vs-approval-spec.md`, `14-production-e2e-harness.md`.
 
-Khi nhận feedback vận tải mới:
+## Cấm dump raw vào đây
 
-1. Ghi raw wording ngắn vào file này nếu cần giữ bằng chứng.
-2. Promote rule dùng lại được vào file rule sống.
-3. Cập nhật decision/status nếu feedback làm thay đổi phạm vi đã chốt.
-4. Sync `.agents/5fedu` và `.codex/5fedu`.
+Khi có feedback vận tải/UI mới:
 
-## Log
+1. **Promote ngay** vào file rule sống (1–5 bullet imperative, không quote owner dài).
+2. Cập nhật `06-decision-status.md` nếu đổi phạm vi `DA_CHOT`.
+3. Chỉ thêm **một dòng** vào bảng dưới: `ngày | chủ đề | promoted → file §`.
+4. Sync master: **chỉ file rule** (xem `14` §11).
 
-### Baseline promoted transport/UI lessons
+## Promoted index (2026-06-15)
 
-- Module vận tải không được dựng CRUD generic theo bảng thô; phải mô hình hóa master-detail và flow nghiệp vụ thật.
-- Tổng chuyến, tổng tiền, tổng lương chuyến, tổng phí và các trường derived không cho nhập tay nếu có thể tính từ dòng con hoặc dữ liệu liên quan.
-- Chuyến xe cha, chi tiết chuyến, bảng lương, tài xế, xe, địa điểm và báo cáo phải verify chéo dữ liệu sau CRUD.
-- Dropdown danh sách lớn như tài xế, xe, địa điểm, chuyến xe phải dùng combobox/searchable picker, không dùng native select thô.
-- Toolbar phải kiểm tra bulk actions, row actions, action nguy hiểm, action duyệt/in, disabled/hidden state và responsive behavior.
-- Filter/search phải đối chiếu với database/source data, bao gồm trường liên kết hiển thị nhưng lưu bằng ID.
-- Drawer/detail phải giữ dữ liệu mới nhất sau mutation, không hiển thị state cũ khi React Query đã refetch.
-- Khi cha đã duyệt/chốt, dòng con phải kế thừa trạng thái khóa nếu nghiệp vụ yêu cầu.
-- Detail tài xế/xe/địa điểm cần hiển thị lịch sử liên quan khi nghiệp vụ cần điều tra luồng vận tải.
-- File export phải được tải thật và kiểm tra tên file, extension, format, dữ liệu và font/cell type.
+| Ngày | Chủ đề | Rule sống |
+|------|--------|-----------|
+| 2026-05-31 | CRUD nghiệp vụ, combobox, derived fields, export | `03` Universal Verification Gate |
+| 2026-06-10 | Một lớp duyệt (superseded) | — |
+| 2026-06-14 | Toolbar một nút Quản lý duyệt | `03` popup phê duyệt |
+| 2026-06-15 | TH vs duyệt, báo cáo CT, cascade cha, lương R6 | `02` §10, `03` Hai lớp trạng thái, `13` R1–R7 |
+| 2026-06-15 | Không duyệt lẻ CT | `03` harness, `13` R4, `14` §6 |
+| 2026-06-15 | Báo cáo CT (không modal ghi chú cha) | `03`, `DriverCtReportDialog` pattern |
 
-Các bài học trên đã được promote vào `03-ui-ux-and-delivery-standards.md`, `02-database-and-auth-rules.md` và quality gates chung. File này giữ vai trò log để truy vết khi user nhắc lại feedback vận tải.
+Raw chat owner: Google Sheet + `13-trip-execution-vs-approval-spec.md` §6.

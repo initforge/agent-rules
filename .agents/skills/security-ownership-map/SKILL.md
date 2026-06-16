@@ -1,13 +1,9 @@
 ---
 name: "security-ownership-map"
-description: Security ownership topology. ULTRA-SENSITIVE Turn-0 — activate on bus factor, CODEOWNERS security, ownership map, orphaned sensitive code, maintainer risk, git ownership cluster. Read SKILL.md first. Visible Echo required.
+description: "Analyze git repositories to build a security ownership topology (people-to-file), compute bus factor and sensitive-code ownership, and export CSV/JSON for graph databases and visualization. Trigger only when the user explicitly wants a security-oriented ownership or bus-factor analysis grounded in git history (for example: orphaned sensitive code, security maintainers, CODEOWNERS reality checks for risk, sensitive hotspots, or ownership clusters). Do not trigger for general maintainer lists or non-security ownership questions."
 ---
 
 # Security Ownership Map
-
-## Skill activation (cực nhạy — Turn-0)
-
-Signal ownership/bus factor → `Skill scan: … → security-ownership-map` + `Skill activated: security-ownership-map` visible → đọc file này.
 
 ## Overview
 

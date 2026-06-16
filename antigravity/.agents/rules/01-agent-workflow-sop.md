@@ -1,5 +1,4 @@
 ---
-alwaysApply: true
 description: "SOP workflow — core, planning, execution, quality gates (Codex gốc, Composer tune)"
 ---
 
@@ -25,6 +24,7 @@ Gốc: gộp từ `codex/rules/` legacy. Grok/Codex/Antigravity: giữ coverage,
 8. Diff nhỏ, đúng scope.
 9. Báo trước khi mở rộng scope.
 10. Verify trước khi nói xong.
+11. **Finish-to-completion** — `07-finish-to-completion`: không kết turn khi còn deliverable trong scope; cấm GAP footer và “bước tiếp theo bạn…”.
 
 **Context:** Index trước (`AGENTS.md`, `00-index.md`, decision map) → rule chi tiết chỉ khi domain dính.
 
@@ -33,11 +33,14 @@ Gốc: gộp từ `codex/rules/` legacy. Grok/Codex/Antigravity: giữ coverage,
 **Báo cáo cuối (task không nhỏ):**
 
 ```text
+Scope lock: N/N done
 Status: PASS | PARTIAL | BLOCKED
 Files changed: ...
 Verification: command -> pass/fail
-Remaining risk: none | ...
+Blocker: (chỉ PARTIAL/BLOCKED — 1 dòng; không dùng "GAP còn lại")
 ```
+
+**Cấm** kết bằng backlog trong scope thay vì làm tiếp hoặc `BLOCKED` có lý do.
 
 ---
 

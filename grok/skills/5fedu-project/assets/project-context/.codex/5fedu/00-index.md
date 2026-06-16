@@ -1,4 +1,4 @@
-﻿# 5fedu Context Index
+# 5fedu Context Index
 
 Đây là index project-local cho 5fedu. Agent đọc file này trước để biết phải đọc gì tiếp theo, không đọc toàn bộ context folder theo thói quen.
 
@@ -18,6 +18,8 @@ Luôn đọc trước:
 - `03-ui-ux-and-delivery-standards.md`: UI, UX, list/detail/form, toolbar, filter, export, responsive, production UI rules.
 - Legacy files `03-database-supabase.md`, `04-auth-permissions-and-flows.md`, `05-delivery-quality.md`, `07-working-format.md`, `08-source-examples.md`, `09-coverage-audit.md` chỉ đọc khi repo còn dùng layout cũ hoặc task cần bằng chứng cụ thể.
 - `10-owner-feedback-lessons.md` và `12-owner-feedback-transport-ui.md` là log/lesson evidence. Nếu thấy rule dùng lại được, promote vào file rule sống phù hợp.
+- `13-trip-execution-vs-approval-spec.md`: checklist triển khai Chuyến xe — tách TT thực hiện vs duyệt (owner 2026-06-15).
+- `14-production-e2e-harness.md`: harness Playwright production — fixtures, backup/restore, blast radius, lệnh chạy, gate deploy bundle.
 
 ## Execution Contract
 
@@ -34,6 +36,7 @@ Khi prompt có tín hiệu rộng, agent phải tự kích hoạt nhanh gate tư
 
 - `verify production hết`, `test production`, `kiểm tra live`: đọc index/mapping trước, suy ra module/role/database/UI/export/cross-flow, rồi mới verify production.
 - `UI`, `chưa chuẩn`, `thiếu`, `không giống`, `module thiếu`, `tính năng thiếu`: đọc mapping, tìm `/template` trước. Nếu template có mẫu đủ đáp ứng prompt/app thì bám sát template và đổi tối thiểu; chỉ dùng fallback/golden reference khi template thiếu, không đủ hành vi, hoặc có bằng chứng đang ngõ cụt.
+- Mọi thay đổi UI 5fedu, gồm làm mới, làm lại, chỉnh sửa, loại bỏ, bổ sung module, bổ sung nút, bổ sung tính năng, đổi layout, đổi flow hoặc đổi responsive behavior, bắt buộc bám pattern UI của template theo đúng surface/hành vi tương ứng.
 - `permission`, `phân quyền`, `role`, `RLS`, `auth`: đọc database/auth rules và test đa account/đa cấp.
 - `export`, `download`, `Excel`, `PDF`, `CSV`: tải file thật và kiểm format/nội dung.
 - `cleanup`, `gitignore`, `xóa file`, `trùng chức năng`: kiểm reference bằng `rg`/GitNexus/package scripts/CI/docs trước khi xóa.
@@ -58,12 +61,26 @@ Test không chỉ là bấm nút:
 - Toolbar/filter/search: kiểm tra behavior và đối chiếu kết quả lọc với database/source.
 - Export: tải file thật, kiểm tra tên file, extension, format, Excel cell type, PDF Unicode/layout.
 - External integration không có quyền test thật: đọc code kỹ, kiểm tra config/error path, ghi `PARTIAL` hoặc gap cho user test.
+- Regression vận tải / chuyến xe / phân quyền: đọc `14-production-e2e-harness.md`, chạy spec trong blast radius tương ứng; test mutating bắt buộc snapshot + restore fixture; thiếu service role → UI-only `PARTIAL`.
 
-## Context Preservation
+## Context Preservation & Evolution (bắt buộc)
 
-- Tinh gọn bằng phân tầng, không xóa mất tri thức.
-- Rule sống nằm ở `00-05` hoặc legacy rule files phù hợp.
-- `10` và `12` chỉ giữ log/evidence.
-- Mỗi feedback mới phải được phân loại: local log, project rule, 5fedu reusable rule, hoặc global cross-stack rule.
-- Sync `.agents/5fedu` và `.codex/5fedu` sau khi cập nhật context. Nếu hai bên cùng thay đổi khác nhau, báo conflict, không chọn theo timestamp một cách mù quáng.
+**Nguyên tắc: promote rule, không dump raw.** File `10`/`12` chỉ là archive index — không ghi quote owner, không lặp lại rule đã promote.
 
+| Loại nội dung | Ghi ở đâu | Sync master? |
+|---------------|-----------|--------------|
+| Rule DB/auth/permission | `02-database-and-auth-rules.md` | Có |
+| Rule UI/UX/harness | `03-ui-ux-and-delivery-standards.md`, `14-production-e2e-harness.md` | Có |
+| Checklist triển khai module | `13-trip-execution-vs-approval-spec.md` (khi liên quan) | Có |
+| Trạng thái chốt/blocker | `06-decision-status.md` | Project only |
+| Câu hỏi mở | `questions.md` | Project only |
+| Raw chat / evidence | Sheet ngoài hoặc 1 dòng index trong `10`/`12` | **Không** |
+
+Workflow mỗi lần tiến hóa:
+
+1. Viết rule imperative (≤5 bullet) vào file sống.
+2. Cập nhật `SKILL.md` §4/§F chỉ khi rule áp dụng mọi repo 5fedu.
+3. Mirror `.agents/5fedu` ↔ `.codex/5fedu`.
+4. Sync ngược master: **chỉ** allowlist trong `14` §11 — không đẩy `10`, `12`, `06`, `questions`.
+
+Nếu hai mirror cùng đổi khác nhau → báo conflict, không chọn theo timestamp mù quáng.

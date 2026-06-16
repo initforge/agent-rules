@@ -112,6 +112,22 @@ Before writing database, auth, staff tables, migration, or UI components, the AI
 - **Large Dataset Selection**: Do NOT use native `<select>` dropdowns for fields with large relation lists (like driver, vehicle, location, trip). Use `Combobox` or `AsyncCombobox` searchable pickers.
 - **Clean Action Segregation**: Banned placing "Duyệt" (Approval) or "In" (Print) buttons inside the main form. Approval and Print actions must be separate buttons outside the form context.
 - **Detail Sections History**: Detail pages for entities like vehicle, location, or driver should include dynamic sections displaying their related historical logs (e.g., historical trips).
+- **Trip execution vs approval (R1–R7)**: Two independent axes on CT — `trang_thai` (execution) and `phe_duyet` (approval). Driver reports per CT; parent approval cascades; payroll requires both approved and executed. Living rules: `13-trip-execution-vs-approval-spec.md`, `02-database-and-auth-rules.md`, `03-ui-ux-and-delivery-standards.md`.
+
+### F. Production E2E Harness (TAH)
+- **Canonical doc**: `14-production-e2e-harness.md` in `.agents/5fedu/` and `.codex/5fedu/`.
+- **Default verify**: production after push + CI deploy; no manual `vercel --prod`.
+- **Playwright**: `output/playwright/helpers/production-e2e.ts`, project `production-e2e`; trip regression `production-trip-execution.spec.ts`.
+- **Mutating tests**: `snapshotPendingDriverTrip` / `restorePendingDriverTrip` (trip `52`).
+- **R4 UI**: `expectTripParentApprovalDialog` only — no per-CT approval UI.
+- **R6 payroll fixture**: `payrollEligibleCtCount` / `countApprovedPayrollTrips` (both axes).
+- **DB assert**: `SUPABASE_SERVICE_ROLE_KEY` or `DATABASE_URL`; else `PARTIAL`.
+
+### G. Context evolution (anti raw-dump)
+- **Promote rule first** into `02`/`03`/`00`/`14` — imperative bullets, no owner quotes in logs.
+- **`10`/`12` = archive index only** (≤1 line per topic). Never sync them to master.
+- **Master sync allowlist**: `00`, `02`, `03`, `13`, `14` + `SKILL.md` §4/§6/§F. Not `06`, `questions`, `10`, `12`.
+- Run `scripts/sync-5fedu-rules-to-master.sh` after promoting rules.
 
 ## 5. Implementation Discipline
 
@@ -128,22 +144,18 @@ Before writing database, auth, staff tables, migration, or UI components, the AI
 
 Whenever the user provides correction, design guidance, or owner feedback during active workspace sessions:
 
-### A. Local Learning (Workspace Level - First Priority)
-- Identify if the feedback relates to project-specific requirements, custom modules, or local UI tweaks.
-- Append raw wording only when useful to `10-owner-feedback-lessons.md` or `12-owner-feedback-transport-ui.md`.
-- Promote reusable lessons immediately into the correct living rule file. Do not leave important guidance only in `10` or `12`.
-- Promote core structural constraints into the project-local entry/index so every future task sees them.
-- Run a mirror sync script or preflight to keep `.codex/5fedu/` and `.agents/5fedu/` aligned. If both sides changed differently, stop and report the conflict instead of silently choosing the newer timestamp.
+### A. Local Learning (Workspace — promote first)
+1. Write imperative rule into living file (`02`/`03`/`00`/`13`/`14`).
+2. Update `06-decision-status.md` only for `DA_CHOT` / `CAN_HOI_THEM` — not essay.
+3. Optional: one index line in `10` or `12` — **never** paste raw chat paragraphs.
+4. Mirror `.agents/5fedu` ↔ `.codex/5fedu`. Conflict → stop, report.
 
-### B. Global Learning (Base Knowledge - Master level `P:\agent-rules`)
-- Determine if the feedback represents a **universal programming rule** or a **standard platform convention** that should apply to all current and future 5fedu projects (such as DB constraints, default credentials, or core architectural gates).
-- If it is global:
-  1. Update the master skill files under `P:\agent-rules\antigravity\.agents\skills\5fedu-project\assets\project-context\.agents\5fedu\10-owner-feedback-lessons.md` and the `.codex\5fedu` mirror when the file exists (or `12-...md`).
-  2. Promote the core rules (like `id int8`) into the master template's `AGENTS.md` file under `## Owner Feedback Gate`.
-  3. Update this `SKILL.md` under `## 4. Developer Lessons Learned`.
-  4. Run `P:\agent-rules\scripts\sync-platform-skills.ps1` to sync the updated rules to `~/.codex` and other local runtime locations.
-  5. Notify the user of the new global baseline.
-  6. Do not commit or push unless the user explicitly requested it in the current session.
+### B. Global Learning (Master `agent-rules` / `~/.grok/skills/5fedu-project`)
+- Sync **only** allowlist in `14` §11: `00`, `02`, `03`, `13`, `14` + this `SKILL.md` (§4/§6/§F).
+- **Never** sync `10`, `12`, `06`, `questions` to master.
+- Update `SKILL.md` §4 when rule applies to all 5fedu repos.
+- Run `scripts/sync-5fedu-rules-to-master.sh` from the project repo.
+- Do not commit/push master unless user requests.
 
 ### C. Universal Learning
 

@@ -1,14 +1,10 @@
 ---
 name: "pdf"
-description: PDF read/create/review. ULTRA-SENSITIVE Turn-0 — activate on PDF, .pdf, xuất PDF, in PDF, reportlab, pdfplumber, export payroll PDF, or layout/render check. Read SKILL.md before PDF tools. Visible Echo required.
+description: "Use when tasks involve reading, creating, or reviewing PDF files where rendering and layout matter; prefer visual checks by rendering pages (Poppler) and use Python tools such as `reportlab`, `pdfplumber`, and `pypdf` for generation and extraction."
 ---
 
 
 # PDF Skill
-
-## Skill activation (cực nhạy — Turn-0)
-
-Signal PDF → `Skill scan: … → pdf` + `Skill activated: pdf` in message → đọc file này trước tool.
 
 ## When to use
 - Read or review PDF content where layout and visuals matter.

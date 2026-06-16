@@ -15,6 +15,7 @@ CORE=(
   04-skills-and-5fedu.md
   05-harness-mutation-gate.md
   06-opus-emulation-contract.md
+  07-finish-to-completion.md
   platform-boundary.md
 )
 

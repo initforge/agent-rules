@@ -20,7 +20,7 @@ echo "== Validate harness (codex master) =="
 [[ ! -d "$ROOT/.grok" ]] || fail ".grok/ still in repo — run sync-all-harness.sh (removes duplicate Grok mirror)"
 
 USER_SKILL_COUNT=$(find "$CODEX_SKILLS" -name SKILL.md ! -path '*/_archive/*' ! -path '*/.system/*' | wc -l)
-[[ "$USER_SKILL_COUNT" -eq 12 ]] || fail "expected 12 user skills, got $USER_SKILL_COUNT"
+[[ "$USER_SKILL_COUNT" -eq 13 ]] || fail "expected 13 user skills, got $USER_SKILL_COUNT"
 
 for dest in "$ANT_RULES" "$LIVE_AGENTS_RULES"; do
   [[ -d "$dest" ]] || fail "missing $dest"
@@ -73,6 +73,12 @@ grep -q 'completeness-harness.md' "$CODEX_SKILLS/e2e-qa/SKILL.md" || fail "e2e-q
 [[ -f "$CODEX_SKILLS/e2e-qa/references/completeness-harness.md" ]] || fail "missing e2e-qa/references/completeness-harness.md"
 grep -q 'Unknown scope is not L1' "$CODEX_SKILLS/e2e-qa/references/completeness-harness.md" || fail "completeness-harness missing unknown-scope rule"
 grep -q 'Done only when' "$CODEX_SKILLS/e2e-qa/references/completeness-harness.md" || fail "completeness-harness missing done definition"
+[[ -f "$CODEX_RULES/07-finish-to-completion.md" ]] || fail "missing 07-finish-to-completion.md"
+grep -q 'Iron Law' "$CODEX_RULES/07-finish-to-completion.md" || fail "07-finish-to-completion missing Iron Law"
+grep -q 'GAP còn lại' "$CODEX_RULES/07-finish-to-completion.md" || fail "07-finish-to-completion missing banned GAP pattern"
+grep -q 'Scope Lock' "$CODEX_RULES/07-finish-to-completion.md" || fail "07-finish-to-completion missing Scope Lock"
+[[ -f "$CODEX_SKILLS/finish-to-completion/SKILL.md" ]] || fail "missing finish-to-completion skill"
+grep -q 'ULTRA-SENSITIVE' "$CODEX_SKILLS/finish-to-completion/SKILL.md" || fail "finish-to-completion missing ULTRA-SENSITIVE"
 grep -q 'Anti-Fake-PASS' "$CODEX_RULES/00-hard-activation-contract.md" || fail "missing Anti-Fake-PASS gate"
 [[ -f "$CODEX_RULES/00-universal-frontier-contract.md" ]] || fail "missing 00-universal-frontier-contract.md"
 grep -q 'Platform-Native Enforcement' "$CODEX_RULES/00-hard-activation-contract.md" || fail "missing Platform-Native Enforcement section"

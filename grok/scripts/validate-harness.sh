@@ -23,6 +23,7 @@ CODEX_ACTIVE=(
   04-skills-and-5fedu.md
   05-harness-mutation-gate.md
   06-opus-emulation-contract.md
+  07-finish-to-completion.md
   codex-overlay.md
   platform-boundary.md
 )
@@ -35,6 +36,7 @@ AG_ACTIVE=(
   04-skills-and-5fedu.md
   05-harness-mutation-gate.md
   06-opus-emulation-contract.md
+  07-finish-to-completion.md
   antigravity-overlay.md
   platform-boundary.md
 )
@@ -47,6 +49,7 @@ GROK_ACTIVE=(
   04-skills-and-5fedu.md
   05-harness-mutation-gate.md
   06-opus-emulation-contract.md
+  07-finish-to-completion.md
   grok-overlay.md
   platform-boundary.md
 )
@@ -94,6 +97,18 @@ for label_path in ".grok/skills:$ROOT/.grok/skills" "codex/skills:$ROOT/codex/sk
     ok "$label skills ($count)"
   fi
 done
+
+if ! grep -q 'Iron Law' "$ROOT/grok/rules/07-finish-to-completion.md"; then
+  fail "07-finish-to-completion missing Iron Law"
+else
+  ok "07-finish-to-completion contract"
+fi
+
+if [[ ! -f "$ROOT/grok/skills/finish-to-completion/SKILL.md" ]]; then
+  fail "missing finish-to-completion skill"
+else
+  ok "finish-to-completion skill"
+fi
 
 if grep -rE 'cursor/scripts|đụng `cursor/`' "$ROOT/grok/rules" "$ROOT/.grok/rules" 2>/dev/null | grep -v 'cursor-pointer' | grep -q .; then
   fail "stale cursor/ path in grok rules"

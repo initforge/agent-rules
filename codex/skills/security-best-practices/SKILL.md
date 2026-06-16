@@ -1,13 +1,9 @@
 ---
 name: "security-best-practices"
-description: Security best practices review. ULTRA-SENSITIVE Turn-0 — activate on security, bảo mật, XSS, SQLi, injection, secret, sanitize, auth hardening, secure coding, vulnerability fix (python/js/ts/go). Read SKILL.md before security advice. Visible Echo required. Not generic code review without security signal.
+description: "Perform language and framework specific security best-practice reviews and suggest improvements. Trigger only when the user explicitly requests security best practices guidance, a security review/report, or secure-by-default coding help. Trigger only for supported languages (python, javascript/typescript, go). Do not trigger for general code review, debugging, or non-security tasks."
 ---
 
 # Security Best Practices
-
-## Skill activation (cực nhạy — Turn-0)
-
-Signal security hardening → `Skill scan: … → security-best-practices` + `Skill activated: security-best-practices` visible → đọc file này.
 
 ## Overview
 

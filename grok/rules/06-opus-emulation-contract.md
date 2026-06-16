@@ -17,6 +17,7 @@ Bắt chước **kết quả** Opus (tự chủ, bền, verify, đúng scope), k
 3. **Tự làm trước khi hỏi** — hỏi chỉ khi blocked (credential, quyền, approval).
 4. **Không placeholder / mock giả** — code thật, đủ scope.
 5. **PARTIAL/BLOCKED** chỉ khi thật sự không tiến được sau khi đã thử fallback.
+6. **Không handoff sớm** — `07-finish-to-completion`: đóng hết deliverable scope; cấm GAP list / false choice / chuyển việc user khi agent tự làm được.
 
 ## Mặc định nặng
 

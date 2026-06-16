@@ -6,7 +6,7 @@ User **không** phải chọn Grok cho E2E, Codex cho plan, Antigravity cho UI. 
 
 ## Nguyên tắc
 
-1. **Cùng outcome bar** — `PASS` / `PARTIAL` / `BLOCKED`, Visible Echo, Multi-Skill Stack, Anti-Fake-PASS, execution ladder, debt gate.
+1. **Cùng outcome bar** — `PASS` / `PARTIAL` / `BLOCKED`, Visible Echo, Multi-Skill Stack, Anti-Fake-PASS, **finish-to-completion** (`07`), execution ladder, debt gate.
 2. **Khác execution harness** — mỗi platform dùng cơ chế native mạnh nhất của nó, không copy máy móc.
 3. **Master chung** — sửa `codex/rules` + `codex/skills`; sync ra Grok / Codex / Antigravity.
 4. **Không routing “cực”** — không doc kiểu “task này bắt buộc Grok”. Task phức tạp = skill stack đầy đủ trên platform user đang dùng.
@@ -22,6 +22,7 @@ User **không** phải chọn Grok cho E2E, Codex cho plan, Antigravity cho UI. 
 | `e2e-qa` execution ladder | Không loop `*:deep` |
 | 5fedu gates | Mapping → template → verify |
 | Technical debt + Anti-Fake-PASS | Trước final |
+| `07-finish-to-completion` | Không handoff sớm; scope lock N/N |
 | Complex project | Plan slices, cross-module, permission matrix — **không** đổi platform |
 
 ## Platform-native harness (cùng chuẩn, khác “cơ”)

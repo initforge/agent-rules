@@ -1,59 +1,61 @@
 ---
-description: "Intent router và hợp đồng kích hoạt — Antigravity"
-alwaysApply: true
+description: "Intent router và hợp đồng kích hoạt — Codex CLI"
 ---
 
 # 00-runtime-and-intent
 
-Bộ rule cốt lõi **Antigravity (Gemini)**. Live: `.agents/rules/`. Opus-emulation: `06-opus-emulation-contract.md`.
+Bộ rule cốt lõi **Codex CLI**. Nạp qua `codex/AGENTS.md` → `codex/rules/`. Opus-emulation: `06-opus-emulation-contract.md`.
 
 ## Intent Contract
 
 ### Mục tiêu
 
-- Làm đúng ý đồ user — **intent audit**, không chỉ literal text.
-- Verify tương xứng rủi ro; không bỏ qua `PASS`/`PARTIAL`/`BLOCKED`.
-- Mặc định **MEDIUM**. Đọc mapping/index trước code.
+- Làm đúng ý đồ user, verify tương xứng rủi ro.
+- Ưu tiên skill khi request khớp trigger.
+- Mặc định task **MEDIUM**. Index trước, sâu sau.
+- Model/effort do Codex runtime quản.
 
 ### Quy tắc kích hoạt
 
 | Tình huống | Phải làm |
 |---|---|
 | Setup/scaffold 5fedu | Skill `5fedu-project` |
-| Research | Skill `codex-research` |
+| Research/docs mới | Skill `codex-research` |
 | Review/audit | Findings first |
-| DB/auth/permission | HIGH — locked plan, không bịa schema |
-| Production verify | Mapping → surfaces → browser/DB/export |
+| DB/auth/permission | HIGH risk — không bịa schema |
 
 ### Không làm
 
-- Không tự commit/push/deploy.
-- Không cleanup/xóa file runtime ép chặt (xem `05`).
+- Không tự commit/push/deploy/force-push.
+- Không sửa lan scope.
+
+### Final status
+
+`PASS` | `PARTIAL` | `BLOCKED`
 
 ## Prompt Intent Router
 
 | Signal | Gate |
 |---|---|
-| `5fedu` hoặc `.agents/5fedu/` | Skill + `00-index.md` |
-| `UI`, `chưa chuẩn`, `thiếu` | `/template` trước |
-| `permission`, `role`, `auth` | Permission đa account |
-| `database`, `migration` | DB gate |
-| `export`, `Excel`, `PDF` | Export verification thật |
-| `cleanup`, `xóa file` | `rg` reference check |
-| `verify production` | Smart verification matrix |
+| `5fedu` hoặc `.codex/5fedu/` | Skill `5fedu-project` + `00-index.md` |
+| `UI`, `giao diện` (5fedu) | Template Parity `/template` |
+| `permission`, `auth`, `RLS` | Permission Gate |
+| `database`, `schema`, `Supabase` | DB gate + root-cause |
+| `verify production` | Smart Verification (`01`) |
+| `audit`, `review` | Findings first + debt |
 
 ## Hard Activation Contract
 
-1. **Code thật** — cấm placeholder, fake CRUD.
-2. **Không fake PASS** — raw output / screenshot / log.
-3. **Fact / Inference / Unknown** — tách rõ khi debug.
+1. **Code thật** — cấm placeholder.
+2. **Không fake PASS** — verify trước PASS.
+3. **No ego / No marketing.**
 
-**Protected:** `.agents/AGENTS.md`, `.agents/INTENT.md`, `.agents/rules/`, `.agents/skills/5fedu-project/`.
+**Protected:** `codex/AGENTS.md`, `codex/rules/*.md`, `codex/skills/5fedu-project/`.
 
 ## 5fedu Hard Mode
 
-`.agents/5fedu/`: mapping → `/template` → sửa tối thiểu → verify. "Chưa chuẩn" → audit gap, không vá bề mặt.
+Khi có `.codex/5fedu/` (hoặc sibling): mapping → `/template` → code → verify.
 
 ## Technical debt gate
 
-Task vừa/lớn: `Technical debt check` bắt buộc trong final MEDIUM/HIGH.
+Task vừa/lớn: phân loại nợ; sửa nghiêm trọng trong scope trước PASS.

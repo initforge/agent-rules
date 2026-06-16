@@ -1,4 +1,0 @@
-interface:
-  display_name: "Researcher"
-  short_description: "Multi-source research before coding"
-  default_prompt: "Use researcher skill to gather evidence from diverse sources, compare options, and write a research note before coding."

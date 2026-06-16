@@ -1,19 +1,11 @@
 ---
 name: workflow-router
-description: Workflow phase router (Codex). ULTRA-SENSITIVE Turn-0 — activate when task spans plan/research/implement/bugfix/review phases, model/profile choice, quota, or unclear which phase next. Read SKILL.md first. Visible Echo required. Grok prefers /implement.
+description: Use this skill when Codex needs to decide which native workflow phase to run next and which model/profile to apply. Trigger for tasks that must move between planning, research, implementation, bug fixing, and review while keeping model choice controlled and quota-aware.
 ---
 
 # Workflow Router
 
-## Skill activation (cực nhạy — Turn-0)
-
-Multi-phase/model routing → `Skill scan: … → workflow-router` + `Skill activated: workflow-router` visible → đọc file này.
-
 Use this skill to turn a task into the correct working phase.
-
-## Multi-skill coordination
-
-When ≥2 skills match, build ordered stack (see `00-hard-activation-contract.md` Multi-Skill Stack). Router picks **phase**; stack picks **which skills stay active**. Update `Primary (this step)` on each phase change without dropping `Skills active`.
 
 ## Goal
 

@@ -1,32 +1,34 @@
 ---
-description: "Chống tự tiến hóa harness — Antigravity"
-alwaysApply: true
+description: "Chống tự tiến hóa harness — Codex"
 ---
 
 # 05-harness-mutation-gate
 
-Harness = hạ tầng. **CẤM** agent tự thêm/sửa rules/skills khi làm task thường.
+Harness = hạ tầng. **CẤM** mutate khi làm task thường.
 
 ## Learning tiers
 
 | Tier | Path | Ai ghi |
 |---|---|---|
 | L0 | chat | Agent |
-| L1 | `AGENTS.md`, `.agents/5fedu/`, `plan/` | Feedback lặp |
+| L1 | `AGENTS.md`, `.codex/5fedu/`, `plan/` | Feedback lặp trong dự án |
 | L2 | `grok/rules/`, `grok/skills/` | User yêu cầu rõ |
-| L3 | `antigravity/`, `codex/` | User + đúng nền |
+| L3 | `codex/`, `antigravity/` | User yêu cầu + đúng nền |
 
-## CẤM mặc định
+## Được sửa L2/L3 khi user nói rõ
 
-- User phàn nàn → sửa **code**, không thêm rule.
-- Cleanup → không đụng `.agents/rules/`, protected skills.
+"sửa harness", "cập nhật rule", "sync harness", "port sang codex/antigravity".
 
-## Protected
+## Protected (Codex)
 
 ```text
-.agents/AGENTS.md  .agents/INTENT.md  .agents/rules/
-.antigravity/.agents/  grok/  .grok/
+codex/rules/  codex/skills/  codex/AGENTS.md
+grok/  .grok/
 docs/06-08  shared/
 ```
 
-Master: `grok/` → `sync-all-harness.sh` → `.agents/rules/`.
+Sửa master `grok/` → chạy `grok/scripts/sync-all-harness.sh`.
+
+## Repo agent-rules
+
+Chỉ mutate harness khi user chỉ định scope harness.
