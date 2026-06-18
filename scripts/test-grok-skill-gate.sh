@@ -52,7 +52,7 @@ ok "allows deep after single -g test"
 
 # 6) harness commit allowed (advisory only)
 export GROK_WORKSPACE_ROOT="/home/linhnxdeveloper/Projects/agent-rules"
-echo '{"hookEventName":"post_tool_use","sessionId":"'"$GROK_SESSION_ID"'","toolName":"search_replace","toolInput":{"path":"codex/rules/10-fast-context.md"}}' \
+echo '{"hookEventName":"post_tool_use","sessionId":"'"$GROK_SESSION_ID"'","toolName":"search_replace","toolInput":{"path":"rules/03-context-and-tools.md"}}' \
   | GROK_HOOK_EVENT=post_tool_use GROK_SESSION_ID="$GROK_SESSION_ID" GROK_WORKSPACE_ROOT="$GROK_WORKSPACE_ROOT" "$GATE" >/dev/null
 OUT=$(echo '{"hookEventName":"pre_tool_use","sessionId":"'"$GROK_SESSION_ID"'","toolName":"run_terminal_command","toolInput":{"command":"git commit -m test"}}' \
   | GROK_HOOK_EVENT=pre_tool_use GROK_SESSION_ID="$GROK_SESSION_ID" GROK_WORKSPACE_ROOT="$GROK_WORKSPACE_ROOT" "$GATE")

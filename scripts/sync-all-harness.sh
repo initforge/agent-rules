@@ -3,9 +3,9 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-CODEX_RULES="$ROOT/codex/rules"
-CODEX_SKILLS="$ROOT/codex/skills"
-ANT_AGENTS="$ROOT/antigravity/.agents"
+CODEX_RULES="$ROOT/rules"
+CODEX_SKILLS="$ROOT/skills"
+ANT_AGENTS="$ROOT/platforms/antigravity/.agents"
 LIVE_AGENTS="$ROOT/.agents"
 # Grok live: chỉ global (~/.grok/) qua install-grok-global.sh — không mirror .grok/ trong repo (tránh duplicate 37 instructions)
 
@@ -32,7 +32,7 @@ done
 rm -rf "$ROOT/.grok"
 
 # --- Rules: codex → antigravity (bỏ file chỉ dành Codex) ---
-find "$ANT_AGENTS/rules" -maxdepth 1 -type f -name '*.md' -delete 2>/dev/null || true
+find "$ANT_AGENTS/rules" -maxdepth 1 -type f -name '*.md' ! -name 'antigravity-overlay.md' -delete 2>/dev/null || true
 for f in "$CODEX_RULES"/*.md; do
   base="$(basename "$f")"
   should_skip_antigravity "$base" && continue
@@ -40,7 +40,7 @@ for f in "$CODEX_RULES"/*.md; do
 done
 
 # Frontmatter cho Antigravity (adapter — không đổi body rule)
-FM_SCRIPT="$ROOT/antigravity/scripts/add-rules-frontmatter.ps1"
+FM_SCRIPT="$ROOT/platforms/antigravity/scripts/add-rules-frontmatter.ps1"
 if [[ -f "$FM_SCRIPT" ]]; then
   if command -v pwsh >/dev/null 2>&1; then
     pwsh -NoProfile -File "$FM_SCRIPT" -RulesDir "$ANT_AGENTS/rules"
@@ -51,9 +51,11 @@ if [[ -f "$FM_SCRIPT" ]]; then
   fi
 fi
 
-# --- Workflows: antigravity master → .agents live (active only) ---
+# --- Workflows: root/workflows → Antigravity master & live ---
 mkdir -p "$ANT_AGENTS/workflows" "$LIVE_AGENTS/workflows"
-rsync -a --delete "$ANT_AGENTS/workflows/" "$LIVE_AGENTS/workflows/"
+for dest in "$ANT_AGENTS/workflows" "$LIVE_AGENTS/workflows"; do
+  rsync -a --delete "$ROOT/workflows/" "$dest/"
+done
 
 # --- Antigravity master → .agents live ---
 rsync -a --delete "$ANT_AGENTS/rules/" "$LIVE_AGENTS/rules/"

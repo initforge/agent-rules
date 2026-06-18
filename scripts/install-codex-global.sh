@@ -10,11 +10,11 @@ SKILLS_DEST="$CODEX_HOME/skills"
 HARNESS_SKIP_GLOBAL_INSTALL=1 "$ROOT/scripts/sync-all-harness.sh" >/dev/null
 
 mkdir -p "$RULES_DEST" "$SKILLS_DEST"
-rsync -a --delete "$ROOT/codex/rules/" "$RULES_DEST/"
+rsync -a --delete "$ROOT/rules/" "$RULES_DEST/"
 rsync -a --delete \
   --exclude '_archive' --exclude '_archive/**' \
   --exclude '.system' --exclude '.system/**' \
-  "$ROOT/codex/skills/" "$SKILLS_DEST/"
+  "$ROOT/skills/" "$SKILLS_DEST/"
 rm -rf "$SKILLS_DEST/_archive" "$SKILLS_DEST/.system" "$SKILLS_DEST/codex-research" 2>/dev/null || true
 
 CODEX_SCRIPTS="$CODEX_HOME/scripts"
@@ -22,7 +22,7 @@ CODEX_HOOKS="$CODEX_HOME/hooks"
 mkdir -p "$CODEX_SCRIPTS" "$CODEX_HOOKS" "$CODEX_HOME/skill-state/e2e-cache"
 install -m 644 "$ROOT/scripts/grok-skill-gate.py" "$CODEX_SCRIPTS/skill-gate.py"
 install -m 755 "$ROOT/scripts/grok-skill-gate.sh" "$CODEX_SCRIPTS/skill-gate.sh"
-sed "s|\${CODEX_HOME}|$CODEX_HOME|g" "$ROOT/codex/hooks/skill-orchestrator.json" > "$CODEX_HOOKS/skill-orchestrator.json"
+sed "s|\${CODEX_HOME}|$CODEX_HOME|g" "$ROOT/platforms/codex/hooks/skill-orchestrator.json" > "$CODEX_HOOKS/skill-orchestrator.json"
 
 USER_SKILLS=$(find "$SKILLS_DEST" -name SKILL.md ! -path '*/.system/*' | wc -l)
 echo "Installed global Codex mirror (from codex master):"

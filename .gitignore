@@ -37,7 +37,18 @@ Thumbs.db
 *mcp_config*.json
 
 # Antigravity workspace rules must be versioned so the IDE can activate them.
-/.agent/
+/.agents/
+
+# Platform auto-generated mirrors (we only track overlays and scripts in git)
+platforms/codex/rules/*
+!platforms/codex/rules/codex-overlay.md
+platforms/codex/skills/
+platforms/grok/rules/
+platforms/grok/skills/
+platforms/antigravity/.agents/rules/*
+!platforms/antigravity/.agents/rules/antigravity-overlay.md
+platforms/antigravity/.agents/skills/
+platforms/antigravity/.agents/workflows/
 
 # Grok live mirror — use ~/.grok/ global only (install-grok-global.sh)
 .grok/

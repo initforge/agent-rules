@@ -145,11 +145,12 @@ def inject_context(message: str) -> None:
 
 
 HARNESS_PATH_MARKERS = (
-    "codex/rules/",
-    "codex/skills/",
+    "rules/",
+    "skills/",
     "scripts/validate-harness",
     "scripts/grok-skill-gate",
-    "grok/hooks/",
+    "platforms/grok/hooks/",
+    "platforms/codex/hooks/",
     "scripts/install-grok-global",
     "scripts/install-codex-global",
     "scripts/sync-all-harness",
@@ -176,7 +177,7 @@ def is_harness_workspace() -> bool:
     root = workspace_root()
     if not root:
         return False
-    return (root / "codex" / "rules" / "00-hard-activation-contract.md").is_file()
+    return (root / "rules" / "00-universal-frontier-contract.md").is_file()
 
 
 def workspace_cache_key() -> str:

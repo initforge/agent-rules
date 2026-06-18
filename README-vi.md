@@ -18,15 +18,15 @@ Repo này phân biệt rõ hai vai trò:
 
 | Khu vực | Vai trò |
 |---|---|
-| `codex/AGENTS.md` | Điểm nạp runtime cho Codex, trỏ về các rule trong `C:\Users\DELL\.codex` |
-| `codex/rules/` | Luật vận hành: core, planning, execution, quality gate, context tools, inventory |
-| `codex/agents/` | Profile TOML cho planner, researcher, implementer, reviewer, bugfixer |
-| `codex/skills/` | Skill cục bộ và skill vendor đã đóng gói |
-| `codex/scripts/` | Script sync, bootstrap, inventory, phase/profile orchestration |
-| `codex/docs/` | Registry và tài liệu runtime được copy vào `.codex/docs` |
-| `codex/templates/` | Mẫu plan, research note, review report, handoff, final report |
-| `codex/inventory/` | Snapshot tool, MCP, path, env và config |
-| `antigravity/` | Adapter cho Google Antigravity: rules, workflows, preflight |
+| `rules/` | Luật vận hành dùng chung (Tiếng Việt): core, planning, execution, quality gate, context tools |
+| `skills/` | Các skill dùng chung hoạt động cho các nền tảng (e.g. 5fedu-project, docs-style, check-work...) |
+| `workflows/` | Các workflow mẫu định nghĩa các pha làm việc |
+| `platforms/` | Các adapter cấu hình đặc thù cho từng nền tảng |
+| `platforms/codex/` | Cấu hình Codex: profile agents, templates, hooks, docs và inventory |
+| `platforms/grok/` | Cấu hình Grok CLI: hooks, scripts và cấu trúc mapping |
+| `platforms/antigravity/` | Adapter cho Google Antigravity: overlay rules, workflows global |
+| `scripts/` | Các tập lệnh cài đặt global, đồng bộ hóa (sync) và kiểm tra tính toàn vẹn (validate) |
+| `.agents/` | Thư mục runtime live cục bộ dùng để kiểm thử trên repo này |
 
 ## Tech Stack
 

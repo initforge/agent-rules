@@ -15,18 +15,15 @@ Daily work uses `C:\Users\DELL\.codex`. The `P:\agent-rules\codex` copy is the b
 
 | Area | Role |
 |---|---|
-| `codex/AGENTS.md` | Runtime entrypoint for Codex |
-| `codex/rules/` | Core, planning, execution, quality, context, and inventory rules |
-| `codex/agents/` | TOML profiles for planner, researcher, implementer, reviewer, and bugfixer |
-| `codex/skills/` | Local and bundled skills |
-| `agents-skills/` | Backup of `C:\Users\DELL\.agents\skills`, including Caveman, Cavecrew, and GitNexus helper skills |
-| `codex/scripts/` | Sync, bootstrap, inventory, and phase orchestration scripts |
-| `codex/docs/` | Runtime registries and setup docs copied into `.codex/docs` |
-| `codex/templates/` | Plan, research, review, handoff, and final report templates |
-| `codex/inventory/` | Machine/tool/MCP/config snapshots |
-| `antigravity/` | Adapter for Google Antigravity rules, workflows, and preflight |
-| `grok/` | **Grok CLI** harness master (rules + skills) — sync cả Codex + Antigravity |
-| `.grok/` | Grok CLI live runtime |
+| `rules/` | Shared operating rules (Vietnamese): core, planning, execution, quality, context |
+| `skills/` | Shared active skills across platforms (e.g. 5fedu-project, docs-style, check-work...) |
+| `workflows/` | Shared workflow template definitions |
+| `platforms/` | Platform adapters for specific configurations |
+| `platforms/codex/` | Codex config: agent profiles, templates, hooks, docs, and inventory |
+| `platforms/grok/` | Grok CLI config: hooks, scripts, and mapping structure |
+| `platforms/antigravity/` | Google Antigravity adapter: overlay rules, global workflows |
+| `scripts/` | Installation, synchronization (sync), and verification (validate) scripts |
+| `.agents/` | Project-local runtime live copy (used for testing on this repo) |
 | `shared/` | Shared contracts (`opus-emulation-contract.md`) |
 
 ## Tech Stack
@@ -61,8 +58,8 @@ Restore from backup to local runtime:
 ## Grok CLI Harness
 
 ```bash
-./grok/scripts/sync-all-harness.sh   # rules + skills → 3 nền
-./grok/scripts/validate-harness.sh   # fail nếu legacy / drift
+./scripts/sync-all-harness.sh   # rules + skills → 3 platforms
+./scripts/validate-harness.sh   # check legacy or drift
 grok inspect
 ```
 

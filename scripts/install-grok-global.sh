@@ -10,11 +10,11 @@ SKILLS_DEST="$GROK_HOME/skills"
 HARNESS_SKIP_GLOBAL_INSTALL=1 "$ROOT/scripts/sync-all-harness.sh" >/dev/null
 
 mkdir -p "$RULES_DEST" "$SKILLS_DEST"
-rsync -a --delete "$ROOT/codex/rules/" "$RULES_DEST/"
+rsync -a --delete "$ROOT/rules/" "$RULES_DEST/"
 rsync -a --delete \
   --exclude '_archive' --exclude '_archive/**' \
   --exclude '.system' --exclude '.system/**' \
-  "$ROOT/codex/skills/" "$SKILLS_DEST/"
+  "$ROOT/skills/" "$SKILLS_DEST/"
 rm -rf "$SKILLS_DEST/_archive" "$SKILLS_DEST/.system" "$SKILLS_DEST/codex-research" 2>/dev/null || true
 
 HOOKS_DEST="$GROK_HOME/hooks"
@@ -22,7 +22,7 @@ HOOKS_BIN="$HOOKS_DEST/bin"
 mkdir -p "$HOOKS_BIN"
 install -m 755 "$ROOT/scripts/grok-skill-gate.sh" "$HOOKS_BIN/grok-skill-gate.sh"
 install -m 644 "$ROOT/scripts/grok-skill-gate.py" "$HOOKS_BIN/grok-skill-gate.py"
-sed "s|\${GROK_HOME}|$GROK_HOME|g" "$ROOT/grok/hooks/skill-orchestrator.json" > "$HOOKS_DEST/skill-orchestrator.json"
+sed "s|\${GROK_HOME}|$GROK_HOME|g" "$ROOT/platforms/grok/hooks/skill-orchestrator.json" > "$HOOKS_DEST/skill-orchestrator.json"
 mkdir -p "$GROK_HOME/skill-state" "$GROK_HOME/skill-state/e2e-cache"
 "$ROOT/scripts/grok-hook-healthcheck.sh" || echo "WARN: hook healthcheck failed — hooks may be fail-open"
 
