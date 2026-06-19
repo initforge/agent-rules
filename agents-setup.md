@@ -178,11 +178,12 @@ Khi Antigravity rules thay đổi:
 
 ## Quy Tắc Vận Hành
 
-- Runtime logic Codex nằm trong `C:\Users\DELL\.codex`.
+- Runtime logic Codex nằm trong `%USERPROFILE%\.codex` (hoặc `C:\Users\<username>\.codex`).
 - Bản mirror bootstrap nằm trong `P:\agent-rules\codex`.
-- Global Antigravity rules nằm trong `C:\Users\DELL\.gemini\GEMINI.md`.
-- Master Antigravity rules nằm trong `P:\agent-rules\antigravity\.agents\rules\`.
+- Global Antigravity rules nằm trong `%USERPROFILE%\.gemini\GEMINI.md`.
+- Master Antigravity rules nằm trong `P:\agent-rules\platforms\antigravity\.agents\rules\`.
 - File root `P:\agent-rules\*.md` chỉ là loader tương thích.
+- **Phạm vi áp dụng `.agents` (Workspace rules)**: Chỉ cài đặt thư mục `.agents` cho một số trường hợp đặc thù (như dự án phát triển quy tắc `agent-rules` hoặc các dự án có quy định nghiệp vụ/kỹ thuật khắt khe như **5fedu**). Đối với các dự án thông thường, không duy trì thư mục `.agents` nhằm tránh nhiễu quy tắc cũ và tiết kiệm token ngữ cảnh; AI sẽ sử dụng bộ Global Rules chung là đủ.
 - Nội dung hướng tới người dùng phải dùng tiếng Việt có dấu đầy đủ.
 - Dùng skill `researcher` làm lớp nghiên cứu chính (Codex + Grok).
 - Dùng `workflow-router` và metadata trong plan để route phase/profile.

@@ -10,12 +10,14 @@ if (-not (Test-Path -LiteralPath $RulesDir)) {
 
 $active = @(
   "00-runtime-and-intent.md",
+  "00-universal-frontier-contract.md",
   "01-agent-workflow-sop.md",
   "02-code-quality-and-debt.md",
   "03-context-and-tools.md",
   "04-skills-and-5fedu.md",
   "05-harness-mutation-gate.md",
   "06-opus-emulation-contract.md",
+  "07-finish-to-completion.md",
   "antigravity-overlay.md",
   "platform-boundary.md"
 )

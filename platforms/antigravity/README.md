@@ -44,11 +44,11 @@ Script thêm frontmatter: `antigravity/scripts/add-rules-frontmatter.ps1`
 
 ```powershell
 # Cài rules + entrypoints + frontmatter
-& "P:\agent-rules\codex\scripts\install-antigravity-adapter.ps1" `
+& "P:\agent-rules\platforms\codex\scripts\install-antigravity-adapter.ps1" `
     -ProjectRoot "P:\du-an-cua-ban"
 
 # Thêm frontmatter (nếu install script chưa thêm)
-& "P:\agent-rules\antigravity\scripts\add-rules-frontmatter.ps1" `
+& "P:\agent-rules\platforms\antigravity\scripts\add-rules-frontmatter.ps1" `
     -RulesDir "P:\du-an-cua-ban\.agents\rules"
 ```
 
@@ -71,8 +71,9 @@ Script thêm frontmatter: `antigravity/scripts/add-rules-frontmatter.ps1`
 
 ## Ghi chú vận hành
 
+- **Phạm vi triển khai `.agents` (Workspace rules)**: Chỉ cài đặt thư mục `.agents` cho các case đặc biệt (như dự án đặc thù **5fedu** cần quy định khắt khe về DB/UI/RLS hoặc dự án phát triển rules `agent-rules`). Đối với các dự án thông thường, không tạo `.agents` nhằm tránh nhiễu và quá tải token ngữ cảnh (AI sẽ chỉ dùng Global Rules).
 - **Không đưa secret** vào rule, workflow hoặc inventory.
-- **Không gitignore `.agents/`** để đảm bảo Antigravity đọc rules ổn định.
+- **Không gitignore `.agents/`** trên các dự án được triển khai để đảm bảo Antigravity đọc rules ổn định.
 - **Rule phải ngắn** (< 12,000 ký tự/file). Workflow mới là nơi chứa quy trình nhiều bước.
 - **Không port `codex/agents/*.toml`** sang Antigravity.
 - **Project nhiều repo** nên cấu hình Antigravity Project với đủ folder liên quan.
