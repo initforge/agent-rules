@@ -12,7 +12,28 @@ The generated `DESIGN.md` serves as the **single source of truth** for prompting
 
 ## Prerequisites
 - Access to Google Stitch via [labs.google.com/stitch](https://labs.google.com/stitch)
-- Optionally: Stitch MCP Server for programmatic integration with Cursor, Antigravity, or Gemini CLI
+- Optionally: Stitch MCP Server for programmatic integration. Configure based on your runtime:
+  * **Antigravity (Gemini)**: Sửa file `~/.gemini/config/mcp_config.json` (định dạng JSON):
+    ```json
+    {
+      "mcpServers": {
+        "stitch": {
+          "command": "npx",
+          "args": ["-y", "@_davideast/stitch-mcp", "proxy"],
+          "env": { "STITCH_API_KEY": "YOUR_API_KEY" }
+        }
+      }
+    }
+    ```
+  * **Grok CLI**: Sửa file `~/.grok/config.toml` (định dạng TOML):
+    ```toml
+    [mcp_servers.stitch]
+    command = "npx"
+    args = ["-y", "@_davideast/stitch-mcp", "proxy"]
+    [mcp_servers.stitch.env]
+    STITCH_API_KEY = "YOUR_API_KEY"
+    ```
+  * **Codex**: Sử dụng lệnh CLI `codex mcp add stitch -- npx -y @_davideast/stitch-mcp proxy`
 
 ## The Goal
 Generate a `DESIGN.md` file that encodes:

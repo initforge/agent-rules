@@ -48,3 +48,8 @@ agent-rules/
 1. Sửa `grok/rules/` hoặc `shared/opus-emulation-contract.md`.
 2. `./grok/scripts/sync-all-harness.sh`.
 3. User sync `~/.codex` / deploy adapter theo quy trình riêng.
+
+## Antigravity IDE (Overlay rules)
+
+1. Cấm tự ý gọi lệnh hoặc tham chiếu đến CLI `grok mcp`, `grok list` khi đang chạy trên Antigravity IDE. Cấu hình MCP của Antigravity phải được chỉnh sửa trực tiếp trong `~/.gemini/config/mcp_config.json`.
+2. **Cấm ngụy biện (Anti-Rationalization):** Khi bị người dùng chỉ ra lỗi nhầm lẫn cấu hình hoặc đường dẫn (ví dụ: cấu hình nhầm sang `~/.grok/`), cấm tuyệt đối việc giải thích vòng vo, tìm cách hợp lý hóa lỗi sai hoặc ngụy biện. Phải thừa nhận lỗi ngay lập tức, sử dụng các công cụ tìm kiếm thực tế để định vị lại môi trường/đường dẫn chính xác và sửa đổi đúng mục tiêu.

@@ -11,6 +11,9 @@ HARNESS_SKIP_GLOBAL_INSTALL=1 "$ROOT/scripts/sync-all-harness.sh" >/dev/null
 
 mkdir -p "$RULES_DEST" "$SKILLS_DEST"
 rsync -a --delete "$ROOT/rules/" "$RULES_DEST/"
+if [[ -f "$ROOT/platforms/grok/rules/grok-overlay.md" ]]; then
+  cp "$ROOT/platforms/grok/rules/grok-overlay.md" "$RULES_DEST/grok-overlay.md"
+fi
 rsync -a --delete \
   --exclude '_archive' --exclude '_archive/**' \
   --exclude '.system' --exclude '.system/**' \

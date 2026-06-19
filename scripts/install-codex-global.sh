@@ -11,6 +11,9 @@ HARNESS_SKIP_GLOBAL_INSTALL=1 "$ROOT/scripts/sync-all-harness.sh" >/dev/null
 
 mkdir -p "$RULES_DEST" "$SKILLS_DEST"
 rsync -a --delete "$ROOT/rules/" "$RULES_DEST/"
+if [[ -f "$ROOT/platforms/codex/rules/codex-overlay.md" ]]; then
+  cp "$ROOT/platforms/codex/rules/codex-overlay.md" "$RULES_DEST/codex-overlay.md"
+fi
 rsync -a --delete \
   --exclude '_archive' --exclude '_archive/**' \
   --exclude '.system' --exclude '.system/**' \

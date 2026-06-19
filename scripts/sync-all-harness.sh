@@ -60,6 +60,9 @@ done
 # --- Antigravity master → .agents live ---
 rsync -a --delete "$ANT_AGENTS/rules/" "$LIVE_AGENTS/rules/"
 rsync -a --delete "$ANT_AGENTS/skills/" "$LIVE_AGENTS/skills/"
+for f in AGENTS.md INTENT.md README.md; do
+  [[ -f "$ANT_AGENTS/$f" ]] && cp "$ANT_AGENTS/$f" "$LIVE_AGENTS/$f"
+done
 
 RULES_CODEX=$(find "$CODEX_RULES" -maxdepth 1 -name '*.md' | wc -l)
 RULES_AG=$(find "$LIVE_AGENTS/rules" -maxdepth 1 -name '*.md' | wc -l)
