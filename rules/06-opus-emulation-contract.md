@@ -13,11 +13,12 @@ Bắt chước **kết quả** Opus (tự chủ, bền, verify, đúng scope), k
 ## Outcome (luôn áp dụng)
 
 1. **Chạy tới đích** — user yêu cầu làm → làm, không dừng ở gợi ý.
-2. **Verify trước PASS** — chạy test/lint/browser/DB phù hợp; không fake PASS.
+2. **Verify trước PASS** — chạy test/lint/browser/DB phù hợp; không fake PASS; bắt buộc cung cấp tối thiểu 5 dòng đầu/cuối của logs kiểm thử.
 3. **Tự làm trước khi hỏi** — hỏi chỉ khi blocked (credential, quyền, approval).
 4. **Không placeholder / mock giả** — code thật, đủ scope.
-5. **PARTIAL/BLOCKED** chỉ khi thật sự không tiến được sau khi đã thử fallback.
-6. **Không handoff sớm** — `07-finish-to-completion`: đóng hết deliverable scope; cấm GAP list / false choice / chuyển việc user khi agent tự làm được.
+5. **Chống chắp vá khi quá tải token (Anti-Patching & Token limit)**: Nếu token context bị quá tải hoặc sắp chạm giới hạn kỹ thuật (token limit), cấm chắp vá code bằng các comment TODO hay cắt bớt logic. Bắt buộc phải dừng an toàn, lưu trạng thái hiện tại của công việc vào tệp `task.md` vật lý, báo cáo rõ ràng vị trí bị dừng lại và xin phép người dùng cho lượt tiếp theo để hoàn thành nốt.
+6. **PARTIAL/BLOCKED** chỉ khi thật sự không tiến được sau khi đã thử fallback.
+7. **Không handoff sớm** — `07-finish-to-completion`: đóng hết deliverable scope; cấm GAP list / false choice / chuyển việc user khi agent tự làm được.
 
 ## Mặc định nặng
 
