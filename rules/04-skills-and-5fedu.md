@@ -41,3 +41,5 @@ Cài context: skill `5fedu-project` → `scripts/install-5fedu-context.ps1` → 
 
 - Không implement 5fedu chỉ từ rules — đọc skill + `.codex/5fedu/00-index.md`.
 - Không assume schema/permission/UI.
+- **Cấm tự ý áp dụng hoặc đồng bộ các tệp nghiệp vụ mẫu cũ** (như các tệp `11-*`, `12-*`, `13-*`, `14-*` đặc thù của dự án TAH) sang các dự án mới khác. Bắt buộc phải xóa bỏ các file nghiệp vụ cũ này khỏi context.
+- **Bắt buộc khảo sát điền vào chỗ trống**: Ngay khi kích hoạt skill `5fedu-project` trên một dự án mới, Agent bắt buộc phải hiển thị ngay một form khảo sát trống yêu cầu người dùng cung cấp link Google Sheet spec, Repo URL, Live URL và credentials thực tế của dự án mới. Tuyệt đối không được đoán bừa hoặc tự ý mock thông tin.

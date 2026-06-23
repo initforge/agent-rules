@@ -3,18 +3,20 @@ const path = require('path');
 
 const PROJECTS_DIR = process.env.PROJECTS_DIR || '/home/linhnxdeveloper/Projects';
 const REPO_ROOT = path.join(__dirname, '..');
-const MASTER_AGENTS_DIR = path.join(REPO_ROOT, 'antigravity', '.agents');
-const MASTER_SKILLS_DIR = path.join(REPO_ROOT, 'grok', 'skills');
-const PREFLIGHT_SRC = path.join(REPO_ROOT, 'antigravity', 'scripts', 'antigravity-preflight.ps1');
+const MASTER_AGENTS_DIR = path.join(REPO_ROOT, 'platforms', 'antigravity', '.agents');
+const MASTER_SKILLS_DIR = path.join(REPO_ROOT, 'platforms', 'grok', 'skills');
+const PREFLIGHT_SRC = path.join(REPO_ROOT, 'platforms', 'antigravity', 'scripts', 'antigravity-preflight.ps1');
 
 const ACTIVE_RULES = [
   '00-runtime-and-intent.md',
+  '00-universal-frontier-contract.md',
   '01-agent-workflow-sop.md',
   '02-code-quality-and-debt.md',
   '03-context-and-tools.md',
   '04-skills-and-5fedu.md',
   '05-harness-mutation-gate.md',
   '06-opus-emulation-contract.md',
+  '07-finish-to-completion.md',
   'antigravity-overlay.md',
   'platform-boundary.md',
 ];
@@ -66,16 +68,16 @@ function rmDirSync(dirPath) {
   }
 }
 
-function syncProject(projectDir) {
+function syncProject(projectDir, agentsFolderName = '.agents') {
   const projectName = path.basename(projectDir);
-  const targetAgentsDir = path.join(projectDir, '.agents');
+  const targetAgentsDir = path.join(projectDir, agentsFolderName);
 
   console.log(`\n========================================`);
-  console.log(`Syncing project: ${projectName}`);
+  console.log(`Syncing project: ${projectName} (${agentsFolderName})`);
   console.log(`========================================`);
 
   if (!fs.existsSync(targetAgentsDir)) {
-    console.log(`[Skip] .agents folder not found in ${projectName}`);
+    console.log(`[Skip] ${agentsFolderName} folder not found in ${projectName}`);
     return;
   }
 
@@ -178,7 +180,9 @@ function main() {
     const fullPath = path.join(PROJECTS_DIR, dir.name);
     if (dir.name === 'agent-rules') continue;
     if (fs.existsSync(path.join(fullPath, '.agents'))) {
-      syncProject(fullPath);
+      syncProject(fullPath, '.agents');
+    } else if (fs.existsSync(path.join(fullPath, '.agent'))) {
+      syncProject(fullPath, '.agent');
     }
   }
 

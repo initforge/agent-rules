@@ -174,12 +174,9 @@ Khi verify production:
 - đối chiếu database sau CRUD hoặc export nếu feature ghi dữ liệu;
 - báo `PARTIAL` nếu thiếu credential/MFA/quyền hoặc không thể test external integration thật.
 
-### Harness Playwright production (TAH)
-
-Chi tiết đầy đủ: `14-production-e2e-harness.md`. Tóm tắt bắt buộc:
-
-- Chạy qua `npx playwright test --project=production-e2e` sau deploy; không deploy thủ công bằng terminal.
-- Sửa module **Chuyến xe / CT / lương / phân quyền vận tải** → chạy thêm `production-trip-execution.spec.ts` và unit `trip-execution-sync.test.ts`.
-- Test làm thay đổi dữ liệu: `snapshotPendingDriverTrip` / `restorePendingDriverTrip` (fixture chuyến `52`).
-- Assert duyệt cha: `expectTripParentApprovalDialog` — không kỳ vọng modal duyệt lẻ CT (R4).
-- Skip có chủ đích khi production chưa có filter **Thực hiện** hoặc popup TH mới → kiểm tra gate bundle trước khi báo FAIL.
+### Tiêu chuẩn an toàn kiểm thử E2E Production (Safety Gates)
+ 
+- Chạy qua Playwright test trên project production sau khi CI/CD đã tự động deploy xong; tuyệt đối không tự ý deploy thủ công từ terminal bằng lệnh `vercel --prod`.
+- **Bảo toàn dữ liệu thực tế (Data Safety)**: Mọi ca kiểm thử làm thay đổi dữ liệu (mutating tests) bắt buộc phải chụp snapshot dữ liệu trước khi test và khôi phục (restore) nguyên trạng dữ liệu ngay khi test kết thúc (sử dụng hook `afterAll` hoặc `afterEach`).
+- **Chống báo cáo PASS ảo (No Fake PASS)**: Yêu cầu ghi log đầy đủ ma trận độ bao phủ kiểm thử thực tế. Chỉ báo PASS khi tất cả các ca kiểm thử cốt lõi đã chạy thành công thực tế, không chấp nhận việc bỏ qua (skip) hoặc che giấu lỗi bằng assert mù.
+- **Assert Database an toàn**: Chỉ assert trực tiếp trên database khi các biến môi trường cấu hình DB credentials (`DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`) tồn tại hợp lệ. Nếu thiếu, ghi nhận trạng thái kiểm thử là `PARTIAL` (chỉ kiểm thử UI), cấm để bộ test bị crash.

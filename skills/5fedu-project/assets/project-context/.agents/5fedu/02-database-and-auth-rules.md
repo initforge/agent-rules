@@ -189,10 +189,11 @@ Khi task đụng database, auth, permission, role, row-level filtering, trigger,
 - Nếu external integration không thể test thật, đọc code/config/error handling kỹ và ghi rõ verification gap.
 
 ## 5fedu-Specific Baseline
-
+ 
 - App table primary key mặc định là `id int8` auto-increment.
 - Foreign key tới app table cũng dùng `int8`.
 - Login dùng `ten_dang_nhap`; admin mặc định `admin` / `5fedu.com`.
 - Tài khoản thường mặc định `123456`.
 - Supabase service role chỉ được dùng ở server/admin path, không nằm ở client.
 - Dữ liệu tự tính phải nhất quán ở database khi feature/báo cáo/export phụ thuộc vào nó.
+- **Quy tắc nghiệp vụ phân duyệt đa cấp**: Đối với các nghiệp vụ có phân cấp kiểm duyệt (phê duyệt đa cấp), cấu trúc cơ sở dữ liệu phải hỗ trợ tách biệt rõ ràng hai trục trạng thái: Trạng thái thực hiện (ở mức phiếu chi tiết dòng con) và Trạng thái phê duyệt (thường ở mức phiếu cha). Khi cập nhật trạng thái duyệt ở bảng cha thành `Đã duyệt` hoặc `Không duyệt`, hệ thống phải cascade (đổ) trạng thái này xuống các dòng con tương ứng và khóa toàn bộ quyền chỉnh sửa của người dùng.

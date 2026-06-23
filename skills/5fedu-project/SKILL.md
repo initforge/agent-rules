@@ -30,14 +30,21 @@ Default loading policy:
 ## 2. Workflow
 
 1. Inspect the target repo first. If `AGENTS.md`, `.agents/5fedu/`, or `.codex/5fedu/` already exists, read it before changing anything.
-2. If the user wants setup, run or adapt `scripts/install-5fedu-context.ps1` to scaffold the project-local context files.
-3. Load `references/5fedu-context-map.md` when writing or updating project rules.
-4. Ask for missing spec, credentials, database rules, or module mapping before implementation. Never invent table names, fields, permissions, or screen mappings.
-5. For real implementation work, map every requested feature from spec -> domain -> module -> view/tab -> source path -> database table -> handler/service. Record uncertain mappings before coding.
-6. Treat Supabase/auth/permission/database work as HIGH risk: create a locked plan, require credentials or mocks explicitly, verify behavior, and do not store secret values in docs.
-7. Treat owner feedback about UI/business flows as reusable gates, not one-off fixes. For transport apps, record list/detail/form/action/totals/combobox/print/approve requirements in project context before coding.
-8. When a template commit is provided, clone or update it under `.agents/template-source/` and record the exact commit in project context. Use it as the UI reference for list, detail, form, dashboard, toolbar, combobox, drawer, table, and mobile card patterns.
-9. Before reporting done, check whether new feedback or a repeated mistake requires context updates. If yes, update local context first, then sync mirrors.
+2. If the user wants setup, display a blank survey form requesting:
+   - Link Google Sheets spec
+   - Repository URL
+   - Live/Deploy URL
+   - Database/Supabase credentials
+   Do not guess, mock, or reuse old project credentials. Fill in these slots based strictly on the user's input before running or adapting `scripts/install-5fedu-context.ps1`.
+3. If the user wants to migrate/scaffold, automatically delete any legacy model-specific specs (like legacy files 11, 12, 13, 14 or any old transport-related files) to avoid context pollution.
+4. Load `references/5fedu-context-map.md` when writing or updating project rules.
+5. Ask for missing spec, credentials (including Supabase password if available), database rules, or module mapping before implementation. Never invent table names, fields, permissions, or screen mappings.
+6. Google Sheets Access: Must use the `/browser` slash command/subagent to access Google Sheets, as they are often shared privately and require the user's active authentication. If the AI cannot view or access the sheet, IMMEDIATELY notify and remind the user to log in/authorize so the AI can read the sheet and completely capture the data model/specs before scaffolding.
+7. For real implementation work, map every requested feature from spec -> domain -> module -> view/tab -> source path -> database table -> handler/service. Record uncertain mappings before coding.
+8. Treat Supabase/auth/permission/database work as HIGH risk: create a locked plan, require credentials or mocks explicitly, verify behavior, and do not store secret values in docs.
+9. Treat owner feedback about UI/business flows as reusable gates, not one-off fixes. For transport apps, record list/detail/form/action/totals/combobox/print/approve requirements in project context before coding.
+10. When a template commit is provided, clone or update it under `.agents/template-source/` and record the exact commit in project context. Use it as the UI reference for list, detail, form, dashboard, toolbar, combobox, drawer, table, and mobile card patterns.
+11. Before reporting done, check whether new feedback or a repeated mistake requires context updates. If yes, update local context first, then sync mirrors.
 
 ## 3. Project Files Layout
 
@@ -72,8 +79,6 @@ Legacy expanded context files may also exist and should be preserved when presen
 |- 08-source-examples.md
 |- 09-coverage-audit.md
 |- 10-owner-feedback-lessons.md
-|- 11-current-sheets-source-map.md
-|- 12-owner-feedback-transport-ui.md
 `- questions.md
 ```
 
@@ -115,28 +120,30 @@ Before writing database, auth, staff tables, migration, or UI components, the AI
 - **Dependency Checking**: Before modifying any database column, API endpoint, or TypeScript type, the AI MUST run `rg`, GitNexus, or the available code-search tool across the codebase to identify and update all files referencing them. Do not depend on a specific search tool name if that tool is not available in the current session.
 - **Query Cache Invalidation**: When modifying data, always invalidate the relevant React Query / SWR cache keys (e.g., calling `queryClient.invalidateQueries(['transport'])`) to prevent UI/query synchronization failures.
 - **Local E2E Verification**: Run a quick local build (`npm run build`) or visual E2E check after modifications to guarantee no query regression.
+### E. Quy tắc thiết kế biểu mẫu nghiệp vụ có duyệt (Approval Workflows)
+- **Tách biệt hai trục trạng thái**: Phân tách rõ ràng giữa Trạng thái thực hiện (ở mức phiếu chi tiết dòng con) và Trạng thái duyệt (ở mức phiếu cha). Không gộp chung hoặc lẫn lộn hai khái niệm này trên giao diện.
+- **Cascade Duyệt**: Cấp trên duyệt phiếu cha thì trạng thái duyệt phải tự động cascade (đổ xuống) và khóa toàn bộ dữ liệu dòng con.
+- **Khóa phê duyệt (Approval Lock)**: Cấm cho phép người dùng sửa đổi bất kỳ thông tin nào khi dữ liệu đã được duyệt (`Đã duyệt` hoặc `Không duyệt`).
+- **Large Relation Dataset Selection**: Không sử dụng thẻ `<select>` mặc định của HTML cho các trường có danh sách dữ liệu liên kết lớn (nhân viên, địa điểm, hàng hóa). Bắt buộc sử dụng `Combobox` hoặc `AsyncCombobox` có hỗ trợ tìm kiếm.
+- **Derived Fields Constraint**: Các trường tính toán hoặc trường dẫn xuất (tổng tiền, tổng số lượng, tổng công) phải là read-only, cấm cho phép nhập trực tiếp trên giao diện.
+- **Clean Action Segregation**: Tách biệt rõ ràng các nút hành động (như Duyệt, In) ra ngoài form chính.
 
-### E. Transport UI & Derived Fields
-- **Derived Fields Constraint**: Fields like `so_chuyen`, `tong_tien_luong`, `tong_phi`, `tong_luong_chuyen` must NEVER be editable by users on the UI. They must be read-only and automatically calculated from child rows or database syncs.
-- **Large Dataset Selection**: Do NOT use native `<select>` dropdowns for fields with large relation lists (like driver, vehicle, location, trip). Use `Combobox` or `AsyncCombobox` searchable pickers.
-- **Clean Action Segregation**: Banned placing "Duyệt" (Approval) or "In" (Print) buttons inside the main form. Approval and Print actions must be separate buttons outside the form context.
-- **Detail Sections History**: Detail pages for entities like vehicle, location, or driver should include dynamic sections displaying their related historical logs (e.g., historical trips).
-- **Trip execution vs approval (R1–R7)**: Two independent axes on CT — `trang_thai` (execution) and `phe_duyet` (approval). Driver reports per CT; parent approval cascades; payroll requires both approved and executed. Living rules: `13-trip-execution-vs-approval-spec.md`, `02-database-and-auth-rules.md`, `03-ui-ux-and-delivery-standards.md`.
-
-### F. Production E2E Harness (TAH)
-- **Canonical doc**: `14-production-e2e-harness.md` in `.agents/5fedu/` and `.codex/5fedu/`.
-- **Default verify**: production after push + CI deploy; no manual `vercel --prod`.
-- **Playwright**: `output/playwright/helpers/production-e2e.ts`, project `production-e2e`; trip regression `production-trip-execution.spec.ts`.
-- **Mutating tests**: `snapshotPendingDriverTrip` / `restorePendingDriverTrip` (trip `52`).
-- **R4 UI**: `expectTripParentApprovalDialog` only — no per-CT approval UI.
-- **R6 payroll fixture**: `payrollEligibleCtCount` / `countApprovedPayrollTrips` (both axes).
-- **DB assert**: `SUPABASE_SERVICE_ROLE_KEY` or `DATABASE_URL`; else `PARTIAL`.
+### F. Quy tắc kiểm thử E2E Production an toàn (Safety Gates)
+- **Default Verify**: Thực hiện kiểm thử trên môi trường live/production sau khi code đã được deploy tự động thông qua CI/CD, không deploy thủ công.
+- **Mutating Test Safety**: Mọi trường hợp test có thay đổi dữ liệu (mutating tests) bắt buộc phải chụp snapshot dữ liệu trước khi test và khôi phục (restore) nguyên trạng dữ liệu ngay khi test kết thúc (`afterAll` hoặc `afterEach`).
+- **Anti-Fake PASS**: Log ra ma trận độ bao phủ kiểm thử thực tế để tránh báo cáo kết quả giả (No Fake PASS).
+- **Database Safety Guard**: Kiểm tra biến môi trường DB credentials trước khi chạy các lệnh assert trực tiếp trên database để tránh crash bộ test.
 
 ### G. Context evolution (anti raw-dump)
-- **Promote rule first** into `02`/`03`/`00`/`14` — imperative bullets, no owner quotes in logs.
-- **`10`/`12` = archive index only** (≤1 line per topic). Never sync them to master.
-- **Master sync allowlist**: `00`, `02`, `03`, `13`, `14` + `SKILL.md` §4/§6/§F. Not `06`, `questions`, `10`, `12`.
-- Run `scripts/sync-5fedu-rules-to-master.sh` after promoting rules.
+- **Promote rule first** vào `02`/`03`/`00` — viết dưới dạng các gạch đầu dòng quy tắc bắt buộc, không đưa các đoạn trích dẫn chat thô của khách hàng vào tệp quy tắc.
+- **`10` = archive index only** (≤1 line per topic). Không đồng bộ chúng về master source.
+- **Master sync allowlist**: `00`, `02`, `03` + `SKILL.md` (Tuyệt đối không tự ý sync các tệp nghiệp vụ đặc thù 11, 12, 13, 14 cũ của dự án TAH sang các dự án mới).
+- Run `scripts/sync-all-harness.sh` để đồng bộ các thay đổi quy tắc từ Master sang các thư mục mirror tương ứng.
+
+
+### H. Google Sheets & Infrastructure Credentials Provisioning
+- **Supabase Password**: Request the Supabase database password if available to allow direct database verification and schema inspection.
+- **Google Sheets Authentication**: Always use the `/browser` subagent to view Google Sheets. If the URL is not accessible due to missing authorization, IMMEDIATELY alert the user to authorize or share the sheet. Do NOT proceed with code generation or structure guessing without successfully viewing the Google Sheets configuration first.
 
 ## 5. Implementation Discipline
 

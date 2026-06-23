@@ -6,14 +6,22 @@ $GrokHome = if ($env:GROK_HOME) { $env:GROK_HOME } else { Join-Path $env:USERPRO
 $RulesDest = Join-Path $GrokHome ".grok\rules"
 $SkillsDest = Join-Path $GrokHome "skills"
 
-$SyncSh = Join-Path $Root "scripts\sync-all-harness.sh"
-if (Get-Command bash -ErrorAction SilentlyContinue) {
-    & bash $SyncSh | Out-Null
-}
+# Skip bash sync on Windows to prevent WSL relay errors
+# Harness sync is already done by the caller script
 
 New-Item -ItemType Directory -Force -Path $RulesDest, $SkillsDest | Out-Null
-Copy-Item -Path (Join-Path $Root "codex\rules\*") -Destination $RulesDest -Recurse -Force
-Copy-Item -Path (Join-Path $Root "codex\skills\*") -Destination $SkillsDest -Recurse -Force
+
+# Clean up destination before copy to prevent stale files
+if (Test-Path $RulesDest) { Remove-Item -Recurse -Force -LiteralPath $RulesDest; New-Item -ItemType Directory -Force -Path $RulesDest | Out-Null }
+if (Test-Path $SkillsDest) { Remove-Item -Recurse -Force -LiteralPath $SkillsDest; New-Item -ItemType Directory -Force -Path $SkillsDest | Out-Null }
+
+Copy-Item -Path (Join-Path $Root "rules\*") -Destination $RulesDest -Recurse -Force
+Copy-Item -Path (Join-Path $Root "skills\*") -Destination $SkillsDest -Recurse -Force
+
+$overlaySrc = Join-Path $Root "platforms\grok\rules\grok-overlay.md"
+if (Test-Path $overlaySrc) {
+    Copy-Item -LiteralPath $overlaySrc -Destination (Join-Path $RulesDest "grok-overlay.md") -Force
+}
 
 $RuleCount = (Get-ChildItem $RulesDest -Filter "*.md").Count
 $SkillCount = (Get-ChildItem $SkillsDest -Recurse -Filter "SKILL.md").Count
