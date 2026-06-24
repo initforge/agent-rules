@@ -78,3 +78,14 @@ Không chạy mù mỗi lượt. Stale → fallback `rg`, ghi trong report.
 ## Tool inventory
 
 Khi thêm CLI/MCP/skill: cập nhật registry (`codex/docs/`, `codex/inventory/`). Không lưu secret trong docs.
+
+## Chống đọc lướt hời hợt & Chống đoán mò (Anti-Superficial & Anti-Guessing)
+
+- **Cấm đoán mò (Strict Grounding):** Không được giả định hay phán đoán về logic của mã nguồn khi chưa đọc trực tiếp. Mọi thông tin về cấu trúc, hàm, luồng dữ liệu phải được đối chiếu bằng công cụ (`view_file`, `grep_search`).
+- **Bắt buộc trích dẫn:** Khi giải thích hoặc đề xuất sửa đổi mã nguồn, bắt buộc phải cung cấp liên kết trực tiếp tới file và số dòng cụ thể dưới định dạng `[filename](file:///absolute/path/to/file#Lstart-Lend)`. Không đặt tên file hay đường dẫn trong dấu backticks `` ` `` của markdown link để tránh làm gãy liên kết.
+- **Thừa nhận thiếu thông tin:** Nếu không tìm thấy file hoặc logic cụ thể sau khi đã tìm kiếm kỹ, phải báo cáo rõ ràng: *"Không tìm thấy logic liên quan tại..."* và hỏi trực tiếp người dùng thay vì suy đoán đại khái.
+- **Đọc trọn vẹn luồng dữ liệu (Data-flow validation):** Khi sửa đổi một API hay hàm chia sẻ, phải dùng `grep_search` để tìm tất cả các nơi đang gọi nó (call sites), đọc và kiểm chứng xem thay đổi đó có làm ảnh hưởng hay phá vỡ logic ở những nơi khác không.
+- **Không hời hợt (Anti-Superficiality):** Khi đọc file code hoặc tài liệu có độ dài lớn, không được lướt qua hoặc chỉ đọc phần đầu. Nếu file quá dài, hãy dùng các công cụ phân tích hoặc chia nhỏ phạm vi đọc để nắm vững toàn bộ nội dung cần sửa đổi.
+- **Đối chiếu Đặc tả nghiêm ngặt (Strict Specification Grounding):** Khi làm việc với các tài liệu đặc tả yêu cầu (file Excel, CSV, Word, hoặc Spec Markdown), AI không được tự ý bổ sung, phán đoán hay tự vẽ ra các chức năng/module nằm ngoài phạm vi tài liệu mà không có bằng chứng rõ ràng.
+- **Phân định rõ đề xuất:** Nếu phát hiện thiết kế đặc tả bị thiếu sót logic (ví dụ: giao diện public có hiển thị bài viết nhưng trang quản trị Excel không yêu cầu tính năng CRUD bài viết), AI bắt buộc phải hỏi lại người dùng để làm rõ hoặc đánh dấu rõ ràng là *"Đề xuất thêm (Không có sẵn trong đặc tả)"* chứ không được tự tiện tích hợp vào mã nguồn.
+- **Trích dẫn vị trí đặc tả:** Đối với mọi tính năng được thảo luận, thiết kế hoặc triển khai, AI phải chỉ ra vị trí chính xác trong tài liệu làm căn cứ (Ví dụ: `Tệp: dacta.xlsx`, `Sheet: Admin`, `Dòng/Ô: B15-B20`).
