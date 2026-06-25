@@ -53,3 +53,8 @@ LOW: `Status` dạng list ngắn gọn.
 ## Hooks
 
 Tuân `hooks.json` và preflight khi workspace bật — không tắt gate để nhanh hơn.
+
+## Playwright Session Isolation
+
+- BẮT BUỘC đặt biến môi trường `PLAYWRIGHT_CLI_SESSION` bằng chuỗi định danh duy nhất (ví dụ: `conv-<conversation_id>` hoặc tên session ngẫu nhiên riêng biệt cho mỗi conversation) trước khi chạy các lệnh qua `playwright_cli.sh` hoặc `playwright-cli`.
+- CẤM sử dụng session mặc định để không gây ra xung đột (dẫm chân nhau) giữa các conversation chạy song song.
