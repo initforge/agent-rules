@@ -18,6 +18,7 @@ Taxonomy reference:
 - `C:\Users\DELL\.codex\docs\skills-taxonomy.md`
 
 Current self-authored skills in this folder:
+- `context-evolution-protocol`
 - `docs-style`
 - `frontend-ui-quality`
 - `ui-ux-pro-max`

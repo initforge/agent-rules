@@ -23,6 +23,7 @@ Gốc: `rules/03-context-and-tools.md`.
 |---|---|
 | setup/scaffold 5fedu | `5fedu-project` |
 | research, xác minh mới | `researcher` |
+| học context, sửa rule/skill/workflow, feedback lặp lại | `context-evolution-protocol` |
 | review, audit | findings first |
 | docs, readme, spec | `docs-style` |
 | screenshot, playwright | `screenshot`, `playwright` |
@@ -78,6 +79,10 @@ Không chạy mù mỗi lượt. Stale → fallback `rg`, ghi trong report.
 ## Tool inventory
 
 Khi thêm CLI/MCP/skill: cập nhật registry phù hợp với nền đang dùng, ví dụ `platforms/codex/docs/` hoặc inventory runtime. Không lưu secret trong docs.
+
+## Context evolution trigger-only
+
+Không auto-load protocol học context cho task code thường. Chỉ dùng skill `context-evolution-protocol` khi sửa/audit/promote/deduplicate `AGENTS.md`, `.agents/**`, `.codex/**`, `rules/**`, `skills/**`, `workflows/**`, project context `.md`, hoặc khi feedback cho thấy agent hiểu sai lặp lại. Trước khi thêm rule mới phải phân loại tầng áp dụng, rà trùng lặp, viết thành pattern rộng nếu có thể, rồi sync + verify.
 
 ## Chống đọc lướt hời hợt & Chống đoán mò (Anti-Superficial & Anti-Guessing)
 

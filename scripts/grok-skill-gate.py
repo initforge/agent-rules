@@ -274,6 +274,7 @@ def detect_signals(text: str) -> list[str]:
         ("ui", r"\bui\b|giao diện|frontend|\.tsx|css|layout|component"),
         ("research", r"research|tìm hiểu|so sánh|stuck|stall"),
         ("5fedu", r"5fedu|\.agents/5fedu|tah-app|/template"),
+        ("context-evolution", r"ghi nhớ|bổ sung context|đưa vào rule|đừng lặp lại|context bị loạn|dọn context|sync rule|agent làm bậy|sửa rule|sửa skill|sửa workflow|AGENTS\.md|\.agents/|\.codex/"),
         ("harness", r"harness|agent-rules|validate-harness|sync-all-harness|install-grok"),
         ("docs", r"\breadme\b|/docs/|tài liệu|\bspecs?\b"),
     ]
@@ -285,6 +286,8 @@ def detect_signals(text: str) -> list[str]:
 
 def build_stack(signals: list[str]) -> list[str]:
     stack: list[str] = []
+    if "context-evolution" in signals:
+        stack.append("context-evolution-protocol")
     if "harness" in signals:
         stack.extend(["researcher", "docs-style"])
     if "5fedu" in signals:
@@ -316,6 +319,8 @@ def pick_primary(stack: list[str], signals: list[str]) -> str | None:
         return "product-ui-craft"
     if "harness" in signals:
         return stack[-1]
+    if "context-evolution" in signals and "context-evolution-protocol" in stack:
+        return "context-evolution-protocol"
     return stack[-1]
 
 

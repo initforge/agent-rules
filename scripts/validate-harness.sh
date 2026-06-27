@@ -20,7 +20,7 @@ echo "== Validate harness (codex master) =="
 [[ ! -d "$ROOT/.grok" ]] || fail ".grok/ still in repo — run sync-all-harness.sh (removes duplicate Grok mirror)"
 
 USER_SKILL_COUNT=$(find "$CODEX_SKILLS" -name SKILL.md ! -path '*/_archive/*' ! -path '*/.system/*' | wc -l)
-[[ "$USER_SKILL_COUNT" -eq 34 ]] || fail "expected 34 user skills, got $USER_SKILL_COUNT"
+[[ "$USER_SKILL_COUNT" -eq 35 ]] || fail "expected 35 user skills, got $USER_SKILL_COUNT"
 
 for dest in "$ANT_RULES" "$LIVE_AGENTS_RULES"; do
   [[ -d "$dest" ]] || fail "missing $dest"
@@ -51,6 +51,8 @@ done
     grep -q 'Skill activation' "$skill_md" || fail "$base missing Skill activation section"
     grep -q 'Skill scan:' "$skill_md" || fail "$base missing Skill scan echo in activation"
   done
+[[ -f "$CODEX_SKILLS/context-evolution-protocol/SKILL.md" ]] || fail "missing context-evolution-protocol skill"
+grep -q 'Trigger-only' "$CODEX_SKILLS/context-evolution-protocol/SKILL.md" || fail "context-evolution-protocol missing trigger-only contract"
 [[ -f "$CODEX_RULES/07-finish-to-completion.md" ]] || fail "missing 07-finish-to-completion.md"
 grep -q 'Iron Law' "$CODEX_RULES/07-finish-to-completion.md" || fail "07-finish-to-completion missing Iron Law"
 grep -q 'GAP còn lại' "$CODEX_RULES/07-finish-to-completion.md" || fail "07-finish-to-completion missing banned GAP pattern"
@@ -78,7 +80,7 @@ grep -q 'PLAN NOT LOCKED' "$ROOT/platforms/antigravity/GEMINI.md" || fail "antig
 grep -q 'harness đồng bộ' "$CODEX_RULES/platform-boundary.md" || fail "platform-boundary not updated for universal frontier"
 
 WF_COUNT=$(find "$ROOT/platforms/antigravity/.agents/workflows" -maxdepth 1 -name '*.md' | wc -l)
-[[ "$WF_COUNT" -eq 13 ]] || fail "expected 13 active workflows, got $WF_COUNT"
+[[ "$WF_COUNT" -eq 14 ]] || fail "expected 14 active workflows, got $WF_COUNT"
 for stale in brandkit stitch-skill taste-skill codex-research; do
   [[ ! -f "$ROOT/.agents/workflows/${stale}.md" ]] || fail "stale workflow $stale still in .agents"
 done

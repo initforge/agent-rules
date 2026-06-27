@@ -163,6 +163,26 @@ Notes:
 - category: self-authored
 - Codex native profile: `researcher`
 
+### context-evolution-protocol
+
+Runtime:
+- Codex + Grok CLI + Antigravity adapter
+
+Purpose:
+- Trigger-only protocol for promoting feedback into context without overfitting, duplication, or default-load bloat.
+
+Path:
+- `skills/context-evolution-protocol` → `~/.codex/skills/` / `.agents/skills/` / `~/.grok/skills/`
+
+Trigger:
+- modifying/auditing `AGENTS.md`, `.agents/**`, `.codex/**`, `rules/**`, `skills/**`, `workflows/**`, project context `.md`
+- user feedback says the agent misunderstood, repeated a mistake, needs to "ghi nhớ", "bổ sung context", "đưa vào rule", "đừng lặp lại", or "context bị loạn"
+- before PASS for context/rule/skill/workflow/harness tasks
+
+Notes:
+- category: self-authored
+- must not auto-load for ordinary coding tasks
+
 ### workflow-router
 
 Runtime:

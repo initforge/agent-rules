@@ -31,6 +31,7 @@ Primary local Codex location:
 
 Current self-authored skills (active sync):
 - `5fedu-project`
+- `context-evolution-protocol` (trigger-only context learning and rule evolution)
 - `researcher` (multi-source contract)
 - `product-ui-craft` (universal UI — replaces frontend-ui-quality / taste / image skills)
 - `e2e-qa` (professional E2E — split from playwright CLI)
