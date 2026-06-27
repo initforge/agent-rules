@@ -32,7 +32,7 @@ $result = switch ($Phase) {
       profile = "researcher"
       model = "gpt-5.4"
       effort = "medium"
-      reason = "Codex Research default profile"
+      reason = "Researcher default profile"
     }
   }
   "implement" {

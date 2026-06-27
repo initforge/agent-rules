@@ -12,22 +12,22 @@ Harness = hạ tầng. **CẤM** mutate khi làm task thường.
 |---|---|---|
 | L0 | chat | Agent |
 | L1 | `AGENTS.md`, `.codex/5fedu/`, `plan/` | Feedback lặp trong dự án |
-| L2 | `grok/rules/`, `grok/skills/` | User yêu cầu rõ |
-| L3 | `codex/`, `antigravity/` | User yêu cầu + đúng nền |
+| L2 | `rules/`, `skills/`, `workflows/`, `shared/` | User yêu cầu rõ |
+| L3 | `platforms/codex/`, `platforms/antigravity/`, `platforms/grok/` | User yêu cầu + đúng nền |
 
 ## Được sửa L2/L3 khi user nói rõ
 
-"sửa harness", "cập nhật rule", "sync harness", "port sang codex/antigravity".
+"sửa harness", "cập nhật rule", "sync harness", "port sang codex/antigravity/grok".
 
 ## Protected (Codex)
 
 ```text
-codex/rules/  codex/skills/  codex/AGENTS.md
-grok/  .grok/
+rules/  skills/  workflows/  platforms/
+.grok/  .agents/
 docs/06-08  shared/
 ```
 
-Sửa master `grok/` → chạy `grok/scripts/sync-all-harness.sh`.
+Sửa master root → chạy `scripts/sync-all-harness.sh`.
 
 ## Repo agent-rules
 

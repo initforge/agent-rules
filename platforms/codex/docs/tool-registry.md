@@ -1,4 +1,4 @@
-﻿# Tool Registry
+# Tool Registry
 
 This file documents installed/open-source tools that Codex can use and how to reinstall them on a new machine.
 

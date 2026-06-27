@@ -20,7 +20,7 @@ echo "== Validate harness (codex master) =="
 [[ ! -d "$ROOT/.grok" ]] || fail ".grok/ still in repo — run sync-all-harness.sh (removes duplicate Grok mirror)"
 
 USER_SKILL_COUNT=$(find "$CODEX_SKILLS" -name SKILL.md ! -path '*/_archive/*' ! -path '*/.system/*' | wc -l)
-[[ "$USER_SKILL_COUNT" -eq 35 ]] || fail "expected 35 user skills, got $USER_SKILL_COUNT"
+[[ "$USER_SKILL_COUNT" -eq 34 ]] || fail "expected 34 user skills, got $USER_SKILL_COUNT"
 
 for dest in "$ANT_RULES" "$LIVE_AGENTS_RULES"; do
   [[ -d "$dest" ]] || fail "missing $dest"
@@ -60,6 +60,20 @@ grep -q 'ULTRA-SENSITIVE' "$CODEX_SKILLS/finish-to-completion/SKILL.md" || fail 
 grep -q 'Anti-Fake-PASS' "$CODEX_RULES/00-universal-frontier-contract.md" || fail "missing Anti-Fake-PASS gate"
 [[ -f "$CODEX_RULES/00-universal-frontier-contract.md" ]] || fail "missing 00-universal-frontier-contract.md"
 grep -q 'Native Harness' "$CODEX_RULES/00-universal-frontier-contract.md" || fail "missing Native Harness section"
+grep -q 'Intent Fidelity Gate' "$CODEX_RULES/01-agent-workflow-sop.md" || fail "01-agent-workflow-sop missing Intent Fidelity Gate"
+grep -q 'Long Prompt Compiler Gate' "$CODEX_RULES/01-agent-workflow-sop.md" || fail "01-agent-workflow-sop missing Long Prompt Compiler Gate"
+grep -q 'Locked Plan Acceptance Gate' "$CODEX_RULES/01-agent-workflow-sop.md" || fail "01-agent-workflow-sop missing Locked Plan Acceptance Gate"
+grep -q 'No Unverified Interface/Schema Gate' "$CODEX_RULES/01-agent-workflow-sop.md" || fail "01-agent-workflow-sop missing No Unverified Interface/Schema Gate"
+grep -q 'Evidence-backed Claim Gate' "$CODEX_RULES/01-agent-workflow-sop.md" || fail "01-agent-workflow-sop missing Evidence-backed Claim Gate"
+grep -q '95% First-Pass Quality Gate' "$CODEX_RULES/01-agent-workflow-sop.md" || fail "01-agent-workflow-sop missing 95% First-Pass Quality Gate"
+grep -q 'Browser Verification Gate' "$CODEX_RULES/01-agent-workflow-sop.md" || fail "01-agent-workflow-sop missing Browser Verification Gate"
+grep -q 'Không plan ảo' "$CODEX_RULES/06-opus-emulation-contract.md" || fail "06-opus-emulation-contract missing anti fake-plan rule"
+grep -q 'Prompt dài phải được biên dịch' "$CODEX_RULES/06-opus-emulation-contract.md" || fail "06-opus-emulation-contract missing long prompt compiler rule"
+grep -q 'Antigravity Plan Quality Lock' "$ROOT/platforms/antigravity/.agents/rules/antigravity-overlay.md" || fail "antigravity overlay missing Plan Quality Lock"
+grep -q '/browser' "$ROOT/platforms/antigravity/.agents/rules/antigravity-overlay.md" || fail "antigravity overlay missing /browser hard gate"
+grep -q 'PLAN NOT LOCKED' "$ROOT/platforms/grok/AGENTS.md" || fail "grok entrypoint missing PLAN NOT LOCKED gate"
+grep -q 'PLAN NOT LOCKED' "$ROOT/platforms/codex/rules/codex-overlay.md" || fail "codex overlay missing PLAN NOT LOCKED gate"
+grep -q 'PLAN NOT LOCKED' "$ROOT/platforms/antigravity/GEMINI.md" || fail "antigravity GEMINI.md missing PLAN NOT LOCKED gate"
 [[ -f "$ROOT/platforms/codex/hooks/skill-orchestrator.json" ]] || fail "missing codex/hooks/skill-orchestrator.json"
 grep -q 'harness đồng bộ' "$CODEX_RULES/platform-boundary.md" || fail "platform-boundary not updated for universal frontier"
 

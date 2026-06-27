@@ -8,12 +8,12 @@
 
 | Vùng | Vì sao nhạy cảm | Cách đổi an toàn |
 |---|---|---|
-| `codex/AGENTS.md` | Điểm nạp runtime | Kiểm tra import path và chạy `verify-codex-rules.ps1` |
-| `codex/rules/core.md` | Ảnh hưởng mọi task | Đọc lại các rule liên quan và test bằng task nhỏ |
-| `codex/rules/planning.md` | Quy định plan/slice | Validate bằng một plan thật hoặc sample |
-| `codex/skills/*/SKILL.md` | Ảnh hưởng trigger và workflow skill | Chạy `quick_validate.py` nếu là Codex skill |
-| `codex/scripts/sync-*.ps1` | Có thể ghi đè runtime | Test bằng dry-run hoặc backup trước |
-| `codex/inventory/*` | Có thể lộ path/secret | Không ghi secret value |
+| `platforms/codex/AGENTS.md` | Điểm nạp runtime | Kiểm tra import path và chạy `validate-runtime-context.ps1` |
+| `rules/00-runtime-and-intent.md` | Ảnh hưởng mọi task | Đọc lại các rule liên quan và test bằng task nhỏ |
+| `rules/01-agent-workflow-sop.md` | Quy định plan/slice | Validate bằng một plan thật hoặc sample |
+| `skills/*/SKILL.md` | Ảnh hưởng trigger và workflow skill | Chạy validation tương ứng nếu là skill tự viết |
+| `platforms/codex/scripts/sync-*.ps1` | Có thể ghi đè runtime | Test bằng dry-run hoặc backup trước |
+| `platforms/codex/inventory/*` | Có thể lộ path/secret | Không ghi secret value |
 
 ## 3. Rủi ro thường gặp
 
@@ -29,7 +29,7 @@
 
 **Dấu hiệu:** Skill/rule vừa sửa biến mất sau khi chạy script.
 
-**Nguyên nhân:** Chạy restore từ `P:\agent-rules\codex` về local trong khi backup cũ hơn.
+**Nguyên nhân:** Chạy restore từ `P:\agent-rules` về local trong khi backup cũ hơn.
 
 **Xử lý:** Kiểm tra git diff, timestamp và nội dung trước khi restore. Khi cần, tạo backup trước khi ghi đè.
 
@@ -51,10 +51,10 @@
 
 ## 4. Quy trình đổi skill
 
-1. Sửa skill trong `C:\Users\DELL\.codex\skills/<skill>`.
+1. Sửa skill trong repo source `skills/<skill>` hoặc runtime local khi cần hotfix.
 2. Chạy validation tương ứng.
-3. Sync sang `P:\agent-rules\codex\skills/<skill>`.
-4. Cập nhật `codex/docs/skills-registry.md` nếu trigger, path hoặc verify command đổi.
+3. Sync sang runtime/platform mirrors bằng script sync phù hợp.
+4. Cập nhật `platforms/codex/docs/skills-registry.md` nếu trigger, path hoặc verify command đổi.
 5. Commit repo với mô tả rõ và `[skip ci]` nếu chỉ là docs/runtime metadata.
 
 ## 5. Quy trình đổi rule

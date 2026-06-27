@@ -1,4 +1,4 @@
-﻿# Coverage Audit
+# Coverage Audit
 
 ## Mục tiêu
 
@@ -20,7 +20,7 @@ Bộ context đã đủ để AI làm việc độc lập theo đúng hướng 5
 | Yêu cầu gốc | Đã phủ ở đâu | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
 | 5fedu có convention/rule/workflow riêng theo dự án | `AGENTS.md`, `00-index.md` | Đã phủ | Context nằm trong repo, không nhét full global |
-| AGENTS.md trong dự án hoặc băm nhỏ file và AGENTS.md kết nối | `AGENTS.md`, `.codex/5fedu/*.md` | Đã phủ | AGENTS là con trỏ nhẹ/loading policy |
+| AGENTS.md trong dự án hoặc băm nhỏ file và AGENTS.md kết nối | `AGENTS.md`, `.agents/5fedu/*.md` | Đã phủ | AGENTS là con trỏ nhẹ/loading policy |
 | Không làm phình global context | `AGENTS.md`, `00-index.md`, skill `5fedu-project` | Đã phủ | Global chỉ giữ `/5fedu` và skill scaffold/bảo trì |
 | Có slash để setup/bảo trì context 5fedu | `C:\Users\ADMIN\.codex\prompts\5fedu.prompt.md` | Đã phủ | Chỉ một slash `/5fedu` |
 | `/5fedu` không phải lệnh cấp context mỗi lần | `AGENTS.md`, `00-index.md`, `06-decision-status.md` | Đã phủ | Normal work tự đọc AGENTS/context |
@@ -45,7 +45,7 @@ Bộ context đã đủ để AI làm việc độc lập theo đúng hướng 5
 | Tên submenu/thư mục module tiếng Việt | `02` | Đã phủ | Giúp tra cứu cho người không biết tiếng Anh |
 | Tên view dạng `nhan-vien-form` | `02` | Đã phủ | Hybrid tiếng Việt không dấu + suffix English |
 | Tên bảng prefix submenu + module | `03`, `07` | Đã phủ | Prefix đầy đủ cần chốt |
-| Bảng đầy đủ có policy authenticated, index, trigger `tg_cap_nhat` | `03`, `07` | Đã phủ | “Hàm index” cần giải thích/mẫu |
+| Bảng đầy đủ có policy authenticated, index, trigger `tg_cap_nhat` | `03`, `07` | Đã phủ | "Hàm index" cần giải thích/mẫu |
 | Fake email login | `04`, `07` | Đã phủ | `admin` -> `admin@gmail.com` |
 | Bỏ đăng ký | `04`, `07` | Đã phủ | |
 | Tài khoản mặc định admin/5fedu.com | `04`, `07` | Đã phủ | |

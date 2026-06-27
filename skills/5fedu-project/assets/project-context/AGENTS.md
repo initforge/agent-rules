@@ -19,8 +19,10 @@ Sau đó chỉ đọc file chi tiết khi task thật sự dính domain đó.
 
 - Database/auth/schema/permission/RLS/trigger/rollup: đọc `.agents/5fedu/02-database-and-auth-rules.md` và legacy `.agents/5fedu/03-database-supabase.md`, `.agents/5fedu/04-auth-permissions-and-flows.md` nếu có.
 - UI/UX/list/detail/form/toolbar/filter/export/responsive: đọc `.agents/5fedu/03-ui-ux-and-delivery-standards.md`, legacy `.agents/5fedu/05-delivery-quality.md`, `.agents/5fedu/07-working-format.md` nếu có.
+- ERP/admin business patterns như master-detail, approval workflow, derived totals, lookup autofill, report/export parity: đọc `.agents/5fedu/04-business-patterns.md`.
 - Feedback cũ, lỗi nhắc lại, vận tải, hoặc owner correction: tìm trong `.agents/5fedu/10-owner-feedback-lessons.md` và `.agents/5fedu/12-owner-feedback-transport-ui.md`, sau đó kiểm tra bài học đã được promote vào rule sống chưa.
 - Template parity: với mọi task UI hoặc khi user nói UI/tính năng/module `chưa chuẩn`, `thiếu`, `không giống`, `chưa đủ`, phải đọc mapping trước và tìm `/template` trước. Nếu template đủ đáp ứng prompt/app thì bám sát template và đổi tối thiểu. Chỉ dùng golden reference khi template thiếu/không đủ/ngõ cụt; khi đó phải research nhiều tab/module theo behavior/output/surface/data/permission để chọn reference phù hợp nhất, không mặc định một module cố định.
+- Pattern fidelity: trước khi code UI/module, phải lập mapping ngắn từ spec -> submenu -> module -> tab/route -> template/current-app reference -> labels/actions/fields/service. Cấm tự chế tên module, mô tả, nút, icon, tab, copy hoặc workflow nếu spec/template/app đã có nguồn.
 
 ## Quy Tắc Cứng
 
@@ -33,6 +35,7 @@ Sau đó chỉ đọc file chi tiết khi task thật sự dính domain đó.
 - Mặc định verify 5fedu trên production sau khi thay đổi đã được push/deploy; nếu user yêu cầu test local thì ưu tiên local.
 - Nếu user yêu cầu `verify production hết`, không nhảy thẳng vào browser. Đọc index/mapping trước, suy ra module/role/database/UI/export/cross-flow, rồi mới nạp context chi tiết và chạy verify.
 - Với task UI, báo cáo cuối phải nêu `Template checked` hoặc lý do không thể kiểm template.
+- Với task UI/module, báo cáo cuối phải nêu `Pattern fidelity` gồm reference đã dùng và các phần đã giữ nguyên từ pattern.
 - Với task vừa/lớn, production, UI, permission, database, export hoặc cleanup, báo cáo cuối phải có `Technical debt check`. Nợ nghiêm trọng trong scope phải sửa trước khi báo `PASS`.
 
 ## Owner Feedback Gate

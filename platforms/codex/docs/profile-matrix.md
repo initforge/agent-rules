@@ -1,4 +1,4 @@
-﻿# Profile Matrix
+# Profile Matrix
 
 ## Purpose
 

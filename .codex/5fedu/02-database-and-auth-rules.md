@@ -44,7 +44,7 @@ Tài liệu này quy định các quy tắc thiết kế cơ sở dữ liệu (s
      ```sql
      SELECT schemaname, tablename, policyname FROM pg_policies WHERE schemaname = 'public' ORDER BY tablename;
      ```
-     Xác nhận **tất cả** các bảng `vt_*` và `var_*` đều có ít nhất 1 policy cho `authenticated`. Nếu thiếu, phải tạo ngay:
+     Xác nhận **tất cả** các bảng nghiệp vụ/hệ thống của app theo prefix dự án (`<prefix>_*`, gồm cả các bảng nền như `var_*` nếu có) đều có ít nhất 1 policy cho `authenticated`. Nếu thiếu, phải tạo ngay:
      ```sql
      CREATE POLICY "authenticated_all" ON public.<tên_bảng> FOR ALL TO authenticated USING (true) WITH CHECK (true);
      ```
@@ -84,10 +84,13 @@ Tài liệu này quy định các quy tắc thiết kế cơ sở dữ liệu (s
 
 ## 3. Thiết Kế Module Dùng Chung Dữ Liệu (Shared Data Modules Pattern)
 
-Khi các thực thể nghiệp vụ có sự chồng chéo thông tin (như Nhân sự & Tài xế):
-1. **Một Bảng Gốc (Single Source of Truth)**: Dùng chung một bảng dữ liệu gốc duy nhất (ví dụ: `var_nhan_vien`). Sử dụng cờ phân loại (ví dụ: `la_tai_xe: boolean`) thay vì tách ra nhiều bảng độc lập gây trùng lặp và lệch đồng bộ.
-2. **Giao Diện Chuyên Biệt**: Duy trì các trang quản lý riêng cho từng nghiệp vụ (Trang Nhân viên, Trang Tài xế). Màn hình chuyên sâu (Tài xế) sẽ tự động lọc danh sách theo cờ phân loại (`la_tai_xe === true`) và bổ sung các tab lịch sử đặc thù (Chuyến xe, Bảng lương).
-3. **Xóa Mềm Vai Trò (Soft Delete Role)**: Khi xóa đối tượng ở module chuyên sâu (xóa Tài xế), hệ thống chỉ chuyển cờ phân loại về `false` (`la_tai_xe = false`), không xóa vật lý bản ghi trong bảng gốc để bảo toàn thông tin hồ sơ nhân viên.
+Áp dụng pattern `04-business-patterns.md` khi một thực thể vừa là hồ sơ gốc vừa có vai trò nghiệp vụ chuyên sâu.
+
+1. **Một nguồn dữ liệu gốc (Single Source of Truth)**: Không tự tách dữ liệu định danh thành nhiều bảng độc lập gây trùng lặp và lệch đồng bộ. Dùng cờ phân loại, bảng liên kết hoặc bảng mở rộng theo spec.
+2. **Giao diện chuyên biệt**: Màn hình chuyên sâu được phép lọc dữ liệu và bổ sung tab/lịch sử nghiệp vụ riêng, nhưng vẫn phải tham chiếu hồ sơ gốc.
+3. **Xóa mềm vai trò**: Khi xóa vai trò chuyên sâu, chỉ unlink/chuyển cờ/xóa mềm theo spec; không xóa vật lý hồ sơ gốc nếu hồ sơ còn dùng ở nơi khác.
+
+Ví dụ: Nhân viên là hồ sơ gốc; Tài xế là vai trò chuyên sâu có lịch sử chuyến/lương.
 
 ---
 
@@ -105,7 +108,7 @@ Khi các thực thể nghiệp vụ có sự chồng chéo thông tin (như Nhâ
 - Chức vụ có quyền `xem` (nhưng không có `quan_tri` hoặc `kiem_tra`):
   - Nếu `cap_bac = 1` -> Được xem toàn bộ dữ liệu.
   - Nếu `cap_bac = 2` -> Chỉ được xem dữ liệu của những người trong cùng phòng ban (`id_phong_ban` của bản ghi trùng với phòng ban của người dùng đăng nhập).
-  - **Cấp bậc khác** (`cap_bac` ≠ 1 và ≠ 2, gồm 3/4/…) -> Chỉ được xem phiếu liên quan trực tiếp đến mình (mình là người tạo `id_nguoi_tao` hoặc mình là tài xế `id_tai_xe` liên kết với tài khoản đăng nhập). Dự án TAH hiện **không** tách filter nhóm riêng cho `cap_bac=3`; mọi cấp ≥3 dùng phạm vi cá nhân này trừ khi owner chốt khác sau.
+  - **Cấp bậc khác** (`cap_bac` ≠ 1 và ≠ 2, gồm 3/4/…) -> Chỉ được xem phiếu liên quan trực tiếp đến mình qua người tạo, người phụ trách, vai trò chuyên sâu, hoặc liên kết nghiệp vụ đã chốt trong spec. Nếu spec chưa tách filter nhóm riêng cho cấp thấp hơn, dùng phạm vi cá nhân này cho đến khi owner chốt khác.
 
 #### 2. Quyền Thêm (Create)
 - Chức vụ có `cap_bac = 1` OR có quyền `quan_tri` OR có quyền `them` -> Được phép tạo mới bản ghi.
@@ -135,10 +138,12 @@ Khi các thực thể nghiệp vụ có sự chồng chéo thông tin (như Nhâ
   - Nếu `cap_bac = 2` -> Được xóa bản ghi của những người cùng phòng ban (`id_phong_ban`), **nhưng chỉ khi bản ghi chưa được Duyệt hoặc Khóa**.
   - **Cấp bậc khác** -> Chỉ được xóa phiếu liên quan trực tiếp đến mình (mình là người tạo hoặc tài xế tương ứng là mình), **nhưng chỉ khi bản ghi chưa được Duyệt hoặc Khóa**.
 
-#### 7. Bảng lương — Toolbar vs nội dung chi tiết (Owner chốt 2026-06-14)
-- **Toolbar / row actions** (list ⋮, detail toolbar): luôn hiện **Quản lý duyệt**, **Chi tiết trong kỳ**, **In bảng lương** theo quyền thông thường — **không** ẩn nút vì chưa có chuyến đã duyệt.
-- **Nội dung render** (ma trận chuyến trong kỳ, preview/in, tổng tính lương): chỉ lấy **chuyến/CT đã duyệt** qua `getPayrollTripDetails(..., approvedOnly=true)`.
-- **Danh sách** luôn hiện mọi phiếu lương trong phạm vi quyền xem (`shouldListPayrollRow` → `true`) — độc lập với toolbar; số tiền/tổng vẫn chỉ tính từ chuyến đã duyệt.
+#### 7. Toolbar Actions Vs Nội Dung Tính Toán
+- Toolbar/list/detail action phải theo quyền hành động của user, không bị ẩn chỉ vì dữ liệu nguồn tính toán hiện chưa đủ điều kiện.
+- Nội dung render, preview, in/export và total phải chỉ lấy các dòng đủ điều kiện nghiệp vụ theo spec.
+- Danh sách phải hiện mọi bản ghi trong phạm vi quyền xem; số tiền/tổng/trạng thái tổng hợp vẫn phải tính từ source records hợp lệ.
+
+Ví dụ: phiếu lương có thể hiện action in/chi tiết theo quyền, nhưng tổng lương chỉ tính từ dòng công/chuyến đủ điều kiện.
 
 #### 8. Định dạng Module Key (`id_module`)
 - **Quy tắc**: Cột `id_module` trong bảng `var_phan_quyen` bắt buộc lưu dưới dạng slug tiếng Việt không dấu (ví dụ: `nhan-vien`, `chuyen-xe`, `bang-luong`, `tai-xe`), tuyệt đối cấm sử dụng đường dẫn phân cấp (như `he-thong/nhan-vien` hoặc `quan-ly-van-tai/chuyen-xe`).
@@ -147,16 +152,14 @@ Khi các thực thể nghiệp vụ có sự chồng chéo thông tin (như Nhâ
 - **Quy tắc**: Giao diện (Frontend) được phép có checkbox "Tất cả" để tự động chọn tất cả quyền khi click.
 - **Hành vi lưu DB**: Khi lưu xuống bảng `var_phan_quyen`, hệ thống **không được lưu** dòng dữ liệu có giá trị `quyen = 'Tất cả'` hay `tat-ca`. Phải tách và lưu thành các dòng quyền riêng lẻ tương ứng (`xem`, `them`, `sua`, `xoa`, `quan_tri`, `kiem_tra`).
 
-#### 10. Quy chuẩn Trạng thái Khóa ("Đã duyệt hoặc Khóa")
-- Một bản ghi được coi là **Đã duyệt hoặc Khóa** khi:
-  - Bản ghi chi tiết chuyến xe (`vt_chuyen_xe_ct`): Cột `phe_duyet` bằng `'Đã duyệt'`.
-  - Bản ghi bảng lương (`vt_luong`): Cột `trang_thai` bằng `'Đã duyệt'`.
-  - Bản ghi chuyến xe cha (`vt_chuyen_xe`): Cột `trang_thai` bằng `'Đã duyệt'`.
-  - **Khóa kế thừa (Cascading Lock)**: Nếu bản ghi chuyến xe cha (`vt_chuyen_xe`) đã ở trạng thái `'Đã duyệt'`, toàn bộ các bản ghi chuyến con (`vt_chuyen_xe_ct`) liên kết với nó cũng tự động bị khóa (read-only) và không được phép sửa hay xóa, bất kể quyền hạn của người dùng đăng nhập là gì (trừ khi người dùng đó có `cap_bac = 1`, tài khoản `admin`, hoặc quyền `quan_tri` trên ma trận module).
-- **Rollup trạng thái duyệt cha từ CT** (owner 2026-06-15): `vt_chuyen_xe.trang_thai` chỉ phản ánh **duyệt**; sau duyệt/cập nhật CT: còn CT `Chưa duyệt` → cha `Chưa duyệt`; tất cả đã xử lý và có `Đã duyệt` → cha `Đã duyệt`; còn lại → `Không duyệt`. Duyệt từ cha **cascade** `phe_duyet` xuống mọi CT.
-- **Trạng thái thực hiện CT** (`vt_chuyen_xe_ct.trang_thai`): độc lập duyệt; tài xế đổi `Chưa thực hiện` → `Đã thực hiện`/`Hủy` qua popup kèm `chi_phi`; chấp nhận `Đã thực hiện` + `Chưa duyệt`. Tiến độ cha `n/tổng` = số CT đã thực hiện, không dùng số CT đã duyệt.
-- **Điều kiện tính lương CT** (owner chat 2026-06-15): chỉ cộng tiền khi **đồng thời** `phe_duyet = 'Đã duyệt'` và `trang_thai = 'Đã thực hiện'`. Thiếu một điều kiện → không đưa vào ma trận/preview/in/export lương.
-- **Khóa sửa**: Khóa theo **duyệt** (`Đã duyệt`/`Không duyệt`), không khóa chỉ vì đã thực hiện. Trước khóa duyệt, tài xế sửa lại `chi_phi` được.
+#### 10. Quy chuẩn Trạng thái Khóa, Duyệt Và Thực Hiện
+- Áp dụng `04-business-patterns.md` cho các nghiệp vụ có hai trục trạng thái: **thực hiện** và **phê duyệt**.
+- Một bản ghi được coi là khóa khi trạng thái duyệt/khóa theo spec đã đạt ngưỡng không cho sửa. UI và service đều phải khóa hành động sửa/xóa cho user không đủ quyền.
+- Với mô hình cha-con, phải xác định rõ trạng thái duyệt của cha cascade xuống con hay aggregate từ con lên cha.
+- Trạng thái thực hiện của dòng con được phép độc lập với trạng thái duyệt nếu spec có hai trục này.
+- Total/rollup/report/export chỉ tính các dòng thỏa đủ điều kiện nghiệp vụ đã chốt.
+
+Ví dụ: phiếu cha có nhiều dòng con; dòng con đã thực hiện nhưng chưa duyệt thì được tính tiến độ thực hiện, nhưng chưa được tính vào total đã duyệt nếu spec yêu cầu đủ cả hai điều kiện.
 
 ---
 
@@ -175,7 +178,7 @@ Khi các thực thể nghiệp vụ có sự chồng chéo thông tin (như Nhâ
 
 4. **Kiểm Tra Build & E2E**:
    - Sau khi chỉnh sửa, AI phải tự chạy thử lệnh build (`npm run build`) cục bộ và dùng browser subagent hoặc Playwright harness production (`14-production-e2e-harness.md`) để kiểm tra giao diện và luồng CRUD trên site đã deploy.
-   - Thay đổi `vt_chuyen_xe` / `vt_chuyen_xe_ct` (TH vs duyệt, cascade, lương R6): chạy unit `trip-execution-sync.test.ts` và spec `production-trip-execution.spec.ts`; mutating test phải restore fixture qua `restorePendingDriverTrip`.
+   - Thay đổi module có master-detail, approval, cascade, rollup hoặc derived totals: chạy unit/E2E trong blast radius tương ứng nếu repo có harness. Với project transport legacy, chạy trip execution specs nếu các spec đó tồn tại; mutating test phải restore fixture.
 ## Database, Permission And Cross-Data Verification Gate
 
 Khi task đụng database, auth, permission, role, row-level filtering, trigger, rollup hoặc service ghi dữ liệu:

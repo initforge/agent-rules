@@ -9,7 +9,7 @@
 
 `agent-rules` is the portable operating bundle for Codex: rules, agent profiles, skills, templates, scripts, and inventory snapshots. Its core purpose is not storing prompts; it keeps a reproducible working contract for planning, research, implementation, review, tool inventory, and machine bootstrap.
 
-Daily work uses `C:\Users\DELL\.codex`. The `P:\agent-rules\codex` copy is the backup/bootstrap layer used for restore, sync, and sharing with other local agents. Local agent ecosystem skills such as Caveman and Cavecrew are backed up separately under `P:\agent-rules\agents-skills`.
+Daily work uses local runtimes such as `~/.codex`, `~/.gemini`, and `~/.grok`. `P:\agent-rules` is the versioned source and backup/bootstrap layer used for restore, sync, and sharing with other local agents. Local agent ecosystem skills such as Caveman and Cavecrew are backed up separately under `P:\agent-rules\agents-skills`.
 
 ## Main Areas
 
@@ -52,7 +52,7 @@ Sync the current runtime to backup:
 Restore from backup to local runtime:
 
 ```powershell
-& "P:\agent-rules\codex\scripts\sync-p-to-codex.ps1"
+& "P:\agent-rules\platforms\codex\scripts\sync-p-to-codex.ps1"
 ```
 
 ## Grok CLI Harness

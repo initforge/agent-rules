@@ -4,7 +4,7 @@ description: Compare current Codex runtime against the P: backup without overwri
 
 # Runtime Sync Audit
 
-1. Compare the local Codex runtime (at `~/.codex` or equivalent) against the master backup repository at `P:\agent-rules\codex`.
+1. Compare the local Codex runtime (at `~/.codex` or equivalent) against the master source repository at `P:\agent-rules`.
 2. Do not overwrite the local config at `~/.codex/config.toml` unless the user explicitly asks.
 3. Hash-check these files directly:
    - `AGENTS.md`

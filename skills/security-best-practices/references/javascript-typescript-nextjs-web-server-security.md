@@ -1,11 +1,11 @@
-﻿# Next.js (TypeScript/JavaScript) Web Security Spec (Next.js 16.1.x, Node.js 20.9+)
+# Next.js (TypeScript/JavaScript) Web Security Spec (Next.js 16.1.x, Node.js 20.9+)
 
 This document is designed as a **security spec** that supports:
 
 1. **Secure-by-default code generation** for new Next.js backend code (Route Handlers, API Routes, Server Actions, Proxy/Middleware).
-2. **Security review / vulnerability hunting** in existing Next.js repos (passive â€œnotice issues while workingâ€ and active â€œscan the repo and report findingsâ€).
+2. **Security review / vulnerability hunting** in existing Next.js repos (passive "notice issues while working" and active "scan the repo and report findings").
 
-It is intentionally written as a set of **normative requirements** (â€œMUST/SHOULD/MAYâ€) plus **audit rules** (what bad patterns look like, how to detect them, and how to fix/mitigate them).
+It is intentionally written as a set of **normative requirements** ("MUST/SHOULD/MAY") plus **audit rules** (what bad patterns look like, how to detect them, and how to fix/mitigate them).
 
 Target scope: Next.js **16.1.x** (latest line shown in the App Router docs) ([Next.js][1]), running on Node.js **20.9+** (per Next.js system requirements). ([Next.js][2])
 
@@ -14,10 +14,10 @@ Target scope: Next.js **16.1.x** (latest line shown in the App Router docs) ([Ne
 ## 0) Safety, boundaries, and anti-abuse constraints (MUST FOLLOW)
 
 * MUST NOT request, output, log, or commit secrets (API keys, passwords, private keys, session cookies, OAuth tokens, `process.env` dumps, database URLs with credentials).
-* MUST NOT â€œfixâ€ security by disabling protections (e.g., disabling origin checks, relaxing CORS to `*`, skipping authz checks, turning off cookie security flags, turning off CSP because itâ€™s â€œhardâ€).
+* MUST NOT "fix" security by disabling protections (e.g., disabling origin checks, relaxing CORS to `*`, skipping authz checks, turning off cookie security flags, turning off CSP because it's "hard").
 * MUST provide **evidence-based findings** during audits: cite file paths, code snippets, and configuration values that justify each claim.
-* MUST treat uncertainty honestly: if a protection might exist in infrastructure (reverse proxy, CDN, WAF, platform headers), report it as â€œnot visible in app code; verify at runtime/configâ€.
-* MUST assume all request-facing server code is reachable by attackers unless there is a clearly enforced auth boundary (not just â€œthe UI doesnâ€™t link to itâ€).
+* MUST treat uncertainty honestly: if a protection might exist in infrastructure (reverse proxy, CDN, WAF, platform headers), report it as "not visible in app code; verify at runtime/config".
+* MUST assume all request-facing server code is reachable by attackers unless there is a clearly enforced auth boundary (not just "the UI doesn't link to it").
 * MUST treat TypeScript types as **non-security boundaries**: types do not validate runtime input; runtime checks are required. ([Next.js][3])
 
 ---
@@ -37,15 +37,15 @@ When asked to write new Next.js code or modify existing code:
 
 While working anywhere in a Next.js repo (even if the user did not ask for a security scan):
 
-* MUST â€œnoticeâ€ violations of this spec in touched/nearby code.
+* MUST "notice" violations of this spec in touched/nearby code.
 * SHOULD mention issues as they come up, with a brief explanation + safe fix.
 
 ### 1.3 Active audit mode (explicit scan request)
 
-When the user asks to â€œscanâ€, â€œauditâ€, or â€œhunt for vulnsâ€:
+When the user asks to "scan", "audit", or "hunt for vulns":
 
 * MUST systematically search the codebase for violations of this spec.
-* MUST output findings in a structured format (see Â§2.3).
+* MUST output findings in a structured format (see §2.3).
 
 Recommended audit order:
 
@@ -54,7 +54,7 @@ Recommended audit order:
 3. Authentication, sessions, cookies.
 4. CSRF protections and state-changing endpoints (Server Actions, Route Handlers, API Routes).
 5. XSS (React + CSP) and unsafe HTML rendering.
-6. Cache/data-leak hazards (static rendering + caching + â€œuse cacheâ€).
+6. Cache/data-leak hazards (static rendering + caching + "use cache").
 7. File handling (uploads/downloads) and path traversal.
 8. Injection classes (SQL/ORM misuse, command execution, unsafe deserialization).
 9. Outbound requests (SSRF).
@@ -114,7 +114,7 @@ For each issue found, output:
 
 ## 3) Secure baseline: minimum production configuration (MUST in production)
 
-This is the smallest â€œproduction baselineâ€ that prevents common Next.js backend misconfigurations.
+This is the smallest "production baseline" that prevents common Next.js backend misconfigurations.
 
 ### 3.1 Run Next.js in production mode (MUST)
 
@@ -219,7 +219,7 @@ Severity: High (Critical if secret is client-exposed)
 Required:
 
 * MUST store secrets in environment variables or a secret manager; MUST NOT commit `.env*` files.
-* MUST treat `.env*` as sensitive; Next.js warns you â€œalmost never want to commit these files.â€ ([Next.js][7])
+* MUST treat `.env*` as sensitive; Next.js warns you "almost never want to commit these files." ([Next.js][7])
 * MUST treat any `NEXT_PUBLIC_*` environment variable as public and browser-visible (inlined into the client bundle at build time). ([Next.js][7])
 
 Insecure patterns:
@@ -242,14 +242,14 @@ Fix:
 
 ---
 
-### NEXT-SECRETS-002: Avoid server-only â†’ client bundling mistakes (server/client boundary is a security boundary)
+### NEXT-SECRETS-002: Avoid server-only → client bundling mistakes (server/client boundary is a security boundary)
 
 Severity: High
 
 Required:
 
 * MUST ensure server-only modules (DB clients, secret-dependent code) are not imported into Client Components or other client-bundled code paths.
-* SHOULD use server-only patterns/layers (e.g., a dedicated DAL and server-only modules) and treat boundary violations as security bugs. Next.js explicitly discusses the â€œserver-onlyâ€ concept for sensitive modules. ([Next.js][6])
+* SHOULD use server-only patterns/layers (e.g., a dedicated DAL and server-only modules) and treat boundary violations as security bugs. Next.js explicitly discusses the "server-only" concept for sensitive modules. ([Next.js][6])
 
 Insecure patterns:
 
@@ -265,7 +265,7 @@ Detection hints:
 Fix:
 
 * Refactor into `lib/server/*` and only import from server contexts (Route Handlers, Server Components, Server Actions).
-* Add an explicit â€œserver-onlyâ€ guard pattern (and/or tests) to prevent accidental imports.
+* Add an explicit "server-only" guard pattern (and/or tests) to prevent accidental imports.
 
 ---
 
@@ -286,7 +286,7 @@ Insecure patterns:
 
 * Sensitive Route Handlers with no session verification.
 * Server Actions that mutate data but do not validate user identity/permissions.
-* â€œAuthorizationâ€ checks in React components only.
+* "Authorization" checks in React components only.
 
 Detection hints:
 
@@ -308,13 +308,13 @@ Severity: High
 Required:
 
 * If using **Proxy** or **Middleware** for authentication checks, MUST ensure it covers every route that needs protection.
-* Next.js documentation notes Proxy can use a `matcher`, and for auth itâ€™s recommended Proxy runs on all routes. ([Next.js][12])
+* Next.js documentation notes Proxy can use a `matcher`, and for auth it's recommended Proxy runs on all routes. ([Next.js][12])
 * MUST treat `matcher` mistakes as an auth bypass risk.
 
 Insecure patterns:
 
-* Proxy/Middleware only matches â€œpagesâ€ but not `/api/*`, or only matches some route groups.
-* â€œDenylistâ€ style matchers that miss alternative request forms (framework-internal variants, RSC navigations, etc.).
+* Proxy/Middleware only matches "pages" but not `/api/*`, or only matches some route groups.
+* "Denylist" style matchers that miss alternative request forms (framework-internal variants, RSC navigations, etc.).
 
 Detection hints:
 
@@ -329,7 +329,7 @@ Fix:
 
 Notes:
 
-* Proxy is commonly used for â€œoptimistic checksâ€; it is not a complete authorization system by itself. ([Next.js][12])
+* Proxy is commonly used for "optimistic checks"; it is not a complete authorization system by itself. ([Next.js][12])
 
 ---
 
@@ -344,12 +344,12 @@ Required:
 * MUST protect every state-changing endpoint that relies on cookies for auth (POST/PUT/PATCH/DELETE).
 * For **Server Actions**, Next.js performs an Origin/Host comparison to help prevent CSRF; do not disable or weaken it. ([Next.js][5])
 * If Server Actions must be callable from additional trusted origins (e.g., a trusted proxy domain), MUST use `allowedOrigins` with a strict allowlist. ([Next.js][5])
-* For **Route Handlers** and **API Routes**, MUST implement CSRF protections explicitly (tokens and/or strict Origin/Referer + SameSite + custom headers). Route Handlers are an â€œescape hatchâ€ and require application-level security decisions. ([Next.js][6])
+* For **Route Handlers** and **API Routes**, MUST implement CSRF protections explicitly (tokens and/or strict Origin/Referer + SameSite + custom headers). Route Handlers are an "escape hatch" and require application-level security decisions. ([Next.js][6])
 
 Insecure patterns:
 
 * POST endpoints (including Server Actions) that mutate state and accept cross-site requests with no token/origin checks.
-* `allowedOrigins: ['*']` (or broad wildcards) or â€œreflect Originâ€ logic.
+* `allowedOrigins: ['*']` (or broad wildcards) or "reflect Origin" logic.
 * Using GET requests to change state.
 
 Detection hints:
@@ -361,7 +361,7 @@ Detection hints:
 Fix:
 
 * Implement a CSRF token strategy for cookie-auth endpoints.
-* Keep cookies `SameSite=Lax` or `Strict` when compatible; donâ€™t treat SameSite alone as sufficient.
+* Keep cookies `SameSite=Lax` or `Strict` when compatible; don't treat SameSite alone as sufficient.
 * Use strict Origin validation for JSON API endpoints, especially when not using CSRF tokens.
 
 Notes:
@@ -414,7 +414,7 @@ Required:
 Insecure patterns:
 
 * Long-lived admin sessions with no rotation.
-* â€œRemember me foreverâ€ for privileged roles without additional risk controls.
+* "Remember me forever" for privileged roles without additional risk controls.
 * Storing access tokens/refresh tokens in non-HttpOnly cookies or localStorage.
 
 Detection hints:
@@ -480,7 +480,7 @@ Insecure patterns:
 Detection hints:
 
 * Check `proxy.ts` / middleware for `response.headers.set(...)`. ([Next.js][7])
-* If not visible in app code, flag as â€œverify at edge/CDNâ€.
+* If not visible in app code, flag as "verify at edge/CDN".
 
 Fix:
 
@@ -499,7 +499,7 @@ Required:
 
 * SHOULD deploy a CSP, ideally with nonces for scripts.
 * SHOULD follow Next.js guidance for CSP implementation (including nonce generation and header application). ([Next.js][7])
-* MUST avoid loosening CSP as a â€œfixâ€ (e.g., `script-src 'unsafe-inline'`) without explicit risk acceptance.
+* MUST avoid loosening CSP as a "fix" (e.g., `script-src 'unsafe-inline'`) without explicit risk acceptance.
 
 Insecure patterns:
 
@@ -528,7 +528,7 @@ Severity: High
 
 Required:
 
-* MUST rely on Reactâ€™s default escaping; MUST NOT insert untrusted HTML into the DOM without sanitization.
+* MUST rely on React's default escaping; MUST NOT insert untrusted HTML into the DOM without sanitization.
 * MUST treat these as high-risk sinks:
 
   * `dangerouslySetInnerHTML`
@@ -545,7 +545,7 @@ Detection hints:
 
 * Search for `dangerouslySetInnerHTML`, `__html:`.
 * Search for template-like string concatenation that builds HTML.
-* Review any â€œrender HTMLâ€ or â€œpreviewâ€ features.
+* Review any "render HTML" or "preview" features.
 
 Fix:
 
@@ -567,7 +567,7 @@ Required:
   * input validation
   * CSRF/origin protections
   * rate limiting for sensitive actions
-* MUST NOT assume Server Actions are â€œnot reachableâ€ or â€œinternalâ€.
+* MUST NOT assume Server Actions are "not reachable" or "internal".
 * MUST understand Server Action request protections:
 
   * Next.js compares Origin with host to mitigate CSRF; extra origins must be explicitly allowlisted via `allowedOrigins`. ([Next.js][5])
@@ -575,7 +575,7 @@ Required:
 Insecure patterns:
 
 * `"use server"` functions that update DB state with no auth check.
-* Adding overly broad `allowedOrigins` to â€œmake it workâ€.
+* Adding overly broad `allowedOrigins` to "make it work".
 
 Detection hints:
 
@@ -667,7 +667,7 @@ Detection hints:
 
 * Search for `formData()` / multipart parsing, `fs.writeFile`, storage SDK usage.
 * Look for any write path under `public/`.
-* Look for â€œdownloadâ€ endpoints that set `Content-Type: text/html` or serve user files inline.
+* Look for "download" endpoints that set `Content-Type: text/html` or serve user files inline.
 
 Fix:
 
@@ -724,12 +724,12 @@ Required:
 Insecure patterns:
 
 * `await fetch(req.query.url)` or `await fetch((await request.json()).url)`
-* â€œURL previewâ€ endpoints that fetch arbitrary URLs.
+* "URL preview" endpoints that fetch arbitrary URLs.
 
 Detection hints:
 
 * Search for `fetch(` in server code and trace where the URL comes from.
-* Look for â€œwebhook testerâ€, â€œpreviewâ€, â€œimport from URLâ€ features.
+* Look for "webhook tester", "preview", "import from URL" features.
 
 Fix:
 
@@ -787,13 +787,13 @@ Insecure patterns:
 
 Detection hints:
 
-* Search for `Access-Control-Allow-Origin`, `cors`, â€œCORSâ€ middleware/wrappers.
+* Search for `Access-Control-Allow-Origin`, `cors`, "CORS" middleware/wrappers.
 * Review preflight `OPTIONS` handlers.
 
 Fix:
 
 * Implement strict origin allowlist and minimal methods/headers.
-* Ensure cookies arenâ€™t exposed cross-origin unless necessary and reviewed.
+* Ensure cookies aren't exposed cross-origin unless necessary and reviewed.
 
 ---
 
@@ -970,7 +970,7 @@ Required:
 
   * Do not forward attacker-controlled `x-forwarded-*` headers unless you have a trusted proxy chain.
   * Do not forward `Authorization`/cookies to unrelated outbound services.
-* Next.js Proxy patterns often mutate headers; ensure this doesnâ€™t create security issues.
+* Next.js Proxy patterns often mutate headers; ensure this doesn't create security issues.
 
 Insecure patterns:
 
@@ -1037,7 +1037,7 @@ Insecure patterns:
 Detection hints:
 
 * Identify auth endpoints and check for rate limiting.
-* Search for â€œsend emailâ€, â€œchargeâ€, â€œgenerate reportâ€ flows.
+* Search for "send email", "charge", "generate report" flows.
 
 Fix:
 
@@ -1046,7 +1046,7 @@ Fix:
 
 ---
 
-## 5) Practical scanning heuristics (how to â€œhuntâ€)
+## 5) Practical scanning heuristics (how to "hunt")
 
 When actively scanning, use these high-signal patterns:
 
@@ -1107,28 +1107,28 @@ Always try to confirm:
 
 Primary framework documentation (Next.js):
 
-* Next.js Docs: Installation (system requirements / Node version) â€” `https://nextjs.org/docs/app/getting-started/installation`
-* Next.js Docs: Route Handlers â€” `https://nextjs.org/docs/app/getting-started/route-handlers`
-* Next.js Docs: API Routes (Pages Router) â€” `https://nextjs.org/docs/pages/building-your-application/routing/api-routes`
-* Next.js Docs: Environment Variables â€” `https://nextjs.org/docs/pages/guides/environment-variables`
-* Next.js Docs: Data Security â€” `https://nextjs.org/docs/app/guides/data-security`
-* Next.js Docs: Content Security Policy â€” `https://nextjs.org/docs/app/guides/content-security-policy`
-* Next.js Docs: Proxy â€” `https://nextjs.org/docs/app/getting-started/proxy`
-* Next.js Docs: `serverActions.allowedOrigins` and `serverActions.bodySizeLimit` â€” `https://nextjs.org/docs/app/api-reference/config/next-config-js/serverActions`
-* Next.js Docs: `cookies()` â€” `https://nextjs.org/docs/app/api-reference/functions/cookies`
-* Next.js Docs: `headers()` â€” `https://nextjs.org/docs/app/api-reference/functions/headers`
-* Next.js Docs: Self-hosting (reverse proxy guidance) â€” `https://nextjs.org/docs/pages/guides/self-hosting`
-* Next.js Docs: Support policy (supported versions/LTS) â€” `https://nextjs.org/docs/support-policy`
+* Next.js Docs: Installation (system requirements / Node version) — `https://nextjs.org/docs/app/getting-started/installation`
+* Next.js Docs: Route Handlers — `https://nextjs.org/docs/app/getting-started/route-handlers`
+* Next.js Docs: API Routes (Pages Router) — `https://nextjs.org/docs/pages/building-your-application/routing/api-routes`
+* Next.js Docs: Environment Variables — `https://nextjs.org/docs/pages/guides/environment-variables`
+* Next.js Docs: Data Security — `https://nextjs.org/docs/app/guides/data-security`
+* Next.js Docs: Content Security Policy — `https://nextjs.org/docs/app/guides/content-security-policy`
+* Next.js Docs: Proxy — `https://nextjs.org/docs/app/getting-started/proxy`
+* Next.js Docs: `serverActions.allowedOrigins` and `serverActions.bodySizeLimit` — `https://nextjs.org/docs/app/api-reference/config/next-config-js/serverActions`
+* Next.js Docs: `cookies()` — `https://nextjs.org/docs/app/api-reference/functions/cookies`
+* Next.js Docs: `headers()` — `https://nextjs.org/docs/app/api-reference/functions/headers`
+* Next.js Docs: Self-hosting (reverse proxy guidance) — `https://nextjs.org/docs/pages/guides/self-hosting`
+* Next.js Docs: Support policy (supported versions/LTS) — `https://nextjs.org/docs/support-policy`
 
 Next.js security guidance & advisories:
 
-* Next.js Blog: How to think about security in Next.js â€” `https://nextjs.org/blog/security-nextjs-server-components-actions`
-* GitHub Security Advisory: Next.js DoS via Server Components / Server Actions (CVE-2026-23864) â€” `https://github.com/advisories/GHSA-fq29-rrrv-cq2m`
-* Next.js Blog: Security update (example security advisory context) â€” `https://nextjs.org/blog/security-update`
+* Next.js Blog: How to think about security in Next.js — `https://nextjs.org/blog/security-nextjs-server-components-actions`
+* GitHub Security Advisory: Next.js DoS via Server Components / Server Actions (CVE-2026-23864) — `https://github.com/advisories/GHSA-fq29-rrrv-cq2m`
+* Next.js Blog: Security update (example security advisory context) — `https://nextjs.org/blog/security-update`
 
 General web security references (recommended baseline):
 
-* OWASP Cheat Sheet Series (CSRF, Session Management, XSS Prevention, SSRF Prevention, File Upload, HTTP Headers) â€” `https://cheatsheetseries.owasp.org/`
+* OWASP Cheat Sheet Series (CSRF, Session Management, XSS Prevention, SSRF Prevention, File Upload, HTTP Headers) — `https://cheatsheetseries.owasp.org/`
 
 [1]: https://nextjs.org/docs/app/getting-started/route-handlers "Getting Started: Route Handlers | Next.js"
 [2]: https://nextjs.org/docs/app/getting-started/deploying?utm_source=chatgpt.com "Getting Started: Deploying"
@@ -1140,5 +1140,5 @@ General web security references (recommended baseline):
 [8]: https://nextjs.org/docs/pages/guides/self-hosting?utm_source=chatgpt.com "Guides: Self-Hosting"
 [9]: https://nextjs.org/docs/app/api-reference/functions/cookies "Functions: cookies | Next.js"
 [10]: https://nextjs.org/blog/next-16?utm_source=chatgpt.com "Next.js 16"
-[11]: https://github.com/vercel/next.js/security/advisories/GHSA-9g9p-9gw9-jx7f?utm_source=chatgpt.com "Denial of Service in Image Optimizer Â· Advisory"
+[11]: https://github.com/vercel/next.js/security/advisories/GHSA-9g9p-9gw9-jx7f?utm_source=chatgpt.com "Denial of Service in Image Optimizer · Advisory"
 [12]: https://nextjs.org/docs/pages/guides/authentication "Guides: Authentication | Next.js"

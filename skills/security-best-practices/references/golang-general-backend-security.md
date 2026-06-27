@@ -2,18 +2,18 @@
 
 This document is designed as a **security spec** that supports:
 1) **Secure-by-default code generation** for new Go code.
-2) **Security review / vulnerability hunting** in existing Go code (passive “notice issues while working” and active “scan the repo and report findings”).
+2) **Security review / vulnerability hunting** in existing Go code (passive "notice issues while working" and active "scan the repo and report findings").
 
-It is intentionally written as a set of **normative requirements** (“MUST/SHOULD/MAY”) plus **audit rules** (what bad patterns look like, how to detect them, and how to fix/mitigate them).
+It is intentionally written as a set of **normative requirements** ("MUST/SHOULD/MAY") plus **audit rules** (what bad patterns look like, how to detect them, and how to fix/mitigate them).
 
 --------------------------------------------------------------------
 
 ## 0) Safety, boundaries, and anti-abuse constraints (MUST FOLLOW)
 
 - MUST NOT request, output, log, or commit secrets (API keys, passwords, private keys, session cookies, JWTs, database URLs with credentials, signing keys, client secrets).
-- MUST NOT “fix” security by disabling protections (e.g., `InsecureSkipVerify`, `GOSUMDB=off` for public modules, wildcard CORS + credentials, removing auth checks, disabling CSRF defenses on cookie-auth apps).
+- MUST NOT "fix" security by disabling protections (e.g., `InsecureSkipVerify`, `GOSUMDB=off` for public modules, wildcard CORS + credentials, removing auth checks, disabling CSRF defenses on cookie-auth apps).
 - MUST provide **evidence-based findings** during audits: cite file paths, code snippets, build/deploy configs, and concrete values that justify the claim.
-- MUST treat uncertainty honestly: if a control might exist in infrastructure (reverse proxy, WAF, service mesh, platform config), report it as “not visible in app code; verify at runtime/config.”
+- MUST treat uncertainty honestly: if a control might exist in infrastructure (reverse proxy, WAF, service mesh, platform config), report it as "not visible in app code; verify at runtime/config."
 - MUST keep fixes minimal, correct, and production-safe; avoid introducing breaking changes without warning (especially around auth/session flows, and proxies).
 
 --------------------------------------------------------------------
@@ -29,11 +29,11 @@ When asked to write new Go code or modify existing code:
 
 ### 1.2 Passive review mode (always on while editing)
 While working anywhere in a Go repo (even if the user did not ask for a security scan):
-- MUST “notice” violations of this spec in touched/nearby code.
+- MUST "notice" violations of this spec in touched/nearby code.
 - SHOULD mention issues as they come up, with a brief explanation + safe fix.
 
 ### 1.3 Active audit mode (explicit scan request)
-When the user asks to “scan”, “audit”, or “hunt for vulns”:
+When the user asks to "scan", "audit", or "hunt for vulns":
 - MUST systematically search the codebase for violations of this spec.
 - MUST output findings in a structured format (see §2.3).
 
@@ -44,7 +44,7 @@ Recommended audit order:
 4) HTTP server configuration (timeouts, body limits, proxy trust, security headers).
 5) AuthN/AuthZ boundaries, session/cookie settings, token validation.
 6) CSRF protections for cookie-authenticated state-changing endpoints.
-7) Template usage and output encoding (XSS), and any “render template from string” behavior (SSTI).
+7) Template usage and output encoding (XSS), and any "render template from string" behavior (SSTI).
 8) File handling (uploads/downloads/path traversal/temp files), static file serving.
 9) Injection sinks: SQL, OS command execution, SSRF/outbound fetch, open redirects.
 10) Concurrency/resource exhaustion (unbounded goroutines/queues, missing timeouts/contexts).
@@ -84,7 +84,7 @@ For each issue found, output:
 
 ## 3) Secure baseline: minimum production configuration (MUST in production)
 
-This is the smallest “production baseline” that prevents common Go misconfigurations.
+This is the smallest "production baseline" that prevents common Go misconfigurations.
 
 ### 3.1 Toolchain, patching, and dependency hygiene (MUST)
 - MUST run a supported Go major version and keep to the latest patch releases.
@@ -119,7 +119,7 @@ NOTE: Upgrading dependencies and the core Go version can break projects in unexp
 
 Required:
 - MUST run a supported Go major release and apply patch releases promptly.
-- SHOULD treat patch releases as security-relevant, even if your application code didn’t change.
+- SHOULD treat patch releases as security-relevant, even if your application code didn't change.
 
 Insecure patterns:
 - Production builds pinned to old Go versions without a patching process.
@@ -157,7 +157,7 @@ Insecure patterns:
 
 Detection hints:
 - Search build configs for `GOSUMDB`, `GONOSUMDB`, `GOINSECURE`, `GOPROXY`, `GOPRIVATE`.
-- Look for documentation/scripts that recommend disabling checksum DB “to make builds work”.
+- Look for documentation/scripts that recommend disabling checksum DB "to make builds work".
 
 Fix:
 - Restore defaults for public module verification.
@@ -218,7 +218,7 @@ Fix:
 - Calibrate timeouts per endpoint type (streaming vs JSON APIs).
 
 Notes:
-- Net/http documents that these timeouts exist and that zero/negative values mean “no timeout”; production services should choose explicit values.
+- Net/http documents that these timeouts exist and that zero/negative values mean "no timeout"; production services should choose explicit values.
 
 ---
 
@@ -239,7 +239,7 @@ Insecure patterns:
 Detection hints:
 - Search for `io.ReadAll(r.Body)`, `json.NewDecoder(r.Body)`, `ParseMultipartForm`, `FormFile`, `multipart`.
 - Look for missing `http.MaxBytesReader` or equivalent per-handler limiting.
-- Look for “upload” endpoints and check limits.
+- Look for "upload" endpoints and check limits.
 
 Fix:
 - Wrap request bodies with `http.MaxBytesReader(w, r.Body, maxBytes)` before parsing.
@@ -286,22 +286,22 @@ Severity: High (auth, URL generation, logging/auditing correctness)
 Required:
 - If behind a reverse proxy, MUST define which proxy is trusted and how client IP/scheme/host are derived.
 - MUST NOT trust `X-Forwarded-For`, `X-Forwarded-Proto`, `Forwarded`, or similar headers from the open internet.
-- MUST ensure “secure cookie” logic, redirects, and absolute URL generation do not rely on spoofable headers.
+- MUST ensure "secure cookie" logic, redirects, and absolute URL generation do not rely on spoofable headers.
 
 Insecure patterns:
 - Using `r.Header.Get("X-Forwarded-For")` as the client IP without validating the proxy boundary.
-- Deriving “is HTTPS” from `X-Forwarded-Proto` without confirming it came from a trusted proxy.
+- Deriving "is HTTPS" from `X-Forwarded-Proto` without confirming it came from a trusted proxy.
 - Using forwarded `Host` values for password reset links without allowlisting.
 
 Detection hints:
-- Search for `X-Forwarded-For`, `X-Forwarded-Proto`, `Forwarded`, `Real-IP`, and any custom “client IP” helpers.
-- Inspect ingress/proxy configs; if not visible, mark as “verify at edge”.
+- Search for `X-Forwarded-For`, `X-Forwarded-Proto`, `Forwarded`, `Real-IP`, and any custom "client IP" helpers.
+- Inspect ingress/proxy configs; if not visible, mark as "verify at edge".
 
 Fix:
 - Enforce proxy trust at the edge and in app:
   - Accept forwarded headers only from known proxy IP ranges.
   - Prefer platform-provided mechanisms where available.
-- If generating external links, use a configured allowlisted canonical origin (not the request’s Host header).
+- If generating external links, use a configured allowlisted canonical origin (not the request's Host header).
 
 ---
 
@@ -317,7 +317,7 @@ Required (typical web app serving browsers):
 - MUST ensure cookies have secure attributes (see GO-HTTP-005).
 
 NOTE:
-- These headers may be set via reverse proxy/CDN; if not visible in app code, report as “verify at edge”.
+- These headers may be set via reverse proxy/CDN; if not visible in app code, report as "verify at edge".
 
 Insecure patterns:
 - No security headers anywhere (app or edge) for a browser-facing app.
@@ -415,7 +415,7 @@ Severity: High
 
 Required:
 - MUST use `html/template` for HTML rendering (not `text/template`).
-- MUST NOT convert untrusted data into “trusted” template types (`template.HTML`, `template.JS`, `template.URL`, etc.).
+- MUST NOT convert untrusted data into "trusted" template types (`template.HTML`, `template.JS`, `template.URL`, etc.).
 - SHOULD keep templates static and controlled by developers; treat dynamic templates as high risk.
 - MUST NOT serve user-uploaded HTML/JS as active content unless explicitly intended and safely sandboxed.
 
@@ -439,7 +439,7 @@ Severity: Critical
 
 Required:
 - MUST NOT call `template.Parse` / `template.ParseFiles` / `template.New(...).Parse(...)` on template text influenced by untrusted input.
-- MUST treat “user-defined templates” as a special high-risk design:
+- MUST treat "user-defined templates" as a special high-risk design:
   - MUST use heavy sandboxing and strict allowlists
   - MUST isolate execution (process/container boundary) if truly required
 
@@ -449,7 +449,7 @@ Insecure patterns:
 
 Detection hints:
 - Search for `.Parse(` and trace the origin of the template string.
-- Look for “custom email templates”, “user theming templates”, etc.
+- Look for "custom email templates", "user theming templates", etc.
 
 Fix:
 - Replace with safe substitution mechanisms (no code execution).
@@ -572,7 +572,7 @@ Required:
 
 Insecure patterns:
 - `http.Get(r.URL.Query().Get("url"))`
-- “URL preview” / “webhook test” endpoints that fetch arbitrary URLs.
+- "URL preview" / "webhook test" endpoints that fetch arbitrary URLs.
 
 Detection hints:
 - Search for `http.Get`, `client.Do`, and URL values derived from requests/DB.
@@ -609,7 +609,7 @@ Fix:
 - Use bounded readers (`io.LimitReader`) for large/untrusted responses.
 
 Notes:
-- The net/http package exposes `DefaultClient` as a zero-valued `http.Client`, which can easily lead to “no timeout” behavior unless configured.
+- The net/http package exposes `DefaultClient` as a zero-valued `http.Client`, which can easily lead to "no timeout" behavior unless configured.
 
 ---
 
@@ -720,7 +720,7 @@ Severity: High (Critical in high-risk code paths)
 
 Required:
 - SHOULD avoid importing `unsafe` in application code unless absolutely necessary.
-- If `unsafe` is used, MUST treat it as “manual memory safety” requiring careful review and test coverage.
+- If `unsafe` is used, MUST treat it as "manual memory safety" requiring careful review and test coverage.
 - If `cgo` is used, MUST treat the C/C++ boundary as memory-unsafe; apply secure coding practices on the C side and isolate where possible.
 
 Insecure patterns:
@@ -736,11 +736,11 @@ Fix:
 - Isolate unsafe code in small, well-tested modules with fuzz/race tests.
 
 Notes:
-- The unsafe package explicitly provides operations that step around Go’s type safety guarantees.
+- The unsafe package explicitly provides operations that step around Go's type safety guarantees.
 
 --------------------------------------------------------------------
 
-## 5) Practical scanning heuristics (how to “hunt”)
+## 5) Practical scanning heuristics (how to "hunt")
 
 When actively scanning, use these high-signal patterns:
 

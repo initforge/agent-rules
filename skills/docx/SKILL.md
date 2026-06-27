@@ -403,7 +403,7 @@ sections: [{
 ```bash
 python scripts/office/unpack.py document.docx unpacked/
 ```
-Extracts XML, pretty-prints, merges adjacent runs, and converts smart quotes to XML entities (`&#x201C;` etc.) so they survive editing. Use `--merge-runs false` to skip run merging.
+Extracts XML, pretty-prints, merges adjacent runs, and converts smart quotes to XML entities (`"` etc.) so they survive editing. Use `--merge-runs false` to skip run merging.
 
 ### Step 2: Edit XML
 
@@ -420,10 +420,10 @@ Edit files in `unpacked/word/`. See XML Reference below for patterns.
 ```
 | Entity | Character |
 |--------|-----------|
-| `&#x2018;` | ‘ (left single) |
-| `&#x2019;` | ’ (right single / apostrophe) |
-| `&#x201C;` | “ (left double) |
-| `&#x201D;` | ” (right double) |
+| `&#x2018;` | ' (left single) |
+| `&#x2019;` | ' (right single / apostrophe) |
+| `&#x201C;` | " (left double) |
+| `&#x201D;` | " (right double) |
 
 **Adding comments:** Use `comment.py` to handle boilerplate across multiple XML files (text must be pre-escaped XML):
 ```bash

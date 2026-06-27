@@ -19,10 +19,10 @@ Sau khi đổi hook/rules: **session Grok mới** hoặc `/hooks` → `r` (platf
 | Risk | Mitigation |
 |---|---|
 | E2E deep loop / stuck | Hook **advisory** + state + `e2e-qa` SKILL ladder + scope redirect (không deny lệnh) |
-| Skill drift `codex-research` | Rename `researcher`, rsync `--delete`, doc `researcher-workflow.md` |
+| Skill drift tên cũ của research skill | Chuẩn hóa về `researcher`, rsync `--delete`, doc `researcher-workflow.md` |
 | `~/.codex` / `~/.grok` skill cũ sót | `install-*-global.sh` rsync `--delete` |
 | Workflow archive nhiễu `.agents` | `sync-all-harness.sh` rsync workflows `--delete` |
-| Harness commit không validate | Hook chặn `git commit` khi sửa harness paths + workspace marker `codex/rules/00-hard-activation-contract.md` |
+| Harness commit không validate | Hook chặn `git commit` khi sửa harness paths + workspace marker trong `rules/` |
 | Quên Turn-0 / stack | `SessionStart` + `UserPromptSubmit` inject `additionalContext` + state file stack |
 | Model skip đọc SKILL.md | Turn-0 rule + inject (không chặn lệnh) |
 | `smoke_passed` mất sau restart | E2E cache workspace 4h `~/.grok/skill-state/e2e-cache/` |
@@ -32,7 +32,7 @@ Sau khi đổi hook/rules: **session Grok mới** hoặc `/hooks` → `r` (platf
 | Antigravity Linux không preflight | `scripts/antigravity-preflight.sh` + `antigravity-preflight-run.sh`; `hooks.json` dùng bash |
 | Hook fail-open im lặng | `~/.grok/skill-state/fail-open.log` + `grok-hook-healthcheck.sh` sau install |
 | Install recursion vô hạn | `HARNESS_SKIP_GLOBAL_INSTALL=1` khi install gọi sync |
-| Legacy docs `codex-research` | Đổi tên doc, cập nhật troubleshooting/bootstrap/workflow-cases |
+| Legacy docs tên cũ của research skill | Đổi tên doc, cập nhật troubleshooting/bootstrap/workflow-cases |
 
 ## Accepted residual (có override — không block PASS harness)
 

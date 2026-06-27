@@ -1,4 +1,4 @@
-﻿# Skills Taxonomy
+# Skills Taxonomy
 
 ## Purpose
 
@@ -31,13 +31,13 @@ Primary local Codex location:
 
 Current self-authored skills (active sync):
 - `5fedu-project`
-- `researcher` (multi-source contract; renamed from codex-research)
+- `researcher` (multi-source contract)
 - `product-ui-craft` (universal UI — replaces frontend-ui-quality / taste / image skills)
 - `e2e-qa` (professional E2E — split from playwright CLI)
 - `docs-style`
 - `workflow-router` (Codex phase; disable on Grok via config)
 
-Archived: `codex/skills/_archive/` (image, taste, ui-ux-pro-max, …)
+Archived: inactive skills should stay outside active `skills/` or under a clearly named archive folder that installers exclude.
 
 Separate local agent ecosystem:
 - `C:\Users\DELL\.agents\skills`

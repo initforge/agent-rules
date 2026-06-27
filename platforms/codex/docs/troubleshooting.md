@@ -1,4 +1,4 @@
-﻿# Troubleshooting
+# Troubleshooting
 
 ## Codex does not follow rules
 
@@ -64,7 +64,7 @@ If a Dart-heavy repo has partial coverage:
 - install or rebuild the optional `tree-sitter-dart` dependency
 - otherwise accept partial indexing and document the limitation
 
-## Codex Research feels weak or incomplete
+## Researcher feels weak or incomplete
 
 Verify:
 

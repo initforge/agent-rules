@@ -15,7 +15,7 @@ C:\Users\DELL\.codex
 Bản sync và bootstrap:
 
 ```text
-P:\agent-rules\codex
+P:\agent-rules
 ```
 
 Loader tương thích:
@@ -28,7 +28,7 @@ P:\agent-rules\codex-overlay.md
 
 Ý nghĩa:
 - Codex chạy từ file local dưới `C:\Users\DELL\.codex`.
-- `P:\agent-rules\codex` là bản mirror để restore máy mới và backup.
+- `P:\agent-rules` là repo source/mirror để restore máy mới và backup.
 - File root dưới `P:\agent-rules` chỉ là loader mỏng để project cũ vẫn import được.
 
 ### Antigravity IDE
@@ -42,7 +42,7 @@ C:\Users\DELL\.gemini\GEMINI.md
 Master source cho workspace rules:
 
 ```text
-P:\agent-rules\antigravity\.agents\rules\
+P:\agent-rules\platforms\antigravity\.agents\rules\
 ```
 
 Workspace-local rules (mỗi project):
@@ -77,7 +77,8 @@ P:\agent-rules\
 |  |- rules\              ← Rules với YAML frontmatter
 |  |- skills\
 |  `- workflows\
-|- antigravity\            ← Master source cho Antigravity adapter
+|- platforms\
+|  |- antigravity\         ← Master source cho Antigravity adapter
 |  |- .agents\
 |  |  |- rules\           ← Master rules (frontmatter source of truth)
 |  |  |- skills\
@@ -85,7 +86,7 @@ P:\agent-rules\
 |  |- scripts\
 |  |  `- add-rules-frontmatter.ps1
 |  `- README.md
-|- codex\                  ← Codex CLI runtime backup
+|  |- codex\               ← Codex CLI platform adapter
 |  |- AGENTS.md
 |  |- RTK.md
 |  |- config.toml
@@ -109,7 +110,7 @@ P:\agent-rules\
 
 ### Codex CLI
 
-1. Đảm bảo `P:\agent-rules\codex` tồn tại.
+1. Đảm bảo `P:\agent-rules` tồn tại.
 2. Copy vào `C:\Users\DELL\.codex`
 3. Chạy:
 
@@ -129,11 +130,11 @@ P:\agent-rules\
 ### Antigravity IDE
 
 1. Đảm bảo `C:\Users\DELL\.gemini\GEMINI.md` tồn tại và chứa global rules ngắn cho mọi conversation.
-2. Copy/cài workspace rules từ `P:\agent-rules\antigravity\.agents\` vào `<project-root>\.agents\`.
+2. Copy/cài workspace rules từ `P:\agent-rules\platforms\antigravity\.agents\` vào `<project-root>\.agents\`.
 3. Chạy frontmatter script trên mỗi project:
 
 ```powershell
-& "P:\agent-rules\antigravity\scripts\add-rules-frontmatter.ps1" `
+& "P:\agent-rules\platforms\antigravity\scripts\add-rules-frontmatter.ps1" `
     -RulesDir "P:\du-an-cua-ban\.agents\rules"
 ```
 
@@ -153,7 +154,7 @@ Khi restore từ bản sync:
 & "$env:USERPROFILE\.codex\scripts\sync-p-to-codex.ps1"
 ```
 
-Sync harness đồng bộ (codex master → Antigravity + `.agents` + `.grok` mirror):
+Sync harness đồng bộ (repo root master → Antigravity + `.agents` + `.grok` mirror):
 
 ```powershell
 & "P:\agent-rules\scripts\sync-platform-skills.ps1"
@@ -170,16 +171,16 @@ Khi Antigravity rules thay đổi:
 
 ```powershell
 # Thêm/update frontmatter trên tất cả locations
-& "P:\agent-rules\antigravity\scripts\add-rules-frontmatter.ps1" -RulesDir "P:\agent-rules\antigravity\.agents\rules"
-& "P:\agent-rules\antigravity\scripts\add-rules-frontmatter.ps1" -RulesDir "P:\agent-rules\.agents\rules"
-& "P:\agent-rules\antigravity\scripts\add-rules-frontmatter.ps1" -RulesDir "P:\tahdieuphoi\.agents\rules"
-& "P:\agent-rules\antigravity\scripts\add-rules-frontmatter.ps1" -RulesDir "P:\FaBsolution\.agents\rules"
+& "P:\agent-rules\platforms\antigravity\scripts\add-rules-frontmatter.ps1" -RulesDir "P:\agent-rules\platforms\antigravity\.agents\rules"
+& "P:\agent-rules\platforms\antigravity\scripts\add-rules-frontmatter.ps1" -RulesDir "P:\agent-rules\.agents\rules"
+& "P:\agent-rules\platforms\antigravity\scripts\add-rules-frontmatter.ps1" -RulesDir "P:\tahdieuphoi\.agents\rules"
+& "P:\agent-rules\platforms\antigravity\scripts\add-rules-frontmatter.ps1" -RulesDir "P:\FaBsolution\.agents\rules"
 ```
 
 ## Quy Tắc Vận Hành
 
 - Runtime logic Codex nằm trong `%USERPROFILE%\.codex` (hoặc `C:\Users\<username>\.codex`).
-- Bản mirror bootstrap nằm trong `P:\agent-rules\codex`.
+- Bản mirror/bootstrap nằm trong `P:\agent-rules`.
 - Global Antigravity rules nằm trong `%USERPROFILE%\.gemini\GEMINI.md`.
 - Master Antigravity rules nằm trong `P:\agent-rules\platforms\antigravity\.agents\rules\`.
 - File root `P:\agent-rules\*.md` chỉ là loader tương thích.

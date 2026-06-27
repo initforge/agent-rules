@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $codexHome = "$env:USERPROFILE\.codex"
-$backupRoot = "P:\agent-rules\codex"
+$backupRoot = "P:\agent-rules"
 $validator = Join-Path $codexHome "scripts\validate-runtime-context.ps1"
 
 Write-Host "== Codex home =="

@@ -573,7 +573,7 @@ Use short, believable, design-friendly copy.
 
 ### Carousel / marquee slop (layout)
 - infinity logo strips repeating the same 6 blobs
-- “trusted by” ticker that is unreadable mosquito logos
+- "trusted by" ticker that is unreadable mosquito logos
 - auto-play-style hero dots with no semantic purpose
 
 ### Data / KPI slop
@@ -886,7 +886,7 @@ Mix at least **two distinct image crops** where multiple sections exist — e.g.
 Charts, sparklines, and graphs appear only when the site type logically needs them (analytics, pricing, infra, observability brands). Else keep proof human (quotes, receipts, timelines, screenshots of real workflows).
 
 ### Cultural / tonal alignment
-When the brief names an industry or region, steer palette and typographic temperament to match — don’t ship default “neutral SF startup” unless the brief is intentionally generic SaaS.
+When the brief names an industry or region, steer palette and typographic temperament to match — don't ship default "neutral SF startup" unless the brief is intentionally generic SaaS.
 
 ### Mobile-implied fidelity (even for desktop mocks)
 Maintain tap-friendly hit sizes and readable caption sizes visually; stacking order should imply a sane single-column narrative.

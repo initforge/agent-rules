@@ -1,7 +1,7 @@
 # Research Note - <topic>
 
 Last updated: <ISO timestamp>
-Source: Codex Research | Web | GitNexus | Manual | Other
+Source: Researcher | Web | GitNexus | Manual | Other
 
 ## Question
 - <What needed research>

@@ -10,9 +10,9 @@ Repo `agent-rules` phục vụ **Codex, Antigravity, Grok CLI**. Lõi rule dùng
 
 | Nền | Master | Live | Cơ chế nạp |
 |---|---|---|---|
-| **Grok CLI** | `grok/rules/` + `grok/skills/` | `.grok/` + `~/.grok/` | scan `.grok/rules/*.md` |
-| **Codex** | `grok/` → sync | `codex/rules/` + `~/.codex/` | `@import` AGENTS.md |
-| **Antigravity** | `grok/` → sync | `.agents/rules/` | `alwaysApply` |
+| **Grok CLI** | `rules/` + `skills/` | `.grok/` + `~/.grok/` | scan `.grok/rules/*.md` |
+| **Codex** | `rules/` + `skills/` + `platforms/codex/` | `~/.codex/` | `@import` AGENTS.md |
+| **Antigravity** | `rules/` + `skills/` + `platforms/antigravity/` | `.agents/rules/` + `~/.gemini/GEMINI.md` | `alwaysApply` |
 
 **Không có Cursor.** `.cursor/` không phải runtime — bỏ qua nếu thấy.
 
@@ -34,19 +34,19 @@ agent-rules/
 ## Sync một lệnh
 
 ```bash
-./grok/scripts/sync-all-harness.sh
+./scripts/sync-all-harness.sh
 ```
 
 ## Grok KHÔNG được (mặc định)
 
-1. Sửa `codex/`, `antigravity/` trực tiếp — sync từ `grok/` master.
+1. Sửa platform mirror/runtime trực tiếp khi thay đổi thuộc lõi dùng chung — sửa ở `rules/`, `skills/`, `workflows/`, `shared/` rồi sync.
 2. Copy ceremony Antigravity cũ (preflight 8 câu mọi lượt).
 3. Tự commit/push harness.
 
 ## Khi core safety đổi
 
-1. Sửa `grok/rules/` hoặc `shared/opus-emulation-contract.md`.
-2. `./grok/scripts/sync-all-harness.sh`.
+1. Sửa `rules/` hoặc `shared/opus-emulation-contract.md`.
+2. `./scripts/sync-all-harness.sh`.
 3. User sync `~/.codex` / deploy adapter theo quy trình riêng.
 
 ## Antigravity IDE (Overlay rules)

@@ -1,8 +1,8 @@
-# Harness Philosophy — 4 nền, một lõi an toàn
+# Harness Philosophy — 3 nền, một lõi an toàn
 
-Repo `agent-rules` phục vụ **ba runtime chính** (Codex, Antigravity, Grok CLI). Master harness: `grok/`. **Không** copy-paste rule chéo mà không adapt.
+Repo `agent-rules` phục vụ **ba runtime chính** (Codex, Antigravity, Grok CLI). Master harness nằm ở repo root (`rules/`, `skills/`, `workflows/`, `shared/`). **Không** copy-paste rule chéo mà không adapt.
 
-## Bốn nền
+## Ba nền
 
 | Nền | Cơ chế nạp | Độ nặng | Mục tiêu |
 |---|---|---|---|
@@ -15,7 +15,7 @@ Repo `agent-rules` phục vụ **ba runtime chính** (Codex, Antigravity, Grok C
 1. **Harness = hạ tầng**, không phải notepad. Agent mặc định **không** tự sửa harness khi làm task thường (`05-harness-mutation-gate`).
 2. **Rules + Skills + Context** — thiếu một tầng → rule reference chết (vd `5fedu-project` không có trong `.grok/skills/`).
 3. **Emulate outcome, not ceremony** — Opus-emulation: tự chủ, bền, verify; không preflight 8 câu mọi lượt.
-4. **Master → live** — sửa `grok/` rồi `sync-all-harness.sh`; một lệnh sync cả Codex + Antigravity.
+4. **Master → live** — sửa repo root rồi `sync-all-harness.sh`; một lệnh sync cả Codex + Antigravity + Grok.
 
 ## Learning tiers
 
@@ -23,12 +23,12 @@ Repo `agent-rules` phục vụ **ba runtime chính** (Codex, Antigravity, Grok C
 |---|---|---|
 | L0 | Chat / báo cáo | Mọi lượt |
 | L1 | `AGENTS.md`, `.grok/5fedu/`, `plan/` dự án | Feedback lặp trong dự án |
-| L2 | `grok/rules/`, `grok/skills/` | User yêu cầu rõ sửa harness |
-| L3 | `codex/`, `antigravity/` adapter | User yêu cầu + đúng nền |
+| L2 | `rules/`, `skills/`, `workflows/`, `shared/` | User yêu cầu rõ sửa harness |
+| L3 | `platforms/codex/`, `platforms/antigravity/`, `platforms/grok/` | User yêu cầu + đúng nền |
 
 ## Opus-emulation (Composer + Gemini)
 
-Lõi: `shared/opus-emulation-contract.md` → `grok/rules/06-*` → sync 3 nền.
+Lõi: `shared/opus-emulation-contract.md` + `rules/*` → sync 3 nền.
 
 - **Mặc định MEDIUM** — đa số task nặng đô, không hạ tier để khỏi verify.
 - **HIGH** khi DB/auth/5fedu UI/production/permission/export.

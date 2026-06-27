@@ -96,10 +96,10 @@ Use these as defaults unless the user clearly wants something else.
 Adapt them to the prompt.
 
 Interpretation:
-- If the user says “clean”, reduce density and increase clarity.
-- If the user says “crazy creative”, increase variance and art direction.
-- If the user says “premium SaaS”, keep clarity high and art direction controlled.
-- If the user says “editorial”, allow stronger type and more asymmetry.
+- If the user says "clean", reduce density and increase clarity.
+- If the user says "crazy creative", increase variance and art direction.
+- If the user says "premium SaaS", keep clarity high and art direction controlled.
+- If the user says "editorial", allow stronger type and more asymmetry.
 - Keep sections breathable.
 - Prefer readability over squeezing too much into one image.
 - In Codex, bias strongly toward larger, more analyzable section images.
@@ -123,7 +123,7 @@ Do not:
 - start with freeform coding
 - skip straight to implementation
 - describe a website without first generating the visual reference when generation is available
-- rely on memory of “good frontend taste” instead of producing the actual reference
+- rely on memory of "good frontend taste" instead of producing the actual reference
 
 The image is the design source.
 The code is the translation layer.
@@ -541,7 +541,7 @@ Do not:
 - create multiple competing focal points
 - overfill the hero with cards or micro-details
 - make the hero noisy or busy
-- add unnecessary labels like “00 orchestration layer” or similar pseudo-system text if it does not add real value
+- add unnecessary labels like "00 orchestration layer" or similar pseudo-system text if it does not add real value
 
 ### Headline Rule
 Strong preference:
@@ -623,7 +623,7 @@ Avoid:
 - overdesigned labels that distract from the main layout
 
 Examples of things to avoid unless they are truly necessary:
-- “00 orchestration layer”
+- "00 orchestration layer"
 - tiny technical status pills
 - decorative runtime markers
 - overly specific pseudo-enterprise microcopy
@@ -744,7 +744,7 @@ The visible text is part of the design system and should influence implementatio
 
 ## 22. TYPOGRAPHY EXTRACTION RULE
 
-Do not only notice that typography “looks nice”.
+Do not only notice that typography "looks nice".
 Analyze it properly.
 
 Extract and observe:
@@ -847,7 +847,7 @@ This means:
 - preserve overall visual cleanliness
 
 Do not drift into a different design direction during implementation.
-Do not “improve” the design by replacing it with a generic coded layout.
+Do not "improve" the design by replacing it with a generic coded layout.
 
 The goal is not:
 - inspired by the image
@@ -869,7 +869,7 @@ During implementation:
 - do not replace distinctive sections with generic rows
 - do not compress generous spacing into dense layout
 - do not replace strong typography with plain hierarchy
-- do not remove the page’s visual identity for convenience
+- do not remove the page's visual identity for convenience
 - do not merge section logic into repetitive patterns that were not present in the source images
 - do not reintroduce nested-box complexity that was intentionally removed during analysis
 
@@ -1147,7 +1147,7 @@ Do not crop previously generated large images when a fresh cleaner section-speci
 
 ### Example 1
 User:
-“make me one hero section for an AI startup”
+"make me one hero section for an AI startup"
 
 Interpretation:
 - generate 1 hero image
@@ -1161,7 +1161,7 @@ Interpretation:
 
 ### Example 2
 User:
-“design me an 8-section landing page”
+"design me an 8-section landing page"
 
 Interpretation:
 - generate 8 separate section images in Codex
@@ -1175,7 +1175,7 @@ Interpretation:
 
 ### Example 3
 User:
-“make a premium creative agency website with 4 sections”
+"make a premium creative agency website with 4 sections"
 
 Interpretation:
 - generate 4 separate section images in Codex

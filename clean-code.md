@@ -9,13 +9,13 @@ File này là điểm tương thích cho các project vẫn import:
 Rule clean-code đang được bảo trì nằm tại:
 
 ```text
-@P:\agent-rules\codex\rules\clean-code.md
+@P:\agent-rules\rules\02-code-quality-and-debt.md
 ```
 
 Tài liệu tham chiếu:
 
 ```text
-P:\agent-rules\codex\docs\clean-code-reference.md
+P:\agent-rules\platforms\codex\docs\clean-code-reference.md
 ```
 
 ## Tóm Tắt Tương Thích
@@ -26,4 +26,3 @@ P:\agent-rules\codex\docs\clean-code-reference.md
 - Xóa dead code phải có bằng chứng.
 - Dùng GitNexus trước khi xóa, đổi tên, di chuyển hoặc refactor symbol dùng chung.
 - Tránh churn chỉ vì style nếu nó không giảm rủi ro bug hoặc chi phí bảo trì.
-

@@ -1,4 +1,4 @@
-﻿# MCP Registry
+# MCP Registry
 
 ## Purpose
 

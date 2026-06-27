@@ -30,7 +30,7 @@
     Giữ lại skills có sẵn trong project (ví dụ: gitnexus). Mặc định: true.
 
 .EXAMPLE
-    & "P:\agent-rules\codex\scripts\install-antigravity-adapter.ps1" `
+    & "P:\agent-rules\platforms\codex\scripts\install-antigravity-adapter.ps1" `
         -ProjectRoot "P:\internaltools"
 #>
 param(

@@ -29,6 +29,11 @@ Không phụ thuộc backup path khi runtime local đủ file.
 - Search trước khi đọc tràn.
 - Patch deterministic; không revert user; không auto-commit/push.
 - Review: `path:line`; plan: `path:symbol`.
+- Prompt dài/multi-domain: trước khi code phải qua Intent Fidelity + Locked Plan Acceptance từ `rules/01-agent-workflow-sop.md`; nếu thiếu evidence/interface/linkage/verification map thì ghi `PLAN NOT LOCKED`, không implement rộng.
+- Prompt dài/rời rạc: biên dịch thành requirement graph, source-of-truth map, assumption/unknown ledger, acceptance contract trước khi plan.
+- Không tự đặt tên bảng/field/API/route/module khi chưa inspect repo/spec/schema; tên chưa verify phải đánh dấu `PROPOSED`.
+- Mọi claim "đã làm/đã test/đã sync/đã deploy" phải có evidence trực tiếp.
+- UI/web/admin/public/production: browser verification evidence bắt buộc trước PASS.
 
 ## Config
 
@@ -40,12 +45,12 @@ TOML trong `~/.codex/agents/` — gọi explicit (planner, implementer, reviewer
 
 ## Skills
 
-`~/.codex/skills/` · `codex/skills/` — workflow dài → skill, không nhồi `AGENTS.md`.
+`~/.codex/skills/` · source `skills/` — workflow dài → skill, không nhồi `AGENTS.md`.
 
 ## MCP
 
-`~/.codex/config.toml` hoặc `codex mcp` — ghi registry `codex/docs/`.
+`~/.codex/config.toml` hoặc `codex mcp` — ghi registry trong `platforms/codex/docs/`.
 
 ## Project AGENTS.md
 
-Chỉ fact dự án (build, test, stack). Global rules ở `codex/rules/`.
+Chỉ fact dự án (build, test, stack). Global rules ở `rules/` và runtime `~/.codex/rules/`.

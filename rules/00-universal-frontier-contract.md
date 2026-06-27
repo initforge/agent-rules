@@ -22,7 +22,7 @@ Người dùng **không** bắt buộc phải chuyển sang Grok để kiểm th
 | Nghiên cứu đa nguồn (`researcher`) | Bắt buộc chạy trước khi code các module lớn hoặc khi bị kẹt lỗi |
 | Phát triển UI & Xác thực Browser | Thiết kế theo mẫu, chạy xác thực bằng Playwright/Browser thực tế |
 | E2E deep ladder | Kiểm thử tích hợp sâu, không lặp lại các test case mù quáng |
-| Cổng kiểm soát 5fedu | Mapping (Ánh xạ) → Template (Mẫu) → Verify (Xác thực) |
+| Cổng kiểm soát 5fedu | Mapping (Ánh xạ) → Pattern Fidelity Packet → Template (Mẫu) → Verify (Xác thực) |
 | Kiểm soát nợ kỹ thuật & Anti-Fake-PASS | Bắt buộc chạy kiểm thử thực tế và phân loại nợ kỹ thuật trước khi báo PASS |
 | Chống chừa việc (`07`) | Giải quyết triệt để scope công việc, không bàn giao việc dở dang |
 

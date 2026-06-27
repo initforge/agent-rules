@@ -3,9 +3,9 @@
 This document is designed as a **security spec** that supports:
 
 1. **Secure-by-default code generation** for new jQuery-based frontend code.
-2. **Security review / vulnerability hunting** in existing jQuery-based code (passive “notice issues while working” and active “scan the repo and report findings”).
+2. **Security review / vulnerability hunting** in existing jQuery-based code (passive "notice issues while working" and active "scan the repo and report findings").
 
-It is intentionally written as a set of **normative requirements** (“MUST/SHOULD/MAY”) plus **audit rules** (what bad patterns look like, how to detect them, and how to fix/mitigate them).
+It is intentionally written as a set of **normative requirements** ("MUST/SHOULD/MAY") plus **audit rules** (what bad patterns look like, how to detect them, and how to fix/mitigate them).
 
 ---
 
@@ -14,11 +14,11 @@ It is intentionally written as a set of **normative requirements** (“MUST/SHOU
 * MUST NOT request, output, log, or commit secrets (API keys, passwords, private keys, session tokens, refresh tokens, CSRF tokens, session cookies).
 * MUST treat the browser as an attacker-controlled environment:
 
-  * Frontend checks (UI gating, “disable button”, hidden fields, client-side validation) MUST NOT be treated as authorization or a security boundary.
-  * Server-side authorization and validation MUST exist even if frontend is “correct”.
-* MUST NOT “fix” security by disabling protections (e.g., relaxing CSP to allow `unsafe-inline`, enabling JSONP “because it works”, adding broad CORS, disabling sanitization, suppressing security checks).
+  * Frontend checks (UI gating, "disable button", hidden fields, client-side validation) MUST NOT be treated as authorization or a security boundary.
+  * Server-side authorization and validation MUST exist even if frontend is "correct".
+* MUST NOT "fix" security by disabling protections (e.g., relaxing CSP to allow `unsafe-inline`, enabling JSONP "because it works", adding broad CORS, disabling sanitization, suppressing security checks).
 * MUST provide evidence-based findings during audits: cite file paths, code snippets, and relevant configuration values.
-* MUST treat uncertainty honestly: if a protection might exist at the edge (CDN/WAF/reverse proxy headers like CSP), report it as “not visible in repo; verify at runtime/config”.
+* MUST treat uncertainty honestly: if a protection might exist at the edge (CDN/WAF/reverse proxy headers like CSP), report it as "not visible in repo; verify at runtime/config".
 
 ---
 
@@ -37,12 +37,12 @@ When asked to write new jQuery code or modify existing jQuery code:
 
 While working anywhere in a repo that uses jQuery (even if the user did not ask for a security scan):
 
-* MUST “notice” violations of this spec in touched/nearby code.
+* MUST "notice" violations of this spec in touched/nearby code.
 * SHOULD mention issues as they come up, with a brief explanation + safe fix.
 
 ### 1.3 Active audit mode (explicit scan request)
 
-When the user asks to “scan”, “audit”, or “hunt for vulns”:
+When the user asks to "scan", "audit", or "hunt for vulns":
 
 * MUST systematically search the codebase for violations of this spec.
 * MUST output findings in the structured format (see §2.3).
@@ -66,7 +66,7 @@ Recommended audit order:
 
 Examples include:
 
-* Any data from the server that originates from users (user profiles, comments, “display name”, rich text, filenames).
+* Any data from the server that originates from users (user profiles, comments, "display name", rich text, filenames).
 * Data from third-party APIs or services.
 * Browser-controlled sources:
 
@@ -77,7 +77,7 @@ Examples include:
   * `postMessage` event data (unless strict origin and schema validation exists)
   * Any DOM content that could have been injected previously (stored XSS)
 
-### 2.2 High-risk “sinks” in jQuery contexts
+### 2.2 High-risk "sinks" in jQuery contexts
 
 A sink is a code path where untrusted input can become interpreted as executable code or HTML.
 
@@ -116,7 +116,7 @@ For each issue found, output:
 
 ## 3) Secure baseline: minimum production configuration (MUST in production)
 
-This is the smallest “production baseline” that prevents common jQuery-related security failures.
+This is the smallest "production baseline" that prevents common jQuery-related security failures.
 
 ### 3.1 Use a supported, patched jQuery version (MUST)
 
@@ -144,7 +144,7 @@ This is the smallest “production baseline” that prevents common jQuery-relat
 Even though these are typically set server-side, they materially reduce the blast radius of jQuery-related mistakes. However if the context is only the frontend web application, these cannot be acted on.
 
 * SHOULD set common security headers (CSP, `X-Content-Type-Options: nosniff`, clickjacking protection via `frame-ancestors` / `X-Frame-Options`, `Referrer-Policy`). ([OWASP Cheat Sheet Series][12])
-* SHOULD avoid storing long-lived secrets/tokens in places accessible to JavaScript (like `localStorage`) unless the threat model explicitly accepts “XSS == account takeover”. This is not jQuery-specific, but jQuery-heavy DOM manipulation increases the chance of DOM XSS regressions; reduce the payoff.
+* SHOULD avoid storing long-lived secrets/tokens in places accessible to JavaScript (like `localStorage`) unless the threat model explicitly accepts "XSS == account takeover". This is not jQuery-specific, but jQuery-heavy DOM manipulation increases the chance of DOM XSS regressions; reduce the payoff.
 
 ---
 
@@ -184,7 +184,7 @@ Fix:
 
 Notes:
 
-* If a product requirement forces old versions, report as “accepted risk requiring compensating controls”.
+* If a product requirement forces old versions, report as "accepted risk requiring compensating controls".
 
 ---
 
@@ -250,7 +250,7 @@ Fix:
 
 Notes:
 
-* Older jQuery versions had additional edge cases even when attempting sanitization; patched in 3.5.0+. Still: never rely on “string sanitization” alone—prefer structured creation or proven sanitizers. ([GitHub][16])
+* Older jQuery versions had additional edge cases even when attempting sanitization; patched in 3.5.0+. Still: never rely on "string sanitization" alone—prefer structured creation or proven sanitizers. ([GitHub][16])
 
 ---
 
@@ -260,7 +260,7 @@ Severity: Medium (High if rich HTML is attacker-controlled and sanitizer is weak
 
 Required:
 
-* MUST NOT “roll your own” HTML sanitizer with regexes.
+* MUST NOT "roll your own" HTML sanitizer with regexes.
 * If user-controlled HTML must be displayed (e.g., rich text comments), MUST sanitize using a well-maintained HTML sanitizer and a restrictive allowlist.
 
   * DOMPurify is a common choice; use conservative configuration and keep it updated. ([GitHub][17])
@@ -269,20 +269,20 @@ Required:
 
 Insecure patterns:
 
-* Regex-based “strip `<script>`” or “escape `<`” attempts followed by `.html()` insertion.
-* DOMPurify (or similar) configured to allow overly broad tags/attributes, or configuration that’s not reviewed.
+* Regex-based "strip `<script>`" or "escape `<`" attempts followed by `.html()` insertion.
+* DOMPurify (or similar) configured to allow overly broad tags/attributes, or configuration that's not reviewed.
 
 Detection hints:
 
-* Search for “sanitize” helper functions, regex replacing `<`/`>` patterns, or “allow all tags” configs.
-* Identify features that render user-generated “rich text” or “custom HTML”.
+* Search for "sanitize" helper functions, regex replacing `<`/`>` patterns, or "allow all tags" configs.
+* Identify features that render user-generated "rich text" or "custom HTML".
 * Check if sanitizer results are inserted with `.html()` or equivalent sinks.
 
 Fix:
 
 * Introduce a sanitizer with strict allowlist.
-* Centralize the “sanitize then inject” pattern into a single reviewed module.
-* Add regression tests covering representative malicious inputs (don’t store payloads in logs or telemetry).
+* Centralize the "sanitize then inject" pattern into a single reviewed module.
+* Add regression tests covering representative malicious inputs (don't store payloads in logs or telemetry).
 
 False positive notes:
 
@@ -371,7 +371,7 @@ Insecure patterns:
 Detection hints:
 
 * Search for `getScript(`, `dataType: "script"`, `globalEval`, `eval`, `new Function`.
-* Look for “plugin loader” or “theme loader” features that accept URLs.
+* Look for "plugin loader" or "theme loader" features that accept URLs.
 
 Fix:
 
@@ -387,7 +387,7 @@ Severity: Medium (High if attacker can influence URL/endpoint)
 Required:
 
 * MUST NOT use JSONP for untrusted endpoints because it executes JavaScript responses.
-* When using `$.ajax`, MUST explicitly disable JSONP for non-fully-trusted targets; jQuery’s own docs recommend setting `jsonp: false` “for security reasons” if you don’t trust the target. ([jQuery API][5])
+* When using `$.ajax`, MUST explicitly disable JSONP for non-fully-trusted targets; jQuery's own docs recommend setting `jsonp: false` "for security reasons" if you don't trust the target. ([jQuery API][5])
 * SHOULD prefer CORS with JSON (`dataType: "json"`) and explicit origin allowlists server-side.
 
 Insecure patterns:
@@ -421,12 +421,12 @@ Required:
 
 * If authentication uses cookies, MUST protect state-changing requests (POST/PUT/PATCH/DELETE) against CSRF.
 * SHOULD use server-verified CSRF tokens; for AJAX calls, tokens are commonly sent in a custom header. ([OWASP Cheat Sheet Series][19])
-* MUST NOT treat “it’s an AJAX request” as CSRF protection by itself.
+* MUST NOT treat "it's an AJAX request" as CSRF protection by itself.
 
 Insecure patterns:
 
 * `$.post("/transfer", {...})` or `$.ajax({ method: "POST", ... })` with cookie auth and no CSRF token/header.
-* “CSRF protection” that only checks for `X-Requested-With` (defense-in-depth only, not primary).
+* "CSRF protection" that only checks for `X-Requested-With` (defense-in-depth only, not primary).
 
 Detection hints:
 
@@ -492,7 +492,7 @@ Insecure patterns:
 Detection hints:
 
 * Search for `"#" +`, `". " +`, or template strings used inside `$(` selectors.
-* Look for “select by user-supplied id”.
+* Look for "select by user-supplied id".
 
 Fix:
 
@@ -501,7 +501,7 @@ Fix:
 
 Notes:
 
-* This is often “robustness”, but it can become security-relevant if incorrect selection causes UI to reveal/modify the wrong data or skip security-related prompts.
+* This is often "robustness", but it can become security-relevant if incorrect selection causes UI to reveal/modify the wrong data or skip security-related prompts.
 
 ---
 
@@ -522,7 +522,7 @@ Insecure patterns:
 Detection hints:
 
 * Search for `$.extend(true` and inspect sources of merged objects.
-* Search for “merge options” / “apply config” patterns using untrusted JSON.
+* Search for "merge options" / "apply config" patterns using untrusted JSON.
 
 Fix:
 
@@ -546,13 +546,13 @@ Required:
 
 Insecure patterns:
 
-* “Fixing” a jQuery feature by weakening CSP (`script-src 'unsafe-inline'` / `'unsafe-eval'`) without a compensating plan.
+* "Fixing" a jQuery feature by weakening CSP (`script-src 'unsafe-inline'` / `'unsafe-eval'`) without a compensating plan.
 * No CSP on applications that render user content or manipulate DOM heavily.
 
 Detection hints:
 
 * Look for CSP headers (server configs, framework middleware, meta tags).
-* If not visible in repo, flag as “verify at edge/runtime”.
+* If not visible in repo, flag as "verify at edge/runtime".
 
 Fix:
 
@@ -561,7 +561,7 @@ Fix:
 
 ---
 
-## 5) Practical scanning heuristics (how to “hunt”)
+## 5) Practical scanning heuristics (how to "hunt")
 
 When actively scanning, use these high-signal patterns:
 

@@ -1,4 +1,4 @@
-# Grok CLI Harness (Master)
+# Grok CLI Harness Adapter
 
 Harness cho **Grok CLI** — không liên quan Cursor IDE.
 
@@ -12,17 +12,17 @@ Harness cho **Grok CLI** — không liên quan Cursor IDE.
 
 | Lớp | Path |
 |---|---|
-| Master | `grok/rules/`, `grok/skills/` |
+| Master | `rules/`, `skills/`, `workflows/` |
 | Live | `.grok/rules/`, `.grok/skills/` |
 | Global | `~/.grok/` |
 
 ```bash
-./grok/scripts/sync-all-harness.sh   # rules + skills → 3 nền
-./grok/scripts/validate-harness.sh  # fail nếu legacy/drift
+./scripts/sync-all-harness.sh   # rules + skills → 3 nền
+./scripts/validate-harness.sh   # fail nếu legacy/drift
 grok inspect
 ```
 
 ## Đọc tiếp
 
-- [docs/07-grok-cli-harness.md](../docs/07-grok-cli-harness.md)
-- [docs/08-opus-emulation-harness.md](../docs/08-opus-emulation-harness.md)
+- [docs/07-grok-cli-harness.md](../../docs/07-grok-cli-harness.md)
+- [docs/08-opus-emulation-harness.md](../../docs/08-opus-emulation-harness.md)

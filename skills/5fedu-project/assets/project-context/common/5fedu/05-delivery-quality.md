@@ -1,4 +1,4 @@
-﻿# Delivery Và Quality Gates
+# Delivery Và Quality Gates
 
 ## Code và thư mục
 
@@ -148,6 +148,5 @@ Từ feedback của chủ dự án về việc sửa đổi Auth và gộp bản
    - Nếu chưa có tài khoản test cho một cấp bậc → phải tạo trước khi kiểm thử.
 
 4. **Không được báo hoàn thành** task liên quan đến phân quyền nếu chưa thực hiện đủ 3 bước trên.
-
 
 

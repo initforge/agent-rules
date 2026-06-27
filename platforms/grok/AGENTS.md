@@ -5,14 +5,14 @@
 ## Harness
 
 ```text
-grok/rules/ + grok/skills/   ← MASTER (sửa ở đây)
+rules/ + skills/             ← MASTER dùng chung
 .grok/                       ← live (Grok scan)
 ~/.grok/                     ← global user
 ```
 
-Sync: `./grok/scripts/sync-all-harness.sh` · Verify: `grok inspect`
+Sync: `./scripts/sync-all-harness.sh` · Verify: `grok inspect`
 
-Codex/Antigravity dùng **cùng lõi** — sync script copy sang `codex/rules/` và `.agents/rules/`.
+Codex/Antigravity dùng **cùng lõi** — sync script copy sang platform mirror/runtime tương ứng.
 
 ## Rules live (10)
 
@@ -25,6 +25,8 @@ Tiếng Việt có dấu; giữ tiếng Anh cho tool, API, path, code.
 ## Mặc định
 
 Task **MEDIUM** (Opus-emulation). `PASS` | `PARTIAL` | `BLOCKED`. Không tự commit/push/deploy.
+
+Prompt dài, dữ liệu rời rạc, multi-domain hoặc HIGH risk phải qua **Intent Fidelity Gate**, **Long Prompt Compiler**, và **Locked Plan Acceptance Gate** trong `rules/01-agent-workflow-sop.md` trước khi implement. Plan thiếu current-state evidence, interface/schema map, business linkage map, unknowns, verification matrix, hoặc PASS/PARTIAL criteria thì phải ghi `PLAN NOT LOCKED`. Không tự bịa bảng/field/API/route/module; mọi claim "đã làm/đã test/đã sync/đã deploy" phải có evidence trực tiếp. UI/web/admin/public/production phải có browser verification evidence trước PASS.
 
 5fedu: `.grok/5fedu/` — skill `5fedu-project` cài vào dự án khách.
 

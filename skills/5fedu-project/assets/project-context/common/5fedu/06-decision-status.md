@@ -1,4 +1,4 @@
-﻿# Decision Status
+# Decision Status
 
 ## Quy ước trạng thái
 
@@ -64,7 +64,7 @@ Chỉ cập nhật một mục sang `DA_CHOT` khi người dùng xác nhận rõ
 | Google Sheets cần đọc bằng browser đã đăng nhập Google khi link cần auth | DA_CHOT | User yêu cầu ngày 2026-05-31 | Playwright headed đã mở để user đăng nhập, sau đó đọc sheet làm nguồn chính |
 | Google Sheet app/data/spec hiện tại | DA_CHOT | User gửi link public ngày 2026-05-31 | `1NY4sVW2GZaOjtZ-Mivq-B5PlXZPL_QEhbJjAJe_0ddg`, đã export vào `output/sheets/current/` |
 | Google Sheet dự án/quy tắc hiện tại | DA_CHOT | User gửi link public ngày 2026-05-31 | `1KF3Pe-N7S4DJm_6TKi9QXy4jXPKzqDmeLVHxgiuGoZY`, đã export vào `output/sheets/current/` |
-| Source map từ 2 Google Sheets | DA_CHOT | Phân tích export ngày 2026-05-31 | `.codex/5fedu/11-current-sheets-source-map.md` là tài liệu đối chiếu chính |
+| Source map từ 2 Google Sheets | DA_CHOT | Phân tích export ngày 2026-05-31 | `.agents/5fedu/11-current-sheets-source-map.md` là tài liệu đối chiếu chính |
 
 ## Cập Nhật Owner Feedback UI/Vận Tải 2026-05-31
 
@@ -118,7 +118,6 @@ Chỉ cập nhật một mục sang `DA_CHOT` khi người dùng xác nhận rõ
 | Popup xác nhận đổi trạng thái | DA_CHOT | User prompt 2026-06-03 | Mọi nút hành động thay đổi trạng thái trực tiếp hoặc hàng loạt (Bulk/Single/Sub-grid) đều phải hiển thị popup confirm trước khi thực thi. |
 | Một nút Báo cáo trên toolbar Chuyến xe | DA_CHOT | User prompt 2026-06-03 | Ẩn nút "Đổi trạng thái" và chỉ giữ lại nút "Báo cáo" trên toolbar chi tiết của chuyến xe. |
 | Chuẩn hóa PDF Export & Font Preload | DA_CHOT | User prompt 2026-06-03 | Tránh race condition bằng Promise chung ở preloadRobotoFonts, nâng cấp PDF layout chuyên nghiệp (tiêu đề Navy in hoa, metadata căn giữa, format VND căn phải, footer phân trang) và đổi filename sang tiếng Việt. |
-
 
 
 

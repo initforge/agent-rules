@@ -56,6 +56,34 @@ Nếu người dùng đưa ảnh mapping hoặc Google Sheet, dùng nó làm ngu
 
 Nếu app mới có domain/module tương tự ví dụ trên, ưu tiên tìm trong template trước khi tạo mới.
 
+## Pattern Fidelity Packet bắt buộc
+
+Trước khi code bất kỳ phân hệ/trang UI nào, tạo packet ngắn gồm:
+
+```text
+Spec/source:
+Submenu/module/tab/route:
+Template/current-app reference:
+Allowed toolbar actions:
+Forbidden extra actions:
+List/table columns:
+Row actions:
+Form fields:
+Detail/drawer sections:
+Mobile card fields:
+Labels/descriptions source:
+Database/service/permission mapping:
+Unknowns:
+```
+
+Quy tắc khóa:
+
+- Tên module, submenu, tab, route, button label, tooltip, description và empty state phải lấy từ spec/template/current app. Không tự viết lại cho "hay hơn".
+- Nếu reference là `Hệ thống`, giữ cùng cấu trúc toolbar/list/detail/form/permission; chỉ đổi dữ liệu nghiệp vụ.
+- Không thêm nút `Xuất`, `Import`, `Duyệt`, `In`, `Báo cáo`, bulk action, mini-tab hoặc filter mới nếu packet không chứng minh nguồn.
+- Không đổi domain/submenu chỉ vì module nghe hợp hơn ở nơi khác; taxonomy trong spec/template thắng suy đoán.
+- Unknowns phải được hỏi hoặc ghi `CAN_HOI_THEM`, không lấp bằng copy tự chế.
+
 ## Tab và route
 
 Khi module có nhiều tab, tab đang mở phải có router query:

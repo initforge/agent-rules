@@ -32,7 +32,7 @@ if (Test-Path $overlaySrc) {
     Write-Host "  [OK] Synced codex-overlay.md"
 }
 
-# 3. Sync skills (excluding _archive, .system, codex-research)
+# 3. Sync skills (excluding _archive, .system, codex-research legacy)
 Write-Host "Syncing skills to global Codex..."
 if (Test-Path $SKILLS_DEST) {
     Remove-Item -Recurse -Force -LiteralPath $SKILLS_DEST

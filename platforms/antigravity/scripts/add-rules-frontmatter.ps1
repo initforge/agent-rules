@@ -48,7 +48,7 @@ foreach ($name in $legacy) {
 foreach ($name in $active) {
   $path = Join-Path $RulesDir $name
   if (-not (Test-Path -LiteralPath $path)) {
-    Write-Warning "Missing active rule: $name (run grok/scripts/sync-all-harness.sh)"
+    Write-Warning "Missing active rule: $name (run scripts/sync-all-harness.sh)"
     continue
   }
 

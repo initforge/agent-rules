@@ -42,7 +42,7 @@ FOR each deliverable in scope:
 UNTIL all done OR hard BLOCKED
 ```
 
-**Không** dừng sau “phần chính”. **Không** chuyển sang báo cáo khi còn item `pending`.
+**Không** dừng sau "phần chính". **Không** chuyển sang báo cáo khi còn item `pending`.
 
 ## Verify Before Claim
 
@@ -52,7 +52,7 @@ Trước `PASS`:
 2. Đọc output đầy đủ.
 3. Cross-check deliverable count: done == N.
 
-Không evidence → không `PASS`. Không “should work”.
+Không evidence → không `PASS`. Không "should work".
 
 ## Banned Patterns (hard fail)
 
@@ -62,7 +62,7 @@ Không evidence → không `PASS`. Không “should work”.
 - "Bước tiếp theo…" / "Bạn có thể chạy…"
 - "Bạn muốn A hay B?" (unless BLOCKED)
 - "Owner defer" khi agent còn làm được
-- Bảng “đã làm” + section “còn lại” rồi dừng
+- Bảng "đã làm" + section "còn lại" rồi dừng
 
 **Never do:**
 
@@ -78,7 +78,7 @@ Không evidence → không `PASS`. Không “should work”.
 | `PARTIAL` | Đã hết fallback; thiếu đúng 1 thứ; blocker 1 dòng |
 | `BLOCKED` | Credential/quyền/env/quyết định — không tiến được |
 
-Không trạng thái “60% xong, phần còn tùy bạn”.
+Không trạng thái "60% xong, phần còn tùy bạn".
 
 ## Miss Prevention Checklist
 
@@ -114,5 +114,5 @@ Blocker: (if not PASS)
 ## Quick Check
 
 - User có thể dùng kết quả ngay không?
-- Còn câu nào bắt user “đẩy thêm một nhịp” không?
+- Còn câu nào bắt user "đẩy thêm một nhịp" không?
 - Nếu có → chưa xong, tiếp tục.

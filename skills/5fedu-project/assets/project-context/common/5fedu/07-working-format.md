@@ -210,11 +210,11 @@ Nếu câu trả lời nào là chưa, dừng triển khai và sửa mapping/sch
 
 2. **Thiết Kế Form & Detail Drawer**:
    - Tất cả các module phải thiết kế form nhập liệu và màn chi tiết (Detail Drawer) theo chuẩn của template, không sử dụng CRUD generic thô.
-   - **Footer Drawer Chi tiết**: Footer phải sử dụng split-layout: nút Đóng (ghost button) nằm bên trái, nút Sửa (màu xanh dương đậm) và nút Xóa (màu đỏ viền) nằm bên phải. Kích thước nút phải thu gọn lại thành dạng compact (`h-8 px-3 text-xs`). Sử dụng các hàm nhãn nút chuẩn từ `lib/button-labels.ts` (như `BTN_CLOSE()`, `BTN_EDIT()`, `BTN_DELETE()`).
-   - **Form Drawer Footer**: Các form drawer (Thêm/Sửa) phải tái sử dụng component `FormDrawerFooter` với các prop `compact` và truyền `createIcon` (như `<Plus className="..." />`) thay vì code tay thủ công.
+   - **Footer Drawer Chi tiết**: Footer phải sử dụng layout, vị trí nút, kích thước nút và nhãn nút theo reference drawer hiện có của template.
+   - **Form Drawer Footer**: Các form drawer (Thêm/Sửa) phải tái sử dụng footer/action primitive chuẩn của dự án thay vì code tay thủ công.
    - **Icon Hiển Thị**: Các trường thông tin chi tiết trong Drawer cần có icon Lucide tương ứng đứng trước nhãn (label) để tăng tính thẩm mỹ và dễ đọc.
-   - **Icon Trong Ô Bảng (Cell Icons)**: Các giá trị dữ liệu chính trong ô của bảng (như họ tên, số điện thoại, biển số, tiền lương, ngày tháng) phải hiển thị kèm prefix icon Lucide tương ứng (dùng `getFieldIcon(colId)`), đồng bộ hoàn toàn với giao diện ô bảng của module Nhân viên.
-   - **Nút Chỉnh Sửa**: Sử dụng đồng bộ icon `Edit` của Lucide cho tất cả các nút chỉnh sửa (trên dòng của bảng danh sách, sửa ảnh đại diện nhân viên...), thay vì dùng icon `Pencil`.
+   - **Icon Trong Ô Bảng (Cell Icons)**: Các giá trị dữ liệu chính trong ô của bảng phải hiển thị kèm icon theo helper/pattern hiện có nếu template đang dùng cách này.
+   - **Nút Chỉnh Sửa**: Sử dụng đồng bộ icon chỉnh sửa theo template/app hiện tại cho cùng một hành động, không trộn nhiều icon khác nhau.
 
 3. **Cơ Chế Tính Toán Tự Động**:
    - Các trường tổng hợp (như `so_chuyen`, `tong_tien_luong`, `tong_phi`, `tong_luong_chuyen`, `tong_chi_phi_chuyen`, `tong_con_lai`) bắt buộc phải tính tự động từ bảng chi tiết hoặc dữ liệu chuyến xe thực tế.
@@ -234,7 +234,7 @@ Nếu câu trả lời nào là chưa, dừng triển khai và sửa mapping/sch
      - **Chi tiết xe**: Hiển thị lịch sử chuyến xe đã chạy.
 
 7. **Trình Bày Bảng & Phân Trang**:
-   - **Đồng Bộ Chân Trang Phân Trang (TablePaginationFooter)**: Tất cả các bảng dữ liệu (kể cả bảng báo cáo, thống kê tùy chỉnh như `TransportReportPage.tsx`) phải sử dụng chân trang phân trang chuẩn. Không để bảng trần không có footer phân trang.
+   - **Đồng Bộ Chân Trang Phân Trang**: Tất cả các bảng dữ liệu, kể cả bảng báo cáo/thống kê tùy chỉnh, phải sử dụng chân trang phân trang chuẩn của template. Không để bảng trần không có footer phân trang.
    - **Tiếng Việt Hóa Header**: Tên các cột trong bảng khi render động phải được ánh xạ qua bộ từ điển dịch `HEADER_LABELS` để hiển thị tiếng Việt có dấu chuẩn hóa, không hiển thị key DB thô.
    - **Nút Xuất (Export)**: Chuyển nút Xuất trên thanh công cụ thành dạng chỉ hiển thị biểu tượng Tải xuống (Download icon-only kèm tooltip mô tả), không dùng text nút to bản.
     - **Quy chuẩn Định dạng Excel & PDF khi Xuất (Excel & PDF Export Format, Style & Font Preloading)**: Mọi thao tác xuất dữ liệu ra file Excel (.xlsx) và PDF phải tuân thủ thiết kế chuyên nghiệp và định dạng rõ ràng:
@@ -319,20 +319,14 @@ Nếu câu trả lời nào là chưa, dừng triển khai và sửa mapping/sch
    - Khi test tính năng "Đổi mật khẩu" trên giao diện Profile: PHẢI đổi lại về đúng mật khẩu gốc sau khi test xong, hoặc dùng tài khoản test riêng — KHÔNG BAO GIỜ test đổi mật khẩu trên tài khoản admin chính.
    - **Bài học**: Conversation trước đã vô tình làm mất password admin do test không đúng quy trình, gây lock out toàn bộ hệ thống.
 
- 5. **Xuất file (Export) trên Chrome — QUY TẮC CỨNG (Download & Font Preloading Convention)**:
-   - **KHÔNG dùng data URI** (`data:application/...;base64,...`) cho download. Chrome bỏ qua `download` attribute trên data URI và blob URL tạo từ data URI → tên file thành UUID.
-   - **KHÔNG dùng `XLSX.writeFile()`** hoặc **`doc.save()`** (phương thức download nội bộ của thư viện). Chrome có thể hiện file trong download manager nhưng KHÔNG persist ra folder Downloads thực sự.
-   - **PHẢI dùng `saveBlobAs()`** (đã implement trong `lib/utils.ts`):
-     - XLSX: `XLSX.write(wb, { bookType: 'xlsx', type: 'array' })` → `new Blob([wbout])` → `saveBlobAs(blob, filename)`
-     - PDF: `doc.output('blob')` → `saveBlobAs(pdfBlob, filename)`
-     - CSV: `new Blob(['\uFEFF' + csvContent])` → `saveBlobAs(blob, filename)`
-   - `saveBlobAs` dùng `anchor element + MouseEvent dispatch + delay cleanup 15s`. Chrome coi đây như user click link thật → luôn lưu vào Downloads folder với đúng tên file.
-   - **Kỹ thuật quan trọng**: Dùng `dispatchEvent(new MouseEvent('click'))` thay vì `.click()` — Chrome xử lý `download` attribute chính xác hơn với MouseEvent thật. Thêm `target='_self'` để tránh mở tab mới.
-   - **Tránh race condition khi preload font**: Khi xuất PDF có nhúng font tiếng Việt Roboto từ CDN, không được gọi các tiến trình preload font song song độc lập. Phải thiết kế hàm `preloadRobotoFonts()` lưu lại một `fontsPromise` chung để các tác vụ cùng chia sẻ và await hoàn thành. Tác vụ xuất PDF phải `await preloadRobotoFonts()` trước khi vẽ dữ liệu, tránh trường hợp font trả về `null` gây lỗi render hoặc fallback làm mất tên file gốc thành UUID.
-   - **Bài học**: Đã mất nhiều iteration để fix triệt để: (1) data URI → blob vẫn UUID, (2) writeFile/doc.save → không về folder, (3) saveBlobAs thống nhất + await Promise fonts chung → hoạt động chính xác.
+ 5. **Xuất file trên trình duyệt — bài học download & font preload**:
+   - Không xuất file theo cách làm mất tên file, không persist vào Downloads, hoặc bị service worker/browser chặn. Luôn verify bằng file tải thật trên trình duyệt mục tiêu.
+   - Ưu tiên một helper download thống nhất của dự án cho PDF/XLSX/CSV thay vì mỗi module tự dùng API download khác nhau.
+   - PDF tiếng Việt phải preload/register font theo một cơ chế dùng chung, có cache promise để tránh race condition khi nhiều tác vụ export chạy gần nhau.
+   - Bài học kỹ thuật chi tiết như data URI, blob, `MouseEvent`, `showSaveFilePicker`, Workbox denylist là evidence/reference; chỉ áp dụng nguyên văn khi dự án hiện tại dùng cùng stack và tái hiện cùng lỗi.
 
- 6. **Popup Xác nhận Bắt buộc cho Mọi Hành động Bảng Con VÀ Nested Detail Drawer (Action Confirmation — QUY TẮC CỨNG)**:
-   - Mọi nút hành động trên bảng con nhúng (EmbeddedChildDataGrid) và trên nested detail drawer (như Sửa, Xóa, Đổi trạng thái, Báo cáo tiến độ) đều bắt buộc phải hiển thị hộp thoại popup xác nhận (`confirm()`) trước khi thực hiện.
+ 6. **Popup Xác nhận Bắt buộc cho hành động con/nested nguy hiểm (Action Confirmation)**:
+   - Mọi nút hành động trên bảng con nhúng hoặc nested detail drawer (như Sửa, Xóa, Đổi trạng thái, Báo cáo tiến độ) đều bắt buộc phải hiển thị hộp thoại xác nhận theo cơ chế chuẩn của dự án trước khi thực hiện.
    - Không chấp nhận ngoại lệ "Form đã là bước đệm đủ". Người dùng trên mobile dễ bấm nhầm nút nhỏ, popup xác nhận là lớp bảo vệ bắt buộc.
    - **Bài học**: Nút sửa dòng con và nút thay đổi trạng thái dòng con trong drawer từng bị bỏ sót không có popup xác nhận.
 
@@ -340,27 +334,24 @@ Nếu câu trả lời nào là chưa, dừng triển khai và sửa mapping/sch
    - Khi ứng dụng sử dụng VitePWA + Workbox, Service Worker có thể intercept các blob download request làm mất tên file hoặc gây lỗi. Bắt buộc phải cấu hình loại trừ (`navigateFallbackDenylist`) trong Workbox config đối với các đường dẫn download, preview.
    - Đồng thời, khi implement `saveBlobAs`, ưu tiên sử dụng `showSaveFilePicker` (File System Access API) trên các trình duyệt Chromium hiện đại để có trải nghiệm download tin cậy nhất và luôn giữ đúng tên file.
 
- 8. **Mobile Card Responsive phải Tham chiếu Template (Mobile Card Reference — QUY TẮC CỨNG)**:
-   - Mobile card của mọi module phải tuân thủ 100% cấu trúc `MobileListCard` từ template.
-   - **Module Nhân viên trên app** là tham chiếu trực tiếp (reference implementation). Khi làm mobile card cho module mới, phải đối chiếu pixel-level, sử dụng cấu trúc `leading` (icon/avatar), `titleRow` (tên + badge), `subheader` (1 dòng text ngắn), và `metaLine` (dòng text phụ), thay vì tự ý thiết kế grid layout label-value thô.
+ 8. **Mobile Card Responsive phải tham chiếu template**:
+   - Mobile card của mọi module phải tuân thủ cấu trúc mobile card hiện có trong template/app.
+   - Khi làm mobile card cho module mới, phải đối chiếu reference implementation gần nhất theo cùng surface/hành vi; chỉ dùng chi tiết cấu trúc như `leading`, `titleRow`, `subheader`, `metaLine` nếu template hiện tại đang dùng pattern đó.
 
  9. **Đồng bộ Format giữa các Trang In (Print Format Parity — QUY TẮC CỨNG)**:
    - Tất cả các trang preview/in (như In bảng lương, In hồ sơ nhân viên) phải đồng nhất về cấu trúc layout và thiết kế tinh gọn theo quy chuẩn A4.
    - Sử dụng chung cấu trúc Header (logo công ty bên trái, tên địa chỉ công ty bên cạnh, không để thông tin linh tinh hoặc mã phiếu to bản bên phải), style bảng dữ liệu header xanh dương (`bg-primary text-white`), và ẩn hoàn toàn các thành phần chữ ký ký duyệt ở cuối trang.
-   - Trực tiếp lấy thông tin công ty `companyInfo` từ `useUIStore` thay vì truyền prop thủ công từ trang cha.
+   - Trực tiếp lấy thông tin công ty từ source chung của dự án thay vì truyền prop thủ công từ trang cha.
 
  10. **Deploy Production chỉ dùng Git Push (Deploy Governance — QUY TẮC CỨNG)**:
    - Project `tah-app.vercel.app` đã được nối với GitHub repo qua Vercel Dashboard (auto-deploy on push). **KHÔNG ĐƯỢC** dùng `npx vercel --prod` hoặc `node scripts/deploy-no-git.js` để deploy thủ công — sẽ tạo ra project Vercel mới hoặc link nhầm project, gây deploy lên domain sai.
    - **Quy trình đúng duy nhất**: `git push` → Vercel tự detect → build → deploy lên `tah-app.vercel.app`.
    - **Bài học**: Đã từng deploy nhầm sang `tahdieuphoi.vercel.app` (project mới do Vercel CLI tự tạo) thay vì `tah-app.vercel.app`, khiến bản mới không lên production thật.
 
- 11. **companyInfo phải đọc từ useUIStore — KHÔNG fetch riêng, KHÔNG truyền qua parameter (Single Source of Truth — QUY TẮC CỨNG)**:
-   - Mọi component và utility function cần thông tin công ty (logo, tên, địa chỉ, SĐT, email) đều **BẮT BUỘC** đọc từ `useUIStore` — store Zustand persist qua `localStorage`.
-     - Trong React component: `useUIStore((s) => s.companyInfo)`
-     - Trong utility/export function (ngoài React): `useUIStore.getState().companyInfo`
-   - **KHÔNG ĐƯỢC** tự fetch từ Supabase (`var_cong_ty`) trong từng page/component riêng lẻ, và **KHÔNG ĐƯỢC** truyền `companyInfo` qua parameter từ caller. Lý do: object fetch riêng thường thiếu trường (vd: không có `appLogo`, `appName`), gây layout không đồng nhất giữa preview và export.
-   - **Module Nhân viên** (`export-employee-profile.ts`, `print-employee-pdf.ts`, `EmployeeProfilePreviewContent.tsx`) là reference implementation chuẩn.
-   - **Bài học**: Payroll từng fetch `companyInfo` riêng từ Supabase (chỉ có `companyName/phone/email/address`, thiếu `appLogo`) rồi truyền qua param cho 3 hàm export — làm giao diện in/export khác hoàn toàn so với preview và employee.
+ 11. **Thông tin công ty phải có Single Source of Truth**:
+   - Mọi component và utility export/preview cần thông tin công ty (logo, tên, địa chỉ, SĐT, email) phải đọc từ nguồn state/service chung của dự án.
+   - Không tự fetch thông tin công ty riêng lẻ trong từng page/component nếu template đã có source chung. Object fetch riêng thường thiếu trường, gây layout không đồng nhất giữa preview và export.
+   - Reference implementation cụ thể của dự án hiện tại chỉ dùng làm evidence; không hard-code tên store/component nếu template đổi.
   12. **Tránh Stale Closure trong Callback Hộp thoại Xác nhận (Stale Closure Prevention — QUY TẮC CỨNG)**:
     - Khi tích hợp các hộp thoại xác nhận có form/input động (như dialog Báo cáo/Đổi trạng thái) bằng hàm `confirm()` từ Zustand, tuyệt đối **KHÔNG** truyền các biến closure cục bộ (`let selectedStatus`, `onStatusChange`) trực tiếp vào các prop callback của element hoặc callback `onConfirm`.
     - **Lý do**: Khi component re-render, các hàm callback này vẫn giữ tham chiếu cũ (stale closure) từ render trước đó, làm lệch dữ liệu gửi lên hoặc khiến Promise không được resolve/reject dẫn đến kẹt/loading không đóng được modal.

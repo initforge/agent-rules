@@ -1,4 +1,4 @@
-﻿# Machine Profile
+# Machine Profile
 
 Last updated: 2026-05-31T10:10:52.5789241+07:00
 

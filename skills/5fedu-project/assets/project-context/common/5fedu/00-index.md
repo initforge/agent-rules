@@ -16,6 +16,7 @@ Luôn đọc trước:
 
 - `02-database-and-auth-rules.md`: database, auth, permission, RLS, trigger, rollup, schema.
 - `03-ui-ux-and-delivery-standards.md`: UI, UX, list/detail/form, toolbar, filter, export, responsive, production UI rules.
+- `04-business-patterns.md`: ERP/admin patterns như master-detail, approval workflow, derived fields, lookup autofill, report/export parity, shared base entity + specialized roles.
 - Legacy files `03-database-supabase.md`, `04-auth-permissions-and-flows.md`, `05-delivery-quality.md`, `07-working-format.md`, `08-source-examples.md`, `09-coverage-audit.md` chỉ đọc khi repo còn dùng layout cũ hoặc task cần bằng chứng cụ thể.
 - `10-owner-feedback-lessons.md` và `12-owner-feedback-transport-ui.md` là log/lesson evidence. Nếu thấy rule dùng lại được, promote vào file rule sống phù hợp.
 - `13-trip-execution-vs-approval-spec.md`: checklist triển khai Chuyến xe — tách TT thực hiện vs duyệt (owner 2026-06-15).
@@ -37,11 +38,13 @@ Khi prompt có tín hiệu rộng, agent phải tự kích hoạt nhanh gate tư
 - `verify production hết`, `test production`, `kiểm tra live`: đọc index/mapping trước, suy ra module/role/database/UI/export/cross-flow, rồi mới verify production.
 - `UI`, `chưa chuẩn`, `thiếu`, `không giống`, `module thiếu`, `tính năng thiếu`: đọc mapping, tìm `/template` trước. Nếu template có mẫu đủ đáp ứng prompt/app thì bám sát template và đổi tối thiểu; chỉ dùng fallback/golden reference khi template thiếu, không đủ hành vi, hoặc có bằng chứng đang ngõ cụt.
 - Mọi thay đổi UI 5fedu, gồm làm mới, làm lại, chỉnh sửa, loại bỏ, bổ sung module, bổ sung nút, bổ sung tính năng, đổi layout, đổi flow hoặc đổi responsive behavior, bắt buộc bám pattern UI của template theo đúng surface/hành vi tương ứng.
+- Trước khi code UI/module, bắt buộc tạo **Pattern Fidelity Packet** theo mẫu trong `02-frontend-mapping.md`. Thiếu packet này thì chưa được code.
+- Cấm tự chế tên module, mô tả, nút, icon, tab, route, empty-state copy hoặc workflow. Nếu không có nguồn rõ từ spec/template/app thì hỏi hoặc đánh dấu `CAN_HOI_THEM`.
 - `permission`, `phân quyền`, `role`, `RLS`, `auth`: đọc database/auth rules và test đa account/đa cấp.
 - `export`, `download`, `Excel`, `PDF`, `CSV`: tải file thật và kiểm format/nội dung.
 - `cleanup`, `gitignore`, `xóa file`, `trùng chức năng`: kiểm reference bằng `rg`/GitNexus/package scripts/CI/docs trước khi xóa.
 
-Với task lớn hoặc production/UI/permission/database/export, report cuối phải có `Context loaded`, `Verification`, `Technical debt check`, `Status`; riêng UI phải có `Template checked`.
+Với task lớn hoặc production/UI/permission/database/export, report cuối phải có `Context loaded`, `Verification`, `Technical debt check`, `Status`; riêng UI phải có `Template checked` và `Pattern fidelity`.
 
 ## Verification Policy
 
@@ -71,6 +74,7 @@ Test không chỉ là bấm nút:
 |---------------|-----------|--------------|
 | Rule DB/auth/permission | `02-database-and-auth-rules.md` | Có |
 | Rule UI/UX/harness | `03-ui-ux-and-delivery-standards.md`, `14-production-e2e-harness.md` | Có |
+| Rule business pattern ERP/admin | `04-business-patterns.md` | Có |
 | Checklist triển khai module | `13-trip-execution-vs-approval-spec.md` (khi liên quan) | Có |
 | Trạng thái chốt/blocker | `06-decision-status.md` | Project only |
 | Câu hỏi mở | `questions.md` | Project only |

@@ -20,6 +20,16 @@ Keep 5fedu rules project-local by default. Do not expand the global `AGENTS.md` 
 
 `/5fedu` is for setup and context maintenance only. Once a repo has `AGENTS.md`, `.agents/5fedu/`, and `.codex/5fedu/`, ordinary coding work should rely on those project-local files without the user needing to call `/5fedu` again.
 
+### Template Fidelity Contract
+
+For every 5fedu UI/module task, the existing template and current app patterns are binding sources of truth, not loose inspiration.
+
+- Do not invent module names, submenu names, descriptions, button labels, icons, routes, tabs, or empty-state copy when the spec/template/current app already provides a source.
+- Do not add new actions, toolbar buttons, mini-tabs, cards, marketing descriptions, badges, or workflow steps unless they are required by the spec, existing pattern, or business logic.
+- Treat the current `Hệ thống` modules and `/template` as canonical references for admin/list/form/detail/permission patterns when the requested module has no closer direct reference.
+- Adapt only the business-specific fields, services, permission checks, calculations, and labels that differ by module.
+- If the source is ambiguous, ask for the missing value or record it as `CAN_HOI_THEM`; never fill ambiguity with nicer-sounding copy.
+
 Default loading policy:
 - Always read only the project entry/index first: `AGENTS.md`, `00-index.md`, decision/status file, `questions.md`, and source/spec map when available.
 - Read detailed context only when the task touches that domain.
@@ -41,6 +51,7 @@ Default loading policy:
 5. Ask for missing spec, credentials (including Supabase password if available), database rules, or module mapping before implementation. Never invent table names, fields, permissions, or screen mappings.
 6. Google Sheets Access: Must use the `/browser` slash command/subagent to access Google Sheets, as they are often shared privately and require the user's active authentication. If the AI cannot view or access the sheet, IMMEDIATELY notify and remind the user to log in/authorize so the AI can read the sheet and completely capture the data model/specs before scaffolding.
 7. For real implementation work, map every requested feature from spec -> domain -> module -> view/tab -> source path -> database table -> handler/service. Record uncertain mappings before coding.
+   - For UI/module work, also create the **Pattern Fidelity Packet** defined in `02-frontend-mapping.md` before editing.
 8. Treat Supabase/auth/permission/database work as HIGH risk: create a locked plan, require credentials or mocks explicitly, verify behavior, and do not store secret values in docs.
 9. Treat owner feedback about UI/business flows as reusable gates, not one-off fixes. For transport apps, record list/detail/form/action/totals/combobox/print/approve requirements in project context before coding.
 10. When a template commit is provided, clone or update it under `.agents/template-source/` and record the exact commit in project context. Use it as the UI reference for list, detail, form, dashboard, toolbar, combobox, drawer, table, and mobile card patterns.
@@ -62,9 +73,24 @@ AGENTS.md
 |- 01-architecture-and-specs.md
 |- 02-database-and-auth-rules.md
 |- 03-ui-ux-and-delivery-standards.md
+|- 04-business-patterns.md
 |- 04-decision-status-and-backlog.md
 `- 05-source-specs-and-coverage.md
 ```
+
+Skill source template layout:
+
+```text
+skills/5fedu-project/assets/project-context/
+|- AGENTS.md
+`- common/5fedu/
+   |- 00-index.md
+   |- 02-frontend-mapping.md
+   |- 04-business-patterns.md
+   `- ...
+```
+
+`scripts/install-5fedu-context.ps1` expands `common/5fedu/` into both target mirrors. Do not keep separate source copies under `assets/project-context/.agents/` and `assets/project-context/.codex/`.
 
 Legacy expanded context files may also exist and should be preserved when present:
 
@@ -82,10 +108,13 @@ Legacy expanded context files may also exist and should be preserved when presen
 `- questions.md
 ```
 
+Default scaffold excludes raw/deep lesson files such as `07-working-format.md`, `08-source-examples.md`, and `10-owner-feedback-lessons.md`. They remain in the skill source as evidence/reference, but new projects should receive them only when the user asks or when a lesson has been promoted into a living rule file.
+
 - `AGENTS.md` should be a lightweight pointer/loading policy, not an `@` include list for every file. Put detailed rules under the respective platform folder.
 - Treat `00-index.md` as the entry point and the source of truth for the **Strict Execution Contract** (Compile Check, Browser Click-through check, Anti-Lỏ code policies).
 - Treat `04-decision-status-and-backlog.md` or legacy `06-decision-status.md` as the source of truth for what is confirmed, unconfirmed, blocked, or paused, open questions, and the temporary raw owner feedback logs.
 - Treat `02-database-and-auth-rules.md` and `03-ui-ux-and-delivery-standards.md` as the active system rules.
+- Treat `04-business-patterns.md` as the active ERP/admin business pattern library for master-detail, approval workflow, derived fields, lookup autofill, report/export parity, and shared base entity + specialized roles.
   * **CRITICAL RULES EVOLUTION**: All resolved bugs or universal architectural lessons (e.g., `id int8` primary keys, `ten_dang_nhap` logins, pagination footer, Excel cell type `'n'`, PDF Unicode base64 fonts, TDZ hoisting prevention) MUST be promoted/moved to the respective Pillar 2 or Pillar 3 rule files. Do not keep them raw in the feedback backlog file to prevent context confusion.
 - Use `05-source-specs-and-coverage.md` to map Google Sheets columns and verify whether the current context covers the original 5fedu prompt/images.
 
@@ -93,6 +122,7 @@ Living rule files:
 - `00-index.md`: execution contract, loading policy, production/local test policy.
 - `02-database-and-auth-rules.md`: database, schema, auth, permission, RLS, triggers, rollups.
 - `03-ui-ux-and-delivery-standards.md`: UI, UX, list/detail/form, toolbar, filter, export, responsive behavior.
+- `04-business-patterns.md`: ERP/admin business patterns.
 - `04-decision-status-and-backlog.md` and legacy `06-decision-status.md`: confirmed/unconfirmed/blockers.
 - `05-source-specs-and-coverage.md`: spec/source coverage.
 - `10` and `12`: logs only unless a project intentionally keeps archived evidence there.
@@ -148,6 +178,9 @@ Before writing database, auth, staff tables, migration, or UI components, the AI
 ## 5. Implementation Discipline
 
 - Prefer adding/adapting modules from `P:\agent-rules\antigravity\.agents\template-source/` (or similar templates); avoid deleting or broadly rewriting template code unless approved.
+- Before coding a 5fedu UI/module slice, write down the Pattern Fidelity Packet in notes/plan or in the working response. Do not start implementation while the reference, labels, actions, and business mapping are unknown.
+- Copy/adapt the structure and interaction model from the selected reference first; then replace only module-specific fields, data source, calculations, permissions, and copy that is explicitly sourced.
+- Treat unsolicited UI creativity as a bug: no self-made page headers, extra description text, surprise buttons, alternate Vietnamese wording, decorative sections, or renamed modules.
 - Keep Vietnamese names for submenu/module folders and labels where the source app convention uses Vietnamese.
 - Keep route/view keys predictable, usually lowercase kebab Vietnamese without accents for route/module keys.
 - Use real Supabase/frontend integration once credentials are provided; avoid dead buttons, placeholder-only flows, or missing handlers.
@@ -175,7 +208,7 @@ Whenever the user provides correction, design guidance, or owner feedback during
 
 ### C. Universal Learning
 
-If feedback applies across tech stacks, promote it to the Codex global runtime rules under `P:\agent-rules\codex\rules\`, not into 5fedu-only files. Examples:
+If feedback applies across tech stacks, promote it to the shared global rules under `P:\agent-rules\rules\` and sync platform mirrors, not into 5fedu-only files. Examples:
 - verification depth;
 - permission E2E discipline;
 - cleanup/gitignore policy;

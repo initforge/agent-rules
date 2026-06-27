@@ -1,11 +1,11 @@
 ---
-name: codex-research
+name: researcher
 description: Use this skill when Codex needs structured research before coding or while a bug fix is stalled. Trigger for latest docs, release notes, changelog review, external platform behavior, codebase exploration, option comparison, source-backed decision support, or difficult bug fixes that need repo facts plus external documentation before another implementation attempt.
 ---
 
-# Codex Research
+# Researcher
 
-Codex Research is the primary research layer inside Codex.
+Researcher is the primary research layer inside Codex.
 
 Use it to gather facts, compare options, and write a reusable research note before implementation.
 

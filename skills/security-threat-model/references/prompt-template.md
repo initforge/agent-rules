@@ -61,7 +61,7 @@ Please produce a security-oriented summary of the repository (or the specified s
 Objectives
 1.	Project overview
 	•	Identify the primary programming languages, frameworks, and build system.
-	•	Summarize the project’s core purpose and high-level architecture.
+	•	Summarize the project's core purpose and high-level architecture.
 	•	Describe major components, services, or modules and how they interact.
 2.	Security posture and entry points
 	•	Identify likely user entry points and trust boundaries.
@@ -133,7 +133,7 @@ You MUST follow this process and reflect outputs in the final document:
       - sandboxing/isolation, privilege boundaries, subprocess execution
       - logging/auditing and error handling paths
       - CI/build/release: pipelines, dependency management, artifact publishing
-   
+
 2) System model
    a. Summarize the primary components (runtime plus critical build/CI components when relevant).
    b. Enumerate data flows and trust boundaries.

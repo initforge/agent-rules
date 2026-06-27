@@ -1,4 +1,4 @@
-﻿# Codex Skills
+# Codex Skills
 
 This folder stores reusable Codex skills.
 
@@ -6,10 +6,10 @@ A skill should use this structure:
 
 ```text
 skill-name\
-â”œâ”€ SKILL.md
-â”œâ”€ scripts\
-â”œâ”€ references\
-â””â”€ assets\
+├─ SKILL.md
+├─ scripts\
+├─ references\
+└─ assets\
 ```
 
 Use skills for reusable workflows that are too long for `AGENTS.md`.
@@ -21,7 +21,7 @@ Current self-authored skills in this folder:
 - `docs-style`
 - `frontend-ui-quality`
 - `ui-ux-pro-max`
-- `codex-research`
+- `researcher`
 - `workflow-router`
 
 Current vendor-installed skills kept in place for runtime safety:

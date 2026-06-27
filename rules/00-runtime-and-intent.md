@@ -18,7 +18,7 @@ Bộ quy tắc cốt lõi điều phối runtime và phân tích ý đồ (Inten
 | Tình huống (Scenario) | Hành động bắt buộc (Required Action) |
 |---|---|
 | Thiết lập/khởi tạo 5fedu | Sử dụng Skill [5fedu-project](file:///home/linhnxdeveloper/Projects/agent-rules/skills/5fedu-project/SKILL.md) |
-| Nghiên cứu/đọc tài liệu mới | Sử dụng Skill [codex-research](file:///home/linhnxdeveloper/Projects/agent-rules/skills/codex-research/SKILL.md) |
+| Nghiên cứu/đọc tài liệu mới | Sử dụng Skill [researcher](file:///home/linhnxdeveloper/Projects/agent-rules/skills/researcher/SKILL.md) |
 | Đánh giá/Kiểm tra mã nguồn (Review/Audit) | Đưa ra các phát hiện lỗi trước (Findings First) |
 | Thao tác Database/Auth/Permissions | HIGH Risk — Phải lập kế hoạch rõ ràng, cấm tự vẽ Schema |
 

@@ -158,7 +158,7 @@ Read only what you need:
 - Keep quotes short and within policy limits; prefer paraphrase with citations.
 - If multiple pages differ, call out the difference and cite both.
 - If official docs and verified callable current-session behavior disagree, state the conflict before making broad claims or edits.
-- If docs do not cover the user’s need, say so and offer next steps.
+- If docs do not cover the user's need, say so and offer next steps.
 
 ## Tooling notes
 

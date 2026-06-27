@@ -1,4 +1,4 @@
-# Codex Research Usage
+# Researcher Usage
 
 ## Good trigger examples
 

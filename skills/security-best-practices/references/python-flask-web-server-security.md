@@ -1,19 +1,19 @@
-﻿# Flask (Python) Web Security Spec (Flask 3.1.x, Python 3.x)
+# Flask (Python) Web Security Spec (Flask 3.1.x, Python 3.x)
 
 This document is designed as a **security spec** that supports:
 1) **Secure-by-default code generation** for new Flask code.
-2) **Security review / vulnerability hunting** in existing Flask code (passive â€œnotice issues while workingâ€ and active â€œscan the repo and report findingsâ€).
+2) **Security review / vulnerability hunting** in existing Flask code (passive "notice issues while working" and active "scan the repo and report findings").
 
-It is intentionally written as a set of **normative requirements** (â€œMUST/SHOULD/MAYâ€) plus **audit rules** (what bad patterns look like, how to detect them, and how to fix/mitigate them).
+It is intentionally written as a set of **normative requirements** ("MUST/SHOULD/MAY") plus **audit rules** (what bad patterns look like, how to detect them, and how to fix/mitigate them).
 
 --------------------------------------------------------------------
 
 ## 0) Safety, boundaries, and anti-abuse constraints (MUST FOLLOW)
 
 - MUST NOT request, output, log, or commit secrets (API keys, passwords, private keys, session cookies, SECRET_KEY).
-- MUST NOT â€œfixâ€ security by disabling protections (e.g., turning off CSRF, relaxing CORS, disabling escaping, disabling auth checks).
+- MUST NOT "fix" security by disabling protections (e.g., turning off CSRF, relaxing CORS, disabling escaping, disabling auth checks).
 - MUST provide **evidence-based findings** during audits: cite file paths, code snippets, and configuration values that justify the claim.
-- MUST treat uncertainty honestly: if a protection might exist in infrastructure (reverse proxy, WAF, CDN), report it as â€œnot visible in app code; verify at runtime/configâ€.
+- MUST treat uncertainty honestly: if a protection might exist in infrastructure (reverse proxy, WAF, CDN), report it as "not visible in app code; verify at runtime/config".
 
 --------------------------------------------------------------------
 
@@ -28,13 +28,13 @@ When asked to write new Flask code or modify existing code:
 
 ### 1.2 Passive review mode (always on while editing)
 While working anywhere in a Flask repo (even if the user did not ask for a security scan):
-- MUST â€œnoticeâ€ violations of this spec in touched/nearby code.
+- MUST "notice" violations of this spec in touched/nearby code.
 - SHOULD mention issues as they come up, with a brief explanation + safe fix.
 
 ### 1.3 Active audit mode (explicit scan request)
-When the user asks to â€œscanâ€, â€œauditâ€, or â€œhunt for vulnsâ€:
+When the user asks to "scan", "audit", or "hunt for vulns":
 - MUST systematically search the codebase for violations of this spec.
-- MUST output findings in a structured format (see Â§2.3).
+- MUST output findings in a structured format (see §2.3).
 
 Recommended audit order:
 1) App entrypoints / deployment scripts / Dockerfiles / Procfiles.
@@ -80,7 +80,7 @@ For each issue found, output:
 
 ## 3) Secure baseline: minimum production configuration (MUST in production)
 
-This is the smallest â€œproduction baselineâ€ that prevents common Flask misconfigurations.
+This is the smallest "production baseline" that prevents common Flask misconfigurations.
 
 ### 3.1 App initialization pattern (SHOULD)
 SHOULD use an app factory and environment-based config so production config is not hard-coded.
@@ -103,7 +103,7 @@ Key baseline config targets:
 
 Each rule contains: required practice, insecure patterns, detection hints, and remediation.
 
-### FLASK-DEPLOY-001: Do not use Flaskâ€™s development server in production
+### FLASK-DEPLOY-001: Do not use Flask's development server in production
 Severity: High (if production)
 
 Required:
@@ -257,7 +257,7 @@ Detection hints:
 
 Fix:
 - Add CSRF protection to all state-changing requests.
-- If the app is a pure API and uses Authorization headers (bearer tokens) rather than cookies, document that choice and ensure cookies arenâ€™t used for auth. If cookies are not used for auth, there is no CSRF risk.
+- If the app is a pure API and uses Authorization headers (bearer tokens) rather than cookies, document that choice and ensure cookies aren't used for auth. If cookies are not used for auth, there is no CSRF risk.
 
 Notes:
 - XSS can defeat CSRF protections; CSRF defenses do not replace XSS prevention.
@@ -339,7 +339,7 @@ Insecure patterns:
 
 Detection hints:
 - Search for `after_request` hooks, Flask-Talisman usage, reverse proxy config.
-- If not visible in app code, flag as â€œverify at edgeâ€.
+- If not visible in app code, flag as "verify at edge".
 
 Fix:
 - Set headers centrally (middleware / after_request) or via reverse proxy/CDN.
@@ -372,7 +372,7 @@ Fix:
 ---
 
 ### FLASK-HOST-001: Host header must be validated in production
-Severity: Low (depends on appâ€™s use of external URLs)
+Severity: Low (depends on app's use of external URLs)
 
 Required:
 - MUST set `TRUSTED_HOSTS` in production to restrict accepted Host values.
@@ -460,7 +460,7 @@ Insecure patterns:
 
 Detection hints:
 - Look for `request.files[...]` handlers.
-- Check for `secure_filename` usage (and whether itâ€™s combined with uniqueness).
+- Check for `secure_filename` usage (and whether it's combined with uniqueness).
 - Check where files are stored and how they are served.
 
 Fix:
@@ -623,7 +623,7 @@ Required:
 - MUST respond to known security advisories promptly.
 
 Audit focus example:
-- If running on Windows and using file serving with untrusted paths, ensure Werkzeugâ€™s `safe_join` behavior is not vulnerable to Windows device-name edge cases.
+- If running on Windows and using file serving with untrusted paths, ensure Werkzeug's `safe_join` behavior is not vulnerable to Windows device-name edge cases.
 
 Detection hints:
 - Check `requirements.txt`, lockfiles, and runtime environments.
@@ -634,7 +634,7 @@ Fix:
 
 --------------------------------------------------------------------
 
-## 5) Practical scanning heuristics (how to â€œhuntâ€)
+## 5) Practical scanning heuristics (how to "hunt")
 
 When actively scanning, use these high-signal patterns:
 
@@ -672,34 +672,34 @@ Always try to confirm:
 ## 6) Sources (accessed 2026-01-26)
 
 Primary framework documentation:
-- Flask Docs: Deploying to Production â€” https://flask.palletsprojects.com/en/stable/deploying/
-- Flask Docs: Debugging Application Errors â€” https://flask.palletsprojects.com/en/stable/debugging/
-- Flask Docs: Configuration Handling â€” https://flask.palletsprojects.com/en/stable/config/
-- Flask Docs: Security Considerations â€” https://flask.palletsprojects.com/en/stable/web-security/
-- Flask Docs: Tell Flask it is Behind a Proxy â€” https://flask.palletsprojects.com/en/stable/deploying/proxy_fix/
-- Flask API Docs: Sessions â€” https://flask.palletsprojects.com/en/stable/api/#sessions
+- Flask Docs: Deploying to Production — https://flask.palletsprojects.com/en/stable/deploying/
+- Flask Docs: Debugging Application Errors — https://flask.palletsprojects.com/en/stable/debugging/
+- Flask Docs: Configuration Handling — https://flask.palletsprojects.com/en/stable/config/
+- Flask Docs: Security Considerations — https://flask.palletsprojects.com/en/stable/web-security/
+- Flask Docs: Tell Flask it is Behind a Proxy — https://flask.palletsprojects.com/en/stable/deploying/proxy_fix/
+- Flask API Docs: Sessions — https://flask.palletsprojects.com/en/stable/api/#sessions
 
 Werkzeug documentation & advisories:
-- Werkzeug Docs: Utilities (send_file / send_from_directory / safe_join / secure_filename / password hashing) â€” https://werkzeug.palletsprojects.com/en/stable/utils/
-- GitHub Advisory: CVE-2025-66221 (Werkzeug safe_join Windows device names) â€” https://github.com/advisories/GHSA-hgf8-39gv-g3f2
+- Werkzeug Docs: Utilities (send_file / send_from_directory / safe_join / secure_filename / password hashing) — https://werkzeug.palletsprojects.com/en/stable/utils/
+- GitHub Advisory: CVE-2025-66221 (Werkzeug safe_join Windows device names) — https://github.com/advisories/GHSA-hgf8-39gv-g3f2
 
 OWASP Cheat Sheet Series:
-- Session Management â€” https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
-- CSRF Prevention â€” https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html
-- XSS Prevention â€” https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
-- Input Validation â€” https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html
-- SQL Injection Prevention â€” https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
-- Injection Prevention â€” https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
-- OS Command Injection Defense â€” https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html
-- SSRF Prevention â€” https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
-- File Upload â€” https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
-- Unvalidated Redirects â€” https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html
-- HTTP Headers â€” https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html
+- Session Management — https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html
+- CSRF Prevention — https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html
+- XSS Prevention — https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html
+- Input Validation — https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html
+- SQL Injection Prevention — https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html
+- Injection Prevention — https://cheatsheetseries.owasp.org/cheatsheets/Injection_Prevention_Cheat_Sheet.html
+- OS Command Injection Defense — https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html
+- SSRF Prevention — https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+- File Upload — https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
+- Unvalidated Redirects — https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html
+- HTTP Headers — https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html
 
 Template safety references:
-- Jinja: Sandbox (rendering untrusted templates) â€” https://jinja.palletsprojects.com/en/stable/sandbox/
-- OWASP WSTG: Testing for Server-Side Template Injection â€” https://owasp.org/www-project-web-security-testing-guide/v41/4-Web_Application_Security_Testing/07-Input_Validation_Testing/18-Testing_for_Server_Side_Template_Injection
-- PortSwigger Web Security Academy: Server-side template injection â€” https://portswigger.net/web-security/server-side-template-injection
+- Jinja: Sandbox (rendering untrusted templates) — https://jinja.palletsprojects.com/en/stable/sandbox/
+- OWASP WSTG: Testing for Server-Side Template Injection — https://owasp.org/www-project-web-security-testing-guide/v41/4-Web_Application_Security_Testing/07-Input_Validation_Testing/18-Testing_for_Server_Side_Template_Injection
+- PortSwigger Web Security Academy: Server-side template injection — https://portswigger.net/web-security/server-side-template-injection
 
 HTTP semantics:
-- RFC 9110: HTTP Semantics (safe methods) â€” https://www.rfc-editor.org/rfc/rfc9110
+- RFC 9110: HTTP Semantics (safe methods) — https://www.rfc-editor.org/rfc/rfc9110

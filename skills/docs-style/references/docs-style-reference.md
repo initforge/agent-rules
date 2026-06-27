@@ -1,4 +1,4 @@
-﻿# Docs Style Reference
+# Docs Style Reference
 
 This reference defines the editorial and verification standard for README.md, README-vi.md, and `/docs/**`.
 
@@ -90,7 +90,7 @@ Use four labels internally:
 | Current | active path imported or used at runtime | write as present behavior |
 | Legacy | old code/config remains but is not active | label as legacy trace |
 | Planned | TODO/roadmap or partially wired feature | put in limitations/roadmap |
-| Unknown | cannot prove from source | omit or mark `TODO: xÃ¡c minh ...` |
+| Unknown | cannot prove from source | omit or mark `TODO: xác minh ...` |
 
 Do not use ambiguous wording such as "supports X" when X is only a dependency, unused component, stale branch, or config leftover.
 
@@ -182,11 +182,9 @@ README should have a deliberate visual surface on GitHub. It should not look lik
 Recommended visual order:
 
 ```md
-# Project Name â€” Short, concrete category
+# Project Name — Short, concrete category
 
-![Primary](...)
-![Stack](...)
-![Stack](...)
+Badges: verified Shields.io URLs for the primary active stack.
 
 Live: https://...
 
@@ -194,7 +192,7 @@ One or two strong paragraphs.
 
 ## Preview
 
-![Screenshot](docs/assets/homepage.png)
+Screenshot: verified local image path, for example `docs/assets/homepage.png`, only when the file exists.
 
 ## What it does
 ...
@@ -660,7 +658,7 @@ Avoid:
 - beginner tutorial tone
 - internal reasoning tone
 - excessive code/path references
-- "cÃ³ váº»", "dÆ°á»ng nhÆ°", "mÃ¬nh tháº¥y" in final docs
+- "có vẻ", "dường như", "mình thấy" in final docs
 
 Use English technical terms when they are the natural term: `route`, `middleware`, `schema`, `migration`, `webhook`, `queue`, `worker`, `cache`, `provider`, `deployment`. Explain only when needed.
 
@@ -727,7 +725,7 @@ React and TypeScript define the UI layer. Node.js owns API behavior and server-s
 Bad:
 
 ```md
-![Cloudflare](...) ![OpenRouter](...) ![Redis](...)
+Cloudflare / OpenRouter / Redis badges with verified Shields.io URLs only.
 ```
 
 when Cloudflare is only legacy, OpenRouter is active, and Redis is not configured.
@@ -872,6 +870,6 @@ Before finishing, verify:
 - [ ] Diagrams match real runtime boundaries.
 - [ ] No secrets are exposed.
 - [ ] No doc reads like agent reasoning, source inventory, or template filler.
-- [ ] Unknowns are marked as `TODO: xÃ¡c minh ...`.
+- [ ] Unknowns are marked as `TODO: xác minh ...`.
 
 If any item fails, continue editing before reporting completion.

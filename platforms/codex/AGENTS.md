@@ -12,7 +12,7 @@
 
 # Bộ Nạp Runtime Codex
 
-Entrypoint global Codex CLI. Lõi rule **Opus-emulation** — đồng bộ từ `agent-rules/grok/` qua `sync-all-harness.sh`.
+Entrypoint global Codex CLI. Lõi rule **Opus-emulation** — đồng bộ từ repo root qua `scripts/sync-all-harness.sh`.
 
 ## Nguồn Runtime
 
@@ -35,7 +35,7 @@ Tiếng Việt có dấu; giữ tiếng Anh cho thuật ngữ kỹ thuật, path
 
 ## Skills
 
-Đọc `04-skills-and-5fedu.md` — `codex/skills/` hoặc `~/.codex/skills/`.
+Đọc `04-skills-and-5fedu.md` — source `skills/` hoặc runtime `~/.codex/skills/`.
 
 ## 5fedu
 

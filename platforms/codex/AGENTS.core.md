@@ -7,8 +7,11 @@
 @C:\Users\DELL\.codex\rules\05-harness-mutation-gate.md
 @C:\Users\DELL\.codex\rules\06-opus-emulation-contract.md
 @C:\Users\DELL\.codex\rules\codex-overlay.md
+@C:\Users\DELL\.codex\rules\00-universal-frontier-contract.md
 @C:\Users\DELL\.codex\rules\platform-boundary.md
 
-# Codex Core Entrypoint
+# Bộ Nạp Runtime Codex
 
-Giữ file này khớp `C:\Users\DELL\.codex\AGENTS.md`. Lõi Opus-emulation — sync từ `agent-rules/grok/`.
+# File tối giản tương thích cho các môi trường chỉ cần import rule.
+
+Giữ danh sách import ở file này khớp với `platforms/codex/AGENTS.md`.

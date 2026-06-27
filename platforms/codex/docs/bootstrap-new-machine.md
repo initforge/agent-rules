@@ -1,11 +1,11 @@
-﻿# Bootstrap New Machine
+# Bootstrap New Machine
 
 ## Goal
 
 Restore Codex operating system from:
 
 ```text
-P:\agent-rules\codex
+P:\agent-rules
 ```
 
 into:
@@ -26,7 +26,7 @@ New-Item -ItemType Directory -Force -Path "P:\agent-rules"
 2. Copy Codex setup
 
 ```powershell
-Copy-Item "P:\agent-rules\codex\*" "$env:USERPROFILE\.codex\" -Recurse -Force
+& "P:\agent-rules\scripts\install-codex-global.ps1"
 ```
 
 3. Verify files

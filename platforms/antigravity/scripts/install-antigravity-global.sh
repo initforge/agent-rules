@@ -45,15 +45,14 @@ rsync -a --delete "${SKILL_RSYNC_EX[@]}" "$ROOT/skills/" "$ANT_GLOBAL_DIR/skills
 echo "Syncing workflows to global..."
 rsync -a --delete "$ROOT/workflows/" "$ANT_GLOBAL_DIR/workflows/"
 
-# 6. Ensure global GEMINI.md setup
+# 6. Install global GEMINI.md setup
 GEMINI_GLOBAL="$HOME/.gemini/GEMINI.md"
-if [[ ! -f "$GEMINI_GLOBAL" ]]; then
-  echo "Creating global GEMINI.md..."
-  mkdir -p "$HOME/.gemini"
-  if [[ -f "$ROOT/platforms/antigravity/GEMINI.md" ]]; then
-    cp "$ROOT/platforms/antigravity/GEMINI.md" "$GEMINI_GLOBAL"
-  else
-    cat << 'EOF' > "$GEMINI_GLOBAL"
+echo "Installing global GEMINI.md..."
+mkdir -p "$HOME/.gemini"
+if [[ -f "$ROOT/platforms/antigravity/GEMINI.md" ]]; then
+  cp "$ROOT/platforms/antigravity/GEMINI.md" "$GEMINI_GLOBAL"
+else
+  cat << 'EOF' > "$GEMINI_GLOBAL"
 # Antigravity Global Rules
 
 Quy tắc toàn cục áp dụng cho mọi phiên làm việc và mọi cuộc hội thoại trên hệ thống Google Antigravity.
@@ -68,7 +67,6 @@ Mọi nhiệm vụ (task) khi hoàn thành hoặc dừng lại đều phải tr�
 - **`PARTIAL`**: Khi chỉ hoàn thành một phần nhiệm vụ do giới hạn kỹ thuật hoặc cần thêm thông tin từ người dùng.
 - **`BLOCKED`**: Khi không thể tiếp tục thực hiện do gặp lỗi nghiêm trọng hoặc thiếu điều kiện cần thiết.
 EOF
-  fi
 fi
 
 echo "Antigravity global installation complete."

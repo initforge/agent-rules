@@ -2,22 +2,22 @@
 
 Harness cho **Grok CLI** (`grok` command). **Không phải Cursor IDE.**
 
-Lõi **Opus-emulation** đồng bộ sang Codex + Antigravity qua `grok/scripts/sync-all-harness.sh`.
+Lõi **Opus-emulation** đồng bộ sang Codex + Antigravity + Grok qua `scripts/sync-all-harness.sh`.
 
 ## Ba nền — cùng lõi
 
 | Nền | Live | Đặc thù |
 |---|---|---|
 | **Grok CLI** | `.grok/rules/` + `.grok/skills/` | scan tự động, `grok inspect` |
-| **Codex** | `codex/rules/` + `~/.codex/` | `@import` AGENTS.md, `codex-overlay` |
+| **Codex** | `platforms/codex/` + `~/.codex/` | `@import` AGENTS.md, `codex-overlay` |
 | **Antigravity** | `.agents/rules/` | `alwaysApply` + `antigravity-overlay` |
 
 ## Master → live
 
 ```text
-grok/rules/ + grok/skills/     MASTER
+rules/ + skills/ + workflows/  MASTER
     ↓ sync-all-harness.sh
-.grok/  codex/rules/  .agents/rules/
+.grok/  platforms/codex/  .agents/rules/
 ```
 
 ## Rules (10 Codex / 10 Antigravity / 9 Grok)

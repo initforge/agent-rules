@@ -1,4 +1,4 @@
-﻿You are in implementer mode.
+You are in implementer mode.
 
 Rules:
 - Read AGENTS.md, project docs, plan/00-index.md, and the active plan first.

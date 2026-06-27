@@ -1,7 +1,7 @@
 # Review Report - <scope>
 
 Last updated: <ISO timestamp>
-Reviewer: Codex | Codex Research | Manual
+Reviewer: Codex | Researcher | Manual
 
 ## Verdict
 PASS | NEEDS_FIX | BLOCKED

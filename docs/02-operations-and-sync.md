@@ -2,7 +2,7 @@
 
 ## 1. Mục tiêu vận hành
 
-Vận hành `agent-rules` xoay quanh một nguyên tắc: **đừng để bản runtime đang dùng và bản backup không rõ nguồn gốc**. Mỗi lần chỉnh rule, skill, script hoặc registry, cần biết thay đổi nằm ở `C:\Users\DELL\.codex`, `P:\agent-rules\codex`, hay repo Git.
+Vận hành `agent-rules` xoay quanh một nguyên tắc: **đừng để bản runtime đang dùng và bản backup không rõ nguồn gốc**. Mỗi lần chỉnh rule, skill, script hoặc registry, cần biết thay đổi nằm ở runtime local, repo source `P:\agent-rules`, hay platform mirror.
 
 ## 2. Kiểm tra runtime local
 
@@ -27,12 +27,12 @@ Inventory dùng để biết máy hiện tại có tool nào, path nào và MCP 
 & "$env:USERPROFILE\.codex\scripts\sync-codex-to-p.ps1"
 ```
 
-Dùng khi `C:\Users\DELL\.codex` là nguồn đúng và cần đẩy sang `P:\agent-rules\codex`. Đây là hướng sync thường dùng sau khi cập nhật skill, rule hoặc script trong runtime local.
+Dùng khi `C:\Users\DELL\.codex` là nguồn đúng và cần đẩy ngược về repo source `P:\agent-rules`. Đây là hướng sync chỉ dùng khi thay đổi thật sự phát sinh trong runtime local.
 
 ## 5. Restore backup về local runtime
 
 ```powershell
-& "P:\agent-rules\codex\scripts\sync-p-to-codex.ps1"
+& "P:\agent-rules\platforms\codex\scripts\sync-p-to-codex.ps1"
 ```
 
 Dùng khi cần dựng lại `C:\Users\DELL\.codex` từ bản backup. Không chạy lệnh này nếu chưa chắc backup mới hơn hoặc đúng hơn bản local, vì nó có thể ghi đè thay đổi runtime hiện tại.
@@ -42,16 +42,16 @@ Dùng khi cần dựng lại `C:\Users\DELL\.codex` từ bản backup. Không ch
 Quy trình nằm trong `codex/docs/bootstrap-new-machine.md`:
 
 1. Tạo `C:\Users\DELL\.codex` và `P:\agent-rules`.
-2. Copy `P:\agent-rules\codex\*` vào `.codex`.
+2. Copy nội dung Codex runtime từ `P:\agent-rules\platforms\codex\` và source dùng chung (`rules/`, `skills/`, `workflows/`, `scripts/`) vào `.codex`.
 3. Chạy verify rules.
 4. Chạy bootstrap/install tools.
 5. Chạy toolchain verify.
 6. Ghi inventory.
 7. Đọc tool/MCP/skills registry để xử lý phần còn thiếu.
 
-## 7. Sync harness một nguồn (codex master)
+## 7. Sync harness một nguồn
 
-**Master nội dung:** `codex/rules/`, `codex/skills/` — Antigravity và Grok chỉ mirror, không có `grok/` master riêng.
+**Master nội dung:** `rules/`, `skills/`, `workflows/`, `shared/` ở repo root. `platforms/codex`, `platforms/antigravity`, `.agents/`, `.grok/` và runtime global chỉ là mirror/adapter.
 
 ```bash
 # Linux / Git Bash (trong agent-rules)

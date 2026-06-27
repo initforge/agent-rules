@@ -48,7 +48,7 @@ C:\Users\DELL\.gemini\GEMINI.md
 └── platform-boundary.md            (alwaysApply: true)
 ```
 
-Master: `agent-rules/grok/` → `./grok/scripts/sync-all-harness.sh`
+Master: `agent-rules/rules/` + `agent-rules/skills/` → `./scripts/sync-all-harness.sh`
 
 **Ý đồ của YAML frontmatter**:
 
@@ -93,8 +93,8 @@ Các dự án (installed via script):
   P:\FaBsolution\.agents\rules\*
 ```
 
-Script cài đặt: `P:\agent-rules\codex\scripts\install-antigravity-adapter.ps1`
-Script thêm frontmatter: `P:\agent-rules\antigravity\scripts\add-rules-frontmatter.ps1`
+Script cài đặt: `P:\agent-rules\platforms\codex\scripts\install-antigravity-adapter.ps1`
+Script thêm frontmatter: `P:\agent-rules\platforms\antigravity\scripts\add-rules-frontmatter.ps1`
 
 ## Những Thứ KHÔNG Hoạt Động
 

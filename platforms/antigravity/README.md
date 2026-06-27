@@ -1,6 +1,6 @@
 # Antigravity Adapter
 
-Adapter này dịch runtime Codex trong `P:\agent-rules\codex` sang cấu trúc mà Google Antigravity đọc: rules với YAML frontmatter, workflows, skills, và global rules file.
+Adapter này dịch source dùng chung trong `P:\agent-rules` sang cấu trúc mà Google Antigravity đọc: rules với YAML frontmatter, workflows, skills, và global rules file.
 
 ## ⚠️ QUAN TRỌNG: Codex vs Antigravity Khác Nhau Hoàn Toàn
 
@@ -15,7 +15,7 @@ ANTIGRAVITY IDE:
   Không có frontmatter = agent KHÔNG ĐỌC = rules chết
 ```
 
-**Tài liệu kiến trúc chi tiết**: [docs/05-antigravity-activation-architecture.md](../docs/05-antigravity-activation-architecture.md)
+**Tài liệu kiến trúc chi tiết**: [docs/05-antigravity-activation-architecture.md](../../docs/05-antigravity-activation-architecture.md)
 
 ## 3 Lớp Kích Hoạt
 
@@ -81,6 +81,6 @@ Script thêm frontmatter: `antigravity/scripts/add-rules-frontmatter.ps1`
 
 ## Nguồn tham khảo
 
-- [Kiến trúc kích hoạt chi tiết](../docs/05-antigravity-activation-architecture.md)
-- [Đặc tả kỹ thuật](../docs/01-technical-specification.md)
-- [Vận hành và đồng bộ](../docs/02-operations-and-sync.md)
+- [Kiến trúc kích hoạt chi tiết](../../docs/05-antigravity-activation-architecture.md)
+- [Đặc tả kỹ thuật](../../docs/01-technical-specification.md)
+- [Vận hành và đồng bộ](../../docs/02-operations-and-sync.md)

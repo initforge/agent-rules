@@ -49,7 +49,7 @@ Nguồn:
 1. Cài adapter vào project:
 
 ```powershell
-& "P:\agent-rules\codex\scripts\install-antigravity-adapter.ps1" -ProjectRoot "P:\repo"
+& "P:\agent-rules\platforms\codex\scripts\install-antigravity-adapter.ps1" -ProjectRoot "P:\repo"
 ```
 
 *Lưu ý:* Hệ thống hiện tại thống nhất sử dụng duy nhất thư mục `.agents`. Mọi cấu hình cũ dạng `.agent` sẽ tự động bị xóa bởi preflight script để tránh trùng lặp tài nguyên.
@@ -70,7 +70,7 @@ Khi tiếp nhận task, Agent tuân thủ thứ tự ưu tiên đọc tài liệ
 4. Chỉ bật hook khi cần preflight tự động:
 
 ```powershell
-& "P:\agent-rules\codex\scripts\install-antigravity-adapter.ps1" -ProjectRoot "P:\repo" -IncludeDisabledHook
+& "P:\agent-rules\platforms\codex\scripts\install-antigravity-adapter.ps1" -ProjectRoot "P:\repo" -IncludeDisabledHook
 ```
 
 Sau đó vào `.agents/hooks.json`, đổi `"enabled": false` thành `true` nếu muốn.
@@ -83,4 +83,3 @@ Sau đó vào `.agents/hooks.json`, đổi `"enabled": false` thành `true` nế
 - Không thêm profile/model config vào adapter Antigravity trừ khi Antigravity có cơ chế chính thức cần dùng.
 - Khi workflow có thể phá dữ liệu, không dùng turbo/auto-run.
 - Khi source runtime thay đổi, cập nhật README và doc này cùng lúc.
-

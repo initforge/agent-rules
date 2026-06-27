@@ -1,4 +1,4 @@
-﻿# Phase Orchestration
+# Phase Orchestration
 
 ## Purpose
 

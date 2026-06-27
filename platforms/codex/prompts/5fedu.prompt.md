@@ -1,4 +1,4 @@
-﻿Use the `5fedu-project` skill to scaffold or maintain project-local 5fedu context. This is the only 5fedu slash/custom prompt.
+Use the `5fedu-project` skill to scaffold or maintain project-local 5fedu context. This is the only 5fedu slash/custom prompt.
 
 Use `/5fedu` only when the user asks to:
 - scaffold a repo as a 5fedu project
@@ -15,7 +15,7 @@ First:
 2. If `AGENTS.md` or `.codex/5fedu/` is missing, scaffold the project-local context from `C:\Users\DELL\.codex\skills\5fedu-project\assets\project-context`.
 3. If context exists, follow the loading policy in `AGENTS.md`: always read `.codex/5fedu/00-index.md`, `.codex/5fedu/06-decision-status.md`, and `.codex/5fedu/questions.md`; read other files only when relevant to the requested work. Read `.codex/5fedu/07-working-format.md` when the request is about default format/how-to. When the work touches database, auth, employee, migration, seed, or Supabase Auth sync, also read `.codex/5fedu/10-owner-feedback-lessons.md`.
 4. Summarize what is `DA_CHOT`, `CHUA_CHOT`, and `CAN_HOI_THEM` for the requested work.
-5. Ask the minimum clear questions needed to chá»‘t the current slice.
+5. Ask the minimum clear questions needed to chốt the current slice.
 
 Rules:
 - Keep 5fedu context project-local.

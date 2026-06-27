@@ -28,7 +28,7 @@ foreach ($item in $required) {
 }
 
 if ($missing.Count -gt 0) {
-  $message = "Antigravity harness missing: " + ($missing -join ", ") + ". Run agent-rules/grok/scripts/sync-all-harness.sh then retry."
+  $message = "Antigravity harness missing: " + ($missing -join ", ") + ". Run agent-rules/scripts/sync-all-harness.sh then retry."
   [pscustomobject]@{
     injectSteps = @(
       @{

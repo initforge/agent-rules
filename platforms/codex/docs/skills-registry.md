@@ -1,4 +1,4 @@
-﻿# Skills Registry
+# Skills Registry
 
 ## Purpose
 
@@ -22,10 +22,10 @@ A skill is usually:
 
 ```text
 skill-name\
-Ã¢â€Å“Ã¢â€â‚¬ SKILL.md
-Ã¢â€Å“Ã¢â€â‚¬ scripts\
-Ã¢â€Å“Ã¢â€â‚¬ references\
-Ã¢â€â€Ã¢â€â‚¬ assets\
+├─ SKILL.md
+├─ scripts\
+├─ references\
+└─ assets\
 ```
 
 ## Required format
@@ -114,7 +114,7 @@ Path:
 - `C:\Users\DELL\.codex\skills\docs-style`
 
 Install/copy:
-- copied with the standard Codex sync into `P:\agent-rules\codex\skills\docs-style`
+- copied with the standard Codex sync from `P:\agent-rules\skills\docs-style`
 
 Verify:
 - `$env:PYTHONUTF8='1'; python C:\Users\DELL\.codex\skills\.system\skill-creator\scripts\quick_validate.py C:\Users\DELL\.codex\skills\docs-style`
@@ -148,10 +148,10 @@ Runtime:
 - Codex + Grok CLI
 
 Purpose:
-- Multi-source structured research (≥3 angles) before implementation or when bug stalls. Renamed from `codex-research`.
+- Multi-source structured research (>=3 angles) before implementation or when bug stalls.
 
 Path:
-- `codex/skills/researcher` → `~/.codex/skills/` / `~/.grok/skills/`
+- `skills/researcher` → `~/.codex/skills/` / `~/.grok/skills/`
 
 Verify:
 - `scripts/validate-harness.sh` (Multi-source contract in SKILL.md)
@@ -209,7 +209,7 @@ Purpose:
 - Universal UI/UX — any visual direction (not one preset). Deep intake, multi-source research, 5fedu `/template`, browser verify. Replaces `frontend-ui-quality` and archived taste/image skills.
 
 Path:
-- `codex/skills/product-ui-craft` → `~/.codex/skills/` / `~/.grok/skills/`
+- `skills/product-ui-craft` → `~/.codex/skills/` / `~/.grok/skills/`
 
 Trigger:
 - UI, frontend, layout, dashboard, landing, greenfield app, redesign, 5fedu FE
@@ -223,14 +223,14 @@ Purpose:
 - Professional E2E: test matrix, permission matrix, cross-module, maximize coverage. Split from `playwright` CLI debug.
 
 Path:
-- `codex/skills/e2e-qa`
+- `skills/e2e-qa`
 
 Trigger:
 - e2e, QA, test phân quyền, regression UI, verify production flows
 
 ### Archived (not synced)
 
-`frontend-ui-quality`, `ui-ux-pro-max`, image/taste skills → `codex/skills/_archive/`
+`frontend-ui-quality`, `ui-ux-pro-max`, image/taste skills → archive only when deliberately moved out of active `skills/`
 
 ### caveman / cavecrew / gitnexus-* family
 
@@ -295,7 +295,7 @@ Purpose:
 - Create/execute locked `plan/` workflows with verification evidence.
 
 Path:
-- `C:\Users\DELL\.codex\rules\planning.md`
+- `C:\Users\DELL\.codex\rules\01-agent-workflow-sop.md`
 - future skill candidate: `C:\Users\DELL\.codex\skills\plan-execution\SKILL.md`
 
 Trigger:

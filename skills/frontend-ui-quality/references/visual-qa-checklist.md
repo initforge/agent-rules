@@ -1,4 +1,4 @@
-﻿# Visual QA Checklist
+# Visual QA Checklist
 
 Use this checklist after the UI renders in a browser. Prefer screenshot evidence over intuition.
 

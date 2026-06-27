@@ -37,7 +37,7 @@
 
 ```bash
 # Grok
-./grok/scripts/sync-all-harness.sh
+./scripts/sync-all-harness.sh
 
 # Antigravity live (từ master)
 cp antigravity/.agents/rules/06-opus-emulation-contract.md .agents/rules/

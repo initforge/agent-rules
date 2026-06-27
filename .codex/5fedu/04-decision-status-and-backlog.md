@@ -63,7 +63,7 @@ Khi có phản hồi mới từ owner hoặc thay đổi nghiệp vụ phát sin
     2. Tài khoản đăng nhập sử dụng cột `ten_dang_nhap` của bảng nhân viên, bỏ qua mã nhân viên HR.
     3. Khi tạo/sửa nhân viên, hệ thống tự động đồng bộ tài khoản auth với email giả dạng `<ten_dang_nhap>@gmail.com` và mật khẩu mặc định `123456`.
 *   **Phạm vi ảnh hưởng (Target Area)**: Thư mục `supabase/migrations/`, `features/he-thong/nhan-vien/`
-*   **Đối chiếu Trụ cột (Pillar Map)**: [02-database-and-auth-rules.md#1-thiet-ke-database--schema-quy-tac-cung](file:///P:/agent-rules/antigravity/.agents/skills/5fedu-project/assets/project-context/.agents/5fedu/02-database-and-auth-rules.md#L7-L33)
+*   **Đối chiếu Trụ cột (Pillar Map)**: `02-database-and-auth-rules.md` §1
 *   **Trạng thái áp dụng (Enforcement)**: `DA_AP_DUNG`
 
 ---
@@ -74,7 +74,7 @@ Khi có phản hồi mới từ owner hoặc thay đổi nghiệp vụ phát sin
     2. Gộp dữ liệu Nhân sự và Tài xế vào bảng `var_nhan_vien` chung, phân loại bằng cờ mềm `la_tai_xe` để tối giản bảng danh mục.
     3. Các cột trong bảng phải hiển thị cell icon chuẩn, các trường khóa ngoại dùng Combobox tìm kiếm động, và file xuất Excel/PDF phải hỗ trợ Unicode cùng định dạng số thực.
 *   **Phạm vi ảnh hưởng (Target Area)**: `components/ui/`, `features/he-thong/`, các modules xuất báo cáo.
-*   **Đối chiếu Trụ cột (Pillar Map)**: [03-ui-ux-and-delivery-standards.md#1-quy-chuan-thiet-ke-giao-dien-uiux-parity](file:///P:/agent-rules/antigravity/.agents/skills/5fedu-project/assets/project-context/.agents/5fedu/03-ui-ux-and-delivery-standards.md#L7-L20)
+*   **Đối chiếu Trụ cột (Pillar Map)**: `03-ui-ux-and-delivery-standards.md` §1
 *   **Trạng thái áp dụng (Enforcement)**: `DA_AP_DUNG`
 
 ---
@@ -84,7 +84,7 @@ Khi có phản hồi mới từ owner hoặc thay đổi nghiệp vụ phát sin
     1. Áp dụng quy tắc Khóa kế thừa (Cascading Lock): Khi dòng dữ liệu cha ở trạng thái phê duyệt hoặc hoàn thành, toàn bộ các bản ghi con liên kết phải tự động bị khóa (read-only) trên cả bảng con nhúng và drawer chi tiết con.
     2. Hỗ trợ kích hoạt bộ lọc và chuyển hướng màn hình thông qua việc đọc các tham số query URL (ví dụ: `?tab=danh-sach&id_tai_xe=1`).
 *   **Phạm vi ảnh hưởng (Target Area)**: `features/quan-ly-van-tai/chuyen-xe/`
-*   **Đối chiếu Trụ cột (Pillar Map)**: [03-ui-ux-and-delivery-standards.md#thiet-ke-mo-hinh-master-detail-cha---con](file:///P:/agent-rules/antigravity/.agents/skills/5fedu-project/assets/project-context/.agents/5fedu/03-ui-ux-and-delivery-standards.md#L21-L26)
+*   **Đối chiếu Trụ cột (Pillar Map)**: `03-ui-ux-and-delivery-standards.md` phần master-detail
 *   **Trạng thái áp dụng (Enforcement)**: `DA_AP_DUNG`
 
 ---
@@ -97,7 +97,7 @@ Khi có phản hồi mới từ owner hoặc thay đổi nghiệp vụ phát sin
     4. Áp dụng quy trình kiểm thử E2E chéo vai trò: Dùng tối thiểu 3 tài khoản cấp bậc khác nhau đăng nhập thực tế để kiểm tra ẩn/hiện UI, thử hành động trái phép, và kiểm tra quyền được áp dụng lập tức.
     5. Thiết lập quy tắc Zero Gaps UI Parity (bắt buộc phải đủ toolbar, pagination, card, drawer giống Nhân viên) và cấm viết code generic gộp các phân hệ khác nhau.
 *   **Phạm vi ảnh hưởng (Target Area)**: Quy trình vận hành và toàn bộ hệ thống phân quyền, module.
-*   **Đối chiếu Trụ cột (Pillar Map)**: [00-index.md#1-hop-dong-thuc-thi-chat-che-anti-flaw-contract](file:///P:/agent-rules/antigravity/.agents/skills/5fedu-project/assets/project-context/.agents/5fedu/00-index.md#L43-L53), [02-database-and-auth-rules.md#4-phan-quyen-ung-dung-permissions-model](file:///P:/agent-rules/antigravity/.agents/skills/5fedu-project/assets/project-context/.agents/5fedu/02-database-and-auth-rules.md#L80-L125), [03-ui-ux-and-delivery-standards.md#nguyen-tac-tham-chieu-template-khong-de-khoang-trong-ui-parity---zero-gaps](file:///P:/agent-rules/antigravity/.agents/skills/5fedu-project/assets/project-context/.agents/5fedu/03-ui-ux-and-delivery-standards.md#L7-L22)
+*   **Đối chiếu Trụ cột (Pillar Map)**: `00-index.md`, `02-database-and-auth-rules.md` phần permission, `03-ui-ux-and-delivery-standards.md` phần UI parity.
 *   **Trạng thái áp dụng (Enforcement)**: `DA_AP_DUNG`
 
 ---

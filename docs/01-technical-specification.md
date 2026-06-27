@@ -1,44 +1,44 @@
 # Agent Rules — Đặc Tả Kỹ Thuật
 
-> **Mục đích:** Giải thích tại sao repo này được tổ chức như một runtime Codex có thể đồng bộ, không chỉ liệt kê file rule và skill.
+> **Mục đích:** Giải thích tại sao repo này được tổ chức như một runtime agent có thể đồng bộ, không chỉ liệt kê file rule và skill.
 
 ## 1. Tổng quan
 
-`agent-rules` là bộ điều khiển vận hành cho Codex trên máy Windows. Nó gom rule, profile, skill, script, template và inventory thành một bundle có thể copy, sync và phục hồi. Điểm quan trọng nhất là repo này không phải ứng dụng chạy cho người dùng cuối; nó là hệ thống kiểm soát cách agent làm việc.
+`agent-rules` là bộ điều khiển vận hành cho Codex, Antigravity và Grok CLI. Nó gom rule, profile, skill, script, template và inventory thành một bundle có thể copy, sync và phục hồi. Điểm quan trọng nhất là repo này không phải ứng dụng chạy cho người dùng cuối; nó là hệ thống kiểm soát cách agent làm việc.
 
-Luận điểm thiết kế: **runtime hằng ngày phải nằm local để ổn định, nhưng cấu hình phải có bản backup/versioned để phục hồi được**. Vì vậy `C:\Users\DELL\.codex` là nguồn dùng hằng ngày, còn `P:\agent-rules\codex` là bản đồng bộ để backup, bootstrap máy mới và chia sẻ với agent/tool khác.
+Luận điểm thiết kế: **runtime hằng ngày phải nằm local để ổn định, nhưng cấu hình phải có bản source/versioned để phục hồi được**. Vì vậy `~/.codex`, `~/.gemini` và `~/.grok` là runtime dùng hằng ngày, còn `P:\agent-rules` là repo source để backup, bootstrap máy mới và chia sẻ với agent/tool khác.
 
 ## 2. Runtime model
 
 ```mermaid
 flowchart LR
   Local["C:\\Users\\DELL\\.codex"]
-  Backup["P:\\agent-rules\\codex"]
+  Source["P:\\agent-rules"]
   Repo["agent-rules repo"]
   Codex["Codex runtime"]
   Tools["Tools / MCP / Skills"]
 
-  Repo --> Backup
-  Backup --> Local
+  Repo --> Source
+  Source --> Local
   Local --> Codex
   Local --> Tools
-  Local --> Backup
+  Local --> Source
 ```
 
-`Local` là runtime thật khi Codex chạy. `Backup` là bản sao để khôi phục hoặc sync. Repo giữ cả hai tầng: các loader tương thích ở root và bundle đầy đủ trong `codex/`.
+`Local` là runtime thật khi Codex chạy. `Source` là repo versioned để khôi phục hoặc sync. Repo giữ source dùng chung ở root và adapter riêng trong `platforms/`.
 
 ## 3. Cấu trúc hệ thống
 
 | Khu vực | Vai trò | Lý do tồn tại |
 |---|---|---|
-| `codex/AGENTS.md` | Điểm nạp runtime | Cho Codex biết phải đọc rule nào trong `C:\Users\DELL\.codex` |
-| `codex/rules/` | Hợp đồng hành vi | Tách planning, execution, quality gate, context và inventory thành từng lớp rõ |
-| `codex/agents/` | Profile TOML | Chọn model, effort và sandbox theo pha làm việc |
-| `codex/skills/` | Quy trình chuyên biệt | Đóng gói workflow như docs, research, Playwright, UI quality, security |
-| `codex/scripts/` | Tự động hóa Windows | Sync, bootstrap, inventory và phase orchestration bằng PowerShell |
-| `codex/docs/` | Registry runtime | Ghi lại tool, MCP, skill, profile và cách bootstrap |
-| `codex/templates/` | Mẫu artifact | Chuẩn hóa plan, research, review, handoff và final report |
-| `codex/inventory/` | Snapshot máy | Ghi tool/path/env/config hiện có mà không lưu secret |
+| `AGENTS.md` | Điểm nạp repo | Cho agent biết entrypoint và nguyên tắc vận hành chung |
+| `rules/` | Hợp đồng hành vi dùng chung | Tách planning, execution, quality gate, context và inventory thành từng lớp rõ |
+| `skills/` | Quy trình chuyên biệt | Đóng gói workflow như docs, research, Playwright, UI quality, security |
+| `workflows/` | Workflow dùng chung | Chuẩn hóa các quy trình nhiều bước |
+| `platforms/codex/` | Codex adapter | Profile TOML, templates, docs, scripts và overlay riêng Codex |
+| `platforms/antigravity/` | Antigravity adapter | Rules có frontmatter, global GEMINI, workflows và install scripts |
+| `platforms/grok/` | Grok adapter | Entrypoint, hook/script và cấu hình live cho Grok CLI |
+| `scripts/` | Tự động hóa chung | Sync, install và validate harness |
 
 ## 4. Luồng nạp rule
 
@@ -78,7 +78,7 @@ Các script chính:
 
 **Vấn đề:** Nếu Codex phụ thuộc trực tiếp vào ổ backup hoặc repo đang sync, công việc hằng ngày dễ bị gãy khi path biến mất hoặc repo chưa cập nhật.
 
-**Chọn:** Dùng `C:\Users\DELL\.codex` làm runtime chính, `P:\agent-rules\codex` làm bản backup/bootstrap.
+**Chọn:** Dùng runtime local (`~/.codex`, `~/.gemini`, `~/.grok`) làm nơi agent chạy thật, `P:\agent-rules` làm source backup/bootstrap.
 
 **Không chọn:** Dùng `P:\agent-rules` làm runtime trực tiếp.
 
@@ -108,7 +108,7 @@ Các script chính:
 
 ## 7. Registry và inventory
 
-Registry trong `codex/docs/` giải thích thứ gì đang được cài và cách dựng lại. Inventory trong `codex/inventory/` ghi snapshot máy hiện tại: tool, path, env, MCP list và config snapshot.
+Registry trong `platforms/codex/docs/` giải thích thứ gì đang được cài và cách dựng lại. Inventory trong `platforms/codex/inventory/` ghi snapshot máy hiện tại: tool, path, env, MCP list và config snapshot.
 
 Điểm cần giữ: inventory được phép ghi tên biến môi trường và path, nhưng không được ghi secret value. Đây là lý do các docs về MCP/tool chỉ mô tả nơi cấu hình và cách verify, không nhúng token.
 
@@ -126,13 +126,10 @@ Registry trong `codex/docs/` giải thích thứ gì đang được cài và cá
 
 | File | Vai trò |
 |---|---|
-| `grok/rules/` | Master harness (sync → codex + antigravity + .grok) |
-| `codex/rules/01-agent-workflow-sop.md` | Planning, execution, RC, quality matrix |
-| `codex/rules/06-opus-emulation-contract.md` | Outcome Opus, MEDIUM default |
-| `grok/scripts/sync-all-harness.sh` | Sync rules + skills một lệnh |
-| `grok/scripts/validate-harness.sh` | Fail nếu còn legacy / skill drift |
-| `codex/docs/phase-orchestration.md` | Cách map phase sang profile |
-| `codex/docs/bootstrap-new-machine.md` | Cách dựng lại runtime trên máy mới |
-| `codex/scripts/verify-codex-rules.ps1` | Kiểm tra file runtime bắt buộc |
-| `codex/scripts/sync-codex-to-p.ps1` | Sync runtime local sang backup |
-| `codex/scripts/sync-p-to-codex.ps1` | Restore backup về runtime local |
+| `rules/` | Master harness dùng chung |
+| `skills/` | Master skills dùng chung |
+| `scripts/sync-all-harness.sh` | Sync rules + skills một lệnh |
+| `scripts/validate-harness.sh` | Fail nếu còn legacy / skill drift |
+| `platforms/codex/docs/phase-orchestration.md` | Cách map phase sang profile |
+| `platforms/codex/docs/bootstrap-new-machine.md` | Cách dựng lại runtime trên máy mới |
+| `platforms/codex/scripts/verify-codex-rules.ps1` | Kiểm tra file runtime bắt buộc |

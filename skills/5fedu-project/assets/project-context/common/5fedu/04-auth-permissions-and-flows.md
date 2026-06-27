@@ -1,4 +1,4 @@
-﻿# Auth, Permissions Và Flow
+# Auth, Permissions Và Flow
 
 ## Đăng nhập
 
@@ -102,6 +102,5 @@ Quy tắc: đứng ở đâu quay lại đó.
 - [ ] **Đã test/trace cho cả 3 cấp bậc?** — Admin (cap_bac=1), Trưởng phòng (cap_bac=2), Nhân viên (cap_bac≥3).
 
 **Nếu bất kỳ mục nào FAIL → KHÔNG được báo hoàn thành task.**
-
 
 

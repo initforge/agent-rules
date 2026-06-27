@@ -9,7 +9,7 @@ File này là điểm tương thích cho các project vẫn import:
 Overlay Codex đang được bảo trì nằm tại:
 
 ```text
-@P:\agent-rules\codex\rules\codex-overlay.md
+@P:\agent-rules\platforms\codex\rules\codex-overlay.md
 ```
 
 Nguồn runtime:
@@ -21,7 +21,7 @@ C:\Users\DELL\.codex
 Bản sync/bootstrap:
 
 ```text
-P:\agent-rules\codex
+P:\agent-rules
 ```
 
 ## Tóm Tắt Tương Thích
@@ -32,4 +32,3 @@ P:\agent-rules\codex
 - Dùng `workflow-router` và metadata trong plan để route phase/profile.
 - Dùng GitNexus cho kiểm tra impact và refactor code dùng chung khi repo đã index.
 - Giữ `AGENTS.md` cấp project thật mỏng, chỉ chứa thông tin riêng của project.
-

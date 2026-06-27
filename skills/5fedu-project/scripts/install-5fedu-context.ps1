@@ -7,9 +7,14 @@ $ErrorActionPreference = "Stop"
 
 $skillRoot = Split-Path -Parent $PSScriptRoot
 $sourceRoot = Join-Path $skillRoot "assets\project-context"
+$source5fedu = Join-Path $sourceRoot "common\5fedu"
 
 if (-not (Test-Path $sourceRoot)) {
   throw "Missing template source: $sourceRoot"
+}
+
+if (-not (Test-Path $source5fedu)) {
+  throw "Missing 5fedu template source: $source5fedu"
 }
 
 $repo = (Resolve-Path $RepoRoot).Path
@@ -21,7 +26,14 @@ $targetCodexContext = Join-Path $repo ".codex\5fedu"
 $sharedFiles = @(
   "00-index.md",
   "02-database-and-auth-rules.md",
-  "03-ui-ux-and-delivery-standards.md"
+  "03-ui-ux-and-delivery-standards.md",
+  "04-business-patterns.md"
+)
+
+$defaultScaffoldExcludes = @(
+  "07-working-format.md",
+  "08-source-examples.md",
+  "10-owner-feedback-lessons.md"
 )
 
 $isAlreadyScaffolded = (Test-Path $targetContext) -or (Test-Path $targetCodexContext)
@@ -32,35 +44,27 @@ if ($isAlreadyScaffolded -and -not $Force) {
   # Copy/overwrite only shared lessons and rules
   foreach ($target in @($targetContext, $targetCodexContext)) {
     New-Item -ItemType Directory -Force -Path $target | Out-Null
-    foreach ($srcFolder in @(".agents\5fedu", ".codex\5fedu")) {
-      $src5fedu = Join-Path $sourceRoot $srcFolder
-      if (-not (Test-Path $src5fedu)) { continue }
-      foreach ($file in $sharedFiles) {
-        $srcFile = Join-Path $src5fedu $file
-        $dstFile = Join-Path $target $file
-        if (Test-Path $srcFile) {
-          Copy-Item -Path $srcFile -Destination $dstFile -Force
-          Write-Host "  -> Updated shared rules file: $file in $target"
-        }
+    foreach ($file in $sharedFiles) {
+      $srcFile = Join-Path $source5fedu $file
+      $dstFile = Join-Path $target $file
+      if (Test-Path $srcFile) {
+        Copy-Item -Path $srcFile -Destination $dstFile -Force
+        Write-Host "  -> Updated shared rules file: $file in $target"
       }
     }
   }
   
   # Check and copy other files ONLY if they don't exist
-  foreach ($srcFolder in @(".agents\5fedu", ".codex\5fedu")) {
-    $src5fedu = Join-Path $sourceRoot $srcFolder
-    if (-not (Test-Path $src5fedu)) { continue }
-    $allFiles = Get-ChildItem $src5fedu -File
-    foreach ($file in $allFiles) {
-      if ($sharedFiles -notcontains $file.Name) {
-        foreach ($target in @($targetContext, $targetCodexContext)) {
-          $dstFile = Join-Path $target $file.Name
-          if (-not (Test-Path $dstFile)) {
-            Copy-Item -Path $file.FullName -Destination $dstFile -Force
-            Write-Host "  -> Initialized missing project-specific file: $($file.Name) in $target"
-          } else {
-            Write-Host "  -> Preserved custom project-specific file: $($file.Name) in $target"
-          }
+  $allFiles = Get-ChildItem $source5fedu -File
+  foreach ($file in $allFiles) {
+    if (($sharedFiles -notcontains $file.Name) -and ($defaultScaffoldExcludes -notcontains $file.Name)) {
+      foreach ($target in @($targetContext, $targetCodexContext)) {
+        $dstFile = Join-Path $target $file.Name
+        if (-not (Test-Path $dstFile)) {
+          Copy-Item -Path $file.FullName -Destination $dstFile -Force
+          Write-Host "  -> Initialized missing project-specific file: $($file.Name) in $target"
+        } else {
+          Write-Host "  -> Preserved custom project-specific file: $($file.Name) in $target"
         }
       }
     }
@@ -76,21 +80,24 @@ if ($isAlreadyScaffolded -and -not $Force) {
     Write-Host "  -> Wrote AGENTS.md"
   }
   
-  # Copy both platform mirrors when available
-  foreach ($platformFolder in @(".agents", ".codex")) {
-    $srcPlatform = Join-Path $sourceRoot $platformFolder
-    if (-not (Test-Path $srcPlatform)) { continue }
-    $dstPlatform = Join-Path $repo $platformFolder
-    New-Item -ItemType Directory -Force -Path $dstPlatform | Out-Null
-    Copy-Item -Path "$srcPlatform\*" -Destination $dstPlatform -Recurse -Force
+  # Generate both platform mirrors from one common source.
+  # Deep examples/raw lessons stay in the skill source unless explicitly requested.
+  foreach ($target in @($targetContext, $targetCodexContext)) {
+    New-Item -ItemType Directory -Force -Path $target | Out-Null
+    foreach ($file in Get-ChildItem $source5fedu -File) {
+      if ($defaultScaffoldExcludes -contains $file.Name) { continue }
+      Copy-Item -Path $file.FullName -Destination (Join-Path $target $file.Name) -Force
+    }
   }
   
   # Also write legacy mirror .agent for compatibility if it is configured
   $legacyDir = Join-Path $repo ".agent"
   if (Test-Path $legacyDir) {
-    $srcAgents = Join-Path $sourceRoot ".agents"
-    if (Test-Path $srcAgents) {
-      Copy-Item -Path "$srcAgents\*" -Destination $legacyDir -Recurse -Force
+    $legacy5fedu = Join-Path $legacyDir "5fedu"
+    New-Item -ItemType Directory -Force -Path $legacy5fedu | Out-Null
+    foreach ($file in Get-ChildItem $source5fedu -File) {
+      if ($defaultScaffoldExcludes -contains $file.Name) { continue }
+      Copy-Item -Path $file.FullName -Destination (Join-Path $legacy5fedu $file.Name) -Force
     }
   }
 }
