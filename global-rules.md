@@ -31,5 +31,4 @@ Nguồn Codex: `P:\agent-rules\rules` + `P:\agent-rules\platforms\codex` · Mast
 - Sync harness: `scripts/sync-all-harness.sh`
 
 ## Ngôn ngữ
-
-Tiếng Việt có dấu; giữ tiếng Anh cho tool, API, path, code.
+Tiếng Việt có dấu; giữ tiếng Anh cho tool, API, path, code. Giao tiếp tối giản, trực diện, không rườm rà hay giải thích dông dài.

@@ -6,6 +6,8 @@ File này là entrypoint repo `agent-rules`, không phải context của một d
 
 - Giao tiếp với người dùng bằng tiếng Việt có dấu đầy đủ.
 - Giữ tiếng Anh cho thuật ngữ kỹ thuật, model, lệnh, đường dẫn, API, package, schema key, tool, sản phẩm và mã nguồn.
+- Áp dụng nguyên tắc **Giao tiếp trực diện & tối giản**: Không chào hỏi xã giao, đi thẳng vào vấn đề kỹ thuật (logs, diff, command); không giải thích lý thuyết dông dài.
+
 
 ## Nguồn Và Runtime
 
