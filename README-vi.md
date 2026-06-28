@@ -26,6 +26,7 @@ Repo này phân biệt rõ hai vai trò:
 | `platforms/grok/` | Cấu hình Grok CLI: hooks, scripts và cấu trúc mapping |
 | `platforms/antigravity/` | Adapter cho Google Antigravity: overlay rules, workflows global |
 | `scripts/` | Các tập lệnh cài đặt global, đồng bộ hóa (sync) và kiểm tra tính toàn vẹn (validate) |
+| `docs/` | Tài liệu hệ thống và [Danh mục Open-source Tools](docs/09-opensource-tools-registry.md) |
 | `.agents/` | Thư mục runtime live cục bộ dùng để kiểm thử trên repo này |
 
 ## Tech Stack

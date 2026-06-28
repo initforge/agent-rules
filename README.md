@@ -23,6 +23,7 @@ Daily work uses local runtimes such as `~/.codex`, `~/.gemini`, and `~/.grok`. `
 | `platforms/grok/` | Grok CLI config: hooks, scripts, and mapping structure |
 | `platforms/antigravity/` | Google Antigravity adapter: overlay rules, global workflows |
 | `scripts/` | Installation, synchronization (sync), and verification (validate) scripts |
+| `docs/` | System documentation and [Open-source Tools Registry](docs/09-opensource-tools-registry.md) |
 | `.agents/` | Project-local runtime live copy (used for testing on this repo) |
 | `shared/` | Shared contracts (`opus-emulation-contract.md`) |
 
