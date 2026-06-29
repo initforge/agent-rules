@@ -38,11 +38,11 @@ agent-rules/
 ./scripts/sync-all-harness.sh
 ```
 
-## Grok KHÔNG được (mặc định)
+## Không được (mặc định cho mọi nền)
 
 1. Sửa platform mirror/runtime trực tiếp khi thay đổi thuộc lõi dùng chung — sửa ở `rules/`, `skills/`, `workflows/`, `shared/` rồi sync.
-2. Copy ceremony Antigravity cũ (preflight 8 câu mọi lượt).
-3. Tự commit/push harness.
+2. Copy ceremony riêng của một nền sang nền khác nếu đó không phải chuẩn outcome chung.
+3. Tự commit/push harness khi người dùng chưa yêu cầu.
 
 ## Khi core safety đổi
 

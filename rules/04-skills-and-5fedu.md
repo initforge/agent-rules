@@ -1,19 +1,19 @@
 ---
 alwaysApply: true
-description: "Registry skills + đường dẫn 5fedu — Codex CLI"
+description: "Registry skills + đường dẫn 5fedu — shared harness"
 ---
 
 # 04-skills-and-5fedu
 
 Rules (`00-03`) là hành vi. **Skills** là quy trình. **5fedu context** là nghiệp vụ dự án.
 
-## Skills — nạp ở đâu (Codex CLI)
+## Skills — nạp ở đâu (shared harness)
 
 | Ưu tiên | Path | Vai trò |
 |---|---|---|
-| 1 | `~/.codex/skills/` | Runtime user |
-| 2 | `<repo>/.codex/skills/` hoặc repo source `skills/` | Project/bootstrap |
-| 3 | `<repo>/.grok/skills/` | Mirror Grok (nếu có) |
+| 1 | Runtime skills của nền đang chạy (`~/.codex/skills/`, `~/.grok/skills/`, hoặc `.agents/skills/`) | User/runtime |
+| 2 | Repo source `skills/` hoặc project-local skills | Canonical/project bootstrap |
+| 3 | Platform mirror do script sync sinh ra | Mirror, không phải source chân lý |
 
 ## Trigger → Skill (bắt buộc)
 

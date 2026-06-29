@@ -81,6 +81,81 @@ Antigravity có xu hướng tạo outline nghe hợp lý nhưng thiếu chứng 
 7. Tự chấm 95% First-Pass Quality: intent fidelity, evidence, schema/interface certainty, business linkage, verification realism, scope/order discipline. Mục nào dưới 4/5 hoặc tổng dưới 27/30 thì `PLAN NOT LOCKED`.
 8. Fail bất kỳ cổng nào thì plan là `PLAN NOT LOCKED`; không được báo `PASS` và không được chuyển sang implementation rộng.
 
+## Antigravity Ultra Prompt-Task-Verify Loop (chỉ Antigravity)
+
+**Ý đồ cốt lõi:** Antigravity phải tự quét sạch yêu cầu trong prompt của người dùng, đào sâu đến các tiểu tiết nhỏ nhất có thể, liên hệ rộng với code/spec/schema/template/downstream, tự kiểm sai liên tục trong lúc làm, và phát hiện lệch yêu cầu trước khi người dùng phải nhắc lại. Rule này chỉ áp dụng cho Antigravity vì nền này dễ bỏ sót chi tiết khi prompt dài hoặc task nhiều nhánh.
+
+### 1. Prompt Exhaustion Pass (quét sạch prompt trước khi làm)
+
+Với mọi task không rõ ràng là LOW, Antigravity phải biên dịch prompt thành checklist làm việc trước khi sửa file:
+
+1. **Atomic Requirement Ledger:** Tách prompt thành từng mệnh đề nhỏ nhất có thể: yêu cầu chính, yêu cầu phụ, điều cấm, tiêu chuẩn chất lượng, thứ tự ưu tiên, ví dụ người dùng nêu, và các chi tiết tưởng nhỏ nhưng có thể ảnh hưởng nghiệm thu.
+2. **Intent Priority Map:** Ghi rõ mục tiêu thật của người dùng, phần nào là sản phẩm phải làm ngay, phần nào là meta/context/harness, phần nào chỉ là nhận xét nền.
+3. **Hidden Acceptance Criteria:** Suy ra các điều kiện nghiệm thu ẩn hợp lý từ prompt, nhưng phải đánh dấu là `INFERRED`; không biến inference thành fact.
+4. **Conflict/Unknown Ledger:** Nếu có mâu thuẫn, thiếu credential/spec/schema hoặc điểm có thể hiểu theo nhiều nghĩa, đánh dấu `UNKNOWN` và chỉ hỏi khi không thể tự xác minh bằng repo/spec/tool.
+5. **Do-Not-Miss List:** Lập danh sách các tiểu tiết dễ sót nhất và dùng nó làm checklist match-back trước mỗi lần báo xong.
+6. **Prompt is Acceptance Source:** Prompt gốc của người dùng là nguồn nghiệm thu cao nhất. `implementation_plan.md`, `task.md`, requirement ledger và mọi suy luận của agent chỉ là bản dịch trung gian; nếu chúng thiếu hoặc lệch prompt thì phải sửa chúng, không được dùng chúng để tự hợp thức hóa kết quả.
+
+### 2. Deep Context Expansion (đào sâu và liên hệ rộng)
+
+Antigravity không được chỉ đọc file gần lỗi nếu task có dấu hiệu liên quan rộng. Phải mở rộng context theo vòng:
+
+1. **Entry → domain → implementation → call-sites:** đọc `AGENTS.md`/index, rule domain, file gần task, imports/call-sites, shared utilities, store/hooks/API/schema liên quan.
+2. **Similar-case sweep:** dùng search của IDE/terminal để tìm tất cả component/module/file cùng họ; sửa một điểm thì phải kiểm tra các điểm tương tự, ít nhất ghi rõ vì sao không sửa điểm còn lại.
+3. **Downstream linkage:** truy vết dữ liệu từ input/form/API/DB/cache/UI/export/report/public surface. Với 5fedu phải liên hệ template, module mapping, permission, export và báo cáo downstream nếu có.
+4. **Case matrix:** với logic có nhánh, phải xét happy path, empty state, loading, error, permission denied, invalid input, duplicate action, stale cache, responsive/UI overflow, và dữ liệu thật/production-safe khi phù hợp.
+5. **Breadth is default:** khi prompt yêu cầu “chi tiết”, “đào sâu”, “quét rộng”, “liên hệ nhiều”, Antigravity phải ưu tiên mở rộng audit hơn mức mặc định, miễn không vượt scope nghiệp vụ hoặc chạm hành động phá hủy.
+
+### 3. Physical Plan & Task Discipline
+
+Với task MEDIUM/HIGH trên Antigravity:
+
+1. **Bắt buộc có `implementation_plan.md` hoặc plan artifact hiện hành** nếu workspace/artifact có cơ chế plan. Nếu chưa có artifact, tạo/cập nhật plan trong vị trí project phù hợp thay vì giữ trong chat.
+2. **Bắt buộc có `task.md` vật lý** để theo dõi từng deliverable. Checklist phải đủ nhỏ để không che giấu tiểu tiết: mỗi module/component/API/test/screenshot/permission case là một item riêng khi có rủi ro.
+3. **Trạng thái task bắt buộc:** `[ ] todo`, `[/] doing`, `[x] verified`, `[!] blocked`. Không được đánh `[x]` nếu mới code xong nhưng chưa verify.
+4. **Plan không chỉ là outline:** plan phải chứa evidence hiện trạng, file mapping, route/API/schema/table/permission map, similar-case audit, verification matrix, và match-back table từ prompt. Plan không bao giờ được thay thế prompt gốc làm tiêu chuẩn nghiệm thu.
+5. **Cập nhật real-time:** khi phát hiện yêu cầu con mới, bug mới, hoặc thay đổi approach, phải cập nhật `task.md`/plan trong cùng lượt làm trước khi tiếp tục code.
+
+### 4. Continuous Self-Check Loop (tự phát hiện sai trong lúc làm)
+
+Antigravity phải chạy vòng lặp sau cho từng deliverable, không chờ tới cuối:
+
+```text
+FOR each atomic requirement:
+  mark task = doing
+  inspect current state and related cases
+  implement the smallest safe slice
+  run the strongest available verification for that slice
+  compare result back to the user's original prompt first
+  update/fix plan or task.md if they drift from the prompt
+  if mismatch:
+    classify root cause (misread prompt | plan drift | wrong file | missing context | bad assumption | broken implementation)
+    fix immediately or mark blocked with one concrete reason
+  only then mark task = verified
+END
+```
+
+Các cổng tự kiểm bắt buộc:
+
+1. **Prompt Match-Back per slice:** sau mỗi slice, đối chiếu trực tiếp lại với prompt gốc và Atomic Requirement Ledger. Nếu ledger/plan/task khác prompt, prompt thắng; phải sửa ledger/plan/task trước khi tiếp tục.
+2. **Assumption Revalidation:** assumption nào dùng để code phải được verify bằng file/schema/tool hoặc chuyển thành `UNKNOWN`; cấm giữ assumption im lặng.
+3. **Diff Review Before Next Slice:** tự đọc diff vừa tạo để bắt lỗi sai file, sai tên, thiếu import, lệch style, hoặc thay đổi ngoài scope.
+4. **Regression Sweep:** trước khi final, chạy search lại các pattern đã sửa để đảm bảo không còn case cùng họ bị bỏ quên.
+5. **Evidence Gate:** mỗi item quan trọng phải có evidence tương ứng: command output, screenshot/browser result, schema query, test log, hoặc diff/call-site proof.
+
+### 5. Antigravity Final Anti-Miss Contract
+
+Antigravity không được báo `PASS` nếu thiếu một trong các mục sau với task MEDIUM/HIGH:
+
+1. `Prompt coverage`: đã cover bao nhiêu atomic requirements từ prompt gốc, còn gì `UNKNOWN/BLOCKED`.
+2. `Task ledger`: `task.md` đã cập nhật, số item verified/tổng item.
+3. `Breadth sweep`: đã quét similar cases/call-sites/module liên quan bằng gì.
+4. `Verification ladder`: build/test/browser/DB/permission/export gates đã chạy hoặc lý do không chạy được.
+5. `Mismatch audit`: có phát hiện sai trong lúc làm không; nếu có, đã sửa bằng evidence nào.
+6. `Status`: chỉ `PASS` khi mọi atomic requirement trong prompt gốc thuộc scope đã implemented + verified + match-back sạch.
+
+Nếu người dùng phải nhắc lại một yêu cầu đã nằm trong prompt ban đầu, Antigravity phải coi đó là hard fail của Prompt Exhaustion Pass: dừng ngụy biện, cập nhật checklist/plan, sửa ngay, và bổ sung miss-prevention vào final.
+
 ## Hooks
 
 Tuân `hooks.json` và preflight khi workspace bật — không tắt gate để nhanh hơn.

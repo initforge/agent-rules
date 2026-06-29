@@ -33,12 +33,14 @@ Bộ quy định kiểm soát chất lượng code, chống lỗi hồi quy (Ant
     2.  Chứng minh rõ ràng thay đổi không làm gãy các module downstream.
 *   **Khi tạo mới hoặc sửa đổi UI Component (Quy tắc React & State):**
     *   Đối chiếu với ít nhất $\ge 1$ component tương tự để đảm bảo tính nhất quán (pattern, trạng thái loading, error, empty).
-    *   **Async Button:** Bắt buộc có trạng thái `disabled` + hiển thị `spinner` khi đang chạy, gắn sự kiện `onClick` thực tế và chống double-click.
-    *   **Kỷ Luật Vận Hành React Hooks**: Tuyệt đối không viết các khối lệnh kiểm tra điều kiện và trả về JSX sớm (như `if (isLoading) return ...` hoặc `if (!data) return ...`) ở phía trên các khai báo React Hook khác (như `useMemo`, `useCallback`, `useEffect`). Toàn bộ các hook bắt buộc phải được khai báo ở đầu component, và các lệnh kiểm tra điều kiện trả về UI thay thế phải nằm ở cuối cùng của component, ngay trước khối `return` chính.
-    *   **Đồng bộ Dữ liệu Drawer Chi Tiết (Drawer State Sync)**: Khi hiển thị chi tiết của một dòng thông qua drawer/popup, tuyệt đối không truyền trực tiếp state thô `row={viewingRow}` vào component drawer (dữ liệu sẽ không cập nhật khi mutation thành công). Phải luôn sử dụng `useMemo` để tìm dòng tương ứng mới nhất từ danh sách đang cache trong React Query (ví dụ: `const currentViewingRow = useMemo(() => rows.find(r => String(r.id) === String(viewingRow.id)) || viewingRow, [viewingRow, rows]);`), rồi truyền `currentViewingRow` vào drawer.
-*   **Chuẩn Hóa Tiện Ích Tải File Từ Data URIs (Base64 Normalization)**:
-    *   Trong hàm giải mã base64 của tiện ích download (`triggerFileDownload` hoặc tương đương), bắt buộc phải gọi `decodeURIComponent(rawData)` để chuẩn hóa chuỗi base64 trước khi gọi `window.atob`. Điều này đảm bảo Blob URL luôn được sinh ra thành công đối với tất cả các link file Excel/PDF/CSV chứa ký tự Unicode đặc biệt.
+    *   **Async Button (Nút bất đồng bộ):** Bắt buộc có trạng thái `disabled` + hiển thị `spinner` (hoặc loading indicator) khi đang thực thi tác vụ bất đồng bộ, gắn sự kiện `onClick` thực tế và chống double-click.
+    *   **Kỷ Luật Khai Báo React Hooks (Hooks Order Rule):** Tuyệt đối không viết các khối lệnh kiểm tra điều kiện và trả về JSX sớm (như `if (isLoading) return ...` hoặc `if (!data) return ...`) ở phía trên các khai báo React Hook khác (như `useMemo`, `useCallback`, `useEffect`). Toàn bộ các hook bắt buộc phải được khai báo ở đầu component, và các lệnh kiểm tra điều kiện trả về UI thay thế phải nằm ở cuối cùng của component, ngay trước khối `return` chính.
+    *   **Đồng bộ Trạng thái Dữ liệu Chi Tiết (Detail State Sync):** Khi hiển thị chi tiết của một thực thể qua drawer/popup, tuyệt đối không truyền trực tiếp state thô đã lỗi thời vào component drawer (dữ liệu sẽ không tự cập nhật sau khi mutation/update thành công). Phải luôn sử dụng cơ chế query cache hoặc đồng bộ hóa qua store/React Query để tìm bản ghi mới nhất từ danh sách đang cache (Ví dụ: `const currentViewingRow = useMemo(() => rows.find(r => String(r.id) === String(viewingRow.id)) || viewingRow, [viewingRow, rows]);`).
+    *   **Phòng Vệ Kiểu Dữ liệu Ngày Tháng (Date Parsing Robustness):** Tuyệt đối không sử dụng `new Date(dateString + "T00:00:00")` để so sánh hoặc tính toán năm/tháng vì gây lỗi `Invalid Date` hoặc sai lệch múi giờ trên các trình duyệt nghiêm ngặt (như Safari hoặc hệ điều hành iOS). Bắt buộc sử dụng phân tách chuỗi `dateString.split(/[-T]/)` hoặc các thư viện chuẩn hóa (như date-fns/dayjs) để trích xuất trực tiếp giá trị năm và tháng dưới dạng số.
+*   **Chuẩn Hóa Tiện Ích Tải File (Base64 Normalization):**
+    *   Trong hàm giải mã base64 của tiện ích download (`triggerFileDownload` hoặc tương đương), bắt buộc phải chuẩn hóa chuỗi base64 (ví dụ bằng cách gọi `decodeURIComponent(rawData)`) trước khi gọi `window.atob`. Điều này đảm bảo Blob URL luôn được sinh ra thành công đối với tất cả các link file Excel/PDF/CSV chứa ký tự Unicode đặc biệt.
 *   **Xác thực tương tác:** Chạy verify bằng Playwright/Browser automation hoặc chụp ảnh màn hình khi có môi trường test chạy thật; nếu không có, thực hiện dry-run truy vết logic từng bước trong suy nghĩ (thought block).
+
 
 
 ---
@@ -55,6 +57,9 @@ Bộ quy định kiểm soát chất lượng code, chống lỗi hồi quy (Ant
     *   *Bước 1: Đối chiếu Context $\rightarrow$ Code (Spec-to-Code Trace)*: Rà soát kỹ lưỡng file specs/rules phân quyền của dự án. Với mỗi quy tắc (xem/thêm/sửa/xóa theo vai trò, cấp bậc, phòng ban, người tạo), phải định vị chính xác dòng code tương ứng chịu trách nhiệm kiểm tra logic đó trong module permissions của hệ thống.
     *   *Bước 2: Đối chiếu Code $\rightarrow$ Dòng Dữ Liệu (Implementation-to-Runtime Trace)*: Với mỗi trường/biến dùng để phân quyền dòng dữ liệu (như `id_phong_ban`, `capBac`, `employeeRecord`), phải trace ngược và xác nhận biến đó được hydrate đầy đủ lúc runtime; cấm để biến nhận giá trị rỗng/undefined làm sập hoặc ẩn sạch bảng dữ liệu.
     *   *Bước 3: Kiểm thử end-to-end cho từng cấp bậc vai trò*: Khi code xong phân quyền, bắt buộc phải giả lập kiểm thử tối thiểu trên 3 kịch bản tài khoản: Admin (quyền tối cao), Quản lý/Trưởng phòng (chỉ thấy dữ liệu thuộc phòng ban/chi nhánh), và Nhân sự thường (chỉ thấy dữ liệu do mình tạo hoặc liên đới trực tiếp).
+*   **Không phân quyền phân mảnh (No Local Permissions)**:
+    *   Quyền truy cập phải do tầng phân quyền tập trung quyết định (Role/RLS/Policy/Permission module), không nhét checkbox quyền xem/sửa/xóa cục bộ vào form của từng thực thể nghiệp vụ nếu hệ thống đã có cơ chế phân quyền chung.
+    *   Nếu một module thật sự cần exception theo bản ghi, phải ghi rõ đây là yêu cầu nghiệp vụ có spec/owner chốt, trace được từ UI -> API -> DB policy và verify bằng nhiều vai trò tài khoản.
 
 
 ---
@@ -89,27 +94,23 @@ Bộ quy định kiểm soát chất lượng code, chống lỗi hồi quy (Ant
 
 ---
 
-## 5. Xử lý Lỗi Database (PG/SQL) và Edge Functions trên UI
+## 5. Xử lý Lỗi Database và Edge Functions/APIs
 
-*   **Bắt lỗi khóa ngoại PostgreSQL thô**:
-    *   Mọi tác vụ xóa (DELETE) Thương hiệu, Dòng sản phẩm, Đối tác... có nguy cơ vi phạm ràng buộc khóa ngoại (Foreign Key Constraint) phải được bọc trong `try-catch` tại tầng mutation/service.
-    *   Không được để lộ lỗi đỏ của DB lên màn hình. Phải bắt lỗi và hiển thị thông báo Toast tiếng Việt thân thiện: *"Không thể xóa thực thể này do vẫn còn dữ liệu liên quan trong kho. Vui lòng di chuyển hoặc xóa các dữ liệu liên kết trước!"*.
-*   **Bắt lỗi Edge Function (employee-auth)**:
-    *   Tác vụ đồng bộ/tạo auth nhân sự gọi Edge Function phải được try-catch an toàn. Nếu Edge Function chưa được deploy hoặc lỗi mạng, bắt lỗi và hiển thị Toast cảnh báo chi tiết thay vì crash app, đồng thời thực hiện fallback cập nhật trạng thái cục bộ để tránh làm gián đoạn luồng nghiệp vụ của Admin.
-*   **Quy Trình Kiểm Tra Schema Drift (Schema Drift Verification)**:
-    *   *Bản chất rủi ro*: Cấu trúc database thực tế có thể bị thay đổi (migration hoặc sửa đổi nóng qua dashboard) mà không khớp với specs.
-    *   *Quy định*: Trước khi can thiệp vào bất kỳ code backend/queries nào, Agent bắt buộc phải chạy truy vấn SQL kiểm tra cấu trúc cột thực tế của bảng đích:
-        ```sql
-        SELECT column_name, data_type, is_nullable, column_default
-        FROM information_schema.columns
-        WHERE table_schema = 'public' AND table_name = '<tên_bảng>'
-        ORDER BY ordinal_position;
-        ```
-        Đối chiếu trực tiếp với mã nguồn và specs trước khi tiến hành code.
-*   **Bảo Đảm Nhất Quán Số Liệu Tự Tính (Database-level Roll-ups)**:
-    *   *Quy định*: Các trường tổng hợp tự tính (như tổng số lượng, tổng chi phí, tổng tiền) có thể hiển thị tính toán động ở Client, nhưng trong Database vẫn phải được ghi nhận đồng bộ. Bắt buộc phải viết **PostgreSQL DB Triggers** (trên các sự kiện `AFTER INSERT/UPDATE/DELETE` của bảng con) để tự động cập nhật số liệu tổng hợp lên bảng cha, giúp dữ liệu luôn chính xác khi truy xuất từ bất kỳ API bên thứ ba nào.
-*   **Kỷ luật Quản lý Dependency & Deploy (Vercel & npm)**:
-    *   *Quy định*: Khi build hoặc nâng cấp dependencies, tuyệt đối cấm dùng `--force` hoặc `--legacy-peer-deps` để che giấu lỗi xung đột peer dependency. Phải rà soát và giải quyết triệt để lỗi xung đột phiên bản. Nghiêm cấm dùng kết quả chạy `npm audit` làm rào cản ngăn chặn cài đặt các dependency hợp lệ (cần phân biệt rõ cảnh báo bảo mật tĩnh vs lỗi build).
+*   **Bắt lỗi vi phạm ràng buộc dữ liệu (DB Constraint Exception Handling):**
+    *   Mọi tác vụ ghi/xóa (MUTATE/DELETE) có nguy cơ vi phạm ràng buộc dữ liệu (ví dụ: Foreign Key Constraint trong RDBMS/PostgreSQL) phải được bọc trong cấu trúc `try-catch` an toàn tại tầng mutation/service/repository tương ứng.
+    *   Nghiêm cấm việc để lộ thông tin lỗi DB thô kỹ thuật (raw database error) lên giao diện người dùng. Phải bắt lỗi và hiển thị thông báo thân thiện bằng tiếng Việt (Ví dụ: thông báo Toast giải thích thực thể không thể xóa do đang được liên kết với dữ liệu khác).
+*   **Bắt lỗi tích hợp dịch vụ/APIs ngoài (Edge Function/External API Resilience):**
+    *   Các tác vụ tích hợp gọi API bên ngoài hoặc Edge Functions (ví dụ: dịch vụ xác thực, đồng bộ hóa) phải được bắt lỗi (try-catch) và xử lý ngoại lệ chu đáo. Nếu dịch vụ gặp sự cố hoặc lỗi mạng, phải Toast cảnh báo chi tiết và thực hiện cơ chế fallback (cập nhật trạng thái offline/cục bộ tạm thời nếu có thể) để không làm crash ứng dụng hoặc làm gián đoạn luồng trải nghiệm chính.
+*   **Quy Trình Kiểm Tra Schema Drift (Schema Drift Verification):**
+    *   *Bản chất rủi ro*: Cấu trúc database thực tế ở môi trường development/staging có thể bị thay đổi nóng hoặc không khớp với định nghĩa trong mã nguồn/specs.
+    *   *Quy định*: Trước khi can thiệp vào bất kỳ code truy vấn/repository nào, Agent bắt buộc phải chạy truy vấn kiểm tra cấu trúc cột thực tế của bảng đích (Ví dụ đối với PostgreSQL: truy vấn thông tin bảng từ `information_schema.columns`). Đối chiếu trực tiếp với mã nguồn và specs trước khi tiến hành code.
+*   **Bảo Đảm Nhất Quán Số Liệu Tự Tính (Database-level Roll-ups & Dynamic Calculation):**
+    *   *Quy định*: Các trường dữ liệu tổng hợp (như tổng số lượng, tổng tiền) có thể tính toán động ở phía Client, nhưng ở phía Database hoặc các APIs downstream vẫn phải được đồng bộ chính xác. Bắt buộc phải triển khai cơ chế đảm bảo (như DB Triggers ở Database hoặc các API hook đồng bộ ở Server) để dữ liệu tổng hợp luôn chính xác khi truy xuất từ bất kỳ API bên thứ ba nào.
+*   **Phòng Vệ Kiểu Dữ liệu Trường Liên Kết Trống trên Form (Foreign Key Normalization):**
+    *   *Quy định*: Khi biểu mẫu (Form) có trường chọn liên kết trỏ đến bảng khác (Foreign Key relation) và trường đó không bắt buộc (`required: false`), giá trị mặc định của trường khi gửi lên database/repository phải được chuẩn hóa thành `null` thay vì chuỗi rỗng `''` hoặc số `'0'`. Hàm chuẩn hóa form bắt buộc phải xử lý chuyển đổi này để tránh các lỗi ép kiểu dữ liệu của Database (ví dụ lỗi PostgreSQL: `invalid input syntax for type bigint: ""`).
+*   **Kỷ luật Quản lý Dependency & Deploy (Package Manager & Build Gates):**
+    *   *Quy định*: Khi build hoặc nâng cấp dependencies, tuyệt đối cấm dùng các cờ ép buộc tiêu cực (như `--force` hoặc `--legacy-peer-deps` trong npm) để che giấu lỗi xung đột peer dependency. Phải rà soát và giải quyết triệt để xung đột phiên bản. Nghiêm cấm dùng các cảnh báo bảo mật tĩnh (như kết quả `npm audit`) làm rào cản ngăn chặn cài đặt các dependency hợp lệ khi chúng thực sự không có lỗi build/runtime.
+
 
 
 
@@ -127,5 +128,8 @@ Bộ quy định kiểm soát chất lượng code, chống lỗi hồi quy (Ant
 *   **Kỷ Luật Cấm Deploy Thủ Công Trên Production (No Manual Terminal Deployment Rule)**:
     *   *Bản chất quy tắc*: Việc tự ý chạy lệnh deploy trực tiếp từ terminal (như `vercel --prod` hay tương đương) từ phía AI có thể gây xung đột trạng thái build, ghi đè không mong muốn các bản phân phối ổn định, hoặc lộ bí mật môi trường.
     *   *Quy tắc cứng*: AI tuyệt đối không bao giờ được tự chạy lệnh deploy ứng dụng lên production thông qua terminal. AI chỉ thực hiện sửa code, kiểm thử local để đảm bảo chất lượng, commit và push mã nguồn lên repository và báo cáo kết quả để hệ thống CI/CD tự động xử lý hoặc người dùng kiểm tra độc lập.
+*   **Tiêu chuẩn An Toàn Kiểm Thử E2E Production (E2E Test Safety Gates)**:
+    *   *Bảo toàn dữ liệu thực tế (Data Safety)*: Mọi ca kiểm thử E2E có thay đổi dữ liệu (mutating tests) bắt buộc phải chụp snapshot dữ liệu trước khi test và khôi phục (restore) nguyên trạng dữ liệu ngay khi kết thúc test (thông qua hook `afterAll` hoặc `afterEach`).
+    *   *Assert Database an toàn*: Chỉ thực hiện kiểm tra so sánh (assert) trực tiếp trên database khi các biến môi trường cấu hình DB credentials (`DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`) tồn tại hợp lệ. Nếu thiếu, ghi nhận trạng thái kiểm thử là `PARTIAL` (chỉ kiểm thử UI), cấm để bộ test bị crash.
 *   **Đối chiếu Prompt và Thiết kế Ban đầu (Coverage & Context Audit)**:
     *   *Kỷ luật*: Mọi thay đổi code phải được kiểm tra so khớp dòng-bằng-dòng (match-back) với file tóm tắt yêu cầu để đảm bảo không bị sót hoặc sai lệch ý của người dùng. Cấm việc suy đoán hoặc lược bớt các điều kiện chấp nhận (acceptance criteria).

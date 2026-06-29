@@ -83,7 +83,23 @@ Khi thêm CLI/MCP/skill: cập nhật registry phù hợp với nền đang dùn
 
 ## Context evolution trigger-only
 
-Không auto-load protocol học context cho task code thường. Chỉ dùng skill `context-evolution-protocol` khi sửa/audit/promote/deduplicate `AGENTS.md`, `.agents/**`, `.codex/**`, `rules/**`, `skills/**`, `workflows/**`, project context `.md`, hoặc khi feedback cho thấy agent hiểu sai lặp lại. Trước khi thêm rule mới phải phân loại tầng áp dụng, rà trùng lặp, viết thành pattern rộng nếu có thể, rồi sync + verify.
+Không auto-load protocol học context cho task code thường. Chỉ dùng skill `context-evolution-protocol` khi sửa/audit/promote/deduplicate `AGENTS.md`, `.agents/**`, `.codex/**`, `rules/**`, `skills/**`, `workflows/**`, project context `.md`, hoặc khi feedback cho thấy agent hiểu sai lặp lại.
+
+**Context ownership map:**
+
+| Loại tri thức | Tầng sở hữu |
+|---|---|
+| Runtime behavior, intent, status contract | `00-runtime-and-intent.md`, `06-opus-emulation-contract.md`, `07-finish-to-completion.md` |
+| Planning, execution, reporting ceremony | `01-agent-workflow-sop.md` |
+| Code behavior, DB/API errors, permission, test/debt | `02-code-quality-and-debt.md` |
+| Reading order, tool/skill trigger, context promotion | `03-context-and-tools.md` |
+| Skill registry and 5fedu activation | `04-skills-and-5fedu.md` |
+| Harness mutation/sync/protected layers | `05-harness-mutation-gate.md` |
+| UI visual/component/template parity | `08-ui-consistency-gate.md` |
+| Platform-specific identity/path/tooling | platform overlays such as `antigravity-overlay.md`, `platforms/*` |
+| Project/module facts, raw owner feedback, backlog | `<project>/{.codex,.agents,.grok,.kiro}/5fedu/*.md` or project-local docs |
+
+**Promotion gate:** Trước khi thêm rule mới phải phân loại tầng áp dụng, rà trùng lặp bằng `rg`, viết thành pattern rộng nếu có thể, giữ ví dụ cụ thể dưới nhãn "Ví dụ", rồi sync + verify. Cấm đẩy raw feedback hoặc tên module/file/cột cụ thể vào global rules nếu chưa trừu tượng hóa.
 
 ## Chống đọc lướt hời hợt & Chống đoán mò (Anti-Superficial & Anti-Guessing)
 

@@ -10,9 +10,9 @@ Người dùng **không** bắt buộc phải chuyển sang Grok để kiểm th
 
 ## Nguyên tắc cốt lõi
 
-1.  **Cùng một tiêu chuẩn đầu ra (Outcome Bar):** Bắt buộc trả về trạng thái kết thúc (`PASS` / `PARTIAL` / `BLOCKED`), thực hiện quét kỹ năng Turn-0 (Visible Echo), kích hoạt Multi-Skill Stack, kiểm soát nợ kỹ thuật (Technical Debt Gate), và tuân thủ tuyệt đối quy tắc chống chừa việc [07-finish-to-completion.md](file:///home/linhnxdeveloper/Projects/agent-rules/rules/07-finish-to-completion.md).
+1.  **Cùng một tiêu chuẩn đầu ra (Outcome Bar):** Bắt buộc trả về trạng thái kết thúc (`PASS` / `PARTIAL` / `BLOCKED`), thực hiện quét kỹ năng Turn-0 (Visible Echo), kích hoạt Multi-Skill Stack, kiểm soát nợ kỹ thuật (Technical Debt Gate), và tuân thủ tuyệt đối quy tắc chống chừa việc [07-finish-to-completion.md](07-finish-to-completion.md).
 2.  **Khác biệt cơ chế thực thi (Native Harness):** Mỗi nền tảng sẽ sử dụng cơ chế nạp quy tắc và công cụ native mạnh nhất của chính nó để ép buộc hành vi của AI, tuyệt đối không sao chép máy móc cấu trúc giữa các nền tảng.
-3.  **Một nguồn chuẩn duy nhất (Master Source):** Mọi chỉnh sửa được thực hiện tại thư mục [rules/](file:///home/linhnxdeveloper/Projects/agent-rules/rules) và [skills/](file:///home/linhnxdeveloper/Projects/agent-rules/skills) ở thư mục gốc của repo này, sau đó chạy đồng bộ sang các platform tương ứng.
+3.  **Một nguồn chuẩn duy nhất (Master Source):** Mọi chỉnh sửa được thực hiện tại thư mục `rules/`, `skills/`, `workflows/`, hoặc `shared/` ở thư mục gốc của repo này, sau đó chạy đồng bộ sang các platform tương ứng.
 4.  **Không phân mảnh quy trình:** Không viết tài liệu định hướng kiểu "Task này bắt buộc phải dùng Grok". Một task phức tạp đòi hỏi AI phải tự nạp đủ Skill Stack cần thiết ngay trên nền tảng người dùng đang chạy.
 
 ---
