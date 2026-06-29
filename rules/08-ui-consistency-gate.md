@@ -57,7 +57,24 @@ Tất cả các Agent khi thực hiện công việc chỉnh sửa giao diện (
 
 ---
 
-### 5. Dọn dẹp trùng lặp Toolbar trong các Popup Details (Drawer)
+### 5. Quy chuẩn Giao diện Danh sách & Xuất file (ListView & Export Standardization)
+
+*   **Cấm lồng ghép class `h-page` ở Component con**:
+    *   Không bao giờ được dùng class `.h-page` ở các component con hoặc trang con nhúng nằm bên trong TabGroup hoặc Layout cha. Lồng ghép class `h-page` sẽ kéo giãn chiều cao vượt quá viewport, đẩy các phần tử chân trang (Table footer, pagination, tổng số dòng) bị ẩn mất xuống dưới. Trang con nhúng bắt buộc chỉ sử dụng `h-full min-h-0` để co giãn tự động theo flex container cha.
+*   **ListView & Actions Standardization**:
+    *   **Xóa Header Dư Thừa**: Tuyệt đối không tự vẽ Page Header (tiêu đề, mô tả, icon lớn) bên trong panel nội dung của các trang nghiệp vụ/phân hệ. Phải nhường vai trò này cho hệ thống Breadcrumbs và Layout bao quát chung để giao diện luôn sạch sẽ, thống nhất.
+    *   **Dropdown Actions**: Các hành động có tính phá hủy dữ liệu (Xóa) hoặc phê duyệt không được hiển thị lộ thiên trực tiếp trên dòng của bảng. Phải đưa gọn gàng vào menu dropdown ẩn (`DataTableRowActions` hoặc `TableRowIconButton` có tooltips). Nút Sửa được để ngoài dạng icon button primary.
+*   **Quy Chuẩn Xuất File Excel (Excel Export)**:
+    *   **Kiểu dữ liệu (Cell Type 'n')**: Các cột chứa số liệu (tiền, số lượng, đợt...) bắt buộc phải được xuất dưới dạng Number thực tế để có thể tính toán (`SUM`, `AVERAGE`), cấm xuất dạng String/Text.
+    *   **Định dạng**: Căn lề phải cho cột số, căn lề giữa cho ngày tháng/trạng thái, và căn lề trái cho text thường.
+    *   **Màu sắc**: Header màu xanh dương đậm thương hiệu (`#1E3A8A`) chữ trắng đậm Segoe UI, có viền mỏng bao quanh và màu nền dòng xen kẽ nhẹ.
+*   **Quy Chuẩn Xuất File PDF (PDF Export)**:
+    *   **Hỗ trợ Tiếng Việt (Unicode)**: Tuyệt đối không dùng các font mặc định của jsPDF (như Helvetica) gây lỗi hiển thị mojibake.
+    *   **Đăng ký Font Chữ**: Phải fetch tệp font TrueType hỗ trợ tiếng Việt (như `Roboto-Regular.ttf` từ CDN), chuyển đổi thành base64 và đăng ký với jsPDF bằng `doc.addFileToVFS` và `doc.addFont`.
+
+---
+
+### 6. Dọn dẹp trùng lặp Toolbar trong các Popup Details (Drawer)
 
 *   **Nguyên tắc bố trí nút bấm trong Drawer**:
     *   Các nút thao tác cốt lõi của hệ thống gồm **Chỉnh sửa (Edit)**, **Xóa (Delete)** và **Đóng (Close)** phải được bố trí tập trung, đồng bộ ở phần **Footer** dưới cùng của Drawer.
@@ -66,9 +83,11 @@ Tất cả các Agent khi thực hiện công việc chỉnh sửa giao diện (
 
 ---
 
-### 6. Bài học nghiệp vụ và Nguyên lý Compliance chung (Gom nhóm có đánh số)
+
+### 7. Bài học nghiệp vụ và Nguyên lý Compliance chung (Gom nhóm có đánh số)
 
 Dưới đây là 5 bài học xương máu được hệ thống hóa thành nguyên lý bắt buộc để loại bỏ hoàn toàn các lỗi cẩu thả:
+
 
 #### Nhóm 1: Nguyên lý "Fidelity-First" (Bản sao tuyệt đối của Template)
 *   *Bài học*: Template là nguồn chân lý duy nhất. Mọi sự tự chế (như tự chế Combobox lọc trạng thái, tự chế Accordion phân cấp, tự chế layout P&L, tự chế Tồn kho/NXT 2 cấp ảo) đều là rác kỹ thuật và bất tuân spec.

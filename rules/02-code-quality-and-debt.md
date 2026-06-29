@@ -49,6 +49,13 @@ Bộ quy định kiểm soát chất lượng code, chống lỗi hồi quy (Ant
 *   **Ma trận phân quyền (Permission Matrix):** Đảm bảo đồng bộ giữa ẩn/hiện trên UI và kiểm tra phân quyền thực tế ở API / Database RLS (Row Level Security).
 *   **Tác động chéo (Cross-module):** Sửa đổi bảng dữ liệu A $\rightarrow$ bắt buộc kiểm tra tác động đến bảng B/C (rollup logic, triggers, hoặc cache).
 *   **Không tự giả định (Zero Assumption):** Đọc kỹ specs, test cases, hoặc database constraints; cấm tự ý phán đoán quy tắc nghiệp vụ.
+*   **Cảnh Giác Với Code Mock Auth/Session**:
+    *   Khi phát triển/sửa đổi các tính năng bảo mật cốt lõi (Đổi mật khẩu, Đăng xuất, Phân quyền), nghiêm cấm sử dụng code mock ở Client (như setTimeout/toast ảo). Bắt buộc phải kết nối và gọi API/Services thực tế ở Server để đảm bảo tính an toàn.
+*   **Kiểm Tra Đối Chiếu Phân Quyền Bắt Buộc (Permission Cross-Reference Gate)**:
+    *   *Bước 1: Đối chiếu Context $\rightarrow$ Code (Spec-to-Code Trace)*: Rà soát kỹ lưỡng file specs/rules phân quyền của dự án. Với mỗi quy tắc (xem/thêm/sửa/xóa theo vai trò, cấp bậc, phòng ban, người tạo), phải định vị chính xác dòng code tương ứng chịu trách nhiệm kiểm tra logic đó trong module permissions của hệ thống.
+    *   *Bước 2: Đối chiếu Code $\rightarrow$ Dòng Dữ Liệu (Implementation-to-Runtime Trace)*: Với mỗi trường/biến dùng để phân quyền dòng dữ liệu (như `id_phong_ban`, `capBac`, `employeeRecord`), phải trace ngược và xác nhận biến đó được hydrate đầy đủ lúc runtime; cấm để biến nhận giá trị rỗng/undefined làm sập hoặc ẩn sạch bảng dữ liệu.
+    *   *Bước 3: Kiểm thử end-to-end cho từng cấp bậc vai trò*: Khi code xong phân quyền, bắt buộc phải giả lập kiểm thử tối thiểu trên 3 kịch bản tài khoản: Admin (quyền tối cao), Quản lý/Trưởng phòng (chỉ thấy dữ liệu thuộc phòng ban/chi nhánh), và Nhân sự thường (chỉ thấy dữ liệu do mình tạo hoặc liên đới trực tiếp).
+
 
 ---
 
@@ -99,6 +106,11 @@ Bộ quy định kiểm soát chất lượng code, chống lỗi hồi quy (Ant
         ORDER BY ordinal_position;
         ```
         Đối chiếu trực tiếp với mã nguồn và specs trước khi tiến hành code.
+*   **Bảo Đảm Nhất Quán Số Liệu Tự Tính (Database-level Roll-ups)**:
+    *   *Quy định*: Các trường tổng hợp tự tính (như tổng số lượng, tổng chi phí, tổng tiền) có thể hiển thị tính toán động ở Client, nhưng trong Database vẫn phải được ghi nhận đồng bộ. Bắt buộc phải viết **PostgreSQL DB Triggers** (trên các sự kiện `AFTER INSERT/UPDATE/DELETE` của bảng con) để tự động cập nhật số liệu tổng hợp lên bảng cha, giúp dữ liệu luôn chính xác khi truy xuất từ bất kỳ API bên thứ ba nào.
+*   **Kỷ luật Quản lý Dependency & Deploy (Vercel & npm)**:
+    *   *Quy định*: Khi build hoặc nâng cấp dependencies, tuyệt đối cấm dùng `--force` hoặc `--legacy-peer-deps` để che giấu lỗi xung đột peer dependency. Phải rà soát và giải quyết triệt để lỗi xung đột phiên bản. Nghiêm cấm dùng kết quả chạy `npm audit` làm rào cản ngăn chặn cài đặt các dependency hợp lệ (cần phân biệt rõ cảnh báo bảo mật tĩnh vs lỗi build).
+
 
 
 ---
