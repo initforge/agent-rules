@@ -64,5 +64,31 @@ Tất cả các Agent khi thực hiện công việc chỉnh sửa giao diện (
     *   Thanh **DetailToolbar** (dạng nút tròn kèm text ở dưới) trong phần body của Drawer chỉ được phép hiển thị các **hành động nghiệp vụ mở rộng đặc thù** (ví dụ: Gọi điện, Gửi email, In phiếu, Duyệt phiếu...).
     *   **CẤM TUYỆT ĐỐI** hiển thị lặp lại các nút Chỉnh sửa và Xóa ở cả DetailToolbar (body) và bottom footer của Drawer.
 
+---
+
+### 6. Bài học nghiệp vụ và Nguyên lý Compliance chung (Gom nhóm có đánh số)
+
+Dưới đây là 5 bài học xương máu được hệ thống hóa thành nguyên lý bắt buộc để loại bỏ hoàn toàn các lỗi cẩu thả:
+
+#### Nhóm 1: Nguyên lý "Fidelity-First" (Bản sao tuyệt đối của Template)
+*   *Bài học*: Template là nguồn chân lý duy nhất. Mọi sự tự chế (như tự chế Combobox lọc trạng thái, tự chế Accordion phân cấp, tự chế layout P&L, tự chế Tồn kho/NXT 2 cấp ảo) đều là rác kỹ thuật và bất tuân spec.
+*   *Quy định*: Trước khi code bất kỳ view/toolbar/table nào, bắt buộc phải inspect code của `5fedu_template` có liên quan và clone 100% cấu trúc, logic, kiểu dữ liệu.
+
+#### Nhóm 2: Nguyên lý "No-Merged-Information" (Rã gộp dữ liệu hiển thị)
+*   *Bài học*: Việc gộp chung nhiều thông tin vào một ô của bảng (ví dụ: Tên + SĐT khách hàng, Tên + Mã sản phẩm, Số tiền + Trạng thái thanh toán) làm tê liệt hoàn toàn chức năng tùy chọn hiển thị (ColumnManager), lọc và sắp xếp.
+*   *Quy định*: Mọi trường thông tin cấu thành nên thực thể bắt buộc phải có một cột riêng biệt trong store và table. Không được gộp chung nếu làm mất khả năng tương tác độc lập của từng cột.
+
+#### Nhóm 3: Nguyên lý "Clean-Nomenclature" (Ngắn gọn và Thích ứng)
+*   *Bài học*: Sử dụng các danh từ dài dòng, thừa thãi (như "Thiết lập loại tài liệu", "Thông tin giao nhận thực tế", "Nostime Journal") làm hẹp không gian hiển thị, vỡ layout và không đồng bộ giữa Cart client và Admin.
+*   *Quy định*: Đổi tên ngắn gọn nhất: "Loại tài liệu", "Thông tin giao nhận", "Bài viết". Đảm bảo cấu trúc dữ liệu truyền nhận giữa Cart và Order Admin là 1-1, đồng bộ trường dữ liệu và format.
+
+#### Nhóm 4: Nguyên lý "Loop-Verification & Global Auditing" (Kiểm thử vòng lặp diện rộng)
+*   *Bài học*: Sửa lỗi cục bộ tại một vị trí được chỉ tên mà bỏ qua các file cùng loại là nguyên nhân dẫn đến việc chỉ hoàn thành được 10% công việc.
+*   *Quy định*: Mỗi khi tiếp nhận feedback sửa lỗi giao diện/logic, Agent bắt buộc phải chạy lệnh `grep_search` quét toàn bộ folder `src/features/` để tìm toàn bộ các component/file tương tự và sửa đồng loạt.
+
+#### Nhóm 5: Nguyên lý "No-Local-Permissions" (Không phân quyền phân mảnh)
+*   *Bài học*: Việc đưa các checkbox phân quyền xem (cho chức vụ/phòng ban/nhân viên) trực tiếp vào form tạo tài liệu riêng lẻ là sai kiến trúc phân quyền tập trung RLS/Role-based.
+*   *Quy định*: Quyền truy cập phải do vai trò tài khoản trong module Phân quyền quyết định chung. Nghiêm cấm đưa các trường cấu hình quyền truy cập cụ thể vào form dữ liệu của thực thể nghiệp vụ.
+
 
 
