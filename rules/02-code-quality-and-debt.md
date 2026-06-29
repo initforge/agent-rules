@@ -31,10 +31,15 @@ Bộ quy định kiểm soát chất lượng code, chống lỗi hồi quy (Ant
 *   **Trước khi chỉnh sửa Shared Logic (Logic dùng chung):**
     1.  Dùng `rg` hoặc công cụ tìm kiếm để quét tất cả call-sites và imports.
     2.  Chứng minh rõ ràng thay đổi không làm gãy các module downstream.
-*   **Khi tạo mới hoặc sửa đổi UI Component:**
+*   **Khi tạo mới hoặc sửa đổi UI Component (Quy tắc React & State):**
     *   Đối chiếu với ít nhất $\ge 1$ component tương tự để đảm bảo tính nhất quán (pattern, trạng thái loading, error, empty).
     *   **Async Button:** Bắt buộc có trạng thái `disabled` + hiển thị `spinner` khi đang chạy, gắn sự kiện `onClick` thực tế và chống double-click.
+    *   **Kỷ Luật Vận Hành React Hooks**: Tuyệt đối không viết các khối lệnh kiểm tra điều kiện và trả về JSX sớm (như `if (isLoading) return ...` hoặc `if (!data) return ...`) ở phía trên các khai báo React Hook khác (như `useMemo`, `useCallback`, `useEffect`). Toàn bộ các hook bắt buộc phải được khai báo ở đầu component, và các lệnh kiểm tra điều kiện trả về UI thay thế phải nằm ở cuối cùng của component, ngay trước khối `return` chính.
+    *   **Đồng bộ Dữ liệu Drawer Chi Tiết (Drawer State Sync)**: Khi hiển thị chi tiết của một dòng thông qua drawer/popup, tuyệt đối không truyền trực tiếp state thô `row={viewingRow}` vào component drawer (dữ liệu sẽ không cập nhật khi mutation thành công). Phải luôn sử dụng `useMemo` để tìm dòng tương ứng mới nhất từ danh sách đang cache trong React Query (ví dụ: `const currentViewingRow = useMemo(() => rows.find(r => String(r.id) === String(viewingRow.id)) || viewingRow, [viewingRow, rows]);`), rồi truyền `currentViewingRow` vào drawer.
+*   **Chuẩn Hóa Tiện Ích Tải File Từ Data URIs (Base64 Normalization)**:
+    *   Trong hàm giải mã base64 của tiện ích download (`triggerFileDownload` hoặc tương đương), bắt buộc phải gọi `decodeURIComponent(rawData)` để chuẩn hóa chuỗi base64 trước khi gọi `window.atob`. Điều này đảm bảo Blob URL luôn được sinh ra thành công đối với tất cả các link file Excel/PDF/CSV chứa ký tự Unicode đặc biệt.
 *   **Xác thực tương tác:** Chạy verify bằng Playwright/Browser automation hoặc chụp ảnh màn hình khi có môi trường test chạy thật; nếu không có, thực hiện dry-run truy vết logic từng bước trong suy nghĩ (thought block).
+
 
 ---
 
