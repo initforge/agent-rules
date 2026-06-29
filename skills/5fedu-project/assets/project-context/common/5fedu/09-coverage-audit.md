@@ -29,7 +29,7 @@ Bộ context đã đủ để AI làm việc độc lập theo đúng hướng 5
 | Sync với `initforge/agent-rules` | thao tác sync đã chạy; `skill/prompt` nằm trong runtime | Đã làm | Chưa commit/push nếu user chưa yêu cầu |
 | Tech stack ảnh 1 | `01-tech-stack-and-template.md`, `06`, `07-working-format.md`, `08-source-examples.md` | Đã chốt cho app này | Nếu repo/source mâu thuẫn thì báo |
 | Google Sheets/AppSheet có thể có credentials | `01`, `03`, `07`, `questions.md` | Đã phủ | Không tự bật nếu spec không nói |
-| Template `tahdieuphoi-ctrl/TAH_app` | `00`, `01`, `06`, `07`, `08`, `questions.md` | Đã chốt và đã clone source local | Source: `P:\tah-app-5f\.agents\template-source\TAH_app`; chỉnh sửa thì báo |
+| Template `admin5fedu/5f-template-ket-noi-supabase` | `00`, `01`, `06`, `07`, `08`, `questions.md` | Đã chốt và đã clone source local | Source: `P:\5fedunew\template_5fedu\5f-template-ket-noi-supabase-main`; chỉnh sửa thì báo |
 | Ưu tiên thêm/adapt, hạn chế sửa/xóa template | `01`, `07` | Đã phủ | Sửa/xóa lớn phải báo và chốt |
 | Domain/sidebar ảnh 2 | `02`, `08` | Đã phủ | Dùng làm ví dụ, không ép scope nếu app khác |
 | Module/view/tab ảnh 3-4 | `02`, `08` | Đã phủ | Đã thêm Hệ thống/Quản lý vận tải mẫu |
@@ -45,7 +45,7 @@ Bộ context đã đủ để AI làm việc độc lập theo đúng hướng 5
 | Tên submenu/thư mục module tiếng Việt | `02` | Đã phủ | Giúp tra cứu cho người không biết tiếng Anh |
 | Tên view dạng `nhan-vien-form` | `02` | Đã phủ | Hybrid tiếng Việt không dấu + suffix English |
 | Tên bảng prefix submenu + module | `03`, `07` | Đã phủ | Prefix đầy đủ cần chốt |
-| Bảng đầy đủ có policy authenticated, index, trigger `tg_cap_nhat` | `03`, `07` | Đã phủ | "Hàm index" cần giải thích/mẫu |
+| Bảng đầy đủ có policy authenticated, index, trigger `tg_cap_nhat` | `03`, `07` | Đã phủ | “Hàm index” cần giải thích/mẫu |
 | Fake email login | `04`, `07` | Đã phủ | `admin` -> `admin@gmail.com` |
 | Bỏ đăng ký | `04`, `07` | Đã phủ | |
 | Tài khoản mặc định admin/5fedu.com | `04`, `07` | Đã phủ | |
@@ -99,7 +99,7 @@ AI không được tự chốt các điểm sau nếu chưa có nguồn:
 
 | Yêu cầu | File phủ | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
-| Template giao diện commit `47947e6eea0b1b7dc6723356f37f604e30ac690b` | `00`, `06`, `12` | Đã phủ | Template local ở `.agents/template-source/TAH_app` |
+| Template giao diện `5f-template-ket-noi-supabase` | `00`, `06`, `12` | Đã phủ | Template local ở `template_5fedu/5f-template-ket-noi-supabase-main` |
 | Trang chủ theo thứ tự Quản lý vận tải -> Hệ thống -> Thông tin bản quyền | `06`, `07`, `12` | Đã phủ | Là owner feedback DA_CHOT |
 | Nhân viên có email thực tế riêng, không trộn fake auth email | `06`, `11`, `12` | Đã phủ | Fake auth vẫn theo `ten_dang_nhap@gmail.com` |
 | Không kết luận phòng ban/chức vụ rỗng khi chưa kiểm tra Supabase/browser | `06`, `10`, `12` | Đã phủ | DB hiện có dữ liệu; nếu UI trắng kiểm tra đường render/filter/env |

@@ -1,4 +1,5 @@
 ---
+alwaysApply: true
 description: "Registry skills + đường dẫn 5fedu — Codex CLI"
 ---
 

@@ -1,4 +1,5 @@
 ---
+alwaysApply: true
 description: "Chống tự tiến hóa harness — Codex"
 ---
 

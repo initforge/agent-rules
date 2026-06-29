@@ -1,3 +1,7 @@
+---
+alwaysApply: true
+---
+
 # Hoàn thành triệt để (Finish to Completion)
 
 **Luật sắt (Iron Law):** Không kết thúc turn khi còn bất kỳ sản phẩm/yêu cầu bàn giao nào (Deliverable) trong scope mà Agent có thể tự thực hiện.

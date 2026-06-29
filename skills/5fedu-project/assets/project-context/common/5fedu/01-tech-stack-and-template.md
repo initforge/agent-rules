@@ -15,7 +15,7 @@
 5fedu thường cấp template:
 
 ```text
-https://github.com/tahdieuphoi-ctrl/TAH_app
+https://github.com/admin5fedu/5f-template-ket-noi-supabase
 ```
 
 Người dùng đã có quyền qua GitHub CLI. Dự án này đã chốt clone/adapt template.
@@ -23,7 +23,7 @@ Người dùng đã có quyền qua GitHub CLI. Dự án này đã chốt clone/
 Template source local đã clone để tham chiếu:
 
 ```text
-P:\tah-app-5f\.agents\template-source\TAH_app
+P:\5fedunew\template_5fedu\5f-template-ket-noi-supabase-main
 ```
 
 Khi implement app root, đọc template source local trước, lấy/adapt đúng phần cần, và báo người dùng nếu phải chỉnh sửa phần template.

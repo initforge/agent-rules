@@ -5,7 +5,7 @@
 Các mục sau đã chốt, không hỏi lại kiểu scope ban đầu:
 
 - Có clone/adapt template không: có.
-- App name hiện tại: `TAH APP`.
+- App name hiện tại: `NOSTIME APP`.
 - Spec source hiện tại: ảnh/spec người dùng đã gửi.
 - Scope: làm full app A-Z, không hỏi "module đầu tiên/phase đầu".
 - Backend mode: Supabase thật.

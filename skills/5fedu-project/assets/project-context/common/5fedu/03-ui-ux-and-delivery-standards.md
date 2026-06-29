@@ -186,3 +186,43 @@ Khi verify production:
 - **Bảo toàn dữ liệu thực tế (Data Safety)**: Mọi ca kiểm thử làm thay đổi dữ liệu (mutating tests) bắt buộc phải chụp snapshot dữ liệu trước khi test và khôi phục (restore) nguyên trạng dữ liệu ngay khi test kết thúc (sử dụng hook `afterAll` hoặc `afterEach`).
 - **Chống báo cáo PASS ảo (No Fake PASS)**: Yêu cầu ghi log đầy đủ ma trận độ bao phủ kiểm thử thực tế. Chỉ báo PASS khi tất cả các ca kiểm thử cốt lõi đã chạy thành công thực tế, không chấp nhận việc bỏ qua (skip) hoặc che giấu lỗi bằng assert mù.
 - **Assert Database an toàn**: Chỉ assert trực tiếp trên database khi các biến môi trường cấu hình DB credentials (`DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`) tồn tại hợp lệ. Nếu thiếu, ghi nhận trạng thái kiểm thử là `PARTIAL` (chỉ kiểm thử UI), cấm để bộ test bị crash.
+
+---
+
+## 5. Đặc tả Giao diện & Nghiệp vụ Chi tiết 5fedu (Nostime)
+
+### A. Thống kê Tồn kho theo danh mục (`ton-kho.tsx`)
+*   **Giao diện**: Là bảng thống kê phân cấp 2 cấp (Thương hiệu > Dòng sản phẩm) bám sát mẫu `https://5f-template.vercel.app/kho-van/ton-kho`. Cấm tự chế accordion lồng nhau.
+*   **Bảng dữ liệu**: Chỉ hiển thị 3 cột chính:
+    1.  `Tổng`: Tổng sản phẩm đã từng nhập của dòng sản phẩm đó.
+    2.  `Còn`: Số lượng sản phẩm thực tế đang tồn kho (trạng thái `'Tồn kho'`).
+    3.  `Đã bán`: Số lượng sản phẩm đã xuất bán (trạng thái `'Đã bán'`).
+*   **Dòng chi tiết con (Expand)**: Khi bấm nút expand dòng sản phẩm, hiển thị danh sách chi tiết các sản phẩm đang tồn kho (Mã sản phẩm, Serial, Giá trị vốn, Ngày nhập kho, Trạng thái).
+
+### B. Báo cáo Nhập Xuất Tồn (NXT)
+*   **Hệ thống 3 Tab**:
+    1.  `Tổng hợp NXT theo kỳ`: Bảng collapsible dạng cây hiển thị tổng đầu kỳ, nhập trong kỳ, xuất trong kỳ, và tồn cuối kỳ của Thương hiệu > Dòng sản phẩm.
+    2.  `Chi tiết phiếu`: Nhật ký nhập xuất theo mã phiếu.
+    3.  `Tồn tại thời điểm`: Danh sách sản phẩm còn tồn kho thực tế.
+*   **Toolbar**: Tích hợp một dòng compact duy nhất (Calendar chọn khoảng ngày, chọn kho, export excel/pdf).
+
+### C. Báo cáo Tài khoản (Tab View Tra cứu Kỳ)
+*   **Hệ thống 2 Tab**:
+    1.  `Danh sách`: Quản lý danh sách tài khoản quỹ, số dư ban đầu, trạng thái.
+    2.  `Tra cứu` (Lọc theo kỳ): So sánh biến động số dư lũy kế của tất cả các tài khoản quỹ.
+*   **Bảng Tra cứu**: Các cột bao gồm Kỳ (khoảng ngày lọc), Tên tài khoản, Loại tài khoản, Số dư đầu kỳ, Tổng thu trong kỳ, Tổng chi trong kỳ, Số dư cuối kỳ. Footer bảng in đậm hiển thị tổng lũy kế của tất cả tài khoản.
+*   **4 Thẻ KPI**: Tổng tồn đầu (xanh lá, icon heo cam), Tổng thu (xanh lá, icon lên), Tổng chi (đỏ, icon xuống), Tổng dư cuối (xanh lá, icon đổi chiều).
+
+### D. Auto-fill Tài khoản Quỹ & Hạng mục P&L trên Đơn bán hàng
+*   **Giao diện**: Trong form tạo đơn hàng, hiển thị Combobox cho phép chọn "Tài khoản quỹ nhận tiền" và "Hạng mục thu tài chính".
+*   **Business Logic**: 
+    *   Hệ thống quét database tìm tài khoản quỹ có `is_default === true` và danh mục tài chính loại Thu có `is_default === true` để tự động điền mặc định cho form.
+    *   Khi lưu đơn hàng, truyền đúng ID tài khoản và danh mục đã chọn sang API tạo giao dịch thay vì gán cứng `'cash-acc'`.
+
+### E. Phiếu Sửa chữa liên kết bảng Đối tác
+*   **Form Sửa chữa**: Thêm Combobox chọn Khách hàng gửi sửa (liên kết khóa ngoại tới bảng đối tác `kd_khach_hang`).
+*   **Bảng Sửa chữa**: Thêm cột Khách hàng hiển thị tên tương ứng.
+
+### F. Đồng bộ Breadcrumbs Tiếng Việt có dấu
+*   Khai báo tường minh route config cho các phân hệ con (nhập hàng, NXT, tồn kho, các route tài chính...) trong `getRouteConfig` của [Breadcrumbs.tsx](file:///home/linhnxdeveloper/Projects/nostime/src/components/shared/Breadcrumbs.tsx) để tránh bị cắt segment không dấu cẩu thả.
+

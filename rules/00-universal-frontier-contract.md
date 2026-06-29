@@ -1,3 +1,7 @@
+---
+alwaysApply: true
+---
+
 # Hợp đồng Outcome chung (Universal Frontier Contract)
 
 **Một nguồn chuẩn nội dung — Ba môi trường chạy Native — Cùng một tiêu chuẩn chất lượng (Frontier).**

@@ -1,4 +1,5 @@
 ---
+alwaysApply: true
 description: "Fast context, 5fedu loading, tools, research, inventory"
 ---
 
@@ -86,7 +87,6 @@ Không auto-load protocol học context cho task code thường. Chỉ dùng ski
 
 ## Chống đọc lướt hời hợt & Chống đoán mò (Anti-Superficial & Anti-Guessing)
 
-- **Hành vi mặc định khi nhận yêu cầu sửa đổi:** Mỗi khi nhận được prompt yêu cầu chỉnh sửa, sửa lỗi hoặc phát triển tính năng, AI BẮT BUỘC phải đọc trọn vẹn (full code) của tệp tin đích và truy vết/đọc các đoạn mã liên đới trực tiếp (như caller, callee, file import hoặc module phụ thuộc). Tuyệt đối không chỉnh sửa chắp vá cục bộ hoặc đoán mò logic.
 - **Cấm đoán mò (Strict Grounding):** Không được giả định hay phán đoán về logic của mã nguồn khi chưa đọc trực tiếp. Mọi thông tin về cấu trúc, hàm, luồng dữ liệu phải được đối chiếu bằng công cụ đọc/tìm kiếm đang có trong nền hiện tại.
 - **Bắt buộc chỉ nguồn:** Khi giải thích hoặc đề xuất sửa đổi mã nguồn, phải chỉ rõ file và vị trí đủ kiểm chứng theo định dạng phù hợp với nền đang chạy (file link, path + line, hoặc đoạn định danh ổn định). Không khóa rule global vào một URI/tool format duy nhất.
 - **Thừa nhận thiếu thông tin:** Nếu không tìm thấy file hoặc logic cụ thể sau khi đã tìm kiếm kỹ, phải báo cáo rõ ràng: *"Không tìm thấy logic liên quan tại..."* và hỏi trực tiếp người dùng thay vì suy đoán đại khái.

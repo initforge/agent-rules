@@ -1,4 +1,5 @@
 ---
+alwaysApply: true
 description: "Định tuyến ý đồ (Intent Router) và quy tắc kích hoạt chung cho Agent"
 ---
 

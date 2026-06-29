@@ -15,7 +15,7 @@ Trước khi báo hoàn thành nhiệm vụ:
    - Trước khi commit bất kỳ thay đổi nào liên quan đến code hoặc config (như `vite.config.ts`, `tsconfig.json`, hook React), bắt buộc phải chạy thử build production ở local (`npm run build` hoặc lệnh tương tự) để kiểm tra lỗi cú pháp và thiếu import (ví dụ: thiếu import hook React `useCallback`, `useMemo` từ `'react'`).
 
 2. **Xác Thực Thực Tế Trên Production (Verify-on-Production)**:
-   - Môi trường phát triển local có thể tự vá hoặc bỏ qua một số lỗi biên dịch/runtime đặc thù. Tất cả các sửa đổi UI, chức năng, hoặc sửa lỗi bắt buộc phải được kiểm tra chạy thử trực tiếp trên môi trường production/live thực tế (ví dụ: `https://tah-app.vercel.app`).
+   - Môi trường phát triển local có thể tự vá hoặc bỏ qua một số lỗi biên dịch/runtime đặc thù. Tất cả các sửa đổi UI, chức năng, hoặc sửa lỗi bắt buộc phải được kiểm tra chạy thử trực tiếp trên môi trường production/live thực tế (ví dụ: `https://nostime.vercel.app`).
    - Smoke test tối thiểu phải thực hiện trên production đối với các tính năng CRUD đã thay đổi.
 
 3. **Kiểm Tra Giao Diện & Tìm Kiếm**:
