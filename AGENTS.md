@@ -1,23 +1,12 @@
-# Antigravity Agent Entrypoint
+# Agent Rules repository
 
-Master adapter — mirror xuống `.agents/` khi cài. Đọc `.agents/INTENT.md` để hiểu manifest.
+Canonical architecture:
 
-## Intent
+- `knowledge/core/`: global always-loaded behavior.
+- `knowledge/capabilities/`: lazy capabilities grouped by subsystem.
+- `knowledge/project-context/`: project-context schema/templates.
+- `integrations/`: external dependencies and platform adapters.
+- `platforms/`: Codex/Grok/Antigravity deltas only.
+- `automation/`: build, install and validation.
 
-Antigravity dùng **lõi Opus-emulation chung** với Grok CLI và Codex (`grok/` master → `sync-all-harness.sh`). Khác: **alwaysApply** mọi rule + `antigravity-overlay.md` (status block MEDIUM/HIGH, UI `/template`).
-
-## Required Rules
-
-1. `00-index.md` (Knowledge Routing Index)
-2. `00-runtime-and-intent.md`
-3. `06-opus-emulation-contract.md`
-4. `01-agent-workflow-sop.md`
-5. `04-skills-and-5fedu.md`
-6. `antigravity-overlay.md`
-7. `02-code-quality-and-debt.md`, `03-context-and-tools.md`, `05-harness-mutation-gate.md`, `platform-boundary.md`
-
-Tất cả file trong `.agents/rules/` có `alwaysApply: true`.
-
-## Protected
-
-Không cleanup: `AGENTS.md`, `INTENT.md`, `hooks.json`, `rules/`, `skills/5fedu-project/`, `workflows/`, `5fedu/00-index.md`.
+Read `knowledge/core/manifest.yaml` before harness changes. Never edit `build/` or global runtime mirrors as canonical source. Do not commit, push or deploy unless explicitly requested.

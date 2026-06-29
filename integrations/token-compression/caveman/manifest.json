@@ -1,0 +1,7 @@
+{
+  "name": "caveman",
+  "upstream": "https://github.com/JuliusBrussee/caveman",
+  "ref": "main",
+  "defaultMode": "minimal",
+  "vendoredPayload": false
+}

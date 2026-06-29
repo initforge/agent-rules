@@ -1,0 +1,27 @@
+# Checklist thực thi
+
+- [x] Owner duyệt `implementation_plan.md`.
+- [x] Snapshot worktree và config runtime liên quan.
+- [x] Gỡ GitNexus khỏi npm, MCP, skills, scripts, docs, rules và generated indexes.
+- [x] Dựng Codebase Memory MCP integration dùng một binary, pinned checksum và ba platform adapters.
+- [x] Tạo integration Caveman có manifest, dry-run installer và uninstaller.
+- [x] Xóa Caveman/Cavecrew/compress vendor payload khỏi repo và `~/.agents/skills`.
+- [x] Giữ/gộp/xóa skills theo migration matrix.
+- [x] Tạo context envelope, token budgets và báo cáo baseline/before-after.
+- [x] Chuẩn hóa taxonomy tên file/thư mục và tạo `knowledge/core/manifest.yaml`.
+- [x] Chuyển canonical source sang bốn phân hệ `knowledge/integrations/platforms/automation`.
+- [x] Group capabilities theo delivery/engineering/frontend/knowledge-management/research/orchestration/domains.
+- [x] Tạo build mirrors cho ba platform kèm source hash/provenance.
+- [x] Gộp Knowledge Core về 5 responsibility, giữ behavior bằng smoke tests.
+- [x] Sinh skill catalog từ frontmatter; xóa mọi trigger registry viết tay.
+- [x] Chuyển vendor capabilities sang dependency/plugin manifest.
+- [x] Hấp thụ hoặc xóa toàn bộ workflow wrappers.
+- [x] Xóa `.agents` generated mirror và `.codex/5fedu` sai tầng.
+- [x] Chuyển project context canonical sang `<repo>/context/`; `.agents/.codex` chỉ làm pointer/adapter.
+- [x] Chuẩn hóa Antigravity overlay/project adapter.
+- [x] Xóa root loaders, `shared/` và docs registry lỗi thời sau khi merge nội dung còn giá trị.
+- [x] Sửa installers, sync scripts, validators và tài liệu.
+- [x] Reinstall global runtimes từ canonical source.
+- [x] Chạy verification matrix và duplicate audit.
+- [x] Chạy token budget, stale-reference, naming và progressive-load validation.
+- [x] Chạy mirror parity/delta report và Codebase MCP handshake/query trên ba platform.

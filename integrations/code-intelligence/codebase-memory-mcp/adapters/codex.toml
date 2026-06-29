@@ -1,0 +1,4 @@
+[mcp_servers.codebase_memory]
+command = '${CODEBASE_MEMORY_MCP_BIN}'
+args = []
+startup_timeout_sec = 120
