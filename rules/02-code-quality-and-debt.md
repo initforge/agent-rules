@@ -84,6 +84,17 @@ Bộ quy định kiểm soát chất lượng code, chống lỗi hồi quy (Ant
     *   Không được để lộ lỗi đỏ của DB lên màn hình. Phải bắt lỗi và hiển thị thông báo Toast tiếng Việt thân thiện: *"Không thể xóa thực thể này do vẫn còn dữ liệu liên quan trong kho. Vui lòng di chuyển hoặc xóa các dữ liệu liên kết trước!"*.
 *   **Bắt lỗi Edge Function (employee-auth)**:
     *   Tác vụ đồng bộ/tạo auth nhân sự gọi Edge Function phải được try-catch an toàn. Nếu Edge Function chưa được deploy hoặc lỗi mạng, bắt lỗi và hiển thị Toast cảnh báo chi tiết thay vì crash app, đồng thời thực hiện fallback cập nhật trạng thái cục bộ để tránh làm gián đoạn luồng nghiệp vụ của Admin.
+*   **Quy Trình Kiểm Tra Schema Drift (Schema Drift Verification)**:
+    *   *Bản chất rủi ro*: Cấu trúc database thực tế có thể bị thay đổi (migration hoặc sửa đổi nóng qua dashboard) mà không khớp với specs.
+    *   *Quy định*: Trước khi can thiệp vào bất kỳ code backend/queries nào, Agent bắt buộc phải chạy truy vấn SQL kiểm tra cấu trúc cột thực tế của bảng đích:
+        ```sql
+        SELECT column_name, data_type, is_nullable, column_default
+        FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = '<tên_bảng>'
+        ORDER BY ordinal_position;
+        ```
+        Đối chiếu trực tiếp với mã nguồn và specs trước khi tiến hành code.
+
 
 ---
 
