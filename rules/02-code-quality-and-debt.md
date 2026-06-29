@@ -1,3 +1,7 @@
+---
+alwaysApply: true
+---
+
 # Chất lượng mã nguồn & Nợ kỹ thuật (Code Quality & Technical Debt)
 
 Bộ quy định kiểm soát chất lượng code, chống lỗi hồi quy (Anti-regression), kỷ luật phân quyền, và quản lý nợ kỹ thuật (Technical Debt Budget).
@@ -70,3 +74,13 @@ Bộ quy định kiểm soát chất lượng code, chống lỗi hồi quy (Ant
     ```
 
 *   **Định nghĩa nợ kỹ thuật trong 5fedu:** Deploy nhưng chưa chạy verify trên production thực tế; UI lệch so với template chuẩn; phân quyền chưa test với đa tài khoản; database schema chưa được sync.
+
+---
+
+## 5. Xử lý Lỗi Database (PG/SQL) và Edge Functions trên UI
+
+*   **Bắt lỗi khóa ngoại PostgreSQL thô**:
+    *   Mọi tác vụ xóa (DELETE) Thương hiệu, Dòng sản phẩm, Đối tác... có nguy cơ vi phạm ràng buộc khóa ngoại (Foreign Key Constraint) phải được bọc trong `try-catch` tại tầng mutation/service.
+    *   Không được để lộ lỗi đỏ của DB lên màn hình. Phải bắt lỗi và hiển thị thông báo Toast tiếng Việt thân thiện: *"Không thể xóa thực thể này do vẫn còn dữ liệu liên quan trong kho. Vui lòng di chuyển hoặc xóa các dữ liệu liên kết trước!"*.
+*   **Bắt lỗi Edge Function (employee-auth)**:
+    *   Tác vụ đồng bộ/tạo auth nhân sự gọi Edge Function phải được try-catch an toàn. Nếu Edge Function chưa được deploy hoặc lỗi mạng, bắt lỗi và hiển thị Toast cảnh báo chi tiết thay vì crash app, đồng thời thực hiện fallback cập nhật trạng thái cục bộ để tránh làm gián đoạn luồng nghiệp vụ của Admin.

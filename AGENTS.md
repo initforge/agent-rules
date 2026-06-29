@@ -1,37 +1,23 @@
-# Agent Rules Runtime Entrypoint
+# Antigravity Agent Entrypoint
 
-File này là entrypoint repo `agent-rules`, không phải context của một dự án 5fedu cụ thể.
+Master adapter — mirror xuống `.agents/` khi cài. Đọc `.agents/INTENT.md` để hiểu manifest.
 
-## Ngôn Ngữ
+## Intent
 
-- Giao tiếp với người dùng bằng tiếng Việt có dấu đầy đủ.
-- Giữ tiếng Anh cho thuật ngữ kỹ thuật, model, lệnh, đường dẫn, API, package, schema key, tool, sản phẩm và mã nguồn.
-- Áp dụng nguyên tắc **Giao tiếp trực diện & tối giản**: Không chào hỏi xã giao, đi thẳng vào vấn đề kỹ thuật (logs, diff, command); không giải thích lý thuyết dông dài.
+Antigravity dùng **lõi Opus-emulation chung** với Grok CLI và Codex (`grok/` master → `sync-all-harness.sh`). Khác: **alwaysApply** mọi rule + `antigravity-overlay.md` (status block MEDIUM/HIGH, UI `/template`).
 
+## Required Rules
 
-## Nguồn Và Runtime
+1. `00-index.md` (Knowledge Routing Index)
+2. `00-runtime-and-intent.md`
+3. `06-opus-emulation-contract.md`
+4. `01-agent-workflow-sop.md`
+5. `04-skills-and-5fedu.md`
+6. `antigravity-overlay.md`
+7. `02-code-quality-and-debt.md`, `03-context-and-tools.md`, `05-harness-mutation-gate.md`, `platform-boundary.md`
 
-- Source dùng chung nằm ở repo root: `rules/`, `skills/`, `workflows/`, `shared/`.
-- Codex adapter nằm ở `platforms/codex/`.
-- Antigravity adapter nằm ở `platforms/antigravity/`.
-- Grok CLI adapter nằm ở `platforms/grok/`.
-- Runtime local lần lượt là `~/.codex`, `~/.gemini`, `~/.grok`.
+Tất cả file trong `.agents/rules/` có `alwaysApply: true`.
 
-Không sửa mirror `.agents/` hoặc `platforms/antigravity/.agents/` bằng tay nếu có thể sync bằng `scripts/sync-all-harness.sh`.
+## Protected
 
-## Vận Hành Mặc Định
-
-- Task nhỏ rõ ràng: đọc đúng ngữ cảnh, sửa trực tiếp, verify tối thiểu.
-- Task vừa: đọc ngữ cảnh, lập plan khi có nhiều lát cắt, triển khai, verify.
-- Task rủi ro cao hoặc multi-domain: locked plan, risk register, reviewer gate, verify sâu.
-- Không tự commit, push, force-push hoặc deploy nếu người dùng chưa yêu cầu rõ trong session hiện tại.
-- Trạng thái cuối luôn là `PASS`, `PARTIAL`, hoặc `BLOCKED`.
-
-## Bắt Buộc Luôn Áp Dụng
-
-- Đọc entrypoint/context index trước khi sửa.
-- Không revert thay đổi của người dùng.
-- Giữ diff nhỏ và đúng scope.
-- Clean code là risk-control, không phải cleanup thẩm mỹ.
-- Root cause và verification phải có bằng chứng trực tiếp khi debug/fix/review.
-- Sau thay đổi rule/skill/runtime, chạy `scripts/sync-all-harness.sh`, `scripts/validate-harness.sh`, rồi cài lại Codex/Grok/Antigravity runtime nếu cần.
+Không cleanup: `AGENTS.md`, `INTENT.md`, `hooks.json`, `rules/`, `skills/5fedu-project/`, `workflows/`, `5fedu/00-index.md`.
