@@ -529,7 +529,7 @@ The frontend owns form state and validation feedback. The API route owns persist
 Screenshot rules:
 
 - Use live screenshots when a live URL exists and the user asks for visual proof.
-- Use Playwright or a real browser capture for web apps when possible.
+- For Codex, use Playwright or a real browser capture only when the user asks for visual proof or documentation quality depends on a fresh screenshot; otherwise prefer existing safe assets and non-browser verification.
 - Store docs images under `/docs/assets/` or a project's existing docs asset folder.
 - Link screenshots with paths that render on GitHub.
 - Verify the file exists after moving or renaming.

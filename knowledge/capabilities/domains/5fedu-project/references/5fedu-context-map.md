@@ -1,4 +1,4 @@
-﻿# 5fedu Context Map
+# 5fedu Context Map
 
 ## Decision
 
@@ -46,20 +46,20 @@ The template usually contains most frontend modules. Prefer adding/adapting. Avo
 
 Default domains seen in the template:
 
-- Trang chá»§
-- HÃ nh chÃ­nh
-- NhÃ¢n sá»±
-- Váº­n hÃ nh
+- Trang chủ
+- Hành chính
+- Nhân sự
+- Vận hành
 - Kinh doanh
 - Marketing
-- TÃ i chÃ­nh
-- Mua hÃ ng
-- Sáº£n xuáº¥t
-- Kho váº­n
-- Äiá»u hÃ nh
-- Há»‡ thá»‘ng
-- Trá»£ lÃ½ AI
-- ThÃ´ng tin báº£n quyá»n
+- Tài chính
+- Mua hàng
+- Sản xuất
+- Kho vận
+- Điều hành
+- Hệ thống
+- Trợ lý AI
+- Thông tin bản quyền
 
 Mapping must be exact:
 
@@ -86,7 +86,7 @@ Baseline columns:
 - `mo_ta` or `dien_giai`
 - `ghi_chu`
 - `trang_thai`
-- `id_nguoi_tao` for most business tables; may be omitted for some system master tables such as phÃ²ng ban/chá»©c vá»¥ if the owner confirms
+- `id_nguoi_tao` for most business tables; may be omitted for some system master tables such as phòng ban/chức vụ if the owner confirms
 - `tg_tao`
 - `tg_cap_nhat`
 
@@ -97,7 +97,7 @@ Every full table should have:
 - index/function/indexing convention required by the project
 - trigger for `tg_cap_nhat`
 
-Ask for a sample SQL/table when the "hÃ m index" convention is not clear.
+Ask for a sample SQL/table when the "hàm index" convention is not clear.
 
 Hard owner-feedback gate:
 
@@ -111,7 +111,7 @@ Hard owner-feedback gate:
 - Login uses fake email: user enters `admin`, app uses `admin@gmail.com`.
 - Disable registration by default.
 - Default account: username `admin`, password `5fedu.com`.
-- **Hard credential rule**: Admin password is ALWAYS `5fedu.com` â€” never change it, never use `123456` or any other value for admin. Regular user accounts default to `123456`. When writing seed/test scripts or browser subagent login: MUST use the correct password per this rule. When testing password-change features: use a dedicated test account, NEVER test on the main admin account.
+- **Hard credential rule**: Admin password is ALWAYS `5fedu.com` — never change it, never use `123456` or any other value for admin. Regular user accounts default to `123456`. When writing seed/test scripts or browser subagent login: MUST use the correct password per this rule. When testing password-change features: use a dedicated test account, NEVER test on the main admin account.
 - Employee module fields should stay lean: `id`, `ho_va_ten`, `avatar`, `trang_thai`, `id_phong_ban`, `id_chuc_vu`, `so_dien_thoai`, `email`, `ten_dang_nhap`.
 - Creating or renaming `ten_dang_nhap` should create/delete a Supabase Auth account as `<ten_dang_nhap>@gmail.com` with default password `123456`, only after the secure implementation path is confirmed.
 - Login must use `ten_dang_nhap`, not `ma_nhan_vien`.
@@ -146,10 +146,10 @@ Default permission names:
 - **Never use data URIs** for client-side file downloads. Chrome ignores the `download` attribute on data URIs and blob URLs created from them, resulting in UUID filenames.
 - **Never use library-native download methods** (`XLSX.writeFile()`, `jsPDF.save()`). Chrome may show the file in its download manager but NOT persist it to the Downloads folder.
 - **Always use `saveBlobAs()`** from `lib/utils.ts`:
-  - XLSX: `XLSX.write(wb, { type: 'array' })` â†’ `new Blob([wbout])` â†’ `saveBlobAs(blob, filename)`
-  - PDF: `doc.output('blob')` â†’ `saveBlobAs(pdfBlob, filename)`
-  - CSV: `new Blob(['\uFEFF' + csvContent])` â†’ `saveBlobAs(blob, filename)`
-- `saveBlobAs` uses anchor element + `dispatchEvent(new MouseEvent('click'))` + 15s cleanup delay. This makes Chrome treat it as a real user-initiated download â†’ correct filename + persisted to disk.
+  - XLSX: `XLSX.write(wb, { type: 'array' })` → `new Blob([wbout])` → `saveBlobAs(blob, filename)`
+  - PDF: `doc.output('blob')` → `saveBlobAs(pdfBlob, filename)`
+  - CSV: `new Blob(['\uFEFF' + csvContent])` → `saveBlobAs(blob, filename)`
+- `saveBlobAs` uses anchor element + `dispatchEvent(new MouseEvent('click'))` + 15s cleanup delay. This makes Chrome treat it as a real user-initiated download → correct filename + persisted to disk.
 
 ## Required Questions Before Build
 
@@ -161,4 +161,3 @@ Default permission names:
 - What are the table prefixes and any sample SQL/table from the owner?
 - What exact permission rule applies per module?
 - Which functions can remain demo and which must be production-real?
-

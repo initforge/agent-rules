@@ -1,207 +1,206 @@
-﻿# Source Examples
+# Source Examples
 
-## Má»¥c tiÃªu
+## Mục tiêu
 
-File nÃ y lÆ°u vÃ­ dá»¥ cá»¥ thá»ƒ Ä‘Ã£ rÃºt tá»« prompt/áº£nh ban Ä‘áº§u. DÃ¹ng nÃ³ nhÆ° reference Ä‘á»ƒ AI suy luáº­n Ä‘Ãºng style 5fedu khi ngÆ°á»i dÃ¹ng Ä‘Æ°a Ã­t instruction hÆ¡n, nhÆ°ng khÃ´ng thay tháº¿ viá»‡c chá»‘t spec tháº­t.
+File này lưu ví dụ cụ thể đã rút từ prompt/ảnh ban đầu. Dùng nó như reference để AI suy luận đúng style 5fedu khi người dùng đưa ít instruction hơn, nhưng không thay thế việc chốt spec thật.
 
-## áº¢nh 1: app vÃ  stack
+## Ảnh 1: app và stack
 
-VÃ­ dá»¥ app:
+Ví dụ app:
 
-- TÃªn app: `TAH APP`.
+- Tên app: `TAH APP`.
 
-Stack thÆ°á»ng tháº¥y:
+Stack thường thấy:
 
 - Frontend: React (Vite) + TypeScript.
-- UI: Tailwind CSS + component ná»™i bá»™ trong `components/ui`, phong cÃ¡ch tÆ°Æ¡ng tá»± shadcn, khÃ´ng dÃ¹ng registry shadcn/Radix náº¿u chÆ°a cáº§n.
-- Dá»¯ liá»‡u: TanStack Query cho server state + Zustand cho client state.
+- UI: Tailwind CSS + component nội bộ trong `components/ui`, phong cách tương tự shadcn, không dùng registry shadcn/Radix nếu chưa cần.
+- Dữ liệu: TanStack Query cho server state + Zustand cho client state.
 - Form: React Hook Form + Zod.
 - Backend: Supabase PostgreSQL + Auth.
-- Dev máº·c Ä‘á»‹nh cÃ³ thá»ƒ dÃ¹ng mock náº¿u Ä‘Æ°á»£c chá»‘t.
+- Dev mặc định có thể dùng mock nếu được chốt.
 - Media: Cloudinary.
-- ThÃ´ng tin káº¿t ná»‘i thÆ°á»ng gá»“m Supabase vÃ  Cloudinary; cÃ³ thá»ƒ cÃ³ Google Sheets/AppSheet tÃ¹y dá»± Ã¡n.
+- Thông tin kết nối thường gồm Supabase và Cloudinary; có thể có Google Sheets/AppSheet tùy dự án.
 
-## áº¢nh 2: domain/sidebar
+## Ảnh 2: domain/sidebar
 
-Domain/sidebar máº«u:
+Domain/sidebar mẫu:
 
-- Trang chá»§
-- HÃ nh chÃ­nh
-- NhÃ¢n sá»±
-- Váº­n hÃ nh
+- Trang chủ
+- Hành chính
+- Nhân sự
+- Vận hành
 - Kinh doanh
 - Marketing
-- TÃ i chÃ­nh
-- Mua hÃ ng
-- Sáº£n xuáº¥t
-- Kho váº­n
-- Äiá»u hÃ nh
-- Há»‡ thá»‘ng
-- Trá»£ lÃ½ AI
-- ThÃ´ng tin báº£n quyá»n
+- Tài chính
+- Mua hàng
+- Sản xuất
+- Kho vận
+- Điều hành
+- Hệ thống
+- Trợ lý AI
+- Thông tin bản quyền
 
-## áº¢nh 3-4: module/view/tab máº«u
+## Ảnh 3-4: module/view/tab mẫu
 
-VÃ­ dá»¥ mapping tá»« sheet:
+Ví dụ mapping từ sheet:
 
-| Submenu | NhÃ³m module | TÃªn view/module | Tab |
+| Submenu | Nhóm module | Tên view/module | Tab |
 | --- | --- | --- | --- |
-| Há»‡ thá»‘ng | SÆ¡ Ä‘á»“ | PhÃ²ng ban | |
-| Há»‡ thá»‘ng | SÆ¡ Ä‘á»“ | Chá»©c vá»¥ | |
-| Há»‡ thá»‘ng | SÆ¡ Ä‘á»“ | NhÃ¢n viÃªn | |
-| Há»‡ thá»‘ng | Thiáº¿t láº­p khÃ¡c | ThÃ´ng tin cÃ´ng ty | |
-| Há»‡ thá»‘ng | Thiáº¿t láº­p khÃ¡c | PhÃ¢n quyá»n | |
-| Quáº£n lÃ½ váº­n táº£i | Káº¿ hoáº¡ch | Chuyáº¿n xe | Danh sÃ¡ch, Danh sÃ¡ch CT |
-| Quáº£n lÃ½ váº­n táº£i | Káº¿ hoáº¡ch | Báº£ng lÆ°Æ¡ng | Danh sÃ¡ch |
-| Quáº£n lÃ½ váº­n táº£i | Káº¿ hoáº¡ch | Thá»‘ng kÃª chuyáº¿n | Lá»c theo ngÃ y, chuyáº¿n, tÃ i xáº¿, Ä‘á»‹a Ä‘iá»ƒm, xe, thá»‘ng kÃª lÆ°Æ¡ng, chi phÃ­ |
-| Quáº£n lÃ½ váº­n táº£i | Káº¿ hoáº¡ch | Thá»‘ng kÃª lÆ°Æ¡ng | Lá»c theo ngÃ y, tÃ i xáº¿ |
-| Quáº£n lÃ½ váº­n táº£i | Thiáº¿t láº­p | TÃ i xáº¿ | |
-| Quáº£n lÃ½ váº­n táº£i | Thiáº¿t láº­p | Äá»‹a Ä‘iá»ƒm | |
-| Quáº£n lÃ½ váº­n táº£i | Thiáº¿t láº­p | Danh sÃ¡ch xe | |
+| Hệ thống | Sơ đồ | Phòng ban | |
+| Hệ thống | Sơ đồ | Chức vụ | |
+| Hệ thống | Sơ đồ | Nhân viên | |
+| Hệ thống | Thiết lập khác | Thông tin công ty | |
+| Hệ thống | Thiết lập khác | Phân quyền | |
+| Quản lý vận tải | Kế hoạch | Chuyến xe | Danh sách, Danh sách CT |
+| Quản lý vận tải | Kế hoạch | Bảng lương | Danh sách |
+| Quản lý vận tải | Kế hoạch | Thống kê chuyến | Lọc theo ngày, chuyến, tài xế, địa điểm, xe, thống kê lương, chi phí |
+| Quản lý vận tải | Kế hoạch | Thống kê lương | Lọc theo ngày, tài xế |
+| Quản lý vận tải | Thiết lập | Tài xế | |
+| Quản lý vận tải | Thiết lập | Địa điểm | |
+| Quản lý vận tải | Thiết lập | Danh sách xe | |
 
-## áº¢nh 5: mapping source
+## Ảnh 5: mapping source
 
-Khi ngÆ°á»i dÃ¹ng Ä‘Æ°a sheet/áº£nh mapping tÆ°Æ¡ng tá»±, AI pháº£i dÃ¹ng nÃ³ lÃ m nguá»“n chÃ­nh Ä‘á»ƒ tÃ¬m trong source vÃ  map tá»›i route/component/service/table.
+Khi người dùng đưa sheet/ảnh mapping tương tự, AI phải dùng nó làm nguồn chính để tìm trong source và map tới route/component/service/table.
 
-KhÃ´ng Ä‘Æ°á»£c tá»± Ä‘á»•i domain/module/view/tab náº¿u chÆ°a há»i.
+Không được tự đổi domain/module/view/tab nếu chưa hỏi.
 
-## áº¢nh 6: schema vÃ­ dá»¥
+## Ảnh 6: schema ví dụ
 
-CÃ¡c báº£ng/cá»™t vÃ­ dá»¥:
+Các bảng/cột ví dụ:
 
-- `var_cong_ty`: thÆ°Æ¡ng hiá»‡u/logo, tÃªn á»©ng dá»¥ng, mÃ´ táº£ ngáº¯n, thÃ´ng tin phÃ¡p nhÃ¢n, tÃªn cÃ´ng ty Ä‘áº§y Ä‘á»§, mÃ£ sá»‘ thuáº¿, sá»‘ Ä‘iá»‡n thoáº¡i, email liÃªn há»‡, website, Ä‘á»‹a chá»‰ trá»¥ sá»Ÿ.
+- `var_cong_ty`: thương hiệu/logo, tên ứng dụng, mô tả ngắn, thông tin pháp nhân, tên công ty đầy đủ, mã số thuế, số điện thoại, email liên hệ, website, địa chỉ trụ sở.
 - `var_phan_quyen`: `id int8`, `id_chuc_vu text`, `id_module text`, `quyen text`.
 - `var_phong_ban`: `id int8`, `tt`, `ma_phong_ban`, `ten_phong_ban`, `mo_ta`, `id_phong_ban_quan_ly`, `trang_thai`.
 - `var_chuc_vu`: `id int8`, `tt`, `ma_chuc_vu`, `ten_chuc_vu`, `mo_ta`, `id_phong_ban`, `trang_thai`.
-- `var_nhan_vien`: ghi chÃº `cho Ä‘Äƒng nháº­p = tÃªn Ä‘Äƒng nháº­p`.
+- `var_nhan_vien`: ghi chú `cho đăng nhập = tên đăng nhập`.
 - `vt_tai_xe`: `id`, `ho_ten`, `trang_thai`, `id_nhan_vien`.
 - `vt_xe`: `id`, `hang`, `model`, `doi`, `bien_so`.
 - `vt_dia_diem`: `id`, `nhom`, `ten`, `mo_ta`, `tien_luong`, `ghi_chu`, `id_nguoi_tao`, `tg_tao`, `tg_cap_nhat`.
-- `vt_chuyen_xe`: `id`, `ngay`, `id_tai_xe`, sá»‘ chuyáº¿n, tá»•ng tiá»n lÆ°Æ¡ng, tá»•ng phÃ­, ghi chÃº, tráº¡ng thÃ¡i.
-- `vt_chuyen_xe_ct`: `id`, `id_chuyen_xe`, `id_dia_diem`, tiá»n lÆ°Æ¡ng initial, chi phÃ­ theo chuyáº¿n, ghi chÃº, tráº¡ng thÃ¡i/phÃª duyá»‡t.
-- `vt_luong`: `id`, `nam`, `thang`, `id_tai_xe`, tá»•ng lÆ°Æ¡ng theo chuyáº¿n, tá»•ng chi phÃ­ theo chuyáº¿n, tá»•ng chi phÃ­ khÃ¡c, ghi chÃº chi phÃ­, tráº¡ng thÃ¡i, `id_nguoi_tao`, `tg_tao`, `tg_cap_nhat`.
+- `vt_chuyen_xe`: `id`, `ngay`, `id_tai_xe`, số chuyến, tổng tiền lương, tổng phí, ghi chú, trạng thái.
+- `vt_chuyen_xe_ct`: `id`, `id_chuyen_xe`, `id_dia_diem`, tiền lương initial, chi phí theo chuyến, ghi chú, trạng thái/phê duyệt.
+- `vt_luong`: `id`, `nam`, `thang`, `id_tai_xe`, tổng lương theo chuyến, tổng chi phí theo chuyến, tổng chi phí khác, ghi chú chi phí, trạng thái, `id_nguoi_tao`, `tg_tao`, `tg_cap_nhat`.
 
-## áº¢nh 7: cáº¥u trÃºc báº£ng chung
+## Ảnh 7: cấu trúc bảng chung
 
-Khung cá»™t chung:
+Khung cột chung:
 
 - `id`
-- tÃªn/label
-- tráº¡ng thÃ¡i
-- cÃ¡c trÆ°á»ng nhÃ³m/phÃ¢n loáº¡i
-- mÃ´ táº£ + ghi chÃº
+- tên/label
+- trạng thái
+- các trường nhóm/phân loại
+- mô tả + ghi chú
 - `id_nguoi_tao`
 - `tg_tao`
 - `tg_cap_nhat`
 
-## áº¢nh 8/chat owner
+## Ảnh 8/chat owner
 
-Quy táº¯c owner nÃ³i:
+Quy tắc owner nói:
 
-- `id_nguoi_tao` pháº£i cÃ³ á»Ÿ háº§u háº¿t báº£ng.
-- CÃ¡c báº£ng há»‡ thá»‘ng nhÆ° phÃ²ng ban/chá»©c vá»¥ cÃ³ thá»ƒ khÃ´ng cáº§n `id_nguoi_tao`.
-- `tg_tao` vÃ  `tg_cap_nhat` thÃ¬ báº£ng nÃ o cÅ©ng cÃ³.
-- CÃ³ váº¥n Ä‘á» gÃ¬ pháº£i trao Ä‘á»•i láº¡i ngay.
+- `id_nguoi_tao` phải có ở hầu hết bảng.
+- Các bảng hệ thống như phòng ban/chức vụ có thể không cần `id_nguoi_tao`.
+- `tg_tao` và `tg_cap_nhat` thì bảng nào cũng có.
+- Có vấn đề gì phải trao đổi lại ngay.
 
-## Giá»›i háº¡n suy luáº­n
+## Giới hạn suy luận
 
-ÄÆ°á»£c suy luáº­n:
+Được suy luận:
 
-- Format tá»• chá»©c module.
-- HÆ°á»›ng Ä‘áº·t tÃªn báº£ng/cá»™t.
-- CÃ¡ch mapping tá»« spec sang frontend/backend.
-- CÃ¡ch há»i credentials vÃ  kiá»ƒm tra format.
+- Format tổ chức module.
+- Hướng đặt tên bảng/cột.
+- Cách mapping từ spec sang frontend/backend.
+- Cách hỏi credentials và kiểm tra format.
 
-KhÃ´ng Ä‘Æ°á»£c tá»± chá»‘t:
+Không được tự chốt:
 
-- App hiá»‡n táº¡i cÃ³ Ä‘Ãºng toÃ n bá»™ vÃ­ dá»¥ trÃªn khÃ´ng.
-- Prefix má»›i ngoÃ i vÃ­ dá»¥.
+- App hiện tại có đúng toàn bộ ví dụ trên không.
+- Prefix mới ngoài ví dụ.
 - SQL/migration production.
-- Permission cá»¥ thá»ƒ tá»«ng module.
-- Credentials hoáº·c secret.
+- Permission cụ thể từng module.
+- Credentials hoặc secret.
 
-## áº¢nh Sheet 2 ngÃ y 2026-05-30: dá»± Ã¡n vÃ  quy táº¯c triá»ƒn khai
+## Ảnh Sheet 2 ngày 2026-05-30: dự án và quy tắc triển khai
 
-Nguá»“n: áº£nh ngÆ°á»i dÃ¹ng gá»­i trong chat ngÃ y 2026-05-30, sheet `5f edu - XuÃ¢n LÄ©nh`.
+Nguồn: ảnh người dùng gửi trong chat ngày 2026-05-30, sheet `5f edu - Xuân Lĩnh`.
 
-### Dá»± Ã¡n
+### Dự án
 
-- TÃªn dá»± Ã¡n: `TAH app`.
-- Tráº¡ng thÃ¡i: `Má»›i`.
+- Tên dự án: `TAH app`.
+- Trạng thái: `Mới`.
 - Deadline 80%: `03/06/2026`.
-- Nghiá»‡m thu: `18/06/2026`.
-- Tá»•ng tiá»n: `3.000.000`.
-- CÃ²n láº¡i: `3.000.000`.
+- Nghiệm thu: `18/06/2026`.
+- Tổng tiền: `3.000.000`.
+- Còn lại: `3.000.000`.
 
-### Quy táº¯c source/code
+### Quy tắc source/code
 
-- Code sáº¡ch, dÃ¹ng láº¡i tá»‘t, dá»… má»Ÿ rá»™ng.
-- Cáº¥u trÃºc thÆ° má»¥c chia theo tá»«ng chá»©c nÄƒng, vÃ­ dá»¥ `Há»‡ thá»‘ng`, `NhÃ¢n sá»±`.
-- CÃ¢y thÆ° má»¥c tham kháº£o app template.
-- File trong tá»«ng module tham kháº£o template.
-- TÃªn submenu vÃ  thÆ° má»¥c module dÃ¹ng tiáº¿ng Viá»‡t Ä‘á»ƒ ngÆ°á»i khÃ´ng biáº¿t tiáº¿ng Anh váº«n dá»… tra cá»©u.
-- TÃªn view dÃ¹ng dáº¡ng hybrid tiáº¿ng Viá»‡t + English suffix, vÃ­ dá»¥ `nhan-vien-form`.
+- Code sạch, dùng lại tốt, dễ mở rộng.
+- Cấu trúc thư mục chia theo từng chức năng, ví dụ `Hệ thống`, `Nhân sự`.
+- Cây thư mục tham khảo app template.
+- File trong từng module tham khảo template.
+- Tên submenu và thư mục module dùng tiếng Việt để người không biết tiếng Anh vẫn dễ tra cứu.
+- Tên view dùng dạng hybrid tiếng Việt + English suffix, ví dụ `nhan-vien-form`.
 
-### Quy táº¯c database chi tiáº¿t
+### Quy tắc database chi tiết
 
-- TÃªn báº£ng viáº¿t theo toÃ n bá»™ submenu + tÃªn module báº±ng dáº¡ng slug/prefix Ä‘Ã£ chá»‘t theo app.
-- VÃ­ dá»¥ Ä‘Ãºng: `var_nhan_su`, `hc_phieu_hanh_chinh`.
-- VÃ­ dá»¥ sai: `nhan-su`, `1.nhan-su`.
-- Cáº¥u trÃºc báº£ng chung gá»“m: `id int8`, cá»™t label/name, cá»™t nhÃ³m/phÃ¢n loáº¡i, cá»™t liÃªn káº¿t dáº¡ng `id_<doi_tuong>`, mÃ´ táº£/diá»…n giáº£i, ghi chÃº, tráº¡ng thÃ¡i, `id_nguoi_tao`, `tg_tao`, `tg_cap_nhat`.
-- Báº£ng Ä‘áº§y Ä‘á»§ pháº£i cÃ³ cáº¥u trÃºc cá»™t, policy authenticated, hÃ m index/convention search, trigger cho `tg_cap_nhat`.
-- Lá»—i thÆ°á»ng gáº·p cáº§n trÃ¡nh: dÃ¹ng `uuid` cho `id`, sai cáº¥u trÃºc tÃªn cá»™t liÃªn káº¿t.
+- Tên bảng viết theo toàn bộ submenu + tên module bằng dạng slug/prefix đã chốt theo app.
+- Ví dụ đúng: `var_nhan_su`, `hc_phieu_hanh_chinh`.
+- Ví dụ sai: `nhan-su`, `1.nhan-su`.
+- Cấu trúc bảng chung gồm: `id int8`, cột label/name, cột nhóm/phân loại, cột liên kết dạng `id_<doi_tuong>`, mô tả/diễn giải, ghi chú, trạng thái, `id_nguoi_tao`, `tg_tao`, `tg_cap_nhat`.
+- Bảng đầy đủ phải có cấu trúc cột, policy authenticated, hàm index/convention search, trigger cho `tg_cap_nhat`.
+- Lỗi thường gặp cần tránh: dùng `uuid` cho `id`, sai cấu trúc tên cột liên kết.
 
-### Auth, tÃ i khoáº£n vÃ  nhÃ¢n viÃªn
+### Auth, tài khoản và nhân viên
 
-- ÄÄƒng nháº­p theo fake email: nháº­p `admin` thÃ¬ app tá»± hiá»ƒu lÃ  `admin@gmail.com`.
-- Bá» tÃ­nh nÄƒng Ä‘Äƒng kÃ½.
-- TÃ i khoáº£n máº·c Ä‘á»‹nh Ä‘á»ƒ test: `admin` / `5fedu.com`.
-- Module nhÃ¢n viÃªn giá»¯ trÆ°á»ng chÃ­nh: `id`, `ho_va_ten`, `avatar`, `trang_thai`, `id_phong_ban`, `id_chuc_vu`, `so_dien_thoai`, `email`, `ten_dang_nhap`.
-- Khi táº¡o má»›i hoáº·c Ä‘á»•i `ten_dang_nhap`, Supabase cáº§n táº¡o/xÃ³a tÃ i khoáº£n theo `<ten_dang_nhap>@gmail.com`, máº­t kháº©u máº·c Ä‘á»‹nh `123456`. Flow nÃ y cáº§n xá»­ lÃ½ báº±ng server/admin path, khÃ´ng Ä‘Æ°a service role vÃ o frontend.
+- Đăng nhập theo fake email: nhập `admin` thì app tự hiểu là `admin@gmail.com`.
+- Bỏ tính năng đăng ký.
+- Tài khoản mặc định để test: `admin` / `5fedu.com`.
+- Module nhân viên giữ trường chính: `id`, `ho_va_ten`, `avatar`, `trang_thai`, `id_phong_ban`, `id_chuc_vu`, `so_dien_thoai`, `email`, `ten_dang_nhap`.
+- Khi tạo mới hoặc đổi `ten_dang_nhap`, Supabase cần tạo/xóa tài khoản theo `<ten_dang_nhap>@gmail.com`, mật khẩu mặc định `123456`. Flow này cần xử lý bằng server/admin path, không đưa service role vào frontend.
 
 ### Flow, UI, search, notification
 
-- Flow thao tÃ¡c chuáº©n: Ä‘ang á»Ÿ detail báº£ng cha -> báº¥m thÃªm dÃ²ng con -> má»Ÿ form -> lÆ°u hoáº·c há»§y -> quay láº¡i detail báº£ng cha.
-- Module cÃ³ nhiá»u tab pháº£i lÆ°u tab hiá»‡n táº¡i báº±ng router query `?tab=<tab>`.
-- Search box pháº£i tÃ¬m Ä‘Æ°á»£c táº¥t cáº£ trÆ°á»ng trong báº£ng vÃ  trÆ°á»ng liÃªn káº¿t hiá»ƒn thá»‹. VÃ­ dá»¥ báº£ng chá»‰ cÃ³ `id_nguoi_tao` nhÆ°ng ngÆ°á»i dÃ¹ng tÃ¬m theo tÃªn nhÃ¢n viÃªn váº«n pháº£i ra káº¿t quáº£.
-- Notification máº·c Ä‘á»‹nh lÃ  demo: trÃªn icon cÃ³ dáº¥u demo, báº¥m vÃ o bÃ¡o chá»©c nÄƒng khÃ´ng sáºµn cÃ³ Ä‘á»ƒ ngÆ°á»i dÃ¹ng khÃ´ng Ä‘Ã²i há»i notification tháº­t á»Ÿ giai Ä‘oáº¡n nÃ y.
+- Flow thao tác chuẩn: đang ở detail bảng cha -> bấm thêm dòng con -> mở form -> lưu hoặc hủy -> quay lại detail bảng cha.
+- Module có nhiều tab phải lưu tab hiện tại bằng router query `?tab=<tab>`.
+- Search box phải tìm được tất cả trường trong bảng và trường liên kết hiển thị. Ví dụ bảng chỉ có `id_nguoi_tao` nhưng người dùng tìm theo tên nhân viên vẫn phải ra kết quả.
+- Notification mặc định là demo: trên icon có dấu demo, bấm vào báo chức năng không sẵn có để người dùng không đòi hỏi notification thật ở giai đoạn này.
 
-### Permission chi tiáº¿t
+### Permission chi tiết
 
-- Máº·c Ä‘á»‹nh module cÃ³ quyá»n `xem`, `them`, `sua`, `xoa`, `quan_tri`.
-- CÃ³ thá»ƒ cÃ³ nÃºt chá»n táº¥t cáº£ trÃªn UI, nhÆ°ng khi lÆ°u váº«n lÆ°u tá»«ng quyá»n tháº­t.
-- CÃ³ quyá»n module thÃ¬ hiá»ƒn thá»‹ module/submenu; khÃ´ng cÃ³ quyá»n thÃ¬ bá»‹ cháº·n khi truy cáº­p route.
-- `quan_tri` luÃ´n Ä‘Æ°á»£c xem, thÃªm, sá»­a, xÃ³a toÃ n bá»™ báº¥t ká»ƒ rule chi tiáº¿t.
-- Rule xem cÃ³ thá»ƒ phá»¥ thuá»™c cáº¥p báº­c/phÃ²ng/nhÃ³m:
-  - `cap_bac=1`: xem háº¿t.
-  - `cap_bac=2`: xem trong phÃ²ng.
-  - `cap_bac=3`: xem trong nhÃ³m.
-  - cÃ²n láº¡i: chá»‰ xem dá»¯ liá»‡u cá»§a chÃ­nh nhÃ¢n sá»± Ä‘Ã³.
-- `them`: nhÃ¢n sá»± cÃ³ chá»©c vá»¥ `cap_bac=1`, hoáº·c cÃ³ quyá»n `quan_tri`, hoáº·c cÃ³ quyá»n `them`.
-- `sua`: nhÃ¢n sá»± cÃ³ chá»©c vá»¥ `cap_bac=1`, hoáº·c cÃ³ quyá»n `quan_tri`, hoáº·c cÃ³ quyá»n `sua`.
-- `xoa`: nhÃ¢n sá»± cÃ³ chá»©c vá»¥ `cap_bac=1`, hoáº·c cÃ³ quyá»n `quan_tri`, hoáº·c cÃ³ quyá»n `xoa`.
-- Module key lÆ°u trÃªn Supabase pháº£i lÃ  tiáº¿ng Viá»‡t khÃ´ng dáº¥u cá»§a tÃªn module, vÃ­ dá»¥ Ä‘Ãºng `nhan-vien`, sai `he-thong/nhan-vien`.
-- Vá»›i module nhÆ° báº£ng lÆ°Æ¡ng, dá»¯ liá»‡u cÃ³ thá»ƒ chá»‰ cho phÃ©p xem cá»§a chÃ­nh ngÆ°á»i Ä‘Ã³ theo app-side permission. KhÃ´ng tá»± thÃªm RLS Supabase náº¿u chÆ°a Ä‘Æ°á»£c chá»‘t.
+- Mặc định module có quyền `xem`, `them`, `sua`, `xoa`, `quan_tri`.
+- Có thể có nút chọn tất cả trên UI, nhưng khi lưu vẫn lưu từng quyền thật.
+- Có quyền module thì hiển thị module/submenu; không có quyền thì bị chặn khi truy cập route.
+- `quan_tri` luôn được xem, thêm, sửa, xóa toàn bộ bất kể rule chi tiết.
+- Rule xem có thể phụ thuộc cấp bậc/phòng/nhóm:
+  - `cap_bac=1`: xem hết.
+  - `cap_bac=2`: xem trong phòng.
+  - `cap_bac=3`: xem trong nhóm.
+  - còn lại: chỉ xem dữ liệu của chính nhân sự đó.
+- `them`: nhân sự có chức vụ `cap_bac=1`, hoặc có quyền `quan_tri`, hoặc có quyền `them`.
+- `sua`: nhân sự có chức vụ `cap_bac=1`, hoặc có quyền `quan_tri`, hoặc có quyền `sua`.
+- `xoa`: nhân sự có chức vụ `cap_bac=1`, hoặc có quyền `quan_tri`, hoặc có quyền `xoa`.
+- Module key lưu trên Supabase phải là tiếng Việt không dấu của tên module, ví dụ đúng `nhan-vien`, sai `he-thong/nhan-vien`.
+- Với module như bảng lương, dữ liệu có thể chỉ cho phép xem của chính người đó theo app-side permission. Không tự thêm RLS Supabase nếu chưa được chốt.
 
 ### Delivery
 
-- Giao diá»‡n desktop dÃ¹ng list view, mobile dÃ¹ng card view; form/detail view theo template.
-- LÃ m xong dá»± Ã¡n pháº£i cÃ³ plan tá»‘i Æ°u trÃ¡nh quÃ¡ táº£i Supabase Egress vÃ  Vercel Edge Function, tham kháº£o tÃ i liá»‡u chÃ­nh thá»©c má»›i nháº¥t cá»§a Supabase/Vercel.
-- Khi push cáº§n push GitHub theo quy trÃ¬nh repo hiá»‡n táº¡i.
-## áº¢nh pháº£n há»“i owner ngÃ y 2026-05-31
+- Giao diện desktop dùng list view, mobile dùng card view; form/detail view theo template.
+- Làm xong dự án phải có plan tối ưu tránh quá tải Supabase Egress và Vercel Edge Function, tham khảo tài liệu chính thức mới nhất của Supabase/Vercel.
+- Khi push cần push GitHub theo quy trình repo hiện tại.
+## Ảnh phản hồi owner ngày 2026-05-31
 
-Nguá»“n: áº£nh chat ngÆ°á»i dÃ¹ng gá»­i ngÃ y 2026-05-31.
+Nguồn: ảnh chat người dùng gửi ngày 2026-05-31.
 
-CÃ¡c Ã½ Ä‘Ã£ chá»‘t tá»« pháº£n há»“i:
+Các ý đã chốt từ phản hồi:
 
-- Owner nháº¯c: `id` cÃ¡c báº£ng pháº£i lÃ  `int8` vÃ  tá»± Ä‘á»™ng tÄƒng dáº§n.
-- Supabase cÃ³ tÃ­nh nÄƒng auto increment cho `int8`; khÃ´ng Ä‘Æ°á»£c bá» qua hoáº·c nÃ³i khÃ´ng cÃ³.
-- Owner yÃªu cáº§u Ä‘á»c láº¡i note/sheet ká»¹ vÃ¬ Ä‘ang sai nhiá»u, nháº¥t lÃ  pháº§n Ä‘Äƒng nháº­p.
-- Báº£ng nhÃ¢n viÃªn pháº£i bá» cÃ¡c trÆ°á»ng linh tinh.
-- Pháº§n login pháº£i lÃ m chuáº©n trÆ°á»›c: khÃ´ng pháº£i mÃ£ nhÃ¢n viÃªn, mÃ  lÃ  `ten_dang_nhap`.
-- Khi thÃªm/sá»­a `ten_dang_nhap` pháº£i tá»± sá»­a Supabase Auth user; khi xÃ³a pháº£i xÃ³a Supabase Auth user tÆ°Æ¡ng á»©ng.
-- NgÆ°á»i dÃ¹ng sáº½ Ä‘Äƒng nháº­p Google trong browser Ä‘á»ƒ cáº¥p quyá»n Ä‘á»c 2 Google Sheets lÃ m source tham chiáº¿u chÃ­nh.
+- Owner nhắc: `id` các bảng phải là `int8` và tự động tăng dần.
+- Supabase có tính năng auto increment cho `int8`; không được bỏ qua hoặc nói không có.
+- Owner yêu cầu đọc lại note/sheet kỹ vì đang sai nhiều, nhất là phần đăng nhập.
+- Bảng nhân viên phải bỏ các trường linh tinh.
+- Phần login phải làm chuẩn trước: không phải mã nhân viên, mà là `ten_dang_nhap`.
+- Khi thêm/sửa `ten_dang_nhap` phải tự sửa Supabase Auth user; khi xóa phải xóa Supabase Auth user tương ứng.
+- Người dùng sẽ đăng nhập Google trong browser để cấp quyền đọc 2 Google Sheets làm source tham chiếu chính.
 
-CÃ¡c Ã½ nÃ y Ä‘Ã£ Ä‘Æ°á»£c chuáº©n hÃ³a thÃ nh gate chi tiáº¿t á»Ÿ `context/5fedu/10-owner-feedback-lessons.md`.
-
+Các ý này đã được chuẩn hóa thành gate chi tiết ở `context/5fedu/10-owner-feedback-lessons.md`.
 

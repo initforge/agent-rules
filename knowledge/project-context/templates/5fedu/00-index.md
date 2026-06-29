@@ -1,91 +1,91 @@
-﻿# 5fedu Context Index
+# 5fedu Context Index
 
-ÄÃ¢y lÃ  index project-local cho 5fedu. Agent Ä‘á»c file nÃ y trÆ°á»›c Ä‘á»ƒ biáº¿t pháº£i Ä‘á»c gÃ¬ tiáº¿p theo, khÃ´ng Ä‘á»c toÃ n bá»™ context folder theo thÃ³i quen.
+Đây là index project-local cho 5fedu. Agent đọc file này trước để biết phải đọc gì tiếp theo, không đọc toàn bộ context folder theo thói quen.
 
 ## Loading Policy
 
-LuÃ´n Ä‘á»c trÆ°á»›c:
+Luôn đọc trước:
 
 - `AGENTS.md`
 - `00-index.md`
-- `04-decision-status-and-backlog.md` hoáº·c legacy `06-decision-status.md`
+- `04-decision-status-and-backlog.md` hoặc legacy `06-decision-status.md`
 - `questions.md`
-- `05-source-specs-and-coverage.md` hoáº·c legacy `11-current-sheets-source-map.md` khi task cáº§n Ä‘á»‘i chiáº¿u spec/source
+- `05-source-specs-and-coverage.md` hoặc legacy `11-current-sheets-source-map.md` khi task cần đối chiếu spec/source
 
-Äá»c sÃ¢u theo domain:
+Đọc sâu theo domain:
 
 - `02-database-and-auth-rules.md`: database, auth, permission, RLS, trigger, rollup, schema.
 - `03-ui-ux-and-delivery-standards.md`: UI, UX, list/detail/form, toolbar, filter, export, responsive, production UI rules.
-- `04-business-patterns.md`: ERP/admin patterns nhÆ° master-detail, approval workflow, derived fields, lookup autofill, report/export parity, shared base entity + specialized roles.
-- Legacy files `03-database-supabase.md`, `04-auth-permissions-and-flows.md`, `05-delivery-quality.md`, `07-working-format.md`, `08-source-examples.md`, `09-coverage-audit.md` chá»‰ Ä‘á»c khi repo cÃ²n dÃ¹ng layout cÅ© hoáº·c task cáº§n báº±ng chá»©ng cá»¥ thá»ƒ.
-- `10-owner-feedback-lessons.md` vÃ  `12-owner-feedback-transport-ui.md` lÃ  log/lesson evidence. Náº¿u tháº¥y rule dÃ¹ng láº¡i Ä‘Æ°á»£c, promote vÃ o file rule sá»‘ng phÃ¹ há»£p.
-- `13-trip-execution-vs-approval-spec.md`: checklist triá»ƒn khai Chuyáº¿n xe â€” tÃ¡ch TT thá»±c hiá»‡n vs duyá»‡t (owner 2026-06-15).
-- `14-production-e2e-harness.md`: harness Playwright production â€” fixtures, backup/restore, blast radius, lá»‡nh cháº¡y, gate deploy bundle.
+- `04-business-patterns.md`: ERP/admin patterns như master-detail, approval workflow, derived fields, lookup autofill, report/export parity, shared base entity + specialized roles.
+- Legacy files `03-database-supabase.md`, `04-auth-permissions-and-flows.md`, `05-delivery-quality.md`, `07-working-format.md`, `08-source-examples.md`, `09-coverage-audit.md` chỉ đọc khi repo còn dùng layout cũ hoặc task cần bằng chứng cụ thể.
+- `10-owner-feedback-lessons.md` và `12-owner-feedback-transport-ui.md` là log/lesson evidence. Nếu thấy rule dùng lại được, promote vào file rule sống phù hợp.
+- `13-trip-execution-vs-approval-spec.md`: checklist triển khai Chuyến xe — tách TT thực hiện vs duyệt (owner 2026-06-15).
+- `14-production-e2e-harness.md`: harness Playwright production — fixtures, backup/restore, blast radius, lệnh chạy, gate deploy bundle.
 
 ## Execution Contract
 
-- KhÃ´ng blind-code. TrÆ°á»›c khi sá»­a, xÃ¡c Ä‘á»‹nh file sá»­a trá»±c tiáº¿p, file liÃªn quan, data/API/UI/caller bá»‹ áº£nh hÆ°á»Ÿng.
-- KhÃ´ng isolated fix. Sá»­a schema/API/type/service/UI pháº£i rÃ  cÃ¡c nÆ¡i dÃ¹ng liÃªn quan.
-- KhÃ´ng placeholder code cho feature Ä‘Ã£ Ä‘Æ°á»£c yÃªu cáº§u tháº­t.
-- KhÃ´ng bÃ¡o xong náº¿u chÆ°a verify gate cá»‘t lÃµi.
-- KhÃ´ng tá»± push, trá»« khi user yÃªu cáº§u rÃµ trong session.
-- KhÃ´ng Ä‘á»ƒ ná»£ ká»¹ thuáº­t má»›i thÃ nh máº·c Ä‘á»‹nh. Náº¿u task táº¡o ná»£ má»›i, pháº£i phÃ¢n loáº¡i, sá»­a ngay náº¿u nghiÃªm trá»ng, hoáº·c ghi rÃµ `Remaining debt`.
+- Không blind-code. Trước khi sửa, xác định file sửa trực tiếp, file liên quan, data/API/UI/caller bị ảnh hưởng.
+- Không isolated fix. Sửa schema/API/type/service/UI phải rà các nơi dùng liên quan.
+- Không placeholder code cho feature đã được yêu cầu thật.
+- Không báo xong nếu chưa verify gate cốt lõi.
+- Không tự push, trừ khi user yêu cầu rõ trong session.
+- Không để nợ kỹ thuật mới thành mặc định. Nếu task tạo nợ mới, phải phân loại, sửa ngay nếu nghiêm trọng, hoặc ghi rõ `Remaining debt`.
 
 ## Smart Intent Contract
 
-Khi prompt cÃ³ tÃ­n hiá»‡u rá»™ng, agent pháº£i tá»± kÃ­ch hoáº¡t nhanh gate tÆ°Æ¡ng á»©ng:
+Khi prompt có tín hiệu rộng, agent phải tự kích hoạt nhanh gate tương ứng:
 
-- `verify production háº¿t`, `test production`, `kiá»ƒm tra live`: Ä‘á»c index/mapping trÆ°á»›c, suy ra module/role/database/UI/export/cross-flow, rá»“i má»›i verify production.
-- `UI`, `chÆ°a chuáº©n`, `thiáº¿u`, `khÃ´ng giá»‘ng`, `module thiáº¿u`, `tÃ­nh nÄƒng thiáº¿u`: Ä‘á»c mapping, tÃ¬m `/template` trÆ°á»›c. Náº¿u template cÃ³ máº«u Ä‘á»§ Ä‘Ã¡p á»©ng prompt/app thÃ¬ bÃ¡m sÃ¡t template vÃ  Ä‘á»•i tá»‘i thiá»ƒu; chá»‰ dÃ¹ng fallback/golden reference khi template thiáº¿u, khÃ´ng Ä‘á»§ hÃ nh vi, hoáº·c cÃ³ báº±ng chá»©ng Ä‘ang ngÃµ cá»¥t.
-- Má»i thay Ä‘á»•i UI 5fedu, gá»“m lÃ m má»›i, lÃ m láº¡i, chá»‰nh sá»­a, loáº¡i bá», bá»• sung module, bá»• sung nÃºt, bá»• sung tÃ­nh nÄƒng, Ä‘á»•i layout, Ä‘á»•i flow hoáº·c Ä‘á»•i responsive behavior, báº¯t buá»™c bÃ¡m pattern UI cá»§a template theo Ä‘Ãºng surface/hÃ nh vi tÆ°Æ¡ng á»©ng.
-- TrÆ°á»›c khi code UI/module, báº¯t buá»™c táº¡o **Pattern Fidelity Packet** theo máº«u trong `02-frontend-mapping.md`. Thiáº¿u packet nÃ y thÃ¬ chÆ°a Ä‘Æ°á»£c code.
-- Cáº¥m tá»± cháº¿ tÃªn module, mÃ´ táº£, nÃºt, icon, tab, route, empty-state copy hoáº·c workflow. Náº¿u khÃ´ng cÃ³ nguá»“n rÃµ tá»« spec/template/app thÃ¬ há»i hoáº·c Ä‘Ã¡nh dáº¥u `CAN_HOI_THEM`.
-- `permission`, `phÃ¢n quyá»n`, `role`, `RLS`, `auth`: Ä‘á»c database/auth rules vÃ  test Ä‘a account/Ä‘a cáº¥p.
-- `export`, `download`, `Excel`, `PDF`, `CSV`: táº£i file tháº­t vÃ  kiá»ƒm format/ná»™i dung.
-- `cleanup`, `gitignore`, `xÃ³a file`, `trÃ¹ng chá»©c nÄƒng`: kiá»ƒm reference báº±ng Codebase Memory MCP hoáº·c `rg`/native navigation, package scripts, CI vÃ  docs trÆ°á»›c khi xÃ³a.
+- `verify production hết`, `test production`, `kiểm tra live`: đọc index/mapping trước, suy ra module/role/database/UI/export/cross-flow, rồi mới verify production.
+- `UI`, `chưa chuẩn`, `thiếu`, `không giống`, `module thiếu`, `tính năng thiếu`: đọc mapping, tìm `/template` trước. Nếu template có mẫu đủ đáp ứng prompt/app thì bám sát template và đổi tối thiểu; chỉ dùng fallback/golden reference khi template thiếu, không đủ hành vi, hoặc có bằng chứng đang ngõ cụt.
+- Mọi thay đổi UI 5fedu, gồm làm mới, làm lại, chỉnh sửa, loại bỏ, bổ sung module, bổ sung nút, bổ sung tính năng, đổi layout, đổi flow hoặc đổi responsive behavior, bắt buộc bám pattern UI của template theo đúng surface/hành vi tương ứng.
+- Trước khi code UI/module, bắt buộc tạo **Pattern Fidelity Packet** theo mẫu trong `02-frontend-mapping.md`. Thiếu packet này thì chưa được code.
+- Cấm tự chế tên module, mô tả, nút, icon, tab, route, empty-state copy hoặc workflow. Nếu không có nguồn rõ từ spec/template/app thì hỏi hoặc đánh dấu `CAN_HOI_THEM`.
+- `permission`, `phân quyền`, `role`, `RLS`, `auth`: đọc database/auth rules và test đa account/đa cấp.
+- `export`, `download`, `Excel`, `PDF`, `CSV`: tải file thật và kiểm format/nội dung.
+- `cleanup`, `gitignore`, `xóa file`, `trùng chức năng`: kiểm reference bằng Codebase Memory MCP hoặc `rg`/native navigation, package scripts, CI và docs trước khi xóa.
 
-Vá»›i task lá»›n hoáº·c production/UI/permission/database/export, report cuá»‘i pháº£i cÃ³ `Context loaded`, `Verification`, `Technical debt check`, `Status`; riÃªng UI pháº£i cÃ³ `Template checked` vÃ  `Pattern fidelity`.
+Với task lớn hoặc production/UI/permission/database/export, report cuối phải có `Context loaded`, `Verification`, `Technical debt check`, `Status`; riêng UI phải có `Template checked` và `Pattern fidelity`.
 
 ## Verification Policy
 
-Máº·c Ä‘á»‹nh cá»§a 5fedu:
+Mặc định của 5fedu:
 
-- Test production sau khi code Ä‘Ã£ Ä‘Æ°á»£c push vÃ  CI/CD deploy xong.
-- Náº¿u user yÃªu cáº§u test local, test local trÆ°á»›c hoáº·c thay production theo yÃªu cáº§u.
-- KhÃ´ng tá»± táº¡o Vercel site/project má»›i.
-- KhÃ´ng manual deploy báº±ng terminal náº¿u user khÃ´ng yÃªu cáº§u rÃµ.
+- Test production sau khi code đã được push và CI/CD deploy xong.
+- Nếu user yêu cầu test local, test local trước hoặc thay production theo yêu cầu.
+- Không tự tạo Vercel site/project mới.
+- Không manual deploy bằng terminal nếu user không yêu cầu rõ.
 
-Test khÃ´ng chá»‰ lÃ  báº¥m nÃºt:
+Test không chỉ là bấm nút:
 
-- CRUD: create/read/update/delete vá»›i dá»¯ liá»‡u tháº­t hoáº·c test data Ä‘Æ°á»£c phÃ©p.
-- Database: query Ä‘á»‘i chiáº¿u record, trigger, rollup, cascade, RLS/policy náº¿u cÃ³.
-- Permission: táº¡o/dÃ¹ng Ä‘á»§ account Ä‘áº¡i diá»‡n cÃ¡c cáº¥p quyá»n; má»—i account pháº£i test quyá»n xem/thÃªm/sá»­a/xÃ³a vÃ  hÃ nh Ä‘á»™ng trÃ¡i phÃ©p.
-- Cross-module: dá»¯ liá»‡u thay Ä‘á»•i á»Ÿ má»™t module pháº£i pháº£n Ã¡nh Ä‘Ãºng á»Ÿ module liÃªn quan, bÃ¡o cÃ¡o, dropdown, cache/query.
-- Toolbar/filter/search: kiá»ƒm tra behavior vÃ  Ä‘á»‘i chiáº¿u káº¿t quáº£ lá»c vá»›i database/source.
-- Export: táº£i file tháº­t, kiá»ƒm tra tÃªn file, extension, format, Excel cell type, PDF Unicode/layout.
-- External integration khÃ´ng cÃ³ quyá»n test tháº­t: Ä‘á»c code ká»¹, kiá»ƒm tra config/error path, ghi `PARTIAL` hoáº·c gap cho user test.
-- Regression váº­n táº£i / chuyáº¿n xe / phÃ¢n quyá»n: Ä‘á»c `14-production-e2e-harness.md`, cháº¡y spec trong blast radius tÆ°Æ¡ng á»©ng; test mutating báº¯t buá»™c snapshot + restore fixture; thiáº¿u service role â†’ UI-only `PARTIAL`.
+- CRUD: create/read/update/delete với dữ liệu thật hoặc test data được phép.
+- Database: query đối chiếu record, trigger, rollup, cascade, RLS/policy nếu có.
+- Permission: tạo/dùng đủ account đại diện các cấp quyền; mỗi account phải test quyền xem/thêm/sửa/xóa và hành động trái phép.
+- Cross-module: dữ liệu thay đổi ở một module phải phản ánh đúng ở module liên quan, báo cáo, dropdown, cache/query.
+- Toolbar/filter/search: kiểm tra behavior và đối chiếu kết quả lọc với database/source.
+- Export: tải file thật, kiểm tra tên file, extension, format, Excel cell type, PDF Unicode/layout.
+- External integration không có quyền test thật: đọc code kỹ, kiểm tra config/error path, ghi `PARTIAL` hoặc gap cho user test.
+- Regression vận tải / chuyến xe / phân quyền: đọc `14-production-e2e-harness.md`, chạy spec trong blast radius tương ứng; test mutating bắt buộc snapshot + restore fixture; thiếu service role → UI-only `PARTIAL`.
 
-## Context Preservation & Evolution (báº¯t buá»™c)
+## Context Preservation & Evolution (bắt buộc)
 
-**NguyÃªn táº¯c: promote rule, khÃ´ng dump raw.** File `10`/`12` chá»‰ lÃ  archive index â€” khÃ´ng ghi quote owner, khÃ´ng láº·p láº¡i rule Ä‘Ã£ promote.
+**Nguyên tắc: promote rule, không dump raw.** File `10`/`12` chỉ là archive index — không ghi quote owner, không lặp lại rule đã promote.
 
-| Loáº¡i ná»™i dung | Ghi á»Ÿ Ä‘Ã¢u | Sync master? |
+| Loại nội dung | Ghi ở đâu | Sync master? |
 |---------------|-----------|--------------|
-| Rule DB/auth/permission | `02-database-and-auth-rules.md` | CÃ³ |
-| Rule UI/UX/harness | `03-ui-ux-and-delivery-standards.md`, `14-production-e2e-harness.md` | CÃ³ |
-| Rule business pattern ERP/admin | `04-business-patterns.md` | CÃ³ |
-| Checklist triá»ƒn khai module | `13-trip-execution-vs-approval-spec.md` (khi liÃªn quan) | CÃ³ |
-| Tráº¡ng thÃ¡i chá»‘t/blocker | `06-decision-status.md` | Project only |
-| CÃ¢u há»i má»Ÿ | `questions.md` | Project only |
-| Raw chat / evidence | Sheet ngoÃ i hoáº·c 1 dÃ²ng index trong `10`/`12` | **KhÃ´ng** |
+| Rule DB/auth/permission | `02-database-and-auth-rules.md` | Có |
+| Rule UI/UX/harness | `03-ui-ux-and-delivery-standards.md`, `14-production-e2e-harness.md` | Có |
+| Rule business pattern ERP/admin | `04-business-patterns.md` | Có |
+| Checklist triển khai module | `13-trip-execution-vs-approval-spec.md` (khi liên quan) | Có |
+| Trạng thái chốt/blocker | `06-decision-status.md` | Project only |
+| Câu hỏi mở | `questions.md` | Project only |
+| Raw chat / evidence | Sheet ngoài hoặc 1 dòng index trong `10`/`12` | **Không** |
 
-Workflow má»—i láº§n tiáº¿n hÃ³a:
+Workflow mỗi lần tiến hóa:
 
-1. Viáº¿t rule imperative (â‰¤5 bullet) vÃ o file sá»‘ng.
-2. Cáº­p nháº­t `SKILL.md` Â§4/Â§F chá»‰ khi rule Ã¡p dá»¥ng má»i repo 5fedu.
+1. Viết rule imperative (≤5 bullet) vào file sống.
+2. Cập nhật `SKILL.md` §4/§F chỉ khi rule áp dụng mọi repo 5fedu.
 3. Giữ `context/5fedu` là canonical; `.agents/AGENTS.md` và `.codex/AGENTS.md` chỉ là pointer.
-4. Sync ngÆ°á»£c master: **chá»‰** allowlist trong `14` Â§11 â€” khÃ´ng Ä‘áº©y `10`, `12`, `06`, `questions`.
+4. Sync ngược master: **chỉ** allowlist trong `14` §11 — không đẩy `10`, `12`, `06`, `questions`.
 
-Náº¿u hai mirror cÃ¹ng Ä‘á»•i khÃ¡c nhau â†’ bÃ¡o conflict, khÃ´ng chá»n theo timestamp mÃ¹ quÃ¡ng.
+Nếu hai mirror cùng đổi khác nhau → báo conflict, không chọn theo timestamp mù quáng.
 

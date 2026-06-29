@@ -10,7 +10,7 @@ Repo giữ một nguồn dễ đọc để build cùng Knowledge Core và capabi
 | `knowledge/capabilities` | Quy trình lazy-load, gom theo nghiệp vụ |
 | `knowledge/project-context` | Schema và template context dự án |
 | `integrations` | Tool ngoài được pin như Codebase Memory MCP và Caveman |
-| `platforms` | Overlay/profile mang tên từng nền tảng |
+| `platforms` | Overlay và delta runtime riêng từng nền tảng |
 | `automation` | Build, cài runtime và kiểm tra mirror |
 
 ## Build và kiểm tra

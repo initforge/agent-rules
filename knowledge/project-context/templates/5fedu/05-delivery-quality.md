@@ -15,8 +15,8 @@ Trước khi báo hoàn thành nhiệm vụ:
    - Trước khi commit bất kỳ thay đổi nào liên quan đến code hoặc config (như `vite.config.ts`, `tsconfig.json`, hook React), bắt buộc phải chạy thử build production ở local (`npm run build` hoặc lệnh tương tự) để kiểm tra lỗi cú pháp và thiếu import (ví dụ: thiếu import hook React `useCallback`, `useMemo` từ `'react'`).
 
 2. **Xác Thực Thực Tế Trên Production (Verify-on-Production)**:
-   - Môi trường phát triển local có thể tự vá hoặc bỏ qua một số lỗi biên dịch/runtime đặc thù. Tất cả các sửa đổi UI, chức năng, hoặc sửa lỗi bắt buộc phải được kiểm tra chạy thử trực tiếp trên môi trường production/live thực tế (ví dụ: `https://nostime.vercel.app`).
-   - Smoke test tối thiểu phải thực hiện trên production đối với các tính năng CRUD đã thay đổi.
+   - Môi trường phát triển local có thể tự vá hoặc bỏ qua một số lỗi biên dịch/runtime đặc thù, nhưng Codex không tự mở browser production mặc định vì tốn context/token.
+   - Với Codex, dùng build, tests, source trace, API/service checks, database query và artifact inspection làm evidence mặc định. Production browser smoke test chỉ chạy khi user yêu cầu rõ; nếu chưa chạy, báo `PARTIAL` hoặc verification gap tương ứng.
 
 3. **Kiểm Tra Giao Diện & Tìm Kiếm**:
    - Đối chiếu chặt chẽ với các thành phần mẫu trong template trước khi chỉnh sửa.
@@ -148,5 +148,4 @@ Từ feedback của chủ dự án về việc sửa đổi Auth và gộp bản
    - Nếu chưa có tài khoản test cho một cấp bậc → phải tạo trước khi kiểm thử.
 
 4. **Không được báo hoàn thành** task liên quan đến phân quyền nếu chưa thực hiện đủ 3 bước trên.
-
 

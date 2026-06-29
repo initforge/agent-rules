@@ -2,10 +2,11 @@ param([ValidateSet("codex","grok","antigravity","all")][string]$Platform = "all"
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 & (Join-Path $PSScriptRoot "build-runtime.ps1") -Root $Root
+$UserHome = if ($env:USERPROFILE) { $env:USERPROFILE } elseif ($env:HOME) { $env:HOME } else { throw "Cannot resolve user home directory" }
 $Map = @{
-  codex = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $env:USERPROFILE ".codex" }
-  grok = if ($env:GROK_HOME) { $env:GROK_HOME } else { Join-Path $env:USERPROFILE ".grok" }
-  antigravity = Join-Path $env:USERPROFILE ".gemini\config"
+  codex = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $UserHome ".codex" }
+  grok = if ($env:GROK_HOME) { $env:GROK_HOME } else { Join-Path $UserHome ".grok" }
+  antigravity = Join-Path $UserHome ".gemini\config"
 }
 $Selected = if ($Platform -eq "all") { @("codex","grok","antigravity") } else { @($Platform) }
 foreach ($Name in $Selected) {
@@ -25,12 +26,20 @@ foreach ($Name in $Selected) {
   }
 
   $RulesTarget = Join-Path $Dest "rules"
+  if (Test-Path $RulesTarget) { Remove-Item -LiteralPath $RulesTarget -Recurse -Force }
   New-Item -ItemType Directory -Force -Path $RulesTarget | Out-Null
-  Get-ChildItem $RulesTarget -File -Filter "*.md" -ErrorAction SilentlyContinue | Remove-Item -Force
   Copy-Item -Path (Join-Path $Source "rules\*") -Destination $RulesTarget -Recurse -Force
 
   $SkillsTarget = Join-Path $Dest "skills"
   New-Item -ItemType Directory -Force -Path $SkillsTarget | Out-Null
+  $StaleSkillsReadme = Join-Path $SkillsTarget "README.md"
+  if (Test-Path $StaleSkillsReadme) { Remove-Item -LiteralPath $StaleSkillsReadme -Force }
+  $SourceSkillNames = Get-ChildItem (Join-Path $Source "skills") -Directory | ForEach-Object { $_.Name }
+  Get-ChildItem $SkillsTarget -Directory -ErrorAction SilentlyContinue | Where-Object {
+    $_.Name -ne ".system" -and ($SourceSkillNames -notcontains $_.Name)
+  } | ForEach-Object {
+    Remove-Item -LiteralPath $_.FullName -Recurse -Force
+  }
   Get-ChildItem (Join-Path $Source "skills") -Directory | ForEach-Object {
     $TargetSkill = Join-Path $SkillsTarget $_.Name
     if (Test-Path $TargetSkill) { Remove-Item -LiteralPath $TargetSkill -Recurse -Force }
@@ -44,13 +53,8 @@ foreach ($Name in $Selected) {
     New-Item -ItemType Directory -Force -Path $DocsTarget | Out-Null
     Copy-Item -Path (Join-Path $Root "docs\*") -Destination $DocsTarget -Recurse -Force
 
-    $ProfilesSource = Join-Path $Root "platforms\codex\profiles"
-    if (Test-Path $ProfilesSource) {
-      $ProfilesTarget = Join-Path $Dest "agents"
-      if (Test-Path $ProfilesTarget) { Remove-Item -LiteralPath $ProfilesTarget -Recurse -Force }
-      New-Item -ItemType Directory -Force -Path $ProfilesTarget | Out-Null
-      Copy-Item -Path (Join-Path $ProfilesSource "*") -Destination $ProfilesTarget -Recurse -Force
-    }
+    $ProfilesTarget = Join-Path $Dest "agents"
+    if (Test-Path $ProfilesTarget) { Remove-Item -LiteralPath $ProfilesTarget -Recurse -Force }
   }
 
   Write-Host "Installed $Name -> $Dest"

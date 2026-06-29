@@ -171,13 +171,15 @@ Ví dụ: phiếu cha có nhiều dòng con; dòng con đã thực hiện nhưng
    - Trước khi thay đổi bất kỳ trường cơ sở dữ liệu nào, sửa API endpoint, hoặc cấu trúc dữ liệu truyền nhận, AI bắt buộc phải chạy `grep_search` trên toàn dự án để tìm tất cả các vị trí đang gọi/tham chiếu đến thực thể đó và cập nhật đồng loạt.
 
 2. **Đối Chiếu Schema Trực Tiếp (Remote DB Verification)**:
-   - AI bắt buộc sử dụng công cụ `browser_subagent` truy cập thẳng vào trang Supabase Dashboard hoặc chạy truy vấn SQL Editor trực tiếp để xác minh cấu trúc thực tế của bảng (bao gồm cột, kiểu dữ liệu, các chính sách RLS) trước khi thay đổi, tuyệt đối cấm đoán mò hoặc bịa cấu trúc DB.
+   - Xác minh cấu trúc thực tế của bảng bằng migration/source đáng tin, CLI/query DB hoặc SQL Editor khi có quyền; tuyệt đối cấm đoán mò hoặc bịa cấu trúc DB.
+   - Với Codex, không dùng browser/Supabase Dashboard mặc định. Chỉ mở browser khi user yêu cầu rõ hoặc không có kênh query/source nào đủ xác minh; nếu thiếu quyền DB và browser là kênh duy nhất còn lại, báo `PARTIAL` với gap đó.
 
 3. **Hủy Cache Đồng Bộ (Query Cache Invalidation)**:
    - Khi thực hiện các hành động CRUD (Thêm, Sửa, Xóa) dữ liệu, AI bắt buộc phải invalidate cache tương ứng ở phía Frontend (ví dụ: gọi `queryClient.invalidateQueries(['key-dung-chung'])` hoặc trigger invalidate theo cache keys) để đồng bộ trạng thái mới ngay lập tức, tránh lỗi dữ liệu cũ đè lên dữ liệu mới.
 
 4. **Kiểm Tra Build & E2E**:
-   - Sau khi chỉnh sửa, AI phải tự chạy thử lệnh build (`npm run build`) cục bộ và dùng browser subagent hoặc Playwright harness production (`14-production-e2e-harness.md`) để kiểm tra giao diện và luồng CRUD trên site đã deploy.
+   - Sau khi chỉnh sửa, AI phải tự chạy thử lệnh build (`npm run build`) cục bộ hoặc check tương đương.
+   - Với Codex, ưu tiên unit/integration tests, service/API checks, source trace, DB query và artifact inspection. Browser/Playwright production chỉ chạy khi user yêu cầu rõ; nếu không chạy browser, báo evidence thay thế và gap còn lại nếu có.
    - Thay đổi module có master-detail, approval, cascade, rollup hoặc derived totals: chạy unit/E2E trong blast radius tương ứng nếu repo có harness. Với project transport legacy, chạy trip execution specs nếu các spec đó tồn tại; mutating test phải restore fixture.
 ## Database, Permission And Cross-Data Verification Gate
 

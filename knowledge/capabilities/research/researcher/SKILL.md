@@ -43,10 +43,7 @@ Expected sections:
 - Recommendation
 - Unknowns
 
-## Profile
-
-Preferred native profile:
-- `researcher`
+## Effort
 
 Escalation:
 - use `planner` when the task becomes large architecture work

@@ -1,51 +1,51 @@
-﻿# 5fedu Project Entry
+# 5fedu Project Entry
 
-Repo nÃ y dÃ¹ng context project-local cho 5fedu. File nÃ y lÃ  con trá» nháº¹, khÃ´ng pháº£i nÆ¡i nhÃ©t toÃ n bá»™ rule chi tiáº¿t.
+Repo này dùng context project-local cho 5fedu. File này là con trỏ nhẹ, không phải nơi nhét toàn bộ rule chi tiết.
 
-NgÆ°á»i dÃ¹ng khÃ´ng cáº§n gá»i `/5fedu` má»—i láº§n lÃ m viá»‡c. `/5fedu` chá»‰ dÃ¹ng Ä‘á»ƒ scaffold hoáº·c báº£o trÃ¬ context.
+Người dùng không cần gọi `/5fedu` mỗi lần làm việc. `/5fedu` chỉ dùng để scaffold hoặc bảo trì context.
 
-## LuÃ´n Äá»c TrÆ°á»›c Khi LÃ m
+## Luôn Đọc Trước Khi Làm
 
-Äá»c lá»›p index/mapping nháº¹:
+Đọc lớp index/mapping nhẹ:
 
-- `context/5fedu/00-index.md`: cÃ¡ch náº¡p context, execution contract, verify policy.
-- `context/5fedu/04-decision-status-and-backlog.md` hoáº·c `context/5fedu/06-decision-status.md`: tráº¡ng thÃ¡i `DA_CHOT`, `CHUA_CHOT`, `CAN_HOI_THEM`.
-- `context/5fedu/questions.md`: cÃ¢u há»i cÃ²n má»Ÿ.
-- `context/5fedu/05-source-specs-and-coverage.md` hoáº·c `context/5fedu/11-current-sheets-source-map.md` khi task cáº§n Ä‘á»‘i chiáº¿u spec/source.
+- `context/5fedu/00-index.md`: cách nạp context, execution contract, verify policy.
+- `context/5fedu/04-decision-status-and-backlog.md` hoặc `context/5fedu/06-decision-status.md`: trạng thái `DA_CHOT`, `CHUA_CHOT`, `CAN_HOI_THEM`.
+- `context/5fedu/questions.md`: câu hỏi còn mở.
+- `context/5fedu/05-source-specs-and-coverage.md` hoặc `context/5fedu/11-current-sheets-source-map.md` khi task cần đối chiếu spec/source.
 
-Sau Ä‘Ã³ chá»‰ Ä‘á»c file chi tiáº¿t khi task tháº­t sá»± dÃ­nh domain Ä‘Ã³.
+Sau đó chỉ đọc file chi tiết khi task thật sự dính domain đó.
 
-## Chá»‰ Äá»c Khi LiÃªn Quan
+## Chỉ Đọc Khi Liên Quan
 
-- Database/auth/schema/permission/RLS/trigger/rollup: Ä‘á»c `context/5fedu/02-database-and-auth-rules.md` vÃ  legacy `context/5fedu/03-database-supabase.md`, `context/5fedu/04-auth-permissions-and-flows.md` náº¿u cÃ³.
-- UI/UX/list/detail/form/toolbar/filter/export/responsive: Ä‘á»c `context/5fedu/03-ui-ux-and-delivery-standards.md`, legacy `context/5fedu/05-delivery-quality.md`, `context/5fedu/07-working-format.md` náº¿u cÃ³.
-- ERP/admin business patterns nhÆ° master-detail, approval workflow, derived totals, lookup autofill, report/export parity: Ä‘á»c `context/5fedu/04-business-patterns.md`.
-- Feedback cÅ©, lá»—i nháº¯c láº¡i, váº­n táº£i, hoáº·c owner correction: tÃ¬m trong `context/5fedu/10-owner-feedback-lessons.md` vÃ  `context/5fedu/12-owner-feedback-transport-ui.md`, sau Ä‘Ã³ kiá»ƒm tra bÃ i há»c Ä‘Ã£ Ä‘Æ°á»£c promote vÃ o rule sá»‘ng chÆ°a.
-- Template parity: vá»›i má»i task UI hoáº·c khi user nÃ³i UI/tÃ­nh nÄƒng/module `chÆ°a chuáº©n`, `thiáº¿u`, `khÃ´ng giá»‘ng`, `chÆ°a Ä‘á»§`, pháº£i Ä‘á»c mapping trÆ°á»›c vÃ  tÃ¬m `/template` trÆ°á»›c. Náº¿u template Ä‘á»§ Ä‘Ã¡p á»©ng prompt/app thÃ¬ bÃ¡m sÃ¡t template vÃ  Ä‘á»•i tá»‘i thiá»ƒu. Chá»‰ dÃ¹ng golden reference khi template thiáº¿u/khÃ´ng Ä‘á»§/ngÃµ cá»¥t; khi Ä‘Ã³ pháº£i research nhiá»u tab/module theo behavior/output/surface/data/permission Ä‘á»ƒ chá»n reference phÃ¹ há»£p nháº¥t, khÃ´ng máº·c Ä‘á»‹nh má»™t module cá»‘ Ä‘á»‹nh.
-- Pattern fidelity: trÆ°á»›c khi code UI/module, pháº£i láº­p mapping ngáº¯n tá»« spec -> submenu -> module -> tab/route -> template/current-app reference -> labels/actions/fields/service. Cáº¥m tá»± cháº¿ tÃªn module, mÃ´ táº£, nÃºt, icon, tab, copy hoáº·c workflow náº¿u spec/template/app Ä‘Ã£ cÃ³ nguá»“n.
+- Database/auth/schema/permission/RLS/trigger/rollup: đọc `context/5fedu/02-database-and-auth-rules.md` và legacy `context/5fedu/03-database-supabase.md`, `context/5fedu/04-auth-permissions-and-flows.md` nếu có.
+- UI/UX/list/detail/form/toolbar/filter/export/responsive: đọc `context/5fedu/03-ui-ux-and-delivery-standards.md`, legacy `context/5fedu/05-delivery-quality.md`, `context/5fedu/07-working-format.md` nếu có.
+- ERP/admin business patterns như master-detail, approval workflow, derived totals, lookup autofill, report/export parity: đọc `context/5fedu/04-business-patterns.md`.
+- Feedback cũ, lỗi nhắc lại, vận tải, hoặc owner correction: tìm trong `context/5fedu/10-owner-feedback-lessons.md` và `context/5fedu/12-owner-feedback-transport-ui.md`, sau đó kiểm tra bài học đã được promote vào rule sống chưa.
+- Template parity: với mọi task UI hoặc khi user nói UI/tính năng/module `chưa chuẩn`, `thiếu`, `không giống`, `chưa đủ`, phải đọc mapping trước và tìm `/template` trước. Nếu template đủ đáp ứng prompt/app thì bám sát template và đổi tối thiểu. Chỉ dùng golden reference khi template thiếu/không đủ/ngõ cụt; khi đó phải research nhiều tab/module theo behavior/output/surface/data/permission để chọn reference phù hợp nhất, không mặc định một module cố định.
+- Pattern fidelity: trước khi code UI/module, phải lập mapping ngắn từ spec -> submenu -> module -> tab/route -> template/current-app reference -> labels/actions/fields/service. Cấm tự chế tên module, mô tả, nút, icon, tab, copy hoặc workflow nếu spec/template/app đã có nguồn.
 
-## Quy Táº¯c Cá»©ng
+## Quy Tắc Cứng
 
-- KhÃ´ng Ä‘oÃ¡n module, route, báº£ng, cá»™t, credential, quyá»n hoáº·c flow khi status cÃ²n `CHUA_CHOT` hoáº·c `CAN_HOI_THEM`.
-- Khi dá»¯ kiá»‡n cá»¥ thá»ƒ chÆ°a chá»‘t, váº«n theo format/cÃ¡ch lÃ m 5fedu Ä‘Ã£ chá»‘t; chá»‰ há»i pháº§n giÃ¡ trá»‹ cÃ²n thiáº¿u.
+- Không đoán module, route, bảng, cột, credential, quyền hoặc flow khi status còn `CHUA_CHOT` hoặc `CAN_HOI_THEM`.
+- Khi dữ kiện cụ thể chưa chốt, vẫn theo format/cách làm 5fedu đã chốt; chỉ hỏi phần giá trị còn thiếu.
 - Khi user chốt hoặc bổ sung rule mới, ghi log nếu cần, promote thành rule sống, cập nhật decision status trong `context/5fedu`, rồi kiểm tra pointer `.agents/AGENTS.md` và `.codex/AGENTS.md`.
-- File `10` vÃ  `12` lÃ  log; khÃ´ng Ä‘á»ƒ rule quan trá»ng chá»‰ náº±m á»Ÿ Ä‘Ã³.
-- KhÃ´ng lÆ°u secret tháº­t vÃ o repo hoáº·c tÃ i liá»‡u.
-- KhÃ´ng tá»± push. Vá»›i 5fedu, production verification thÆ°á»ng cáº§n push/deploy, nhÆ°ng chá»‰ push khi user yÃªu cáº§u rÃµ trong session.
-- Máº·c Ä‘á»‹nh verify 5fedu trÃªn production sau khi thay Ä‘á»•i Ä‘Ã£ Ä‘Æ°á»£c push/deploy; náº¿u user yÃªu cáº§u test local thÃ¬ Æ°u tiÃªn local.
-- Náº¿u user yÃªu cáº§u `verify production háº¿t`, khÃ´ng nháº£y tháº³ng vÃ o browser. Äá»c index/mapping trÆ°á»›c, suy ra module/role/database/UI/export/cross-flow, rá»“i má»›i náº¡p context chi tiáº¿t vÃ  cháº¡y verify.
-- Vá»›i task UI, bÃ¡o cÃ¡o cuá»‘i pháº£i nÃªu `Template checked` hoáº·c lÃ½ do khÃ´ng thá»ƒ kiá»ƒm template.
-- Vá»›i task UI/module, bÃ¡o cÃ¡o cuá»‘i pháº£i nÃªu `Pattern fidelity` gá»“m reference Ä‘Ã£ dÃ¹ng vÃ  cÃ¡c pháº§n Ä‘Ã£ giá»¯ nguyÃªn tá»« pattern.
-- Vá»›i task vá»«a/lá»›n, production, UI, permission, database, export hoáº·c cleanup, bÃ¡o cÃ¡o cuá»‘i pháº£i cÃ³ `Technical debt check`. Ná»£ nghiÃªm trá»ng trong scope pháº£i sá»­a trÆ°á»›c khi bÃ¡o `PASS`.
+- File `10` và `12` là log; không để rule quan trọng chỉ nằm ở đó.
+- Không lưu secret thật vào repo hoặc tài liệu.
+- Không tự push. Với 5fedu, production verification thường cần push/deploy, nhưng chỉ push khi user yêu cầu rõ trong session.
+- Với Codex, không tự mở browser/Playwright để verify mặc định. Dùng build/test/source trace/API/DB/artifact evidence trước; browser/live visual verification chỉ chạy khi user yêu cầu rõ.
+- Mặc định verify 5fedu bằng evidence phù hợp sau khi thay đổi đã được push/deploy; nếu user yêu cầu test local thì ưu tiên local.
+- Nếu user yêu cầu `verify production hết`, không nhảy thẳng vào browser. Đọc index/mapping trước, suy ra module/role/database/UI/export/cross-flow, rồi mới nạp context chi tiết và chạy verify.
+- Với task UI, báo cáo cuối phải nêu `Template checked` hoặc lý do không thể kiểm template.
+- Với task UI/module, báo cáo cuối phải nêu `Pattern fidelity` gồm reference đã dùng và các phần đã giữ nguyên từ pattern.
+- Với task vừa/lớn, production, UI, permission, database, export hoặc cleanup, báo cáo cuối phải có `Technical debt check`. Nợ nghiêm trọng trong scope phải sửa trước khi báo `PASS`.
 
 ## Owner Feedback Gate
 
-- App table primary key máº·c Ä‘á»‹nh lÃ  `id int8` auto-increment; foreign key tá»›i app table cÅ©ng lÃ  `int8`.
-- Login dÃ¹ng `ten_dang_nhap`; admin máº·c Ä‘á»‹nh lÃ  `admin` / `5fedu.com`.
-- TÃ i khoáº£n thÆ°á»ng máº·c Ä‘á»‹nh `123456`; khÃ´ng test Ä‘á»•i máº­t kháº©u trÃªn admin chÃ­nh.
-- Supabase service role khÃ´ng bao giá» náº±m á»Ÿ client.
-- CRUD khÃ´ng Ä‘Æ°á»£c mock áº£o khi feature Ä‘Ã£ yÃªu cáº§u tháº­t.
-- Permission pháº£i test Ä‘a tÃ i khoáº£n, Ä‘a cáº¥p báº­c, UI vÃ  API/database náº¿u cÃ³ thá»ƒ.
-- Dá»¯ liá»‡u liÃªn module pháº£i verify qua láº¡i: module nguá»“n, module phá»¥ thuá»™c, bÃ¡o cÃ¡o, dropdown, rollup, cache/query.
-- Toolbar, filter, search, export, drawer, pagination vÃ  responsive behavior Ä‘á»u lÃ  bá» máº·t test tháº­t.
-
+- App table primary key mặc định là `id int8` auto-increment; foreign key tới app table cũng là `int8`.
+- Login dùng `ten_dang_nhap`; admin mặc định là `admin` / `5fedu.com`.
+- Tài khoản thường mặc định `123456`; không test đổi mật khẩu trên admin chính.
+- Supabase service role không bao giờ nằm ở client.
+- CRUD không được mock ảo khi feature đã yêu cầu thật.
+- Permission phải test đa tài khoản, đa cấp bậc, UI và API/database nếu có thể.
+- Dữ liệu liên module phải verify qua lại: module nguồn, module phụ thuộc, báo cáo, dropdown, rollup, cache/query.
+- Toolbar, filter, search, export, drawer, pagination và responsive behavior đều là bề mặt test thật.

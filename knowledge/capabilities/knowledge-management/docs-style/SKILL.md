@@ -25,19 +25,11 @@ If a fact cannot be proven, omit it or write `TODO: xác minh ...`. Never fill g
 
 ## Required Workflow
 
-1. **Classify the repo first.**
-   - Product/app: users, screens, flows, data, operations.
-   - Frontend-only: public experience, routing, state, components, assets, build/deploy assumptions.
-   - Backend/API: domain, endpoints, auth, data model, jobs, integrations, error handling.
-   - Library/tooling: install/use, CLI/API, extension points, compatibility, failure modes.
-   - Agent/rules repo: runtime loading, precedence, skill/tool flow, sync/backup model, guardrails.
-   - Data/AI repo: input/output, provider path, data pipeline, evaluation, fallback.
-   - Profile repo: keep minimal; do not force architecture docs.
-   - Demo/prototype: clearly label real, mocked, incomplete, and planned parts.
+1. **Classify the repo first.** Product/app, frontend, backend/API, library/tooling, agent/rules, data/AI, profile repo, or demo/prototype each needs a different documentation shape.
 2. **Read source before writing.** Inspect manifests, lockfiles, entry points, route/API definitions, schemas/migrations, env examples, deployment files, CI, tests/scripts, and the main UI/CLI surfaces.
 3. **Build an evidence map privately.** For every major claim, know the source path or runtime check behind it. Use source paths sparingly in docs as "Where to verify", not as the main prose.
 4. **Write from thesis to detail.** Start with the domain/product pressure, then system shape, then workflows, decisions, operations, and risks.
-5. **Use verified visuals.** Capture screenshots with Playwright or a real browser when web UI is live/runnable. Store docs images under `/docs/assets/` unless the repo already has a clear docs asset convention.
+5. **Use verified visuals only when useful.** Prefer existing safe screenshots/assets. For Codex, capture new browser screenshots only when the user asks for visual proof or docs quality depends on it.
 6. **Clean the docs surface.** Move useful scattered markdown into `/docs`, merge repeated shallow files, delete stale migration/setup/task files only after preserving useful facts, and move loose docs assets into subfolders.
 7. **Verify.** Check links/images, badge URLs, commands, formatting, and repo status. Do not report PASS until the quality gates pass.
 
@@ -208,14 +200,7 @@ docs/
 
 ## Screenshots
 
-Rules:
-
-- Use Playwright or a real browser when the UI is live/runnable.
-- Capture homepage/landing at minimum; add 1-2 workflow/admin screenshots when available and safe.
-- Store images under `/docs/assets/` or the repo's existing docs image folder.
-- Use descriptive filenames: `homepage.png`, `admin-dashboard.png`, `checkout-flow.png`.
-- Verify the image exists and renders after moving.
-- Do not include sensitive data, placeholder screenshots, broken links, or screenshots from another project.
+Rules: use existing safe visuals when available; capture browser screenshots only when requested or necessary; store them under `/docs/assets/` or the existing docs image folder; use descriptive filenames; verify files exist and render; never include sensitive data, placeholders, broken links, or screenshots from another project.
 
 ## Cleanup Rules
 

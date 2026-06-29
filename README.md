@@ -10,7 +10,7 @@ One readable source builds the same compact core and capability catalog for Code
 | `knowledge/capabilities` | Triggered procedures grouped by domain |
 | `knowledge/project-context` | Canonical schema and project templates |
 | `integrations` | Pinned external tools such as Codebase Memory MCP and Caveman |
-| `platforms` | Named platform overlays and profiles |
+| `platforms` | Named platform overlays and runtime deltas |
 | `automation` | Runtime build, install and parity validation |
 
 ## Build and verify
