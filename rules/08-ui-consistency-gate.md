@@ -7,21 +7,24 @@ Tất cả các Agent khi thực hiện công việc chỉnh sửa giao diện (
 ---
 
 ### 1. Đồng bộ Giao diện & Layout theo 5fedu Template
-
 *   **CẤM tự chế toolbar hoặc bộ lọc**:
     *   Mọi bộ lọc trạng thái hoặc bộ lọc danh mục trên các màn hình danh sách bắt buộc phải sử dụng `ToolbarFilterChipGroup` kết hợp với `FilterChipMultiSelect` hoặc `FilterChipSingleSelect`.
     *   Nghiêm cấm việc đặt thẻ `Combobox`, `Select` hoặc các trường input lọc trơ trọi trực tiếp trên thanh toolbar làm vỡ layout ngang.
-*   **BẮT BUỘC cấu hình ColumnManager (Tùy chọn ẩn/hiển thị cột)**:
-    *   Tất cả các module kế thừa từ factory `createFeatureModule` phải định nghĩa `DEFAULT_COLUMNS` trong store và truyền đầy đủ 3 props:
+*   **BẮT BUỘC cấu hình ColumnManager (Tùy chọn ẩn/hiển thị cột) cho TOÀN BỘ HỆ THỐNG**:
+    *   Tất cả các module hiển thị dạng bảng danh sách (bao gồm Sản phẩm, Đơn hàng, Nhập hàng, Bài viết, Tài liệu, Loại tài liệu, Banner, và các module khác) bắt buộc phải truyền đầy đủ 3 props vào `GenericToolbar`:
         *   `columns={store.columns}`
         *   `onToggleColumn={store.toggleColumn}`
         *   `onResetColumns={store.resetColumns}`
-        vào `GenericToolbar`.
-*   **Audit icon nút Thêm mới ở Footer Form**:
+    *   Tương ứng trong store của từng module, bắt buộc phải định nghĩa mảng `columns` (kế thừa từ `createGenericStore` hoặc lưu trữ thủ công trong store và sync với localStorage).
+*   **Audit icon nút Thêm mới**:
     *   Nút Thêm mới mặc định ở footer drawer (`FormDrawerFooter.tsx`) là icon `Plus` (dấu cộng). Chỉ dùng `UserPlus` cho module Nhân viên / Tài khoản hệ thống.
-*   **Quy chuẩn nút Quay lại (Back Button) & Actions popup**:
+    *   Nút Thêm mới ở toolbar chính phải được render qua prop `onAdd` của `GenericToolbar` (để tự động hiển thị nút Add chuẩn có icon `PlusCircle`), cấm tự code nút thêm với icon khác hoặc lệch vị trí.
+*   **Quy chuẩn nút Quay lại (Back Button) & Navigation**:
     *   Mọi popup chi tiết (`DetailComponent`) và form nhập liệu (`FormComponent`) phải có nút Quay lại/Đóng hoạt động nhất quán.
+    *   Nút Quay lại ở thanh đường dẫn (Breadcrumbs) của các trang con (như trang chi tiết đơn hàng, nhập hàng) bắt buộc phải hoạt động chính xác, cho phép chuyển hướng quay lại trang phân hệ chính (Kinh doanh, Kho vận, Tài chính, v.v.), không được làm hỏng liên kết điều hướng.
     *   Nút "Sửa" hoặc "Xóa" trên toolbar của popup chi tiết phải được định nghĩa qua `DetailToolbar` và bọc trong array `toolbarActions` một cách ngăn nắp, xóa bỏ các nút ảo không hoạt động.
+*   **Quy tắc Global Auditing (Quét diện rộng tự động)**:
+    *   Khi phát hiện một lỗi UI lệch chuẩn (ví dụ: thiếu ColumnManager, thiếu bộ lọc chip, icon người ở nút thêm), Agent bắt buộc phải chạy lệnh `grep_search` quét toàn bộ dự án để tìm tất cả các component/file cùng loại và sửa đồng loạt. Cấm chỉ sửa một điểm cục bộ được người dùng nhắc tên.
 
 ---
 
