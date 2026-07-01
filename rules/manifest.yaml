@@ -1,0 +1,17 @@
+version: 1
+load_order:
+  - 00-bootstrap.md
+  - 10-execution.md
+  - 15-output-economy.md
+  - 20-quality-and-safety.md
+  - 30-context-routing.md
+  - 40-harness-governance.md
+  - 45-sync-canonical.md
+  - 50-context-budget.md
+budgets:
+  bootstrap_tokens: 300
+  core_total_tokens: 4000
+  platform_overlay_tokens: 600
+  capability_tokens: 3500
+  project_index_tokens: 1800
+  lazy_project_pack_tokens: 8000

@@ -1,4 +1,0 @@
-[mcp_servers.context7]
-command = 'context7-mcp'
-args = []
-startup_timeout_sec = 120

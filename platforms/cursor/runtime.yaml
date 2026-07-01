@@ -1,0 +1,8 @@
+platform: cursor
+core: rules
+capabilities: skills
+overlay: platforms/cursor/cursor-overlay.md
+runtime_home: ~/.cursor
+mcp_config: ~/.cursor/mcp.json
+skills_path: ~/.cursor/skills
+rules_path: ~/.cursor/rules

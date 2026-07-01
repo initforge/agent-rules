@@ -1,0 +1,7 @@
+platform: grok
+core: rules
+capabilities: skills
+overlay: platforms/grok/grok-overlay.md
+runtime_home: ~/.grok
+mcp_config: ~/.grok/mcp.json
+mcp_format: json_mcpServers

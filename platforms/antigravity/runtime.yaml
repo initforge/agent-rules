@@ -1,0 +1,7 @@
+platform: antigravity
+core: rules
+capabilities: skills
+overlay: platforms/antigravity/antigravity-overlay.md
+runtime_home: ~/.gemini/config
+mcp_config: ~/.gemini/config/mcp_config.json
+mcp_format: json_mcpServers

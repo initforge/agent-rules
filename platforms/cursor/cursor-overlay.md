@@ -1,0 +1,13 @@
+---
+alwaysApply: true
+description: Cursor-specific runtime delta for agent-rules harness.
+---
+
+# Cursor overlay
+
+**Ý đồ:** Cursor dùng `~/.cursor/rules`, `~/.cursor/skills`, và MCP qua `~/.cursor/mcp.json` (JSON `mcpServers`). Canonical source vẫn là repo `agent-rules`; đây chỉ là delta cài runtime.
+
+- MCP adapter format: JSON `mcpServers` trong `~/.cursor/mcp.json` — không dùng TOML như Codex.
+- Rules nạp từ `~/.cursor/rules/` sau khi chạy `automation/02-install-runtime.ps1 -Platform cursor`.
+- Skills nạp từ `~/.cursor/skills/` (slug phẳng, không lớp category).
+- Không reverse-sync runtime skills/rules về canonical trừ qua `automation/07-import-reviewed-changes.ps1` đã review.

@@ -1,36 +1,46 @@
-﻿# Agent Rules â€” readable runtime map
+# Agent Rules
 
-This repository is organized so a new maintainer can identify global context, skills, project context, integrations, platform adapters, automation scripts, and generated output directly from the tree.
+**Thesis:** One canonical harness for AI agents — flat role-based folders, lazy skills, platform deltas, and automation that keeps runtime mirrors in sync without editing generated output by hand.
 
-## Top-level map
+## Shape
 
-| Folder | Purpose |
+| Folder | Role |
 |---|---|
-| `00-guides` | Human-facing docs and system map |
-| `01-global/rules` | Always-loaded global context |
-| `01-global/skills` | Lazy-loaded skills |
-| `01-global/integrations` | Required, recommended, and optional integrations |
-| `02-projects` | Project context and 5fedu template pack |
-| `03-platforms` | Platform-only deltas |
-| `04-automation` | Build, install, verify, export, and sync scripts |
-| `05-generated` | Generated runtime preview |
-| `06-plans` | Research and migration history |
+| `guides/` | Maintainer docs and system map |
+| `rules/` | Always-loaded global context (numbered = load priority) |
+| `skills/` | Lazy-loaded capabilities (flat slugs) |
+| `integrations/` | Required / recommended / optional tools |
+| `projects/` | Project packs (`5fedu` template) |
+| `platforms/` | Per-runtime overlays (Codex, Grok, Antigravity, **Cursor**) |
+| `automation/` | Build, install, validate, sync, doctor |
+| `05-generated/` | Build output — do not edit |
+| `plans/` | Plans, handoffs, tombstones |
 
-## Baseline integrations
+**Integrations**
 
-| Integration | Policy | Meaning |
-|---|---|---|
-| `codebase-memory-mcp` | required | Code intelligence baseline |
-| `context7` | recommended | Latest library and framework docs |
-| `caveman` | optional | Compression workflow, not auto-installed |
+| Name | Policy |
+|---|---|
+| `codebase-memory-mcp` | required |
+| `context7` | recommended |
+| `caveman` | optional |
 
-## Build and verify
+## Run
 
 ```powershell
-& .\04-automation\03-validate-context.ps1
-& .\04-automation\04-verify-mirrors.ps1
-& .\04-automation\02-install-runtime.ps1 -Platform all
+./automation/03-validate-context.ps1
+./automation/01-build-runtime.ps1
+./automation/04-verify-mirrors.ps1
+./automation/02-install-runtime.ps1 -Platform all
+./automation/09-doctor.ps1
 ```
 
-Start with [System map](00-guides/00-system-map.md) and [Runtime model](00-guides/01-runtime-model.md).
+Install targets: `~/.codex`, `~/.grok`, `~/.gemini/config`, `~/.cursor`. MCP config format differs per platform — see `platforms/*/runtime.yaml`.
 
+## Read next
+
+1. [System map](guides/00-system-map.md)
+2. [Runtime model](guides/01-runtime-model.md)
+3. Vietnamese overview: [README-vi.md](README-vi.md)
+4. 5fedu projects: [projects/5fedu/AGENTS.md](projects/5fedu/AGENTS.md)
+
+**Governance:** Edit `rules/` and `skills/` here only — not `05-generated/` or installed mirrors. Reverse sync via `automation/07-import-reviewed-changes.ps1`.

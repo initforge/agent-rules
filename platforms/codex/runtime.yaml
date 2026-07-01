@@ -1,0 +1,7 @@
+platform: codex
+core: rules
+capabilities: skills
+overlay: platforms/codex/codex-overlay.md
+runtime_home: ~/.codex
+mcp_config: ~/.codex/config.toml
+mcp_format: toml_mcp_servers

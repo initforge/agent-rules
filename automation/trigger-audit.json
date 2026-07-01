@@ -1,0 +1,92 @@
+[
+  {
+    "phrase": "plan dài nhiều phase",
+    "skill": "plan-and-handoff",
+    "keywords": ["plan", "handoff", "phase"]
+  },
+  {
+    "phrase": "đại trùng tu",
+    "skill": "plan-and-handoff",
+    "keywords": ["plan", "phase", "handoff"]
+  },
+  {
+    "phrase": "làm hết hoàn thành",
+    "skill": "finish-to-completion",
+    "keywords": ["PASS", "scope", "deliverable"]
+  },
+  {
+    "phrase": "nhập hàng lệch sai pattern",
+    "file": "projects/5fedu/00-context-map.md",
+    "keywords": ["nhập hàng", "module-mapping", "Nhân viên"]
+  },
+  {
+    "phrase": "drawer sai thiếu nút",
+    "file": "projects/5fedu/domains/ui-delivery.md",
+    "keywords": ["drawer", "pattern", "audit"]
+  },
+  {
+    "phrase": "thiết lập context 5fedu",
+    "skill": "5fedu-project",
+    "keywords": ["5fedu", "context", "template"]
+  },
+  {
+    "phrase": "phân quyền cap_bac module",
+    "file": "projects/5fedu/domains/permissions.md",
+    "keywords": ["cap_bac", "quyền", "phân quyền"]
+  },
+  {
+    "phrase": "migration RLS schema int8",
+    "file": "projects/5fedu/domains/database.md",
+    "keywords": ["int8", "RLS", "schema"]
+  },
+  {
+    "phrase": "viết lại README docs",
+    "skill": "docs-style",
+    "keywords": ["README", "documentation", "docs"]
+  },
+  {
+    "phrase": "research changelog api mới",
+    "skill": "researcher",
+    "keywords": ["research", "documentation", "changelog"]
+  },
+  {
+    "phrase": "review code thay đổi",
+    "skill": "code-review",
+    "keywords": ["review", "code"]
+  },
+  {
+    "phrase": "best of n thử nhiều cách",
+    "skill": "best-of-n",
+    "keywords": ["parallel", "worktree", "best"]
+  },
+  {
+    "phrase": "ghi nhớ vào rule context",
+    "skill": "context-evolution-protocol",
+    "keywords": ["context", "evolution", "promote"]
+  },
+  {
+    "phrase": "redesign giao diện tailwind",
+    "skill": "frontend-architect",
+    "keywords": ["UI", "Tailwind", "redesign"]
+  },
+  {
+    "phrase": "sinh ảnh mockup giao diện",
+    "skill": "master-image-generation",
+    "keywords": ["mockup", "image", "ảnh"]
+  },
+  {
+    "phrase": "lệch template thanh lọc",
+    "file": "projects/5fedu/domains/module-mapping.md",
+    "keywords": ["tham chiếu", "Nhân viên", "đối chiếu"]
+  },
+  {
+    "phrase": "fake email ten_dang_nhap",
+    "file": "projects/5fedu/domains/database.md",
+    "keywords": ["fake", "ten_dang_nhap", "gmail"]
+  },
+  {
+    "phrase": "chia nhỏ task handoff session",
+    "skill": "plan-and-handoff",
+    "keywords": ["handoff", "session", "phase"]
+  }
+]
