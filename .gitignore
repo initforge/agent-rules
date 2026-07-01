@@ -45,7 +45,7 @@ Thumbs.db
 
 # Runtime/test artifacts
 dist/
-build/
+05-ban-dung/
 coverage/
 test-results/
 playwright-report/

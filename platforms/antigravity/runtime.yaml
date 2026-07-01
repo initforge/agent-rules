@@ -1,5 +1,0 @@
-﻿platform: antigravity
-core: knowledge/core
-capabilities: knowledge/capabilities
-overlay: platforms/antigravity/antigravity-overlay.md
-

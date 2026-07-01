@@ -1,0 +1,4 @@
+﻿platform: codex
+core: 01-global/loi
+capabilities: 01-global/ky-nang
+overlay: 03-nen-tang/codex/codex-overlay.md

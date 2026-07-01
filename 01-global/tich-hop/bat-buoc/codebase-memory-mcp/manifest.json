@@ -1,0 +1,34 @@
+{
+  "name": "codebase-memory-mcp",
+  "capability": "code-intelligence",
+  "upstream": "https://github.com/DeusData/codebase-memory-mcp",
+  "version": "0.8.1",
+  "installDirs": {
+    "windows": "%LOCALAPPDATA%\\Programs\\codebase-memory-mcp",
+    "linux": "$HOME/.local/share/codebase-memory-mcp",
+    "darwin": "$HOME/Library/Application Support/codebase-memory-mcp"
+  },
+  "assets": {
+    "windows-amd64": {
+      "archive": "codebase-memory-mcp-windows-amd64.zip",
+      "sha256": "a602ad090ed3f49d86c55472f73f27ad7055222806a82358f2e08513e027f00f"
+    },
+    "linux-amd64": {
+      "archive": "codebase-memory-mcp-linux-amd64-portable.tar.gz",
+      "sha256": "6ab87a6c05d049dde57700803ca0ab4199fcf25973a0606618af0fcee73f5abd"
+    },
+    "linux-arm64": {
+      "archive": "codebase-memory-mcp-linux-arm64-portable.tar.gz",
+      "sha256": "13526acc2a6a0697dff3c763fb443a416589bc10ad8b12015b63d87e515dd72b"
+    },
+    "darwin-amd64": {
+      "archive": "codebase-memory-mcp-darwin-amd64.tar.gz",
+      "sha256": "fb62da3016ea12b948351208759b5c083fb1446cf6e78d6db8b7cd28fe86fd54"
+    },
+    "darwin-arm64": {
+      "archive": "codebase-memory-mcp-darwin-arm64.tar.gz",
+      "sha256": "fbd047509852021b5446a11141bcb0a3d1dcaebf6e5112460960f29f052c1c58"
+    }
+  },
+  "autoIndex": false
+}

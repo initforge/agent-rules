@@ -1,24 +1,35 @@
-# Agent Rules — canonical multi-platform context
+# Agent Rules — readable runtime map
 
-One readable source builds the same compact core and capability catalog for Codex, Grok, and Antigravity. Platform folders contain only their delta; project folders contain only project context pointers.
+This repository is organized so a new maintainer can identify global context, skills, project context, integrations, platform adapters, automation scripts, and generated output directly from the tree.
 
-## Subsystems
+## Top-level map
 
-| Subsystem | Ownership |
+| Folder | Purpose |
 |---|---|
-| `knowledge/core` | Always-loaded platform-neutral contract |
-| `knowledge/capabilities` | Triggered procedures grouped by domain |
-| `knowledge/project-context` | Canonical schema and project templates |
-| `integrations` | Pinned external tools such as Codebase Memory MCP and Caveman |
-| `platforms` | Named platform overlays and runtime deltas |
-| `automation` | Runtime build, install and parity validation |
+| `00-huong-dan` | Human-facing docs and system map |
+| `01-global/loi` | Always-loaded global context |
+| `01-global/ky-nang` | Lazy-loaded skills |
+| `01-global/tich-hop` | Required, recommended, and optional integrations |
+| `02-du-an` | Project context and 5fedu template pack |
+| `03-nen-tang` | Platform-only deltas |
+| `04-tu-dong-hoa` | Build, install, verify, export, and sync scripts |
+| `05-ban-dung` | Generated runtime preview |
+| `06-ke-hoach` | Research and migration history |
+
+## Baseline integrations
+
+| Integration | Policy | Meaning |
+|---|---|---|
+| `codebase-memory-mcp` | required | Code intelligence baseline |
+| `context7` | recommended | Latest library and framework docs |
+| `caveman` | optional | Compression workflow, not auto-installed |
 
 ## Build and verify
 
 ```powershell
-& .\automation\validate-context.ps1
-& .\automation\verify-mirrors.ps1
-& .\automation\install-runtime.ps1 -Platform all
+& .\04-tu-dong-hoa\03-kiem-tra-context.ps1
+& .\04-tu-dong-hoa\04-kiem-tra-mirror.ps1
+& .\04-tu-dong-hoa\02-cai-runtime.ps1 -Platform all
 ```
 
-See [runtime model](docs/01-runtime-model.md) and [knowledge system](docs/02-knowledge-system.md).
+Start with [Bản đồ hệ thống](00-huong-dan/00-ban-do-he-thong.md) and [Mô hình runtime](00-huong-dan/01-mo-hinh-runtime.md).

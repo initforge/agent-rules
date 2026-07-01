@@ -1,0 +1,7 @@
+{
+  "name": "context7",
+  "policy": "recommended",
+  "upstream": "https://github.com/upstash/context7",
+  "npmPackage": "@upstash/context7-mcp",
+  "commandName": "context7-mcp"
+}

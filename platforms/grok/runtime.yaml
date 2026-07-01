@@ -1,5 +1,0 @@
-﻿platform: grok
-core: knowledge/core
-capabilities: knowledge/capabilities
-overlay: platforms/grok/grok-overlay.md
-
