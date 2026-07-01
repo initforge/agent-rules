@@ -45,7 +45,7 @@ Thumbs.db
 
 # Runtime/test artifacts
 dist/
-05-ban-dung/
+05-generated/
 coverage/
 test-results/
 playwright-report/
@@ -61,3 +61,4 @@ downloads/
 # One-off scratch scripts should live outside tracked runtime scripts.
 scratch/
 tmp/
+skills-lock.json

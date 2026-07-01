@@ -1,0 +1,5 @@
+﻿platform: antigravity
+core: 01-global/rules
+capabilities: 01-global/skills
+overlay: 03-platforms/antigravity/antigravity-overlay.md
+

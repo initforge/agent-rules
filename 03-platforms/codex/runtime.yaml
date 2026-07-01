@@ -1,0 +1,5 @@
+﻿platform: codex
+core: 01-global/rules
+capabilities: 01-global/skills
+overlay: 03-platforms/codex/codex-overlay.md
+
