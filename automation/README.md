@@ -18,7 +18,8 @@
 | `08-install-5fedu-context.ps1` | Cài `context/5fedu/` — `-Profile tah-app|nostime`, `-UpdatePointersOnly`, `-Force` |
 | `09-doctor.ps1` | Post-install health (sha256, integrations, MCP) |
 | `Merge-Mcp-Adapters.ps1` | Helper: merge staged adapters → platform MCP config |
-| `trigger-audit.json` | 18 câu test precision/recall (dùng bởi 03) |
+| `trigger-audit.json` | 23 câu test precision/recall (dùng bởi 03) |
+| `audit-ui-routing.ps1` | Audit routing 5fedu UI parity vs frontend-architect |
 
 ## Linux / macOS
 

@@ -11,7 +11,7 @@
 
 | Domain | Trigger (phrase bank) | File | Hành động bắt buộc |
 |---|---|---|---|
-| UI / giao diện | lệch, sai pattern, thiếu nút, drawer sai, thanh lọc sai, khác template, nhập hàng lệch, form sai, listview sai, responsive | `domains/ui-delivery.md` + `domains/module-mapping.md` | Mở module đã map → mở route template + route hiện tại → đối chiếu bằng mắt với module tham chiếu (Nhân viên/Phòng ban/Chức vụ) trước khi sửa |
+| UI / giao diện | lệch, sai pattern, thiếu nút, drawer sai, thanh lọc sai, khác template, nhập hàng lệch, form sai, listview sai, responsive, parity, đối chiếu template | `domains/ui-delivery.md` + `domains/module-mapping.md` | Mở module đã map → mở route template + route hiện tại → đối chiếu bằng mắt với module tham chiếu (Nhân viên/Phòng ban/Chức vụ) trước khi sửa. **Cấm** `frontend-architect` làm nguồn chính. |
 | Database / schema | bảng, cột, migration, RLS, trigger, int8, uuid, schema cache, foreign key, index | `domains/database.md` | Đối chiếu schema thật trước khi sửa code; không đoán |
 | Auth / đăng nhập | đăng nhập, ten_dang_nhap, fake email, admin, mật khẩu, đăng ký | `domains/database.md` (mục Auth) | Áp fake-email + sync Supabase Auth |
 | Phân quyền | phân quyền, cap_bac, quyền xem/sửa/xóa, quản trị, phong_id, nhom_id | `domains/permissions.md` | Đọc chuẩn cap_bac; không suy diễn từ quyền sửa thường |
@@ -19,6 +19,11 @@
 | Template / stack | template, vite, supabase, tech stack, clone module | `domains/tech-stack.md` + `domains/module-mapping.md` | Source of truth: `5f-template-ket-noi-supabase` + React/Vite |
 | Quyết định owner | đã chốt, DA_CHOT, CAN_HOI_THEM | `decisions.md` | Không hỏi lại mục DA_CHOT; Nostime → `archive/nostime/decisions.md` |
 | Thiếu dữ kiện | chưa rõ, thiếu spec | `open-questions.md` | Ghi câu hỏi, không tự bịa |
+
+## Skill exclusion (UI parity)
+
+- UI parity ERP: **`ui-delivery` + `module-mapping`** — không `frontend-architect`, không `master-image-generation` làm source chính.
+- `frontend-architect`: chỉ branding/landing/redesign ngoài shell module ERP.
 
 ## Không auto-load
 

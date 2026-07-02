@@ -17,7 +17,7 @@ Layout cũ (`00-index.md`, file đánh số): vẫn hợp lệ nếu repo chưa 
 
 ## Behavior mặc định (UI)
 
-Khi user báo lệch/sai pattern → `00-context-map.md` → `domains/module-mapping.md` → mở template + route hiện tại → đối chiếu trước khi sửa.
+Khi user báo lệch/sai pattern → `00-context-map.md` → `domains/module-mapping.md` → mở template + route hiện tại → đối chiếu trước khi sửa. **Cấm** `frontend-architect` cho parity ERP.
 
 ## Cấu trúc (sau cài)
 

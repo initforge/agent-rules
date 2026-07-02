@@ -1,13 +1,20 @@
 ---
 name: frontend-architect
-description: "UI/UX standards — Tailwind, component states, motion, redesign. Use when building or polishing UI/UX, layout, CSS, animation, redesign, giao diện đẹp, tailwind, component. Do NOT use for 5fedu ERP module parity (use 5fedu ui-delivery + module-mapping) or pure backend work. Skill is reference quality, not a rigid pipeline."
+description: "UI/UX polish for marketing/landing and non-ERP surfaces — Tailwind, motion, redesign. Use for giao diện đẹp, branding, landing, animation polish outside ERP module shells. Do NOT use when repo has context/5fedu and task is ERP parity — lệch, sai pattern, drawer/listview/toolbar, template alignment (use ui-delivery + module-mapping). Do NOT use for pure backend. Reference quality, not rigid pipeline."
 ---
 
-# Kỹ năng Kiến trúc sư Frontend (Frontend Architect Skill)
+# Frontend Architect
 
-Kỹ năng này chịu trách nhiệm cho MỌI TÁC VỤ liên quan đến giao diện người dùng (UI), trải nghiệm (UX), CSS/Tailwind, hoạt ảnh (Animation), và cấu trúc Component. 
+## Hard stop — 5fedu ERP parity
 
-Khi kích hoạt kỹ năng này, Agent đóng vai trò là một **Senior UI/UX Engineer** kiêm **Design Architect**. 
+- Repo có `context/5fedu/` **và** task là module ERP / parity / lệch template → **dừng skill này**.
+- Đọc `context/5fedu/domains/ui-delivery.md` + `module-mapping.md`; mở route template + route hiện tại; đối chiếu Nhân viên/Phòng ban trước khi sửa.
+- Trigger lệch/sai pattern **không** kích hoạt skill này dù user nói "giao diện".
+
+## Scope
+
+- Marketing, landing, branding, motion polish **ngoài** shell CRUD ERP 5fedu.
+- Vai trò: Senior UI/UX Engineer — taste và component quality, không thay parity gate. 
 
 ## 1. Tiêu chuẩn Thiết kế Cốt lõi (Visual Taste)
 - **Tối giản & Đắt tiền (High-end & Minimalist)**: Tránh xa các màu cơ bản (đỏ tươi, xanh lam thô). Sử dụng bảng màu HSL, màu pastel, tối màu có chiều sâu (dark modes).

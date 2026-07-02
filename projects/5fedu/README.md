@@ -29,4 +29,4 @@ Chi tiết: [`known-5fedu-repos.md`](../known-5fedu-repos.md).
 ```
 
 `-UpdatePointersOnly` — chỉ sửa `.codex`/`.agents` pointer, giữ context hiện có.  
-`-Force` — thay thế full (backup trước).
+`-Force` — thay thế full (ghi đè trực tiếp, không backup).

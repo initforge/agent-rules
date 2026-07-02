@@ -12,7 +12,7 @@ Criteria (structural):
 - `rules/manifest.yaml` load_order complete
 - Core token budget within manifest limit
 - Required skills and guides present
-- Trigger audit 18/18 pass
+- Trigger audit 23/23 pass
 
 ## M2 — Durable advisory layer
 

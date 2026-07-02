@@ -9,6 +9,7 @@
 | `05-critical-thinking.md` | Phản biện xây dựng |
 | `10-execution.md` | Thực thi |
 | `15-output-economy.md` | Tiết kiệm output |
+| `16-context-style.md` | Style context sống (bullet, anti-drift) |
 | `20-quality-and-safety.md` | Chất lượng |
 | `25-task-lifecycle.md` | Intake lane + trace |
 | `30-context-routing.md` | Lazy-load |

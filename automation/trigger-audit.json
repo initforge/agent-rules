@@ -67,7 +67,7 @@
   {
     "phrase": "redesign giao diện tailwind",
     "skill": "frontend-architect",
-    "keywords": ["UI", "Tailwind", "redesign"]
+    "keywords": ["UI", "Tailwind", "redesign", "Hard stop"]
   },
   {
     "phrase": "sinh ảnh mockup giao diện",
@@ -93,5 +93,25 @@
     "phrase": "verify trước khi sửa known-unknowns",
     "skill": "implementation-discovery",
     "keywords": ["verify", "known-unknowns", "assumptions"]
+  },
+  {
+    "phrase": "giao dien lech sai pattern parity",
+    "file": "projects/5fedu/domains/ui-delivery.md",
+    "keywords": ["parity", "pattern", "lệch"]
+  },
+  {
+    "phrase": "frontend architect 5fedu exclusion guard",
+    "skill": "frontend-architect",
+    "keywords": ["Hard stop", "5fedu", "ui-delivery"]
+  },
+  {
+    "phrase": "context style bullet imperative",
+    "file": "rules/16-context-style.md",
+    "keywords": ["imperative", "bullet", "mâu thuẫn"]
+  },
+  {
+    "phrase": "skill exclusion ui parity router",
+    "file": "projects/5fedu/00-context-map.md",
+    "keywords": ["Skill exclusion", "frontend-architect"]
   }
 ]

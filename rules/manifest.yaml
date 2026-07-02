@@ -4,6 +4,7 @@ load_order:
   - 05-critical-thinking.md
   - 10-execution.md
   - 15-output-economy.md
+  - 16-context-style.md
   - 20-quality-and-safety.md
   - 25-task-lifecycle.md
   - 30-context-routing.md

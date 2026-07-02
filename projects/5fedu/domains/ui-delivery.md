@@ -3,10 +3,19 @@
 **Vai trò:** Pattern-format UI/workflow 5fedu — linh hoạt theo template, không rập khuôn cứng.  
 **Ý đồ:** Parity với template trước khi sửa; audit toàn surface khi user báo lệch.
 
+## Quick gate (đọc trước)
+
+- User báo lệch/sai pattern → **không** dùng `frontend-architect`.
+- Tra `module-mapping.md` → chọn Nhân viên / Phòng ban / Chức vụ.
+- Mở route template + route hiện tại → đối chiếu bằng mắt → mới sửa.
+- Audit **tất cả** surface module (toolbar, drawer, filter chip, pagination, detail footer).
+- PASS cần `Template reference` + verification evidence trong report.
+
 ## Navigation flow (Sheet)
 
 - **"Dùng ở đâu quay lại đó"** — sau thao tác (form/drawer/detail), quay đúng list/context user vào, không dump về route mặc định.
 - Sidebar + breadcrumb + route guard + permission matrix **đi cùng nhau** khi đổi tên/vị trí module.
+- **Breadcrumb admin:** mỗi route `/admin/*` mới **bắt buộc** thêm entry vào `getRouteConfig()` trong `src/components/shared/Breadcrumbs.tsx` với `label` tiếng Việt **có dấu** + `parentPath` phân hệ (vd. `/admin/he-thong`). Sidebar **không** tự sinh breadcrumb — đây là nguồn duy nhất.
 - Search liên kết: filter/search phải khớp module reference (toolbar chip vs form combobox — xem Surface Classification).
 - Notification demo: nếu spec yêu cầu, reuse pattern notification đang sống trong template.
 - Responsive: verify desktop + mobile khi module có mobile behavior.
@@ -33,6 +42,9 @@ Thứ tự ưu tiên:
 - Tổ chức trong hierarchy 2 cấp: lấy **Chức vụ** nhưng vẫn xem **Phòng ban** là trục cha
 - Stats/report/tab-view: lấy tab **Thống kê** của **Nhân viên**
 - Print/PDF/export: lấy toolbar in/xuất và helper export đang sống
+- **Bảng con trong detail:** lấy **Phòng ban** — `DetailSection` + `EmbeddedChildDataGrid` + badge count + nút Thêm primary + **2 icon trực tiếp** (`TableRowIconButton` Sửa primary + Xóa danger). **Không** giấu Xóa trong menu ⋮ trên bảng con. Khác với listview 2 cấp — chỉ làm listview 2 cấp khi owner nói rõ.
+- **Confirm xóa:** lấy **Nhân viên** — `useConfirmStore().confirm({ variant: 'danger' })` trước mọi xóa/hành động nguy hiểm.
+- **Cột listview:** `TABLE_COLUMN_PRESETS` (`lib/table-column-presets.ts`) — `minWidth`/`maxWidth` + `truncate`.
 
 Quy tắc baseline:
 

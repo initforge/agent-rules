@@ -16,6 +16,12 @@ Template: `https://github.com/admin5fedu/5f-template-ket-noi-supabase` (React/Vi
 | Toolbar in/xuất | Module export đang sống | Export thật |
 | Phân quyền ma trận | Pattern **Phân quyền** template | Xem `permissions.md` |
 | Chi nhánh / đối tác | **Chi nhánh** (nếu có) hoặc **Nhân viên** shell | CRUD đối tác |
+| **Bảng con trong detail drawer** | **Phòng ban** (`EmbeddedChildDataGrid`) | Khi user nói "bảng con" — kể cả module không có listview 2 cấp |
+| **Popup xác nhận xóa/hành động nguy hiểm** | **Nhân viên** (`useConfirmStore` + `ConfirmDialog`) | Xóa đơn, xóa nhiều, toggle ảnh hưởng site |
+| **Độ rộng cột listview** | **Nhân viên** + `TABLE_COLUMN_PRESETS` | `minWidth`/`maxWidth` + `truncate` theo nội dung thực tế |
+| **In hồ sơ / preview PDF** | **Nhân viên** (`openEmployeeProfilePreviewTab` → `/ho-so-nhan-vien/:id`) | jsPDF + `window.print()`; letterhead từ `useUIStore.companyInfo` |
+| **Cấu hình 1 dòng (settings)** | **Thông tin công ty** | Logo, MST, địa chỉ — nguồn letterhead in hồ sơ; service read phải fallback mock khi thiếu bảng DB |
+| **Module thống kê standalone** | **Thống kê tồn kho** (`thong-ke-ton-kho`) | Route + sidebar riêng, không phải tab trong CRUD |
 
 ## Bảng mapping — template ERP chuẩn (5f-template)
 
@@ -25,6 +31,7 @@ Template: `https://github.com/admin5fedu/5f-template-ket-noi-supabase` (React/Vi
 | Phòng ban | Hệ thống | Phòng ban | Hierarchy |
 | Chức vụ | Hệ thống | Chức vụ | Trong trục Phòng ban |
 | Phân quyền | Hệ thống | Phân quyền template | + `permissions.md` |
+| Thông tin công ty | Hệ thống | Thông tin công ty (template) | `var_cong_ty` → `useUIStore.companyInfo`; read fallback mock nếu bảng chưa migrate |
 | Chi nhánh | Hệ thống / Kinh doanh | Chi nhánh hoặc Nhân viên | Đối tác clone Chi nhánh |
 | Danh mục (2 cấp) | Tùy nghiệp vụ | Phòng ban | Cây danh mục |
 | Phiếu hành chính | Hành chính | Nhân viên | CRUD + workflow |
@@ -55,8 +62,10 @@ Retail/luxury routes (`/san-pham`, Journal, kho serial…) → **[archive/nostim
 ## Chain mapping (trước khi code)
 
 ```text
-spec → submenu → module → view → tab → route → source path → table → service
+spec → submenu → module → view → tab → route → Breadcrumbs.tsx getRouteConfig → table → service
 ```
+
+**Checklist route admin mới:** `App.tsx` route + `sidebar-menu.tsx` + `admin-module-registry.ts` + **`Breadcrumbs.tsx` getRouteConfig** (label có dấu + parentPath).
 
 ## Hành động bắt buộc khi báo lệch
 

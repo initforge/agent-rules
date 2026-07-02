@@ -60,7 +60,7 @@ foreach ($Name in $Selected) {
     if ((Test-Path $McpPath) -and (Select-String -Path $McpPath -Pattern '\[mcp_servers\.codebase_memory\]' -Quiet)) {
       $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config"; status = "OK"; detail = "codebase_memory in config.toml" }
     } else {
-      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config"; status = "WARN"; detail = "codebase_memory section missing — re-run install" }
+      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config"; status = "WARN"; detail = "codebase_memory section missing - re-run install" }
     }
   } elseif (Test-Path $McpPath) {
     $Mcp = Get-Content -Raw $McpPath | ConvertFrom-Json
@@ -77,7 +77,7 @@ foreach ($Name in $Selected) {
   if ($Registry) {
     foreach ($Integration in $Registry.integrations) {
       if ($Integration.policy -eq "optional") { continue }
-      $VerifyScript = Join-Path $Root $Integration.path "verify.ps1"
+      $VerifyScript = Join-Path (Join-Path $Root $Integration.path) "verify.ps1"
       if (-not (Test-Path $VerifyScript)) {
         $Status = if ($Integration.policy -eq "required") { "MISSING" } else { "WARN" }
         $Report += [pscustomobject]@{ platform = $Name; check = $Integration.name; status = $Status; detail = "no verify.ps1" }

@@ -29,11 +29,17 @@ if (-not $TemplateUrl) { $TemplateUrl = "https://github.com/admin5fedu/5f-templa
 if (-not $Stack -and $ProfileConfig.stack) { $Stack = $ProfileConfig.stack }
 if (-not $Stack) { $Stack = "vite-react" }
 
-$LegacyContext = Test-Path (Join-Path $Target "00-index.md")
-$NewLayout = Test-Path (Join-Path $Target "00-context-map.md")
-$PointerEntry = if ($LegacyContext) { "context/5fedu/00-index.md" } elseif ($NewLayout) { "context/5fedu/AGENTS.md" } else { "context/5fedu/AGENTS.md" }
+function Get-PointerEntry {
+  $LegacyContext = Test-Path (Join-Path $Target "00-index.md")
+  $NewLayout = Test-Path (Join-Path $Target "00-context-map.md")
+  if ($LegacyContext) { return "context/5fedu/00-index.md" }
+  if ($NewLayout) { return "context/5fedu/AGENTS.md" }
+  return "context/5fedu/AGENTS.md"
+}
 
-$Pointer = @"
+function Set-ProjectPointers {
+  $PointerEntry = Get-PointerEntry
+  $PointerText = @"
 # Project context pointer
 
 Canonical project context: ``$PointerEntry``.
@@ -42,17 +48,19 @@ Load from **this repo only** — never from ``agent-rules/projects/5fedu/`` (tem
 
 Known 5fedu repos: tah-app, nostime — see agent-rules ``projects/known-5fedu-repos.md``.
 "@
-
-function Set-ProjectPointers {
   foreach ($Adapter in @(".agents", ".codex")) {
     $Dir = Join-Path $Project $Adapter
     New-Item -ItemType Directory -Force -Path $Dir | Out-Null
-    Set-Content -Encoding utf8NoBOM -LiteralPath (Join-Path $Dir "AGENTS.md") -Value $Pointer
+    [System.IO.File]::WriteAllText((Join-Path $Dir "AGENTS.md"), $PointerText)
+  }
+  $RootAgents = Join-Path $Project "AGENTS.md"
+  if (-not (Test-Path $RootAgents)) {
+    [System.IO.File]::WriteAllText($RootAgents, $PointerText)
   }
 }
 
 if ($UpdatePointersOnly) {
-  if (-not (Test-Path $Target)) { throw "No context/5fedu in project — run full install first or use -Force on empty." }
+  if (-not (Test-Path $Target)) { throw "No context/5fedu in project - run full install first or use -Force on empty." }
   Set-ProjectPointers
   Write-Host "Updated pointers only (context preserved): $Target"
   exit 0
@@ -119,7 +127,7 @@ if ($ProfileConfig -and $ProfileConfig.installMetadata) {
     $MetaLines += "- $($Prop.Name): ``$($Prop.Value)``"
   }
 }
-Set-Content -Encoding utf8NoBOM -LiteralPath (Join-Path $Target "install-metadata.md") -Value ($MetaLines -join "`n")
+[System.IO.File]::WriteAllText((Join-Path $Target "install-metadata.md"), ($MetaLines -join "`n"))
 
 Set-ProjectPointers
 Write-Host "Installed 5fedu context: $Target"

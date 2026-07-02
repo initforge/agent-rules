@@ -7,8 +7,8 @@
 
 | Slug | Path (máy dev) | Profile | Ghi chú |
 |---|---|---|---|
-| `tah-app` | `/home/linhnxdeveloper/Projects/Tah-app` | `tah-app` | ERP TAH; deploy `tah-app.vercel.app` qua `git push` |
-| `nostime` | `/home/linhnxdeveloper/Projects/nostime` | `nostime` | NOSTIME APP; luxury retail |
+| `tah-app` | `/home/linhnxdeveloper/Projects/Tah-app` (Linux) / `P:\Tah-app` (Windows) | `tah-app` | ERP TAH; deploy `tah-app.vercel.app` qua `git push` |
+| `nostime` | `/home/linhnxdeveloper/Projects/nostime` (Linux) / `P:\nostime` (Windows) | `nostime` | NOSTIME APP; luxury retail |
 
 Không có dự án 5fedu thứ ba trừ khi owner thêm vào đây và chạy installer.
 

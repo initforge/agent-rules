@@ -127,7 +127,7 @@ foreach ($Name in $Selected) {
   }
 
   $StatePath = Join-Path $Dest "agent-rules-integrations.json"
-  $IntegrationState | Where-Object platform -eq $Name | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8NoBOM $StatePath
+  [System.IO.File]::WriteAllText($StatePath, ($IntegrationState | Where-Object platform -eq $Name | ConvertTo-Json -Depth 4))
 
   $McpMerged = Merge-PlatformMcpAdapters -PlatformName $Name -RuntimeHome $Dest -UserHome $UserHome -Root $Root
   if ($McpMerged) { Write-Host "Merged MCP adapters for $Name" }

@@ -11,7 +11,10 @@ function Get-CodebaseMcpBin {
 function Expand-McpPlaceholders {
   param([string]$Text)
   $Bin = Get-CodebaseMcpBin
-  if ($Bin) { return $Text.Replace('${CODEBASE_MEMORY_MCP_BIN}', $Bin) }
+  if ($Bin) {
+    $SafeBin = $Bin.Replace('\', '/')
+    return $Text.Replace('${CODEBASE_MEMORY_MCP_BIN}', $SafeBin)
+  }
   return $Text
 }
 
@@ -58,7 +61,7 @@ function Merge-JsonMcpAdapters {
   if (-not $Changed) { return $false }
   $Parent = Split-Path $ConfigPath -Parent
   if (-not (Test-Path $Parent)) { New-Item -ItemType Directory -Force -Path $Parent | Out-Null }
-  ($Merged | ConvertTo-Json -Depth 10) | Set-Content -Encoding utf8NoBOM -LiteralPath $ConfigPath
+  [System.IO.File]::WriteAllText($ConfigPath, ($Merged | ConvertTo-Json -Depth 10))
   return $true
 }
 
@@ -91,7 +94,7 @@ function Merge-CodexTomlAdapters {
   if (-not $Changed) { return $false }
   $Parent = Split-Path $ConfigPath -Parent
   if (-not (Test-Path $Parent)) { New-Item -ItemType Directory -Force -Path $Parent | Out-Null }
-  Set-Content -Encoding utf8NoBOM -LiteralPath $ConfigPath -Value $Content
+  [System.IO.File]::WriteAllText($ConfigPath, $Content)
   return $true
 }
 
@@ -109,7 +112,7 @@ function Get-RegistryAdapterPaths {
   $Paths = @()
   foreach ($Integration in $Registry.integrations) {
     if ($Integration.policy -eq "optional") { continue }
-    $Candidate = Join-Path $Root ($Integration.path -replace "/", "\") "adapters\$File"
+    $Candidate = Join-Path (Join-Path $Root ($Integration.path -replace "/", "\")) "adapters\$File"
     if (Test-Path $Candidate) { $Paths += $Candidate }
   }
   return $Paths

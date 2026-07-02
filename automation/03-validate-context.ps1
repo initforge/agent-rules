@@ -43,6 +43,7 @@ $RequiredPaths = @(
   "projects\5fedu\00-context-map.md",
   "projects\5fedu\decisions.md",
   "rules\05-critical-thinking.md",
+  "rules\16-context-style.md",
   "rules\25-task-lifecycle.md",
   "skills\plan-and-handoff\SKILL.md"
 )
@@ -94,7 +95,7 @@ if (Test-Path $RegistryPath) {
       $Problems.Add("Integration registry path missing: $($Integration.path)")
     }
     if ($Integration.name -eq "context7") {
-      $CursorAdapter = Join-Path $Root $Integration.path "adapters\cursor.json"
+      $CursorAdapter = Join-Path (Join-Path $Root $Integration.path) "adapters\cursor.json"
       if (-not (Test-Path $CursorAdapter)) { $Problems.Add("Missing context7 cursor adapter: $CursorAdapter") }
     }
   }
@@ -102,7 +103,7 @@ if (Test-Path $RegistryPath) {
 
 $TriggerAuditPath = Join-Path $Root "automation\trigger-audit.json"
 if (Test-Path $TriggerAuditPath) {
-  $Cases = Get-Content -Raw $TriggerAuditPath | ConvertFrom-Json
+  $Cases = Get-Content -Raw -Encoding UTF8 $TriggerAuditPath | ConvertFrom-Json
   foreach ($Case in $Cases) {
     $TargetPath = $null
     $Body = ""
@@ -127,6 +128,16 @@ if (Test-Path $TriggerAuditPath) {
   $Problems.Add("Missing trigger audit file: automation/trigger-audit.json")
 }
 
+$UiRoutingAudit = Join-Path $Root "automation\audit-ui-routing.ps1"
+if (Test-Path $UiRoutingAudit) {
+  & $UiRoutingAudit -Root $Root -RunId validate-context -LogPath (Join-Path $Root "debug-af8c2b.log") | Out-Null
+  if ($LASTEXITCODE -ne 0) {
+    $Problems.Add("UI routing audit failed - see debug-af8c2b.log and automation/audit-ui-routing.ps1")
+  }
+} else {
+  $Problems.Add("Missing UI routing audit: automation/audit-ui-routing.ps1")
+}
+
 if (Test-Path (Join-Path $Root ".agents")) { $Problems.Add("Project mirror exists: .agents") }
 if (Test-Path (Join-Path $Root ".codex")) { $Problems.Add("Project mirror exists: .codex") }
 
@@ -139,8 +150,12 @@ $MojibakePattern = [string]::Join("|", @(
   ([string][char]0x00c4 + "[\x{80}-\x{bf}]"),
   ([string][char]0x00c6 + "[\x{80}-\x{bf}]")
 ))
-$Mojibake = rg -n $MojibakePattern $Root -g "*.md" -g "*.ps1" -g "*.yaml" -g "*.toml" -g "!05-generated/**" -g "!.git/**" 2>$null
-if ($Mojibake) { $Problems.Add("Possible mojibake remains outside archive/build") }
+if (Get-Command rg -ErrorAction SilentlyContinue) {
+  $Mojibake = rg -n $MojibakePattern $Root -g "*.md" -g "*.ps1" -g "*.yaml" -g "*.toml" -g "!05-generated/**" -g "!.git/**" 2>$null
+  if ($Mojibake) { $Problems.Add("Possible mojibake remains outside archive/build") }
+} else {
+  Write-Warning "ripgrep (rg) is not found, skipping mojibake check."
+}
 
 if ($Problems.Count) {
   $Problems | ForEach-Object { Write-Error $_ }

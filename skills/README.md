@@ -14,7 +14,7 @@
 | `code-review` | Review thay đổi |
 | `best-of-n` | User yêu cầu thử N cách |
 | `context-evolution-protocol` | Tiến hoá rules/context |
-| `frontend-architect` | UI/UX tiêu chuẩn (tham chiếu, không xiềng) |
+| `frontend-architect` | UI/UX polish ngoài ERP parity (cấm khi 5fedu lệch/sai pattern) |
 | `master-image-generation` | Mockup / image-to-code |
 
 Mỗi skill: một thư mục `SKILL.md` + references/scripts tùy nhu cầu.

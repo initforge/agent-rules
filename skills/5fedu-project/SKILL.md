@@ -34,7 +34,7 @@ agent-rules/projects/5fedu/       ← SAI khi implement (chỉ template / mainta
 
 1. Sửa `<repo>/context/5fedu/` — không sửa template harness thay thế.
 2. Promote lesson chung → `context-evolution-protocol` → agent-rules (nếu áp dụng mọi dự án).
-3. UI lệch → `module-mapping.md` + đối chiếu template trước khi sửa code.
+3. UI lệch → `module-mapping.md` + `ui-delivery.md`; đối chiếu template. **Không** `frontend-architect`.
 
 ## Do NOT
 
