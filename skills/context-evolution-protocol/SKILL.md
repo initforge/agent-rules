@@ -16,6 +16,7 @@ Use this skill when any of these signals appears:
 
 - the user corrects agent behavior: "hiểu sai", "không phải vậy", "đừng làm kiểu đó", "sao lại tự chế", "t đã nói rồi";
 - the same mistake repeats at least twice;
+- repeated `Friction` entries in `<working-repo>/.agent/trace.jsonl` name the same missing rule, manual step, or conflicting source of truth;
 - the task modifies or audits `AGENTS.md`, `rules/**`, `skills/**`, `projects/**`, `platforms/**`, `automation/**`, `.agents/**`, `.codex/**`, project context, or runtime harness files;
 - feedback, bug, owner correction, or project lesson may be promoted into a reusable rule;
 - a context paragraph is too specific and could be written as a broader pattern;
@@ -80,6 +81,7 @@ Concrete examples are allowed only after the general rule and must be labeled as
 Before editing:
 
 - `rg` for existing wording, synonyms, file names, and rule concepts.
+- If `<working-repo>/.agent/trace.jsonl` exists, scan recent `friction` fields for repeated patterns before promoting.
 - Identify canonical source and mirrors.
 - Check whether `.agents`, `.codex`, global runtime, and project-local copies will drift.
 - Keep raw examples out of default-loaded files unless they are short examples under a broader rule.

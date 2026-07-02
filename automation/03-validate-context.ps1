@@ -37,10 +37,13 @@ foreach ($Dup in $Duplicates) { $Problems.Add("Duplicate skill slug: $($Dup.Name
 
 $RequiredPaths = @(
   "guides\00-system-map.md",
+  "guides\05-maturity.md",
   "integrations\registry.json",
   "projects\5fedu\AGENTS.md",
   "projects\5fedu\00-context-map.md",
   "projects\5fedu\decisions.md",
+  "rules\05-critical-thinking.md",
+  "rules\25-task-lifecycle.md",
   "skills\plan-and-handoff\SKILL.md"
 )
 foreach ($Path in $RequiredPaths) {
@@ -60,6 +63,26 @@ $LegacyDocNames = @("00-ban-do-he-thong.md", "01-mo-hinh-runtime.md", "02-he-tho
 foreach ($Name in $LegacyDocNames) {
   if (Get-ChildItem $Root -Recurse -File -Filter $Name -ErrorAction SilentlyContinue) {
     $Problems.Add("Legacy Vietnamese doc remains: $Name")
+  }
+}
+
+if (Test-Path (Join-Path $Root "plans")) { $Problems.Add("Legacy plans/ folder still exists") }
+
+$TracePath = Join-Path $Root ".agent\trace.jsonl"
+if (Test-Path $TracePath) {
+  $TraceLines = @(Get-Content $TracePath -ErrorAction SilentlyContinue | Where-Object { $_.Trim() })
+  if ($TraceLines.Count -gt 0) {
+    $MissingFriction = 0
+    foreach ($Line in $TraceLines) {
+      try {
+        $Obj = $Line | ConvertFrom-Json
+        if (-not $Obj.PSObject.Properties.Name -contains "friction") { $MissingFriction++ }
+      } catch { $MissingFriction++ }
+    }
+    if ($MissingFriction -gt 0) {
+      Write-Warning "Advisory: $MissingFriction trace line(s) missing friction field in .agent/trace.jsonl"
+    }
+    Write-Host "Advisory trace lines: $($TraceLines.Count)"
   }
 }
 
@@ -116,7 +139,7 @@ $MojibakePattern = [string]::Join("|", @(
   ([string][char]0x00c4 + "[\x{80}-\x{bf}]"),
   ([string][char]0x00c6 + "[\x{80}-\x{bf}]")
 ))
-$Mojibake = rg -n $MojibakePattern $Root -g "*.md" -g "*.ps1" -g "*.yaml" -g "*.toml" -g "!plans/**" -g "!05-generated/**" -g "!.git/**" 2>$null
+$Mojibake = rg -n $MojibakePattern $Root -g "*.md" -g "*.ps1" -g "*.yaml" -g "*.toml" -g "!05-generated/**" -g "!.git/**" 2>$null
 if ($Mojibake) { $Problems.Add("Possible mojibake remains outside archive/build") }
 
 if ($Problems.Count) {

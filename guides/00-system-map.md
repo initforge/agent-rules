@@ -9,7 +9,7 @@ Repo này được tổ chức để người mới nhìn cây thư mục là bi
 - `platforms/`: chỉ chứa delta riêng cho từng runtime.
 - `automation/`: scripts build, cài, kiểm tra, sync guard.
 - `05-generated/`: build preview/generated mirrors, không sửa tay.
-- `plans/`: plan và research cũ, không phải source vận hành.
+- `.agent/`: trace log, research notes, tombstones (gitignored, per-repo advisory layer).
 
 ## Global đang chạy như thế nào
 
@@ -32,7 +32,7 @@ Repo này được tổ chức để người mới nhìn cây thư mục là bi
 ## Quy tắc đồng bộ
 
 - Mặc định chỉ có một chiều: canonical -> build -> runtime/project.
-- Reverse sync chỉ được phép qua `automation/07-import-reviewed-changes.ps1` (có tombstone cho skill đã xóa).
+- Reverse sync chỉ được phép qua `automation/07-import-reviewed-changes.ps1` (tombstone tại `.agent/tombstones/`).
 - Sau install chạy `automation/09-doctor.ps1` để kiểm tra manifest parity và integration live.
 
 

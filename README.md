@@ -14,7 +14,7 @@
 | `platforms/` | Per-runtime overlays (Codex, Grok, Antigravity, **Cursor**) |
 | `automation/` | Build, install, validate, sync, doctor |
 | `05-generated/` | Build output — do not edit |
-| `plans/` | Plans, handoffs, tombstones |
+| `.agent/` | Advisory trace log, research notes, tombstones (gitignored) |
 
 **Integrations**
 
@@ -28,6 +28,15 @@
 
 ```powershell
 ./automation/03-validate-context.ps1
+```
+
+Linux/macOS (requires [PowerShell Core](https://github.com/PowerShell/PowerShell)):
+
+```bash
+./automation/run.sh 03-validate-context
+```
+
+```powershell
 ./automation/01-build-runtime.ps1
 ./automation/04-verify-mirrors.ps1
 ./automation/02-install-runtime.ps1 -Platform all

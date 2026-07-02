@@ -30,16 +30,25 @@ foreach ($Allowed in $AllowedRoots) {
 }
 if (-not $UnderAllowedRoot) { throw "Source path is outside reviewed import roots." }
 
-if ($Resolved -match "\\evidence\\" -and $ChangeType -ne "evidence") { throw "Evidence paths can only be imported as evidence." }
-if ($Resolved -match "\\legacy\\" -and $ChangeType -ne "legacy") { throw "Legacy paths can only be imported as legacy." }
-if ($Resolved -match "\\archive\\" -and $ChangeType -ne "legacy") { throw "Archive paths can only be imported as legacy." }
+if ($Resolved -match "[/\\]evidence[/\\]" -and $ChangeType -ne "evidence") { throw "Evidence paths can only be imported as evidence." }
+if ($Resolved -match "[/\\]legacy[/\\]" -and $ChangeType -ne "legacy") { throw "Legacy paths can only be imported as legacy." }
+if ($Resolved -match "[/\\]archive[/\\]" -and $ChangeType -ne "legacy") { throw "Archive paths can only be imported as legacy." }
 
-$TombstoneDir = Join-Path $Root "plans\tombstones"
+$TombstoneDir = Join-Path $Root ".agent" "tombstones"
+$LegacyTombstoneDir = Join-Path $Root "plans" "tombstones"
+if (-not (Test-Path $TombstoneDir)) { New-Item -ItemType Directory -Path $TombstoneDir -Force | Out-Null }
+if (Test-Path $LegacyTombstoneDir) {
+  Get-ChildItem $LegacyTombstoneDir -File -ErrorAction SilentlyContinue | ForEach-Object {
+    $Dest = Join-Path $TombstoneDir $_.Name
+    if (-not (Test-Path $Dest)) { Copy-Item -LiteralPath $_.FullName -Destination $Dest }
+  }
+}
+
 if ($ChangeType -eq "skill" -and -not $AllowDeletedSkillRestore) {
   $SkillName = $null
-  if ($Resolved -match "\\skills\\([^\\]+)\\") { $SkillName = $Matches[1] }
+  if ($Resolved -match "[/\\]skills[/\\]([^/\\]+)[/\\]") { $SkillName = $Matches[1] }
   if ($SkillName) {
-    $CanonicalSkill = Join-Path $Root "skills\$SkillName"
+    $CanonicalSkill = Join-Path $Root "skills" $SkillName
     $Tombstone = Join-Path $TombstoneDir "$SkillName.tombstone"
     if (-not (Test-Path $CanonicalSkill) -or (Test-Path $Tombstone)) {
       throw "Skill '$SkillName' was removed from canonical (tombstone). Use -AllowDeletedSkillRestore after explicit review."

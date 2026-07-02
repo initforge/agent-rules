@@ -10,12 +10,10 @@
 ## Note path guidance
 
 Preferred:
-- `plans/<feature>/research/<topic>.md`
-- `plans/<feature>/review/<topic>.md`
+- `<working-repo>/.agent/research/<topic>.md` (gitignored)
 
-If no plan exists:
-- create a temporary note in the workspace
-- summarize the result back into chat
+If no durable path is appropriate:
+- summarize the result in chat with Evidence / Risks / Recommendation / Unknowns
 
 ## Consumption rule
 
@@ -25,4 +23,3 @@ Research should end with:
 - a recommendation
 - a risk summary
 - the next action
-

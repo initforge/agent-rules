@@ -18,7 +18,7 @@ MCP adapter theo platform: `integrations/*/adapters/{codex.toml,grok.json,antigr
 ## Sync
 
 - **Outbound:** `automation/01-build-runtime.ps1` → `02-install-runtime.ps1` (wipe target, merge MCP adapters)
-- **Inbound:** chỉ `automation/07-import-reviewed-changes.ps1` + tombstone `plans/tombstones/`
+- **Inbound:** chỉ `automation/07-import-reviewed-changes.ps1` + tombstone `.agent/tombstones/`
 - Rule: [`rules/45-sync-canonical.md`](../rules/45-sync-canonical.md)
 
 Chi tiết runtime homes: [`01-runtime-model.md`](01-runtime-model.md).

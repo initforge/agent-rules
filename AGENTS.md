@@ -10,7 +10,6 @@ Canonical architecture:
 - `platforms/`: delta riêng cho Codex, Grok, Antigravity, Cursor.
 - `automation/`: build, cài, kiểm tra, sync guard.
 - `05-generated/`: generated output, không sửa tay.
-- `plans/`: plan và research archive.
 
 Đọc `rules/manifest.yaml` và `guides/00-system-map.md` trước khi sửa harness. Không sửa tay `05-generated/` hoặc global runtime mirrors như canonical source. Không commit, push hoặc deploy nếu chưa được yêu cầu rõ.
 

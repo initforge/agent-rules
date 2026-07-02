@@ -17,7 +17,7 @@ description: Canonical sync governance — agent-rules is source of truth; revie
 
 - Chỉ qua `automation/07-import-reviewed-changes.ps1` sau diff review
 - Phân loại: `global` | `skill` | `project` | `evidence` | `legacy`
-- **Tombstone:** skill/rule đã xóa ở canonical không được import ngược; ghi `plans/tombstones/` nếu cần audit
+- **Tombstone:** skill/rule đã xóa ở canonical không được import ngược; ghi `.agent/tombstones/` nếu cần audit
 - Evidence/legacy không promote thành global rule sống
 
 ## Bắt buộc khi tiến hoá agent

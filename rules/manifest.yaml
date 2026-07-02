@@ -1,9 +1,11 @@
 version: 1
 load_order:
   - 00-bootstrap.md
+  - 05-critical-thinking.md
   - 10-execution.md
   - 15-output-economy.md
   - 20-quality-and-safety.md
+  - 25-task-lifecycle.md
   - 30-context-routing.md
   - 40-harness-governance.md
   - 45-sync-canonical.md

@@ -14,7 +14,7 @@
 | `platforms/` | Overlay Codex, Grok, Antigravity, **Cursor** |
 | `automation/` | Build, cài, validate, sync, doctor |
 | `05-generated/` | Output build — không sửa tay |
-| `plans/` | Plan, handoff, tombstone |
+| `.agent/` | Trace log, research notes, tombstones (gitignored) |
 
 **Tích hợp**
 
@@ -28,6 +28,15 @@
 
 ```powershell
 ./automation/03-validate-context.ps1
+```
+
+Linux/macOS (cần [PowerShell Core](https://github.com/PowerShell/PowerShell)):
+
+```bash
+./automation/run.sh 03-validate-context
+```
+
+```powershell
 ./automation/01-build-runtime.ps1
 ./automation/04-verify-mirrors.ps1
 ./automation/02-install-runtime.ps1 -Platform all

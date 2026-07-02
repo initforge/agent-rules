@@ -88,5 +88,10 @@
     "phrase": "chia nhỏ task handoff session",
     "skill": "plan-and-handoff",
     "keywords": ["handoff", "session", "phase"]
+  },
+  {
+    "phrase": "verify trước khi sửa known-unknowns",
+    "skill": "implementation-discovery",
+    "keywords": ["verify", "known-unknowns", "assumptions"]
   }
 ]

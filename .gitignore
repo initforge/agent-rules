@@ -39,6 +39,7 @@ Thumbs.db
 # Project adapters are local/generated in this harness repo.
 /.agents/
 /.codex/
+/.agent/
 
 # Grok live mirror — use ~/.grok/ global only (install-grok-global.sh)
 .grok/

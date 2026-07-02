@@ -6,6 +6,7 @@
 | Slug | Khi nào |
 |---|---|
 | `plan-and-handoff` | Task dài, plan mode, nhiều phase |
+| `implementation-discovery` | Verify giả định plan vs repo/DB; known-unknowns lúc implement |
 | `finish-to-completion` | Thực thi scope đã khóa (không plan dài) |
 | `5fedu-project` | Setup/maintain context 5fedu |
 | `researcher` | Cần research trước khi code |

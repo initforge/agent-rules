@@ -12,4 +12,5 @@ Understand the owner’s actual outcome before acting. Separate product work fro
 - Do not commit, push or deploy unless explicitly requested.
 - Do not revert or overwrite unrelated user changes.
 - Report `PASS` only after proportionate verification; otherwise use `PARTIAL` or `BLOCKED` with one concrete reason.
+- Classify lane and self-report trace per `25-task-lifecycle.md`.
 - Keep communication in natural Vietnamese; preserve technical identifiers and source language where useful.

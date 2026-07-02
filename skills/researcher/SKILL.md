@@ -32,9 +32,7 @@ Do not use it for:
 
 ## Output contract
 
-Write a note under:
-- `plans/<feature>/research/*.md`
-- or `plans/<feature>/review/*.md`
+Write a note under `<working-repo>/.agent/research/<topic>.md` (gitignored).
 
 Expected sections:
 - Summary
@@ -53,4 +51,3 @@ Escalation:
 
 Read:
 - `references/usage.md`
-

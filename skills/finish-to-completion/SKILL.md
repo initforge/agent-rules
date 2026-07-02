@@ -36,6 +36,8 @@ Scope lock: N = [d1, d2, ...]
 
 ## Execution Loop
 
+Trước vòng lặp: chạy **verify gate** (`implementation-discovery`) — đối chiếu giả định plan vs repo/interface/DB/template thật; báo lệch trước khi sửa.
+
 ```text
 FOR each deliverable in scope:
   implement
@@ -78,7 +80,7 @@ Không evidence → không `PASS`. Không "should work".
 |---|---|
 | `PASS` | N/N deliverables done + verify + evidence |
 | `PARTIAL` | Đã hết fallback; thiếu đúng 1 thứ; blocker 1 dòng |
-| `BLOCKED` | Credential/quyền/env/quyết định — không tiến được |
+| `BLOCKED` | Credential/quyền/env/quyết định must-not-self-decide — không tiến được; ghi blocker (`open-questions.md` nếu có); escape-hatch theo `implementation-discovery` |
 
 Không trạng thái "60% xong, phần còn tùy bạn".
 

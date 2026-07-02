@@ -120,6 +120,7 @@ Format cố định cho task UI/module 5fedu:
 3. `Implementation changes`
 4. `Verification plan`
 5. `Assumptions locked`
+6. `Known-unknowns` — thứ chỉ xác nhận được lúc implement (call sites, gaps, orphaned, runtime-only); verify theo `implementation-discovery`
 
 Luôn ghi `Template reference` + lý do, `Production verification path`, `Verify by image` khi cần. Không viết chung chung "sửa theo template" — phải nêu module baseline và surface reuse.
 
