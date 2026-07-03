@@ -18,7 +18,7 @@ Layout cũ (`00-index.md` ở root): hợp lệ nếu chưa migrate — đọc `
 
 ## Behavior mặc định (UI)
 
-**Mọi** task tạo/sửa/refactor module ERP → `00-context-map.md` → `domains/module-mapping.md` + `domains/ui-delivery.md` → mở module tham chiếu (Nhân viên/Phòng ban) + route hiện tại → đối chiếu **trước** khi code. **Cấm** `frontend-architect` / `master-image-generation` làm nguồn chính.
+**Mọi** task tạo/sửa/refactor module ERP → `00-context-map.md` → `domains/module-mapping.md` + `domains/ui-delivery.md` (+ `domains/references/ui-delivery-detail.md` khi implement) → mở module tham chiếu (Nhân viên/Phòng ban) + route hiện tại → đối chiếu **trước** khi code. **Cấm** `frontend-architect` / `master-image-generation` làm nguồn chính.
 
 Khi user báo lệch/sai pattern: cùng flow trên + audit toàn surface.
 

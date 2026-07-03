@@ -15,15 +15,16 @@ Không có dự án 5fedu thứ ba trừ khi owner thêm vào đây và chạy i
 ## Context trong repo
 
 - Context **chỉ** tại `<repo>/context/5fedu/` sau `08-install-5fedu-context.ps1`.
-- Hai repo trên hiện dùng **layout context cũ** (`00-index.md`, file đánh số) — agent đọc đúng file trong repo đó cho đến khi migrate sang `domains/`.
+- Layout chuẩn: `00-context-map.md`, `domains/`, `AGENTS.md`; dữ liệu dự án trong `project-local/` (installer không ghi đè).
+- Root `AGENTS.md` được migrate tự động bởi `10-sync-project-agents.ps1` (gọi từ `08-install`); rule cứng repo → `project-local/agents-hard-rules.md`.
 
 ## Lệnh thường dùng
 
 ```powershell
-# Chỉ cập nhật pointer (giữ context cũ)
-./automation/08-install-5fedu-context.ps1 -ProjectRoot /home/linhnxdeveloper/Projects/Tah-app -Profile tah-app -UpdatePointersOnly
-./automation/08-install-5fedu-context.ps1 -ProjectRoot /home/linhnxdeveloper/Projects/nostime -Profile nostime -UpdatePointersOnly
+# Cài/sync template + auto migrate root AGENTS
+./automation/run.sh 08-install-5fedu-context -ProjectRoot /home/linhnxdeveloper/Projects/Tah-app -Profile tah-app -Force -SkipPrompts
+./automation/run.sh 08-install-5fedu-context -ProjectRoot /home/linhnxdeveloper/Projects/nostime -Profile nostime -Force -SkipPrompts
 
-# Cài layout mới (backup context cũ)
-./automation/08-install-5fedu-context.ps1 -ProjectRoot ... -Profile tah-app -Force
+# Chỉ cập nhật pointer adapter (.codex/.agents)
+./automation/run.sh 08-install-5fedu-context -ProjectRoot ... -Profile tah-app -UpdatePointersOnly
 ```

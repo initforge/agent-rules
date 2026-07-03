@@ -47,6 +47,7 @@ Thumbs.db
 # Runtime/test artifacts
 dist/
 05-generated/
+projects/5fedu/.template-managed.json
 coverage/
 test-results/
 playwright-report/

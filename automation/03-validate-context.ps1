@@ -130,9 +130,12 @@ if (Test-Path $TriggerAuditPath) {
 
 $UiRoutingAudit = Join-Path $Root "automation\audit-ui-routing.ps1"
 if (Test-Path $UiRoutingAudit) {
-  & $UiRoutingAudit -Root $Root -RunId validate-context -LogPath (Join-Path $Root "debug-af8c2b.log") | Out-Null
+  $ValidateLogDir = Join-Path $Root ".cursor"
+  if (-not (Test-Path $ValidateLogDir)) { New-Item -ItemType Directory -Force -Path $ValidateLogDir | Out-Null }
+  $ValidateUiLog = Join-Path $ValidateLogDir "validate-ui-routing.log"
+  & $UiRoutingAudit -Root $Root -RunId validate-context -LogPath $ValidateUiLog | Out-Null
   if ($LASTEXITCODE -ne 0) {
-    $Problems.Add("UI routing audit failed - see debug-af8c2b.log and automation/audit-ui-routing.ps1")
+    $Problems.Add("UI routing audit failed - see $ValidateUiLog and automation/audit-ui-routing.ps1")
   }
 } else {
   $Problems.Add("Missing UI routing audit: automation/audit-ui-routing.ps1")
@@ -166,3 +169,4 @@ Write-Host "Context validation PASS"
 Write-Host "Core tokens (estimated): $CoreTokens"
 Write-Host "Skills: $($Slugs.Count)"
 Write-Host "Trigger audit cases: $((Get-Content -Raw $TriggerAuditPath | ConvertFrom-Json).Count)"
+exit 0

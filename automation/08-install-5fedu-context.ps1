@@ -17,6 +17,9 @@ $ContextParent = Split-Path -Parent $Target
 
 if (-not (Test-Path $Template)) { throw "Missing 5fedu template: $Template" }
 
+& (Join-Path $RepoRoot "automation\03-validate-context.ps1")
+if ($LASTEXITCODE -ne 0) { throw "validate-context failed — fix harness before 5fedu context install" }
+
 $ProfileConfig = $null
 if ($Profile -ne "default") {
   $ProfilePath = Join-Path $PSScriptRoot "profiles\$Profile.json"
@@ -116,9 +119,9 @@ Remove-StaleBackups -ParentDir $ContextParent
 
 New-Item -ItemType Directory -Force -Path $Target | Out-Null
 
-$Exclude = @()
+$Exclude = @("project-local")
 if ($ProfileConfig -and $ProfileConfig.excludePaths) {
-  $Exclude = @($ProfileConfig.excludePaths)
+  $Exclude = @($Exclude + @($ProfileConfig.excludePaths) | Select-Object -Unique)
 }
 
 $ManagedPaths = @()
@@ -128,7 +131,8 @@ Get-ChildItem $Template -Force | ForEach-Object {
   if ($Exclude -contains $Name) { return }
   $Dest = Join-Path $Target $Name
   if ($_.PSIsContainer) {
-    Copy-Item -LiteralPath $_.FullName -Destination $Dest -Recurse -Force
+    if (Test-Path $Dest) { Remove-Item -LiteralPath $Dest -Recurse -Force }
+    Copy-Item -LiteralPath $_.FullName -Destination $Target -Recurse -Force
     Get-ChildItem $Dest -Recurse -File | ForEach-Object {
       $ManagedPaths += $_.FullName.Substring($Target.Length + 1).Replace('\', '/')
     }
@@ -171,6 +175,7 @@ $ManagedPaths += "install-metadata.md"
 Write-TemplateManagedManifest -ManagedPaths $ManagedPaths -TargetDir $Target
 
 Set-ProjectPointers
+& (Join-Path $PSScriptRoot "10-sync-project-agents.ps1") -ProjectRoot $Project -Profile $Profile
 Write-Host "Installed 5fedu context (no-wipe): $Target"
 Write-Host "Template files overwritten; project-local/ and other non-template paths preserved."
 Write-Host "Next: project facts in context/5fedu/project-local/ (not in agent-rules template)."

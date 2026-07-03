@@ -1,5 +1,7 @@
 # Coverage Audit
 
+> **ARCHIVAL** — không auto-load. Router sống: `00-context-map.md` + `domains/`. File này chỉ tham chiếu lịch sử coverage.
+
 ## Mục tiêu
 
 File này đối chiếu prompt/ảnh ban đầu với bộ context hiện tại để tránh mất ý. Khi bổ sung rule mới, cập nhật audit nếu rule đó thay đổi phạm vi hoặc cách AI phải làm việc.
@@ -19,13 +21,13 @@ Bộ context đã đủ để AI làm việc độc lập theo đúng hướng 5
 
 | Yêu cầu gốc | Đã phủ ở đâu | Trạng thái | Ghi chú |
 | --- | --- | --- | --- |
-| 5fedu có convention/rule/workflow riêng theo dự án | `AGENTS.md`, `00-index.md` | Đã phủ | Context nằm trong repo, không nhét full global |
+| 5fedu có convention/rule/workflow riêng theo dự án | `AGENTS.md`, `00-context-map.md` | Đã phủ | Context nằm trong repo, không nhét full global |
 | AGENTS.md trong dự án hoặc băm nhỏ file và AGENTS.md kết nối | `AGENTS.md`, `context/5fedu/*.md` | Đã phủ | AGENTS là con trỏ nhẹ/loading policy |
-| Không làm phình global context | `AGENTS.md`, `00-index.md`, skill `5fedu-project` | Đã phủ | Global chỉ giữ `/5fedu` và skill scaffold/bảo trì |
+| Không làm phình global context | `AGENTS.md`, `00-context-map.md`, skill `5fedu-project` | Đã phủ | Global chỉ giữ `/5fedu` và skill scaffold/bảo trì |
 | Có slash để setup/bảo trì context 5fedu | `C:\Users\ADMIN\.codex\prompts\5fedu.prompt.md` | Đã phủ | Chỉ một slash `/5fedu` |
-| `/5fedu` không phải lệnh cấp context mỗi lần | `AGENTS.md`, `00-index.md`, `06-decision-status.md` | Đã phủ | Normal work tự đọc AGENTS/context |
-| Scope dự án là full app A-Z | `00-index.md`, `06-decision-status.md`, `07-working-format.md` | Đã chốt | AI tự chia plan nội bộ nếu cần |
-| Hỏi đàng hoàng, không suy diễn lung tung | `00-index.md`, `06-decision-status.md`, `questions.md` | Đã phủ | `CHUA_CHOT/CAN_HOI_THEM` phải hỏi |
+| `/5fedu` không phải lệnh cấp context mỗi lần | `AGENTS.md`, `00-context-map.md`, `decisions.md` | Đã phủ | Normal work tự đọc AGENTS/context |
+| Scope dự án là full app A-Z | `00-context-map.md`, `decisions.md`, `domains/ui-delivery.md` | Đã chốt | AI tự chia plan nội bộ nếu cần |
+| Hỏi đàng hoàng, không suy diễn lung tung | `00-context-map.md`, `decisions.md`, `open-questions.md` | Đã phủ | `CHUA_CHOT/CAN_HOI_THEM` phải hỏi |
 | Sync với `initforge/agent-rules` | thao tác sync đã chạy; `skill/prompt` nằm trong runtime | Đã làm | Chưa commit/push nếu user chưa yêu cầu |
 | Tech stack ảnh 1 | `01-tech-stack-and-template.md`, `06`, `07-working-format.md`, `08-source-examples.md` | Đã chốt cho app này | Nếu repo/source mâu thuẫn thì báo |
 | Google Sheets/AppSheet có thể có credentials | `01`, `03`, `07`, `questions.md` | Đã phủ | Không tự bật nếu spec không nói |
@@ -68,8 +70,8 @@ Bộ context đã đủ để AI làm việc độc lập theo đúng hướng 5
 
 AI được tự suy luận theo thứ tự:
 
-1. Đọc `AGENTS.md`, `00-index.md`, `06-decision-status.md`, `questions.md`.
-2. Đọc `07-working-format.md` để nắm format/cách làm.
+1. Đọc `AGENTS.md`, `00-context-map.md`, `decisions.md`, `open-questions.md`.
+2. Đọc `domains/ui-delivery.md` để nắm format/cách làm.
 3. Đọc `08-source-examples.md` để lấy ví dụ neo theo ảnh/spec ban đầu.
 4. Tìm trong template/source trước khi tạo mới.
 5. Đề xuất mapping và các câu hỏi còn thiếu.
@@ -92,7 +94,7 @@ AI không được tự chốt các điểm sau nếu chưa có nguồn:
 | Bảng nhân viên bỏ trường linh tinh | `04-auth-permissions-and-flows.md`, `10-owner-feedback-lessons.md` | Đã chốt | Chỉ giữ trường nghiệp vụ chính từ source |
 | Login dùng `ten_dang_nhap`, không dùng `ma_nhan_vien` | `04`, `07`, `10` | Đã chốt | Là gate trước khi mở rộng auth |
 | Thêm/sửa/xóa username phải đồng bộ Supabase Auth user | `04`, `10` | Đã chốt | Phải qua server/admin path |
-| Cần đọc Google Sheets qua browser đã đăng nhập Google | `00-index.md`, `questions.md`, `10` | Đang thực hiện | Playwright headed đã mở để user auth Google |
+| Cần đọc Google Sheets qua browser đã đăng nhập Google | `00-context-map.md`, `open-questions.md`, `10` | Đang thực hiện | Playwright headed đã mở để user auth Google |
 | Hai Google Sheets public đã được tải/phân tích làm source chính | `11-current-sheets-source-map.md`, `06-decision-status.md` | Đã chốt | Dùng để đối chiếu module/schema/rule trước khi sửa code |
 
 ## Coverage Owner Feedback UI/Vận Tải 2026-05-31

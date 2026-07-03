@@ -7,5 +7,10 @@
   "installMetadata": {
     "project": "tah-app",
     "deploy": "git push → tah-app.vercel.app"
+  },
+  "rootAgents": {
+    "title": "5fedu Project Entry (Tah-app)",
+    "productionVerifyUrl": "https://tah-app.vercel.app",
+    "deployNote": "Deploy: git push → tah-app.vercel.app"
   }
 }

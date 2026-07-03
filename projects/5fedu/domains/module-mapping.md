@@ -67,6 +67,36 @@ spec → submenu → module → view → tab → route → Breadcrumbs.tsx getRo
 
 **Checklist route admin mới:** `App.tsx` route + `sidebar-menu.tsx` + `admin-module-registry.ts` + **`Breadcrumbs.tsx` getRouteConfig** (label có dấu + parentPath).
 
+## Clone checklist (module mới)
+
+- Tra bảng mapping → chọn module tham chiếu (thường **Nhân viên**)
+- Mở **toàn bộ** file module gốc — không chỉ 1 file
+- Route admin: `App.tsx` + `sidebar-menu.tsx` + `admin-module-registry.ts` + `Breadcrumbs` getRouteConfig
+- Shell: `*-module.module.tsx` (`createFeatureModule`; tabs nếu spec có stats)
+- List: `*-table.tsx`, `*-toolbar.tsx`
+- Form drawer: `*-form.tsx` (lazy)
+- Detail drawer: `*-detail.tsx`
+- Row/bulk actions nếu reference có
+- Stats tab (nếu có): kế thừa ~100% từ tab Thống kê Nhân viên
+- `core/`: types, schema, constants (+ supabase-select nếu cần)
+- `hooks/`: page handlers, list hook, data hook
+- `services/`: `*-service.ts`
+- `store/` + `utils/` theo reference
+- **Cấm generic monolith** — 1 config page cho nhiều module
+
+## Audit checklist (sửa module cũ)
+
+- Tra mapping → module tham chiếu
+- Mở route template + route hiện tại — audit **mọi surface**
+- Toolbar, filter chip, search, column toggle, pagination, export
+- Form drawer + detail drawer (cặp reference)
+- Confirm xóa (`useConfirmStore`)
+- Bảng con detail (`EmbeddedChildDataGrid`) nếu có
+- Stats tab surfaces nếu có
+- Permission-gated actions
+- Sync sidebar/breadcrumb/registry nếu đổi route
+- Ghi `Template reference` trong plan trước khi sửa
+
 ## Hành động bắt buộc khi báo lệch
 
 1. Tra bảng → chọn module tham chiếu

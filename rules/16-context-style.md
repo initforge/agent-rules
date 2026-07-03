@@ -27,5 +27,4 @@ description: Living context writing style — short bullets, direct actions, ant
 
 ## Kiểm tra sau khi sửa context
 
-- `automation/03-validate-context.ps1`
-- `automation/audit-ui-routing.ps1` (5fedu UI skill routing)
+- `automation/03-validate-context.ps1` (gồm audit-ui-routing); thêm `10-audit-harness-health` khi audit sâu.

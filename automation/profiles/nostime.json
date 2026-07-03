@@ -8,5 +8,10 @@
   "installMetadata": {
     "project": "nostime",
     "appName": "NOSTIME APP"
+  },
+  "rootAgents": {
+    "title": "5fedu Project Entry (NOSTIME)",
+    "productionVerifyUrl": "",
+    "deployNote": "NOSTIME APP — luxury retail"
   }
 }

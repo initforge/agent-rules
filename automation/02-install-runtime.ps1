@@ -2,6 +2,8 @@ param([ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platfor
 $ErrorActionPreference = "Stop"
 
 $Root = Split-Path -Parent $PSScriptRoot
+& (Join-Path $PSScriptRoot "03-validate-context.ps1")
+if ($LASTEXITCODE -ne 0) { throw "validate-context failed — fix harness before runtime install" }
 & (Join-Path $PSScriptRoot "01-build-runtime.ps1") -Root $Root
 . (Join-Path $PSScriptRoot "Merge-Mcp-Adapters.ps1")
 

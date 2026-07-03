@@ -28,16 +28,7 @@ description: "5fedu ERP module UI parity — clone/adapt from Nhân viên/Phòng
 3. Chạy **Audit checklist** trong `module-mapping.md`.
 4. Sửa theo reference — không redesign tự do.
 
-## Canonical references
-
-| Surface | Reference |
-|---|---|
-| CRUD list/form/detail | **Nhân viên** |
-| Hierarchy 2 cấp | **Phòng ban** |
-| Entity trong cây | **Chức vụ** |
-| Tab stats | Tab **Thống kê** Nhân viên |
-| Bảng con detail | **Phòng ban** (`EmbeddedChildDataGrid`) |
-| Confirm xóa | **Nhân viên** (`useConfirmStore`) |
+Chi tiết mapping + checklist: `context/5fedu/domains/module-mapping.md`. Surface gates: `context/5fedu/domains/ui-delivery.md` + `context/5fedu/domains/references/ui-delivery-detail.md` (khi implement).
 
 ## Report contract
 
