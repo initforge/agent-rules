@@ -13,5 +13,7 @@ description: Scope, execution, verification and reporting contract.
 6. Re-run impacted checks after fixes. A compile pass alone does not prove UI, data or permission correctness; when browser proof is skipped by platform policy, compensate with targeted non-browser evidence and report any remaining gap honestly.
 7. Final reports state scope completion, files/layers changed, verification evidence and status per `25-task-lifecycle.md` (Lane, Friction, advisory `.agent/trace.jsonl` for normal/high-risk). Never present unverified assumptions as facts.
 8. When `Friction` names missing rules, repeated manual steps, or conflicting sources of truth, propose promotion via `context-evolution-protocol` — do not silently edit canonical context.
+9. If an implementation/fix fails (builds, tests, or user feedback) >= 2 times, do not repeat the same approach or patch locally. Stop, verify target surface/component, propose >= 2 alternatives, and ask the user if the cause is ambiguous.
 
 Use `finish-to-completion` for execution tasks. Use `researcher` when current external behavior matters or investigation stalls. Use specialized capabilities only when their trigger matches.
+

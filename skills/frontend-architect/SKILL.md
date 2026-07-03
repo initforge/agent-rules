@@ -1,15 +1,15 @@
 ---
 name: frontend-architect
-description: "UI/UX polish for marketing/landing and non-ERP surfaces — Tailwind, motion, redesign. Use for giao diện đẹp, branding, landing, animation polish outside ERP module shells. Do NOT use when repo has context/5fedu and task is ERP parity — lệch, sai pattern, drawer/listview/toolbar, template alignment (use ui-delivery + module-mapping). Do NOT use for pure backend. Reference quality, not rigid pipeline."
+description: "UI/UX polish for marketing/landing and non-ERP surfaces — Tailwind, motion, redesign. Use for giao diện đẹp, branding, landing, animation polish outside ERP module shells. Do NOT use when repo has context/5fedu and task is ERP module (tạo/sửa/refactor module, parity, lệch, sai pattern, drawer/listview/toolbar) — use 5fedu-module-parity + ui-delivery + module-mapping. Do NOT use for pure backend. Reference quality, not rigid pipeline."
 ---
 
 # Frontend Architect
 
 ## Hard stop — 5fedu ERP parity
 
-- Repo có `context/5fedu/` **và** task là module ERP / parity / lệch template → **dừng skill này**.
-- Đọc `context/5fedu/domains/ui-delivery.md` + `module-mapping.md`; mở route template + route hiện tại; đối chiếu Nhân viên/Phòng ban trước khi sửa.
-- Trigger lệch/sai pattern **không** kích hoạt skill này dù user nói "giao diện".
+- Repo có `context/5fedu/` **và** task là module ERP (tạo module mới, sửa module, refactor, clone, parity, lệch template) → **dừng skill này**.
+- Dùng skill `5fedu-module-parity` + `context/5fedu/domains/ui-delivery.md` + `module-mapping.md`; mở route template + route hiện tại; đối chiếu Nhân viên/Phòng ban trước khi sửa.
+- Trigger "giao diện" / "làm module" / "sửa module" **không** kích hoạt skill này trong repo 5fedu.
 
 ## Scope
 

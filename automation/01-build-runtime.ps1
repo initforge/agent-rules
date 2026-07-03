@@ -13,7 +13,8 @@ foreach ($Platform in $Platforms) {
   $Target = Join-Path $BuildRoot $Platform
   $Rules = Join-Path $Target "rules"
   $Skills = Join-Path $Target "skills"
-  New-Item -ItemType Directory -Force -Path $Rules, $Skills | Out-Null
+  $Docs = Join-Path $Target "docs"
+  New-Item -ItemType Directory -Force -Path $Rules, $Skills, $Docs | Out-Null
 
   Get-ChildItem $Core -File -Filter "*.md" | Where-Object { $_.Name -ne "README.md" } | ForEach-Object {
     Copy-Item $_.FullName (Join-Path $Rules $_.Name)

@@ -42,17 +42,20 @@ Thứ tự ưu tiên:
 - Tổ chức trong hierarchy 2 cấp: lấy **Chức vụ** nhưng vẫn xem **Phòng ban** là trục cha
 - Stats/report/tab-view: lấy tab **Thống kê** của **Nhân viên**
 - Print/PDF/export: lấy toolbar in/xuất và helper export đang sống
-- **Bảng con trong detail:** lấy **Phòng ban** — `DetailSection` + `EmbeddedChildDataGrid` + badge count + nút Thêm primary + **2 icon trực tiếp** (`TableRowIconButton` Sửa primary + Xóa danger). **Không** giấu Xóa trong menu ⋮ trên bảng con. Khác với listview 2 cấp — chỉ làm listview 2 cấp khi owner nói rõ.
+- **Bảng con trong detail:** lấy **Phòng ban** — `DetailSection` + `EmbeddedChildDataGrid` + badge count (`{n} bản ghi`) + nút Thêm primary (`bg-primary text-white shadow-sm hover:bg-primary/90 h-8 px-3 text-xs`) + **cột Thao tác nhất quán với bảng chính** (nút Sửa hiển thị trực tiếp dạng `primary` + Dấu 3 chấm `RowActionsOverflowMenu` chứa nút Xóa và các hành động phụ). Không tự chế layout 2 icon trực tiếp hoặc ẩn hết vào menu 3 chấm nếu template mẫu có cấu trúc chuẩn.
 - **Confirm xóa:** lấy **Nhân viên** — `useConfirmStore().confirm({ variant: 'danger' })` trước mọi xóa/hành động nguy hiểm.
 - **Cột listview:** `TABLE_COLUMN_PRESETS` (`lib/table-column-presets.ts`) — `minWidth`/`maxWidth` + `truncate`.
+- **Thao tác 3 chấm (RowActionsOverflowMenu):** Luôn luôn bật portal (`portalEnabled={true}`) để dropdown menu hoạt động ổn định trên cả mobile và desktop cho tất cả các bảng chính và bảng con. Cấm tắt portal hoặc dùng điều kiện `compact` để vô hiệu hóa portal dẫn đến lỗi ẩn/mất menu.
 
 Quy tắc baseline:
 
+- **Bắt buộc đối chiếu trực quan (Visual Parity Gate):** Khi sửa hoặc tạo mới giao diện (Table chính, Bảng con, Toolbar, Stats), bắt buộc phải mở trực tiếp file code mẫu của template Nhân viên/Phòng ban đang chạy để đối chiếu cấu trúc DOM và class Tailwind thực tế. Cấm suy đoán cảm tính hoặc tin tưởng mù quáng vào tài liệu markdown rules tĩnh nếu chúng mâu thuẫn với code đang chạy.
+- **Cấm import chắp vá component Stats:** Tuyệt đối không import component cấu hình KPI (`StatsKpiConfigPopover`) của Nhân viên sang các phân hệ khác do nhãn checkbox bị hardcode. Phải viết component popover riêng biệt (hoặc inline) cho từng phân hệ, đồng bộ đầy đủ class checkbox của hệ thống và trạng thái active (`bg-muted`) của nút trigger khi popup mở.
 - **Nhân viên** là module gốc và canonical reference cho mọi CRUD chuẩn hoặc biến thể CRUD trong nhóm quản trị nội bộ.
 - **Phòng ban** chỉ dùng 2 cấp nếu spec/template/app chưa xác nhận cấu trúc sâu hơn.
 - **Chức vụ** là lớp đối tượng gắn trong cây **Phòng ban**; không xử lý **Chức vụ** như module độc lập cắt rời khỏi trục tổ chức.
-- Module mới dạng "entity quản trị nội bộ" → clone/adapt từ **Nhân viên**; chỉ đổi phần nghiệp vụ, không đổi layout/surface vô cớ.
-- Module có **Thống kê** → reuse shell stats của **Nhân viên**: tab stats, toolbar lọc, KPI, chart, grid, export/report, drilldown.
+- **Module mới dạng "entity quản trị nội bộ"** → clone/adapt từ **Nhân viên**; chỉ đổi phần nghiệp vụ, không đổi layout/surface vô cớ.
+- **Module có Thống kê** → reuse shell stats của **Nhân viên**: tab stats, toolbar lọc, KPI, chart, grid, export/report, drilldown.
 
 Reference không khớp behavior → bỏ, không bám module quen tay.
 

@@ -1,6 +1,6 @@
 ---
 name: master-image-generation
-description: "Mockups, brand visuals, image-to-code. Use when user asks to generate UI mockup, sinh ảnh giao diện, brandkit, image-to-code, thiết kế màn hình từ ảnh. Do NOT use for 5fedu ERP parity or module shell fixes (use context/5fedu ui-delivery + module-mapping). Do NOT use for ordinary CSS tweaks in ERP modules. Reference standards, not mandatory pipeline."
+description: "Mockups, brand visuals, image-to-code. Use when user asks to generate UI mockup, sinh ảnh giao diện, brandkit, image-to-code, thiết kế màn hình từ ảnh. Do NOT use for 5fedu ERP module work (tạo/sửa/refactor module, parity, lệch) — use 5fedu-module-parity + ui-delivery + module-mapping. Do NOT use for ordinary CSS tweaks in ERP modules. Reference standards, not mandatory pipeline."
 ---
 
 # Kỹ năng Xử lý Ảnh & Thiết kế Hình ảnh (Master Image Generation Skill)

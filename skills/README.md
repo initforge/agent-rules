@@ -9,6 +9,7 @@
 | `implementation-discovery` | Verify giả định plan vs repo/DB; known-unknowns lúc implement |
 | `finish-to-completion` | Thực thi scope đã khóa (không plan dài) |
 | `5fedu-project` | Setup/maintain context 5fedu |
+| `5fedu-module-parity` | Tạo/sửa/refactor module ERP — clone/audit vs Nhân viên template |
 | `researcher` | Cần research trước khi code |
 | `docs-style` | README/spec chất lượng |
 | `code-review` | Review thay đổi |

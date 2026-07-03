@@ -5,10 +5,11 @@ description: Output economy and direct communication for token efficiency.
 
 # Output economy
 
-**Ý đồ:** Trả lời trực diện, tiết kiệm token, vẫn đủ ý cho agent yếu hơn Opus hiểu.
+**Ý đồ:** Trực diện, tiết kiệm token, đủ ý cho agent hiểu.
 
-- Trả lời thẳng câu hỏi; không lặp lại context user đã biết.
-- Dùng heading/bảng khi liệt kê ≥3 mục; tránh đoạn văn dài một cục.
-- Không dump file inventory thay cho giải thích.
-- Ghi rõ **kết luận / Status** trước chi tiết khi báo cáo task.
+- Trả lời thẳng; không lặp lại context đã biết.
+- Dùng heading/bảng khi liệt kê >=3 mục; tránh đoạn văn dài.
+- Không dump danh sách file thay cho giải thích.
+- Ghi **kết luận/Status** trước chi tiết báo cáo.
 - Tiếng Việt tự nhiên có dấu (trừ identifier/code).
+

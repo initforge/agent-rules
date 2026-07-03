@@ -113,5 +113,25 @@
     "phrase": "skill exclusion ui parity router",
     "file": "projects/5fedu/00-context-map.md",
     "keywords": ["Skill exclusion", "frontend-architect"]
+  },
+  {
+    "phrase": "làm module mới clone nhân viên",
+    "skill": "5fedu-module-parity",
+    "keywords": ["làm module mới", "Nhân viên", "clone"]
+  },
+  {
+    "phrase": "sửa module cũ audit surface",
+    "skill": "5fedu-module-parity",
+    "keywords": ["sửa module", "audit", "surface"]
+  },
+  {
+    "phrase": "refactor module generic monolith",
+    "file": "projects/5fedu/domains/module-mapping.md",
+    "keywords": ["generic", "monolith", "clone checklist"]
+  },
+  {
+    "phrase": "thêm chức năng vào module",
+    "skill": "5fedu-module-parity",
+    "keywords": ["thêm chức năng", "module-mapping", "ui-delivery"]
   }
 ]

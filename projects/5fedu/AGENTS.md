@@ -7,22 +7,26 @@
 
 Chỉ **Tah-app** và **nostime** — xem `known-5fedu-repos.md` (agent-rules).
 
-## Đọc trước (layout mới)
+## Đọc trước
 
-1. `00-context-map.md`
-2. `decisions.md`
-3. `open-questions.md`
+1. `00-context-map.md` — router domain (template)
+2. **`project-local/00-index.md`** — router dự án (sheets, Supabase, decisions đã chốt) — **ưu tiên** nếu có
+3. `decisions.md` (generic template) hoặc `project-local/decisions.md` (dự án)
+4. `open-questions.md` hoặc `project-local/open-questions.md`
 
-Layout cũ (`00-index.md`, file đánh số): vẫn hợp lệ nếu repo chưa migrate — đọc `00-index.md` trong repo đó.
+Layout cũ (`00-index.md` ở root): hợp lệ nếu chưa migrate — đọc `00-index.md` hoặc `project-local/00-index.md`.
 
 ## Behavior mặc định (UI)
 
-Khi user báo lệch/sai pattern → `00-context-map.md` → `domains/module-mapping.md` → mở template + route hiện tại → đối chiếu trước khi sửa. **Cấm** `frontend-architect` cho parity ERP.
+**Mọi** task tạo/sửa/refactor module ERP → `00-context-map.md` → `domains/module-mapping.md` + `domains/ui-delivery.md` → mở module tham chiếu (Nhân viên/Phòng ban) + route hiện tại → đối chiếu **trước** khi code. **Cấm** `frontend-architect` / `master-image-generation` làm nguồn chính.
+
+Khi user báo lệch/sai pattern: cùng flow trên + audit toàn surface.
 
 ## Cấu trúc (sau cài)
 
-| Thư mục | Vai trò |
-|---|---|
-| `domains/` | Rule theo domain |
-| `project-overlay/` | Chỉ profile `nostime` — spec retail |
-| `evidence/`, `legacy/` | Không auto-load |
+| Thư mục | Vai trò | Installer |
+|---|---|---|
+| `domains/` | Rule theo domain (generic) | Ghi đè |
+| `project-local/` | **Dữ liệu dự án** — sheets, Supabase, spec chốt | **Không đụng** |
+| `project-overlay/` | Profile `nostime` — overlay template retail | Ghi đè (nostime) |
+| `evidence/`, `legacy/` | Không auto-load | Ghi đè nếu trong template |
