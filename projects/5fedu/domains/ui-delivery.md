@@ -55,7 +55,7 @@ Quy tắc baseline:
 - **Phòng ban** chỉ dùng 2 cấp nếu spec/template/app chưa xác nhận cấu trúc sâu hơn.
 - **Chức vụ** là lớp đối tượng gắn trong cây **Phòng ban**; không xử lý **Chức vụ** như module độc lập cắt rời khỏi trục tổ chức.
 - **Module mới dạng "entity quản trị nội bộ"** → clone/adapt từ **Nhân viên**; chỉ đổi phần nghiệp vụ, không đổi layout/surface vô cớ.
-- **Module có Thống kê** → reuse shell stats của **Nhân viên**: tab stats, toolbar lọc, KPI, chart, grid, export/report, drilldown.
+- **Module có Thống kê (Tab Stats):** Bắt buộc kế thừa gần như toàn bộ (gần như 100%) kiến trúc, layout và các components từ tab **Thống kê của Nhân viên** (gồm DashboardToolbar lọc, StatsKpiGrid hiển thị KPI, StatsKpiConfigPopover cấu hình ẩn/hiện, hệ thống biểu đồ, StatsDataGrid hiển thị danh sách chi tiết ở chân trang, và dialog StatsDrillDownDialog). Cấm tự chế cấu trúc riêng hoặc lược bỏ các thành phần này.
 
 Reference không khớp behavior → bỏ, không bám module quen tay.
 
