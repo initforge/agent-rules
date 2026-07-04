@@ -81,7 +81,7 @@ function Install-Integration {
       & $VerifyScript | Out-Null
       $State.verified = $true
     } else {
-      $State.verified = $true
+      $State.verified = $false
       $State.note = "No verify script"
     }
   } catch {

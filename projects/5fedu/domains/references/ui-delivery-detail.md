@@ -99,3 +99,19 @@ Chi tiết mapping module → template: `module-mapping.md`.
 ## Dự án Nostime
 
 Quyết định retail/luxury, tồn kho, báo cáo NXT → `archive/nostime/` — không auto-load cho template chung.
+
+## Excel / PDF / h-page Quality Gates
+
+### 1. Cấm lồng ghép class `h-page` (h-page Nesting Block)
+- Không bao giờ được dùng class `.h-page` ở các component con hoặc trang con nhúng (như `TransportModulePage`).
+- Trang con nhúng bắt buộc dùng `h-full min-h-0` để co giãn chính xác theo không gian còn lại của flex parent, tránh kéo giãn chiều cao vượt quá viewport làm ẩn footer/pagination.
+
+### 2. Quy chuẩn xuất file Excel (Excel Export Verification)
+- **Kiểu dữ liệu (Cell Type 'n')**: Các cột chứa số liệu (như Tiền lương, Chi phí, Số chuyến...) bắt buộc phải được xuất dưới dạng Number thực tế để có thể tính toán (`=SUM()`, `=AVERAGE()`), không được để kiểu String/Text (gây ra cảnh báo tam giác xanh lá "Number stored as text").
+- **Định dạng hiển thị (Number Format)**: Phải hiển thị phân tách phần nghìn rõ ràng (`#,##0`), căn lề phải cho cột số, căn lề giữa cho ngày tháng/trạng thái/biển số, và căn lề trái cho text thường.
+- **Màu sắc và Layout**: Header màu xanh dương đậm thương hiệu (`#1E3A8A`) chữ trắng đậm Segoe UI, có viền mỏng bao quanh và màu nền dòng xen kẽ nhẹ nhàng để tăng độ tương phản.
+
+### 3. Quy chuẩn xuất file PDF (PDF Export Verification)
+- **Hỗ trợ Tiếng Việt (Unicode Support)**: Tuyệt đối không dùng các font mặc định của jsPDF (như Helvetica, Times, Courier) vì các font này không hỗ trợ bảng mã Unicode tiếng Việt, dẫn đến vỡ font/hiển thị ký tự lạ (mojibake).
+- **Đăng ký Font Chữ**: Phải fetch các tệp font TrueType hỗ trợ tiếng Việt (như `Roboto-Regular.ttf` và `Roboto-Medium.ttf` từ CDN uy tín như cdnjs), chuyển đổi thành base64 thông qua ArrayBuffer, và đăng ký với jsPDF bằng `doc.addFileToVFS` và `doc.addFont`.
+- **Áp dụng Font**: Đảm bảo tất cả các văn bản vẽ bằng `doc.text` và bảng vẽ bằng `autoTable` đều chỉ định sử dụng font đã đăng ký (ví dụ: `font: 'Roboto'`).

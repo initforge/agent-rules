@@ -57,18 +57,34 @@ foreach ($Name in $Selected) {
 
   $McpPath = $McpConfigPaths[$Name]
   if ($Name -eq "codex") {
-    if ((Test-Path $McpPath) -and (Select-String -Path $McpPath -Pattern '\[mcp_servers\.codebase_memory\]' -Quiet)) {
-      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config"; status = "OK"; detail = "codebase_memory in config.toml" }
+    $HasCodebaseMemory = (Test-Path $McpPath) -and (Select-String -Path $McpPath -Pattern '\[mcp_servers\.codebase_memory\]' -Quiet)
+    $HasContext7 = (Test-Path $McpPath) -and (Select-String -Path $McpPath -Pattern '\[mcp_servers\.context7\]' -Quiet)
+
+    if ($HasCodebaseMemory) {
+      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-codebase-memory"; status = "OK"; detail = "codebase_memory in config.toml" }
     } else {
-      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config"; status = "WARN"; detail = "codebase_memory section missing - re-run install" }
+      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-codebase-memory"; status = "WARN"; detail = "codebase_memory section missing - re-run install" }
+    }
+
+    if ($HasContext7) {
+      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-context7"; status = "OK"; detail = "context7 in config.toml" }
+    } else {
+      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-context7"; status = "WARN"; detail = "context7 section missing - re-run install" }
     }
   } elseif (Test-Path $McpPath) {
     $Mcp = Get-Content -Raw $McpPath | ConvertFrom-Json
     $Keys = @($Mcp.mcpServers.PSObject.Properties.Name)
+
     if ($Keys -contains "codebase-memory") {
-      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config"; status = "OK"; detail = "mcp.json has codebase-memory" }
+      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-codebase-memory"; status = "OK"; detail = "mcp.json has codebase-memory" }
     } else {
-      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config"; status = "WARN"; detail = "mcp.json missing codebase-memory" }
+      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-codebase-memory"; status = "WARN"; detail = "mcp.json missing codebase-memory" }
+    }
+
+    if ($Keys -contains "context7") {
+      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-context7"; status = "OK"; detail = "mcp.json has context7" }
+    } else {
+      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-context7"; status = "WARN"; detail = "mcp.json missing context7" }
     }
   } else {
     $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config"; status = "WARN"; detail = "no mcp config at $McpPath" }

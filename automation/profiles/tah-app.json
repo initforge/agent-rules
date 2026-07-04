@@ -1,9 +1,9 @@
 {
-  "slug": "tah-app",
+  "project": "tah-app",
   "displayName": "Tah-app",
   "templateUrl": "https://github.com/admin5fedu/5f-template-ket-noi-supabase",
   "stack": "vite-react",
-  "excludePaths": ["archive"],
+  "excludePaths": ["archive", "project-overlay", "project-local"],
   "installMetadata": {
     "project": "tah-app",
     "deploy": "git push → tah-app.vercel.app"

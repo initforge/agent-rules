@@ -85,6 +85,7 @@ For every meaningful change, ask:
 - Did the diff introduce casts, optionality, or ad-hoc object shapes that obscure the real invariant?
 - Is this logic living in the canonical layer, or did the diff leak details across a boundary?
 - Is this orchestration more sequential or less atomic than it needs to be?
+- **Security & Performance:** Đối chiếu kỹ với danh sách hard-block của [clean-code-checklist.md](../clean-code/references/clean-code-checklist.md). Có truy vấn N+1, load-all DB, lộ secret, hay thiếu validate ở backend không?
 
 ## What to Flag Aggressively
 

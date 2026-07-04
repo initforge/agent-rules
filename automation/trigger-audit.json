@@ -133,5 +133,10 @@
     "phrase": "thêm chức năng vào module",
     "skill": "5fedu-module-parity",
     "keywords": ["thêm chức năng", "module-mapping", "ui-delivery"]
+  },
+  {
+    "phrase": "dọn dẹp clean code tối ưu",
+    "skill": "clean-code",
+    "keywords": ["clean-code", "smell", "hard-block"]
   }
 ]

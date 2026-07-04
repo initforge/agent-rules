@@ -28,7 +28,6 @@
 
 ## Không auto-load
 
-- `evidence/` — feedback thô, audit
-- `legacy/` — tham chiếu cũ
+- `evidence/` — feedback thô, audit (archival)
 - `archive/nostime/` — overlay template nostime, không phải project-local
 - `project-local/evidence/` — log dự án

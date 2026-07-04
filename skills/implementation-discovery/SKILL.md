@@ -16,7 +16,7 @@ description: Reality-check before and during implementation when plan assumption
 ## Do NOT use when
 
 - Chỉ giải thích/review, chưa implement
-- Task dài chưa cắt phase → `plan-and-handoff` trước
+- Task dài/multi-phase chưa cắt slice rõ → `plan-and-handoff` trước (≥2 files alone không kích hoạt)
 
 ## 1. Verify gate (đầu implement)
 
@@ -67,14 +67,16 @@ Những thứ plan **không thể chốt trước** — liệt kê trong plan, v
 | **Permission / auth** | Store chưa hydrate (`cap_bac`, `employeeRecord`); mock auth toast; test chỉ admin |
 | **Hidden UI** | Orphan nodes tàng hình; `h-page` lồng đẩy footer; null FK hiển thị sai |
 
-Ví dụ chi tiết 5fedu: `projects/5fedu/legacy/working-format-legacy.md`, `delivery-quality-legacy.md`.
+Ví dụ chi tiết 5fedu: `context/5fedu/domains/ui-delivery.md`, `domains/references/ui-delivery-detail.md`, `domains/module-mapping.md`.
+
+## Read-only verify (plan-only modes)
+Khi ở các chế độ `plan-authoring` hoặc `plan-review`, chỉ sử dụng các công cụ đọc (read-only tools như grep, view_file, list_dir, search) để thu thập thông tin và xác minh các giả định. Tuyệt đối không sửa mã nguồn. Kết quả đầu ra: `Proceed: yes` có nghĩa là tiếp tục soạn thảo/đánh giá kế hoạch (không phải code).
 
 ## Workflow tie-in
 
 ```text
-plan-and-handoff → Known-unknowns in plan
-verify gate (this skill) → implement
-finish-to-completion → verify + PASS | BLOCKED
+plan-first path → read-only discovery (optional) → deliver plan
+execute path → discovery verify (this skill) → finish-to-completion
 ```
 
 ## Phrase bank (recall)

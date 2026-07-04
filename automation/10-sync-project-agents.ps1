@@ -64,8 +64,22 @@ function Rewrite-LegacyPaths {
   }
   $Out = $Out.Replace("${Bq}00-index.md${Bq}", "${Bq}00-context-map.md${Bq}")
   $Out = $Out.Replace("00-index.md", "00-context-map.md")
-  $Out = $Out.Replace("questions.md", "open-questions.md")
+  while ($Out -match 'open-open-') {
+    $Out = $Out -replace 'open-open-', 'open-'
+  }
+  $Out = [regex]::Replace($Out, '(?<!open-)(?<![\w/])questions\.md', 'open-questions.md')
   $Out = $Out.Replace("06-decision-status.md", "decisions.md")
+  $LegacyTargets = @{
+    "legacy/working-format-legacy.md" = "domains/references/ui-delivery-detail.md"
+    "legacy/delivery-quality-legacy.md" = "domains/ui-delivery.md"
+    "legacy/database-supabase-legacy.md" = "domains/database.md"
+    "legacy/auth-permissions-legacy.md" = "domains/permissions.md"
+    "legacy/decision-status-legacy.md" = "decisions.md"
+  }
+  foreach ($Legacy in $LegacyTargets.GetEnumerator()) {
+    $Out = $Out.Replace($Legacy.Key, $Legacy.Value)
+    $Out = $Out.Replace("${Bq}$($Legacy.Key)${Bq}", "${Bq}$($Legacy.Value)${Bq}")
+  }
   return $Out
 }
 

@@ -3,8 +3,14 @@ $ErrorActionPreference = "Stop"
 function Get-CodebaseMcpBin {
   $Cmd = Get-Command codebase-memory-mcp -ErrorAction SilentlyContinue
   if ($Cmd) { return $Cmd.Source }
+  if ($env:LOCALAPPDATA) {
+    $Windows = Join-Path $env:LOCALAPPDATA "Programs\codebase-memory-mcp\codebase-memory-mcp.exe"
+    if (Test-Path $Windows) { return $Windows }
+  }
   $Linux = Join-Path $HOME ".local/share/codebase-memory-mcp/codebase-memory-mcp"
   if (Test-Path $Linux) { return $Linux }
+  $Darwin = Join-Path $HOME "Library/Application Support/codebase-memory-mcp/codebase-memory-mcp"
+  if (Test-Path $Darwin) { return $Darwin }
   return $null
 }
 

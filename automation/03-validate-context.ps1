@@ -7,8 +7,16 @@ $BudgetYaml = if (Test-Path $ManifestPath) { Get-Content -Raw $ManifestPath } el
 $CoreBudget = 4000
 if ($BudgetYaml -match "core_total_tokens:\s*(\d+)") { $CoreBudget = [int]$Matches[1] }
 
-$Core = Get-ChildItem (Join-Path $Root "rules") -File -Filter "*.md" | Where-Object { $_.Name -ne "README.md" }
-$CoreChars = ($Core | ForEach-Object { (Get-Content -Raw -Encoding UTF8 $_.FullName).Length } | Measure-Object -Sum).Sum
+$ManifestContent = if (Test-Path $ManifestPath) { Get-Content -Raw $ManifestPath } else { "" }
+$LoadOrderFiles = [System.Collections.Generic.List[string]]::new()
+if ($ManifestContent -match "(?ms)load_order:\s*\r?\n(.*?)(?=\r?\n\w+:|$)") {
+  $Block = $Matches[1]
+  foreach ($Line in ($Block -split "`n")) {
+    if ($Line -match "-\s*(\S+)") { $LoadOrderFiles.Add($Matches[1]) }
+  }
+}
+$Core = $LoadOrderFiles | ForEach-Object { Join-Path $Root "rules\$_" } | Where-Object { Test-Path $_ }
+$CoreChars = ($Core | ForEach-Object { (Get-Content -Raw -Encoding UTF8 $_).Length } | Measure-Object -Sum).Sum
 $CoreTokens = [math]::Ceiling($CoreChars / 3.6)
 if ($CoreTokens -gt $CoreBudget) { $Problems.Add("Core token budget exceeded: $CoreTokens > $CoreBudget") }
 
@@ -130,12 +138,16 @@ if (Test-Path $TriggerAuditPath) {
 
 $UiRoutingAudit = Join-Path $Root "automation\audit-ui-routing.ps1"
 if (Test-Path $UiRoutingAudit) {
-  $ValidateLogDir = Join-Path $Root ".cursor"
-  if (-not (Test-Path $ValidateLogDir)) { New-Item -ItemType Directory -Force -Path $ValidateLogDir | Out-Null }
-  $ValidateUiLog = Join-Path $ValidateLogDir "validate-ui-routing.log"
-  & $UiRoutingAudit -Root $Root -RunId validate-context -LogPath $ValidateUiLog | Out-Null
-  if ($LASTEXITCODE -ne 0) {
-    $Problems.Add("UI routing audit failed - see $ValidateUiLog and automation/audit-ui-routing.ps1")
+  $UiLogPath = Join-Path $Root ".agent\validate-ui-routing.log"
+  $UiLogDir = Split-Path $UiLogPath -Parent
+  if (-not (Test-Path $UiLogDir)) { New-Item -ItemType Directory -Force -Path $UiLogDir | Out-Null }
+  try {
+    & $UiRoutingAudit -Root $Root -RunId validate-context -LogPath $UiLogPath | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+      $Problems.Add("UI routing audit failed - see .agent/validate-ui-routing.log and automation/audit-ui-routing.ps1")
+    }
+  } catch {
+    $Problems.Add("UI routing audit crashed - error: $_ - see .agent/validate-ui-routing.log")
   }
 } else {
   $Problems.Add("Missing UI routing audit: automation/audit-ui-routing.ps1")
@@ -160,6 +172,18 @@ if (Get-Command rg -ErrorAction SilentlyContinue) {
   Write-Warning "ripgrep (rg) is not found, skipping mojibake check."
 }
 
+$PurityAudit = Join-Path $PSScriptRoot "audit-5fedu-template-purity.ps1"
+if (Test-Path $PurityAudit) {
+  try {
+    & $PurityAudit | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+      $Problems.Add("5fedu template purity audit failed - run automation/audit-5fedu-template-purity.ps1 for details")
+    }
+  } catch {
+    $Problems.Add("5fedu template purity audit crashed - error: $_")
+  }
+}
+
 if ($Problems.Count) {
   $Problems | ForEach-Object { Write-Error $_ }
   exit 1
@@ -169,4 +193,3 @@ Write-Host "Context validation PASS"
 Write-Host "Core tokens (estimated): $CoreTokens"
 Write-Host "Skills: $($Slugs.Count)"
 Write-Host "Trigger audit cases: $((Get-Content -Raw $TriggerAuditPath | ConvertFrom-Json).Count)"
-exit 0

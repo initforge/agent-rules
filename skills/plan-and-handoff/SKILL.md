@@ -1,6 +1,6 @@
 ---
 name: plan-and-handoff
-description: Use when the user gives a long or multi-part task, uses plan mode first, asks for phased work, or needs a task decomposed before execution. Trigger on "plan dài", "nhiều phase", "đại trùng tu", "làm từng bước", "handoff", "chia nhỏ task", or task scope clearly exceeding one session. Do NOT use for single small fixes or pure Q&A.
+description: Use when the user gives a long or multi-part task, uses plan mode first, asks for phased work, or needs a task decomposed before execution. Trigger on plan dài, nhiều phase, đại trùng tu, làm từng bước, handoff, chia nhỏ task, /goal, khảo sát, viết plan cho gemini, viết plan cho flash, plan cho agent khác, plan mode, báo cáo theo mệnh đề, phân tích plan, review plan. Do NOT use for single small fixes or pure Q&A.
 ---
 
 # Plan and Handoff
@@ -15,11 +15,12 @@ description: Use when the user gives a long or multi-part task, uses plan mode f
 
 ## Do NOT use when
 
-- Single-file typo or one-line fix
-- Pure explanation/review without execution plan
-- User already gave a narrow slice with clear scope
+- Single-file typo (use tiny execution instead)
+- User already confirmed execute for current slice (use finish-to-completion directly)
 
 ## Steps
+
+## Plan-first path (plan-authoring | plan-review) — HB-1
 
 1. **Lock scope** — list deliverables; refuse scope creep in same phase.
 2. **Cut phases** — each phase: goal, files touched, verify command, exit criteria.
@@ -30,7 +31,11 @@ description: Use when the user gives a long or multi-part task, uses plan mode f
    - Decisions locked
    - Remaining
    - Next step (one phase only)
-6. Execute **current phase only**; trước khi code phase, chạy verify gate (`implementation-discovery`); end with handoff update, not "bước tiếp theo?" footer.
+End with plan artifact. No step 6 unless pivot phrase in same user message (HB-2).
+
+## Execute path (mode=execution) — HB-5
+
+6. Execute **current phase only**; trước khi code phase, chạy verify gate (`implementation-discovery`); end with handoff update, not "bước tiếp theo?" footer. (Delegates to finish-to-completion).
 
 ## Phrase bank (recall)
 

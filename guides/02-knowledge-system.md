@@ -21,3 +21,36 @@ Trigger source of truth: `description` frontmatter mỗi skill — không duy tr
 ## Không auto-load
 
 Evidence, legacy, `archive/`, `05-generated/`, runtime mirrors.
+
+## Zones A–E (Phân vùng không nhiễu)
+
+- **ZONE A: always-load rules (manifest)**
+  `05-critical-thinking` | `10-execution` | `25-task-lifecycle` | `50-context-budget` | `16-context-style`
+  *Mục đích:* Quản lý workflow mode, lane, priority, các ranh giới cứng HB-1..5.
+- **ZONE B: lazy skills (trigger only)**
+  `plan-and-handoff` | `finish-to-completion` | `discovery` | `clean-code` | `code-review` | `researcher` | `5fedu-*`
+  *Mục đích:* Các procedure thực thi tải chậm, không trùng lặp rules.
+- **ZONE C: 5fedu template (domains — generic)**
+  `ui-delivery` | `module-mapping` | `surface` | `detail`
+  *Mục đích:* Tri thức ERP chung của template, không chứa execution routing.
+- **ZONE D: automation + audit**
+  `03-validate` | `audit-*` | CI | install scripts
+  *Mục đích:* Tự động hóa kiểm tra harness, không nạp vào session.
+- **ZONE E: repo project-local (NOT harness)**
+  `<project>/context/5fedu/project-local/`
+  *Mục đích:* Cấu hình, credentials, DDL đặc thù dự án; installer không bao giờ ghi đè.
+
+## Ma trận Trigger Phase (2 giai đoạn)
+
+| Context / Skill | Trước plan (DETECT) | Implement (EXECUTE / VERIFY) | Sau plan (REVIEW) | Ghi chú |
+|---|---|---|---|---|
+| `25-task-lifecycle` | Intake lane triage | — | — | Quy định lane hoạt động |
+| `05-critical-thinking` | Phân tích pushback | — | — | Chỉ khi ambiguous/high-risk |
+| `researcher` | Fact-finding | (khi stall) | — | Nghiên cứu nền tảng |
+| `implementation-discovery` | Verify assumptions | Known-unknowns | — | **Span cả hai pha** |
+| `5fedu-module-parity` | Mapping detect | Visual parity gate | Audit surface | **Span cả ba pha** |
+| `clean-code` | Smell detect | Hard-block check | Code quality review | **Cặp 2 pha** |
+| `plan-and-handoff` | — (tạo plan) | — | — | Pivot |
+| `finish-to-completion` | — | Thực thi locked scope | — | |
+| `code-review` | — | — | Review strict | User-invoked |
+| `context-evolution-protocol`| — | — | Post-friction evolve | Meta |

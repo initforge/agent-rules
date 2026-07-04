@@ -3,7 +3,7 @@
   "03-database-supabase.md": "domains/database.md (+ project-local/database-and-auth.md)",
   "04-auth-permissions-and-flows.md": "domains/permissions.md (+ project-local/database-and-auth.md)",
   "05-delivery-quality.md": "domains/ui-delivery.md",
-  "07-working-format.md": "domains/ui-delivery.md (+ legacy/working-format-legacy.md)",
+  "07-working-format.md": "domains/ui-delivery.md (+ domains/references/ui-delivery-detail.md)",
   "questions.md": "open-questions.md",
   "06-decision-status.md": "decisions.md (+ project-local/decisions.md)",
   "04-decision-status-and-backlog.md": "decisions.md (+ project-local/decisions.md)",

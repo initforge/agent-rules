@@ -1,9 +1,9 @@
 {
-  "slug": "nostime",
+  "project": "nostime",
   "displayName": "NOSTIME APP",
   "templateUrl": "https://github.com/admin5fedu/5f-template-ket-noi-supabase",
   "stack": "nextjs-legacy",
-  "excludePaths": [],
+  "excludePaths": ["project-local"],
   "overlayFrom": "archive/nostime",
   "installMetadata": {
     "project": "nostime",

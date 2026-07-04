@@ -5,6 +5,23 @@ description: Intake lane, risk gate, self-report trace, and advisory durable log
 
 # Task lifecycle
 
+## Workflow mode (infer first — before lane)
+
+| Mode | Typical signals | Deliverable | Code edits |
+|---|---|---|---|
+| `advisory` | explain, compare, Q&A | answer | no |
+| `plan-authoring` | survey, `/goal`, plan for Gemini/Flash/agent khác | plan + report | **no (HB-1)** |
+| `plan-review` | pasted `[Plan]` input, khảo sát, tìm hiểu kỹ | reviewed plan + gaps | **no until pivot (HB-1, HB-2)** |
+| `execution` | implement, fix, làm đi, execute; pivot phrase (HB-2) | code + verify | yes |
+
+**Hard boundaries (HB-1, HB-3):**
+- plan-authoring / plan-review → no working-repo source edits (read-only tools OK).
+- Pasted plan alone → default plan-review, not execution scope lock.
+
+**Pivot (HB-2):** switch to execution only on explicit pivot phrases (see `10-execution.md`).
+
+Lane (tiny/normal/high-risk) applies when mode=`execution` only.
+
 ## Intake and lane
 
 Classify non-trivial work into `tiny`, `normal`, or `high-risk`.
@@ -13,10 +30,16 @@ Risk flags (each that applies): auth; authorization; data model/migration; audit
 
 Hard gate → `high-risk`: auth; authorization; data loss/migration; audit/security; external provider; weakening validation.
 
+## File-count gate (hard)
+
+Scope chạm **≥2 distinct files** (create/modify/delete) trong deliverable → **cấm** lane `tiny`; tối thiểu `normal` (task dài).
+Scope **đúng 1 file** và không có hard gate high-risk → mới được `tiny`.
+Module mới: đếm cả file registry (`App.tsx`, sidebar, breadcrumbs, registry, module views) tại intake — không giảm xuống tiny.
+
 Lane behavior:
-- `tiny`: patch directly; quick checks; minimal trace.
-- `normal`: bounded validation; standard trace.
-- `high-risk`: pause if direction is ambiguous; strongest verification; detailed trace.
+- `tiny` (1 file only): patch trực buộc; quick hard-block check (N+1, secrets, async loading/error); skip plan/review ceremony; minimal trace. **Only when mode=`execution`.**
+- `normal` (≥2 files OR standard work): scope lock + `finish-to-completion` when mode=`execution`; discovery verify before code; bounded validation. `plan-and-handoff` when multi-phase execution or ambiguous — not every normal task. When mode is plan-only, lane n/a — prefer plan-and-handoff over finish.
+- `high-risk`: pause if ambiguous; `plan-and-handoff` bắt buộc before execute; `implementation-discovery`; strongest verification; optional `clean-code` smell detect; detailed trace.
 
 Mid-task unknown that is must-not-self-decide (credentials, schema/migration, permission rule, large destructive change) → `BLOCKED` and record blocker per `implementation-discovery` escape-hatch — do not guess.
 

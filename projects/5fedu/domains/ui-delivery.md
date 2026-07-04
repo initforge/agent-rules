@@ -48,6 +48,14 @@ Trong audit, tách control cùng tên nhưng khác **pattern**:
 - Form/drawer input: combobox/searchable combobox — không nhét filter chip vào form.
 - Richtext/popup trong form: modal/popover design system — không `prompt/alert/confirm` native nếu app đã có pattern.
 
+## Hybrid verification (local mandatory + production opt-in)
+
+Mọi thay đổi UI verify như hệ thống liên kết (toolbar, filter, list/detail/form/drawer, permission actions, responsive, export thật, cross-module sync).
+
+- **Local (mặc định bắt buộc):** lint/typecheck/build/tests phù hợp risk; interaction check (add drawer, row-click detail, form popup, filter/dropdown) — không chỉ mở route đọc text; desktop + mobile khi module có responsive.
+- **Production (opt-in):** chỉ khi owner yêu cầu deploy/production proof → vòng lặp sửa → push → đợi deploy → verify production + screenshot. Mặc định tuân `rules/30-context-routing.md` (browser opt-in).
+- Bằng chứng production: screenshot production; DOM chỉ hỗ trợ debug. Browser context mới hoặc bypass cache/PWA trước khi chụp.
+
 ## Chi tiết (lazy-load khi implement)
 
 - Surface hard gates + verify + navigation: `references/ui-delivery-detail.md`

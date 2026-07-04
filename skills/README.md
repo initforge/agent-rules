@@ -5,9 +5,10 @@
 
 | Slug | Khi nào |
 |---|---|
-| `plan-and-handoff` | Task dài, plan mode, nhiều phase |
-| `implementation-discovery` | Verify giả định plan vs repo/DB; known-unknowns lúc implement |
-| `finish-to-completion` | Thực thi scope đã khóa (không plan dài) |
+| `plan-and-handoff` | Plan-only OR multi-phase slice before execute |
+| `implementation-discovery` | Verify gate — read-only in plan-only modes; known-unknowns lúc implement |
+| `finish-to-completion` | Execution mode only — implement locked slice |
+| `clean-code` | Kiểm tra chất lượng mã sạch cuối pha execution |
 | `5fedu-project` | Setup/maintain context 5fedu |
 | `5fedu-module-parity` | Tạo/sửa/refactor module ERP — clone/audit vs Nhân viên template |
 | `researcher` | Cần research trước khi code |

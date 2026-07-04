@@ -1,4 +1,4 @@
-﻿---
+---
 name: researcher
 description: Use this skill when Codex needs structured research before coding or while a bug fix is stalled. Trigger for latest docs, release notes, changelog review, external platform behavior, codebase exploration, option comparison, source-backed decision support, or difficult bug fixes that need repo facts plus external documentation before another implementation attempt.
 ---
@@ -44,8 +44,8 @@ Expected sections:
 ## Effort
 
 Escalation:
-- use `planner` when the task becomes large architecture work
-- use `bugfixer` when the research is in service of an unresolved bug
+- use `plan-and-handoff` when the task becomes large architecture work
+- use `implementation-discovery` when the research is in service of an unresolved bug
 
 ## Related references
 

@@ -20,7 +20,7 @@ Core rules và skills **phải cùng hash** giữa Codex, Grok, Antigravity, Cur
 | Antigravity | `~/.gemini/config` | JSON `mcp_config.json` |
 | Cursor | `~/.cursor` | JSON `~/.cursor/mcp.json` |
 
-Adapters: `integrations/required/codebase-memory-mcp/adapters/<platform>.json`.
+Adapters: `integrations/required/codebase-memory-mcp/adapters/` (Codex adapter = `codex.toml`).
 
 ## Project pointers
 

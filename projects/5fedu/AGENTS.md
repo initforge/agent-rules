@@ -28,5 +28,5 @@ Khi user báo lệch/sai pattern: cùng flow trên + audit toàn surface.
 |---|---|---|
 | `domains/` | Rule theo domain (generic) | Ghi đè |
 | `project-local/` | **Dữ liệu dự án** — sheets, Supabase, spec chốt | **Không đụng** |
-| `project-overlay/` | Profile `nostime` — overlay template retail | Ghi đè (nostime) |
-| `evidence/`, `legacy/` | Không auto-load | Ghi đè nếu trong template |
+| `archive/nostime/` | Overlay template retail (profile nostime) | Ghi đè khi install nostime |
+| `evidence/` | Không auto-load — feedback/audit | Ghi đè nếu trong template |

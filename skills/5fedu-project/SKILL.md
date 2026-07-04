@@ -12,7 +12,7 @@ description: Scaffold or maintain 5fedu context in a real project repo. Use when
 - **Tah-app** — React/Vite, template `5f-template-ket-noi-supabase`
 - **nostime** — NOSTIME APP, Next.js legacy + overlay nostime
 
-Registry: `agent-rules/projects/known-5fedu-repos.md`.
+Registry: [known-5fedu-repos.md](../../projects/known-5fedu-repos.md).
 
 ## Nguồn đọc khi code
 

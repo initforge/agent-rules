@@ -17,6 +17,7 @@ $ContextParent = Split-Path -Parent $Target
 
 if (-not (Test-Path $Template)) { throw "Missing 5fedu template: $Template" }
 
+# [KEEP f856075] Run validation check first
 & (Join-Path $RepoRoot "automation\03-validate-context.ps1")
 if ($LASTEXITCODE -ne 0) { throw "validate-context failed — fix harness before 5fedu context install" }
 
@@ -119,9 +120,9 @@ Remove-StaleBackups -ParentDir $ContextParent
 
 New-Item -ItemType Directory -Force -Path $Target | Out-Null
 
-$Exclude = @("project-local")
+$Exclude = @()
 if ($ProfileConfig -and $ProfileConfig.excludePaths) {
-  $Exclude = @($Exclude + @($ProfileConfig.excludePaths) | Select-Object -Unique)
+  $Exclude = @($ProfileConfig.excludePaths)
 }
 
 $ManagedPaths = @()
@@ -131,8 +132,10 @@ Get-ChildItem $Template -Force | ForEach-Object {
   if ($Exclude -contains $Name) { return }
   $Dest = Join-Path $Target $Name
   if ($_.PSIsContainer) {
-    if (Test-Path $Dest) { Remove-Item -LiteralPath $Dest -Recurse -Force }
-    Copy-Item -LiteralPath $_.FullName -Destination $Target -Recurse -Force
+    if (-not (Test-Path $Dest)) { New-Item -ItemType Directory -Force -Path $Dest | Out-Null }
+    Get-ChildItem $_.FullName -Force | ForEach-Object {
+      Copy-Item -LiteralPath $_.FullName -Destination $Dest -Recurse -Force
+    }
     Get-ChildItem $Dest -Recurse -File | ForEach-Object {
       $ManagedPaths += $_.FullName.Substring($Target.Length + 1).Replace('\', '/')
     }
@@ -142,11 +145,24 @@ Get-ChildItem $Template -Force | ForEach-Object {
   }
 }
 
+# Ensure project-local stub exists in target repo (never overwrite existing)
+$PlDest = Join-Path $Target "project-local"
+if (-not (Test-Path $PlDest)) {
+  New-Item -ItemType Directory -Force -Path $PlDest | Out-Null
+  $Stub = Join-Path $Template "project-local\README.md"
+  if (Test-Path $Stub) {
+    Copy-Item $Stub (Join-Path $PlDest "README.md") -Force
+  }
+}
+
 if ($ProfileConfig -and $ProfileConfig.overlayFrom) {
   $OverlaySrc = Join-Path $Template ($ProfileConfig.overlayFrom -replace "/", "\")
   if (Test-Path $OverlaySrc) {
     $OverlayDest = Join-Path $Target "project-overlay"
-    Copy-Item -LiteralPath $OverlaySrc -Destination $OverlayDest -Recurse -Force
+    if (-not (Test-Path $OverlayDest)) { New-Item -ItemType Directory -Force -Path $OverlayDest | Out-Null }
+    Get-ChildItem $OverlaySrc -Force | ForEach-Object {
+      Copy-Item -LiteralPath $_.FullName -Destination $OverlayDest -Recurse -Force
+    }
     Get-ChildItem $OverlayDest -Recurse -File | ForEach-Object {
       $ManagedPaths += $_.FullName.Substring($Target.Length + 1).Replace('\', '/')
     }
@@ -175,7 +191,10 @@ $ManagedPaths += "install-metadata.md"
 Write-TemplateManagedManifest -ManagedPaths $ManagedPaths -TargetDir $Target
 
 Set-ProjectPointers
+
+# [KEEP f856075] Run sync project agents after installation
 & (Join-Path $PSScriptRoot "10-sync-project-agents.ps1") -ProjectRoot $Project -Profile $Profile
+
 Write-Host "Installed 5fedu context (no-wipe): $Target"
 Write-Host "Template files overwritten; project-local/ and other non-template paths preserved."
 Write-Host "Next: project facts in context/5fedu/project-local/ (not in agent-rules template)."

@@ -1,0 +1,11 @@
+name: Validate Context
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-powershell@v1
+      - run: pwsh -File automation/03-validate-context.ps1
+      - run: pwsh -File automation/01-build-runtime.ps1
+      - run: pwsh -File automation/04-verify-mirrors.ps1
