@@ -1,0 +1,81 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "__CODEX_HOME__/scripts/skill-gate.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "__CODEX_HOME__/scripts/skill-gate.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "run_terminal_command|Bash|Shell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "__CODEX_HOME__/scripts/skill-gate.sh",
+            "timeout": 8
+          }
+        ]
+      },
+      {
+        "matcher": "search_replace|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "__CODEX_HOME__/scripts/skill-gate.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "run_terminal_command|Bash|Shell|search_replace|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "__CODEX_HOME__/scripts/skill-gate.sh",
+            "timeout": 8
+          }
+        ]
+      },
+      {
+        "matcher": "search_replace|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "__CODEX_HOME__/scripts/audit-on-edit.sh",
+            "timeout": 6
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "__CODEX_HOME__/scripts/skill-gate.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

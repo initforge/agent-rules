@@ -94,6 +94,8 @@ Format cố định cho task UI/module 5fedu:
 
 Luôn ghi `Template reference` + lý do, `Production verification path`, `Verify by image` khi cần. Không viết chung chung "sửa theo template" — phải nêu module baseline và surface reuse.
 
+**Plan artifact (task dài / module mới):** dùng harness **PAF** — `skills/plan-and-handoff/references/plan-artifact-template.md`. Section 6 bên dưới = **execution report** (sau implement), map PAF: Mục tiêu→§1; Khảo sát→§3+§5b; Verification plan→§4 verify; Assumptions/Known-unknowns→§5.
+
 Chi tiết mapping module → template: `module-mapping.md`.
 
 ## Dự án Nostime

@@ -16,11 +16,21 @@ Load progressively:
 
 The `description` frontmatter of each capability is the trigger source of truth. Do not maintain a second handwritten trigger table. If multiple capabilities match, choose a primary capability and add only the minimum supporting set.
 
+## Mid-flow activation (trigger khi đang chạy flow — không nghẽn, không hiểu lầm)
+
+Trigger không chỉ ở đầu turn. Khi đang execute mà xuất hiện trigger mới (cần `implementation-discovery`, `researcher`, `clean-code`, `5fedu-module-parity`…):
+
+- **Re-entrant, bounded:** pause step hiện tại → chạy capability phụ trong phạm vi hẹp → quay lại đúng chỗ. KHÔNG bỏ `finish-to-completion` loop, KHÔNG reset scope lock.
+- **Một primary tại một thời điểm** + minimum supporting set; 2 trigger tranh nhau → theo thứ tự conflict `10-execution.md` §"When signals conflict".
+- **Cấm biến mid-flow thành re-plan toàn bộ.** Mid-flow chỉ bổ sung hiểu biết/kiểm chứng; thay đổi scope lớn → `REVISE` PAF (§9), không âm thầm mở rộng.
+- **Chống deadlock:** capability phụ fail/stall 2 lần → dừng phụ, ghi 1 dòng blocker, tiếp tục primary hoặc `BLOCKED` — không lặp vô hạn, không chờ trigger không bao giờ tới.
+- **Owner interjection giữa flow** (owner gửi yêu cầu mới khi đang chạy): phân loại lại mode/lane cho yêu cầu đó; nếu là mở rộng scope → REVISE, nếu là chỉ đạo nhỏ → nhận vào step hiện tại; không mất tiến độ đã có (`_progress.md`).
+
 ## Capability precedence (5fedu UI)
 
 When the active repo has `context/5fedu/` and the task matches UI/module triggers (làm module mới, thêm module, sửa module, refactor module, clone module, thêm chức năng, lệch, sai pattern, drawer, listview, toolbar, template, nhập hàng lệch):
 
-1. **Primary:** skill `5fedu-module-parity` → `context/5fedu/domains/ui-delivery.md` + `module-mapping.md` — not `frontend-architect`.
+1. **Primary:** skill `5fedu-module-parity` (router + hard stop) → **`module-mapping.md`** (checklist owner) → **`ui-delivery.md`** (surface/verify). Đọc tuần tự; không lặp checklist ở SKILL.
 2. **Cấm** dùng `frontend-architect` hoặc `master-image-generation` làm nguồn chính cho parity ERP hoặc tạo/sửa module.
 3. `frontend-architect` chỉ khi: branding/landing/redesign **ngoài** module shell ERP, và owner không yêu cầu đối chiếu template Nhân viên.
 

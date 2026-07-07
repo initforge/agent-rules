@@ -10,8 +10,8 @@ description: Intake lane, risk gate, self-report trace, and advisory durable log
 | Mode | Typical signals | Deliverable | Code edits |
 |---|---|---|---|
 | `advisory` | explain, compare, Q&A | answer | no |
-| `plan-authoring` | survey, `/goal`, plan for Gemini/Flash/agent khác | plan + report | **no (HB-1)** |
-| `plan-review` | pasted `[Plan]` input, khảo sát, tìm hiểu kỹ | reviewed plan + gaps | **no until pivot (HB-1, HB-2)** |
+| `plan-authoring` | survey, `/goal`, plan for agent khác | PAF artifact + report | **no (HB-1)** |
+| `plan-review` | pasted `[Plan]` input, review plan, phân tích plan | gap list + PAF patch hints | **no until pivot (HB-1, HB-2)** |
 | `execution` | implement, fix, làm đi, execute; pivot phrase (HB-2) | code + verify | yes |
 
 **Hard boundaries (HB-1, HB-3):**
@@ -21,6 +21,14 @@ description: Intake lane, risk gate, self-report trace, and advisory durable log
 **Pivot (HB-2):** switch to execution only on explicit pivot phrases (see `10-execution.md`).
 
 Lane (tiny/normal/high-risk) applies when mode=`execution` only.
+
+## Plan roles vs capability tier
+
+- **Roles:** Architect | Scribe | Reviewer | Executor | Research Analyst — skill + mode (see `plan-and-handoff`).
+- **Tiers L0/L1/L2:** weak-first execute default; `min_tier` per role/phase — details in `skills/plan-and-handoff/references/capability-tier-routing.md`.
+- **Weak-first:** execute phases prefer **L0** unless phase `min_tier` higher or owner `force_tier`.
+- **PAF format:** `skills/plan-and-handoff/references/plan-artifact-template.md`.
+- L0 models OK for Scribe + Executor; Architect/Reviewer deep work → `min_tier L1+`.
 
 ## Intake and lane
 
@@ -52,5 +60,7 @@ End task reports with: `Status` (PASS/PARTIAL/BLOCKED), `Lane`, files/layers cha
 After `normal` or `high-risk` tasks, append one JSON line to `<working-repo>/.agent/trace.jsonl`:
 
 `ts, lane, status, task_summary, files_changed, verification, friction`
+
+Optional when PAF workflow: `plan_id`, `phase`, `revision`, `tier_used`, `escalation_reason`
 
 `.agent/` is gitignored. This is advisory — not enforced from canonical. Repeated friction is a signal for `context-evolution-protocol` (human review only).

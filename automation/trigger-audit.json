@@ -135,7 +135,11 @@
     "keywords": ["thêm chức năng", "module-mapping", "ui-delivery"]
   },
   {
-    "phrase": "dọn dẹp clean code tối ưu",
+    "phrase": "chuẩn hóa PAF plan artifact",
+    "skill": "plan-and-handoff",
+    "keywords": ["PAF", "Scribe", "plan artifact"]
+  },
+  {
     "skill": "clean-code",
     "keywords": ["clean-code", "smell", "hard-block"]
   }

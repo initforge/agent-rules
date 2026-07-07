@@ -5,30 +5,18 @@ description: "5fedu ERP module UI parity — clone/adapt from Nhân viên/Phòng
 
 # 5fedu module parity
 
-**Ý đồ:** Mọi task tạo/sửa/refactor module ERP phải đối chiếu template **trước** khi code — không chờ user báo lệch.
+**Ý đồ:** Task tạo/sửa/refactor module ERP → đối chiếu template **trước** khi code — không chờ user báo lệch.
 
 ## Hard stop
 
-- Repo có `context/5fedu/` **và** task là module ERP → **dừng** `frontend-architect`, `master-image-generation`.
-- Đọc `context/5fedu/domains/module-mapping.md` + `ui-delivery.md`.
-- Nếu có `project-local/00-index.md` → đọc router dự án trước (spec/sheets đã chốt).
+- Có `context/5fedu/` + module ERP → **dừng** `frontend-architect`, `master-image-generation`.
+- Có `project-local/00-index.md` → đọc router dự án trước (spec/sheets đã chốt).
 
-## Gate CREATE (module mới)
+## Đọc theo thứ tự (một luồng)
 
-1. Tra `module-mapping.md` → chọn module tham chiếu (thường **Nhân viên**).
-2. Mở toàn bộ file module gốc trong app/template (không chỉ 1 file).
-3. Chạy **Clone checklist** trong `module-mapping.md` — đủ file trước khi viết logic nghiệp vụ.
-4. **Cấm** generic monolith (1 config page cho nhiều module).
-5. Ghi `Template reference` trong plan.
-
-## Gate EDIT (sửa module cũ)
-
-1. Tra mapping → module tham chiếu.
-2. Mở route template + route hiện tại — audit **mọi surface** (toolbar, drawer, filter, pagination, export, confirm).
-3. Chạy **Audit checklist** trong `module-mapping.md`.
-4. Sửa theo reference — không redesign tự do.
-
-Chi tiết mapping + checklist: `context/5fedu/domains/module-mapping.md`. Surface gates: `context/5fedu/domains/ui-delivery.md` + `context/5fedu/domains/references/ui-delivery-detail.md` (khi implement).
+1. **`context/5fedu/domains/module-mapping.md`** — chọn module tham chiếu; chạy **Clone checklist** (mới) hoặc **Audit checklist** (sửa). Checklist **chỉ** ở file này.
+2. **`context/5fedu/domains/ui-delivery.md`** — surface classification + verify gates khi implement hoặc user báo lệch pattern.
+3. **`context/5fedu/domains/references/ui-delivery-detail.md`** — lazy khi cần deep-dive surface.
 
 ## Report contract
 

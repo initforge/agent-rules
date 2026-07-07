@@ -1,0 +1,48 @@
+{
+  "skill-gate-preinvocation": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "python3 __ANTIGRAVITY_HOME__/scripts/antigravity-skill-gate.py PreInvocation",
+        "timeout": 15
+      }
+    ]
+  },
+  "skill-gate-pretooluse": {
+    "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 __ANTIGRAVITY_HOME__/scripts/antigravity-skill-gate.py PreToolUse",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "skill-gate-posttooluse": {
+    "PostToolUse": [
+      {
+        "matcher": "write_to_file|replace_file_content|multi_replace_file_content|run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 __ANTIGRAVITY_HOME__/scripts/antigravity-skill-gate.py PostToolUse",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  },
+  "skill-gate-stop": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "python3 __ANTIGRAVITY_HOME__/scripts/antigravity-skill-gate.py Stop",
+        "timeout": 20
+      }
+    ]
+  }
+}

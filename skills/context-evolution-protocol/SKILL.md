@@ -51,6 +51,22 @@ Classify every learning item before editing:
 
 If classification is unclear, keep it as `question` or `raw-evidence`; do not promote.
 
+## Placement decision (thêm ĐÚNG NƠI — domain rõ ràng)
+
+Chọn file đích theo bản chất, không theo tiện tay:
+
+| Nội dung | Layer / file đích | KHÔNG để ở |
+|---|---|---|
+| Workflow/lane/verify/boundary chung | `rules/**` (always-load) | skill, project |
+| Procedure lazy theo trigger | `skills/<slug>/SKILL.md` + `references/` | rules always-load |
+| Trigger/precedence | skill `description` frontmatter (source of truth) | bảng trigger viết tay |
+| Delta riêng 1 platform | `platforms/<name>/*-overlay.md` | rules chung |
+| Tri thức ERP chung | `projects/5fedu/` hoặc `context/5fedu/domains/` | rules global |
+| Cấu hình/credential/DDL 1 repo | `<repo>/context/5fedu/project-local/` | global, 5fedu-common |
+| Ví dụ/log/chat thô | `references/` hoặc `evidence/` (index-only) | file always-load |
+
+Quy tắc: **cùng một concept chỉ có MỘT nơi sở hữu**; nơi khác trỏ tới, không copy (chống drift/nhiễu).
+
 ## Promotion Gate
 
 Before promoting any lesson into living context, answer these checks:
@@ -76,6 +92,21 @@ Bad:
 
 Concrete examples are allowed only after the general rule and must be labeled as examples.
 
+## Cohesion gate (trước khi tách file)
+
+Hỏi trước khi split hoặc thêm reference bắt buộc:
+
+1. Các phần có **cùng một workflow** đọc liên tiếp không? → **Giữ 1 file**, gọn câu thay vì tách.
+2. Link chain >1 bước để hiểu hành động? → **Gộp lại** vào file sở hữu.
+3. Tách chỉ vì audit/`wc -l`? → **Cấm** (xem `16-context-style` §Liền mạch).
+4. Reference mới có thật sự hiếm load? → OK; nếu không → merge upstream.
+
+## Agent flexibility (behavior — không checklist máy móc)
+
+- Trigger skill/rule **theo signal**, không quét toàn bộ harness mỗi turn.
+- Auto-audit on edit: **WARN + gợi ý gộp**, không auto-split; oversize skill self-contained → note, không bắt tách trừ owner yêu cầu hoặc vượt token budget manifest.
+- Promotion: ưu tiên **sửa/gộp** rule cũ trước khi thêm file mới.
+
 ## Context Hygiene Checklist
 
 Before editing:
@@ -93,6 +124,33 @@ After editing:
 - Verify with repository validators and runtime/preflight checks.
 - Confirm no duplicate stale rule remains with conflicting wording.
 - Report touched layers and final `PASS`, `PARTIAL`, or `BLOCKED`.
+
+## Auto-audit on edit (BẮT BUỘC mỗi lần sửa context)
+
+Mọi lần sửa `rules/**`, `skills/**`, `AGENTS.md`, `platforms/**`, `projects/**`, overlay, GEMINI.md → **tự động** chạy 2 việc, không chờ owner nhắc:
+
+**1. Chuẩn hoá (correctness):**
+- Áp `16-context-style` (bullet ≤20 từ; cohesion trước số dòng; linh hoạt theo tình huống).
+- Đúng Placement (bảng trên); một concept một nơi.
+- `rg` tìm wording/synonym trùng → gộp, không để 2 bản mâu thuẫn.
+
+**2. Quét gãy gọn cấu trúc (structural tightness scan) — báo/sửa nếu phát hiện:**
+- **Oversize:** `wc -l` vs budget manifest — **rule** always-load vượt ~90 dòng → cân nhắc tách; **SKILL** >~350 dòng chỉ WARN nếu workflow vẫn liền mạch (cấm tách máy móc).
+- **Dead ref:** path/@import/link trỏ file không tồn tại (đặc biệt path Windows `C:\`, tên file drift).
+- **Drift mirror:** canonical vs `~/.codex`,`~/.gemini/config`,`~/.grok`,`~/.cursor` lệch nhau.
+- **Overlap:** rule mới trùng chức năng rule cũ → merge về single source, nơi khác trỏ tới.
+- **Trigger sanity:** skill body không mâu thuẫn `description`; trigger không quá rộng (precision).
+
+**Verify command (fallback không cần pwsh):**
+```bash
+# oversize + dead windows path + duplicate marker nhanh
+wc -l <file đã sửa>
+rg -n "C:\\\\Users" <thư mục runtime>        # phải rỗng
+rg -n "<khái niệm vừa thêm>" rules skills     # kỳ vọng 1 nơi sở hữu
+```
+Đủ pwsh → thêm `pwsh automation/03-validate-context.ps1` + `10-audit-harness-health.ps1`.
+
+**Chốt:** không báo `PASS` cho task sửa context nếu chưa chạy Auto-audit on edit. Đây là automation behavior mặc định, không phải bước tuỳ chọn.
 
 ## Output Contract
 

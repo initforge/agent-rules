@@ -23,3 +23,4 @@ Research should end with:
 - a recommendation
 - a risk summary
 - the next action
+- **Hand to Plan Architect** — items for PAF §5 (see `plan-and-handoff/references/plan-artifact-template.md`)

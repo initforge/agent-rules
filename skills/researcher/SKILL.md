@@ -1,53 +1,54 @@
 ---
 name: researcher
-description: Use this skill when Codex needs structured research before coding or while a bug fix is stalled. Trigger for latest docs, release notes, changelog review, external platform behavior, codebase exploration, option comparison, source-backed decision support, or difficult bug fixes that need repo facts plus external documentation before another implementation attempt.
+description: Use this skill when Codex needs structured research before coding or while a bug fix is stalled. Trigger for latest docs, release notes, changelog review, external platform behavior, codebase exploration, option comparison, source-backed decision support, or difficult bug fixes that need repo facts plus external documentation before another implementation attempt. Do NOT use when user wants a phased implementation plan — use plan-and-handoff Plan Architect instead.
 ---
 
 # Researcher
 
-Researcher is the primary research layer inside Codex.
-
-Use it to gather facts, compare options, and write a reusable research note before implementation.
+Research layer — facts, compare options, research note **before** implementation plan or code.
 
 ## Trigger
 
-Use this skill when:
-- the user asks to research or compare
+Use when:
+- user asks to research or compare
 - latest docs or platform behavior matters
-- a bug keeps looping without resolution
-- external platform documentation must be read
-- architecture or impact is unclear
-- a decision needs evidence before coding
+- bug loops without resolution
+- decision needs evidence before coding
 
-Do not use it for:
-- tiny local edits
-- direct implementation with obvious context
-- final code patch ownership
+Do NOT use when:
+- user wants phased plan / PAF → `plan-and-handoff` path A
+- tiny local edit with obvious context
+- final code patch ownership (hand off after note)
 
 ## Research order
 
 1. `rg` and targeted local reads
-2. Codebase Memory MCP when usable for graph/impact/process context
+2. Codebase Memory MCP when usable
 3. `web` for latest or external facts
+
+**Antigravity:** preferred platform for web/browser research when available.
 
 ## Output contract
 
-Write a note under `<working-repo>/.agent/research/<topic>.md` (gitignored).
+Write `<working-repo>/.agent/research/<topic>.md` (gitignored):
 
-Expected sections:
 - Summary
 - Evidence
 - Risks
 - Recommendation
 - Unknowns
 
-## Effort
+End with **Hand to Plan Architect** — list items for PAF §5 (Assumptions / Known-unknowns). Research does **not** set execute tier — Architect assigns per phase.
 
-Escalation:
-- use `plan-and-handoff` when the task becomes large architecture work
-- use `implementation-discovery` when the research is in service of an unresolved bug
+## Do NOT load
 
-## Related references
+`5fedu-module-parity`, `ui-delivery` unless research topic is ERP module UI parity.
 
-Read:
-- `references/usage.md`
+## Escalation
+
+- Large architecture → `plan-and-handoff` Architect after research
+- Unresolved bug → `implementation-discovery` when implementing
+
+## Related
+
+- [`references/usage.md`](references/usage.md)

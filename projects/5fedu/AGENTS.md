@@ -22,6 +22,8 @@ Layout cũ (`00-index.md` ở root): hợp lệ nếu chưa migrate — đọc `
 
 Khi user báo lệch/sai pattern: cùng flow trên + audit toàn surface.
 
+Task dài / module mới: **PAF** + phase execute — `skills/plan-and-handoff/references/plan-artifact-template.md` (tier routing: `references/capability-tier-routing.md`).
+
 ## Cấu trúc (sau cài)
 
 | Thư mục | Vai trò | Installer |

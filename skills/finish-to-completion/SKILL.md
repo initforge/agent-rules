@@ -65,6 +65,8 @@ Trước `PASS`:
 
 Không evidence → không `PASS`. Không "should work".
 
+**AC-gate (≥3 AC hoặc PAF phase):** format + luật hard → [`references/completion-ledger.md`](references/completion-ledger.md) (single source). Trước `PASS`: grep ledger còn `[ ]` → continue working.
+
 ## Banned Patterns (hard fail)
 
 **Never end with:**

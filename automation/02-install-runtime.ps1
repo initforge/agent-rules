@@ -138,3 +138,11 @@ foreach ($Name in $Selected) {
 }
 
 & (Join-Path $PSScriptRoot "09-doctor.ps1") -Root $Root -Platform $Platform
+
+$HooksScript = Join-Path $PSScriptRoot "11-install-runtime-hooks.sh"
+if ((Get-Command bash -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath $HooksScript)) {
+  Write-Host "Installing runtime hooks (Codex/Antigravity/Grok/pre-commit)..."
+  & bash $HooksScript
+} else {
+  Write-Host "Skip runtime hooks: bash or 11-install-runtime-hooks.sh missing — chạy thủ công sau install."
+}

@@ -58,6 +58,29 @@ if (Test-Path $UiAudit) {
   }
 }
 
+# H1b: plan artifact audit
+$PlanAudit = Join-Path $Root "automation\audit-plan-artifact.ps1"
+if (Test-Path $PlanAudit) {
+  $PlanProblems = @()
+  try {
+    & $PlanAudit -Root $Root -RunId $RunId 2>&1 | ForEach-Object { $PlanProblems += "$_" }
+  } catch {
+    $PlanProblems += $_.Exception.Message
+  }
+  if ($LASTEXITCODE -ne 0 -and $PlanProblems.Count -eq 0) {
+    $PlanProblems += "plan-artifact audit exit $LASTEXITCODE"
+  }
+  Write-DebugLog "H1b" "audit-harness-health.ps1:plan-artifact" "plan-artifact-exit" @{
+    exitCode = $LASTEXITCODE
+    problems = @($PlanProblems)
+  }
+  if ($LASTEXITCODE -ne 0) {
+    foreach ($P in $PlanProblems) {
+      Add-Finding "workflow" "plan-artifact-audit" "fail" $P "H1b"
+    }
+  }
+}
+
 # H2: keyword gap ui-delivery
 $UiPath = Join-Path $Root "projects\5fedu\domains\ui-delivery.md"
 if (Test-Path $UiPath) {

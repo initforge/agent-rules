@@ -11,3 +11,4 @@ description: Cursor-specific runtime delta for agent-rules harness.
 - Rules nạp từ `~/.cursor/rules/` sau khi chạy `automation/02-install-runtime.ps1 -Platform cursor`.
 - Skills nạp từ `~/.cursor/skills/` (slug phẳng, không lớp category).
 - Không reverse-sync runtime skills/rules về canonical trừ qua `automation/07-import-reviewed-changes.ps1` đã review.
+- Plan artifacts: `.cursor/plans/` or in-chat **PAF** per `skills/plan-and-handoff/references/plan-artifact-template.md`; tier routing in `references/capability-tier-routing.md`.

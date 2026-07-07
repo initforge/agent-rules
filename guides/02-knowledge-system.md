@@ -46,11 +46,16 @@ Evidence, legacy, `archive/`, `05-generated/`, runtime mirrors.
 |---|---|---|---|---|
 | `25-task-lifecycle` | Intake lane triage | — | — | Quy định lane hoạt động |
 | `05-critical-thinking` | Phân tích pushback | — | — | Chỉ khi ambiguous/high-risk |
-| `researcher` | Fact-finding | (khi stall) | — | Nghiên cứu nền tảng |
+| `researcher` | Research Analyst (L0+) | (khi stall) | — | Web/docs; hand off → Architect |
 | `implementation-discovery` | Verify assumptions | Known-unknowns | — | **Span cả hai pha** |
 | `5fedu-module-parity` | Mapping detect | Visual parity gate | Audit surface | **Span cả ba pha** |
 | `clean-code` | Smell detect | Hard-block check | Code quality review | **Cặp 2 pha** |
-| `plan-and-handoff` | — (tạo plan) | — | — | Pivot |
+| `plan-and-handoff` A | Plan Architect (L1+) | — | — | PAF READY |
+| `plan-and-handoff` B | Plan Scribe (L0) | — | — | Normalize spec |
+| `plan-and-handoff` D | — | — | Plan Reviewer (L1+) | Gap list |
+| `plan-and-handoff` C | — | Executor (prefer L0) | — | Pivot → finish-to-completion |
 | `finish-to-completion` | — | Thực thi locked scope | — | |
 | `code-review` | — | — | Review strict | User-invoked |
 | `context-evolution-protocol`| — | — | Post-friction evolve | Meta |
+
+**Dedup:** Zone B skills không duplicate Zone A workflow rules. PAF template lazy-only trong `plan-and-handoff/references/`. `00-context-map` = project router; `30-context-routing` = global skill precedence — không merge.

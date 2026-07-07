@@ -21,7 +21,8 @@ Template: `https://github.com/admin5fedu/5f-template-ket-noi-supabase` (React/Vi
 | **Độ rộng cột listview** | **Nhân viên** + `TABLE_COLUMN_PRESETS` | `minWidth`/`maxWidth` + `truncate` theo nội dung thực tế |
 | **In hồ sơ / preview PDF** | **Nhân viên** (`openEmployeeProfilePreviewTab` → `/ho-so-nhan-vien/:id`) | jsPDF + `window.print()`; letterhead từ `useUIStore.companyInfo` |
 | **Cấu hình 1 dòng (settings)** | **Thông tin công ty** | Logo, MST, địa chỉ — nguồn letterhead in hồ sơ; service read phải fallback mock khi thiếu bảng DB |
-| **Module thống kê standalone** | **Thống kê tồn kho** (`thong-ke-ton-kho`) | Route + sidebar riêng, không phải tab trong CRUD |
+| **Module thống kê standalone** | Tab stats **Nhân viên** (route riêng) | Route + sidebar riêng, không tab CRUD |
+| **Row actions list (master-detail / phiếu)** | **Nhân viên** (`employee-table-row-actions.tsx`) | Primary **Sửa** + ⋮ thao tác phụ (in, liên hệ, xóa). **Không** nút *Xem chi tiết* — mở detail bằng click hàng. Overflow mirror **DetailToolbar** (prominent), không duplicate nút chỉ có ở drawer footer |
 
 ## Bảng mapping — template ERP chuẩn (5f-template)
 
@@ -48,6 +49,16 @@ Template: `https://github.com/admin5fedu/5f-template-ket-noi-supabase` (React/Vi
 | Báo cáo P&L / tài chính | Tài chính | Tab stats Nhân viên | So sánh cột kỳ |
 
 *Dòng có nghiệp vụ đặc thù dự án (vd Nostime luxury retail) → bổ sung từ spec riêng, không đoán.*
+
+## Taxonomy admin — phân hệ / group / module
+
+| Cấp | Ý nghĩa | Nguồn |
+|-----|---------|-------|
+| **Phân hệ** | Tab dashboard | `sidebar-menu.tsx` → Website, Hành chính, Kinh doanh, Tài chính, Hệ thống |
+| **Group module** | Nhóm card | `groups[].groupTitle` (vd. *Quản lý bán hàng*, *Tồn kho & Kho vận*) |
+| **Module** | Card / route | `groups[].items[]` |
+
+Ma trận phân quyền mirror cùng cấu trúc — xem `permissions.md`. Folder `src/features/kho-van/` **không** phải phân hệ UI.
 
 ## Mapping Nostime (riêng dự án)
 
@@ -87,7 +98,7 @@ spec → submenu → module → view → tab → route → Breadcrumbs.tsx getRo
 ## Audit checklist (sửa module cũ)
 
 - Tra mapping → module tham chiếu
-- Mở route template + route hiện tại — audit **mọi surface**
+- Mở route template + route hiện tại — đối chiếu bằng mắt, audit **mọi surface**
 - Toolbar, filter chip, search, column toggle, pagination, export
 - Form drawer + detail drawer (cặp reference)
 - Confirm xóa (`useConfirmStore`)
@@ -97,13 +108,8 @@ spec → submenu → module → view → tab → route → Breadcrumbs.tsx getRo
 - Sync sidebar/breadcrumb/registry nếu đổi route
 - Ghi `Template reference` trong plan trước khi sửa
 
-## Hành động bắt buộc khi báo lệch
+## Hành động khi báo lệch
 
-1. Tra bảng → chọn module tham chiếu
-2. Mở route/file template + route/file hiện tại
-3. Đối chiếu bằng mắt (toolbar, drawer, filter, pagination, export)
-4. Ghi `Template reference` trong plan trước khi sửa
+Chạy **Audit checklist** (trên) + §Surface classification tại `ui-delivery.md` — không redesign tự do.
 
-Cập nhật bảng khi owner gửi ảnh/Sheet — không đoán hàng/cột thiếu.
-
-Chi tiết surfaces: `ui-delivery.md`.
+Cập nhật bảng mapping khi owner gửi ảnh/Sheet — không đoán hàng/cột thiếu.

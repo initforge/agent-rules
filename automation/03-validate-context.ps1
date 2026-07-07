@@ -54,6 +54,8 @@ $RequiredPaths = @(
   "rules\16-context-style.md",
   "rules\25-task-lifecycle.md",
   "skills\plan-and-handoff\SKILL.md"
+  "skills\plan-and-handoff\references\plan-artifact-template.md"
+  "skills\plan-and-handoff\references\capability-tier-routing.md"
 )
 foreach ($Path in $RequiredPaths) {
   if (-not (Test-Path (Join-Path $Root $Path))) { $Problems.Add("Missing required path: $Path") }
@@ -151,6 +153,20 @@ if (Test-Path $UiRoutingAudit) {
   }
 } else {
   $Problems.Add("Missing UI routing audit: automation/audit-ui-routing.ps1")
+}
+
+$PlanArtifactAudit = Join-Path $Root "automation\audit-plan-artifact.ps1"
+if (Test-Path $PlanArtifactAudit) {
+  try {
+    & $PlanArtifactAudit -Root $Root -RunId validate-context 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+      $Problems.Add("Plan artifact audit failed - run automation/audit-plan-artifact.ps1")
+    }
+  } catch {
+    $Problems.Add("Plan artifact audit crashed - error: $_")
+  }
+} else {
+  $Problems.Add("Missing plan artifact audit: automation/audit-plan-artifact.ps1")
 }
 
 if (Test-Path (Join-Path $Root ".agents")) { $Problems.Add("Project mirror exists: .agents") }

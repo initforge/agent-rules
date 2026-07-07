@@ -5,18 +5,15 @@
 
 ## Quick gate (đọc trước)
 
-- Task **sửa module** cũ hoặc **tạo mới** module ERP → đọc Clone/Audit checklist trong `module-mapping.md` trước khi code.
-- User báo lệch/sai **pattern** → **không** dùng `frontend-architect`; audit **parity** toàn surface.
-- Tra `module-mapping.md` → chọn Nhân viên / Phòng ban / Chức vụ.
-- Mở route template + route hiện tại → đối chiếu bằng mắt → mới sửa.
-- Audit **tất cả** surface module (toolbar, **drawer**, filter chip, pagination, detail footer).
-- **Cấm generic** hóa module — mỗi feature có file view/table/form/service riêng.
-- PASS cần `Template reference` + verification evidence trong report.
+- **Tạo mới / sửa module:** chạy checklist tại `module-mapping.md` §Clone / §Audit — không lặp checklist ở đây.
+- **User báo lệch/sai pattern:** audit **toàn surface** theo §Surface classification — **không** `frontend-architect`.
+- PASS cần `Template reference` + verification evidence.
 
 ## Core UI source of truth
 
 - Template/current app là source of truth bắt buộc.
 - Không tự chế pattern mới nếu đã có pattern sống trong template/app.
+- **Cấm generic** monolith — file list theo `module-mapping.md` §Clone checklist.
 - Không lấy module đang lỗi hoặc module clone sai làm chuẩn ngược lại.
 - Trước khi code UI/module, phải xác định reference đúng theo surface/behavior — tra `module-mapping.md`.
 - Agent phải mở và đối chiếu bằng mắt trước khi code task UI dài, không làm theo trí nhớ.

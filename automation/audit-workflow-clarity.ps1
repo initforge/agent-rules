@@ -80,6 +80,22 @@ $checks = @(
     name     = "normal_no_mandatory_plan"
     files    = @("rules/25-task-lifecycle.md")
     patterns = @("not every normal task")
+  },
+  @{
+    name     = "plan_tier_routing"
+    files    = @("rules/25-task-lifecycle.md", "skills/plan-and-handoff/references/capability-tier-routing.md")
+    patterns = @("Weak-first", "L0")
+    anyFile  = $true
+  },
+  @{
+    name     = "paf_template"
+    files    = @("skills/plan-and-handoff/references/plan-artifact-template.md")
+    patterns = @("HANDOFF", "preferred_tier", "min_tier")
+  },
+  @{
+    name     = "plan_paths_ad"
+    files    = @("skills/plan-and-handoff/SKILL.md")
+    patterns = @("Path A", "Path D", "decision tree")
   }
 )
 
