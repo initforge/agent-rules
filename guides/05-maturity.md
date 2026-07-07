@@ -31,10 +31,13 @@ Criteria (advisory, target repo):
 Criteria (structural):
 - M2 pass
 - `context-evolution-protocol` references `.agent/trace.jsonl` as friction signal source
+- `rules/26-slice-completion-gate.md` in manifest load_order
+- `skills/finish-to-completion/references/slice-gate-protocol.md` present
 
 Criteria (advisory):
 - Repeated friction in trace log leads to reviewed promotion (human gate)
 - No stale `plans/` references in canonical docs
+- Repos with multi-phase execution use `.agent/ledger/` with verify cmd per AC (SGP §11)
 
 ## How to check
 

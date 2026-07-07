@@ -25,6 +25,10 @@ Skill activated: finish-to-completion
 
 HB-4: scope ≥2 files → lane tối thiểu `normal` (không `tiny`); **không** bắt buộc `plan-and-handoff`. Task dài/multi-phase chưa cắt slice → `plan-and-handoff` trước execution.
 
+## Step 0 — Slice Gate (trước Turn-0)
+
+Khi ≥3 AC, PAF phase, Path E, hoặc HANDOFF slice → đọc **bắt buộc** [`references/slice-gate-protocol.md`](references/slice-gate-protocol.md) và chạy Gates A–D. Bỏ qua với `tiny` (<3 AC, 1 file).
+
 ## Baseline
 
 Một task được giao = một cam kết **đóng scope**. Partial handoff là output hỏng.
@@ -65,7 +69,7 @@ Trước `PASS`:
 
 Không evidence → không `PASS`. Không "should work".
 
-**AC-gate (≥3 AC hoặc PAF phase):** format + luật hard → [`references/completion-ledger.md`](references/completion-ledger.md) (single source). Trước `PASS`: grep ledger còn `[ ]` → continue working.
+**AC-gate (≥3 AC hoặc PAF phase):** operational contract → [`references/slice-gate-protocol.md`](references/slice-gate-protocol.md); AC format → [`references/completion-ledger.md`](references/completion-ledger.md). Trước `PASS`: Gate D machine checks — ledger còn `[ ]` → continue working.
 
 ## Banned Patterns (hard fail)
 

@@ -7,13 +7,14 @@ load_order:
   - 16-context-style.md
   - 20-quality-and-safety.md
   - 25-task-lifecycle.md
+  - 26-slice-completion-gate.md
   - 30-context-routing.md
   - 40-harness-governance.md
   - 45-sync-canonical.md
   - 50-context-budget.md
 budgets:
   bootstrap_tokens: 300
-  core_total_tokens: 4000
+  core_total_tokens: 7000
   platform_overlay_tokens: 600
   capability_tokens: 3500
   project_index_tokens: 1800

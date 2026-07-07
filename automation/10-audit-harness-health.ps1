@@ -228,6 +228,65 @@ Write-DebugLog "H10" "audit-harness-health.ps1:validate" "validate-context-exit"
   output = @($ValOut)
 }
 
+# H11: Slice Gate Protocol wiring
+$Rule26Path = Join-Path $Root "rules\26-slice-completion-gate.md"
+$SgpPath = Join-Path $Root "skills\finish-to-completion\references\slice-gate-protocol.md"
+$FtcSkillPath = Join-Path $Root "skills\finish-to-completion\SKILL.md"
+$ManifestPath = Join-Path $Root "rules\manifest.yaml"
+$H11Problems = @()
+if (-not (Test-Path $Rule26Path)) {
+  $H11Problems += "missing rules/26-slice-completion-gate.md"
+}
+if (-not (Test-Path $SgpPath)) {
+  $H11Problems += "missing skills/finish-to-completion/references/slice-gate-protocol.md"
+}
+if (Test-Path $ManifestPath) {
+  $ManifestBody = Get-Content -Raw -Encoding UTF8 $ManifestPath
+  if ($ManifestBody -notmatch "26-slice-completion-gate\.md") {
+    $H11Problems += "rules/manifest.yaml load_order missing 26-slice-completion-gate.md"
+  }
+} else {
+  $H11Problems += "missing rules/manifest.yaml"
+}
+if (Test-Path $FtcSkillPath) {
+  $FtcBody = Get-Content -Raw -Encoding UTF8 $FtcSkillPath
+  if ($FtcBody -notlike "*slice-gate-protocol*") {
+    $H11Problems += "finish-to-completion/SKILL.md missing slice-gate-protocol reference"
+  }
+} else {
+  $H11Problems += "missing skills/finish-to-completion/SKILL.md"
+}
+if (Test-Path $Rule26Path) {
+  $Rule26Body = Get-Content -Raw -Encoding UTF8 $Rule26Path
+  if ($Rule26Body -notlike "*slice-gate-protocol*") {
+    $H11Problems += "rules/26-slice-completion-gate.md missing slice-gate-protocol pointer"
+  }
+}
+$PahSkillPath = Join-Path $Root "skills\plan-and-handoff\SKILL.md"
+if (Test-Path $PahSkillPath) {
+  $PahBody = Get-Content -Raw -Encoding UTF8 $PahSkillPath
+  if ($PahBody -notlike "*slice-gate-protocol*") {
+    $H11Problems += "plan-and-handoff/SKILL.md missing slice-gate-protocol reference"
+  }
+} else {
+  $H11Problems += "missing skills/plan-and-handoff/SKILL.md"
+}
+$ClPath = Join-Path $Root "skills\finish-to-completion\references\completion-ledger.md"
+if (Test-Path $ClPath) {
+  $ClBody = Get-Content -Raw -Encoding UTF8 $ClPath
+  if ($ClBody -notlike "*slice-gate-protocol*") {
+    $H11Problems += "completion-ledger.md missing slice-gate-protocol reference"
+  }
+} else {
+  $H11Problems += "missing skills/finish-to-completion/references/completion-ledger.md"
+}
+Write-DebugLog "H11" "audit-harness-health.ps1:slice-gate" "sgp-wiring" @{
+  problems = @($H11Problems)
+}
+foreach ($P in $H11Problems) {
+  Add-Finding "workflow" "slice-gate-protocol" "fail" $P "H11"
+}
+
 Write-DebugLog "summary" "audit-harness-health.ps1:end" "findings-summary" @{
   findingCount = $Findings.Count
   byCategory = ($Findings | Group-Object category | ForEach-Object { @{ $_.Name = $_.Count } })

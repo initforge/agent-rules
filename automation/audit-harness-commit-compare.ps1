@@ -98,7 +98,7 @@ foreach ($name in $checks.Keys) {
 foreach ($label in @{ base = $Base; mid = $Mid; new = $New }.GetEnumerator()) {
   $chars = 0
   $manifest = Get-GitFile -Commit $label.Value -Path "rules/manifest.yaml"
-  if ($manifest -match '(?ms)load_order:\s*\r?\n(.*?)(?=\r?\n\w+:|$)') {
+  if ($manifest -match '(?s)load_order:\s*\r?\n((?:[ \t]+-\s+\S+\r?\n)+)') {
     foreach ($line in ($Matches[1] -split "`n")) {
       if ($line -match '-\s*(\S+)') {
         $f = Get-GitFile -Commit $label.Value -Path ("rules/" + $Matches[1])
@@ -107,8 +107,10 @@ foreach ($label in @{ base = $Base; mid = $Mid; new = $New }.GetEnumerator()) {
     }
   }
   $tokens = [math]::Ceiling($chars / 3.6)
+  $budgetLimit = 7000
+  if ($manifest -match 'core_total_tokens:\s*(\d+)') { $budgetLimit = [int]$Matches[1] }
   Write-AuditLog -HypothesisId "H2" -Location "audit:token-budget" -Message "Core always-load token estimate" -Data @{
-    commit = $label.Value; coreChars = $chars; coreTokensEst = $tokens; budgetLimit = 4000
+    commit = $label.Value; coreChars = $chars; coreTokensEst = $tokens; budgetLimit = $budgetLimit
   }
 }
 

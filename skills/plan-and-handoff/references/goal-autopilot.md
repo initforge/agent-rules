@@ -1,6 +1,6 @@
 # /goal Autopilot — plan tự sinh + execute tự lái (unattended)
 
-**Single entry map:** `/goal` + unattended + Antigravity artifact → **file này** (Phần 1–5). PAF template → `plan-artifact-template.md`. AC ledger format → `finish-to-completion/references/completion-ledger.md`. Execute loop hard gates → `finish-to-completion/SKILL.md`. Skill routing → `plan-and-handoff/SKILL.md` (paths only, không lặp prose).
+**Single entry map:** `/goal` + unattended + Antigravity artifact → **file này** (Phần 1–5). PAF template → `plan-artifact-template.md`. AC ledger format → `finish-to-completion/references/completion-ledger.md`. Execute loop hard gates → `finish-to-completion/SKILL.md` + Path E procedure → `finish-to-completion/references/slice-gate-protocol.md` §8. Skill routing → `plan-and-handoff/SKILL.md` (paths only, không lặp prose).
 
 **Ý đồ:** Owner gõ **`/goal <yêu cầu>`** một lần → agent tự: khảo sát repo → đẻ PAF hoàn chỉnh (self-QA loop tới khi §7 pass) → execute từng phase nguyên tử theo vòng lặp verify → chỉ dừng khi DONE hoặc BLOCKED thật. Tối ưu cho **antigravity/Flash chạy treo máy**.
 

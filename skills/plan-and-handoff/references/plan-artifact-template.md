@@ -171,6 +171,7 @@ handoff_out:
 - **HB-4:** ≥2 files → no `tiny` lane
 - **5fedu UI:** mở template route trước first edit
 - **finish-to-completion:** PASS only when N/N deliverables + verify
+- **slice-gate-protocol:** execute pivot → SGP Gates A–D PASS trước khi HANDOFF báo done
 - **Report (5fedu UI):** Template reference | Pattern fidelity | Verification | Status
 
 ---
@@ -201,7 +202,9 @@ Plan **READY** chỉ khi tất cả PASS:
 ---
 HANDOFF — paste vào session execute
 Plan ID: ...
-Execute: Phase P_N ONLY
+Slice ID: <slice-id>
+Ledger path: .agent/ledger/<slice-id>.md
+Execute: Phase P_N ONLY (or Slice <id> ONLY)
 Pivot: "làm đi phase P_N"
 preferred_tier: L0
 min_tier: ...
@@ -211,7 +214,7 @@ Context files: [...]
 Template reference: Nhân viên @ [paths]
 Verify: npm run lint && npm run typecheck
 Forbidden: scope creep, next phase without pivot
-Report: Template reference | Pattern fidelity | Verification | Status | tier_used
+Report: Template reference | Pattern fidelity | Verification | Status | tier_used | Ledger: <path> | Slice: <id> | Open AC: 0
 ---
 ```
 

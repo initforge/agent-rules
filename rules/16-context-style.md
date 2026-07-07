@@ -21,7 +21,7 @@ Nguyên tắc gốc: **đủ ngắn để đọc 1 lần hiểu ngay, đủ dài
 - **1 bullet = 1 ý**, bắt đầu bằng động từ imperative, ≤ ~20 từ. Cần giải thích dài → xuống `references/` (deep-dive hiếm load).
 - **`rules/**` always-load:** 1 concept/file, mục tiêu ≤ ~40 dòng / ≤ ~300 từ. Vượt → gộp câu hoặc đẩy reference — **không** áp ngưỡng này cho skill (skill: §Liền mạch).
 - **Mở file bằng Hard gates / Hành động bắt buộc** (3–7 bullet); ví dụ/lý do/edge để cuối hoặc reference.
-- **Token budget là ràng buộc cứng** — single source `rules/manifest.yaml` (core 4000, overlay 600, skill 3500). Không nhân bản số ở nơi khác.
+- **Token budget là ràng buộc cứng** — single source `rules/manifest.yaml` budgets section. Không nhân bản số ở nơi khác.
 - **Delete-first khi bổ sung:** trước khi THÊM, hỏi "gộp/thay câu cũ được không?". Thêm mới chỉ khi không rule nào cover (promotion gate `context-evolution-protocol`).
 - **Không văn xuôi trong always-load/router:** bảng hoặc bullet; cấm đoạn giải thích dông dài.
 - **Đánh thẳng vấn đề:** nêu hành động + điều kiện trigger, không kể bối cảnh.

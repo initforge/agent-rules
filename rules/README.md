@@ -12,6 +12,7 @@
 | `16-context-style.md` | Style context sống (bullet, anti-drift) |
 | `20-quality-and-safety.md` | Chất lượng |
 | `25-task-lifecycle.md` | Intake lane + trace |
+| `26-slice-completion-gate.md` | Slice gate hard enforcement |
 | `30-context-routing.md` | Lazy-load |
 | `40-harness-governance.md` | Sửa harness |
 | `45-sync-canonical.md` | Sync 2 chiều |

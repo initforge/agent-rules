@@ -56,5 +56,6 @@ Sau khi chạy verify, điền evidence + tick:
 
 ## Liên kết
 
+- Operational contract (Gates A–D): `finish-to-completion/references/slice-gate-protocol.md`.
 - Enforcement: `finish-to-completion/SKILL.md` §Verify Before Claim.
 - Tier ghi trong ledger khớp phase `tier_used` của PAF (`plan-and-handoff/references/capability-tier-routing.md`).

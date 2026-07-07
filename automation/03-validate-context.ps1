@@ -9,7 +9,7 @@ if ($BudgetYaml -match "core_total_tokens:\s*(\d+)") { $CoreBudget = [int]$Match
 
 $ManifestContent = if (Test-Path $ManifestPath) { Get-Content -Raw $ManifestPath } else { "" }
 $LoadOrderFiles = [System.Collections.Generic.List[string]]::new()
-if ($ManifestContent -match "(?ms)load_order:\s*\r?\n(.*?)(?=\r?\n\w+:|$)") {
+if ($ManifestContent -match '(?s)load_order:\s*\r?\n((?:[ \t]+-\s+\S+\r?\n)+)') {
   $Block = $Matches[1]
   foreach ($Line in ($Block -split "`n")) {
     if ($Line -match "-\s*(\S+)") { $LoadOrderFiles.Add($Matches[1]) }
@@ -19,6 +19,7 @@ $Core = $LoadOrderFiles | ForEach-Object { Join-Path $Root "rules\$_" } | Where-
 $CoreChars = ($Core | ForEach-Object { (Get-Content -Raw -Encoding UTF8 $_).Length } | Measure-Object -Sum).Sum
 $CoreTokens = [math]::Ceiling($CoreChars / 3.6)
 if ($CoreTokens -gt $CoreBudget) { $Problems.Add("Core token budget exceeded: $CoreTokens > $CoreBudget") }
+if ($LoadOrderFiles.Count -lt 10) { $Problems.Add("manifest load_order parse incomplete: only $($LoadOrderFiles.Count) rule(s)") }
 
 foreach ($Platform in @("codex", "grok", "antigravity", "cursor")) {
   $Overlay = Join-Path $Root "platforms\$Platform\$Platform-overlay.md"
@@ -53,9 +54,11 @@ $RequiredPaths = @(
   "rules\05-critical-thinking.md",
   "rules\16-context-style.md",
   "rules\25-task-lifecycle.md",
-  "skills\plan-and-handoff\SKILL.md"
-  "skills\plan-and-handoff\references\plan-artifact-template.md"
-  "skills\plan-and-handoff\references\capability-tier-routing.md"
+  "rules\26-slice-completion-gate.md",
+  "skills\plan-and-handoff\SKILL.md",
+  "skills\plan-and-handoff\references\plan-artifact-template.md",
+  "skills\plan-and-handoff\references\capability-tier-routing.md",
+  "skills\finish-to-completion\references\slice-gate-protocol.md"
 )
 foreach ($Path in $RequiredPaths) {
   if (-not (Test-Path (Join-Path $Root $Path))) { $Problems.Add("Missing required path: $Path") }

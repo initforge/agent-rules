@@ -59,7 +59,7 @@ Delegates to **`finish-to-completion`** — start `phase.preferred_tier` (defaul
 
 ## Path E — Gap-closure (`execution`, chống "tường 90%")
 
-Audit delta chưa xong → gap checklist (format `completion-ledger.md`) → giao **từng slice** ≤~10 AC qua `finish-to-completion`. Chi tiết loop + MISS-SWEEP: `goal-autopilot.md` Phần 2. Cấm: re-run full plan; dump GAP rồi dừng.
+Audit delta chưa xong → gap checklist (format `completion-ledger.md`) → giao **từng slice** ≤~10 AC qua `finish-to-completion`. Operational procedure → `finish-to-completion/references/slice-gate-protocol.md` §8. MISS-SWEEP → SGP §8 step 4 (`goal-autopilot.md` Phần 2 cho `/goal` full-plan loop). Cấm: re-run full plan; dump GAP rồi dừng.
 
 ## HANDOFF format
 
