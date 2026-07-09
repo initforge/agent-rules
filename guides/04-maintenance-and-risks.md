@@ -36,7 +36,7 @@ Guardrails:
 
 - Script: `automation/audit-context-pre-commit.sh` — quét staged files context/harness trước commit.
 - Cài: `./automation/install-pre-commit-hook.sh` (repo hiện tại) hoặc `./automation/install-pre-commit-hook.sh --global`.
-- Checks: oversize (rule>90, SKILL>350 warn nhẹ nếu liền mạch), dead `C:\Users`, dead `@import`.
+- Checks: oversize (rule>90, SKILL>350 warn nhẹ nếu liền mạch), dead Windows absolute user-profile paths, dead `@import`.
 - Default **fail-open** (WARN, exit 0). `CONTEXT_AUDIT_STRICT=1` → block commit.
 - Chạy trên mọi IDE/agent (Codex/Antigravity/Cursor) vì là git hook, không phụ thuộc platform hook API.
 - Cài tất cả hooks một lần: `./automation/11-install-runtime-hooks.sh` (Codex + Antigravity + Grok + pre-commit + smoke test).
