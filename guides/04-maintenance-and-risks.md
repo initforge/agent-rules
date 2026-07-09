@@ -17,7 +17,7 @@ Guardrails:
 ## Runtime hooks (Codex) — backstop, không nằm trong pipeline build
 
 - `~/.codex/hooks/skill-orchestrator.json`: SessionStart/UserPromptSubmit/PreToolUse/PostToolUse → `scripts/skill-gate.sh`.
-- **PostToolUse `audit-on-edit.sh`** (Write/Edit): tự cảnh báo khi sửa context/harness — oversize (rule>90, SKILL>350 warn nhẹ nếu liền mạch), dead `C:\Users` path, dead `@import`. Fail-open, chỉ WARN.
+- **PostToolUse `audit-on-edit.sh`** (Write/Edit): tự cảnh báo khi sửa context/harness — oversize (rule>90, SKILL>350 warn nhẹ nếu liền mạch), dead Windows absolute user-profile paths, dead `@import`. Fail-open, chỉ WARN.
 - Các hook/script `~/.codex/scripts/*.sh|*.py` là runtime-only (không do `01-build-runtime` sinh); sửa trực tiếp tại runtime, ghi chú ở đây để audit sau không nhầm là orphan.
 
 ## Runtime hooks (Antigravity) — unattended + skill inject
