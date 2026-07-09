@@ -1,4 +1,4 @@
-﻿# Researcher Usage
+# Researcher Usage
 
 ## Good trigger examples
 

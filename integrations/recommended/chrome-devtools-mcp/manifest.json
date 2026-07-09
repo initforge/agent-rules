@@ -1,0 +1,8 @@
+{
+  "name": "chrome-devtools-mcp",
+  "policy": "recommended",
+  "upstream": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+  "npmPackage": "chrome-devtools-mcp",
+  "commandName": "chrome-devtools-mcp",
+  "mcpServerKey": "chrome-devtools"
+}

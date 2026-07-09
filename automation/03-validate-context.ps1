@@ -32,12 +32,22 @@ $SkillFiles = Get-ChildItem (Join-Path $Root "skills") -Directory | ForEach-Obje
   Join-Path $_.FullName "SKILL.md"
 } | Where-Object { Test-Path $_ }
 
+# Owner-intentional oversize packs (cohesion) — do not FAIL size-only (see rules/50-context-budget.md)
+$IntentionalOversizeSkills = @("docs-style", "plan-and-handoff", "finish-to-completion")
+
 $Slugs = @()
 foreach ($SkillPath in $SkillFiles) {
-  $Slugs += (Split-Path $SkillPath -Parent | Split-Path -Leaf)
+  $Slug = (Split-Path $SkillPath -Parent | Split-Path -Leaf)
+  $Slugs += $Slug
+  $RawBytes = [System.IO.File]::ReadAllBytes($SkillPath)
+  if ($RawBytes.Length -ge 3 -and $RawBytes[0] -eq 0xEF -and $RawBytes[1] -eq 0xBB -and $RawBytes[2] -eq 0xBF) {
+    $Problems.Add("UTF-8 BOM forbidden in skill frontmatter: $SkillPath")
+  }
   $Tokens = [math]::Ceiling((Get-Content -Raw -Encoding UTF8 $SkillPath).Length / 3.6)
-  if ($Tokens -gt 3500) {
+  if ($Tokens -gt 3500 -and $IntentionalOversizeSkills -notcontains $Slug) {
     $Problems.Add("Skill token budget exceeded: $SkillPath = $Tokens")
+  } elseif ($Tokens -gt 3500) {
+    Write-Host "Intentional oversize skill (allowed): $Slug ~$Tokens tokens"
   }
 }
 
@@ -201,6 +211,41 @@ if (Test-Path $PurityAudit) {
   } catch {
     $Problems.Add("5fedu template purity audit crashed - error: $_")
   }
+}
+
+# Always-on must not reintroduce legacy dual-tree filenames in canonical rules/
+$LegacyAlwaysOn = @("00-index.md", "01-agent-workflow-sop.md", "07-finish-to-completion.md", "08-ui-consistency-gate.md")
+foreach ($Legacy in $LegacyAlwaysOn) {
+  if (Test-Path (Join-Path $Root "rules\$Legacy")) {
+    $Problems.Add("Legacy always-on rule must not live in canonical rules/: $Legacy")
+  }
+}
+
+# Glossary + intentional-oversize intent + 5fedu-project routing must be reachable
+$Bootstrap = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "rules\00-bootstrap.md")
+foreach ($Term in @("PAF", "HB-1", "SGP", "L0")) {
+  if ($Bootstrap -notlike "*$Term*") {
+    $Problems.Add("rules/00-bootstrap.md missing glossary term: $Term")
+  }
+}
+$BudgetBody = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "rules\50-context-budget.md")
+if ($BudgetBody -notlike "*Intentional oversize*" -or $BudgetBody -notlike "*docs-style*" -or $BudgetBody -notlike "*plan-and-handoff*") {
+  $Problems.Add("rules/50-context-budget.md missing intentional oversize owner intent for docs-style/plan-and-handoff")
+}
+$RoutingBody = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "rules\30-context-routing.md")
+if ($RoutingBody -notlike "*5fedu-project*") {
+  $Problems.Add("rules/30-context-routing.md must link 5fedu-project setup path")
+}
+if ($RoutingBody -notlike "*trigger-audit*" -or $RoutingBody -notlike "*CI*") {
+  $Problems.Add("rules/30-context-routing.md must mark trigger-audit as CI/fixture not runtime SoT")
+}
+$Researcher = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "skills\researcher\SKILL.md")
+if ($Researcher -match "when Codex needs") {
+  $Problems.Add("skills/researcher/SKILL.md must be platform-neutral (not 'when Codex needs')")
+}
+$CleanCode = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "skills\clean-code\SKILL.md")
+if ($CleanCode -match '"review code"' -or $CleanCode -match 'Trigger on.*"review code"') {
+  $Problems.Add("skills/clean-code must not claim generic 'review code' (belongs to code-review)")
 }
 
 if ($Problems.Count) {

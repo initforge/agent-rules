@@ -2,145 +2,331 @@
   {
     "phrase": "plan dài nhiều phase",
     "skill": "plan-and-handoff",
-    "keywords": ["plan", "handoff", "phase"]
+    "keywords": [
+      "plan",
+      "handoff",
+      "phase"
+    ]
   },
   {
     "phrase": "đại trùng tu",
     "skill": "plan-and-handoff",
-    "keywords": ["plan", "phase", "handoff"]
+    "keywords": [
+      "plan",
+      "phase",
+      "handoff"
+    ]
   },
   {
     "phrase": "làm hết hoàn thành",
     "skill": "finish-to-completion",
-    "keywords": ["PASS", "scope", "deliverable"]
+    "keywords": [
+      "PASS",
+      "scope",
+      "deliverable"
+    ]
   },
   {
     "phrase": "nhập hàng lệch sai pattern",
     "file": "projects/5fedu/00-context-map.md",
-    "keywords": ["nhập hàng", "module-mapping", "Nhân viên"]
+    "keywords": [
+      "nhập hàng",
+      "module-mapping",
+      "Nhân viên"
+    ]
   },
   {
     "phrase": "drawer sai thiếu nút",
     "file": "projects/5fedu/domains/ui-delivery.md",
-    "keywords": ["drawer", "pattern", "audit"]
+    "keywords": [
+      "drawer",
+      "pattern",
+      "audit"
+    ]
   },
   {
     "phrase": "thiết lập context 5fedu",
     "skill": "5fedu-project",
-    "keywords": ["5fedu", "context", "template"]
+    "keywords": [
+      "5fedu",
+      "context",
+      "template"
+    ]
   },
   {
     "phrase": "phân quyền cap_bac module",
     "file": "projects/5fedu/domains/permissions.md",
-    "keywords": ["cap_bac", "quyền", "phân quyền"]
+    "keywords": [
+      "cap_bac",
+      "quyền",
+      "phân quyền"
+    ]
   },
   {
     "phrase": "migration RLS schema int8",
     "file": "projects/5fedu/domains/database.md",
-    "keywords": ["int8", "RLS", "schema"]
+    "keywords": [
+      "int8",
+      "RLS",
+      "schema"
+    ]
   },
   {
     "phrase": "viết lại README docs",
     "skill": "docs-style",
-    "keywords": ["README", "documentation", "docs"]
+    "keywords": [
+      "README",
+      "documentation",
+      "docs"
+    ]
   },
   {
     "phrase": "research changelog api mới",
     "skill": "researcher",
-    "keywords": ["research", "documentation", "changelog"]
+    "keywords": [
+      "research",
+      "documentation",
+      "changelog"
+    ]
   },
   {
     "phrase": "review code thay đổi",
     "skill": "code-review",
-    "keywords": ["review", "code"]
+    "keywords": [
+      "review",
+      "code"
+    ]
   },
   {
     "phrase": "best of n thử nhiều cách",
     "skill": "best-of-n",
-    "keywords": ["parallel", "worktree", "best"]
+    "keywords": [
+      "parallel",
+      "worktree",
+      "best"
+    ]
   },
   {
     "phrase": "ghi nhớ vào rule context",
     "skill": "context-evolution-protocol",
-    "keywords": ["context", "evolution", "promote"]
+    "keywords": [
+      "context",
+      "evolution",
+      "promote"
+    ]
   },
   {
     "phrase": "redesign giao diện tailwind",
     "skill": "frontend-architect",
-    "keywords": ["UI", "Tailwind", "redesign", "Hard stop"]
+    "keywords": [
+      "UI",
+      "Tailwind",
+      "redesign",
+      "Hard stop"
+    ]
   },
   {
     "phrase": "sinh ảnh mockup giao diện",
     "skill": "master-image-generation",
-    "keywords": ["mockup", "image", "ảnh"]
+    "keywords": [
+      "mockup",
+      "image",
+      "ảnh"
+    ]
   },
   {
     "phrase": "lệch template thanh lọc",
     "file": "projects/5fedu/domains/module-mapping.md",
-    "keywords": ["tham chiếu", "Nhân viên", "đối chiếu"]
+    "keywords": [
+      "tham chiếu",
+      "Nhân viên",
+      "đối chiếu"
+    ]
   },
   {
     "phrase": "fake email ten_dang_nhap",
     "file": "projects/5fedu/domains/database.md",
-    "keywords": ["fake", "ten_dang_nhap", "gmail"]
+    "keywords": [
+      "fake",
+      "ten_dang_nhap",
+      "gmail"
+    ]
   },
   {
     "phrase": "chia nhỏ task handoff session",
     "skill": "plan-and-handoff",
-    "keywords": ["handoff", "session", "phase"]
+    "keywords": [
+      "handoff",
+      "session",
+      "phase"
+    ]
   },
   {
     "phrase": "verify trước khi sửa known-unknowns",
     "skill": "implementation-discovery",
-    "keywords": ["verify", "known-unknowns", "assumptions"]
+    "keywords": [
+      "verify",
+      "known-unknowns",
+      "assumptions"
+    ]
   },
   {
     "phrase": "giao dien lech sai pattern parity",
     "file": "projects/5fedu/domains/ui-delivery.md",
-    "keywords": ["parity", "pattern", "lệch"]
+    "keywords": [
+      "parity",
+      "pattern",
+      "lệch"
+    ]
   },
   {
     "phrase": "frontend architect 5fedu exclusion guard",
     "skill": "frontend-architect",
-    "keywords": ["Hard stop", "5fedu", "ui-delivery"]
+    "keywords": [
+      "Hard stop",
+      "5fedu",
+      "ui-delivery"
+    ]
   },
   {
     "phrase": "context style bullet imperative",
     "file": "rules/16-context-style.md",
-    "keywords": ["imperative", "bullet", "mâu thuẫn"]
+    "keywords": [
+      "imperative",
+      "bullet",
+      "mâu thuẫn"
+    ]
   },
   {
     "phrase": "skill exclusion ui parity router",
     "file": "projects/5fedu/00-context-map.md",
-    "keywords": ["Skill exclusion", "frontend-architect"]
+    "keywords": [
+      "Skill exclusion",
+      "frontend-architect"
+    ]
   },
   {
     "phrase": "làm module mới clone nhân viên",
     "skill": "5fedu-module-parity",
-    "keywords": ["làm module mới", "Nhân viên", "clone"]
+    "keywords": [
+      "làm module mới",
+      "Nhân viên",
+      "clone"
+    ]
   },
   {
     "phrase": "sửa module cũ audit surface",
     "skill": "5fedu-module-parity",
-    "keywords": ["sửa module", "audit", "surface"]
+    "keywords": [
+      "sửa module",
+      "audit",
+      "surface"
+    ]
   },
   {
     "phrase": "refactor module generic monolith",
     "file": "projects/5fedu/domains/module-mapping.md",
-    "keywords": ["generic", "monolith", "clone checklist"]
+    "keywords": [
+      "generic",
+      "monolith",
+      "clone checklist"
+    ]
   },
   {
     "phrase": "thêm chức năng vào module",
     "skill": "5fedu-module-parity",
-    "keywords": ["thêm chức năng", "module-mapping", "ui-delivery"]
+    "keywords": [
+      "thêm chức năng",
+      "module-mapping",
+      "ui-delivery"
+    ]
   },
   {
     "phrase": "chuẩn hóa PAF plan artifact",
     "skill": "plan-and-handoff",
-    "keywords": ["PAF", "Scribe", "plan artifact"]
+    "keywords": [
+      "PAF",
+      "Scribe",
+      "plan artifact"
+    ]
   },
   {
     "skill": "clean-code",
-    "keywords": ["clean-code", "smell", "hard-block"]
+    "keywords": [
+      "clean-code",
+      "smell",
+      "hard-block"
+    ],
+    "phrase": "clean code smell hard-block"
+  },
+  {
+    "phrase": "manual test exploratory như QA",
+    "skill": "qa-skills",
+    "keywords": [
+      "manual cases",
+      "exploratory",
+      "qa-skills",
+      "browser-qa"
+    ]
+  },
+  {
+    "phrase": "test mọi ngóc ngách deep QA",
+    "skill": "qa-skills",
+    "keywords": [
+      "ngóc ngách",
+      "verify UI",
+      "browser-qa",
+      "Playwright"
+    ]
+  },
+  {
+    "phrase": "browser qa click through verify ui",
+    "skill": "browser-qa",
+    "keywords": [
+      "browser-qa",
+      "Playwright MCP",
+      "Chrome DevTools",
+      "qa-skills"
+    ]
+  },
+  {
+    "phrase": "playwright mcp e2e smoke ui",
+    "skill": "browser-qa",
+    "keywords": [
+      "Playwright MCP",
+      "E2E",
+      "smoke UI",
+      "Chrome DevTools"
+    ]
+  },
+  {
+    "phrase": "chrome devtools console network fail",
+    "skill": "browser-qa",
+    "keywords": [
+      "chrome-devtools",
+      "console error",
+      "network",
+      "Playwright"
+    ]
+  },
+  {
+    "phrase": "qa skills edge permission matrix",
+    "skill": "qa-skills",
+    "keywords": [
+      "edge",
+      "permission",
+      "matrix",
+      "browser-qa"
+    ]
+  },
+  {
+    "phrase": "verify ui regression plan smoke",
+    "skill": "qa-skills",
+    "keywords": [
+      "verify UI",
+      "regression plan",
+      "smoke plan",
+      "browser-qa"
+    ]
   }
 ]

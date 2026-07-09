@@ -12,3 +12,4 @@ description: Cursor-specific runtime delta for agent-rules harness.
 - Skills nạp từ `~/.cursor/skills/` (slug phẳng, không lớp category).
 - Không reverse-sync runtime skills/rules về canonical trừ qua `automation/07-import-reviewed-changes.ps1` đã review.
 - Plan artifacts: `.cursor/plans/` or in-chat **PAF** per `skills/plan-and-handoff/references/plan-artifact-template.md`; tier routing in `references/capability-tier-routing.md`.
+- Deep/manual/UI QA → combo `qa-skills` + `browser-qa` (Playwright MCP + Chrome DevTools, lazy); không auto-browser mọi task.

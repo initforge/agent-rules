@@ -287,6 +287,31 @@ foreach ($P in $H11Problems) {
   Add-Finding "workflow" "slice-gate-protocol" "fail" $P "H11"
 }
 
+# H12: Grok dual-tree / inject lean (when home present)
+$UserHome = if ($env:USERPROFILE) { $env:USERPROFILE } elseif ($env:HOME) { $env:HOME } else { $null }
+if ($UserHome) {
+  $GrokHome = if ($env:GROK_HOME) { $env:GROK_HOME } else { Join-Path $UserHome ".grok" }
+  $Inject = Join-Path (Join-Path $GrokHome ".grok") "rules"
+  if (Test-Path $Inject) {
+    $Legacy = @("00-index.md", "01-agent-workflow-sop.md", "antigravity-overlay.md")
+    $Hits = @($Legacy | Where-Object { Test-Path (Join-Path $Inject $_) })
+    if ($Hits.Count -gt 0) {
+      Add-Finding "desync" "grok-legacy-inject" "fail" "Legacy dual-tree markers in $Inject : $($Hits -join ', ')" "H12"
+    } elseif (-not (Test-Path (Join-Path $Inject "00-bootstrap.md"))) {
+      Add-Finding "desync" "grok-inject-missing-lean" "fail" "Inject path lacks lean 00-bootstrap.md: $Inject" "H12"
+    }
+  }
+}
+
+# H13: intentional oversize documented (must not pressure FAIL on docs-style/plan-and-handoff size alone)
+$BudgetPath = Join-Path $Root "rules\50-context-budget.md"
+if (Test-Path $BudgetPath) {
+  $Bb = Get-Content -Raw -Encoding UTF8 $BudgetPath
+  if ($Bb -notlike "*Intentional oversize*" -or $Bb -notlike "*docs-style*") {
+    Add-Finding "desync" "intentional-oversize-missing" "fail" "50-context-budget missing intentional oversize intent" "H13"
+  }
+}
+
 Write-DebugLog "summary" "audit-harness-health.ps1:end" "findings-summary" @{
   findingCount = $Findings.Count
   byCategory = ($Findings | Group-Object category | ForEach-Object { @{ $_.Name = $_.Count } })

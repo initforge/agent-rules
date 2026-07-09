@@ -26,3 +26,15 @@ description: Context budget, fresh sessions, and code exploration discipline.
 - Always-load: `rules/` + manifest budgets only.
 - Domain/project packs: lazy qua router (`00-context-map.md`, skill triggers).
 - References/scripts: chỉ khi skill/domain yêu cầu.
+
+## Intentional oversize (owner — không “sửa gầy” vì số)
+
+Các pack sau **được phép** vượt soft line/token guide vì cohesion / depth; audit **không FAIL** chỉ vì size:
+
+| Pack | Lý do |
+|---|---|
+| `docs-style` (+ refs) | Self-contained docs workflow end-to-end |
+| `plan-and-handoff` (+ refs) | PAF + tier + goal autopilot liền mạch |
+| `projects/5fedu/**` domain packs | Progressive domain depth khi lazy-load |
+
+Always-on `rules/` vẫn cứng theo `manifest.yaml` `core_total_tokens`.

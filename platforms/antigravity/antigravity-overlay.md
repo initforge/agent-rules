@@ -8,6 +8,7 @@ description: Antigravity-only runtime delta.
 - Global: `~/.gemini/config` + `~/.gemini/GEMINI.md`. Frontmatter bắt buộc.
 - `.agents/` = pointer mỏng; không copy core/capabilities vào project.
 - Browser/MCP native Antigravity — không lệnh Codex/Grok.
+- Deep/manual/UI QA → combo `qa-skills` + `browser-qa` (Playwright MCP + Chrome DevTools); parity 5fedu vẫn `5fedu-module-parity`.
 
 ## Capability tier (delta)
 

@@ -1,4 +1,4 @@
-﻿# Bảo Trì Và Rủi Ro
+# Bảo Trì Và Rủi Ro
 
 Trước khi cài global runtime, luôn chạy:
 

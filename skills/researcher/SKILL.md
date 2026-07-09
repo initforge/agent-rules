@@ -1,6 +1,6 @@
 ---
 name: researcher
-description: Use this skill when Codex needs structured research before coding or while a bug fix is stalled. Trigger for latest docs, release notes, changelog review, external platform behavior, codebase exploration, option comparison, source-backed decision support, or difficult bug fixes that need repo facts plus external documentation before another implementation attempt. Do NOT use when user wants a phased implementation plan — use plan-and-handoff Plan Architect instead.
+description: Use this skill when the agent needs structured research before coding or while a bug fix is stalled. Trigger for latest docs, release notes, changelog review, external platform behavior, codebase exploration, option comparison, source-backed decision support, or difficult bug fixes that need repo facts plus external documentation before another implementation attempt. Do NOT use when user wants a phased implementation plan — use plan-and-handoff Plan Architect instead.
 ---
 
 # Researcher
@@ -26,7 +26,7 @@ Do NOT use when:
 2. Codebase Memory MCP when usable
 3. `web` for latest or external facts
 
-**Antigravity:** preferred platform for web/browser research when available.
+Web/browser research: use the active platform’s browser/MCP tools when available; otherwise CLI + docs tools.
 
 ## Output contract
 

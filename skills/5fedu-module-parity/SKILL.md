@@ -21,3 +21,7 @@ description: "5fedu ERP module UI parity — clone/adapt from Nhân viên/Phòng
 ## Report contract
 
 Mọi task UI/module kết thúc bằng: `Template reference` | `Pattern fidelity` | `Verification` | `Status`
+
+## Deep QA (optional)
+
+Owner yêu cầu test như user / exploratory / verify UI sau parity → mid-flow combo `qa-skills` + `browser-qa`. Không thay checklist mapping/template.

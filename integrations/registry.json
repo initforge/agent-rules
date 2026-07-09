@@ -14,6 +14,18 @@
       "triggerClasses": ["latest-docs", "framework-behavior", "api-reference", "migration-research"]
     },
     {
+      "name": "playwright-mcp",
+      "policy": "recommended",
+      "path": "integrations/recommended/playwright-mcp",
+      "triggerClasses": ["browser-qa", "ui-e2e", "click-through", "playwright", "agentic-browser"]
+    },
+    {
+      "name": "chrome-devtools-mcp",
+      "policy": "recommended",
+      "path": "integrations/recommended/chrome-devtools-mcp",
+      "triggerClasses": ["browser-qa", "console-debug", "network-debug", "cdp", "chrome-devtools"]
+    },
+    {
       "name": "caveman",
       "policy": "optional",
       "path": "integrations/optional/caveman",

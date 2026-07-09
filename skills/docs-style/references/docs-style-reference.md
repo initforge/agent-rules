@@ -1,4 +1,4 @@
-﻿# Docs Style Reference
+# Docs Style Reference
 
 This reference defines the editorial and verification standard for README.md, README-vi.md, and `/docs/**`.
 

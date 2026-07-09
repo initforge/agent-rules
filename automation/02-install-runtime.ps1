@@ -92,33 +92,70 @@ function Install-Integration {
   return [pscustomobject]$State
 }
 
+function Install-RulesSkillsDocs {
+  param(
+    [string]$Source,
+    [string]$Dest,
+    [string[]]$Folders = @("rules", "skills", "docs")
+  )
+  foreach ($Folder in $Folders) {
+    $SrcFolder = Join-Path $Source $Folder
+    $TargetFolder = Join-Path $Dest $Folder
+    if (Test-Path $TargetFolder) { Remove-Item -LiteralPath $TargetFolder -Recurse -Force }
+    New-Item -ItemType Directory -Force -Path $TargetFolder | Out-Null
+    if (Test-Path $SrcFolder) {
+      Copy-Item -Path (Join-Path $SrcFolder "*") -Destination $TargetFolder -Recurse -Force
+    }
+  }
+}
+
+# Grok native discovery loads global rules from $GROK_HOME/.grok/rules (not $GROK_HOME/rules).
+# Install lean rules to both: doctor/manifest path + inject path. Wipe legacy dual-tree.
+function Sync-GrokInjectRules {
+  param([string]$GrokHome, [string]$BuildRulesDir)
+  $InjectRules = Join-Path (Join-Path $GrokHome ".grok") "rules"
+  $LegacyMarkers = @("00-index.md", "01-agent-workflow-sop.md", "07-finish-to-completion.md", "antigravity-overlay.md", "platform-boundary.md")
+  $HadLegacy = $false
+  if (Test-Path $InjectRules) {
+    foreach ($M in $LegacyMarkers) {
+      if (Test-Path (Join-Path $InjectRules $M)) { $HadLegacy = $true; break }
+    }
+    if ($HadLegacy) {
+      $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+      $Backup = Join-Path $GrokHome (".legacy-rules-backup-" + $Stamp)
+      Write-Host "Archiving legacy Grok inject rules -> $Backup"
+      New-Item -ItemType Directory -Force -Path $Backup | Out-Null
+      Move-Item -LiteralPath $InjectRules -Destination (Join-Path $Backup "rules") -Force
+    } else {
+      Remove-Item -LiteralPath $InjectRules -Recurse -Force
+    }
+  }
+  New-Item -ItemType Directory -Force -Path $InjectRules | Out-Null
+  if (Test-Path $BuildRulesDir) {
+    Copy-Item -Path (Join-Path $BuildRulesDir "*") -Destination $InjectRules -Recurse -Force
+  }
+  Write-Host "Grok inject rules synced -> $InjectRules"
+}
+
 foreach ($Name in $Selected) {
   $Source = Join-Path $BuildRoot $Name
   $Dest = $PlatformHomes[$Name]
   New-Item -ItemType Directory -Force -Path $Dest | Out-Null
 
   if ($Name -eq "cursor") {
-    $CursorRules = Join-Path $Dest "rules"
-    $CursorSkills = Join-Path $Dest "skills"
-    foreach ($FolderPair in @(@("rules", $CursorRules), @("skills", $CursorSkills))) {
-      $SrcFolder = Join-Path $Source $FolderPair[0]
-      $TargetFolder = $FolderPair[1]
-      if (Test-Path $TargetFolder) { Remove-Item -LiteralPath $TargetFolder -Recurse -Force }
-      New-Item -ItemType Directory -Force -Path $TargetFolder | Out-Null
-      if (Test-Path $SrcFolder) {
-        Copy-Item -Path (Join-Path $SrcFolder "*") -Destination $TargetFolder -Recurse -Force
-      }
-    }
+    Install-RulesSkillsDocs -Source $Source -Dest $Dest -Folders @("rules", "skills")
     $DocsDest = Join-Path $Dest "agent-rules-docs"
     if (Test-Path $DocsDest) { Remove-Item -LiteralPath $DocsDest -Recurse -Force }
-    Copy-Item -Path (Join-Path $Source "docs") -Destination $DocsDest -Recurse -Force
-  } else {
-    foreach ($Folder in @("rules", "skills", "docs")) {
-      $TargetFolder = Join-Path $Dest $Folder
-      if (Test-Path $TargetFolder) { Remove-Item -LiteralPath $TargetFolder -Recurse -Force }
-      New-Item -ItemType Directory -Force -Path $TargetFolder | Out-Null
-      Copy-Item -Path (Join-Path $Source "$Folder\*") -Destination $TargetFolder -Recurse -Force
+    $DocsSrc = Join-Path $Source "docs"
+    if (Test-Path $DocsSrc) {
+      Copy-Item -Path $DocsSrc -Destination $DocsDest -Recurse -Force
     }
+  } else {
+    Install-RulesSkillsDocs -Source $Source -Dest $Dest
+  }
+
+  if ($Name -eq "grok") {
+    Sync-GrokInjectRules -GrokHome $Dest -BuildRulesDir (Join-Path $Source "rules")
   }
 
   Copy-Item (Join-Path $Source "manifest.json") (Join-Path $Dest "agent-rules-manifest.json") -Force

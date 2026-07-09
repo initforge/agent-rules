@@ -1,0 +1,8 @@
+{
+  "name": "playwright-mcp",
+  "policy": "recommended",
+  "upstream": "https://github.com/microsoft/playwright-mcp",
+  "npmPackage": "@playwright/mcp",
+  "commandName": "playwright-mcp",
+  "mcpServerKey": "playwright"
+}

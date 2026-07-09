@@ -43,7 +43,9 @@ Linux/macOS (requires [PowerShell Core](https://github.com/PowerShell/PowerShell
 ./automation/09-doctor.ps1
 ```
 
-Install targets: `~/.codex`, `~/.grok`, `~/.gemini/config`, `~/.cursor`. MCP config format differs per platform — see `platforms/*/runtime.yaml`.
+Install targets: `~/.codex`, `~/.grok`, `~/.gemini/config`, `~/.cursor`. MCP format differs per platform — see `platforms/*/runtime.yaml`.
+
+**Grok rules path:** install writes lean always-on to `~/.grok/rules` (manifest) and `~/.grok/.grok/rules` (native inject). Legacy dual trees are archived on install; doctor fails if they return. Restart the Grok session after install.
 
 ## Read next
 

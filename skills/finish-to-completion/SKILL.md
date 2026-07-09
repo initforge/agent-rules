@@ -17,11 +17,7 @@ Chỉ khi scope **đã khóa** (≤1 phase hoặc user giao slice rõ) và **mod
 - Do not treat pasted [Plan] sections as locked code deliverables (HB-3).
 - Prefer plan-and-handoff for plan modes.
 
-Nếu thoả mãn các điều kiện thực thi (mode=`execution`):
-```text
-Skill scan: finish-to-completion (locked slice)
-Skill activated: finish-to-completion
-```
+Mode=`execution` + scope đã khóa → skill active (không bắt buộc echo “Skill scan” mỗi turn; tiny/Q&A bỏ qua skill này).
 
 HB-4: scope ≥2 files → lane tối thiểu `normal` (không `tiny`); **không** bắt buộc `plan-and-handoff`. Task dài/multi-phase chưa cắt slice → `plan-and-handoff` trước execution.
 
@@ -66,6 +62,7 @@ Trước `PASS`:
 1. Chạy command chứng minh (test/lint/build/browser) — fresh trong session.
 2. Đọc output đầy đủ.
 3. Cross-check deliverable count: done == N.
+4. Owner yêu cầu deep/manual/UI QA → mid-flow combo `qa-skills` + `browser-qa`; không tự nở full exploratory matrix nếu scope không yêu cầu.
 
 Không evidence → không `PASS`. Không "should work".
 
@@ -116,17 +113,17 @@ Fail bất kỳ → **continue working**, không respond final.
 - Hard pause only: `[PAUSED — X/N — next: <item>]`
 - "tiếp tục"/"làm đi": resume item, no recap.
 
-## Final Echo (MEDIUM/HIGH)
+## Final Echo (normal/high-risk execution)
 
 ```text
-Skill scan: finish-to-completion
-Skill activated: finish-to-completion
 Scope lock: N/N done
 Verification: <cmd> → <outcome>
 Miss check: pass
 Status: PASS | PARTIAL | BLOCKED
 Blocker: (if not PASS)
 ```
+
+Tiny: chỉ `Status` + 1 dòng verify. Không Skill-scan theater trên Q&A/plan-only.
 
 ## Quick Check
 

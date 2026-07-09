@@ -35,6 +35,7 @@ Nguyên tắc gốc: **đủ ngắn để đọc 1 lần hiểu ngay, đủ dài
 - **Cấm:** tách chỉ để pass `wc -l`/audit; thay nội dung liền mạch bằng "đọc thêm references/…" bắt buộc nhiều bước.
 - **`references/`** = deep-dive hiếm dùng, ví dụ dài, benchmark mẫu — **không** là phần 2 bắt buộc của skill thực thi hàng ngày.
 - **Skill thực thi** (docs-style, plan-and-handoff, finish-to-completion): ưu tiên **self-contained**; warn oversize nhẹ >~350 dòng, **không** auto-bắt tách.
+- **Owner intent:** `docs-style`, `plan-and-handoff` (+refs), `projects/5fedu` domain packs **được phép lớn** — cohesion/depth; cấm “fix bloat” size-only (`50-context-budget` §Intentional oversize).
 
 ## Linh hoạt theo tình huống (không máy móc mọi case)
 

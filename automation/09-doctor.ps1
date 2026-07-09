@@ -57,34 +57,35 @@ foreach ($Name in $Selected) {
 
   $McpPath = $McpConfigPaths[$Name]
   if ($Name -eq "codex") {
-    $HasCodebaseMemory = (Test-Path $McpPath) -and (Select-String -Path $McpPath -Pattern '\[mcp_servers\.codebase_memory\]' -Quiet)
-    $HasContext7 = (Test-Path $McpPath) -and (Select-String -Path $McpPath -Pattern '\[mcp_servers\.context7\]' -Quiet)
-
-    if ($HasCodebaseMemory) {
-      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-codebase-memory"; status = "OK"; detail = "codebase_memory in config.toml" }
-    } else {
-      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-codebase-memory"; status = "WARN"; detail = "codebase_memory section missing - re-run install" }
+    $TomlChecks = @{
+      "mcp-config-codebase-memory" = '\[mcp_servers\.codebase_memory\]'
+      "mcp-config-context7"        = '\[mcp_servers\.context7\]'
+      "mcp-config-playwright"      = '\[mcp_servers\.playwright\]'
+      "mcp-config-chrome-devtools" = '\[mcp_servers\.chrome_devtools\]'
     }
-
-    if ($HasContext7) {
-      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-context7"; status = "OK"; detail = "context7 in config.toml" }
-    } else {
-      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-context7"; status = "WARN"; detail = "context7 section missing - re-run install" }
+    foreach ($Check in $TomlChecks.GetEnumerator()) {
+      $Ok = (Test-Path $McpPath) -and (Select-String -Path $McpPath -Pattern $Check.Value -Quiet)
+      if ($Ok) {
+        $Report += [pscustomobject]@{ platform = $Name; check = $Check.Key; status = "OK"; detail = "present in config.toml" }
+      } else {
+        $Report += [pscustomobject]@{ platform = $Name; check = $Check.Key; status = "WARN"; detail = "missing - re-run install" }
+      }
     }
   } elseif (Test-Path $McpPath) {
     $Mcp = Get-Content -Raw $McpPath | ConvertFrom-Json
     $Keys = @($Mcp.mcpServers.PSObject.Properties.Name)
-
-    if ($Keys -contains "codebase-memory") {
-      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-codebase-memory"; status = "OK"; detail = "mcp.json has codebase-memory" }
-    } else {
-      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-codebase-memory"; status = "WARN"; detail = "mcp.json missing codebase-memory" }
+    $JsonChecks = @{
+      "mcp-config-codebase-memory" = "codebase-memory"
+      "mcp-config-context7"        = "context7"
+      "mcp-config-playwright"      = "playwright"
+      "mcp-config-chrome-devtools" = "chrome-devtools"
     }
-
-    if ($Keys -contains "context7") {
-      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-context7"; status = "OK"; detail = "mcp.json has context7" }
-    } else {
-      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-context7"; status = "WARN"; detail = "mcp.json missing context7" }
+    foreach ($Check in $JsonChecks.GetEnumerator()) {
+      if ($Keys -contains $Check.Value) {
+        $Report += [pscustomobject]@{ platform = $Name; check = $Check.Key; status = "OK"; detail = "mcp.json has $($Check.Value)" }
+      } else {
+        $Report += [pscustomobject]@{ platform = $Name; check = $Check.Key; status = "WARN"; detail = "mcp.json missing $($Check.Value)" }
+      }
     }
   } else {
     $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config"; status = "WARN"; detail = "no mcp config at $McpPath" }
@@ -107,6 +108,71 @@ foreach ($Name in $Selected) {
         $Report += [pscustomobject]@{ platform = $Name; check = $Integration.name; status = $Status; detail = $_.Exception.Message }
       }
     }
+  }
+}
+
+# Grok: inject path must be lean-only (no legacy dual tree)
+$GrokHome = $PlatformHomes["grok"]
+$GrokInject = Join-Path (Join-Path $GrokHome ".grok") "rules"
+$GrokManifestRules = Join-Path $GrokHome "rules"
+$LegacyNames = @("00-index.md", "01-agent-workflow-sop.md", "00-universal-frontier-contract.md", "07-finish-to-completion.md", "antigravity-overlay.md", "platform-boundary.md", "08-ui-consistency-gate.md")
+if (Test-Path $GrokInject) {
+  $LegacyHits = @()
+  foreach ($Ln in $LegacyNames) {
+    if (Test-Path (Join-Path $GrokInject $Ln)) { $LegacyHits += $Ln }
+  }
+  if ($LegacyHits.Count -gt 0) {
+    $Report += [pscustomobject]@{
+      platform = "grok"
+      check    = "legacy-inject-rules"
+      status   = "NOT_LIVE"
+      detail   = "Legacy dual-tree still at $GrokInject : $($LegacyHits -join ', ') — re-run 02-install-runtime"
+    }
+  } else {
+    $LeanOk = (Test-Path (Join-Path $GrokInject "00-bootstrap.md")) -and (Test-Path (Join-Path $GrokInject "10-execution.md"))
+    if (-not $LeanOk) {
+      $Report += [pscustomobject]@{
+        platform = "grok"
+        check    = "inject-rules-lean"
+        status   = "MISSING"
+        detail   = "Inject path missing lean core: $GrokInject"
+      }
+    } else {
+      # Hash sample: inject bootstrap must match installed rules/bootstrap when both exist
+      if (Test-Path (Join-Path $GrokManifestRules "00-bootstrap.md")) {
+        $H1 = (Get-FileHash -Algorithm SHA256 (Join-Path $GrokInject "00-bootstrap.md")).Hash
+        $H2 = (Get-FileHash -Algorithm SHA256 (Join-Path $GrokManifestRules "00-bootstrap.md")).Hash
+        if ($H1 -ne $H2) {
+          $Report += [pscustomobject]@{
+            platform = "grok"
+            check    = "inject-vs-rules-drift"
+            status   = "NOT_LIVE"
+            detail   = "Inject path drift vs $GrokManifestRules — re-run install"
+          }
+        } else {
+          $Report += [pscustomobject]@{
+            platform = "grok"
+            check    = "inject-rules-lean"
+            status   = "OK"
+            detail   = "Lean inject path matches installed rules"
+          }
+        }
+      } else {
+        $Report += [pscustomobject]@{
+          platform = "grok"
+          check    = "inject-rules-lean"
+          status   = "OK"
+          detail   = "Lean inject path present"
+        }
+      }
+    }
+  }
+} elseif (Test-Path (Join-Path $GrokHome "agent-rules-manifest.json")) {
+  $Report += [pscustomobject]@{
+    platform = "grok"
+    check    = "inject-rules-lean"
+    status   = "MISSING"
+    detail   = "Grok installed but inject path missing: $GrokInject"
   }
 }
 

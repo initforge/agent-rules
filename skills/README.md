@@ -18,5 +18,7 @@
 | `context-evolution-protocol` | Tiến hoá rules/context |
 | `frontend-architect` | UI/UX polish ngoài ERP parity (cấm khi 5fedu lệch/sai pattern) |
 | `master-image-generation` | Mockup / image-to-code |
+| `qa-skills` | Não QA — map `petrkindlmann/qa-skills`; combo với `browser-qa` |
+| `browser-qa` | Mắt+tay coding agent (Chrome DevTools / Playwright MCP) |
 
 Mỗi skill: một thư mục `SKILL.md` + references/scripts tùy nhu cầu.

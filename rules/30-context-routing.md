@@ -14,11 +14,17 @@ Load progressively:
 5. Project context index, then only domain packs matching the task.
 6. External documentation only for unstable, unfamiliar or explicitly requested facts.
 
-The `description` frontmatter of each capability is the trigger source of truth. Do not maintain a second handwritten trigger table. If multiple capabilities match, choose a primary capability and add only the minimum supporting set.
+The `description` frontmatter of each capability is the trigger source of truth. `automation/trigger-audit.json` is a **CI/fixture recall check only** — not a second runtime router. If multiple capabilities match, choose a primary capability and add only the minimum supporting set.
+
+## Setup / project context (5fedu)
+
+- Thiết lập / cài context 5fedu / tah-app / nostime → skill **`5fedu-project`** (installer → `<repo>/context/5fedu/`).
+- Sau khi có `context/5fedu/`, task module ERP → **`5fedu-module-parity`** (không `frontend-architect`).
+- Sửa harness (`rules/`, `skills/`, `platforms/`, `automation/`) → `context-evolution-protocol` + open **`41-harness-maintainer.md`** (alwaysApply false; mid-flow).
 
 ## Mid-flow activation (trigger khi đang chạy flow — không nghẽn, không hiểu lầm)
 
-Trigger không chỉ ở đầu turn. Khi đang execute mà xuất hiện trigger mới (cần `implementation-discovery`, `researcher`, `clean-code`, `5fedu-module-parity`…):
+Trigger không chỉ ở đầu turn. Khi đang execute mà xuất hiện trigger mới (cần `implementation-discovery`, `researcher`, `clean-code`, `5fedu-module-parity`, `qa-skills`/`browser-qa`…):
 
 - **Re-entrant, bounded:** pause step hiện tại → chạy capability phụ trong phạm vi hẹp → quay lại đúng chỗ. KHÔNG bỏ `finish-to-completion` loop, KHÔNG reset scope lock.
 - **Một primary tại một thời điểm** + minimum supporting set; 2 trigger tranh nhau → theo thứ tự conflict `10-execution.md` §"When signals conflict".
@@ -33,6 +39,7 @@ When the active repo has `context/5fedu/` and the task matches UI/module trigger
 1. **Primary:** skill `5fedu-module-parity` (router + hard stop) → **`module-mapping.md`** (checklist owner) → **`ui-delivery.md`** (surface/verify). Đọc tuần tự; không lặp checklist ở SKILL.
 2. **Cấm** dùng `frontend-architect` hoặc `master-image-generation` làm nguồn chính cho parity ERP hoặc tạo/sửa module.
 3. `frontend-architect` chỉ khi: branding/landing/redesign **ngoài** module shell ERP, và owner không yêu cầu đối chiếu template Nhân viên.
+4. Deep/manual/UI QA sau surface ổn / owner test như user → combo `qa-skills` + `browser-qa`; **không** thay parity/mapping.
 
 Keep always-loaded context stable and small. Put durable, reusable instructions before variable project facts; put volatile examples, raw evidence and long domain details behind indexes, skills or references so prompt-cache prefixes and context windows are not churned by every task.
 
