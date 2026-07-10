@@ -1,4 +1,4 @@
-# Migrate nostime project-specific content -> project-local/ (preserved from installer overlay overwrite)
+﻿# Migrate nostime project-specific content -> project-local/ (preserved from installer overlay overwrite)
 $ErrorActionPreference = "Stop"
 $Src = "/home/linhnxdeveloper/Projects/nostime/context/5fedu"
 $Overlay = Join-Path $Src "project-overlay"
@@ -29,8 +29,8 @@ foreach ($Entry in $Map.GetEnumerator()) {
 $Idx = @"
 # 5fedu Project-Local Router (NOSTIME)
 
-**Vai trò:** Spec retail/luxury **riêng dự án** — installer không ghi đè ``project-local/``.
-**Ý đồ:** Sheets, Supabase, decisions Nostime — chỉ trong repo này.
+**Vai trò:** Spec retail/luxury **riêng dự án** - installer không ghi đè ``project-local/``.
+**Ý đồ:** Sheets, Supabase, decisions Nostime - chỉ trong repo này.
 
 ## File chính
 

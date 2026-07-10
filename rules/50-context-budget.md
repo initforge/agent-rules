@@ -35,6 +35,20 @@ Các pack sau **được phép** vượt soft line/token guide vì cohesion / de
 |---|---|
 | `docs-style` (+ refs) | Self-contained docs workflow end-to-end |
 | `plan-and-handoff` (+ refs) | PAF + tier + goal autopilot liền mạch |
+| `finish-to-completion` (+ refs) | Slice completion / ledger depth |
+| `code-review` | User-invoked strict maintainability; depth > soft 3500 |
 | `projects/5fedu/**` domain packs | Progressive domain depth khi lazy-load |
 
 Always-on `rules/` vẫn cứng theo `manifest.yaml` `core_total_tokens`.
+
+## Benefit–Harm Gate (sửa / rút gọn / tinh chỉnh depth)
+
+Trước khi **slim, rewrite gầy, xóa section**, hoặc đổi fail-open → deny trên skill/rule depth:
+
+1. Ghi **Benefit** (1–3) và **Harm** (1–3).
+2. **Net:**
+   - **Lợi > hại rõ** (vd allowlist oversize, fix dead skill name) → **PROCEED**, ghi rationale ngắn.
+   - **Hòa / mơ hồ / chỉ lợi install-ceremony** → **DISCUSS_OWNER** — không tự cắt depth.
+   - **Hại ≥ lợi** (mất hard rules, approval bar, parity criteria) → **DISCUSS_OWNER** hoặc **ABORT**.
+3. **Cấm slim-for-budget:** validate/token FAIL → ưu tiên intentional oversize, soft limit, hoặc `references/` **cùng depth khi load** — không xóa tiêu chí “cho qua số”.
+4. `16-context-style` delete-first = bỏ **trùng/rác/ceremony**, không bỏ sức mạnh. Benefit–Harm **thắng** khi xung đột với “file phải gầy”.

@@ -1,4 +1,4 @@
-param(
+﻿param(
   [Parameter(Mandatory=$true)][string]$SourcePath,
   [Parameter(Mandatory=$true)][ValidateSet("global","skill","project","evidence","legacy")][string]$ChangeType,
   [switch]$Apply,

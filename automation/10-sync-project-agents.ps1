@@ -1,4 +1,4 @@
-param(
+﻿param(
   [Parameter(Mandatory = $true)][string]$ProjectRoot,
   [ValidateSet("default", "tah-app", "nostime")][string]$Profile = "default",
   [switch]$WhatIf
@@ -123,7 +123,7 @@ function New-RootAgentsContent {
 }
 
 if (-not (Test-Path $ContextDir)) {
-  Write-Warning "No context/5fedu — skip root AGENTS sync"
+  Write-Warning "No context/5fedu - skip root AGENTS sync"
   exit 0
 }
 

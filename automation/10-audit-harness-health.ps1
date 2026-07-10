@@ -1,4 +1,4 @@
-param(
+﻿param(
   [string]$Root = (Split-Path -Parent $PSScriptRoot),
   [string]$DebugLog = (Join-Path $Root ".cursor\debug-d2ae37.log"),
   [string]$RunId = "audit-pre"
@@ -18,7 +18,15 @@ function Write-DebugLog {
   }
   $Line = ($Entry | ConvertTo-Json -Compress -Depth 6)
   # #region agent log
-  Add-Content -Encoding utf8NoBOM -Path $DebugLog -Value $Line
+  try {
+    $dir = Split-Path -Parent $DebugLog
+    if ($dir -and -not (Test-Path $dir)) {
+      New-Item -ItemType Directory -Force -Path $dir | Out-Null
+    }
+    Add-Content -Encoding UTF8 -Path $DebugLog -Value $Line -ErrorAction SilentlyContinue
+  } catch {
+    # debug log must never fail the audit
+  }
   # #endregion
 }
 
@@ -150,7 +158,7 @@ Write-DebugLog "H5" "audit-harness-health.ps1:duplication" "parity-doc-chars" @{
   totalChars = ($ParitySkill + $UiLen + $MapLen)
 }
 if (($ParitySkill + $UiLen + $MapLen) -gt 12000) {
-  Add-Finding "concept" "parity-triple-stack" "warn" "ui-delivery + module-mapping + 5fedu-module-parity overlap ~$([math]::Ceiling(($ParitySkill+$UiLen+$MapLen)/3.6)) tokens — agent may read partial/wrong layer" "H5"
+  Add-Finding "concept" "parity-triple-stack" "warn" "ui-delivery + module-mapping + 5fedu-module-parity overlap ~$([math]::Ceiling(($ParitySkill+$UiLen+$MapLen)/3.6)) tokens - agent may read partial/wrong layer" "H5"
 }
 
 # H6: project-local in canonical template
@@ -182,7 +190,7 @@ Write-DebugLog "H8" "audit-harness-health.ps1:artifacts" "debug-log-artifact" @{
   cursorValidateLog = (Test-Path $CursorValidateLog)
 }
 if (Test-Path $DebugArtifact) {
-  Add-Finding "redundant" "debug-af8c2b-log" "warn" "debug-af8c2b.log in repo root — remove or gitignore" "H8"
+  Add-Finding "redundant" "debug-af8c2b-log" "warn" "debug-af8c2b.log in repo root - remove or gitignore" "H8"
 }
 
 # H9: trigger-audit full run

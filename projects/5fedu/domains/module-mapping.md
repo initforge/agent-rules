@@ -78,8 +78,17 @@ spec → submenu → module → view → tab → route → Breadcrumbs.tsx getRo
 
 **Checklist route admin mới:** `App.tsx` route + `sidebar-menu.tsx` + `admin-module-registry.ts` + **`Breadcrumbs.tsx` getRouteConfig** (label có dấu + parentPath).
 
+## Pattern inventory (shell vs variable)
+
+Máy đọc: [`references/pattern-inventory.yaml`](references/pattern-inventory.yaml).
+
+- **Shell:** toolbar/chip group/table/drawer chrome/footer/stats shell — parity **100%** reference.
+- **Variable:** drawer fields, filter chip options, KPI cards, columns, export — theo spec/schema **module**, không copy mù text Nhân viên.
+- Task UI/module: load inventory surface khớp → ghi **Shell parity** + **Variable map** trong report.
+
 ## Clone checklist (module mới)
 
+- Tra `pattern-inventory.yaml` → surface + shell_must + variable_slots
 - Tra bảng mapping → chọn module tham chiếu (thường **Nhân viên**)
 - Mở **toàn bộ** file module gốc — không chỉ 1 file
 - Route admin: `App.tsx` + `sidebar-menu.tsx` + `admin-module-registry.ts` + `Breadcrumbs` getRouteConfig

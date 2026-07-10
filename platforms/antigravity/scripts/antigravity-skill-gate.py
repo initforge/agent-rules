@@ -134,12 +134,33 @@ def workspace_paths(payload: dict[str, Any]) -> list[Path]:
     return out
 
 
+def skill_exists(slug: str) -> bool:
+    # __file__ = …/platforms/antigravity/scripts/… → parents[3] = repo root
+    repo_skills = Path(__file__).resolve().parents[3] / "skills" / slug / "SKILL.md"
+    candidates = [
+        RUNTIME_HOME / "skills" / slug / "SKILL.md",
+        repo_skills,
+        Path.home() / ".grok" / "skills" / slug / "SKILL.md",
+        Path.home() / ".codex" / "skills" / slug / "SKILL.md",
+        Path.home() / ".gemini" / "config" / "skills" / slug / "SKILL.md",
+    ]
+    return any(p.is_file() for p in candidates)
+
+
 def detect_signals(text: str) -> list[str]:
     rules = [
-        ("e2e", r"\be2e\b|playwright|\.spec\.ts|test:e2e"),
-        ("ui", r"\bui\b|giao diện|frontend|\.tsx|css"),
+        (
+            "e2e",
+            r"\be2e\b|playwright|\.spec\.ts|test:e2e|browser.?qa|verify\s+ui|"
+            r"click-through|exploratory|test như user|chrome-devtools",
+        ),
+        (
+            "ui",
+            r"\bui\b|giao diện|frontend|\.tsx|css|làm module|sửa module|sua module|"
+            r"lam module|refactor module|\bmodule\b|parity|lệch template|drawer|toolbar|listview",
+        ),
         ("research", r"research|tìm hiểu|so sánh|stuck"),
-        ("5fedu", r"5fedu|context/5fedu|tah-app"),
+        ("5fedu", r"5fedu|context/5fedu|tah-app|nostime|module-parity|\bmodule\b"),
         (
             "context-evolution",
             r"ghi nhớ|bổ sung context|sửa rule|sửa skill|dọn context|AGENTS\.md",
@@ -155,21 +176,35 @@ def detect_signals(text: str) -> list[str]:
     return out
 
 
+def _append_live(order: list[str], slug: str) -> None:
+    if slug not in order and skill_exists(slug):
+        order.append(slug)
+
+
 def build_stack(signals: list[str]) -> list[str]:
     order: list[str] = []
-    mapping = [
-        ("context-evolution", "context-evolution-protocol"),
-        ("harness", "researcher"),
-        ("5fedu", "5fedu-project"),
-        ("research", "researcher"),
-        ("ui", "product-ui-craft"),
-        ("e2e", "e2e-qa"),
-        ("goal", "plan-and-handoff"),
-        ("docs", "docs-style"),
-    ]
-    for sig, skill in mapping:
-        if sig in signals and skill not in order:
-            order.append(skill)
+    if "context-evolution" in signals:
+        _append_live(order, "context-evolution-protocol")
+    if "harness" in signals:
+        _append_live(order, "researcher")
+    if "5fedu" in signals:
+        _append_live(order, "5fedu-project")
+        if "ui" in signals or "e2e" in signals:
+            _append_live(order, "5fedu-module-parity")
+    if "research" in signals:
+        _append_live(order, "researcher")
+    if "ui" in signals:
+        if "5fedu" in signals:
+            _append_live(order, "5fedu-module-parity")
+        else:
+            _append_live(order, "frontend-architect")
+    if "e2e" in signals:
+        _append_live(order, "qa-skills")
+        _append_live(order, "browser-qa")
+    if "goal" in signals:
+        _append_live(order, "plan-and-handoff")
+    if "docs" in signals:
+        _append_live(order, "docs-style")
     return order
 
 
@@ -178,8 +213,16 @@ def pick_primary(stack: list[str], signals: list[str]) -> str | None:
         return None
     if "goal" in signals and "plan-and-handoff" in stack:
         return "plan-and-handoff"
-    if "e2e" in signals and "e2e-qa" in stack:
-        return "e2e-qa"
+    if "e2e" in signals:
+        for pref in ("browser-qa", "qa-skills"):
+            if pref in stack:
+                return pref
+    if "ui" in signals:
+        for pref in ("5fedu-module-parity", "frontend-architect"):
+            if pref in stack:
+                return pref
+    if "5fedu" in signals and "5fedu-module-parity" in stack:
+        return "5fedu-module-parity"
     if "context-evolution" in signals:
         return "context-evolution-protocol"
     return stack[-1]

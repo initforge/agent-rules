@@ -1,4 +1,4 @@
-param(
+﻿param(
   [string]$Root = (Split-Path -Parent $PSScriptRoot),
   [string]$RunId = "audit-ui-routing",
   [string]$LogPath = ""
@@ -24,25 +24,39 @@ function Test-FileContains {
 }
 
 $SkillPath = Join-Path $Root "skills\5fedu-module-parity\SKILL.md"
-Test-FileContains $SkillPath @("làm module mới", "sửa module", "refactor module", "frontend-architect") | Out-Null
+Test-FileContains $SkillPath @("làm module mới", "sửa module", "refactor module", "frontend-architect", "pattern-inventory", "shell parity", "variable map") | Out-Null
 
 $FaPath = Join-Path $Root "skills\frontend-architect\SKILL.md"
 Test-FileContains $FaPath @("hard stop", "5fedu", "ui-delivery", "tạo", "sửa") | Out-Null
 
 $CtxMap = Join-Path $Root "projects\5fedu\00-context-map.md"
-Test-FileContains $CtxMap @("làm module mới", "sửa module", "5fedu-module-parity", "cấm", "frontend-architect") | Out-Null
+Test-FileContains $CtxMap @("làm module mới", "sửa module", "5fedu-module-parity", "cấm", "frontend-architect", "pattern-inventory") | Out-Null
 
 $ModuleMapping = Join-Path $Root "projects\5fedu\domains\module-mapping.md"
-Test-FileContains $ModuleMapping @("clone checklist", "audit checklist") | Out-Null
+Test-FileContains $ModuleMapping @("clone checklist", "audit checklist", "pattern-inventory", "shell", "variable") | Out-Null
 
 $Rules30 = Join-Path $Root "rules\30-context-routing.md"
 Test-FileContains $Rules30 @("5fedu-module-parity", "tạo", "sửa", "refactor") | Out-Null
 
 $UiDelivery = Join-Path $Root "projects\5fedu\domains\ui-delivery.md"
-Test-FileContains $UiDelivery @("tạo mới", "sửa module", "generic") | Out-Null
+Test-FileContains $UiDelivery @("tạo mới", "sửa module", "generic", "pattern-inventory", "shell parity") | Out-Null
 
 $Agents = Join-Path $Root "projects\5fedu\AGENTS.md"
 Test-FileContains $Agents @("project-local", "tạo", "sửa") | Out-Null
+
+# Pattern inventory must exist and define shell_must + variable_slots
+$Inventory = Join-Path $Root "projects\5fedu\domains\references\pattern-inventory.yaml"
+if (-not (Test-Path $Inventory)) {
+  $Problems.Add("Missing pattern inventory: $Inventory")
+} else {
+  $InvBody = Get-Content -Raw -Encoding UTF8 $Inventory
+  if ($InvBody -notlike "*shell_must*" -or $InvBody -notlike "*variable_slots*") {
+    $Problems.Add("pattern-inventory.yaml must define shell_must and variable_slots")
+  }
+  if ($InvBody -notlike "*crud-list*" -and $InvBody -notlike "*surfaces:*") {
+    $Problems.Add("pattern-inventory.yaml must list surfaces")
+  }
+}
 
 if ($LogPath) {
   $LogDir = Split-Path -Parent $LogPath
@@ -53,7 +67,8 @@ if ($LogPath) {
     problemCount = $Problems.Count
     problems = @($Problems)
   }
-  ($Entry | ConvertTo-Json -Depth 4) + "`n" | Add-Content -Encoding utf8NoBOM $LogPath
+  # UTF8 works on Windows PowerShell 5.1; UTF8 is PS7+ only.
+($Entry | ConvertTo-Json -Depth 4) + "`n" | Add-Content -Encoding UTF8 $LogPath
 }
 
 if ($Problems.Count -gt 0) {

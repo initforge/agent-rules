@@ -14,13 +14,23 @@ description: "5fedu ERP module UI parity — clone/adapt from Nhân viên/Phòng
 
 ## Đọc theo thứ tự (một luồng)
 
-1. **`context/5fedu/domains/module-mapping.md`** — chọn module tham chiếu; chạy **Clone checklist** (mới) hoặc **Audit checklist** (sửa). Checklist **chỉ** ở file này.
-2. **`context/5fedu/domains/ui-delivery.md`** — surface classification + verify gates khi implement hoặc user báo lệch pattern.
-3. **`context/5fedu/domains/references/ui-delivery-detail.md`** — lazy khi cần deep-dive surface.
+1. **`context/5fedu/domains/references/pattern-inventory.yaml`** — surface → **shell_must** (parity 100%) vs **variable_slots** (fields/chips/KPIs module-specific). Bắt buộc trước code.
+2. **`context/5fedu/domains/module-mapping.md`** — chọn module tham chiếu; chạy **Clone checklist** (mới) hoặc **Audit checklist** (sửa). Checklist **chỉ** ở file này.
+3. **`context/5fedu/domains/ui-delivery.md`** — surface classification + verify gates khi implement hoặc user báo lệch pattern.
+4. **`context/5fedu/domains/references/ui-delivery-detail.md`** — lazy khi cần deep-dive surface.
+
+## Pattern Fidelity Packet (bắt buộc)
+
+Hai phần — **không** gộp:
+
+| Phần | Nội dung |
+|---|---|
+| **Shell parity** | Surface + `shell_must` từ inventory đã đối chiếu template_paths |
+| **Variable map** | Fields drawer, filter chip options, KPI cards, columns, export — nguồn spec/schema module (không copy mù Nhân viên) |
 
 ## Report contract
 
-Mọi task UI/module kết thúc bằng: `Template reference` | `Pattern fidelity` | `Verification` | `Status`
+Mọi task UI/module kết thúc bằng: `Template reference` | `Shell parity` | `Variable map` | `Pattern fidelity` | `Verification` | `Status`
 
 ## Deep QA (optional)
 

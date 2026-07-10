@@ -121,6 +121,11 @@ def save_state(state: dict[str, Any]) -> None:
     )
 
 
+def _posix_paths_in_text(text: str) -> str:
+    """Avoid C:\\\\Users noise in injected context (Windows backslash over-escape)."""
+    return text.replace("\\", "/")
+
+
 def allow() -> None:
     print(json.dumps({"decision": "allow"}))
 
@@ -129,10 +134,12 @@ def allow_with_hint(hint: str | None) -> None:
     if not hint:
         allow()
         return
-    esc = hint.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
     print(
         json.dumps(
-            {"decision": "allow", "additionalContext": esc},
+            {
+                "decision": "allow",
+                "additionalContext": _posix_paths_in_text(hint),
+            },
             ensure_ascii=False,
         )
     )
@@ -140,8 +147,12 @@ def allow_with_hint(hint: str | None) -> None:
 
 def inject_context(message: str) -> None:
     """Passive hook: inject Turn-0 / stack reminder into agent context."""
-    esc = message.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
-    print(json.dumps({"additionalContext": esc}, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"additionalContext": _posix_paths_in_text(message)},
+            ensure_ascii=False,
+        )
+    )
 
 
 HARNESS_PATH_MARKERS = (
@@ -266,15 +277,49 @@ def extract_prompt(payload: dict[str, Any]) -> str:
     return ""
 
 
+def skill_exists(slug: str) -> bool:
+    """Only inject skills that exist on disk (repo skills/ or runtime skills/)."""
+    # __file__ = …/platforms/codex/scripts/skill-gate.py → parents[3] = repo root
+    repo_skills = Path(__file__).resolve().parents[3] / "skills" / slug / "SKILL.md"
+    candidates = [
+        RUNTIME_HOME / "skills" / slug / "SKILL.md",
+        repo_skills,
+        Path.home() / ".grok" / "skills" / slug / "SKILL.md",
+        Path.home() / ".codex" / "skills" / slug / "SKILL.md",
+    ]
+    root = workspace_root()
+    if root:
+        candidates.insert(0, root / "skills" / slug / "SKILL.md")
+    return any(p.is_file() for p in candidates)
+
+
 def detect_signals(text: str) -> list[str]:
     t = text.lower()
     signals: list[str] = []
     rules = [
-        ("e2e", r"\be2e\b|playwright|\.spec\.ts|test:e2e|kiểm thử|npm run test"),
-        ("ui", r"\bui\b|giao diện|frontend|\.tsx|css|layout|component"),
+        (
+            "e2e",
+            r"\be2e\b|playwright|\.spec\.ts|test:e2e|kiểm thử|browser.?qa|"
+            r"verify\s+ui|click-through|exploratory|test như user|chrome-devtools|console error",
+        ),
+        (
+            "ui",
+            r"\bui\b|giao diện|frontend|\.tsx|css|layout|component|"
+            r"làm module|sửa module|sua module|lam module|refactor module|"
+            r"\bmodule\b|parity|lệch template|drawer|toolbar|listview",
+        ),
         ("research", r"research|tìm hiểu|so sánh|stuck|stall"),
-        ("5fedu", r"5fedu|\.agents/5fedu|tah-app|/template"),
-        ("context-evolution", r"ghi nhớ|bổ sung context|đưa vào rule|đừng lặp lại|context bị loạn|dọn context|sync rule|agent làm bậy|sửa rule|sửa skill|sửa workflow|AGENTS\.md|\.agents/|\.codex/"),
+        (
+            "5fedu",
+            r"5fedu|\.agents/5fedu|context/5fedu|tah-app|nostime|/template|"
+            r"module-parity|nhân viên|phòng ban|\bmodule\b",
+        ),
+        (
+            "context-evolution",
+            r"ghi nhớ|bổ sung context|đưa vào rule|đừng lặp lại|context bị loạn|"
+            r"dọn context|sync rule|agent làm bậy|sửa rule|sửa skill|sửa workflow|"
+            r"AGENTS\.md|\.agents/|\.codex/",
+        ),
         ("harness", r"harness|agent-rules|validate-harness|sync-all-harness|install-grok"),
         ("docs", r"\breadme\b|/docs/|tài liệu|\bspecs?\b"),
     ]
@@ -284,43 +329,54 @@ def detect_signals(text: str) -> list[str]:
     return signals
 
 
+def _append_live(stack: list[str], slug: str) -> None:
+    if slug not in stack and skill_exists(slug):
+        stack.append(slug)
+
+
 def build_stack(signals: list[str]) -> list[str]:
     stack: list[str] = []
     if "context-evolution" in signals:
-        stack.append("context-evolution-protocol")
+        _append_live(stack, "context-evolution-protocol")
     if "harness" in signals:
-        stack.extend(["researcher", "docs-style"])
+        _append_live(stack, "researcher")
+        _append_live(stack, "docs-style")
     if "5fedu" in signals:
-        stack.append("5fedu-project")
+        _append_live(stack, "5fedu-project")
+        if "ui" in signals or "e2e" in signals:
+            _append_live(stack, "5fedu-module-parity")
     if "research" in signals:
-        stack.append("researcher")
+        _append_live(stack, "researcher")
     if "ui" in signals:
-        stack.append("product-ui-craft")
+        if "5fedu" in signals:
+            _append_live(stack, "5fedu-module-parity")
+        else:
+            _append_live(stack, "frontend-architect")
     if "e2e" in signals:
-        stack.append("e2e-qa")
-    if "docs" in signals and "docs-style" not in stack:
-        stack.append("docs-style")
-    # dedupe preserve order
-    seen: set[str] = set()
-    out: list[str] = []
-    for s in stack:
-        if s not in seen:
-            seen.add(s)
-            out.append(s)
-    return out
+        _append_live(stack, "qa-skills")
+        _append_live(stack, "browser-qa")
+    if "docs" in signals:
+        _append_live(stack, "docs-style")
+    return stack
 
 
 def pick_primary(stack: list[str], signals: list[str]) -> str | None:
     if not stack:
         return None
-    if "e2e" in signals and "e2e-qa" in stack:
-        return "e2e-qa"
-    if "ui" in signals and "product-ui-craft" in stack:
-        return "product-ui-craft"
-    if "harness" in signals:
-        return stack[-1]
+    if "e2e" in signals:
+        for pref in ("browser-qa", "qa-skills"):
+            if pref in stack:
+                return pref
+    if "ui" in signals:
+        for pref in ("5fedu-module-parity", "frontend-architect"):
+            if pref in stack:
+                return pref
+    if "5fedu" in signals and "5fedu-module-parity" in stack:
+        return "5fedu-module-parity"
     if "context-evolution" in signals and "context-evolution-protocol" in stack:
         return "context-evolution-protocol"
+    if "harness" in signals:
+        return stack[-1]
     return stack[-1]
 
 

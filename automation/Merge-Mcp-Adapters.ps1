@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 
 function Get-CodebaseMcpBin {
   $Cmd = Get-Command codebase-memory-mcp -ErrorAction SilentlyContinue

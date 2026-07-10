@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 $PSScriptRootResolved = $PSScriptRoot
 $RepoRoot = Split-Path -Parent $PSScriptRootResolved
 $Harness = Join-Path $RepoRoot "projects\5fedu"

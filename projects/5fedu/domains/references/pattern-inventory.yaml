@@ -1,0 +1,113 @@
+# 5fedu Pattern Inventory — shell invariants vs module-variable slots
+# Agent MUST load matched surface before coding UI/module.
+# Shell = parity 100% with reference. Variable = module-specific (fields, chips, KPIs…).
+
+version: 1
+template_repo: "https://github.com/admin5fedu/5f-template-ket-noi-supabase"
+template_root_hint: "features/he-thong/"
+
+surfaces:
+  crud-list:
+    reference: nhan-vien
+    shell_must:
+      - ToolbarFilterChipGroup  # not bare Combobox on toolbar
+      - ColumnManager via GenericToolbar
+      - GenericTable + TablePaginationFooter
+      - row: primary Edit + RowActionsOverflowMenu (portalEnabled)
+      - row-click opens detail; no "Xem chi tiết" button
+      - search + filter chips + export actions when reference has them
+    variable_slots:
+      - filter_chips: options from module domain/status enum
+      - columns: entity fields + TABLE_COLUMN_PRESETS
+      - exportColumns / exportMapFn
+      - row overflow actions set
+    template_paths:
+      - features/he-thong/nhan-vien/
+
+  form-drawer:
+    reference: nhan-vien
+    shell_must:
+      - GenericDrawer chrome + FormSection/FormGrid
+      - FormDrawerFooter submit/cancel (async disabled+spinner)
+      - validation via schema/rhf pattern of reference
+    variable_slots:
+      - form fields / zod schema from entity
+      - default values / relation pickers
+    template_paths:
+      - features/he-thong/nhan-vien/
+
+  detail-drawer:
+    reference: nhan-vien
+    shell_must:
+      - header summary + DetailSection cards
+      - footer Đóng / Sửa / Xóa (permission-gated)
+      - no duplicate Edit/Delete in body toolbar
+    variable_slots:
+      - DetailField set from entity columns
+      - embedded child grids if module has children
+      - module-specific business actions in body toolbar only
+    template_paths:
+      - features/he-thong/nhan-vien/
+
+  hierarchy-list:
+    reference: phong-ban
+    shell_must:
+      - HierarchyListShell / HierarchyTable pattern
+      - parent-child expand; not flat-only if source is 2-level
+    variable_slots:
+      - parent/child field names
+      - filter chips for hierarchy roots
+    template_paths:
+      - features/he-thong/phong-ban/
+
+  hierarchy-entity:
+    reference: chuc-vu
+    shell_must:
+      - parent (phong-ban) axis retained
+      - list/form/detail pair like reference entity-in-tree
+    variable_slots:
+      - entity fields; parent select options
+    template_paths:
+      - features/he-thong/chuc-vu/
+
+  stats-tab:
+    reference: nhan-vien-stats
+    shell_must:
+      - DashboardToolbar filter/report shell
+      - StatsKpiGrid + chart region + StatsDataGrid footer pattern
+      - StatsDrillDownDialog when reference has drill-down
+      - no import hard-coded KPI popover from another module
+    variable_slots:
+      - KPI metric keys/labels
+      - chart series
+      - stats table columns / date range fields
+    template_paths:
+      - features/he-thong/nhan-vien/
+
+  embedded-child-grid:
+    reference: phong-ban
+    shell_must:
+      - DetailSection + EmbeddedChildDataGrid
+      - badge count + Add primary button pattern
+      - row actions parity with main table (Edit visible + overflow)
+    variable_slots:
+      - child entity columns and form fields
+    template_paths:
+      - features/he-thong/phong-ban/
+
+  confirm-danger:
+    reference: nhan-vien
+    shell_must:
+      - useConfirmStore confirm variant danger before delete/bulk danger
+    variable_slots:
+      - confirm copy/title per action
+    template_paths:
+      - features/he-thong/nhan-vien/
+
+fidelity_packet_required:
+  - Template reference
+  - Shell parity (surface + shell_must checked)
+  - Variable map (fields / chips / KPIs / columns sources)
+  - Pattern fidelity
+  - Verification
+  - Status

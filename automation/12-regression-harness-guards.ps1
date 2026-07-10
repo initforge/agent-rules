@@ -1,4 +1,4 @@
-# Regression guards for dual-tree, BOM, glossary, intentional-oversize — drives shipped validate.
+﻿# Regression guards for dual-tree, BOM, glossary, intentional-oversize - drives shipped validate.
 param([string]$Root = (Split-Path -Parent $PSScriptRoot))
 $ErrorActionPreference = "Stop"
 $Failed = 0
@@ -11,7 +11,7 @@ function Assert-True([bool]$Cond, [string]$Msg) {
 & (Join-Path $PSScriptRoot "03-validate-context.ps1")
 Assert-True ($LASTEXITCODE -eq 0) "03-validate-context.ps1 exit 0"
 
-# 2) docs-style BOM — read real file bytes
+# 2) docs-style BOM - read real file bytes
 $Docs = Join-Path $Root "skills\docs-style\SKILL.md"
 $Bytes = [System.IO.File]::ReadAllBytes($Docs)
 $NoBom = -not ($Bytes.Length -ge 3 -and $Bytes[0] -eq 0xEF -and $Bytes[1] -eq 0xBB -and $Bytes[2] -eq 0xBF)

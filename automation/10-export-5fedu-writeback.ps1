@@ -1,4 +1,4 @@
-param(
+﻿param(
   [Parameter(Mandatory=$true)][string]$ProjectRoot,
   [Parameter(Mandatory=$true)][string[]]$RelativePaths,
   [switch]$Apply

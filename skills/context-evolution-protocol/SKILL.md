@@ -111,6 +111,7 @@ Hỏi trước khi split hoặc thêm reference bắt buộc:
 
 Before editing:
 
+- **Benefit–Harm Gate** (`rules/50-context-budget.md`) when slim/rewrite/depth cut: Benefit + Harm + Net → PROCEED | DISCUSS_OWNER | ABORT. **Cấm slim-for-budget.**
 - `rg` for existing wording, synonyms, file names, and rule concepts.
 - If `<working-repo>/.agent/trace.jsonl` exists, scan recent `friction` fields for repeated patterns before promoting.
 - Identify canonical source and mirrors.

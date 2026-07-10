@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
-# Wrapper for skill orchestrator hooks - delegates to skill-gate.py (fail-open).
+# Wrapper for antigravity-skill-gate.py — resolves real Python on Windows (fail-open).
 set -uo pipefail
 DIR="$(cd "$(dirname "$0")" && pwd)"
-GATE="$DIR/skill-gate.py"
-# Fallback ten cu neu ton tai; khong thi dung skill-gate.py.
-[ -f "$DIR/grok-skill-gate.py" ] && GATE="$DIR/grok-skill-gate.py"
+GATE="$DIR/antigravity-skill-gate.py"
+EVENT="${1:-}"
 
-# Windows: `python3` often resolves to Microsoft Store stub - prefer real installs.
 resolve_python() {
-  local cand
+  local cand resolved
   for cand in \
     "${HARNESS_PYTHON:-}" \
     "${PYTHON_BIN:-}" \
@@ -18,8 +16,6 @@ resolve_python() {
   do
     [ -z "$cand" ] && continue
     if command -v "$cand" >/dev/null 2>&1; then
-      # Reject WindowsApps Store stub (opens Store, no real interpreter).
-      local resolved
       resolved="$(command -v "$cand" 2>/dev/null || true)"
       case "$resolved" in
         *WindowsApps*) continue ;;
@@ -30,12 +26,10 @@ resolve_python() {
       fi
     fi
   done
-  # Common Windows install path (Git Bash often has USERNAME, not USER)
   local win_user="${USER:-${USERNAME:-}}"
   for cand in \
     "/c/Users/${win_user}/AppData/Local/Programs/Python/Python312/python.exe" \
     "/c/Users/${win_user}/AppData/Local/Programs/Python/Python311/python.exe" \
-    "/c/Python312/python.exe" \
     "/usr/bin/python3" \
     "/usr/local/bin/python3"
   do
@@ -48,9 +42,12 @@ resolve_python() {
 }
 
 PY="$(resolve_python)" || {
-  # Fail-open: never block the agent if Python missing
-  echo '{"decision":"allow","note":"skill-gate: python not found (fail-open)"}'
+  echo '{"decision":"allow","note":"antigravity-skill-gate: python not found (fail-open)"}'
   exit 0
 }
 
-exec "$PY" "$GATE"
+if [ -n "$EVENT" ]; then
+  exec "$PY" "$GATE" "$EVENT"
+else
+  exec "$PY" "$GATE"
+fi

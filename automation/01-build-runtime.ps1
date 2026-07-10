@@ -1,4 +1,4 @@
-param([string]$Root = (Split-Path -Parent $PSScriptRoot))
+﻿param([string]$Root = (Split-Path -Parent $PSScriptRoot))
 $ErrorActionPreference = "Stop"
 
 $BuildRoot = Join-Path $Root "05-generated\runtime-build"

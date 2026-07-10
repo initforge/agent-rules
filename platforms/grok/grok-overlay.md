@@ -13,3 +13,4 @@ description: Grok-only runtime delta.
 - Use Grok-native hooks/inspection only inside Grok.
 - Deep/manual/UI QA → combo `qa-skills` + `browser-qa`; dual MCP: Playwright + Chrome DevTools.
 - After install: **restart Grok session** so inject reloads from disk (cached sessions may keep old rules until restart).
+- **Dual machine:** Linux và Windows là runtime riêng — cài hooks/rules trên **từng máy**; không copy `~/.grok/hooks/*.json` chéo OS.

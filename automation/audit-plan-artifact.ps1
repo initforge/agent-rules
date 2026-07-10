@@ -1,4 +1,4 @@
-param(
+﻿param(
   [string]$Root = (Split-Path -Parent $PSScriptRoot),
   [string]$PlanPath = "",
   [string]$RunId = "audit-plan-artifact"
@@ -69,11 +69,11 @@ Test-FileContains $AntigravityOverlay @("L0", "researcher", "capability-tier-rou
 Test-FileContains $PafTemplate @("Scope lock", "Context routing", "Phases", "Known-unknowns", "Plan QA", "HANDOFF", "Revision protocol", "preferred_tier", "min_tier", "allowed_tiers") | Out-Null
 Test-FileContains $UiDetail @("plan-artifact-template") | Out-Null
 
-# Path C delegate — no long execute loop in plan-and-handoff
+# Path C delegate - no long execute loop in plan-and-handoff
 if (Test-Path $SkillPath) {
   $SkillBody = Get-Content -Raw -Encoding UTF8 $SkillPath
   if ($SkillBody -match "FOR each deliverable") {
-    $Problems.Add("plan-and-handoff duplicates finish-to-completion loop — Path C should delegate only")
+    $Problems.Add("plan-and-handoff duplicates finish-to-completion loop - Path C should delegate only")
   }
   if (($SkillBody | Select-String -Pattern "finish-to-completion" -AllMatches).Matches.Count -lt 1) {
     $Problems.Add("plan-and-handoff Path C must delegate to finish-to-completion")
@@ -87,7 +87,7 @@ foreach ($CheckPath in @($LifePath, $SkillPath, $AntigravityOverlay)) {
     $Lower = (Get-Content -Raw -Encoding UTF8 $CheckPath).ToLowerInvariant()
     foreach ($P in $RigidPatterns) {
       if ($Lower -like "*$P*") {
-        $Problems.Add("Rigid model binding '$P' in $CheckPath — use tier routing instead")
+        $Problems.Add("Rigid model binding '$P' in $CheckPath - use tier routing instead")
       }
     }
   }

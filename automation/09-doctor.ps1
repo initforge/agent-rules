@@ -1,4 +1,4 @@
-param(
+﻿param(
   [string]$Root = (Split-Path -Parent $PSScriptRoot),
   [ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platform = "all"
 )
@@ -126,7 +126,7 @@ if (Test-Path $GrokInject) {
       platform = "grok"
       check    = "legacy-inject-rules"
       status   = "NOT_LIVE"
-      detail   = "Legacy dual-tree still at $GrokInject : $($LegacyHits -join ', ') — re-run 02-install-runtime"
+      detail   = "Legacy dual-tree still at $GrokInject : $($LegacyHits -join ', ') - re-run 02-install-runtime"
     }
   } else {
     $LeanOk = (Test-Path (Join-Path $GrokInject "00-bootstrap.md")) -and (Test-Path (Join-Path $GrokInject "10-execution.md"))
@@ -147,7 +147,7 @@ if (Test-Path $GrokInject) {
             platform = "grok"
             check    = "inject-vs-rules-drift"
             status   = "NOT_LIVE"
-            detail   = "Inject path drift vs $GrokManifestRules — re-run install"
+            detail   = "Inject path drift vs $GrokManifestRules - re-run install"
           }
         } else {
           $Report += [pscustomobject]@{

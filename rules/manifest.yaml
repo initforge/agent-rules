@@ -14,7 +14,7 @@ load_order:
   - 50-context-budget.md
 budgets:
   bootstrap_tokens: 300
-  core_total_tokens: 7000
+  core_total_tokens: 7500
   platform_overlay_tokens: 600
   capability_tokens: 3500
   project_index_tokens: 1800

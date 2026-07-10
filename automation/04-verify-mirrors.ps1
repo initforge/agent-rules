@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 & (Join-Path $PSScriptRoot "01-build-runtime.ps1") -Root $Root
 

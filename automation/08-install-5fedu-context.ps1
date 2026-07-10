@@ -1,4 +1,4 @@
-param(
+﻿param(
   [Parameter(Mandatory=$true)][string]$ProjectRoot,
   [ValidateSet("default","tah-app","nostime")][string]$Profile = "default",
   [string]$TemplateUrl = "",
@@ -19,7 +19,7 @@ if (-not (Test-Path $Template)) { throw "Missing 5fedu template: $Template" }
 
 # [KEEP f856075] Run validation check first
 & (Join-Path $RepoRoot "automation\03-validate-context.ps1")
-if ($LASTEXITCODE -ne 0) { throw "validate-context failed — fix harness before 5fedu context install" }
+if ($LASTEXITCODE -ne 0) { throw "validate-context failed - fix harness before 5fedu context install" }
 
 $ProfileConfig = $null
 if ($Profile -ne "default") {
@@ -51,11 +51,11 @@ function Set-ProjectPointers {
 
 Canonical project context: ``$PointerEntry``.
 
-Load from **this repo only** — never from ``agent-rules/projects/5fedu/`` (template source).
+Load from **this repo only** - never from ``agent-rules/projects/5fedu/`` (template source).
 
-Project-specific facts (sheets, Supabase, decisions): ``context/5fedu/project-local/`` — installer never overwrites this folder.
+Project-specific facts (sheets, Supabase, decisions): ``context/5fedu/project-local/`` - installer never overwrites this folder.
 
-Known 5fedu repos: tah-app, nostime — see agent-rules ``projects/known-5fedu-repos.md``.
+Known 5fedu repos: tah-app, nostime - see agent-rules ``projects/known-5fedu-repos.md``.
 "@
   foreach ($Adapter in @(".agents", ".codex")) {
     $Dir = Join-Path $Project $Adapter

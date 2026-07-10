@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 $Problems = [System.Collections.Generic.List[string]]::new()
 
@@ -32,8 +32,8 @@ $SkillFiles = Get-ChildItem (Join-Path $Root "skills") -Directory | ForEach-Obje
   Join-Path $_.FullName "SKILL.md"
 } | Where-Object { Test-Path $_ }
 
-# Owner-intentional oversize packs (cohesion) — do not FAIL size-only (see rules/50-context-budget.md)
-$IntentionalOversizeSkills = @("docs-style", "plan-and-handoff", "finish-to-completion")
+# Owner-intentional oversize packs (cohesion) - do not FAIL size-only (see rules/50-context-budget.md)
+$IntentionalOversizeSkills = @("docs-style", "plan-and-handoff", "finish-to-completion", "code-review")
 
 $Slugs = @()
 foreach ($SkillPath in $SkillFiles) {
@@ -68,7 +68,8 @@ $RequiredPaths = @(
   "skills\plan-and-handoff\SKILL.md",
   "skills\plan-and-handoff\references\plan-artifact-template.md",
   "skills\plan-and-handoff\references\capability-tier-routing.md",
-  "skills\finish-to-completion\references\slice-gate-protocol.md"
+  "skills\finish-to-completion\references\slice-gate-protocol.md",
+  "projects\5fedu\domains\references\pattern-inventory.yaml"
 )
 foreach ($Path in $RequiredPaths) {
   if (-not (Test-Path (Join-Path $Root $Path))) { $Problems.Add("Missing required path: $Path") }

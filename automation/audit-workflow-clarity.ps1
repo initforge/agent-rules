@@ -1,4 +1,4 @@
-# Phase 6e — Workflow hybrid audit (§E)
+﻿# Phase 6e - Workflow hybrid audit (§E)
 param(
   [string]$LogPath = (Join-Path (Split-Path -Parent $PSScriptRoot) ".cursor\debug-75fce4.log")
 )

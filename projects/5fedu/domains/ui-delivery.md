@@ -5,9 +5,9 @@
 
 ## Quick gate (đọc trước)
 
-- **Tạo mới / sửa module:** chạy checklist tại `module-mapping.md` §Clone / §Audit — không lặp checklist ở đây.
+- **Tạo mới / sửa module:** đọc `references/pattern-inventory.yaml` (shell vs variable) rồi checklist tại `module-mapping.md` §Clone / §Audit — không lặp checklist ở đây.
 - **User báo lệch/sai pattern:** audit **toàn surface** theo §Surface classification — **không** `frontend-architect`.
-- PASS cần `Template reference` + verification evidence.
+- PASS cần `Template reference` + **Shell parity** + **Variable map** + verification evidence.
 
 ## Core UI source of truth
 

@@ -1,9 +1,9 @@
-param([ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platform = "all")
+﻿param([ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platform = "all")
 $ErrorActionPreference = "Stop"
 
 $Root = Split-Path -Parent $PSScriptRoot
 & (Join-Path $PSScriptRoot "03-validate-context.ps1")
-if ($LASTEXITCODE -ne 0) { throw "validate-context failed — fix harness before runtime install" }
+if ($LASTEXITCODE -ne 0) { throw "validate-context failed - fix harness before runtime install" }
 & (Join-Path $PSScriptRoot "01-build-runtime.ps1") -Root $Root
 . (Join-Path $PSScriptRoot "Merge-Mcp-Adapters.ps1")
 
@@ -177,9 +177,20 @@ foreach ($Name in $Selected) {
 & (Join-Path $PSScriptRoot "09-doctor.ps1") -Root $Root -Platform $Platform
 
 $HooksScript = Join-Path $PSScriptRoot "11-install-runtime-hooks.sh"
-if ((Get-Command bash -ErrorAction SilentlyContinue) -and (Test-Path -LiteralPath $HooksScript)) {
-  Write-Host "Installing runtime hooks (Codex/Antigravity/Grok/pre-commit)..."
-  & bash $HooksScript
+# Prefer Git Bash on Windows; system `bash` may be a broken WSL relay.
+$BashCandidates = @(
+  (Get-Command bash -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -ErrorAction SilentlyContinue),
+  "C:\Program Files\Git\bin\bash.exe",
+  "C:\Program Files\Git\usr\bin\bash.exe"
+) | Where-Object { $_ -and (Test-Path -LiteralPath $_) } | Select-Object -Unique
+$GitBash = $BashCandidates | Where-Object { $_ -match 'Git\\bin\\bash|Git/bin/bash' } | Select-Object -First 1
+if (-not $GitBash) { $GitBash = $BashCandidates | Select-Object -First 1 }
+if ($GitBash -and (Test-Path -LiteralPath $HooksScript)) {
+  Write-Host "Installing runtime hooks via $GitBash ..."
+  & $GitBash $HooksScript
+  if ($LASTEXITCODE -ne 0) {
+    Write-Warning "Runtime hooks install returned exit $LASTEXITCODE - re-run with Git Bash: `"$GitBash`" automation/11-install-runtime-hooks.sh"
+  }
 } else {
-  Write-Host "Skip runtime hooks: bash or 11-install-runtime-hooks.sh missing — chạy thủ công sau install."
+  Write-Host "Skip runtime hooks: bash or 11-install-runtime-hooks.sh missing - chay thu cong sau install."
 }

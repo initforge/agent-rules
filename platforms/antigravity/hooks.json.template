@@ -3,7 +3,7 @@
     "PreInvocation": [
       {
         "type": "command",
-        "command": "python3 __ANTIGRAVITY_HOME__/scripts/antigravity-skill-gate.py PreInvocation",
+        "command": "\"__PYTHON__\" \"__ANTIGRAVITY_HOME__/scripts/antigravity-skill-gate.py\" PreInvocation",
         "timeout": 15
       }
     ]
@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 __ANTIGRAVITY_HOME__/scripts/antigravity-skill-gate.py PreToolUse",
+            "command": "\"__PYTHON__\" \"__ANTIGRAVITY_HOME__/scripts/antigravity-skill-gate.py\" PreToolUse",
             "timeout": 10
           }
         ]
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 __ANTIGRAVITY_HOME__/scripts/antigravity-skill-gate.py PostToolUse",
+            "command": "\"__PYTHON__\" \"__ANTIGRAVITY_HOME__/scripts/antigravity-skill-gate.py\" PostToolUse",
             "timeout": 15
           }
         ]
@@ -40,7 +40,7 @@
     "Stop": [
       {
         "type": "command",
-        "command": "python3 __ANTIGRAVITY_HOME__/scripts/antigravity-skill-gate.py Stop",
+        "command": "\"__PYTHON__\" \"__ANTIGRAVITY_HOME__/scripts/antigravity-skill-gate.py\" Stop",
         "timeout": 20
       }
     ]

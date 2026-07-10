@@ -1,4 +1,4 @@
-# Compare harness execution power across commits — writes NDJSON audit evidence
+﻿# Compare harness execution power across commits - writes NDJSON audit evidence
 param(
   [string]$Base = "ba8a55f",
   [string]$Mid = "f856075",

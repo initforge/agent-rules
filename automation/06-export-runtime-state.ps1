@@ -1,4 +1,4 @@
-param([ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platform = "all")
+﻿param([ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platform = "all")
 $ErrorActionPreference = "Stop"
 
 $Root = Split-Path -Parent $PSScriptRoot

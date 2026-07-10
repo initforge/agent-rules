@@ -1,4 +1,4 @@
-# One-time migrate tah-app legacy context -> project-local/
+﻿# One-time migrate tah-app legacy context -> project-local/
 $ErrorActionPreference = "Stop"
 $Src = "/home/linhnxdeveloper/Projects/Tah-app/context/5fedu"
 $Pl = Join-Path $Src "project-local"
@@ -76,8 +76,8 @@ $Idx = Join-Path $Pl "00-index.md"
 $Header = @"
 # 5fedu Project-Local Router (Tah-app)
 
-**Vai trò:** Router và rule sống **riêng dự án** — installer không ghi đè ``project-local/``.
-**Ý đồ:** Sheets map, Supabase spec, decisions đã chốt, transport, e2e — chỉ trong repo này.
+**Vai trò:** Router và rule sống **riêng dự án** - installer không ghi đè ``project-local/``.
+**Ý đồ:** Sheets map, Supabase spec, decisions đã chốt, transport, e2e - chỉ trong repo này.
 
 ## File chính
 
