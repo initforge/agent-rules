@@ -34,12 +34,16 @@ Owner chạy **hai máy vật lý tách** — **không** share `~/.codex` / `~/.
 | OS | Python | bash | Ghi chú |
 |---|---|---|---|
 | **Linux** | `python3` (`/usr/bin/python3`) | `/bin/bash` | Path hook giữ `/home/<user>/...` |
-| **Windows** | Python.org (skip WindowsApps stub) | **Git Bash** (không WSL hỏng) | Grok LIVE: `~/.grok/hooks/bin/`; prefer `C:/Users/...` |
+| **Windows** | Python.org (skip WindowsApps stub) | **Git Bash** (không WSL hỏng) | Grok LIVE: `python.exe` + `hooks/bin/*.py` (không bare `.sh`) |
 
 ## Runtime hooks (Grok) — LIVE path khác Codex
 
-- Grok **không** chỉ dùng `~/.grok/scripts/`. Orchestrator: `~/.grok/hooks/skill-orchestrator.json` → **`~/.grok/hooks/bin/grok-skill-gate.sh`**.
-- `11-install-runtime-hooks.sh` **bắt buộc** sync skill-gate vào **cả** `hooks/bin/` và `scripts/`, resolve Python thật (skip WindowsApps stub), smoke **LIVE** `hooks/bin`.
+- Grok **không** chỉ dùng `~/.grok/scripts/`. Orchestrator: `~/.grok/hooks/skill-orchestrator.json`.
+- **Windows:** command = **một path** `hooks/bin/grok-skill-gate.cmd` (CreateProcess-safe; `.cmd` gọi `python.exe` + sibling `.py`).
+- **Linux:** command = `python3 hooks/bin/grok-skill-gate.py` (unquoted nếu path không space).
+- **Cấm** bare `grok-skill-gate.sh` → OS **193**. **Cấm** nested `\"python\" \"gate.py\"` → **exit 1**.
+- Sau khi sửa hook JSON: `/hooks` → phím **`r`** reload, hoặc **session mới** (session cache command cũ).
+- Wrapper `.sh` chỉ cho Git Bash manual.
 - Antigravity: `hooks.json` dùng absolute `__PYTHON__` + `.py` (không phụ thuộc `bash` WSL / placeholder).
 
 ## Runtime hooks (Antigravity) — unattended + skill inject

@@ -223,41 +223,103 @@ EOS
   chmod +x "$GROK_HOME/hooks/bin/"*.sh "$GROK_HOME/hooks/bin/"*.py \
            "$GROK_HOME/scripts/"*.sh "$GROK_HOME/scripts/"*.py 2>/dev/null || true
 
-  GROK_BIN_HOOK="$(to_hook_path "$GROK_HOME/hooks/bin/grok-skill-gate.sh")"
-  # Write skill-orchestrator pointing at LIVE bin path (Windows-friendly)
-  cat > "$GROK_HOME/hooks/skill-orchestrator.json" <<EOF
-{
-  "hooks": {
-    "SessionStart": [
-      { "hooks": [ { "type": "command", "command": "${GROK_BIN_HOOK}", "timeout": 5 } ] }
-    ],
-    "UserPromptSubmit": [
-      { "hooks": [ { "type": "command", "command": "${GROK_BIN_HOOK}", "timeout": 5 } ] }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "run_terminal_command|Bash|Shell",
-        "hooks": [ { "type": "command", "command": "${GROK_BIN_HOOK}", "timeout": 8 } ]
-      },
-      {
-        "matcher": "search_replace|Edit|Write",
-        "hooks": [ { "type": "command", "command": "${GROK_BIN_HOOK}", "timeout": 5 } ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "run_terminal_command|Bash|Shell|search_replace|Edit|Write",
-        "hooks": [ { "type": "command", "command": "${GROK_BIN_HOOK}", "timeout": 8 } ]
-      }
-    ],
-    "Stop": [
-      { "hooks": [ { "type": "command", "command": "${GROK_BIN_HOOK}", "timeout": 5 } ] }
-    ]
-  }
-}
+  # Grok hooks spawn:
+  # 1) Bare .sh → Windows OS error 193 (CreateProcess, no shell).
+  # 2) Nested quotes \"python\" \"gate.py\" → cmd exit 1 (filename syntax incorrect).
+  # 3) Multi-token python+.py still fragile under some Windows spawners.
+  # Windows: single-path .cmd wrapper (CreateProcess-safe). Linux: python + .py unquoted.
+  # Keep .sh for Git-Bash manual smoke only — never sole orchestrator command on Windows.
+  GROK_GATE_PY_FS="$GROK_HOME/hooks/bin/grok-skill-gate.py"
+  GROK_GATE_CMD_FS="$GROK_HOME/hooks/bin/grok-skill-gate.cmd"
+  GROK_GATE_PY="$(to_hook_path "$GROK_GATE_PY_FS")"
+  IS_WIN=0
+  case "$(uname -s 2>/dev/null || true)" in
+    MINGW*|MSYS*|CYGWIN*) IS_WIN=1 ;;
+  esac
+  case "$PY_HOOK" in *.exe|*/Python/*|[A-Za-z]:/*) IS_WIN=1 ;; esac
+
+  if [ "$IS_WIN" -eq 1 ]; then
+    # Single-path .cmd: Grok CreateProcess + stdin pipe work; avoids quote parsing.
+    PY_WIN="$(to_hook_path "$PY" | tr '/' '\\')"
+    cat > "$GROK_GATE_CMD_FS" <<EOF
+@echo off
+setlocal EnableExtensions
+set "GATE_PY=%~dp0grok-skill-gate.py"
+set "PY=${PY_WIN}"
+if not exist "%PY%" (
+  where py >nul 2>&1 && set "PY=py" || set "PY=python"
+)
+set PYTHONUTF8=1
+set PYTHONIOENCODING=utf-8
+"%PY%" "%GATE_PY%"
+exit /b %ERRORLEVEL%
 EOF
+    GROK_ORCH_CMD="$(to_hook_path "$GROK_GATE_CMD_FS")"
+    echo "[11] Grok Windows orchestrator: $GROK_ORCH_CMD"
+  else
+    GROK_ORCH_CMD="${PY_HOOK} ${GROK_GATE_PY}"
+    echo "[11] Grok Linux orchestrator: $GROK_ORCH_CMD"
+  fi
+
+  "$PY" - "$GROK_HOME/hooks/skill-orchestrator.json" "$GROK_ORCH_CMD" <<'PY'
+import json, sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+cmd = sys.argv[2].replace("\\", "/")
+
+def hook(timeout: int) -> dict:
+    return {"hooks": [{"type": "command", "command": cmd, "timeout": timeout}]}
+
+data = {
+    "hooks": {
+        "SessionStart": [hook(5)],
+        "UserPromptSubmit": [hook(5)],
+        "PreToolUse": [
+            {
+                "matcher": "run_terminal_command|Bash|Shell",
+                "hooks": [{"type": "command", "command": cmd, "timeout": 8}],
+            },
+            {
+                "matcher": "search_replace|Edit|Write",
+                "hooks": [{"type": "command", "command": cmd, "timeout": 5}],
+            },
+        ],
+        "PostToolUse": [
+            {
+                "matcher": "run_terminal_command|Bash|Shell|search_replace|Edit|Write",
+                "hooks": [{"type": "command", "command": cmd, "timeout": 8}],
+            }
+        ],
+        "Stop": [hook(5)],
+    }
+}
+path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+print(f"[11] wrote {path} command={cmd}")
+PY
   if grep -qE '__CODEX_HOME__|__ANTIGRAVITY_HOME__' "$GROK_HOME/hooks/skill-orchestrator.json"; then
     echo "[11] FAIL: placeholder in Grok skill-orchestrator" >&2
+    exit 1
+  fi
+  # Hard guard: never reintroduce bare .sh as CreateProcess target
+  if grep -qE '"command"[[:space:]]*:[[:space:]]*"[^"]*grok-skill-gate\.sh"' \
+       "$GROK_HOME/hooks/skill-orchestrator.json"; then
+    echo "[11] FAIL: Grok skill-orchestrator still points at bare .sh (Win32 error 193)" >&2
+    exit 1
+  fi
+  # Hard guard: nested \"python\" \"gate.py\" breaks cmd on Windows (exit 1)
+  if grep -qE '"command"[[:space:]]*:[[:space:]]*"\\"[^"]+\\" \\"[^"]+\\"' \
+       "$GROK_HOME/hooks/skill-orchestrator.json"; then
+    echo "[11] FAIL: Grok skill-orchestrator uses nested quotes (cmd exit 1 on Windows)" >&2
+    exit 1
+  fi
+  if [ "$IS_WIN" -eq 1 ]; then
+    if ! grep -q 'grok-skill-gate\.cmd' "$GROK_HOME/hooks/skill-orchestrator.json"; then
+      echo "[11] FAIL: Windows Grok orchestrator missing grok-skill-gate.cmd" >&2
+      exit 1
+    fi
+  elif ! grep -qE 'grok-skill-gate\.(py|cmd)' "$GROK_HOME/hooks/skill-orchestrator.json"; then
+    echo "[11] FAIL: Grok skill-orchestrator missing gate entry" >&2
     exit 1
   fi
 fi
@@ -294,7 +356,31 @@ test_pipe() {
 
 test_pipe "Codex skill-gate.sh" "\"$CODEX_HOME/scripts/skill-gate.sh\""
 test_pipe "Grok scripts/skill-gate.sh" "\"$GROK_HOME/scripts/skill-gate.sh\""
-test_pipe "Grok LIVE hooks/bin/grok-skill-gate.sh" "\"$GROK_HOME/hooks/bin/grok-skill-gate.sh\""
+# LIVE path Grok actually runs
+if [ -f "$GROK_HOME/hooks/bin/grok-skill-gate.py" ]; then
+  test_pipe "Grok LIVE hooks/bin via python" "\"$PY\" \"$GROK_HOME/hooks/bin/grok-skill-gate.py\""
+fi
+if [ -f "$GROK_HOME/hooks/bin/grok-skill-gate.cmd" ]; then
+  test_pipe "Grok LIVE hooks/bin via .cmd" "\"$GROK_HOME/hooks/bin/grok-skill-gate.cmd\""
+fi
+if [ -f "$GROK_HOME/hooks/skill-orchestrator.json" ]; then
+  if grep -qE '"command"[[:space:]]*:[[:space:]]*"[^"]*grok-skill-gate\.sh"' \
+       "$GROK_HOME/hooks/skill-orchestrator.json"; then
+    echo "  Grok orchestrator bare-.sh guard: FAIL" >&2
+    FAIL=1
+  elif grep -qE '"command"[[:space:]]*:[[:space:]]*"\\"[^"]+\\" \\"[^"]+\\"' \
+       "$GROK_HOME/hooks/skill-orchestrator.json"; then
+    echo "  Grok orchestrator nested-quotes guard: FAIL" >&2
+    FAIL=1
+  elif grep -q 'grok-skill-gate\.cmd' "$GROK_HOME/hooks/skill-orchestrator.json"; then
+    echo "  Grok orchestrator single-path .cmd: OK"
+  elif grep -q 'grok-skill-gate\.py' "$GROK_HOME/hooks/skill-orchestrator.json"; then
+    echo "  Grok orchestrator python+.py: OK"
+  else
+    echo "  Grok orchestrator gate entry: FAIL" >&2
+    FAIL=1
+  fi
+fi
 
 # Antigravity PreInvocation via python (live)
 if [ -f "$ANTIGRAVITY_HOME/scripts/antigravity-skill-gate.py" ]; then

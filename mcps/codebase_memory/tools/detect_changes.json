@@ -1,0 +1,30 @@
+{
+  "name": "detect_changes",
+  "description": "Detect code changes and their impact",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string"
+      },
+      "scope": {
+        "type": "string"
+      },
+      "depth": {
+        "type": "integer",
+        "default": 2
+      },
+      "base_branch": {
+        "type": "string",
+        "default": "main"
+      },
+      "since": {
+        "type": "string",
+        "description": "Git ref or date to compare from (e.g. HEAD~5, v0.5.0, 2026-01-01)"
+      }
+    },
+    "required": [
+      "project"
+    ]
+  }
+}

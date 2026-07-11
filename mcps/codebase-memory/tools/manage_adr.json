@@ -1,0 +1,32 @@
+{
+  "name": "manage_adr",
+  "description": "Create or update Architecture Decision Records",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string"
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "get",
+          "update",
+          "sections"
+        ]
+      },
+      "content": {
+        "type": "string"
+      },
+      "sections": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": [
+      "project"
+    ]
+  }
+}

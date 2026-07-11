@@ -1,0 +1,24 @@
+{
+  "name": "get_code_snippet",
+  "description": "Read source code for a function/class/symbol. IMPORTANT: First call search_graph to find the exact qualified_name, then pass it here. This is a read tool, not a search tool. Accepts full qualified_name (exact match) or short function name (returns suggestions if ambiguous).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "qualified_name": {
+        "type": "string",
+        "description": "Full qualified_name from search_graph, or short function name"
+      },
+      "project": {
+        "type": "string"
+      },
+      "include_neighbors": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": [
+      "qualified_name",
+      "project"
+    ]
+  }
+}

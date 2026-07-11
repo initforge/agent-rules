@@ -1,0 +1,15 @@
+{
+  "name": "get_graph_schema",
+  "description": "Get the schema of the knowledge graph (node labels, edge types)",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "project"
+    ]
+  }
+}

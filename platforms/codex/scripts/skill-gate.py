@@ -17,6 +17,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+# Windows hook runner may use cp1252 pipes; Vietnamese inject must not crash.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
+    except Exception:
+        pass
+
 def runtime_home() -> Path:
     for key in ("GROK_HOME", "CODEX_HOME", "HARNESS_RUNTIME_HOME"):
         val = os.environ.get(key)
