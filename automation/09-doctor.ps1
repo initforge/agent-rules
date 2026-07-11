@@ -71,6 +71,16 @@ foreach ($Name in $Selected) {
         $Report += [pscustomobject]@{ platform = $Name; check = $Check.Key; status = "WARN"; detail = "missing - re-run install" }
       }
     }
+    try {
+      $CodexMcpOutput = (& codex mcp list 2>&1 | Out-String).Trim()
+      if ($LASTEXITCODE -eq 0) {
+        $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-parse"; status = "OK"; detail = "codex mcp list parsed config.toml" }
+      } else {
+        $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-parse"; status = "NOT_LIVE"; detail = $CodexMcpOutput }
+      }
+    } catch {
+      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-parse"; status = "NOT_LIVE"; detail = $_.Exception.Message }
+    }
   } elseif (Test-Path $McpPath) {
     $Mcp = Get-Content -Raw $McpPath | ConvertFrom-Json
     $Keys = @($Mcp.mcpServers.PSObject.Properties.Name)

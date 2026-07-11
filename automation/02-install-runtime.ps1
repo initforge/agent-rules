@@ -154,6 +154,11 @@ foreach ($Name in $Selected) {
     Install-RulesSkillsDocs -Source $Source -Dest $Dest
   }
 
+  $RuntimeAgents = Join-Path $Source "AGENTS.md"
+  if (Test-Path $RuntimeAgents) {
+    Copy-Item -LiteralPath $RuntimeAgents -Destination (Join-Path $Dest "AGENTS.md") -Force
+  }
+
   if ($Name -eq "grok") {
     Sync-GrokInjectRules -GrokHome $Dest -BuildRulesDir (Join-Path $Source "rules")
   }

@@ -30,6 +30,23 @@ Assert-True ($Budget -like "*docs-style*" -and $Budget -like "*plan-and-handoff*
 $GrokOv = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "platforms\grok\grok-overlay.md")
 Assert-True ($GrokOv -like "*.grok/rules*" -or $GrokOv -like "*.grok\\rules*") "grok-overlay documents inject path"
 
+# 6) Codex TOML adapter merge must be idempotent and preserve array values.
+. (Join-Path $PSScriptRoot "Merge-Mcp-Adapters.ps1")
+$MergeTemp = Join-Path ([IO.Path]::GetTempPath()) ("agent-rules-mcp-" + [guid]::NewGuid().ToString("N") + ".toml")
+try {
+  [IO.File]::WriteAllText($MergeTemp, "model = 'test'`n`n[mcp_servers.playwright]`ncommand = 'old'`nargs = ['old']`nstartup_timeout_sec = 5`n")
+  $Adapter = Join-Path $Root "integrations\recommended\playwright-mcp\adapters\codex.toml"
+  Merge-CodexTomlAdapters -ConfigPath $MergeTemp -AdapterPaths @($Adapter) | Out-Null
+  $Once = Get-Content -Raw $MergeTemp
+  Merge-CodexTomlAdapters -ConfigPath $MergeTemp -AdapterPaths @($Adapter) | Out-Null
+  $Twice = Get-Content -Raw $MergeTemp
+  $SectionCount = ([regex]::Matches($Twice, '(?m)^\[mcp_servers\.playwright\]\r?$')).Count
+  $BareArray = $Twice -match '(?m)^\s*\[''-y'''
+  Assert-True ($Once -eq $Twice -and $SectionCount -eq 1 -and -not $BareArray) "Codex MCP TOML merge is idempotent"
+} finally {
+  Remove-Item -LiteralPath $MergeTemp -Force -ErrorAction SilentlyContinue
+}
+
 if ($Failed -gt 0) {
   Write-Error "Regression guards failed: $Failed"
   exit 1

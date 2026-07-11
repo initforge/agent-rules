@@ -9,7 +9,7 @@ if ($LASTEXITCODE -ne 0) { throw "Playwright MCP npx failed" }
 # Browser binary for agent sessions
 & npx -y playwright install chromium
 if ($LASTEXITCODE -ne 0) {
-  Write-Host "WARN: playwright install chromium failed — agent may auto-download on first run"
+  Write-Host "WARN: playwright install chromium failed - agent may auto-download on first run"
 } else {
   Write-Host "Playwright Chromium ready"
 }

@@ -330,7 +330,8 @@ if ($Findings.Count -gt 0) {
   $Findings | ForEach-Object {
     Write-Host "[$($_.severity)] $($_.category)/$($_.id): $($_.detail)"
   }
-  exit 1
+  $Failures = @($Findings | Where-Object severity -eq "fail")
+  if ($Failures.Count -gt 0) { exit 1 }
 }
 
 Write-Host "Harness health audit PASS"

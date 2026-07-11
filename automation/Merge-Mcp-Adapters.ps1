@@ -87,7 +87,8 @@ function Merge-CodexTomlAdapters {
     if ($Block -match '\[mcp_servers\.([^\]]+)\]') {
       $Header = $Matches[0]
       $SectionName = $Matches[1]
-      $Pattern = "(?ms)\[mcp_servers\.$([regex]::Escape($SectionName))\][^\[]*"
+      $EscapedSection = [regex]::Escape($SectionName)
+      $Pattern = "(?ms)^\s*\[mcp_servers\.$EscapedSection\]\s*\r?\n.*?(?=^\s*\[[A-Za-z_][A-Za-z0-9_.-]*\]\s*$|\z)"
       if ($Content -match $Pattern) {
         $Content = [regex]::Replace($Content, $Pattern, ($Block + "`n"))
       } else {

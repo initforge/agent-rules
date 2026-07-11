@@ -16,6 +16,11 @@ foreach ($Platform in $Platforms) {
   $Docs = Join-Path $Target "docs"
   New-Item -ItemType Directory -Force -Path $Rules, $Skills, $Docs | Out-Null
 
+  $PlatformAgents = Join-Path $Root "platforms\$Platform\AGENTS.md"
+  if (Test-Path $PlatformAgents) {
+    Copy-Item -LiteralPath $PlatformAgents -Destination (Join-Path $Target "AGENTS.md") -Force
+  }
+
   Get-ChildItem $Core -File -Filter "*.md" | Where-Object { $_.Name -ne "README.md" } | ForEach-Object {
     Copy-Item $_.FullName (Join-Path $Rules $_.Name)
   }
