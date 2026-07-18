@@ -24,11 +24,40 @@ for _stream in (sys.stdout, sys.stderr):
     except Exception:
         pass
 
+def hook_platform() -> str:
+    """Resolve the adapter without requiring a shell wrapper.
+
+    Codex may launch a hook command directly on Windows, where a `.sh`
+    wrapper is not a reliable executable. The copied script therefore also
+    infers its platform from the runtime path while preserving explicit
+    environment overrides for Git-Bash and Grok adapters.
+    """
+    explicit = os.environ.get("AGENT_RULES_HOOK_PLATFORM")
+    if explicit:
+        return explicit.lower()
+    script = str(Path(__file__).resolve()).replace("\\", "/").lower()
+    if "/.codex/" in script:
+        return "codex"
+    if "/.grok/" in script:
+        return "grok"
+    return ""
+
+
 def runtime_home() -> Path:
+    platform = hook_platform()
+    if platform == "codex" and os.environ.get("CODEX_HOME"):
+        return Path(os.environ["CODEX_HOME"])
+    if platform == "grok" and os.environ.get("GROK_HOME"):
+        return Path(os.environ["GROK_HOME"])
     for key in ("GROK_HOME", "CODEX_HOME", "HARNESS_RUNTIME_HOME"):
         val = os.environ.get(key)
         if val:
             return Path(val)
+    script = Path(__file__).resolve()
+    if platform in {"codex", "grok"} and script.parent.name == "scripts":
+        candidate = script.parent.parent
+        if candidate.name.startswith("."):
+            return candidate
     return Path.home() / ".grok"
 
 
@@ -51,8 +80,8 @@ SMOKE_PATTERNS = re.compile(
 SINGLE_TEST_PATTERNS = re.compile(
     r"playwright\s+test\b.*(-g|--grep)", re.I
 )
-SPEC_EDIT_TOOLS = {"search_replace", "Edit", "Write", "MultiEdit"}
-BASH_TOOLS = {"run_terminal_command", "Bash", "Shell", "bash"}
+SPEC_EDIT_TOOLS = {"search_replace", "apply_patch", "Edit", "Write", "MultiEdit"}
+BASH_TOOLS = {"run_terminal_command", "shell_command", "Bash", "Shell", "bash"}
 
 
 
@@ -64,6 +93,7 @@ def session_id_from_env(payload: dict[str, Any]) -> str:
     return (
         os.environ.get("GROK_SESSION_ID")
         or payload.get("sessionId")
+        or payload.get("session_id")
         or "unknown"
     )
 
@@ -134,12 +164,27 @@ def _posix_paths_in_text(text: str) -> str:
 
 
 def allow() -> None:
+    if hook_platform() == "codex":
+        return
     print(json.dumps({"decision": "allow"}))
 
 
-def allow_with_hint(hint: str | None) -> None:
+def allow_with_hint(hint: str | None, event: str = "PreToolUse") -> None:
     if not hint:
         allow()
+        return
+    if hook_platform() == "codex":
+        print(
+            json.dumps(
+                {
+                    "hookSpecificOutput": {
+                        "hookEventName": event,
+                        "additionalContext": _posix_paths_in_text(hint),
+                    }
+                },
+                ensure_ascii=False,
+            )
+        )
         return
     print(
         json.dumps(
@@ -152,8 +197,21 @@ def allow_with_hint(hint: str | None) -> None:
     )
 
 
-def inject_context(message: str) -> None:
+def inject_context(message: str, event: str) -> None:
     """Passive hook: inject Turn-0 / stack reminder into agent context."""
+    if hook_platform() == "codex":
+        print(
+            json.dumps(
+                {
+                    "hookSpecificOutput": {
+                        "hookEventName": event,
+                        "additionalContext": _posix_paths_in_text(message),
+                    }
+                },
+                ensure_ascii=False,
+            )
+        )
+        return
     print(
         json.dumps(
             {"additionalContext": _posix_paths_in_text(message)},
@@ -165,6 +223,7 @@ def inject_context(message: str) -> None:
 HARNESS_PATH_MARKERS = (
     "rules/",
     "skills/",
+    "automation/",
     "scripts/validate-harness",
     "scripts/grok-skill-gate",
     "platforms/grok/hooks/",
@@ -184,6 +243,8 @@ def workspace_root() -> Path | None:
     raw = (
         os.environ.get("GROK_WORKSPACE_ROOT")
         or os.environ.get("CLAUDE_PROJECT_DIR")
+        or os.environ.get("CODEX_PROJECT_DIR")
+        or os.environ.get("CODEX_WORKSPACE_ROOT")
         or ""
     )
     if not raw:
@@ -195,7 +256,7 @@ def is_harness_workspace() -> bool:
     root = workspace_root()
     if not root:
         return False
-    return (root / "rules" / "00-universal-frontier-contract.md").is_file()
+    return (root / "rules" / "manifest.yaml").is_file() and (root / "automation" / "03-validate-context.ps1").is_file()
 
 
 def workspace_cache_key() -> str:
@@ -260,14 +321,14 @@ def skill_md_read(path: str) -> str | None:
 
 
 def extract_command(payload: dict[str, Any]) -> str:
-    ti = payload.get("toolInput") or {}
+    ti = payload.get("toolInput") or payload.get("tool_input") or {}
     if isinstance(ti, dict):
         return str(ti.get("command") or ti.get("cmd") or "")
     return ""
 
 
 def extract_file_path(payload: dict[str, Any]) -> str:
-    ti = payload.get("toolInput") or {}
+    ti = payload.get("toolInput") or payload.get("tool_input") or {}
     if not isinstance(ti, dict):
         return ""
     for key in ("path", "file_path", "filePath", "target_file"):
@@ -389,12 +450,32 @@ def pick_primary(stack: list[str], signals: list[str]) -> str | None:
 
 def tool_output_text(payload: dict[str, Any]) -> str:
     chunks: list[str] = []
-    for key in ("toolOutput", "output", "result", "stdout", "stderr", "content"):
+    # Codex currently sends the completed tool payload as `tool_response`.
+    # Keep legacy aliases for Grok/older adapters so the state machine stays
+    # backward-compatible without weakening the live Codex path.
+    for key in (
+        "tool_response",
+        "toolResponse",
+        "toolOutput",
+        "output",
+        "result",
+        "stdout",
+        "stderr",
+        "content",
+    ):
         val = payload.get(key)
         if isinstance(val, str):
             chunks.append(val)
         elif isinstance(val, dict):
-            for k2 in ("stdout", "stderr", "content", "text", "output"):
+            for k2 in (
+                "stdout",
+                "stderr",
+                "content",
+                "text",
+                "output",
+                "result",
+                "message",
+            ):
                 if val.get(k2):
                     chunks.append(str(val[k2]))
     return "\n".join(chunks)
@@ -439,7 +520,7 @@ def handle_session_start(payload: dict[str, Any]) -> None:
         )
     if st["e2e"].get("smoke_passed"):
         parts.append("E2E cache: smoke đã pass (session hoặc 4h cache workspace).")
-    inject_context(" ".join(parts))
+    inject_context(" ".join(parts), "SessionStart")
 
 
 def handle_user_prompt_submit(payload: dict[str, Any]) -> None:
@@ -481,7 +562,7 @@ def handle_user_prompt_submit(payload: dict[str, Any]) -> None:
     if "e2e" in st.get("signals", []):
         hints.append(e2e_session_reminder(st))
     if hints:
-        inject_context(" ".join(h for h in hints if h))
+        inject_context(" ".join(h for h in hints if h), "UserPromptSubmit")
     else:
         allow()
 
@@ -544,7 +625,7 @@ def harness_commit_advisory(state: dict[str, Any], command: str) -> str | None:
 
 
 def handle_pre_tool_use(payload: dict[str, Any]) -> None:
-    tool = payload.get("toolName") or ""
+    tool = payload.get("toolName") or payload.get("tool_name") or ""
     sid = session_id_from_env(payload)
     st = load_state(sid)
     hints: list[str] = []
@@ -560,15 +641,15 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
             if DEEP_PATTERNS.search(cmd):
                 st["e2e"]["deep_runs"] = int(st["e2e"].get("deep_runs", 0)) + 1
                 save_state(st)
-    allow_with_hint(" ".join(hints) if hints else None)
+    allow_with_hint(" ".join(hints) if hints else None, "PreToolUse")
 
 
 def handle_post_tool_use(payload: dict[str, Any]) -> None:
     sid = session_id_from_env(payload)
     st = load_state(sid)
-    tool = payload.get("toolName") or ""
+    tool = payload.get("toolName") or payload.get("tool_name") or ""
     out = tool_output_text(payload)
-    exit_ok = payload.get("toolSuccess", True) is not False
+    exit_ok = payload.get("toolSuccess", payload.get("tool_success", True)) is not False
 
     if tool in READ_TOOLS:
         path = extract_file_path(payload)

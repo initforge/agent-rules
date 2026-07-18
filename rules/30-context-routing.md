@@ -30,7 +30,7 @@ Trigger không chỉ ở đầu turn. Khi đang execute mà xuất hiện trigge
 - **Một primary tại một thời điểm** + minimum supporting set; 2 trigger tranh nhau → theo thứ tự conflict `10-execution.md` §"When signals conflict".
 - **Cấm biến mid-flow thành re-plan toàn bộ.** Mid-flow chỉ bổ sung hiểu biết/kiểm chứng; thay đổi scope lớn → `REVISE` PAF (§9), không âm thầm mở rộng.
 - **Chống deadlock:** capability phụ fail/stall 2 lần → dừng phụ, ghi 1 dòng blocker, tiếp tục primary hoặc `BLOCKED` — không lặp vô hạn, không chờ trigger không bao giờ tới.
-- **Owner interjection giữa flow** (owner gửi yêu cầu mới khi đang chạy): phân loại lại mode/lane cho yêu cầu đó; nếu là mở rộng scope → REVISE, nếu là chỉ đạo nhỏ → nhận vào step hiện tại; không mất tiến độ đã có (`_progress.md`).
+- **Owner interjection giữa flow** (owner gửi yêu cầu mới khi đang chạy): phân loại lại mode/lane cho yêu cầu đó; nếu là mở rộng scope → REVISE, nếu là chỉ đạo nhỏ → nhận vào step hiện tại; không mất tiến độ đã có trong `.agent/plans/<plan-id>/progress.md` (legacy `_progress.md` chỉ đọc để migrate).
 
 ## Capability precedence (5fedu UI)
 
@@ -48,3 +48,10 @@ Do not spend context on verification channels before they are needed. Prefer com
 Code intelligence order: Codebase Memory MCP when available and indexed; otherwise `rg`, targeted reads and native navigation. Never preload an entire repository to compensate for a missing index.
 
 Raw logs, chat evidence, old decisions and generated mirrors are never default context.
+
+## Plan/state routing
+
+- Markdown PAF remains the source of intent and reasoning; `automation/planctl.ps1` only compiles and validates it, never replaces it with JSON.
+- State, progress, handoff and ledger default to `.agent/plans/<plan-id>/`; read legacy `.agent/ledger/` only for migration or an existing gap-closure slice.
+- Tiny/clear normal work does not require PAF/ledger; use planctl/SGP for multi-phase, high-risk or independently evidenced AC work.
+- Hard-block only provable invariants (missing verify, placeholders, dependency cycles, open/blocker AC); heuristic context/file-size findings remain WARN so the agent keeps implementation freedom.

@@ -1,5 +1,6 @@
 ﻿$ErrorActionPreference = "Stop"
 $PSScriptRootResolved = $PSScriptRoot
+. (Join-Path $PSScriptRoot "path-compat.ps1")
 $RepoRoot = Split-Path -Parent $PSScriptRootResolved
 $Harness = Join-Path $RepoRoot "projects\5fedu"
 

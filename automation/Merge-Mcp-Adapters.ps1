@@ -1,5 +1,7 @@
 ﻿$ErrorActionPreference = "Stop"
 
+. (Join-Path $PSScriptRoot "path-compat.ps1")
+
 function Get-CodebaseMcpBin {
   $Cmd = Get-Command codebase-memory-mcp -ErrorAction SilentlyContinue
   if ($Cmd) { return $Cmd.Source }
@@ -105,6 +107,26 @@ function Merge-CodexTomlAdapters {
   return $true
 }
 
+function Ensure-CodexHooksEnabled {
+  param([string]$ConfigPath)
+
+  $Content = if (Test-Path $ConfigPath) { Get-Content -Raw $ConfigPath } else { "" }
+  $Updated = $Content
+  if ($Updated -match '(?m)^\s*hooks\s*=') {
+    $Updated = [regex]::Replace($Updated, '(?m)^\s*hooks\s*=.*$', 'hooks = true')
+  } elseif ($Updated -match '(?m)^\s*\[features\]\s*$') {
+    $Updated = [regex]::Replace($Updated, '(?m)^\s*\[features\]\s*$', "[features]`n hooks = true", 1)
+  } else {
+    $Updated = ($Updated.TrimEnd() + "`n`n[features]`nhooks = true`n")
+  }
+
+  if ($Updated -eq $Content) { return $false }
+  $Parent = Split-Path $ConfigPath -Parent
+  if (-not (Test-Path $Parent)) { New-Item -ItemType Directory -Force -Path $Parent | Out-Null }
+  [System.IO.File]::WriteAllText($ConfigPath, $Updated)
+  return $true
+}
+
 function Get-RegistryAdapterPaths {
   param(
     [string]$Root,
@@ -139,7 +161,11 @@ function Merge-PlatformMcpAdapters {
     "cursor" { return Merge-JsonMcpAdapters (Join-Path $UserHome ".cursor/mcp.json") $AdapterPaths }
     "grok" { return Merge-JsonMcpAdapters (Join-Path $UserHome ".grok/mcp.json") $AdapterPaths }
     "antigravity" { return Merge-JsonMcpAdapters (Join-Path $UserHome ".gemini/config/mcp_config.json") $AdapterPaths }
-    "codex" { return Merge-CodexTomlAdapters (Join-Path $UserHome ".codex/config.toml") $AdapterPaths }
+    "codex" {
+      $ConfigPath = Join-Path $UserHome ".codex/config.toml"
+      [void](Ensure-CodexHooksEnabled -ConfigPath $ConfigPath)
+      return Merge-CodexTomlAdapters $ConfigPath $AdapterPaths
+    }
     default { return $false }
   }
 }

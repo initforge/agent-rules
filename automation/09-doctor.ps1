@@ -3,6 +3,7 @@
   [ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platform = "all"
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "path-compat.ps1")
 
 $UserHome = if ($env:USERPROFILE) { $env:USERPROFILE } elseif ($env:HOME) { $env:HOME } else { throw "Cannot resolve user home" }
 $PlatformHomes = @{
@@ -52,6 +53,62 @@ foreach ($Name in $Selected) {
     }
     if (-not $Extra -and -not $Missing -and -not $HashMismatch) {
       $Report += [pscustomobject]@{ platform = $Name; check = "manifest-parity"; status = "OK"; detail = "paths and hashes match build" }
+    }
+  }
+
+  # Hook health: structural config plus a recent local smoke probe. A copied
+  # JSON file alone is not reported as live.
+  $HookConfig = $null
+  $HookNeedle = $null
+  $HookScript = $null
+  switch ($Name) {
+    "codex" {
+      $HookConfig = Join-Path $RuntimeHome "hooks.json"
+      $HookNeedle = "shell_command|apply_patch"
+      $HookScript = Join-Path $RuntimeHome "scripts\skill-gate.py"
+    }
+    "antigravity" {
+      $HookConfig = Join-Path $RuntimeHome "hooks.json"
+      $HookNeedle = "antigravity-skill-gate"
+      $HookScript = Join-Path $RuntimeHome "scripts\antigravity-skill-gate.py"
+    }
+    "grok" {
+      $HookConfig = Join-Path $RuntimeHome "hooks\skill-orchestrator.json"
+      $HookNeedle = "grok-skill-gate"
+      $HookScript = Join-Path $RuntimeHome "hooks\bin\grok-skill-gate.py"
+    }
+  }
+  if ($Name -eq "cursor") {
+    $Report += [pscustomobject]@{ platform = $Name; check = "native-hook-contract"; status = "WARN"; detail = "No native Cursor hook contract discovered; rules/MCP remain installed" }
+  } elseif ($HookConfig) {
+    if ($Name -eq "codex") {
+      $CodexConfigPath = $McpConfigPaths[$Name]
+      $HooksEnabled = (Test-Path $CodexConfigPath) -and (Select-String -Path $CodexConfigPath -Pattern '(?m)^\s*hooks\s*=\s*true\s*$' -Quiet)
+      if ($HooksEnabled) {
+        $Report += [pscustomobject]@{ platform = $Name; check = "hooks-feature"; status = "OK"; detail = "[features].hooks=true" }
+      } else {
+        $Report += [pscustomobject]@{ platform = $Name; check = "hooks-feature"; status = "NOT_LIVE"; detail = "Codex hooks feature is not explicitly enabled in config.toml" }
+      }
+    }
+    $ConfigBody = if (Test-Path $HookConfig) { Get-Content -Raw -Encoding UTF8 $HookConfig } else { "" }
+    if ((Test-Path $HookConfig) -and (Test-Path $HookScript) -and $ConfigBody -notmatch "__CODEX_HOME__|__ANTIGRAVITY_HOME__|__PYTHON__" -and $ConfigBody -match $HookNeedle) {
+      $Report += [pscustomobject]@{ platform = $Name; check = "hook-config"; status = "OK"; detail = "hook config and gate script present" }
+    } else {
+      $Report += [pscustomobject]@{ platform = $Name; check = "hook-config"; status = "NOT_LIVE"; detail = "hook config/script missing, placeholder, or stale matcher" }
+    }
+    $HealthPath = Join-Path $RuntimeHome "skill-state\hook-health.json"
+    $HealthOk = $false
+    if (Test-Path $HealthPath) {
+      try {
+        $Health = Get-Content -Raw -Encoding UTF8 $HealthPath | ConvertFrom-Json
+        $When = [DateTimeOffset]::Parse([string]$Health.last_probe)
+        $HealthOk = ([string]$Health.status -eq "PASS" -and (([DateTimeOffset]::UtcNow - $When).TotalDays -le 7))
+      } catch { $HealthOk = $false }
+    }
+    if ($HealthOk) {
+      $Report += [pscustomobject]@{ platform = $Name; check = "hook-live-probe"; status = "OK"; detail = "recent local smoke probe passed" }
+    } else {
+      $Report += [pscustomobject]@{ platform = $Name; check = "hook-live-probe"; status = "NOT_LIVE"; detail = "no recent passing smoke probe; rerun runtime hook installer" }
     }
   }
 

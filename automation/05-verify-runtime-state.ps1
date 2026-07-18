@@ -1,6 +1,7 @@
 ﻿param([ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platform = "all")
 $ErrorActionPreference = "Stop"
 
+. (Join-Path $PSScriptRoot "path-compat.ps1")
 $Root = Split-Path -Parent $PSScriptRoot
 $UserHome = if ($env:USERPROFILE) { $env:USERPROFILE } elseif ($env:HOME) { $env:HOME } else { throw "Cannot resolve user home directory" }
 $PlatformHomes = @{

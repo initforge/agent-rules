@@ -1,4 +1,3 @@
-@C:\Users\ADMIN\.codex\RTK.md
 @C:\Users\ADMIN\.codex\rules\00-bootstrap.md
 @C:\Users\ADMIN\.codex\rules\05-critical-thinking.md
 @C:\Users\ADMIN\.codex\rules\10-execution.md

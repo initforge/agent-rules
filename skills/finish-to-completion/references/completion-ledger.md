@@ -10,7 +10,7 @@
 
 ## Vị trí file
 
-`<working-repo>/.agent/ledger/<phase-or-slice-id>.md` — `.agent/` gitignored, advisory, không phải canonical.
+`<working-repo>/.agent/plans/<plan-id>/ledger/<phase-or-slice-id>.md` — `.agent/` gitignored, advisory, không phải canonical. Ledger cũ dưới `.agent/ledger/` vẫn được đọc trong migration/gap-closure.
 
 ## Format (một dòng một AC)
 
@@ -36,11 +36,12 @@ Sau khi chạy verify, điền evidence + tick:
 4. Command tự kiểm trước final message:
 
    ```bash
-   grep -nE "^- \[ \]|evidence: <chưa chạy>" .agent/ledger/<slice-id>.md
+   automation/audit-slice-ledger.ps1 -LedgerPath .agent/plans/<plan-id>/ledger/<slice-id>.md -Strict
    ```
 
    Có dòng khớp → **continue working**, không respond final.
 5. AC không tick được do blocker must-not-self-decide → đánh dấu `- [!]` + ghi blocker; status `BLOCKED`/`PARTIAL`, không `PASS`.
+6. Chạy machine gate scoped: `automation/audit-slice-ledger.ps1 -LedgerPath <path> -Strict`.
 
 ## Ví dụ AC verify theo loại
 

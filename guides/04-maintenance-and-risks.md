@@ -16,7 +16,7 @@ Guardrails:
 
 ## Runtime hooks (Codex) — backstop, không nằm trong pipeline build
 
-- `~/.codex/hooks/skill-orchestrator.json`: SessionStart/UserPromptSubmit/PreToolUse/PostToolUse → `scripts/skill-gate.sh`.
+- `~/.codex/hooks.json`: SessionStart/UserPromptSubmit/PreToolUse/PostToolUse → absolute Python `scripts/skill-gate.py` (with `commandWindows` on Windows).
 - **PostToolUse `audit-on-edit.sh`** (Write/Edit): tự cảnh báo khi sửa context/harness — oversize (rule>90, SKILL>350 warn nhẹ nếu liền mạch), dead Windows absolute user-profile paths, dead `@import`. Fail-open, chỉ WARN.
 - Các hook/script `~/.codex/scripts/*.sh|*.py` là runtime-only (không do `01-build-runtime` sinh); sửa trực tiếp tại runtime, ghi chú ở đây để audit sau không nhầm là orphan.
 
@@ -42,7 +42,7 @@ Owner chạy **hai máy vật lý tách** — **không** share `~/.codex` / `~/.
 - **Windows:** command = **một path** `hooks/bin/grok-skill-gate.cmd` (CreateProcess-safe; `.cmd` gọi `python.exe` + sibling `.py`).
 - **Linux:** command = `python3 hooks/bin/grok-skill-gate.py` (unquoted nếu path không space).
 - **Cấm** bare `grok-skill-gate.sh` → OS **193**. **Cấm** nested `\"python\" \"gate.py\"` → **exit 1**.
-- Sau khi sửa hook JSON: `/hooks` → phím **`r`** reload, hoặc **session mới** (session cache command cũ).
+- Sau khi sửa hook JSON: `/hooks` → phím **`r`** reload, hoặc **session mới** (session cache command cũ). Hook unmanaged phải được review/trust trong `/hooks` trước khi chạy bình thường.
 - Wrapper `.sh` chỉ cho Git Bash manual.
 - Antigravity: `hooks.json` dùng absolute `__PYTHON__` + `.py` (không phụ thuộc `bash` WSL / placeholder).
 

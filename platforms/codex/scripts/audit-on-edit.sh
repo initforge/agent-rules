@@ -11,7 +11,7 @@ paths="$(printf '%s' "$payload" | grep -oE '(/[A-Za-z0-9._/-]+)+\.(md|json|ya?ml
 [ -z "$paths" ] && exit 0
 
 # Chỉ quan tâm file context/harness.
-ctx_re='(/rules/|/skills/|/platforms/|/projects/|AGENTS\.md|AGENTS\.core\.md|GEMINI\.md|-overlay\.md|/context/5fedu/)'
+ctx_re='(/rules/|/skills/|/platforms/|/projects/|/automation/|AGENTS\.md|AGENTS\.core\.md|GEMINI\.md|-overlay\.md|/context/5fedu/)'
 
 warns=""
 for f in $paths; do
@@ -28,15 +28,10 @@ for f in $paths; do
     [ "$lines" -gt 350 ] && warns="${warns}\n  - OVERSIZE ${f}: ${lines} dòng (>350) → chỉ tách nếu workflow không liền mạch (16-context-style)"
   fi
 
-  # Dead Windows path.
-  if grep -qE 'C:\\\\Users' "$f" 2>/dev/null; then
-    warns="${warns}\n  - DEAD PATH trong ${base}: còn 'C:\\\\Users...' (Windows) → sửa sang path Linux/relative"
-  fi
-
   # Dead @import / link tới file không tồn tại (chỉ path tuyệt đối cho chắc).
   while IFS= read -r imp; do
     [ -n "$imp" ] && [ ! -e "$imp" ] && warns="${warns}\n  - DEAD IMPORT trong ${base}: ${imp} không tồn tại"
-  done < <(grep -oE '^@(/[A-Za-z0-9._/-]+)' "$f" 2>/dev/null | sed 's/^@//')
+  done < <(grep -oE '^@[A-Za-z]:[^[:space:])\],>]+|^@/[A-Za-z0-9._/-]+' "$f" 2>/dev/null | sed 's/^@//')
 done
 
 if [ -n "$warns" ]; then

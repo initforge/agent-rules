@@ -44,7 +44,7 @@ Output: PAF READY + HANDOFF §8 cho P1. Chưa execute.
 
 Áp dụng khi execute (mode=execution). Mở rộng `finish-to-completion` execution loop bằng vòng tự-kiểm đối kháng.
 
-**Master progress ledger (chống miss ở cấp PLAN):** trước phase đầu, sinh `.agent/ledger/_progress.md` liệt kê **MỌI** phase từ PAF §4 + mọi deliverable PAF §2 (đếm N):
+**Master progress state (chống miss ở cấp PLAN):** trước phase đầu, sinh `.agent/plans/<plan-id>/progress.md` liệt kê **MỌI** phase từ PAF §4 + mọi deliverable PAF §2 (đếm N). Có thể dùng `automation/planctl.ps1 -Action init/start` để tạo state mà không thay PAF:
 
 ```md
 # Progress: <plan_id>  —  0/<N> phases
@@ -57,7 +57,7 @@ Deliverables §2: [ ] D1 [ ] D2 ...   (map D→phase để không rơi deliverab
 ```text
 FOR each phase P (theo thứ tự PAF):
   1. Load HANDOFF §8 của P (fresh context — KHÔNG kéo cả plan cũ).
-  2. Tạo completion-ledger .agent/ledger/P.md (mỗi AC + verify cmd).
+  2. Tạo completion-ledger `.agent/plans/<plan-id>/ledger/P.md` (mỗi AC + verify cmd).
   3. IMPLEMENT scope P.
   4. RUN verify_gate commands (build/typecheck/test) — output thật.
   5. SELF-REVIEW (đối kháng): tự đọc diff, hỏi "AC nào CHƯA thật sự đạt? có build-green không?
@@ -67,17 +67,17 @@ FOR each phase P (theo thứ tự PAF):
         - fix → quay lại STEP 4
         - fail ≥2 lần cùng cách → ESCALATE tier (capability-tier-routing #5), KHÔNG lặp y hệt.
   7. IF build không xanh độc lập → chưa được sang phase sau (build-green invariant §4).
-  8. PROGRESS CHECKPOINT: cập nhật _progress.md (P → done, k/N); emit 1 dòng
+  8. PROGRESS CHECKPOINT: cập nhật `progress.md` (P → done, k/N); emit 1 dòng
         `[PROGRESS k/N · P<done> · AC x/y · build-green]`; ghi trace .agent/trace.jsonl.
 UNTIL mọi phase DONE OR hard BLOCKED (must-not-self-decide).
 
 FINAL MISS-SWEEP (bắt buộc trước khi báo xong):
-  - grep _progress.md còn `- [ ]` → CHƯA xong, quay lại phase đó.
+  - kiểm tra `progress.md` còn `- [ ]` → CHƯA xong, quay lại phase đó.
   - đối chiếu deliverable §2: mỗi D đã map vào ≥1 phase done? D nào chưa → phase bị rơi.
-  - grep `- [ ]` trong mọi .agent/ledger/*.md → phải rỗng.
+  - chạy `automation/audit-slice-ledger.ps1` cho từng ledger của plan; không quét ledger của task khác.
 ```
 
-Luật cứng: cấm sang phase mới khi phase hiện tại còn `[ ]`; cấm `PASS` không evidence; cấm lặp cùng cách sau 2 fail (đổi cách/đổi tier); cấm báo xong khi `_progress.md` hoặc bất kỳ ledger còn `[ ]` (đây là chốt chống-miss cấp plan).
+Luật cứng: cấm sang phase mới khi phase hiện tại còn `[ ]`; cấm `PASS` không evidence; cấm lặp cùng cách sau 2 fail (đổi cách/đổi tier); cấm báo xong khi `progress.md` hoặc ledger của chính plan còn `[ ]` (machine gate nhận path cụ thể, không quét task khác).
 
 ---
 

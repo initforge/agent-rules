@@ -24,7 +24,7 @@ is_context_path() {
   case "$f" in
     rules/*|skills/*|platforms/*|projects/*|guides/*)
       return 0 ;;
-    context/5fedu/*|.agents/*|automation/trigger-audit.json)
+    context/5fedu/*|.agents/*|automation/*)
       return 0 ;;
     AGENTS.md|AGENTS.core.md|GEMINI.md)
       return 0 ;;
@@ -52,13 +52,16 @@ for rel in "${FILES[@]}"; do
     [ "$lines" -gt 350 ] && warns="${warns}\n  - OVERSIZE ${rel}: ${lines} dòng (>350) → chỉ tách nếu workflow không liền mạch (16-context-style)"
   fi
 
-  if grep -qE 'C:\\Users' "$f" 2>/dev/null; then
-    warns="${warns}\n  - DEAD PATH ${rel}: còn C:\\Users... → sửa Linux/relative"
-  fi
-
   while IFS= read -r imp; do
-    [ -n "$imp" ] && [ ! -e "$imp" ] && warns="${warns}\n  - DEAD IMPORT ${rel}: ${imp} không tồn tại"
-  done < <(grep -oE '^@(/[A-Za-z0-9._/-]+)' "$f" 2>/dev/null | sed 's/^@//')
+    [ -n "$imp" ] || continue
+    resolved="$imp"
+    if printf '%s' "$resolved" | grep -qE '^[A-Za-z]:[\\/]'; then
+      if command -v cygpath >/dev/null 2>&1; then
+        resolved="$(cygpath -u "$resolved" 2>/dev/null || printf '%s' "$resolved")"
+      fi
+    fi
+    [ -e "$resolved" ] || warns="${warns}\n  - DEAD IMPORT ${rel}: ${imp} không tồn tại"
+  done < <(grep -oE '^@[A-Za-z]:[^[:space:])\],>]+|^@/[A-Za-z0-9._/-]+' "$f" 2>/dev/null | sed 's/^@//')
 
   # Runtime drift: canonical agent-rules vs ~/.codex|gemini|grok|cursor (chỉ khi file tồn tại ở runtime).
   if [ -f "$ROOT/automation/run.sh" ] && command -v sha256sum >/dev/null 2>&1; then

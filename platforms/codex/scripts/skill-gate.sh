@@ -6,6 +6,13 @@ GATE="$DIR/skill-gate.py"
 # Fallback ten cu neu ton tai; khong thi dung skill-gate.py.
 [ -f "$DIR/grok-skill-gate.py" ] && GATE="$DIR/grok-skill-gate.py"
 
+# The same canonical gate is copied to Codex and Grok. Set an explicit mode so
+# the Python process can emit each platform's hook wire format correctly.
+case "$DIR" in
+  */.codex/*) export CODEX_HOME="$(cd "$DIR/.." && pwd)"; export AGENT_RULES_HOOK_PLATFORM="codex" ;;
+  */.grok/*) export GROK_HOME="$(cd "$DIR/.." && pwd)"; export AGENT_RULES_HOOK_PLATFORM="grok" ;;
+esac
+
 # Windows: `python3` often resolves to Microsoft Store stub - prefer real installs.
 resolve_python() {
   local cand

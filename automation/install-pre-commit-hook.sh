@@ -33,20 +33,28 @@ install_repo_hook() {
   local hook="$hooks/pre-commit"
   mkdir -p "$hooks"
 
-  if [ -f "$hook" ] && ! grep -q 'audit-context-pre-commit' "$hook" 2>/dev/null; then
-    cp "$hook" "${hook}.bak.$(date +%Y%m%d%H%M%S)"
-    printf '# Existing pre-commit backed up before agent-rules audit install.\n' >> "${hook}.bak.$(date +%Y%m%d%H%M%S)"
+  local previous="$hooks/pre-commit.agent-rules.previous"
+  if [ -f "$hook" ] && ( ! grep -q 'audit-context-pre-commit' "$hook" 2>/dev/null || ! grep -q 'pre-commit.agent-rules.previous' "$hook" 2>/dev/null ); then
+    cp "$hook" "$previous"
+    printf '# Existing pre-commit backed up before agent-rules audit install.\n' >> "$previous"
   fi
 
   cat > "$hook" << EOF
 #!/usr/bin/env bash
-# agent-rules context audit (auto-installed). Chain-safe: preserves prior hook as pre-commit.agent-rules.bak runner.
+# agent-rules context audit (auto-installed). Chain-safe: preserves prior hook as pre-commit.agent-rules.previous.
 set -uo pipefail
 AUDIT="$AUDIT_SRC"
-[ -x "\$AUDIT" ] && "\$AUDIT" || true
-# Chain previous custom hook if present
-PREV="\$(dirname "\$0")/pre-commit.local"
-[ -x "\$PREV" ] && "\$PREV"
+if [ -x "\$AUDIT" ]; then
+  "\$AUDIT"
+  audit_status=\$?
+  [ "\$audit_status" -eq 0 ] || exit "\$audit_status"
+fi
+PREV="\$(dirname "\$0")/pre-commit.agent-rules.previous"
+if [ -x "\$PREV" ]; then
+  "\$PREV"
+  prev_status=\$?
+  [ "\$prev_status" -eq 0 ] || exit "\$prev_status"
+fi
 exit 0
 EOF
   chmod +x "$hook"
@@ -61,7 +69,10 @@ if [ "$MODE" = "global" ]; then
 #!/usr/bin/env bash
 set -uo pipefail
 AUDIT="$GLOBAL_DIR/audit-context-pre-commit.sh"
-[ -x "\$AUDIT" ] && "\$AUDIT" || true
+if [ -x "\$AUDIT" ]; then
+  "\$AUDIT"
+  exit \$?
+fi
 exit 0
 EOF
   chmod +x "$GLOBAL_DIR/pre-commit"

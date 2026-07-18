@@ -1,6 +1,7 @@
 ﻿$ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 $Problems = [System.Collections.Generic.List[string]]::new()
+. (Join-Path $PSScriptRoot "path-compat.ps1")
 
 $ManifestPath = Join-Path $Root "rules\manifest.yaml"
 $BudgetYaml = if (Test-Path $ManifestPath) { Get-Content -Raw $ManifestPath } else { "" }
@@ -181,6 +182,18 @@ if (Test-Path $PlanArtifactAudit) {
   }
 } else {
   $Problems.Add("Missing plan artifact audit: automation/audit-plan-artifact.ps1")
+}
+
+$PlanCtlTests = Join-Path $Root "automation\test-planctl.ps1"
+if (Test-Path $PlanCtlTests) {
+  try {
+    & $PlanCtlTests -Root $Root | Out-Null
+    if ($LASTEXITCODE -ne 0) { $Problems.Add("Plan compiler/ledger fixtures failed") }
+  } catch {
+    $Problems.Add("Plan compiler/ledger fixtures crashed - error: $_")
+  }
+} else {
+  $Problems.Add("Missing plan compiler fixtures: $PlanCtlTests")
 }
 
 if (Test-Path (Join-Path $Root ".agents")) { $Problems.Add("Project mirror exists: .agents") }

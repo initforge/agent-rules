@@ -1,5 +1,6 @@
 ﻿param([string]$Root = (Split-Path -Parent $PSScriptRoot))
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "path-compat.ps1")
 
 $BuildRoot = Join-Path $Root "05-generated\runtime-build"
 if (Test-Path $BuildRoot) { Remove-Item -LiteralPath $BuildRoot -Recurse -Force }

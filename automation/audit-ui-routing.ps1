@@ -4,6 +4,7 @@
   [string]$LogPath = ""
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "path-compat.ps1")
 
 $Problems = [System.Collections.Generic.List[string]]::new()
 

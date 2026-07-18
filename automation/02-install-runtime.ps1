@@ -1,5 +1,6 @@
 ﻿param([ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platform = "all")
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "path-compat.ps1")
 
 $Root = Split-Path -Parent $PSScriptRoot
 & (Join-Path $PSScriptRoot "03-validate-context.ps1")
@@ -18,6 +19,7 @@ $Selected = if ($Platform -eq "all") { @("codex", "grok", "antigravity", "cursor
 $BuildRoot = Join-Path $Root "05-generated\runtime-build"
 $Registry = Get-Content -Raw (Join-Path $Root "integrations\registry.json") | ConvertFrom-Json
 $IntegrationState = @()
+$SharedIntegrations = @{}
 
 function Stage-Adapters {
   param(
@@ -47,7 +49,8 @@ function Install-Integration {
   param(
     [pscustomobject]$Integration,
     [string]$PlatformName,
-    [string]$RuntimeHome
+    [string]$RuntimeHome,
+    [switch]$SkipInstall
   )
 
   $Path = Join-Path $Root $Integration.path
@@ -70,8 +73,13 @@ function Install-Integration {
   }
 
   try {
-    & $InstallScript | Out-Null
-    $State.installed = $true
+    if ($SkipInstall) {
+      $State.installed = $true
+      $State.note = "Shared integration install reused"
+    } else {
+      & $InstallScript | Out-Null
+      $State.installed = $true
+    }
     $AdapterPath = Stage-Adapters -Integration $Integration -PlatformName $PlatformName -RuntimeHome $RuntimeHome
     if ($AdapterPath) {
       $State.adapterStaged = $true
@@ -167,7 +175,10 @@ foreach ($Name in $Selected) {
 
   foreach ($Integration in $Registry.integrations) {
     if ($Integration.policy -eq "optional") { continue }
-    $IntegrationState += Install-Integration -Integration $Integration -PlatformName $Name -RuntimeHome $Dest
+    $reuse = $SharedIntegrations.ContainsKey([string]$Integration.name)
+    $state = Install-Integration -Integration $Integration -PlatformName $Name -RuntimeHome $Dest -SkipInstall:$reuse
+    $IntegrationState += $state
+    if ($state.installed -and $state.verified) { $SharedIntegrations[[string]$Integration.name] = $true }
   }
 
   $StatePath = Join-Path $Dest "agent-rules-integrations.json"
@@ -178,8 +189,6 @@ foreach ($Name in $Selected) {
 
   Write-Host "Installed $Name -> $Dest"
 }
-
-& (Join-Path $PSScriptRoot "09-doctor.ps1") -Root $Root -Platform $Platform
 
 $HooksScript = Join-Path $PSScriptRoot "11-install-runtime-hooks.sh"
 # Prefer Git Bash on Windows; system `bash` may be a broken WSL relay.
@@ -194,8 +203,10 @@ if ($GitBash -and (Test-Path -LiteralPath $HooksScript)) {
   Write-Host "Installing runtime hooks via $GitBash ..."
   & $GitBash $HooksScript
   if ($LASTEXITCODE -ne 0) {
-    Write-Warning "Runtime hooks install returned exit $LASTEXITCODE - re-run with Git Bash: `"$GitBash`" automation/11-install-runtime-hooks.sh"
+    throw "Runtime hooks install failed with exit $LASTEXITCODE - re-run with Git Bash: `"$GitBash`" automation/11-install-runtime-hooks.sh"
   }
 } else {
-  Write-Host "Skip runtime hooks: bash or 11-install-runtime-hooks.sh missing - chay thu cong sau install."
+  throw "Runtime hooks install blocked: Git Bash or automation/11-install-runtime-hooks.sh is missing"
 }
+
+& (Join-Path $PSScriptRoot "09-doctor.ps1") -Root $Root -Platform $Platform

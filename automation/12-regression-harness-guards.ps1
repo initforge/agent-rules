@@ -1,6 +1,7 @@
 ﻿# Regression guards for dual-tree, BOM, glossary, intentional-oversize - drives shipped validate.
 param([string]$Root = (Split-Path -Parent $PSScriptRoot))
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "path-compat.ps1")
 $Failed = 0
 
 function Assert-True([bool]$Cond, [string]$Msg) {

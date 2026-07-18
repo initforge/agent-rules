@@ -105,14 +105,14 @@ copy_scripts() {
 
 echo "[11] Python for hooks: $PY_HOOK"
 
-echo "[11] Installing Codex hooks → $CODEX_HOME"
-mkdir -p "$CODEX_HOME/scripts" "$CODEX_HOME/hooks" "$CODEX_HOME/skill-state"
+echo "[11] Installing Codex hooks → $CODEX_HOME/hooks.json"
+mkdir -p "$CODEX_HOME/scripts" "$CODEX_HOME/skill-state"
 copy_scripts "$ROOT/platforms/codex/scripts" "$CODEX_HOME/scripts"
 CODEX_HOOK_HOME="$(to_hook_path "$CODEX_HOME")"
 AGY_HOOK_HOME="$(to_hook_path "$ANTIGRAVITY_HOME")"
 subst_file \
   "$ROOT/platforms/codex/hooks/skill-orchestrator.json.template" \
-  "$CODEX_HOME/hooks/skill-orchestrator.json" \
+  "$CODEX_HOME/hooks.json" \
   "$CODEX_HOOK_HOME" "$AGY_HOOK_HOME" "$PY_HOOK"
 
 echo "[11] Installing Antigravity hooks → $ANTIGRAVITY_HOME"
@@ -172,6 +172,9 @@ PY
 fi
 
 # Grok LIVE path is hooks/bin/grok-skill-gate.* (not only scripts/)
+# Create the target on a fresh Linux/Windows machine as well; the installer is
+# responsible for laying down the platform adapter before the app first runs.
+mkdir -p "$GROK_HOME"
 if [ -d "$GROK_HOME" ]; then
   echo "[11] Syncing Grok live hooks → $GROK_HOME/hooks/bin + scripts"
   mkdir -p "$GROK_HOME/scripts" "$GROK_HOME/skill-state" "$GROK_HOME/hooks/bin"
@@ -277,17 +280,17 @@ data = {
         "UserPromptSubmit": [hook(5)],
         "PreToolUse": [
             {
-                "matcher": "run_terminal_command|Bash|Shell",
+                "matcher": "run_terminal_command|shell_command|Bash|Shell",
                 "hooks": [{"type": "command", "command": cmd, "timeout": 8}],
             },
             {
-                "matcher": "search_replace|Edit|Write",
+                "matcher": "search_replace|apply_patch|Edit|Write",
                 "hooks": [{"type": "command", "command": cmd, "timeout": 5}],
             },
         ],
         "PostToolUse": [
             {
-                "matcher": "run_terminal_command|Bash|Shell|search_replace|Edit|Write",
+                "matcher": "run_terminal_command|shell_command|Bash|Shell|search_replace|apply_patch|Edit|Write",
                 "hooks": [{"type": "command", "command": cmd, "timeout": 8}],
             }
         ],
@@ -395,7 +398,7 @@ fi
 
 # Assert installed JSON has no placeholders
 for f in \
-  "$CODEX_HOME/hooks/skill-orchestrator.json" \
+  "$CODEX_HOME/hooks.json" \
   "$ANTIGRAVITY_HOME/hooks.json" \
   "$GROK_HOME/hooks/skill-orchestrator.json"
 do
@@ -405,6 +408,23 @@ do
   fi
 done
 echo "  Placeholder check installed JSON: OK (or missing file skipped)"
+
+# Persist the result of the smoke probe so doctor can distinguish an installed
+# config from a recently exercised hook path. This is probe evidence, not a
+# claim that every future host event will be delivered by the platform.
+probe_status="PARTIAL"
+[ "$FAIL" -eq 0 ] && probe_status="PASS"
+probe_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+write_probe_health() {
+  local home="$1" platform="$2"
+  [ -d "$home" ] || return 0
+  mkdir -p "$home/skill-state"
+  printf '{\n  "platform": "%s",\n  "status": "%s",\n  "last_probe": "%s",\n  "events": ["SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Stop"]\n}\n' \
+    "$platform" "$probe_status" "$probe_at" > "$home/skill-state/hook-health.json"
+}
+write_probe_health "$CODEX_HOME" "codex"
+write_probe_health "$ANTIGRAVITY_HOME" "antigravity"
+write_probe_health "$GROK_HOME" "grok"
 
 if [ "$SKIP_PRECOMMIT" -eq 0 ]; then
   if [ -x "$ROOT/.git/hooks/pre-commit" ]; then

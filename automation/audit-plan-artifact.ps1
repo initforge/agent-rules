@@ -4,6 +4,7 @@
   [string]$RunId = "audit-plan-artifact"
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "path-compat.ps1")
 
 $Problems = [System.Collections.Generic.List[string]]::new()
 
@@ -56,9 +57,14 @@ $ResearcherPath = Join-Path $Root "skills\researcher\SKILL.md"
 $LifePath = Join-Path $Root "rules\25-task-lifecycle.md"
 $AntigravityOverlay = Join-Path $Root "platforms\antigravity\antigravity-overlay.md"
 $UiDetail = Join-Path $Root "projects\5fedu\domains\references\ui-delivery-detail.md"
+$PlanCtl = Join-Path $Root "automation\planctl.ps1"
+$LedgerAudit = Join-Path $Root "automation\audit-slice-ledger.ps1"
 
 foreach ($F in @($TierRef, $PafTemplate, $PafExample)) {
   if (-not (Test-Path $F)) { $Problems.Add("Missing required: $F") }
+}
+foreach ($F in @($PlanCtl, $LedgerAudit)) {
+  if (-not (Test-Path $F)) { $Problems.Add("Missing machine gate: $F") }
 }
 
 Test-FileContains $SkillPath @("Plan Architect", "Plan Scribe", "Plan Reviewer", "PAF", "HANDOFF", "decision tree") | Out-Null
@@ -68,6 +74,8 @@ Test-FileContains $LifePath @("capability-tier-routing", "Weak-first", "plan_id"
 Test-FileContains $AntigravityOverlay @("L0", "researcher", "capability-tier-routing") | Out-Null
 Test-FileContains $PafTemplate @("Scope lock", "Context routing", "Phases", "Known-unknowns", "Plan QA", "HANDOFF", "Revision protocol", "preferred_tier", "min_tier", "allowed_tiers") | Out-Null
 Test-FileContains $UiDetail @("plan-artifact-template") | Out-Null
+Test-FileContains $PlanCtl @("semantic validation", "compiled.json", "evidence", "handoff") | Out-Null
+Test-FileContains $LedgerAudit @("Scope IN", "evidence", "open_ac=0") | Out-Null
 
 # Path C delegate - no long execute loop in plan-and-handoff
 if (Test-Path $SkillPath) {
@@ -104,6 +112,14 @@ if ((Test-Path $ResearcherPath) -and (Test-Path $SkillPath)) {
 # Optional plan file validation
 if ($PlanPath) {
   Test-PlanFile $PlanPath
+  if (Test-Path $PlanCtl) {
+    try {
+      & $PlanCtl -Action validate -Root $Root -PlanPath $PlanPath | ForEach-Object { Write-Host $_ }
+      if ($LASTEXITCODE -ne 0) { $Problems.Add("Plan semantic validation failed: $PlanPath") }
+    } catch {
+      $Problems.Add("Plan semantic validation crashed: $PlanPath - $_")
+    }
+  }
 }
 
 if ($Problems.Count -gt 0) {

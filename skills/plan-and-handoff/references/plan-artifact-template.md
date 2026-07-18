@@ -7,9 +7,12 @@
 
 ## §0 Meta
 
+PAF Markdown is the canonical intent artifact. `automation/planctl.ps1` may compile a derived JSON/state artifact for validation and resume; agents do not need to author JSON directly.
+
 ```yaml
 ---
 plan_id: "<repo>-<slug>-<YYYYMMDD>"
+schema_version: 1
 revision: 0
 supersedes: null
 workflow_mode: plan-authoring | plan-review | execution
@@ -23,6 +26,8 @@ context/5fedu: installed | missing
 primary_skills: [plan-and-handoff]
 preferred_tier: L0
 plan_author_min_tier: L1
+enforcement: off | shadow | strict
+state_root: .agent/plans/<plan-id>/
 ---
 ```
 
@@ -100,6 +105,7 @@ Scope nhỏ (ngân sách trên) **nhưng đặc tả dày**. Khi plan do Cursor 
 - **Forbidden / OUT:** điều cấm làm trong phase (chống scope creep).
 - **Depends-on:** phase tiền đề (thứ tự bắt buộc).
 - **Definition of done:** build-green command + trạng thái cuối.
+- **Machine semantic gate:** `automation/planctl.ps1 -Action validate -PlanPath <path>`; hard-fail only on missing contract, placeholder, invalid dependency or non-observable AC; heuristic scope warnings do not remove implementation freedom.
 
 Quy tắc vàng: *"Một executor L0 KHÔNG biết gì về intent của bạn phải làm đúng chỉ bằng nội dung phase này."* Đọc lại phase, chỗ nào cần suy luận → thêm chi tiết cho tới khi hết suy luận.
 
@@ -191,6 +197,7 @@ Plan **READY** chỉ khi tất cả PASS:
 - [ ] **MỌI phase đạt Task Density Contract §4** (files+anchor, context_files, mỗi AC có verify+expected, edge_cases, regression_map, forbidden, depends_on)
 - [ ] **Không AC mơ hồ** (mỗi AC verify được bằng command/kiểm tra cụ thể; không "cải thiện UX" chung chung)
 - [ ] **MỌI phase để build/typecheck xanh độc lập** (không cross-phase hidden dep)
+- [ ] `automation/planctl.ps1 -Action validate -PlanPath <plan>` passes; compiled JSON is derived, not a second source of truth
 - [ ] Phase khó (AI-engine/migration/auth/RBAC) tag `min_tier L2` — không để L0
 - [ ] Risk flags → high-risk nếu auth/migration/permission
 
@@ -203,7 +210,7 @@ Plan **READY** chỉ khi tất cả PASS:
 HANDOFF — paste vào session execute
 Plan ID: ...
 Slice ID: <slice-id>
-Ledger path: .agent/ledger/<slice-id>.md
+Ledger path: .agent/plans/<plan-id>/ledger/<slice-id>.md
 Execute: Phase P_N ONLY (or Slice <id> ONLY)
 Pivot: "làm đi phase P_N"
 preferred_tier: L0
@@ -214,7 +221,7 @@ Context files: [...]
 Template reference: Nhân viên @ [paths]
 Verify: npm run lint && npm run typecheck
 Forbidden: scope creep, next phase without pivot
-Report: Template reference | Pattern fidelity | Verification | Status | tier_used | Ledger: <path> | Slice: <id> | Open AC: 0
+Report: Template reference | Pattern fidelity | Verification | Status | tier_used | Ledger: <path> | Slice: <id> | Open AC: 0 | no raw HTML marker tags
 ---
 ```
 

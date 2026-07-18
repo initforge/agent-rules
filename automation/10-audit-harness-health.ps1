@@ -1,9 +1,10 @@
 ﻿param(
   [string]$Root = (Split-Path -Parent $PSScriptRoot),
-  [string]$DebugLog = (Join-Path $Root ".cursor\debug-d2ae37.log"),
+  [string]$DebugLog = (Join-Path $Root ".cursor/debug-d2ae37.log"),
   [string]$RunId = "audit-pre"
 )
 $ErrorActionPreference = "Continue"
+. (Join-Path $PSScriptRoot "path-compat.ps1")
 
 function Write-DebugLog {
   param([string]$HypothesisId, [string]$Location, [string]$Message, $Data)
@@ -157,8 +158,12 @@ Write-DebugLog "H5" "audit-harness-health.ps1:duplication" "parity-doc-chars" @{
   moduleMappingChars = $MapLen
   totalChars = ($ParitySkill + $UiLen + $MapLen)
 }
-if (($ParitySkill + $UiLen + $MapLen) -gt 12000) {
-  Add-Finding "concept" "parity-triple-stack" "warn" "ui-delivery + module-mapping + 5fedu-module-parity overlap ~$([math]::Ceiling(($ParitySkill+$UiLen+$MapLen)/3.6)) tokens - agent may read partial/wrong layer" "H5"
+ $SingleOwnerRouting =
+  ($Skill -match "Checklist.*chỉ.*file\s+này") -and
+  ($UiBody -match "không\s+lặp\s+checklist") -and
+  ($Map.ToLowerInvariant() -match "clone checklist")
+if (($ParitySkill + $UiLen + $MapLen) -gt 12000 -and -not $SingleOwnerRouting) {
+  Add-Finding "concept" "parity-triple-stack" "warn" "ui-delivery + module-mapping + 5fedu-module-parity exceed the context budget without explicit single-owner routing (~$([math]::Ceiling(($ParitySkill+$UiLen+$MapLen)/3.6)) tokens)" "H5"
 }
 
 # H6: project-local in canonical template

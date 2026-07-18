@@ -5,7 +5,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "__CODEX_HOME__/scripts/skill-gate.sh",
+            "command": "\"__PYTHON__\" \"__CODEX_HOME__/scripts/skill-gate.py\"",
+            "commandWindows": "\"__PYTHON__\" \"__CODEX_HOME__/scripts/skill-gate.py\"",
             "timeout": 5
           }
         ]
@@ -16,7 +17,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "__CODEX_HOME__/scripts/skill-gate.sh",
+            "command": "\"__PYTHON__\" \"__CODEX_HOME__/scripts/skill-gate.py\"",
+            "commandWindows": "\"__PYTHON__\" \"__CODEX_HOME__/scripts/skill-gate.py\"",
             "timeout": 5
           }
         ]
@@ -24,21 +26,23 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "run_terminal_command|Bash|Shell",
+        "matcher": "run_terminal_command|shell_command|Bash|Shell",
         "hooks": [
           {
             "type": "command",
-            "command": "__CODEX_HOME__/scripts/skill-gate.sh",
+            "command": "\"__PYTHON__\" \"__CODEX_HOME__/scripts/skill-gate.py\"",
+            "commandWindows": "\"__PYTHON__\" \"__CODEX_HOME__/scripts/skill-gate.py\"",
             "timeout": 8
           }
         ]
       },
       {
-        "matcher": "search_replace|Edit|Write",
+        "matcher": "search_replace|apply_patch|Edit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": "__CODEX_HOME__/scripts/skill-gate.sh",
+            "command": "\"__PYTHON__\" \"__CODEX_HOME__/scripts/skill-gate.py\"",
+            "commandWindows": "\"__PYTHON__\" \"__CODEX_HOME__/scripts/skill-gate.py\"",
             "timeout": 5
           }
         ]
@@ -46,21 +50,23 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "run_terminal_command|Bash|Shell|search_replace|Edit|Write",
+        "matcher": "run_terminal_command|shell_command|Bash|Shell|search_replace|apply_patch|Edit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": "__CODEX_HOME__/scripts/skill-gate.sh",
+            "command": "\"__PYTHON__\" \"__CODEX_HOME__/scripts/skill-gate.py\"",
+            "commandWindows": "\"__PYTHON__\" \"__CODEX_HOME__/scripts/skill-gate.py\"",
             "timeout": 8
           }
         ]
       },
       {
-        "matcher": "search_replace|Edit|Write",
+        "matcher": "search_replace|apply_patch|Edit|Write",
         "hooks": [
           {
             "type": "command",
             "command": "__CODEX_HOME__/scripts/audit-on-edit.sh",
+            "commandWindows": "bash \"__CODEX_HOME__/scripts/audit-on-edit.sh\"",
             "timeout": 6
           }
         ]
@@ -71,7 +77,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "__CODEX_HOME__/scripts/skill-gate.sh",
+            "command": "\"__PYTHON__\" \"__CODEX_HOME__/scripts/skill-gate.py\"",
+            "commandWindows": "\"__PYTHON__\" \"__CODEX_HOME__/scripts/skill-gate.py\"",
             "timeout": 5
           }
         ]
