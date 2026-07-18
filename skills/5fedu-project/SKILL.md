@@ -1,6 +1,7 @@
 ---
 name: 5fedu-project
 description: Scaffold or maintain 5fedu context in a real project repo. Use when 5fedu setup, context/5fedu, tah-app, nostime, owner decisions, Supabase/UI conventions. Trigger — thiết lập 5fedu, cài context dự án, tah-app, nostime. Do NOT read agent-rules/projects/5fedu/ during app implementation — only <repo>/context/5fedu/ after install. Do NOT use without 5fedu context in the active repo.
+routing: {"signals":["5fedu","context/5fedu","tah-app","nostime","thiết lập 5fedu","cài context dự án","owner decisions","supabase"],"excludes":["generic module without 5fedu"],"priority":70,"loads":["project:5fedu:entry","project:5fedu:router"],"supports":["5fedu-module-parity"],"project_scope":"5fedu","platform_scope":"all","max_route_tokens":1800,"default":false}
 ---
 
 # 5fedu project

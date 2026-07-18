@@ -1,6 +1,7 @@
 ---
 name: docs-style
 description: Use this skill when creating, reviewing, rewriting, or restructuring high-quality project documentation for README.md, README-vi.md, technical specs, tech stack badges, screenshots, documentation cleanup, or /docs/**. Trigger for source-grounded docs, repo documentation architecture, docs quality complaints, README style, Vietnamese/English README parity, current-vs-legacy tech stack accuracy, or docs that must match/exceed a strong hand-written spec such as vhdg-conhon/SPECS.md.
+routing: {"signals":["README","README-vi","/docs/","documentation","tài liệu","docs cleanup","tech stack"],"excludes":["pure code implementation"],"priority":50,"loads":["skill:docs-style"],"supports":[],"project_scope":"","platform_scope":"all","max_route_tokens":4500,"default":false}
 ---
 
 # Docs Style

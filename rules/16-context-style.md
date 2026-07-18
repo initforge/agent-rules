@@ -1,5 +1,5 @@
 ---
-alwaysApply: true
+alwaysApply: false
 description: Living context writing style — short bullets, direct actions, anti-drift.
 ---
 

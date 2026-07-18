@@ -70,7 +70,7 @@ foreach ($F in @($PlanCtl, $LedgerAudit)) {
 Test-FileContains $SkillPath @("Plan Architect", "Plan Scribe", "Plan Reviewer", "PAF", "HANDOFF", "decision tree") | Out-Null
 Test-FileContains $SkillPath @("Path D") | Out-Null
 Test-FileContains $ResearcherPath @("plan-and-handoff", "Do NOT") | Out-Null
-Test-FileContains $LifePath @("capability-tier-routing", "Weak-first", "plan_id") | Out-Null
+Test-FileContains $LifePath @("Plan roles", "plan_id", "friction") | Out-Null
 Test-FileContains $AntigravityOverlay @("L0", "researcher", "capability-tier-routing") | Out-Null
 Test-FileContains $PafTemplate @("Scope lock", "Context routing", "Phases", "Known-unknowns", "Plan QA", "HANDOFF", "Revision protocol", "preferred_tier", "min_tier", "allowed_tiers") | Out-Null
 Test-FileContains $UiDetail @("plan-artifact-template") | Out-Null

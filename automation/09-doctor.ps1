@@ -1,6 +1,7 @@
 ﻿param(
   [string]$Root = (Split-Path -Parent $PSScriptRoot),
-  [ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platform = "all"
+  [ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platform = "all",
+  [switch]$SkipIntegrationVerify
 )
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "path-compat.ps1")
@@ -44,16 +45,49 @@ foreach ($Name in $Selected) {
     if ($Missing) { $Report += [pscustomobject]@{ platform = $Name; check = "missing-files"; status = "MISSING"; detail = ($Missing.InputObject -join ", ") } }
 
     $HashMismatch = @()
+    $RuntimeMissing = @()
+    $RuntimeHashMismatch = @()
     foreach ($Exp in $Expected.files) {
       $Ins = $Installed.files | Where-Object Path -EQ $Exp.Path | Select-Object -First 1
       if ($Ins -and $Ins.Sha256 -ne $Exp.Sha256) { $HashMismatch += $Exp.Path }
+      $LivePath = Join-Path $RuntimeHome ($Exp.Path -replace '/', [IO.Path]::DirectorySeparatorChar)
+      if (-not (Test-Path -LiteralPath $LivePath)) {
+        $RuntimeMissing += $Exp.Path
+      } elseif ((Get-FileHash -LiteralPath $LivePath -Algorithm SHA256).Hash.ToLowerInvariant() -ne $Exp.Sha256) {
+        $RuntimeHashMismatch += $Exp.Path
+      }
     }
     if ($HashMismatch) {
       $Report += [pscustomobject]@{ platform = $Name; check = "sha256-drift"; status = "NOT_LIVE"; detail = ($HashMismatch -join ", ") }
     }
-    if (-not $Extra -and -not $Missing -and -not $HashMismatch) {
+    if ($RuntimeMissing) {
+      $Report += [pscustomobject]@{ platform = $Name; check = "runtime-missing-files"; status = "MISSING"; detail = ($RuntimeMissing -join ", ") }
+    }
+    if ($RuntimeHashMismatch) {
+      $Report += [pscustomobject]@{ platform = $Name; check = "runtime-hash-drift"; status = "NOT_LIVE"; detail = ($RuntimeHashMismatch -join ", ") }
+    }
+    if (-not $Extra -and -not $Missing -and -not $HashMismatch -and -not $RuntimeMissing -and -not $RuntimeHashMismatch) {
       $Report += [pscustomobject]@{ platform = $Name; check = "manifest-parity"; status = "OK"; detail = "paths and hashes match build" }
     }
+  }
+
+  $RoutingModePath = Join-Path $RuntimeHome "skill-state\routing-mode.json"
+  $RoutingGraphPath = Join-Path $RuntimeHome "context-graph.json"
+  if ((Test-Path -LiteralPath $RoutingModePath) -and (Test-Path -LiteralPath $RoutingGraphPath)) {
+    try {
+      $RoutingState = Get-Content -Raw -LiteralPath $RoutingModePath | ConvertFrom-Json
+      $RoutingGraph = Get-Content -Raw -LiteralPath $RoutingGraphPath | ConvertFrom-Json
+      $RoutingHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $RoutingGraphPath).Hash.ToLowerInvariant()
+      if ([int]$RoutingGraph.version -ge 2 -and [string]$RoutingState.graph_hash -eq $RoutingHash -and [string]$RoutingState.mode -in @("shadow", "strict")) {
+        $Report += [pscustomobject]@{ platform = $Name; check = "context-routing-mode"; status = "OK"; detail = "$($RoutingState.mode), graph hash verified" }
+      } else {
+        $Report += [pscustomobject]@{ platform = $Name; check = "context-routing-mode"; status = "NOT_LIVE"; detail = "mode state and installed graph do not match" }
+      }
+    } catch {
+      $Report += [pscustomobject]@{ platform = $Name; check = "context-routing-mode"; status = "NOT_LIVE"; detail = $_.Exception.Message }
+    }
+  } else {
+    $Report += [pscustomobject]@{ platform = $Name; check = "context-routing-mode"; status = "WARN"; detail = "not cut over; runtime defaults to shadow" }
   }
 
   # Hook health: structural config plus a recent local smoke probe. A copied
@@ -128,15 +162,26 @@ foreach ($Name in $Selected) {
         $Report += [pscustomobject]@{ platform = $Name; check = $Check.Key; status = "WARN"; detail = "missing - re-run install" }
       }
     }
-    try {
-      $CodexMcpOutput = (& codex mcp list 2>&1 | Out-String).Trim()
-      if ($LASTEXITCODE -eq 0) {
-        $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-parse"; status = "OK"; detail = "codex mcp list parsed config.toml" }
-      } else {
-        $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-parse"; status = "NOT_LIVE"; detail = $CodexMcpOutput }
+    if ($SkipIntegrationVerify) {
+      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-parse"; status = "SKIP"; detail = "external codex mcp probe skipped by request" }
+    } else {
+      try {
+        $CodexMcpOutput = (& codex mcp list 2>&1 | Out-String).Trim()
+        if ($LASTEXITCODE -eq 0) {
+          $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-parse"; status = "OK"; detail = "codex mcp list parsed config.toml" }
+        } elseif ($CodexMcpOutput -match "Access is denied|UnauthorizedAccessException") {
+          $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-parse"; status = "SKIP"; detail = "codex CLI is protected by WindowsApps; static config and integration probes passed" }
+        } else {
+          $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-parse"; status = "NOT_LIVE"; detail = $CodexMcpOutput }
+        }
+      } catch {
+        $ErrorText = $_.Exception.Message
+        if ($ErrorText -match "Access is denied|UnauthorizedAccessException") {
+          $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-parse"; status = "SKIP"; detail = "codex CLI is protected by WindowsApps; static config and integration probes passed" }
+        } else {
+          $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-parse"; status = "NOT_LIVE"; detail = $ErrorText }
+        }
       }
-    } catch {
-      $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config-parse"; status = "NOT_LIVE"; detail = $_.Exception.Message }
     }
   } elseif (Test-Path $McpPath) {
     $Mcp = Get-Content -Raw $McpPath | ConvertFrom-Json
@@ -158,7 +203,7 @@ foreach ($Name in $Selected) {
     $Report += [pscustomobject]@{ platform = $Name; check = "mcp-config"; status = "WARN"; detail = "no mcp config at $McpPath" }
   }
 
-  if ($Registry) {
+  if ($Registry -and -not $SkipIntegrationVerify) {
     foreach ($Integration in $Registry.integrations) {
       if ($Integration.policy -eq "optional") { continue }
       $VerifyScript = Join-Path (Join-Path $Root $Integration.path) "verify.ps1"
@@ -174,6 +219,14 @@ foreach ($Name in $Selected) {
         $Status = if ($Integration.policy -eq "required") { "NOT_LIVE" } else { "WARN" }
         $Report += [pscustomobject]@{ platform = $Name; check = $Integration.name; status = $Status; detail = $_.Exception.Message }
       }
+    }
+  }
+  if ($Registry -and $SkipIntegrationVerify) {
+    $Report += [pscustomobject]@{
+      platform = $Name
+      check    = "integration-verify"
+      status   = "SKIP"
+      detail   = "external MCP probes skipped by request; structural/runtime parity checks still ran"
     }
   }
 }

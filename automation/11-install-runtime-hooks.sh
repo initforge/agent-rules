@@ -108,6 +108,12 @@ echo "[11] Python for hooks: $PY_HOOK"
 echo "[11] Installing Codex hooks → $CODEX_HOME/hooks.json"
 mkdir -p "$CODEX_HOME/scripts" "$CODEX_HOME/skill-state"
 copy_scripts "$ROOT/platforms/codex/scripts" "$CODEX_HOME/scripts"
+if [ -f "$ROOT/platforms/shared/scripts/context-router.py" ]; then
+  cp "$ROOT/platforms/shared/scripts/context-router.py" "$CODEX_HOME/scripts/context-router.py"
+fi
+if [ -f "$ROOT/platforms/shared/scripts/context_router.py" ]; then
+  cp "$ROOT/platforms/shared/scripts/context_router.py" "$CODEX_HOME/scripts/context_router.py"
+fi
 CODEX_HOOK_HOME="$(to_hook_path "$CODEX_HOME")"
 AGY_HOOK_HOME="$(to_hook_path "$ANTIGRAVITY_HOME")"
 subst_file \
@@ -118,6 +124,12 @@ subst_file \
 echo "[11] Installing Antigravity hooks → $ANTIGRAVITY_HOME"
 mkdir -p "$ANTIGRAVITY_HOME/scripts" "$ANTIGRAVITY_HOME/skill-state"
 copy_scripts "$ROOT/platforms/antigravity/scripts" "$ANTIGRAVITY_HOME/scripts"
+if [ -f "$ROOT/platforms/shared/scripts/context-router.py" ]; then
+  cp "$ROOT/platforms/shared/scripts/context-router.py" "$ANTIGRAVITY_HOME/scripts/context-router.py"
+fi
+if [ -f "$ROOT/platforms/shared/scripts/context_router.py" ]; then
+  cp "$ROOT/platforms/shared/scripts/context_router.py" "$ANTIGRAVITY_HOME/scripts/context_router.py"
+fi
 # Prefer template that invokes Python directly (no bash path fragility on Windows).
 if [ -f "$ROOT/platforms/antigravity/hooks.json.template" ]; then
   # Rewrite template commands to python absolute if template still uses bash wrapper.
@@ -180,9 +192,21 @@ if [ -d "$GROK_HOME" ]; then
   mkdir -p "$GROK_HOME/scripts" "$GROK_HOME/skill-state" "$GROK_HOME/hooks/bin"
   cp "$CODEX_HOME/scripts/skill-gate.py" "$GROK_HOME/scripts/skill-gate.py"
   cp "$CODEX_HOME/scripts/skill-gate.sh" "$GROK_HOME/scripts/skill-gate.sh"
+  if [ -f "$ROOT/platforms/shared/scripts/context-router.py" ]; then
+    cp "$ROOT/platforms/shared/scripts/context-router.py" "$GROK_HOME/scripts/context-router.py"
+  fi
+  if [ -f "$ROOT/platforms/shared/scripts/context_router.py" ]; then
+    cp "$ROOT/platforms/shared/scripts/context_router.py" "$GROK_HOME/scripts/context_router.py"
+  fi
   # Live names Grok skill-orchestrator expects
   cp "$CODEX_HOME/scripts/skill-gate.py" "$GROK_HOME/hooks/bin/grok-skill-gate.py"
   cp "$CODEX_HOME/scripts/skill-gate.sh" "$GROK_HOME/hooks/bin/grok-skill-gate.sh"
+  if [ -f "$ROOT/platforms/shared/scripts/context-router.py" ]; then
+    cp "$ROOT/platforms/shared/scripts/context-router.py" "$GROK_HOME/hooks/bin/context-router.py"
+  fi
+  if [ -f "$ROOT/platforms/shared/scripts/context_router.py" ]; then
+    cp "$ROOT/platforms/shared/scripts/context_router.py" "$GROK_HOME/hooks/bin/context_router.py"
+  fi
   # Ensure sh delegates to same-dir .py with resolve_python (already in skill-gate.sh)
   # Patch shebang target name inside bin wrapper for local py name
   cat > "$GROK_HOME/hooks/bin/grok-skill-gate.sh" <<'EOS'
@@ -340,10 +364,12 @@ echo "[11] Smoke tests"
 FAIL=0
 
 test_pipe() {
-  local label="$1" cmd="$2"
+  local label="$1" cmd="$2" allow_silent="${3:-0}"
   local out
   out="$(printf '{"hookEventName":"UserPromptSubmit","prompt":"verify UI browser","session_id":"install-smoke"}' | eval "$cmd" 2>&1)" || true
-  if printf '%s' "$out" | grep -q 'additionalContext\|"decision"\|injectSteps'; then
+  if [ -z "$(printf '%s' "$out" | tr -d '[:space:]')" ] && [ "$allow_silent" = "1" ]; then
+    echo "  $label: OK (silent allow)"
+  elif printf '%s' "$out" | grep -q 'additionalContext\|"decision"\|injectSteps'; then
     if printf '%s' "$out" | grep -qE '__ANTIGRAVITY_HOME__|__CODEX_HOME__|e2e-qa|product-ui-craft'; then
       echo "  $label: FAIL (dead name or placeholder in output)" >&2
       echo "    $out" >&2
@@ -357,7 +383,7 @@ test_pipe() {
   fi
 }
 
-test_pipe "Codex skill-gate.sh" "\"$CODEX_HOME/scripts/skill-gate.sh\""
+test_pipe "Codex skill-gate.sh" "\"$CODEX_HOME/scripts/skill-gate.sh\"" 1
 test_pipe "Grok scripts/skill-gate.sh" "\"$GROK_HOME/scripts/skill-gate.sh\""
 # LIVE path Grok actually runs
 if [ -f "$GROK_HOME/hooks/bin/grok-skill-gate.py" ]; then
@@ -388,7 +414,9 @@ fi
 # Antigravity PreInvocation via python (live)
 if [ -f "$ANTIGRAVITY_HOME/scripts/antigravity-skill-gate.py" ]; then
   out="$(printf '{"invocationNum":0,"conversationId":"install-smoke"}' | "$PY" "$ANTIGRAVITY_HOME/scripts/antigravity-skill-gate.py" PreInvocation 2>&1)" || true
-  if printf '%s' "$out" | grep -q 'injectSteps\|"decision"'; then
+  # Antigravity intentionally fails open with `{}` when no actionable guard is
+  # needed; that is a valid silent result after removing visible skill ceremony.
+  if printf '%s' "$out" | grep -q 'injectSteps\|"decision"' || [ "$(printf '%s' "$out" | tr -d '[:space:]')" = "{}" ]; then
     echo "  Antigravity PreInvocation: OK"
   else
     echo "  Antigravity PreInvocation: FAIL ($out)" >&2

@@ -37,7 +37,7 @@ $ModuleMapping = Join-Path $Root "projects\5fedu\domains\module-mapping.md"
 Test-FileContains $ModuleMapping @("clone checklist", "audit checklist", "pattern-inventory", "shell", "variable") | Out-Null
 
 $Rules30 = Join-Path $Root "rules\30-context-routing.md"
-Test-FileContains $Rules30 @("5fedu-module-parity", "tạo", "sửa", "refactor") | Out-Null
+Test-FileContains $Rules30 @("project/domain router", "matching leaf context", "skill", "trigger") | Out-Null
 
 $UiDelivery = Join-Path $Root "projects\5fedu\domains\ui-delivery.md"
 Test-FileContains $UiDelivery @("tạo mới", "sửa module", "generic", "pattern-inventory", "shell parity") | Out-Null

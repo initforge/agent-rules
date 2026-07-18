@@ -255,8 +255,8 @@ if (-not (Test-Path $SgpPath)) {
 }
 if (Test-Path $ManifestPath) {
   $ManifestBody = Get-Content -Raw -Encoding UTF8 $ManifestPath
-  if ($ManifestBody -notmatch "26-slice-completion-gate\.md") {
-    $H11Problems += "rules/manifest.yaml load_order missing 26-slice-completion-gate.md"
+  if ($ManifestBody -match "load_order:[\s\S]*26-slice-completion-gate\.md") {
+    $H11Problems += "rules/manifest.yaml must keep slice gate lazy; remove 26-slice-completion-gate.md from load_order"
   }
 } else {
   $H11Problems += "missing rules/manifest.yaml"
@@ -322,6 +322,47 @@ if (Test-Path $BudgetPath) {
   $Bb = Get-Content -Raw -Encoding UTF8 $BudgetPath
   if ($Bb -notlike "*Intentional oversize*" -or $Bb -notlike "*docs-style*") {
     Add-Finding "desync" "intentional-oversize-missing" "fail" "50-context-budget missing intentional oversize intent" "H13"
+  }
+}
+
+# H14: progressive context graph is generated and structurally usable
+$GraphPath = Join-Path $Root "05-generated\context-graph.json"
+if (-not (Test-Path $GraphPath)) {
+  Add-Finding "workflow" "context-graph-missing" "fail" "05-generated/context-graph.json is missing; run build-context-graph.ps1" "H14"
+} else {
+  try {
+    $Graph = Get-Content -Raw -Encoding UTF8 $GraphPath | ConvertFrom-Json
+    $GraphNodes = @($Graph.nodes)
+    $InvalidNodes = @($GraphNodes | Where-Object {
+      [string]::IsNullOrWhiteSpace([string]$_.id) -or
+      [string]::IsNullOrWhiteSpace([string]$_.source) -or
+      [string]::IsNullOrWhiteSpace([string]$_.load_policy) -or
+      [string]::IsNullOrWhiteSpace([string]$_.owner) -or
+      [string]::IsNullOrWhiteSpace([string]$_.source_hash) -or
+      $null -eq $_.routing
+    })
+    $GraphIds = @($GraphNodes | ForEach-Object { [string]$_.id })
+    $DuplicateIds = @($GraphIds | Group-Object | Where-Object Count -gt 1)
+    Write-DebugLog "H14" "audit-harness-health.ps1:context-graph" "graph-structure" @{
+      version = $Graph.version
+      nodeCount = $GraphNodes.Count
+      invalidCount = $InvalidNodes.Count
+      duplicateIdCount = $DuplicateIds.Count
+    }
+    if ([int]$Graph.version -lt 2) {
+      Add-Finding "workflow" "context-graph-old-schema" "fail" "context graph schema is $($Graph.version); expected >= 2" "H14"
+    }
+    if ($GraphNodes.Count -lt 20) {
+      Add-Finding "workflow" "context-graph-too-small" "fail" "context graph has only $($GraphNodes.Count) nodes" "H14"
+    }
+    if ($InvalidNodes.Count -gt 0) {
+      Add-Finding "workflow" "context-graph-invalid" "fail" "context graph has $($InvalidNodes.Count) nodes without id/source/load_policy" "H14"
+    }
+    if ($DuplicateIds.Count -gt 0) {
+      Add-Finding "workflow" "context-graph-duplicate-ids" "fail" "context graph has $($DuplicateIds.Count) duplicate node ids" "H14"
+    }
+  } catch {
+    Add-Finding "workflow" "context-graph-invalid-json" "fail" "cannot parse 05-generated/context-graph.json: $($_.Exception.Message)" "H14"
   }
 }
 

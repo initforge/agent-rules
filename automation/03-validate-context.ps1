@@ -17,10 +17,12 @@ if ($ManifestContent -match '(?s)load_order:\s*\r?\n((?:[ \t]+-\s+\S+\r?\n)+)') 
   }
 }
 $Core = $LoadOrderFiles | ForEach-Object { Join-Path $Root "rules\$_" } | Where-Object { Test-Path $_ }
-$CoreChars = ($Core | ForEach-Object { (Get-Content -Raw -Encoding UTF8 $_).Length } | Measure-Object -Sum).Sum
+$CoreChars = ($Core | ForEach-Object {
+  (Get-Content -Raw -Encoding UTF8 $_).Replace("`r`n", "`n").Replace("`r", "`n").Length
+} | Measure-Object -Sum).Sum
 $CoreTokens = [math]::Ceiling($CoreChars / 3.6)
 if ($CoreTokens -gt $CoreBudget) { $Problems.Add("Core token budget exceeded: $CoreTokens > $CoreBudget") }
-if ($LoadOrderFiles.Count -lt 10) { $Problems.Add("manifest load_order parse incomplete: only $($LoadOrderFiles.Count) rule(s)") }
+if ($LoadOrderFiles.Count -lt 7) { $Problems.Add("manifest load_order parse incomplete: only $($LoadOrderFiles.Count) rule(s)") }
 
 foreach ($Platform in @("codex", "grok", "antigravity", "cursor")) {
   $Overlay = Join-Path $Root "platforms\$Platform\$Platform-overlay.md"
@@ -74,6 +76,20 @@ $RequiredPaths = @(
 )
 foreach ($Path in $RequiredPaths) {
   if (-not (Test-Path (Join-Path $Root $Path))) { $Problems.Add("Missing required path: $Path") }
+}
+
+$CodexAgentsTemplate = Join-Path $Root "platforms\codex\AGENTS.md"
+if (Test-Path $CodexAgentsTemplate) {
+  $CodexAgentsBody = Get-Content -Raw -Encoding UTF8 $CodexAgentsTemplate
+  if ($CodexAgentsBody -notlike "*@__GENERATED_CORE_IMPORTS__*") {
+    $Problems.Add("Codex AGENTS template missing generated core import marker")
+  }
+  if ($CodexAgentsBody -notlike "*@__CODEX_HOME__/rules/codex-overlay.md*" -or $CodexAgentsBody -notlike "*__AGENT_RULES_ROOT__*") {
+    $Problems.Add("Codex AGENTS template missing runtime placeholders")
+  }
+  if ($CodexAgentsBody -match '(?i)[A-Z]:[\\/]') {
+    $Problems.Add("Codex AGENTS template contains a machine-specific Windows path")
+  }
 }
 
 $ForbiddenTopLevel = @(
@@ -235,11 +251,12 @@ foreach ($Legacy in $LegacyAlwaysOn) {
   }
 }
 
-# Glossary + intentional-oversize intent + 5fedu-project routing must be reachable
+# Glossary + intentional-oversize intent + project routing must be reachable
 $Bootstrap = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "rules\00-bootstrap.md")
+$Glossary = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "rules\00-bootstrap-reference.md")
 foreach ($Term in @("PAF", "HB-1", "SGP", "L0")) {
-  if ($Bootstrap -notlike "*$Term*") {
-    $Problems.Add("rules/00-bootstrap.md missing glossary term: $Term")
+  if ($Glossary -notlike "*$Term*") {
+    $Problems.Add("rules/00-bootstrap-reference.md missing glossary term: $Term")
   }
 }
 $BudgetBody = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "rules\50-context-budget.md")
@@ -247,11 +264,95 @@ if ($BudgetBody -notlike "*Intentional oversize*" -or $BudgetBody -notlike "*doc
   $Problems.Add("rules/50-context-budget.md missing intentional oversize owner intent for docs-style/plan-and-handoff")
 }
 $RoutingBody = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "rules\30-context-routing.md")
-if ($RoutingBody -notlike "*5fedu-project*") {
-  $Problems.Add("rules/30-context-routing.md must link 5fedu-project setup path")
+if ($RoutingBody -notlike "*project installer skill*") {
+  $Problems.Add("rules/30-context-routing.md must describe project installer routing")
 }
 if ($RoutingBody -notlike "*trigger-audit*" -or $RoutingBody -notlike "*CI*") {
   $Problems.Add("rules/30-context-routing.md must mark trigger-audit as CI/fixture not runtime SoT")
+}
+
+$RouteCasesPath = Join-Path $Root "automation\context-route-cases.json"
+if (-not (Test-Path $RouteCasesPath)) {
+  $Problems.Add("Missing progressive context route cases: automation/context-route-cases.json")
+} else {
+  try {
+    $RouteCases = Get-Content -Raw -Encoding UTF8 $RouteCasesPath | ConvertFrom-Json
+    foreach ($BudgetName in @("core_tokens", "normal_execution_tokens", "uncertain_execution_tokens", "plan_authoring_tokens", "harness_edit_tokens", "5fedu_ui_base_tokens")) {
+      if (-not $RouteCases.budgets.PSObject.Properties.Name -contains $BudgetName) {
+        $Problems.Add("Progressive route budget missing: $BudgetName")
+      }
+    }
+    if (@($RouteCases.cases).Count -lt 8) { $Problems.Add("Progressive route cases are incomplete") }
+    if (-not $RouteCases.routes) {
+      $Problems.Add("Progressive route definitions missing")
+    } else {
+      foreach ($RouteName in @($RouteCases.routes.PSObject.Properties.Name)) {
+        $RouteChars = 0
+        foreach ($RouteFile in @($RouteCases.routes.$RouteName)) {
+          $RoutePath = Join-Path $Root ($RouteFile -replace '/', '\')
+          if (-not (Test-Path -LiteralPath $RoutePath)) {
+            $Problems.Add("Progressive route file missing: $RouteFile")
+            continue
+          }
+          $RouteChars += (Get-Content -Raw -Encoding UTF8 -LiteralPath $RoutePath).Replace("`r`n", "`n").Replace("`r", "`n").Length
+        }
+        $RouteTokens = [math]::Ceiling($RouteChars / 3.6)
+        $BudgetKey = switch ($RouteName) {
+          "normal_execution" { "normal_execution_tokens" }
+          "uncertain_execution" { "uncertain_execution_tokens" }
+          "plan_authoring" { "plan_authoring_tokens" }
+          "harness_edit" { "harness_edit_tokens" }
+          "5fedu_ui_base" { "5fedu_ui_base_tokens" }
+          default { $null }
+        }
+        if ($BudgetKey -and $RouteCases.budgets.$BudgetKey -and $RouteTokens -gt [int]$RouteCases.budgets.$BudgetKey) {
+          $Problems.Add("Progressive route budget exceeded: $RouteName = $RouteTokens > $($RouteCases.budgets.$BudgetKey)")
+        }
+        Write-Host "Route tokens ($RouteName): $RouteTokens / $($RouteCases.budgets.$BudgetKey)"
+      }
+    }
+  } catch {
+    $Problems.Add("Progressive route cases invalid JSON: $RouteCasesPath")
+  }
+}
+
+$ContextGraphScript = Join-Path $Root "automation\build-context-graph.ps1"
+if (-not (Test-Path $ContextGraphScript)) {
+  $Problems.Add("Missing context graph builder: automation/build-context-graph.ps1")
+}
+$ContextGraphSchema = Join-Path $Root "automation\context-graph.schema.json"
+if (-not (Test-Path $ContextGraphSchema)) {
+  $Problems.Add("Missing context graph schema: automation/context-graph.schema.json")
+}
+$ContextGraphPath = Join-Path $Root "05-generated\context-graph.json"
+if (Test-Path $ContextGraphPath) {
+  try {
+    $ContextGraph = Get-Content -Raw -Encoding UTF8 $ContextGraphPath | ConvertFrom-Json
+    if ([int]$ContextGraph.version -lt 2 -or @($ContextGraph.nodes).Count -lt $Slugs.Count) {
+      $Problems.Add("Context graph is incomplete: expected skill/project nodes")
+    }
+    foreach ($Node in @($ContextGraph.nodes)) {
+      if (-not $Node.id -or -not $Node.source -or -not $Node.load_policy -or -not $Node.owner -or -not $Node.routing -or -not $Node.source_hash) {
+        $Problems.Add("Context graph node missing id/source/load_policy/owner/routing/source_hash")
+        break
+      }
+      $RoutingProperties = @($Node.routing.PSObject.Properties.Name)
+      if (("signals", "excludes", "priority", "loads" | Where-Object { $RoutingProperties -notcontains $_ }).Count -gt 0) {
+        $Problems.Add("Context graph node has incomplete routing metadata: $($Node.id)")
+        break
+      }
+    }
+    $GraphIds = @($ContextGraph.nodes | ForEach-Object { [string]$_.id })
+    if (($GraphIds | Sort-Object -Unique).Count -ne $GraphIds.Count) {
+      $Problems.Add("Context graph contains duplicate node ids")
+    }
+    $SourceGroups = @($ContextGraph.nodes | Group-Object source | Where-Object { @($_.Group | Select-Object -ExpandProperty owner -Unique).Count -gt 1 })
+    if ($SourceGroups.Count -gt 0) {
+      $Problems.Add("Context graph contains conflicting owners for sources: $($SourceGroups.Name -join ', ')")
+    }
+  } catch {
+    $Problems.Add("Context graph invalid JSON: $ContextGraphPath")
+  }
 }
 $Researcher = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "skills\researcher\SKILL.md")
 if ($Researcher -match "when Codex needs") {

@@ -9,17 +9,45 @@ $Platforms = @("codex", "grok", "antigravity", "cursor")
 $Core = Join-Path $Root "rules"
 $SkillsRoot = Join-Path $Root "skills"
 $SystemMap = Join-Path $Root "guides"
+$ManifestText = Get-Content -Raw -Encoding UTF8 (Join-Path $Core "manifest.yaml")
+$ManifestRules = @([regex]::Matches($ManifestText, '(?m)^\s+-\s+(\S+\.md)\s*$') | ForEach-Object { $_.Groups[1].Value })
+$GeneratedCoreImports = ($ManifestRules | ForEach-Object { "@__CODEX_HOME__/rules/$($_)" }) -join "`n"
+$UserHome = if ($env:USERPROFILE) { $env:USERPROFILE } elseif ($env:HOME) { $env:HOME } else { throw "Cannot resolve user home directory" }
+$CodexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $UserHome ".codex" }
+$ContextGraphScript = Join-Path $PSScriptRoot "build-context-graph.ps1"
+$ContextGraphPath = Join-Path $Root "05-generated\context-graph.json"
+if (Test-Path -LiteralPath $ContextGraphScript) {
+  & $ContextGraphScript -Root $Root -OutputPath $ContextGraphPath
+}
 
 foreach ($Platform in $Platforms) {
   $Target = Join-Path $BuildRoot $Platform
   $Rules = Join-Path $Target "rules"
   $Skills = Join-Path $Target "skills"
+  $Scripts = Join-Path $Target "scripts"
   $Docs = Join-Path $Target "docs"
-  New-Item -ItemType Directory -Force -Path $Rules, $Skills, $Docs | Out-Null
+  New-Item -ItemType Directory -Force -Path $Rules, $Skills, $Scripts, $Docs | Out-Null
+
+  $SharedScripts = Join-Path $Root "platforms\shared\scripts"
+  if (Test-Path -LiteralPath $SharedScripts) {
+    Get-ChildItem -LiteralPath $SharedScripts -File -Filter "*.py" | ForEach-Object {
+      Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $Scripts $_.Name) -Force
+    }
+  }
+
+  if (Test-Path -LiteralPath $ContextGraphPath) {
+    Copy-Item -LiteralPath $ContextGraphPath -Destination (Join-Path $Target "context-graph.json") -Force
+  }
 
   $PlatformAgents = Join-Path $Root "platforms\$Platform\AGENTS.md"
   if (Test-Path $PlatformAgents) {
-    Copy-Item -LiteralPath $PlatformAgents -Destination (Join-Path $Target "AGENTS.md") -Force
+    $AgentsBody = Get-Content -Raw -Encoding UTF8 $PlatformAgents
+    if ($Platform -eq "codex") {
+      $AgentsBody = $AgentsBody.Replace("@__GENERATED_CORE_IMPORTS__", $GeneratedCoreImports)
+      $AgentsBody = $AgentsBody.Replace("__CODEX_HOME__", $CodexHome.Replace('\', '/'))
+      $AgentsBody = $AgentsBody.Replace("__AGENT_RULES_ROOT__", $Root.Replace('\', '/'))
+    }
+    [System.IO.File]::WriteAllText((Join-Path $Target "AGENTS.md"), $AgentsBody)
   }
 
   Get-ChildItem $Core -File -Filter "*.md" | Where-Object { $_.Name -ne "README.md" } | ForEach-Object {

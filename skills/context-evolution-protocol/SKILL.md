@@ -1,12 +1,10 @@
 ---
 name: context-evolution-protocol
 description: Trigger-only protocol for learning from user feedback and evolving agent context safely. Use when modifying, promoting, deduplicating, or auditing AGENTS.md, rules, skills, workflows, .agents, .codex, 5fedu context, or when user feedback reveals repeated agent misunderstanding, context drift, over-specific rules, duplicated lessons, or requests like "ghi nhớ", "bổ sung context", "đưa vào rule", "đừng lặp lại", "context bị loạn", "dọn context", "sync rule". Do not use for ordinary coding tasks.
+routing: {"signals":["AGENTS.md","rules","skills","context","ghi nhớ","bổ sung context","dọn context","sync rule","agent-rules"],"excludes":["ordinary implementation"],"priority":90,"loads":["skill:context-evolution-protocol"],"supports":["clean-code"],"project_scope":"","platform_scope":"all","max_route_tokens":2800,"default":false}
 ---
 
 # Context Evolution Protocol
-
-Skill scan: context-evolution-protocol
-Skill activated: context-evolution-protocol
 
 This is a trigger-only learning and context hygiene protocol. It prevents agents from "learning" by dumping raw feedback into always-loaded context or promoting one project's specific lesson into a global rule.
 
@@ -155,12 +153,6 @@ rg -n "<khái niệm vừa thêm>" rules skills     # kỳ vọng 1 nơi sở h�
 
 ## Output Contract
 
-For context/harness tasks, final report must include:
-
-- `Classification`: one-off/project-specific/5fedu-common/global-agent-rule/raw-evidence/question
-- `Layer changed`: source files and mirrors/runtime/project copies
-- `Duplicate audit`: what was searched and what was consolidated
-- `Verification`: commands/checks run
-- `Status`: PASS/PARTIAL/BLOCKED
+For context/harness tasks, keep the public report domain-first. Mention classification, changed layer, duplicate audit or status only when it changes a decision, explains a blocker, or is requested. Keep the complete metadata in trace/artifacts.
 
 

@@ -1,6 +1,7 @@
 ---
 name: 5fedu-module-parity
 description: "5fedu ERP module UI parity — clone/adapt from Nhân viên/Phòng ban template. Use when làm module mới, thêm module, tạo màn hình/trang, sửa module, chỉnh module, refactor module, thêm chức năng vào module, clone module, lệch, sai pattern, thiếu nút, drawer sai, listview sai, toolbar sai, parity, đối chiếu template, nhập hàng lệch. Do NOT use for branding/landing/redesign outside ERP shells (frontend-architect). Do NOT use without context/5fedu in active repo."
+routing: {"signals":["5fedu","context/5fedu","5fedu ui","làm module","sửa module","refactor module","drawer","listview","parity"],"excludes":["branding","landing","redesign outside ERP"],"priority":80,"loads":["project:5fedu:router","pattern-inventory","module-mapping","ui-delivery"],"supports":["5fedu-project","qa-skills","browser-qa"],"project_scope":"5fedu","platform_scope":"all","max_route_tokens":6500,"default":false}
 ---
 
 # 5fedu module parity
@@ -30,7 +31,7 @@ Hai phần — **không** gộp:
 
 ## Report contract
 
-Mọi task UI/module kết thúc bằng: `Template reference` | `Shell parity` | `Variable map` | `Pattern fidelity` | `Verification` | `Status`
+Khi task cần báo cáo kỹ thuật, ghi `Template reference`, `Shell parity`, `Variable map`, `Pattern fidelity` và `Verification`. Câu trả lời mặc định vẫn bắt đầu bằng tác động nghiệp vụ; metadata chỉ hiện khi có giá trị hoặc được hỏi.
 
 ## Deep QA (optional)
 

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/context-graph.schema.json",
+  "type": "object",
+  "required": ["version", "generated_from", "source_of_truth", "nodes"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 2 },
+    "generated_from": { "type": "array", "items": { "type": "string" } },
+    "source_of_truth": { "type": "object" },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "layer", "source", "load_policy", "owner", "routing", "source_hash", "token_estimate"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "layer": { "type": "string", "minLength": 1 },
+          "source": { "type": "string", "minLength": 1 },
+          "load_policy": { "enum": ["always", "router", "skill", "leaf", "reference", "verify-only", "platform"] },
+          "owner": { "type": "string", "minLength": 1 },
+          "source_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "token_estimate": { "type": "integer", "minimum": 0 },
+          "routing": {
+            "type": "object",
+            "required": ["signals", "excludes", "priority", "loads"],
+            "properties": {
+              "signals": { "type": "array", "items": { "type": "string" } },
+              "excludes": { "type": "array", "items": { "type": "string" } },
+              "priority": { "type": "integer" },
+              "loads": { "type": "array", "items": { "type": "string" } },
+              "supports": { "type": "array", "items": { "type": "string" } },
+              "project_scope": { "type": "string" },
+              "platform_scope": { "type": "string" },
+              "max_route_tokens": { "type": "integer", "minimum": 0 },
+              "default": { "type": "boolean" }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

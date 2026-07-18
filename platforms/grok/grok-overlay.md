@@ -11,6 +11,6 @@ description: Grok-only runtime delta.
 - Skills: `$GROK_HOME/skills` (not under `.grok/skills` for global user skills).
 - Project `.grok/` = project config/pointers only — never a second global core copy.
 - Use Grok-native hooks/inspection only inside Grok.
-- Deep/manual/UI QA → combo `qa-skills` + `browser-qa`; dual MCP: Playwright + Chrome DevTools.
+- Live/manual UI proof → load `qa-skills` + `browser-qa`; do not preload browser tooling for source-only work.
 - After install: **restart Grok session** so inject reloads from disk (cached sessions may keep old rules until restart).
 - **Dual machine:** Linux và Windows là runtime riêng — cài hooks/rules trên **từng máy**; không copy `~/.grok/hooks/*.json` chéo OS.

@@ -48,6 +48,26 @@ def main() -> int:
         print(f"FAIL: 5fedu stack has dead skills: {f_stack}")
         return 1
 
+    # Precision guards: generic product work must not inherit 5fedu or
+    # unrelated research/docs capabilities merely because it says "module".
+    generic_signals = mod.detect_signals("refactor module thanh toán Node.js")
+    generic_stack = mod.build_stack(generic_signals)
+    if any(s in generic_stack for s in ("5fedu-project", "5fedu-module-parity")):
+        print(f"FAIL: generic module falsely routed to 5fedu: {generic_stack}")
+        return 1
+
+    compare_signals = mod.detect_signals("so sánh hai cách đặt tên biến")
+    compare_stack = mod.build_stack(compare_signals)
+    if "researcher" in compare_stack:
+        print(f"FAIL: generic comparison falsely routed to researcher: {compare_stack}")
+        return 1
+
+    harness_signals = mod.detect_signals("tinh gọn rules và skills của agent-rules")
+    harness_stack = mod.build_stack(harness_signals)
+    if "docs-style" in harness_stack or "researcher" in harness_stack:
+        print(f"FAIL: harness task picked unrelated skills: {harness_stack}")
+        return 1
+
     # Live path: UserPromptSubmit handler produces context without dead names
     payload = {
         "hookEventName": "UserPromptSubmit",
@@ -71,6 +91,12 @@ def main() -> int:
     if "5fedu-module-parity" not in blob:
         print("FAIL: expected 5fedu-module-parity in combined prompt")
         return 1
+
+    hook_src = src
+    for noisy in ("Skill scan + Skill activated", "Skills active + Skill activated"):
+        if noisy in hook_src:
+            print(f"FAIL: visible skill ceremony remains: {noisy}")
+            return 1
 
     print("PASS: skill-gate live stack regression")
     return 0

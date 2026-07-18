@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Grok skill orchestrator hook — advisory + state (fail-open, never deny commands).
+Graph-aware Codex skill orchestrator hook — advisory + state (fail-open, never deny commands).
 PreToolUse: allow always; inject E2E ladder hints when deep would be risky.
 PostToolUse: track smoke/spec/deep_runs for reminders.
-UserPromptSubmit / SessionStart: stack inject + anti-stuck context.
+UserPromptSubmit / SessionStart: internal guard state + anti-stuck context.
 """
 from __future__ import annotations
 
@@ -16,6 +16,18 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+for _shared in (
+    SCRIPT_DIR,
+    SCRIPT_DIR.parents[2] / "shared" / "scripts",
+):
+    if str(_shared) not in sys.path:
+        sys.path.insert(0, str(_shared))
+try:
+    from context_router import load_graph, route as graph_route, route_signature
+except ImportError:  # pragma: no cover - legacy installs use the old gate
+    load_graph = graph_route = route_signature = None  # type: ignore[assignment]
 
 # Windows hook runner may use cp1252 pipes; Vietnamese inject must not crash.
 for _stream in (sys.stdout, sys.stderr):
@@ -68,6 +80,19 @@ E2E_CACHE_DIR = STATE_DIR / "e2e-cache"
 E2E_CACHE_TTL_SEC = 4 * 3600
 READ_TOOLS = {"read_file", "Read", "skill", "Skill"}
 GIT_COMMIT_RE = re.compile(r"\bgit\b.{0,40}\bcommit\b", re.I | re.S)
+
+
+def routing_mode() -> str:
+    """Read the explicit cutover mode, defaulting safely to shadow."""
+    raw = os.environ.get("AGENT_RULES_ROUTING_MODE")
+    if raw:
+        return raw.lower()
+    mode_file = STATE_DIR / "routing-mode.json"
+    try:
+        mode = json.loads(mode_file.read_text(encoding="utf-8-sig")).get("mode", "shadow")
+    except (OSError, ValueError, TypeError):
+        mode = "shadow"
+    return str(mode).lower() if mode else "shadow"
 DEEP_PATTERNS = re.compile(
     r"test:e2e:prod:deep|"
     r"production-multi-role\.spec\.ts.*production-transport-deep|"
@@ -110,6 +135,7 @@ def default_state(sid: str) -> dict[str, Any]:
         "signals": [],
         "stack": [],
         "primary": None,
+        "routing": {"mode": "fallback", "graph": None},
         "e2e": {
             "smoke_passed": False,
             "smoke_passed_at": None,
@@ -198,7 +224,7 @@ def allow_with_hint(hint: str | None, event: str = "PreToolUse") -> None:
 
 
 def inject_context(message: str, event: str) -> None:
-    """Passive hook: inject Turn-0 / stack reminder into agent context."""
+    """Passive hook: inject only a bounded guard advisory into agent context."""
     if hook_platform() == "codex":
         print(
             json.dumps(
@@ -250,6 +276,41 @@ def workspace_root() -> Path | None:
     if not raw:
         return None
     return Path(raw)
+
+
+def graph_decision(prompt: str) -> dict[str, Any] | None:
+    if load_graph is None or graph_route is None:
+        return None
+    candidates = [
+        RUNTIME_HOME / "context-graph.json",
+        Path(__file__).resolve().parents[3] / "05-generated" / "context-graph.json",
+    ]
+    graph_path = next((p for p in candidates if p.is_file()), None)
+    if not graph_path:
+        return None
+    try:
+        graph = load_graph(graph_path)
+        roots = [workspace_root()] if workspace_root() else []
+        decision = graph_route(prompt, roots, graph)
+        decision["graph_path"] = str(graph_path)
+        return decision
+    except (OSError, ValueError, json.JSONDecodeError):
+        return None
+
+
+def record_routing_comparison(state: dict[str, Any], prompt: str, legacy: dict[str, Any], graph: dict[str, Any] | None) -> None:
+    if not graph:
+        state["routing"] = {"mode": "fallback", "graph": None}
+        return
+    legacy_sig = (legacy.get("primary"), tuple(legacy.get("stack") or []), tuple())
+    graph_sig = route_signature(graph) if route_signature else ()
+    state["routing"] = {
+        "mode": routing_mode(),
+        "legacy": {"primary": legacy.get("primary"), "stack": legacy.get("stack") or []},
+        "graph": {"primary": graph.get("primary"), "stack": graph.get("stack") or [], "context_nodes": graph.get("context_nodes") or []},
+        "match": legacy_sig == graph_sig,
+        "graph_hash": graph.get("graph_hash"),
+    }
 
 
 def is_harness_workspace() -> bool:
@@ -376,11 +437,11 @@ def detect_signals(text: str) -> list[str]:
             r"làm module|sửa module|sua module|lam module|refactor module|"
             r"\bmodule\b|parity|lệch template|drawer|toolbar|listview",
         ),
-        ("research", r"research|tìm hiểu|so sánh|stuck|stall"),
+        ("research", r"research|tìm hiểu|changelog|release notes|latest|external|stuck|stall"),
         (
             "5fedu",
             r"5fedu|\.agents/5fedu|context/5fedu|tah-app|nostime|/template|"
-            r"module-parity|nhân viên|phòng ban|\bmodule\b",
+            r"module-parity|nhân viên|phòng ban",
         ),
         (
             "context-evolution",
@@ -394,6 +455,13 @@ def detect_signals(text: str) -> list[str]:
     for name, pat in rules:
         if re.search(pat, t, re.I):
             signals.append(name)
+    # A generic "module" belongs to the active project, not automatically to
+    # 5fedu. Only add the project signal when the workspace proves that context
+    # is installed; an explicit 5fedu phrase still wins everywhere.
+    if "ui" in signals and "5fedu" not in signals:
+        root = workspace_root()
+        if root and (root / "context" / "5fedu" / "00-context-map.md").is_file():
+            signals.append("5fedu")
     return signals
 
 
@@ -407,8 +475,7 @@ def build_stack(signals: list[str]) -> list[str]:
     if "context-evolution" in signals:
         _append_live(stack, "context-evolution-protocol")
     if "harness" in signals:
-        _append_live(stack, "researcher")
-        _append_live(stack, "docs-style")
+        _append_live(stack, "context-evolution-protocol")
     if "5fedu" in signals:
         _append_live(stack, "5fedu-project")
         if "ui" in signals or "e2e" in signals:
@@ -509,18 +576,13 @@ def handle_session_start(payload: dict[str, Any]) -> None:
     st = load_state(sid)
     apply_e2e_cache(st)
     save_state(st)
-    parts = [
-        "[skill-gate] Turn-0: Skill scan + Skill activated trong message đầu (visible).",
-        "Đọc SKILL.md trước test/sửa spec (rule — không chặn lệnh).",
-        "E2E anti-stuck: smoke → -g 1 test sau edit spec → deep; ≥3 deep/session → dùng -g hoặc DEEP_OK.",
-    ]
-    if st.get("stack"):
-        parts.append(
-            f"State file stack: {' → '.join(st['stack'])} | primary: {st.get('primary')}."
-        )
+    parts = []
     if st["e2e"].get("smoke_passed"):
         parts.append("E2E cache: smoke đã pass (session hoặc 4h cache workspace).")
-    inject_context(" ".join(parts), "SessionStart")
+    if parts:
+        inject_context(" ".join(parts), "SessionStart")
+    else:
+        allow()
 
 
 def handle_user_prompt_submit(payload: dict[str, Any]) -> None:
@@ -528,11 +590,23 @@ def handle_user_prompt_submit(payload: dict[str, Any]) -> None:
     st = load_state(sid)
     prompt = extract_prompt(payload)
     if prompt:
-        signals = detect_signals(prompt)
+        legacy_signals = detect_signals(prompt)
+        legacy = {
+            "signals": legacy_signals,
+            "stack": build_stack(legacy_signals),
+            "primary": None,
+        }
+        legacy["primary"] = pick_primary(legacy["stack"], legacy_signals)
+        graph = graph_decision(prompt)
+        record_routing_comparison(st, prompt, legacy, graph)
+        use_graph = bool(graph) and routing_mode() == "strict"
+        signals = (graph or {}).get("signals", []) if use_graph else legacy_signals
+        stack = (graph or {}).get("stack", []) if use_graph else legacy["stack"]
+        primary = (graph or {}).get("primary") if use_graph else legacy["primary"]
         if signals:
             st["signals"] = signals
-            st["stack"] = build_stack(signals)
-            st["primary"] = pick_primary(st["stack"], signals)
+            st["stack"] = stack
+            st["primary"] = primary
         st["harness_task"] = "harness" in signals
         st["harness"]["task"] = st["harness_task"]
         e2e = st["e2e"]
@@ -549,16 +623,7 @@ def handle_user_prompt_submit(payload: dict[str, Any]) -> None:
             st["skills_read"] = []
     apply_e2e_cache(st)
     save_state(st)
-    stack = st.get("stack") or []
-    primary = st.get("primary")
     hints: list[str] = []
-    if stack:
-        hints.append(
-            f"[skill-gate] Signals: {', '.join(st.get('signals', []))}. "
-            f"Skill stack: {' → '.join(stack)}. Primary: {primary}. "
-            f"Đọc {RUNTIME_HOME}/skills/{primary}/SKILL.md trước test/sửa spec. "
-            "Message đầu: Skill scan + Skills active + Skill activated."
-        )
     if "e2e" in st.get("signals", []):
         hints.append(e2e_session_reminder(st))
     if hints:

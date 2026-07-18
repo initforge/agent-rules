@@ -7,18 +7,18 @@
 
 Chỉ **Tah-app** và **nostime** — xem `known-5fedu-repos.md` (agent-rules).
 
-## Đọc trước
+## Đọc theo trigger
 
-1. `00-context-map.md` — router domain (template)
-2. **`project-local/00-index.md`** — router dự án (sheets, Supabase, decisions đã chốt) — **ưu tiên** nếu có
-3. `decisions.md` (generic template) hoặc `project-local/decisions.md` (dự án)
-4. `open-questions.md` hoặc `project-local/open-questions.md`
+1. Luôn đọc `00-context-map.md` — đây là router, không phải toàn bộ domain pack.
+2. Nếu có `project-local/00-index.md`, chỉ đọc nó khi task chạm dữ liệu/quyết định của dự án.
+3. Chỉ mở `decisions.md`, `open-questions.md` hoặc bản `project-local/` khi router chỉ đúng domain đó.
+4. Không preload toàn bộ `domains/`, `archive/`, `evidence/` hoặc project-local.
 
 Layout cũ (`00-index.md` ở root): hợp lệ nếu chưa migrate — đọc `00-index.md` hoặc `project-local/00-index.md`.
 
 ## Behavior mặc định (UI)
 
-**Mọi** task tạo/sửa/refactor module ERP → `00-context-map.md` → `domains/module-mapping.md` + `domains/ui-delivery.md` (+ `domains/references/ui-delivery-detail.md` khi implement) → mở module tham chiếu (Nhân viên/Phòng ban) + route hiện tại → đối chiếu **trước** khi code. **Cấm** `frontend-architect` / `master-image-generation` làm nguồn chính.
+Task tạo/sửa/refactor module ERP → `00-context-map.md` → chỉ mở `module-mapping.md` và `ui-delivery.md` khi trigger UI khớp; mở `ui-delivery-detail.md` khi surface cần detail/navigation/verify. Sau đó mở module tham chiếu và route hiện tại trước khi code. **Cấm** `frontend-architect` / `master-image-generation` làm nguồn chính.
 
 Khi user báo lệch/sai pattern: cùng flow trên + audit toàn surface.
 

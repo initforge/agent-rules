@@ -1,6 +1,7 @@
 ---
 name: frontend-architect
 description: "UI/UX polish for marketing/landing and non-ERP surfaces — Tailwind, motion, redesign. Use for giao diện đẹp, branding, landing, animation polish outside ERP module shells. Do NOT use when repo has context/5fedu and task is ERP module (tạo/sửa/refactor module, parity, lệch, sai pattern, drawer/listview/toolbar) — use 5fedu-module-parity + ui-delivery + module-mapping. Do NOT use for pure backend. Reference quality, not rigid pipeline."
+routing: {"signals":["branding","landing","marketing","redesign","animation","giao diện đẹp"],"excludes":["5fedu","ERP module","parity","drawer","listview","toolbar"],"priority":60,"loads":["skill:frontend-architect"],"supports":[],"project_scope":"","platform_scope":"all","max_route_tokens":3500,"default":false}
 ---
 
 # Frontend Architect

@@ -5,6 +5,7 @@ description: >
   subagents in isolated worktrees, evaluates all candidates, and applies the
   winner. Use when asked to "best of n", "try multiple approaches", "parallel
   implementations", "/best-of-n", or "/bon".
+routing: {"signals":["best of n","try multiple approaches","parallel implementations","/best-of-n","/bon"],"excludes":[],"priority":60,"loads":["skill:best-of-n"],"supports":[],"project_scope":"","platform_scope":"all","max_route_tokens":3500,"default":false}
 metadata:
   short-description: "Parallel implementation tournament"
 ---
@@ -16,8 +17,6 @@ metadata:
 ULTRA-SENSITIVE Turn-0:
 
 ```text
-Skill scan: best-of-n
-Skill activated: best-of-n
 ```
 
 Implement a task multiple different ways in parallel, evaluate all candidates,

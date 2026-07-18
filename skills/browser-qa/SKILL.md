@@ -2,12 +2,12 @@
 name: browser-qa
 description: >
   Eyes/hands UI QA via dual MCP: Playwright MCP (a11y navigate/click/assert) +
-  Chrome DevTools MCP (console/network/perf/CDP). Use when: browser QA, click-through,
-  verify UI, E2E, smoke UI, exploratory run, test như user, manual test UI, Playwright MCP,
-  chrome-devtools, network error, console error, regression UI, screenshot verify,
-  drawer/form live check, production smoke UI. Pair with qa-skills for matrix.
+  Chrome DevTools MCP (console/network/perf/CDP). Use when the owner asks for browser,
+  live/manual, click-through, E2E, smoke, exploratory, screenshot or console/network proof.
+  Static source/UI verification does not trigger this skill. Pair with qa-skills for matrix.
   Do NOT use for pure unit/API without UI; not 5fedu module build (5fedu-module-parity first);
   not Codex non-browser default unless owner explicit live/UI verify.
+routing: {"signals":["browser","live/manual","click-through","e2e","smoke","exploratory","screenshot","console/network","playwright","chrome-devtools"],"excludes":["static source verification","unit/api only"],"priority":80,"loads":["skill:browser-qa"],"supports":["qa-skills","5fedu-module-parity"],"project_scope":"","platform_scope":"all","max_route_tokens":3500,"default":false}
 ---
 
 # Browser QA

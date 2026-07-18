@@ -1,6 +1,7 @@
 ---
 name: clean-code
 description: Distilled clean-code guidelines, 2-phase code quality gate (pre-plan smell scan / post-plan strict review), triage lanes, and hard-block validation rules. Trigger on "clean code", "dọn dẹp code", "refactor code", "viết code đẹp", "tối ưu code", smell scan, hard-block. Do NOT use for deep maintainability audit — that is skill code-review (user-invoked).
+routing: {"signals":["clean code","dọn dẹp code","refactor code","viết code đẹp","tối ưu code","smell scan","hard-block"],"excludes":["pure q&a"],"priority":50,"loads":["skill:clean-code"],"supports":["implementation-discovery","code-review"],"project_scope":"","platform_scope":"all","max_route_tokens":3500,"default":false}
 ---
 
 # Clean Code Skill

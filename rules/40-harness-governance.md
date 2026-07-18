@@ -1,5 +1,5 @@
 ---
-alwaysApply: true
+alwaysApply: false
 description: Canonical ownership, promotion and mirror governance.
 ---
 

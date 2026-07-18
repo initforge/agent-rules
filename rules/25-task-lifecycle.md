@@ -22,13 +22,9 @@ description: Intake lane, risk gate, self-report trace, and advisory durable log
 
 Lane (tiny/normal/high-risk) applies when mode=`execution` only.
 
-## Plan roles vs capability tier
+## Plan roles and capability tier
 
-- **Roles:** Architect | Scribe | Reviewer | Executor | Research Analyst — skill + mode (see `plan-and-handoff`).
-- **Tiers L0/L1/L2:** weak-first execute default; `min_tier` per role/phase — details in `skills/plan-and-handoff/references/capability-tier-routing.md`.
-- **Weak-first:** execute phases prefer **L0** unless phase `min_tier` higher or owner `force_tier`.
-- **PAF format:** `skills/plan-and-handoff/references/plan-artifact-template.md`.
-- L0 models OK for Scribe + Executor; Architect/Reviewer deep work → `min_tier L1+`.
+Plan roles and L0/L1/L2 routing belong to `plan-and-handoff`; load them only for plan work.
 
 ## Intake and lane
 
@@ -45,15 +41,16 @@ Scope **đúng 1 file** và không có hard gate high-risk → mới được `t
 Module mới: đếm cả file registry (`App.tsx`, sidebar, breadcrumbs, registry, module views) tại intake — không giảm xuống tiny.
 
 Lane behavior:
-- `tiny` (1 file only): patch trực buộc; quick hard-block check (N+1, secrets, async loading/error); skip plan/review ceremony; minimal trace. **Only when mode=`execution`.**
-- `normal` (≥2 files OR standard work): scope lock + `finish-to-completion` when mode=`execution`; discovery verify before code; bounded validation. `plan-and-handoff` when multi-phase execution or ambiguous — not every normal task. When mode is plan-only, lane n/a — prefer plan-and-handoff over finish.
+- `tiny` (1 file only): direct patch, quick safety check, minimal report.
+- `normal` (≥2 files OR standard work): scope lock, bounded discovery and verification.
+- `high-risk`: plan first, strongest verification and explicit blocker handling.
 - `high-risk`: pause if ambiguous; `plan-and-handoff` bắt buộc before execute; `implementation-discovery`; strongest verification; optional `clean-code` smell detect; detailed trace.
 
 Mid-task unknown that is must-not-self-decide (credentials, schema/migration, permission rule, large destructive change) → `BLOCKED` and record blocker per `implementation-discovery` escape-hatch — do not guess.
 
 ## Self-report trace (in response)
 
-End task reports with: `Status` (PASS/PARTIAL/BLOCKED), `Lane`, files/layers changed, verification evidence, `Friction` (or `none`). Depth follows lane: tiny = minimal; normal = standard; high-risk = detailed.
+Execution reports state outcome and verification. Expose lane or friction only when they change the decision, explain a blocker or are requested.
 
 ## Advisory durable log
 

@@ -7,39 +7,29 @@ description: Progressive context loading and capability activation.
 
 Load progressively:
 
-1. Bootstrap and repository entrypoint.
-2. Files/interfaces nearest the task.
-3. One matching capability from its `SKILL.md` metadata.
-4. Capability references/scripts only when the procedure requires them.
-5. Project context index, then only domain packs matching the task.
-6. External documentation only for unstable, unfamiliar or explicitly requested facts.
+1. Core and the nearest repository entrypoint.
+2. One matching capability from its `SKILL.md` metadata.
+3. Project/domain router, then only matching leaf context.
+4. References/scripts only when the procedure requires them.
+5. External documentation only for unstable, unfamiliar or explicitly requested facts.
 
-The `description` frontmatter of each capability is the trigger source of truth. `automation/trigger-audit.json` is a **CI/fixture recall check only** — not a second runtime router. If multiple capabilities match, choose a primary capability and add only the minimum supporting set.
+The structured `routing` object in each capability frontmatter is the runtime trigger source of truth; `description` remains the human-facing contract. `05-generated/context-graph.json` is compiled from that metadata and consumed by runtime hooks. `automation/trigger-audit.json` and `automation/context-route-cases.json` are **CI/fixture regression checks only** — not a second runtime router. If multiple capabilities match, choose a primary capability and add only the minimum supporting set.
 
-## Setup / project context (5fedu)
+## Context routing ownership
 
-- Thiết lập / cài context 5fedu / tah-app / nostime → skill **`5fedu-project`** (installer → `<repo>/context/5fedu/`).
-- Sau khi có `context/5fedu/`, task module ERP → **`5fedu-module-parity`** (không `frontend-architect`).
-- Sửa harness (`rules/`, `skills/`, `platforms/`, `automation/`) → `context-evolution-protocol` + open **`41-harness-maintainer.md`** (alwaysApply false; mid-flow).
+- Setup project context → the project installer skill.
+- Domain implementation → the active project router and matching capability.
+- Harness edits → `context-evolution-protocol`; load maintainer detail only when syncing/building.
 
-## Mid-flow activation (trigger khi đang chạy flow — không nghẽn, không hiểu lầm)
+## Mid-flow activation
 
-Trigger không chỉ ở đầu turn. Khi đang execute mà xuất hiện trigger mới (cần `implementation-discovery`, `researcher`, `clean-code`, `5fedu-module-parity`, `qa-skills`/`browser-qa`…):
+- Trigger mới khi execute → pause đúng step, chạy capability phụ bounded, rồi quay lại primary; không reset scope/finish loop.
+- Chỉ một primary + minimum supporting set; không biến mid-flow thành re-plan. Phụ fail/stall 2 lần → ghi blocker, tiếp tục primary hoặc `BLOCKED`.
+- Owner interjection: phân loại lại mode/lane; mở rộng scope → `REVISE`, chỉ đạo nhỏ → nhận vào step hiện tại; giữ `.agent/plans/<plan-id>/progress.md`.
 
-- **Re-entrant, bounded:** pause step hiện tại → chạy capability phụ trong phạm vi hẹp → quay lại đúng chỗ. KHÔNG bỏ `finish-to-completion` loop, KHÔNG reset scope lock.
-- **Một primary tại một thời điểm** + minimum supporting set; 2 trigger tranh nhau → theo thứ tự conflict `10-execution.md` §"When signals conflict".
-- **Cấm biến mid-flow thành re-plan toàn bộ.** Mid-flow chỉ bổ sung hiểu biết/kiểm chứng; thay đổi scope lớn → `REVISE` PAF (§9), không âm thầm mở rộng.
-- **Chống deadlock:** capability phụ fail/stall 2 lần → dừng phụ, ghi 1 dòng blocker, tiếp tục primary hoặc `BLOCKED` — không lặp vô hạn, không chờ trigger không bao giờ tới.
-- **Owner interjection giữa flow** (owner gửi yêu cầu mới khi đang chạy): phân loại lại mode/lane cho yêu cầu đó; nếu là mở rộng scope → REVISE, nếu là chỉ đạo nhỏ → nhận vào step hiện tại; không mất tiến độ đã có trong `.agent/plans/<plan-id>/progress.md` (legacy `_progress.md` chỉ đọc để migrate).
+## Capability precedence (project-specific routers)
 
-## Capability precedence (5fedu UI)
-
-When the active repo has `context/5fedu/` and the task matches UI/module triggers (làm module mới, thêm module, sửa module, refactor module, clone module, thêm chức năng, lệch, sai pattern, drawer, listview, toolbar, template, nhập hàng lệch):
-
-1. **Primary:** skill `5fedu-module-parity` (router + hard stop) → **`module-mapping.md`** (checklist owner) → **`ui-delivery.md`** (surface/verify). Đọc tuần tự; không lặp checklist ở SKILL.
-2. **Cấm** dùng `frontend-architect` hoặc `master-image-generation` làm nguồn chính cho parity ERP hoặc tạo/sửa module.
-3. `frontend-architect` chỉ khi: branding/landing/redesign **ngoài** module shell ERP, và owner không yêu cầu đối chiếu template Nhân viên.
-4. Deep/manual/UI QA sau surface ổn / owner test như user → combo `qa-skills` + `browser-qa`; **không** thay parity/mapping.
+Project routers own domain precedence. Keep exclusions beside the matching skill; do not copy the same checklist into the global core.
 
 Keep always-loaded context stable and small. Put durable, reusable instructions before variable project facts; put volatile examples, raw evidence and long domain details behind indexes, skills or references so prompt-cache prefixes and context windows are not churned by every task.
 
@@ -51,7 +41,6 @@ Raw logs, chat evidence, old decisions and generated mirrors are never default c
 
 ## Plan/state routing
 
-- Markdown PAF remains the source of intent and reasoning; `automation/planctl.ps1` only compiles and validates it, never replaces it with JSON.
-- State, progress, handoff and ledger default to `.agent/plans/<plan-id>/`; read legacy `.agent/ledger/` only for migration or an existing gap-closure slice.
-- Tiny/clear normal work does not require PAF/ledger; use planctl/SGP for multi-phase, high-risk or independently evidenced AC work.
-- Hard-block only provable invariants (missing verify, placeholders, dependency cycles, open/blocker AC); heuristic context/file-size findings remain WARN so the agent keeps implementation freedom.
+- Markdown PAF remains the intent source; `planctl` compiles and validates it.
+- State, progress, handoff and ledger stay under `.agent/plans/<plan-id>/`; legacy paths are migration-only.
+- Tiny/clear normal work does not require PAF/ledger; multi-phase, high-risk or independently evidenced AC work does.

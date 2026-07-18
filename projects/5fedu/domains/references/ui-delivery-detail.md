@@ -79,7 +79,7 @@ Mọi thay đổi UI verify như hệ thống liên kết:
 - Đổi tên module đã sync sidebar/breadcrumb/permission/registry chưa?
 - Production verify interaction sau deploy thật chưa?
 
-Report cuối: `Template checked` | `Pattern fidelity` | `Verification` | `Status`
+Khi cần báo cáo kỹ thuật, ghi `Template reference`, `Pattern fidelity` và `Verification`; không ép các metadata này vào câu trả lời nghiệp vụ mặc định.
 
 ## Plan và report contract
 

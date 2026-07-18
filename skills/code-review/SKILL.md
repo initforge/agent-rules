@@ -1,6 +1,7 @@
 ---
 name: code-review
 description: Run an extremely strict maintainability review for abstraction quality, giant files, and spaghetti-condition growth. Use for a deep code quality audit or an especially harsh maintainability review.
+routing: {"signals":["deep code quality audit","strict maintainability review","spaghetti","code judo"],"excludes":["ordinary comparison","obvious fix"],"priority":60,"loads":["skill:code-review"],"supports":["clean-code"],"project_scope":"","platform_scope":"all","max_route_tokens":4000,"default":false}
 disable-model-invocation: true
 ---
 

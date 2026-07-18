@@ -27,7 +27,32 @@ RUNTIME_HOME = Path(
     or Path.home() / ".gemini" / "config"
 )
 STATE_DIR = RUNTIME_HOME / "skill-state"
+
+
+def routing_mode() -> str:
+    """Read the explicit cutover mode, defaulting safely to shadow."""
+    raw = os.environ.get("AGENT_RULES_ROUTING_MODE")
+    if raw:
+        return raw.lower()
+    mode_file = STATE_DIR / "routing-mode.json"
+    try:
+        mode = json.loads(mode_file.read_text(encoding="utf-8-sig")).get("mode", "shadow")
+    except (OSError, ValueError, TypeError):
+        mode = "shadow"
+    return str(mode).lower() if mode else "shadow"
+
+
 SCRIPT_DIR = Path(__file__).resolve().parent
+for _shared in (
+    SCRIPT_DIR,
+    SCRIPT_DIR.parents[2] / "shared" / "scripts",
+):
+    if str(_shared) not in sys.path:
+        sys.path.insert(0, str(_shared))
+try:
+    from context_router import load_graph, route as graph_route, route_signature
+except ImportError:  # pragma: no cover - legacy installs use the old gate
+    load_graph = graph_route = route_signature = None  # type: ignore[assignment]
 
 READ_TOOLS = {"view_file"}
 WRITE_TOOLS = {
@@ -82,6 +107,7 @@ def default_state(cid: str) -> dict[str, Any]:
         "signals": [],
         "stack": [],
         "primary": None,
+        "routing": {"mode": "fallback", "graph": None},
         "stop_continues": 0,
         "e2e": {
             "smoke_passed": False,
@@ -139,6 +165,40 @@ def workspace_paths(payload: dict[str, Any]) -> list[Path]:
     return out
 
 
+def graph_decision(prompt: str, paths: list[Path]) -> dict[str, Any] | None:
+    if load_graph is None or graph_route is None:
+        return None
+    candidates = [
+        RUNTIME_HOME / "context-graph.json",
+        Path(__file__).resolve().parents[3] / "05-generated" / "context-graph.json",
+    ]
+    graph_path = next((p for p in candidates if p.is_file()), None)
+    if not graph_path:
+        return None
+    try:
+        graph = load_graph(graph_path)
+        decision = graph_route(prompt, paths, graph)
+        decision["graph_path"] = str(graph_path)
+        return decision
+    except (OSError, ValueError, json.JSONDecodeError):
+        return None
+
+
+def record_routing_comparison(state: dict[str, Any], legacy: dict[str, Any], graph: dict[str, Any] | None) -> None:
+    if not graph:
+        state["routing"] = {"mode": "fallback", "graph": None}
+        return
+    legacy_sig = (legacy.get("primary"), tuple(legacy.get("stack") or []), tuple())
+    graph_sig = route_signature(graph) if route_signature else ()
+    state["routing"] = {
+        "mode": routing_mode(),
+        "legacy": {"primary": legacy.get("primary"), "stack": legacy.get("stack") or []},
+        "graph": {"primary": graph.get("primary"), "stack": graph.get("stack") or [], "context_nodes": graph.get("context_nodes") or []},
+        "match": legacy_sig == graph_sig,
+        "graph_hash": graph.get("graph_hash"),
+    }
+
+
 def skill_exists(slug: str) -> bool:
     # __file__ = …/platforms/antigravity/scripts/… → parents[3] = repo root
     repo_skills = Path(__file__).resolve().parents[3] / "skills" / slug / "SKILL.md"
@@ -164,8 +224,8 @@ def detect_signals(text: str) -> list[str]:
             r"\bui\b|giao diện|frontend|\.tsx|css|làm module|sửa module|sua module|"
             r"lam module|refactor module|\bmodule\b|parity|lệch template|drawer|toolbar|listview",
         ),
-        ("research", r"research|tìm hiểu|so sánh|stuck"),
-        ("5fedu", r"5fedu|context/5fedu|tah-app|nostime|module-parity|\bmodule\b"),
+        ("research", r"research|tìm hiểu|changelog|release notes|latest|external|stuck|stall"),
+        ("5fedu", r"5fedu|context/5fedu|tah-app|nostime|module-parity|nhân viên|phòng ban"),
         (
             "context-evolution",
             r"ghi nhớ|bổ sung context|sửa rule|sửa skill|dọn context|AGENTS\.md",
@@ -191,7 +251,7 @@ def build_stack(signals: list[str]) -> list[str]:
     if "context-evolution" in signals:
         _append_live(order, "context-evolution-protocol")
     if "harness" in signals:
-        _append_live(order, "researcher")
+        _append_live(order, "context-evolution-protocol")
     if "5fedu" in signals:
         _append_live(order, "5fedu-project")
         if "ui" in signals or "e2e" in signals:
@@ -335,27 +395,27 @@ def handle_preinvocation(payload: dict[str, Any]) -> None:
     transcript = str(payload.get("transcriptPath") or "")
     user_text = read_transcript_user_text(transcript)
     if user_text:
-        signals = detect_signals(user_text)
+        legacy_signals = detect_signals(user_text)
+        legacy_stack = build_stack(legacy_signals)
+        legacy_primary = pick_primary(legacy_stack, legacy_signals)
+        legacy = {"signals": legacy_signals, "stack": legacy_stack, "primary": legacy_primary}
+        graph = graph_decision(user_text, workspace_paths(payload))
+        record_routing_comparison(st, legacy, graph)
+        use_graph = bool(graph) and routing_mode() == "strict"
+        signals = (graph or {}).get("signals", []) if use_graph else legacy_signals
         if signals:
             st["signals"] = signals
-            st["stack"] = build_stack(signals)
-            st["primary"] = pick_primary(st["stack"], signals)
+            st["stack"] = (graph or {}).get("stack", []) if use_graph else legacy_stack
+            st["primary"] = (graph or {}).get("primary") if use_graph else legacy_primary
             save_state(st)
 
     if inv == 0:
-        messages.append(
-            "[skill-gate] Turn-0: Skill scan + Skill activated trong message đầu (visible). "
-            "Đọc SKILL.md trước test/sửa spec. E2E: smoke → -g 1 test → deep."
-        )
+        # Skill selection is handled by the native catalog. Keep this hook
+        # silent unless a tool-specific guard has actionable advice.
+        pass
 
     stack = st.get("stack") or []
     primary = st.get("primary")
-    if stack and primary:
-        messages.append(
-            f"[skill-gate] Stack: {' → '.join(stack)}. Primary: {primary}. "
-            f"Đọc {RUNTIME_HOME}/skills/{primary}/SKILL.md."
-        )
-
     if not messages:
         fail_open()
         return

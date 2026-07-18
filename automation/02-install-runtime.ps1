@@ -1,5 +1,7 @@
 ﻿param([ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platform = "all")
 $ErrorActionPreference = "Stop"
+$SkipRuntimeHooks = $env:AGENT_RULES_SKIP_RUNTIME_HOOKS -eq "1"
+$SkipIntegrationInstall = $env:AGENT_RULES_SKIP_INTEGRATION_INSTALL -eq "1"
 . (Join-Path $PSScriptRoot "path-compat.ps1")
 
 $Root = Split-Path -Parent $PSScriptRoot
@@ -167,22 +169,37 @@ foreach ($Name in $Selected) {
     Copy-Item -LiteralPath $RuntimeAgents -Destination (Join-Path $Dest "AGENTS.md") -Force
   }
 
+  $RuntimeScripts = Join-Path $Source "scripts"
+  if (Test-Path -LiteralPath $RuntimeScripts) {
+    New-Item -ItemType Directory -Force -Path (Join-Path $Dest "scripts") | Out-Null
+    Copy-Item -Path (Join-Path $RuntimeScripts "*") -Destination (Join-Path $Dest "scripts") -Recurse -Force
+  }
+
+  $ContextGraph = Join-Path $Source "context-graph.json"
+  if (Test-Path -LiteralPath $ContextGraph) {
+    Copy-Item -LiteralPath $ContextGraph -Destination (Join-Path $Dest "context-graph.json") -Force
+  }
+
   if ($Name -eq "grok") {
     Sync-GrokInjectRules -GrokHome $Dest -BuildRulesDir (Join-Path $Source "rules")
   }
 
   Copy-Item (Join-Path $Source "manifest.json") (Join-Path $Dest "agent-rules-manifest.json") -Force
 
-  foreach ($Integration in $Registry.integrations) {
-    if ($Integration.policy -eq "optional") { continue }
-    $reuse = $SharedIntegrations.ContainsKey([string]$Integration.name)
-    $state = Install-Integration -Integration $Integration -PlatformName $Name -RuntimeHome $Dest -SkipInstall:$reuse
-    $IntegrationState += $state
-    if ($state.installed -and $state.verified) { $SharedIntegrations[[string]$Integration.name] = $true }
-  }
+  if (-not $SkipIntegrationInstall) {
+    foreach ($Integration in $Registry.integrations) {
+      if ($Integration.policy -eq "optional") { continue }
+      $reuse = $SharedIntegrations.ContainsKey([string]$Integration.name)
+      $state = Install-Integration -Integration $Integration -PlatformName $Name -RuntimeHome $Dest -SkipInstall:$reuse
+      $IntegrationState += $state
+      if ($state.installed -and $state.verified) { $SharedIntegrations[[string]$Integration.name] = $true }
+    }
 
-  $StatePath = Join-Path $Dest "agent-rules-integrations.json"
-  [System.IO.File]::WriteAllText($StatePath, ($IntegrationState | Where-Object platform -eq $Name | ConvertTo-Json -Depth 4))
+    $StatePath = Join-Path $Dest "agent-rules-integrations.json"
+    [System.IO.File]::WriteAllText($StatePath, ($IntegrationState | Where-Object platform -eq $Name | ConvertTo-Json -Depth 4))
+  } else {
+    Write-Host "Integration install skipped (AGENT_RULES_SKIP_INTEGRATION_INSTALL=1)"
+  }
 
   $McpMerged = Merge-PlatformMcpAdapters -PlatformName $Name -RuntimeHome $Dest -UserHome $UserHome -Root $Root
   if ($McpMerged) { Write-Host "Merged MCP adapters for $Name" }
@@ -190,7 +207,8 @@ foreach ($Name in $Selected) {
   Write-Host "Installed $Name -> $Dest"
 }
 
-$HooksScript = Join-Path $PSScriptRoot "11-install-runtime-hooks.sh"
+if (-not $SkipRuntimeHooks) {
+  $HooksScript = Join-Path $PSScriptRoot "11-install-runtime-hooks.sh"
 # Prefer Git Bash on Windows; system `bash` may be a broken WSL relay.
 $BashCandidates = @(
   (Get-Command bash -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -ErrorAction SilentlyContinue),
@@ -205,8 +223,15 @@ if ($GitBash -and (Test-Path -LiteralPath $HooksScript)) {
   if ($LASTEXITCODE -ne 0) {
     throw "Runtime hooks install failed with exit $LASTEXITCODE - re-run with Git Bash: `"$GitBash`" automation/11-install-runtime-hooks.sh"
   }
+  } else {
+    throw "Runtime hooks install blocked: Git Bash or automation/11-install-runtime-hooks.sh is missing"
+  }
 } else {
-  throw "Runtime hooks install blocked: Git Bash or automation/11-install-runtime-hooks.sh is missing"
+  Write-Host "Runtime hooks skipped (AGENT_RULES_SKIP_RUNTIME_HOOKS=1); run automation/11-install-runtime-hooks.sh separately"
 }
 
-& (Join-Path $PSScriptRoot "09-doctor.ps1") -Root $Root -Platform $Platform
+$DoctorArgs = @{ Root = $Root; Platform = $Platform }
+if ($env:AGENT_RULES_SKIP_INTEGRATION_VERIFY -eq "1") {
+  $DoctorArgs.SkipIntegrationVerify = $true
+}
+& (Join-Path $PSScriptRoot "09-doctor.ps1") @DoctorArgs

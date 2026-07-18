@@ -1,11 +1,12 @@
 ---
 name: plan-and-handoff
 description: Use when the user gives a long or multi-part task, uses plan mode first, asks for phased work, or needs a task decomposed before execution. Trigger on plan dài, nhiều phase, đại trùng tu, làm từng bước, handoff, chia nhỏ task, /goal, khảo sát repo cho plan, viết plan cho gemini, viết plan cho flash, plan cho agent khác, plan mode, báo cáo theo mệnh đề, phân tích plan, review plan, PAF, plan artifact, Plan Architect, Plan Scribe. Do NOT use for single small fixes, pure Q&A, or external web/docs research only — use researcher.
+routing: {"signals":["plan","plan dài","nhiều phase","handoff","chia nhỏ","/goal","PAF","plan artifact","Plan Architect","Plan Scribe"],"excludes":["single small fix","pure q&a"],"priority":80,"loads":["skill:plan-and-handoff","plan-artifact-template"],"supports":["implementation-discovery"],"project_scope":"","platform_scope":"all","max_route_tokens":3800,"default":false}
 ---
 
 # Plan and Handoff
 
-**Ý đồ:** Task dài = **1 phase / 1 session**; output **PAF** + HANDOFF §8; tier routing [`references/capability-tier-routing.md`](references/capability-tier-routing.md).
+**Ý đồ:** Task dài = **1 phase / 1 session**; output **PAF** + HANDOFF §8. Chỉ đọc tier routing khi phase cần escalation hoặc owner override.
 
 **`/goal` + treo máy:** một nguồn — [`references/goal-autopilot.md`](references/goal-autopilot.md) (plan → execute → artifact Antigravity → task card). Skill này = decision tree + paths; không lặp prose autopilot ở đây.
 
@@ -33,7 +34,7 @@ description: Use when the user gives a long or multi-part task, uses plan mode f
 ## Path A — Plan Architect (default `plan-authoring`, Plan-first HB-1)
 
 1. Read-only verify (`implementation-discovery`)
-2. Lock scope; cut phases with tier fields per [`plan-artifact-template.md`](references/plan-artifact-template.md)
+2. Lock scope; cut phases with fields per [`plan-artifact-template.md`](references/plan-artifact-template.md); mở tier reference khi routing không mặc định
 3. Context routing subset + template paths (5fedu → `module-mapping.md`)
 4. Classify lock-at-plan vs Known-unknowns
 5. Output PAF `READY` + HANDOFF §8 for **P1 only**

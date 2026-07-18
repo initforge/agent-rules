@@ -1,5 +1,5 @@
 ---
-alwaysApply: true
+alwaysApply: false
 description: Context budget, fresh sessions, and code exploration discipline.
 ---
 

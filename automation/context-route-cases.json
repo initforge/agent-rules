@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "description": "CI regression fixtures for progressive-context routing; the compiled context graph is the runtime source, and this file is not a second router or trigger source.",
+  "budgets": {
+    "core_tokens": 4500,
+    "normal_execution_tokens": 1500,
+    "uncertain_execution_tokens": 2600,
+    "plan_authoring_tokens": 3800,
+    "harness_edit_tokens": 2800,
+    "5fedu_ui_base_tokens": 6500
+  },
+  "routes": {
+    "normal_execution": ["skills/finish-to-completion/SKILL.md"],
+    "uncertain_execution": ["skills/finish-to-completion/SKILL.md", "skills/implementation-discovery/SKILL.md"],
+    "plan_authoring": ["skills/plan-and-handoff/SKILL.md", "skills/plan-and-handoff/references/plan-artifact-template.md"],
+    "harness_edit": ["skills/context-evolution-protocol/SKILL.md"],
+    "5fedu_ui_base": ["projects/5fedu/AGENTS.md", "projects/5fedu/00-context-map.md", "skills/5fedu-module-parity/SKILL.md", "projects/5fedu/domains/references/pattern-inventory.yaml", "projects/5fedu/domains/ui-delivery.md", "projects/5fedu/domains/module-mapping.md"]
+  },
+  "cases": [
+    { "id": "qa-simple", "prompt": "Giải thích cách xử lý đơn giản", "must_not_load": ["plan-and-handoff", "finish-to-completion", "browser-qa", "context-evolution-protocol"] },
+    { "id": "generic-module", "prompt": "Refactor module thanh toán Node.js", "must_not_load": ["5fedu-project", "5fedu-module-parity"] },
+    { "id": "5fedu-ui", "prompt": "Sửa module 5fedu lệch pattern drawer", "must_load": ["5fedu-module-parity"] },
+    { "id": "research", "prompt": "Kiểm tra changelog API mới nhất", "must_load": ["researcher"] },
+    { "id": "unit-test", "prompt": "Chạy unit test cho service", "must_not_load": ["browser-qa"] },
+    { "id": "manual-browser", "prompt": "Manual browser QA click-through", "must_load": ["qa-skills", "browser-qa"] },
+    { "id": "harness", "prompt": "Tinh gọn rules và skills của agent-rules", "must_load": ["context-evolution-protocol"], "must_not_load": ["docs-style", "researcher"] },
+    { "id": "long-plan", "prompt": "Lập kế hoạch nhiều phase cho harness", "must_load": ["plan-and-handoff"] },
+    { "id": "project-setup", "prompt": "Cài context cho project 5fedu", "must_load": ["5fedu-project"], "must_not_load": ["5fedu-module-parity", "browser-qa"] },
+    { "id": "5fedu-database", "prompt": "Kiểm tra migration RLS và schema int8", "must_load": ["database-domain"], "must_not_load": ["5fedu-module-parity", "frontend-architect"] },
+    { "id": "5fedu-permission", "prompt": "Kiểm tra quyền cap_bac cho module", "must_load": ["permissions-domain"], "must_not_load": ["browser-qa"] },
+    { "id": "docs-reference", "prompt": "Viết lại README và tài liệu dự án", "must_load": ["docs-style"], "must_not_load": ["5fedu-module-parity"] },
+    { "id": "generic-project-domain", "prompt": "Sửa quy tắc nghiệp vụ của project không dùng 5fedu", "must_load": ["project-router"], "must_not_load": ["5fedu-project", "5fedu-module-parity"] },
+    { "id": "export-reference", "prompt": "Kiểm tra xuất Excel/PDF tiếng Việt", "must_load": ["export-reference"], "must_not_load": ["browser-qa", "5fedu-module-parity"] },
+    { "id": "metadata-output", "prompt": "Giải thích tiến độ xử lý cho người dùng", "must_not_show": ["Skill scan", "Skill activated", "Classification", "Lane", "Friction: none", "Ledger:"] }
+  ]
+}

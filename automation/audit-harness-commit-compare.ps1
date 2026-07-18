@@ -57,7 +57,6 @@ $checks = [ordered]@{
   normal_require_plan           = 'require plan-and-handoff'
   normal_bounded_only           = 'bounded validation'
   pipeline_five_step            = 'code-review \(strict review \+ clean-code review\)'
-  turn0_skill_echo              = 'Skill activated: finish-to-completion'
   banned_ask_ab_only_blocked    = '\(unless BLOCKED\)'
 }
 
@@ -130,10 +129,6 @@ if ((Test-ContentMatch $baseLife 'bounded validation') -and (Test-ContentMatch $
 if ((Test-ContentMatch (Get-GitFile $Base "rules/05-critical-thinking.md") 'Proactively inspect') -and -not (Test-ContentMatch (Get-GitFile $New "rules/05-critical-thinking.md") 'Proactively inspect')) {
   $regressions += "critical_thinking_narrowed"
 }
-if ((Test-ContentMatch (Get-GitFile $Base "skills/finish-to-completion/SKILL.md") 'Skill activated: finish-to-completion') -and -not (Test-ContentMatch (Get-GitFile $New "skills/finish-to-completion/SKILL.md") 'Skill activated: finish-to-completion')) {
-  $regressions += "turn0_echo_removed"
-}
-
 Write-AuditLog -HypothesisId "H3" -Location "audit:regressions" -Message "c689300 regressions vs ba8a55f" -Data @{
   count = $regressions.Count; items = $regressions
 }

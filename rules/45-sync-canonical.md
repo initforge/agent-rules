@@ -1,5 +1,5 @@
 ---
-alwaysApply: true
+alwaysApply: false
 description: Canonical sync governance — agent-rules is source of truth; reviewed inbound only.
 ---
 
