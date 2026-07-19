@@ -1,7 +1,7 @@
 # Rules
 
-**Vai trò:** Global context luôn nạp — load order theo số ưu tiên.  
-**Ý đồ:** Hành vi tối thiểu mọi agent phải tuân; budget trong `manifest.yaml`.
+**Vai trò:** Core context luôn nạp; boundary rules và procedure dài được route lazy theo `manifest.yaml` và owner pointer.
+**Ý đồ:** Hành vi tối thiểu mọi agent phải tuân; budget và load policy nằm trong `manifest.yaml`.
 
 | File | Ưu tiên |
 |---|---|
@@ -9,11 +9,11 @@
 | `05-critical-thinking.md` | Phản biện xây dựng |
 | `10-execution.md` | Thực thi |
 | `15-output-economy.md` | Tiết kiệm output |
-| `16-context-style.md` | Style context sống (bullet, anti-drift) |
 | `20-quality-and-safety.md` | Chất lượng |
 | `25-task-lifecycle.md` | Intake lane + trace |
-| `26-slice-completion-gate.md` | Slice gate hard enforcement |
 | `30-context-routing.md` | Lazy-load |
+
+Lazy boundary rules: `00-bootstrap-reference.md`, `16-context-style.md`, `26-slice-completion-gate.md`, `40-harness-governance.md`, `45-sync-canonical.md`, `50-context-budget.md`.
 | `40-harness-governance.md` | Sửa harness |
 | `45-sync-canonical.md` | Sync 2 chiều |
 | `50-context-budget.md` | Session dài / exploration |

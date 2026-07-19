@@ -272,11 +272,20 @@ if ($RoutingBody -notlike "*trigger-audit*" -or $RoutingBody -notlike "*CI*") {
 }
 
 $RouteCasesPath = Join-Path $Root "automation\context-route-cases.json"
+$RouteCasesSchemaPath = Join-Path $Root "automation\context-route-cases.schema.json"
 if (-not (Test-Path $RouteCasesPath)) {
   $Problems.Add("Missing progressive context route cases: automation/context-route-cases.json")
 } else {
   try {
     $RouteCases = Get-Content -Raw -Encoding UTF8 $RouteCasesPath | ConvertFrom-Json
+    if ([int]$RouteCases.version -lt 3) { $Problems.Add("Progressive route cases must use schema version 3+") }
+    if (-not (Test-Path -LiteralPath $RouteCasesSchemaPath)) { $Problems.Add("Missing route case schema: automation/context-route-cases.schema.json") }
+    foreach ($Case in @($RouteCases.cases)) {
+      if (-not $Case.id -or -not $Case.prompt -or -not $Case.workspace -or -not $Case.expect) {
+        $Problems.Add("Progressive route case missing id/prompt/workspace/expect")
+        break
+      }
+    }
     foreach ($BudgetName in @("core_tokens", "normal_execution_tokens", "uncertain_execution_tokens", "plan_authoring_tokens", "harness_edit_tokens", "5fedu_ui_base_tokens")) {
       if (-not $RouteCases.budgets.PSObject.Properties.Name -contains $BudgetName) {
         $Problems.Add("Progressive route budget missing: $BudgetName")
@@ -316,6 +325,29 @@ if (-not (Test-Path $RouteCasesPath)) {
   }
 }
 
+$RouterTest = Join-Path $Root "automation\test-context-router.py"
+$GraphBuilderForRoute = Join-Path $Root "automation\build-context-graph.ps1"
+if (Test-Path -LiteralPath $GraphBuilderForRoute) {
+  & $GraphBuilderForRoute -Root $Root -OutputPath (Join-Path $Root "05-generated\context-graph.json") 2>&1 | ForEach-Object { Write-Host $_ }
+  if ($LASTEXITCODE -ne 0) { $Problems.Add("Context graph rebuild failed before conformance") }
+}
+$PythonCommand = $env:AGENT_RULES_PYTHON
+if (-not $PythonCommand) { $PythonCommand = $env:HARNESS_PYTHON }
+if (-not $PythonCommand) {
+  foreach ($Candidate in @("python", "python3")) {
+    $Resolved = Get-Command $Candidate -ErrorAction SilentlyContinue
+    if ($Resolved) { $PythonCommand = $Resolved.Source; break }
+  }
+}
+if (-not (Test-Path -LiteralPath $RouterTest)) {
+  $Problems.Add("Missing graph routing conformance test: automation/test-context-router.py")
+} elseif (-not $PythonCommand) {
+  $Problems.Add("Cannot execute graph routing conformance: set AGENT_RULES_PYTHON or install python")
+} else {
+  & $PythonCommand $RouterTest 2>&1 | ForEach-Object { Write-Host $_ }
+  if ($LASTEXITCODE -ne 0) { $Problems.Add("Graph routing conformance failed: automation/test-context-router.py") }
+}
+
 $ContextGraphScript = Join-Path $Root "automation\build-context-graph.ps1"
 if (-not (Test-Path $ContextGraphScript)) {
   $Problems.Add("Missing context graph builder: automation/build-context-graph.ps1")
@@ -331,6 +363,7 @@ if (Test-Path $ContextGraphPath) {
     if ([int]$ContextGraph.version -lt 2 -or @($ContextGraph.nodes).Count -lt $Slugs.Count) {
       $Problems.Add("Context graph is incomplete: expected skill/project nodes")
     }
+    $GraphIds = @($ContextGraph.nodes | ForEach-Object { [string]$_.id })
     foreach ($Node in @($ContextGraph.nodes)) {
       if (-not $Node.id -or -not $Node.source -or -not $Node.load_policy -or -not $Node.owner -or -not $Node.routing -or -not $Node.source_hash) {
         $Problems.Add("Context graph node missing id/source/load_policy/owner/routing/source_hash")
@@ -341,8 +374,14 @@ if (Test-Path $ContextGraphPath) {
         $Problems.Add("Context graph node has incomplete routing metadata: $($Node.id)")
         break
       }
+      foreach ($EdgeName in @("requires", "supports")) {
+        foreach ($Edge in @($Node.routing.$EdgeName | Where-Object { $_ })) {
+          if ($GraphIds -notcontains ("skill:$Edge")) {
+            $Problems.Add("Context graph node '$($Node.id)' has missing $EdgeName target '$Edge'")
+          }
+        }
+      }
     }
-    $GraphIds = @($ContextGraph.nodes | ForEach-Object { [string]$_.id })
     if (($GraphIds | Sort-Object -Unique).Count -ne $GraphIds.Count) {
       $Problems.Add("Context graph contains duplicate node ids")
     }
@@ -361,6 +400,14 @@ if ($Researcher -match "when Codex needs") {
 $CleanCode = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "skills\clean-code\SKILL.md")
 if ($CleanCode -match '"review code"' -or $CleanCode -match 'Trigger on.*"review code"') {
   $Problems.Add("skills/clean-code must not claim generic 'review code' (belongs to code-review)")
+}
+$KnowledgeSystem = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "guides\02-knowledge-system.md")
+if ($KnowledgeSystem -notlike "*routing*" -or $KnowledgeSystem -notlike "*ZONE A-lazy*") {
+  $Problems.Add("guides/02-knowledge-system.md is out of sync with structured routing and lazy boundaries")
+}
+$Bootstrap = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "rules\00-bootstrap.md")
+if ($Bootstrap -notlike "*00-bootstrap-reference.md*") {
+  $Problems.Add("rules/00-bootstrap.md must point to the lazy glossary")
 }
 
 if ($Problems.Count) {

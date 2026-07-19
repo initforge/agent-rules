@@ -24,10 +24,12 @@
             "type": "object",
             "required": ["signals", "excludes", "priority", "loads"],
             "properties": {
-              "signals": { "type": "array", "items": { "type": "string" } },
+            "signals": { "type": "array", "items": { "type": "string" } },
+              "intent_signals": { "type": "array", "items": { "type": "string" } },
               "excludes": { "type": "array", "items": { "type": "string" } },
               "priority": { "type": "integer" },
               "loads": { "type": "array", "items": { "type": "string" } },
+              "requires": { "type": "array", "items": { "type": "string" } },
               "supports": { "type": "array", "items": { "type": "string" } },
               "project_scope": { "type": "string" },
               "platform_scope": { "type": "string" },

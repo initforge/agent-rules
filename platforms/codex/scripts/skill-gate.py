@@ -20,7 +20,7 @@ from typing import Any
 SCRIPT_DIR = Path(__file__).resolve().parent
 for _shared in (
     SCRIPT_DIR,
-    SCRIPT_DIR.parents[2] / "shared" / "scripts",
+    SCRIPT_DIR.parents[1] / "shared" / "scripts",
 ):
     if str(_shared) not in sys.path:
         sys.path.insert(0, str(_shared))
@@ -307,7 +307,16 @@ def record_routing_comparison(state: dict[str, Any], prompt: str, legacy: dict[s
     state["routing"] = {
         "mode": routing_mode(),
         "legacy": {"primary": legacy.get("primary"), "stack": legacy.get("stack") or []},
-        "graph": {"primary": graph.get("primary"), "stack": graph.get("stack") or [], "context_nodes": graph.get("context_nodes") or []},
+        "graph": {
+            "primary": graph.get("primary"),
+            "stack": graph.get("stack") or [],
+            "required_skills": graph.get("required_skills") or [],
+            "supporting_skills": graph.get("supporting_skills") or [],
+            "context_nodes": graph.get("context_nodes") or [],
+            "intent_signals": graph.get("intent_signals") or graph.get("signals") or [],
+            "matched_phrases": graph.get("matched_phrases") or [],
+            "workspace_facts": graph.get("workspace_facts") or {},
+        },
         "match": legacy_sig == graph_sig,
         "graph_hash": graph.get("graph_hash"),
     }
@@ -603,11 +612,10 @@ def handle_user_prompt_submit(payload: dict[str, Any]) -> None:
         signals = (graph or {}).get("signals", []) if use_graph else legacy_signals
         stack = (graph or {}).get("stack", []) if use_graph else legacy["stack"]
         primary = (graph or {}).get("primary") if use_graph else legacy["primary"]
-        if signals:
-            st["signals"] = signals
-            st["stack"] = stack
-            st["primary"] = primary
-        st["harness_task"] = "harness" in signals
+        st["signals"] = signals
+        st["stack"] = stack
+        st["primary"] = primary
+        st["harness_task"] = "harness" in signals or "context_evolution" in signals
         st["harness"]["task"] = st["harness_task"]
         e2e = st["e2e"]
         if re.search(r"force deep|deep_ok|bỏ qua ladder|deep cuối|full deep regression", prompt, re.I):

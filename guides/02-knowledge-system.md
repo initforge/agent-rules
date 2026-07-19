@@ -12,7 +12,7 @@
 5. Context dự án: `projects/5fedu/` hoặc `context/5fedu/` sau cài
 6. Nguồn ngoài khi cần facts mới hoặc docs upstream
 
-Trigger source of truth: `description` frontmatter mỗi skill — không duy trì bảng trigger viết tay song song.
+Trigger source of truth: `routing` object trong frontmatter mỗi skill; `description` chỉ là human-facing contract — không duy trì bảng trigger viết tay song song.
 
 ## Token budget
 
@@ -25,8 +25,11 @@ Evidence, legacy, `archive/`, `05-generated/`, runtime mirrors.
 ## Zones A–E (Phân vùng không nhiễu)
 
 - **ZONE A: always-load rules (manifest)**
-  `05-critical-thinking` | `10-execution` | `25-task-lifecycle` | `50-context-budget` | `16-context-style`
-  *Mục đích:* Quản lý workflow mode, lane, priority, các ranh giới cứng HB-1..5.
+  `00-bootstrap` | `05-critical-thinking` | `10-execution` | `15-output-economy` | `20-quality-and-safety` | `25-task-lifecycle` | `30-context-routing`
+  *Mục đích:* Context tối thiểu cho mode, execution, safety và routing; các procedure dài đi qua skill/reference.
+- **ZONE A-lazy: boundary references**
+  `00-bootstrap-reference` | `16-context-style` | `26-slice-completion-gate` | `40-harness-governance` | `45-sync-canonical` | `50-context-budget`
+  *Mục đích:* Chỉ đọc khi task chạm plan/slice/harness/context-depth; pointer phải tồn tại từ rule/skill owner.
 - **ZONE B: lazy skills (trigger only)**
   `plan-and-handoff` | `finish-to-completion` | `discovery` | `clean-code` | `code-review` | `researcher` | `5fedu-*`
   *Mục đích:* Các procedure thực thi tải chậm, không trùng lặp rules.

@@ -7,7 +7,7 @@ description: >
   release readiness smoke plan, regression plan, test strategy UI. Combo hands: browser-qa
   (Playwright MCP + Chrome DevTools). Do NOT pure unit/API-only; not 5fedu module build
   (5fedu-module-parity first).
-routing: {"signals":["QA checklist","exploratory","edge-case","test như QA","manual cases","bug triage","permission matrix","release readiness","regression plan","test strategy UI"],"excludes":["pure unit/api only"],"priority":60,"loads":["skill:qa-skills"],"supports":["browser-qa","5fedu-module-parity"],"project_scope":"","platform_scope":"all","max_route_tokens":3000,"default":false}
+routing: {"signals":["QA checklist","exploratory","edge-case","test như QA","manual cases","bug triage","permission matrix","release readiness","regression plan","test strategy UI"],"intent_signals":["qa"],"excludes":["pure unit/api only"],"priority":60,"loads":["skill:qa-skills"],"supports":["browser-qa","5fedu-module-parity"],"project_scope":"","platform_scope":"all","max_route_tokens":3000,"default":false}
 ---
 
 # QA Skills

@@ -45,7 +45,7 @@ def routing_mode() -> str:
 SCRIPT_DIR = Path(__file__).resolve().parent
 for _shared in (
     SCRIPT_DIR,
-    SCRIPT_DIR.parents[2] / "shared" / "scripts",
+    SCRIPT_DIR.parents[1] / "shared" / "scripts",
 ):
     if str(_shared) not in sys.path:
         sys.path.insert(0, str(_shared))
@@ -193,7 +193,16 @@ def record_routing_comparison(state: dict[str, Any], legacy: dict[str, Any], gra
     state["routing"] = {
         "mode": routing_mode(),
         "legacy": {"primary": legacy.get("primary"), "stack": legacy.get("stack") or []},
-        "graph": {"primary": graph.get("primary"), "stack": graph.get("stack") or [], "context_nodes": graph.get("context_nodes") or []},
+        "graph": {
+            "primary": graph.get("primary"),
+            "stack": graph.get("stack") or [],
+            "required_skills": graph.get("required_skills") or [],
+            "supporting_skills": graph.get("supporting_skills") or [],
+            "context_nodes": graph.get("context_nodes") or [],
+            "intent_signals": graph.get("intent_signals") or graph.get("signals") or [],
+            "matched_phrases": graph.get("matched_phrases") or [],
+            "workspace_facts": graph.get("workspace_facts") or {},
+        },
         "match": legacy_sig == graph_sig,
         "graph_hash": graph.get("graph_hash"),
     }
@@ -403,11 +412,10 @@ def handle_preinvocation(payload: dict[str, Any]) -> None:
         record_routing_comparison(st, legacy, graph)
         use_graph = bool(graph) and routing_mode() == "strict"
         signals = (graph or {}).get("signals", []) if use_graph else legacy_signals
-        if signals:
-            st["signals"] = signals
-            st["stack"] = (graph or {}).get("stack", []) if use_graph else legacy_stack
-            st["primary"] = (graph or {}).get("primary") if use_graph else legacy_primary
-            save_state(st)
+        st["signals"] = signals
+        st["stack"] = (graph or {}).get("stack", []) if use_graph else legacy_stack
+        st["primary"] = (graph or {}).get("primary") if use_graph else legacy_primary
+        save_state(st)
 
     if inv == 0:
         # Skill selection is handled by the native catalog. Keep this hook

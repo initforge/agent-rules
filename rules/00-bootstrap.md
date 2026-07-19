@@ -14,3 +14,4 @@ Understand the owner’s actual outcome before acting. Separate product work fro
 - Report `PASS` only after proportionate verification; otherwise use `PARTIAL` or `BLOCKED` with one concrete reason.
 - Infer workflow mode first; apply risk lane only to execution work.
 - Keep Vietnamese natural; lead with product/domain terms and confirmed UI labels. Use technical identifiers only when requested or necessary.
+- When plan/slice/boundary terms appear, read `rules/00-bootstrap-reference.md` and the owning skill before acting; the glossary is lazy by design.

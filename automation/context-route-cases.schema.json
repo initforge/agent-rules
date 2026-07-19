@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/context-route-cases.schema.json",
+  "type": "object",
+  "required": ["version", "budgets", "routes", "cases"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 3 },
+    "description": { "type": "string" },
+    "budgets": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+    "routes": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["id", "prompt", "workspace", "expect"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "prompt": { "type": "string", "minLength": 1 },
+          "workspace": {
+            "type": "object",
+            "required": ["kind", "has_5fedu_context"],
+            "properties": {
+              "kind": { "enum": ["harness", "generic", "5fedu-app"] },
+              "has_5fedu_context": { "type": "boolean" }
+            },
+            "additionalProperties": true
+          },
+          "expect": {
+            "type": "object",
+            "required": ["primary", "required_skills", "forbidden_skills"],
+            "properties": {
+              "primary": { "type": ["string", "null"] },
+              "required_skills": { "type": "array", "items": { "type": "string" } },
+              "supporting_skills": { "type": "array", "items": { "type": "string" } },
+              "forbidden_skills": { "type": "array", "items": { "type": "string" } },
+              "context_nodes": { "type": "array", "items": { "type": "string" } },
+              "intent_signals": { "type": "array", "items": { "type": "string" } },
+              "must_not_show": { "type": "array", "items": { "type": "string" } }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

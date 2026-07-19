@@ -179,6 +179,12 @@ foreach ($Name in $Selected) {
   if (Test-Path -LiteralPath $ContextGraph) {
     Copy-Item -LiteralPath $ContextGraph -Destination (Join-Path $Dest "context-graph.json") -Force
   }
+  foreach ($RouteContract in @("context-route-cases.json", "context-route-cases.schema.json")) {
+    $RouteContractPath = Join-Path $Source $RouteContract
+    if (Test-Path -LiteralPath $RouteContractPath) {
+      Copy-Item -LiteralPath $RouteContractPath -Destination (Join-Path $Dest $RouteContract) -Force
+    }
+  }
 
   if ($Name -eq "grok") {
     Sync-GrokInjectRules -GrokHome $Dest -BuildRulesDir (Join-Path $Source "rules")

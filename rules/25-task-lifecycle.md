@@ -43,7 +43,6 @@ Module mới: đếm cả file registry (`App.tsx`, sidebar, breadcrumbs, regist
 Lane behavior:
 - `tiny` (1 file only): direct patch, quick safety check, minimal report.
 - `normal` (≥2 files OR standard work): scope lock, bounded discovery and verification.
-- `high-risk`: plan first, strongest verification and explicit blocker handling.
 - `high-risk`: pause if ambiguous; `plan-and-handoff` bắt buộc before execute; `implementation-discovery`; strongest verification; optional `clean-code` smell detect; detailed trace.
 
 Mid-task unknown that is must-not-self-decide (credentials, schema/migration, permission rule, large destructive change) → `BLOCKED` and record blocker per `implementation-discovery` escape-hatch — do not guess.

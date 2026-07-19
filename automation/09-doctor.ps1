@@ -73,15 +73,20 @@ foreach ($Name in $Selected) {
 
   $RoutingModePath = Join-Path $RuntimeHome "skill-state\routing-mode.json"
   $RoutingGraphPath = Join-Path $RuntimeHome "context-graph.json"
+  $RoutingCasesPath = Join-Path $RuntimeHome "context-route-cases.json"
+  $RoutingSchemaPath = Join-Path $RuntimeHome "context-route-cases.schema.json"
   if ((Test-Path -LiteralPath $RoutingModePath) -and (Test-Path -LiteralPath $RoutingGraphPath)) {
     try {
       $RoutingState = Get-Content -Raw -LiteralPath $RoutingModePath | ConvertFrom-Json
       $RoutingGraph = Get-Content -Raw -LiteralPath $RoutingGraphPath | ConvertFrom-Json
       $RoutingHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $RoutingGraphPath).Hash.ToLowerInvariant()
-      if ([int]$RoutingGraph.version -ge 2 -and [string]$RoutingState.graph_hash -eq $RoutingHash -and [string]$RoutingState.mode -in @("shadow", "strict")) {
-        $Report += [pscustomobject]@{ platform = $Name; check = "context-routing-mode"; status = "OK"; detail = "$($RoutingState.mode), graph hash verified" }
+      $CasesHash = if (Test-Path -LiteralPath $RoutingCasesPath) { (Get-FileHash -Algorithm SHA256 -LiteralPath $RoutingCasesPath).Hash.ToLowerInvariant() } else { "" }
+      $SchemaHash = if (Test-Path -LiteralPath $RoutingSchemaPath) { (Get-FileHash -Algorithm SHA256 -LiteralPath $RoutingSchemaPath).Hash.ToLowerInvariant() } else { "" }
+      $ConformanceOk = [int]$RoutingState.conformance_version -ge 3 -and [string]$RoutingState.conformance_hash -eq $CasesHash -and [string]$RoutingState.conformance_schema_hash -eq $SchemaHash
+      if ([int]$RoutingGraph.version -ge 2 -and [string]$RoutingState.graph_hash -eq $RoutingHash -and [string]$RoutingState.mode -in @("shadow", "strict") -and $ConformanceOk) {
+        $Report += [pscustomobject]@{ platform = $Name; check = "context-routing-mode"; status = "OK"; detail = "$($RoutingState.mode), graph + conformance hashes verified" }
       } else {
-        $Report += [pscustomobject]@{ platform = $Name; check = "context-routing-mode"; status = "NOT_LIVE"; detail = "mode state and installed graph do not match" }
+        $Report += [pscustomobject]@{ platform = $Name; check = "context-routing-mode"; status = "NOT_LIVE"; detail = "mode, graph or conformance contract does not match installed runtime" }
       }
     } catch {
       $Report += [pscustomobject]@{ platform = $Name; check = "context-routing-mode"; status = "NOT_LIVE"; detail = $_.Exception.Message }

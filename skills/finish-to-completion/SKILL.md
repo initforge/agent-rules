@@ -1,7 +1,7 @@
 ---
 name: finish-to-completion
 description: Anti-handoff execution for a locked slice of work. Use when user expects implementation done (fix, refactor, migrate, làm hết, hoàn thành) on a scope already defined — not for dumping a long multi-phase plan. Do NOT activate Turn-0 on pure Q&A, docs-only review, or when plan-and-handoff should decompose first (plan dài, đại trùng tu, nhiều phase). Read SKILL.md before claiming PASS.
-routing: {"signals":["làm đi","implement","fix","refactor","migrate","hoàn thành","execute"],"excludes":["plan-only","pure q&a"],"priority":10,"loads":["skill:finish-to-completion"],"supports":["implementation-discovery","clean-code"],"project_scope":"","platform_scope":"all","max_route_tokens":1500,"default":true}
+routing: {"signals":["làm đi","implement","fix","refactor","migrate","hoàn thành","execute"],"intent_signals":["execution"],"excludes":["plan-only","pure q&a"],"priority":10,"loads":["skill:finish-to-completion"],"supports":["implementation-discovery","clean-code"],"project_scope":"","platform_scope":"all","max_route_tokens":1500,"default":false}
 ---
 
 # Finish To Completion

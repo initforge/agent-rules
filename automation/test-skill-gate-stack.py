@@ -9,6 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 GATE = ROOT / "platforms" / "codex" / "scripts" / "skill-gate.py"
+GRAPH = ROOT / "05-generated" / "context-graph.json"
 DEAD = ("e2e-qa", "product-ui-craft")
 LIVE_UI = ("qa-skills", "browser-qa")
 LIVE_5FEDU = ("5fedu-module-parity",)
@@ -30,6 +31,18 @@ def main() -> int:
             return 1
 
     mod = load_gate()
+    if GRAPH.is_file():
+        sys.path.insert(0, str(ROOT / "platforms" / "shared" / "scripts"))
+        from context_router import load_graph, route  # noqa: E402
+
+        graph = load_graph(GRAPH)
+        if route("Giải thích cách xử lý đơn giản", [], graph)["primary"] is not None:
+            print("FAIL: graph assigned a capability to pure Q&A")
+            return 1
+        browser = route("Manual browser QA click-through", [], graph)
+        if browser["primary"] != "browser-qa" or "qa-skills" not in browser["required_skills"]:
+            print(f"FAIL: graph browser contract mismatch: {browser}")
+            return 1
     ui_signals = mod.detect_signals("verify UI browser click-through")
     ui_stack = mod.build_stack(ui_signals)
     if not any(s in ui_stack for s in LIVE_UI):

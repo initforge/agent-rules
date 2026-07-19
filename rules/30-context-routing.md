@@ -13,13 +13,15 @@ Load progressively:
 4. References/scripts only when the procedure requires them.
 5. External documentation only for unstable, unfamiliar or explicitly requested facts.
 
-The structured `routing` object in each capability frontmatter is the runtime trigger source of truth; `description` remains the human-facing contract. `05-generated/context-graph.json` is compiled from that metadata and consumed by runtime hooks. `automation/trigger-audit.json` and `automation/context-route-cases.json` are **CI/fixture regression checks only** — not a second runtime router. If multiple capabilities match, choose a primary capability and add only the minimum supporting set.
+The structured `routing` object in each capability frontmatter is the runtime trigger source of truth; `description` remains the human-facing contract. `05-generated/context-graph.json` is compiled from that metadata and consumed by runtime hooks. `automation/context-route-cases.json` is the executable conformance contract for routing; `automation/trigger-audit.json` remains a recall fixture only. An unmatched prompt returns no capability; it must not fall back to execution. If multiple capabilities match, choose a primary capability and add only declared required/supporting skills.
 
 ## Context routing ownership
 
 - Setup project context → the project installer skill.
 - Domain implementation → the active project router and matching capability.
 - Harness edits → `context-evolution-protocol`; load maintainer detail only when syncing/building.
+- 5fedu module parity → only when the active workspace contains `context/5fedu/`; a prompt mention alone is not proof of context.
+- Plan/slice/governance terms → follow the owning rule/skill pointer instead of preloading the whole pack.
 
 ## Mid-flow activation
 

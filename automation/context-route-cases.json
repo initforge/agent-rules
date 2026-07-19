@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "description": "CI regression fixtures for progressive-context routing; the compiled context graph is the runtime source, and this file is not a second router or trigger source.",
   "budgets": {
     "core_tokens": 4500,
@@ -17,20 +17,101 @@
     "5fedu_ui_base": ["projects/5fedu/AGENTS.md", "projects/5fedu/00-context-map.md", "skills/5fedu-module-parity/SKILL.md", "projects/5fedu/domains/references/pattern-inventory.yaml", "projects/5fedu/domains/ui-delivery.md", "projects/5fedu/domains/module-mapping.md"]
   },
   "cases": [
-    { "id": "qa-simple", "prompt": "Giải thích cách xử lý đơn giản", "must_not_load": ["plan-and-handoff", "finish-to-completion", "browser-qa", "context-evolution-protocol"] },
-    { "id": "generic-module", "prompt": "Refactor module thanh toán Node.js", "must_not_load": ["5fedu-project", "5fedu-module-parity"] },
-    { "id": "5fedu-ui", "prompt": "Sửa module 5fedu lệch pattern drawer", "must_load": ["5fedu-module-parity"] },
-    { "id": "research", "prompt": "Kiểm tra changelog API mới nhất", "must_load": ["researcher"] },
-    { "id": "unit-test", "prompt": "Chạy unit test cho service", "must_not_load": ["browser-qa"] },
-    { "id": "manual-browser", "prompt": "Manual browser QA click-through", "must_load": ["qa-skills", "browser-qa"] },
-    { "id": "harness", "prompt": "Tinh gọn rules và skills của agent-rules", "must_load": ["context-evolution-protocol"], "must_not_load": ["docs-style", "researcher"] },
-    { "id": "long-plan", "prompt": "Lập kế hoạch nhiều phase cho harness", "must_load": ["plan-and-handoff"] },
-    { "id": "project-setup", "prompt": "Cài context cho project 5fedu", "must_load": ["5fedu-project"], "must_not_load": ["5fedu-module-parity", "browser-qa"] },
-    { "id": "5fedu-database", "prompt": "Kiểm tra migration RLS và schema int8", "must_load": ["database-domain"], "must_not_load": ["5fedu-module-parity", "frontend-architect"] },
-    { "id": "5fedu-permission", "prompt": "Kiểm tra quyền cap_bac cho module", "must_load": ["permissions-domain"], "must_not_load": ["browser-qa"] },
-    { "id": "docs-reference", "prompt": "Viết lại README và tài liệu dự án", "must_load": ["docs-style"], "must_not_load": ["5fedu-module-parity"] },
-    { "id": "generic-project-domain", "prompt": "Sửa quy tắc nghiệp vụ của project không dùng 5fedu", "must_load": ["project-router"], "must_not_load": ["5fedu-project", "5fedu-module-parity"] },
-    { "id": "export-reference", "prompt": "Kiểm tra xuất Excel/PDF tiếng Việt", "must_load": ["export-reference"], "must_not_load": ["browser-qa", "5fedu-module-parity"] },
-    { "id": "metadata-output", "prompt": "Giải thích tiến độ xử lý cho người dùng", "must_not_show": ["Skill scan", "Skill activated", "Classification", "Lane", "Friction: none", "Ledger:"] }
+    {
+      "id": "qa-simple",
+      "prompt": "Giải thích cách xử lý đơn giản",
+      "workspace": { "kind": "generic", "has_5fedu_context": false },
+      "expect": { "primary": null, "required_skills": [], "forbidden_skills": ["plan-and-handoff", "finish-to-completion", "browser-qa", "context-evolution-protocol"] }
+    },
+    {
+      "id": "generic-module",
+      "prompt": "Refactor module thanh toán Node.js",
+      "workspace": { "kind": "generic", "has_5fedu_context": false },
+      "expect": { "primary": "finish-to-completion", "required_skills": [], "forbidden_skills": ["5fedu-project", "5fedu-module-parity"] }
+    },
+    {
+      "id": "5fedu-ui",
+      "prompt": "Sửa module 5fedu lệch pattern drawer",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
+      "expect": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] }
+    },
+    {
+      "id": "5fedu-ui-missing-context",
+      "prompt": "Sửa module 5fedu lệch pattern drawer",
+      "workspace": { "kind": "generic", "has_5fedu_context": false },
+      "expect": { "primary": null, "required_skills": [], "forbidden_skills": ["5fedu-project", "5fedu-module-parity"] }
+    },
+    {
+      "id": "research",
+      "prompt": "Kiểm tra changelog API mới nhất",
+      "workspace": { "kind": "generic", "has_5fedu_context": false },
+      "expect": { "primary": "researcher", "required_skills": [], "forbidden_skills": [] }
+    },
+    {
+      "id": "unit-test",
+      "prompt": "Chạy unit test cho service",
+      "workspace": { "kind": "generic", "has_5fedu_context": false },
+      "expect": { "primary": null, "required_skills": [], "forbidden_skills": ["browser-qa"] }
+    },
+    {
+      "id": "manual-browser",
+      "prompt": "Manual browser QA click-through",
+      "workspace": { "kind": "generic", "has_5fedu_context": false },
+      "expect": { "primary": "browser-qa", "required_skills": ["qa-skills"], "forbidden_skills": [] }
+    },
+    {
+      "id": "harness",
+      "prompt": "Tinh gọn rules và skills của agent-rules",
+      "workspace": { "kind": "harness", "has_5fedu_context": false },
+      "expect": { "primary": "context-evolution-protocol", "required_skills": [], "forbidden_skills": ["docs-style", "researcher"] }
+    },
+    {
+      "id": "long-plan",
+      "prompt": "Lập kế hoạch nhiều phase cho harness",
+      "workspace": { "kind": "harness", "has_5fedu_context": false },
+      "expect": { "primary": "plan-and-handoff", "required_skills": [], "forbidden_skills": [] }
+    },
+    {
+      "id": "project-setup",
+      "prompt": "Cài context cho project 5fedu",
+      "workspace": { "kind": "generic", "has_5fedu_context": false },
+      "expect": { "primary": "5fedu-project", "required_skills": [], "forbidden_skills": ["5fedu-module-parity", "browser-qa"] }
+    },
+    {
+      "id": "5fedu-database",
+      "prompt": "Kiểm tra migration RLS và schema int8",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
+      "expect": { "primary": null, "required_skills": [], "context_nodes": ["project:5fedu:projects:5fedu:domains:database:md"], "forbidden_skills": ["5fedu-module-parity", "frontend-architect"] }
+    },
+    {
+      "id": "5fedu-permission",
+      "prompt": "Kiểm tra quyền cap_bac cho module",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
+      "expect": { "primary": null, "required_skills": [], "context_nodes": ["project:5fedu:projects:5fedu:domains:permissions:md"], "forbidden_skills": ["browser-qa"] }
+    },
+    {
+      "id": "docs-reference",
+      "prompt": "Viết lại README và tài liệu dự án",
+      "workspace": { "kind": "generic", "has_5fedu_context": false },
+      "expect": { "primary": "docs-style", "required_skills": [], "forbidden_skills": ["5fedu-module-parity"] }
+    },
+    {
+      "id": "generic-project-domain",
+      "prompt": "Sửa quy tắc nghiệp vụ của project không dùng 5fedu",
+      "workspace": { "kind": "generic", "has_5fedu_context": false },
+      "expect": { "primary": null, "required_skills": [], "forbidden_skills": ["5fedu-project", "5fedu-module-parity"] }
+    },
+    {
+      "id": "export-reference",
+      "prompt": "Kiểm tra xuất Excel/PDF tiếng Việt",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
+      "expect": { "primary": null, "required_skills": [], "context_nodes": ["project:5fedu:projects:5fedu:domains:business:md"], "forbidden_skills": ["browser-qa", "5fedu-module-parity"] }
+    },
+    {
+      "id": "metadata-output",
+      "prompt": "Giải thích tiến độ xử lý cho người dùng",
+      "workspace": { "kind": "generic", "has_5fedu_context": false },
+      "expect": { "primary": null, "required_skills": [], "forbidden_skills": [], "must_not_show": ["Skill scan", "Skill activated", "Classification", "Lane", "Friction: none", "Ledger:"] }
+    }
   ]
 }

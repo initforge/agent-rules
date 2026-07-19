@@ -7,7 +7,7 @@ description: >
   Static source/UI verification does not trigger this skill. Pair with qa-skills for matrix.
   Do NOT use for pure unit/API without UI; not 5fedu module build (5fedu-module-parity first);
   not Codex non-browser default unless owner explicit live/UI verify.
-routing: {"signals":["browser","live/manual","click-through","e2e","smoke","exploratory","screenshot","console/network","playwright","chrome-devtools"],"excludes":["static source verification","unit/api only"],"priority":80,"loads":["skill:browser-qa"],"supports":["qa-skills","5fedu-module-parity"],"project_scope":"","platform_scope":"all","max_route_tokens":3500,"default":false}
+routing: {"signals":["browser","live/manual","click-through","e2e","smoke","exploratory","screenshot","console/network","playwright","chrome-devtools"],"intent_signals":["browser_qa","e2e"],"excludes":["static source verification","unit/api only"],"priority":80,"loads":["skill:browser-qa"],"requires":["qa-skills"],"supports":["5fedu-module-parity"],"project_scope":"","platform_scope":"all","max_route_tokens":3500,"default":false}
 ---
 
 # Browser QA

@@ -1,7 +1,7 @@
 ---
 name: context-evolution-protocol
 description: Trigger-only protocol for learning from user feedback and evolving agent context safely. Use when modifying, promoting, deduplicating, or auditing AGENTS.md, rules, skills, workflows, .agents, .codex, 5fedu context, or when user feedback reveals repeated agent misunderstanding, context drift, over-specific rules, duplicated lessons, or requests like "ghi nhớ", "bổ sung context", "đưa vào rule", "đừng lặp lại", "context bị loạn", "dọn context", "sync rule". Do not use for ordinary coding tasks.
-routing: {"signals":["AGENTS.md","rules","skills","context","ghi nhớ","bổ sung context","dọn context","sync rule","agent-rules"],"excludes":["ordinary implementation"],"priority":90,"loads":["skill:context-evolution-protocol"],"supports":["clean-code"],"project_scope":"","platform_scope":"all","max_route_tokens":2800,"default":false}
+routing: {"signals":["AGENTS.md","rules","skills","context","ghi nhớ","bổ sung context","dọn context","sync rule","agent-rules"],"intent_signals":["context_evolution"],"excludes":["ordinary implementation","cài context","thiết lập 5fedu"],"priority":90,"loads":["skill:context-evolution-protocol"],"supports":["clean-code"],"project_scope":"","platform_scope":"all","max_route_tokens":2800,"default":false}
 ---
 
 # Context Evolution Protocol

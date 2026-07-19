@@ -1,8 +1,8 @@
 ﻿# Compare harness execution power across commits - writes NDJSON audit evidence
 param(
-  [string]$Base = "ba8a55f",
-  [string]$Mid = "f856075",
-  [string]$New = "c689300",
+  [string]$Base = "15f8834",
+  [string]$Mid = "6b485c0",
+  [string]$New = "62d63a9",
   [switch]$IncludeWorkingTree,
   [string]$LogPath = (Join-Path (Split-Path -Parent $PSScriptRoot) ".cursor\debug-75fce4.log")
 )
@@ -113,7 +113,7 @@ foreach ($label in @{ base = $Base; mid = $Mid; new = $New }.GetEnumerator()) {
   }
 }
 
-# c689300-only regressions vs base
+# New-commit regressions vs base
 $baseExec = Get-GitFile -Commit $Base -Path "rules/10-execution.md"
 $newExec = Get-GitFile -Commit $New -Path "rules/10-execution.md"
 $baseLife = Get-GitFile -Commit $Base -Path "rules/25-task-lifecycle.md"
@@ -129,11 +129,11 @@ if ((Test-ContentMatch $baseLife 'bounded validation') -and (Test-ContentMatch $
 if ((Test-ContentMatch (Get-GitFile $Base "rules/05-critical-thinking.md") 'Proactively inspect') -and -not (Test-ContentMatch (Get-GitFile $New "rules/05-critical-thinking.md") 'Proactively inspect')) {
   $regressions += "critical_thinking_narrowed"
 }
-Write-AuditLog -HypothesisId "H3" -Location "audit:regressions" -Message "c689300 regressions vs ba8a55f" -Data @{
+Write-AuditLog -HypothesisId "H3" -Location "audit:regressions" -Message "$New regressions vs $Base" -Data @{
   count = $regressions.Count; items = $regressions
 }
 
-# Gains from c689300
+# Gains from new commit
 $gains = @()
 if (Test-Path (Join-Path $Root "automation/audit-5fedu-template-purity.ps1")) { } else {
   $purity = Get-GitFile -Commit $New -Path "automation/audit-5fedu-template-purity.ps1"
@@ -145,8 +145,8 @@ $govBase = (Get-GitFile $Base "rules/40-harness-governance.md").Length
 $govNew = (Get-GitFile $New "rules/40-harness-governance.md").Length
 if ($govNew -lt $govBase) { $gains += "governance_slimmed_chars_saved=$($govBase - $govNew)" }
 
-Write-AuditLog -HypothesisId "H4" -Location "audit:gains" -Message "c689300 gains vs ba8a55f" -Data @{ items = $gains }
+Write-AuditLog -HypothesisId "H4" -Location "audit:gains" -Message "$New gains vs $Base" -Data @{ items = $gains }
 
 Write-Host "Audit complete. Log: $LogPath"
-Write-Host "Regressions vs ba8a55f in c689300: $($regressions -join ', ')"
-Write-Host "Gains in c689300: $($gains -join ', ')"
+Write-Host "Regressions vs $Base in $New`: $($regressions -join ', ')"
+Write-Host "Gains in $New`: $($gains -join ', ')"

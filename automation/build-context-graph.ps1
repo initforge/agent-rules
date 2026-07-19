@@ -39,9 +39,11 @@ function Frontmatter-Routing([string]$Body) {
 function Default-Routing([string]$Source, [string]$Policy) {
   $Routing = [ordered]@{
     signals = @()
+    intent_signals = @()
     excludes = @()
     priority = 0
     loads = @()
+    requires = @()
     supports = @()
     project_scope = ""
     platform_scope = ""
@@ -51,16 +53,34 @@ function Default-Routing([string]$Source, [string]$Policy) {
   $Lower = $Source.ToLowerInvariant()
   if ($Lower -like "*projects/5fedu/00-context-map.md") {
     $Routing.signals = @("5fedu", "context/5fedu", "tah-app", "nostime")
+    $Routing.intent_signals = @("5fedu_setup", "5fedu_context")
     $Routing.priority = 30
     $Routing.loads = @("project:5fedu:router")
     $Routing.project_scope = "5fedu"
   } elseif ($Lower -like "*projects/5fedu/domains/module-mapping.md" -or $Lower -like "*projects/5fedu/domains/ui-delivery.md") {
-    $Routing.signals = @("5fedu ui", "module", "drawer", "listview", "parity")
+    $Routing.signals = @("5fedu ui", "drawer", "listview", "parity", "ERP module")
+    $Routing.intent_signals = @("5fedu_ui")
     $Routing.priority = 70
     $Routing.project_scope = "5fedu"
   } elseif ($Lower -like "*projects/5fedu/domains/references/*") {
     $Routing.signals = @("detail", "navigation", "verify", "surface")
+    $Routing.intent_signals = @("5fedu_detail")
     $Routing.priority = 40
+    $Routing.project_scope = "5fedu"
+  } elseif ($Lower -like "*projects/5fedu/domains/database.md") {
+    $Routing.signals = @("migration", "rls", "schema", "int8", "uuid", "foreign key", "index")
+    $Routing.intent_signals = @("5fedu_database")
+    $Routing.priority = 60
+    $Routing.project_scope = "5fedu"
+  } elseif ($Lower -like "*projects/5fedu/domains/permissions.md") {
+    $Routing.signals = @("permission", "phân quyền", "cap_bac", "quyền xem", "quyền sửa", "quyền xóa", "quản trị")
+    $Routing.intent_signals = @("5fedu_permissions")
+    $Routing.priority = 60
+    $Routing.project_scope = "5fedu"
+  } elseif ($Lower -like "*projects/5fedu/domains/business.md") {
+    $Routing.signals = @("master-detail", "duyệt", "rollup", "export", "báo cáo", "thống kê", "excel", "pdf")
+    $Routing.intent_signals = @("5fedu_business")
+    $Routing.priority = 50
     $Routing.project_scope = "5fedu"
   }
   return [pscustomobject]$Routing
@@ -166,7 +186,7 @@ $Graph = [ordered]@{
   generated_from = @("rules/manifest.yaml", "skills/**/SKILL.md", "projects/**/AGENTS.md", "projects/**/00-context-map.md", "platforms/*/*-overlay.md", "integrations/registry.json", "guides/**")
   source_of_truth = @{
     rules = "rules/manifest.yaml"
-    skills = "SKILL.md frontmatter description"
+    skills = "SKILL.md frontmatter routing object"
     projects = "project entrypoint and 00-context-map.md"
     platforms = "platform overlay and runtime.yaml"
   }

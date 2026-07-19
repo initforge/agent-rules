@@ -1,9 +1,11 @@
 ---
 alwaysApply: false
-description: Optional glossary for plan, slice and capability terminology.
+description: Lazy glossary for plan, slice and capability terminology; reachable from bootstrap when those terms appear.
 ---
 
 # Harness glossary
+
+Load this reference when a task uses PAF, HB, SGP, slice, ledger or capability-tier terms. It is intentionally not part of the always-loaded core.
 
 | Term | Meaning |
 |---|---|
