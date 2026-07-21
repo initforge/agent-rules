@@ -12,7 +12,7 @@ Criteria (structural):
 - `rules/manifest.yaml` load_order complete
 - Core token budget within manifest limit
 - Required skills and guides present
-- Trigger audit 29/29 pass
+- All trigger-audit fixtures pass
 - `automation/audit-ui-routing.ps1` pass (via `03-validate-context`)
 
 ## M2 — Durable advisory layer
@@ -39,11 +39,29 @@ Criteria (advisory):
 - No stale `plans/` references in canonical docs
 - Repos with multi-phase execution use `.agent/plans/<plan-id>/ledger/` with verify cmd per AC (SGP §11)
 
+## M4 — Empirically measured
+
+Criteria (structural):
+- Benchmark corpus and schemas validate
+- Existing route conformance plus evidence routing benchmark pass
+- Live-result collector rejects invalid/privacy-sensitive records
+- Quality reporter emits JSON and Markdown without auto-promoting rules
+
+Criteria (empirical):
+- Real live results exist under `.agent/benchmarks/`
+- Comparable runs record model, effort, platform, tools and evidence
+- Baseline/core/full claims use comparable task fixtures
+- Synthetic fixtures are never counted as behavioral evidence
+- Adapter operational status requires at least one complete empirical triplet
+- A `KEEP` strength decision requires the corpus thresholds (currently 6 comparable cases and 12 triplets), not a single smoke case
+- Native current-runtime smoke is useful operational evidence but cannot be combined with isolated baseline/core runs for causal comparison
+
 ## How to check
 
 ```bash
-pwsh automation/03-validate-context.ps1   # structural M1–M3
+pwsh automation/03-validate-context.ps1   # structural M1–M4
 pwsh automation/04-verify-mirrors.ps1      # mirror parity
+python automation/test-agent-quality-benchmark.py
 ```
 
-Behavior metrics (advisory WARN only when `.agent/trace.jsonl` exists in the working repo).
+Behavior metrics remain advisory. M4 empirical status requires real live runs; structural fixture PASS alone does not qualify.

@@ -348,6 +348,22 @@ if (-not (Test-Path -LiteralPath $RouterTest)) {
   if ($LASTEXITCODE -ne 0) { $Problems.Add("Graph routing conformance failed: automation/test-context-router.py") }
 }
 
+$QualityBenchmarkTest = Join-Path $Root "automation\test-agent-quality-benchmark.py"
+if (-not (Test-Path -LiteralPath $QualityBenchmarkTest)) {
+  $Problems.Add("Missing evidence-first benchmark test: automation/test-agent-quality-benchmark.py")
+} elseif ($PythonCommand) {
+  & $PythonCommand $QualityBenchmarkTest --contracts-only 2>&1 | ForEach-Object { Write-Host $_ }
+  if ($LASTEXITCODE -ne 0) { $Problems.Add("Agent quality benchmark contracts failed") }
+}
+
+$LiveAdapterTest = Join-Path $Root "automation\test-live-agent-adapter.py"
+if (-not (Test-Path -LiteralPath $LiveAdapterTest)) {
+  $Problems.Add("Missing live-agent adapter test: automation/test-live-agent-adapter.py")
+} elseif ($PythonCommand) {
+  & $PythonCommand $LiveAdapterTest --contracts-only 2>&1 | ForEach-Object { Write-Host $_ }
+  if ($LASTEXITCODE -ne 0) { $Problems.Add("Live-agent adapter contracts failed") }
+}
+
 $ContextGraphScript = Join-Path $Root "automation\build-context-graph.ps1"
 if (-not (Test-Path $ContextGraphScript)) {
   $Problems.Add("Missing context graph builder: automation/build-context-graph.ps1")

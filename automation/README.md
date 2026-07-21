@@ -24,6 +24,14 @@
 | `planctl.ps1` | Compile/validate Markdown PAF, persist scoped state/evidence, generate handoff/report |
 | `audit-slice-ledger.ps1` | Scoped AC/evidence gate; blocks false PASS and open/blocker ledgers |
 | `test-planctl.ps1` | Fixture regression for semantic plan and ledger validation |
+| `test-agent-quality-benchmark.py` | Contract, deterministic routing, live-result and report regression |
+| `collect-live-results.py` | Validate/normalize externally collected live-agent evidence; never invokes an agent |
+| `build-benchmark-runtime.ps1` | Build credential-free isolated Codex homes for baseline/core/full |
+| `run-live-benchmark.py` | Execute safe current-runtime native smoke or isolated ablation runs; only ablation requires `CODEX_API_KEY` |
+| `verify-live-workspace.py` | Independently verify changed files, expected content, commands, and response contracts |
+| `test-live-agent-adapter.py` | Regression tests for the runner, verifier, fixtures, and credential boundary |
+| `report-agent-quality.py` | Compare routing, live variants and advisory traces as JSON + Markdown |
+| `benchmarks/` | Canonical evidence corpus and schemas; fixtures are tests, not empirical results |
 | `10-sync-project-agents.ps1` | Migrate root `AGENTS.md` + extract hard rules to `project-local/` |
 | `Merge-Mcp-Adapters.ps1` | Helper: merge staged adapters → platform MCP config |
 | `context-route-cases.json` | Versioned route budgets plus executable positive/negative progressive-loading fixtures |

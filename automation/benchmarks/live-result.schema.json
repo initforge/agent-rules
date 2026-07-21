@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/live-result.schema.json",
+  "type": "object",
+  "required": ["run_id", "case_id", "variant", "evidence_kind", "platform", "model", "reasoning_effort", "tools_available", "started_at", "finished_at", "outcome", "scores", "evidence", "owner_correction", "friction"],
+  "properties": {
+    "run_id": { "type": "string", "minLength": 1 },
+    "case_id": { "type": "string", "minLength": 1 },
+    "variant": { "enum": ["baseline", "core", "full"] },
+    "evidence_kind": { "enum": ["empirical", "synthetic"] },
+    "platform": { "type": "string", "minLength": 1 },
+    "model": { "type": "string", "minLength": 1 },
+    "model_version": { "type": "string" },
+    "reasoning_effort": { "type": "string", "minLength": 1 },
+    "tools_available": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "started_at": { "type": "string", "format": "date-time" },
+    "finished_at": { "type": "string", "format": "date-time" },
+    "outcome": { "enum": ["PASS", "PARTIAL", "BLOCKED", "FAIL", "NOT_RUN"] },
+    "scores": {
+      "type": "object",
+      "required": ["scope", "correctness", "safety", "verification", "communication"],
+      "properties": {
+        "scope": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "correctness": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "safety": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "verification": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "communication": { "type": "integer", "minimum": 0, "maximum": 4 }
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "label", "status", "ref"],
+        "properties": {
+          "type": { "enum": ["command", "artifact", "review", "runtime"] },
+          "label": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["PASS", "FAIL", "SKIP"] },
+          "ref": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "owner_correction": { "type": "boolean" },
+    "friction": { "type": "array", "items": { "type": "string" } },
+    "duration_seconds": { "type": "number", "minimum": 0 },
+    "input_tokens": { "type": "integer", "minimum": 0 },
+    "output_tokens": { "type": "integer", "minimum": 0 },
+    "tool_calls": { "type": "integer", "minimum": 0 },
+    "notes": { "type": "string" }
+  },
+  "additionalProperties": false
+}
