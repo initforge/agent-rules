@@ -1083,18 +1083,37 @@ function Invoke-RunnerReceipt {
   $allowedReceiptRoot = [IO.Path]::GetFullPath($dir).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
   if (-not ([IO.Path]::GetFullPath($path)).StartsWith($allowedReceiptRoot, [StringComparison]::OrdinalIgnoreCase)) { throw "ReceiptPath must stay under $dir" }
   $receipt.receipt_path = [IO.Path]::GetFullPath($path)
-  $receipt["receipt_hash"] = Get-ExactHash (($receipt | ConvertTo-Json -Depth 12 -Compress))
+  $receipt["receipt_hash"] = Get-ReceiptIntegrityHash ([pscustomobject]$receipt)
   Save-Json $path ([pscustomobject]$receipt)
   return [pscustomobject]@{ receipt = [pscustomobject]$receipt; path = [IO.Path]::GetFullPath($path); passed = ($exitCode -eq 0 -and $expectedMatch) }
 }
 
 function Get-ReceiptIntegrityHash {
   param([object]$Receipt)
-  $copy = [ordered]@{}
-  foreach ($property in @($Receipt.PSObject.Properties)) {
-    if ($property.Name -ne "receipt_hash") { $copy[$property.Name] = $property.Value }
-  }
-  return Get-ExactHash (($copy | ConvertTo-Json -Depth 12 -Compress))
+  # Hash only stable scalar/ordered proof fields.  Hashing a re-serialized
+  # PSCustomObject is not portable between Windows PowerShell and pwsh
+  # (null-valued properties and array coercion differ), which used to make a
+  # valid receipt disappear during complete/finalize on Linux CI.
+  $artifactHashes = @($Receipt.artifacts | ForEach-Object { [string]$_.sha256 }) -join "|"
+  $stable = @(
+    [string]$Receipt.plan_id,
+    [string]$Receipt.plan_hash,
+    [string]$Receipt.revision,
+    [string]$Receipt.phase_id,
+    [string]$Receipt.contract_hash,
+    [string]$Receipt.ac_contract_hash,
+    [string]$Receipt.ac_id,
+    [string]$Receipt.command_hash,
+    [string]$Receipt.expected_hash,
+    [string]$Receipt.expected_match,
+    [string]$Receipt.exit_code,
+    [string]$Receipt.output_hash,
+    [string]$Receipt.evidence_kind,
+    [string]$Receipt.environment,
+    [string]$Receipt.manifest_hash,
+    $artifactHashes
+  ) -join "`n"
+  return Get-ExactHash $stable
 }
 
 function Get-PhaseReceipt {
