@@ -122,6 +122,7 @@ Assert-Fails @{ Action = "start"; Root = $Root; PlanPath = $hashLifecycle; Phase
 if ($LASTEXITCODE -ne 0) { throw "P1 start failed" }
 $env:PLANCTL_LEASE_ID = [string]((Get-Content -Raw -Encoding UTF8 $statePath | ConvertFrom-Json).lease_id)
 $verifyResult = Invoke-PlanctlResult @{ Action = "verify"; Root = $Root; PlanPath = $hashLifecycle; Phase = "P1"; AcId = "AC1" }
+Write-Host "DEBUG_VERIFY_RESULT: $($verifyResult.Output)"
 if ($verifyResult.Code -ne 0 -or $verifyResult.Output -notmatch "VERIFY_PASS: P1/AC1" -or $verifyResult.Output -notmatch "receipts") {
   throw "Runner receipt verification failed: $($verifyResult.Output)"
 }
