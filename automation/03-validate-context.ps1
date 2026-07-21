@@ -212,6 +212,21 @@ if (Test-Path $PlanCtlTests) {
   $Problems.Add("Missing plan compiler fixtures: $PlanCtlTests")
 }
 
+$PythonExe = (Get-Command python -ErrorAction SilentlyContinue).Source
+foreach ($PlanGuardTest in @("test-plan-guard.py", "test-plan-hook-wire.py", "test-state-reliability.py", "test-external-receipt.py")) {
+  $TestPath = Join-Path $Root "automation\$PlanGuardTest"
+  if (-not $PythonExe -or -not (Test-Path $TestPath)) {
+    $Problems.Add("Missing Python or plan guard fixture: $TestPath")
+    continue
+  }
+  try {
+    & $PythonExe $TestPath 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) { $Problems.Add("Plan guard fixture failed: $PlanGuardTest") }
+  } catch {
+    $Problems.Add("Plan guard fixture crashed: $PlanGuardTest - error: $_")
+  }
+}
+
 if (Test-Path (Join-Path $Root ".agents")) { $Problems.Add("Project mirror exists: .agents") }
 if (Test-Path (Join-Path $Root ".codex")) { $Problems.Add("Project mirror exists: .codex") }
 

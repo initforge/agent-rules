@@ -31,7 +31,7 @@ Sau khi chạy verify, điền evidence + tick:
 ## Luật gate (hard)
 
 1. **Mỗi AC phải có `verify:` là command chạy được** — không phải "đã kiểm tra bằng mắt".
-2. **`evidence:` phải là output THẬT** copy từ lần chạy fresh trong session — không "should be 0".
+2. **`evidence:` phải là output THẬT** copy từ lần chạy fresh trong session — không "should be 0". Với tracked PAF, ledger phải trỏ `receipt: .agent/plans/<plan-id>/receipts/<phase>/<ac-id>.json`; receipt được tạo bởi runner/`planctl verify`, không được tự viết.
 3. **Cấm `PASS`** khi còn bất kỳ `- [ ]` (chưa tick) hoặc `evidence: <chưa chạy>`.
 4. Command tự kiểm trước final message:
 
@@ -42,6 +42,10 @@ Sau khi chạy verify, điền evidence + tick:
    Có dòng khớp → **continue working**, không respond final.
 5. AC không tick được do blocker must-not-self-decide → đánh dấu `- [!]` + ghi blocker; status `BLOCKED`/`PARTIAL`, không `PASS`.
 6. Chạy machine gate scoped: `automation/audit-slice-ledger.ps1 -LedgerPath <path> -Strict`.
+
+## Runner receipt
+
+`planctl verify` chạy command khai báo và ghi JSON receipt dưới `.agent/plans/<plan-id>/receipts/<phase>/`. Receipt tối thiểu gồm plan/phase/revision hashes, AC-ID, command hash, thời gian, exit code, expected matcher, output hash, số redaction và artifact hashes. Receipt cũ bị vô hiệu khi plan hoặc phase contract đổi; `complete`/`finalize` từ chối ledger chỉ có prose hoặc receipt không khớp.
 
 ## Ví dụ AC verify theo loại
 

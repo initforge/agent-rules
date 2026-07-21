@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "machine_evidence_kinds": [
+    "integration-test",
+    "component-test",
+    "browser-test",
+    "migration-test",
+    "concurrency-test",
+    "security-test",
+    "pipeline-run",
+    "production-smoke",
+    "custom-runtime"
+  ],
+  "profiles": {
+    "static-change": {
+      "required_dimensions": ["outcome", "regression"],
+      "allowed_kinds": ["source-assertion", "unit-test", "integration-test", "artifact-audit", "build", "custom-runtime"],
+      "signals": []
+    },
+    "ui-runtime": {
+      "required_dimensions": ["interaction", "state", "regression"],
+      "conditional_dimensions": {
+        "viewport": ["responsive", "mobile", "viewport"],
+        "reference": ["parity", "template", "reference fidelity"]
+      },
+      "allowed_kinds": ["component-test", "browser-test", "integration-test", "build", "custom-runtime"],
+      "signals": ["ui runtime", "drawer", "toolbar", "responsive", "mobile", "parity", "template fidelity"]
+    },
+    "api-contract": {
+      "required_dimensions": ["positive", "invalid-error", "regression"],
+      "allowed_kinds": ["integration-test", "unit-test", "build", "custom-runtime"],
+      "signals": ["api contract", "endpoint", "dto", "error envelope", "http response"]
+    },
+    "access-control": {
+      "required_dimensions": ["allowed", "denied", "isolation"],
+      "conditional_dimensions": {
+        "audit": ["audit log", "audit trail"]
+      },
+      "allowed_kinds": ["integration-test", "security-test", "custom-runtime"],
+      "signals": ["rbac", "permission", "authorization", "tenant isolation", "role boundary"]
+    },
+    "migration-reconciliation": {
+      "required_dimensions": ["blank", "existing-clone", "reconciliation", "failure-path"],
+      "allowed_kinds": ["migration-test", "integration-test", "custom-runtime"],
+      "signals": ["migration", "data-safe", "checksum", "reconciliation", "schema transition"]
+    },
+    "concurrency-idempotency": {
+      "required_dimensions": ["contention", "retry-failure", "idempotency"],
+      "allowed_kinds": ["concurrency-test", "integration-test", "custom-runtime"],
+      "signals": ["concurrency", "race", "lease", "retry", "idempotency", "duplicate"]
+    },
+    "security-boundary": {
+      "required_dimensions": ["positive", "negative", "leakage-sanitization"],
+      "allowed_kinds": ["security-test", "integration-test", "custom-runtime"],
+      "signals": ["security", "credential", "secret", "cookie", "sanitize", "pan", "cvv"]
+    },
+    "external-release": {
+      "required_dimensions": ["target-identity", "terminal-run", "smoke"],
+      "conditional_dimensions": {
+        "rollback": ["rollback"],
+        "restore": ["restore"]
+      },
+      "allowed_kinds": ["pipeline-run", "production-smoke", "custom-runtime"],
+      "signals": ["deploy", "deployment", "ci/cd", "pipeline", "production", "release"]
+    },
+    "custom": {
+      "required_dimensions": ["outcome", "failure", "regression"],
+      "allowed_kinds": ["custom-runtime"],
+      "signals": []
+    }
+  }
+}

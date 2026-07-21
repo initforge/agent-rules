@@ -14,3 +14,4 @@ description: Grok-only runtime delta.
 - Live/manual UI proof → load `qa-skills` + `browser-qa`; do not preload browser tooling for source-only work.
 - After install: **restart Grok session** so inject reloads from disk (cached sessions may keep old rules until restart).
 - **Dual machine:** Linux và Windows là runtime riêng — cài hooks/rules trên **từng máy**; không copy `~/.grok/hooks/*.json` chéo OS.
+- Shared plan guard emits Grok-native `decision: continue` while an admitted continuous plan is open; `SLICE_PASS` is not a stop condition for full-plan intent.

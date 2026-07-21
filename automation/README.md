@@ -21,9 +21,17 @@
 | `09-doctor.ps1` | Post-install health (sha256, integrations, MCP); thêm `-SkipIntegrationVerify` khi chỉ cần kiểm tra cấu trúc/runtime parity mà không gọi probe mạng |
 | `10-audit-harness-health.ps1` | Full harness health audit (manual; findings by category) |
 | `audit-plan-artifact.ps1` | PAF wiring + tier routing + path conflict checks; optional `-PlanPath` |
-| `planctl.ps1` | Compile/validate Markdown PAF, persist scoped state/evidence, generate handoff/report |
+| `planctl.ps1` | Hash-only `admit`/`adopt`, source coverage, phase lifecycle, typed proof receipts via `verify`, exact ledger gate, `SLICE_PASS`/`PLAN_PASS`, handoff/report derived từ state |
+| `evidence-profiles.json` | Generic typed proof profiles and required dimensions for adaptive semantic evidence |
+| `verify-external-receipt.py` | Provider-neutral CI/deployment receipt identity, SHA, terminal, smoke and rollback validation |
 | `audit-slice-ledger.ps1` | Scoped AC/evidence gate; blocks false PASS and open/blocker ledgers |
-| `test-planctl.ps1` | Fixture regression for semantic plan and ledger validation |
+| `test-planctl.ps1` | Source/deliverable mapping, dependency, exact AC, invalidation and finalize regression |
+| `test-plan-proof.ps1` | PAF v2 anti-tautology, proof dimensions, matcher, artifact and receipt-integrity regression |
+| `test-state-reliability.py` | Locked atomic state and generation-fence regression |
+| `test-external-receipt.py` | External CI/deployment evidence contract regression |
+| `test-plan-guard.py` | Mega-plan detection, hash-only admission, progress reset, BLOCKED/corrupt/exhaustion contracts |
+| `test-plan-input.py` | Project-neutral adversarial inventory, one-pass detection, fence exclusion and raw-prompt boundary |
+| `test-plan-hook-wire.py` | Codex/Grok/Antigravity native Stop wire-format regression |
 | `test-agent-quality-benchmark.py` | Contract, deterministic routing, live-result and report regression |
 | `collect-live-results.py` | Validate/normalize externally collected live-agent evidence; never invokes an agent |
 | `build-benchmark-runtime.ps1` | Build credential-free isolated Codex homes for baseline/core/full |

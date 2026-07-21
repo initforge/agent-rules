@@ -6,8 +6,6 @@ routing: {"signals":["làm đi","implement","fix","refactor","migrate","hoàn th
 
 # Finish To Completion
 
-Skill này chống **bệnh chừa việc**: làm một phần → liệt kê còn lại → hỏi user. Bổ sung: `rules/10-execution.md` và skill này (không có file `07-finish-to-completion.md` riêng).
-
 ## Skill activation (Turn-0)
 
 Chỉ khi scope **đã khóa** (≤1 phase hoặc user giao slice rõ) và **mode=`execution`**.
@@ -28,9 +26,7 @@ Khi ≥3 AC, PAF phase, Path E, hoặc HANDOFF slice → đọc **bắt buộc**
 
 ## Baseline
 
-Một task được giao = một cam kết **đóng scope**. Partial handoff là output hỏng.
-
-Ưu tiên: **hoàn thành scope** > báo cáo đẹp > kết turn nhanh.
+Một task được giao = cam kết **đóng scope**; partial handoff là output hỏng.
 
 ## Turn-0 — Scope Lock
 
@@ -66,6 +62,8 @@ Trước `PASS`:
 4. Owner yêu cầu deep/manual/UI QA → mid-flow combo `qa-skills` + `browser-qa`; không tự nở full exploratory matrix nếu scope không yêu cầu.
 
 Không evidence → không `PASS`. Không "should work".
+
+Với tracked PAF, gate này chỉ đóng phase và tạo `SLICE_PASS`; cấm biến slice sạch thành toàn-plan PASS. `PLAN_PASS` thuộc `planctl finalize` sau khi mọi phase/source/deliverable và ledger được re-audit.
 
 **AC-gate (≥3 AC hoặc PAF phase):** operational contract → [`references/slice-gate-protocol.md`](references/slice-gate-protocol.md); AC format → [`references/completion-ledger.md`](references/completion-ledger.md). Trước `PASS`: Gate D machine checks — ledger còn `[ ]` → continue working.
 
@@ -125,9 +123,3 @@ Blocker: (if not PASS)
 ```
 
 Tiny: chỉ `Status` + 1 dòng verify. Không Skill-scan theater trên Q&A/plan-only.
-
-## Quick Check
-
-- User có thể dùng kết quả ngay không?
-- Còn câu nào bắt user "đẩy thêm một nhịp" không?
-- Nếu có → chưa xong, tiếp tục.

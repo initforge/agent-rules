@@ -67,14 +67,14 @@ foreach ($F in @($PlanCtl, $LedgerAudit)) {
   if (-not (Test-Path $F)) { $Problems.Add("Missing machine gate: $F") }
 }
 
-Test-FileContains $SkillPath @("Plan Architect", "Plan Scribe", "Plan Reviewer", "PAF", "HANDOFF", "decision tree") | Out-Null
+Test-FileContains $SkillPath @("Plan Architect", "Plan Scribe", "Plan Reviewer", "PAF", "HANDOFF", "decision tree", "Source coverage", "PLAN_PASS") | Out-Null
 Test-FileContains $SkillPath @("Path D") | Out-Null
 Test-FileContains $ResearcherPath @("plan-and-handoff", "Do NOT") | Out-Null
 Test-FileContains $LifePath @("Plan roles", "plan_id", "friction") | Out-Null
 Test-FileContains $AntigravityOverlay @("L0", "researcher", "capability-tier-routing") | Out-Null
-Test-FileContains $PafTemplate @("Scope lock", "Context routing", "Phases", "Known-unknowns", "Plan QA", "HANDOFF", "Revision protocol", "preferred_tier", "min_tier", "allowed_tiers") | Out-Null
+Test-FileContains $PafTemplate @("Scope lock", "Source coverage", "DERIVED(reason)", "Context routing", "Phases", "Known-unknowns", "Plan QA", "HANDOFF", "Revision protocol", "preferred_tier", "min_tier", "allowed_tiers") | Out-Null
 Test-FileContains $UiDetail @("plan-artifact-template") | Out-Null
-Test-FileContains $PlanCtl @("semantic validation", "compiled.json", "evidence", "handoff") | Out-Null
+Test-FileContains $PlanCtl @("semantic validation", "compiled.json", "admission_id", "contract_hash", "SLICE_PASS", "PLAN_PASS", "finalize", "handoff") | Out-Null
 Test-FileContains $LedgerAudit @("Scope IN", "evidence", "open_ac=0") | Out-Null
 
 # Path C delegate - no long execute loop in plan-and-handoff

@@ -13,6 +13,8 @@ Execute pivot với ≥3 AC hoặc multi-file slice → đọc `skills/finish-to
 - **1 session = 1 slice** — scope creep ngoài Scope IN = `BLOCKED` (trừ user pivot).
 - **Path E:** chỉ đóng AC còn mở trong ledger — cấm re-run full plan.
 - Verify cmd từ slice phải chạy fresh trước PASS — không "should work".
+- Mỗi AC trong tracked plan phải có runner receipt mới khớp `plan_hash`, `revision`, `phase contract_hash`, command hash, exit code và expected result; copy output vào ledger chỉ là derived view.
+- Ledger sạch chỉ chứng minh `SLICE_PASS`; không được suy rộng thành toàn-plan PASS. Tracked plan chỉ hoàn tất khi `planctl finalize` re-audit và phát `PLAN_PASS`.
 
 **Report footer (execution):**
 

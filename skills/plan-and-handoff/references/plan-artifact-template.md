@@ -12,7 +12,7 @@ PAF Markdown is the canonical intent artifact. `automation/planctl.ps1` may comp
 ```yaml
 ---
 plan_id: "<repo>-<slug>-<YYYYMMDD>"
-schema_version: 1
+schema_version: 2
 revision: 0
 supersedes: null
 workflow_mode: plan-authoring | plan-review | execution
@@ -54,6 +54,33 @@ state_root: .agent/plans/<plan-id>/
 
 ---
 
+## §2b Source coverage (required for admitted mega-plan)
+
+Reference the admission hash so the plan can be audited without copying raw prompt text. Never put credentials, raw prompt, or chain-of-thought in the PAF.
+
+```text
+## Source coverage
+
+- S001 -> D1 | @sha256:<admission sha256>
+- S002 -> CONTEXT | @sha256:<admission sha256>
+- S003 -> OUT(owner excluded deployment) | @sha256:<admission sha256>
+```
+
+Every admission S-ID appears exactly once and its hash must match the admission artifact. Every `D<n>` maps to at least one phase. A new deliverable is written `- D3 [DERIVED(reason)]: ...`; derived work cannot replace or absorb an S-ID.
+
+Initialize once, then later actions inherit admission and mode from canonical state:
+
+```powershell
+./automation/planctl.ps1 -Action admit -AdmissionPath .agent/plans/_admission/<session-id>.json
+./automation/planctl.ps1 -Action init -PlanPath <paf> -AdmissionPath <json> -ExecutionMode continuous
+./automation/planctl.ps1 -Action start -PlanPath <paf> -Phase P1
+./automation/planctl.ps1 -Action verify -PlanPath <paf> -Phase P1 -AcId AC1 # runner receipt
+./automation/planctl.ps1 -Action complete -PlanPath <paf> -Phase P1 -LedgerPath <ledger> # SLICE_PASS
+./automation/planctl.ps1 -Action finalize -PlanPath <paf>                                 # PLAN_PASS
+```
+
+---
+
 ## §3 Context routing map
 
 Chỉ subset task-relevant — full router: `context/5fedu/00-context-map.md`.
@@ -79,42 +106,22 @@ Chỉ subset task-relevant — full router: `context/5fedu/00-context-map.md`.
 
 Mỗi phase = **1 session**.
 
-### Ngân sách nguyên tử phase (HARD — quyết định trần yield phát-đầu)
+### Atomic + density contract
 
-Trần "một phát đạt ~90-95%" của model **không** phụ thuộc câu chữ plan mà phụ thuộc **kích thước unit**. Mỗi phase PHẢI thoả:
+- ≤8 AC is hard. File count is advisory (normally ≤5); a cohesive subsystem may exceed it when the phase declares why. Registry chain cùng module tính một nhóm.
+- Verify/build-green độc lập; dependency phải explicit, không dựa code hỏng hoặc phần chưa xong của phase trước.
+- Ghi path + operation + symbol/anchor; context phải đọc; contract/schema/type; edge/regression; forbidden.
+- Mỗi AC là checkbox observable có `verify` + `expected`; không dùng mục tiêu mơ hồ.
+- `planctl validate` hard-fail contract thiếu/placeholder/dependency sai/AC không observable; warning không tước quyền executor.
 
-- **≤ 5 file** create/modify (registry chain đếm là 1 nhóm nếu cùng 1 module).
-- **≤ 8 exit-criteria (AC)**.
-- **1 subsystem / 1 layer** (không trộn DB + API + UI trong 1 phase trừ vertical-slice nhỏ có chủ đích).
-- **verify tự chứa**: chạy được độc lập, không chờ phase sau.
-- **Build-green invariant**: sau phase, `build`/`typecheck` phải XANH độc lập. Cấm phase để lại code hỏng cho phase sau "dọn".
-- **Không cross-phase hidden dep**: phase N không phụ thuộc phần *chưa xong* của N-1.
-
-Phase vượt ngân sách → Architect **bắt buộc tách nhỏ**. Phase to = nguyên nhân #1 khiến L0 làm 45% rồi tự kết.
-
-### Task Density Contract (chống-miss — mỗi phase phải ĐẶC đặc tả)
-
-Scope nhỏ (ngân sách trên) **nhưng đặc tả dày**. Khi plan do Cursor plan-mode viết rồi ném cho antigravity/Flash, Flash **không suy luận ngầm** — thiếu chi tiết = miss. Mỗi phase PHẢI có đủ:
-
-- **Files chính xác:** đường dẫn đầy đủ + `(create|modify|delete)` + *sửa đúng chỗ nào* (tên hàm/symbol/anchor, line ref nếu có).
-- **Context files phải đọc trước:** liệt kê path cụ thể (Flash load đúng context, không đoán).
-- **Mỗi AC là 1 checkbox độc lập-verify:** mô tả + `verify:` command chạy được + **expected output** (vd `→ 0`, `→ build pass`). Không AC mơ hồ kiểu "cải thiện UX".
-- **Contract/DB/type reference:** schema field, Zod schema, endpoint, type name cần dùng/đổi (path cụ thể).
-- **Edge cases + Regression map:** cái gì PHẢI KHÔNG vỡ; input biên cần xử lý.
-- **Code anchor / snippet** khi thao tác không hiển nhiên (không paste cả function — chỉ anchor + ý đồ).
-- **Forbidden / OUT:** điều cấm làm trong phase (chống scope creep).
-- **Depends-on:** phase tiền đề (thứ tự bắt buộc).
-- **Definition of done:** build-green command + trạng thái cuối.
-- **Machine semantic gate:** `automation/planctl.ps1 -Action validate -PlanPath <path>`; hard-fail only on missing contract, placeholder, invalid dependency or non-observable AC; heuristic scope warnings do not remove implementation freedom.
-
-Quy tắc vàng: *"Một executor L0 KHÔNG biết gì về intent của bạn phải làm đúng chỉ bằng nội dung phase này."* Đọc lại phase, chỗ nào cần suy luận → thêm chi tiết cho tới khi hết suy luận.
+Vượt ngân sách thì tách phase. Executor không biết intent ngoài PAF vẫn phải làm đúng chỉ từ block sau:
 
 Copy block cho mỗi phase:
 
 ```yaml
 ### Phase P1 — [tên ngắn]
 goal: ...
-depends_on: [P0]                 # phase tiền đề (thứ tự bắt buộc)
+depends_on: [P0]
 preferred_tier: L0
 min_tier: L0
 allowed_tiers: [L0, L1, L2]
@@ -122,12 +129,12 @@ escalate_if: [verify_fail_2x, parity_fail, BLOCKED]
 force_tier: null
 tier_used: null
 escalation_reason: null
-scope_lock: [deliverables phase này]   # ≤8 AC
-context_files:                    # Flash đọc TRƯỚC khi sửa (không đoán)
+scope_lock: [deliverables phase này]
+context_files:
   - path (đọc để hiểu X)
 files_touched:
-  - path (create|modify|delete) — sửa ở: <hàm/symbol/anchor + line nếu có>; ý đồ: <...>
-contracts_refs:                   # schema/type/endpoint cần dùng/đổi
+  - path (create|modify|delete) — <symbol/anchor>; ý đồ: <...>
+contracts_refs:
   - packages/contracts/... (field/type)
 template_reference: Nhân viên — [paths]
 skills_active: [finish-to-completion, 5fedu-module-parity]
@@ -137,10 +144,15 @@ forbidden: [ngoài scope — cấm động]
 verify_gate:
   assumptions_check: ...
   commands: npm run lint && npm run typecheck
-exit_criteria:                    # mỗi item: mô tả | verify cmd | expected output
-  - [ ] AC1 <mô tả> | verify: <cmd> | expected: <vd → 0 / build pass>
-  - [ ] build-green độc lập | verify: <build cmd> | expected: pass
-  - [ ] Template reference cited in report
+proof_profiles: [api-contract]
+proof_map:
+  - AC1 -> api-contract.positive | kind=integration-test | env=local | artifacts=junit:test-results/api-positive.xml
+  - AC2 -> api-contract.invalid-error | kind=integration-test | env=local | artifacts=junit:test-results/api-negative.xml
+  - AC3 -> api-contract.regression | kind=integration-test | env=local | artifacts=junit:test-results/api-regression.xml
+exit_criteria:
+  - [ ] AC1 <mô tả> | verify: npm test -- api-positive | expected: exit=0
+  - [ ] AC2 <mô tả> | verify: npm test -- api-negative | expected: exit=0
+  - [ ] AC3 build-green độc lập | verify: npm run build | expected: exit=0
 handoff_out:
   done: ...
   remaining: P2, P3
@@ -162,12 +174,6 @@ handoff_out:
 
 ---
 
-## §5b External research (optional)
-
-| Research note | Path | Findings → §5 |
-|---|---|---|
-| … | `.agent/research/<topic>.md` | Assumption / KU |
-
 ---
 
 ## §6 Gates
@@ -188,16 +194,20 @@ Plan **READY** chỉ khi tất cả PASS:
 
 - [ ] Meta đủ (plan_id, tier, repo, skills, lane)
 - [ ] Scope IN/OUT rõ; deliverables đếm được (N)
+- [ ] Nếu có admission: mọi S-ID coverage đúng hash/đúng một lần; mọi D map phase hoặc `DERIVED(reason)`
 - [ ] Mỗi phase có: goal, tier fields, files, verify cmd, exit criteria
+- [ ] PAF v2: mỗi phase có `proof_profiles`; mỗi AC-ID map đúng một `proof_map` row và đủ dimensions
+- [ ] Deep/runtime proof dùng machine artifact hoặc `manifest=true`; build/source query không thay outcome proof
 - [ ] Context routing khớp task (5fedu khi module ERP)
 - [ ] Template reference có path cụ thể
 - [ ] Known-unknowns tách khỏi assumptions locked
 - [ ] Phase P1 đủ nhỏ cho 1 session L0 (hoặc min_tier ghi rõ)
-- [ ] **MỌI phase trong ngân sách nguyên tử §4** (≤5 file, ≤8 AC, 1 subsystem, verify tự chứa, build-green)
+- [ ] **MỌI phase trong ngân sách nguyên tử §4** (≤8 AC, 1 subsystem, verify tự chứa, build-green; file-count vượt ngưỡng phải có cohesion justification)
+- [ ] **MỌI AC có proof profile/dimension, evidence kind, environment, typed matcher và artifact contract**; profile sâu không được dùng `contains`/`exit_code` nông làm bằng chứng duy nhất
 - [ ] **MỌI phase đạt Task Density Contract §4** (files+anchor, context_files, mỗi AC có verify+expected, edge_cases, regression_map, forbidden, depends_on)
 - [ ] **Không AC mơ hồ** (mỗi AC verify được bằng command/kiểm tra cụ thể; không "cải thiện UX" chung chung)
 - [ ] **MỌI phase để build/typecheck xanh độc lập** (không cross-phase hidden dep)
-- [ ] `automation/planctl.ps1 -Action validate -PlanPath <plan>` passes; compiled JSON is derived, not a second source of truth
+- [ ] `automation/planctl.ps1 -Action validate -PlanPath <plan> [-AdmissionPath <json>]` passes; compiled JSON/report là derived view, `state.json` là canonical progress
 - [ ] Phase khó (AI-engine/migration/auth/RBAC) tag `min_tier L2` — không để L0
 - [ ] Risk flags → high-risk nếu auth/migration/permission
 
@@ -237,6 +247,4 @@ Report: Template reference | Pattern fidelity | Verification | Status | tier_use
 
 ---
 
-## Optional owner prompts
-
-Copy-paste prompts are kept in [`owner-prompts.md`](owner-prompts.md) and are not part of the default PAF load.
+Owner prompt snippets live in `owner-prompts.md` and are not part of the default PAF load.

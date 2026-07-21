@@ -53,6 +53,10 @@ try:
     from context_router import load_graph, route as graph_route, route_signature
 except ImportError:  # pragma: no cover - legacy installs use the old gate
     load_graph = graph_route = route_signature = None  # type: ignore[assignment]
+try:
+    from plan_guard import evaluate_stop as evaluate_plan_stop, write_admission
+except ImportError:  # pragma: no cover - staged rollout keeps older runtimes usable
+    evaluate_plan_stop = write_admission = None  # type: ignore[assignment]
 
 READ_TOOLS = {"view_file"}
 WRITE_TOOLS = {
@@ -404,6 +408,15 @@ def handle_preinvocation(payload: dict[str, Any]) -> None:
     transcript = str(payload.get("transcriptPath") or "")
     user_text = read_transcript_user_text(transcript)
     if user_text:
+        paths = workspace_paths(payload)
+        if write_admission is not None and paths:
+            admission = write_admission(paths[0], cid, user_text)
+            if admission is not None:
+                st["plan_admission_path"] = str(admission)
+                messages.append(
+                    f"Mega-plan admitted at {admission}. Before edits, create exact Source coverage and init planctl state; "
+                    "continuous mode may stop only after PLAN_PASS."
+                )
         legacy_signals = detect_signals(user_text)
         legacy_stack = build_stack(legacy_signals)
         legacy_primary = pick_primary(legacy_stack, legacy_signals)
@@ -508,7 +521,18 @@ def handle_stop(payload: dict[str, Any]) -> None:
         fail_open()
         return
 
-    open_items = scan_open_ledger_items(workspace_paths(payload))
+    paths = workspace_paths(payload)
+    if evaluate_plan_stop is not None and paths:
+        decision = evaluate_plan_stop(paths[0], cid, st)
+        save_state(st)
+        if decision.get("action") == "continue":
+            emit({"decision": "continue", "reason": str(decision.get("reason") or "Continue active plan.")})
+            return
+        if decision.get("warning"):
+            emit({"decision": "allow", "reason": str(decision.get("reason") or "Plan enforcement exhausted; PLAN_PASS is forbidden.")})
+            return
+
+    open_items = scan_open_ledger_items(paths)
     if not open_items:
         st["stop_continues"] = 0
         save_state(st)

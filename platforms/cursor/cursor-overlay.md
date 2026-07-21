@@ -13,3 +13,4 @@ description: Cursor-specific runtime delta for agent-rules harness.
 - Không reverse-sync runtime skills/rules về canonical trừ qua `automation/07-import-reviewed-changes.ps1` đã review.
 - Plan artifacts: `.cursor/plans/` or in-chat **PAF** per `skills/plan-and-handoff/references/plan-artifact-template.md`; tier routing in `references/capability-tier-routing.md`.
 - Live/manual UI proof → load `qa-skills` + `browser-qa`; không auto-browser source-only task.
+- Cursor chưa có hard-stop tương đương adapter Codex/Grok/Antigravity: dùng rule + `planctl` source/phase/finalize gate; chỉ `PLAN_PASS` từ `finalize` là toàn-plan completion.

@@ -16,7 +16,7 @@ Guardrails:
 
 ## Runtime hooks (Codex) — backstop, không nằm trong pipeline build
 
-- `~/.codex/hooks.json`: SessionStart/UserPromptSubmit/PreToolUse/PostToolUse → absolute Python `scripts/skill-gate.py` (with `commandWindows` on Windows).
+- `~/.codex/hooks.json`: SessionStart/UserPromptSubmit/PreToolUse/PostToolUse/Stop → absolute Python `scripts/skill-gate.py` (with `commandWindows` on Windows). UserPromptSubmit writes hash-only mega-plan admission; Stop uses native `continue=false`/`stopReason` until continuous state is `DONE`.
 - **PostToolUse `audit-on-edit.sh`** (Write/Edit): tự cảnh báo khi sửa context/harness — oversize (rule>90, SKILL>350 warn nhẹ nếu liền mạch), dead Windows absolute user-profile paths, dead `@import`. Fail-open, chỉ WARN.
 - Các hook/script `~/.codex/scripts/*.sh|*.py` là runtime-only (không do `01-build-runtime` sinh); sửa trực tiếp tại runtime, ghi chú ở đây để audit sau không nhầm là orphan.
 
@@ -44,6 +44,7 @@ Owner chạy **hai máy vật lý tách** — **không** share `~/.codex` / `~/.
 - **Cấm** bare `grok-skill-gate.sh` → OS **193**. **Cấm** nested `\"python\" \"gate.py\"` → **exit 1**.
 - Sau khi sửa hook JSON: `/hooks` → phím **`r`** reload, hoặc **session mới** (session cache command cũ). Hook unmanaged phải được review/trust trong `/hooks` trước khi chạy bình thường.
 - Wrapper `.sh` chỉ cho Git Bash manual.
+- Grok Stop dùng cùng `plan_guard.py` nhưng wire format `decision:continue`; no-progress counter reset khi phase token đổi và fail-open sau ba lần đứng yên.
 - Antigravity: `hooks.json` dùng absolute `__PYTHON__` + `.py` (không phụ thuộc `bash` WSL / placeholder).
 
 ## Runtime hooks (Antigravity) — unattended + skill inject
@@ -54,9 +55,11 @@ Owner chạy **hai máy vật lý tách** — **không** share `~/.codex` / `~/.
   - **PreInvocation** → Turn-0 skill scan + inject skill stack (`injectSteps.ephemeralMessage`).
   - **PreToolUse** (`run_command`) → advisory E2E ladder + destructive cmd warning (`decision:allow` + `reason`).
   - **PostToolUse** (write/run) → state tracking + `audit-on-edit.sh` side-effect.
-  - **Stop** → scan `.agent/ledger/*.md` còn `- [ ]` hoặc `evidence: <chưa chạy>` → `decision:continue` (max 15/lần hội thoại).
+  - **Stop** → shared plan guard đọc canonical `.agent/plans/<id>/state.json`; continuous plan mở → `decision:continue`. Legacy ledger scan (max 15) chỉ là fallback cho task chưa admission.
 - Cài runtime: copy `platforms/antigravity/scripts/*` → `~/.gemini/config/scripts/`, merge `hooks.json` (path tuyệt đối tới script).
 - Contract: https://antigravity.google/docs/hooks — khác Codex (`injectSteps` thay `additionalContext`, Stop dùng `continue`).
+
+State hỏng hoặc ba Stop không có tiến triển phải ghi `ENFORCEMENT_EXHAUSTED` và fail-open để tránh loop; trạng thái này cấm claim `PLAN_PASS`. Cursor không có hard-stop tương đương, nên chỉ dựa rule + `planctl finalize` gate.
 
 ## Git pre-commit audit (cross-platform backstop)
 
