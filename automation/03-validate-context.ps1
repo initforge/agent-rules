@@ -212,6 +212,21 @@ if (Test-Path $PlanCtlTests) {
   $Problems.Add("Missing plan compiler fixtures: $PlanCtlTests")
 }
 
+$PythonExe = (Get-Command python -ErrorAction SilentlyContinue).Source
+foreach ($PlanGuardTest in @("test-plan-guard.py", "test-plan-hook-wire.py", "test-state-reliability.py", "test-external-receipt.py")) {
+  $TestPath = Join-Path $Root "automation\$PlanGuardTest"
+  if (-not $PythonExe -or -not (Test-Path $TestPath)) {
+    $Problems.Add("Missing Python or plan guard fixture: $TestPath")
+    continue
+  }
+  try {
+    & $PythonExe $TestPath 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) { $Problems.Add("Plan guard fixture failed: $PlanGuardTest") }
+  } catch {
+    $Problems.Add("Plan guard fixture crashed: $PlanGuardTest - error: $_")
+  }
+}
+
 if (Test-Path (Join-Path $Root ".agents")) { $Problems.Add("Project mirror exists: .agents") }
 if (Test-Path (Join-Path $Root ".codex")) { $Problems.Add("Project mirror exists: .codex") }
 
@@ -346,6 +361,22 @@ if (-not (Test-Path -LiteralPath $RouterTest)) {
 } else {
   & $PythonCommand $RouterTest 2>&1 | ForEach-Object { Write-Host $_ }
   if ($LASTEXITCODE -ne 0) { $Problems.Add("Graph routing conformance failed: automation/test-context-router.py") }
+}
+
+$QualityBenchmarkTest = Join-Path $Root "automation\test-agent-quality-benchmark.py"
+if (-not (Test-Path -LiteralPath $QualityBenchmarkTest)) {
+  $Problems.Add("Missing evidence-first benchmark test: automation/test-agent-quality-benchmark.py")
+} elseif ($PythonCommand) {
+  & $PythonCommand $QualityBenchmarkTest --contracts-only 2>&1 | ForEach-Object { Write-Host $_ }
+  if ($LASTEXITCODE -ne 0) { $Problems.Add("Agent quality benchmark contracts failed") }
+}
+
+$LiveAdapterTest = Join-Path $Root "automation\test-live-agent-adapter.py"
+if (-not (Test-Path -LiteralPath $LiveAdapterTest)) {
+  $Problems.Add("Missing live-agent adapter test: automation/test-live-agent-adapter.py")
+} elseif ($PythonCommand) {
+  & $PythonCommand $LiveAdapterTest --contracts-only 2>&1 | ForEach-Object { Write-Host $_ }
+  if ($LASTEXITCODE -ne 0) { $Problems.Add("Live-agent adapter contracts failed") }
 }
 
 $ContextGraphScript = Join-Path $Root "automation\build-context-graph.ps1"

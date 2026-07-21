@@ -78,13 +78,13 @@ Bỏ qua: `tiny` lane (1 file, <3 AC), pure Q&A, plan-authoring/review (HB-1).
 
 ---
 
-## §2 Ba lớp state (không trộn)
+## §2 Ba lớp contract/state/evidence (không trộn)
 
 | Lớp | Vai trò | Ghi chú |
 |-----|---------|---------|
 | **Plan artifact (PAF)** | Read-only sau pivot | `.cursor/plans/*.plan.md` hoặc in-chat PAF |
-| **Progress** | Session heartbeat | `.agent/plans/<plan-id>/progress.md` — phase/slice map |
-| **Ledger** | Nguồn PASS duy nhất | `.agent/plans/<plan-id>/ledger/<slice-id>.md` — AC + evidence; `.agent/ledger/` chỉ là legacy |
+| **Plan state** | Canonical lifecycle | `.agent/plans/<plan-id>/state.json` — phase/hash/mode; report/progress chỉ derived |
+| **Ledger** | Nguồn evidence của slice | `.agent/plans/<plan-id>/ledger/<slice-id>.md` — AC + evidence; `.agent/ledger/` chỉ là legacy |
 
 Cấm dùng chat prose hoặc plan artifact thay ledger để claim done.
 
@@ -166,7 +166,7 @@ Khi plan đã execute một phần, kẹt <100%:
 2. Gom thành slice R0, R1… (≤8 AC mỗi slice)
 3. Execute **R_n ONLY** qua Gates A–D
 4. **MISS-SWEEP** trong scope slice: `rg` dead code / TODO / symbol còn sót
-5. Cập nhật `progress.md` nếu có
+5. Gọi `planctl complete` để state ghi `SLICE_PASS`; continuous plan quay lại master loop cho phase kế
 
 **Cấm:** re-run full P1–Pn; dump GAP rồi dừng.
 
@@ -214,13 +214,13 @@ Single source mở rộng: `plan-and-handoff/references/plan-artifact-template.m
 | Biến / artifact | Path mặc định | Ai tạo |
 |-----------------|---------------|--------|
 | `LEDGER_PATH` | `.agent/plans/<plan-id>/ledger/<slice-id>.md` | Path E hoặc Plan Architect HANDOFF |
-| `PROGRESS_PATH` | `.agent/plans/<plan-id>/progress.md` | Trước phase đầu (`goal-autopilot` Phần 2) |
+| `STATE_PATH` | `.agent/plans/<plan-id>/state.json` | `planctl init`; canonical, không sửa tay |
 | CONTEXT block | Header trong ledger | Owner/Architect |
 | AGENTS.md pointer | ~10 dòng Execution Contract | Project maintainer — trỏ SGP + default ledger |
 
 `.agent/` gitignored, advisory — không canonical harness.
 
-`automation/audit-slice-ledger.ps1` là machine gate hiện hành; nhận đúng một ledger path để tránh dead/closed ledger ở task khác làm nhiễu Stop gate.
+`automation/audit-slice-ledger.ps1` là machine gate của slice; `planctl finalize` re-audit mọi ledger và mới được phát `PLAN_PASS`.
 
 ## Liên kết
 

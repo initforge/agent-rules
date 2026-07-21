@@ -31,6 +31,10 @@ routing: {"signals":["plan","plan dài","nhiều phase","handoff","chia nhỏ","
 - User confirmed execute for current slice only → `finish-to-completion` directly
 - External research only → `researcher`
 
+## Mega-plan admission + source coverage
+
+Admission trước edit: map every S-ID once as `Snnn -> Dn | @sha256:<hash>`, `CONTEXT`, or `OUT(reason)`; map every D-ID to a phase; use `planctl init`; keep `state.json` canonical. `complete` emits `SLICE_PASS`; continuous mode stops only after `finalize` emits `PLAN_PASS`. Admission is hash-only (no raw prompt/credentials/CoT); PAF + `planctl` are the machine contract. Evidence is adaptive: tiny tasks stay light, normal tasks may justify an alternate proof, while admitted continuous/high-risk phases must satisfy the inferred proof profile and typed evidence contract.
+
 ## Path A — Plan Architect (default `plan-authoring`, Plan-first HB-1)
 
 1. Read-only verify (`implementation-discovery`)
@@ -49,7 +53,7 @@ routing: {"signals":["plan","plan dài","nhiều phase","handoff","chia nhỏ","
 
 ## Path C — Execute handoff (`execution`, HB-2)
 
-Delegates to **`finish-to-completion`** — start `phase.preferred_tier` (default L0); respect `min_tier`, `allowed_tiers`, `force_tier`; escalate per [`capability-tier-routing.md`](references/capability-tier-routing.md). Model that planned **may** execute if tier allows.
+Delegates each phase to **`finish-to-completion`** — start `phase.preferred_tier` (default L0); respect `min_tier`, `allowed_tiers`, `force_tier`; escalate per [`capability-tier-routing.md`](references/capability-tier-routing.md). With `execution_mode=continuous`, return to the master state and start the next dependency-ready phase until `finalize`; with `phase`, handoff may stop at `SLICE_PASS`.
 
 ## Path D — Plan Reviewer (`plan-review`, HB-1)
 

@@ -44,15 +44,7 @@ Output: PAF READY + HANDOFF §8 cho P1. Chưa execute.
 
 Áp dụng khi execute (mode=execution). Mở rộng `finish-to-completion` execution loop bằng vòng tự-kiểm đối kháng.
 
-**Master progress state (chống miss ở cấp PLAN):** trước phase đầu, sinh `.agent/plans/<plan-id>/progress.md` liệt kê **MỌI** phase từ PAF §4 + mọi deliverable PAF §2 (đếm N). Có thể dùng `automation/planctl.ps1 -Action init/start` để tạo state mà không thay PAF:
-
-```md
-# Progress: <plan_id>  —  0/<N> phases
-- [ ] P0 <tên> | AC: 0/<a> | build-green: ? | status: pending
-- [ ] P1 <tên> | AC: 0/<b> | build-green: ? | status: pending
-...
-Deliverables §2: [ ] D1 [ ] D2 ...   (map D→phase để không rơi deliverable nào)
-```
+**Master progress state (chống miss ở cấp PLAN):** `.agent/plans/<plan-id>/state.json` do `planctl init/start/complete/finalize` quản lý là nguồn duy nhất. Nó giữ admission/plan/revision hash, execution mode và phase state; `progress.md`, report hoặc native task-list nếu sinh ra chỉ là derived view, tuyệt đối không ghi ngược làm nguồn trạng thái thứ hai.
 
 ```text
 FOR each phase P (theo thứ tự PAF):
@@ -67,17 +59,17 @@ FOR each phase P (theo thứ tự PAF):
         - fix → quay lại STEP 4
         - fail ≥2 lần cùng cách → ESCALATE tier (capability-tier-routing #5), KHÔNG lặp y hệt.
   7. IF build không xanh độc lập → chưa được sang phase sau (build-green invariant §4).
-  8. PROGRESS CHECKPOINT: cập nhật `progress.md` (P → done, k/N); emit 1 dòng
+  8. PROGRESS CHECKPOINT: chạy `planctl complete -Phase P -LedgerPath <path>` để ghi state + nhận `SLICE_PASS k/N`; emit 1 dòng
         `[PROGRESS k/N · P<done> · AC x/y · build-green]`; ghi trace .agent/trace.jsonl.
 UNTIL mọi phase DONE OR hard BLOCKED (must-not-self-decide).
 
 FINAL MISS-SWEEP (bắt buộc trước khi báo xong):
-  - kiểm tra `progress.md` còn `- [ ]` → CHƯA xong, quay lại phase đó.
-  - đối chiếu deliverable §2: mỗi D đã map vào ≥1 phase done? D nào chưa → phase bị rơi.
-  - chạy `automation/audit-slice-ledger.ps1` cho từng ledger của plan; không quét ledger của task khác.
+  - chạy `planctl finalize`; command tự kiểm tra phase/source/deliverable còn mở và re-audit từng ledger.
+  - finalize fail → quay lại phase được liệt kê; không tự diễn giải `SLICE_PASS` thành plan xong.
+  - chỉ output toàn-plan PASS khi command phát `PLAN_PASS`.
 ```
 
-Luật cứng: cấm sang phase mới khi phase hiện tại còn `[ ]`; cấm `PASS` không evidence; cấm lặp cùng cách sau 2 fail (đổi cách/đổi tier); cấm báo xong khi `progress.md` hoặc ledger của chính plan còn `[ ]` (machine gate nhận path cụ thể, không quét task khác).
+Luật cứng: cấm sang phase mới khi phase hiện tại còn `[ ]`; cấm bare `PASS` khi state chưa `DONE`; cấm lặp cùng cách sau 2 fail (đổi cách/đổi tier); continuous plan tự chạy phase kế đến `PLAN_PASS`, phase-by-phase được dừng ở `SLICE_PASS`.
 
 ---
 
@@ -96,12 +88,12 @@ Mục tiêu: owner bấm 1 lần, máy chạy hết chuỗi phase. Ba mức tự
 ```text
 AUTOPILOT execute PAF <plan_id>.
 Chạy TUẦN TỰ mọi phase theo Self-verify iterate loop (goal-autopilot Phần 2).
-Mỗi phase: implement → verify command thật → completion-ledger → build-green → sang phase kế.
+Mỗi phase: implement → verify command thật → completion-ledger → `planctl complete` (`SLICE_PASS`) → sang phase kế.
 KHÔNG hỏi lại giữa các phase. KHÔNG dừng ở "phần chính".
 Chỉ dừng khi: (a) mọi phase DONE + verify pass, hoặc (b) BLOCKED must-not-self-decide (credential/
 schema/permission/destructive) — ghi blocker 1 dòng vào open-questions.md rồi tiếp phase độc lập khác.
 Phase tag min_tier L2 mà model hiện là L0 → dừng phase đó, ghi cần-escalate, tiếp phase L0 khác.
-Cuối: báo N/N phase, evidence mỗi verify, danh sách BLOCKED (nếu có).
+Cuối: chạy `planctl finalize`; chỉ báo `PLAN_PASS` khi finalize thành công, nếu không báo BLOCKED/ENFORCEMENT_EXHAUSTED đúng state.
 ```
 
 **Điều kiện để mức B/C chạy ngon:** PAF phải qua ngân sách nguyên tử §4 (phase nhỏ, build-green, không hidden dep). Plan to/cục = autopilot sẽ hụt như chạy tay.

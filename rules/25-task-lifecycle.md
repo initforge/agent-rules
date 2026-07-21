@@ -20,6 +20,10 @@ description: Intake lane, risk gate, self-report trace, and advisory durable log
 
 **Pivot (HB-2):** switch to execution only on explicit pivot phrases (see `10-execution.md`).
 
+## Mega-plan admission (before first edit)
+
+Execution prompt tự vào admission khi có ≥2 heading `Phase/Step/P<n>`, ≥9 actionable item, >5 file, hoặc full-run intent (kể cả “one-pass”, “một task liên tục”, “no handoff”) + ≥3 item. Hook chỉ lưu ID/ordinal/SHA-256 ở `.agent/plans/_admission/<session-id>.json`; trước edit phải tạo PAF `Source coverage` bằng hash reference và chạy `planctl init`. Semantics đầy đủ thuộc `plan-and-handoff`, không nhân bản ở rule này.
+
 Lane (tiny/normal/high-risk) applies when mode=`execution` only.
 
 ## Plan roles and capability tier

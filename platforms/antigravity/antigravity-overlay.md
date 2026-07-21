@@ -18,4 +18,4 @@ description: Antigravity-only runtime delta.
 
 ## Hooks (unattended)
 
-- Stop `continue` khi `.agent/ledger/` còn `[ ]` · cài `./automation/11-install-runtime-hooks.sh` · chi tiết **`guides/04-maintenance-and-risks.md`**.
+- Stop `decision: continue` ưu tiên shared plan guard cho admitted continuous plan; legacy `.agent/ledger/` scan chỉ là fallback. `DONE`, evidence-backed `BLOCKED`, hoặc exhausted fail-open mới được thả · cài `./automation/11-install-runtime-hooks.sh`.

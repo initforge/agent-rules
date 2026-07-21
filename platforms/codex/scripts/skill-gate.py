@@ -28,6 +28,10 @@ try:
     from context_router import load_graph, route as graph_route, route_signature
 except ImportError:  # pragma: no cover - legacy installs use the old gate
     load_graph = graph_route = route_signature = None  # type: ignore[assignment]
+try:
+    from plan_guard import evaluate_stop as evaluate_plan_stop, write_admission
+except ImportError:  # pragma: no cover - staged rollout keeps older runtimes usable
+    evaluate_plan_stop = write_admission = None  # type: ignore[assignment]
 
 # Windows hook runner may use cp1252 pipes; Vietnamese inject must not crash.
 for _stream in (sys.stdout, sys.stderr):
@@ -276,6 +280,14 @@ def workspace_root() -> Path | None:
     if not raw:
         return None
     return Path(raw)
+
+
+def payload_workspace(payload: dict[str, Any]) -> Path | None:
+    for key in ("cwd", "workspaceRoot", "workspace_root", "projectDir", "project_dir"):
+        raw = payload.get(key)
+        if isinstance(raw, str) and raw.strip():
+            return Path(raw)
+    return workspace_root()
 
 
 def graph_decision(prompt: str) -> dict[str, Any] | None:
@@ -598,7 +610,17 @@ def handle_user_prompt_submit(payload: dict[str, Any]) -> None:
     sid = session_id_from_env(payload)
     st = load_state(sid)
     prompt = extract_prompt(payload)
+    admission_hint = ""
     if prompt:
+        root = payload_workspace(payload)
+        if write_admission is not None and root is not None:
+            admission = write_admission(root, sid, prompt)
+            if admission is not None:
+                st["plan_admission_path"] = str(admission)
+                admission_hint = (
+                    f"Mega-plan admitted at {admission}. Before edits, create a PAF with exact Source coverage "
+                    "and initialize planctl state. Continuous mode may stop only after PLAN_PASS."
+                )
         legacy_signals = detect_signals(prompt)
         legacy = {
             "signals": legacy_signals,
@@ -634,6 +656,8 @@ def handle_user_prompt_submit(payload: dict[str, Any]) -> None:
     hints: list[str] = []
     if "e2e" in st.get("signals", []):
         hints.append(e2e_session_reminder(st))
+    if admission_hint:
+        hints.append(admission_hint)
     if hints:
         inject_context(" ".join(h for h in hints if h), "UserPromptSubmit")
     else:
@@ -771,6 +795,20 @@ def handle_post_tool_use(payload: dict[str, Any]) -> None:
 def handle_stop(payload: dict[str, Any]) -> None:
     sid = session_id_from_env(payload)
     st = load_state(sid)
+    root = payload_workspace(payload)
+    if evaluate_plan_stop is not None and root is not None:
+        decision = evaluate_plan_stop(root, sid, st)
+        save_state(st)
+        if decision.get("action") == "continue":
+            reason = _posix_paths_in_text(str(decision.get("reason") or "Continue active plan."))
+            if hook_platform() == "codex":
+                print(json.dumps({"continue": False, "stopReason": reason, "systemMessage": reason}, ensure_ascii=False))
+            else:
+                print(json.dumps({"decision": "continue", "reason": reason}, ensure_ascii=False))
+            return
+        if decision.get("warning"):
+            inject_context(str(decision.get("reason") or "Plan enforcement exhausted; PLAN_PASS is forbidden."), "Stop")
+            return
     if st.get("harness_task"):
         log = RUNTIME_HOME / "skill-state" / "harness-reminders.log"
         try:

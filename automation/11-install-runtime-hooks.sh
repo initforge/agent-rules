@@ -111,9 +111,11 @@ copy_scripts "$ROOT/platforms/codex/scripts" "$CODEX_HOME/scripts"
 if [ -f "$ROOT/platforms/shared/scripts/context-router.py" ]; then
   cp "$ROOT/platforms/shared/scripts/context-router.py" "$CODEX_HOME/scripts/context-router.py"
 fi
-if [ -f "$ROOT/platforms/shared/scripts/context_router.py" ]; then
-  cp "$ROOT/platforms/shared/scripts/context_router.py" "$CODEX_HOME/scripts/context_router.py"
-fi
+for shared_script in context_router.py plan_guard.py; do
+  if [ -f "$ROOT/platforms/shared/scripts/$shared_script" ]; then
+    cp "$ROOT/platforms/shared/scripts/$shared_script" "$CODEX_HOME/scripts/$shared_script"
+  fi
+done
 CODEX_HOOK_HOME="$(to_hook_path "$CODEX_HOME")"
 AGY_HOOK_HOME="$(to_hook_path "$ANTIGRAVITY_HOME")"
 subst_file \
@@ -127,9 +129,11 @@ copy_scripts "$ROOT/platforms/antigravity/scripts" "$ANTIGRAVITY_HOME/scripts"
 if [ -f "$ROOT/platforms/shared/scripts/context-router.py" ]; then
   cp "$ROOT/platforms/shared/scripts/context-router.py" "$ANTIGRAVITY_HOME/scripts/context-router.py"
 fi
-if [ -f "$ROOT/platforms/shared/scripts/context_router.py" ]; then
-  cp "$ROOT/platforms/shared/scripts/context_router.py" "$ANTIGRAVITY_HOME/scripts/context_router.py"
-fi
+for shared_script in context_router.py plan_guard.py; do
+  if [ -f "$ROOT/platforms/shared/scripts/$shared_script" ]; then
+    cp "$ROOT/platforms/shared/scripts/$shared_script" "$ANTIGRAVITY_HOME/scripts/$shared_script"
+  fi
+done
 # Prefer template that invokes Python directly (no bash path fragility on Windows).
 if [ -f "$ROOT/platforms/antigravity/hooks.json.template" ]; then
   # Rewrite template commands to python absolute if template still uses bash wrapper.
@@ -195,18 +199,22 @@ if [ -d "$GROK_HOME" ]; then
   if [ -f "$ROOT/platforms/shared/scripts/context-router.py" ]; then
     cp "$ROOT/platforms/shared/scripts/context-router.py" "$GROK_HOME/scripts/context-router.py"
   fi
-  if [ -f "$ROOT/platforms/shared/scripts/context_router.py" ]; then
-    cp "$ROOT/platforms/shared/scripts/context_router.py" "$GROK_HOME/scripts/context_router.py"
-  fi
+  for shared_script in context_router.py plan_guard.py; do
+    if [ -f "$ROOT/platforms/shared/scripts/$shared_script" ]; then
+      cp "$ROOT/platforms/shared/scripts/$shared_script" "$GROK_HOME/scripts/$shared_script"
+    fi
+  done
   # Live names Grok skill-orchestrator expects
   cp "$CODEX_HOME/scripts/skill-gate.py" "$GROK_HOME/hooks/bin/grok-skill-gate.py"
   cp "$CODEX_HOME/scripts/skill-gate.sh" "$GROK_HOME/hooks/bin/grok-skill-gate.sh"
   if [ -f "$ROOT/platforms/shared/scripts/context-router.py" ]; then
     cp "$ROOT/platforms/shared/scripts/context-router.py" "$GROK_HOME/hooks/bin/context-router.py"
   fi
-  if [ -f "$ROOT/platforms/shared/scripts/context_router.py" ]; then
-    cp "$ROOT/platforms/shared/scripts/context_router.py" "$GROK_HOME/hooks/bin/context_router.py"
-  fi
+  for shared_script in context_router.py plan_guard.py; do
+    if [ -f "$ROOT/platforms/shared/scripts/$shared_script" ]; then
+      cp "$ROOT/platforms/shared/scripts/$shared_script" "$GROK_HOME/hooks/bin/$shared_script"
+    fi
+  done
   # Ensure sh delegates to same-dir .py with resolve_python (already in skill-gate.sh)
   # Patch shebang target name inside bin wrapper for local py name
   cat > "$GROK_HOME/hooks/bin/grok-skill-gate.sh" <<'EOS'
@@ -362,6 +370,19 @@ fi
 
 echo "[11] Smoke tests"
 FAIL=0
+
+for required_guard in \
+  "$CODEX_HOME/scripts/plan_guard.py" \
+  "$GROK_HOME/scripts/plan_guard.py" \
+  "$GROK_HOME/hooks/bin/plan_guard.py" \
+  "$ANTIGRAVITY_HOME/scripts/plan_guard.py"; do
+  if [ -f "$required_guard" ]; then
+    echo "  shared plan guard: OK ($required_guard)"
+  else
+    echo "  shared plan guard: FAIL ($required_guard)" >&2
+    FAIL=1
+  fi
+done
 
 test_pipe() {
   local label="$1" cmd="$2" allow_silent="${3:-0}"

@@ -27,7 +27,7 @@ The structured `routing` object in each capability frontmatter is the runtime tr
 
 - Trigger mới khi execute → pause đúng step, chạy capability phụ bounded, rồi quay lại primary; không reset scope/finish loop.
 - Chỉ một primary + minimum supporting set; không biến mid-flow thành re-plan. Phụ fail/stall 2 lần → ghi blocker, tiếp tục primary hoặc `BLOCKED`.
-- Owner interjection: phân loại lại mode/lane; mở rộng scope → `REVISE`, chỉ đạo nhỏ → nhận vào step hiện tại; giữ `.agent/plans/<plan-id>/progress.md`.
+- Owner interjection: phân loại lại mode/lane; mở rộng scope → `REVISE`, chỉ đạo nhỏ → nhận vào step hiện tại; giữ `.agent/plans/<plan-id>/state.json` làm canonical state (report/progress chỉ là derived view).
 
 ## Capability precedence (project-specific routers)
 

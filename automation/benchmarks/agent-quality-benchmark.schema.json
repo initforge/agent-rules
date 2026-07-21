@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/agent-quality-benchmark.schema.json",
+  "type": "object",
+  "required": ["version", "description", "score_scale", "decision_thresholds", "cases"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "description": { "type": "string", "minLength": 1 },
+    "score_scale": {
+      "type": "object",
+      "required": ["minimum", "maximum"],
+      "properties": {
+        "minimum": { "const": 0 },
+        "maximum": { "const": 4 }
+      },
+      "additionalProperties": false
+    },
+    "decision_thresholds": {
+      "type": "object",
+      "required": ["minimum_comparable_cases", "minimum_comparable_triplets"],
+      "properties": {
+        "minimum_comparable_cases": { "type": "integer", "minimum": 2 },
+        "minimum_comparable_triplets": { "type": "integer", "minimum": 3 }
+      },
+      "additionalProperties": false
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 30,
+      "items": {
+        "type": "object",
+        "required": ["id", "class", "evaluator", "prompt", "workspace"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$" },
+          "class": { "enum": ["mode", "routing", "scope", "safety", "5fedu", "browser", "harness", "live_task"] },
+          "evaluator": { "enum": ["deterministic", "live"] },
+          "prompt": { "type": "string", "minLength": 1 },
+          "workspace": {
+            "type": "object",
+            "required": ["kind", "has_5fedu_context"],
+            "properties": {
+              "kind": { "enum": ["harness", "generic", "5fedu-app"] },
+              "has_5fedu_context": { "type": "boolean" },
+              "fixture": { "type": "string" }
+            },
+            "additionalProperties": false
+          },
+          "expected": {
+            "type": "object",
+            "required": ["primary", "required_skills", "forbidden_skills"],
+            "properties": {
+              "primary": { "type": ["string", "null"] },
+              "required_skills": { "type": "array", "items": { "type": "string" } },
+              "supporting_skills": { "type": "array", "items": { "type": "string" } },
+              "forbidden_skills": { "type": "array", "items": { "type": "string" } },
+              "context_nodes": { "type": "array", "items": { "type": "string" } },
+              "intent_signals": { "type": "array", "items": { "type": "string" } }
+            },
+            "additionalProperties": false
+          },
+          "required_behavior": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+          "scoring_dimensions": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "enum": ["scope", "correctness", "safety", "verification", "communication"] }
+          },
+          "variants": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "enum": ["baseline", "core", "full"] }
+          },
+          "provenance": { "type": "string", "minLength": 1 }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "evaluator": { "const": "deterministic" } } },
+            "then": { "required": ["expected"], "not": { "required": ["required_behavior"] } }
+          },
+          {
+            "if": { "properties": { "evaluator": { "const": "live" } } },
+            "then": { "required": ["required_behavior", "scoring_dimensions", "variants"] }
+          }
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

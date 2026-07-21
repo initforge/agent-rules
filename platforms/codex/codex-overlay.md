@@ -12,3 +12,4 @@ description: Codex-only runtime delta.
 - Exception: owner yêu cầu deep/manual/UI QA → combo `qa-skills` + `browser-qa` (Playwright MCP + Chrome DevTools); vẫn cấm auto-browser mọi task.
 - Treat mojibake in Vietnamese or other Unicode text as a harness defect: read/write UTF-8, repair corrupted text at the canonical source, and verify before reporting success.
 - Global runtime lives under `$CODEX_HOME` or `~/.codex`; project `.codex/` contains only project config/pointers.
+- Native Stop hook conditionally returns `continue=false` + `stopReason` for admitted continuous plans until `state.json` is `DONE`; three no-progress stops fail-open as `ENFORCEMENT_EXHAUSTED`, never as PASS.
