@@ -99,7 +99,7 @@ $legacyLifecycle = Join-Path $lifecycleRoot "lifecycle-v1.md"
 # against a proof-bearing v2 plan.
 Assert-Fails @{ Action = "init"; Root = $Root; PlanPath = $legacyLifecycle; AdmissionPath = $admissionPath; ExecutionMode = "continuous" } "paf-schema-v2-required"
 $strictBody = $lifecycleBody -replace '(?m)^plan_id:', "schema_version: 2`r`nplan_id:"
-  $runtimeCheck = 'pwsh -NoProfile -Command "if (Get-Command pwsh,powershell -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }"'
+  $runtimeCheck = 'pwsh -NoProfile -Command "Get-Date | Out-Null"'
 $strictBody = $strictBody.Replace('pwsh -NoProfile -Command "Write-Output P1"', $runtimeCheck)
 $strictBody = $strictBody.Replace('pwsh -NoProfile -Command "Write-Output P2"', $runtimeCheck)
 $strictBody = $strictBody.Replace('| expected: P1', '| expected: exit=0').Replace('| expected: P2', '| expected: exit=0')
