@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import argparse
 import os
+import subprocess
 import tempfile
+from unittest.mock import patch
 from pathlib import Path
 
 from agent_quality import DEFAULT_CORPUS, load_json
@@ -15,6 +17,7 @@ from live_benchmark_runner import (
     require_environment_credential,
     require_native_artifact_path,
     resolve_variants,
+    run_one,
     self_test as runner_self_test,
 )
 from live_workspace_verifier import DEFAULT_FIXTURES, self_test as verifier_self_test
@@ -67,7 +70,26 @@ def contracts() -> None:
     runner_self_test()
     verifier_self_test()
     native_contract()
+    timeout_contract()
     print(f"PASS: live adapter contracts ({len(runnable)} executable fixture oracles)")
+
+
+def timeout_contract() -> None:
+    fixtures = load_json(DEFAULT_FIXTURES)["fixtures"]
+    case = next(item for item in load_json(DEFAULT_CORPUS)["cases"] if item["id"] == "live-advisory-no-mutation")
+    with tempfile.TemporaryDirectory(prefix="runner-timeout-") as holder:
+        real_run = subprocess.run
+        def timeout_codex(command, *args, **kwargs):
+            if "exec" in command:
+                raise subprocess.TimeoutExpired(command, 1)
+            return real_run(command, *args, **kwargs)
+        with patch("live_benchmark_runner.subprocess.run", side_effect=timeout_codex):
+            result = run_one(
+                "native", "timeout-contract", case, "full", fixtures["read-only-repo"],
+                Path(holder) / "runtime", Path(holder) / "runs", "test-model", "medium",
+            )
+        if result["termination"] != "timeout" or result["outcome"] != "FAIL":
+            raise AssertionError(f"timeout was not preserved as FAIL evidence: {result}")
 
 
 def native_contract() -> None:

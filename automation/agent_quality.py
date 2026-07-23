@@ -99,7 +99,7 @@ def _fallback_validate(instance: Any, schema_name: str) -> None:
         allowed = required | {
             "model_version", "duration_seconds", "input_tokens", "output_tokens",
             "cached_input_tokens", "uncached_input_tokens", "reasoning_output_tokens",
-            "tool_calls", "turn_count", "tool_output_chars", "max_input_tokens", "notes",
+            "tool_calls", "turn_count", "tool_output_chars", "max_input_tokens", "termination", "notes",
         }
         _require_keys(instance, required, "live result")
         unknown = sorted(set(instance) - allowed)

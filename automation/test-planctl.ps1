@@ -44,10 +44,13 @@ if ($LASTEXITCODE -ne 0) { throw "Valid fixture unexpectedly failed" }
 & $planctl -Action init -Root $Root -PlanPath $valid | Out-Host
 if ($LASTEXITCODE -ne 0) { throw "Valid fixture state init unexpectedly failed" }
 & $planctl -Action handoff -Root $Root -PlanPath $valid -Phase P1 | Out-Host
+& $planctl -Action handoff -Root $Root -PlanPath $valid -HandoffMode executor | Out-Host
 if ($LASTEXITCODE -ne 0) { throw "Handoff generation unexpectedly failed" }
 & $planctl -Action report -Root $Root -PlanPath $valid | Out-Host
 if ($LASTEXITCODE -ne 0) { throw "Report generation unexpectedly failed" }
 $fixtureState = Join-Path $Root ".agent\plans\fixture-valid-20260718"
+if (-not (Test-Path (Join-Path $fixtureState "EXECUTOR-HANDOFF.md"))) { throw "Executor handoff was not generated" }
+if ((Get-Content (Join-Path $fixtureState "EXECUTOR-HANDOFF.md") -Raw) -notmatch "Role: executor") { throw "Executor handoff role is missing" }
 $fixtureReport = Join-Path $fixtureState "REPORT.md"
 if (-not (Test-Path $fixtureReport) -or (Get-Content -Raw -Encoding UTF8 $fixtureReport) -match "<mark>") { throw "Plain report renderer regression" }
 & $planctl -Action validate -Root $Root -PlanPath $invalid -Quiet | Out-Null

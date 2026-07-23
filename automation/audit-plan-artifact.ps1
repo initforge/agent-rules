@@ -58,6 +58,7 @@ $LifePath = Join-Path $Root "rules\25-task-lifecycle.md"
 $AntigravityOverlay = Join-Path $Root "platforms\antigravity\antigravity-overlay.md"
 $UiDetail = Join-Path $Root "projects\5fedu\domains\references\ui-delivery-detail.md"
 $PlanCtl = Join-Path $Root "automation\planctl.ps1"
+$PlanCtlImplementation = Join-Path $Root "automation\planctl.legacy.ps1"
 $LedgerAudit = Join-Path $Root "automation\audit-slice-ledger.ps1"
 
 foreach ($F in @($TierRef, $PafTemplate, $PafExample)) {
@@ -66,6 +67,7 @@ foreach ($F in @($TierRef, $PafTemplate, $PafExample)) {
 foreach ($F in @($PlanCtl, $LedgerAudit)) {
   if (-not (Test-Path $F)) { $Problems.Add("Missing machine gate: $F") }
 }
+if (-not (Test-Path $PlanCtlImplementation)) { $Problems.Add("Missing planctl implementation: $PlanCtlImplementation") }
 
 Test-FileContains $SkillPath @("Plan Architect", "Plan Scribe", "Plan Reviewer", "PAF", "HANDOFF", "decision tree", "Source coverage", "PLAN_PASS") | Out-Null
 Test-FileContains $SkillPath @("Path D") | Out-Null
@@ -74,7 +76,7 @@ Test-FileContains $LifePath @("Plan roles", "plan_id", "friction") | Out-Null
 Test-FileContains $AntigravityOverlay @("L0", "researcher", "capability-tier-routing") | Out-Null
 Test-FileContains $PafTemplate @("Scope lock", "Source coverage", "DERIVED(reason)", "Context routing", "Phases", "Known-unknowns", "Plan QA", "HANDOFF", "Revision protocol", "preferred_tier", "min_tier", "allowed_tiers") | Out-Null
 Test-FileContains $UiDetail @("plan-artifact-template") | Out-Null
-Test-FileContains $PlanCtl @("semantic validation", "compiled.json", "admission_id", "contract_hash", "implemented", "verify-batch", "verification_strategy", "reference_contract", "SLICE_PASS", "PLAN_PASS", "finalize", "handoff") | Out-Null
+Test-FileContains $PlanCtlImplementation @("semantic validation", "compiled.json", "admission_id", "contract_hash", "implemented", "verify-batch", "verification_strategy", "reference_contract", "SLICE_PASS", "PLAN_PASS", "finalize", "handoff") | Out-Null
 Test-FileContains $LedgerAudit @("Scope IN", "evidence", "open_ac=0") | Out-Null
 
 # Path C delegate - no long execute loop in plan-and-handoff

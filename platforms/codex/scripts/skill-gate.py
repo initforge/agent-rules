@@ -256,10 +256,15 @@ def allow_with_hint(hint: str | None, event: str = "PreToolUse") -> None:
     )
 
 
-def efficiency_policy() -> dict[str, Any]:
+def efficiency_policy(profile: str = "normal") -> dict[str, Any]:
     policy: dict[str, Any] = {
         "mode": "active",
-        "soft_checkpoint": {"tool_calls": 24, "tool_output_chars": 120000, "repeat_after_tool_calls": 12, "repeat_after_output_chars": 60000},
+        "default_profile": "normal",
+        "profiles": {
+            "tiny": {"checkpoint": False},
+            "normal": {"tool_calls": 20, "tool_output_chars": 60000, "repeat_after_tool_calls": 10, "repeat_after_output_chars": 30000},
+            "continuous": {"tool_calls": 12, "tool_output_chars": 40000, "repeat_after_tool_calls": 8, "repeat_after_output_chars": 20000},
+        },
         "hard_stop": False,
     }
     if EFFICIENCY_POLICY_PATH.exists():
@@ -273,10 +278,15 @@ def efficiency_policy() -> dict[str, Any]:
     if override in {"off", "shadow", "active"}:
         policy["mode"] = override
     policy["hard_stop"] = False  # A checkpoint may never stop work or remove tools.
+    selected = os.environ.get("AGENT_RULES_EFFICIENCY_PROFILE", profile).strip().lower()
+    if selected not in policy.get("profiles", {}):
+        selected = str(policy.get("default_profile", "normal"))
+    policy["profile"] = selected
+    policy["soft_checkpoint"] = policy["profiles"].get(selected, {})
     return policy
 
 
-def reset_efficiency(state: dict[str, Any], reason: str) -> None:
+def reset_efficiency(state: dict[str, Any], reason: str, profile: str = "normal") -> None:
     state["efficiency"] = {
         "tool_calls": 0,
         "tool_output_chars": 0,
@@ -284,15 +294,18 @@ def reset_efficiency(state: dict[str, Any], reason: str) -> None:
         "last_checkpoint_tool_calls": 0,
         "last_checkpoint_output_chars": 0,
         "last_reset_reason": reason,
+        "profile": profile,
     }
 
 
 def efficiency_checkpoint(state: dict[str, Any]) -> str | None:
-    policy = efficiency_policy()
+    current = state.get("efficiency", {})
+    policy = efficiency_policy(str(current.get("profile", "normal")))
     if policy.get("mode") != "active":
         return None
-    current = state.get("efficiency", {})
     checkpoint = policy.get("soft_checkpoint", {})
+    if checkpoint.get("checkpoint") is False:
+        return None
     calls, output_chars = int(current.get("tool_calls", 0)), int(current.get("tool_output_chars", 0))
     emitted = int(current.get("checkpoints_emitted", 0))
     last_calls, last_output = int(current.get("last_checkpoint_tool_calls", 0)), int(current.get("last_checkpoint_output_chars", 0))
@@ -307,6 +320,16 @@ def efficiency_checkpoint(state: dict[str, Any]) -> str | None:
     state["efficiency"] = current
     return ("[Efficiency checkpoint] Continue the task without reducing verification. Update the current phase briefly; "
             "read only targeted files or log excerpts; batch independent checks; keep future command output concise.")
+
+
+def select_efficiency_profile(prompt: str, signals: list[str]) -> str:
+    """Choose only the checkpoint cadence; this never changes safety or verification."""
+    lower = prompt.lower()
+    if any(signal in {"plan", "mega_plan"} for signal in signals):
+        return "continuous"
+    if re.search(r"\b(typo|one[- ]file|một file|mot file|tiny)\b", lower):
+        return "tiny"
+    return "normal"
 
 
 def inject_context(message: str, event: str) -> None:
@@ -722,6 +745,7 @@ def handle_user_prompt_submit(payload: dict[str, Any]) -> None:
         st["signals"] = signals
         st["stack"] = stack
         st["primary"] = primary
+        reset_efficiency(st, "prompt_profile", select_efficiency_profile(prompt, signals))
         st["harness_task"] = "harness" in signals or "context_evolution" in signals
         st["harness"]["task"] = st["harness_task"]
         e2e = st["e2e"]

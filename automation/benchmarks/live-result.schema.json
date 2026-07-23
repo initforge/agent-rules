@@ -15,6 +15,7 @@
     "tools_available": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
     "started_at": { "type": "string", "format": "date-time" },
     "finished_at": { "type": "string", "format": "date-time" },
+    "termination": { "enum": ["completed", "timeout", "cancelled", "runner_error"] },
     "outcome": { "enum": ["PASS", "PARTIAL", "BLOCKED", "FAIL", "NOT_RUN"] },
     "scores": {
       "type": "object",

@@ -41,6 +41,18 @@ def main() -> int:
     if efficiency["efficiency"]["tool_calls"] != 0 or efficiency["efficiency"]["last_reset_reason"] != "unit_test":
         print("FAIL: efficiency checkpoint did not reset at phase boundary")
         return 1
+    tiny = mod.default_state("efficiency-tiny")
+    mod.reset_efficiency(tiny, "unit_test", "tiny")
+    tiny["efficiency"].update({"tool_calls": 999, "tool_output_chars": 999999})
+    if mod.efficiency_checkpoint(tiny) is not None:
+        print("FAIL: tiny work emitted an unnecessary checkpoint")
+        return 1
+    continuous = mod.default_state("efficiency-continuous")
+    mod.reset_efficiency(continuous, "unit_test", "continuous")
+    continuous["efficiency"].update({"tool_calls": 12, "tool_output_chars": 0})
+    if mod.efficiency_checkpoint(continuous) is None:
+        print("FAIL: continuous plan did not checkpoint early")
+        return 1
     if GRAPH.is_file():
         sys.path.insert(0, str(ROOT / "platforms" / "shared" / "scripts"))
         from context_router import load_graph, route  # noqa: E402

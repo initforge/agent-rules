@@ -1,11 +1,21 @@
 {
   "version": 1,
   "mode": "active",
-  "soft_checkpoint": {
-    "tool_calls": 24,
-    "tool_output_chars": 120000,
-    "repeat_after_tool_calls": 12,
-    "repeat_after_output_chars": 60000
+  "default_profile": "normal",
+  "profiles": {
+    "tiny": { "checkpoint": false },
+    "normal": {
+      "tool_calls": 20,
+      "tool_output_chars": 60000,
+      "repeat_after_tool_calls": 10,
+      "repeat_after_output_chars": 30000
+    },
+    "continuous": {
+      "tool_calls": 12,
+      "tool_output_chars": 40000,
+      "repeat_after_tool_calls": 8,
+      "repeat_after_output_chars": 20000
+    }
   },
   "hard_stop": false
 }
