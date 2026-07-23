@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "mode": "active",
+  "soft_checkpoint": {
+    "tool_calls": 24,
+    "tool_output_chars": 120000,
+    "repeat_after_tool_calls": 12,
+    "repeat_after_output_chars": 60000
+  },
+  "hard_stop": false
+}

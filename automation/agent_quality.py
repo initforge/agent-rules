@@ -98,7 +98,8 @@ def _fallback_validate(instance: Any, schema_name: str) -> None:
         }
         allowed = required | {
             "model_version", "duration_seconds", "input_tokens", "output_tokens",
-            "tool_calls", "notes",
+            "cached_input_tokens", "uncached_input_tokens", "reasoning_output_tokens",
+            "tool_calls", "turn_count", "tool_output_chars", "max_input_tokens", "notes",
         }
         _require_keys(instance, required, "live result")
         unknown = sorted(set(instance) - allowed)
@@ -318,6 +319,9 @@ def aggregate_quality_report(
     for variant in ("baseline", "core", "full"):
         selected = [result for result in empirical_results if result["variant"] == variant]
         score_values = [score for result in selected for score in result["scores"].values()]
+        def average_metric(name: str) -> float | None:
+            values = [float(result[name]) for result in selected if isinstance(result.get(name), (int, float))]
+            return round(sum(values) / len(values), 3) if values else None
         by_variant[variant] = {
             "runs": len(selected),
             "pass": sum(result["outcome"] == "PASS" for result in selected),
@@ -326,9 +330,14 @@ def aggregate_quality_report(
             "fail": sum(result["outcome"] == "FAIL" for result in selected),
             "owner_corrections": sum(bool(result["owner_correction"]) for result in selected),
             "average_score": round(sum(score_values) / len(score_values), 3) if score_values else None,
-            "average_duration_seconds": round(
-                sum(float(result.get("duration_seconds", 0)) for result in selected) / len(selected), 3
-            ) if selected else None,
+            "average_duration_seconds": average_metric("duration_seconds"),
+            "average_input_tokens": average_metric("input_tokens"),
+            "average_cached_input_tokens": average_metric("cached_input_tokens"),
+            "average_uncached_input_tokens": average_metric("uncached_input_tokens"),
+            "average_output_tokens": average_metric("output_tokens"),
+            "average_tool_calls": average_metric("tool_calls"),
+            "average_turn_count": average_metric("turn_count"),
+            "average_tool_output_chars": average_metric("tool_output_chars"),
         }
 
     comparable_groups = 0
@@ -424,6 +433,20 @@ def render_markdown(report: dict[str, Any]) -> str:
         lines.append(
             f"| {variant} | {values['runs']} | {values['pass']} | {values['partial']} | "
             f"{values['blocked']} | {values['fail']} | {values['owner_corrections']} | {average} |"
+        )
+    lines.extend([
+        "", "## Efficiency (average per empirical run)", "",
+        "| Variant | Input | Cached input | Uncached input | Output | Tool calls | Turns | Tool output (chars) |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|",
+    ])
+    for variant, values in report["live"]["by_variant"].items():
+        def show(name: str) -> str:
+            value = values.get(name)
+            return "—" if value is None else f"{value:,.0f}"
+        lines.append(
+            f"| {variant} | {show('average_input_tokens')} | {show('average_cached_input_tokens')} | "
+            f"{show('average_uncached_input_tokens')} | {show('average_output_tokens')} | "
+            f"{show('average_tool_calls')} | {show('average_turn_count')} | {show('average_tool_output_chars')} |"
         )
     lines.extend(["", "## Friction", ""])
     if report["friction"]:

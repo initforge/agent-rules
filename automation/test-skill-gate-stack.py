@@ -31,6 +31,16 @@ def main() -> int:
             return 1
 
     mod = load_gate()
+    efficiency = mod.default_state("efficiency-test")
+    efficiency["efficiency"].update({"tool_calls": 24, "tool_output_chars": 0})
+    hint = mod.efficiency_checkpoint(efficiency)
+    if not hint or "without reducing verification" not in hint:
+        print(f"FAIL: efficiency checkpoint missing or unsafe: {hint}")
+        return 1
+    mod.reset_efficiency(efficiency, "unit_test")
+    if efficiency["efficiency"]["tool_calls"] != 0 or efficiency["efficiency"]["last_reset_reason"] != "unit_test":
+        print("FAIL: efficiency checkpoint did not reset at phase boundary")
+        return 1
     if GRAPH.is_file():
         sys.path.insert(0, str(ROOT / "platforms" / "shared" / "scripts"))
         from context_router import load_graph, route  # noqa: E402

@@ -117,9 +117,13 @@ def report_only(output_dir: str | None, routing_report: dict | None = None) -> N
     for record in empirical:
         record["evidence_kind"] = "empirical"
         record["platform"] = "codex"
+        record.update({"input_tokens": 100, "cached_input_tokens": 60, "uncached_input_tokens": 40,
+                       "output_tokens": 10, "tool_calls": 3, "turn_count": 2, "tool_output_chars": 20})
     empirical_report = aggregate_quality_report(corpus, routing_report, empirical, trace)
     if empirical_report["recommendation"] != "INSUFFICIENT_EVIDENCE" or empirical_report["live"]["comparable_triplets"] != 1:
         raise AssertionError("small empirical sample was not recognized as insufficient")
+    if empirical_report["live"]["by_variant"]["baseline"]["average_uncached_input_tokens"] != 40:
+        raise AssertionError("token efficiency metrics were not aggregated")
     empirical[-1]["outcome"] = "FAIL"
     failed_report = aggregate_quality_report(corpus, routing_report, empirical, trace)
     if failed_report["recommendation"] != "INVESTIGATE":

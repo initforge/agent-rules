@@ -38,7 +38,7 @@ foreach ($Platform in $Platforms) {
   if (Test-Path -LiteralPath $ContextGraphPath) {
     Copy-Item -LiteralPath $ContextGraphPath -Destination (Join-Path $Target "context-graph.json") -Force
   }
-  foreach ($RouteContract in @("context-route-cases.json", "context-route-cases.schema.json")) {
+  foreach ($RouteContract in @("context-route-cases.json", "context-route-cases.schema.json", "efficiency-policy.json")) {
     $RouteContractPath = Join-Path $Root "automation\$RouteContract"
     if (Test-Path -LiteralPath $RouteContractPath) {
       Copy-Item -LiteralPath $RouteContractPath -Destination (Join-Path $Target $RouteContract) -Force

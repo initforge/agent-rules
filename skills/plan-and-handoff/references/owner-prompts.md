@@ -45,7 +45,7 @@ Skills: finish-to-completion + domain skills
 Execute: Phase P_N ONLY — HANDOFF below:
 [paste §8]
 
-Start preferred_tier L0; respect min_tier and allowed_tiers; escalate per capability-tier-routing.md
+Start preferred_tier L0; respect min_tier and allowed_tiers; read only this current HANDOFF plus targeted evidence; escalate per capability-tier-routing.md
 Report: tier_used | escalation_reason if any
 ```
 

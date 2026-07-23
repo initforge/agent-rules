@@ -45,9 +45,15 @@
     "owner_correction": { "type": "boolean" },
     "friction": { "type": "array", "items": { "type": "string" } },
     "duration_seconds": { "type": "number", "minimum": 0 },
-    "input_tokens": { "type": "integer", "minimum": 0 },
-    "output_tokens": { "type": "integer", "minimum": 0 },
-    "tool_calls": { "type": "integer", "minimum": 0 },
+    "input_tokens": { "type": ["integer", "null"], "minimum": 0 },
+    "cached_input_tokens": { "type": ["integer", "null"], "minimum": 0 },
+    "uncached_input_tokens": { "type": ["integer", "null"], "minimum": 0 },
+    "output_tokens": { "type": ["integer", "null"], "minimum": 0 },
+    "reasoning_output_tokens": { "type": ["integer", "null"], "minimum": 0 },
+    "tool_calls": { "type": ["integer", "null"], "minimum": 0 },
+    "turn_count": { "type": ["integer", "null"], "minimum": 0 },
+    "tool_output_chars": { "type": ["integer", "null"], "minimum": 0 },
+    "max_input_tokens": { "type": ["integer", "null"], "minimum": 0 },
     "notes": { "type": "string" }
   },
   "additionalProperties": false

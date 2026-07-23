@@ -60,7 +60,7 @@ FOR each phase P (theo thứ tự PAF):
         - fail ≥2 lần cùng cách → ESCALATE tier (capability-tier-routing #5), KHÔNG lặp y hệt.
   7. IF build không xanh độc lập → chưa được sang phase sau (build-green invariant §4).
   8. PROGRESS CHECKPOINT: chạy `planctl complete -Phase P -LedgerPath <path>` để ghi state + nhận `SLICE_PASS k/N`; emit 1 dòng
-        `[PROGRESS k/N · P<done> · AC x/y · build-green]`; ghi trace .agent/trace.jsonl.
+        `[PROGRESS k/N · P<done> · AC x/y · build-green]`; ghi trace .agent/trace.jsonl. Sau đó chỉ nạp HANDOFF/evidence cần cho phase kế; checkpoint không cho phép bớt verify hay dừng task.
 UNTIL mọi phase DONE OR hard BLOCKED (must-not-self-decide).
 
 FINAL MISS-SWEEP (bắt buộc trước khi báo xong):

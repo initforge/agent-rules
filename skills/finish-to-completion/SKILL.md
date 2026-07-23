@@ -105,7 +105,8 @@ Fail bất kỳ → **continue working**, không respond final.
 
 ## Token / Multi-turn
 
-- Same session: keep calling tools until PASS/BLOCKED.
+- Keep one owner task until PASS/BLOCKED. Long work may use internal phase checkpoints: update state/HANDOFF briefly, then continue without asking the owner to relay work.
+- At a checkpoint, read only the current HANDOFF and targeted evidence; batch independent checks and keep successful tool output concise. A checkpoint never lowers scope, safety, or verification.
 - Hard pause only: `[PAUSED — X/N — next: <item>]`
 - "tiếp tục"/"làm đi": resume item, no recap.
 

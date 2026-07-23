@@ -91,6 +91,39 @@ def build_command(
     ]
 
 
+def event_telemetry(events_path: Path) -> dict[str, int | None]:
+    """Extract compact cost evidence from Codex JSONL without storing prompts."""
+    totals = {"input_tokens": 0, "cached_input_tokens": 0, "output_tokens": 0, "reasoning_output_tokens": 0}
+    turn_count = tool_calls = tool_output_chars = max_input_tokens = 0
+    usage_seen = False
+    if not events_path.exists():
+        return {**{key: None for key in totals}, "uncached_input_tokens": None, "turn_count": 0, "tool_calls": 0, "tool_output_chars": 0, "max_input_tokens": None}
+    for line in events_path.read_text(encoding="utf-8", errors="replace").splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if event.get("type") == "turn.completed":
+            usage = event.get("usage") or {}
+            if isinstance(usage, dict):
+                usage_seen = True
+                turn_count += 1
+                for key in totals:
+                    value = usage.get(key, 0)
+                    totals[key] += int(value) if isinstance(value, int) else 0
+                value = usage.get("input_tokens", 0)
+                max_input_tokens = max(max_input_tokens, int(value) if isinstance(value, int) else 0)
+        item = event.get("item") or {}
+        if event.get("type") == "item.completed" and isinstance(item, dict) and item.get("type") == "command_execution":
+            tool_calls += 1
+            tool_output_chars += len(str(item.get("aggregated_output", "")))
+    if not usage_seen:
+        totals = {key: None for key in totals}
+        max_input_tokens = None
+    uncached = None if totals["input_tokens"] is None or totals["cached_input_tokens"] is None else totals["input_tokens"] - totals["cached_input_tokens"]
+    return {**totals, "uncached_input_tokens": uncached, "turn_count": turn_count, "tool_calls": tool_calls, "tool_output_chars": tool_output_chars, "max_input_tokens": max_input_tokens}
+
+
 def run_one(
     mode: str,
     run_id: str,
@@ -152,6 +185,7 @@ def run_one(
             "type": "runtime", "label": "codex exec", "status": "PASS", "ref": "exit=0; events.jsonl"
         })
     finished_at = utc_now()
+    telemetry = event_telemetry(events)
     return {
         "run_id": run_id,
         "case_id": case["id"],
@@ -170,6 +204,7 @@ def run_one(
         "owner_correction": False,
         "friction": verified["friction"],
         "duration_seconds": round(time.monotonic() - started_clock, 3),
+        **telemetry,
         "notes": f"execution_mode={mode}; fixture={case['workspace']['fixture']}; artifact={artifact_dir}",
     }
 
@@ -195,6 +230,13 @@ def self_test() -> None:
             pass
         else:
             raise AssertionError("native mode accepted baseline")
+        events = Path(holder) / "events.jsonl"
+        events.write_text(
+            '{"type":"turn.completed","usage":{"input_tokens":100,"cached_input_tokens":60,"output_tokens":10,"reasoning_output_tokens":4}}\n'
+            '{"type":"item.completed","item":{"type":"command_execution","aggregated_output":"ok"}}\n', encoding="utf-8"
+        )
+        if event_telemetry(events)["uncached_input_tokens"] != 40:
+            raise AssertionError("event telemetry did not calculate uncached input")
     print("PASS: live benchmark runner contracts")
 
 

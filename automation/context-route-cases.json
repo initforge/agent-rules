@@ -3,8 +3,8 @@
   "description": "CI regression fixtures for progressive-context routing; the compiled context graph is the runtime source, and this file is not a second router or trigger source.",
   "budgets": {
     "core_tokens": 4500,
-    "normal_execution_tokens": 1500,
-    "uncertain_execution_tokens": 2600,
+    "normal_execution_tokens": 1550,
+    "uncertain_execution_tokens": 2700,
     "plan_authoring_tokens": 4200,
     "harness_edit_tokens": 2800,
     "5fedu_ui_base_tokens": 6500

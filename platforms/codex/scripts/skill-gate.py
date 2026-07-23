@@ -82,6 +82,7 @@ GROK_HOME = Path(os.environ.get("GROK_HOME") or RUNTIME_HOME)
 STATE_DIR = RUNTIME_HOME / "skill-state"
 E2E_CACHE_DIR = STATE_DIR / "e2e-cache"
 E2E_CACHE_TTL_SEC = 4 * 3600
+EFFICIENCY_POLICY_PATH = RUNTIME_HOME / "efficiency-policy.json"
 READ_TOOLS = {"read_file", "Read", "skill", "Skill"}
 GIT_COMMIT_RE = re.compile(r"\bgit\b.{0,40}\bcommit\b", re.I | re.S)
 
@@ -178,6 +179,14 @@ def default_state(sid: str) -> dict[str, Any]:
         },
         "skill_read_required": False,
         "skills_read": [],
+        "efficiency": {
+            "tool_calls": 0,
+            "tool_output_chars": 0,
+            "checkpoints_emitted": 0,
+            "last_checkpoint_tool_calls": 0,
+            "last_checkpoint_output_chars": 0,
+            "last_reset_reason": "session_start",
+        },
     }
 
 
@@ -188,12 +197,12 @@ def load_state(sid: str) -> dict[str, Any]:
     try:
         data = json.loads(p.read_text(encoding="utf-8"))
         base = default_state(sid)
-        for key in ("e2e", "harness"):
+        for key in ("e2e", "harness", "efficiency"):
             sub = base.get(key, {})
             if isinstance(sub, dict):
                 sub.update((data.get(key) or {}))
                 base[key] = sub
-        base.update({k: v for k, v in data.items() if k not in ("e2e", "harness")})
+        base.update({k: v for k, v in data.items() if k not in ("e2e", "harness", "efficiency")})
         return base
     except (json.JSONDecodeError, OSError):
         return default_state(sid)
@@ -245,6 +254,59 @@ def allow_with_hint(hint: str | None, event: str = "PreToolUse") -> None:
             ensure_ascii=False,
         )
     )
+
+
+def efficiency_policy() -> dict[str, Any]:
+    policy: dict[str, Any] = {
+        "mode": "active",
+        "soft_checkpoint": {"tool_calls": 24, "tool_output_chars": 120000, "repeat_after_tool_calls": 12, "repeat_after_output_chars": 60000},
+        "hard_stop": False,
+    }
+    if EFFICIENCY_POLICY_PATH.exists():
+        try:
+            loaded = json.loads(EFFICIENCY_POLICY_PATH.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                policy.update({key: value for key, value in loaded.items() if key in policy})
+        except (OSError, json.JSONDecodeError):
+            pass
+    override = os.environ.get("AGENT_RULES_EFFICIENCY_MODE", "").strip().lower()
+    if override in {"off", "shadow", "active"}:
+        policy["mode"] = override
+    policy["hard_stop"] = False  # A checkpoint may never stop work or remove tools.
+    return policy
+
+
+def reset_efficiency(state: dict[str, Any], reason: str) -> None:
+    state["efficiency"] = {
+        "tool_calls": 0,
+        "tool_output_chars": 0,
+        "checkpoints_emitted": 0,
+        "last_checkpoint_tool_calls": 0,
+        "last_checkpoint_output_chars": 0,
+        "last_reset_reason": reason,
+    }
+
+
+def efficiency_checkpoint(state: dict[str, Any]) -> str | None:
+    policy = efficiency_policy()
+    if policy.get("mode") != "active":
+        return None
+    current = state.get("efficiency", {})
+    checkpoint = policy.get("soft_checkpoint", {})
+    calls, output_chars = int(current.get("tool_calls", 0)), int(current.get("tool_output_chars", 0))
+    emitted = int(current.get("checkpoints_emitted", 0))
+    last_calls, last_output = int(current.get("last_checkpoint_tool_calls", 0)), int(current.get("last_checkpoint_output_chars", 0))
+    due = (
+        calls >= int(checkpoint.get("tool_calls", 24)) or output_chars >= int(checkpoint.get("tool_output_chars", 120000))
+        if not emitted
+        else calls - last_calls >= int(checkpoint.get("repeat_after_tool_calls", 12)) or output_chars - last_output >= int(checkpoint.get("repeat_after_output_chars", 60000))
+    )
+    if not due:
+        return None
+    current.update({"checkpoints_emitted": emitted + 1, "last_checkpoint_tool_calls": calls, "last_checkpoint_output_chars": output_chars})
+    state["efficiency"] = current
+    return ("[Efficiency checkpoint] Continue the task without reducing verification. Update the current phase briefly; "
+            "read only targeted files or log excerpts; batch independent checks; keep future command output concise.")
 
 
 def inject_context(message: str, event: str) -> None:
@@ -616,6 +678,7 @@ def handle_session_start(payload: dict[str, Any]) -> None:
     sid = session_id_from_env(payload)
     record_native_receipt("SessionStart", sid)
     st = load_state(sid)
+    reset_efficiency(st, "session_start")
     apply_e2e_cache(st)
     save_state(st)
     parts = []
@@ -770,6 +833,9 @@ def handle_post_tool_use(payload: dict[str, Any]) -> None:
     out = tool_output_text(payload)
     exit_ok = payload.get("toolSuccess", payload.get("tool_success", True)) is not False
     st["activity_epoch"] = int(st.get("activity_epoch", 0)) + 1
+    efficiency = st.setdefault("efficiency", {})
+    efficiency["tool_calls"] = int(efficiency.get("tool_calls", 0)) + 1
+    efficiency["tool_output_chars"] = int(efficiency.get("tool_output_chars", 0)) + len(out)
     record_native_receipt("PostToolUse", sid)
 
     if tool in READ_TOOLS:
@@ -799,6 +865,8 @@ def handle_post_tool_use(payload: dict[str, Any]) -> None:
 
     if tool in BASH_TOOLS:
         cmd = extract_command(payload)
+        if cmd and re.search(r"\bplanctl(?:\.ps1)?\b.*\b(?:start|complete|finalize)\b", cmd, re.I):
+            reset_efficiency(st, "plan_phase_boundary")
         if cmd and re.search(r"validate-harness(-behaviors)?\.sh", cmd) and looks_like_test_success(out, exit_ok):
             st["harness"]["validated"] = True
             st["harness"]["validated_at"] = now_iso()
@@ -812,8 +880,9 @@ def handle_post_tool_use(payload: dict[str, Any]) -> None:
         if cmd and DEEP_PATTERNS.search(cmd) and looks_like_test_success(out, exit_ok):
             st["e2e"]["deep_override"] = False
 
+    checkpoint_hint = efficiency_checkpoint(st)
     save_state(st)
-    allow()
+    allow_with_hint(checkpoint_hint, "PostToolUse")
 
 
 def handle_stop(payload: dict[str, Any]) -> None:
