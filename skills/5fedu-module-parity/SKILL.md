@@ -29,6 +29,13 @@ Hai phần — **không** gộp:
 | **Shell parity** | Surface + `shell_must` từ inventory đã đối chiếu template_paths |
 | **Variable map** | Fields drawer, filter chip options, KPI cards, columns, export — nguồn spec/schema module (không copy mù Nhân viên) |
 
+## Copy/adapt contract
+
+- Module mới: copy structural file graph từ reference đã mở và xác nhận trước; rename cơ học rồi mới thay variable slots/domain logic.
+- Module cũ: diff target với reference, transplant shell fragment thiếu; không ghi đè business logic đang sống.
+- Ghi source path, revision/hash, copy map, variable map và khác biệt có chủ đích vào PAF/evidence.
+- Không có template source chính xác hoặc reference còn mơ hồ: block riêng parity slice và hỏi; cấm code theo trí nhớ/cảm giác.
+
 ## Report contract
 
 Khi task cần báo cáo kỹ thuật, ghi `Template reference`, `Shell parity`, `Variable map`, `Pattern fidelity` và `Verification`. Câu trả lời mặc định vẫn bắt đầu bằng tác động nghiệp vụ; metadata chỉ hiện khi có giá trị hoặc được hỏi.

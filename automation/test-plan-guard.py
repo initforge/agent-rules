@@ -13,8 +13,8 @@ sys.path.insert(0, str(SHARED))
 from plan_guard import detect_mega_plan, evaluate_stop, load_json, text_hash, write_admission  # noqa: E402
 
 
-def write_state(root: Path, value: dict) -> Path:
-    path = root / ".agent" / "plans" / "demo" / "state.json"
+def write_state(root: Path, value: dict, plan_id: str = "demo") -> Path:
+    path = root / ".agent" / "plans" / plan_id / "state.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
     return path
@@ -91,6 +91,7 @@ def main() -> int:
         if "no initialized PAF state" not in mismatched.get("reason", ""):
             raise AssertionError("new admission incorrectly attached to an older active state")
         state = {
+            "plan_id": "demo",
             "admission_id": admission["admission_id"],
             "execution_mode": "continuous",
             "status": "IN_PROGRESS",
@@ -106,6 +107,18 @@ def main() -> int:
         first = evaluate_stop(root, "session-1", hook_state)
         if first["action"] != "continue":
             raise AssertionError(first)
+
+        # Exact per-session binding wins over unrelated open plans.
+        other = dict(state)
+        other["plan_id"] = "other"
+        other["admission_id"] = "unrelated"
+        write_state(root, other, "other")
+        binding = root / ".agent" / "plans" / "_active" / "session-1.json"
+        binding.parent.mkdir(parents=True, exist_ok=True)
+        binding.write_text(json.dumps({"owner_session_id": "session-1", "plan_id": "demo", "state_path": str(path)}), encoding="utf-8")
+        bound = evaluate_stop(root, "session-1", {})
+        if bound["action"] != "continue" or "Multiple active" in bound.get("reason", ""):
+            raise AssertionError("session binding did not isolate the active plan")
         state["execution_mode"] = "phase"
         write_state(root, state)
         if evaluate_stop(root, "session-1", {})["action"] != "allow":

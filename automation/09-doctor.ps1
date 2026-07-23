@@ -136,18 +136,26 @@ foreach ($Name in $Selected) {
       $Report += [pscustomobject]@{ platform = $Name; check = "hook-config"; status = "NOT_LIVE"; detail = "hook config/script missing, placeholder, or stale matcher" }
     }
     $HealthPath = Join-Path $RuntimeHome "skill-state\hook-health.json"
-    $HealthOk = $false
+    $AdapterOk = $false
+    $NativeLive = $false
+    $NativeUnobserved = $false
     if (Test-Path $HealthPath) {
       try {
         $Health = Get-Content -Raw -Encoding UTF8 $HealthPath | ConvertFrom-Json
-        $When = [DateTimeOffset]::Parse([string]$Health.last_probe)
-        $HealthOk = ([string]$Health.status -eq "PASS" -and (([DateTimeOffset]::UtcNow - $When).TotalDays -le 7))
-      } catch { $HealthOk = $false }
+        $When = [DateTimeOffset]::Parse([string]$Health.adapter_probe.at)
+        $AdapterOk = ([string]$Health.adapter_probe.status -eq "PASS" -and (([DateTimeOffset]::UtcNow - $When).TotalDays -le 7))
+        $NativeLive = [bool]$Health.native_receipt -and ([string]$Health.trust_state -eq "trusted")
+        $NativeUnobserved = $AdapterOk -and -not $NativeLive
+      } catch { $AdapterOk = $false }
     }
-    if ($HealthOk) {
-      $Report += [pscustomobject]@{ platform = $Name; check = "hook-live-probe"; status = "OK"; detail = "recent local smoke probe passed" }
+    if ($NativeLive) {
+      $Report += [pscustomobject]@{ platform = $Name; check = "hook-native-live"; status = "OK"; detail = "host-delivered hook receipt is present" }
+    } elseif ($NativeUnobserved) {
+      $Report += [pscustomobject]@{ platform = $Name; check = "hook-native-live"; status = "NATIVE_UNOBSERVED"; detail = "adapter smoke passed, but no host-delivered receipt; review hook trust or host lifecycle dispatch before claiming native enforcement" }
+    } elseif ($AdapterOk) {
+      $Report += [pscustomobject]@{ platform = $Name; check = "hook-adapter"; status = "ADAPTER_PASS"; detail = "direct adapter smoke passed; native delivery remains unproven" }
     } else {
-      $Report += [pscustomobject]@{ platform = $Name; check = "hook-live-probe"; status = "NOT_LIVE"; detail = "no recent passing smoke probe; rerun runtime hook installer" }
+      $Report += [pscustomobject]@{ platform = $Name; check = "hook-native-live"; status = "NOT_LIVE"; detail = "no current adapter probe or host receipt; rerun installer, then inspect trust and host lifecycle dispatch" }
     }
   }
 

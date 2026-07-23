@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise native Stop wire formats against a synthetic continuous plan."""
+"""Exercise adapter Stop wire formats; this is deliberately not native proof."""
 from __future__ import annotations
 
 import json
@@ -84,6 +84,7 @@ def main() -> int:
             "CODEX_HOME": str(codex_home),
             "CODEX_PROJECT_DIR": str(workspace),
             "AGENT_RULES_HOOK_PLATFORM": "codex",
+            "AGENT_RULES_ADAPTER_PROBE": "1",
             "CODEX_HOOK_EVENT": "UserPromptSubmit",
         }
         prompt_out, _ = run(
@@ -122,7 +123,7 @@ def main() -> int:
             raise AssertionError(f"Grok Stop wire failed: {grok_stop}")
 
         antigravity_home = base / "antigravity-home"
-        anti_env = {"GEMINI_CONFIG_HOME": str(antigravity_home), "GEMINI_SESSION_ID": sid}
+        anti_env = {"GEMINI_CONFIG_HOME": str(antigravity_home), "GEMINI_SESSION_ID": sid, "AGENT_RULES_ADAPTER_PROBE": "1"}
         anti_stop, _ = run(
             [sys.executable, str(ANTIGRAVITY_GATE), "Stop"],
             {"conversationId": sid, "fullyIdle": True, "terminationReason": "model_stop", "workspacePaths": [str(workspace)]},

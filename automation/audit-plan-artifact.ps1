@@ -74,7 +74,7 @@ Test-FileContains $LifePath @("Plan roles", "plan_id", "friction") | Out-Null
 Test-FileContains $AntigravityOverlay @("L0", "researcher", "capability-tier-routing") | Out-Null
 Test-FileContains $PafTemplate @("Scope lock", "Source coverage", "DERIVED(reason)", "Context routing", "Phases", "Known-unknowns", "Plan QA", "HANDOFF", "Revision protocol", "preferred_tier", "min_tier", "allowed_tiers") | Out-Null
 Test-FileContains $UiDetail @("plan-artifact-template") | Out-Null
-Test-FileContains $PlanCtl @("semantic validation", "compiled.json", "admission_id", "contract_hash", "SLICE_PASS", "PLAN_PASS", "finalize", "handoff") | Out-Null
+Test-FileContains $PlanCtl @("semantic validation", "compiled.json", "admission_id", "contract_hash", "implemented", "verify-batch", "verification_strategy", "reference_contract", "SLICE_PASS", "PLAN_PASS", "finalize", "handoff") | Out-Null
 Test-FileContains $LedgerAudit @("Scope IN", "evidence", "open_ac=0") | Out-Null
 
 # Path C delegate - no long execute loop in plan-and-handoff

@@ -6,7 +6,7 @@ routing: {"signals":["plan","plan dài","nhiều phase","handoff","chia nhỏ","
 
 # Plan and Handoff
 
-**Ý đồ:** Task dài = **1 phase / 1 session**; output **PAF** + HANDOFF §8. Chỉ đọc tier routing khi phase cần escalation hoặc owner override.
+**Ý đồ:** Task dài dùng PAF + master state; continuous plan ưu tiên hoàn thành mọi phần khả thi trong một luồng, còn phase mode mới dừng ở từng slice.
 
 **`/goal` + treo máy:** một nguồn — [`references/goal-autopilot.md`](references/goal-autopilot.md) (plan → execute → artifact Antigravity → task card). Skill này = decision tree + paths; không lặp prose autopilot ở đây.
 
@@ -33,7 +33,13 @@ routing: {"signals":["plan","plan dài","nhiều phase","handoff","chia nhỏ","
 
 ## Mega-plan admission + source coverage
 
-Admission trước edit: map every S-ID once as `Snnn -> Dn | @sha256:<hash>`, `CONTEXT`, or `OUT(reason)`; map every D-ID to a phase; use `planctl init`; keep `state.json` canonical. `complete` emits `SLICE_PASS`; continuous mode stops only after `finalize` emits `PLAN_PASS`. Admission is hash-only (no raw prompt/credentials/CoT); PAF + `planctl` are the machine contract. Evidence is adaptive: tiny tasks stay light, normal tasks may justify an alternate proof, while admitted continuous/high-risk phases must satisfy the inferred proof profile and typed evidence contract.
+Admission: map mỗi S-ID đúng một lần, map D-ID → phase, rồi `planctl init`; `state.json` là canonical. Continuous mặc định `implementation-first`: làm mọi phase khả thi → batch proof → `finalize`/`PLAN_PASS`; `SLICE_PASS` chỉ cho phase mode. PAF có outcome/release/reference contract khi applicable. Admission hash-only; proof cần verifier receipt, không nhận JSON tự phát.
+
+## Native subagent policy
+
+- Tiny: không spawn. Mega/high-risk: explorer + adversarial reviewer nếu host hỗ trợ.
+- Root giữ state/write; subagent làm discovery, review, log/test và miss-sweep.
+- Writer song song chỉ khi ownership tách biệt/isolated; thiếu native → tuần tự + `INDEPENDENCE_UNAVAILABLE`.
 
 ## Path A — Plan Architect (default `plan-authoring`, Plan-first HB-1)
 

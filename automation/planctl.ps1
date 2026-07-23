@@ -1,12 +1,14 @@
 [CmdletBinding()]
 param(
-  [ValidateSet("validate", "compile", "admit", "adopt", "init", "status", "focus", "start", "verify", "evidence", "block", "recover", "complete", "finalize", "handoff", "revise", "gate", "report")]
+  [ValidateSet("validate", "compile", "admit", "adopt", "init", "status", "focus", "start", "implemented", "verify", "verify-batch", "evidence", "block", "recover", "complete", "finalize", "handoff", "revise", "gate", "report")]
   [string]$Action = "validate",
   [string]$Root = (Split-Path -Parent $PSScriptRoot),
   [string]$PlanPath = "",
   [string]$PlanId = "",
   [string]$AdmissionPath = "",
   [ValidateSet("", "continuous", "phase")][string]$ExecutionMode = "",
+  [ValidateSet("", "implementation-first", "incremental")][string]$VerificationStrategy = "",
+  [string]$SessionId = "",
   [string]$Phase = "",
   [string]$LeaseId = "",
   [string]$SliceId = "",
@@ -100,6 +102,35 @@ function Normalize-Id {
   $safe = ($Value -replace "[^A-Za-z0-9._-]", "-").Trim("-")
   if (-not $safe -or $safe -in @(".", "..")) { throw "Plan id is empty or reserved" }
   return $safe.ToLowerInvariant()
+}
+
+function Get-OwnerSessionId {
+  if ($SessionId) { return (Normalize-Id $SessionId) }
+  foreach ($candidate in @($env:CODEX_SESSION_ID, $env:GROK_SESSION_ID, $env:ANTIGRAVITY_SESSION_ID, $env:PLANCTL_SESSION_ID)) {
+    if ($candidate) { return (Normalize-Id ([string]$candidate)) }
+  }
+  return ""
+}
+
+function Get-SessionBindingPath {
+  param([string]$OwnerSessionId)
+  if (-not $OwnerSessionId) { return "" }
+  $dir = Join-Path $StateRoot "_active"
+  New-Item -ItemType Directory -Force -Path $dir | Out-Null
+  return (Join-Path $dir "$(Normalize-Id $OwnerSessionId).json")
+}
+
+function Write-SessionBinding {
+  param([object]$State)
+  $owner = [string]$State.owner_session_id
+  if (-not $owner) { return }
+  $path = Get-SessionBindingPath $owner
+  Save-Json $path ([pscustomobject]@{
+    version = 1; owner_session_id = $owner; plan_id = [string]$State.plan_id
+    admission_id = [string]$State.admission_id; admission_path = [string]$State.admission_path
+    state_path = (Join-Path (Get-StateDirectory $State.plan_id) "state.json")
+    lease_id = [string]$State.lease_id; updated_at = [DateTime]::UtcNow.ToString("o")
+  })
 }
 
 function Read-TextUtf8 {
@@ -265,6 +296,27 @@ function Test-OutputOnlyCommand {
   return $false
 }
 
+function Get-CommandEvidenceClass {
+  param([string]$CommandText)
+  $command = ([string]$CommandText).ToLowerInvariant()
+  if ($command -match '(?:^|\s)(?:npm|pnpm|yarn)\s+(?:run\s+)?(?:typecheck|lint|build)\b|\b(?:tsc|eslint|vite\s+build)\b') { return "static" }
+  if ($command -match '(?:playwright|cypress|selenium|browser)') { return "browser" }
+  if ($command -match '(?:prisma\s+migrate|flyway|liquibase|migration)') { return "migration" }
+  if ($command -match '(?:curl|newman|supertest|pytest|jest|vitest|mocha|dotnet\s+test|go\s+test|cargo\s+test)') { return "test" }
+  if ($command -match '(?:echo|printf|write-output|write-host).*evidence_json') { return "self-authored" }
+  return "custom"
+}
+
+function Normalize-SemanticText {
+  param([string]$Text)
+  $value = [string]$Text
+  $value = $value -replace '(?i)\b(?:phase|step)\s*p?\d+\b', ' '
+  $value = $value -replace '(?i)\b(?:AC|D|S)\d+[A-Za-z_-]*\b', ' '
+  $value = $value -replace '(?i)\|\s*(?:verify|expected)\s*:.*$', ' '
+  $value = $value -replace '[0-9]+', ' '
+  return (($value -replace '[^a-zA-Z]+', ' ' -replace '\s+', ' ').Trim().ToLowerInvariant())
+}
+
 function Get-PathReference {
   param([string]$Item)
   if (-not $Item) { return "" }
@@ -426,12 +478,38 @@ function Compile-Plan {
     ([string]$meta.risk_tier -match '(?i)^(high|critical)$')
   $requiresSchemaV2 = [bool]$admission -or ([string]$ExecutionMode -eq 'continuous') -or $isHighRisk -or
     ([string]$meta.workflow_mode -match '(?i)^(continuous|full[-_ ]?plan|execution[-_ ]?full)$')
+  $effectiveMode = if ($ExecutionMode) { $ExecutionMode } elseif ($admission) { [string]$admission.execution_mode } else { 'phase' }
+  $effectiveStrategy = if ($VerificationStrategy) { $VerificationStrategy } elseif ($meta.verification_strategy) { [string]$meta.verification_strategy } elseif ($effectiveMode -eq 'continuous') { 'implementation-first' } else { 'incremental' }
+  if ($effectiveStrategy -notin @('implementation-first', 'incremental')) {
+    Add-Diagnostic $diagnostics 'error' 'invalid-verification-strategy' "Unknown verification_strategy '$effectiveStrategy'"
+  }
+  $referenceBody = Get-SectionBody $body "Reference contract"
+  $referenceRequired = [bool]$referenceBody -or ([string]$meta.reference_contract -match '(?i)^(required|true|yes)$')
+  if ($referenceRequired) {
+    if (-not $referenceBody) { Add-Diagnostic $diagnostics 'error' 'missing-reference-contract' 'Reference/parity work requires ## Reference contract' }
+    foreach ($key in @('source', 'revision', 'copy_map', 'variable_map')) {
+      if ($referenceBody -notmatch "(?im)^\s*$key\s*:") { Add-Diagnostic $diagnostics 'error' 'incomplete-reference-contract' "Reference contract is missing '$key'" }
+    }
+  }
+  $releaseBody = Get-SectionBody $body "Release contract"
+  $releaseRequired = [string]$meta.release_contract -match '(?i)^(required|true|yes)$'
+  if ($releaseRequired -and -not $releaseBody) {
+    Add-Diagnostic $diagnostics 'error' 'missing-release-contract' 'Release-authorized plan requires ## Release contract'
+  }
+  if ($releaseBody) {
+    foreach ($key in @('branch', 'commit', 'push', 'ci')) {
+      if ($releaseBody -notmatch "(?im)^\s*$key\s*:") { Add-Diagnostic $diagnostics 'error' 'incomplete-release-contract' "Release contract is missing '$key'" }
+    }
+  }
   if ($requiresSchemaV2 -and $schemaVersion -lt 2) {
     $reason = if ($admission) { 'admission-backed' } elseif ([string]$ExecutionMode -eq 'continuous' -or [string]$meta.workflow_mode -match '(?i)continuous') { 'continuous execution' } else { 'high-risk' }
     Add-Diagnostic $diagnostics 'error' 'paf-schema-v2-required' "The $reason lifecycle requires schema_version: 2; schema v1 cannot be admitted or finalized"
   }
   $seenIds = @{}
   $seenAc = @{}
+  $seenSemanticAc = @{}
+  $seenPhaseAnchors = @{}
+  $seenBehaviorCommands = @{}
   $mappedDeliverables = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
   $graph = @{}
   $compiledPhases = @()
@@ -528,6 +606,20 @@ function Compile-Plan {
           }
         if ($acSpecs.ContainsKey($row.ac_id)) {
           $spec = $acSpecs[$row.ac_id]
+          $commandClass = Get-CommandEvidenceClass $spec.command
+          $deepProfile = @($row.profiles | Where-Object { $_ -notin @('static-change') }).Count -gt 0
+          if ($commandClass -eq 'static' -and ($deepProfile -or $row.kind -in @('security-test','browser-test','migration-test','integration-test','custom-runtime'))) {
+            Add-Diagnostic $diagnostics 'error' 'command-proof-kind-mismatch' "Phase $($phase.id)/$($row.ac_id) uses a static command for $($row.kind) runtime evidence" $phase.id
+          }
+          if ($commandClass -eq 'self-authored' -or ($row.manifest -and $commandClass -eq 'custom' -and $row.artifacts.Count -eq 0)) {
+            Add-Diagnostic $diagnostics 'error' 'self-authored-manifest' "Phase $($phase.id)/$($row.ac_id) cannot self-author a manifest without a verifier-backed artifact or query" $phase.id
+          }
+          if ($deepProfile) {
+            $commandFingerprint = Get-TextHash (Normalize-SemanticText $spec.command)
+            if ($seenBehaviorCommands.ContainsKey($commandFingerprint) -and $seenBehaviorCommands[$commandFingerprint] -ne $phase.id) {
+              Add-Diagnostic $diagnostics 'error' 'reused-behavior-proof-command' "Runtime proof command is reused by unrelated phases $($seenBehaviorCommands[$commandFingerprint]) and $($phase.id)" $phase.id
+            } else { $seenBehaviorCommands[$commandFingerprint] = $phase.id }
+          }
           if (Test-OutputOnlyCommand $spec.command) { Add-Diagnostic $diagnostics "error" "tautological-verify-command" "Phase $($phase.id)/$($row.ac_id) verify command only emits success" $phase.id }
           if ($spec.expected -notmatch "^(?i:exit=0|contains:.+|regex:.+|json:[A-Za-z0-9_.-]+=.+)$") { Add-Diagnostic $diagnostics "error" "untyped-expected-matcher" "Phase $($phase.id)/$($row.ac_id) expected must use exit=0, contains:, regex:, or json:<path>=<value>" $phase.id }
           if ($spec.expected -match "^(?i:contains:)(?<literal>.+)$") {
@@ -559,6 +651,14 @@ function Compile-Plan {
     }
     $fileItems = Get-Items (Get-IndentedBlock $phase.body "files_touched")
     $scopeLock = Get-KeyValue $phase.body "scope_lock"
+    $anchorFingerprint = (($fileItems | ForEach-Object { Normalize-SemanticText (Get-PathReference $_) } | Sort-Object) -join '|')
+    if ($anchorFingerprint -and $phase.body -notmatch '(?i)shared_surface\s*\(') {
+      if (-not $seenPhaseAnchors.ContainsKey($anchorFingerprint)) { $seenPhaseAnchors[$anchorFingerprint] = @() }
+      $seenPhaseAnchors[$anchorFingerprint] = @($seenPhaseAnchors[$anchorFingerprint] + $phase.id)
+      if (@($seenPhaseAnchors[$anchorFingerprint]).Count -ge 3) {
+        Add-Diagnostic $diagnostics 'error' 'repeated-phase-anchor' "Three or more phases reuse the same touched-file anchor without SHARED_SURFACE(reason): $($seenPhaseAnchors[$anchorFingerprint] -join ', ')" $phase.id
+      }
+    }
     if ($deliverables.Count -gt 0 -and -not ($scopeLock -match "\bD[0-9]+\b")) {
       Add-Diagnostic $diagnostics "error" "unmapped-phase-scope" "Phase $($phase.id) scope_lock must map at least one deliverable id" $phase.id
     }
@@ -605,6 +705,12 @@ function Compile-Plan {
       $normalized = ($criterion -replace "(?i)\bverify\s*:.*$", "" -replace "[^a-z0-9]+", " ").Trim().ToLowerInvariant()
       if ($normalized -and $seenAc.ContainsKey($normalized)) { Add-Diagnostic $diagnostics "error" "duplicate-ac" "Duplicate acceptance criterion '$normalized' in $($phase.id) and $($seenAc[$normalized])" $phase.id }
       if ($normalized) { $seenAc[$normalized] = $phase.id }
+      $semantic = Normalize-SemanticText $criterion
+      if ($semantic -and $semantic.Length -ge 12) {
+        if ($seenSemanticAc.ContainsKey($semantic) -and $seenSemanticAc[$semantic] -ne $phase.id) {
+          Add-Diagnostic $diagnostics 'error' 'duplicate-ac-cross-phase' "Acceptance criterion template is repeated across phases $($seenSemanticAc[$semantic]) and $($phase.id)" $phase.id
+        } else { $seenSemanticAc[$semantic] = $phase.id }
+      }
     }
     $verify = Get-IndentedBlock $phase.body "verify_gate"
     if (-not $verify -or $verify -match "(?i)<(?:cmd|command|expected)") { Add-Diagnostic $diagnostics "error" "invalid-verify-gate" "Phase $($phase.id) needs a concrete verify_gate command" $phase.id }
@@ -645,8 +751,12 @@ function Compile-Plan {
   $planContract = [ordered]@{
     meta = $meta
     admission_id = $(if ($admission) { [string]$admission.admission_id } else { '' })
+    admission_session_id = $(if ($admission) { [string]$admission.session_id } else { '' })
     admission_hash = $(if ($admission) { if ($admission.source_set_hash) { [string]$admission.source_set_hash } elseif ($admission.prompt_hash) { [string]$admission.prompt_hash } else { '' } } else { '' })
-    execution_mode = $(if ($ExecutionMode) { $ExecutionMode } elseif ($admission) { [string]$admission.execution_mode } else { 'phase' })
+    execution_mode = $effectiveMode
+    verification_strategy = $effectiveStrategy
+    reference_contract = $(if ($referenceBody) { Get-TextHash $referenceBody } else { '' })
+    release_contract = $(if ($releaseBody) { Get-TextHash $releaseBody } else { '' })
     source_coverage = @($coverage)
     deliverables = @($deliverables)
     phase_topology = @($compiledPhases | ForEach-Object { [ordered]@{ id = $_.id; depends_on = @($_.depends_on) } })
@@ -663,12 +773,16 @@ function Compile-Plan {
     plan_id = (Normalize-Id $planIdValue)
     meta = $meta
     admission_id = $(if ($admission) { [string]$admission.admission_id } else { "" })
+    admission_session_id = $(if ($admission) { [string]$admission.session_id } else { "" })
     admission_hash = $(if ($admission) {
       if ($admission.source_set_hash) { [string]$admission.source_set_hash }
       elseif ($admission.prompt_hash) { [string]$admission.prompt_hash }
       else { "" }
     } else { "" })
-    execution_mode = $(if ($ExecutionMode) { $ExecutionMode } elseif ($admission) { [string]$admission.execution_mode } else { "phase" })
+    execution_mode = $effectiveMode
+    verification_strategy = $effectiveStrategy
+    reference_contract = $(if ($referenceBody) { Get-TextHash $referenceBody } else { '' })
+    release_contract = $(if ($releaseBody) { Get-TextHash $releaseBody } else { '' })
     source_coverage = @($coverage)
     deliverables = @($deliverables)
     phases = @($compiledPhases)
@@ -729,7 +843,8 @@ function Load-State {
   $path = Join-Path (Get-StateDirectory $Id) "state.json"
   if (-not (Test-Path -LiteralPath $path)) {
     return [pscustomobject]@{
-      plan_id = (Normalize-Id $Id); status = "DRAFT"; revision = 0; current_phase = $null; session_id = $null
+      plan_id = (Normalize-Id $Id); status = "DRAFT"; revision = 0; current_phase = $null; session_id = $null; owner_session_id = ""
+      verification_strategy = "incremental"
       evidence = @(); receipts = @(); blockers = @(); history = @(); generation = 0; lease_id = ""; lease_expires_at = ""; enforcement_status = ""; updated_at = [DateTime]::UtcNow.ToString("o")
     }
   }
@@ -779,6 +894,8 @@ function Ensure-StateShape {
   Ensure-StateProperty $State "admission_hash" ""
   Ensure-StateProperty $State "admission_path" ""
   Ensure-StateProperty $State "execution_mode" "phase"
+  Ensure-StateProperty $State "verification_strategy" "incremental"
+  Ensure-StateProperty $State "owner_session_id" ""
   Ensure-StateProperty $State "receipts" @()
   Ensure-StateProperty $State "generation" 0
   Ensure-StateProperty $State "lease_id" ""
@@ -814,7 +931,11 @@ function Ensure-StateShape {
     $preserve = $prior -and -not $invalidated.Contains([string]$phase.id)
     $phaseState += [pscustomobject]@{
       id = [string]$phase.id
+      depends_on = @($phase.depends_on)
       status = if ($preserve -and $prior.status) { [string]$prior.status } else { "PENDING" }
+      implementation_status = if ($preserve -and $prior.implementation_status) { [string]$prior.implementation_status } elseif ($preserve -and $prior.status -eq "DONE") { "IMPLEMENTED" } else { "PENDING" }
+      verification_status = if ($preserve -and $prior.verification_status) { [string]$prior.verification_status } elseif ($preserve -and $prior.status -eq "DONE") { "VERIFIED" } else { "PENDING" }
+      change_receipt = if ($preserve -and $prior.change_receipt) { [string]$prior.change_receipt } else { "" }
       contract_hash = [string]$phase.contract_hash
       started_at = if ($preserve -and $prior.started_at) { [string]$prior.started_at } else { "" }
       ledger_path = if ($preserve -and $prior.ledger_path) { [string]$prior.ledger_path } else { "" }
@@ -830,7 +951,7 @@ function Ensure-StateShape {
       foreach ($phase in @($Compiled.phases)) {
         $phaseState = @($State.phases | Where-Object id -eq $phase.id)[0]
         if ($phaseState) {
-          $phaseState.status = "PENDING"; $phaseState.started_at = ""; $phaseState.ledger_path = ""; $phaseState.completed_at = ""
+          $phaseState.status = "PENDING"; $phaseState.implementation_status = "PENDING"; $phaseState.verification_status = "PENDING"; $phaseState.change_receipt = ""; $phaseState.started_at = ""; $phaseState.ledger_path = ""; $phaseState.completed_at = ""
         }
       }
       $State.current_phase = $null
@@ -840,6 +961,10 @@ function Ensure-StateShape {
     $State.admission_path = [IO.Path]::GetFullPath($AdmissionPath)
   }
   if ($Compiled.execution_mode) { $State.execution_mode = [string]$Compiled.execution_mode }
+  if ($Compiled.verification_strategy) { $State.verification_strategy = [string]$Compiled.verification_strategy }
+  if (-not $State.owner_session_id) {
+    $State.owner_session_id = if ($Compiled.admission_session_id) { Normalize-Id ([string]$Compiled.admission_session_id) } else { Get-OwnerSessionId }
+  }
   if ($invalidated.Count -gt 0 -and $State.current_phase -and $invalidated.Contains([string]$State.current_phase)) {
     $State.current_phase = $null
   }
@@ -1332,8 +1457,10 @@ try {
         $state.status = "READY"
       }
       $state.revision = [int]($state.revision)
+      if (-not $state.owner_session_id) { $state.owner_session_id = Get-OwnerSessionId }
       Add-StateItem $state "history" ([pscustomobject]@{ at = [DateTime]::UtcNow.ToString("o"); event = "init"; valid = $compiled.valid })
       Save-State $state | Out-Null
+      Write-SessionBinding $state
       Write-Host "$(if ($compiled.valid) { 'STATE_READY' } else { 'STATE_PARTIAL' }): plan state initialized for $($compiled.plan_id)"
       if ($compiled.valid) { exit 0 } else { exit 1 }
     }
@@ -1365,8 +1492,9 @@ try {
       $id = Normalize-Id $PlanId
       $statePath = Join-Path (Get-StateDirectory $id) "state.json"
       if (-not (Test-Path -LiteralPath $statePath -PathType Leaf)) { throw "Cannot focus plan without initialized state: $id" }
-      $focusPath = Join-Path $StateRoot "active-plan.json"
-      Save-Json $focusPath ([pscustomobject]@{ plan_id = $id; focused_at = [DateTime]::UtcNow.ToString("o") })
+      $state = Load-State $id
+      if (-not $state.owner_session_id) { $state.owner_session_id = Get-OwnerSessionId; Save-State $state | Out-Null }
+      Write-SessionBinding $state
       Write-Host "PLAN_FOCUSED: $id"
       exit 0
     }
@@ -1387,16 +1515,41 @@ try {
         Add-StateItem $state "history" ([pscustomobject]@{ at = [DateTime]::UtcNow.ToString("o"); event = "lease_reclaimed"; phase = $state.current_phase })
         $state.current_phase = $null
       }
-      $openDependencies = @($phaseContract.depends_on | Where-Object { (Get-PhaseState $state $_).status -ne "DONE" })
+      $implementationFirst = ([string]$state.execution_mode -eq 'continuous' -and [string]$state.verification_strategy -eq 'implementation-first')
+      $openDependencies = @($phaseContract.depends_on | Where-Object {
+        $dependencyState = Get-PhaseState $state $_
+        if ($implementationFirst) { [string]$dependencyState.implementation_status -ne 'IMPLEMENTED' -and [string]$dependencyState.status -ne 'DONE' }
+        else { [string]$dependencyState.status -ne 'DONE' }
+      })
       if ($openDependencies.Count -gt 0) { throw "Phase $phaseId has incomplete dependencies: $($openDependencies -join ', ')" }
-      $state.status = "IN_PROGRESS"; $state.current_phase = $phaseId; $state.session_id = [guid]::NewGuid().ToString()
-      $state.lease_id = [string]$state.session_id
+      $state.status = "IN_PROGRESS"; $state.current_phase = $phaseId
+      if (-not $state.owner_session_id) { $state.owner_session_id = Get-OwnerSessionId }
+      $state.session_id = [string]$state.owner_session_id
+      $state.lease_id = [guid]::NewGuid().ToString()
       $state.lease_expires_at = [DateTime]::UtcNow.AddMinutes(30).ToString("o")
       $phaseState.status = "IN_PROGRESS"
       $phaseState.started_at = [DateTime]::UtcNow.ToString("o")
       Add-StateItem $state "history" ([pscustomobject]@{ at = [DateTime]::UtcNow.ToString("o"); event = "start"; phase = $phaseId; session_id = $state.session_id })
       Save-State $state | Out-Null
+      Write-SessionBinding $state
       Write-Host "LEASE_ACQUIRED: started $($compiled.plan_id) phase $phaseId; lease=$($state.lease_id)"
+      exit 0
+    }
+    "implemented" {
+      $compiled = Require-Compiled
+      $state = Ensure-StateShape (Load-State $compiled.plan_id) $compiled
+      $phaseId = if ($Phase) { $Phase } elseif ($state.current_phase) { [string]$state.current_phase } else { throw "-Phase is required when no phase is active" }
+      $phaseState = Get-PhaseState $state $phaseId
+      if (-not $phaseState -or $phaseState.status -ne 'IN_PROGRESS' -or [string]$state.current_phase -ne $phaseId) { throw "Phase $phaseId must be the active IN_PROGRESS phase before implemented" }
+      Assert-LeaseOwner $state; Assert-LeaseValid $state
+      $phaseState.implementation_status = 'IMPLEMENTED'
+      $phaseState.change_receipt = [string]$ReceiptPath
+      $phaseState.status = 'IMPLEMENTED'
+      $state.current_phase = $null; $state.lease_id = ''; $state.lease_expires_at = ''
+      $implementedCount = @($state.phases | Where-Object { $_.implementation_status -eq 'IMPLEMENTED' -or $_.status -eq 'DONE' }).Count
+      Add-StateItem $state 'history' ([pscustomobject]@{ at = [DateTime]::UtcNow.ToString('o'); event = 'implemented'; phase = $phaseId; receipt = $phaseState.change_receipt })
+      Save-State $state | Out-Null; Write-SessionBinding $state
+      Write-Host "IMPLEMENTED: $($compiled.plan_id) phase $phaseId ($implementedCount/$(@($state.phases).Count)); verification=$($state.verification_strategy)"
       exit 0
     }
     "verify" {
@@ -1431,6 +1584,35 @@ try {
         exit 1
       }
       Write-Host "VERIFY_PASS: $($phaseId)/$AcId receipt=$($run.path)"
+      exit 0
+    }
+    "verify-batch" {
+      $compiled = Require-Compiled
+      $state = Ensure-StateShape (Load-State $compiled.plan_id) $compiled
+      if ([string]$state.execution_mode -ne 'continuous' -or [string]$state.verification_strategy -ne 'implementation-first') {
+        throw "verify-batch is reserved for continuous implementation-first plans"
+      }
+      $candidates = @($compiled.phases | Where-Object {
+        $phaseState = Get-PhaseState $state $_.id
+        (-not $Phase -or $_.id -eq $Phase) -and $phaseState.implementation_status -eq 'IMPLEMENTED' -and $phaseState.verification_status -ne 'VERIFIED'
+      })
+      if ($candidates.Count -eq 0) { throw "No IMPLEMENTED phase is pending batch verification" }
+      $failed = @()
+      foreach ($phaseContract in $candidates) {
+        foreach ($criterion in @($phaseContract.acceptance_criteria)) {
+          $acId = Get-CriterionId $criterion 1
+          $run = Invoke-RunnerReceipt $compiled $state $phaseContract $acId $criterion '' '' ''
+          Add-StateItem $state 'receipts' ([pscustomobject]$run.receipt)
+          if (-not $run.passed) { $failed += "$($phaseContract.id)/$acId" }
+        }
+        if (-not ($failed | Where-Object { $_ -like "$($phaseContract.id)/*" })) {
+          (Get-PhaseState $state $phaseContract.id).verification_status = 'VERIFIED'
+        }
+      }
+      Add-StateItem $state 'history' ([pscustomobject]@{ at = [DateTime]::UtcNow.ToString('o'); event = 'verify_batch'; phases = @($candidates.id); failed = @($failed) })
+      Save-State $state | Out-Null
+      if ($failed.Count -gt 0) { Write-Host "BATCH_VERIFY_FAIL: $($failed -join ', ')"; exit 1 }
+      Write-Host "BATCH_VERIFY_PASS: phases=$($candidates.Count); receipts=$(@($state.receipts).Count)"
       exit 0
     }
     "evidence" {
@@ -1486,17 +1668,21 @@ try {
       $phaseContract = @($compiled.phases | Where-Object id -eq $phaseId)[0]
       if (-not $phaseContract) { throw "Unknown phase: $phaseId" }
       $phaseState = Get-PhaseState $state $phaseId
-      if (-not $phaseState -or $phaseState.status -ne "IN_PROGRESS" -or [string]$state.current_phase -ne $phaseId) {
+      $implementationFirst = ([string]$state.execution_mode -eq 'continuous' -and [string]$state.verification_strategy -eq 'implementation-first')
+      if ($implementationFirst) {
+        if (-not $phaseState -or $phaseState.implementation_status -ne 'IMPLEMENTED' -or $phaseState.verification_status -ne 'VERIFIED') {
+          throw "Phase $phaseId must be IMPLEMENTED and batch VERIFIED before complete"
+        }
+      } elseif (-not $phaseState -or $phaseState.status -ne "IN_PROGRESS" -or [string]$state.current_phase -ne $phaseId) {
         throw "Phase $phaseId must be the active IN_PROGRESS phase before complete"
-      }
-      Assert-LeaseOwner $state
-      Assert-LeaseValid $state
+      } else { Assert-LeaseOwner $state; Assert-LeaseValid $state }
       if (-not $LedgerPath) { $LedgerPath = Join-Path $StateRoot "$($compiled.plan_id)\ledger\$phaseId.md" }
       $LedgerPath = Assert-SafePath $LedgerPath "Ledger path"
       Invoke-PhaseLedgerGate $phaseContract $LedgerPath
       Assert-NoActiveBlockers $state $phaseId
       Assert-PhaseReceipts $compiled $state $phaseContract
       $phaseState.status = "DONE"
+      $phaseState.implementation_status = 'IMPLEMENTED'; $phaseState.verification_status = 'VERIFIED'
       $phaseState.ledger_path = [IO.Path]::GetFullPath($LedgerPath)
       $phaseState.completed_at = [DateTime]::UtcNow.ToString("o")
       $state.current_phase = $null
@@ -1507,7 +1693,8 @@ try {
       $state.status = if ($doneCount -eq $totalCount) { "READY_TO_FINALIZE" } else { "IN_PROGRESS" }
       Add-StateItem $state "history" ([pscustomobject]@{ at = [DateTime]::UtcNow.ToString("o"); event = "phase_complete"; phase = $phaseId; ledger = $phaseState.ledger_path })
       Save-State $state | Out-Null
-      Write-Host "SLICE_PASS: $($compiled.plan_id) phase $phaseId completed ($doneCount/$totalCount); plan=$($state.status)"
+      if ($implementationFirst) { Write-Host "PHASE_VERIFIED: $($compiled.plan_id) phase $phaseId completed ($doneCount/$totalCount); plan=$($state.status)" }
+      else { Write-Host "SLICE_PASS: $($compiled.plan_id) phase $phaseId completed ($doneCount/$totalCount); plan=$($state.status)" }
       exit 0
     }
     "finalize" {
@@ -1522,6 +1709,7 @@ try {
       if ($openPhases.Count -gt 0) { throw "Plan cannot finalize; open phases: $($openPhases -join ', ')" }
       foreach ($phaseContract in @($compiled.phases)) {
         $phaseState = Get-PhaseState $state $phaseContract.id
+        if ($phaseState.implementation_status -ne 'IMPLEMENTED' -or $phaseState.verification_status -ne 'VERIFIED') { throw "Plan cannot finalize; $($phaseContract.id) is not implementation and verification complete" }
         if (-not $phaseState.ledger_path) { throw "Plan cannot finalize; $($phaseContract.id) has no recorded ledger" }
         Invoke-PhaseLedgerGate $phaseContract $phaseState.ledger_path
         Assert-PhaseReceipts $compiled $state $phaseContract

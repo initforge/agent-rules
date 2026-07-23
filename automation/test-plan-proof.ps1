@@ -49,6 +49,28 @@ foreach ($case in $cases) {
   Assert-Fails @{ Action = "validate"; Root = $Root; PlanPath = $path } $case.Pattern
 }
 
+# Semantic anti-template/evidence regressions: these are intentionally generic
+# fixtures so no project/domain lesson is promoted into the harness core.
+$duplicatePhase = ($body -split '(?m)^## Known-unknowns', 2)[0]
+$p2 = ($duplicatePhase -split '(?m)^## Phases\s*\r?\n', 2)[1].Replace('Phase P1', 'Phase P2').Replace('Semantic receipt', 'Semantic receipt two')
+$repeatedPlan = Join-Path $work 'repeated-ac.md'
+[IO.File]::WriteAllText($repeatedPlan, ($body -replace '(?m)^## Known-unknowns', "`r`n$p2`r`n## Known-unknowns"), [Text.Encoding]::UTF8)
+Assert-Fails @{ Action = 'validate'; Root = $Root; PlanPath = $repeatedPlan } 'duplicate-ac-cross-phase'
+
+$staticSecurity = Join-Path $work 'static-security.md'
+$staticSecurityBody = $body.Replace('proof_profiles: [static-change]', 'proof_profiles: [security-boundary]').Replace('static-change.outcome, static-change.regression | kind=unit-test', 'security-boundary.positive, security-boundary.negative, security-boundary.leakage-sanitization | kind=security-test').Replace('powershell -NoProfile -Command "if ((2 + 2) -ne 4) { exit 1 }"', 'npm run typecheck')
+[IO.File]::WriteAllText($staticSecurity, $staticSecurityBody, [Text.Encoding]::UTF8)
+Assert-Fails @{ Action = 'validate'; Root = $Root; PlanPath = $staticSecurity } 'command-proof-kind-mismatch'
+
+$selfManifest = Join-Path $work 'self-manifest.md'
+$selfManifestBody = $body.Replace('kind=unit-test | env=local', 'kind=custom-runtime | env=local | manifest=true').Replace('powershell -NoProfile -Command "if ((2 + 2) -ne 4) { exit 1 }"', 'powershell -NoProfile -Command "Write-Output EVIDENCE_JSON"')
+[IO.File]::WriteAllText($selfManifest, $selfManifestBody, [Text.Encoding]::UTF8)
+Assert-Fails @{ Action = 'validate'; Root = $Root; PlanPath = $selfManifest } 'self-authored-manifest'
+
+$missingReference = Join-Path $work 'missing-reference.md'
+[IO.File]::WriteAllText($missingReference, ($body -replace '(?m)^lane: normal$', "lane: normal`r`nreference_contract: required"), [Text.Encoding]::UTF8)
+Assert-Fails @{ Action = 'validate'; Root = $Root; PlanPath = $missingReference } 'missing-reference-contract'
+
 $duplicateHash = Get-NormalizedHash "same source requirement"
 $sourceItems = @(
   [pscustomobject]@{ id = "S001"; ordinal = 1; sha256 = $duplicateHash },

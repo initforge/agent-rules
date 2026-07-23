@@ -43,11 +43,8 @@ Scope lock: N = [d1, d2, ...]
 Trước vòng lặp: chạy **verify gate** (`implementation-discovery`) — đối chiếu giả định plan vs repo/interface/DB/template thật; báo lệch trước khi sửa.
 
 ```text
-FOR each deliverable in scope:
-  implement
-  verify (if applicable)
-  mark done
-UNTIL all done OR hard BLOCKED
+FOR each deliverable: implement → cheap dependency guard if needed → mark implemented.
+Then batch-verify feasible work; fix and re-run impacted proof.
 ```
 
 **Không** dừng sau "phần chính". **Không** chuyển sang báo cáo khi còn item `pending`.
@@ -88,10 +85,10 @@ Với tracked PAF, gate này chỉ đóng phase và tạo `SLICE_PASS`; cấm bi
 | Status | Khi |
 |---|---|
 | `PASS` | N/N deliverables done + verify + evidence |
-| `PARTIAL` | Đã hết fallback; thiếu đúng 1 thứ; blocker 1 dòng |
+| `PARTIAL` | Chỉ progress nội bộ của continuous plan; không phải terminal response |
 | `BLOCKED` | Credential/quyền/env/quyết định must-not-self-decide — không tiến được; ghi blocker (`open-questions.md` nếu có); escape-hatch theo `implementation-discovery` |
 
-Không trạng thái "60% xong, phần còn tùy bạn".
+Với continuous PAF, terminal chỉ là `PLAN_PASS`, evidence-backed plan-wide `BLOCKED`, hoặc `ABORTED/ENFORCEMENT_EXHAUSTED`; một blocker cục bộ phải chạy phần độc lập tiếp theo.
 
 ## Miss Prevention Checklist
 

@@ -7,6 +7,7 @@ Contract: https://antigravity.google/docs/hooks
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import re
 import sys
@@ -89,6 +90,24 @@ HARNESS_PATH_MARKERS = (
 
 def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def record_native_receipt(event: str, cid: str) -> None:
+    if os.environ.get("AGENT_RULES_ADAPTER_PROBE") == "1":
+        return
+    try:
+        path = STATE_DIR / "hook-health.json"
+        current = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+        current.update({
+            "platform": "antigravity",
+            "status": "NATIVE_LIVE",
+            "trust_state": "trusted",
+            "native_receipt": {"event": event, "session_id": cid, "at": now_iso(), "script_hash": hashlib.sha256(Path(__file__).read_bytes()).hexdigest()},
+        })
+        STATE_DIR.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(current, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    except OSError:
+        pass
 
 
 def conversation_id(payload: dict[str, Any]) -> str:
@@ -489,6 +508,8 @@ def handle_posttooluse(payload: dict[str, Any]) -> None:
     st = load_state(cid)
     name = tool_name(payload)
     args = tool_args(payload)
+    st["activity_epoch"] = int(st.get("activity_epoch", 0)) + 1
+    record_native_receipt("PostToolUse", cid)
 
     if name in WRITE_TOOLS:
         path = extract_file_path(args)
@@ -514,6 +535,7 @@ def handle_posttooluse(payload: dict[str, Any]) -> None:
 def handle_stop(payload: dict[str, Any]) -> None:
     cid = conversation_id(payload)
     st = load_state(cid)
+    record_native_receipt("Stop", cid)
     reason = str(payload.get("terminationReason") or "")
     fully_idle = payload.get("fullyIdle") is True
 

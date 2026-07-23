@@ -118,6 +118,26 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def record_native_receipt(event: str, session_id: str) -> None:
+    """Record host delivery only; installer/direct probes explicitly opt out."""
+    if os.environ.get("AGENT_RULES_ADAPTER_PROBE") == "1":
+        return
+    try:
+        path = STATE_DIR / "hook-health.json"
+        current = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+        script_hash = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+        current.update({
+            "platform": hook_platform() or "unknown",
+            "status": "NATIVE_LIVE",
+            "trust_state": "trusted",
+            "native_receipt": {"event": event, "session_id": session_id, "at": now_iso(), "script_hash": script_hash},
+        })
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(current, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    except OSError:
+        pass
+
+
 def session_id_from_env(payload: dict[str, Any]) -> str:
     return (
         os.environ.get("GROK_SESSION_ID")
@@ -594,6 +614,7 @@ def handle_session_start(payload: dict[str, Any]) -> None:
         except OSError:
             pass
     sid = session_id_from_env(payload)
+    record_native_receipt("SessionStart", sid)
     st = load_state(sid)
     apply_e2e_cache(st)
     save_state(st)
@@ -608,6 +629,7 @@ def handle_session_start(payload: dict[str, Any]) -> None:
 
 def handle_user_prompt_submit(payload: dict[str, Any]) -> None:
     sid = session_id_from_env(payload)
+    record_native_receipt("UserPromptSubmit", sid)
     st = load_state(sid)
     prompt = extract_prompt(payload)
     admission_hint = ""
@@ -747,6 +769,8 @@ def handle_post_tool_use(payload: dict[str, Any]) -> None:
     tool = payload.get("toolName") or payload.get("tool_name") or ""
     out = tool_output_text(payload)
     exit_ok = payload.get("toolSuccess", payload.get("tool_success", True)) is not False
+    st["activity_epoch"] = int(st.get("activity_epoch", 0)) + 1
+    record_native_receipt("PostToolUse", sid)
 
     if tool in READ_TOOLS:
         path = extract_file_path(payload)
@@ -795,6 +819,7 @@ def handle_post_tool_use(payload: dict[str, Any]) -> None:
 def handle_stop(payload: dict[str, Any]) -> None:
     sid = session_id_from_env(payload)
     st = load_state(sid)
+    record_native_receipt("Stop", sid)
     root = payload_workspace(payload)
     if evaluate_plan_stop is not None and root is not None:
         decision = evaluate_plan_stop(root, sid, st)

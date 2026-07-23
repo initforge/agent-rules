@@ -116,15 +116,13 @@ if ($state.execution_mode -ne "continuous" -or $state.admission_id -ne $admissio
   throw "Lifecycle state did not preserve admission/continuous phase shape"
 }
 
-Assert-Fails @{ Action = "complete"; Root = $Root; PlanPath = $hashLifecycle; Phase = "P1" } "active IN_PROGRESS"
+Assert-Fails @{ Action = "complete"; Root = $Root; PlanPath = $hashLifecycle; Phase = "P1" } "IMPLEMENTED and batch VERIFIED"
 Assert-Fails @{ Action = "start"; Root = $Root; PlanPath = $hashLifecycle; Phase = "P2" } "incomplete dependencies"
 & $planctl -Action start -Root $Root -PlanPath $hashLifecycle -Phase P1 | Out-Host
 if ($LASTEXITCODE -ne 0) { throw "P1 start failed" }
 $env:PLANCTL_LEASE_ID = [string]((Get-Content -Raw -Encoding UTF8 $statePath | ConvertFrom-Json).lease_id)
-$verifyResult = Invoke-PlanctlResult @{ Action = "verify"; Root = $Root; PlanPath = $hashLifecycle; Phase = "P1"; AcId = "AC1" }
-if ($verifyResult.Code -ne 0 -or $verifyResult.Output -notmatch "VERIFY_PASS: P1/AC1" -or $verifyResult.Output -notmatch "receipts") {
-  throw "Runner receipt verification failed: $($verifyResult.Output)"
-}
+$implementedP1 = Invoke-PlanctlResult @{ Action = "implemented"; Root = $Root; PlanPath = $hashLifecycle; Phase = "P1"; LeaseId = $env:PLANCTL_LEASE_ID }
+if ($implementedP1.Code -ne 0 -or $implementedP1.Output -notmatch "IMPLEMENTED:.*P1.*\(1/2\)") { throw "P1 implementation transition failed: $($implementedP1.Output)" }
 
 $badLedger = Join-Path $lifecycleRoot "P1-bad.md"
 [IO.File]::WriteAllText($badLedger, @"
@@ -136,7 +134,7 @@ Scope OUT: [P2]
   verify: pwsh -NoProfile -Command "Write-Output P1"
   evidence: P1
 "@, [Text.Encoding]::UTF8)
-Assert-Fails @{ Action = "complete"; Root = $Root; PlanPath = $hashLifecycle; Phase = "P1"; LedgerPath = $badLedger } "misses plan criteria"
+Assert-Fails @{ Action = "complete"; Root = $Root; PlanPath = $hashLifecycle; Phase = "P1"; LedgerPath = $badLedger } "IMPLEMENTED and batch VERIFIED"
 
 $p1Ledger = Join-Path $lifecycleRoot "P1.md"
 [IO.File]::WriteAllText($p1Ledger, @"
@@ -148,11 +146,7 @@ Scope OUT: [P2]
   verify: pwsh -NoProfile -Command "Write-Output P1"
   evidence: P1
 "@, [Text.Encoding]::UTF8)
-$p1Complete = Invoke-PlanctlResult @{ Action = "complete"; Root = $Root; PlanPath = $hashLifecycle; Phase = "P1"; LedgerPath = $p1Ledger }
-if ($p1Complete.Code -ne 0 -or $p1Complete.Output -notmatch "SLICE_PASS:.*\(1/2\)" -or $p1Complete.Output -match "(?m)^PASS:") {
-  throw "P1 did not emit strict SLICE_PASS 1/2: $($p1Complete.Output)"
-}
-Assert-Fails @{ Action = "finalize"; Root = $Root; PlanPath = $hashLifecycle } "open phases: P2"
+Assert-Fails @{ Action = "complete"; Root = $Root; PlanPath = $hashLifecycle; Phase = "P1"; LedgerPath = $p1Ledger } "batch VERIFIED"
 
 & $planctl -Action start -Root $Root -PlanPath $hashLifecycle -Phase P2 | Out-Host
 if ($LASTEXITCODE -ne 0) { throw "P2 start failed" }
@@ -167,10 +161,14 @@ Scope OUT: []
   verify: pwsh -NoProfile -Command "Write-Output P2"
   evidence: P2
 "@, [Text.Encoding]::UTF8)
-$p2Verify = Invoke-PlanctlResult @{ Action = "verify"; Root = $Root; PlanPath = $hashLifecycle; Phase = "P2"; AcId = "AC1" }
-if ($p2Verify.Code -ne 0 -or $p2Verify.Output -notmatch "VERIFY_PASS: P2/AC1") { throw "P2 receipt verification failed: $($p2Verify.Output)" }
+$implementedP2 = Invoke-PlanctlResult @{ Action = "implemented"; Root = $Root; PlanPath = $hashLifecycle; Phase = "P2"; LeaseId = $env:PLANCTL_LEASE_ID }
+if ($implementedP2.Code -ne 0 -or $implementedP2.Output -notmatch "IMPLEMENTED:.*P2.*\(2/2\)") { throw "P2 implementation transition failed: $($implementedP2.Output)" }
+$batch = Invoke-PlanctlResult @{ Action = "verify-batch"; Root = $Root; PlanPath = $hashLifecycle }
+if ($batch.Code -ne 0 -or $batch.Output -notmatch "BATCH_VERIFY_PASS: phases=2") { throw "Consolidated verification failed: $($batch.Output)" }
+$p1Complete = Invoke-PlanctlResult @{ Action = "complete"; Root = $Root; PlanPath = $hashLifecycle; Phase = "P1"; LedgerPath = $p1Ledger }
+if ($p1Complete.Code -ne 0 -or $p1Complete.Output -notmatch "PHASE_VERIFIED:.*\(1/2\)" -or $p1Complete.Output -match "(?m)^PASS:") { throw "P1 completion was not continuous-safe: $($p1Complete.Output)" }
 $p2Complete = Invoke-PlanctlResult @{ Action = "complete"; Root = $Root; PlanPath = $hashLifecycle; Phase = "P2"; LedgerPath = $p2Ledger }
-if ($p2Complete.Code -ne 0 -or $p2Complete.Output -notmatch "SLICE_PASS:.*\(2/2\)") { throw "P2 completion failed: $($p2Complete.Output)" }
+if ($p2Complete.Code -ne 0 -or $p2Complete.Output -notmatch "PHASE_VERIFIED:.*\(2/2\)") { throw "P2 completion failed: $($p2Complete.Output)" }
 $final = Invoke-PlanctlResult @{ Action = "finalize"; Root = $Root; PlanPath = $hashLifecycle }
 if ($final.Code -ne 0 -or $final.Output -notmatch "(?m)^PLAN_PASS:" -or $final.Output -match "(?m)^PASS:") {
   throw "Finalize did not emit strict PLAN_PASS: $($final.Output)"

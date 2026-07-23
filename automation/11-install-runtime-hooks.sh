@@ -387,7 +387,7 @@ done
 test_pipe() {
   local label="$1" cmd="$2" allow_silent="${3:-0}"
   local out
-  out="$(printf '{"hookEventName":"UserPromptSubmit","prompt":"verify UI browser","session_id":"install-smoke"}' | eval "$cmd" 2>&1)" || true
+  out="$(printf '{"hookEventName":"UserPromptSubmit","prompt":"verify UI browser","session_id":"install-smoke"}' | AGENT_RULES_ADAPTER_PROBE=1 eval "$cmd" 2>&1)" || true
   if [ -z "$(printf '%s' "$out" | tr -d '[:space:]')" ] && [ "$allow_silent" = "1" ]; then
     echo "  $label: OK (silent allow)"
   elif printf '%s' "$out" | grep -q 'additionalContext\|"decision"\|injectSteps'; then
@@ -458,9 +458,8 @@ do
 done
 echo "  Placeholder check installed JSON: OK (or missing file skipped)"
 
-# Persist the result of the smoke probe so doctor can distinguish an installed
-# config from a recently exercised hook path. This is probe evidence, not a
-# claim that every future host event will be delivered by the platform.
+# Persist only direct-adapter smoke evidence. Native host delivery is recorded
+# separately by the hook adapter; an installer can never prove it.
 probe_status="PARTIAL"
 [ "$FAIL" -eq 0 ] && probe_status="PASS"
 probe_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -468,7 +467,7 @@ write_probe_health() {
   local home="$1" platform="$2"
   [ -d "$home" ] || return 0
   mkdir -p "$home/skill-state"
-  printf '{\n  "platform": "%s",\n  "status": "%s",\n  "last_probe": "%s",\n  "events": ["SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Stop"]\n}\n' \
+  printf '{\n  "platform": "%s",\n  "status": "ADAPTER_PASS",\n  "adapter_probe": {"status": "%s", "at": "%s"},\n  "native_receipt": null,\n  "trust_state": "unknown"\n}\n' \
     "$platform" "$probe_status" "$probe_at" > "$home/skill-state/hook-health.json"
 }
 write_probe_health "$CODEX_HOME" "codex"

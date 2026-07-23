@@ -32,7 +32,7 @@ implement, execute, làm đi, bắt đầu code, triển khai, sửa code, apply
 - Advisory → answer in domain language; inspect adjacent facts only when they affect the answer.
 - Plan mode → read-only plan artifact; no source edits before pivot.
 - Execution → verify assumptions, use the matching capability, and close the locked scope.
-- Continuous/full-plan execution → tự đi phase kế tiếp tới `PLAN_PASS`; phase-by-phase bình thường được dừng ở `SLICE_PASS`.
+- Continuous/full-plan execution → tự đi phần việc dependency-ready tới `PLAN_PASS`; verification cadence, reference/release contract và blocker scheduling thuộc `plan-and-handoff`, không tự dừng bằng `PARTIAL`.
 - Evidence enforcement is adaptive: tiny/normal work may use a justified alternate proof; an admitted continuous or high-risk plan must satisfy its typed proof profile, artifact freshness and environment contract. A build/lint-only signal never proves a deep behavior claim.
 - Use browser QA only for explicit live/manual UI proof or when non-browser evidence cannot prove the outcome.
 

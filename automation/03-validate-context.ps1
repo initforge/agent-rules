@@ -212,7 +212,21 @@ if (Test-Path $PlanCtlTests) {
   $Problems.Add("Missing plan compiler fixtures: $PlanCtlTests")
 }
 
-$PythonExe = (Get-Command python -ErrorAction SilentlyContinue).Source
+$PlanProofTests = Join-Path $Root "automation\test-plan-proof.ps1"
+if (Test-Path $PlanProofTests) {
+  try {
+    & $PlanProofTests -Root $Root | Out-Null
+    if ($LASTEXITCODE -ne 0) { $Problems.Add("Plan semantic-proof fixtures failed") }
+  } catch {
+    $Problems.Add("Plan semantic-proof fixtures crashed - error: $_")
+  }
+} else {
+  $Problems.Add("Missing plan semantic-proof fixtures: $PlanProofTests")
+}
+
+$PythonExe = $env:AGENT_RULES_PYTHON
+if (-not $PythonExe) { $PythonExe = $env:HARNESS_PYTHON }
+if (-not $PythonExe) { $PythonExe = (Get-Command python -ErrorAction SilentlyContinue).Source }
 foreach ($PlanGuardTest in @("test-plan-guard.py", "test-plan-hook-wire.py", "test-state-reliability.py", "test-external-receipt.py")) {
   $TestPath = Join-Path $Root "automation\$PlanGuardTest"
   if (-not $PythonExe -or -not (Test-Path $TestPath)) {

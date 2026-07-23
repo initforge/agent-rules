@@ -12,7 +12,7 @@ PAF Markdown is the canonical intent artifact. `automation/planctl.ps1` may comp
 ```yaml
 ---
 plan_id: "<repo>-<slug>-<YYYYMMDD>"
-schema_version: 2
+schema_version: 3
 revision: 0
 supersedes: null
 workflow_mode: plan-authoring | plan-review | execution
@@ -27,6 +27,9 @@ primary_skills: [plan-and-handoff]
 preferred_tier: L0
 plan_author_min_tier: L1
 enforcement: off | shadow | strict
+execution_mode: phase | continuous
+verification_strategy: incremental | implementation-first
+reference_contract: false | required
 state_root: .agent/plans/<plan-id>/
 ---
 ```
@@ -74,8 +77,9 @@ Initialize once, then later actions inherit admission and mode from canonical st
 ./automation/planctl.ps1 -Action admit -AdmissionPath .agent/plans/_admission/<session-id>.json
 ./automation/planctl.ps1 -Action init -PlanPath <paf> -AdmissionPath <json> -ExecutionMode continuous
 ./automation/planctl.ps1 -Action start -PlanPath <paf> -Phase P1
-./automation/planctl.ps1 -Action verify -PlanPath <paf> -Phase P1 -AcId AC1 # runner receipt
-./automation/planctl.ps1 -Action complete -PlanPath <paf> -Phase P1 -LedgerPath <ledger> # SLICE_PASS
+./automation/planctl.ps1 -Action implemented -PlanPath <paf> -Phase P1
+./automation/planctl.ps1 -Action verify-batch -PlanPath <paf> # continuous implementation-first
+./automation/planctl.ps1 -Action complete -PlanPath <paf> -Phase P1 -LedgerPath <ledger>
 ./automation/planctl.ps1 -Action finalize -PlanPath <paf>                                 # PLAN_PASS
 ```
 
@@ -92,24 +96,26 @@ Chỉ subset task-relevant — full router: `context/5fedu/00-context-map.md`.
 | Permission | `domains/permissions.md` | — | suy từ quyền sửa |
 | Owner đã chốt | `project-local/decisions.md` | — | hỏi lại DA_CHOT |
 
-**Template reference (5fedu UI):**
+**Reference contract (only when parity/clone/reference is required):**
 
-| Surface | Reference module | Files mẫu (paths) |
-|---|---|---|
-| CRUD listview | Nhân viên | … |
-| Form drawer | Nhân viên | … |
-| Route chain | — | App.tsx, sidebar-menu, admin-module-registry, Breadcrumbs |
+```yaml
+source: <local path or approved URL>
+revision: <commit/hash/version>
+copy_map: [reference/path -> target/path]
+variable_map: [reference symbol -> domain symbol]
+intentional_differences: []
+```
 
 ---
 
 ## §4 Phases
 
-Mỗi phase = **1 session**.
+Phase là dependency/ownership boundary, không mặc định là terminal session boundary.
 
 ### Atomic + density contract
 
 - ≤8 AC is hard. File count is advisory (normally ≤5); a cohesive subsystem may exceed it when the phase declares why. Registry chain cùng module tính một nhóm.
-- Verify/build-green độc lập; dependency phải explicit, không dựa code hỏng hoặc phần chưa xong của phase trước.
+- Dependency phải explicit. Implementation-first chỉ dùng guard nhẹ ở boundary; heavy verification chạy batch sau mọi phase khả thi.
 - Ghi path + operation + symbol/anchor; context phải đọc; contract/schema/type; edge/regression; forbidden.
 - Mỗi AC là checkbox observable có `verify` + `expected`; không dùng mục tiêu mơ hồ.
 - `planctl validate` hard-fail contract thiếu/placeholder/dependency sai/AC không observable; warning không tước quyền executor.
@@ -136,7 +142,7 @@ files_touched:
   - path (create|modify|delete) — <symbol/anchor>; ý đồ: <...>
 contracts_refs:
   - packages/contracts/... (field/type)
-template_reference: Nhân viên — [paths]
+reference_contract: <optional source/revision/copy map>
 skills_active: [finish-to-completion, 5fedu-module-parity]
 edge_cases: [input biên cần xử lý]
 regression_map: [cái PHẢI KHÔNG vỡ]
@@ -197,9 +203,9 @@ Plan **READY** chỉ khi tất cả PASS:
 - [ ] Nếu có admission: mọi S-ID coverage đúng hash/đúng một lần; mọi D map phase hoặc `DERIVED(reason)`
 - [ ] Mỗi phase có: goal, tier fields, files, verify cmd, exit criteria
 - [ ] PAF v2: mỗi phase có `proof_profiles`; mỗi AC-ID map đúng một `proof_map` row và đủ dimensions
-- [ ] Deep/runtime proof dùng machine artifact hoặc `manifest=true`; build/source query không thay outcome proof
+- [ ] Deep/runtime proof dùng verifier-backed machine artifact/query; `manifest=true` tự phát không thay outcome proof
 - [ ] Context routing khớp task (5fedu khi module ERP)
-- [ ] Template reference có path cụ thể
+- [ ] Nếu có parity/clone: reference contract có source, revision, copy_map và variable_map
 - [ ] Known-unknowns tách khỏi assumptions locked
 - [ ] Phase P1 đủ nhỏ cho 1 session L0 (hoặc min_tier ghi rõ)
 - [ ] **MỌI phase trong ngân sách nguyên tử §4** (≤8 AC, 1 subsystem, verify tự chứa, build-green; file-count vượt ngưỡng phải có cohesion justification)

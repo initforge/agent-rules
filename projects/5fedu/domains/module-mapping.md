@@ -91,6 +91,7 @@ Máy đọc: [`references/pattern-inventory.yaml`](references/pattern-inventory.
 - Tra `pattern-inventory.yaml` → surface + shell_must + variable_slots
 - Tra bảng mapping → chọn module tham chiếu (thường **Nhân viên**)
 - Mở **toàn bộ** file module gốc — không chỉ 1 file
+- Copy structural file graph từ module gốc vào target trước, rồi rename/adapt; PAF ghi source path + revision + copy map + variable map
 - Route admin: `App.tsx` + `sidebar-menu.tsx` + `admin-module-registry.ts` + `Breadcrumbs` getRouteConfig
 - Shell: `*-module.module.tsx` (`createFeatureModule`; tabs nếu spec có stats)
 - List: `*-table.tsx`, `*-toolbar.tsx`
@@ -103,11 +104,13 @@ Máy đọc: [`references/pattern-inventory.yaml`](references/pattern-inventory.
 - `services/`: `*-service.ts`
 - `store/` + `utils/` theo reference
 - **Cấm generic monolith** — 1 config page cho nhiều module
+- Không có source template chính xác hoặc identity mơ hồ → block parity slice, không tự dựng theo trí nhớ
 
 ## Audit checklist (sửa module cũ)
 
 - Tra mapping → module tham chiếu
 - Mở route template + route hiện tại — đối chiếu bằng mắt, audit **mọi surface**
+- Diff/transplant shell fragment thiếu từ source thật; giữ business logic target trừ phần đã map thay thế
 - Toolbar, filter chip, search, column toggle, pagination, export
 - Form drawer + detail drawer (cặp reference)
 - Confirm xóa (`useConfirmStore`)

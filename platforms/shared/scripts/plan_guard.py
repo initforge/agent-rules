@@ -192,6 +192,11 @@ def admission_path(workspace: Path, session_id: str) -> Path:
     return workspace / ".agent" / "plans" / "_admission" / f"{safe}.json"
 
 
+def binding_path(workspace: Path, session_id: str) -> Path:
+    safe = re.sub(r"[^A-Za-z0-9_.-]", "_", session_id)[:128] or "unknown"
+    return workspace / ".agent" / "plans" / "_active" / f"{safe}.json"
+
+
 def _safe_workspace_path(workspace: Path, path: Path) -> Path:
     base = workspace.resolve()
     candidate = path.resolve()
@@ -245,6 +250,16 @@ def _matching_admission(workspace: Path, session_id: str) -> tuple[Path, dict[st
     if direct.is_file():
         return direct, load_json(direct)
     return None
+
+
+def _session_binding(workspace: Path, session_id: str) -> dict[str, Any] | None:
+    path = binding_path(workspace, session_id)
+    if not path.is_file():
+        return None
+    value = load_json(path)
+    if str(value.get("owner_session_id", "")) != session_id:
+        return None
+    return value
 
 
 def _plan_states(workspace: Path) -> tuple[list[tuple[Path, dict[str, Any]]], list[Path]]:
@@ -322,6 +337,9 @@ def _progress_token(state: dict[str, Any]) -> str:
                 "receipt_hash",
                 "evidence_hash",
                 "progress_marker",
+                "implementation_status",
+                "verification_status",
+                "change_receipt",
             )
         )
         for item in state.get("phases") or []
@@ -332,6 +350,7 @@ def _progress_token(state: dict[str, Any]) -> str:
             str(state.get("revision", "")),
             str(state.get("current_phase", "")),
             str(state.get("progress_marker", "")),
+            str(state.get("activity_epoch", "")),
             *phases,
         ]
     )
@@ -377,6 +396,28 @@ def _all_open_phases_blocked(state: dict[str, Any], blockers: list[dict[str, Any
         return True  # explicit plan-wide blocker (legacy states remain safe)
     open_ids = _open_phase_ids(state)
     return bool(open_ids) and set(open_ids).issubset(_blocked_phase_ids(state, active))
+
+
+def _next_runnable_phase(state: dict[str, Any], blocked_ids: set[str]) -> str | None:
+    phases = [item for item in state.get("phases") or [] if isinstance(item, dict)]
+    by_id = {str(item.get("id")): item for item in phases if item.get("id")}
+    implementation_first = (
+        str(state.get("execution_mode", "")) == "continuous"
+        and str(state.get("verification_strategy", "")) == "implementation-first"
+    )
+    for item in phases:
+        phase_id = str(item.get("id", ""))
+        if not phase_id or phase_id in blocked_ids or str(item.get("status", "")).upper() == "DONE":
+            continue
+        dependencies = [str(value) for value in item.get("depends_on") or []]
+        if all(
+            str(by_id.get(dep, {}).get("implementation_status" if implementation_first else "status", "")).upper()
+            == ("IMPLEMENTED" if implementation_first else "DONE")
+            or str(by_id.get(dep, {}).get("status", "")).upper() == "DONE"
+            for dep in dependencies
+        ):
+            return phase_id
+    return None
 
 
 @contextmanager
@@ -442,6 +483,7 @@ def _write_state(path: Path, state: dict[str, Any]) -> None:
 def evaluate_stop(workspace: Path, session_id: str, hook_state: dict[str, Any]) -> dict[str, Any]:
     try:
         admission_pair = _matching_admission(workspace, session_id)
+        binding = _session_binding(workspace, session_id)
         states, corrupt = _plan_states(workspace)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         return {"action": "allow", "reason": f"Plan guard fail-open: {exc}", "warning": True}
@@ -453,7 +495,16 @@ def evaluate_stop(workspace: Path, session_id: str, hook_state: dict[str, Any]) 
             "warning": True,
         }
     admission_id = str((admission or {}).get("admission_id", ""))
-    matching = [(path, state) for path, state in states if admission_id and state.get("admission_id") == admission_id]
+    bound_plan_id = str((binding or {}).get("plan_id", ""))
+    bound_state_path = str((binding or {}).get("state_path", ""))
+    if binding:
+        matching = [
+            (path, state) for path, state in states
+            if str(state.get("plan_id", "")) == bound_plan_id
+            and (not bound_state_path or str(path.resolve()) == str(Path(bound_state_path).resolve()))
+        ]
+    else:
+        matching = [(path, state) for path, state in states if admission_id and state.get("admission_id") == admission_id]
     if not admission:
         # Legacy/adopted plans may predate an admission artifact.  Track every
         # non-terminal lifecycle state so a short "continue" turn cannot bypass
@@ -482,11 +533,6 @@ def evaluate_stop(workspace: Path, session_id: str, hook_state: dict[str, Any]) 
             f"Mega-plan admission {admission_id} has no initialized PAF state; create source coverage and run planctl init before stopping.",
             admission_pair,
         )
-    focused_id = _focused_plan_id(workspace)
-    if focused_id and len(matching) > 1:
-        focused = [(path, state) for path, state in matching if str(state.get("plan_id", "")) == focused_id]
-        if focused:
-            matching = focused
     if not matching:
         if not admission:
             legacy = _legacy_open_artifacts(workspace)
@@ -520,7 +566,7 @@ def evaluate_stop(workspace: Path, session_id: str, hook_state: dict[str, Any]) 
         return {"action": "allow", "reason": "Plan is BLOCKED with recorded evidence; no unblocked phase remains."}
     if str(state.get("execution_mode", (admission or {}).get("execution_mode", "phase"))) != "continuous":
         return {"action": "allow", "reason": "Phase-by-phase plan may stop after SLICE_PASS."}
-    token = _progress_token(state)
+    token = _progress_token(state) + ":" + str(hook_state.get("activity_epoch", ""))
     guard = hook_state.setdefault("plan_guard", {})
     if guard.get("progress_token") != token:
         guard["progress_token"] = token
@@ -528,13 +574,13 @@ def evaluate_stop(workspace: Path, session_id: str, hook_state: dict[str, Any]) 
     guard["no_progress_stops"] = int(guard.get("no_progress_stops", 0)) + 1
     if guard["no_progress_stops"] >= 3:
         state["enforcement_status"] = "ENFORCEMENT_EXHAUSTED"
+        state["status"] = "ABORTED"
         state["enforcement_reason"] = "three consecutive Stop attempts without plan-state progress"
         _write_state(state_path, state)
         return {"action": "allow", "reason": "Plan guard fail-open after three no-progress continuations; PLAN_PASS is forbidden.", "warning": True}
     open_phases = _open_phase_ids(state)
     blocked_ids = _blocked_phase_ids(state, active_blockers)
-    runnable_phases = [phase_id for phase_id in open_phases if phase_id not in blocked_ids]
-    next_phase = str(state.get("current_phase") or (runnable_phases[0] if runnable_phases else (open_phases[0] if open_phases else "finalize")))
+    next_phase = _next_runnable_phase(state, blocked_ids) or (open_phases[0] if open_phases else "finalize")
     return {
         "action": "continue",
         "reason": f"Continuous plan is {status}; next={next_phase}; open_phases={len(open_phases)}; blocked_phases={len(blocked_ids)}. Continue until planctl finalize emits PLAN_PASS.",
