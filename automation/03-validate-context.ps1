@@ -67,11 +67,14 @@ $RequiredPaths = @(
   "rules\05-critical-thinking.md",
   "rules\16-context-style.md",
   "rules\25-task-lifecycle.md",
-  "rules\26-slice-completion-gate.md",
   "skills\plan-and-handoff\SKILL.md",
+  "skills\plan-and-handoff\references\adaptive-work-protocol.md",
   "skills\plan-and-handoff\references\plan-artifact-template.md",
   "skills\plan-and-handoff\references\capability-tier-routing.md",
   "skills\finish-to-completion\references\slice-gate-protocol.md",
+  "automation\workctl.py",
+  "automation\work-ledger.schema.json",
+  "automation\test-workctl.py",
   "projects\5fedu\domains\references\pattern-inventory.yaml"
 )
 foreach ($Path in $RequiredPaths) {
@@ -189,7 +192,7 @@ if (Test-Path $UiRoutingAudit) {
 $PlanArtifactAudit = Join-Path $Root "automation\audit-plan-artifact.ps1"
 if (Test-Path $PlanArtifactAudit) {
   try {
-    & $PlanArtifactAudit -Root $Root -RunId validate-context 2>&1 | Out-Null
+    & $PlanArtifactAudit -Root $Root 2>&1 | Out-Null
     if ($LASTEXITCODE -ne 0) {
       $Problems.Add("Plan artifact audit failed - run automation/audit-plan-artifact.ps1")
     }
@@ -200,45 +203,37 @@ if (Test-Path $PlanArtifactAudit) {
   $Problems.Add("Missing plan artifact audit: automation/audit-plan-artifact.ps1")
 }
 
-$PlanCtlTests = Join-Path $Root "automation\test-planctl.ps1"
-if (Test-Path $PlanCtlTests) {
-  try {
-    & $PlanCtlTests -Root $Root | Out-Null
-    if ($LASTEXITCODE -ne 0) { $Problems.Add("Plan compiler/ledger fixtures failed") }
-  } catch {
-    $Problems.Add("Plan compiler/ledger fixtures crashed - error: $_")
-  }
-} else {
-  $Problems.Add("Missing plan compiler fixtures: $PlanCtlTests")
-}
-
-$PlanProofTests = Join-Path $Root "automation\test-plan-proof.ps1"
-if (Test-Path $PlanProofTests) {
-  try {
-    & $PlanProofTests -Root $Root | Out-Null
-    if ($LASTEXITCODE -ne 0) { $Problems.Add("Plan semantic-proof fixtures failed") }
-  } catch {
-    $Problems.Add("Plan semantic-proof fixtures crashed - error: $_")
-  }
-} else {
-  $Problems.Add("Missing plan semantic-proof fixtures: $PlanProofTests")
-}
-
 $PythonExe = $env:AGENT_RULES_PYTHON
 if (-not $PythonExe) { $PythonExe = $env:HARNESS_PYTHON }
 if (-not $PythonExe) { $PythonExe = (Get-Command python -ErrorAction SilentlyContinue).Source }
-foreach ($PlanGuardTest in @("test-plan-guard.py", "test-plan-hook-wire.py", "test-state-reliability.py", "test-external-receipt.py")) {
-  $TestPath = Join-Path $Root "automation\$PlanGuardTest"
+foreach ($ContractTest in @("test-workctl.py", "test-skill-gate-stack.py", "test-external-receipt.py")) {
+  $TestPath = Join-Path $Root "automation\$ContractTest"
   if (-not $PythonExe -or -not (Test-Path $TestPath)) {
-    $Problems.Add("Missing Python or plan guard fixture: $TestPath")
+    $Problems.Add("Missing Python or workflow fixture: $TestPath")
     continue
   }
   try {
     & $PythonExe $TestPath 2>&1 | Out-Null
-    if ($LASTEXITCODE -ne 0) { $Problems.Add("Plan guard fixture failed: $PlanGuardTest") }
+    if ($LASTEXITCODE -ne 0) { $Problems.Add("Workflow fixture failed: $ContractTest") }
   } catch {
-    $Problems.Add("Plan guard fixture crashed: $PlanGuardTest - error: $_")
+    $Problems.Add("Workflow fixture crashed: $ContractTest - error: $_")
   }
+}
+
+$WorkflowAudit = Join-Path $Root "automation\audit-workflow-clarity.ps1"
+if (-not (Test-Path $WorkflowAudit)) {
+  $Problems.Add("Missing workflow clarity audit: automation/audit-workflow-clarity.ps1")
+} else {
+  & $WorkflowAudit -Root $Root 2>&1 | Out-Null
+  if ($LASTEXITCODE -ne 0) { $Problems.Add("Adaptive workflow clarity audit failed") }
+}
+
+$ToolRegistryAudit = Join-Path $Root "automation\validate-tool-registry.ps1"
+if (-not (Test-Path $ToolRegistryAudit)) {
+  $Problems.Add("Missing tool registry validator")
+} else {
+  & $ToolRegistryAudit -Root $Root 2>&1 | Out-Null
+  if ($LASTEXITCODE -ne 0) { $Problems.Add("Tool registry validation failed") }
 }
 
 if (Test-Path (Join-Path $Root ".agents")) { $Problems.Add("Project mirror exists: .agents") }
@@ -280,24 +275,10 @@ foreach ($Legacy in $LegacyAlwaysOn) {
   }
 }
 
-# Glossary + intentional-oversize intent + project routing must be reachable
-$Bootstrap = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "rules\00-bootstrap.md")
-$Glossary = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "rules\00-bootstrap-reference.md")
-foreach ($Term in @("PAF", "HB-1", "SGP", "L0")) {
-  if ($Glossary -notlike "*$Term*") {
-    $Problems.Add("rules/00-bootstrap-reference.md missing glossary term: $Term")
-  }
-}
+# Intentional oversize declarations remain explicit.
 $BudgetBody = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "rules\50-context-budget.md")
 if ($BudgetBody -notlike "*Intentional oversize*" -or $BudgetBody -notlike "*docs-style*" -or $BudgetBody -notlike "*plan-and-handoff*") {
   $Problems.Add("rules/50-context-budget.md missing intentional oversize owner intent for docs-style/plan-and-handoff")
-}
-$RoutingBody = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "rules\30-context-routing.md")
-if ($RoutingBody -notlike "*project installer skill*") {
-  $Problems.Add("rules/30-context-routing.md must describe project installer routing")
-}
-if ($RoutingBody -notlike "*trigger-audit*" -or $RoutingBody -notlike "*CI*") {
-  $Problems.Add("rules/30-context-routing.md must mark trigger-audit as CI/fixture not runtime SoT")
 }
 
 $RouteCasesPath = Join-Path $Root "automation\context-route-cases.json"
@@ -447,14 +428,13 @@ if ($CleanCode -match '"review code"' -or $CleanCode -match 'Trigger on.*"review
   $Problems.Add("skills/clean-code must not claim generic 'review code' (belongs to code-review)")
 }
 $KnowledgeSystem = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "guides\02-knowledge-system.md")
-if ($KnowledgeSystem -notlike "*routing*" -or $KnowledgeSystem -notlike "*ZONE A-lazy*") {
+if (
+  $KnowledgeSystem -notlike "*routing*" -or
+  $KnowledgeSystem -notlike "*Boundary*" -or
+  $KnowledgeSystem -notlike "*small/medium/large/resumable*"
+) {
   $Problems.Add("guides/02-knowledge-system.md is out of sync with structured routing and lazy boundaries")
 }
-$Bootstrap = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "rules\00-bootstrap.md")
-if ($Bootstrap -notlike "*00-bootstrap-reference.md*") {
-  $Problems.Add("rules/00-bootstrap.md must point to the lazy glossary")
-}
-
 if ($Problems.Count) {
   $Problems | ForEach-Object { Write-Error $_ }
   exit 1

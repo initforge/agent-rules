@@ -1,6 +1,6 @@
 ﻿param(
   [ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platform = "all",
-  [ValidateSet("shadow","strict")][string]$Mode = "strict"
+  [ValidateSet("strict")][string]$Mode = "strict"
 )
 
 $ErrorActionPreference = "Stop"

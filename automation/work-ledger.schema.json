@@ -1,0 +1,433 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/work-ledger.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "work_id",
+    "status",
+    "created_at",
+    "updated_at",
+    "plan_ref",
+    "classification",
+    "execution_contract",
+    "repository",
+    "source_history",
+    "slices",
+    "assignments",
+    "receipts",
+    "reviews",
+    "findings",
+    "checkpoints",
+    "usage",
+    "next_action",
+    "active_slices"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "work_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{2,79}$" },
+    "status": {
+      "enum": ["planned", "running", "blocked", "needs-replan", "passed", "rolled-back"]
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "plan_ref": { "type": "string", "minLength": 1 },
+    "active_slices": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "classification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["shape", "ledger", "strategy", "review_required", "reasons"],
+      "properties": {
+        "shape": { "enum": ["small", "medium", "large", "resumable"] },
+        "ledger": { "enum": ["off", "auto", "required"] },
+        "strategy": { "enum": ["single-agent", "delegated", "parallel"] },
+        "review_required": { "type": "boolean" },
+        "reasons": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "execution_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "max_active_agents_including_main",
+        "max_delegation_depth",
+        "effort_cap",
+        "authorized_final_actions"
+      ],
+      "properties": {
+        "mode": { "const": "automatic" },
+        "max_active_agents_including_main": { "type": "integer", "minimum": 1, "maximum": 16 },
+        "max_delegation_depth": { "type": "integer", "minimum": 0, "maximum": 2 },
+        "effort_cap": { "enum": ["low", "medium", "high"] },
+        "authorized_final_actions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["edit", "commit", "push", "deploy", "external-write"] }
+        }
+      }
+    },
+    "repository": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["path", "branch", "baseline_commit"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "branch": { "type": "string", "minLength": 1 },
+        "baseline_commit": { "type": "string", "minLength": 1 }
+      }
+    },
+    "source_history": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/source" }
+    },
+    "slices": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/slice" }
+    },
+    "assignments": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/assignment" }
+    },
+    "receipts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/receipt" }
+    },
+    "reviews": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/review" }
+    },
+    "findings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/finding" }
+    },
+    "checkpoints": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/checkpoint" }
+    },
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input_tokens",
+        "cached_input_tokens",
+        "output_tokens",
+        "reasoning_tokens",
+        "agent_runs",
+        "tool_calls",
+        "records"
+      ],
+      "properties": {
+        "input_tokens": { "type": "integer", "minimum": 0 },
+        "cached_input_tokens": { "type": "integer", "minimum": 0 },
+        "output_tokens": { "type": "integer", "minimum": 0 },
+        "reasoning_tokens": { "type": "integer", "minimum": 0 },
+        "agent_runs": { "type": "integer", "minimum": 0 },
+        "tool_calls": { "type": "integer", "minimum": 0 },
+        "records": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/usageRecord" }
+        }
+      }
+    },
+    "next_action": { "type": "string" }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "summary", "captured_at", "redacted", "slice_ids"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z]+-[0-9]{3}$" },
+        "kind": { "enum": ["original", "decision", "injection", "discovery"] },
+        "summary": { "type": "string", "minLength": 1 },
+        "verbatim_excerpt": { "type": "string" },
+        "captured_at": { "type": "string", "format": "date-time" },
+        "redacted": { "type": "boolean" },
+        "slice_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "acceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "claim",
+        "status",
+        "proof_required",
+        "proof_profile",
+        "required_proof_kinds",
+        "required_dimensions",
+        "receipt_ids"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^AC[0-9]+$" },
+        "claim": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["open", "passed", "failed", "blocked"] },
+        "proof_required": { "type": "boolean" },
+        "proof_profile": { "type": "string", "minLength": 1 },
+        "required_proof_kinds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "static", "diff", "build", "unit", "integration", "api", "e2e",
+              "browser", "performance", "security", "manual", "artifact"
+            ]
+          }
+        },
+        "required_dimensions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "receipt_ids": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "slice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "name", "status", "depends_on", "required", "review_required", "acceptance"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9._-]+$" },
+        "name": { "type": "string", "minLength": 1 },
+        "status": {
+          "enum": ["planned", "ready", "running", "review", "passed", "blocked", "needs-replan", "rolled-back"]
+        },
+        "depends_on": { "type": "array", "items": { "type": "string" } },
+        "required": { "type": "boolean" },
+        "review_required": { "type": "boolean" },
+        "acceptance": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/acceptance" } }
+      }
+    },
+    "assignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "slice_id",
+        "agent",
+        "role",
+        "model_class",
+        "model",
+        "effort",
+        "source_ids",
+        "write_paths",
+        "context_paths",
+        "forbidden_paths",
+        "acceptance_ids",
+        "status"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "slice_id": { "type": "string", "minLength": 1 },
+        "agent": { "type": "string", "minLength": 1 },
+        "role": { "enum": ["researcher", "mechanical-executor", "executor", "reviewer", "specialist", "main"] },
+        "model_class": { "enum": ["economy", "standard", "expert"] },
+        "model": { "type": "string", "minLength": 1 },
+        "effort": { "enum": ["low", "medium", "high"] },
+        "source_ids": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "write_paths": { "type": "array", "items": { "type": "string" } },
+        "context_paths": { "type": "array", "items": { "type": "string" } },
+        "forbidden_paths": { "type": "array", "items": { "type": "string" } },
+        "acceptance_ids": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "status": { "enum": ["ready", "running", "done", "blocked", "cancelled"] }
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "slice_id",
+        "acceptance_id",
+        "claim",
+        "status",
+        "expected",
+        "observed",
+        "environment",
+        "agent",
+        "model",
+        "effort",
+        "captured_at",
+        "claim_hash",
+        "contract_hash",
+        "provenance",
+        "proof_kind",
+        "dimensions",
+        "command_hash",
+        "output_hash",
+        "exit_code",
+        "expected_exit_code",
+        "artifact_evidence",
+        "verifier"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "slice_id": { "type": "string", "minLength": 1 },
+        "acceptance_id": { "type": "string", "minLength": 1 },
+        "claim": { "type": "string", "minLength": 1 },
+        "claim_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "contract_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "status": { "enum": ["PASS", "FAIL", "BLOCKED"] },
+        "provenance": { "enum": ["runner", "external-verifier"] },
+        "proof_kind": {
+          "enum": [
+            "static", "diff", "build", "unit", "integration", "api", "e2e",
+            "browser", "performance", "security", "manual", "artifact"
+          ]
+        },
+        "dimensions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "command": { "type": "string" },
+        "command_hash": {
+          "oneOf": [
+            { "const": "" },
+            { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+          ]
+        },
+        "expected": { "type": "string", "minLength": 1 },
+        "observed": { "type": "string", "minLength": 1 },
+        "environment": { "type": "string", "minLength": 1 },
+        "output_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "exit_code": { "type": ["integer", "null"] },
+        "expected_exit_code": { "type": ["integer", "null"] },
+        "artifact_evidence": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/artifactEvidence" }
+        },
+        "verifier": { "type": "string", "minLength": 1 },
+        "agent": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 },
+        "effort": { "enum": ["low", "medium", "high"] },
+        "captured_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "slice_id", "severity", "summary", "status", "reviewer", "created_at"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "slice_id": { "type": "string", "minLength": 1 },
+        "severity": { "enum": ["critical", "high", "medium", "low"] },
+        "summary": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["open", "resolved", "accepted"] },
+        "reviewer": { "type": "string", "minLength": 1 },
+        "created_at": { "type": "string", "format": "date-time" },
+        "resolution": { "type": "string" },
+        "resolved_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "slice_id",
+        "reviewer",
+        "status",
+        "scope",
+        "observed",
+        "receipt_ids",
+        "receipt_hashes",
+        "model",
+        "effort",
+        "created_at"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "slice_id": { "type": "string", "minLength": 1 },
+        "reviewer": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["PASS", "FAIL"] },
+        "scope": { "type": "string", "minLength": 1 },
+        "observed": { "type": "string", "minLength": 1 },
+        "receipt_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "receipt_hashes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "model": { "type": "string", "minLength": 1 },
+        "effort": { "enum": ["low", "medium", "high"] },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "checkpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "slice_id", "commit", "summary", "next_action", "created_at"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "slice_id": { "type": "string", "minLength": 1 },
+        "commit": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 },
+        "next_action": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "artifactEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "size_bytes", "modified_at"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "modified_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "usageRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "captured_at",
+        "actor",
+        "assignment_id",
+        "input_tokens",
+        "cached_input_tokens",
+        "output_tokens",
+        "reasoning_tokens",
+        "agent_runs",
+        "tool_calls"
+      ],
+      "properties": {
+        "captured_at": { "type": "string", "format": "date-time" },
+        "actor": { "type": "string", "minLength": 1 },
+        "assignment_id": { "type": ["string", "null"] },
+        "input_tokens": { "type": "integer", "minimum": 0 },
+        "cached_input_tokens": { "type": "integer", "minimum": 0 },
+        "output_tokens": { "type": "integer", "minimum": 0 },
+        "reasoning_tokens": { "type": "integer", "minimum": 0 },
+        "agent_runs": { "type": "integer", "minimum": 0 },
+        "tool_calls": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

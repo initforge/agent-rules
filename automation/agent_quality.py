@@ -29,6 +29,7 @@ DEFAULT_CORPUS_SCHEMA = BENCHMARK_DIR / "agent-quality-benchmark.schema.json"
 DEFAULT_LIVE_SCHEMA = BENCHMARK_DIR / "live-result.schema.json"
 DEFAULT_TRACE_SCHEMA = ROOT / "automation" / "trace-schema.json"
 DEFAULT_GRAPH = ROOT / "05-generated" / "context-graph.json"
+DEFAULT_EVIDENCE_PROFILES = ROOT / "automation" / "evidence-profiles.json"
 
 
 class ContractError(ValueError):
@@ -86,7 +87,11 @@ def _fallback_validate(instance: Any, schema_name: str) -> None:
             if case["evaluator"] == "deterministic":
                 _require_keys(case, {"expected"}, f"case[{index}]")
             elif case["evaluator"] == "live":
-                _require_keys(case, {"required_behavior", "scoring_dimensions", "variants"}, f"case[{index}]")
+                _require_keys(
+                    case,
+                    {"required_behavior", "scoring_dimensions", "variants", "claim_profile"},
+                    f"case[{index}]",
+                )
             else:
                 raise ContractError(f"case[{index}]: unknown evaluator {case['evaluator']}")
         return
@@ -100,6 +105,8 @@ def _fallback_validate(instance: Any, schema_name: str) -> None:
             "model_version", "duration_seconds", "input_tokens", "output_tokens",
             "cached_input_tokens", "uncached_input_tokens", "reasoning_output_tokens",
             "tool_calls", "turn_count", "tool_output_chars", "max_input_tokens", "termination", "notes",
+            "subagent_input_tokens", "subagent_cached_input_tokens", "subagent_uncached_input_tokens",
+            "subagent_output_tokens", "subagent_reasoning_output_tokens", "claim_profile", "proof_dimensions",
         }
         _require_keys(instance, required, "live result")
         unknown = sorted(set(instance) - allowed)
@@ -138,6 +145,13 @@ def validate_corpus(corpus: dict[str, Any], graph: dict[str, Any] | None = None)
     live = [case for case in corpus["cases"] if case["evaluator"] == "live"]
     if len(deterministic) < 15 or len(live) < 15:
         raise ContractError("benchmark requires at least 15 deterministic and 15 live cases")
+    profiles = load_json(DEFAULT_EVIDENCE_PROFILES)["profiles"]
+    for case in live:
+        profile = case.get("claim_profile")
+        if not profile:
+            raise ContractError(f"{case['id']}: live case requires a claim profile")
+        if profile not in profiles:
+            raise ContractError(f"{case['id']}: unknown claim profile {profile}")
 
     if graph is not None:
         graph_ids = {str(node["id"]) for node in graph.get("nodes", [])}
@@ -271,6 +285,9 @@ def read_records(paths: Iterable[str | Path]) -> list[dict[str, Any]]:
 
 def validate_live_results(records: list[dict[str, Any]], corpus: dict[str, Any]) -> None:
     live_cases = {case["id"]: case for case in corpus["cases"] if case["evaluator"] == "live"}
+    profile_document = load_json(DEFAULT_EVIDENCE_PROFILES)
+    profiles = profile_document["profiles"]
+    machine_kinds = set(profile_document["machine_evidence_kinds"])
     seen: set[tuple[str, str, str]] = set()
     for index, record in enumerate(records):
         validate_schema(record, DEFAULT_LIVE_SCHEMA)
@@ -285,6 +302,46 @@ def validate_live_results(records: list[dict[str, Any]], corpus: dict[str, Any])
             raise ContractError(f"record {index}: finished_at precedes started_at")
         if record["outcome"] == "PASS" and not any(item.get("status") == "PASS" for item in record["evidence"]):
             raise ContractError(f"record {index}: PASS requires at least one passing evidence item")
+        required_profile = live_cases[case_id].get("claim_profile")
+        if required_profile:
+            profile = profiles.get(required_profile)
+            if not profile:
+                raise ContractError(f"record {index}: unknown claim profile {required_profile}")
+            if record.get("claim_profile") != required_profile:
+                raise ContractError(f"record {index}: {case_id} requires claim_profile={required_profile}")
+        if required_profile and record["outcome"] == "PASS":
+            required_dimensions = set(profile["required_dimensions"])
+            case_text = json.dumps(live_cases[case_id], ensure_ascii=False).lower()
+            for dimension, signals in profile.get("conditional_dimensions", {}).items():
+                if any(str(signal).lower() in case_text for signal in signals):
+                    required_dimensions.add(dimension)
+            dimensions = set(record.get("proof_dimensions") or [])
+            missing_dimensions = required_dimensions - dimensions
+            if missing_dimensions:
+                raise ContractError(f"record {index}: {case_id} missing proof dimensions {sorted(missing_dimensions)}")
+            passing = [item for item in record["evidence"] if item.get("status") == "PASS"]
+            passing_kinds = {item.get("kind") for item in passing}
+            if not passing_kinds & set(profile["allowed_kinds"]):
+                raise ContractError(f"record {index}: {case_id} lacks allowed evidence kind for {required_profile}")
+            observed_dimensions = {dimension for item in passing for dimension in item.get("dimensions", [])}
+            if not required_dimensions.issubset(observed_dimensions):
+                raise ContractError(f"record {index}: {case_id} evidence does not cover required dimensions")
+            if profile.get("build_only_forbidden") and passing_kinds <= {"build"}:
+                raise ContractError(f"record {index}: build-only evidence cannot prove {required_profile}")
+            if profile.get("runtime_evidence_required") and not passing_kinds & machine_kinds:
+                raise ContractError(f"record {index}: {required_profile} requires runtime evidence")
+        for total_name, cached_name, uncached_name in (
+            ("input_tokens", "cached_input_tokens", "uncached_input_tokens"),
+            ("subagent_input_tokens", "subagent_cached_input_tokens", "subagent_uncached_input_tokens"),
+        ):
+            total = record.get(total_name)
+            cached = record.get(cached_name)
+            uncached = record.get(uncached_name)
+            if all(isinstance(value, (int, float)) for value in (total, cached, uncached)):
+                if cached + uncached != total:
+                    raise ContractError(
+                        f"record {index}: {cached_name} + {uncached_name} must equal {total_name}"
+                    )
         if record["evidence_kind"] == "empirical" and record["platform"] == "fixture":
             raise ContractError(f"record {index}: fixture platform cannot be empirical evidence")
         key = (str(record["run_id"]), case_id, str(record["variant"]))
@@ -315,12 +372,23 @@ def aggregate_quality_report(
 
     empirical_results = [result for result in live_results if result["evidence_kind"] == "empirical"]
     synthetic_results = [result for result in live_results if result["evidence_kind"] == "synthetic"]
+    known_false_passes = [
+        result for result in empirical_results
+        if result["outcome"] == "PASS" and bool(result["owner_correction"])
+    ]
     by_variant: dict[str, dict[str, Any]] = {}
     for variant in ("baseline", "core", "full"):
         selected = [result for result in empirical_results if result["variant"] == variant]
         score_values = [score for result in selected for score in result["scores"].values()]
         def average_metric(name: str) -> float | None:
             values = [float(result[name]) for result in selected if isinstance(result.get(name), (int, float))]
+            return round(sum(values) / len(values), 3) if values else None
+        def average_total(main: str, subagent: str) -> float | None:
+            values = [
+                float(result.get(main) or 0) + float(result.get(subagent) or 0)
+                for result in selected
+                if isinstance(result.get(main), (int, float)) or isinstance(result.get(subagent), (int, float))
+            ]
             return round(sum(values) / len(values), 3) if values else None
         by_variant[variant] = {
             "runs": len(selected),
@@ -335,6 +403,13 @@ def aggregate_quality_report(
             "average_cached_input_tokens": average_metric("cached_input_tokens"),
             "average_uncached_input_tokens": average_metric("uncached_input_tokens"),
             "average_output_tokens": average_metric("output_tokens"),
+            "average_total_input_tokens": average_total("input_tokens", "subagent_input_tokens"),
+            "average_total_cached_input_tokens": average_total("cached_input_tokens", "subagent_cached_input_tokens"),
+            "average_total_uncached_input_tokens": average_total("uncached_input_tokens", "subagent_uncached_input_tokens"),
+            "average_total_output_tokens": average_total("output_tokens", "subagent_output_tokens"),
+            "average_total_reasoning_output_tokens": average_total(
+                "reasoning_output_tokens", "subagent_reasoning_output_tokens"
+            ),
             "average_tool_calls": average_metric("tool_calls"),
             "average_turn_count": average_metric("turn_count"),
             "average_tool_output_chars": average_metric("tool_output_chars"),
@@ -393,6 +468,11 @@ def aggregate_quality_report(
             "empirical_runs": len(empirical_results),
             "synthetic_runs": len(synthetic_results),
             "unique_cases": len({result["case_id"] for result in empirical_results}),
+            "known_false_passes": len(known_false_passes),
+            "known_false_pass_rate": (
+                round(len(known_false_passes) / len(empirical_results), 4)
+                if empirical_results else None
+            ),
             "comparable_triplets": comparable_groups,
             "comparable_cases": len(comparable_case_ids),
             "decision_thresholds": {
@@ -417,6 +497,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- Routing: {report['routing']['passed']}/{report['routing']['total']} passed",
         f"- Live evidence: {report['live']['empirical_runs']} empirical runs across {report['live']['unique_cases']} cases",
         f"- Synthetic contract records excluded from evidence: {report['live']['synthetic_runs']}",
+        f"- Known false PASS (owner-corrected PASS only): {report['live']['known_false_passes']}",
         f"- Comparable baseline/core/full triplets: {report['live']['comparable_triplets']}",
         f"- Comparable cases: {report['live']['comparable_cases']}",
         f"- KEEP threshold: {report['live']['decision_thresholds']['minimum_comparable_cases']} cases and "
@@ -436,16 +517,18 @@ def render_markdown(report: dict[str, Any]) -> str:
         )
     lines.extend([
         "", "## Efficiency (average per empirical run)", "",
-        "| Variant | Input | Cached input | Uncached input | Output | Tool calls | Turns | Tool output (chars) |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|",
+        "| Variant | Main input | Total input | Total cached | Total uncached | Main output | Total output | Total reasoning | Tool calls | Turns | Tool output (chars) |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ])
     for variant, values in report["live"]["by_variant"].items():
         def show(name: str) -> str:
             value = values.get(name)
             return "—" if value is None else f"{value:,.0f}"
         lines.append(
-            f"| {variant} | {show('average_input_tokens')} | {show('average_cached_input_tokens')} | "
-            f"{show('average_uncached_input_tokens')} | {show('average_output_tokens')} | "
+            f"| {variant} | {show('average_input_tokens')} | {show('average_total_input_tokens')} | "
+            f"{show('average_total_cached_input_tokens')} | {show('average_total_uncached_input_tokens')} | "
+            f"{show('average_output_tokens')} | {show('average_total_output_tokens')} | "
+            f"{show('average_total_reasoning_output_tokens')} | "
             f"{show('average_tool_calls')} | {show('average_turn_count')} | {show('average_tool_output_chars')} |"
         )
     lines.extend(["", "## Friction", ""])

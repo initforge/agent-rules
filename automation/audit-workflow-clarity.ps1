@@ -1,139 +1,79 @@
-﻿# Phase 6e - Workflow hybrid audit (§E)
-param(
-  [string]$LogPath = (Join-Path (Split-Path -Parent $PSScriptRoot) ".cursor\debug-75fce4.log")
-)
+param([string]$Root = (Split-Path -Parent $PSScriptRoot))
 $ErrorActionPreference = "Stop"
-$Root = Split-Path -Parent $PSScriptRoot
-Set-Location $Root
+$Problems = [System.Collections.Generic.List[string]]::new()
 
-function Write-AuditLog {
-  param([string]$HypothesisId, [string]$Location, [string]$Message, [hashtable]$Data)
-  $entry = @{
-    sessionId    = "75fce4"
-    runId        = "workflow-clarity"
-    hypothesisId = $HypothesisId
-    location     = $Location
-    message      = $Message
-    data         = $Data
-    timestamp    = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
-  } | ConvertTo-Json -Compress -Depth 6
-  $dir = Split-Path -Parent $LogPath
-  if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
-  Add-Content -LiteralPath $LogPath -Value $entry -Encoding UTF8
-}
-
-function Read-Text {
-  param([string]$RelPath)
-  $full = Join-Path $Root $RelPath
-  if (-not (Test-Path $full)) { return $null }
-  Get-Content -Raw -Encoding UTF8 $full
-}
-
-function Test-AllPatterns {
-  param([string]$Text, [string[]]$Patterns)
-  if (-not $Text) { return $false }
-  foreach ($p in $Patterns) {
-    if ($Text -notmatch $p) { return $false }
+function Test-Contract {
+  param([string]$RelativePath, [string[]]$Patterns)
+  $Path = Join-Path $Root $RelativePath
+  if (-not (Test-Path -LiteralPath $Path)) {
+    $Problems.Add("Missing file: $RelativePath")
+    return
   }
-  return $true
+  $Body = Get-Content -Raw -Encoding UTF8 -LiteralPath $Path
+  foreach ($Pattern in $Patterns) {
+    if ($Body -notmatch $Pattern) {
+      $Problems.Add("$RelativePath missing workflow contract: $Pattern")
+    }
+  }
 }
 
-$checks = @(
-  @{
-    name     = "workflow_mode"
-    files    = @("rules/25-task-lifecycle.md")
-    patterns = @("Workflow mode", "plan-authoring")
-  },
-  @{
-    name     = "plan_wall_hb1"
-    files    = @("rules/25-task-lifecycle.md", "rules/10-execution.md")
-    patterns = @("HB-1")
-    anyFile  = $true
-  },
-  @{
-    name     = "pivot_phrases"
-    files    = @("rules/10-execution.md")
-    patterns = @("Pivot phrases", "làm đi")
-  },
-  @{
-    name     = "finish_execution"
-    files    = @("rules/10-execution.md", "skills/finish-to-completion/SKILL.md")
-    patterns = @("mode=", "execution")
-    perFile  = $true
-  },
-  @{
-    name     = "plan_first_end"
-    files    = @("skills/plan-and-handoff/SKILL.md")
-    patterns = @("Plan-first", "HB-1")
-  },
-  @{
-    name     = "zones_doc"
-    files    = @("guides/02-knowledge-system.md")
-    patterns = @("Zone")
-  },
-  @{
-    name     = "file_count_gate"
-    files    = @("rules/25-task-lifecycle.md")
-    patterns = @("File-count gate", "≥2")
-  },
-  @{
-    name     = "normal_no_mandatory_plan"
-    files    = @("rules/25-task-lifecycle.md")
-    patterns = @("not every normal task")
-  },
-  @{
-    name     = "plan_tier_routing"
-    files    = @("rules/25-task-lifecycle.md", "skills/plan-and-handoff/references/capability-tier-routing.md")
-    patterns = @("Weak-first", "L0")
-    anyFile  = $true
-  },
-  @{
-    name     = "paf_template"
-    files    = @("skills/plan-and-handoff/references/plan-artifact-template.md")
-    patterns = @("HANDOFF", "preferred_tier", "min_tier")
-  },
-  @{
-    name     = "plan_paths_ad"
-    files    = @("skills/plan-and-handoff/SKILL.md")
-    patterns = @("Path A", "Path D", "decision tree")
-  }
+Test-Contract "rules\00-bootstrap.md" @(
+  "native Plan Mode",
+  "explicit execute pivot",
+  "Ask only a question",
+  "main agent accountable"
+)
+Test-Contract "rules\10-execution.md" @(
+  "own orchestration",
+  "local blocker does not stop independent work",
+  "Match evidence to the claim",
+  "build/lint proves static compatibility"
+)
+Test-Contract "rules\25-task-lifecycle.md" @(
+  "advisory",
+  "plan",
+  "execution",
+  "small",
+  "medium",
+  "large",
+  "resumable",
+  "not a file-count"
+)
+Test-Contract "skills\plan-and-handoff\references\adaptive-work-protocol.md" @(
+  "Automatic execution",
+  "Meaningful questions",
+  "economy",
+  "standard",
+  "expert",
+  "risk-triggered",
+  "ledger"
+)
+Test-Contract "skills\finish-to-completion\SKILL.md" @(
+  "execute pivot",
+  "dependency-ready",
+  "main agent",
+  "PARTIAL",
+  "BLOCKED"
 )
 
-$failures = @()
-Write-AuditLog -HypothesisId "W0" -Location "audit-workflow-clarity:start" -Message "Workflow clarity audit started" -Data @{ checks = $checks.Count }
-
-foreach ($check in $checks) {
-  $pass = $false
-  if ($check.perFile) {
-    $pass = $true
-    foreach ($f in $check.files) {
-      $text = Read-Text $f
-      if (-not (Test-AllPatterns -Text $text -Patterns $check.patterns)) {
-        $pass = $false
-        break
-      }
+foreach ($RelativePath in @(
+  "rules\00-bootstrap.md",
+  "rules\10-execution.md",
+  "rules\25-task-lifecycle.md",
+  "skills\plan-and-handoff\SKILL.md",
+  "skills\finish-to-completion\SKILL.md"
+)) {
+  $Body = Get-Content -Raw -Encoding UTF8 -LiteralPath (Join-Path $Root $RelativePath)
+  foreach ($Forbidden in @("HB-1", "PLAN_PASS", "SLICE_PASS", "file-count gate", "Stop-hook admission")) {
+    if ($Body -match [regex]::Escape($Forbidden)) {
+      $Problems.Add("$RelativePath retains obsolete ceremony: $Forbidden")
     }
-  } elseif ($check.anyFile) {
-    foreach ($f in $check.files) {
-      $text = Read-Text $f
-      if (Test-AllPatterns -Text $text -Patterns $check.patterns) {
-        $pass = $true
-        break
-      }
-    }
-  } else {
-    $text = Read-Text $check.files[0]
-    $pass = Test-AllPatterns -Text $text -Patterns $check.patterns
   }
-
-  Write-AuditLog -HypothesisId "W1" -Location "audit-workflow-clarity:check" -Message $check.name -Data @{ check = $check.name; pass = $pass }
-  if (-not $pass) { $failures += $check.name }
 }
 
-if ($failures.Count -gt 0) {
-  Write-Host "FAIL: $($failures -join ', ')"
+if ($Problems.Count -gt 0) {
+  $Problems | ForEach-Object { Write-Host "FAIL: $_" }
   exit 1
 }
 
-Write-Host "PASS: workflow hybrid audit ($($checks.Count) checks)"
-exit 0
+Write-Host "PASS: adaptive workflow clarity audit"

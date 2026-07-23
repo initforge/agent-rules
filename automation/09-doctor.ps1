@@ -14,10 +14,10 @@ $PlatformHomes = @{
   cursor = Join-Path $UserHome ".cursor"
 }
 $McpConfigPaths = @{
-  codex = Join-Path $UserHome ".codex/config.toml"
-  grok = Join-Path $UserHome ".grok/mcp.json"
-  antigravity = Join-Path $UserHome ".gemini/config/mcp_config.json"
-  cursor = Join-Path $UserHome ".cursor/mcp.json"
+  codex = Join-Path $PlatformHomes["codex"] "config.toml"
+  grok = Join-Path $PlatformHomes["grok"] "mcp.json"
+  antigravity = Join-Path $PlatformHomes["antigravity"] "mcp_config.json"
+  cursor = Join-Path $PlatformHomes["cursor"] "mcp.json"
 }
 $Selected = if ($Platform -eq "all") { @("codex", "grok", "antigravity", "cursor") } else { @($Platform) }
 
@@ -83,7 +83,7 @@ foreach ($Name in $Selected) {
       $CasesHash = if (Test-Path -LiteralPath $RoutingCasesPath) { (Get-FileHash -Algorithm SHA256 -LiteralPath $RoutingCasesPath).Hash.ToLowerInvariant() } else { "" }
       $SchemaHash = if (Test-Path -LiteralPath $RoutingSchemaPath) { (Get-FileHash -Algorithm SHA256 -LiteralPath $RoutingSchemaPath).Hash.ToLowerInvariant() } else { "" }
       $ConformanceOk = [int]$RoutingState.conformance_version -ge 3 -and [string]$RoutingState.conformance_hash -eq $CasesHash -and [string]$RoutingState.conformance_schema_hash -eq $SchemaHash
-      if ([int]$RoutingGraph.version -ge 2 -and [string]$RoutingState.graph_hash -eq $RoutingHash -and [string]$RoutingState.mode -in @("shadow", "strict") -and $ConformanceOk) {
+      if ([int]$RoutingGraph.version -ge 2 -and [string]$RoutingState.graph_hash -eq $RoutingHash -and [string]$RoutingState.mode -eq "strict" -and $ConformanceOk) {
         $Report += [pscustomobject]@{ platform = $Name; check = "context-routing-mode"; status = "OK"; detail = "$($RoutingState.mode), graph + conformance hashes verified" }
       } else {
         $Report += [pscustomobject]@{ platform = $Name; check = "context-routing-mode"; status = "NOT_LIVE"; detail = "mode, graph or conformance contract does not match installed runtime" }
@@ -92,7 +92,7 @@ foreach ($Name in $Selected) {
       $Report += [pscustomobject]@{ platform = $Name; check = "context-routing-mode"; status = "NOT_LIVE"; detail = $_.Exception.Message }
     }
   } else {
-    $Report += [pscustomobject]@{ platform = $Name; check = "context-routing-mode"; status = "WARN"; detail = "not cut over; runtime defaults to shadow" }
+    $Report += [pscustomobject]@{ platform = $Name; check = "context-routing-mode"; status = "NOT_LIVE"; detail = "missing strict graph-routing receipt" }
   }
 
   # Hook health: structural config plus a recent local smoke probe. A copied
@@ -118,8 +118,11 @@ foreach ($Name in $Selected) {
     }
   }
   if ($Name -eq "cursor") {
-    $Report += [pscustomobject]@{ platform = $Name; check = "native-hook-contract"; status = "WARN"; detail = "No native Cursor hook contract discovered; rules/MCP remain installed" }
-  } elseif ($HookConfig) {
+    $HookConfig = Join-Path $RuntimeHome "hooks.json"
+    $HookNeedle = "cursor-hook.py"
+    $HookScript = Join-Path $RuntimeHome "scripts\cursor-hook.py"
+  }
+  if ($HookConfig) {
     if ($Name -eq "codex") {
       $CodexConfigPath = $McpConfigPaths[$Name]
       $HooksEnabled = (Test-Path $CodexConfigPath) -and (Select-String -Path $CodexConfigPath -Pattern '(?m)^\s*hooks\s*=\s*true\s*$' -Quiet)
@@ -130,26 +133,38 @@ foreach ($Name in $Selected) {
       }
     }
     $ConfigBody = if (Test-Path $HookConfig) { Get-Content -Raw -Encoding UTF8 $HookConfig } else { "" }
-    if ((Test-Path $HookConfig) -and (Test-Path $HookScript) -and $ConfigBody -notmatch "__CODEX_HOME__|__ANTIGRAVITY_HOME__|__PYTHON__" -and $ConfigBody -match $HookNeedle) {
+    if ((Test-Path $HookConfig) -and (Test-Path $HookScript) -and $ConfigBody -notmatch "__CODEX_HOME__|__ANTIGRAVITY_HOME__|__CURSOR_HOME__|__PYTHON__" -and $ConfigBody -match $HookNeedle) {
       $Report += [pscustomobject]@{ platform = $Name; check = "hook-config"; status = "OK"; detail = "hook config and gate script present" }
     } else {
       $Report += [pscustomobject]@{ platform = $Name; check = "hook-config"; status = "NOT_LIVE"; detail = "hook config/script missing, placeholder, or stale matcher" }
     }
     $HealthPath = Join-Path $RuntimeHome "skill-state\hook-health.json"
     $AdapterOk = $false
-    $NativeLive = $false
+    $NativeObserved = $false
     $NativeUnobserved = $false
     if (Test-Path $HealthPath) {
       try {
         $Health = Get-Content -Raw -Encoding UTF8 $HealthPath | ConvertFrom-Json
         $When = [DateTimeOffset]::Parse([string]$Health.adapter_probe.at)
         $AdapterOk = ([string]$Health.adapter_probe.status -eq "PASS" -and (([DateTimeOffset]::UtcNow - $When).TotalDays -le 7))
-        $NativeLive = [bool]$Health.native_receipt -and ([string]$Health.trust_state -eq "trusted")
-        $NativeUnobserved = $AdapterOk -and -not $NativeLive
+        if ([bool]$Health.native_receipt) {
+          $ReceiptAt = [DateTimeOffset]::Parse([string]$Health.native_receipt.at)
+          $ReceiptHash = [string]$Health.native_receipt.script_hash
+          $InstalledHash = if (Test-Path $HookScript) {
+            (Get-FileHash -Algorithm SHA256 -LiteralPath $HookScript).Hash.ToLowerInvariant()
+          } else { "" }
+          $NativeObserved = (
+            [string]$Health.status -eq "NATIVE_OBSERVED" -and
+            [string]$Health.trust_state -eq "unattested" -and
+            $ReceiptHash -eq $InstalledHash -and
+            (([DateTimeOffset]::UtcNow - $ReceiptAt).TotalDays -le 7)
+          )
+        }
+        $NativeUnobserved = $AdapterOk -and -not $NativeObserved
       } catch { $AdapterOk = $false }
     }
-    if ($NativeLive) {
-      $Report += [pscustomobject]@{ platform = $Name; check = "hook-native-live"; status = "OK"; detail = "host-delivered hook receipt is present" }
+    if ($NativeObserved) {
+      $Report += [pscustomobject]@{ platform = $Name; check = "hook-native-observed"; status = "NATIVE_OBSERVED"; detail = "matching hook observation exists; local state cannot independently prove host origin" }
     } elseif ($NativeUnobserved) {
       $Report += [pscustomobject]@{ platform = $Name; check = "hook-native-live"; status = "NATIVE_UNOBSERVED"; detail = "adapter smoke passed, but no host-delivered receipt; review hook trust or host lifecycle dispatch before claiming native enforcement" }
     } elseif ($AdapterOk) {

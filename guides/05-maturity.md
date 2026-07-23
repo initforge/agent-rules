@@ -31,13 +31,13 @@ Criteria (advisory, target repo):
 Criteria (structural):
 - M2 pass
 - `context-evolution-protocol` references `.agent/trace.jsonl` as friction signal source
-- `rules/26-slice-completion-gate.md` remains lazy but is reachable from finish/plan slice procedures
-- `skills/finish-to-completion/references/slice-gate-protocol.md` present
+- adaptive plan/execute protocol and `workctl` schema/tests are present
+- `skills/finish-to-completion/references/slice-gate-protocol.md` is reachable from plan and execution skills
 
 Criteria (advisory):
 - Repeated friction in trace log leads to reviewed promotion (human gate)
 - No stale `plans/` references in canonical docs
-- Repos with multi-phase execution use `.agent/plans/<plan-id>/ledger/` with verify cmd per AC (SGP §11)
+- Large/resumable work maps requirements and later injections to slices and keeps runner-backed proof per acceptance criterion
 
 ## M4 — Empirically measured
 

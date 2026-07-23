@@ -15,7 +15,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from agent_quality import DEFAULT_CORPUS, load_json, validate_live_results, write_jsonl
+from agent_quality import (
+    DEFAULT_CORPUS,
+    DEFAULT_EVIDENCE_PROFILES,
+    load_json,
+    validate_live_results,
+    write_jsonl,
+)
 from live_workspace_verifier import DEFAULT_FIXTURES, initialize_git, verify
 
 
@@ -62,6 +68,17 @@ def prompt_for(case: dict[str, Any]) -> str:
         "Finish the task and report concise verification evidence. If the fixture contains `.benchmark-verify.cmd`, "
         "use it for its provided verification instead of assuming a language executable is on PATH."
     )
+
+
+def profile_contract(case: dict[str, Any]) -> tuple[str, list[str]]:
+    profile_name = str(case["claim_profile"])
+    profile = load_json(DEFAULT_EVIDENCE_PROFILES)["profiles"][profile_name]
+    dimensions = set(profile["required_dimensions"])
+    case_text = json.dumps(case, ensure_ascii=False).lower()
+    for dimension, signals in profile.get("conditional_dimensions", {}).items():
+        if any(str(signal).lower() in case_text for signal in signals):
+            dimensions.add(dimension)
+    return profile_name, sorted(dimensions)
 
 
 def prepare_run_home(variant_home: Path) -> tempfile.TemporaryDirectory[str]:
@@ -243,6 +260,15 @@ def run_one(
         verified["evidence"].append({
             "type": "runtime", "label": "codex exec", "status": "PASS", "ref": "exit=0; events.jsonl"
         })
+    profile_name, proof_dimensions = profile_contract(case)
+    verified["evidence"].append({
+        "type": "runtime",
+        "kind": "custom-runtime",
+        "label": "fixture behavior contract",
+        "status": "PASS" if verified["outcome"] == "PASS" else "FAIL",
+        "ref": "verifier.json",
+        "dimensions": proof_dimensions,
+    })
     finished_at = utc_now()
     telemetry = event_telemetry(events)
     return {
@@ -261,6 +287,8 @@ def run_one(
         "outcome": verified["outcome"],
         "scores": verified["scores"],
         "evidence": verified["evidence"],
+        "claim_profile": profile_name,
+        "proof_dimensions": proof_dimensions,
         "owner_correction": False,
         "friction": verified["friction"],
         "duration_seconds": round(time.monotonic() - started_clock, 3),
@@ -287,6 +315,11 @@ def self_test() -> None:
             raise AssertionError("fixture was not initialized")
         if resolve_variants("native", None) != ["full"]:
             raise AssertionError("native default variant is not full")
+        if profile_contract(case) != (
+            "behavior-safety",
+            ["negative-constraint", "outcome", "scope"],
+        ):
+            raise AssertionError("runner lost the live evidence profile contract")
         try:
             resolve_variants("native", ["baseline"])
         except ValueError:

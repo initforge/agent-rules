@@ -9,7 +9,7 @@ load_order:
   - 30-context-routing.md
 budgets:
   bootstrap_tokens: 300
-  core_total_tokens: 4500
+  core_total_tokens: 3000
   route_budgets_file: automation/context-route-cases.json
   platform_overlay_tokens: 600
   capability_tokens: 3500

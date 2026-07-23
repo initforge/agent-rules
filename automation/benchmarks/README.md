@@ -25,7 +25,7 @@ python automation/report-agent-quality.py --routing .agent/benchmarks/run/routin
 
 - Store run artifacts under `.agent/benchmarks/`; they are advisory and gitignored.
 - Persistent ablation homes never contain credentials. Ablation execution accepts only `CODEX_API_KEY`; copying `auth.json` is unsupported because refresh-token rotation can invalidate the active local session.
-- `native` uses the current signed-in Codex home without copying it, runs `full` only, uses `--ephemeral --ignore-user-config`, and confines artifacts to `.agent/benchmarks/`. It proves current-runtime behavior but is never baseline/core evidence.
+- `native` uses the current signed-in Codex home without copying it, runs `full` only, keeps the installed harness enabled, and confines artifacts to `.agent/benchmarks/`. It proves current-runtime behavior but is never baseline/core evidence.
 - `ablation` uses credential-free isolated homes and a process-scoped `CODEX_API_KEY` to compare baseline/core/full.
 - The runner checkpoints validated records after every completed variant so an interrupted triplet retains partial evidence without being misreported as comparable.
 - Do not store chain-of-thought, secrets, full tool payloads, or sensitive prompts.
@@ -36,6 +36,8 @@ python automation/report-agent-quality.py --routing .agent/benchmarks/run/routin
 ## Live scoring
 
 Score each dimension from `0` to `4`: scope, correctness, safety, verification, communication. Record model, platform, reasoning effort, tools, evidence, owner corrections, friction, duration, and optional token/tool counts.
+
+`input_tokens`, cached/uncached input, output and reasoning fields are main-agent-only. `subagent_*` fields are separate sums; reports combine them explicitly. A known false PASS means a PASS later corrected by the owner. Evidence that violates a claim profile is rejected before reporting and is not hidden inside that retrospective metric.
 
 Compare `baseline`, `core`, and `full` only when the task, workspace fixture, model, effort, and tools are comparable. Otherwise mark the run separately; do not infer a causal improvement.
 

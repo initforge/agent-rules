@@ -2,15 +2,21 @@
 """Executable conformance suite for graph-backed progressive routing."""
 from __future__ import annotations
 
+import importlib.util
 import json
 import sys
 import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "platforms" / "shared" / "scripts"))
-
-from context_router import load_graph, route  # noqa: E402
+ROUTER_PATH = ROOT / "automation" / "context-graph-router.py"
+spec = importlib.util.spec_from_file_location("context_graph_router", ROUTER_PATH)
+if spec is None or spec.loader is None:
+    raise ImportError(f"cannot load {ROUTER_PATH}")
+router = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(router)
+load_graph = router.load_graph
+route = router.route
 
 
 def fail(case_id: str, message: str) -> None:
@@ -56,6 +62,8 @@ def main() -> int:
 
         if decision.get("primary") != expected.get("primary"):
             fail(case_id, f"primary={decision.get('primary')!r}; expected {expected.get('primary')!r}")
+        if decision.get("routing_mode") != "strict" or decision.get("router_source") != "context-graph":
+            fail(case_id, "router must default to strict graph routing")
 
         required = set(decision.get("required_skills") or [])
         supporting = set(decision.get("supporting_skills") or [])

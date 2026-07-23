@@ -5,31 +5,61 @@
       "name": "codebase-memory-mcp",
       "policy": "required",
       "path": "integrations/required/codebase-memory-mcp",
-      "triggerClasses": ["code-exploration", "impact-analysis", "cross-file-trace"]
+      "triggerClasses": ["code-exploration", "impact-analysis", "cross-file-trace"],
+      "capabilityClass": "codebase-intelligence",
+      "sideEffects": "read-only",
+      "tokenClass": "low",
+      "nativeHosts": ["codex", "grok", "antigravity", "cursor"],
+      "fallback": "rg plus targeted reads and native symbol navigation",
+      "proofStatus": "adapter-verified"
     },
     {
       "name": "context7",
       "policy": "recommended",
       "path": "integrations/recommended/context7",
-      "triggerClasses": ["latest-docs", "framework-behavior", "api-reference", "migration-research"]
+      "triggerClasses": ["latest-docs", "framework-behavior", "api-reference", "migration-research"],
+      "capabilityClass": "external-documentation",
+      "sideEffects": "network-read",
+      "tokenClass": "medium",
+      "nativeHosts": ["codex", "grok", "antigravity", "cursor"],
+      "fallback": "official primary-source documentation or web research",
+      "proofStatus": "adapter-verified"
     },
     {
       "name": "playwright-mcp",
       "policy": "recommended",
       "path": "integrations/recommended/playwright-mcp",
-      "triggerClasses": ["browser-qa", "ui-e2e", "click-through", "playwright", "agentic-browser"]
+      "triggerClasses": ["browser-qa", "ui-e2e", "click-through", "playwright", "agentic-browser"],
+      "capabilityClass": "browser-interaction",
+      "sideEffects": "interactive-browser",
+      "tokenClass": "high",
+      "nativeHosts": ["codex", "grok", "antigravity", "cursor"],
+      "fallback": "report the live-interaction proof gap; do not infer it from build output",
+      "proofStatus": "adapter-verified"
     },
     {
       "name": "chrome-devtools-mcp",
       "policy": "recommended",
       "path": "integrations/recommended/chrome-devtools-mcp",
-      "triggerClasses": ["browser-qa", "console-debug", "network-debug", "cdp", "chrome-devtools"]
+      "triggerClasses": ["browser-qa", "console-debug", "network-debug", "cdp", "chrome-devtools"],
+      "capabilityClass": "browser-diagnostics",
+      "sideEffects": "browser-read",
+      "tokenClass": "high",
+      "nativeHosts": ["codex", "grok", "antigravity", "cursor"],
+      "fallback": "browser console/network evidence when a host-native DevTools session is available",
+      "proofStatus": "adapter-verified"
     },
     {
       "name": "caveman",
       "policy": "optional",
       "path": "integrations/optional/caveman",
-      "triggerClasses": ["compression-workflow"]
+      "triggerClasses": ["compression-workflow"],
+      "capabilityClass": "workflow-utility",
+      "sideEffects": "local-write",
+      "tokenClass": "medium",
+      "nativeHosts": [],
+      "fallback": "use canonical skills and normal task reasoning",
+      "proofStatus": "advisory-only"
     }
   ]
 }

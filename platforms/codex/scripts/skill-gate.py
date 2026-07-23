@@ -25,13 +25,9 @@ for _shared in (
     if str(_shared) not in sys.path:
         sys.path.insert(0, str(_shared))
 try:
-    from context_router import load_graph, route as graph_route, route_signature
-except ImportError:  # pragma: no cover - legacy installs use the old gate
-    load_graph = graph_route = route_signature = None  # type: ignore[assignment]
-try:
-    from plan_guard import evaluate_stop as evaluate_plan_stop, write_admission
-except ImportError:  # pragma: no cover - staged rollout keeps older runtimes usable
-    evaluate_plan_stop = write_admission = None  # type: ignore[assignment]
+    from context_router import load_graph, route as graph_route
+except ImportError:  # pragma: no cover - fail open without routing context
+    load_graph = graph_route = None  # type: ignore[assignment]
 
 # Windows hook runner may use cp1252 pipes; Vietnamese inject must not crash.
 for _stream in (sys.stdout, sys.stderr):
@@ -87,17 +83,6 @@ READ_TOOLS = {"read_file", "Read", "skill", "Skill"}
 GIT_COMMIT_RE = re.compile(r"\bgit\b.{0,40}\bcommit\b", re.I | re.S)
 
 
-def routing_mode() -> str:
-    """Read the explicit cutover mode, defaulting safely to shadow."""
-    raw = os.environ.get("AGENT_RULES_ROUTING_MODE")
-    if raw:
-        return raw.lower()
-    mode_file = STATE_DIR / "routing-mode.json"
-    try:
-        mode = json.loads(mode_file.read_text(encoding="utf-8-sig")).get("mode", "shadow")
-    except (OSError, ValueError, TypeError):
-        mode = "shadow"
-    return str(mode).lower() if mode else "shadow"
 DEEP_PATTERNS = re.compile(
     r"test:e2e:prod:deep|"
     r"production-multi-role\.spec\.ts.*production-transport-deep|"
@@ -129,8 +114,8 @@ def record_native_receipt(event: str, session_id: str) -> None:
         script_hash = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
         current.update({
             "platform": hook_platform() or "unknown",
-            "status": "NATIVE_LIVE",
-            "trust_state": "trusted",
+            "status": "NATIVE_OBSERVED",
+            "trust_state": "unattested",
             "native_receipt": {"event": event, "session_id": session_id, "at": now_iso(), "script_hash": script_hash},
         })
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -160,7 +145,7 @@ def default_state(sid: str) -> dict[str, Any]:
         "signals": [],
         "stack": [],
         "primary": None,
-        "routing": {"mode": "fallback", "graph": None},
+        "routing": {"mode": "unavailable", "graph": None},
         "e2e": {
             "smoke_passed": False,
             "smoke_passed_at": None,
@@ -415,15 +400,13 @@ def graph_decision(prompt: str) -> dict[str, Any] | None:
         return None
 
 
-def record_routing_comparison(state: dict[str, Any], prompt: str, legacy: dict[str, Any], graph: dict[str, Any] | None) -> None:
+def record_graph_routing(state: dict[str, Any], graph: dict[str, Any] | None) -> None:
     if not graph:
-        state["routing"] = {"mode": "fallback", "graph": None}
+        state["routing"] = {"mode": "strict", "status": "graph-unavailable", "graph": None}
         return
-    legacy_sig = (legacy.get("primary"), tuple(legacy.get("stack") or []), tuple())
-    graph_sig = route_signature(graph) if route_signature else ()
     state["routing"] = {
-        "mode": routing_mode(),
-        "legacy": {"primary": legacy.get("primary"), "stack": legacy.get("stack") or []},
+        "mode": "strict",
+        "status": "graph-routed",
         "graph": {
             "primary": graph.get("primary"),
             "stack": graph.get("stack") or [],
@@ -434,7 +417,6 @@ def record_routing_comparison(state: dict[str, Any], prompt: str, legacy: dict[s
             "matched_phrases": graph.get("matched_phrases") or [],
             "workspace_facts": graph.get("workspace_facts") or {},
         },
-        "match": legacy_sig == graph_sig,
         "graph_hash": graph.get("graph_hash"),
     }
 
@@ -532,115 +514,6 @@ def extract_prompt(payload: dict[str, Any]) -> str:
     return ""
 
 
-def skill_exists(slug: str) -> bool:
-    """Only inject skills that exist on disk (repo skills/ or runtime skills/)."""
-    # __file__ = …/platforms/codex/scripts/skill-gate.py → parents[3] = repo root
-    repo_skills = Path(__file__).resolve().parents[3] / "skills" / slug / "SKILL.md"
-    candidates = [
-        RUNTIME_HOME / "skills" / slug / "SKILL.md",
-        repo_skills,
-        Path.home() / ".grok" / "skills" / slug / "SKILL.md",
-        Path.home() / ".codex" / "skills" / slug / "SKILL.md",
-    ]
-    root = workspace_root()
-    if root:
-        candidates.insert(0, root / "skills" / slug / "SKILL.md")
-    return any(p.is_file() for p in candidates)
-
-
-def detect_signals(text: str) -> list[str]:
-    t = text.lower()
-    signals: list[str] = []
-    rules = [
-        (
-            "e2e",
-            r"\be2e\b|playwright|\.spec\.ts|test:e2e|kiểm thử|browser.?qa|"
-            r"verify\s+ui|click-through|exploratory|test như user|chrome-devtools|console error",
-        ),
-        (
-            "ui",
-            r"\bui\b|giao diện|frontend|\.tsx|css|layout|component|"
-            r"làm module|sửa module|sua module|lam module|refactor module|"
-            r"\bmodule\b|parity|lệch template|drawer|toolbar|listview",
-        ),
-        ("research", r"research|tìm hiểu|changelog|release notes|latest|external|stuck|stall"),
-        (
-            "5fedu",
-            r"5fedu|\.agents/5fedu|context/5fedu|tah-app|nostime|/template|"
-            r"module-parity|nhân viên|phòng ban",
-        ),
-        (
-            "context-evolution",
-            r"ghi nhớ|bổ sung context|đưa vào rule|đừng lặp lại|context bị loạn|"
-            r"dọn context|sync rule|agent làm bậy|sửa rule|sửa skill|sửa workflow|"
-            r"AGENTS\.md|\.agents/|\.codex/",
-        ),
-        ("harness", r"harness|agent-rules|validate-harness|sync-all-harness|install-grok"),
-        ("docs", r"\breadme\b|/docs/|tài liệu|\bspecs?\b"),
-    ]
-    for name, pat in rules:
-        if re.search(pat, t, re.I):
-            signals.append(name)
-    # A generic "module" belongs to the active project, not automatically to
-    # 5fedu. Only add the project signal when the workspace proves that context
-    # is installed; an explicit 5fedu phrase still wins everywhere.
-    if "ui" in signals and "5fedu" not in signals:
-        root = workspace_root()
-        if root and (root / "context" / "5fedu" / "00-context-map.md").is_file():
-            signals.append("5fedu")
-    return signals
-
-
-def _append_live(stack: list[str], slug: str) -> None:
-    if slug not in stack and skill_exists(slug):
-        stack.append(slug)
-
-
-def build_stack(signals: list[str]) -> list[str]:
-    stack: list[str] = []
-    if "context-evolution" in signals:
-        _append_live(stack, "context-evolution-protocol")
-    if "harness" in signals:
-        _append_live(stack, "context-evolution-protocol")
-    if "5fedu" in signals:
-        _append_live(stack, "5fedu-project")
-        if "ui" in signals or "e2e" in signals:
-            _append_live(stack, "5fedu-module-parity")
-    if "research" in signals:
-        _append_live(stack, "researcher")
-    if "ui" in signals:
-        if "5fedu" in signals:
-            _append_live(stack, "5fedu-module-parity")
-        else:
-            _append_live(stack, "frontend-architect")
-    if "e2e" in signals:
-        _append_live(stack, "qa-skills")
-        _append_live(stack, "browser-qa")
-    if "docs" in signals:
-        _append_live(stack, "docs-style")
-    return stack
-
-
-def pick_primary(stack: list[str], signals: list[str]) -> str | None:
-    if not stack:
-        return None
-    if "e2e" in signals:
-        for pref in ("browser-qa", "qa-skills"):
-            if pref in stack:
-                return pref
-    if "ui" in signals:
-        for pref in ("5fedu-module-parity", "frontend-architect"):
-            if pref in stack:
-                return pref
-    if "5fedu" in signals and "5fedu-module-parity" in stack:
-        return "5fedu-module-parity"
-    if "context-evolution" in signals and "context-evolution-protocol" in stack:
-        return "context-evolution-protocol"
-    if "harness" in signals:
-        return stack[-1]
-    return stack[-1]
-
-
 def tool_output_text(payload: dict[str, Any]) -> str:
     chunks: list[str] = []
     # Codex currently sends the completed tool payload as `tool_response`.
@@ -721,27 +594,11 @@ def handle_user_prompt_submit(payload: dict[str, Any]) -> None:
     admission_hint = ""
     if prompt:
         root = payload_workspace(payload)
-        if write_admission is not None and root is not None:
-            admission = write_admission(root, sid, prompt)
-            if admission is not None:
-                st["plan_admission_path"] = str(admission)
-                admission_hint = (
-                    f"Mega-plan admitted at {admission}. Before edits, create a PAF with exact Source coverage "
-                    "and initialize planctl state. Continuous mode may stop only after PLAN_PASS."
-                )
-        legacy_signals = detect_signals(prompt)
-        legacy = {
-            "signals": legacy_signals,
-            "stack": build_stack(legacy_signals),
-            "primary": None,
-        }
-        legacy["primary"] = pick_primary(legacy["stack"], legacy_signals)
         graph = graph_decision(prompt)
-        record_routing_comparison(st, prompt, legacy, graph)
-        use_graph = bool(graph) and routing_mode() == "strict"
-        signals = (graph or {}).get("signals", []) if use_graph else legacy_signals
-        stack = (graph or {}).get("stack", []) if use_graph else legacy["stack"]
-        primary = (graph or {}).get("primary") if use_graph else legacy["primary"]
+        record_graph_routing(st, graph)
+        signals = (graph or {}).get("signals", [])
+        stack = (graph or {}).get("stack", [])
+        primary = (graph or {}).get("primary")
         st["signals"] = signals
         st["stack"] = stack
         st["primary"] = primary
@@ -889,8 +746,12 @@ def handle_post_tool_use(payload: dict[str, Any]) -> None:
 
     if tool in BASH_TOOLS:
         cmd = extract_command(payload)
-        if cmd and re.search(r"\bplanctl(?:\.ps1)?\b.*\b(?:start|complete|finalize)\b", cmd, re.I):
-            reset_efficiency(st, "plan_phase_boundary")
+        if cmd and re.search(
+            r"\bworkctl(?:\.py|\.ps1|\.sh)?\b.*\b(?:start|close|checkpoint|finalize)\b",
+            cmd,
+            re.I,
+        ):
+            reset_efficiency(st, "work_slice_boundary")
         if cmd and re.search(r"validate-harness(-behaviors)?\.sh", cmd) and looks_like_test_success(out, exit_ok):
             st["harness"]["validated"] = True
             st["harness"]["validated_at"] = now_iso()
@@ -913,20 +774,7 @@ def handle_stop(payload: dict[str, Any]) -> None:
     sid = session_id_from_env(payload)
     st = load_state(sid)
     record_native_receipt("Stop", sid)
-    root = payload_workspace(payload)
-    if evaluate_plan_stop is not None and root is not None:
-        decision = evaluate_plan_stop(root, sid, st)
-        save_state(st)
-        if decision.get("action") == "continue":
-            reason = _posix_paths_in_text(str(decision.get("reason") or "Continue active plan."))
-            if hook_platform() == "codex":
-                print(json.dumps({"continue": False, "stopReason": reason, "systemMessage": reason}, ensure_ascii=False))
-            else:
-                print(json.dumps({"decision": "continue", "reason": reason}, ensure_ascii=False))
-            return
-        if decision.get("warning"):
-            inject_context(str(decision.get("reason") or "Plan enforcement exhausted; PLAN_PASS is forbidden."), "Stop")
-            return
+    save_state(st)
     if st.get("harness_task"):
         log = RUNTIME_HOME / "skill-state" / "harness-reminders.log"
         try:

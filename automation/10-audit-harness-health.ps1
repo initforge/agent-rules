@@ -241,63 +241,34 @@ Write-DebugLog "H10" "audit-harness-health.ps1:validate" "validate-context-exit"
   output = @($ValOut)
 }
 
-# H11: Slice Gate Protocol wiring
-$Rule26Path = Join-Path $Root "rules\26-slice-completion-gate.md"
-$SgpPath = Join-Path $Root "skills\finish-to-completion\references\slice-gate-protocol.md"
-$FtcSkillPath = Join-Path $Root "skills\finish-to-completion\SKILL.md"
-$ManifestPath = Join-Path $Root "rules\manifest.yaml"
+# H11: Adaptive work protocol and machine ledger wiring
 $H11Problems = @()
-if (-not (Test-Path $Rule26Path)) {
-  $H11Problems += "missing rules/26-slice-completion-gate.md"
-}
-if (-not (Test-Path $SgpPath)) {
-  $H11Problems += "missing skills/finish-to-completion/references/slice-gate-protocol.md"
-}
-if (Test-Path $ManifestPath) {
-  $ManifestBody = Get-Content -Raw -Encoding UTF8 $ManifestPath
-  if ($ManifestBody -match "load_order:[\s\S]*26-slice-completion-gate\.md") {
-    $H11Problems += "rules/manifest.yaml must keep slice gate lazy; remove 26-slice-completion-gate.md from load_order"
-  }
-} else {
-  $H11Problems += "missing rules/manifest.yaml"
-}
-if (Test-Path $FtcSkillPath) {
-  $FtcBody = Get-Content -Raw -Encoding UTF8 $FtcSkillPath
-  if ($FtcBody -notlike "*slice-gate-protocol*") {
-    $H11Problems += "finish-to-completion/SKILL.md missing slice-gate-protocol reference"
-  }
-} else {
-  $H11Problems += "missing skills/finish-to-completion/SKILL.md"
-}
-if (Test-Path $Rule26Path) {
-  $Rule26Body = Get-Content -Raw -Encoding UTF8 $Rule26Path
-  if ($Rule26Body -notlike "*slice-gate-protocol*") {
-    $H11Problems += "rules/26-slice-completion-gate.md missing slice-gate-protocol pointer"
+$H11Files = @(
+  "skills\plan-and-handoff\references\adaptive-work-protocol.md",
+  "skills\finish-to-completion\references\slice-gate-protocol.md",
+  "skills\finish-to-completion\references\completion-ledger.md",
+  "automation\workctl.py",
+  "automation\work-ledger.schema.json",
+  "automation\test-workctl.py"
+)
+foreach ($RelativePath in $H11Files) {
+  if (-not (Test-Path (Join-Path $Root $RelativePath))) {
+    $H11Problems += "missing $RelativePath"
   }
 }
+$FtcSkillPath = Join-Path $Root "skills\finish-to-completion\SKILL.md"
 $PahSkillPath = Join-Path $Root "skills\plan-and-handoff\SKILL.md"
-if (Test-Path $PahSkillPath) {
-  $PahBody = Get-Content -Raw -Encoding UTF8 $PahSkillPath
-  if ($PahBody -notlike "*slice-gate-protocol*") {
-    $H11Problems += "plan-and-handoff/SKILL.md missing slice-gate-protocol reference"
-  }
-} else {
-  $H11Problems += "missing skills/plan-and-handoff/SKILL.md"
+if ((Test-Path $FtcSkillPath) -and (Get-Content -Raw -Encoding UTF8 $FtcSkillPath) -notlike "*slice-gate-protocol*") {
+  $H11Problems += "finish-to-completion missing slice receipt reference"
 }
-$ClPath = Join-Path $Root "skills\finish-to-completion\references\completion-ledger.md"
-if (Test-Path $ClPath) {
-  $ClBody = Get-Content -Raw -Encoding UTF8 $ClPath
-  if ($ClBody -notlike "*slice-gate-protocol*") {
-    $H11Problems += "completion-ledger.md missing slice-gate-protocol reference"
-  }
-} else {
-  $H11Problems += "missing skills/finish-to-completion/references/completion-ledger.md"
+if ((Test-Path $PahSkillPath) -and (Get-Content -Raw -Encoding UTF8 $PahSkillPath) -notlike "*adaptive-work-protocol*") {
+  $H11Problems += "plan-and-handoff missing adaptive protocol reference"
 }
-Write-DebugLog "H11" "audit-harness-health.ps1:slice-gate" "sgp-wiring" @{
+Write-DebugLog "H11" "audit-harness-health.ps1:adaptive-work" "work-protocol-wiring" @{
   problems = @($H11Problems)
 }
 foreach ($P in $H11Problems) {
-  Add-Finding "workflow" "slice-gate-protocol" "fail" $P "H11"
+  Add-Finding "workflow" "adaptive-work-protocol" "fail" $P "H11"
 }
 
 # H12: Grok dual-tree / inject lean (when home present)

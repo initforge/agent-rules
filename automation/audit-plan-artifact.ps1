@@ -1,125 +1,109 @@
-﻿param(
+param(
   [string]$Root = (Split-Path -Parent $PSScriptRoot),
-  [string]$PlanPath = "",
-  [string]$RunId = "audit-plan-artifact"
+  [string]$PlanPath = ""
 )
 $ErrorActionPreference = "Stop"
-. (Join-Path $PSScriptRoot "path-compat.ps1")
 
 $Problems = [System.Collections.Generic.List[string]]::new()
 
-function Test-FileContains {
-  param([string]$Path, [string[]]$Needles, [switch]$MustNotContain)
-  if (-not (Test-Path $Path)) {
-    $Problems.Add("Missing file: $Path")
-    return $false
-  }
-  $Body = (Get-Content -Raw -Encoding UTF8 $Path)
-  $Lower = $Body.ToLowerInvariant()
-  foreach ($N in $Needles) {
-    $Hit = $Lower -like "*$($N.ToLowerInvariant())*"
-    if ($MustNotContain -and $Hit) {
-      $Problems.Add("Forbidden pattern '$N' in $Path")
-      return $false
-    }
-    if (-not $MustNotContain -and -not $Hit) {
-      $Problems.Add("Missing keyword '$N' in $Path")
-      return $false
-    }
-  }
-  return $true
-}
-
-function Test-PlanFile {
-  param([string]$Path)
-  if (-not (Test-Path $Path)) {
-    $Problems.Add("Plan file not found: $Path")
+function Test-Contains {
+  param([string]$RelativePath, [string[]]$Patterns)
+  $Path = Join-Path $Root $RelativePath
+  if (-not (Test-Path -LiteralPath $Path)) {
+    $Problems.Add("Missing file: $RelativePath")
     return
   }
-  $Body = Get-Content -Raw -Encoding UTF8 $Path
-  $Sections = @(
-    "Scope lock", "Context routing", "Phases", "Known-unknowns",
-    "Plan QA", "HANDOFF", "preferred_tier", "min_tier"
-  )
-  foreach ($S in $Sections) {
-    if ($Body -notlike "*$S*") {
-      $Problems.Add("PAF plan missing section/field '$S' in $Path")
+  $Body = Get-Content -Raw -Encoding UTF8 -LiteralPath $Path
+  foreach ($Pattern in $Patterns) {
+    if ($Body -notmatch $Pattern) {
+      $Problems.Add("$RelativePath missing contract pattern: $Pattern")
     }
   }
 }
 
-# --- Harness self-check ---
-$TierRef = Join-Path $Root "skills\plan-and-handoff\references\capability-tier-routing.md"
-$PafTemplate = Join-Path $Root "skills\plan-and-handoff\references\plan-artifact-template.md"
-$PafExample = Join-Path $Root "skills\plan-and-handoff\references\example-5fedu-module-plan.md"
-$SkillPath = Join-Path $Root "skills\plan-and-handoff\SKILL.md"
-$ResearcherPath = Join-Path $Root "skills\researcher\SKILL.md"
-$LifePath = Join-Path $Root "rules\25-task-lifecycle.md"
-$AntigravityOverlay = Join-Path $Root "platforms\antigravity\antigravity-overlay.md"
-$UiDetail = Join-Path $Root "projects\5fedu\domains\references\ui-delivery-detail.md"
-$PlanCtl = Join-Path $Root "automation\planctl.ps1"
-$PlanCtlImplementation = Join-Path $Root "automation\planctl.legacy.ps1"
-$LedgerAudit = Join-Path $Root "automation\audit-slice-ledger.ps1"
+Test-Contains "skills\plan-and-handoff\SKILL.md" @(
+  "executable intent contract",
+  "Ask only a question",
+  "risk-triggered independent reviewer",
+  "Source coverage",
+  "automatically classify and begin execution"
+)
+Test-Contains "skills\plan-and-handoff\references\adaptive-work-protocol.md" @(
+  "small",
+  "medium",
+  "large",
+  "resumable",
+  "Context capsule",
+  "main agent",
+  "economy",
+  "standard",
+  "expert"
+)
+Test-Contains "skills\plan-and-handoff\references\plan-artifact-template.md" @(
+  "Repository truth",
+  "Change map",
+  "Acceptance and proof contract",
+  "Negative invariant",
+  "Task graph and ownership",
+  "Automatic execution contract",
+  "Rollback",
+  "Later injections",
+  "Authorized final actions"
+)
+Test-Contains "skills\finish-to-completion\references\completion-ledger.md" @(
+  "workctl.py",
+  "source requirement",
+  "per-assignment usage",
+  "Self-reported PASS"
+)
+Test-Contains "automation\workctl.py" @(
+  "def classify",
+  "active_slices",
+  "acceptance_contract_hash",
+  "command_verify",
+  "independent PASS review",
+  "command_resume",
+  "command_finalize"
+)
+Test-Contains "automation\work-ledger.schema.json" @(
+  '"schema_version"',
+  '"source_history"',
+  '"assignments"',
+  '"reviews"',
+  '"artifact_evidence"',
+  '"usageRecord"'
+)
+Test-Contains "rules\25-task-lifecycle.md" @(
+  "Plan roles",
+  "dependencies, risk, coordination, rollback, and proof",
+  "main agent integrates"
+)
 
-foreach ($F in @($TierRef, $PafTemplate, $PafExample)) {
-  if (-not (Test-Path $F)) { $Problems.Add("Missing required: $F") }
-}
-foreach ($F in @($PlanCtl, $LedgerAudit)) {
-  if (-not (Test-Path $F)) { $Problems.Add("Missing machine gate: $F") }
-}
-if (-not (Test-Path $PlanCtlImplementation)) { $Problems.Add("Missing planctl implementation: $PlanCtlImplementation") }
-
-Test-FileContains $SkillPath @("Plan Architect", "Plan Scribe", "Plan Reviewer", "PAF", "HANDOFF", "decision tree", "Source coverage", "PLAN_PASS") | Out-Null
-Test-FileContains $SkillPath @("Path D") | Out-Null
-Test-FileContains $ResearcherPath @("plan-and-handoff", "Do NOT") | Out-Null
-Test-FileContains $LifePath @("Plan roles", "plan_id", "friction") | Out-Null
-Test-FileContains $AntigravityOverlay @("L0", "researcher", "capability-tier-routing") | Out-Null
-Test-FileContains $PafTemplate @("Scope lock", "Source coverage", "DERIVED(reason)", "Context routing", "Phases", "Known-unknowns", "Plan QA", "HANDOFF", "Revision protocol", "preferred_tier", "min_tier", "allowed_tiers") | Out-Null
-Test-FileContains $UiDetail @("plan-artifact-template") | Out-Null
-Test-FileContains $PlanCtlImplementation @("semantic validation", "compiled.json", "admission_id", "contract_hash", "implemented", "verify-batch", "verification_strategy", "reference_contract", "SLICE_PASS", "PLAN_PASS", "finalize", "handoff") | Out-Null
-Test-FileContains $LedgerAudit @("Scope IN", "evidence", "open_ac=0") | Out-Null
-
-# Path C delegate - no long execute loop in plan-and-handoff
-if (Test-Path $SkillPath) {
-  $SkillBody = Get-Content -Raw -Encoding UTF8 $SkillPath
-  if ($SkillBody -match "FOR each deliverable") {
-    $Problems.Add("plan-and-handoff duplicates finish-to-completion loop - Path C should delegate only")
+foreach ($Required in @(
+  "automation\test-workctl.py",
+  "skills\plan-and-handoff\references\capability-tier-routing.md"
+)) {
+  if (-not (Test-Path -LiteralPath (Join-Path $Root $Required))) {
+    $Problems.Add("Missing executable-plan component: $Required")
   }
-  if (($SkillBody | Select-String -Pattern "finish-to-completion" -AllMatches).Matches.Count -lt 1) {
-    $Problems.Add("plan-and-handoff Path C must delegate to finish-to-completion")
-  }
 }
 
-# Conflict: rigid Flash-only / Opus-only in rules and skills (not in examples)
-$RigidPatterns = @("flash only", "opus only", "flash → scribe | executor only", "cấm flash")
-foreach ($CheckPath in @($LifePath, $SkillPath, $AntigravityOverlay)) {
-  if (Test-Path $CheckPath) {
-    $Lower = (Get-Content -Raw -Encoding UTF8 $CheckPath).ToLowerInvariant()
-    foreach ($P in $RigidPatterns) {
-      if ($Lower -like "*$P*") {
-        $Problems.Add("Rigid model binding '$P' in $CheckPath - use tier routing instead")
-      }
-    }
-  }
-}
-
-# researcher vs plan boundary
-if ((Test-Path $ResearcherPath) -and (Test-Path $SkillPath)) {
-  $PlanDesc = (Get-Content -Raw -Encoding UTF8 $SkillPath)
-  if ($PlanDesc -notmatch "Do NOT use.*researcher") {
-    $Problems.Add("plan-and-handoff description should Do NOT use for researcher-only")
-  }
-}
-
-# Optional plan file validation
 if ($PlanPath) {
-  Test-PlanFile $PlanPath
-  if (Test-Path $PlanCtl) {
-    try {
-      & $PlanCtl -Action validate -Root $Root -PlanPath $PlanPath | ForEach-Object { Write-Host $_ }
-      if ($LASTEXITCODE -ne 0) { $Problems.Add("Plan semantic validation failed: $PlanPath") }
-    } catch {
-      $Problems.Add("Plan semantic validation crashed: $PlanPath - $_")
+  if (-not (Test-Path -LiteralPath $PlanPath)) {
+    $Problems.Add("Plan file not found: $PlanPath")
+  } else {
+    $Plan = Get-Content -Raw -Encoding UTF8 -LiteralPath $PlanPath
+    foreach ($Pattern in @(
+      "Outcome|Kết quả",
+      "scope|phạm vi",
+      "Acceptance|nghiệm thu",
+      "proof|bằng chứng|verify",
+      "rollback|khôi phục",
+      "file|interface|API|schema|entity"
+    )) {
+      if ($Plan -notmatch $Pattern) {
+        $Problems.Add("Plan lacks executable detail: $Pattern")
+      }
     }
   }
 }
@@ -129,5 +113,4 @@ if ($Problems.Count -gt 0) {
   exit 1
 }
 
-Write-Host "PASS: plan artifact audit (harness$(if ($PlanPath) { " + plan file" }))"
-exit 0
+Write-Host "PASS: adaptive executable-plan audit$(if ($PlanPath) { ' + plan file' })"

@@ -15,10 +15,32 @@
     "static-change": {
       "required_dimensions": ["outcome", "regression"],
       "allowed_kinds": ["source-assertion", "unit-test", "integration-test", "artifact-audit", "build", "custom-runtime"],
+      "build_only_forbidden": true,
       "signals": []
+    },
+    "implementation-runtime": {
+      "required_dimensions": ["outcome", "integration", "regression"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
+      "allowed_kinds": ["unit-test", "integration-test", "component-test", "custom-runtime"],
+      "signals": ["multi-file", "consumer", "integration", "behavior change"]
+    },
+    "behavior-safety": {
+      "required_dimensions": ["outcome", "scope", "negative-constraint"],
+      "build_only_forbidden": true,
+      "allowed_kinds": ["source-assertion", "artifact-audit", "transcript-review", "custom-runtime"],
+      "signals": ["no mutation", "plan only", "scope boundary", "safe recovery", "blocked"]
+    },
+    "external-research": {
+      "required_dimensions": ["current-source", "claim-support", "scope"],
+      "build_only_forbidden": true,
+      "allowed_kinds": ["source-assertion", "artifact-audit", "custom-runtime"],
+      "signals": ["latest", "release", "changelog", "current documentation"]
     },
     "ui-runtime": {
       "required_dimensions": ["interaction", "state", "regression"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
       "conditional_dimensions": {
         "viewport": ["responsive", "mobile", "viewport"],
         "reference": ["parity", "template", "reference fidelity"]
@@ -28,11 +50,15 @@
     },
     "api-contract": {
       "required_dimensions": ["positive", "invalid-error", "regression"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
       "allowed_kinds": ["integration-test", "unit-test", "build", "custom-runtime"],
       "signals": ["api contract", "endpoint", "dto", "error envelope", "http response"]
     },
     "access-control": {
       "required_dimensions": ["allowed", "denied", "isolation"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
       "conditional_dimensions": {
         "audit": ["audit log", "audit trail"]
       },
@@ -41,27 +67,70 @@
     },
     "migration-reconciliation": {
       "required_dimensions": ["blank", "existing-clone", "reconciliation", "failure-path"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
       "allowed_kinds": ["migration-test", "integration-test", "custom-runtime"],
       "signals": ["migration", "data-safe", "checksum", "reconciliation", "schema transition"]
     },
     "concurrency-idempotency": {
       "required_dimensions": ["contention", "retry-failure", "idempotency"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
       "allowed_kinds": ["concurrency-test", "integration-test", "custom-runtime"],
       "signals": ["concurrency", "race", "lease", "retry", "idempotency", "duplicate"]
     },
     "security-boundary": {
       "required_dimensions": ["positive", "negative", "leakage-sanitization"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
       "allowed_kinds": ["security-test", "integration-test", "custom-runtime"],
       "signals": ["security", "credential", "secret", "cookie", "sanitize", "pan", "cvv"]
     },
     "external-release": {
       "required_dimensions": ["target-identity", "terminal-run", "smoke"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
       "conditional_dimensions": {
         "rollback": ["rollback"],
         "restore": ["restore"]
       },
       "allowed_kinds": ["pipeline-run", "production-smoke", "custom-runtime"],
       "signals": ["deploy", "deployment", "ci/cd", "pipeline", "production", "release"]
+    },
+    "business-invariant": {
+      "required_dimensions": ["positive", "invariant", "regression"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
+      "allowed_kinds": ["integration-test", "migration-test", "custom-runtime"],
+      "signals": ["business invariant", "balance", "inventory", "rollup", "approval state", "oversell"]
+    },
+    "distributed-consistency": {
+      "required_dimensions": ["commit-failure", "delivery-retry", "reconciliation"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
+      "allowed_kinds": ["integration-test", "concurrency-test", "custom-runtime"],
+      "signals": ["distributed consistency", "saga", "outbox", "compensation", "cross-service", "event delivery"]
+    },
+    "query-index": {
+      "required_dimensions": ["representative-query", "query-plan", "write-regression"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
+      "allowed_kinds": ["integration-test", "custom-runtime"],
+      "signals": ["query plan", "explain analyze", "index", "slow query", "query performance"]
+    },
+    "cache-freshness": {
+      "required_dimensions": ["write-invalidation", "fresh-read", "stale-boundary"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
+      "allowed_kinds": ["integration-test", "custom-runtime"],
+      "signals": ["cache freshness", "cache invalidation", "stale cache", "ttl", "cache-aside"]
+    },
+    "resource-lifetime": {
+      "required_dimensions": ["steady-state", "cleanup", "failure-cleanup"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
+      "allowed_kinds": ["integration-test", "custom-runtime"],
+      "signals": ["memory leak", "resource lifetime", "connection leak", "stream cleanup", "file handle"]
     },
     "custom": {
       "required_dimensions": ["outcome", "failure", "regression"],

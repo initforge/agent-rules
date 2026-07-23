@@ -20,18 +20,14 @@
 | `08-install-5fedu-context.ps1` | Cài `context/5fedu/` — `-Profile tah-app|nostime`, `-UpdatePointersOnly`, `-Force` |
 | `09-doctor.ps1` | Post-install health (sha256, integrations, MCP); thêm `-SkipIntegrationVerify` khi chỉ cần kiểm tra cấu trúc/runtime parity mà không gọi probe mạng |
 | `10-audit-harness-health.ps1` | Full harness health audit (manual; findings by category) |
-| `audit-plan-artifact.ps1` | PAF wiring + tier routing + path conflict checks; optional `-PlanPath` |
-| `planctl.ps1` | Hash-only admission, semantic outcome/reference validation, implementation-first or incremental lifecycle, batch receipts, exact ledger gate, `SLICE_PASS`/`PLAN_PASS`, handoff/report derived từ state |
+| `audit-plan-artifact.ps1` | Executable-plan contract, adaptive routing and optional `-PlanPath` checks |
+| `workctl.py` + wrappers | Automatic size/risk classification, ownership, resumable ledger, proof, review and finalization |
+| `work-ledger.schema.json` | Canonical source/injection, slice, assignment, receipt, review and usage contract |
 | `evidence-profiles.json` | Generic typed proof profiles and required dimensions for adaptive semantic evidence |
 | `verify-external-receipt.py` | Provider-neutral CI/deployment receipt identity, SHA, terminal, smoke and rollback validation |
-| `audit-slice-ledger.ps1` | Scoped AC/evidence gate; blocks false PASS and open/blocker ledgers |
-| `test-planctl.ps1` | Source/deliverable mapping, dependency, exact AC, invalidation and finalize regression |
-| `test-plan-proof.ps1` | PAF v2 anti-tautology, proof dimensions, matcher, artifact and receipt-integrity regression |
-| `test-state-reliability.py` | Locked atomic state and generation-fence regression |
+| `test-workctl.py` | Adversarial schema, parallel resume, blocker, proof, independent review, usage and lock regression |
 | `test-external-receipt.py` | External CI/deployment evidence contract regression |
-| `test-plan-guard.py` | Mega-plan detection, hash-only admission, progress reset, BLOCKED/corrupt/exhaustion contracts |
-| `test-plan-input.py` | Project-neutral adversarial inventory, one-pass detection, fence exclusion and raw-prompt boundary |
-| `test-plan-hook-wire.py` | Codex/Grok/Antigravity adapter Stop wire-format regression; native delivery is a separate host receipt |
+| `test-skill-gate-stack.py` | Native graph routing, efficiency reminders and active-skill regression |
 | `test-agent-quality-benchmark.py` | Contract, deterministic routing, live-result and report regression |
 | `collect-live-results.py` | Validate/normalize externally collected live-agent evidence; never invokes an agent |
 | `build-benchmark-runtime.ps1` | Build credential-free isolated Codex homes for baseline/core/full |
@@ -48,14 +44,14 @@
 | `audit-ui-routing.ps1` | Audit routing 5fedu UI parity vs frontend-architect |
 | `audit-context-pre-commit.sh` | Git pre-commit: audit staged context/harness (oversize, dead path, dead @import). WARN default; `CONTEXT_AUDIT_STRICT=1` block |
 | `install-pre-commit-hook.sh` | Cài pre-commit vào repo hiện tại, path chỉ định, hoặc `--global` (core.hooksPath) |
-| `11-install-runtime-hooks.sh` | Cài Codex/Antigravity/Grok hooks + pre-commit (idempotent). Codex dùng `hooks.json` + Python absolute path và `commandWindows`; smoke test cuối |
-| `13-cutover-context-routing.ps1` | Đổi runtime từ shadow sang strict (hoặc rollback về shadow) chỉ sau semantic conformance; ghi graph + contract hashes vào `skill-state/routing-mode.json` |
+| `11-install-runtime-hooks.sh` | Cài Codex/Antigravity/Grok/Cursor hooks + pre-commit; hook chỉ route/nhắc/ghi native receipt và fail-open |
+| `13-cutover-context-routing.ps1` | Bật strict graph routing sau conformance; ghi graph + contract hashes vào `skill-state/routing-mode.json` |
 
 ## Linux / macOS
 
 ```bash
 ./automation/run.sh 03-validate-context
 ./automation/run.sh 04-verify-mirrors
-./automation/11-install-runtime-hooks.sh   # hooks runtime (Codex/Antigravity/pre-commit)
+./automation/11-install-runtime-hooks.sh   # hooks runtime (Codex/Grok/Antigravity/Cursor/pre-commit)
 ./automation/run.sh 13-cutover-context-routing -Mode strict   # chỉ chạy sau khi các gate đã PASS
 ```

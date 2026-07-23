@@ -18,6 +18,7 @@ done
 CODEX_HOME="${CODEX_HOME:-$USER_HOME/.codex}"
 ANTIGRAVITY_HOME="${ANTIGRAVITY_HOME:-$USER_HOME/.gemini/config}"
 GROK_HOME="${GROK_HOME:-$USER_HOME/.grok}"
+CURSOR_HOME="${CURSOR_HOME:-$USER_HOME/.cursor}"
 
 # Resolve a real Python interpreter (skip WindowsApps Store stub).
 resolve_python() {
@@ -111,7 +112,7 @@ copy_scripts "$ROOT/platforms/codex/scripts" "$CODEX_HOME/scripts"
 if [ -f "$ROOT/platforms/shared/scripts/context-router.py" ]; then
   cp "$ROOT/platforms/shared/scripts/context-router.py" "$CODEX_HOME/scripts/context-router.py"
 fi
-for shared_script in context_router.py plan_guard.py; do
+for shared_script in context_router.py; do
   if [ -f "$ROOT/platforms/shared/scripts/$shared_script" ]; then
     cp "$ROOT/platforms/shared/scripts/$shared_script" "$CODEX_HOME/scripts/$shared_script"
   fi
@@ -129,7 +130,7 @@ copy_scripts "$ROOT/platforms/antigravity/scripts" "$ANTIGRAVITY_HOME/scripts"
 if [ -f "$ROOT/platforms/shared/scripts/context-router.py" ]; then
   cp "$ROOT/platforms/shared/scripts/context-router.py" "$ANTIGRAVITY_HOME/scripts/context-router.py"
 fi
-for shared_script in context_router.py plan_guard.py; do
+for shared_script in context_router.py; do
   if [ -f "$ROOT/platforms/shared/scripts/$shared_script" ]; then
     cp "$ROOT/platforms/shared/scripts/$shared_script" "$ANTIGRAVITY_HOME/scripts/$shared_script"
   fi
@@ -199,7 +200,7 @@ if [ -d "$GROK_HOME" ]; then
   if [ -f "$ROOT/platforms/shared/scripts/context-router.py" ]; then
     cp "$ROOT/platforms/shared/scripts/context-router.py" "$GROK_HOME/scripts/context-router.py"
   fi
-  for shared_script in context_router.py plan_guard.py; do
+  for shared_script in context_router.py; do
     if [ -f "$ROOT/platforms/shared/scripts/$shared_script" ]; then
       cp "$ROOT/platforms/shared/scripts/$shared_script" "$GROK_HOME/scripts/$shared_script"
     fi
@@ -210,7 +211,7 @@ if [ -d "$GROK_HOME" ]; then
   if [ -f "$ROOT/platforms/shared/scripts/context-router.py" ]; then
     cp "$ROOT/platforms/shared/scripts/context-router.py" "$GROK_HOME/hooks/bin/context-router.py"
   fi
-  for shared_script in context_router.py plan_guard.py; do
+  for shared_script in context_router.py; do
     if [ -f "$ROOT/platforms/shared/scripts/$shared_script" ]; then
       cp "$ROOT/platforms/shared/scripts/$shared_script" "$GROK_HOME/hooks/bin/$shared_script"
     fi
@@ -359,6 +360,13 @@ PY
   fi
 fi
 
+echo "[11] Installing Cursor hooks -> $CURSOR_HOME/hooks.json"
+mkdir -p "$CURSOR_HOME/scripts" "$CURSOR_HOME/skill-state"
+cp "$ROOT/platforms/cursor/scripts/cursor-hook.py" "$CURSOR_HOME/scripts/cursor-hook.py"
+CURSOR_HOOK_HOME="$(to_hook_path "$CURSOR_HOME")"
+sed -e "s|__CURSOR_HOME__|${CURSOR_HOOK_HOME//|/\\|}|g" -e "s|__PYTHON__|${PY_HOOK//|/\\|}|g" \
+  "$ROOT/platforms/cursor/hooks.json.template" > "$CURSOR_HOME/hooks.json"
+
 if [ "$SKIP_PRECOMMIT" -eq 0 ]; then
   echo "[11] Installing git pre-commit → agent-rules"
   "$SCRIPT_DIR/install-pre-commit-hook.sh" "$ROOT"
@@ -371,23 +379,19 @@ fi
 echo "[11] Smoke tests"
 FAIL=0
 
-for required_guard in \
-  "$CODEX_HOME/scripts/plan_guard.py" \
-  "$GROK_HOME/scripts/plan_guard.py" \
-  "$GROK_HOME/hooks/bin/plan_guard.py" \
-  "$ANTIGRAVITY_HOME/scripts/plan_guard.py"; do
-  if [ -f "$required_guard" ]; then
-    echo "  shared plan guard: OK ($required_guard)"
-  else
-    echo "  shared plan guard: FAIL ($required_guard)" >&2
-    FAIL=1
-  fi
-done
-
 test_pipe() {
   local label="$1" cmd="$2" allow_silent="${3:-0}"
-  local out
-  out="$(printf '{"hookEventName":"UserPromptSubmit","prompt":"verify UI browser","session_id":"install-smoke"}' | AGENT_RULES_ADAPTER_PROBE=1 eval "$cmd" 2>&1)" || true
+  local out status
+  if out="$(printf '{"hookEventName":"UserPromptSubmit","prompt":"verify UI browser","session_id":"install-smoke"}' | AGENT_RULES_ADAPTER_PROBE=1 eval "$cmd" 2>&1)"; then
+    status=0
+  else
+    status=$?
+  fi
+  if [ "$status" -ne 0 ]; then
+    echo "  $label: FAIL (exit=$status; $out)" >&2
+    FAIL=1
+    return
+  fi
   if [ -z "$(printf '%s' "$out" | tr -d '[:space:]')" ] && [ "$allow_silent" = "1" ]; then
     echo "  $label: OK (silent allow)"
   elif printf '%s' "$out" | grep -q 'additionalContext\|"decision"\|injectSteps'; then
@@ -434,13 +438,25 @@ fi
 
 # Antigravity PreInvocation via python (live)
 if [ -f "$ANTIGRAVITY_HOME/scripts/antigravity-skill-gate.py" ]; then
-  out="$(printf '{"invocationNum":0,"conversationId":"install-smoke"}' | "$PY" "$ANTIGRAVITY_HOME/scripts/antigravity-skill-gate.py" PreInvocation 2>&1)" || true
+  status=0
+  out="$(printf '{"invocationNum":0,"conversationId":"install-smoke"}' | "$PY" "$ANTIGRAVITY_HOME/scripts/antigravity-skill-gate.py" PreInvocation 2>&1)" || status=$?
   # Antigravity intentionally fails open with `{}` when no actionable guard is
   # needed; that is a valid silent result after removing visible skill ceremony.
-  if printf '%s' "$out" | grep -q 'injectSteps\|"decision"' || [ "$(printf '%s' "$out" | tr -d '[:space:]')" = "{}" ]; then
+  if [ "$status" -eq 0 ] && { printf '%s' "$out" | grep -q 'injectSteps\|"decision"' || [ "$(printf '%s' "$out" | tr -d '[:space:]')" = "{}" ]; }; then
     echo "  Antigravity PreInvocation: OK"
   else
     echo "  Antigravity PreInvocation: FAIL ($out)" >&2
+    FAIL=1
+  fi
+fi
+
+if [ -f "$CURSOR_HOME/scripts/cursor-hook.py" ]; then
+  status=0
+  out="$(printf '{"conversation_id":"install-smoke"}' | AGENT_RULES_ADAPTER_PROBE=1 "$PY" "$CURSOR_HOME/scripts/cursor-hook.py" beforeSubmitPrompt 2>&1)" || status=$?
+  if [ "$status" -eq 0 ] && [ "$(printf '%s' "$out" | tr -d '[:space:]')" = "{}" ]; then
+    echo "  Cursor beforeSubmitPrompt adapter: OK"
+  else
+    echo "  Cursor beforeSubmitPrompt adapter: FAIL ($out)" >&2
     FAIL=1
   fi
 fi
@@ -449,9 +465,10 @@ fi
 for f in \
   "$CODEX_HOME/hooks.json" \
   "$ANTIGRAVITY_HOME/hooks.json" \
-  "$GROK_HOME/hooks/skill-orchestrator.json"
+  "$GROK_HOME/hooks/skill-orchestrator.json" \
+  "$CURSOR_HOME/hooks.json"
 do
-  if [ -f "$f" ] && grep -qE '__CODEX_HOME__|__ANTIGRAVITY_HOME__|__PYTHON__' "$f"; then
+  if [ -f "$f" ] && grep -qE '__CODEX_HOME__|__ANTIGRAVITY_HOME__|__CURSOR_HOME__|__PYTHON__' "$f"; then
     echo "  Placeholder check $f: FAIL" >&2
     FAIL=1
   fi
@@ -473,6 +490,7 @@ write_probe_health() {
 write_probe_health "$CODEX_HOME" "codex"
 write_probe_health "$ANTIGRAVITY_HOME" "antigravity"
 write_probe_health "$GROK_HOME" "grok"
+write_probe_health "$CURSOR_HOME" "cursor"
 
 if [ "$SKIP_PRECOMMIT" -eq 0 ]; then
   if [ -x "$ROOT/.git/hooks/pre-commit" ]; then
@@ -488,4 +506,4 @@ if [ "$FAIL" -ne 0 ]; then
   exit 1
 fi
 
-echo "[11] PASS — runtime hooks installed (Codex + Antigravity + Grok LIVE path)"
+echo "[11] PASS — runtime hooks installed (Codex + Grok + Antigravity + Cursor)"

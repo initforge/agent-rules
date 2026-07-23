@@ -31,6 +31,28 @@ ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = BENCHMARK_DIR / "fixtures"
 
 
+def profiled_record(base: dict, case: dict, run_id: str) -> dict:
+    profiles = load_json(quality.DEFAULT_EVIDENCE_PROFILES)["profiles"]
+    profile_name = case["claim_profile"]
+    profile = profiles[profile_name]
+    dimensions = set(profile["required_dimensions"])
+    dimensions.update(profile.get("conditional_dimensions", {}).keys())
+    item = copy.deepcopy(base)
+    item["run_id"] = run_id
+    item["case_id"] = case["id"]
+    item["claim_profile"] = profile_name
+    item["proof_dimensions"] = sorted(dimensions)
+    item["evidence"] = [{
+        "type": "command",
+        "kind": "custom-runtime",
+        "label": "profile contract fixture",
+        "status": "PASS",
+        "ref": "automation/test-agent-quality-benchmark.py",
+        "dimensions": sorted(dimensions),
+    }]
+    return item
+
+
 def contracts_only() -> None:
     corpus = load_json(DEFAULT_CORPUS)
     graph = load_json(DEFAULT_GRAPH)
@@ -83,6 +105,48 @@ def live_only() -> list[dict]:
         pass
     else:
         raise AssertionError("duplicate live result key was accepted")
+    false_pass = read_records([FIXTURES / "false-pass-invalid.jsonl"])
+    for record in false_pass:
+        try:
+            validate_live_results([record], corpus)
+        except ContractError:
+            pass
+        else:
+            raise AssertionError(f"build-only deep-behavior fixture was accepted: {record['case_id']}")
+    live_cases = [case for case in corpus["cases"] if case["evaluator"] == "live"]
+    for case in live_cases:
+        record = profiled_record(valid[0], case, f"build-only-{case['id']}")
+        record["evidence"][0]["kind"] = "build"
+        try:
+            validate_live_results([record], corpus)
+        except ContractError:
+            pass
+        else:
+            raise AssertionError(f"build-only evidence was accepted for live case: {case['id']}")
+    ui_missing_reference = copy.deepcopy(
+        next(record for record in false_pass if record["case_id"] == "live-5fedu-ui-parity")
+    )
+    ui_missing_reference["evidence"][0]["kind"] = "browser-test"
+    ui_missing_reference["evidence"][0]["dimensions"].remove("reference")
+    ui_missing_reference["proof_dimensions"].remove("reference")
+    try:
+        validate_live_results([ui_missing_reference], corpus)
+    except ContractError:
+        pass
+    else:
+        raise AssertionError("5fedu parity proof without reference dimension was accepted")
+    inconsistent_tokens = copy.deepcopy(valid[0])
+    inconsistent_tokens.update({
+        "input_tokens": 100,
+        "cached_input_tokens": 80,
+        "uncached_input_tokens": 30,
+    })
+    try:
+        validate_live_results([inconsistent_tokens], corpus)
+    except ContractError:
+        pass
+    else:
+        raise AssertionError("inconsistent cached/uncached token accounting was accepted")
 
     previous = quality.jsonschema
     try:
@@ -118,26 +182,44 @@ def report_only(output_dir: str | None, routing_report: dict | None = None) -> N
         record["evidence_kind"] = "empirical"
         record["platform"] = "codex"
         record.update({"input_tokens": 100, "cached_input_tokens": 60, "uncached_input_tokens": 40,
-                       "output_tokens": 10, "tool_calls": 3, "turn_count": 2, "tool_output_chars": 20})
+                       "output_tokens": 10, "subagent_input_tokens": 25, "subagent_output_tokens": 5,
+                       "subagent_cached_input_tokens": 10, "subagent_uncached_input_tokens": 15,
+                       "reasoning_output_tokens": 4, "subagent_reasoning_output_tokens": 2,
+                       "tool_calls": 3, "turn_count": 2, "tool_output_chars": 20})
     empirical_report = aggregate_quality_report(corpus, routing_report, empirical, trace)
     if empirical_report["recommendation"] != "INSUFFICIENT_EVIDENCE" or empirical_report["live"]["comparable_triplets"] != 1:
         raise AssertionError("small empirical sample was not recognized as insufficient")
     if empirical_report["live"]["by_variant"]["baseline"]["average_uncached_input_tokens"] != 40:
         raise AssertionError("token efficiency metrics were not aggregated")
+    if empirical_report["live"]["by_variant"]["baseline"]["average_total_input_tokens"] != 125:
+        raise AssertionError("main plus subagent token costs were not aggregated")
+    if empirical_report["live"]["by_variant"]["baseline"]["average_total_cached_input_tokens"] != 70:
+        raise AssertionError("main plus subagent cached tokens were not aggregated")
+    if empirical_report["live"]["by_variant"]["baseline"]["average_total_uncached_input_tokens"] != 55:
+        raise AssertionError("main plus subagent uncached tokens were not aggregated")
+    if empirical_report["live"]["by_variant"]["baseline"]["average_total_reasoning_output_tokens"] != 6:
+        raise AssertionError("main plus subagent reasoning tokens were not aggregated")
+    false_pass_record = copy.deepcopy(empirical[0])
+    false_pass_record["owner_correction"] = True
+    false_pass_report = aggregate_quality_report(corpus, routing_report, [false_pass_record], trace)
+    if false_pass_report["live"]["known_false_passes"] != 1:
+        raise AssertionError("owner-corrected PASS was not counted as a known false PASS")
     empirical[-1]["outcome"] = "FAIL"
     failed_report = aggregate_quality_report(corpus, routing_report, empirical, trace)
     if failed_report["recommendation"] != "INVESTIGATE":
         raise AssertionError("failed empirical evidence did not trigger INVESTIGATE")
-    live_case_ids = [case["id"] for case in corpus["cases"] if case["evaluator"] == "live"][:6]
+    live_cases = [case for case in corpus["cases"] if case["evaluator"] == "live"][:6]
     sufficient = []
     for repetition in range(2):
-        for case_id in live_case_ids:
+        for case in live_cases:
             for record in live:
-                item = copy.deepcopy(record)
+                item = profiled_record(
+                    record,
+                    case,
+                    f"threshold-{repetition}-{case['id']}",
+                )
                 item["evidence_kind"] = "empirical"
                 item["platform"] = "codex"
-                item["run_id"] = f"threshold-{repetition}-{case_id}"
-                item["case_id"] = case_id
                 sufficient.append(item)
     sufficient_report = aggregate_quality_report(corpus, routing_report, sufficient, trace)
     if sufficient_report["recommendation"] != "KEEP":

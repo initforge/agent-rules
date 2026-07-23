@@ -21,26 +21,12 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
-MAX_STOP_CONTINUES = 15
 RUNTIME_HOME = Path(
     os.environ.get("GEMINI_CONFIG_HOME")
     or os.environ.get("HARNESS_RUNTIME_HOME")
     or Path.home() / ".gemini" / "config"
 )
 STATE_DIR = RUNTIME_HOME / "skill-state"
-
-
-def routing_mode() -> str:
-    """Read the explicit cutover mode, defaulting safely to shadow."""
-    raw = os.environ.get("AGENT_RULES_ROUTING_MODE")
-    if raw:
-        return raw.lower()
-    mode_file = STATE_DIR / "routing-mode.json"
-    try:
-        mode = json.loads(mode_file.read_text(encoding="utf-8-sig")).get("mode", "shadow")
-    except (OSError, ValueError, TypeError):
-        mode = "shadow"
-    return str(mode).lower() if mode else "shadow"
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -51,13 +37,9 @@ for _shared in (
     if str(_shared) not in sys.path:
         sys.path.insert(0, str(_shared))
 try:
-    from context_router import load_graph, route as graph_route, route_signature
-except ImportError:  # pragma: no cover - legacy installs use the old gate
-    load_graph = graph_route = route_signature = None  # type: ignore[assignment]
-try:
-    from plan_guard import evaluate_stop as evaluate_plan_stop, write_admission
-except ImportError:  # pragma: no cover - staged rollout keeps older runtimes usable
-    evaluate_plan_stop = write_admission = None  # type: ignore[assignment]
+    from context_router import load_graph, route as graph_route
+except ImportError:  # pragma: no cover - fail open without routing context
+    load_graph = graph_route = None  # type: ignore[assignment]
 
 READ_TOOLS = {"view_file"}
 WRITE_TOOLS = {
@@ -100,8 +82,8 @@ def record_native_receipt(event: str, cid: str) -> None:
         current = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
         current.update({
             "platform": "antigravity",
-            "status": "NATIVE_LIVE",
-            "trust_state": "trusted",
+            "status": "NATIVE_OBSERVED",
+            "trust_state": "unattested",
             "native_receipt": {"event": event, "session_id": cid, "at": now_iso(), "script_hash": hashlib.sha256(Path(__file__).read_bytes()).hexdigest()},
         })
         STATE_DIR.mkdir(parents=True, exist_ok=True)
@@ -130,8 +112,7 @@ def default_state(cid: str) -> dict[str, Any]:
         "signals": [],
         "stack": [],
         "primary": None,
-        "routing": {"mode": "fallback", "graph": None},
-        "stop_continues": 0,
+        "routing": {"mode": "unavailable", "graph": None},
         "e2e": {
             "smoke_passed": False,
             "spec_edited_at": None,
@@ -207,15 +188,13 @@ def graph_decision(prompt: str, paths: list[Path]) -> dict[str, Any] | None:
         return None
 
 
-def record_routing_comparison(state: dict[str, Any], legacy: dict[str, Any], graph: dict[str, Any] | None) -> None:
+def record_graph_routing(state: dict[str, Any], graph: dict[str, Any] | None) -> None:
     if not graph:
-        state["routing"] = {"mode": "fallback", "graph": None}
+        state["routing"] = {"mode": "strict", "status": "graph-unavailable", "graph": None}
         return
-    legacy_sig = (legacy.get("primary"), tuple(legacy.get("stack") or []), tuple())
-    graph_sig = route_signature(graph) if route_signature else ()
     state["routing"] = {
-        "mode": routing_mode(),
-        "legacy": {"primary": legacy.get("primary"), "stack": legacy.get("stack") or []},
+        "mode": "strict",
+        "status": "graph-routed",
         "graph": {
             "primary": graph.get("primary"),
             "stack": graph.get("stack") or [],
@@ -226,103 +205,8 @@ def record_routing_comparison(state: dict[str, Any], legacy: dict[str, Any], gra
             "matched_phrases": graph.get("matched_phrases") or [],
             "workspace_facts": graph.get("workspace_facts") or {},
         },
-        "match": legacy_sig == graph_sig,
         "graph_hash": graph.get("graph_hash"),
     }
-
-
-def skill_exists(slug: str) -> bool:
-    # __file__ = …/platforms/antigravity/scripts/… → parents[3] = repo root
-    repo_skills = Path(__file__).resolve().parents[3] / "skills" / slug / "SKILL.md"
-    candidates = [
-        RUNTIME_HOME / "skills" / slug / "SKILL.md",
-        repo_skills,
-        Path.home() / ".grok" / "skills" / slug / "SKILL.md",
-        Path.home() / ".codex" / "skills" / slug / "SKILL.md",
-        Path.home() / ".gemini" / "config" / "skills" / slug / "SKILL.md",
-    ]
-    return any(p.is_file() for p in candidates)
-
-
-def detect_signals(text: str) -> list[str]:
-    rules = [
-        (
-            "e2e",
-            r"\be2e\b|playwright|\.spec\.ts|test:e2e|browser.?qa|verify\s+ui|"
-            r"click-through|exploratory|test như user|chrome-devtools",
-        ),
-        (
-            "ui",
-            r"\bui\b|giao diện|frontend|\.tsx|css|làm module|sửa module|sua module|"
-            r"lam module|refactor module|\bmodule\b|parity|lệch template|drawer|toolbar|listview",
-        ),
-        ("research", r"research|tìm hiểu|changelog|release notes|latest|external|stuck|stall"),
-        ("5fedu", r"5fedu|context/5fedu|tah-app|nostime|module-parity|nhân viên|phòng ban"),
-        (
-            "context-evolution",
-            r"ghi nhớ|bổ sung context|sửa rule|sửa skill|dọn context|AGENTS\.md",
-        ),
-        ("harness", r"harness|agent-rules|validate-harness"),
-        ("goal", r"/goal\b|autopilot|unattended|treo máy"),
-        ("docs", r"\breadme\b|/docs/|tài liệu"),
-    ]
-    out: list[str] = []
-    for name, pat in rules:
-        if re.search(pat, text, re.I):
-            out.append(name)
-    return out
-
-
-def _append_live(order: list[str], slug: str) -> None:
-    if slug not in order and skill_exists(slug):
-        order.append(slug)
-
-
-def build_stack(signals: list[str]) -> list[str]:
-    order: list[str] = []
-    if "context-evolution" in signals:
-        _append_live(order, "context-evolution-protocol")
-    if "harness" in signals:
-        _append_live(order, "context-evolution-protocol")
-    if "5fedu" in signals:
-        _append_live(order, "5fedu-project")
-        if "ui" in signals or "e2e" in signals:
-            _append_live(order, "5fedu-module-parity")
-    if "research" in signals:
-        _append_live(order, "researcher")
-    if "ui" in signals:
-        if "5fedu" in signals:
-            _append_live(order, "5fedu-module-parity")
-        else:
-            _append_live(order, "frontend-architect")
-    if "e2e" in signals:
-        _append_live(order, "qa-skills")
-        _append_live(order, "browser-qa")
-    if "goal" in signals:
-        _append_live(order, "plan-and-handoff")
-    if "docs" in signals:
-        _append_live(order, "docs-style")
-    return order
-
-
-def pick_primary(stack: list[str], signals: list[str]) -> str | None:
-    if not stack:
-        return None
-    if "goal" in signals and "plan-and-handoff" in stack:
-        return "plan-and-handoff"
-    if "e2e" in signals:
-        for pref in ("browser-qa", "qa-skills"):
-            if pref in stack:
-                return pref
-    if "ui" in signals:
-        for pref in ("5fedu-module-parity", "frontend-architect"):
-            if pref in stack:
-                return pref
-    if "5fedu" in signals and "5fedu-module-parity" in stack:
-        return "5fedu-module-parity"
-    if "context-evolution" in signals:
-        return "context-evolution-protocol"
-    return stack[-1]
 
 
 def read_transcript_user_text(transcript_path: str, tail: int = 80) -> str:
@@ -428,25 +312,12 @@ def handle_preinvocation(payload: dict[str, Any]) -> None:
     user_text = read_transcript_user_text(transcript)
     if user_text:
         paths = workspace_paths(payload)
-        if write_admission is not None and paths:
-            admission = write_admission(paths[0], cid, user_text)
-            if admission is not None:
-                st["plan_admission_path"] = str(admission)
-                messages.append(
-                    f"Mega-plan admitted at {admission}. Before edits, create exact Source coverage and init planctl state; "
-                    "continuous mode may stop only after PLAN_PASS."
-                )
-        legacy_signals = detect_signals(user_text)
-        legacy_stack = build_stack(legacy_signals)
-        legacy_primary = pick_primary(legacy_stack, legacy_signals)
-        legacy = {"signals": legacy_signals, "stack": legacy_stack, "primary": legacy_primary}
         graph = graph_decision(user_text, workspace_paths(payload))
-        record_routing_comparison(st, legacy, graph)
-        use_graph = bool(graph) and routing_mode() == "strict"
-        signals = (graph or {}).get("signals", []) if use_graph else legacy_signals
+        record_graph_routing(st, graph)
+        signals = (graph or {}).get("signals", [])
         st["signals"] = signals
-        st["stack"] = (graph or {}).get("stack", []) if use_graph else legacy_stack
-        st["primary"] = (graph or {}).get("primary") if use_graph else legacy_primary
+        st["stack"] = (graph or {}).get("stack", [])
+        st["primary"] = (graph or {}).get("primary")
         save_state(st)
 
     if inv == 0:
@@ -533,48 +404,12 @@ def handle_posttooluse(payload: dict[str, Any]) -> None:
 
 
 def handle_stop(payload: dict[str, Any]) -> None:
+    """Observe terminal events; never coerce a continuation or inspect plan state."""
     cid = conversation_id(payload)
     st = load_state(cid)
     record_native_receipt("Stop", cid)
-    reason = str(payload.get("terminationReason") or "")
-    fully_idle = payload.get("fullyIdle") is True
-
-    if not fully_idle or reason not in ("model_stop", ""):
-        fail_open()
-        return
-
-    paths = workspace_paths(payload)
-    if evaluate_plan_stop is not None and paths:
-        decision = evaluate_plan_stop(paths[0], cid, st)
-        save_state(st)
-        if decision.get("action") == "continue":
-            emit({"decision": "continue", "reason": str(decision.get("reason") or "Continue active plan.")})
-            return
-        if decision.get("warning"):
-            emit({"decision": "allow", "reason": str(decision.get("reason") or "Plan enforcement exhausted; PLAN_PASS is forbidden.")})
-            return
-
-    open_items = scan_open_ledger_items(paths)
-    if not open_items:
-        st["stop_continues"] = 0
-        save_state(st)
-        fail_open()
-        return
-
-    continues = int(st.get("stop_continues") or 0) + 1
-    st["stop_continues"] = continues
     save_state(st)
-
-    if continues > MAX_STOP_CONTINUES:
-        fail_open()
-        return
-
-    sample = "\n".join(f"  - {x}" for x in open_items[:5])
-    msg = (
-        f"[skill-gate Stop] Còn {len(open_items)} mục chưa đóng trong .agent/ledger/. "
-        f"Tiếp tục execute — tick AC + chạy verify trước PASS.\n{sample}"
-    )
-    emit({"decision": "continue", "reason": msg})
+    fail_open()
 
 
 def main() -> None:

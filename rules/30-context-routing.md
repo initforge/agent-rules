@@ -10,39 +10,23 @@ Load progressively:
 1. Core and the nearest repository entrypoint.
 2. One matching capability from its `SKILL.md` metadata.
 3. Project/domain router, then only matching leaf context.
-4. References/scripts only when the procedure requires them.
-5. External documentation only for unstable, unfamiliar or explicitly requested facts.
+4. References or scripts only when the procedure requires them.
+5. External documentation only for unstable, unfamiliar, or explicitly requested facts.
 
-The structured `routing` object in each capability frontmatter is the runtime trigger source of truth; `description` remains the human-facing contract. `05-generated/context-graph.json` is compiled from that metadata and consumed by runtime hooks. `automation/context-route-cases.json` is the executable conformance contract for routing; `automation/trigger-audit.json` remains a recall fixture only. An unmatched prompt returns no capability; it must not fall back to execution. If multiple capabilities match, choose a primary capability and add only declared required/supporting skills.
+- Treat capability frontmatter as the canonical routing contract; descriptions explain it to humans.
+- An unmatched prompt uses core behavior, not an invented capability.
+- When multiple capabilities match, choose one primary and only necessary declared support.
+- Harness edits use `context-evolution-protocol`; load maintainer detail only when syncing or building.
+- 5fedu module parity requires installed `context/5fedu/`; a prompt mention alone is not proof.
+- Plan terms load the work protocol only when task shape requires it.
+- A new signal during execution activates only the bounded supporting capability, then returns to the primary flow.
+- Do not turn mid-flow routing into replanning. If support fails twice, record the reason and continue safely or block.
+- Reclassify on an owner pivot: integrate small direction into the current step; revise durable state for a material scope change.
 
-## Context routing ownership
+Keep always-loaded context stable and small. Put durable instructions before variable facts; keep examples, raw evidence, old decisions, and generated mirrors out of default context.
 
-- Setup project context → the project installer skill.
-- Domain implementation → the active project router and matching capability.
-- Harness edits → `context-evolution-protocol`; load maintainer detail only when syncing/building.
-- 5fedu module parity → only when the active workspace contains `context/5fedu/`; a prompt mention alone is not proof of context.
-- Plan/slice/governance terms → follow the owning rule/skill pointer instead of preloading the whole pack.
+Load verification channels only when needed. Prefer the least expensive evidence that proves the claim; use browser traces only for live behavior or when other evidence cannot prove it.
 
-## Mid-flow activation
+Use indexed code intelligence when available; otherwise use targeted search and reads. Never preload a repository to compensate for a missing index.
 
-- Trigger mới khi execute → pause đúng step, chạy capability phụ bounded, rồi quay lại primary; không reset scope/finish loop.
-- Chỉ một primary + minimum supporting set; không biến mid-flow thành re-plan. Phụ fail/stall 2 lần → ghi blocker, tiếp tục primary hoặc `BLOCKED`.
-- Owner interjection: phân loại lại mode/lane; mở rộng scope → `REVISE`, chỉ đạo nhỏ → nhận vào step hiện tại; giữ `.agent/plans/<plan-id>/state.json` làm canonical state (report/progress chỉ là derived view).
-
-## Capability precedence (project-specific routers)
-
-Project routers own domain precedence. Keep exclusions beside the matching skill; do not copy the same checklist into the global core.
-
-Keep always-loaded context stable and small. Put durable, reusable instructions before variable project facts; put volatile examples, raw evidence and long domain details behind indexes, skills or references so prompt-cache prefixes and context windows are not churned by every task.
-
-Do not spend context on verification channels before they are needed. Prefer command output, test results, source diffs, database/API queries and generated artifact inspection over browser sessions when those prove the behavior. Browser traces/screenshots are high-context evidence and should be opt-in or risk-justified by the active platform overlay.
-
-Code intelligence order: Codebase Memory MCP when available and indexed; otherwise `rg`, targeted reads and native navigation. Never preload an entire repository to compensate for a missing index.
-
-Raw logs, chat evidence, old decisions and generated mirrors are never default context.
-
-## Plan/state routing
-
-- Markdown PAF remains the intent source; `planctl` compiles and validates it.
-- State, progress, handoff and ledger stay under `.agent/plans/<plan-id>/`; legacy paths are migration-only.
-- Tiny/clear normal work does not require PAF/ledger; multi-phase, high-risk or independently evidenced AC work does.
+For durable plans, keep intent, progress, handoff, and ledger in one portable work state. Ordinary work needs neither a PAF nor a ledger.

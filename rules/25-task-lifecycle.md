@@ -1,66 +1,34 @@
 ---
 alwaysApply: true
-description: Intake lane, risk gate, self-report trace, and advisory durable log.
+description: Workflow classification, proportional work state, and execution ownership.
 ---
 
 # Task lifecycle
 
-## Workflow mode (infer first — before lane)
+## Decide the mode first
 
-| Mode | Typical signals | Deliverable | Code edits |
-|---|---|---|---|
-| `advisory` | explain, compare, Q&A | answer | no |
-| `plan-authoring` | survey, `/goal`, plan for agent khác | PAF artifact + report | **no (HB-1)** |
-| `plan-review` | pasted `[Plan]` input, review plan, phân tích plan | gap list + PAF patch hints | **no until pivot (HB-1, HB-2)** |
-| `execution` | implement, fix, làm đi, execute; pivot phrase (HB-2) | code + verify | yes |
+| Mode | Deliverable | Source edits |
+|---|---|---|
+| `advisory` | answer or recommendation | no |
+| `plan` | executable plan or review | no, until execute pivot |
+| `execution` | completed change and proof | yes |
 
-**Hard boundaries (HB-1, HB-3):**
-- plan-authoring / plan-review → no working-repo source edits (read-only tools OK).
-- Pasted plan alone → default plan-review, not execution scope lock.
+- A pasted plan is review input, not authority to edit.
+- An explicit execute pivot authorizes execution; the main agent then owns classification, orchestration, and completion.
+- Plan roles and model routing belong to the lazy work protocol, not this core rule.
 
-**Pivot (HB-2):** switch to execution only on explicit pivot phrases (see `10-execution.md`).
+## Scale the work
 
-## Mega-plan admission (before first edit)
+| Shape | Use | Durable state |
+|---|---|---|
+| `small` | focused, low-risk work | none unless useful |
+| `medium` | multi-file or bounded change | concise scope and proof note |
+| `large` | phased, high-risk, or coordinated work | roadmap, ownership, proof, and ledger |
+| `resumable` | interruptible, multi-session, or externally waiting work | large state plus checkpoints and resume context |
 
-Execution prompt tự vào admission khi có ≥2 heading `Phase/Step/P<n>`, ≥9 actionable item, >5 file, hoặc full-run intent (kể cả “one-pass”, “một task liên tục”, “no handoff”) + ≥3 item. Hook chỉ lưu ID/ordinal/SHA-256 ở `.agent/plans/_admission/<session-id>.json`; trước edit phải tạo PAF `Source coverage` bằng hash reference và chạy `planctl init`. Semantics đầy đủ thuộc `plan-and-handoff`, không nhân bản ở rule này.
-
-Lane (tiny/normal/high-risk) applies when mode=`execution` only.
-
-## Plan roles and capability tier
-
-Plan roles and L0/L1/L2 routing belong to `plan-and-handoff`; load them only for plan work.
-
-## Intake and lane
-
-Classify non-trivial work into `tiny`, `normal`, or `high-risk`.
-
-Risk flags (each that applies): auth; authorization; data model/migration; audit/security; external provider; public contract; cross-platform; existing tested behavior; weak proof; multi-domain.
-
-Hard gate → `high-risk`: auth; authorization; data loss/migration; audit/security; external provider; weakening validation.
-
-## File-count gate (hard)
-
-Scope chạm **≥2 distinct files** (create/modify/delete) trong deliverable → **cấm** lane `tiny`; tối thiểu `normal` (task dài).
-Scope **đúng 1 file** và không có hard gate high-risk → mới được `tiny`.
-Module mới: đếm cả file registry (`App.tsx`, sidebar, breadcrumbs, registry, module views) tại intake — không giảm xuống tiny.
-
-Lane behavior:
-- `tiny` (1 file only): direct patch, quick safety check, minimal report.
-- `normal` (≥2 files OR standard work): scope lock, bounded discovery and verification.
-- `high-risk`: pause if ambiguous; `plan-and-handoff` bắt buộc before execute; `implementation-discovery`; strongest verification; optional `clean-code` smell detect; detailed trace.
-
-Mid-task unknown that is must-not-self-decide (credentials, schema/migration, permission rule, large destructive change) → `BLOCKED` and record blocker per `implementation-discovery` escape-hatch — do not guess.
-
-## Self-report trace (in response)
-
-Execution reports state outcome and verification. Expose lane or friction only when they change the decision, explain a blocker or are requested.
-
-## Advisory durable log
-
-After `normal` or `high-risk` tasks, append one JSON line to `<working-repo>/.agent/trace.jsonl`:
-
-`ts, lane, status, task_summary, files_changed, verification, friction`
-
-Optional when PAF workflow: `plan_id`, `phase`, `revision`, `tier_used`, `escalation_reason`
-
-`.agent/` is gitignored. This is advisory — not enforced from canonical. Repeated friction is a signal for `context-evolution-protocol` (human review only).
+- Classify from dependencies, risk, coordination, rollback, and proof needs, not a file-count or checklist threshold alone.
+- Escalate to `high-risk` for auth, authorization, migration/data loss, security, external providers, or weakened validation.
+- For high-risk ambiguity, stop only for a material owner decision; otherwise investigate and continue safe independent work.
+- Delegate only independent bounded work with clear ownership and evidence duties; the main agent integrates and verifies the result.
+- Record durable state only when it improves handoff, recovery, coordination, rollback, or independent proof. Tiny and ordinary work do not need a ledger.
+- Keep trace logs advisory. Repeated friction is evidence for a later context-evolution review, not a task blocker.

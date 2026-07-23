@@ -13,7 +13,7 @@
 | `25-task-lifecycle.md` | Intake lane + trace |
 | `30-context-routing.md` | Lazy-load |
 
-Lazy boundary rules: `00-bootstrap-reference.md`, `16-context-style.md`, `26-slice-completion-gate.md`, `40-harness-governance.md`, `45-sync-canonical.md`, `50-context-budget.md`.
+Lazy boundary rules: `16-context-style.md`, `40-harness-governance.md`, `45-sync-canonical.md`, `50-context-budget.md`.
 | `40-harness-governance.md` | Sửa harness |
 | `45-sync-canonical.md` | Sync 2 chiều |
 | `50-context-budget.md` | Session dài / exploration |

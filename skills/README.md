@@ -5,7 +5,7 @@
 
 | Slug | Khi nào |
 |---|---|
-| `plan-and-handoff` | PAF plan, phased handoff, tier L0/L1/L2 — refs: `plan-artifact-template.md`, `capability-tier-routing.md` |
+| `plan-and-handoff` | Executable plan, automatic handoff, adaptive economy/standard/expert routing |
 | `implementation-discovery` | Verify gate — read-only in plan-only modes; known-unknowns lúc implement |
 | `finish-to-completion` | Execution mode only — implement locked slice |
 | `clean-code` | Kiểm tra chất lượng mã sạch cuối pha execution |

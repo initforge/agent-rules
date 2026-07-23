@@ -1,123 +1,34 @@
 ---
 name: finish-to-completion
-description: Anti-handoff execution for a locked slice of work. Use when user expects implementation done (fix, refactor, migrate, làm hết, hoàn thành) on a scope already defined — not for dumping a long multi-phase plan. Do NOT activate Turn-0 on pure Q&A, docs-only review, or when plan-and-handoff should decompose first (plan dài, đại trùng tu, nhiều phase). Read SKILL.md before claiming PASS.
-routing: {"signals":["làm đi","implement","fix","refactor","migrate","hoàn thành","execute"],"intent_signals":["execution"],"excludes":["plan-only","pure q&a"],"priority":10,"loads":["skill:finish-to-completion"],"supports":["implementation-discovery","clean-code"],"project_scope":"","platform_scope":"all","max_route_tokens":1500,"default":false}
+description: Use after an explicit execute pivot for a clear task or executable plan. Complete feasible in-scope work, verify claims with fresh evidence, and continue independent work around genuine blockers. Do not use for plan-only, pure Q&A, or an unbounded multi-part request that first needs plan-and-handoff.
+routing: {"signals":["làm đi","implement","fix","refactor","migrate","hoàn thành","execute"],"intent_signals":["execution"],"excludes":["plan-only","pure q&a"],"priority":10,"loads":["skill:finish-to-completion","adaptive-work-protocol"],"supports":["implementation-discovery","clean-code"],"project_scope":"","platform_scope":"all","max_route_tokens":1500,"default":false}
 ---
 
 # Finish To Completion
 
-## Skill activation (Turn-0)
+An explicit pivot to execute authorizes automatic delivery. The main agent classifies work, selects tools/agents/proof, implements, reviews, fixes, and reports without making the owner manually relay phases.
 
-Chỉ khi scope **đã khóa** (≤1 phase hoặc user giao slice rõ) và **mode=`execution`**.
+Read [`../plan-and-handoff/references/adaptive-work-protocol.md`](../plan-and-handoff/references/adaptive-work-protocol.md). For a long/resumable slice, also read [`references/completion-ledger.md`](references/completion-ledger.md).
+For a delegated or resumed slice, use [`references/slice-gate-protocol.md`](references/slice-gate-protocol.md).
 
-**Hard boundaries (HB-1, HB-3):**
-- Do not activate when mode is plan-authoring or plan-review (HB-1).
-- Do not activate when deliverable is plan/report for another agent unless pivot phrase present (HB-2).
-- Do not treat pasted [Plan] sections as locked code deliverables (HB-3).
-- Prefer plan-and-handoff for plan modes.
+## Execute
 
-Mode=`execution` + scope đã khóa → skill active; tiny/Q&A bỏ qua skill này.
+1. Recover the executable plan or create the smallest one from the locked request. Verify assumptions against real interfaces before shared or risky changes.
+2. Keep ownership disjoint. The main agent retains intent, integration, and final review; each delegated packet contains only relevant source IDs, later injections, paths, acceptance criteria, proof, and forbidden scope.
+3. Implement all feasible scoped deliverables. A local blocker does not stop independent work.
+4. Match proof to the claim: build/lint for build claims; tests/API/data checks for behavior; live interaction/device evidence for UI/runtime claims when applicable. Re-run affected proof after fixes.
+5. Review the integrated diff at a depth proportional to risk. Do not report PASS from prose, a ledger tick, or a build alone.
 
-HB-4: scope ≥2 files → lane tối thiểu `normal` (không `tiny`); **không** bắt buộc `plan-and-handoff`. Task dài/multi-phase chưa cắt slice → `plan-and-handoff` trước execution.
+## Completion and blockers
 
-## Step 0 — Slice Gate (trước Turn-0)
+- Continue automatically across dependency-ready slices after the pivot. Do not use default Stop coercion or require owner phase relay.
+- `PASS`: all feasible deliverables are complete and evidence supports every material claim.
+- `PARTIAL`: useful, verified progress remains but a non-authority constraint prevents the complete outcome.
+- `BLOCKED`: a decision, credential, permission, destructive authority, or external state is genuinely required. State the one decisive blocker; preserve any independently completed work.
 
-Khi ≥3 AC, PAF phase, Path E, hoặc HANDOFF slice → đọc **bắt buộc** [`references/slice-gate-protocol.md`](references/slice-gate-protocol.md) và chạy Gates A–D. Bỏ qua với `tiny` (<3 AC, 1 file).
+## Guardrails
 
-## Baseline
-
-Một task được giao = cam kết **đóng scope**; partial handoff là output hỏng.
-
-## Turn-0 — Scope Lock
-
-1. Parse request → liệt kê deliverable (đếm N).
-2. Không thêm deliverable ngầm (full E2E matrix, đóng mọi GAP, combinatorial) trừ khi user yêu cầu.
-3. `TodoWrite` mỗi deliverable nếu N ≥ 2.
-
-```text
-Scope lock: N = [d1, d2, ...]
-```
-
-## Execution Loop
-
-Trước vòng lặp: chạy **verify gate** (`implementation-discovery`) — đối chiếu giả định plan vs repo/interface/DB/template thật; báo lệch trước khi sửa.
-
-```text
-FOR each deliverable: implement → cheap dependency guard if needed → mark implemented.
-Then batch-verify feasible work; fix and re-run impacted proof.
-```
-
-**Không** dừng sau "phần chính". **Không** chuyển sang báo cáo khi còn item `pending`.
-
-## Verify Before Claim
-
-Trước `PASS`:
-
-1. Chạy command chứng minh (test/lint/build/browser) — fresh trong session.
-2. Đọc output đầy đủ.
-3. Cross-check deliverable count: done == N.
-4. Owner yêu cầu deep/manual/UI QA → mid-flow combo `qa-skills` + `browser-qa`; không tự nở full exploratory matrix nếu scope không yêu cầu.
-
-Không evidence → không `PASS`. Không "should work".
-
-Với tracked PAF, gate này chỉ đóng phase và tạo `SLICE_PASS`; cấm biến slice sạch thành toàn-plan PASS. `PLAN_PASS` thuộc `planctl finalize` sau khi mọi phase/source/deliverable và ledger được re-audit.
-
-**AC-gate (≥3 AC hoặc PAF phase):** operational contract → [`references/slice-gate-protocol.md`](references/slice-gate-protocol.md); AC format → [`references/completion-ledger.md`](references/completion-ledger.md). Trước `PASS`: Gate D machine checks — ledger còn `[ ]` → continue working.
-
-## Banned Patterns (hard fail)
-
-**Never end with:**
-
-- GAP / remaining / backlog list như kết quả hợp lệ
-- "Bước tiếp theo…" / "Bạn có thể chạy…"
-- "Bạn muốn A hay B?" (unless BLOCKED)
-- "Owner defer" khi agent còn làm được
-- Bảng "đã làm" + section "còn lại" rồi dừng
-
-**Never do:**
-
-- Mô tả lệnh thay vì chạy lệnh (khi có shell)
-- PASS khi verify chưa chạy
-- Mở scope lớn → làm subset → dump phần còn
-
-## Terminal States
-
-| Status | Khi |
-|---|---|
-| `PASS` | N/N deliverables done + verify + evidence |
-| `PARTIAL` | Chỉ progress nội bộ của continuous plan; không phải terminal response |
-| `BLOCKED` | Credential/quyền/env/quyết định must-not-self-decide — không tiến được; ghi blocker (`open-questions.md` nếu có); escape-hatch theo `implementation-discovery` |
-
-Với continuous PAF, terminal chỉ là `PLAN_PASS`, evidence-backed plan-wide `BLOCKED`, hoặc `ABORTED/ENFORCEMENT_EXHAUSTED`; một blocker cục bộ phải chạy phần độc lập tiếp theo.
-
-## Miss Prevention Checklist
-
-Trước final message:
-
-- [ ] Scope lock: all N done?
-- [ ] Mỗi file/function trong scope đã chạm?
-- [ ] Verify đã chạy và pass?
-- [ ] Không TODO mới trong scope?
-- [ ] Không banned pattern trong prose?
-- [ ] Không hỏi user việc agent tự làm được?
-
-Fail bất kỳ → **continue working**, không respond final.
-
-## Token / Multi-turn
-
-- Keep one owner task until PASS/BLOCKED. Long work may use internal phase checkpoints: update state/HANDOFF briefly, then continue without asking the owner to relay work.
-- At a checkpoint, read only the current HANDOFF and targeted evidence; batch independent checks and keep successful tool output concise. A checkpoint never lowers scope, safety, or verification.
-- Hard pause only: `[PAUSED — X/N — next: <item>]`
-- "tiếp tục"/"làm đi": resume item, no recap.
-
-## Final Echo (normal/high-risk execution)
-
-```text
-Scope lock: N/N done
-Verification: <cmd> → <outcome>
-Miss check: pass
-Status: PASS | PARTIAL | BLOCKED
-Blocker: (if not PASS)
-```
-
-Tiny: chỉ `Status` + 1 dòng verify. Không Skill-scan theater trên Q&A/plan-only.
+- Never widen scope silently or replace proof with a suggested command.
+- Ask only meaningful questions; otherwise inspect and proceed.
+- Long/resumable work requires the detailed ledger. For medium/small work, use it only when it materially improves continuity or proof.
+- For plan-only or unbounded multi-part work, return to `plan-and-handoff` rather than fabricating a partial implementation.

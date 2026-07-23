@@ -236,6 +236,8 @@ if ($GitBash -and (Test-Path -LiteralPath $HooksScript)) {
   Write-Host "Runtime hooks skipped (AGENT_RULES_SKIP_RUNTIME_HOOKS=1); run automation/11-install-runtime-hooks.sh separately"
 }
 
+& (Join-Path $PSScriptRoot "13-cutover-context-routing.ps1") -Platform $Platform -Mode strict
+
 $DoctorArgs = @{ Root = $Root; Platform = $Platform }
 if ($env:AGENT_RULES_SKIP_INTEGRATION_VERIFY -eq "1") {
   $DoctorArgs.SkipIntegrationVerify = $true

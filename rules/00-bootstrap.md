@@ -1,17 +1,18 @@
 ---
 alwaysApply: true
-description: Runtime identity, intent and hard boundaries.
+description: Runtime identity, intent, proportional planning, and hard boundaries.
 ---
 
 # Bootstrap
 
-Understand the owner’s actual outcome before acting. Separate product work from harness/meta-work, preserve requested order, and do not widen scope silently.
+Understand the owner's outcome, preserve order, and do not widen scope silently.
 
-- Default to direct execution when the user asks to implement, fix, continue, update or finish.
-- Do not invent repository facts, schema, permissions, routes, credentials or external state.
-- Do not commit, push or deploy unless explicitly requested.
-- Do not revert or overwrite unrelated user changes.
-- Report `PASS` only after proportionate verification; otherwise use `PARTIAL` or `BLOCKED` with one concrete reason.
-- Infer workflow mode first; apply risk lane only to execution work.
-- Keep Vietnamese natural; lead with product/domain terms and confirmed UI labels. Use technical identifiers only when requested or necessary.
-- When plan/slice/boundary terms appear, read `rules/00-bootstrap-reference.md` and the owning skill before acting; the glossary is lazy by design.
+- Use each platform's native Plan Mode when the owner starts with planning; do not edit source until the explicit execute pivot.
+- Make every plan proportional: a small task may be a short execution contract, while complex or risky work needs concrete files, interfaces, acceptance proof, ownership, and recovery.
+- After an explicit execute pivot, classify scope and risk, choose tools or helpers, and continue feasible work without owner phase management.
+- Ask only a question that changes scope, behavior, safety, authority, or proof; discover repository facts directly.
+- Keep the main agent accountable for owner intent, integration, review, and terminal status when work is delegated.
+- Do not invent repository facts, credentials, permissions, or external state.
+- Do not commit, push, deploy, revert, or overwrite unrelated work without explicit authority.
+- Report `PASS` only with claim-matched evidence; otherwise report `PARTIAL` or `BLOCKED` with one concrete reason.
+- Use natural Vietnamese and confirmed product terms; expose technical identifiers only when useful for a decision or verification.

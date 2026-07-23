@@ -1,73 +1,48 @@
-# Bảo Trì Và Rủi Ro
+# Bảo trì và rủi ro
 
-Trước khi cài global runtime, luôn chạy:
+## Trước khi cài runtime
 
-- kiểm tra context
-- kiểm tra mirror
-- kiểm tra runtime state nếu đang sửa integrations
+Chạy lần lượt:
 
-Guardrails:
+1. `automation/03-validate-context.ps1`
+2. `automation/01-build-runtime.ps1`
+3. `automation/02-install-runtime.ps1`
+4. `automation/09-doctor.ps1`
 
-- overlay phải nhỏ và chỉ chứa delta riêng từng platform
-- integrations phải có version/policy/verify rõ ràng
-- generated output trong `05-generated/` không được sửa tay
-- evidence/legacy không được promote lên rule sống nếu chưa qua review
-- không commit/push tự động
+Canonical source là repo này. `05-generated/` và thư mục runtime toàn cục chỉ là đầu ra; không sửa tay rồi coi đó là nguồn chuẩn.
 
-## Runtime hooks (Codex) — backstop, không nằm trong pipeline build
+## Hook native
 
-- `~/.codex/hooks.json`: SessionStart/UserPromptSubmit/PreToolUse/PostToolUse/Stop → absolute Python `scripts/skill-gate.py` (with `commandWindows` on Windows). UserPromptSubmit writes hash-only mega-plan admission; Stop uses native `continue=false`/`stopReason` until continuous state is `DONE`.
-- **PostToolUse `audit-on-edit.sh`** (Write/Edit): tự cảnh báo khi sửa context/harness — oversize (rule>90, SKILL>350 warn nhẹ nếu liền mạch), dead Windows absolute user-profile paths, dead `@import`. Fail-open, chỉ WARN.
-- Các hook/script `~/.codex/scripts/*.sh|*.py` là runtime-only (không do `01-build-runtime` sinh); sửa trực tiếp tại runtime, ghi chú ở đây để audit sau không nhầm là orphan.
+Codex, Grok, Antigravity và Cursor đều dùng hook đúng định dạng của nền tảng. Hook có ba nhiệm vụ nhỏ:
 
-## Dual machine (Linux + Windows riêng)
+- đưa context đã route vào phiên làm việc;
+- nhắc kiểm tra khi agent vừa sửa harness;
+- ghi receipt (biên nhận) do host thực sự gọi.
 
-Owner chạy **hai máy vật lý tách** — **không** share `~/.codex` / `~/.grok` / `~/.gemini`. Mỗi máy:
+Hook luôn fail-open (hook lỗi thì không khóa công việc). Stop chỉ quan sát và ghi receipt, không ép agent tiếp tục, không tự tạo plan và không tự phong PASS. Trạng thái dài/resume nằm trong `workctl`, còn quyết định vẫn thuộc agent chính.
 
-1. `git pull` agent-rules (cùng commit nếu muốn parity).
-2. Build/install runtime trên **máy đó** (`02-install-runtime` hoặc tương đương).
-3. `./automation/11-install-runtime-hooks.sh` trên **máy đó** (ghi path absolute local: `/home/...` hoặc `C:/Users/...`).
-4. Restart session agent trên máy đó.
+`ADAPTER_PASS` chỉ chứng minh script chạy độc lập. `NATIVE_OBSERVED` cho biết adapter đã thấy một event khớp script hiện tại, nhưng local state không thể tự chứng minh event đó thật sự đến từ host. Vì vậy doctor không nâng observation này thành “native live”. Không được sửa receipt để làm doctor xanh.
 
-**Không** copy `hooks.json` / `skill-orchestrator.json` từ Windows sang Linux (hoặc ngược) — path Python/home sẽ gãy. Canonical = repo; runtime = per-host.
+## Cài trên từng máy
 
-| OS | Python | bash | Ghi chú |
-|---|---|---|---|
-| **Linux** | `python3` (`/usr/bin/python3`) | `/bin/bash` | Path hook giữ `/home/<user>/...` |
-| **Windows** | Python.org (skip WindowsApps stub) | **Git Bash** (không WSL hỏng) | Grok LIVE: `python.exe` + `hooks/bin/*.py` (không bare `.sh`) |
+Linux và Windows là hai runtime riêng. Trên mỗi máy:
 
-## Runtime hooks (Grok) — LIVE path khác Codex
+1. pull cùng commit;
+2. build/install runtime;
+3. chạy `automation/11-install-runtime-hooks.sh`;
+4. reload hoặc mở session mới;
+5. chạy doctor.
 
-- Grok **không** chỉ dùng `~/.grok/scripts/`. Orchestrator: `~/.grok/hooks/skill-orchestrator.json`.
-- **Windows:** command = **một path** `hooks/bin/grok-skill-gate.cmd` (CreateProcess-safe; `.cmd` gọi `python.exe` + sibling `.py`).
-- **Linux:** command = `python3 hooks/bin/grok-skill-gate.py` (unquoted nếu path không space).
-- **Cấm** bare `grok-skill-gate.sh` → OS **193**. **Cấm** nested `\"python\" \"gate.py\"` → **exit 1**.
-- Sau khi sửa hook JSON: `/hooks` → phím **`r`** reload, hoặc **session mới** (session cache command cũ). Hook unmanaged phải được review/trust trong `/hooks` trước khi chạy bình thường.
-- Wrapper `.sh` chỉ cho Git Bash manual.
-- Grok Stop dùng cùng `plan_guard.py` nhưng wire format `decision:continue`; no-progress counter reset khi phase token đổi và fail-open sau ba lần đứng yên.
-- Antigravity: `hooks.json` dùng absolute `__PYTHON__` + `.py` (không phụ thuộc `bash` WSL / placeholder).
+Không copy hook JSON giữa hai hệ điều hành vì đường dẫn Python và home khác nhau. Trên Windows ưu tiên Git Bash thật; không dựa vào WSL hỏng.
 
-## Runtime hooks (Antigravity) — unattended + skill inject
+## Các rủi ro cần giữ
 
-- Config: `~/.gemini/config/hooks.json` (global) hoặc `<repo>/.agents/hooks.json` (project).
-- Source: `platforms/antigravity/hooks.json` + `platforms/antigravity/scripts/antigravity-skill-gate.py`.
-- Events wired:
-  - **PreInvocation** → Turn-0 skill scan + inject skill stack (`injectSteps.ephemeralMessage`).
-  - **PreToolUse** (`run_command`) → advisory E2E ladder + destructive cmd warning (`decision:allow` + `reason`).
-  - **PostToolUse** (write/run) → state tracking + `audit-on-edit.sh` side-effect.
-  - **Stop** → shared plan guard đọc canonical `.agent/plans/<id>/state.json`; continuous plan mở → `decision:continue`. Legacy ledger scan (max 15) chỉ là fallback cho task chưa admission.
-- Cài runtime: copy `platforms/antigravity/scripts/*` → `~/.gemini/config/scripts/`, merge `hooks.json` (path tuyệt đối tới script).
-- Contract: https://antigravity.google/docs/hooks — khác Codex (`injectSteps` thay `additionalContext`, Stop dùng `continue`).
+- Overlay chỉ chứa delta riêng nền tảng và phải nằm trong budget.
+- Tool/integration phải có side effect (khả năng làm thay đổi dữ liệu), chi phí token, host native, fallback và proof status rõ ràng.
+- Không preload skill, browser hay project context khi chưa có tín hiệu.
+- Build không được dùng để chứng minh UI, API sống, dữ liệu, quyền, migration, concurrency hay performance.
+- Reviewer độc lập là bắt buộc cho rủi ro đã khai báo; executor không được tự review.
+- Artifact proof phải mới, có hash và khớp acceptance contract (hợp đồng nghiệm thu).
+- Không commit/push/deploy nếu chưa có quyền rõ ràng.
 
-State hỏng hoặc ba Stop không có tiến triển phải ghi `ENFORCEMENT_EXHAUSTED` và fail-open để tránh loop; trạng thái này cấm claim `PLAN_PASS`. Cursor không có hard-stop tương đương, nên chỉ dựa rule + `planctl finalize` gate.
-
-## Git pre-commit audit (cross-platform backstop)
-
-- Script: `automation/audit-context-pre-commit.sh` — quét staged files context/harness trước commit.
-- Cài: `./automation/install-pre-commit-hook.sh` (repo hiện tại) hoặc `./automation/install-pre-commit-hook.sh --global`.
-- Checks: oversize (rule>90, SKILL>350 warn nhẹ nếu liền mạch), dead Windows absolute user-profile paths, dead `@import`.
-- Default **fail-open** (WARN, exit 0). `CONTEXT_AUDIT_STRICT=1` → block commit.
-- Chạy trên mọi IDE/agent (Codex/Antigravity/Cursor) vì là git hook, không phụ thuộc platform hook API.
-- Cài tất cả hooks một lần: `./automation/11-install-runtime-hooks.sh` (Codex + Antigravity + Grok + pre-commit + smoke test).
-
-
+Git pre-commit audit vẫn là backstop dùng chung mọi IDE/agent. Mặc định nó cảnh báo; `CONTEXT_AUDIT_STRICT=1` mới chặn commit.

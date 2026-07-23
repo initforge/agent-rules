@@ -1,16 +1,16 @@
 ---
 alwaysApply: true
-description: Engineering quality, mutation safety and regression boundaries.
+description: Engineering quality, mutation safety, and regression boundaries.
 ---
 
 # Quality and safety
 
-- Prefer small cohesive changes, explicit ownership and one source of truth.
-- Before delete/rename/refactor/shared API or schema changes, find call sites with Codebase MCP when available; fallback to `rg`, targeted reads and native symbol navigation.
-- Separate behavior change from cleanup. Do not hide conflicts with force flags or placeholders.
-- Database/auth/permission/production work is high risk: verify real interfaces and test allowed/denied paths, not admin-only happy paths.
-- Preserve data integrity, normalize optional values correctly, handle errors at mutation boundaries and never expose secrets.
-- Generated runtime/build artifacts are replaceable; canonical source and project decisions are not.
-- Destructive filesystem operations require resolved-path checks and must stay inside the named target.
-- Preserve Unicode as UTF-8. If Vietnamese text shows mojibake from double-decoded UTF-8, treat it as corruption, repair the canonical source instead of normalizing around it, and verify no matching corruption remains in active context files.
-- New technical debt created by the task must be fixed before `PASS` when it is safely in scope.
+- Prefer small cohesive changes, explicit ownership, and one source of truth.
+- Before shared, destructive, or schema changes, find consumers with code intelligence or targeted search.
+- Separate behavior change from cleanup; do not hide conflicts with force flags or placeholders.
+- Treat auth, permissions, data loss/migration, security, production, and external providers as high risk; verify real allowed and denied paths.
+- Preserve data integrity, normalize optional values, handle mutation-boundary errors, and never expose secrets.
+- Treat canonical source and project decisions as durable; generated artifacts are replaceable.
+- Resolve destructive paths and keep them inside the authorized target.
+- Preserve UTF-8; repair verified mojibake at canonical source.
+- Fix safely in-scope technical debt introduced by the task before `PASS`.

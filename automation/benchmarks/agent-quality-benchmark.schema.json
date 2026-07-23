@@ -71,7 +71,8 @@
             "uniqueItems": true,
             "items": { "enum": ["baseline", "core", "full"] }
           },
-          "provenance": { "type": "string", "minLength": 1 }
+          "provenance": { "type": "string", "minLength": 1 },
+          "claim_profile": { "type": "string", "minLength": 1 }
         },
         "allOf": [
           {
@@ -80,7 +81,7 @@
           },
           {
             "if": { "properties": { "evaluator": { "const": "live" } } },
-            "then": { "required": ["required_behavior", "scoring_dimensions", "variants"] }
+            "then": { "required": ["required_behavior", "scoring_dimensions", "variants", "claim_profile"] }
           }
         ],
         "additionalProperties": false
