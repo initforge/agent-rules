@@ -74,17 +74,48 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def record_native_receipt(event: str, cid: str) -> None:
+def telemetry_actor(payload: dict[str, Any]) -> str:
+    value = str(payload.get("actor") or payload.get("agent_role") or os.environ.get("AGENT_RULES_ACTOR") or "").lower()
+    return value if value in {"main", "worker"} else "unknown"
+
+
+def telemetry_event(event: str, cid: str, payload: dict[str, Any] | None = None, outcome: str = "ALLOW") -> dict[str, Any]:
+    payload = payload or {}
+    actor = telemetry_actor(payload)
+    tool = str((payload.get("toolCall") or {}).get("name") or "")
+    tool_class = "domain_tool" if tool else "host_event"
+    # UNKNOWN model/actor telemetry is not a worker denial: report UNVERIFIED
+    # and keep the fail-open response contract.
+    if actor == "unknown": outcome = "UNVERIFIED"
+    elif actor == "main" and payload.get("policy_violation") is True and tool_class == "domain_tool": outcome = "VIOLATION"
+    return {"session_id": cid, "actor": actor, "assignment_id": str(payload.get("assignment_id") or payload.get("assignmentId") or "unknown"), "tool": tool or "unknown", "tool_class": tool_class, "timestamp": now_iso(), "outcome": outcome}
+
+
+def retain_telemetry(event: str, telemetry: dict[str, Any]) -> tuple[dict[str, Any], str]:
+    record = {"schema_version": 1, "platform": "antigravity", "event": event, **telemetry}
+    canonical = json.dumps(record, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    event_id = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    record["event_id"] = event_id
+    ref = f"skill-state/telemetry-events.jsonl#{event_id}"
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    with (STATE_DIR / "telemetry-events.jsonl").open("a", encoding="utf-8") as stream:
+        stream.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+    return record, ref
+
+
+def record_native_receipt(event: str, cid: str, payload: dict[str, Any] | None = None, outcome: str = "ALLOW") -> None:
     if os.environ.get("AGENT_RULES_ADAPTER_PROBE") == "1":
         return
     try:
         path = STATE_DIR / "hook-health.json"
         current = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+        telemetry, ref = retain_telemetry(event, telemetry_event(event, cid, payload, outcome))
         current.update({
             "platform": "antigravity",
             "status": "NATIVE_OBSERVED",
             "trust_state": "unattested",
-            "native_receipt": {"event": event, "session_id": cid, "at": now_iso(), "script_hash": hashlib.sha256(Path(__file__).read_bytes()).hexdigest()},
+            "native_receipt": {"event": event, **telemetry, "event_ref": ref, "script_hash": hashlib.sha256(Path(__file__).read_bytes()).hexdigest()},
+            "latest_event_ref": ref,
         })
         STATE_DIR.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(current, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -380,7 +411,7 @@ def handle_posttooluse(payload: dict[str, Any]) -> None:
     name = tool_name(payload)
     args = tool_args(payload)
     st["activity_epoch"] = int(st.get("activity_epoch", 0)) + 1
-    record_native_receipt("PostToolUse", cid)
+    record_native_receipt("PostToolUse", cid, payload)
 
     if name in WRITE_TOOLS:
         path = extract_file_path(args)

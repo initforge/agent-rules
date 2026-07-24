@@ -10,6 +10,7 @@ $Core = Join-Path $Root "rules"
 $SkillsRoot = Join-Path $Root "skills"
 $SystemMap = Join-Path $Root "guides"
 $ManifestText = Get-Content -Raw -Encoding UTF8 (Join-Path $Core "manifest.yaml")
+$ModelPolicy = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "automation\model-policy.json") | ConvertFrom-Json
 $ManifestRules = @([regex]::Matches($ManifestText, '(?m)^\s+-\s+(\S+\.md)\s*$') | ForEach-Object { $_.Groups[1].Value })
 $GeneratedCoreImports = ($ManifestRules | ForEach-Object { "@__CODEX_HOME__/rules/$($_)" }) -join "`n"
 $UserHome = if ($env:USERPROFILE) { $env:USERPROFILE } elseif ($env:HOME) { $env:HOME } else { throw "Cannot resolve user home directory" }
@@ -40,8 +41,8 @@ foreach ($Platform in $Platforms) {
   if (-not (Test-Path -LiteralPath $PolicyPath)) { throw "Missing model policy: $PolicyPath" }
   Copy-Item -LiteralPath $PolicyPath -Destination (Join-Path $Target "model-policy.json") -Force
 
-  # Native definitions remain source-faithful.  The installer maps these files to
-  # documented host locations and owns only the names recorded in its manifest.
+  # Native definitions are source templates. Model selectors deliberately live
+  # only in model-policy.json and are rendered into host-native definitions here.
   switch ($Platform) {
     "codex" {
       Copy-Item -LiteralPath (Join-Path $Root "platforms\codex\agents") -Destination (Join-Path $Native "agents") -Recurse -Force
@@ -59,6 +60,20 @@ foreach ($Platform in $Platforms) {
       Copy-Item -LiteralPath (Join-Path $Root "platforms\antigravity\agents") -Destination (Join-Path $Native "agents") -Recurse -Force
       Remove-Item -LiteralPath (Join-Path $Native "agents\README.md") -Force -ErrorAction SilentlyContinue
     }
+  }
+
+  $NativeTokens = @{
+    "__CODEX_STANDARD_MODEL__" = $ModelPolicy.platforms.codex.standard.selector
+    "__CODEX_STANDARD_EFFORT__" = $ModelPolicy.platforms.codex.standard.effort
+    "__CURSOR_IMPLEMENTATION_MODEL__" = $ModelPolicy.platforms.cursor.implementation.selector
+    "__CURSOR_RESEARCH_REVIEW_MODEL__" = $ModelPolicy.platforms.cursor.research_review.selector
+    "__GROK_BASE_MODEL__" = $ModelPolicy.platforms.grok.base.selector
+    "__GROK_MINIMUM_EFFORT__" = $ModelPolicy.platforms.grok.minimum_effort
+  }
+  Get-ChildItem -LiteralPath $Native -Recurse -File | ForEach-Object {
+    $Content = Get-Content -Raw -Encoding UTF8 $_.FullName
+    foreach ($Token in $NativeTokens.Keys) { $Content = $Content.Replace($Token, [string]$NativeTokens[$Token]) }
+    [System.IO.File]::WriteAllText($_.FullName, $Content, [System.Text.UTF8Encoding]::new($false))
   }
 
   $SharedScripts = Join-Path $Root "platforms\shared\scripts"

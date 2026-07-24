@@ -1,6 +1,6 @@
 description = "Bounded implementation role with proportional verification."
 default_capability_mode = "general-purpose"
-model = "grok-4.5"
-reasoning_effort = "medium"
+model = "__GROK_BASE_MODEL__"
+reasoning_effort = "__GROK_MINIMUM_EFFORT__"
 prompt_file = "prompts/agent-rules-implementer.md"
 default_isolation = "shared"

@@ -2,7 +2,7 @@
 
 This is the shared protocol for planning, execution, handoff, and review. It favors a complete, evidence-backed outcome over workflow theater.
 
-## 1. Classify, then act
+## 1. Classify risk, then act
 
 | Shape | Plan detail | Ledger | Delegation |
 |---|---|---|---|
@@ -11,7 +11,7 @@ This is the shared protocol for planning, execution, handoff, and review. It fav
 | Large | roadmap, task graph, ownership, proof and rollback | required | independent disjoint slices only |
 | Resumable | large plan plus checkpoints and resume context capsules | required, detailed | independent disjoint slices only |
 
-Every plan is executable. It names the outcome, in/out scope, affected interfaces or files, implementation approach, acceptance/proof, and next safe action. Long work adds dependencies, ownership, rollback/handoff, and resume state; it does not add a mandatory phase ceremony.
+Start with the observable outcome and classify risk before operational shape. A plan names outcome, in/out scope, affected interfaces or files, implementation approach, acceptance/proof, and next safe action. Long work adds dependencies, ownership, rollback/handoff, and resume state; it does not add a mandatory phase ceremony.
 
 ## 2. Meaningful questions and ownership
 
@@ -28,11 +28,13 @@ proof commands/artifacts and return receipt
 
 Keep capsules compact: include only source IDs and facts needed for that slice; size assignments so one owner can implement and prove them without broad repository preload. No two writers own the same path.
 
-The main agent may implement directly only for small, clear work. On medium/large work it owns intent, allocation, integration, and final review; direct implementation is limited to a bounded integration exception that unblocks or verifies delegated slices. Do not create a planned main implementation slice merely to retain work.
+The main agent may implement directly only for small, clear work. On medium+ work, zero main-agent domain work is the default: it owns intent, allocation, integration, and final review. A narrow control-plane exception may only inspect, route, reconcile ownership, resolve a mechanical merge conflict, or run claim-matched proof needed to unblock or integrate delegated slices. It must not implement product behavior, domain rules, schema changes, or a planned main implementation slice.
 
-If callable native subagents are absent or unavailable, declare a host-capability exception and execute the planned slices sequentially in the main agent. Preserve acceptance, proof, checkpoints, and context/ownership boundaries; do not stop or weaken implementation solely because orchestration is unavailable. This is never a planned main slice or silent fallback. Record orchestration/model capability as `PARTIAL`/`UNVERIFIED`; the actual task may still `PASS` when its behavior is fully proven.
+Every ready assignment begins `pending`; its owner must acknowledge it before the slice starts, transitioning the assignment to `acknowledged`. `NEEDS_CONTEXT`, `CONFLICT`, and `BLOCKED` are recovery signals, not acknowledgment states: use them respectively for a bounded missing fact, ownership/interface overlap, or a decisive external dependency. Recover in order: supply the minimum missing context, reconcile ownership/interface boundaries, reassign a narrow slice, then use sequential execution only when native subagents are unavailable. Preserve acceptance, proof, checkpoints, and context boundaries; never silently fall back or weaken the outcome. Record this as orchestration `UNAVAILABLE`, not task `PARTIAL`; task outcome may still `PASS` when behavior is proven.
 
-Use a risk-triggered independent expert reviewer or expert route only when warranted: security/auth, migration/data loss, public contract, concurrency/distributed consistency, performance/cache/index freshness, resource lifetime, weak proof, a material unknown, or two failed approaches.
+Risk-triggered independent review is mandatory for security/auth, authorization, migration/data loss, public contracts, concurrency/distributed consistency, performance/cache/index freshness, resource lifetime, weakened proof, a material unknown, or two failed approaches. The reviewer must be independent of the implementation owner and use an expert route where the risk requires it.
+
+Capsules and receipts have semantic budgets, not word or token quotas. A capsule includes only the facts needed to implement and prove its slice; a receipt states changed scope, proof, unresolved risks, and the next recovery action. Do not pad them with transcript, inventory, or status theater.
 
 ## 3. Model and effort routing
 
@@ -52,10 +54,10 @@ Never exceed high effort. Escalate after material uncertainty, two failed approa
 
 Once the owner says execute, the main agent automatically classifies size/risk, chooses tools and agents, implements, reviews, fixes, and continues dependency-ready work. Do not require manual phase relay or default host Stop coercion.
 
-Proof must match the claim. A build proves buildability, not UI parity, runtime behavior, authorization, migration safety, or distributed correctness. Use the least expensive evidence that actually proves the claim; use live UI/device interaction when that claim requires it.
+Proof must match the claim. A build proves buildability, not UI parity, runtime behavior, authorization, migration safety, or distributed correctness. Inspect only evidence needed to establish the assigned acceptance claim, its negative invariant, scope boundary, and any review trigger; do not preload unrelated repository state or expose raw owner context. Use the least expensive evidence that actually proves the claim; use live UI/device interaction when that claim requires it.
 
 ## 5. Ledger and resume
 
 Large/resumable work uses a detailed ledger. It preserves original requirement IDs, later injections, their allocation to slices/agents, owner decisions, current proof, rollback notes, and next safe action. Medium/small work may use it when interruption, coordination, proof, or rollback risk justifies it.
 
-The ledger is a continuity and evidence aid, not permission to declare success. A plan artifact remains intent; fresh runner-backed or observed evidence establishes completion.
+The ledger is a continuity and evidence aid, not permission to declare success. A plan artifact remains intent; fresh runner-backed or observed evidence establishes completion. Keep task outcome separate from execution-control status: `PASS`, `PARTIAL`, or `BLOCKED` applies to delivery; acknowledgments, host observation, and orchestration availability remain distinct fields.

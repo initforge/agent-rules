@@ -13,4 +13,4 @@ description: Grok-only runtime delta.
 - Live/manual UI proof loads `qa-skills` plus `browser-qa`.
 - Restart or reload Grok after hook/rule installation.
 - Linux and Windows are separate runtimes; never copy hook JSON with host-specific paths across operating systems.
-- Native hooks inject routed context and record receipts. Stop is observational and fail-open; continuity comes from the adaptive work ledger, not forced continuation.
+- Native hooks inject routed context and record portable telemetry receipts; unknown actors are UNVERIFIED. Stop and hook errors are fail-open; continuity comes from the adaptive work ledger, not forced continuation or a worker block caused by UNKNOWN model telemetry.

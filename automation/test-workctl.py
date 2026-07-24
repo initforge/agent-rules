@@ -158,6 +158,15 @@ def main() -> None:
     if medium["shape"] != "medium" or medium["ledger"] != "auto" or not medium["review_required"]:
         raise AssertionError(f"medium classification missed adaptive ledger/review: {medium}")
 
+    file_only = run(ROOT, "classify", "--payload-json", compact({"file_count": 20}))
+    if file_only["shape"] != "small" or file_only["ledger"] != "off":
+        raise AssertionError(f"file count incorrectly became a risk classifier: {file_only}")
+    migration_risk = run(ROOT, "classify", "--payload-json", compact({
+        "file_count": 1, "risk_signals": ["migration"],
+    }))
+    if migration_risk["shape"] != "resumable" or migration_risk["ledger"] != "required" or not migration_risk["review_required"]:
+        raise AssertionError(f"material risk did not dominate classification: {migration_risk}")
+
     signals = {
         "file_count": 10,
         "domain_count": 3,
@@ -335,6 +344,17 @@ def main() -> None:
             compact(high_effort),
             contains="exceeds work cap",
         )
+
+        expect_error(
+            root, "start", "--work-id", "demo-work", "--slice", "P1",
+            contains="require acknowledgement",
+        )
+        for assignment_id in ("A1", "A2", "A3", "AR1", "AR2", "AR3"):
+            acknowledged = run(
+                root, "ack-assignment", "--work-id", "demo-work", "--assignment", assignment_id,
+            )
+            if acknowledged["status"] != "ASSIGNMENT_ACKNOWLEDGED":
+                raise AssertionError(f"assignment acknowledgement was not recorded: {acknowledged}")
 
         run(root, "start", "--work-id", "demo-work", "--slice", "P1")
         run(root, "start", "--work-id", "demo-work", "--slice", "P3")
@@ -776,6 +796,27 @@ def main() -> None:
         portable_ledger = json.loads(
             (root / ".agent" / "work" / "demo-work" / "ledger.json").read_text(encoding="utf-8")
         )
+        telemetry = {
+            "schema_version": 1, "platform": "codex", "event": "PostToolUse",
+            "session_id": "session-1", "actor": "worker", "assignment_id": "A1",
+            "tool": "shell_command", "tool_class": "shell", "timestamp": "2026-07-24T00:00:00+00:00",
+            "outcome": "ALLOW",
+        }
+        telemetry["event_id"] = module.sha256_text(module.canonical_json(telemetry))
+        telemetry_ref = f"skill-state/telemetry-events.jsonl#{telemetry['event_id']}"
+        portable_ledger["telemetry_events"] = [telemetry]
+        portable_ledger["assignments"][0]["actor_telemetry_refs"] = [telemetry_ref]
+        module.validate_ledger(portable_ledger)
+        portable_ledger["assignments"][0]["actor_telemetry_refs"] = [
+            "skill-state/telemetry-events.jsonl#" + "0" * 64
+        ]
+        try:
+            module.validate_ledger(portable_ledger)
+            raise AssertionError("unknown telemetry event ref was accepted")
+        except module.WorkError as error:
+            if "ledger-known canonical event" not in str(error):
+                raise
+        portable_ledger["assignments"][0]["actor_telemetry_refs"] = [telemetry_ref]
         portable_ledger["slices"][0]["acceptance"][0]["required_proof_kinds"] = ["invented-proof"]
         original_jsonschema = module.jsonschema
         module.jsonschema = None

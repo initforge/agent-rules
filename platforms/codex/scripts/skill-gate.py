@@ -104,7 +104,40 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def record_native_receipt(event: str, session_id: str) -> None:
+def telemetry_actor(payload: dict[str, Any]) -> str:
+    value = str(payload.get("actor") or payload.get("agent_role") or os.environ.get("AGENT_RULES_ACTOR") or "").lower()
+    return value if value in {"main", "worker"} else "unknown"
+
+
+def telemetry_event(event: str, session_id: str, payload: dict[str, Any] | None = None, outcome: str = "ALLOW") -> dict[str, Any]:
+    payload = payload or {}
+    actor = telemetry_actor(payload)
+    tool = str(payload.get("toolName") or payload.get("tool_name") or "")
+    tool_class = "domain_tool" if tool else "host_event"
+    # A hook cannot attest an unknown actor. It records UNVERIFIED and allows
+    # execution; a hook error must never become a hidden deny path.
+    if actor == "unknown":
+        outcome = "UNVERIFIED"
+    elif actor == "main" and payload.get("policy_violation") is True and tool_class == "domain_tool":
+        outcome = "VIOLATION"
+    return {"session_id": session_id, "actor": actor, "assignment_id": str(payload.get("assignment_id") or payload.get("assignmentId") or "unknown"), "tool": tool or "unknown", "tool_class": tool_class, "timestamp": now_iso(), "outcome": outcome}
+
+
+def retain_telemetry(event: str, telemetry: dict[str, Any]) -> tuple[dict[str, Any], str]:
+    """Append ledger-addressable telemetry; health remains only a latest pointer."""
+    platform = hook_platform() or "unknown"
+    record = {"schema_version": 1, "platform": platform, "event": event, **telemetry}
+    canonical = json.dumps(record, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    event_id = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    record["event_id"] = event_id
+    ref = f"skill-state/telemetry-events.jsonl#{event_id}"
+    (STATE_DIR / "telemetry-events.jsonl").parent.mkdir(parents=True, exist_ok=True)
+    with (STATE_DIR / "telemetry-events.jsonl").open("a", encoding="utf-8") as stream:
+        stream.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+    return record, ref
+
+
+def record_native_receipt(event: str, session_id: str, payload: dict[str, Any] | None = None, outcome: str = "ALLOW") -> None:
     """Record host delivery only; installer/direct probes explicitly opt out."""
     if os.environ.get("AGENT_RULES_ADAPTER_PROBE") == "1":
         return
@@ -112,11 +145,13 @@ def record_native_receipt(event: str, session_id: str) -> None:
         path = STATE_DIR / "hook-health.json"
         current = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
         script_hash = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+        telemetry, ref = retain_telemetry(event, telemetry_event(event, session_id, payload, outcome))
         current.update({
             "platform": hook_platform() or "unknown",
             "status": "NATIVE_OBSERVED",
             "trust_state": "unattested",
-            "native_receipt": {"event": event, "session_id": session_id, "at": now_iso(), "script_hash": script_hash},
+            "native_receipt": {"event": event, **telemetry, "event_ref": ref, "script_hash": script_hash},
+            "latest_event_ref": ref,
         })
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(current, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -717,7 +752,7 @@ def handle_post_tool_use(payload: dict[str, Any]) -> None:
     efficiency = st.setdefault("efficiency", {})
     efficiency["tool_calls"] = int(efficiency.get("tool_calls", 0)) + 1
     efficiency["tool_output_chars"] = int(efficiency.get("tool_output_chars", 0)) + len(out)
-    record_native_receipt("PostToolUse", sid)
+    record_native_receipt("PostToolUse", sid, payload)
 
     if tool in READ_TOOLS:
         path = extract_file_path(payload)

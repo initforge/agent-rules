@@ -37,7 +37,11 @@ Test-Contains "skills\plan-and-handoff\references\adaptive-work-protocol.md" @(
   "main agent",
   "economy",
   "standard",
-  "expert"
+  "expert",
+  "acknowledgment",
+  "semantic budgets",
+  "control-plane exception",
+  "Independent review is mandatory"
 )
 Test-Contains "skills\plan-and-handoff\references\plan-artifact-template.md" @(
   "Repository truth",
@@ -48,13 +52,19 @@ Test-Contains "skills\plan-and-handoff\references\plan-artifact-template.md" @(
   "Automatic execution contract",
   "Rollback",
   "Later injections",
-  "Authorized final actions"
+  "Authorized final actions",
+  "Risk classification",
+  "Acknowledgment",
+  "Status separation"
 )
 Test-Contains "skills\finish-to-completion\references\completion-ledger.md" @(
   "workctl.py",
   "source requirement",
   "per-assignment usage",
-  "Self-reported PASS"
+  "Self-reported PASS",
+  "semantic",
+  "pending",
+  "acknowledged"
 )
 Test-Contains "automation\workctl.py" @(
   "def classify",
@@ -75,8 +85,9 @@ Test-Contains "automation\work-ledger.schema.json" @(
 )
 Test-Contains "rules\25-task-lifecycle.md" @(
   "Plan roles",
-  "dependencies, risk, coordination, rollback, and proof",
-  "main agent integrates"
+  "risk first, then shape",
+  "main agent integrates",
+  "zero main-agent domain work"
 )
 
 foreach ($Required in @(

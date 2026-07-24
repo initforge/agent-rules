@@ -13,9 +13,9 @@ Role mapping:
 
 The `agent-rules-` namespace prevents collisions with generic user-owned agents.
 
-The implementer pins `composer-2.5[fast=false]`, the current staff-documented
+The build renders the implementation selector from model policy, the current staff-documented
 custom-agent selector for Composer 2.5 Standard. Researcher, reviewer, and verifier
-use the exact `grok-4.5` selector and `readonly: true`; implementer explicitly uses
+use the policy research/review selector and `readonly: true`; implementer explicitly uses
 `readonly: false`.
 
 The central model-policy validator should parse these exact frontmatter values and

@@ -30,6 +30,13 @@ DEFAULT_RUNTIME = ROOT / ".agent" / "benchmarks" / "runtime"
 DEFAULT_RUNS = ROOT / ".agent" / "benchmarks" / "runs"
 DEFAULT_RESULTS = ROOT / ".agent" / "benchmarks" / "results" / "live-results.jsonl"
 BENCHMARK_ARTIFACT_ROOT = ROOT / ".agent" / "benchmarks"
+MODEL_POLICY = ROOT / "automation" / "model-policy.json"
+
+
+def default_benchmark_model() -> str:
+    """Use the policy-owned expert route; benchmark code never owns a selector."""
+    policy = load_json(MODEL_POLICY)
+    return str(policy["platforms"]["codex"]["expert"]["selector"])
 
 
 def utc_now() -> str:
@@ -298,6 +305,8 @@ def run_one(
 
 
 def self_test() -> None:
+    if default_benchmark_model() != load_json(MODEL_POLICY)["platforms"]["codex"]["expert"]["selector"]:
+        raise AssertionError("benchmark default drifted from model policy")
     fixtures = load_json(DEFAULT_FIXTURES)["fixtures"]
     corpus = load_json(DEFAULT_CORPUS)
     case = next(item for item in corpus["cases"] if item["id"] == "live-advisory-no-mutation")
@@ -341,7 +350,7 @@ def main() -> int:
     parser.add_argument("--mode", choices=["native", "ablation"], default="native")
     parser.add_argument("--cases", nargs="+", default=["live-advisory-no-mutation"])
     parser.add_argument("--variants", nargs="+")
-    parser.add_argument("--model", default="gpt-5.6-sol")
+    parser.add_argument("--model", default=default_benchmark_model())
     parser.add_argument("--reasoning-effort", default="medium")
     parser.add_argument("--repeat", type=int, default=1)
     parser.add_argument("--exec-timeout-seconds", type=int, default=90,

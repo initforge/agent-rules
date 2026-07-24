@@ -26,13 +26,13 @@ description: Workflow classification, proportional work state, and execution own
 | `large` | phased, high-risk, or coordinated work | roadmap, ownership, proof, and ledger |
 | `resumable` | interruptible, multi-session, or externally waiting work | large state plus checkpoints and resume context |
 
-- Classify from dependencies, risk, coordination, rollback, and proof needs, not a file-count or checklist threshold alone.
+- Classify risk first, then shape from dependencies, coordination, rollback, and proof needs; this is not a file-count or checklist classification.
 - Escalate to `high-risk` for auth, authorization, migration/data loss, security, external providers, or weakened validation.
 - For high-risk ambiguity, stop only for a material owner decision; otherwise investigate and continue safe independent work.
 - Use portable classes: economy for retrieval/mechanical work, standard for ordinary implementation, expert for unresolved material risk.
-- Keep direct main implementation to small work or bounded integration; do not plan main slices for medium/large work.
-- If callable subagents are unavailable, declare the exception and run slices sequentially without weakening boundaries, acceptance, proof, or checkpoints.
-- Mark orchestration/model capability `PARTIAL`/`UNVERIFIED` separately; fully proven task behavior may still `PASS`.
+- For medium+ work, default to zero main-agent domain work: it owns outcome, allocation, integration, and review. The protocol defines the narrow control-plane exception and recovery ladder.
+- If callable subagents are unavailable, declare the exception and recover without weakening boundaries, acceptance, proof, or checkpoints.
+- Report task outcome (`PASS`/`PARTIAL`/`BLOCKED`) separately from orchestration or model-attestation state (`OBSERVED`/`UNVERIFIED`/`UNAVAILABLE`).
 - Delegate independent bounded work with clear ownership and evidence duties; the main agent integrates and verifies the result.
 - Record durable state only when it improves handoff, recovery, coordination, rollback, or independent proof. Tiny and ordinary work do not need a ledger.
 - Keep trace logs advisory. Repeated friction is evidence for a later context-evolution review, not a task blocker.

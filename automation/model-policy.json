@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 4,
   "owner": "portable-orchestration",
   "capability_classes": {
     "economy": "retrieval, inventory, deterministic edits, and narrow checks",
@@ -12,15 +12,21 @@
     "observed": "Fresh independently attested execution or outcome evidence.",
     "fail_honest": "Requested and resolved values are not observed evidence. Missing attestation is unknown and cannot support PASS."
   },
+  "telemetry_contract": {
+    "event_fields": ["session_id", "actor", "assignment_id", "tool", "tool_class", "timestamp", "outcome"],
+    "actors": ["main", "worker", "unknown"],
+    "unknown_actor_outcome": "UNVERIFIED",
+    "hook_error_behavior": "fail_open"
+  },
   "platforms": {
     "codex": {
-      "standard": { "family": "Terra", "effort": "medium" },
-      "expert": { "family": "Sol", "effort": "medium" },
+      "standard": { "family": "Terra", "selector": "gpt-5.6-terra", "effort": "medium" },
+      "expert": { "family": "Sol", "selector": "gpt-5.6-sol", "effort": "medium" },
       "expert_escalation": "Use high effort only when material risk requires it."
     },
     "cursor": {
-      "implementation": { "family": "Composer", "channel": "Standard", "selector": "latest_verified", "display": "latest verified Composer Standard" },
-      "research_review": { "family": "Grok", "channel": "base", "selector": "latest_verified", "display": "latest verified Grok base" },
+      "implementation": { "family": "Composer", "channel": "Standard", "selector": "composer-2.5[fast=false]", "display": "Composer 2.5 Standard" },
+      "research_review": { "family": "Grok", "channel": "base", "selector": "grok-4.5", "display": "Grok 4.5 base" },
       "denied_modes": ["Fast", "Auto"],
       "denial_behavior": "fail_closed_partial"
     },
@@ -32,7 +38,7 @@
       "denial_behavior": "fail_closed_partial"
     },
     "grok": {
-      "base": { "selector": "latest_verified", "channel": "base" },
+      "base": { "selector": "grok-4.5", "channel": "base" },
       "minimum_effort": "medium",
       "denied_modes": ["Fast"],
       "subagent_model_override": "supported",

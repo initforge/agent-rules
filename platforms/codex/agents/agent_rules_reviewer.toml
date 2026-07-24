@@ -1,6 +1,6 @@
 name = "agent_rules_reviewer"
 description = "Independent correctness and regression review specialist."
 developer_instructions = "Review without changing the requested implementation. Prioritize concrete findings, material risks, and missing proof in priority order."
-model = "gpt-5.6-terra"
-model_reasoning_effort = "medium"
+model = "__CODEX_STANDARD_MODEL__"
+model_reasoning_effort = "__CODEX_STANDARD_EFFORT__"
 sandbox_mode = "read-only"

@@ -7,6 +7,7 @@ Scale detail to risk, but never omit implementation truth or proof. A plan is an
 
 ## 1. Intent and boundaries
 - Outcome: <what the user can observe>
+- Risk classification: <risk first; why the classification fits>
 - In scope: <deliverables>
 - Non-goals: <explicit exclusions>
 - Scope lock: <allowed systems, repositories and external actions>
@@ -35,20 +36,21 @@ Include repository creation, entities, migrations, APIs, UI states, tests, clean
 `build` proves compilation only. UI parity requires source-copy mapping, justified diff, desktop/mobile visual comparison, interaction and state coverage, plus live console/network/API evidence. Choose equivalent domain-specific proof for business rules, concurrency, data, security and performance.
 
 ## 5. Task graph and ownership
-| Slice | Exact work | Depends on | Owner/model class | Write paths | Context capsule | ACs | Rollback point |
+| Slice | Exact work | Depends on | Owner/model class | Write paths | Context capsule | Acknowledgment | ACs | Rollback point |
 |---|---|---|---|---|---|---|---|
-| S1 | <bounded implementation> | none | <main/economy/standard/expert> | <exclusive paths> | <source IDs + targeted files> | AC1 | <safe restore point> |
+| S1 | <bounded implementation> | none | <assigned/economy/standard/expert> | <exclusive paths> | <only facts needed to act and prove> | <pending -> acknowledged; recovery signal if unable> | AC1 | <safe restore point> |
 
 - Parallel groups: <independent slices only>
 - Integration owner: main agent
-- Reviewer triggers: <UI parity/public API/auth/migration/concurrency/performance/...>
+- Reviewer triggers: <mandatory: UI parity/public API/auth/migration/concurrency/performance/material unknown/weakened proof/...>
 - Refactor/cleanup review: <smells and nearby improvements worth acting on>
 
 ## 6. Automatic execution contract
 - Mode: automatic after the user pivots from plan to execution
 - Work shape: small | medium | large | resumable
 - Ledger: off | auto | required
-- Strategy: single-agent | delegated | parallel
+- Strategy: small direct | delegated | parallel | sequential recovery after orchestration `UNAVAILABLE`
+- Medium+ default: zero main-agent domain work; any control-plane exception is <bounded routing/integration/proof action only>
 - Max active agents including main: <n>
 - Max delegation depth: <0..2>
 - Model route: <economy for retrieval/mechanical; standard for bounded implementation/review; expert only for unresolved high-risk reasoning>
@@ -58,7 +60,7 @@ Include repository creation, entities, migrations, APIs, UI states, tests, clean
 - Stop conditions: <real blocker, failed proof, unsafe divergence or exhausted recovery>
 
 ## 7. Risks, regression and recovery
-| Risk | Early signal | Prevention | Regression surface | Rollback/re-plan trigger |
+| Risk | Early signal | Prevention | Regression surface | Recovery ladder / rollback trigger |
 |---|---|---|---|---|
 | <risk> | <observable> | <guard> | <affected behavior> | <trigger/action> |
 
@@ -67,12 +69,13 @@ Include repository creation, entities, migrations, APIs, UI states, tests, clean
 - Owner decisions: DEC-... -> affected slices
 - Later injections: INJ-... -> responsible slices and changed acceptance
 - Discoveries: DISC-... -> decision/re-plan impact
-- Assignment packets: source IDs + paths + ACs + model/effort + forbidden paths
+- Assignment packets: semantic capsule (only facts needed for scope/proof) + paths + ACs + forbidden paths
 - Current active slices: <parallel-safe list>
-- Proof receipts: <runner-backed command or independently verifiable fresh artifact>
+- Proof receipts: <semantic receipt: changed scope, fresh proof, unresolved risk, next recovery action>
 - Review findings: <open/resolved/accepted>
 - Usage: <main vs each assignment; input/cached/output/reasoning/tool calls>
 - Resume point: <fresh checkpoint + next safe actions>
+- Status separation: task outcome <PASS/PARTIAL/BLOCKED>; control status <acknowledgment/host observation/orchestration availability>
 ```
 
 For a clear small task, sections 1-4 and a short execution contract may fit in a few lines. For long work, fill every relevant field before delegating. The main agent remains responsible for source coverage, integration, final proof and the user’s original intent.

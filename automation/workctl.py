@@ -13,6 +13,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 import tempfile
 import time
 import uuid
@@ -51,6 +52,8 @@ REVIEW_RISKS = {
     "performance", "query-index", "cache", "resource-lifetime", "multi-writer",
 }
 EXECUTOR_ROLES = {"mechanical-executor", "executor", "specialist", "main"}
+TOOL_CLASSES = {"read", "edit", "test", "shell", "browser", "network", "git", "external-write"}
+CONTROL_PLANE_EXCEPTION = "CONTROL_PLANE_EXCEPTION"
 
 
 class WorkError(RuntimeError):
@@ -78,12 +81,15 @@ def canonical_json(value: Any) -> str:
 
 
 def migrate_v2(ledger: dict[str, Any]) -> dict[str, Any]:
-    """Upgrade v2 ledgers without discarding their historical evidence."""
-    if ledger.get("schema_version") == 3:
+    """Upgrade v2/v3 ledgers to v4 without discarding historical evidence."""
+    version = ledger.get("schema_version")
+    if version == 4:
+        return normalize_v4(ledger)
+    if version == 3:
         upgraded = dict(ledger)
         upgraded.setdefault("model_policy_reasons", [])
-        return upgraded
-    if ledger.get("schema_version") != 2:
+        return upgrade_v3_to_v4(upgraded)
+    if version != 2:
         return ledger
     upgraded = dict(ledger)
     plan_ref = str(upgraded.pop("plan_ref", "native-plan"))
@@ -109,6 +115,115 @@ def migrate_v2(ledger: dict[str, Any]) -> dict[str, Any]:
         receipt.setdefault("model_evidence", legacy_model_evidence(receipt))
     for review in upgraded.get("reviews", []):
         review.setdefault("model_evidence", legacy_model_evidence(review))
+    return upgrade_v3_to_v4(upgraded)
+
+
+def proof_epoch_fingerprint(acceptance: dict[str, Any]) -> str:
+    return sha256_text(canonical_json({
+        "acceptance_id": acceptance["id"],
+        "proof_epoch": acceptance.get("proof_epoch", 0),
+        "contract_hash": acceptance_contract_hash(acceptance),
+    }))
+
+
+def full_gate_fingerprint(root: Path, ledger: dict[str, Any], acceptance: dict[str, Any]) -> str:
+    """Bind proof reuse to source state, ledger configuration and runtime identity."""
+    try:
+        head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, text=True,
+                              capture_output=True, encoding="utf-8", check=True).stdout.strip()
+        diff = subprocess.run(["git", "diff", "--no-ext-diff", "--binary"], cwd=root, text=True,
+                              capture_output=True, encoding="utf-8", check=True).stdout
+        status = subprocess.run(["git", "status", "--porcelain"], cwd=root, text=True,
+                                capture_output=True, encoding="utf-8", check=True).stdout
+    except (OSError, subprocess.CalledProcessError):
+        head, diff, status = "non-git", "", ""
+    schema_path = next((path for path in SCHEMA_CANDIDATES if path.is_file()), None)
+    runtime_hashes = {"workctl": hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
+    if schema_path:
+        runtime_hashes["schema"] = hashlib.sha256(schema_path.read_bytes()).hexdigest()
+    return sha256_text(canonical_json({
+        "acceptance": proof_epoch_fingerprint(acceptance), "repository": str(root),
+        "head": head, "diff": hashlib.sha256(diff.encode()).hexdigest(),
+        "status": hashlib.sha256(status.encode()).hexdigest(),
+        "source_history": ledger.get("source_history", []), "runtime": runtime_hashes,
+        "python": sys.version,
+    }))
+
+
+def refresh_full_gate(ledger: dict[str, Any], root: Path, item: dict[str, Any], target: dict[str, Any]) -> bool:
+    fingerprint = full_gate_fingerprint(root, ledger, target)
+    if target["full_gate_fingerprint"] == fingerprint:
+        return False
+    target["proof_epoch"] += 1
+    target["full_gate_fingerprint"] = fingerprint
+    target["receipt_ids"] = []
+    target["status"] = "open"
+    ledger["proof_cache"] = [entry for entry in ledger["proof_cache"] if not (
+        entry["slice_id"] == item["id"] and entry["acceptance_id"] == target["id"]
+    )]
+    return True
+
+
+def upgrade_v3_to_v4(ledger: dict[str, Any]) -> dict[str, Any]:
+    upgraded = dict(ledger)
+    upgraded["schema_version"] = 4
+    legacy_status = str(upgraded.get("status", "planned"))
+    upgraded.setdefault("lifecycle_status", legacy_status)
+    upgraded.setdefault("task_status", "open" if legacy_status not in {"passed", "partial"} else legacy_status)
+    upgraded.setdefault("orchestration_status", "healthy")
+    upgraded.setdefault("control_plane_exceptions", [])
+    upgraded.setdefault("proof_cache", [])
+    upgraded.setdefault("telemetry_events", [])
+    contract = dict(upgraded.get("execution_contract", {}))
+    contract.setdefault("run_id", uuid.uuid4().hex)
+    contract.setdefault("main_direct_policy", {"allowed": True, "allowed_tool_classes": sorted(TOOL_CLASSES)})
+    upgraded["execution_contract"] = contract
+    for slice_item in upgraded.get("slices", []):
+        for acceptance in slice_item.get("acceptance", []):
+            acceptance.setdefault("proof_epoch", 0)
+            acceptance.setdefault("full_gate_fingerprint", proof_epoch_fingerprint(acceptance))
+    for assignment in upgraded.get("assignments", []):
+        assignment.setdefault("mission", "Legacy assignment; mission was not recorded.")
+        assignment.setdefault("actor_session", "legacy-unobserved")
+        assignment.setdefault("allowed_tool_classes", sorted(TOOL_CLASSES))
+        assignment.setdefault("capsule_hash", sha256_text(canonical_json({
+            "source_ids": assignment.get("source_ids", []),
+            "context_paths": assignment.get("context_paths", []),
+            "forbidden_paths": assignment.get("forbidden_paths", []),
+        })))
+        assignment.setdefault("receipt_budget", 1)
+        assignment.setdefault("recovery_attempts", [])
+        assignment.setdefault("actor_telemetry_refs", [])
+        assignment.setdefault("ack_status", "legacy-implicit")
+    for receipt in upgraded.get("receipts", []):
+        slice_item = next((item for item in upgraded.get("slices", []) if item["id"] == receipt.get("slice_id")), None)
+        acceptance = next((item for item in (slice_item or {}).get("acceptance", []) if item["id"] == receipt.get("acceptance_id")), None)
+        receipt.setdefault("proof_epoch", (acceptance or {}).get("proof_epoch", 0))
+        receipt.setdefault("full_gate_fingerprint", (acceptance or {}).get("full_gate_fingerprint", ""))
+        receipt.setdefault("actor_telemetry_ref", "")
+    for finding in upgraded.get("findings", []):
+        finding.setdefault("owner_assignment_id", "")
+    for record in upgraded.get("usage", {}).get("records", []):
+        record.setdefault("actor_session", "legacy-unobserved")
+        record.setdefault("actor_telemetry_ref", "")
+    return normalize_v4(upgraded)
+
+
+def normalize_v4(ledger: dict[str, Any]) -> dict[str, Any]:
+    """Fill v4 fields omitted by an interrupted or older writer before validation."""
+    if "lifecycle_status" not in ledger:
+        return upgrade_v3_to_v4({**ledger, "schema_version": 3})
+    upgraded = dict(ledger)
+    upgraded.setdefault("model_policy_reasons", [])
+    upgraded.setdefault("task_status", "open")
+    upgraded.setdefault("orchestration_status", "healthy")
+    upgraded.setdefault("control_plane_exceptions", [])
+    upgraded.setdefault("proof_cache", [])
+    upgraded.setdefault("telemetry_events", [])
+    contract = dict(upgraded.get("execution_contract", {}))
+    contract.setdefault("run_id", uuid.uuid4().hex)
+    contract.setdefault("main_direct_policy", {"allowed": True, "allowed_tool_classes": sorted(TOOL_CLASSES)})
+    upgraded["execution_contract"] = contract
     return upgraded
 
 
@@ -167,6 +282,20 @@ def acceptance_contract_hash(target: dict[str, Any]) -> str:
         "required_dimensions": sorted(target["required_dimensions"]),
     }
     return sha256_text(json.dumps(contract, ensure_ascii=False, sort_keys=True))
+
+
+def proof_cache_key(target: dict[str, Any], request: dict[str, Any]) -> str:
+    """Stable key deliberately excludes receipt id and volatile output/timestamps."""
+    return sha256_text(canonical_json({
+        "contract_hash": acceptance_contract_hash(target),
+        "proof_epoch": target["proof_epoch"],
+        "full_gate_fingerprint": target["full_gate_fingerprint"],
+        "proof_kind": request["proof_kind"],
+        "dimensions": sorted(request["dimensions"]),
+        "command_hash": sha256_text(str(request["command"]).strip()),
+        "expected_exit_code": request["expected_exit_code"],
+        "environment": request["environment"],
+    }))
 
 
 def artifact_evidence(
@@ -230,18 +359,23 @@ def classify(signals: dict[str, Any]) -> dict[str, Any]:
     rollback = bool(signals.get("rollback_sensitive"))
     reasons: list[str] = []
 
-    if resume or external_wait or minutes >= 90:
+    high_risks = risks & {"auth", "permission", "security", "migration", "data-loss", "external-provider", "public-api", "concurrency", "distributed-consistency"}
+    material_risk = bool(high_risks or rollback)
+    if resume or external_wait or material_risk or minutes >= 90:
         shape = "resumable"
-        reasons.append("resume/external wait/long runtime")
+        reasons.append("risk/resume/external wait/long runtime")
     elif domains >= 3 or groups >= 2 or acceptance >= 9 or agents >= 3 or minutes >= 60:
         shape = "large"
         reasons.append("multiple domains, independent groups, agents or acceptance criteria")
-    elif domains >= 2 or files >= 3 or acceptance >= 3 or risks or agents >= 2 or minutes >= 20:
+    elif domains >= 2 or acceptance >= 3 or risks or agents >= 2 or minutes >= 20:
         shape = "medium"
-        reasons.append("multi-file, multi-domain, risk, review or coordination")
+        reasons.append("multi-domain, risk, review or coordination")
     else:
         shape = "small"
-        reasons.append("bounded single-session change")
+        reasons.append("bounded single-session change; file count is advisory only")
+
+    if files >= 3:
+        reasons.append("file count is an advisory signal, not a risk classifier")
 
     if shape in {"large", "resumable"}:
         ledger = "required"
@@ -257,7 +391,7 @@ def classify(signals: dict[str, Any]) -> dict[str, Any]:
     else:
         strategy = "single-agent"
 
-    review_required = bool(risks & REVIEW_RISKS) or agents >= 3
+    review_required = bool(risks & REVIEW_RISKS) or bool(high_risks) or agents >= 3
     if review_required:
         reasons.append("risk-triggered independent review")
     return {
@@ -323,6 +457,28 @@ def validate_ids(ledger: dict[str, Any]) -> None:
     for collection in ("receipts", "reviews"):
         for item in ledger.get(collection, []):
             normalize_model_evidence(item["model_evidence"])
+    event_ids = {item["event_id"] for item in ledger.get("telemetry_events", [])}
+    for event in ledger.get("telemetry_events", []):
+        expected = sha256_text(canonical_json({key: value for key, value in event.items() if key != "event_id"}))
+        if event["event_id"] != expected:
+            raise WorkError(f"telemetry event {event['event_id']}: canonical event_id mismatch")
+    def validate_ref(ref: str, location: str) -> None:
+        if not ref:
+            return
+        prefix, separator, event_id = ref.rpartition("#")
+        if prefix != "skill-state/telemetry-events.jsonl" or not separator or event_id not in event_ids:
+            raise WorkError(f"{location}: telemetry ref is not a ledger-known canonical event")
+    for assignment in ledger.get("assignments", []):
+        for ref in assignment.get("actor_telemetry_refs", []):
+            validate_ref(ref, f"assignment {assignment['id']}")
+        for attempt in assignment.get("recovery_attempts", []):
+            validate_ref(str(attempt.get("actor_telemetry_ref", "")), f"recovery {assignment['id']}")
+    for receipt in ledger.get("receipts", []):
+        validate_ref(receipt.get("actor_telemetry_ref", ""), f"receipt {receipt['id']}")
+    for record in ledger.get("usage", {}).get("records", []):
+        validate_ref(record.get("actor_telemetry_ref", ""), "usage")
+    for record in ledger.get("control_plane_exceptions", []):
+        validate_ref(record.get("actor_telemetry_ref", ""), CONTROL_PLANE_EXCEPTION)
 
 
 def validate_portable_schema(
@@ -482,6 +638,14 @@ def state_lock(path: Path, timeout: float = 8.0) -> Iterator[None]:
 
 
 def atomic_write(path: Path, ledger: dict[str, Any]) -> None:
+    # `status` remains the v3 compatibility projection; v4 keeps each concern explicit.
+    ledger["lifecycle_status"] = ledger["status"]
+    if ledger["status"] == "passed":
+        ledger["task_status"] = "passed"
+    elif ledger["status"] == "partial" and ledger.get("task_status") != "passed":
+        ledger["task_status"] = "partial"
+    elif ledger["status"] == "blocked":
+        ledger["task_status"] = "blocked"
     validate_ledger(ledger)
     path.parent.mkdir(parents=True, exist_ok=True)
     ledger["updated_at"] = now()
@@ -603,10 +767,19 @@ def validate_receipt_actor(
         and assignment["role"] in EXECUTOR_ROLES
         and assignment["status"] != "cancelled"
     ]
-    main_exception = (
-        agent == "main"
-        and bool(model_evidence["main_direct_exception_reason"].strip())
-    )
+    main_exception = False
+    if agent == "main":
+        policy = ledger["execution_contract"]["main_direct_policy"]
+        exception = any(
+            record["scope"] == "main-direct" and (not record.get("assignment_id") or any(
+                assignment["id"] == record["assignment_id"] and assignment["slice_id"] == item["id"]
+                for assignment in ledger["assignments"]
+            ))
+            for record in ledger["control_plane_exceptions"]
+        )
+        main_exception = bool(policy["allowed"] or exception)
+        if not main_exception:
+            raise WorkError("main proof requires small/direct policy or scoped CONTROL_PLANE_EXCEPTION")
     if not accountable and not main_exception:
         raise WorkError(
             "proof agent is not bound to an eligible executor assignment for this "
@@ -627,6 +800,10 @@ def attach_receipt(
         raise WorkError(f"proof effort {receipt['effort']} exceeds work cap {cap}")
     if receipt["contract_hash"] != acceptance_contract_hash(target):
         raise WorkError("proof contract changed; rerun evidence against the current acceptance")
+    if receipt["proof_epoch"] != target["proof_epoch"]:
+        raise WorkError("proof epoch changed; rerun evidence against the current acceptance")
+    if receipt["full_gate_fingerprint"] != target["full_gate_fingerprint"]:
+        raise WorkError("full-gate fingerprint changed; rerun evidence against the current acceptance")
     validate_receipt_actor(
         ledger, item, receipt["acceptance_id"], receipt["agent"],
         receipt["model_evidence"],
@@ -669,6 +846,9 @@ def command_init(args: argparse.Namespace) -> dict[str, Any]:
     }]
     for item in slices:
         item.setdefault("review_required", classification["review_required"])
+        for acceptance in item.get("acceptance", []):
+            acceptance.setdefault("proof_epoch", 0)
+            acceptance.setdefault("full_gate_fingerprint", proof_epoch_fingerprint(acceptance))
     raw_agents = data.get("max_active_agents_including_main", 4)
     raw_depth = data.get("max_delegation_depth", 2)
     if isinstance(raw_agents, bool) or not isinstance(raw_agents, int):
@@ -676,9 +856,12 @@ def command_init(args: argparse.Namespace) -> dict[str, Any]:
     if isinstance(raw_depth, bool) or not isinstance(raw_depth, int):
         raise WorkError("max delegation depth must be an integer")
     ledger = {
-        "schema_version": 3,
+        "schema_version": 4,
         "work_id": work_id,
         "status": "planned",
+        "lifecycle_status": "planned",
+        "task_status": "open",
+        "orchestration_status": "healthy",
         "created_at": timestamp,
         "updated_at": timestamp,
         "plan": dict(data.get("__adopt_plan") or {
@@ -700,12 +883,19 @@ def command_init(args: argparse.Namespace) -> dict[str, Any]:
                 "source": str(dict(data.get("execute_authorization") or {}).get("source") or "legacy-init"),
                 "actions": list(dict(data.get("execute_authorization") or {}).get("actions") or data.get("authorized_final_actions", ["edit"])),
             },
+            "run_id": str(data.get("run_id") or uuid.uuid4().hex),
+            "main_direct_policy": dict(data.get("main_direct_policy") or {
+                "allowed": classification["shape"] == "small", "allowed_tool_classes": sorted(TOOL_CLASSES),
+            }),
         },
         "repository": dict(data.get("repository") or {
             "path": str(Path(args.root).resolve()), "branch": "unknown", "baseline_commit": "unknown",
         }),
         "host_refs": dict(data.get("host_refs") or {"host": "unknown", "task_ref": "", "session_ref": ""}),
         "model_policy_reasons": [],
+        "control_plane_exceptions": [],
+        "proof_cache": [],
+        "telemetry_events": [],
         "source_history": list(data.get("source_history", [])),
         "slices": slices,
         "assignments": [],
@@ -724,6 +914,10 @@ def command_init(args: argparse.Namespace) -> dict[str, Any]:
         },
         "next_action": str(data.get("next_action") or "Start the first dependency-ready slice."),
     }
+    root = Path(ledger["repository"]["path"]).resolve()
+    for slice_item in ledger["slices"]:
+        for acceptance in slice_item["acceptance"]:
+            acceptance["full_gate_fingerprint"] = full_gate_fingerprint(root, ledger, acceptance)
     with (nullcontext() if getattr(args, "_already_locked", False) else state_lock(path)):
         atomic_write(path, ledger)
     return {"status": "LEDGER_CREATED", "path": str(path), "classification": classification}
@@ -805,12 +999,31 @@ def command_assign(args: argparse.Namespace) -> dict[str, Any]:
         raise WorkError("assignment effort exceeds supported cap")
     item["model_evidence"] = normalize_model_evidence(dict(item.get("model_evidence") or item))
     item.setdefault("status", "ready")
+    item.setdefault("mission", f"Complete slice {item['slice_id']} acceptance criteria.")
+    item.setdefault("actor_session", "legacy-unobserved")
+    item.setdefault("allowed_tool_classes", sorted(TOOL_CLASSES))
+    item.setdefault("capsule_hash", sha256_text(canonical_json({
+        "source_ids": item["source_ids"], "context_paths": item["context_paths"],
+        "forbidden_paths": item["forbidden_paths"], "acceptance_ids": item["acceptance_ids"],
+    })))
+    item.setdefault("receipt_budget", max(1, len(item["acceptance_ids"])))
+    item.setdefault("recovery_attempts", [])
+    item.setdefault("actor_telemetry_refs", [])
+    item.setdefault("ack_status", "pending")
+    if not set(item["allowed_tool_classes"]).issubset(TOOL_CLASSES):
+        raise WorkError("assignment has unsupported allowed tool classes")
 
     def apply(ledger: dict[str, Any]) -> dict[str, Any]:
         target_slice = get_slice(ledger, item["slice_id"])
         cap = ledger["execution_contract"]["effort_cap"]
         if EFFORT_RANK[item["effort"]] > EFFORT_RANK[cap]:
             raise WorkError(f"assignment effort {item['effort']} exceeds work cap {cap}")
+        if item["role"] == "main":
+            policy = ledger["execution_contract"]["main_direct_policy"]
+            if not policy["allowed"]:
+                raise WorkError("main executor assignment requires CONTROL_PLANE_EXCEPTION")
+            if not set(item["allowed_tool_classes"]).issubset(set(policy["allowed_tool_classes"])):
+                raise WorkError("main executor tool classes exceed main-direct policy")
         target_acceptance = {acceptance["id"] for acceptance in target_slice["acceptance"]}
         unknown_acceptance = set(item["acceptance_ids"]) - target_acceptance
         if unknown_acceptance:
@@ -840,6 +1053,36 @@ def command_assign(args: argparse.Namespace) -> dict[str, Any]:
         ledger["assignments"].append(item)
         ledger["usage"]["agent_runs"] += 1
         return {"status": "ASSIGNED", "assignment_id": item["id"]}
+    return mutate(args, apply)
+
+
+def command_ack_assignment(args: argparse.Namespace) -> dict[str, Any]:
+    def apply(ledger: dict[str, Any]) -> dict[str, Any]:
+        assignment = next((item for item in ledger["assignments"] if item["id"] == args.assignment), None)
+        if assignment is None:
+            raise WorkError(f"unknown assignment: {args.assignment}")
+        if assignment["status"] in {"done", "cancelled"}:
+            raise WorkError("terminal assignment cannot be acknowledged")
+        assignment["ack_status"] = "acknowledged"
+        return {"status": "ASSIGNMENT_ACKNOWLEDGED", "assignment_id": args.assignment}
+    return mutate(args, apply)
+
+
+def command_record_telemetry(args: argparse.Namespace) -> dict[str, Any]:
+    event = payload(args)
+    required = {"schema_version", "platform", "event", "session_id", "actor", "assignment_id",
+                "tool", "tool_class", "timestamp", "outcome", "event_id"}
+    if required - set(event):
+        raise WorkError(f"telemetry event missing keys: {sorted(required - set(event))}")
+    expected = sha256_text(canonical_json({key: value for key, value in event.items() if key != "event_id"}))
+    if event["event_id"] != expected:
+        raise WorkError("telemetry event_id must be the SHA-256 of canonical event JSON")
+    ref = f"skill-state/telemetry-events.jsonl#{event['event_id']}"
+    def apply(ledger: dict[str, Any]) -> dict[str, Any]:
+        if any(item["event_id"] == event["event_id"] for item in ledger["telemetry_events"]):
+            return {"status": "TELEMETRY_EVENT_KNOWN", "event_ref": ref}
+        ledger["telemetry_events"].append(event)
+        return {"status": "TELEMETRY_EVENT_RECORDED", "event_ref": ref}
     return mutate(args, apply)
 
 
@@ -911,6 +1154,62 @@ def command_complete_assignment(args: argparse.Namespace) -> dict[str, Any]:
     return mutate(args, apply)
 
 
+def command_recover_assignment(args: argparse.Namespace) -> dict[str, Any]:
+    data = payload(args)
+    reason = str(data.get("reason", "")).strip()
+    outcome = str(data.get("status", "started")).strip()
+    if not reason or outcome not in {"started", "recovered", "failed"}:
+        raise WorkError("recovery requires a reason and status of started, recovered or failed")
+
+    def apply(ledger: dict[str, Any]) -> dict[str, Any]:
+        assignment = next((item for item in ledger["assignments"] if item["id"] == args.assignment), None)
+        if assignment is None:
+            raise WorkError(f"unknown assignment: {args.assignment}")
+        if assignment["status"] in {"done", "cancelled"}:
+            raise WorkError("terminal assignment cannot be recovered")
+        attempt = {"attempt": len(assignment["recovery_attempts"]) + 1, "reason": reason,
+                   "status": outcome, "recorded_at": now()}
+        telemetry = str(data.get("actor_telemetry_ref", "")).strip()
+        if telemetry:
+            attempt["actor_telemetry_ref"] = telemetry
+            assignment["actor_telemetry_refs"].append(telemetry)
+        assignment["recovery_attempts"].append(attempt)
+        if outcome == "recovered":
+            assignment["status"] = "ready"
+            ledger["orchestration_status"] = "healthy"
+        elif outcome == "started":
+            ledger["orchestration_status"] = "recovering"
+        else:
+            ledger["orchestration_status"] = "degraded"
+        return {"status": "ASSIGNMENT_RECOVERY_RECORDED", "assignment_id": args.assignment,
+                "attempt": attempt["attempt"], "recovery_status": outcome}
+    return mutate(args, apply)
+
+
+def command_record_control_plane_exception(args: argparse.Namespace) -> dict[str, Any]:
+    data = payload(args)
+    scope = str(data.get("scope", "")).strip()
+    reason = str(data.get("reason", "")).strip()
+    if scope not in {"orchestration", "main-direct", "host-telemetry"} or not reason:
+        raise WorkError("CONTROL_PLANE_EXCEPTION requires a narrow scope and reason")
+
+    def apply(ledger: dict[str, Any]) -> dict[str, Any]:
+        assignment_id = str(data.get("assignment_id", "")).strip()
+        if assignment_id and not any(item["id"] == assignment_id for item in ledger["assignments"]):
+            raise WorkError("CONTROL_PLANE_EXCEPTION references an unknown assignment")
+        record = {"kind": CONTROL_PLANE_EXCEPTION, "scope": scope, "reason": reason,
+                  "recorded_at": now()}
+        if assignment_id:
+            record["assignment_id"] = assignment_id
+        telemetry = str(data.get("actor_telemetry_ref", "")).strip()
+        if telemetry:
+            record["actor_telemetry_ref"] = telemetry
+        ledger["control_plane_exceptions"].append(record)
+        ledger["orchestration_status"] = "exception"
+        return {"status": CONTROL_PLANE_EXCEPTION, "scope": scope}
+    return mutate(args, apply)
+
+
 def command_start(args: argparse.Namespace) -> dict[str, Any]:
     def apply(ledger: dict[str, Any]) -> dict[str, Any]:
         item = get_slice(ledger, args.slice)
@@ -920,6 +1219,11 @@ def command_start(args: argparse.Namespace) -> dict[str, Any]:
             raise WorkError(f"slice dependencies are not passed: {open_dependencies}")
         if item["status"] not in {"planned", "ready", "blocked"}:
             raise WorkError(f"cannot start slice from {item['status']}")
+        unacknowledged = [assignment["id"] for assignment in ledger["assignments"]
+                          if assignment["slice_id"] == item["id"] and assignment["status"] == "ready"
+                          and assignment["ack_status"] != "acknowledged"]
+        if unacknowledged:
+            raise WorkError(f"slice assignments require acknowledgement: {unacknowledged}")
         new_agents = {
             assignment["agent"] for assignment in ledger["assignments"]
             if assignment["slice_id"] == item["id"]
@@ -999,6 +1303,9 @@ def command_record_proof(args: argparse.Namespace) -> dict[str, Any]:
             "model": evidence["model"],
             "effort": evidence["effort"],
             "model_evidence": model_evidence,
+            "proof_epoch": target["proof_epoch"],
+            "full_gate_fingerprint": target["full_gate_fingerprint"],
+            "actor_telemetry_ref": str(evidence.get("actor_telemetry_ref", "")),
             "captured_at": now(),
         }
         return attach_receipt(ledger, item, target, receipt)
@@ -1029,13 +1336,28 @@ def command_verify(args: argparse.Namespace) -> dict[str, Any]:
     validate_ledger(ledger)
     item = get_slice(ledger, args.slice)
     target = get_acceptance(item, request["acceptance_id"])
+    repository = Path(ledger["repository"]["path"]).resolve()
+    if full_gate_fingerprint(repository, ledger, target) != target["full_gate_fingerprint"]:
+        def invalidate(current: dict[str, Any]) -> dict[str, Any]:
+            current_item = get_slice(current, args.slice)
+            current_target = get_acceptance(current_item, request["acceptance_id"])
+            refresh_full_gate(current, Path(current["repository"]["path"]).resolve(), current_item, current_target)
+            return {"status": "PROOF_GATE_STALE", "proof_epoch": current_target["proof_epoch"]}
+        mutate(args, invalidate)
+        raise WorkError("full-gate fingerprint changed; proof cache invalidated, rerun verification")
     validate_proof_contract(
         target, target["claim"], str(request["proof_kind"]), list(request["dimensions"]),
     )
     validate_receipt_actor(
         ledger, item, request["acceptance_id"], request["agent"], model_evidence,
     )
-    repository = Path(ledger["repository"]["path"]).resolve()
+    cache_key = proof_cache_key(target, request)
+    if bool(request.get("allow_same_run_cache")):
+        cached = next((entry for entry in ledger["proof_cache"] if entry["cache_key"] == cache_key
+                       and entry["run_id"] == ledger["execution_contract"]["run_id"]), None)
+        if cached:
+            return {"status": "PROOF_CACHE_HIT", "receipt_id": cached["receipt_id"],
+                    "cache_key": cache_key, "run_id": cached["run_id"]}
     try:
         completed = subprocess.run(
             command,
@@ -1082,6 +1404,9 @@ def command_verify(args: argparse.Namespace) -> dict[str, Any]:
         "model": request["model"],
         "effort": request["effort"],
         "model_evidence": model_evidence,
+        "proof_epoch": target["proof_epoch"],
+        "full_gate_fingerprint": target["full_gate_fingerprint"],
+        "actor_telemetry_ref": str(request.get("actor_telemetry_ref", "")),
         "captured_at": now(),
     }
 
@@ -1090,7 +1415,18 @@ def command_verify(args: argparse.Namespace) -> dict[str, Any]:
         current_target = get_acceptance(current_item, request["acceptance_id"])
         if acceptance_contract_hash(current_target) != receipt["contract_hash"]:
             raise WorkError("acceptance proof contract changed while verification ran; rerun proof")
-        return attach_receipt(current, current_item, current_target, receipt)
+        result = attach_receipt(current, current_item, current_target, receipt)
+        if bool(request.get("allow_same_run_cache")):
+            current["proof_cache"] = [entry for entry in current["proof_cache"]
+                                      if entry["cache_key"] != cache_key]
+            current["proof_cache"].append({
+                "cache_key": cache_key, "run_id": current["execution_contract"]["run_id"],
+                "slice_id": args.slice, "acceptance_id": request["acceptance_id"],
+                "proof_epoch": current_target["proof_epoch"],
+                "full_gate_fingerprint": current_target["full_gate_fingerprint"],
+                "receipt_id": receipt["id"],
+            })
+        return result
 
     result = mutate(args, apply)
     result.update({"proof_status": status, "exit_code": exit_code, "output_tail": output[-2000:]})
@@ -1106,6 +1442,10 @@ def command_record_finding(args: argparse.Namespace) -> dict[str, Any]:
 
     def apply(ledger: dict[str, Any]) -> dict[str, Any]:
         get_slice(ledger, args.slice)["status"] = "review"
+        owner = str(finding.get("owner_assignment_id", ""))
+        if owner and not any(item["id"] == owner and item["slice_id"] == args.slice for item in ledger["assignments"]):
+            raise WorkError("finding owner_assignment_id must belong to the finding slice")
+        finding.setdefault("owner_assignment_id", "")
         ledger["findings"].append(finding)
         return {"status": "FINDING_RECORDED", "finding_id": finding["id"]}
     return mutate(args, apply)
@@ -1334,6 +1674,8 @@ def command_usage(args: argparse.Namespace) -> dict[str, Any]:
     required = {"actor", "assignment_id"} | counters
     if required - set(data):
         raise WorkError(f"usage record missing keys: {sorted(required - set(data))}")
+    data.setdefault("actor_session", "legacy-unobserved")
+    data.setdefault("actor_telemetry_ref", "")
 
     def apply(ledger: dict[str, Any]) -> dict[str, Any]:
         assignment_id = data["assignment_id"]
@@ -1342,7 +1684,9 @@ def command_usage(args: argparse.Namespace) -> dict[str, Any]:
             raise WorkError(f"unknown usage assignment: {assignment_id}")
         if assignment_id is None and data["actor"] != "main":
             raise WorkError("usage without assignment_id is reserved for main")
-        record = {"captured_at": now(), "actor": str(data["actor"]), "assignment_id": assignment_id}
+        record = {"captured_at": now(), "actor": str(data["actor"]), "assignment_id": assignment_id,
+                  "actor_session": str(data["actor_session"]),
+                  "actor_telemetry_ref": str(data["actor_telemetry_ref"])}
         for key in counters:
             value = data[key]
             if isinstance(value, bool) or not isinstance(value, int) or value < 0:
@@ -1409,6 +1753,8 @@ def command_finalize(args: argparse.Namespace) -> dict[str, Any]:
         ledger["model_policy_reasons"] = reasons
         if reasons:
             ledger["status"] = "partial"
+            ledger["task_status"] = "passed"
+            ledger["orchestration_status"] = "unverified"
             ledger["active_slices"] = []
             ledger["next_action"] = "Obtain host-observed model and effort evidence before claiming PASS."
             return {
@@ -1431,6 +1777,9 @@ def command_status(args: argparse.Namespace) -> dict[str, Any]:
     return {
         "work_id": ledger["work_id"],
         "status": ledger["status"],
+        "lifecycle_status": ledger["lifecycle_status"],
+        "task_status": ledger["task_status"],
+        "orchestration_status": ledger["orchestration_status"],
         "classification": ledger["classification"],
         "active_slices": ledger["active_slices"],
         "slices": [{"id": item["id"], "status": item["status"]} for item in ledger["slices"]],
@@ -1526,6 +1875,23 @@ def build_parser() -> argparse.ArgumentParser:
     complete_assignment.add_argument("--assignment", required=True)
     add_payload_options(complete_assignment)
 
+    ack_assignment = commands.add_parser("ack-assignment")
+    add_target_options(ack_assignment)
+    ack_assignment.add_argument("--assignment", required=True)
+
+    record_telemetry = commands.add_parser("record-telemetry")
+    add_target_options(record_telemetry)
+    add_payload_options(record_telemetry)
+
+    recover_assignment = commands.add_parser("recover-assignment")
+    add_target_options(recover_assignment)
+    recover_assignment.add_argument("--assignment", required=True)
+    add_payload_options(recover_assignment)
+
+    control_exception = commands.add_parser("record-control-plane-exception")
+    add_target_options(control_exception)
+    add_payload_options(control_exception)
+
     for name in (
         "start", "close", "checkpoint", "record-proof", "verify",
         "record-review", "record-finding", "block", "rollback",
@@ -1560,6 +1926,10 @@ def main() -> int:
         "add-source": command_add_source,
         "assign": command_assign,
         "complete-assignment": command_complete_assignment,
+        "ack-assignment": command_ack_assignment,
+        "record-telemetry": command_record_telemetry,
+        "recover-assignment": command_recover_assignment,
+        "record-control-plane-exception": command_record_control_plane_exception,
         "start": command_start,
         "record-proof": command_record_proof,
         "verify": command_verify,

@@ -33,6 +33,25 @@ def exact_files(folder: Path, expected: set[str]) -> list[Path]:
 
 policy = json.loads((ROOT / "automation/model-policy.json").read_text(encoding="utf-8"))
 platforms = policy["platforms"]
+telemetry = policy["telemetry_contract"]
+if telemetry["event_fields"] != ["session_id", "actor", "assignment_id", "tool", "tool_class", "timestamp", "outcome"]: fail("telemetry event schema drift")
+selectors = [
+    platforms["codex"]["standard"]["selector"], platforms["codex"]["expert"]["selector"],
+    platforms["cursor"]["implementation"]["selector"], platforms["cursor"]["research_review"]["selector"],
+    platforms["grok"]["base"]["selector"],
+]
+selector_source_roots = [ROOT / "platforms", ROOT / "automation"]
+for root in selector_source_roots:
+  for source in root.rglob("*"):
+    if source.name.startswith("test-") or source == ROOT / "automation/model-policy.json":
+        continue
+    if source.is_file() and source.suffix in {".md", ".toml", ".py", ".ps1", ".sh"}:
+        text = source.read_text(encoding="utf-8")
+        if any(selector in text for selector in selectors): fail(f"model selector duplicated outside policy: {source.relative_to(ROOT)}")
+for hook in (ROOT / "platforms/codex/scripts/skill-gate.py", ROOT / "platforms/antigravity/scripts/antigravity-skill-gate.py", ROOT / "platforms/cursor/scripts/cursor-hook.py"):
+    body = hook.read_text(encoding="utf-8")
+    if "telemetry-events.jsonl" not in body or "event_id" not in body or "event_ref" not in body:
+        fail(f"{hook.relative_to(ROOT)} lacks retained telemetry event references")
 if not {"Fast", "Auto"}.issubset(platforms["cursor"]["denied_modes"]): fail("Cursor Fast/Auto denial missing")
 if "Fast" not in platforms["grok"]["denied_modes"]: fail("Grok Fast denial missing")
 if {"family": "Gemini", "version": "3.6", "channel": "Flash"} not in platforms["antigravity"]["denied_models"]: fail("Gemini 3.6 Flash denial missing")
@@ -42,15 +61,15 @@ for path in exact_files(ROOT / "platforms/codex/agents", ROLES["codex"]):
     expected = {"name", "description", "developer_instructions", "model", "model_reasoning_effort", "sandbox_mode"}
     if set(data) != expected: fail(f"{path.relative_to(ROOT)} does not match Codex native schema")
     if data["name"] != path.stem: fail(f"{path.relative_to(ROOT)} name must match native filename")
-    if data["model"] != "gpt-5.6-terra" or data["model_reasoning_effort"] != platforms["codex"]["standard"]["effort"]:
-        fail(f"{path.relative_to(ROOT)} violates Codex standard model/effort policy")
+    if data["model"] != "__CODEX_STANDARD_MODEL__" or data["model_reasoning_effort"] != "__CODEX_STANDARD_EFFORT__":
+        fail(f"{path.relative_to(ROOT)} must be a selector-free Codex template")
 
 for path in exact_files(ROOT / "platforms/grok/agents", ROLES["grok"]):
     data = tomllib.loads(path.read_text(encoding="utf-8"))
     expected = {"description", "default_capability_mode", "model", "reasoning_effort", "prompt_file", "default_isolation"}
     if set(data) != expected: fail(f"{path.relative_to(ROOT)} does not match Grok native schema")
-    if not data["model"].startswith("grok-") or data["reasoning_effort"] != platforms["grok"]["minimum_effort"]:
-        fail(f"{path.relative_to(ROOT)} violates Grok model/effort policy")
+    if data["model"] != "__GROK_BASE_MODEL__" or data["reasoning_effort"] != "__GROK_MINIMUM_EFFORT__":
+        fail(f"{path.relative_to(ROOT)} must be a selector-free Grok template")
     if not (path.parent / data["prompt_file"]).is_file(): fail(f"{path.relative_to(ROOT)} prompt_file missing")
 
 for path in exact_files(ROOT / "platforms/cursor/agents", ROLES["cursor"]):
@@ -59,12 +78,11 @@ for path in exact_files(ROOT / "platforms/cursor/agents", ROLES["cursor"]):
     frontmatter = body.split("---", 2)[1]
     fields = dict(line.split(":", 1) for line in frontmatter.splitlines() if ":" in line)
     if set(fields) != {"name", "description", "model", "readonly"}: fail(f"{path.relative_to(ROOT)} does not match Cursor native schema")
-    family = platforms["cursor"]["implementation"]["family"] if path.name.endswith("implementer.md") else platforms["cursor"]["research_review"]["family"]
     model = fields["model"].strip().strip('"')
-    expected_model = "composer-2.5[fast=false]" if path.name.endswith("implementer.md") else "grok-4.5"
+    expected_model = "__CURSOR_IMPLEMENTATION_MODEL__" if path.name.endswith("implementer.md") else "__CURSOR_RESEARCH_REVIEW_MODEL__"
     expected_readonly = "false" if path.name.endswith("implementer.md") else "true"
-    if not model.lower().startswith(family.lower()) or model != expected_model or fields["readonly"].strip() != expected_readonly:
-        fail(f"{path.relative_to(ROOT)} violates Cursor role model/readonly policy")
+    if model != expected_model or fields["readonly"].strip() != expected_readonly:
+        fail(f"{path.relative_to(ROOT)} must be a selector-free Cursor template")
 
 antigravity_root = ROOT / "platforms/antigravity/agents"
 found_antigravity = {p.name for p in antigravity_root.iterdir() if p.is_dir()}
@@ -76,7 +94,7 @@ for role in sorted(ANTIGRAVITY_ROLES):
     fields = dict(line.split(":", 1) for line in frontmatter.splitlines() if ":" in line)
     if set(fields) != {"name", "description", "model"} or fields["name"].strip() != role or fields["model"].strip() != "inherit":
         fail(f"{path.relative_to(ROOT)} violates Antigravity native schema")
-    if "Gemini 3.6 Flash" not in body or "medium" not in body: fail(f"{path.relative_to(ROOT)} lacks inherited policy guard")
+    if "policy-denied inherited model" not in body or "medium" not in body: fail(f"{path.relative_to(ROOT)} lacks inherited policy guard")
 antigravity_readme = (antigravity_root / "README.md").read_text(encoding="utf-8")
 if "~/.gemini/config/agents/<role>/agent.md" not in antigravity_readme or "https://antigravity.google/docs/cli/commands/agents" not in antigravity_readme:
     fail("Antigravity official discovery location/schema citation missing")
@@ -244,7 +262,18 @@ if "--build" in sys.argv:
             for source_file in expected_paths:
                 relative = source_file.relative_to(source)
                 target = build / "native" / destination / relative
-                if not target.is_file() or sha(target) != sha(source_file): fail(f"{platform} native build drift: {destination}/{relative}")
+                if not target.is_file(): fail(f"{platform} native build missing: {destination}/{relative}")
+                if platform != "antigravity" and "__" in target.read_text(encoding="utf-8"):
+                    fail(f"{platform} native build retained a policy template token: {destination}/{relative}")
                 manifest_path = f"native/{destination}/{relative.as_posix()}"
                 if manifest.get(manifest_path) != sha(target): fail(f"{platform} manifest hash missing/drift: {manifest_path}")
+        if platform == "codex":
+            rendered = tomllib.loads((build / "native/agents/agent_rules_implementer.toml").read_text(encoding="utf-8"))
+            if rendered["model"] != platforms["codex"]["standard"]["selector"]: fail("Codex policy selector did not render")
+        if platform == "cursor":
+            rendered = (build / "native/agents/agent-rules-implementer.md").read_text(encoding="utf-8")
+            if f"model: {platforms['cursor']['implementation']['selector']}" not in rendered: fail("Cursor policy selector did not render")
+        if platform == "grok":
+            rendered = tomllib.loads((build / "native/agents/agent-rules-implementer.toml").read_text(encoding="utf-8"))
+            if rendered["model"] != platforms["grok"]["base"]["selector"]: fail("Grok policy selector did not render")
 print("native agent policy PASS")

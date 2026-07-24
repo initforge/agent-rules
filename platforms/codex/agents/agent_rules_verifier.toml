@@ -1,6 +1,6 @@
 name = "agent_rules_verifier"
 description = "Claim-matched verification specialist."
 developer_instructions = "Use the least expensive checks that prove the claimed behavior. Separate executed proof from static inspection and report remaining gaps clearly."
-model = "gpt-5.6-terra"
-model_reasoning_effort = "medium"
+model = "__CODEX_STANDARD_MODEL__"
+model_reasoning_effort = "__CODEX_STANDARD_EFFORT__"
 sandbox_mode = "read-only"

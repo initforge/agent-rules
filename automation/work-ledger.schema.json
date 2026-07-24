@@ -23,15 +23,18 @@
     "checkpoints",
     "usage",
     "next_action",
-    "active_slices"
-    ,"model_policy_reasons"
+    "active_slices", "model_policy_reasons", "lifecycle_status", "task_status",
+    "orchestration_status", "control_plane_exceptions", "proof_cache", "telemetry_events"
   ],
   "properties": {
-    "schema_version": { "const": 3 },
+    "schema_version": { "const": 4 },
     "work_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{2,79}$" },
     "status": {
       "enum": ["planned", "running", "blocked", "needs-replan", "passed", "partial", "rolled-back"]
     },
+    "lifecycle_status": { "enum": ["planned", "running", "blocked", "needs-replan", "passed", "partial", "rolled-back"] },
+    "task_status": { "enum": ["open", "blocked", "passed", "partial", "cancelled"] },
+    "orchestration_status": { "enum": ["healthy", "recovering", "degraded", "exception", "unverified"] },
     "created_at": { "type": "string", "format": "date-time" },
     "updated_at": { "type": "string", "format": "date-time" },
     "plan": { "$ref": "#/$defs/plan" },
@@ -62,7 +65,7 @@
         "max_delegation_depth",
         "effort_cap",
         "authorized_final_actions",
-        "execute_authorization"
+        "execute_authorization", "run_id", "main_direct_policy"
       ],
       "properties": {
         "mode": { "const": "automatic" },
@@ -74,7 +77,9 @@
           "uniqueItems": true,
           "items": { "enum": ["edit", "commit", "push", "deploy", "external-write"] }
         },
-        "execute_authorization": { "$ref": "#/$defs/executeAuthorization" }
+        "execute_authorization": { "$ref": "#/$defs/executeAuthorization" },
+        "run_id": { "type": "string", "minLength": 1 },
+        "main_direct_policy": { "$ref": "#/$defs/mainDirectPolicy" }
       }
     },
     "repository": {
@@ -141,8 +146,11 @@
         }
       }
     },
-    "next_action": { "type": "string" }
-    ,"model_policy_reasons": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+    "next_action": { "type": "string" },
+    "model_policy_reasons": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "control_plane_exceptions": { "type": "array", "items": { "$ref": "#/$defs/controlPlaneException" } },
+    "proof_cache": { "type": "array", "items": { "$ref": "#/$defs/proofCache" } }
+    ,"telemetry_events": { "type": "array", "items": { "$ref": "#/$defs/telemetryEvent" } }
   },
   "$defs": {
     "plan": {
@@ -222,7 +230,7 @@
         "proof_profile",
         "required_proof_kinds",
         "required_dimensions",
-        "receipt_ids"
+        "receipt_ids", "proof_epoch", "full_gate_fingerprint"
       ],
       "properties": {
         "id": { "type": "string", "pattern": "^AC[0-9]+$" },
@@ -247,7 +255,9 @@
           "uniqueItems": true,
           "items": { "type": "string", "minLength": 1 }
         },
-        "receipt_ids": { "type": "array", "items": { "type": "string" } }
+        "receipt_ids": { "type": "array", "items": { "type": "string" } },
+        "proof_epoch": { "type": "integer", "minimum": 0 },
+        "full_gate_fingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
       }
     },
     "slice": {
@@ -285,7 +295,8 @@
         "forbidden_paths",
         "acceptance_ids",
         "status",
-        "model_evidence"
+        "model_evidence", "mission", "actor_session", "allowed_tool_classes", "capsule_hash",
+        "receipt_budget", "recovery_attempts", "actor_telemetry_refs", "ack_status"
       ],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
@@ -303,7 +314,15 @@
         "status": { "enum": ["ready", "running", "done", "blocked", "cancelled"] },
         "model_evidence": { "$ref": "#/$defs/modelEvidence" },
         "completed_at": { "type": "string", "format": "date-time" },
-        "host_attestation_ref": { "type": "string", "minLength": 1 }
+        "host_attestation_ref": { "type": "string", "minLength": 1 },
+        "mission": { "type": "string", "minLength": 1 },
+        "actor_session": { "type": "string", "minLength": 1 },
+        "allowed_tool_classes": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["read", "edit", "test", "shell", "browser", "network", "git", "external-write"] } },
+        "capsule_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "receipt_budget": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "recovery_attempts": { "type": "array", "items": { "$ref": "#/$defs/recoveryAttempt" } },
+        "actor_telemetry_refs": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+        ,"ack_status": { "enum": ["pending", "acknowledged", "legacy-implicit"] }
       }
     },
     "receipt": {
@@ -333,7 +352,7 @@
         "expected_exit_code",
         "artifact_evidence",
         "verifier",
-        "model_evidence"
+        "model_evidence", "proof_epoch", "full_gate_fingerprint", "actor_telemetry_ref"
       ],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
@@ -378,13 +397,16 @@
         "model": { "type": "string", "minLength": 1 },
         "effort": { "enum": ["low", "medium", "high"] },
         "captured_at": { "type": "string", "format": "date-time" },
-        "model_evidence": { "$ref": "#/$defs/modelEvidence" }
+        "model_evidence": { "$ref": "#/$defs/modelEvidence" },
+        "proof_epoch": { "type": "integer", "minimum": 0 },
+        "full_gate_fingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "actor_telemetry_ref": { "type": "string" }
       }
     },
     "finding": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "slice_id", "severity", "summary", "status", "reviewer", "created_at"],
+      "required": ["id", "slice_id", "severity", "summary", "status", "reviewer", "created_at", "owner_assignment_id"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "slice_id": { "type": "string", "minLength": 1 },
@@ -394,7 +416,8 @@
         "reviewer": { "type": "string", "minLength": 1 },
         "created_at": { "type": "string", "format": "date-time" },
         "resolution": { "type": "string" },
-        "resolved_at": { "type": "string", "format": "date-time" }
+        "resolved_at": { "type": "string", "format": "date-time" },
+        "owner_assignment_id": { "type": "string" }
       }
     },
     "review": {
@@ -488,6 +511,34 @@
         "reasoning_tokens": { "type": "integer", "minimum": 0 },
         "agent_runs": { "type": "integer", "minimum": 0 },
         "tool_calls": { "type": "integer", "minimum": 0 }
+        ,"actor_session": { "type": "string", "minLength": 1 }
+        ,"actor_telemetry_ref": { "type": "string" }
+      }
+    },
+    "mainDirectPolicy": {
+      "type": "object", "additionalProperties": false, "required": ["allowed", "allowed_tool_classes"],
+      "properties": { "allowed": { "type": "boolean" }, "allowed_tool_classes": { "type": "array", "uniqueItems": true, "items": { "enum": ["read", "edit", "test", "shell", "browser", "network", "git", "external-write"] } } }
+    },
+    "recoveryAttempt": {
+      "type": "object", "additionalProperties": false, "required": ["attempt", "reason", "status", "recorded_at"],
+      "properties": { "attempt": { "type": "integer", "minimum": 1 }, "reason": { "type": "string", "minLength": 1 }, "status": { "enum": ["started", "recovered", "failed"] }, "recorded_at": { "type": "string", "format": "date-time" }, "actor_telemetry_ref": { "type": "string" } }
+    },
+    "controlPlaneException": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "scope", "reason", "recorded_at"],
+      "properties": { "kind": { "const": "CONTROL_PLANE_EXCEPTION" }, "scope": { "enum": ["orchestration", "main-direct", "host-telemetry"] }, "reason": { "type": "string", "minLength": 1 }, "recorded_at": { "type": "string", "format": "date-time" }, "assignment_id": { "type": "string" }, "actor_telemetry_ref": { "type": "string" } }
+    },
+    "proofCache": {
+      "type": "object", "additionalProperties": false, "required": ["cache_key", "run_id", "slice_id", "acceptance_id", "proof_epoch", "full_gate_fingerprint", "receipt_id"],
+      "properties": { "cache_key": { "type": "string", "pattern": "^[a-f0-9]{64}$" }, "run_id": { "type": "string", "minLength": 1 }, "slice_id": { "type": "string", "minLength": 1 }, "acceptance_id": { "type": "string", "minLength": 1 }, "proof_epoch": { "type": "integer", "minimum": 0 }, "full_gate_fingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" }, "receipt_id": { "type": "string", "minLength": 1 } }
+    },
+    "telemetryEvent": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "platform", "event", "session_id", "actor", "assignment_id", "tool", "tool_class", "timestamp", "outcome", "event_id"],
+      "properties": {
+        "schema_version": { "const": 1 }, "platform": { "type": "string", "minLength": 1 }, "event": { "type": "string", "minLength": 1 },
+        "session_id": { "type": "string", "minLength": 1 }, "actor": { "enum": ["main", "worker", "unknown"] }, "assignment_id": { "type": "string", "minLength": 1 },
+        "tool": { "type": "string", "minLength": 1 }, "tool_class": { "type": "string", "minLength": 1 }, "timestamp": { "type": "string", "format": "date-time" },
+        "outcome": { "type": "string", "minLength": 1 }, "event_id": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
       }
     }
   }

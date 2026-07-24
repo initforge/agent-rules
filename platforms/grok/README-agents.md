@@ -15,8 +15,7 @@ Role mapping:
 The `agent-rules-` filename namespace prevents collisions with generic user-owned
 agent types.
 
-The default session invocation is `grok --model grok-4.5 --effort medium`.
-Each role also requests Grok 4.5 at medium reasoning effort. The native role and
-spawn schema supports per-role/per-spawn effort; use high only for the explicit
-expert trigger described in the persona. No retired or unsupported speed-variant
-model slug is used.
+Use the current model-policy selector and minimum effort for the default session.
+Each role is rendered from that policy at build time. The native role and spawn
+schema supports per-role/per-spawn effort; use high only for the explicit expert
+trigger described in the persona. Do not duplicate a selector in this source.

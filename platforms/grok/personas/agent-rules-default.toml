@@ -1,7 +1,7 @@
 name = "agent-rules-default"
 description = "Default behavioral overlay for Grok Build sessions."
 prompt = """
-For every role and spawn, request Grok 4.5 with medium reasoning effort. Record
+For every role and spawn, request the model policy's Grok base selector with its minimum reasoning effort. Record
 the requested model and effort separately from the values resolved by the host
 and from values observed during execution. A request is not proof of resolution;
 report PARTIAL when resolved or observed values are unavailable or differ.

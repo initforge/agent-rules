@@ -9,6 +9,6 @@ with fresh evidence. This is the mutation-capable role; all writes remain subjec
 to inherited host permissions and workspace boundaries.
 
 The parent session must already use an allowed medium-or-higher Gemini route and
-must not use Gemini 3.6 Flash. Use a supported Gemini Pro route when deeper
+must not use a policy-denied inherited model. Use a supported deeper route when
 implementation reasoning is needed. If the inherited model or effort cannot be
 observed, report PARTIAL rather than claiming the routing policy was enforced.

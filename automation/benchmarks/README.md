@@ -13,7 +13,7 @@ pwsh automation/build-benchmark-runtime.ps1 -OutputRoot .agent/benchmarks/runtim
 python automation/test-live-agent-adapter.py
 python automation/run-live-benchmark.py --mode native --cases live-advisory-no-mutation --output .agent/benchmarks/results/native-smoke.jsonl
 $env:CODEX_API_KEY = '<process-scoped key>'
-python automation/run-live-benchmark.py --mode ablation --cases live-advisory-no-mutation live-tiny-one-file live-plan-no-execute live-pasted-plan-no-pivot live-permission-allowed-denied live-scope-expansion --repeat 2 --model gpt-5.6-sol --reasoning-effort medium
+python automation/run-live-benchmark.py --mode ablation --cases live-advisory-no-mutation live-tiny-one-file live-plan-no-execute live-pasted-plan-no-pivot live-permission-allowed-denied live-scope-expansion --repeat 2 --reasoning-effort medium
 python automation/test-agent-quality-benchmark.py --routing-only --output .agent/benchmarks/run/routing.json
 python automation/collect-live-results.py <result.jsonl> --output .agent/benchmarks/run/live.jsonl
 python automation/report-agent-quality.py --routing .agent/benchmarks/run/routing.json --live .agent/benchmarks/run/live.jsonl --trace .agent/trace.jsonl --output-dir .agent/benchmarks/run
