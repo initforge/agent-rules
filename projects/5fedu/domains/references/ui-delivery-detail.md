@@ -1,119 +1,44 @@
-# UI delivery — chi tiết surfaces
+# UI delivery — navigation, interaction và proof
 
-**Vai trò:** Hard gates, verify, navigation — lazy-load khi implement UI.  
-**Đọc trước:** `../ui-delivery.md` + `../module-mapping.md`.
+**Vai trò:** Chi tiết lazy-load sau `ui-delivery.md` và `module-mapping.md`. Inventory vẫn là source machine-readable cho từng surface; file này chỉ giữ các điều kiện liên surface và cách chứng minh.
 
-## Navigation flow (Sheet)
+## Navigation và route integrity
 
-- **"Dùng ở đâu quay lại đó"** — sau thao tác (form/drawer/detail), quay đúng list/context user vào, không dump về route mặc định.
-- Sidebar + breadcrumb + route guard + permission matrix **đi cùng nhau** khi đổi tên/vị trí module.
-- **Breadcrumb admin:** mỗi route `/admin/*` mới **bắt buộc** thêm entry vào `getRouteConfig()` trong `src/components/shared/Breadcrumbs.tsx` với `label` tiếng Việt **có dấu** + `parentPath` phân hệ (vd. `/admin/he-thong`). Sidebar **không** tự sinh breadcrumb — đây là nguồn duy nhất.
-- Search liên kết: filter/search phải khớp module reference (toolbar chip vs form combobox — xem Surface Classification trong `ui-delivery.md`).
-- Notification demo: nếu spec yêu cầu, reuse pattern notification đang sống trong template.
-- Responsive: verify desktop + mobile khi module có mobile behavior.
+- **“Dùng ở đâu quay lại đó”:** sau form/drawer/detail, trả user về đúng list và filter/context đã vào; không dump về route mặc định.
+- Route, sidebar, breadcrumb registry, route guard, permission matrix, module key và destination là một thay đổi liên kết. Đổi tên/vị trí module phải kiểm tất cả.
+- Với mỗi route product mới, đăng ký exact route trong `getRouteConfig()` tại `src/components/shared/Breadcrumbs.tsx` với `label` tiếng Việt Unicode có dấu và `parentPath` phân hệ (ví dụ template `/he-thong/nhan-vien` có parent `/he-thong`). Sidebar không tạo breadcrumb thay registry; fallback từ slug là configuration defect, không phải nhãn product chấp nhận được.
+- Search/filter phải dùng control đúng surface: filter chip trên toolbar; combobox/searchable combobox trong form. Notification chỉ reuse pattern template khi spec yêu cầu.
 
-## Canonical references
+## Motion, accessibility và responsive
 
-- CRUD list/form/detail: lấy **Nhân viên**
-- Hierarchy 2 cấp: lấy **Phòng ban**
-- Tổ chức trong hierarchy 2 cấp: lấy **Chức vụ** nhưng vẫn xem **Phòng ban** là trục cha
-- Stats/report/tab-view: lấy tab **Thống kê** của **Nhân viên**
-- Print/PDF/export: lấy toolbar in/xuất và helper export đang sống
-- **Bảng con trong detail:** lấy **Phòng ban** — `DetailSection` + `EmbeddedChildDataGrid` + badge count (`{n} bản ghi`) + nút Thêm primary (`bg-primary text-white shadow-sm hover:bg-primary/90 h-8 px-3 text-xs`) + **cột Thao tác nhất quán với bảng chính** (nút Sửa hiển thị trực tiếp dạng `primary` + Dấu 3 chấm `RowActionsOverflowMenu` chứa nút Xóa và các hành động phụ). Không tự chế layout 2 icon trực tiếp hoặc ẩn hết vào menu 3 chấm nếu template mẫu có cấu trúc chuẩn.
-- **Confirm xóa:** lấy **Nhân viên** — `useConfirmStore().confirm({ variant: 'danger' })` trước mọi xóa/hành động nguy hiểm.
-- **Cột listview:** `TABLE_COLUMN_PRESETS` (`lib/table-column-presets.ts`) — `minWidth`/`maxWidth` + `truncate`.
-- **Thao tác 3 chấm (RowActionsOverflowMenu):** Luôn luôn bật portal (`portalEnabled={true}`) để dropdown menu hoạt động ổn định trên cả mobile và desktop cho tất cả các bảng chính và bảng con. Cấm tắt portal hoặc dùng điều kiện `compact` để vô hiệu hóa portal dẫn đến lỗi ẩn/mất menu.
+- Reuse motion primitive/timing của reference. Motion không là decoration được tự chế; mọi enter/exit, drawer/menu/card/tree transition phải tôn trọng `prefers-reduced-motion`.
+- Drawer/modal phải giữ focus trap, Escape close, focus restore về opener, backdrop behavior, dialog semantics (`role="dialog"`, `aria-modal`, accessible title/label) và submit/loading/error state có thể nhận biết.
+- Menu/action phải dùng keyboard/outside-click behavior của primitive; xóa/hành động nguy hiểm luôn có danger confirmation. Permission không chỉ ẩn nút mà còn bảo vệ action/state đúng reference.
+- Kiểm tra desktop và mobile khi surface có responsive behavior: drawer/modal full-screen/safe-area footer, toolbar/action/filter usable, table/grid overflow đọc được, breadcrumb truncate không đổi Unicode label.
 
-Quy tắc baseline:
+## Các reference sâu thường gặp
 
-- **Bắt buộc đối chiếu trực quan (Visual Parity Gate):** Khi sửa hoặc tạo mới giao diện (Table chính, Bảng con, Toolbar, Stats), bắt buộc phải mở trực tiếp file code mẫu của template Nhân viên/Phòng ban đang chạy để đối chiếu cấu trúc DOM và class Tailwind thực tế. Cấm suy đoán cảm tính hoặc tin tưởng mù quáng vào tài liệu markdown rules tĩnh nếu chúng mâu thuẫn với code đang chạy.
-- **Cấm import chắp vá component Stats:** Tuyệt đối không import component cấu hình KPI (`StatsKpiConfigPopover`) của Nhân viên sang các phân hệ khác do nhãn checkbox bị hardcode. Phải viết component popover riêng biệt (hoặc inline) cho từng phân hệ, đồng bộ đầy đủ class checkbox của hệ thống và trạng thái active (`bg-muted`) của nút trigger khi popup mở.
-- **Nhân viên** là module gốc và canonical reference cho mọi CRUD chuẩn hoặc biến thể CRUD trong nhóm quản trị nội bộ.
-- **Phòng ban** chỉ dùng 2 cấp nếu spec/template/app chưa xác nhận cấu trúc sâu hơn.
-- **Chức vụ** là lớp đối tượng gắn trong cây **Phòng ban**; không xử lý **Chức vụ** như module độc lập cắt rời khỏi trục tổ chức.
-- **Module mới dạng "entity quản trị nội bộ"** → clone/adapt từ **Nhân viên**; chỉ đổi phần nghiệp vụ, không đổi layout/surface vô cớ.
-- **Module có Thống kê (Tab Stats):** Bắt buộc kế thừa gần như toàn bộ (gần như 100%) kiến trúc, layout và các components từ tab **Thống kê của Nhân viên** (gồm DashboardToolbar lọc, StatsKpiGrid hiển thị KPI, StatsKpiConfigPopover cấu hình ẩn/hiện, hệ thống biểu đồ, StatsDataGrid hiển thị danh sách chi tiết ở chân trang, và dialog StatsDrillDownDialog). Cấm tự chế cấu trúc riêng hoặc lược bỏ các thành phần này.
+| Nhu cầu | Reference cần mở |
+|---|---|
+| CRUD/list/form/detail | Nhân viên; `GenericToolbar`, `GenericDrawer`, `FormDrawerFooter`, `DetailToolbar` khi inventory chỉ ra |
+| Hierarchy/child grid | Phòng ban; `HierarchyListShell`, `HierarchyTable`, `EmbeddedChildDataGrid` khi inventory chỉ ra |
+| Stats | Thống kê Nhân viên; `DashboardToolbar`, KPI/chart/grid đã mở từ template |
+| Row overflow | `RowActionsOverflowMenu`: portal phải hoạt động desktop/mobile; action phụ mirror DetailToolbar; destructive action có separator/confirm |
+| Export/PDF | Export dialog/helper reference; file thật phải dùng visible scope/columns và báo lỗi recoverable. PDF tiếng Việt dùng font Unicode đã verify, không font mặc định jsPDF |
 
-Reference không khớp behavior → bỏ, không bám module quen tay.
+Không import component có text/KPI hard-code từ module khác để “reuse”; giữ shell primitive nhưng viết variable content cho module, hoặc có deviation được duyệt.
 
-## Hard gates
+## Layout và export quality gates
 
-- Cấm tự chế tên module, button, tab, route, empty state, icon, tooltip, workflow nếu không có nguồn rõ từ spec/template/app.
-- Cấm generic hóa lưới biếng; mỗi feature vẫn có file view/table/form/service riêng.
-- CRUD/listview chuẩn: search, filter toolbar, column visibility, pagination footer, action đủ theo permission.
-- Detail/form drawer: header/section/footer/action đúng pattern sống.
-- Biến thể CRUD quản trị nội bộ: không lệch form/drawer/action khỏi **Nhân viên**.
-- Export thật: `exportColumns` + `exportMapFn` khớp dữ liệu.
-- Stats/report: không nhét mini-tab vào CRUD page nếu đã có surface stats riêng.
-- Ảnh từ link ngoài (Google Drive share, thumbnail, richtext image) — không chỉ test URL trực tiếp.
-- Đổi tên/vị trí module: sync sidebar, breadcrumb, route registry/guard, permission matrix, module key, label.
+- Component/trang con nhúng không dùng `.h-page`; dùng `h-full min-h-0` để flex parent còn chỗ cho footer/pagination.
+- Excel số liệu phải xuất kiểu Number (không string), có định dạng `#,##0`, căn phải cho số; ngày/trạng thái căn giữa, text căn trái. Header dùng layout/màu template và file mở được để tính `SUM`/`AVERAGE`.
+- PDF tiếng Việt không dùng font mặc định jsPDF. Đăng ký font TrueType Unicode đã verify (qua VFS) và dùng font đó cho `text` lẫn `autoTable`.
 
-## Verification gate (UI)
+## Verification và proof
 
-Mọi thay đổi UI verify như hệ thống liên kết:
+1. **Static/local:** chạy lint/typecheck/build/tests phù hợp risk; kiểm runtime imports, props, hook và factory chứ không chỉ build pass.
+2. **Interaction:** thực hiện add drawer, row-click detail, form popup/validation, filter/dropdown, permission action, mutation sync; export kiểm file thật. Kiểm responsive desktop/mobile khi áp dụng.
+3. **Parity:** đối chiếu target với local template paths đã ghi trong packet cho shell, behavior, state, motion và responsive; xác nhận variable map có nguồn spec/schema.
+4. **Production (opt-in):** chỉ khi owner yêu cầu deploy/production proof: sửa → push → chờ deploy → interaction verify; chụp screenshot bằng browser context mới hoặc bypass cache/PWA. DOM chỉ hỗ trợ debug.
 
-- Toolbar, filter, search, column toggle, pagination
-- List/detail/form/drawer
-- Action theo permission
-- Responsive nếu module có mobile behavior
-- Export file thật
-- Cross-module sync nếu dữ liệu ảnh hưởng module khác
-- Runtime imports/props/hook/factory — không chỉ build pass
-- PASS task UI/module cần production proof đầy đủ khi user yêu cầu deploy
-- Vòng lặp: sửa → push → đợi deploy → verify production; không dừng ở local pass
-- Bằng chứng: screenshot production; DOM chỉ hỗ trợ debug
-- Browser context mới hoặc bypass cache/PWA trước khi chụp
-- Interaction check: add drawer, row-click detail, form popup, filter/dropdown — không chỉ mở route đọc text
-- Desktop + mobile nếu module có responsive
-
-## Pattern fidelity audit (trước PASS)
-
-*Bổ sung cho Audit checklist trong `module-mapping.md`.*
-
-- Reference đã chọn là gì?
-- Đã mở template/current route và đối chiếu bằng mắt chưa?
-- Đã map module → surface → reference → expected controls chưa?
-- Toolbar, drawer detail/form, listview, row-click, export, stats đúng pattern chưa?
-- Đã quét module cùng primitive nếu lỗi lặp chưa?
-- Ảnh Google Drive render được chưa?
-- Đổi tên module đã sync sidebar/breadcrumb/permission/registry chưa?
-- Production verify interaction sau deploy thật chưa?
-
-Khi cần báo cáo kỹ thuật, ghi `Template reference`, `Pattern fidelity` và `Verification`; không ép các metadata này vào câu trả lời nghiệp vụ mặc định.
-
-## Plan và report contract
-
-Format cố định cho task UI/module 5fedu:
-
-1. `Mục tiêu`
-2. `Khảo sát đã xác nhận`
-3. `Implementation changes`
-4. `Verification plan`
-5. `Assumptions locked`
-6. `Known-unknowns` — thứ chỉ xác nhận được lúc implement (call sites, gaps, orphaned, runtime-only); verify theo `implementation-discovery`
-
-Luôn ghi `Template reference` + lý do, `Production verification path`, `Verify by image` khi cần. Không viết chung chung "sửa theo template" — phải nêu module baseline và surface reuse.
-
-**Plan artifact (task dài / module mới):** dùng harness **PAF** — `skills/plan-and-handoff/references/plan-artifact-template.md`. Section 6 bên dưới = **execution report** (sau implement), map PAF: Mục tiêu→§1; Khảo sát→§3+§5b; Verification plan→§4 verify; Assumptions/Known-unknowns→§5.
-
-Chi tiết mapping module → template: `module-mapping.md`.
-
-## Dự án Nostime
-
-Quyết định retail/luxury, tồn kho, báo cáo NXT → `archive/nostime/` — không auto-load cho template chung.
-
-## Excel / PDF / h-page Quality Gates
-
-### 1. Cấm lồng ghép class `h-page` (h-page Nesting Block)
-- Không bao giờ được dùng class `.h-page` ở các component con hoặc trang con nhúng (như `TransportModulePage`).
-- Trang con nhúng bắt buộc dùng `h-full min-h-0` để co giãn chính xác theo không gian còn lại của flex parent, tránh kéo giãn chiều cao vượt quá viewport làm ẩn footer/pagination.
-
-### 2. Quy chuẩn xuất file Excel (Excel Export Verification)
-- **Kiểu dữ liệu (Cell Type 'n')**: Các cột chứa số liệu (như Tiền lương, Chi phí, Số chuyến...) bắt buộc phải được xuất dưới dạng Number thực tế để có thể tính toán (`=SUM()`, `=AVERAGE()`), không được để kiểu String/Text (gây ra cảnh báo tam giác xanh lá "Number stored as text").
-- **Định dạng hiển thị (Number Format)**: Phải hiển thị phân tách phần nghìn rõ ràng (`#,##0`), căn lề phải cho cột số, căn lề giữa cho ngày tháng/trạng thái/biển số, và căn lề trái cho text thường.
-- **Màu sắc và Layout**: Header màu xanh dương đậm thương hiệu (`#1E3A8A`) chữ trắng đậm Segoe UI, có viền mỏng bao quanh và màu nền dòng xen kẽ nhẹ nhàng để tăng độ tương phản.
-
-### 3. Quy chuẩn xuất file PDF (PDF Export Verification)
-- **Hỗ trợ Tiếng Việt (Unicode Support)**: Tuyệt đối không dùng các font mặc định của jsPDF (như Helvetica, Times, Courier) vì các font này không hỗ trợ bảng mã Unicode tiếng Việt, dẫn đến vỡ font/hiển thị ký tự lạ (mojibake).
-- **Đăng ký Font Chữ**: Phải fetch các tệp font TrueType hỗ trợ tiếng Việt (như `Roboto-Regular.ttf` và `Roboto-Medium.ttf` từ CDN uy tín như cdnjs), chuyển đổi thành base64 thông qua ArrayBuffer, và đăng ký với jsPDF bằng `doc.addFileToVFS` và `doc.addFont`.
-- **Áp dụng Font**: Đảm bảo tất cả các văn bản vẽ bằng `doc.text` và bảng vẽ bằng `autoTable` đều chỉ định sử dụng font đã đăng ký (ví dụ: `font: 'Roboto'`).
+Report kỹ thuật ghi `Template reference`, `Shell parity`, `Variable map`, `Pattern fidelity`, `Approved deviations` và `Verification`. Evidence cần nêu snapshot template, paths/surface đã đối chiếu, command hoặc interaction đã chạy, và giới hạn chưa chứng minh được.

@@ -48,6 +48,16 @@
       "allowed_kinds": ["component-test", "browser-test", "integration-test", "build", "custom-runtime"],
       "signals": ["ui runtime", "drawer", "toolbar", "responsive", "mobile", "parity", "template fidelity"]
     },
+    "ui-parity": {
+      "required_dimensions": ["interaction", "state", "regression", "visual", "reference"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
+      "conditional_dimensions": {
+        "viewport": ["responsive", "mobile", "viewport"]
+      },
+      "allowed_kinds": ["component-test", "browser-test", "integration-test", "custom-runtime"],
+      "signals": ["ui parity", "template", "reference fidelity", "shell parity", "variable map", "drawer", "toolbar", "listview"]
+    },
     "api-contract": {
       "required_dimensions": ["positive", "invalid-error", "regression"],
       "runtime_evidence_required": true,

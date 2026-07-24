@@ -33,8 +33,8 @@
 - "Hàm index" = SQL index, RPC, hay mẫu riêng?
 - Module nào exception permission?
 
-## Dự án 5fedu thật
+## Dự án 5fedu đã đăng ký
 
-Chỉ **Tah-app** và **nostime** — quyết định riêng trong `context/5fedu/` mỗi repo sau cài. Template harness: `projects/known-5fedu-repos.md`.
+Xem các repo đã đăng ký hiện tại tại `projects/known-5fedu-repos.md`; đây không phải tập đóng vĩnh viễn. Quyết định riêng nằm trong `context/5fedu/` mỗi repo sau cài. Repo mới cần owner đăng ký và chạy installer trước khi dùng context.
 
 Nostime retail → `archive/nostime/` (overlay khi cài profile `nostime`) — không auto-load cho tah-app.

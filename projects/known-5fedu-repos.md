@@ -1,16 +1,16 @@
 # Dự án 5fedu đã biết
 
-**Vai trò:** Registry các repo 5fedu thật — không thêm dự án ảo.  
+**Vai trò:** Registry các repo 5fedu đã đăng ký — không thêm dự án ảo.
 **Ý đồ:** Agent chỉ nạp `context/5fedu/` **trong repo đang mở**, không đọc template `agent-rules/projects/5fedu/`.
 
-## Repo hợp lệ
+## Repo đăng ký hiện tại
 
 | Slug | Path (máy dev) | Profile | Ghi chú |
 |---|---|---|---|
 | `tah-app` | `/home/linhnxdeveloper/Projects/Tah-app` (Linux) / `P:\Tah-app` (Windows) | `tah-app` | ERP TAH; deploy `tah-app.vercel.app` qua `git push` |
 | `nostime` | `/home/linhnxdeveloper/Projects/nostime` (Linux) / `P:\nostime` (Windows) | `nostime` | NOSTIME APP; luxury retail |
 
-Không có dự án 5fedu thứ ba trừ khi owner thêm vào đây và chạy installer.
+Danh sách này là registry hiện tại, không phải tập đóng vĩnh viễn. Chỉ owner mới thêm repo mới vào đây và repo đó phải chạy installer trước khi agent dùng `context/5fedu/`.
 
 ## Context trong repo
 

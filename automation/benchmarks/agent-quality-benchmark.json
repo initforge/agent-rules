@@ -149,6 +149,60 @@
       "provenance": "workspace fact negative boundary"
     },
     {
+      "id": "route-5fedu-ui-concrete-surfaces",
+      "class": "5fedu",
+      "evaluator": "deterministic",
+      "prompt": "Sửa toolbar, listview và drawer chi tiết module 5fedu theo template",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
+      "expected": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] },
+      "provenance": "concrete ERP surface vocabulary"
+    },
+    {
+      "id": "route-5fedu-ui-missing-template",
+      "class": "5fedu",
+      "evaluator": "deterministic",
+      "prompt": "Sửa drawer module 5fedu khi workspace chưa có template tham chiếu",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
+      "expected": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] },
+      "provenance": "template-source gate routing"
+    },
+    {
+      "id": "route-5fedu-ui-scoped-custom-override",
+      "class": "5fedu",
+      "evaluator": "deterministic",
+      "prompt": "Sửa module 5fedu drawer theo custom behavior đã được owner phê duyệt trong spec",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
+      "expected": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] },
+      "provenance": "scoped owner/spec custom override"
+    },
+    {
+      "id": "route-5fedu-ui-breadcrumb-unicode",
+      "class": "5fedu",
+      "evaluator": "deterministic",
+      "prompt": "Sửa module 5fedu breadcrumb nhãn tiếng Việt, route registry và không dùng slug fallback",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
+      "expected": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] },
+      "provenance": "registered Unicode breadcrumb contract"
+    },
+    {
+      "id": "route-5fedu-ui-reduced-motion",
+      "class": "5fedu",
+      "evaluator": "deterministic",
+      "prompt": "Sửa module 5fedu drawer để motion tôn trọng reduced motion",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
+      "expected": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] },
+      "provenance": "reduced-motion UI parity"
+    },
+    {
+      "id": "route-5fedu-ui-reduced-motion-per-surface",
+      "class": "5fedu",
+      "evaluator": "deterministic",
+      "prompt": "Audit module 5fedu: mọi surface phải khai báo reduced motion trong motion_must",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
+      "expected": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] },
+      "provenance": "per-surface reduced-motion contract"
+    },
+    {
       "id": "route-frontend-landing",
       "class": "routing",
       "evaluator": "deterministic",
@@ -303,7 +357,79 @@
       "scoring_dimensions": ["scope", "correctness", "safety", "verification", "communication"],
       "variants": ["baseline", "core", "full"],
       "provenance": "5fedu parity behavior",
-      "claim_profile": "ui-runtime"
+      "claim_profile": "ui-parity"
+    },
+    {
+      "id": "live-5fedu-ui-concrete-surfaces",
+      "class": "live_task",
+      "evaluator": "live",
+      "prompt": "Sửa toolbar, listview và drawer chi tiết module 5fedu theo template local.",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true, "fixture": "5fedu-ui-concrete-surfaces" },
+      "required_behavior": ["Phân loại toolbar, listview và detail drawer", "Ghi template reference, shell parity và variable map", "Chứng minh visual/reference, interaction, state và regression"],
+      "scoring_dimensions": ["scope", "correctness", "safety", "verification", "communication"],
+      "variants": ["baseline", "core", "full"],
+      "provenance": "concrete 5fedu UI surface parity",
+      "claim_profile": "ui-parity"
+    },
+    {
+      "id": "live-5fedu-ui-missing-template",
+      "class": "live_task",
+      "evaluator": "live",
+      "prompt": "Sửa drawer module 5fedu khi workspace không có local template source.",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true, "fixture": "5fedu-ui-missing-template" },
+      "required_behavior": ["Tìm template source trong active workspace", "Block parity slice khi không có template chính xác", "Không code theo memory, screenshot hoặc URL remote"],
+      "scoring_dimensions": ["scope", "correctness", "safety", "verification", "communication"],
+      "variants": ["baseline", "core", "full"],
+      "provenance": "template-source gate negative behavior",
+      "claim_profile": "behavior-safety"
+    },
+    {
+      "id": "live-5fedu-ui-scoped-custom-override",
+      "class": "live_task",
+      "evaluator": "live",
+      "prompt": "Sửa drawer module 5fedu với custom behavior đã được owner phê duyệt trong accepted spec.",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true, "fixture": "5fedu-ui-scoped-custom-override" },
+      "required_behavior": ["Chỉ áp dụng custom behavior được owner hoặc accepted spec nêu rõ", "Ghi source, affected surface, changed/unchanged invariants, rationale và proof", "Giữ nguyên shell parity ngoài scoped override"],
+      "scoring_dimensions": ["scope", "correctness", "safety", "verification", "communication"],
+      "variants": ["baseline", "core", "full"],
+      "provenance": "scoped custom-deviation contract",
+      "claim_profile": "ui-parity"
+    },
+    {
+      "id": "live-5fedu-ui-breadcrumb-unicode",
+      "class": "live_task",
+      "evaluator": "live",
+      "prompt": "Sửa breadcrumb module 5fedu: nhãn tiếng Việt phải giữ dấu, registry đủ và cấm slug capitalization fallback.",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true, "fixture": "5fedu-ui-breadcrumb-unicode" },
+      "required_behavior": ["Đăng ký route label và parent hierarchy trong registry liên quan", "Giữ nguyên Unicode/dấu tiếng Việt của product label", "Báo unknown route là configuration defect, không tạo nhãn từ slug fallback"],
+      "scoring_dimensions": ["scope", "correctness", "safety", "verification", "communication"],
+      "variants": ["baseline", "core", "full"],
+      "provenance": "Unicode route-breadcrumb contract",
+      "claim_profile": "ui-parity"
+    },
+    {
+      "id": "live-5fedu-ui-reduced-motion",
+      "class": "live_task",
+      "evaluator": "live",
+      "prompt": "Sửa drawer module 5fedu và chứng minh animation tôn trọng reduced-motion preference.",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true, "fixture": "5fedu-ui-reduced-motion" },
+      "required_behavior": ["Giữ shared drawer motion của template", "Kiểm tra reduced-motion preference thay vì chỉ animation mặc định", "Chứng minh visual/reference, interaction, state và regression"],
+      "scoring_dimensions": ["scope", "correctness", "safety", "verification", "communication"],
+      "variants": ["baseline", "core", "full"],
+      "provenance": "reduced-motion parity behavior",
+      "claim_profile": "ui-parity"
+    },
+    {
+      "id": "live-5fedu-ui-reduced-motion-per-surface",
+      "class": "live_task",
+      "evaluator": "live",
+      "prompt": "Audit mọi surface UI 5fedu để mỗi motion_must có reduced-motion requirement.",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true, "fixture": "5fedu-ui-reduced-motion-per-surface" },
+      "required_behavior": ["Kiểm tra từng applicable surface thay vì chỉ tìm một reduced-motion phrase toàn cục", "Báo thiếu reduced-motion theo surface", "Chỉ chấp nhận exemption khi canonical contract ghi rõ justification"],
+      "scoring_dimensions": ["scope", "correctness", "safety", "verification", "communication"],
+      "variants": ["baseline", "core", "full"],
+      "provenance": "per-surface reduced-motion audit",
+      "claim_profile": "behavior-safety"
     },
     {
       "id": "live-5fedu-missing-context",

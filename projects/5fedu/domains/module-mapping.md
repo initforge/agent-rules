@@ -1,127 +1,46 @@
 # Module mapping — UI → template
 
-**Vai trò:** Bảng tra module UI ↔ template; bắt buộc mở khi user báo lệch/sai pattern.  
-**Ý đồ:** Agent vào đúng module tham chiếu trước khi sửa.
+**Vai trò:** Chọn reference trước khi clone/audit. Template authority là code local đã verify theo workflow ở `ui-delivery.md`; URL repo chỉ là định danh, không thay thế code local hay một đường dẫn máy cố định.
 
-Template: `https://github.com/admin5fedu/5f-template-ket-noi-supabase` (React/Vite).
+Trước khi chọn reference, load surface khớp trong [`references/pattern-inventory.yaml`](references/pattern-inventory.yaml): đó là source canonical cho `shell_must`, behavior/state/motion/responsive và variable slots; file này chỉ map module → baseline và checklist.
 
-## Module tham chiếu (reference)
+## Reference theo behavior
 
-| Loại surface | Module tham chiếu | Khi nào dùng |
+| Surface/behavior | Module hoặc primitive tham chiếu | Dùng khi |
 |---|---|---|
-| CRUD list/form/detail | **Nhân viên** | Entity quản trị nội bộ |
-| Hierarchy 2 cấp | **Phòng ban** | Cây cha-con |
-| Entity trong hierarchy | **Chức vụ** (cha: Phòng ban) | Form/lọc theo phòng |
-| Tab Thống kê / báo cáo | Tab stats **Nhân viên** | Module có stats |
-| Toolbar in/xuất | Module export đang sống | Export thật |
-| Phân quyền ma trận | Pattern **Phân quyền** template | Xem `permissions.md` |
-| Chi nhánh / đối tác | **Chi nhánh** (nếu có) hoặc **Nhân viên** shell | CRUD đối tác |
-| **Bảng con trong detail drawer** | **Phòng ban** (`EmbeddedChildDataGrid`) | Khi user nói "bảng con" — kể cả module không có listview 2 cấp |
-| **Popup xác nhận xóa/hành động nguy hiểm** | **Nhân viên** (`useConfirmStore` + `ConfirmDialog`) | Xóa đơn, xóa nhiều, toggle ảnh hưởng site |
-| **Độ rộng cột listview** | **Nhân viên** + `TABLE_COLUMN_PRESETS` | `minWidth`/`maxWidth` + `truncate` theo nội dung thực tế |
-| **In hồ sơ / preview PDF** | **Nhân viên** (`openEmployeeProfilePreviewTab` → `/ho-so-nhan-vien/:id`) | jsPDF + `window.print()`; letterhead từ `useUIStore.companyInfo` |
-| **Cấu hình 1 dòng (settings)** | **Thông tin công ty** | Logo, MST, địa chỉ — nguồn letterhead in hồ sơ; service read phải fallback mock khi thiếu bảng DB |
-| **Module thống kê standalone** | Tab stats **Nhân viên** (route riêng) | Route + sidebar riêng, không tab CRUD |
-| **Row actions list (master-detail / phiếu)** | **Nhân viên** (`employee-table-row-actions.tsx`) | Primary **Sửa** + ⋮ thao tác phụ (in, liên hệ, xóa). **Không** nút *Xem chi tiết* — mở detail bằng click hàng. Overflow mirror **DetailToolbar** (prominent), không duplicate nút chỉ có ở drawer footer |
+| CRUD list, form, detail, row actions, confirm danger | **Nhân viên** | Entity quản trị nội bộ và CRUD chuẩn |
+| Hierarchy hai cấp, embedded child grid | **Phòng ban** | Quan hệ parent–child có thật |
+| Entity theo parent | **Chức vụ** trong trục Phòng ban | Không được tách entity khỏi parent axis |
+| Stats/report tab-view | **Thống kê Nhân viên** | Có KPI/chart/report riêng |
+| Print/PDF/export | Helper/export đang sống của reference | Cần export dữ liệu thật; cột map đúng scope/data |
+| Permission matrix | **Phân quyền** | Registry + quyền + trạng thái save |
+| Single-record settings | **Thông tin công ty** | Một bản ghi cấu hình |
 
-## Bảng mapping — template ERP chuẩn (5f-template)
+Các mapping nghiệp vụ dự án (Nostime retail/luxury, kho serial, NXT) chỉ lấy từ `archive/nostime/` hoặc spec dự án khi router yêu cầu; không nâng thành default 5fedu.
 
-| Module (tiếng Việt) | Submenu gợi ý | Module tham chiếu | Ghi chú |
-|---|---|---|---|
-| Nhân viên | Hệ thống | Nhân viên (self) | Root CRUD |
-| Phòng ban | Hệ thống | Phòng ban | Hierarchy |
-| Chức vụ | Hệ thống | Chức vụ | Trong trục Phòng ban |
-| Phân quyền | Hệ thống | Phân quyền template | + `permissions.md` |
-| Thông tin công ty | Hệ thống | Thông tin công ty (template) | `var_cong_ty` → `useUIStore.companyInfo`; read fallback mock nếu bảng chưa migrate |
-| Chi nhánh | Hệ thống / Kinh doanh | Chi nhánh hoặc Nhân viên | Đối tác clone Chi nhánh |
-| Danh mục (2 cấp) | Tùy nghiệp vụ | Phòng ban | Cây danh mục |
-| Phiếu hành chính | Hành chính | Nhân viên | CRUD + workflow |
-| Nhập hàng | Mua hàng / Kho | **Nhân viên** | "nhập hàng lệch" → so Nhân viên trước |
-| Mua hàng | Mua hàng | Nhân viên | Master-detail nếu spec yêu cầu |
-| Xuất kho / Phiếu xuất | Kho | Nhân viên hoặc module phiếu tương đương | |
-| Tồn kho (list thực tế) | Kho | Nhân viên listview | Không CRUD giả |
-| Báo cáo NXT / thống kê kho | Kho | Tab stats Nhân viên | Surface stats, không CRUD |
-| Thu chi | Tài chính | Nhân viên | Danh mục + phân bổ tháng |
-| Danh mục thu/chi | Tài chính | Phòng ban (2 cấp) | Cha-con |
-| Tài liệu | Hành chính | Nhân viên | 2 module: danh sách + thiết lập |
-| Đơn hàng | Kinh doanh | Nhân viên + master-detail | Auto-fill tài khoản mặc định |
-| Sản phẩm / hàng hóa | Kinh doanh / Kho | Nhân viên | URL ảnh nếu spec retail |
-| Báo cáo P&L / tài chính | Tài chính | Tab stats Nhân viên | So sánh cột kỳ |
-
-*Dòng có nghiệp vụ đặc thù dự án (vd Nostime luxury retail) → bổ sung từ spec riêng, không đoán.*
-
-## Taxonomy admin — phân hệ / group / module
-
-| Cấp | Ý nghĩa | Nguồn |
-|-----|---------|-------|
-| **Phân hệ** | Tab dashboard | `sidebar-menu.tsx` → Website, Hành chính, Kinh doanh, Tài chính, Hệ thống |
-| **Group module** | Nhóm card | `groups[].groupTitle` (vd. *Quản lý bán hàng*, *Tồn kho & Kho vận*) |
-| **Module** | Card / route | `groups[].items[]` |
-
-Ma trận phân quyền mirror cùng cấu trúc — xem `permissions.md`. Folder `src/features/kho-van/` **không** phải phân hệ UI.
-
-## Mapping Nostime (riêng dự án)
-
-Retail/luxury routes (`/san-pham`, Journal, kho serial…) → **[archive/nostime/architecture-and-specs.md](../archive/nostime/architecture-and-specs.md)** — không dùng làm default template.
-
-## Quy ước tên
-
-- Submenu: **tiếng Việt**
-- View: hybrid `nhan-vien-form`
-- Module key Supabase: slug không dấu (`nhan-vien`)
-
-## Chain mapping (trước khi code)
+## Chain mapping và route
 
 ```text
-spec → submenu → module → view → tab → route → Breadcrumbs.tsx getRouteConfig → table → service
+spec → submenu → module → view → tab → route → breadcrumb registry → table/service
 ```
 
-**Checklist route admin mới:** `App.tsx` route + `sidebar-menu.tsx` + `admin-module-registry.ts` + **`Breadcrumbs.tsx` getRouteConfig** (label có dấu + parentPath).
-
-## Pattern inventory (shell vs variable)
-
-Máy đọc: [`references/pattern-inventory.yaml`](references/pattern-inventory.yaml).
-
-- **Shell:** toolbar/chip group/table/drawer chrome/footer/stats shell — parity **100%** reference.
-- **Variable:** drawer fields, filter chip options, KPI cards, columns, export — theo spec/schema **module**, không copy mù text Nhân viên.
-- Task UI/module: load inventory surface khớp → ghi **Shell parity** + **Variable map** trong report.
+- Submenu dùng tiếng Việt; view có thể hybrid như `nhan-vien-form`; module key Supabase là slug không dấu.
+- Mọi route product đã đăng ký phải cập nhật route host (`App.tsx`), sidebar, module registry, route guard và permission matrix cùng lúc.
+- **Breadcrumb rule:** với mỗi route product mới, thêm **exact path** vào `getRouteConfig()` của `src/components/shared/Breadcrumbs.tsx`, dùng `label` tiếng Việt Unicode đầy đủ dấu và `parentPath` của phân hệ (ví dụ template `/he-thong/nhan-vien` có parent `/he-thong`). Sidebar không tự sinh breadcrumb; tuyệt đối không để product label rơi vào slug/capitalization fallback.
 
 ## Clone checklist (module mới)
 
-- Tra `pattern-inventory.yaml` → surface + shell_must + variable_slots
-- Tra bảng mapping → chọn module tham chiếu (thường **Nhân viên**)
-- Mở **toàn bộ** file module gốc — không chỉ 1 file
-- Copy structural file graph từ module gốc vào target trước, rồi rename/adapt; PAF ghi source path + revision + copy map + variable map
-- Route admin: `App.tsx` + `sidebar-menu.tsx` + `admin-module-registry.ts` + `Breadcrumbs` getRouteConfig
-- Shell: `*-module.module.tsx` (`createFeatureModule`; tabs nếu spec có stats)
-- List: `*-table.tsx`, `*-toolbar.tsx`
-- Form drawer: `*-form.tsx` (lazy)
-- Detail drawer: `*-detail.tsx`
-- Row/bulk actions nếu reference có
-- Stats tab (nếu có): kế thừa ~100% từ tab Thống kê Nhân viên
-- `core/`: types, schema, constants (+ supabase-select nếu cần)
-- `hooks/`: page handlers, list hook, data hook
-- `services/`: `*-service.ts`
-- `store/` + `utils/` theo reference
-- **Cấm generic monolith** — 1 config page cho nhiều module
-- Không có source template chính xác hoặc identity mơ hồ → block parity slice, không tự dựng theo trí nhớ
+- Load inventory entry theo surface, xác minh local template identity/snapshot, chọn reference và mở đầy đủ file graph nguồn.
+- Ghi template source path + snapshot, copy map và variable map trong parity packet; copy structural graph trước, rồi rename/adapt variable slot/domain logic.
+- Thêm shell cần thiết: module factory/page, list + toolbar, form drawer, detail drawer, row/bulk actions; thêm stats, hierarchy hoặc child grid khi surface/spec yêu cầu.
+- Thêm core (type/schema/constants/select), hooks, service và store/utils theo **reference đã mở**. Không tạo generic monolith/config page để né feature structure.
+- Nối full route chain ở trên, rồi verify theo `ui-delivery.md` và detail reference.
+- Không có template source đúng hoặc identity còn mơ hồ: block parity slice và hỏi owner; không dựng theo trí nhớ.
 
-## Audit checklist (sửa module cũ)
+## Audit checklist (module cũ hoặc user báo lệch)
 
-- Tra mapping → module tham chiếu
-- Mở route template + route hiện tại — đối chiếu bằng mắt, audit **mọi surface**
-- Diff/transplant shell fragment thiếu từ source thật; giữ business logic target trừ phần đã map thay thế
-- Toolbar, filter chip, search, column toggle, pagination, export
-- Form drawer + detail drawer (cặp reference)
-- Confirm xóa (`useConfirmStore`)
-- Bảng con detail (`EmbeddedChildDataGrid`) nếu có
-- Stats tab surfaces nếu có
-- Permission-gated actions
-- Sync sidebar/breadcrumb/registry nếu đổi route
-- Ghi `Template reference` trong plan trước khi sửa
-
-## Hành động khi báo lệch
-
-Chạy **Audit checklist** (trên) + §Surface classification tại `ui-delivery.md` — không redesign tự do.
-
-Cập nhật bảng mapping khi owner gửi ảnh/Sheet — không đoán hàng/cột thiếu.
+- Chọn mapping, mở route template và route target, **đối chiếu** code/contract của surface khớp rồi audit mọi surface liên quan thay vì chỉ control bị báo lỗi.
+- Diff/transplant shell fragment thiếu từ source thật; giữ business logic target trừ phần đã map thay thế.
+- Kiểm tra list toolbar/filter/search/column/pagination/export; form + detail là cặp; row-click, permission action, danger confirmation, child grid, stats và cross-module sync khi có.
+- Kiểm tra route chain nếu tên/vị trí/permission đổi; validate motion, accessibility, responsive và interaction evidence theo detail reference.
+- Ghi `Template reference`, `Shell parity`, `Variable map`, `Pattern fidelity`, `Verification` và deviation được duyệt (nếu có). Không đoán field/column từ ảnh hoặc module lỗi.

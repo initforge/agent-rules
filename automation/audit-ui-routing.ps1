@@ -45,17 +45,117 @@ Test-FileContains $UiDelivery @("tạo mới", "sửa module", "generic", "patte
 $Agents = Join-Path $Root "projects\5fedu\AGENTS.md"
 Test-FileContains $Agents @("project-local", "tạo", "sửa") | Out-Null
 
-# Pattern inventory must exist and define shell_must + variable_slots
+# Pattern inventory is the canonical UI contract. Keep this audit structural so
+# changing prose does not silently drop a mandatory parity gate.
 $Inventory = Join-Path $Root "projects\5fedu\domains\references\pattern-inventory.yaml"
 if (-not (Test-Path $Inventory)) {
   $Problems.Add("Missing pattern inventory: $Inventory")
 } else {
   $InvBody = Get-Content -Raw -Encoding UTF8 $Inventory
-  if ($InvBody -notlike "*shell_must*" -or $InvBody -notlike "*variable_slots*") {
-    $Problems.Add("pattern-inventory.yaml must define shell_must and variable_slots")
+
+  foreach ($Section in @("template_source:", "custom_deviation_contract:", "surfaces:", "fidelity_packet_required:")) {
+    if ($InvBody -notlike "*$Section*") {
+      $Problems.Add("pattern-inventory.yaml must define contract section '$Section'")
+    }
   }
-  if ($InvBody -notlike "*crud-list*" -and $InvBody -notlike "*surfaces:*") {
-    $Problems.Add("pattern-inventory.yaml must list surfaces")
+
+  $TemplateContract = @(
+    "required: true",
+    "active workspace only; never a fixed absolute path",
+    "positive_anchors:",
+    "If zero candidates, stop",
+    "If multiple candidates",
+    "snapshot:",
+    "precedence:",
+    "forbidden_substitutes:",
+    "memory, screenshots, remote URLs, or static context"
+  )
+  foreach ($Requirement in $TemplateContract) {
+    if ($InvBody -notlike "*$Requirement*") {
+      $Problems.Add("pattern-inventory.yaml template-source gate missing '$Requirement'")
+    }
+  }
+
+  $DeviationMatch = [regex]::Match($InvBody, "(?ms)^custom_deviation_contract:\r?\n(?<body>.*?)(?=^surfaces:|\z)")
+  if (-not $DeviationMatch.Success) {
+    $Problems.Add("pattern-inventory.yaml missing custom-deviation contract")
+  } else {
+    $DeviationBody = $DeviationMatch.Groups["body"].Value
+    foreach ($Requirement in @(
+      "Exact reference fidelity outside variable slots.",
+      "Owner or accepted spec explicitly names the custom behavior.",
+      "A project custom never becomes a common 5fedu rule without a separate context decision."
+    )) {
+      if ($DeviationBody -notlike "*$Requirement*") {
+        $Problems.Add("pattern-inventory.yaml custom-deviation contract missing '$Requirement'")
+      }
+    }
+    foreach ($RecordField in @("source", "affected_surface", "changed_invariant", "rationale", "unchanged_invariants", "proof")) {
+      if ($DeviationBody -notlike "*$RecordField*") {
+        $Problems.Add("pattern-inventory.yaml custom-deviation record missing '$RecordField'")
+      }
+    }
+  }
+
+  $RequiredSurfaceKeys = @("aliases:", "reference:", "template_paths:", "shell_must:", "behavior_must:", "states_must:", "motion_must:", "responsive_must:", "variable_slots:")
+  $RequiredSurfaces = @(
+    "home-dashboard", "subsystem-dashboard-navigation", "crud-list", "row-actions", "form-drawer",
+    "detail-drawer", "stats-tab", "export-dialog", "hierarchy-list", "entity-in-tree",
+    "embedded-child-grid", "split-master-detail-tabs", "permission-matrix", "single-record-settings",
+    "route-breadcrumb"
+  )
+  foreach ($Surface in $RequiredSurfaces) {
+    $EscapedSurface = [regex]::Escape($Surface)
+    $SurfaceMatch = [regex]::Match($InvBody, "(?ms)^  ${EscapedSurface}:\r?\n(?<body>.*?)(?=^  [a-z0-9-]+:|^fidelity_packet_required:|\z)")
+    if (-not $SurfaceMatch.Success) {
+      $Problems.Add("pattern-inventory.yaml missing required surface '$Surface'")
+      continue
+    }
+    $SurfaceBody = $SurfaceMatch.Groups["body"].Value
+    foreach ($Key in $RequiredSurfaceKeys) {
+      if ($SurfaceBody -notlike "*$Key*") {
+        $Problems.Add("pattern-inventory.yaml surface '$Surface' missing '$Key'")
+      }
+    }
+    if ($SurfaceBody -match "(?ms)^    motion_must:.*?\[(?<motion>.*?)\]") {
+      $MotionMust = $Matches["motion"]
+      if ([string]::IsNullOrWhiteSpace($MotionMust)) {
+        $Problems.Add("pattern-inventory.yaml surface '$Surface' must define motion behavior")
+      }
+      if ($MotionMust -notmatch "(?i)reduced[ -]motion") {
+        $Problems.Add("pattern-inventory.yaml surface '$Surface' motion_must must explicitly require reduced-motion behavior")
+      }
+    } else {
+      $Problems.Add("pattern-inventory.yaml surface '$Surface' must define motion_must as an inline contract list")
+    }
+  }
+
+  $BreadcrumbMatch = [regex]::Match($InvBody, "(?ms)^  route-breadcrumb:\r?\n(?<body>.*?)(?=^fidelity_packet_required:|\z)")
+  if (-not $BreadcrumbMatch.Success) {
+    $Problems.Add("pattern-inventory.yaml missing route-breadcrumb surface")
+  } else {
+    $BreadcrumbBody = $BreadcrumbMatch.Groups["body"].Value
+    foreach ($Requirement in @(
+      "registered route label and parent hierarchy",
+      "Vietnamese product labels retain full diacritics",
+      "route registry is updated with sidebar, guard, permission matrix, module key, and destination",
+      "product labels must not depend on slug capitalization fallback",
+      "unknown route is an explicit configuration defect, not a user-facing generated label"
+    )) {
+      if ($BreadcrumbBody -notlike "*$Requirement*") {
+        $Problems.Add("pattern-inventory.yaml route-breadcrumb semantic contract missing '$Requirement'")
+      }
+    }
+  }
+
+  foreach ($PacketField in @(
+    "template_identity_and_snapshot", "target_surface_and_reference_paths", "target_paths",
+    "shell_behavior_state_motion_responsive_map", "variable_map_with_schema_or_spec_source",
+    "approved_deviations", "verification_evidence"
+  )) {
+    if ($InvBody -notlike "*$PacketField*") {
+      $Problems.Add("pattern-inventory.yaml fidelity packet missing '$PacketField'")
+    }
   }
 }
 

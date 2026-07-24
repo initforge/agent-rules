@@ -1,113 +1,204 @@
-# 5fedu Pattern Inventory — shell invariants vs module-variable slots
-# Agent MUST load matched surface before coding UI/module.
-# Shell = parity 100% with reference. Variable = module-specific (fields, chips, KPIs…).
+# 5fedu UI contract. Load the matched surface before planning or coding.
+# Code under a verified workspace-local template is the default visual/behavior authority.
+version: 2
 
-version: 1
-template_repo: "https://github.com/admin5fedu/5f-template-ket-noi-supabase"
-template_root_hint: "features/he-thong/"
+template_source:
+  discovery:
+    required: true
+    scope: "active workspace only; never a fixed absolute path"
+    positive_anchors:
+      - "package identity for 5f-template-react-supa or an owner-confirmed fork"
+      - "features/he-thong/nhan-vien"
+      - "components/shared/GenericToolbar.tsx"
+      - "components/shared/GenericDrawer.tsx"
+    selection: "If zero candidates, stop and ask the owner to provide/copy the template. If multiple candidates or identity is unclear, ask which template is authoritative."
+    snapshot: "Record Git commit when available; otherwise record a deterministic hash of the opened anchors."
+  precedence:
+    - "Scoped owner-approved custom or current task spec"
+    - "Project schema/spec for variable business content"
+    - "Verified local template code for shell, behavior, state, motion, and responsive behavior"
+    - "Compatible live-app primitive only when the template does not supply the behavior"
+  forbidden_substitutes:
+    - "memory, screenshots, remote URLs, or static context as a replacement for local template code"
+    - "copying a known functional defect merely because it exists in a visual reference"
+
+custom_deviation_contract:
+  default: "Exact reference fidelity outside variable slots."
+  allowed_only_when: "Owner or accepted spec explicitly names the custom behavior."
+  record: [source, affected_surface, changed_invariant, rationale, unchanged_invariants, proof]
+  promotion: "A project custom never becomes a common 5fedu rule without a separate context decision."
 
 surfaces:
+  home-dashboard:
+    aliases: ["trang chủ", "home", "dashboard chính"]
+    reference: "pages/Home.tsx + components/dashboard/MainCard.tsx"
+    template_paths: ["pages/Home.tsx", "components/dashboard/MainCard.tsx"]
+    shell_must: ["permission-filtered cards", "unique SVG/icon, color treatment, title, and description per card", "clean grouped layout; no generic module-count hero"]
+    behavior_must: ["hide inaccessible destinations", "card opens the registered destination"]
+    states_must: ["permission-filtered empty state when no destination is available"]
+    motion_must: ["staggered entrance and card hover/tap feedback", "respect reduced motion"]
+    responsive_must: ["card grid reflows without replacing the dashboard pattern"]
+    variable_slots: ["allowed destinations", "permission predicates", "labels and descriptions from route registry"]
+
+  subsystem-dashboard-navigation:
+    aliases: ["phân hệ", "menu", "group module", "dashboard phân hệ"]
+    reference: "lib/sidebar-menu.tsx + pages/dashboards/SystemDashboard.tsx"
+    template_paths: ["lib/sidebar-menu.tsx", "pages/dashboards/SystemDashboard.tsx", "components/dashboard/ModuleDashboardLayout.tsx"]
+    shell_must: ["sidebar exposes registered top-level destinations only", "subsystem groups module cards with distinct SVG/icon and description", "no repeated generic icon for unrelated modules"]
+    behavior_must: ["sidebar, route guard, breadcrumb, permission matrix, and module key stay synchronized"]
+    states_must: ["active route and inaccessible module states"]
+    motion_must: ["sidebar and subsystem card transitions follow template", "respect reduced motion"]
+    responsive_must: ["navigation collapse/mobile behavior follows template"]
+    variable_slots: ["module registry, hierarchy, permission, labels, icons"]
+
   crud-list:
-    reference: nhan-vien
-    shell_must:
-      - ToolbarFilterChipGroup  # not bare Combobox on toolbar
-      - ColumnManager via GenericToolbar
-      - GenericTable + TablePaginationFooter
-      - row: primary Edit + RowActionsOverflowMenu (portalEnabled)
-      - row-click opens detail; no "Xem chi tiết" button
-      - search + filter chips + export actions when reference has them
-    variable_slots:
-      - filter_chips: options from module domain/status enum
-      - columns: entity fields + TABLE_COLUMN_PRESETS
-      - exportColumns / exportMapFn
-      - row overflow actions set
-    template_paths:
-      - features/he-thong/nhan-vien/
+    aliases: ["listview", "danh sách", "bảng chính", "trang list"]
+    reference: "nhan-vien"
+    template_paths: ["features/he-thong/nhan-vien/", "components/shared/GenericToolbar.tsx", "components/shared/GenericTable.tsx", "components/shared/TablePaginationFooter.tsx"]
+    shell_must: ["tab/page shell fills available module viewport", "Back then search/filter chips/reset on the left", "column manager, import, export, add on the right", "GenericTable and TablePaginationFooter", "column presets and truncation match reference"]
+    behavior_must: ["search shortcut and clear filters", "filter chips are toolbar controls, not form comboboxes", "row click opens detail drawer", "permission-gated actions and bulk mode use the reference flow"]
+    states_must: ["loading, empty, error, filtered-empty, bulk-selection"]
+    motion_must: ["normal/bulk toolbar transition via AnimatePresence", "respect reduced motion"]
+    responsive_must: ["mobile toolbar/filter/action sheets use template behavior"]
+    variable_slots: ["filter choices", "columns", "column presets", "import availability", "export map", "row-action set"]
+
+  row-actions:
+    aliases: ["cột thao tác", "dấu ba chấm", "menu hành động"]
+    reference: "nhan-vien employee-table-row-actions"
+    template_paths: ["features/he-thong/nhan-vien/components/employee-table-row-actions.tsx", "components/shared/row-actions/RowActionsOverflowMenu.tsx"]
+    shell_must: ["visible primary Edit when permitted", "portal-enabled overflow menu for secondary actions", "automatic separator immediately before destructive actions", "no standalone Xem chi tiết action"]
+    behavior_must: ["overflow mirrors permitted DetailToolbar actions", "Escape/outside click/scroll reposition work", "delete uses danger confirmation"]
+    states_must: ["permission-hidden, disabled, destructive-confirmation"]
+    motion_must: ["menu opening/closing follows shared primitive", "respect reduced motion"]
+    responsive_must: ["portal menu remains usable on desktop and mobile"]
+    variable_slots: ["permitted secondary actions", "business action labels and callbacks"]
 
   form-drawer:
-    reference: nhan-vien
-    shell_must:
-      - GenericDrawer chrome + FormSection/FormGrid
-      - FormDrawerFooter submit/cancel (async disabled+spinner)
-      - validation via schema/rhf pattern of reference
-    variable_slots:
-      - form fields / zod schema from entity
-      - default values / relation pickers
-    template_paths:
-      - features/he-thong/nhan-vien/
+    aliases: ["drawer form thêm", "drawer thêm", "drawer form", "form drawer"]
+    reference: "nhan-vien"
+    template_paths: ["features/he-thong/nhan-vien/components/nhan-vien-form.tsx", "components/shared/GenericDrawer.tsx", "components/shared/FormDrawerFooter.tsx"]
+    shell_must: ["icon/title/subtitle header", "sectioned FormSection and responsive FormGrid layout", "sticky Hủy / Thêm-or-Lưu footer", "no shallow one-section placeholder form"]
+    behavior_must: ["schema/RHF validation", "focus trap, Escape, focus restore, backdrop behavior", "async submit disables controls and exposes progress/error"]
+    states_must: ["create/edit defaults, validating, submitting, field error, submit error, permission-disabled"]
+    motion_must: ["backdrop fade and spring drawer transition", "respect reduced motion"]
+    responsive_must: ["mobile full-screen drawer and safe-area footer"]
+    variable_slots: ["fields", "schema", "defaults", "relation pickers", "section labels"]
 
   detail-drawer:
-    reference: nhan-vien
-    shell_must:
-      - header summary + DetailSection cards
-      - footer Đóng / Sửa / Xóa (permission-gated)
-      - no duplicate Edit/Delete in body toolbar
-    variable_slots:
-      - DetailField set from entity columns
-      - embedded child grids if module has children
-      - module-specific business actions in body toolbar only
-    template_paths:
-      - features/he-thong/nhan-vien/
-
-  hierarchy-list:
-    reference: phong-ban
-    shell_must:
-      - HierarchyListShell / HierarchyTable pattern
-      - parent-child expand; not flat-only if source is 2-level
-    variable_slots:
-      - parent/child field names
-      - filter chips for hierarchy roots
-    template_paths:
-      - features/he-thong/phong-ban/
-
-  hierarchy-entity:
-    reference: chuc-vu
-    shell_must:
-      - parent (phong-ban) axis retained
-      - list/form/detail pair like reference entity-in-tree
-    variable_slots:
-      - entity fields; parent select options
-    template_paths:
-      - features/he-thong/chuc-vu/
+    aliases: ["drawer chi tiết", "drawer khi bấm một hàng", "detail drawer"]
+    reference: "nhan-vien"
+    template_paths: ["features/he-thong/nhan-vien/components/nhan-vien-detail.tsx", "components/shared/DetailToolbar.tsx", "components/shared/GenericDrawer.tsx"]
+    shell_must: ["icon/title/subtitle header", "hero summary with avatar-or-domain visual and colored status", "sectioned detail cards", "DetailToolbar", "sticky Đóng / Sửa / Xóa footer"]
+    behavior_must: ["opens from row click", "footer and toolbar actions are permission-gated", "edit/delete sync the underlying list without reload"]
+    states_must: ["loading, not-found, permission-hidden, delete-confirmation, mutation progress"]
+    motion_must: ["shared drawer motion and focus behavior", "respect reduced motion"]
+    responsive_must: ["mobile full-screen and safe-area behavior"]
+    variable_slots: ["summary fields", "status mapping", "detail sections", "permitted business actions", "related child data"]
 
   stats-tab:
-    reference: nhan-vien-stats
-    shell_must:
-      - DashboardToolbar filter/report shell
-      - StatsKpiGrid + chart region + StatsDataGrid footer pattern
-      - StatsDrillDownDialog when reference has drill-down
-      - no import hard-coded KPI popover from another module
-    variable_slots:
-      - KPI metric keys/labels
-      - chart series
-      - stats table columns / date range fields
-    template_paths:
-      - features/he-thong/nhan-vien/
+    aliases: ["tabview thống kê", "tab thống kê", "báo cáo", "dashboard thống kê"]
+    reference: "nhan-vien-stats"
+    template_paths: ["features/he-thong/nhan-vien/components/nhan-vien-stats.tsx", "components/shared/DashboardToolbar.tsx", "components/shared/StatsKpiGrid.tsx", "components/shared/StatsDataGrid.tsx"]
+    shell_must: ["same tab/page shell as list", "Back, date range, filter chips, KPI configuration only when reference/spec supports it, report export", "KPI grid, chart region, stats grid/footer, drill-down when supported"]
+    behavior_must: ["date/filter state drives every displayed aggregate", "export respects visible data/filter scope", "drill-down preserves context"]
+    states_must: ["loading, empty date range, no-data chart, filter-empty, export progress/error"]
+    motion_must: ["toolbar/card/chart transitions follow template and reduced-motion preference", "respect reduced motion"]
+    responsive_must: ["mobile filters and grids use DashboardToolbar behavior"]
+    variable_slots: ["metric keys", "KPI labels", "chart series", "stats columns", "permitted report actions"]
+
+  export-dialog:
+    aliases: ["xuất dữ liệu", "export", "hộp xuất file"]
+    reference: "components/shared/ExportDialog.tsx"
+    template_paths: ["components/shared/ExportDialog.tsx"]
+    shell_must: ["format selection", "scope all/current/selected with row counts", "column selection", "count-aware footer"]
+    behavior_must: ["selected scope and visible columns map to real data", "export failure is visible and recoverable"]
+    states_must: ["no selection, disabled unsupported format, in-progress, success, failure"]
+    motion_must: ["scale/fade dialog transition and reduced-motion support", "respect reduced motion"]
+    responsive_must: ["dialog remains operable at narrow viewport"]
+    variable_slots: ["supported formats", "column labels", "export transformer", "scope availability"]
+
+  hierarchy-list:
+    aliases: ["danh mục cha con", "cây hai cấp", "listview phòng ban"]
+    reference: "phong-ban"
+    template_paths: ["features/he-thong/phong-ban/", "components/shared/HierarchyListShell.tsx", "components/shared/HierarchyTable.tsx"]
+    shell_must: ["HierarchyListShell and HierarchyTable", "expandable parent-child rows", "search preserves ancestry rather than flattening a real hierarchy"]
+    behavior_must: ["child mutations update parent/context", "danger confirmation protects child deletion"]
+    states_must: ["collapsed/expanded, empty parent, filtered hierarchy, child mutation"]
+    motion_must: ["tree expansion uses shared motion if reference supplies it", "respect reduced motion"]
+    responsive_must: ["hierarchy remains navigable on small screens"]
+    variable_slots: ["parent/child fields", "root filters", "depth approved by spec"]
+
+  entity-in-tree:
+    aliases: ["chức vụ", "dữ liệu trong cây", "entity theo cha"]
+    reference: "chuc-vu"
+    template_paths: ["features/he-thong/chuc-vu/"]
+    shell_must: ["entity list/form/detail remains attached to the parent axis"]
+    behavior_must: ["parent selection/context is required", "cross-module relation options remain synchronized"]
+    states_must: ["no parent, invalid parent, parent-filtered empty"]
+    motion_must: ["reuse paired list/drawer motion", "respect reduced motion"]
+    responsive_must: ["follow reference list/drawer behavior"]
+    variable_slots: ["entity fields", "parent source", "relation filters"]
 
   embedded-child-grid:
-    reference: phong-ban
-    shell_must:
-      - DetailSection + EmbeddedChildDataGrid
-      - badge count + Add primary button pattern
-      - row actions parity with main table (Edit visible + overflow)
-    variable_slots:
-      - child entity columns and form fields
-    template_paths:
-      - features/he-thong/phong-ban/
+    aliases: ["bảng con trong drawer chi tiết", "child grid", "dòng liên kết"]
+    reference: "phong-ban detail"
+    template_paths: ["features/he-thong/phong-ban/components/phong-ban-detail.tsx", "components/shared/EmbeddedChildDataGrid.tsx"]
+    shell_must: ["DetailSection, count badge, primary Add action, embedded grid", "child rows use the same visible Edit plus overflow convention as the main table"]
+    behavior_must: ["child create/edit/delete remains scoped to current parent", "child changes refresh parent rollups and list state"]
+    states_must: ["no children, loading, relation error, mutation progress"]
+    motion_must: ["reuse detail drawer and child-grid transitions", "respect reduced motion"]
+    responsive_must: ["child table has usable overflow behavior on mobile"]
+    variable_slots: ["child entity", "columns", "child form", "rollups", "related actions"]
 
-  confirm-danger:
-    reference: nhan-vien
-    shell_must:
-      - useConfirmStore confirm variant danger before delete/bulk danger
-    variable_slots:
-      - confirm copy/title per action
-    template_paths:
-      - features/he-thong/nhan-vien/
+  split-master-detail-tabs:
+    aliases: ["tách tab đơn hàng và chi tiết", "master detail tabs", "hai listview liên kết"]
+    reference: "nhan-vien list shell + phong-ban embedded relation"
+    template_paths: ["features/he-thong/nhan-vien/", "features/he-thong/phong-ban/"]
+    shell_must: ["each tab keeps the CRUD list contract", "parent row still opens a detail drawer that can expose related children when the relationship requires it"]
+    behavior_must: ["selected parent/filter context is explicit between tabs", "related data never appears as an unscoped flat list"]
+    states_must: ["no selected parent, stale relation, empty related tab"]
+    motion_must: ["tab and drawer transitions reuse shared primitives", "respect reduced motion"]
+    responsive_must: ["tabs remain discoverable and stateful on mobile"]
+    variable_slots: ["tab labels", "relation key", "selection propagation", "child columns"]
+
+  permission-matrix:
+    aliases: ["phân quyền", "ma trận quyền"]
+    reference: "phan-quyen"
+    template_paths: ["features/he-thong/phan-quyen/index.tsx", "features/he-thong/phan-quyen/components/permission-matrix.tsx"]
+    shell_must: ["desktop module navigation plus right-side matrix", "Back, department filter, save action, grouped permission rows", "mobile module list and detail overlay"]
+    behavior_must: ["tri-state/select-all action controls", "permission gating and save state follow reference"]
+    states_must: ["loading, saving, dirty, denied, no module"]
+    motion_must: ["mobile overlay and selection transitions use reference", "respect reduced motion"]
+    responsive_must: ["desktop matrix and mobile overlay are separate intended layouts"]
+    variable_slots: ["permission actions", "organization grouping", "module registry"]
+
+  single-record-settings:
+    aliases: ["thông tin công ty", "cấu hình một dòng", "settings"]
+    reference: "thong-tin-cong-ty"
+    template_paths: ["features/he-thong/thong-tin-cong-ty/index.tsx", "features/he-thong/thong-tin-cong-ty/components/thong-tin-cong-ty-form.tsx"]
+    shell_must: ["Back header with title/description", "sectioned branding and legal-information cards", "responsive multi-column form and save action"]
+    behavior_must: ["single-record load/save, permission-disabled fields, recoverable save failure"]
+    states_must: ["loading, missing record, read-only, saving, error, success"]
+    motion_must: ["section stagger and reduced-motion behavior", "respect reduced motion"]
+    responsive_must: ["form columns collapse according to template"]
+    variable_slots: ["branding fields", "legal fields", "storage/provider integration"]
+
+  route-breadcrumb:
+    aliases: ["breadcrumb", "đường dẫn header", "nhãn tiếng Việt"]
+    reference: "components/shared/Breadcrumbs.tsx"
+    template_paths: ["components/shared/Breadcrumbs.tsx", "lib/sidebar-menu.tsx"]
+    shell_must: ["registered route label and parent hierarchy", "Vietnamese product labels retain full diacritics"]
+    behavior_must: ["route registry is updated with sidebar, guard, permission matrix, module key, and destination", "product labels must not depend on slug capitalization fallback"]
+    states_must: ["unknown route is an explicit configuration defect, not a user-facing generated label"]
+    motion_must: ["reuse shell transition behavior", "respect reduced motion"]
+    responsive_must: ["breadcrumb truncation remains readable without altering labels"]
+    variable_slots: ["route path", "label", "parentPath", "access guard"]
 
 fidelity_packet_required:
-  - Template reference
-  - Shell parity (surface + shell_must checked)
-  - Variable map (fields / chips / KPIs / columns sources)
-  - Pattern fidelity
-  - Verification
-  - Status
+  - template_identity_and_snapshot
+  - target_surface_and_reference_paths
+  - target_paths
+  - shell_behavior_state_motion_responsive_map
+  - variable_map_with_schema_or_spec_source
+  - approved_deviations
+  - verification_evidence

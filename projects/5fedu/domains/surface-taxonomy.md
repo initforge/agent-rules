@@ -1,22 +1,28 @@
-# Surface Taxonomy (Phân loại Surface 5fedu)
+# Surface taxonomy — ngôn ngữ UI 5fedu
 
-Bảng phân loại và đặc tả các bề mặt UI (surfaces) trong template ERP 5fedu.
+**Vai trò:** Bảng từ vựng cho người đọc. Trước khi code, xác nhận surface cụ thể và load entry tương ứng trong `references/pattern-inventory.yaml`; file inventory là nơi giữ invariant chi tiết.
 
-| Surface | Reference | Component Anchors | Khác biệt |
+| Surface | Composition người dùng thấy | Baseline thường dùng | Không nhầm với |
 |---|---|---|---|
-| **ModuleListToolbar** | Nhân viên | `FilterChip`, export, search, column toggle | Khác với `DashboardToolbar` (không có các trường tính tổng hoặc biểu đồ lọc). |
-| **StatsTabToolbar** | Nhân viên (tab Thống kê) | `DashboardToolbar` lọc theo khoảng thời gian/chi nhánh | Khác với list toolbar (thường chứa các nút KPI hoặc nút lọc nhanh). |
-| **DetailDrawerFooter** | Nhân viên | Nút `Đóng / Sửa / Xóa` dưới chân drawer | Khác với form drawer footer (chỉ có `Hủy` và `Lưu`). |
-| **DetailSectionToolbar** | Phòng ban | Thêm nút primary + EmbeddedChildDataGrid | Khác với module toolbar (chỉ tác động lên bảng con của một entity cha). |
-| **WorkflowToolbar** | `business.md` §3,6 | Nút `Duyệt`, `In`, `Báo cáo` | Khác với CRUD toolbar (gắn với luồng trạng thái hóa đơn/chứng từ). |
-| **HierarchyListview** | Phòng ban | Cấu trúc cây 2 cấp dạng list | Khác với flat CRUD (hiển thị danh sách phẳng, không lồng ghép). |
-| **EntityInTree** | Chức vụ | Form cập nhật gắn trực tiếp trong trục Phòng ban | Khác với standalone module (không thể tồn tại độc lập ngoài cây cha). |
-| **MasterDetailFormLines** | `business.md` §2 | Form nhập liệu chi tiết dạng dòng con | Khác với bảng hiển thị con (cho phép chỉnh sửa trực tiếp, validate realtime). |
+| **Home dashboard** | Card điểm đến theo quyền | Home + `MainCard` | Landing/hero tự chế hoặc dashboard đếm module chung chung |
+| **Subsystem dashboard/navigation** | Sidebar, group module, card destination, quyền và route | sidebar + System Dashboard | CRUD toolbar hoặc registry chỉ có route |
+| **CRUD list** | Back, search/filter chip/reset, table, pagination, action hàng | Nhân viên | Form combobox đặt trên toolbar; nút “Xem chi tiết” thay row-click |
+| **Row actions** | Sửa primary nhìn thấy, overflow cho action phụ/phá huỷ | Nhân viên | Dồn toàn bộ action vào menu hoặc duplicate action drawer |
+| **Form drawer** | Header, section/grid field, footer Hủy/Lưu | Nhân viên + `GenericDrawer` | Form một section sơ sài hoặc modal native |
+| **Detail drawer** | Summary, section detail, toolbar, footer Đóng/Sửa/Xóa | Nhân viên | Detail page rời khi reference dùng drawer |
+| **Stats/report** | Toolbar thời gian/filter, KPI, chart, stats grid, export/drill-down | Thống kê Nhân viên | Mini-tab/dashboard tự chế trong CRUD |
+| **Export dialog** | Format, scope/count, column selection, result/error | `ExportDialog` | Export chỉ tải dữ liệu mock hay bỏ trạng thái lỗi |
+| **Hierarchy list** | Cây cha–con, expand, search còn ancestry | Phòng ban | Flat list làm mất quan hệ thật |
+| **Entity in tree** | Entity phụ thuộc parent/context | Chức vụ trong trục Phòng ban | CRUD độc lập mất parent axis |
+| **Embedded child grid** | `DetailSection`, count, Add, grid con scoped parent | Detail Phòng ban | Một bảng con phẳng không context parent |
+| **Split master-detail tabs** | Hai list liên quan, context parent explicit, detail có relation | Nhân viên + Phòng ban | Hai list độc lập làm lộ dữ liệu con không scope |
+| **Permission matrix** | Điều hướng module + ma trận quyền desktop/mobile | Phân quyền | Một nhóm checkbox không registry/quyền thật |
+| **Single-record settings** | Header Back, card section, form một bản ghi | Thông tin công ty | CRUD list cho singleton |
+| **Route breadcrumb** | Nhãn/cha của route đã đăng ký | `Breadcrumbs` + sidebar | Tạo label từ slug/capitalization fallback |
 
-## Chi tiết các Quy ước Giao diện
+## Quy ước composition
 
-1. **Orphan node Chức vụ:** Chức vụ luôn là con của Phòng ban, khi hiển thị cây hoặc form của Chức vụ, Phòng ban cha bắt buộc phải được chọn hoặc truyền context qua.
-2. **Tree indent / search preserve child:** Khi tìm kiếm trên cây danh mục (như Phòng ban), kết quả tìm kiếm phải giữ nguyên cấu trúc cha-con thụt lề, không làm bẹt phẳng dữ liệu (flat list) làm mất quan hệ phân cấp.
-3. **Detail drawer state sync:** Khi thực hiện sửa hoặc xóa từ Detail Drawer, trạng thái ở bảng danh sách chính (lưới dữ liệu phía sau) phải được đồng bộ ngay lập tức mà không cần F5 trình duyệt.
-4. **Nested row confirm (Bảng con):** Trước khi xóa một dòng trên bảng con (như Nhân viên trong Phòng ban), bắt buộc phải gọi popover hoặc dialog xác nhận xóa (`danger` variant).
-5. **Dropdown đồng bộ cross-module:** Giá trị combobox Chức vụ trong form Nhân viên phải đồng bộ với danh sách Chức vụ đang sống trong trục Phòng ban tương ứng.
+- Một module có thể ghép nhiều surface: CRUD list → row-click detail drawer → form drawer; hierarchy có thể thêm embedded child grid. Mỗi surface giữ shell riêng nhưng chia sẻ route, quyền, state và mutation sync theo reference.
+- **Shell** là phần chung phải giữ; **variable slot** là dữ liệu nghiệp vụ được map từ spec/schema. Định nghĩa đầy đủ ở `ui-delivery.md`; field-level contract ở inventory.
+- Quan hệ thật phải hiển thị đúng composition: Chức vụ cần parent Phòng ban; tìm cây vẫn giữ ancestor; child mutation phải refresh parent/list context; xóa có danger confirmation.
+- Toolbar control và form input có ngữ cảnh khác nhau. Filter chip dùng để lọc danh sách; combobox/searchable combobox dùng để nhập hoặc chọn dữ liệu của form.

@@ -1,6 +1,6 @@
 # Owner Feedback Lessons — Archive Index
 
-> **Không phải rule file.** Rule sống: `domains/database.md`, `domains/ui-delivery.md`, `AGENTS.md`.
+> **ARCHIVAL — không auto-load, không phải rule file hay template source.** Rule sống: `domains/database.md`, `domains/ui-delivery.md`, `AGENTS.md`. Chỉ mở khi owner/router cần truy vết feedback; không dùng nội dung archive, remote/docs/screenshot hay memory để thay thế template code cục bộ.
 
 ## Cấm dump raw vào đây
 

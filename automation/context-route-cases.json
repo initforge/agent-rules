@@ -7,7 +7,7 @@
     "uncertain_execution_tokens": 2700,
     "plan_authoring_tokens": 4200,
     "harness_edit_tokens": 2800,
-    "5fedu_ui_base_tokens": 6500
+    "5fedu_ui_base_tokens": 10400
   },
   "routes": {
     "normal_execution": ["skills/finish-to-completion/SKILL.md"],
@@ -40,6 +40,42 @@
       "prompt": "Sửa module 5fedu lệch pattern drawer",
       "workspace": { "kind": "generic", "has_5fedu_context": false },
       "expect": { "primary": null, "required_skills": [], "forbidden_skills": ["5fedu-project", "5fedu-module-parity"] }
+    },
+    {
+      "id": "5fedu-ui-concrete-surfaces",
+      "prompt": "Sửa toolbar, listview và drawer chi tiết module 5fedu theo template",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
+      "expect": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] }
+    },
+    {
+      "id": "5fedu-ui-missing-template",
+      "prompt": "Sửa drawer module 5fedu khi workspace chưa có template tham chiếu",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
+      "expect": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] }
+    },
+    {
+      "id": "5fedu-ui-scoped-custom-override",
+      "prompt": "Sửa module 5fedu drawer theo custom behavior đã được owner phê duyệt trong spec",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
+      "expect": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] }
+    },
+    {
+      "id": "5fedu-ui-breadcrumb-unicode",
+      "prompt": "Sửa module 5fedu breadcrumb nhãn tiếng Việt, route registry và không dùng slug fallback",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
+      "expect": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] }
+    },
+    {
+      "id": "5fedu-ui-reduced-motion",
+      "prompt": "Sửa module 5fedu drawer để motion tôn trọng reduced motion",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
+      "expect": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] }
+    },
+    {
+      "id": "5fedu-ui-reduced-motion-per-surface",
+      "prompt": "Audit module 5fedu: mọi surface phải khai báo reduced motion trong motion_must",
+      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
+      "expect": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] }
     },
     {
       "id": "research",

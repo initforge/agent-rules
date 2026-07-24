@@ -1,59 +1,38 @@
-# UI/UX parity và delivery gates
+# UI parity và delivery gates
 
-**Vai trò:** Pattern-format UI/workflow 5fedu — linh hoạt theo template, không rập khuôn cứng.  
-**Ý đồ:** Parity với template trước khi sửa; audit toàn surface khi user báo lệch.
+**Vai trò:** Hợp đồng đọc nhanh cho UI 5fedu. Tài liệu này giải thích cách chọn và chứng minh parity; `references/pattern-inventory.yaml` là hợp đồng máy đọc theo từng surface, còn checklist clone/audit chỉ nằm ở `module-mapping.md`.
 
-## Quick gate (đọc trước)
+## Từ vựng chung
 
-- **Tạo mới / sửa module:** đọc `references/pattern-inventory.yaml` (shell vs variable) rồi checklist tại `module-mapping.md` §Clone / §Audit — không lặp checklist ở đây.
-- **User báo lệch/sai pattern:** audit **toàn surface** theo §Surface classification — **không** `frontend-architect`.
-- PASS cần `Template reference` + **Shell parity** + **Variable map** + verification evidence.
+| Khái niệm | Nghĩa và cách dùng |
+|---|---|
+| **Surface** | Một bề mặt người dùng có mục tiêu và vòng đời riêng, như list CRUD, form drawer, detail drawer, stats hoặc hierarchy. Chọn surface trước khi chọn component. |
+| **Shell** | Chrome, bố cục, primitive, hành vi, state, motion và responsive đã có trong reference. Shell phải fidelity chính xác, trừ deviation được duyệt. |
+| **Variable slot** | Nội dung nghiệp vụ của module: field/schema, chip/filter, cột, KPI, export, action được phép. Lấy từ spec/schema dự án, không copy mù từ Nhân viên. |
+| **Reference** | File/route template đã mở và xác nhận khớp surface + behavior. Module quen tay hoặc ảnh chụp không phải reference. |
+| **Parity packet** | Bằng chứng gồm template identity/snapshot, surface + paths đã mở, map shell/state/motion/responsive, variable map, deviation được duyệt và verification. |
 
-## Core UI source of truth
+`surface-taxonomy.md` giúp gọi đúng tên và composition; `module-mapping.md` chọn baseline; inventory liệt kê invariant cụ thể. Không diễn giải lại danh sách `shell_must` ở đây.
 
-- Template/current app là source of truth bắt buộc.
-- Không tự chế pattern mới nếu đã có pattern sống trong template/app.
-- **Cấm generic** monolith — file list theo `module-mapping.md` §Clone checklist.
-- Không lấy module đang lỗi hoặc module clone sai làm chuẩn ngược lại.
-- Trước khi code UI/module, phải xác định reference đúng theo surface/behavior — tra `module-mapping.md`.
-- Agent phải mở và đối chiếu bằng mắt trước khi code task UI dài, không làm theo trí nhớ.
+## Nguồn chuẩn và local-template workflow
 
-Thứ tự ưu tiên:
+Trước khi sửa UI/module, tìm template **trong workspace đang làm** theo anchors của inventory (package identity, `features/he-thong/nhan-vien`, `GenericToolbar`, `GenericDrawer`). Không mã hóa đường dẫn máy cá nhân. Không có candidate thì dừng parity slice và xin owner cung cấp/copy template; nhiều candidate hoặc identity mơ hồ thì xin owner chỉ template chuẩn.
 
-1. Template trực tiếp cùng behavior
-2. Template cùng surface
-3. Module sống trong app cùng behavior
-4. Shared primitive/component/helper đã có
+1. Ghi template identity và Git commit; nếu không có Git, ghi hash xác định của các anchor đã mở.
+2. Chọn surface rồi mở đầy đủ template path của reference **và** route/feature target. Đối chiếu bằng mắt cấu trúc DOM, class, primitive và interaction; static context, URL remote, screenshot hay trí nhớ không thay thế code local.
+3. Map riêng shell (behavior, state, motion, responsive) và variable slot (nguồn spec/schema). Không copy lỗi chức năng chỉ vì nó có trong visual reference.
+4. Áp dụng clone hoặc audit checklist ở `module-mapping.md`; khi template không có behavior cần thiết, mới dùng compatible live-app primitive và ghi rõ lý do.
 
-## Surface classification gate
+Thứ tự quyết định là: (1) custom được owner/spec hiện hành phê duyệt trong scope, (2) schema/spec cho variable business content, (3) code template local đã verify cho shell/behavior/state/motion/responsive, (4) primitive app tương thích khi template không cung cấp behavior. Mâu thuẫn không tự suy đoán: khoanh vùng và hỏi owner.
 
-Trước khi sửa UI/module, phân loại từng surface:
+## Deviation có phạm vi
 
-- **CRUD listview:** toolbar, search, filter chip, column visibility, export, pagination, row action, row-click detail.
-- **Form drawer:** header, section layout, footer action, submit/cancel state.
-- **Detail drawer:** header summary, section cards, footer `Đóng / Sửa / Xóa`, permission/action placement.
-- **Stats/report tab-view:** tab shell factory/page, toolbar filter/report, cards/table/chart/export/print.
-- **Hierarchy 2 cấp:** parent-child theo mẫu **Phòng ban**/**Chức vụ**, không flat list nếu source có quan hệ cấp.
+Mặc định là fidelity tuyệt đối ngoài variable slot. Custom chỉ hợp lệ khi owner hoặc accepted spec gọi tên rõ behavior khác chuẩn. Parity packet phải ghi: nguồn phê duyệt, surface bị ảnh hưởng, invariant thay đổi, lý do, invariant vẫn giữ và proof. Custom của một dự án không tự trở thành luật 5fedu chung.
 
-Form thêm và detail drawer phải đi thành cặp reference. Không lấy form module A nhưng detail pattern rời module B nếu template gốc đã có cặp đúng.
+## Delivery gates
 
-Khi user nói "sai pattern", "thiếu nút", "drawer sai", "thanh lọc sai" → **audit** **tất cả** surface của module và các module cùng pattern trong batch.
-
-Trong audit, tách control cùng tên nhưng khác **pattern**:
-
-- Toolbar filter: filter chip (`FilterChip*`, `ToolbarFilterChipGroup`, count/reset) — không thay bằng combobox form.
-- Form/drawer input: combobox/searchable combobox — không nhét filter chip vào form.
-- Richtext/popup trong form: modal/popover design system — không `prompt/alert/confirm` native nếu app đã có pattern.
-
-## Hybrid verification (local mandatory + production opt-in)
-
-Mọi thay đổi UI verify như hệ thống liên kết (toolbar, filter, list/detail/form/drawer, permission actions, responsive, export thật, cross-module sync).
-
-- **Local (mặc định bắt buộc):** lint/typecheck/build/tests phù hợp risk; interaction check (add drawer, row-click detail, form popup, filter/dropdown) — không chỉ mở route đọc text; desktop + mobile khi module có responsive.
-- **Production (opt-in):** chỉ khi owner yêu cầu deploy/production proof → vòng lặp sửa → push → đợi deploy → verify production + screenshot. Mặc định tuân `rules/30-context-routing.md` (browser opt-in).
-- Bằng chứng production: screenshot production; DOM chỉ hỗ trợ debug. Browser context mới hoặc bypass cache/PWA trước khi chụp.
-
-## Chi tiết (lazy-load khi implement)
-
-- Surface hard gates + verify + navigation: `references/ui-delivery-detail.md`
-- Module → template + Clone/Audit checklist: `module-mapping.md`
+- Tạo mới/sửa module: load inventory surface khớp, rồi dùng §Clone hoặc §Audit tại `module-mapping.md`.
+- User báo lệch/sai pattern: audit toàn surface liên quan; phân biệt toolbar filter chip với form combobox, và form/detail drawer là cặp reference.
+- Không generic hóa feature để né structure của reference. Report parity phải nêu `Shell parity` và `Variable map`, không lặp toàn bộ inventory.
+- Navigation, breadcrumb, motion/accessibility và proof interaction: xem lazy detail tại `references/ui-delivery-detail.md`.
+- PASS chỉ khi parity packet đủ và evidence phù hợp risk. Local proof mặc định gồm lint/typecheck/build/tests phù hợp + interaction check (add drawer, row-click detail, form popup, filter/dropdown); kiểm tra desktop và mobile khi surface hỗ trợ mobile. Production/screenshot chỉ bắt buộc khi owner yêu cầu deploy/production proof.
