@@ -59,6 +59,9 @@ def contracts_only() -> None:
     counts = validate_corpus(corpus, graph)
     if counts["total"] < 30:
         raise AssertionError("benchmark corpus is unexpectedly small")
+    normal = next(case for case in corpus["cases"] if case["id"] == "live-normal-multifile")
+    if normal["workspace"].get("fixture") != "normal-multifile":
+        raise AssertionError("live-normal-multifile fixture binding drifted")
     print(
         "PASS: benchmark contracts "
         f"({counts['total']} cases; {counts['deterministic']} deterministic; {counts['live']} live)"

@@ -2,6 +2,8 @@
 . (Join-Path $PSScriptRoot "path-compat.ps1")
 $Root = Split-Path -Parent $PSScriptRoot
 & (Join-Path $PSScriptRoot "01-build-runtime.ps1") -Root $Root
+& python (Join-Path $PSScriptRoot "test-native-agent-policy.py") --build
+if ($LASTEXITCODE -ne 0) { throw "Native agent policy/build contract failed" }
 
 $Platforms = @("codex", "grok", "antigravity", "cursor")
 $BuildRoot = Join-Path $Root "05-generated\runtime-build"

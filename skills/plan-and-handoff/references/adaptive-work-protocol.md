@@ -6,8 +6,8 @@ This is the shared protocol for planning, execution, handoff, and review. It fav
 
 | Shape | Plan detail | Ledger | Delegation |
 |---|---|---|---|
-| Small/clear | outcome, scope, approach, proof | optional | normally none |
-| Medium | executable plan with files/interfaces, acceptance criteria, proof, rollback note | optional when useful | bounded disjoint research/mechanical work |
+| Small/clear | outcome, scope, approach, proof | optional | main-direct or none |
+| Medium | executable plan with files/interfaces, acceptance criteria, proof, rollback note | optional when useful | independent bounded slices |
 | Large | roadmap, task graph, ownership, proof and rollback | required | independent disjoint slices only |
 | Resumable | large plan plus checkpoints and resume context capsules | required, detailed | independent disjoint slices only |
 
@@ -15,7 +15,7 @@ Every plan is executable. It names the outcome, in/out scope, affected interface
 
 ## 2. Meaningful questions and ownership
 
-Ask only when the answer changes scope, behavior, safety, authority, or proof. Read code, schemas, logs, tests, and documentation to discover facts instead.
+Ask only a meaningful question: one whose answer changes scope, behavior, safety, authority, or proof. Read code, schemas, logs, tests, and documentation to discover facts instead.
 
 The main agent holds the owner’s requirements, later instructions, cross-slice decisions, integration, final review, and terminal status. A sub-agent receives a context capsule, not the whole transcript:
 
@@ -26,15 +26,25 @@ owned paths; read-only context paths; forbidden paths/actions
 proof commands/artifacts and return receipt
 ```
 
-No two writers own the same path. Use a risk-triggered independent reviewer only when warranted: security/auth, migration/data loss, public contract, concurrency/distributed consistency, performance/cache/index freshness, resource lifetime, or weak proof.
+Keep capsules compact: include only source IDs and facts needed for that slice; size assignments so one owner can implement and prove them without broad repository preload. No two writers own the same path.
+
+The main agent may implement directly only for small, clear work. On medium/large work it owns intent, allocation, integration, and final review; direct implementation is limited to a bounded integration exception that unblocks or verifies delegated slices. Do not create a planned main implementation slice merely to retain work.
+
+If callable native subagents are absent or unavailable, declare a host-capability exception and execute the planned slices sequentially in the main agent. Preserve acceptance, proof, checkpoints, and context/ownership boundaries; do not stop or weaken implementation solely because orchestration is unavailable. This is never a planned main slice or silent fallback. Record orchestration/model capability as `PARTIAL`/`UNVERIFIED`; the actual task may still `PASS` when its behavior is fully proven.
+
+Use a risk-triggered independent expert reviewer or expert route only when warranted: security/auth, migration/data loss, public contract, concurrency/distributed consistency, performance/cache/index freshness, resource lifetime, weak proof, a material unknown, or two failed approaches.
 
 ## 3. Model and effort routing
 
-| Route | Use | Example |
+| Route | Use |
 |---|---|---|
-| Economy | research, inventory, mechanical changes, narrow checks | Codex Luna when callable; otherwise the cheapest capable model |
-| Standard | ordinary implementation, normal plan/review | Codex Terra, medium effort |
-| Expert | hard architecture or triggered independent review | Codex Sol, medium; high only when the risk needs it |
+| Economy | research, inventory, mechanical changes, narrow checks |
+| Standard | ordinary implementation, normal plan/review |
+| Expert | hard architecture or triggered independent review |
+
+Resolve provider/model/effort through the installed host `model-policy.json`; inside `agent-rules`, `automation/model-policy.json` is canonical source and fallback. Capability class stays portable in plans and assignment packets. Record requested intent, host-resolved selection, and independently observed result separately. Missing host attestation is unknown, never inferred from request or resolution.
+
+A denied provider mode/model fails closed. An unavailable allowed choice may use only a policy-allowed fallback and remains `PARTIAL` until resolved and observed.
 
 Never exceed high effort. Escalate after material uncertainty, two failed approaches, or an expert-risk signal—not merely because the task has multiple files.
 

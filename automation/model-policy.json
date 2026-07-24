@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "owner": "portable-orchestration",
+  "capability_classes": {
+    "economy": "retrieval, inventory, deterministic edits, and narrow checks",
+    "standard": "ordinary planning, implementation, and integration review",
+    "expert": "unresolved material risk or independent expert review"
+  },
+  "evidence_contract": {
+    "requested": "The route, provider preference, and effort requested by the agent or owner.",
+    "resolved": "The provider/model/effort selected by the host or adapter.",
+    "observed": "Fresh independently attested execution or outcome evidence.",
+    "fail_honest": "Requested and resolved values are not observed evidence. Missing attestation is unknown and cannot support PASS."
+  },
+  "platforms": {
+    "codex": {
+      "standard": { "family": "Terra", "effort": "medium" },
+      "expert": { "family": "Sol", "effort": "medium" },
+      "expert_escalation": "Use high effort only when material risk requires it."
+    },
+    "cursor": {
+      "implementation": { "family": "Composer", "channel": "Standard", "selector": "latest_verified", "display": "latest verified Composer Standard" },
+      "research_review": { "family": "Grok", "channel": "base", "selector": "latest_verified", "display": "latest verified Grok base" },
+      "denied_modes": ["Fast", "Auto"],
+      "denial_behavior": "fail_closed_partial"
+    },
+    "antigravity": {
+      "standard": { "family": "Gemini", "channel": "Flash-to-Pro", "minimum_effort": "medium" },
+      "denied_models": [{ "family": "Gemini", "version": "3.6", "channel": "Flash" }],
+      "exceptional_expert": { "family": "Claude", "effort": "high", "only_when": "material expert-risk work" },
+      "subagent_model_override": "unconfirmed",
+      "denial_behavior": "fail_closed_partial"
+    },
+    "grok": {
+      "base": { "selector": "latest_verified", "channel": "base" },
+      "minimum_effort": "medium",
+      "denied_modes": ["Fast"],
+      "subagent_model_override": "supported",
+      "subagent_effort_override": "supported/per_role_and_spawn",
+      "effort_evidence": "Per-role and spawn-time effort overrides are supported. Record requested, resolved, and observed effort separately; missing attestation leaves only observed effort unknown.",
+      "denial_behavior": "fail_closed_partial"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+description = "Read-only research and codebase exploration role."
+default_capability_mode = "explore"
+model = "grok-4.5"
+reasoning_effort = "medium"
+prompt_file = "prompts/agent-rules-researcher.md"
+default_isolation = "shared"

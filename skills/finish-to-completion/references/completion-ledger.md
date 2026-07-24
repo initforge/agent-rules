@@ -2,7 +2,7 @@
 
 Required for long/resumable work. Optional for medium/small work when it materially improves coordination, proof, rollback or interruption recovery.
 
-Canonical machine state uses `automation/workctl.py` with `automation/work-ledger.schema.json`. The agent invokes it automatically; the owner does not need to operate the CLI.
+Normal projects use the installed host launcher `agent-rules-tools/workctl`. Inside this harness repository, `automation/workctl.py` is the canonical source and fallback with `automation/work-ledger.schema.json`. The agent invokes it automatically; the owner does not operate the CLI.
 
 The ledger records:
 

@@ -16,7 +16,7 @@ import subprocess
 import tempfile
 import time
 import uuid
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any, Iterator
@@ -27,8 +27,12 @@ except ImportError:  # pragma: no cover - exercised by minimal native runtimes.
     jsonschema = None
 
 
-ROOT = Path(__file__).resolve().parents[1]
-SCHEMA_PATH = ROOT / "automation" / "work-ledger.schema.json"
+SCRIPT_DIR = Path(__file__).resolve().parent
+ROOT = SCRIPT_DIR.parent
+SCHEMA_CANDIDATES = (
+    SCRIPT_DIR / "work-ledger.schema.json",  # canonical automation/ and installed bundle
+    ROOT / "automation" / "work-ledger.schema.json",  # compatibility fallback
+)
 WORK_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{2,79}$")
 EFFORTS = {"low", "medium", "high"}
 EFFORT_RANK = {"low": 0, "medium": 1, "high": 2}
@@ -46,6 +50,7 @@ REVIEW_RISKS = {
     "security", "migration", "concurrency", "distributed-consistency",
     "performance", "query-index", "cache", "resource-lifetime", "multi-writer",
 }
+EXECUTOR_ROLES = {"mechanical-executor", "executor", "specialist", "main"}
 
 
 class WorkError(RuntimeError):
@@ -65,6 +70,89 @@ def load_json(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise WorkError(f"{path}: expected JSON object")
     return value
+
+
+def canonical_json(value: Any) -> str:
+    """Stable portable identity for JSON plan payloads."""
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+
+
+def migrate_v2(ledger: dict[str, Any]) -> dict[str, Any]:
+    """Upgrade v2 ledgers without discarding their historical evidence."""
+    if ledger.get("schema_version") == 3:
+        upgraded = dict(ledger)
+        upgraded.setdefault("model_policy_reasons", [])
+        return upgraded
+    if ledger.get("schema_version") != 2:
+        return ledger
+    upgraded = dict(ledger)
+    plan_ref = str(upgraded.pop("plan_ref", "native-plan"))
+    upgraded["schema_version"] = 3
+    upgraded["plan"] = {
+        "ref": plan_ref,
+        "sha256": sha256_text(plan_ref),
+        "identity": "legacy-v2-plan-ref",
+    }
+    contract = dict(upgraded.get("execution_contract", {}))
+    contract["execute_authorization"] = {
+        "authorized": True,
+        "recorded_at": upgraded.get("created_at", now()),
+        "source": "v2-migration",
+        "actions": list(contract.get("authorized_final_actions", ["edit"])),
+    }
+    upgraded["execution_contract"] = contract
+    upgraded["host_refs"] = {"host": "unknown", "task_ref": "", "session_ref": ""}
+    upgraded["model_policy_reasons"] = []
+    for assignment in upgraded.get("assignments", []):
+        assignment.setdefault("model_evidence", legacy_model_evidence(assignment))
+    for receipt in upgraded.get("receipts", []):
+        receipt.setdefault("model_evidence", legacy_model_evidence(receipt))
+    for review in upgraded.get("reviews", []):
+        review.setdefault("model_evidence", legacy_model_evidence(review))
+    return upgraded
+
+
+def legacy_model_evidence(value: dict[str, Any]) -> dict[str, Any]:
+    model = str(value.get("model", "unknown"))
+    effort = str(value.get("effort", "medium"))
+    return {
+        "requested_model": model,
+        "requested_effort": effort,
+        "resolved_model": model,
+        "resolved_effort": effort,
+        "observed_model": None,
+        "observed_effort": None,
+        "status": "unobserved",
+        "fallback_reason": "legacy record did not contain host observation",
+        "main_direct_exception_reason": "",
+    }
+
+
+def normalize_model_evidence(value: dict[str, Any]) -> dict[str, Any]:
+    """Keep requested routing separate from actual host-observed evidence."""
+    requested_model = str(value.get("requested_model", value.get("model", "unknown")))
+    requested_effort = str(value.get("requested_effort", value.get("effort", "medium")))
+    result = {
+        "requested_model": requested_model,
+        "requested_effort": requested_effort,
+        "resolved_model": str(value.get("resolved_model", requested_model)),
+        "resolved_effort": str(value.get("resolved_effort", requested_effort)),
+        "observed_model": value.get("observed_model"),
+        "observed_effort": value.get("observed_effort"),
+        "status": str(value.get("evidence_status", value.get("status", "unobserved"))),
+        "fallback_reason": str(value.get("fallback_reason", "")),
+        "main_direct_exception_reason": str(value.get("main_direct_exception_reason", "")),
+    }
+    if result["status"] not in {"observed", "unobserved", "fallback"}:
+        result["status"] = "unobserved"
+    if result["status"] == "observed":
+        if not result["observed_model"] or not result["observed_effort"]:
+            raise WorkError("observed model evidence requires observed model and effort")
+    elif result["observed_model"] is not None or result["observed_effort"] is not None:
+        raise WorkError("unobserved model evidence must not claim observed model or effort")
+    if result["status"] == "fallback" and not result["fallback_reason"]:
+        raise WorkError("fallback model evidence requires fallback_reason")
+    return result
 
 
 def sha256_text(value: str) -> str:
@@ -220,6 +308,7 @@ def validate_ids(ledger: dict[str, Any]) -> None:
         if unknown:
             raise WorkError(f"source {source['id']}: unknown slice ids {sorted(unknown)}")
     for item in ledger.get("assignments", []):
+        normalize_model_evidence(item["model_evidence"])
         if item["slice_id"] not in slice_set:
             raise WorkError(f"assignment {item['id']}: unknown slice {item['slice_id']}")
         missing = set(item["source_ids"]) - source_set
@@ -231,6 +320,9 @@ def validate_ids(ledger: dict[str, Any]) -> None:
                 f"assignment {item['id']}: acceptance ids do not belong to "
                 f"{item['slice_id']}: {sorted(unknown_acceptance)}"
             )
+    for collection in ("receipts", "reviews"):
+        for item in ledger.get(collection, []):
+            normalize_model_evidence(item["model_evidence"])
 
 
 def validate_portable_schema(
@@ -340,7 +432,11 @@ def validate_portable_schema(
 
 
 def validate_ledger(ledger: dict[str, Any]) -> None:
-    schema = load_json(SCHEMA_PATH)
+    schema_path = next((path for path in SCHEMA_CANDIDATES if path.is_file()), None)
+    if schema_path is None:
+        searched = ", ".join(str(path) for path in SCHEMA_CANDIDATES)
+        raise WorkError(f"work ledger schema is missing; searched: {searched}")
+    schema = load_json(schema_path)
     if jsonschema is not None:
         validator = jsonschema.Draft202012Validator(
             schema, format_checker=jsonschema.FormatChecker(),
@@ -353,6 +449,10 @@ def validate_ledger(ledger: dict[str, Any]) -> None:
     else:
         validate_portable_schema(ledger, schema, schema)
     validate_ids(ledger)
+
+
+def load_ledger(path: Path) -> dict[str, Any]:
+    return migrate_v2(load_json(path))
 
 
 @contextmanager
@@ -412,7 +512,7 @@ def mutate(args: argparse.Namespace, callback: Any) -> dict[str, Any]:
     with state_lock(path):
         if not path.is_file():
             raise WorkError(f"missing ledger: {path}")
-        ledger = load_json(path)
+        ledger = load_ledger(path)
         validate_ledger(ledger)
         result = callback(ledger)
         atomic_write(path, ledger)
@@ -436,6 +536,44 @@ def get_acceptance(item: dict[str, Any], acceptance_id: str) -> dict[str, Any]:
     return target
 
 
+def current_slice_receipts(
+    ledger: dict[str, Any], item: dict[str, Any],
+) -> list[dict[str, Any]]:
+    receipt_by_id = {receipt["id"]: receipt for receipt in ledger["receipts"]}
+    current = []
+    for acceptance in item["acceptance"]:
+        if acceptance["status"] != "passed":
+            continue
+        if not acceptance["receipt_ids"]:
+            raise WorkError(f"passed acceptance {acceptance['id']} has no proof receipt")
+        receipt_id = acceptance["receipt_ids"][-1]
+        receipt = receipt_by_id.get(receipt_id)
+        if receipt is None:
+            raise WorkError(f"passed acceptance {acceptance['id']} has unknown current receipt {receipt_id}")
+        if (
+            receipt["slice_id"] != item["id"]
+            or receipt["acceptance_id"] != acceptance["id"]
+            or receipt["status"] != "PASS"
+        ):
+            raise WorkError(f"current receipt {receipt_id} is not PASS for acceptance {acceptance['id']}")
+        if receipt["contract_hash"] != acceptance_contract_hash(acceptance):
+            raise WorkError(f"current receipt {receipt_id} does not match the acceptance contract")
+        current.append(receipt)
+    return current
+
+
+def latest_applicable_review(
+    ledger: dict[str, Any], item: dict[str, Any], receipts: list[dict[str, Any]],
+) -> dict[str, Any] | None:
+    current_ids = {receipt["id"] for receipt in receipts}
+    applicable = [
+        review for review in ledger["reviews"]
+        if review["slice_id"] == item["id"]
+        and current_ids.issubset(set(review["receipt_ids"]))
+    ]
+    return applicable[-1] if applicable else None
+
+
 def validate_proof_contract(
     target: dict[str, Any], claim: str, proof_kind: str, dimensions: list[str],
 ) -> None:
@@ -453,6 +591,29 @@ def validate_proof_contract(
         raise WorkError(f"proof misses required dimensions: {sorted(missing_dimensions)}")
 
 
+def validate_receipt_actor(
+    ledger: dict[str, Any], item: dict[str, Any], acceptance_id: str,
+    agent: str, model_evidence: dict[str, Any],
+) -> None:
+    accountable = [
+        assignment for assignment in ledger["assignments"]
+        if assignment["slice_id"] == item["id"]
+        and acceptance_id in assignment["acceptance_ids"]
+        and assignment["agent"] == agent
+        and assignment["role"] in EXECUTOR_ROLES
+        and assignment["status"] != "cancelled"
+    ]
+    main_exception = (
+        agent == "main"
+        and bool(model_evidence["main_direct_exception_reason"].strip())
+    )
+    if not accountable and not main_exception:
+        raise WorkError(
+            "proof agent is not bound to an eligible executor assignment for this "
+            "slice and acceptance criterion"
+        )
+
+
 def attach_receipt(
     ledger: dict[str, Any],
     item: dict[str, Any],
@@ -466,15 +627,10 @@ def attach_receipt(
         raise WorkError(f"proof effort {receipt['effort']} exceeds work cap {cap}")
     if receipt["contract_hash"] != acceptance_contract_hash(target):
         raise WorkError("proof contract changed; rerun evidence against the current acceptance")
-    accountable = [
-        assignment for assignment in ledger["assignments"]
-        if assignment["slice_id"] == item["id"]
-        and receipt["acceptance_id"] in assignment["acceptance_ids"]
-        and assignment["agent"] == receipt["agent"]
-        and assignment["status"] != "cancelled"
-    ]
-    if not accountable:
-        raise WorkError("proof agent is not assigned to this slice and acceptance criterion")
+    validate_receipt_actor(
+        ledger, item, receipt["acceptance_id"], receipt["agent"],
+        receipt["model_evidence"],
+    )
     ledger["receipts"].append(receipt)
     target["receipt_ids"].append(receipt["id"])
     target["status"] = {
@@ -520,12 +676,16 @@ def command_init(args: argparse.Namespace) -> dict[str, Any]:
     if isinstance(raw_depth, bool) or not isinstance(raw_depth, int):
         raise WorkError("max delegation depth must be an integer")
     ledger = {
-        "schema_version": 2,
+        "schema_version": 3,
         "work_id": work_id,
         "status": "planned",
         "created_at": timestamp,
         "updated_at": timestamp,
-        "plan_ref": str(data.get("plan_ref") or "native-plan"),
+        "plan": dict(data.get("__adopt_plan") or {
+            "ref": str(data.get("plan_ref") or "native-plan"),
+            "sha256": sha256_text(str(data.get("plan_ref") or "native-plan")),
+            "identity": "legacy-init-ref",
+        }),
         "active_slices": [],
         "classification": classification,
         "execution_contract": {
@@ -534,10 +694,18 @@ def command_init(args: argparse.Namespace) -> dict[str, Any]:
             "max_delegation_depth": raw_depth,
             "effort_cap": str(data.get("effort_cap", "high")),
             "authorized_final_actions": list(data.get("authorized_final_actions", ["edit"])),
+            "execute_authorization": {
+                "authorized": bool(dict(data.get("execute_authorization") or {}).get("authorized", True)),
+                "recorded_at": str(dict(data.get("execute_authorization") or {}).get("recorded_at") or timestamp),
+                "source": str(dict(data.get("execute_authorization") or {}).get("source") or "legacy-init"),
+                "actions": list(dict(data.get("execute_authorization") or {}).get("actions") or data.get("authorized_final_actions", ["edit"])),
+            },
         },
         "repository": dict(data.get("repository") or {
             "path": str(Path(args.root).resolve()), "branch": "unknown", "baseline_commit": "unknown",
         }),
+        "host_refs": dict(data.get("host_refs") or {"host": "unknown", "task_ref": "", "session_ref": ""}),
+        "model_policy_reasons": [],
         "source_history": list(data.get("source_history", [])),
         "slices": slices,
         "assignments": [],
@@ -556,9 +724,57 @@ def command_init(args: argparse.Namespace) -> dict[str, Any]:
         },
         "next_action": str(data.get("next_action") or "Start the first dependency-ready slice."),
     }
-    with state_lock(path):
+    with (nullcontext() if getattr(args, "_already_locked", False) else state_lock(path)):
         atomic_write(path, ledger)
     return {"status": "LEDGER_CREATED", "path": str(path), "classification": classification}
+
+
+def repository_baseline(root: Path) -> dict[str, str]:
+    try:
+        commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, text=True,
+            capture_output=True, encoding="utf-8", check=True).stdout.strip()
+        branch = subprocess.run(["git", "branch", "--show-current"], cwd=root, text=True,
+            capture_output=True, encoding="utf-8", check=True).stdout.strip() or "detached"
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise WorkError(f"adopt requires a readable git baseline: {exc}") from exc
+    return {"path": str(root), "branch": branch, "baseline_commit": commit}
+
+
+def command_adopt(args: argparse.Namespace) -> dict[str, Any]:
+    data = payload(args)
+    plan_path = Path(args.plan_file).resolve()
+    if not plan_path.is_file():
+        raise WorkError(f"plan file is missing: {plan_path}")
+    plan_bytes = plan_path.read_bytes()
+    plan_hash = hashlib.sha256(plan_bytes).hexdigest()
+    root = Path(args.root).resolve()
+    baseline = repository_baseline(root)
+    expected = dict(data.get("repository") or {})
+    for key in ("branch", "baseline_commit"):
+        if expected.get(key) and expected[key] != baseline[key]:
+            raise WorkError(f"repository baseline mismatch for {key}: expected {expected[key]!r}, observed {baseline[key]!r}")
+    authorization = dict(data.get("execute_authorization") or {})
+    if authorization.get("authorized") is not True or not authorization.get("source"):
+        raise WorkError("adopt requires an explicit execute_authorization record")
+    path = ledger_path(args)
+    with state_lock(path):
+        if path.is_file():
+            ledger = load_ledger(path)
+            validate_ledger(ledger)
+            if ledger["plan"]["sha256"] != plan_hash:
+                raise WorkError("plan identity mismatch; refusing to resume a different plan")
+            return {"status": "LEDGER_RESUMED", "path": str(path), "plan": ledger["plan"]}
+        data["repository"] = baseline
+        data["plan_ref"] = str(plan_path)
+        data["__adopt_plan"] = {"ref": str(plan_path), "sha256": plan_hash, "identity": "sha256-file"}
+        data.setdefault("host_refs", {"host": "unknown", "task_ref": "", "session_ref": ""})
+        args.payload_file = None
+        args.payload_json = canonical_json(data)
+        args._already_locked = True
+        args.force = True
+        created = command_init(args)
+        created["plan"] = data["__adopt_plan"]
+        return created
 
 
 def command_add_source(args: argparse.Namespace) -> dict[str, Any]:
@@ -587,6 +803,7 @@ def command_assign(args: argparse.Namespace) -> dict[str, Any]:
         raise WorkError(f"assignment missing keys: {sorted(required - set(item))}")
     if item["effort"] not in EFFORTS:
         raise WorkError("assignment effort exceeds supported cap")
+    item["model_evidence"] = normalize_model_evidence(dict(item.get("model_evidence") or item))
     item.setdefault("status", "ready")
 
     def apply(ledger: dict[str, Any]) -> dict[str, Any]:
@@ -623,6 +840,74 @@ def command_assign(args: argparse.Namespace) -> dict[str, Any]:
         ledger["assignments"].append(item)
         ledger["usage"]["agent_runs"] += 1
         return {"status": "ASSIGNED", "assignment_id": item["id"]}
+    return mutate(args, apply)
+
+
+def command_complete_assignment(args: argparse.Namespace) -> dict[str, Any]:
+    data = payload(args)
+    target_status = str(data.get("status", "")).strip()
+    if target_status not in {"done", "blocked"}:
+        raise WorkError("assignment completion status must be done or blocked")
+    observed_model = data.get("observed_model")
+    observed_effort = data.get("observed_effort")
+    fallback_reason = str(data.get("fallback_reason", "")).strip()
+    attestation_ref = str(data.get("host_attestation_ref", "")).strip()
+    has_observation = observed_model is not None or observed_effort is not None
+    if has_observation:
+        if not observed_model or observed_effort not in EFFORTS:
+            raise WorkError("observed completion requires both observed_model and observed_effort")
+        if fallback_reason:
+            raise WorkError("completion cannot record observation and fallback simultaneously")
+        if not attestation_ref:
+            raise WorkError("observed completion requires host_attestation_ref")
+    elif not fallback_reason:
+        raise WorkError("completion requires observed model/effort or explicit fallback_reason")
+
+    def apply(ledger: dict[str, Any]) -> dict[str, Any]:
+        assignment = next(
+            (item for item in ledger["assignments"] if item["id"] == args.assignment), None,
+        )
+        if assignment is None:
+            raise WorkError(f"unknown assignment: {args.assignment}")
+        if assignment["role"] not in EXECUTOR_ROLES:
+            raise WorkError("only executor assignments can be completed with host attestation")
+        if assignment["status"] == "cancelled":
+            raise WorkError("cancelled assignment cannot be completed")
+        if assignment["status"] == "done" and target_status == "blocked":
+            raise WorkError("done assignment cannot transition to blocked")
+        if (
+            assignment["status"] == "done"
+            and assignment["model_evidence"]["status"] == "observed"
+        ):
+            raise WorkError("observed done assignment is already complete")
+        evidence = dict(assignment["model_evidence"])
+        if has_observation:
+            evidence.update({
+                "observed_model": str(observed_model),
+                "observed_effort": str(observed_effort),
+                "status": "observed",
+                "fallback_reason": "",
+            })
+        else:
+            evidence.update({
+                "observed_model": None,
+                "observed_effort": None,
+                "status": "fallback",
+                "fallback_reason": fallback_reason,
+            })
+        assignment["model_evidence"] = normalize_model_evidence(evidence)
+        assignment["status"] = target_status
+        assignment["completed_at"] = now()
+        if attestation_ref:
+            assignment["host_attestation_ref"] = attestation_ref
+        else:
+            assignment.pop("host_attestation_ref", None)
+        return {
+            "status": "ASSIGNMENT_COMPLETED" if target_status == "done" else "ASSIGNMENT_BLOCKED",
+            "assignment_id": assignment["id"],
+            "assignment_status": target_status,
+            "model_evidence_status": assignment["model_evidence"]["status"],
+        }
     return mutate(args, apply)
 
 
@@ -676,6 +961,7 @@ def command_record_proof(args: argparse.Namespace) -> dict[str, Any]:
         )
     if evidence["status"] == "PASS" and not evidence["artifact_paths"]:
         raise WorkError("external PASS requires at least one fresh artifact")
+    model_evidence = normalize_model_evidence(dict(evidence.get("model_evidence") or evidence))
     def apply(ledger: dict[str, Any]) -> dict[str, Any]:
         item = get_slice(ledger, args.slice)
         target = get_acceptance(item, evidence["acceptance_id"])
@@ -712,6 +998,7 @@ def command_record_proof(args: argparse.Namespace) -> dict[str, Any]:
             "agent": evidence["agent"],
             "model": evidence["model"],
             "effort": evidence["effort"],
+            "model_evidence": model_evidence,
             "captured_at": now(),
         }
         return attach_receipt(ledger, item, target, receipt)
@@ -735,14 +1022,18 @@ def command_verify(args: argparse.Namespace) -> dict[str, Any]:
     timeout_seconds = int(request.get("timeout_seconds", 300))
     if not 1 <= timeout_seconds <= 3600:
         raise WorkError("timeout_seconds must be between 1 and 3600")
+    model_evidence = normalize_model_evidence(dict(request.get("model_evidence") or request))
 
     path = ledger_path(args)
-    ledger = load_json(path)
+    ledger = load_ledger(path)
     validate_ledger(ledger)
     item = get_slice(ledger, args.slice)
     target = get_acceptance(item, request["acceptance_id"])
     validate_proof_contract(
         target, target["claim"], str(request["proof_kind"]), list(request["dimensions"]),
+    )
+    validate_receipt_actor(
+        ledger, item, request["acceptance_id"], request["agent"], model_evidence,
     )
     repository = Path(ledger["repository"]["path"]).resolve()
     try:
@@ -790,6 +1081,7 @@ def command_verify(args: argparse.Namespace) -> dict[str, Any]:
         "agent": request["agent"],
         "model": request["model"],
         "effort": request["effort"],
+        "model_evidence": model_evidence,
         "captured_at": now(),
     }
 
@@ -831,6 +1123,7 @@ def command_record_review(args: argparse.Namespace) -> dict[str, Any]:
         raise WorkError("review status must be PASS or FAIL")
     if not review["receipt_ids"]:
         raise WorkError("review must bind to at least one proof receipt")
+    review["model_evidence"] = normalize_model_evidence(dict(review.get("model_evidence") or review))
 
     def apply(ledger: dict[str, Any]) -> dict[str, Any]:
         item = get_slice(ledger, args.slice)
@@ -948,28 +1241,17 @@ def command_close(args: argparse.Namespace) -> dict[str, Any]:
         if open_acceptance:
             raise WorkError(f"slice has open acceptance criteria: {open_acceptance}")
         if item["review_required"]:
-            passing_reviews = [
-                review for review in ledger["reviews"]
-                if review["slice_id"] == args.slice and review["status"] == "PASS"
-            ]
-            if not passing_reviews:
+            current_receipts = current_slice_receipts(ledger, item)
+            latest_review = latest_applicable_review(ledger, item, current_receipts)
+            if latest_review is None:
                 raise WorkError("risk-triggered slice requires an independent PASS review")
-            latest_review = passing_reviews[-1]
-            current_receipts = {
-                receipt_id
-                for acceptance in item["acceptance"]
-                for receipt_id in acceptance["receipt_ids"]
-                if next(
-                    receipt for receipt in ledger["receipts"] if receipt["id"] == receipt_id
-                )["status"] == "PASS"
-            }
-            if not current_receipts.issubset(set(latest_review["receipt_ids"])):
-                raise WorkError("independent review does not cover all current passing proof")
+            if latest_review["status"] != "PASS":
+                raise WorkError("latest applicable independent review is FAIL")
             receipt_by_id = {receipt["id"]: receipt for receipt in ledger["receipts"]}
             changed = [
-                receipt_id for receipt_id in latest_review["receipt_ids"]
-                if latest_review["receipt_hashes"].get(receipt_id)
-                != sha256_text(json.dumps(receipt_by_id[receipt_id], sort_keys=True))
+                receipt["id"] for receipt in current_receipts
+                if latest_review["receipt_hashes"].get(receipt["id"])
+                != sha256_text(json.dumps(receipt_by_id[receipt["id"]], sort_keys=True))
             ]
             if changed:
                 raise WorkError(f"proof changed after independent review: {changed}")
@@ -1081,6 +1363,60 @@ def command_finalize(args: argparse.Namespace) -> dict[str, Any]:
         open_findings = [item["id"] for item in ledger["findings"] if item["status"] == "open"]
         if incomplete or open_findings:
             raise WorkError(f"cannot finalize; slices={incomplete}; findings={open_findings}")
+        current_receipts = []
+        current_reviews = []
+        reasons = []
+        for slice_item in ledger["slices"]:
+            if not slice_item["required"]:
+                continue
+            slice_receipts = current_slice_receipts(ledger, slice_item)
+            current_receipts.extend(slice_receipts)
+            if slice_item["review_required"]:
+                latest_review = latest_applicable_review(ledger, slice_item, slice_receipts)
+                if latest_review is None or latest_review["status"] != "PASS":
+                    raise WorkError(
+                        f"slice {slice_item['id']} lacks a current applicable PASS review"
+                    )
+                changed = [
+                    receipt["id"] for receipt in slice_receipts
+                    if latest_review["receipt_hashes"].get(receipt["id"])
+                    != sha256_text(json.dumps(receipt, sort_keys=True))
+                ]
+                if changed:
+                    raise WorkError(f"proof changed after independent review: {changed}")
+                current_reviews.append(latest_review)
+            executors = [
+                assignment for assignment in ledger["assignments"]
+                if assignment["slice_id"] == slice_item["id"]
+                and assignment["role"] in EXECUTOR_ROLES
+                and assignment["status"] != "cancelled"
+            ]
+            if not executors:
+                reasons.append(f"slice {slice_item['id']} has no accountable executor assignment")
+            for assignment in executors:
+                evidence = assignment["model_evidence"]
+                if evidence["status"] != "observed":
+                    reasons.append(
+                        f"assignment {assignment['id']} has {evidence['status']} model evidence"
+                    )
+        for kind, records in (("proof", current_receipts), ("review", current_reviews)):
+            for record in records:
+                evidence = record["model_evidence"]
+                if evidence["status"] != "observed":
+                    reasons.append(
+                        f"{kind} {record['id']} has {evidence['status']} model evidence"
+                    )
+        ledger["model_policy_reasons"] = reasons
+        if reasons:
+            ledger["status"] = "partial"
+            ledger["active_slices"] = []
+            ledger["next_action"] = "Obtain host-observed model and effort evidence before claiming PASS."
+            return {
+                "status": "WORK_PARTIAL",
+                "work_id": ledger["work_id"],
+                "model_policy_reasons": reasons,
+                "usage": ledger["usage"],
+            }
         ledger["status"] = "passed"
         ledger["active_slices"] = []
         ledger["next_action"] = ""
@@ -1090,7 +1426,7 @@ def command_finalize(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_status(args: argparse.Namespace) -> dict[str, Any]:
     path = ledger_path(args)
-    ledger = load_json(path)
+    ledger = load_ledger(path)
     validate_ledger(ledger)
     return {
         "work_id": ledger["work_id"],
@@ -1106,7 +1442,7 @@ def command_status(args: argparse.Namespace) -> dict[str, Any]:
 
 def command_resume(args: argparse.Namespace) -> dict[str, Any]:
     path = ledger_path(args)
-    ledger = load_json(path)
+    ledger = load_ledger(path)
     validate_ledger(ledger)
     source_by_id = {item["id"]: item for item in ledger["source_history"]}
     active = list(ledger["active_slices"])
@@ -1172,10 +1508,23 @@ def build_parser() -> argparse.ArgumentParser:
     init_parser.add_argument("--force", action="store_true")
     add_payload_options(init_parser)
 
+    adopt_parser = commands.add_parser("adopt", help="atomically bind a plan and git baseline to a ledger")
+    adopt_parser.add_argument("--work-id", required=True)
+    adopt_parser.add_argument("--plan-file", required=True)
+    add_payload_options(adopt_parser)
+
     for name in ("add-source", "assign", "usage"):
         item = commands.add_parser(name)
         add_target_options(item)
         add_payload_options(item)
+
+    complete_assignment = commands.add_parser(
+        "complete-assignment",
+        help="attest one executor assignment after execution without changing its scope",
+    )
+    add_target_options(complete_assignment)
+    complete_assignment.add_argument("--assignment", required=True)
+    add_payload_options(complete_assignment)
 
     for name in (
         "start", "close", "checkpoint", "record-proof", "verify",
@@ -1207,8 +1556,10 @@ def main() -> int:
     handlers = {
         "classify": lambda value: classify(payload(value)),
         "init": command_init,
+        "adopt": command_adopt,
         "add-source": command_add_source,
         "assign": command_assign,
+        "complete-assignment": command_complete_assignment,
         "start": command_start,
         "record-proof": command_record_proof,
         "verify": command_verify,

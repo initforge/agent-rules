@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -30,8 +31,54 @@ def run(root: Path, *args: str, expect: int = 0) -> dict:
     return json.loads(result.stdout)
 
 
+def run_launcher(root: Path, launcher: Path, *args: str, expect: int = 0) -> dict:
+    command = (
+        ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(launcher)]
+        if os.name == "nt"
+        else ["sh", str(launcher)]
+    )
+    result = subprocess.run(
+        [*command, "--root", str(root), *args], text=True, capture_output=True, encoding="utf-8",
+    )
+    if result.returncode != expect:
+        raise AssertionError(
+            f"launcher exit={result.returncode}, expected={expect}\n"
+            f"stdout={result.stdout}\nstderr={result.stderr}"
+        )
+    return json.loads(result.stdout)
+
+
 def compact(value: dict) -> str:
     return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+
+
+def observed_model_evidence() -> dict:
+    return {
+        "requested_model": "gpt-5.6-terra", "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra", "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra", "observed_effort": "medium",
+        "status": "observed", "fallback_reason": "", "main_direct_exception_reason": "",
+    }
+
+
+def unobserved_model_evidence(status: str = "unobserved") -> dict:
+    return {
+        "requested_model": "gpt-5.6-terra", "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra", "resolved_effort": "medium",
+        "observed_model": None, "observed_effort": None,
+        "status": status,
+        "fallback_reason": "host did not expose model telemetry" if status == "fallback" else "",
+        "main_direct_exception_reason": "",
+    }
+
+
+def observed_completion(attestation: str) -> dict:
+    return {
+        "status": "done",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "host_attestation_ref": attestation,
+    }
 
 
 def acceptance(identifier: str, claim: str) -> dict:
@@ -86,6 +133,7 @@ def verification(identifier: str, acceptance_id: str, agent: str) -> dict:
         "agent": agent,
         "model": "gpt-5.6-terra",
         "effort": "medium",
+        "model_evidence": observed_model_evidence(),
     }
 
 
@@ -220,6 +268,27 @@ def main() -> None:
         reviewer3 = assignment("AR3", "P3", "review-3", "AC3", ["REQ-001"], "", "reviewer")
         for item in (a1, a2, a3, reviewer1, reviewer2, reviewer3):
             run(root, "assign", "--work-id", "demo-work", "--payload-json", compact(item))
+        cancelled_executor = assignment(
+            "A-cancelled", "P3", "cancelled-worker", "AC3", ["REQ-001"], "",
+        )
+        cancelled_executor["status"] = "cancelled"
+        run(root, "assign", "--work-id", "demo-work", "--payload-json", compact(cancelled_executor))
+        expect_error(
+            root, "complete-assignment", "--work-id", "demo-work",
+            "--assignment", "missing-assignment", "--payload-json",
+            compact(observed_completion("host://missing")), contains="unknown assignment",
+        )
+        expect_error(
+            root, "complete-assignment", "--work-id", "demo-work",
+            "--assignment", "A-cancelled", "--payload-json",
+            compact(observed_completion("host://cancelled")), contains="cancelled assignment",
+        )
+        expect_error(
+            root, "complete-assignment", "--work-id", "demo-work",
+            "--assignment", "A1", "--payload-json",
+            compact({"status": "done", "observed_model": "gpt-5.6-terra", "observed_effort": "medium"}),
+            contains="host_attestation_ref",
+        )
 
         collision = {
             **a1,
@@ -301,6 +370,39 @@ def main() -> None:
             compact(build_only),
             contains="does not satisfy",
         )
+        spoofed = verification("R-spoofed", "AC1", "review-1")
+        expect_error(
+            root,
+            "verify",
+            "--work-id",
+            "demo-work",
+            "--slice",
+            "P1",
+            "--payload-json",
+            compact(spoofed),
+            contains="eligible executor assignment",
+        )
+        spoof_marker = root / "spoof-command-ran.txt"
+        unbound = {
+            **verification("R-unbound", "AC1", "intruder"),
+            "command": (
+                f'"{sys.executable}" -c "from pathlib import Path; '
+                f"Path('{spoof_marker.as_posix()}').write_text('ran')\""
+            ),
+        }
+        expect_error(
+            root,
+            "verify",
+            "--work-id",
+            "demo-work",
+            "--slice",
+            "P1",
+            "--payload-json",
+            compact(unbound),
+            contains="eligible executor assignment",
+        )
+        if spoof_marker.exists():
+            raise AssertionError("unbound proof command executed before assignment validation")
 
         artifact = root / "external-proof.txt"
         artifact.write_text("fresh proof", encoding="utf-8")
@@ -363,6 +465,13 @@ def main() -> None:
             contains="not fresh",
         )
 
+        historical = verification("R1-historical", "AC1", "worker-1")
+        historical["model_evidence"] = unobserved_model_evidence()
+        run(
+            root, "verify", "--work-id", "demo-work", "--slice", "P1",
+            "--payload-json", compact(historical),
+        )
+
         for slice_id, receipt_id, ac_id, agent in (
             ("P1", "R1", "AC1", "worker-1"),
             ("P3", "R3", "AC3", "worker-3"),
@@ -388,6 +497,19 @@ def main() -> None:
             "--slice",
             "P3",
             contains="independent PASS review",
+        )
+        run(
+            root, "record-review", "--work-id", "demo-work", "--slice", "P3",
+            "--payload-json", compact({
+                "id": "REV3-fail", "reviewer": "review-3", "status": "FAIL",
+                "scope": "Current proof review", "observed": "Current proof needs follow-up.",
+                "receipt_ids": ["R3"], "model": "gpt-5.6-terra", "effort": "medium",
+                "model_evidence": observed_model_evidence(),
+            }),
+        )
+        expect_error(
+            root, "close", "--work-id", "demo-work", "--slice", "P3",
+            contains="latest applicable independent review is FAIL",
         )
         self_review = {
             "id": "REV-self",
@@ -431,6 +553,7 @@ def main() -> None:
                     "receipt_ids": [receipt_id],
                     "model": "gpt-5.6-terra",
                     "effort": "medium",
+                    "model_evidence": observed_model_evidence(),
                 }),
             )
 
@@ -473,6 +596,37 @@ def main() -> None:
             "--payload-json",
             compact({"id": "C1", "commit": "abc124", "summary": "P1 verified", "next_action": "Start P2"}),
         )
+        fallback_completion = run(
+            root, "complete-assignment", "--work-id", "demo-work", "--assignment", "A1",
+            "--payload-json", compact({
+                "status": "done",
+                "fallback_reason": "host did not expose model telemetry",
+                "host_attestation_ref": "host://fallback/A1",
+            }),
+        )
+        if fallback_completion["model_evidence_status"] != "fallback":
+            raise AssertionError(f"assignment fallback was not preserved: {fallback_completion}")
+        completed_ledger = json.loads(
+            (root / ".agent" / "work" / "demo-work" / "ledger.json").read_text(encoding="utf-8")
+        )
+        completed_a1 = next(item for item in completed_ledger["assignments"] if item["id"] == "A1")
+        immutable_fields = (
+            "slice_id", "agent", "role", "source_ids", "write_paths", "context_paths",
+            "forbidden_paths", "acceptance_ids",
+        )
+        if any(completed_a1[key] != a1[key] for key in immutable_fields):
+            raise AssertionError("assignment completion changed ownership or acceptance scope")
+        if not completed_a1.get("completed_at") or completed_a1.get("host_attestation_ref") != "host://fallback/A1":
+            raise AssertionError("assignment completion lost timestamp or host attestation reference")
+        run(
+            root, "complete-assignment", "--work-id", "demo-work", "--assignment", "A3",
+            "--payload-json", compact(observed_completion("host://observed/A3")),
+        )
+        expect_error(
+            root, "complete-assignment", "--work-id", "demo-work", "--assignment", "A3",
+            "--payload-json", compact({"status": "blocked", "fallback_reason": "late block"}),
+            contains="done assignment cannot transition to blocked",
+        )
         run(root, "close", "--work-id", "demo-work", "--slice", "P1")
         run(root, "close", "--work-id", "demo-work", "--slice", "P3")
 
@@ -504,7 +658,12 @@ def main() -> None:
                 "receipt_ids": ["R2"],
                 "model": "gpt-5.6-terra",
                 "effort": "medium",
-            }),
+                "model_evidence": observed_model_evidence(),
+                }),
+        )
+        run(
+            root, "complete-assignment", "--work-id", "demo-work", "--assignment", "A2",
+            "--payload-json", compact(observed_completion("host://observed/A2")),
         )
         run(root, "close", "--work-id", "demo-work", "--slice", "P2")
         usage = {
@@ -528,12 +687,86 @@ def main() -> None:
         if recorded["usage"]["records"][0]["assignment_id"] != "A2":
             raise AssertionError("usage lost per-assignment accountability")
 
+        fallback_final = run(root, "finalize", "--work-id", "demo-work")
+        if fallback_final["status"] != "WORK_PARTIAL" or not any(
+            reason.startswith("assignment A1 ")
+            for reason in fallback_final["model_policy_reasons"]
+        ):
+            raise AssertionError(f"fallback assignment incorrectly permitted PASS: {fallback_final}")
+        upgraded = run(
+            root, "complete-assignment", "--work-id", "demo-work", "--assignment", "A1",
+            "--payload-json", compact(observed_completion("host://observed/A1")),
+        )
+        if upgraded["model_evidence_status"] != "observed":
+            raise AssertionError(f"assignment observation upgrade failed: {upgraded}")
         final = run(root, "finalize", "--work-id", "demo-work")
         if final["status"] != "WORK_PASS":
             raise AssertionError(f"work did not finalize: {final}")
         status = run(root, "status", "--work-id", "demo-work")
         if status["status"] != "passed" or list(root.rglob("*.lock")) or list(root.rglob("*.tmp")):
             raise AssertionError(f"atomic state cleanup failed: {status}")
+
+        latest_fallback = verification("R2-latest-fallback", "AC2", "worker-2")
+        latest_fallback["model_evidence"] = unobserved_model_evidence("fallback")
+        run(
+            root, "verify", "--work-id", "demo-work", "--slice", "P2",
+            "--payload-json", compact(latest_fallback),
+        )
+        run(
+            root, "record-review", "--work-id", "demo-work", "--slice", "P2",
+            "--payload-json", compact({
+                "id": "REV2-latest-fallback", "reviewer": "review-2", "status": "PASS",
+                "scope": "Latest fallback proof review", "observed": "Current proof set reviewed.",
+                "receipt_ids": ["R2-latest-fallback"], "model": "gpt-5.6-terra",
+                "effort": "medium", "model_evidence": observed_model_evidence(),
+            }),
+        )
+        latest_partial = run(root, "finalize", "--work-id", "demo-work")
+        if latest_partial["status"] != "WORK_PARTIAL" or not any(
+            reason.startswith("proof R2-latest-fallback ")
+            for reason in latest_partial["model_policy_reasons"]
+        ):
+            raise AssertionError(f"historical observed proof laundered latest fallback: {latest_partial}")
+
+        run(
+            root, "verify", "--work-id", "demo-work", "--slice", "P2",
+            "--payload-json", compact(verification("R2-recovered", "AC2", "worker-2")),
+        )
+        run(
+            root, "record-review", "--work-id", "demo-work", "--slice", "P2",
+            "--payload-json", compact({
+                "id": "REV2-recovered", "reviewer": "review-2", "status": "PASS",
+                "scope": "Recovered current proof review", "observed": "Current proof set reviewed.",
+                "receipt_ids": ["R2-recovered"], "model": "gpt-5.6-terra",
+                "effort": "medium", "model_evidence": observed_model_evidence(),
+            }),
+        )
+        if run(root, "finalize", "--work-id", "demo-work")["status"] != "WORK_PASS":
+            raise AssertionError("observed rerun and current review did not recover WORK_PASS")
+
+        ledger_path = root / ".agent" / "work" / "demo-work" / "ledger.json"
+        unobserved = json.loads(ledger_path.read_text(encoding="utf-8"))
+        current_p1_review = next(review for review in unobserved["reviews"] if review["id"] == "REV1")
+        current_p1_review["model_evidence"] = {
+            "requested_model": "gpt-5.6-terra", "requested_effort": "medium",
+            "resolved_model": "gpt-5.6-terra", "resolved_effort": "medium",
+            "observed_model": None, "observed_effort": None, "status": "unobserved",
+            "fallback_reason": "", "main_direct_exception_reason": "main direct review had no host telemetry",
+        }
+        unobserved["assignments"][0]["model_evidence"] = {
+            "requested_model": "gpt-5.6-terra", "requested_effort": "medium",
+            "resolved_model": "gpt-5.6-terra", "resolved_effort": "medium",
+            "observed_model": None, "observed_effort": None, "status": "fallback",
+            "fallback_reason": "executor route was not observed", "main_direct_exception_reason": "",
+        }
+        ledger_path.write_text(json.dumps(unobserved), encoding="utf-8")
+        partial = run(root, "finalize", "--work-id", "demo-work")
+        if partial["status"] != "WORK_PARTIAL" or len(partial["model_policy_reasons"]) < 2:
+            raise AssertionError(f"unobserved/fallback evidence incorrectly permitted PASS: {partial}")
+        if not any(reason.startswith("assignment A1 ") for reason in partial["model_policy_reasons"]):
+            raise AssertionError(f"executor assignment evidence was not terminally enforced: {partial}")
+        if run(root, "status", "--work-id", "demo-work")["status"] != "partial":
+            raise AssertionError("partial terminal result was not persisted")
 
         spec = importlib.util.spec_from_file_location("workctl_contract", WORKCTL)
         if spec is None or spec.loader is None:
@@ -567,9 +800,95 @@ def main() -> None:
         if lock_file.read_text(encoding="ascii") != "999999 existing-owner":
             raise AssertionError("timed-out contender modified existing lock")
 
+    with tempfile.TemporaryDirectory(prefix="workctl-adopt-") as holder:
+        root = Path(holder)
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        subprocess.run(["git", "config", "user.email", "workctl@example.test"], cwd=root, check=True)
+        subprocess.run(["git", "config", "user.name", "Workctl test"], cwd=root, check=True)
+        marker = root / "marker.txt"
+        marker.write_text("baseline", encoding="utf-8")
+        subprocess.run(["git", "add", "marker.txt"], cwd=root, check=True)
+        subprocess.run(["git", "commit", "-qm", "baseline"], cwd=root, check=True)
+        plan = root / "plan.json"
+        plan.write_text('{"outcome":"portable ledger"}\n', encoding="utf-8")
+        adopt_payload = {
+            "signals": {"resume_requested": True},
+            "execute_authorization": {"authorized": True, "source": "owner-execute"},
+            "host_refs": {"host": "test-host", "task_ref": "task-1", "session_ref": "session-1"},
+            "source_history": [{"id": "REQ-001", "kind": "original", "summary": "Adopt plan.", "captured_at": "2026-07-24T00:00:00+00:00", "redacted": False, "slice_ids": ["*"]}],
+        }
+        created = run(root, "adopt", "--work-id", "adopt-work", "--plan-file", str(plan), "--payload-json", compact(adopt_payload))
+        if created["status"] != "LEDGER_CREATED":
+            raise AssertionError(f"adopt did not create: {created}")
+        resumed = run(root, "adopt", "--work-id", "adopt-work", "--plan-file", str(plan), "--payload-json", compact(adopt_payload))
+        if resumed["status"] != "LEDGER_RESUMED":
+            raise AssertionError(f"adopt did not resume atomically: {resumed}")
+        concurrent = [
+            subprocess.Popen([sys.executable, str(WORKCTL), "--root", str(root), "adopt", "--work-id", "concurrent-work", "--plan-file", str(plan), "--payload-json", compact(adopt_payload)], text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8")
+            for _ in range(2)
+        ]
+        concurrent_results = [json.loads(process.communicate(timeout=20)[0]) for process in concurrent]
+        if sorted(result["status"] for result in concurrent_results) != ["LEDGER_CREATED", "LEDGER_RESUMED"]:
+            raise AssertionError(f"concurrent adopt was not atomic: {concurrent_results}")
+        plan.write_text('{"outcome":"different plan"}\n', encoding="utf-8")
+        expect_error(root, "adopt", "--work-id", "adopt-work", "--plan-file", str(plan), "--payload-json", compact(adopt_payload), contains="plan identity mismatch")
+        wrong_baseline = {**adopt_payload, "repository": {"baseline_commit": "not-the-current-commit"}}
+        expect_error(root, "adopt", "--work-id", "baseline-work", "--plan-file", str(plan), "--payload-json", compact(wrong_baseline), contains="baseline mismatch")
+
+        v2 = root / ".agent" / "work" / "adopt-work" / "ledger.json"
+        migrated = json.loads(v2.read_text(encoding="utf-8"))
+        migrated.pop("model_policy_reasons")
+        v2.write_text(json.dumps(migrated), encoding="utf-8")
+        run(root, "add-source", "--work-id", "adopt-work", "--payload-json", compact({"id": "INJ-001", "kind": "injection", "summary": "Persist v3 terminal defaults.", "slice_ids": ["*"]}))
+        if "model_policy_reasons" not in json.loads(v2.read_text(encoding="utf-8")):
+            raise AssertionError("pre-policy v3 ledger did not normalize on mutation")
+        migrated = json.loads(v2.read_text(encoding="utf-8"))
+        migrated["schema_version"] = 2
+        migrated["plan_ref"] = migrated.pop("plan")["ref"]
+        migrated.pop("host_refs")
+        migrated["execution_contract"].pop("execute_authorization")
+        v2.write_text(json.dumps(migrated), encoding="utf-8")
+        if run(root, "status", "--work-id", "adopt-work")["status"] != "planned":
+            raise AssertionError("v2 ledger did not migrate safely in memory")
+
+        evidence = {"requested_model": "economy", "requested_effort": "low", "resolved_model": "standard", "resolved_effort": "medium", "observed_model": None, "observed_effort": None, "status": "fallback", "fallback_reason": "host did not expose economy route", "main_direct_exception_reason": ""}
+        if evidence["status"] == "observed":
+            raise AssertionError("test fixture must retain honest unobserved host evidence")
+
+    with tempfile.TemporaryDirectory(prefix="workctl-bundle-") as holder:
+        holder_path = Path(holder)
+        project = holder_path / "arbitrary-project"
+        bundle = holder_path / "runtime" / "agent-rules-tools"
+        project.mkdir()
+        bundle.mkdir(parents=True)
+        for name in ("workctl.py", "work-ledger.schema.json", "workctl.ps1", "workctl.sh"):
+            shutil.copy2(ROOT / "automation" / name, bundle / name)
+        launcher = bundle / ("workctl.ps1" if os.name == "nt" else "workctl.sh")
+        init_payload = project / "init.json"
+        init_payload.write_text(json.dumps({
+            "signals": {"resume_requested": True},
+            "slices": [{
+                "id": "P1", "name": "Optional portable smoke", "status": "ready",
+                "depends_on": [], "required": False,
+                "acceptance": [acceptance("AC1", "Portable launcher resolves sibling schema")],
+            }],
+        }), encoding="utf-8")
+        created = run_launcher(project, launcher, "init", "--work-id", "bundle-work", "--payload-file", str(init_payload))
+        if created["status"] != "LEDGER_CREATED":
+            raise AssertionError(f"installed bundle init failed: {created}")
+        if run_launcher(project, launcher, "status", "--work-id", "bundle-work")["status"] != "planned":
+            raise AssertionError("installed bundle status failed")
+        resumed = run_launcher(project, launcher, "resume", "--work-id", "bundle-work")
+        if resumed["active_slices"] != ["P1"]:
+            raise AssertionError(f"installed bundle resume failed: {resumed}")
+        finalized = run_launcher(project, launcher, "finalize", "--work-id", "bundle-work")
+        if finalized["status"] != "WORK_PASS":
+            raise AssertionError(f"installed bundle finalize failed: {finalized}")
+
     print(
-        "PASS: classification, schema, source ownership, parallel resume, local blocking, "
-        "runner-backed proof, review, usage and lock safety"
+        "PASS: portable installed bundle, legacy commands, v2 migration, assignment completion, "
+        "adopt/resume/baseline checks, assignment-bound proof, model evidence, schema, review, "
+        "usage and lock safety"
     )
 
 

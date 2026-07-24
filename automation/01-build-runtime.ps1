@@ -26,7 +26,40 @@ foreach ($Platform in $Platforms) {
   $Skills = Join-Path $Target "skills"
   $Scripts = Join-Path $Target "scripts"
   $Docs = Join-Path $Target "docs"
-  New-Item -ItemType Directory -Force -Path $Rules, $Skills, $Scripts, $Docs | Out-Null
+  $Native = Join-Path $Target "native"
+  $Tools = Join-Path $Target "agent-rules-tools"
+  New-Item -ItemType Directory -Force -Path $Rules, $Skills, $Scripts, $Docs, $Native, $Tools | Out-Null
+
+  # Portable orchestration must be available outside this repository after install.
+  foreach ($ToolName in @("workctl.py", "workctl.ps1", "workctl.sh", "work-ledger.schema.json")) {
+    $ToolPath = Join-Path $Root "automation\$ToolName"
+    if (-not (Test-Path -LiteralPath $ToolPath)) { throw "Missing portable tool: $ToolPath" }
+    Copy-Item -LiteralPath $ToolPath -Destination (Join-Path $Tools $ToolName) -Force
+  }
+  $PolicyPath = Join-Path $Root "automation\model-policy.json"
+  if (-not (Test-Path -LiteralPath $PolicyPath)) { throw "Missing model policy: $PolicyPath" }
+  Copy-Item -LiteralPath $PolicyPath -Destination (Join-Path $Target "model-policy.json") -Force
+
+  # Native definitions remain source-faithful.  The installer maps these files to
+  # documented host locations and owns only the names recorded in its manifest.
+  switch ($Platform) {
+    "codex" {
+      Copy-Item -LiteralPath (Join-Path $Root "platforms\codex\agents") -Destination (Join-Path $Native "agents") -Recurse -Force
+      Remove-Item -LiteralPath (Join-Path $Native "agents\README.md") -Force -ErrorAction SilentlyContinue
+    }
+    "cursor" {
+      Copy-Item -LiteralPath (Join-Path $Root "platforms\cursor\agents") -Destination (Join-Path $Native "agents") -Recurse -Force
+      Remove-Item -LiteralPath (Join-Path $Native "agents\README.md") -Force -ErrorAction SilentlyContinue
+    }
+    "grok" {
+      Copy-Item -LiteralPath (Join-Path $Root "platforms\grok\agents") -Destination (Join-Path $Native "agents") -Recurse -Force
+      Copy-Item -LiteralPath (Join-Path $Root "platforms\grok\personas") -Destination (Join-Path $Native "personas") -Recurse -Force
+    }
+    "antigravity" {
+      Copy-Item -LiteralPath (Join-Path $Root "platforms\antigravity\agents") -Destination (Join-Path $Native "agents") -Recurse -Force
+      Remove-Item -LiteralPath (Join-Path $Native "agents\README.md") -Force -ErrorAction SilentlyContinue
+    }
+  }
 
   $SharedScripts = Join-Path $Root "platforms\shared\scripts"
   if (Test-Path -LiteralPath $SharedScripts) {
@@ -78,6 +111,8 @@ foreach ($Platform in $Platforms) {
     Copy-Item -LiteralPath $_.FullName -Destination $Dest -Recurse
   }
 
+  Copy-Item -Path (Join-Path $SystemMap "*") -Destination (Join-Path $Target "docs") -Recurse -Force
+
   $ManifestItems = Get-ChildItem $Target -Recurse -File | Sort-Object FullName | ForEach-Object {
     [pscustomobject]@{
       Path = $_.FullName.Substring($Target.Length + 1).Replace('\', '/')
@@ -98,7 +133,6 @@ foreach ($Platform in $Platforms) {
   }
 
   $Inventory | ConvertTo-Json -Depth 5 | Set-Content -Encoding UTF8 (Join-Path $Target "manifest.json")
-  Copy-Item -Path (Join-Path $SystemMap "*") -Destination (Join-Path $Target "docs") -Recurse -Force
 }
 
 Write-Host "Runtime builds created: $BuildRoot"

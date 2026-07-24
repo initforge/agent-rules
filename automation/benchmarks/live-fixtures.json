@@ -22,6 +22,36 @@
       "response_contains": ["message.txt"],
       "verification_commands": ["python -m unittest -q"]
     },
+    "normal-multifile": {
+      "sandbox": "workspace-write",
+      "files": {
+        ".gitignore": "__pycache__/\n",
+        "TASK.md": "# Internal label API change\n\n`api.build_label` must require a keyword-only `kind` argument and return `\"{kind}:{trimmed value}\"`. Before editing source, record every direct consumer in `consumer-trace.json` as exactly `{\"api\":\"api.build_label\",\"consumers\":[\"consumers/audit.py\",\"consumers/invoice.py\"]}` followed by a newline. Update only the API and those two consumers; do not change `unrelated.py` or tests.\n",
+        "api.py": "def build_label(value: str) -> str:\n    return value.strip()\n",
+        "consumers/__init__.py": "",
+        "consumers/invoice.py": "from api import build_label\n\n\ndef invoice_label(customer: str) -> str:\n    return build_label(customer)\n",
+        "consumers/audit.py": "from api import build_label\n\n\ndef audit_label(actor: str) -> str:\n    return build_label(actor)\n",
+        "unrelated.py": "# This legacy formatting is deliberately out of scope.\nVALUE    =    1\n",
+        "test_api.py": "import unittest\n\nfrom api import build_label\n\n\nclass BuildLabelTest(unittest.TestCase):\n    def test_kind_is_required_and_formats_trimmed_value(self):\n        self.assertEqual(build_label(' Ada ', kind='invoice'), 'invoice:Ada')\n\n    def test_kind_is_keyword_only(self):\n        with self.assertRaises(TypeError):\n            build_label('Ada', 'invoice')\n\n\nif __name__ == '__main__':\n    unittest.main()\n",
+        "test_consumers.py": "import unittest\n\nfrom consumers.audit import audit_label\nfrom consumers.invoice import invoice_label\n\n\nclass ConsumerTest(unittest.TestCase):\n    def test_invoice_consumer_uses_its_kind(self):\n        self.assertEqual(invoice_label(' Ada '), 'invoice:Ada')\n\n    def test_audit_consumer_uses_its_kind(self):\n        self.assertEqual(audit_label(' Lin '), 'audit:Lin')\n\n\nif __name__ == '__main__':\n    unittest.main()\n"
+      },
+      "expected_changed_files": ["api.py", "consumer-trace.json", "consumers/audit.py", "consumers/invoice.py"],
+      "required_change_order": {
+        "before": ["consumer-trace.json"],
+        "after": ["api.py", "consumers/audit.py", "consumers/invoice.py"]
+      },
+      "expected_files": {
+        "consumer-trace.json": "{\"api\":\"api.build_label\",\"consumers\":[\"consumers/audit.py\",\"consumers/invoice.py\"]}\n"
+      },
+      "solution_files": {
+        "api.py": "def build_label(value: str, *, kind: str) -> str:\n    return f'{kind}:{value.strip()}'\n",
+        "consumer-trace.json": "{\"api\":\"api.build_label\",\"consumers\":[\"consumers/audit.py\",\"consumers/invoice.py\"]}\n",
+        "consumers/audit.py": "from api import build_label\n\n\ndef audit_label(actor: str) -> str:\n    return build_label(actor, kind='audit')\n",
+        "consumers/invoice.py": "from api import build_label\n\n\ndef invoice_label(customer: str) -> str:\n    return build_label(customer, kind='invoice')\n"
+      },
+      "response_contains": ["build_label", "consumer"],
+      "verification_commands": ["python -m unittest -q"]
+    },
     "permission-service": {
       "sandbox": "workspace-write",
       "files": {

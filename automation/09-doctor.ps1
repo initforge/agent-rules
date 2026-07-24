@@ -24,6 +24,50 @@ $Selected = if ($Platform -eq "all") { @("codex", "grok", "antigravity", "cursor
 $Report = @()
 $RegistryPath = Join-Path $Root "integrations\registry.json"
 $Registry = if (Test-Path $RegistryPath) { Get-Content -Raw $RegistryPath | ConvertFrom-Json } else { $null }
+$NativeContractOutput = @(& python (Join-Path $Root "automation\test-native-agent-policy.py") --build 2>&1 | ForEach-Object { "$_" })
+$NativeContractOk = $LASTEXITCODE -eq 0
+
+function Test-NativeStructure {
+  param([string]$Name, [string]$RuntimeHome, [string]$Root, [bool]$ContractOk)
+  $Problems = @()
+  if (-not $ContractOk) { $Problems += "source/build native schema contract failed" }
+  $Groups = switch ($Name) {
+    "grok" { @(
+      [pscustomobject]@{ Build = "native\agents"; Destination = "agents"; Manifest = "agent-rules-native-agents.json" },
+      [pscustomobject]@{ Build = "native\personas"; Destination = "personas"; Manifest = "agent-rules-native-personas.json" }
+    ) }
+    default { @([pscustomobject]@{ Build = "native\agents"; Destination = "agents"; Manifest = "agent-rules-native-agents.json" }) }
+  }
+  foreach ($Group in $Groups) {
+    $BuildDir = Join-Path $Root "05-generated\runtime-build\$Name\$($Group.Build)"
+    $Destination = Join-Path $RuntimeHome $Group.Destination
+    $OwnershipManifest = Join-Path $RuntimeHome $Group.Manifest
+    if (-not (Test-Path -LiteralPath $BuildDir)) { $Problems += "missing build $($Group.Build)"; continue }
+    $ExpectedFiles = @(Get-ChildItem -LiteralPath $BuildDir -Recurse -File)
+    $ExpectedRelative = @($ExpectedFiles | ForEach-Object { $_.FullName.Substring($BuildDir.Length + 1).Replace('\', '/') } | Sort-Object)
+    if (-not (Test-Path -LiteralPath $OwnershipManifest)) { $Problems += "missing ownership $($Group.Manifest)"; continue }
+    try {
+      $ParsedOwnership = Get-Content -Raw -LiteralPath $OwnershipManifest | ConvertFrom-Json
+      $OwnedItems = if ($ParsedOwnership -is [Array]) {
+        @($ParsedOwnership | ForEach-Object { [string]$_ })
+      } else {
+        @([string]$ParsedOwnership)
+      }
+      $Owned = @($OwnedItems | Sort-Object)
+    } catch { $Problems += "invalid ownership $($Group.Manifest)"; continue }
+    if (@(Compare-Object $ExpectedRelative $Owned).Count -gt 0) { $Problems += "ownership mapping drift $($Group.Manifest)"; continue }
+    foreach ($Expected in $ExpectedFiles) {
+      $ExpectedFullName = [string]$Expected.FullName
+      $Relative = $ExpectedFullName.Substring($BuildDir.Length + 1)
+      $Installed = Join-Path $Destination $Relative
+      if (-not (Test-Path -LiteralPath $Installed -PathType Leaf)) { $Problems += "missing $($Group.Destination)/$($Relative.Replace('\','/'))"; continue }
+      if ((Get-FileHash -LiteralPath $Installed -Algorithm SHA256).Hash -ne (Get-FileHash -LiteralPath $ExpectedFullName -Algorithm SHA256).Hash) {
+        $Problems += "hash drift $($Group.Destination)/$($Relative.Replace('\','/'))"
+      }
+    }
+  }
+  return @($Problems)
+}
 
 foreach ($Name in $Selected) {
   $RuntimeHome = $PlatformHomes[$Name]
@@ -32,6 +76,28 @@ foreach ($Name in $Selected) {
     $Report += [pscustomobject]@{ platform = $Name; check = "runtime-manifest"; status = "MISSING"; detail = $ManifestPath }
     continue
   }
+
+  $Report += [pscustomobject]@{ platform = $Name; check = "install"; status = "INSTALL_PASS"; detail = "runtime manifest is present; this proves install copy only" }
+  $NativeProblems = @(Test-NativeStructure -Name $Name -RuntimeHome $RuntimeHome -Root $Root -ContractOk $NativeContractOk)
+  if ($NativeProblems.Count -eq 0) {
+    $Report += [pscustomobject]@{ platform = $Name; check = "native-structure"; status = "NATIVE_CAPABLE"; detail = "required native files, ownership mapping, source schema, and build hashes match" }
+  } else {
+    $Report += [pscustomobject]@{ platform = $Name; check = "native-structure"; status = "NATIVE_PARTIAL"; detail = ($NativeProblems -join "; ") }
+  }
+  $NativeCli = switch ($Name) { "codex" { "codex" }; "cursor" { "cursor" }; "grok" { "grok" }; "antigravity" { "gemini" } }
+  $Cli = Get-Command $NativeCli -ErrorAction SilentlyContinue
+  $NativeDetail = if ($Cli) { "$NativeCli CLI is available, but no trusted host-activation receipt exists" } else { "$NativeCli CLI is unavailable; host activation is unobserved" }
+  $Report += [pscustomobject]@{ platform = $Name; check = "native-activation"; status = "NATIVE_UNVERIFIED"; detail = $NativeDetail }
+  $ToolsPath = Join-Path $RuntimeHome "agent-rules-tools"
+  $ToolFiles = @("workctl.py", "workctl.ps1", "workctl.sh", "work-ledger.schema.json")
+  $ToolsOk = @($ToolFiles | Where-Object { -not (Test-Path -LiteralPath (Join-Path $ToolsPath $_)) }).Count -eq 0
+  # A copied workctl bundle proves only capability. Native subagent execution needs
+  # a separate trusted host receipt before it can ever be called observed/pass.
+  $Report += [pscustomobject]@{ platform = $Name; check = "orchestration"; status = $(if ($ToolsOk) { "ORCHESTRATION_CAPABLE" } else { "ORCHESTRATION_PARTIAL" }); detail = $(if ($ToolsOk) { "portable workctl bundle available; no trusted native subagent receipt" } else { "portable workctl bundle incomplete; no native execution claim" }) }
+  $SourcePolicy = Join-Path $Root "automation\model-policy.json"
+  $InstalledPolicy = Join-Path $RuntimeHome "model-policy.json"
+  $PolicyStatus = if ((Test-Path $SourcePolicy) -and (Test-Path $InstalledPolicy) -and ((Get-FileHash $SourcePolicy -Algorithm SHA256).Hash -eq (Get-FileHash $InstalledPolicy -Algorithm SHA256).Hash)) { "MODEL_POLICY_MATCH" } elseif (Test-Path $InstalledPolicy) { "MODEL_POLICY_DRIFT" } else { "MODEL_POLICY_MISSING" }
+  $Report += [pscustomobject]@{ platform = $Name; check = "model-policy-install"; status = $PolicyStatus; detail = "source-to-runtime policy hash only; effective host model remains receipt-gated" }
 
   $BuildManifest = Join-Path $Root "05-generated\runtime-build\$Name\manifest.json"
   if (Test-Path $BuildManifest) {
@@ -47,10 +113,13 @@ foreach ($Name in $Selected) {
     $HashMismatch = @()
     $RuntimeMissing = @()
     $RuntimeHashMismatch = @()
-    foreach ($Exp in $Expected.files) {
+    foreach ($Exp in @($Expected.files | Where-Object { $_.Path -notlike "native/*" })) {
       $Ins = $Installed.files | Where-Object Path -EQ $Exp.Path | Select-Object -First 1
       if ($Ins -and $Ins.Sha256 -ne $Exp.Sha256) { $HashMismatch += $Exp.Path }
-      $LivePath = Join-Path $RuntimeHome ($Exp.Path -replace '/', [IO.Path]::DirectorySeparatorChar)
+      $RuntimeRelative = if ($Name -eq "cursor" -and $Exp.Path -like "docs/*") {
+        "agent-rules-docs/" + $Exp.Path.Substring(5)
+      } else { $Exp.Path }
+      $LivePath = Join-Path $RuntimeHome ($RuntimeRelative -replace '/', [IO.Path]::DirectorySeparatorChar)
       if (-not (Test-Path -LiteralPath $LivePath)) {
         $RuntimeMissing += $Exp.Path
       } elseif ((Get-FileHash -LiteralPath $LivePath -Algorithm SHA256).Hash.ToLowerInvariant() -ne $Exp.Sha256) {
@@ -324,10 +393,20 @@ if (Test-Path $GrokInject) {
   }
 }
 
+if ($env:AGENT_RULES_SKIP_RUNTIME_HOOKS -eq "1") {
+  foreach ($HookResult in @($Report | Where-Object { $_.check -like "hook*" -or $_.check -eq "hooks-feature" })) {
+    $HookResult.status = "HOOK_UNVERIFIED"
+    $HookResult.detail = "runtime hook installation was explicitly skipped; no activation claim"
+  }
+}
+
 $Report | Format-Table -AutoSize
-$Bad = $Report | Where-Object status -in @("MISSING", "NOT_LIVE")
+$Bad = $Report | Where-Object status -in @("MISSING", "NOT_LIVE", "MODEL_POLICY_DRIFT", "MODEL_POLICY_MISSING", "NATIVE_PARTIAL")
 if ($Bad) {
-  Write-Error "Doctor found $($Bad.Count) problem(s)"
+  Write-Error "Doctor PARTIAL: $($Bad.Count) install/runtime failure(s); native and orchestration observations remain separately classified above"
   exit 1
 }
-Write-Host "Doctor PASS"
+$NativeObserved = @($Report | Where-Object status -eq "NATIVE_OBSERVED").Count
+$NativeUnverified = @($Report | Where-Object status -eq "NATIVE_UNVERIFIED").Count
+$OrchestrationObserved = @($Report | Where-Object status -eq "ORCHESTRATION_OBSERVED").Count
+Write-Host "Doctor layered summary: install/parity checks have no blocking failures; native observed=$NativeObserved, native unverified=$NativeUnverified, orchestration observed=$OrchestrationObserved. Capability is not native execution evidence."

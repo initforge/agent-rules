@@ -9,7 +9,8 @@
     "status",
     "created_at",
     "updated_at",
-    "plan_ref",
+    "plan",
+    "host_refs",
     "classification",
     "execution_contract",
     "repository",
@@ -23,16 +24,18 @@
     "usage",
     "next_action",
     "active_slices"
+    ,"model_policy_reasons"
   ],
   "properties": {
-    "schema_version": { "const": 2 },
+    "schema_version": { "const": 3 },
     "work_id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{2,79}$" },
     "status": {
-      "enum": ["planned", "running", "blocked", "needs-replan", "passed", "rolled-back"]
+      "enum": ["planned", "running", "blocked", "needs-replan", "passed", "partial", "rolled-back"]
     },
     "created_at": { "type": "string", "format": "date-time" },
     "updated_at": { "type": "string", "format": "date-time" },
-    "plan_ref": { "type": "string", "minLength": 1 },
+    "plan": { "$ref": "#/$defs/plan" },
+    "host_refs": { "$ref": "#/$defs/hostRefs" },
     "active_slices": {
       "type": "array",
       "uniqueItems": true,
@@ -58,7 +61,8 @@
         "max_active_agents_including_main",
         "max_delegation_depth",
         "effort_cap",
-        "authorized_final_actions"
+        "authorized_final_actions",
+        "execute_authorization"
       ],
       "properties": {
         "mode": { "const": "automatic" },
@@ -69,7 +73,8 @@
           "type": "array",
           "uniqueItems": true,
           "items": { "enum": ["edit", "commit", "push", "deploy", "external-write"] }
-        }
+        },
+        "execute_authorization": { "$ref": "#/$defs/executeAuthorization" }
       }
     },
     "repository": {
@@ -137,8 +142,56 @@
       }
     },
     "next_action": { "type": "string" }
+    ,"model_policy_reasons": { "type": "array", "items": { "type": "string", "minLength": 1 } }
   },
   "$defs": {
+    "plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ref", "sha256", "identity"],
+      "properties": {
+        "ref": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "identity": { "type": "string", "minLength": 1 }
+      }
+    },
+    "hostRefs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["host", "task_ref", "session_ref"],
+      "properties": {
+        "host": { "type": "string", "minLength": 1 },
+        "task_ref": { "type": "string" },
+        "session_ref": { "type": "string" }
+      }
+    },
+    "executeAuthorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authorized", "recorded_at", "source", "actions"],
+      "properties": {
+        "authorized": { "const": true },
+        "recorded_at": { "type": "string", "format": "date-time" },
+        "source": { "type": "string", "minLength": 1 },
+        "actions": { "type": "array", "uniqueItems": true, "items": { "enum": ["edit", "commit", "push", "deploy", "external-write"] } }
+      }
+    },
+    "modelEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requested_model", "requested_effort", "resolved_model", "resolved_effort", "observed_model", "observed_effort", "status", "fallback_reason", "main_direct_exception_reason"],
+      "properties": {
+        "requested_model": { "type": "string", "minLength": 1 },
+        "requested_effort": { "enum": ["low", "medium", "high"] },
+        "resolved_model": { "type": "string", "minLength": 1 },
+        "resolved_effort": { "enum": ["low", "medium", "high"] },
+        "observed_model": { "type": ["string", "null"] },
+        "observed_effort": { "type": ["string", "null"] },
+        "status": { "enum": ["observed", "unobserved", "fallback"] },
+        "fallback_reason": { "type": "string" },
+        "main_direct_exception_reason": { "type": "string" }
+      }
+    },
     "source": {
       "type": "object",
       "additionalProperties": false,
@@ -231,7 +284,8 @@
         "context_paths",
         "forbidden_paths",
         "acceptance_ids",
-        "status"
+        "status",
+        "model_evidence"
       ],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
@@ -246,7 +300,10 @@
         "context_paths": { "type": "array", "items": { "type": "string" } },
         "forbidden_paths": { "type": "array", "items": { "type": "string" } },
         "acceptance_ids": { "type": "array", "minItems": 1, "items": { "type": "string" } },
-        "status": { "enum": ["ready", "running", "done", "blocked", "cancelled"] }
+        "status": { "enum": ["ready", "running", "done", "blocked", "cancelled"] },
+        "model_evidence": { "$ref": "#/$defs/modelEvidence" },
+        "completed_at": { "type": "string", "format": "date-time" },
+        "host_attestation_ref": { "type": "string", "minLength": 1 }
       }
     },
     "receipt": {
@@ -275,7 +332,8 @@
         "exit_code",
         "expected_exit_code",
         "artifact_evidence",
-        "verifier"
+        "verifier",
+        "model_evidence"
       ],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
@@ -319,7 +377,8 @@
         "agent": { "type": "string", "minLength": 1 },
         "model": { "type": "string", "minLength": 1 },
         "effort": { "enum": ["low", "medium", "high"] },
-        "captured_at": { "type": "string", "format": "date-time" }
+        "captured_at": { "type": "string", "format": "date-time" },
+        "model_evidence": { "$ref": "#/$defs/modelEvidence" }
       }
     },
     "finding": {
@@ -352,7 +411,8 @@
         "receipt_hashes",
         "model",
         "effort",
-        "created_at"
+        "created_at",
+        "model_evidence"
       ],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
@@ -376,7 +436,8 @@
         },
         "model": { "type": "string", "minLength": 1 },
         "effort": { "enum": ["low", "medium", "high"] },
-        "created_at": { "type": "string", "format": "date-time" }
+        "created_at": { "type": "string", "format": "date-time" },
+        "model_evidence": { "$ref": "#/$defs/modelEvidence" }
       }
     },
     "checkpoint": {

@@ -13,6 +13,7 @@ description: Scope, execution, verification, and reporting contract.
 6. Match evidence to the claim: build/lint proves static compatibility, tests prove exercised behavior, and live UI/API/data proof is required when claimed.
 7. Re-run affected proof after fixes and report remaining gaps honestly.
 8. After two failed attempts, change approach, investigate, or escalate; do not repeat blindly.
+9. Route work by portable capability class; choose an expert only for unresolved material risk.
 
 ## When signals conflict
 
@@ -29,6 +30,7 @@ description: Scope, execution, verification, and reporting contract.
 - Long or resumable work: maintain an executable roadmap and current slice; checkpoints preserve state but never become owner ceremony or a reason to stop feasible work.
 - Use a ledger only when handoff, interruption, coordination, rollback, or independent proof makes durable state useful.
 - Use browser QA for live/manual UI proof or when non-browser evidence cannot prove the claim.
+- Treat requested, resolved, and observed execution evidence as distinct; never promote local intent into host-observed proof.
 
 ## Flexibility
 

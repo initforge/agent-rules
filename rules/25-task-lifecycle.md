@@ -29,6 +29,10 @@ description: Workflow classification, proportional work state, and execution own
 - Classify from dependencies, risk, coordination, rollback, and proof needs, not a file-count or checklist threshold alone.
 - Escalate to `high-risk` for auth, authorization, migration/data loss, security, external providers, or weakened validation.
 - For high-risk ambiguity, stop only for a material owner decision; otherwise investigate and continue safe independent work.
-- Delegate only independent bounded work with clear ownership and evidence duties; the main agent integrates and verifies the result.
+- Use portable classes: economy for retrieval/mechanical work, standard for ordinary implementation, expert for unresolved material risk.
+- Keep direct main implementation to small work or bounded integration; do not plan main slices for medium/large work.
+- If callable subagents are unavailable, declare the exception and run slices sequentially without weakening boundaries, acceptance, proof, or checkpoints.
+- Mark orchestration/model capability `PARTIAL`/`UNVERIFIED` separately; fully proven task behavior may still `PASS`.
+- Delegate independent bounded work with clear ownership and evidence duties; the main agent integrates and verifies the result.
 - Record durable state only when it improves handoff, recovery, coordination, rollback, or independent proof. Tiny and ordinary work do not need a ledger.
 - Keep trace logs advisory. Repeated friction is evidence for a later context-evolution review, not a task blocker.

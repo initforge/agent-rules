@@ -240,7 +240,7 @@ def run_one(
             holder.cleanup()
 
     try:
-        verified = verify(workspace, response, fixture)
+        verified = verify(workspace, response, fixture, events)
     except (OSError, subprocess.SubprocessError) as exc:
         termination = "runner_error" if termination == "completed" else termination
         verified = {

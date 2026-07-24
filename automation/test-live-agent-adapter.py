@@ -67,6 +67,20 @@ def contracts() -> None:
     }
     if len(runnable) < 6:
         raise AssertionError(f"expected at least six executable live fixtures, got {sorted(runnable)}")
+    normal = fixtures.get("normal-multifile")
+    if not normal:
+        raise AssertionError("live-normal-multifile has no executable fixture oracle")
+    if normal.get("expected_changed_files") != [
+        "api.py", "consumer-trace.json", "consumers/audit.py", "consumers/invoice.py",
+    ] or normal.get("verification_commands") != ["python -m unittest -q"]:
+        raise AssertionError("normal-multifile fixture lost its scoped API and consumer contract")
+    if sorted(normal.get("solution_files", {})) != normal["expected_changed_files"]:
+        raise AssertionError("normal-multifile self-test solution no longer covers its exact change scope")
+    if normal.get("required_change_order") != {
+        "before": ["consumer-trace.json"],
+        "after": ["api.py", "consumers/audit.py", "consumers/invoice.py"],
+    }:
+        raise AssertionError("normal-multifile trace-before-edit contract drifted")
     runner_self_test()
     verifier_self_test()
     native_contract()

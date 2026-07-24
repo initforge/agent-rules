@@ -119,6 +119,92 @@ function Install-RulesSkillsDocs {
   }
 }
 
+# BEGIN SYNC-OWNED-FILES
+# This is deliberately defined before the install loop: native files are synced
+# during that loop, and only paths from the prior ownership manifest are removed.
+function Sync-OwnedFiles {
+  param([string]$Source, [string]$Destination, [string]$OwnershipManifest)
+  $DestinationFull = [IO.Path]::GetFullPath($Destination).TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
+  $Old = @()
+  if (Test-Path -LiteralPath $OwnershipManifest) {
+    try {
+      $ParsedOwnership = Get-Content -Raw -LiteralPath $OwnershipManifest | ConvertFrom-Json
+      $Old = @($ParsedOwnership | ForEach-Object { $_ })
+    } catch { throw "Invalid ownership manifest: $OwnershipManifest" }
+  }
+  $Owned = @{}
+  foreach ($Entry in $Old) {
+    if ($Entry -isnot [string]) { throw "Ownership manifest entry must be a string in $OwnershipManifest" }
+    if ([string]::IsNullOrWhiteSpace($Entry) -or [IO.Path]::IsPathRooted($Entry)) { throw "Unsafe rooted/empty ownership manifest entry '$Entry' in $OwnershipManifest" }
+    $Parts = @($Entry -split '[\\/]' | Where-Object { $_ -ne '' })
+    if ($Parts.Count -eq 0 -or $Parts -contains '.' -or $Parts -contains '..') {
+      throw "Unsafe ownership manifest entry '$Entry' in $OwnershipManifest"
+    }
+    $Normalized = $Parts -join '/'
+    $Candidate = [IO.Path]::GetFullPath((Join-Path $DestinationFull ($Normalized -replace '/', [IO.Path]::DirectorySeparatorChar)))
+    $Prefix = $DestinationFull + [IO.Path]::DirectorySeparatorChar
+    if (-not $Candidate.StartsWith($Prefix, [StringComparison]::OrdinalIgnoreCase)) {
+      throw "Ownership manifest path escapes destination: '$Entry'"
+    }
+    $Owned[$Normalized] = $Candidate
+  }
+  $Current = @()
+  $Copies = @()
+  Get-ChildItem -LiteralPath $Source -Recurse -File | ForEach-Object {
+    $Relative = $_.FullName.Substring($Source.Length + 1)
+    $Normalized = $Relative.Replace('\', '/')
+    $Target = [IO.Path]::GetFullPath((Join-Path $DestinationFull $Relative))
+    if ((Test-Path -LiteralPath $Target) -and -not $Owned.ContainsKey($Normalized)) {
+      throw "Refusing to overwrite unowned runtime file: $Target"
+    }
+    $Current += $Normalized
+    $Copies += [pscustomobject]@{ Source = $_.FullName; Target = $Target }
+  }
+  New-Item -ItemType Directory -Force -Path $DestinationFull | Out-Null
+  foreach ($Copy in $Copies) {
+    $Target = $Copy.Target
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Target) | Out-Null
+    Copy-Item -LiteralPath $Copy.Source -Destination $Target -Force
+  }
+  foreach ($Relative in $Owned.Keys | Where-Object { $Current -notcontains $_ }) {
+    $Target = $Owned[$Relative]
+    if (Test-Path -LiteralPath $Target) { Remove-Item -LiteralPath $Target -Force }
+  }
+  $Current | ConvertTo-Json | Set-Content -Encoding UTF8 -LiteralPath $OwnershipManifest
+}
+# END SYNC-OWNED-FILES
+
+# BEGIN REMOVE-PREVIOUSLY-OWNED-FILES
+function Remove-PreviouslyOwnedFiles {
+  param([string]$Destination, [string]$OwnershipManifest)
+  if (-not (Test-Path -LiteralPath $OwnershipManifest)) { return }
+  $DestinationFull = [IO.Path]::GetFullPath($Destination).TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
+  try {
+    $ParsedOwnership = Get-Content -Raw -LiteralPath $OwnershipManifest | ConvertFrom-Json
+    $Entries = @($ParsedOwnership | ForEach-Object { $_ })
+  } catch { throw "Invalid ownership manifest: $OwnershipManifest" }
+  $Targets = @()
+  foreach ($Entry in $Entries) {
+    if ($Entry -isnot [string]) { throw "Ownership manifest entry must be a string in $OwnershipManifest" }
+    if ([string]::IsNullOrWhiteSpace($Entry) -or [IO.Path]::IsPathRooted($Entry)) { throw "Unsafe rooted/empty ownership manifest entry '$Entry' in $OwnershipManifest" }
+    $Parts = @($Entry -split '[\\/]' | Where-Object { $_ -ne '' })
+    if ($Parts.Count -eq 0 -or $Parts -contains '.' -or $Parts -contains '..') { throw "Unsafe ownership manifest entry '$Entry' in $OwnershipManifest" }
+    $Target = [IO.Path]::GetFullPath((Join-Path $DestinationFull ($Parts -join [IO.Path]::DirectorySeparatorChar)))
+    if (-not $Target.StartsWith(($DestinationFull + [IO.Path]::DirectorySeparatorChar), [StringComparison]::OrdinalIgnoreCase)) {
+      throw "Ownership manifest path escapes destination: '$Entry'"
+    }
+    $Targets += $Target
+  }
+  foreach ($Target in $Targets) {
+    if (Test-Path -LiteralPath $Target -PathType Leaf) { Remove-Item -LiteralPath $Target -Force }
+  }
+  Remove-Item -LiteralPath $OwnershipManifest -Force
+  if ((Test-Path -LiteralPath $DestinationFull) -and @((Get-ChildItem -LiteralPath $DestinationFull -Force)).Count -eq 0) {
+    Remove-Item -LiteralPath $DestinationFull -Force
+  }
+}
+# END REMOVE-PREVIOUSLY-OWNED-FILES
+
 # Grok native discovery loads global rules from $GROK_HOME/.grok/rules (not $GROK_HOME/rules).
 # Install lean rules to both: doctor/manifest path + inject path. Wipe legacy dual-tree.
 function Sync-GrokInjectRules {
@@ -173,6 +259,28 @@ foreach ($Name in $Selected) {
   if (Test-Path -LiteralPath $RuntimeScripts) {
     New-Item -ItemType Directory -Force -Path (Join-Path $Dest "scripts") | Out-Null
     Copy-Item -Path (Join-Path $RuntimeScripts "*") -Destination (Join-Path $Dest "scripts") -Recurse -Force
+  }
+
+  $Tools = Join-Path $Source "agent-rules-tools"
+  if (Test-Path -LiteralPath $Tools) {
+    Sync-OwnedFiles -Source $Tools -Destination (Join-Path $Dest "agent-rules-tools") -OwnershipManifest (Join-Path $Dest "agent-rules-tools-manifest.json")
+  }
+  $Policy = Join-Path $Source "model-policy.json"
+  if (Test-Path -LiteralPath $Policy) { Copy-Item -LiteralPath $Policy -Destination (Join-Path $Dest "model-policy.json") -Force }
+  $Native = Join-Path $Source "native"
+  if (Test-Path -LiteralPath $Native) {
+    switch ($Name) {
+      "codex" { Sync-OwnedFiles -Source (Join-Path $Native "agents") -Destination (Join-Path $Dest "agents") -OwnershipManifest (Join-Path $Dest "agent-rules-native-agents.json") }
+      "cursor" { Sync-OwnedFiles -Source (Join-Path $Native "agents") -Destination (Join-Path $Dest "agents") -OwnershipManifest (Join-Path $Dest "agent-rules-native-agents.json") }
+      "grok" {
+        Sync-OwnedFiles -Source (Join-Path $Native "agents") -Destination (Join-Path $Dest "agents") -OwnershipManifest (Join-Path $Dest "agent-rules-native-agents.json")
+        Sync-OwnedFiles -Source (Join-Path $Native "personas") -Destination (Join-Path $Dest "personas") -OwnershipManifest (Join-Path $Dest "agent-rules-native-personas.json")
+      }
+      "antigravity" {
+        Remove-PreviouslyOwnedFiles -Destination (Join-Path $Dest "agent-rules-instructions") -OwnershipManifest (Join-Path $Dest "agent-rules-native-instructions.json")
+        Sync-OwnedFiles -Source (Join-Path $Native "agents") -Destination (Join-Path $Dest "agents") -OwnershipManifest (Join-Path $Dest "agent-rules-native-agents.json")
+      }
+    }
   }
 
   $ContextGraph = Join-Path $Source "context-graph.json"

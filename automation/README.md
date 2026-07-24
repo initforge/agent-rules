@@ -5,10 +5,19 @@
 
 **Prerequisite:** [PowerShell Core](https://github.com/PowerShell/PowerShell) (`pwsh`) on Linux/macOS/Windows.
 
+Native installation maps Codex and Cursor to `agents/`, Grok to `agents/` plus
+`personas/`, and Antigravity to `agents/agent-rules-<role>/agent.md` with inherited host model
+routing (no invented static per-agent pin). Owned-name manifests preserve unrelated user
+definitions. Every runtime also receives `agent-rules-tools/` for portable workctl.
+
+Doctor separates installed structure (`NATIVE_CAPABLE`) from host activation
+(`NATIVE_UNVERIFIED` without a trusted receipt). `MODEL_POLICY_MATCH` means only
+that the installed policy hash matches canonical source, not that a host selected it.
+
 | Script | Mục đích |
 |---|---|
 | `run.sh` | Cross-platform entrypoint: `./automation/run.sh <script-name>` |
-| `01-build-runtime.ps1` | Build `05-generated/runtime-build/` |
+| `01-build-runtime.ps1` | Build `05-generated/runtime-build/`, including model policy, native definitions, portable `workctl` bundle, and SHA-256 manifest |
 | `build-context-graph.ps1` | Generate progressive context graph from canonical rules, skills, projects, platforms and integrations |
 | `context-graph.schema.json` | Contract for graph nodes, routing metadata, ownership and source hashes |
 | `02-install-runtime.ps1` | Cài vào ~/.codex, ~/.grok, ~/.gemini/config, ~/.cursor + doctor; hỗ trợ `AGENT_RULES_SKIP_RUNTIME_HOOKS=1`, `AGENT_RULES_SKIP_INTEGRATION_INSTALL=1` và `AGENT_RULES_SKIP_INTEGRATION_VERIFY=1` cho cập nhật cục bộ/parity nhanh |

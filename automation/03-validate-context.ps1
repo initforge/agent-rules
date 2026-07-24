@@ -3,6 +3,14 @@ $Root = Split-Path -Parent $PSScriptRoot
 $Problems = [System.Collections.Generic.List[string]]::new()
 . (Join-Path $PSScriptRoot "path-compat.ps1")
 
+$NativePolicyTest = Join-Path $PSScriptRoot "test-native-agent-policy.py"
+if (-not (Test-Path -LiteralPath $NativePolicyTest)) {
+  $Problems.Add("Missing native agent policy test: $NativePolicyTest")
+} else {
+  & python $NativePolicyTest
+  if ($LASTEXITCODE -ne 0) { $Problems.Add("Native agent/model policy contract failed") }
+}
+
 $ManifestPath = Join-Path $Root "rules\manifest.yaml"
 $BudgetYaml = if (Test-Path $ManifestPath) { Get-Content -Raw $ManifestPath } else { "" }
 $CoreBudget = 4000

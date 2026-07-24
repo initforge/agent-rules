@@ -1,0 +1,6 @@
+description = "Claim-matched verification role."
+default_capability_mode = "general-purpose"
+model = "grok-4.5"
+reasoning_effort = "medium"
+prompt_file = "prompts/agent-rules-verifier.md"
+default_isolation = "shared"
