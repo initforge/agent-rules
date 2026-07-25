@@ -1,6 +1,6 @@
 # Tích hợp và đồng bộ
 
-**Vai trờ:** Policy integrations + hướng sync canonical.  
+**Vai trò:** Policy integrations + hướng sync canonical.  
 **Ý đồ:** Agent biết tool bắt buộc và không merge ngược tự do.
 
 ## Registry (`integrations/registry.json` + `registry.yaml`)
@@ -13,31 +13,28 @@ Một canonical registry duy nhất cho mọi integration và MCP server.
 | `recommended` | Auto-check; thiếu thì install |
 | `optional` | Không cài mặc định |
 
+**Generated full registry** (including profiles, trusts, capabilities):  
+[05-generated/references/integration-registry.md](../05-generated/references/integration-registry.md)  
+Canonical source: `integrations/registry.json`. Regenerate after changes:
+
+```bash
+python automation/generate-doc-references.py
+```
+
 ### Registry fields
 
-- `id` — canonical identifier (kebab-case)
-- `displayName` — human-readable name
-- `kind` — mcp / tool / adapter / native
-- `policy` — required / recommended / optional
-- `profiles` — profile group membership
-- `source` — upstream origin + version + package info
-- `integrity` — pin status + platform SHA-256 hashes
-- `trust` — advisory-only / declared / adapter-verified / native-live
-- `capabilities` — functional capability classes
-- `triggers` — phrase triggers for skill routing
-- `sideEffects` — side-effect classification
-- `tokenClass` — low / medium / high
-- `permissions` — access level
-- `environment` — required env vars
-- `install` — install/verify/uninstall scripts + type
-- `health` — probe command + expected exit codes
-- `schema` — tool schema source path + generated output
-- `platform` — OS-specific install paths
-- `nativeHosts` — platforms with native support
-- `fallback` — documented fallback when absent
-- `deprecatedAliases` — historical aliases this ID replaces
+Xem schema tại `integrations/registry.yaml` (header comments liệt kê tất cả 21 fields).  
+**Không duplicate danh sách field ở đây** — nguồn chuẩn là registry.yaml.
 
-Baseline: `codebase-memory-mcp` (required), `context7` (recommended), `caveman` (optional).
+### Current integrations (5)
+
+| ID | Policy | Kind |
+|---|---|---|
+| `codebase-memory-mcp` | required | mcp |
+| `context7` | recommended | mcp |
+| `playwright-mcp` | recommended | mcp |
+| `chrome-devtools-mcp` | recommended | mcp |
+| `caveman` | optional | tool |
 
 MCP adapter theo platform: `integrations/*/adapters/{codex.toml,grok.json,antigravity.json,cursor.json}`.
 
