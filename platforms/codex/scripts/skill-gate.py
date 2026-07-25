@@ -420,7 +420,7 @@ def graph_decision(prompt: str) -> dict[str, Any] | None:
         return None
     candidates = [
         RUNTIME_HOME / "context-graph.json",
-        Path(__file__).resolve().parents[3] / "05-generated" / "context-graph.json",
+        Path(__file__).resolve().parents[3] / "generated" / "context-graph.json",
     ]
     graph_path = next((p for p in candidates if p.is_file()), None)
     if not graph_path:

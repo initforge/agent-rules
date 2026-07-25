@@ -13,16 +13,16 @@ agent-rules/
 ├── .github/          CI/CD workflows (GitHub Actions)
 ├── .opencode/        OpenCode agent configuration (local)
 ├── .agent/           Advisory trace, research, tombstones (gitignored)
-├── 05-generated/     Build output — DO NOT EDIT
+├── generated/     Build output — DO NOT EDIT
 ├── AGENTS.md         Repository entry point for agent sessions
 ├── README.md         English landing page
 ├── README-vi.md      Vietnamese landing page
 ├── automation/       Build, install, validate, sync, doctor scripts
-├── guides/           Maintainer documentation
+├── docs/guides/           Maintainer documentation
 ├── integrations/     Required/recommended/optional tool registry
 ├── mcps/             MCP tool JSON schemas (vendor origin)
 ├── platforms/        Per-runtime overlays + platform contracts
-├── projects/         5fedu template pack + known repos registry
+├── profiles/5fedu/projects/         5fedu template pack + known repos registry
 ├── rules/            Always-loaded global context (numbered)
 └── skills/           Lazy-loaded capabilities (flat slugs)
 ```
@@ -143,7 +143,7 @@ agent-rules/
 
 ---
 
-### 2.6 `projects/` — Project-Specific Context
+### 2.6 `profiles/5fedu/projects/` — Project-Specific Context
 
 **Status:** Active  
 **Owner:** 5fedu-maintainer  
@@ -151,7 +151,7 @@ agent-rules/
 
 **5fedu template structure:**
 ```
-projects/5fedu/
+profiles/5fedu/projects/
 ├── AGENTS.md                    Entry point
 ├── 00-context-map.md           Central router
 ├── decisions.md                Generic decisions
@@ -197,7 +197,7 @@ projects/5fedu/
 
 ---
 
-### 2.9 `guides/` — Maintainer Documentation
+### 2.9 `docs/guides/` — Maintainer Documentation
 
 **Status:** Active  
 **Owner:** harness-maintainer  
@@ -207,10 +207,10 @@ Written mostly in Vietnamese. Not rules — documentation for human maintainers.
 
 ---
 
-### 2.10 `05-generated/` — Build Output
+### 2.10 `generated/` — Build Output
 
 **Status:** Generated (DO NOT EDIT)  
-**Canonical Source:** `automation/01-build-runtime.ps1` building from `rules/`, `skills/`, `platforms/`, `guides/`, `automation/model-policy.json`
+**Canonical Source:** `automation/01-build-runtime.ps1` building from `rules/`, `skills/`, `platforms/`, `docs/guides/`, `automation/model-policy.json`
 
 | Path | Description |
 |------|-------------|
@@ -285,7 +285,7 @@ Written mostly in Vietnamese. Not rules — documentation for human maintainers.
 
 | Finding | Detail |
 |---------|--------|
-| `guides/02-knowledge-system.md` describes budget rules | Canonical budget is in `rules/manifest.yaml` (guides are advisory) |
+| `docs/guides/02-knowledge-system.md` describes budget rules | Canonical budget is in `rules/manifest.yaml` (guides are advisory) |
 
 ---
 
@@ -293,8 +293,8 @@ Written mostly in Vietnamese. Not rules — documentation for human maintainers.
 
 | Owner | Directories |
 |-------|-------------|
-| **harness-maintainer** | `rules/`, `skills/` (11 of 15), `automation/`, `platforms/`, `integrations/`, `guides/`, `.github/`, `05-generated/`, root files |
-| **5fedu-maintainer** | `skills/5fedu-*`, `projects/` |
+| **harness-maintainer** | `rules/`, `skills/` (11 of 15), `automation/`, `platforms/`, `integrations/`, `docs/guides/`, `.github/`, `generated/`, root files |
+| **5fedu-maintainer** | `skills/5fedu-*`, `profiles/5fedu/projects/` |
 | **agent-sessions** | `.agent/` |
 | **agent-user** | `.opencode/` |
 | **upstream-vendor** | `mcps/` |
@@ -328,7 +328,7 @@ Written mostly in Vietnamese. Not rules — documentation for human maintainers.
 
 - All files tracked by git are covered by directory-level rules above.
 - `rules/manifest.yaml` references resolve to existing files.
-- `05-generated/` files identify canonical sources (build script + inputs).
+- `generated/` files identify canonical sources (build script + inputs).
 - All 4 platform folders and their install targets are represented.
 - `automation/repository-inventory.json` parses as valid JSON.
 - This markdown document agrees with the JSON inventory.

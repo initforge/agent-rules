@@ -18,7 +18,7 @@ $PlatformHomes = @{
   cursor = Join-Path $UserHome ".cursor"
 }
 $Selected = if ($Platform -eq "all") { @("codex", "grok", "antigravity", "cursor") } else { @($Platform) }
-$BuildRoot = Join-Path $Root "05-generated\runtime-build"
+$BuildRoot = Join-Path $Root "generated\runtime-build"
 $Registry = Get-Content -Raw (Join-Path $Root "integrations\registry.json") | ConvertFrom-Json
 $IntegrationState = @()
 $SharedIntegrations = @{}

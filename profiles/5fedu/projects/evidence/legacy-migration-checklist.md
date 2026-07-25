@@ -1,6 +1,6 @@
 # Legacy migration checklist (Phase 3.5b)
 
-**Gate:** 100% rows PASS trước khi xóa `projects/5fedu/legacy/**` khỏi harness template.
+**Gate:** 100% rows PASS trước khi xóa `profiles/5fedu/projects/legacy/**` khỏi harness template.
 
 **Audit date:** 2026-07-05  
 **Result:** PASS (36/36 sections mapped; legacy deleted after migrate)
@@ -21,7 +21,7 @@
 | `working-format-legacy.md` | Delivery | `domains/ui-delivery.md` | PASS |
 | `working-format-legacy.md` | Khi instruction ít | `evidence/coverage-audit.md`, `00-context-map.md` | PASS |
 | `working-format-legacy.md` | Owner Feedback Gate | `evidence/owner-feedback-lessons.md`, `decisions.md` | PASS |
-| `working-format-legacy.md` | Platform Separation (.agents vs .codex) | `guides/01-runtime-model.md` | PASS |
+| `working-format-legacy.md` | Platform Separation (.agents vs .codex) | `docs/guides/01-runtime-model.md` | PASS |
 | `working-format-legacy.md` | Tiến hóa từ Feedback | `context-evolution-protocol` skill | PASS |
 | `working-format-legacy.md` | Owner Feedback Gate checklist | `evidence/owner-feedback-lessons.md` | PASS |
 | `working-format-legacy.md` | UI & Vận tải (Quy Tắc Cứng) | `domains/references/ui-delivery-detail.md` | PASS |
@@ -54,8 +54,8 @@
 ## Post-delete verification
 
 ```text
-rg "legacy/" projects/5fedu/ skills/ rules/ --glob '*.md'  # 0 active router refs
-Test-Path projects/5fedu/legacy                              # False
+rg "legacy/" profiles/5fedu/projects/ skills/ rules/ --glob '*.md'  # 0 active router refs
+Test-Path profiles/5fedu/projects/legacy                              # False
 automation/audit-5fedu-template-purity.ps1                   # R5 PASS
 ```
 

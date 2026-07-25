@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -37,17 +37,17 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq powershell
       - run: npm ci && npx tsc
-        working-directory: cli
+        working-directory: packages/cli
       - run: node dist/index.js build
-        working-directory: cli
+        working-directory: packages/cli
       - run: node dist/index.js validate
-        working-directory: cli
+        working-directory: packages/cli
       - uses: actions/upload-artifact@v4
         with:
           name: evaluation-build
           path: |
-            05-generated/
-            !05-generated/.gitignore
+            generated/
+            !generated/.gitignore
   benchmark-contracts:
     name: benchmark-contracts
     needs: [build]

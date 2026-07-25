@@ -29,7 +29,7 @@ DEFAULT_CORPUS = BENCHMARK_DIR / "agent-quality-benchmark.json"
 DEFAULT_CORPUS_SCHEMA = BENCHMARK_DIR / "agent-quality-benchmark.schema.json"
 DEFAULT_LIVE_SCHEMA = BENCHMARK_DIR / "live-result.schema.json"
 DEFAULT_TRACE_SCHEMA = ROOT / "automation" / "trace-schema.json"
-DEFAULT_GRAPH = ROOT / "05-generated" / "context-graph.json"
+DEFAULT_GRAPH = ROOT / "generated" / "context-graph.json"
 DEFAULT_EVIDENCE_PROFILES = ROOT / "automation" / "evidence-profiles.json"
 
 

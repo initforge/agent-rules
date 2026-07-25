@@ -16,15 +16,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
       - run: npm ci && npx tsc
-        working-directory: cli
+        working-directory: packages/cli
       - run: node dist/index.js build
-        working-directory: cli
+        working-directory: packages/cli
       - uses: actions/upload-artifact@v4
         with:
           name: runtime-build
-          path: 05-generated/runtime-build/
+          path: generated/runtime-build/
   doctor:
     name: doctor-${{ matrix.platform }}
     needs: [build]
@@ -38,27 +38,27 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
       - name: Restore build artifact
         uses: actions/download-artifact@v4
         with:
           name: runtime-build
-          path: 05-generated/runtime-build/
+          path: generated/runtime-build/
       - run: npm ci && npx tsc
-        working-directory: cli
+        working-directory: packages/cli
       - name: Run doctor
         id: doctor
         continue-on-error: true
         run: |
           node dist/index.js doctor ${{ matrix.platform }} --json > doctor-${{ matrix.platform }}.json 2>&1 || true
           cat doctor-${{ matrix.platform }}.json
-        working-directory: cli
+        working-directory: packages/cli
       - name: Parse and summarize
         id: summary
         shell: python
         run: |
           import json, os
-          path = f"cli/doctor-{os.environ['MATRIX_PLATFORM']}.json"
+           path = f"packages/cli/doctor-{os.environ['MATRIX_PLATFORM']}.json"
           try:
             with open(path) as f:
               data = json.load(f)
@@ -73,7 +73,7 @@ jobs:
         if: always()
         with:
           name: doctor-report-${{ matrix.platform }}
-          path: cli/doctor-${{ matrix.platform }}.json
+          path: packages/cli/doctor-${{ matrix.platform }}.json
           if-no-files-found: ignore
   report:
     name: report

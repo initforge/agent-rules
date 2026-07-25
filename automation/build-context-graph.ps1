@@ -1,6 +1,6 @@
 param(
   [string]$Root = (Split-Path -Parent $PSScriptRoot),
-  [string]$OutputPath = (Join-Path $Root "05-generated\context-graph.json")
+  [string]$OutputPath = (Join-Path $Root "generated\context-graph.json")
 )
 
 $ErrorActionPreference = "Stop"
@@ -238,7 +238,7 @@ foreach ($PlatformDir in Get-ChildItem (Join-Path $Root "platforms") -Directory)
   }
 }
 
-$GuidesRoot = Join-Path $Root "guides"
+$GuidesRoot = Join-Path $Root "docs\guides"
 if (Test-Path -LiteralPath $GuidesRoot) {
   foreach ($Guide in Get-ChildItem $GuidesRoot -Recurse -File) {
     $Rel = Normalize-Path ($Guide.FullName.Substring($Root.Length + 1))
@@ -257,7 +257,7 @@ if (Test-Path -LiteralPath $IntegrationsRoot) {
 
 $Graph = [ordered]@{
   version = 2
-  generated_from = @("rules/manifest.yaml", "skills/**/SKILL.md", "projects/**/AGENTS.md", "projects/**/00-context-map.md", "platforms/*/*-overlay.md", "integrations/registry.json", "guides/**")
+  generated_from = @("rules/manifest.yaml", "skills/**/SKILL.md", "profiles/**/projects/**/AGENTS.md", "profiles/**/projects/**/00-context-map.md", "platforms/*/*-overlay.md", "integrations/registry.json", "docs/guides/**")
   source_of_truth = @{
     rules = "rules/manifest.yaml"
     skills = "SKILL.md frontmatter routing object"

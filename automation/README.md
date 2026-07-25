@@ -1,7 +1,7 @@
 # Automation
 
 **Vai trò:** Build, cài, validate, sync — chạy theo số thứ tự.  
-**Ý đồ:** Script là cầu nối canonical → runtime; không sửa tay `05-generated/`.
+**Ý đồ:** Script là cầu nối canonical → runtime; không sửa tay `generated/`.
 
 **Prerequisite:** [PowerShell Core](https://github.com/PowerShell/PowerShell) (`pwsh`) on Linux/macOS/Windows.
 
@@ -17,7 +17,7 @@ that the installed policy hash matches canonical source, not that a host selecte
 | Script | Mục đích |
 |---|---|
 | `run.sh` | Cross-platform entrypoint: `./automation/run.sh <script-name>` |
-| `01-build-runtime.ps1` | Build `05-generated/runtime-build/`, including model policy, native definitions, portable `workctl` bundle, and SHA-256 manifest |
+| `01-build-runtime.ps1` | Build `generated/runtime-build/`, including model policy, native definitions, portable `workctl` bundle, and SHA-256 manifest |
 | `build-context-graph.ps1` | Generate progressive context graph from canonical rules, skills, projects, platforms and integrations |
 | `context-graph.schema.json` | Contract for graph nodes, routing metadata, ownership and source hashes |
 | `02-install-runtime.ps1` | Cài vào ~/.codex, ~/.grok, ~/.gemini/config (Antigravity), ~/.cursor + doctor; hỗ trợ `AGENT_RULES_SKIP_RUNTIME_HOOKS=1`, `AGENT_RULES_SKIP_INTEGRATION_INSTALL=1` và `AGENT_RULES_SKIP_INTEGRATION_VERIFY=1` cho cập nhật cục bộ/parity nhanh |
@@ -56,7 +56,7 @@ that the installed policy hash matches canonical source, not that a host selecte
 | `install-pre-commit-hook.sh` | Cài pre-commit vào repo hiện tại, path chỉ định, hoặc `--global` (core.hooksPath) |
 | `11-install-runtime-hooks.sh` | Cài Codex/Antigravity/Grok/Cursor hooks + pre-commit; hook chỉ route/nhắc/ghi native receipt và fail-open |
 | `13-cutover-context-routing.ps1` | Bật strict graph routing sau conformance; ghi graph + contract hashes vào `skill-state/routing-mode.json` |
-| `generate-doc-references.py` | Generate volatile reference docs (`05-generated/references/`) từ canonical registry, manifests, schemas, platform runtime.yaml |
+| `generate-doc-references.py` | Generate volatile reference docs (`generated/references/`) từ canonical registry, manifests, schemas, platform runtime.yaml |
 
 ## Linux / macOS
 

@@ -1,6 +1,6 @@
 param(
   [string]$Root = (Split-Path -Parent $PSScriptRoot),
-  [string]$OutputDir = (Join-Path (Split-Path -Parent $PSScriptRoot) "05-generated")
+  [string]$OutputDir = (Join-Path (Split-Path -Parent $PSScriptRoot) "generated")
 )
 
 $ErrorActionPreference = "Stop"
@@ -93,7 +93,7 @@ $CLines = New-Object System.Collections.ArrayList
 [void]$CLines.Add("")
 [void]$CLines.Add("**Status values:** native | emulated | unsupported | unverified")
 [void]$CLines.Add("")
-[void]$CLines.Add("See full matrix with per-dimension status: guides/06-platform-capability.md")
+[void]$CLines.Add("See full matrix with per-dimension status: docs/guides/06-platform-capability.md")
 $Body = $CLines -join "`r`n"
 Write-ReferenceDoc (Join-Path $RefDir "capability-matrix.md") "Capability Matrix" $Body
 
@@ -201,7 +201,7 @@ if (Test-Path $RegPath2) {
 
 [void]$DepLines.Add("| plans/ (legacy folder) | .agent/plans/ | validate-context.ps1 |")
 [void]$DepLines.Add("| 00-index.md (legacy always-on) | 00-bootstrap.md | validate-context.ps1 |")
-[void]$DepLines.Add("| Gemini CLI (product reference) | Antigravity (runtime binary is gemini) | guides/06-platform-capability.md |")
+[void]$DepLines.Add("| Gemini CLI (product reference) | Antigravity (runtime binary is gemini) | docs/guides/06-platform-capability.md |")
 
 $Body = $DepLines -join "`r`n"
 Write-ReferenceDoc (Join-Path $RefDir "deprecation-list.md") "Deprecation List" $Body

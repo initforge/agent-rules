@@ -6,7 +6,7 @@
 ## Quy tắc vàng
 
 ```text
-agent-rules/projects/5fedu/  →  template (copy qua installer)
+agent-rules/profiles/5fedu/projects/  →  template (copy qua installer)
 <repo>/context/5fedu/        →  context sống (chỉ sau khi cài vào repo)
 ```
 
@@ -19,7 +19,7 @@ agent-rules/projects/5fedu/  →  template (copy qua installer)
 | `Tah-app` | `tah-app` | React/Vite + `5f-template-ket-noi-supabase` |
 | `nostime` | `nostime` | Next.js legacy + overlay `archive/nostime/` |
 
-Chi tiết: [`known-5fedu-repos.md`](../known-5fedu-repos.md).
+Chi tiết: [`known-repos.md`](../known-repos.md).
 
 ## Cài vào repo
 

@@ -42,8 +42,8 @@
         "expectedExitCodes": [0]
       },
       "schema": {
-        "source": "mcps/codebase-memory/tools/",
-        "generated": "05-generated/mcps/codebase-memory/"
+        "source": "integrations/required/codebase-memory-mcp/tools/",
+        "generated": "generated/integrations/codebase-memory/"
       },
       "platform": {
         "windows": "%LOCALAPPDATA%\\Programs\\codebase-memory-mcp",
@@ -89,7 +89,7 @@
         "expectedExitCodes": [0]
       },
       "schema": {
-        "source": "mcps/context7/tools/"
+        "source": "integrations/recommended/context7/tools/"
       },
       "nativeHosts": ["codex", "grok", "antigravity", "cursor", "opencode"],
       "fallback": "official primary-source documentation or web research",
@@ -131,7 +131,7 @@
         "expectedExitCodes": [0]
       },
       "schema": {
-        "source": "mcps/playwright/tools/"
+        "source": "integrations/recommended/playwright-mcp/tools/"
       },
       "nativeHosts": ["codex", "grok", "antigravity", "cursor", "opencode"],
       "fallback": "report the live-interaction proof gap; do not infer it from build output",
@@ -173,7 +173,7 @@
         "expectedExitCodes": [0]
       },
       "schema": {
-        "source": "mcps/chrome-devtools/tools/"
+        "source": "integrations/recommended/chrome-devtools-mcp/tools/"
       },
       "nativeHosts": ["codex", "grok", "antigravity", "cursor", "opencode"],
       "fallback": "browser console/network evidence when a host-native DevTools session is available",

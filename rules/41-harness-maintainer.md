@@ -17,7 +17,7 @@ Always edit canonical source first. Build outputs and global runtimes are genera
 
 ## 2. Sync Governance (Outbound & Inbound)
 - **Outbound (Canonical -> Runtime/Project):**
-  - Build: Run `automation/01-build-runtime.ps1` to populate `05-generated/runtime-build/`.
+  - Build: Run `automation/01-build-runtime.ps1` to populate `generated/runtime-build/`.
   - Install: Run `automation/02-install-runtime.ps1` (wipes target before copy; does not retain untracked files outside the manifest).
   - Doctor: Run `automation/09-doctor.ps1` post-install to verify integrity.
 - **Inbound (Target Repo -> Canonical):**

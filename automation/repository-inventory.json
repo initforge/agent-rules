@@ -26,24 +26,24 @@
       ]
     },
     {
-      "path": "guides/",
+      "path": "docs/guides/",
       "type": "documentation",
       "owner": "harness-maintainer",
       "canonical_source": null,
       "public": true,
       "status": "active",
-      "recommended_future_location": "guides/",
+      "recommended_future_location": "docs/guides/",
       "consumers": ["maintainers", "new-contributors"],
       "confidence": "high",
       "evidence": "Listed in AGENTS.md as canonical doc path",
       "entries": [
-        { "path": "guides/README.md", "type": "documentation", "status": "active", "consumers": ["new-contributors"] },
-        { "path": "guides/00-system-map.md", "type": "documentation", "status": "active", "consumers": ["all-agents"] },
-        { "path": "guides/01-runtime-model.md", "type": "documentation", "status": "active", "consumers": ["maintainers"] },
-        { "path": "guides/02-knowledge-system.md", "type": "documentation", "status": "active", "consumers": ["maintainers"] },
-        { "path": "guides/03-integrations-and-sync.md", "type": "documentation", "status": "active", "consumers": ["maintainers"] },
-        { "path": "guides/04-maintenance-and-risks.md", "type": "documentation", "status": "active", "consumers": ["maintainers"] },
-        { "path": "guides/05-maturity.md", "type": "documentation", "status": "active", "consumers": ["maintainers"] }
+        { "path": "docs/guides/README.md", "type": "documentation", "status": "active", "consumers": ["new-contributors"] },
+        { "path": "docs/guides/00-system-map.md", "type": "documentation", "status": "active", "consumers": ["all-agents"] },
+        { "path": "docs/guides/01-runtime-model.md", "type": "documentation", "status": "active", "consumers": ["maintainers"] },
+        { "path": "docs/guides/02-knowledge-system.md", "type": "documentation", "status": "active", "consumers": ["maintainers"] },
+        { "path": "docs/guides/03-integrations-and-sync.md", "type": "documentation", "status": "active", "consumers": ["maintainers"] },
+        { "path": "docs/guides/04-maintenance-and-risks.md", "type": "documentation", "status": "active", "consumers": ["maintainers"] },
+        { "path": "docs/guides/05-maturity.md", "type": "documentation", "status": "active", "consumers": ["maintainers"] }
       ]
     },
     {
@@ -126,22 +126,22 @@
       ]
     },
     {
-      "path": "mcps/",
+      "path": "integrations/",
       "type": "runtime adapter",
       "owner": "upstream-vendor",
       "canonical_source": "vendor MCP server definitions",
       "public": true,
       "status": "active",
-      "recommended_future_location": "mcps/",
+      "recommended_future_location": "integrations/",
       "consumers": ["codex", "cursor", "grok", "antigravity"],
       "confidence": "medium",
       "evidence": "Tool JSON schemas for MCP servers; source unknown",
       "entries": [
-        { "path": "mcps/codebase-memory/", "type": "runtime adapter", "status": "active", "server": "codebase-memory-mcp", "tool_count": 13, "note": "Canonical identity; underscore variant removed in 4dccb80+2" },
-        { "path": "mcps/chrome-devtools/", "type": "runtime adapter", "status": "active", "server": "chrome-devtools-mcp", "tool_count": 29 },
-        { "path": "mcps/context7/", "type": "runtime adapter", "status": "active", "server": "context7-mcp", "tool_count": 2 },
-        { "path": "mcps/playwright/", "type": "runtime adapter", "status": "active", "server": "playwright-mcp", "tool_count": 27 },
-        { "path": "mcps/tasks/", "type": "runtime adapter", "status": "active", "server": "tasks-mcp", "tool_count": 7 }
+        { "path": "integrations/codebase-memory/", "type": "runtime adapter", "status": "active", "server": "codebase-memory-mcp", "tool_count": 13, "note": "Canonical identity; underscore variant removed in 4dccb80+2" },
+        { "path": "integrations/chrome-devtools/", "type": "runtime adapter", "status": "active", "server": "chrome-devtools-mcp", "tool_count": 29 },
+        { "path": "integrations/context7/", "type": "runtime adapter", "status": "active", "server": "context7-mcp", "tool_count": 2 },
+        { "path": "integrations/playwright/", "type": "runtime adapter", "status": "active", "server": "playwright-mcp", "tool_count": 27 },
+        { "path": "integrations/tasks/", "type": "runtime adapter", "status": "active", "server": "tasks-mcp", "tool_count": 7 }
       ]
     },
     {
@@ -166,21 +166,21 @@
       ]
     },
     {
-      "path": "projects/",
+      "path": "profiles/5fedu/projects/",
       "type": "project-specific context",
       "owner": "5fedu-maintainer",
       "canonical_source": null,
       "public": true,
       "status": "active",
-      "recommended_future_location": "projects/",
+      "recommended_future_location": "profiles/5fedu/projects/",
       "consumers": ["08-install-5fedu-context.ps1", "15-sync-project-agents.ps1", "5fedu-project skill"],
       "confidence": "high",
       "evidence": "Referenced by AGENTS.md; consumed by 5fedu installer",
       "entries": [
-        { "path": "projects/README.md", "type": "documentation", "status": "active" },
-        { "path": "projects/known-5fedu-repos.md", "type": "documentation", "status": "active" },
-        { "path": "projects/5fedu/", "type": "project-specific context", "status": "active", "template": true },
-        { "path": "projects/context-template/", "type": "project-specific context", "status": "active", "template": true }
+        { "path": "profiles/5fedu/projects/README.md", "type": "documentation", "status": "active" },
+        { "path": "profiles/5fedu/known-repos.md", "type": "documentation", "status": "active" },
+        { "path": "profiles/5fedu/projects/", "type": "project-specific context", "status": "active", "template": true },
+        { "path": "profiles/5fedu/projects/context-template/", "type": "project-specific context", "status": "active", "template": true }
       ]
     },
     {
@@ -258,22 +258,22 @@
       ]
     },
     {
-      "path": "05-generated/",
+      "path": "generated/",
       "type": "generated output",
       "owner": "harness-maintainer (build output)",
-      "canonical_source": "automation/01-build-runtime.ps1 + rules/ + skills/ + platforms/ + guides/ + automation/model-policy.json",
+      "canonical_source": "automation/01-build-runtime.ps1 + rules/ + skills/ + platforms/ + docs/guides/ + automation/model-policy.json",
       "public": true,
       "status": "generated",
-      "recommended_future_location": "05-generated/",
+      "recommended_future_location": "generated/",
       "consumers": ["02-install-runtime.ps1", "09-doctor.ps1"],
       "confidence": "high",
       "evidence": "Marked DO NOT EDIT in AGENTS.md; regenerated by build script",
       "entries": [
-        { "path": "05-generated/context-graph.json", "type": "generated output", "canonical_source": "automation/build-context-graph.ps1 + skills/ + projects/ + rules/manifest.yaml" },
-        { "path": "05-generated/runtime-build/codex/", "type": "generated output", "canonical_source": "01-build-runtime.ps1 + rules/ + skills/ + platforms/codex/" },
-        { "path": "05-generated/runtime-build/grok/", "type": "generated output", "canonical_source": "01-build-runtime.ps1 + rules/ + skills/ + platforms/grok/" },
-        { "path": "05-generated/runtime-build/antigravity/", "type": "generated output", "canonical_source": "01-build-runtime.ps1 + rules/ + skills/ + platforms/antigravity/" },
-        { "path": "05-generated/runtime-build/cursor/", "type": "generated output", "canonical_source": "01-build-runtime.ps1 + rules/ + skills/ + platforms/cursor/" }
+        { "path": "generated/context-graph.json", "type": "generated output", "canonical_source": "automation/build-context-graph.ps1 + skills/ + profiles/5fedu/projects/ + rules/manifest.yaml" },
+        { "path": "generated/runtime-build/codex/", "type": "generated output", "canonical_source": "01-build-runtime.ps1 + rules/ + skills/ + platforms/codex/" },
+        { "path": "generated/runtime-build/grok/", "type": "generated output", "canonical_source": "01-build-runtime.ps1 + rules/ + skills/ + platforms/grok/" },
+        { "path": "generated/runtime-build/antigravity/", "type": "generated output", "canonical_source": "01-build-runtime.ps1 + rules/ + skills/ + platforms/antigravity/" },
+        { "path": "generated/runtime-build/cursor/", "type": "generated output", "canonical_source": "01-build-runtime.ps1 + rules/ + skills/ + platforms/cursor/" }
       ]
     },
     {
@@ -292,8 +292,8 @@
     "duplicates_resolved": [
       {
         "severity": "medium",
-        "finding": "mcps/codebase_memory/ and mcps/codebase-memory/ were identical (13 tool JSONs each)",
-        "resolution": "Removed mcps/codebase_memory/; canonical identity is mcps/codebase-memory/"
+        "finding": "integrations/codebase_memory/ and integrations/codebase-memory/ were identical (13 tool JSONs each)",
+        "resolution": "Removed integrations/codebase_memory/; canonical identity is integrations/codebase-memory/"
       }
     ],
     "stale_path_references_resolved": [
@@ -316,8 +316,8 @@
     "unclear_owner": [
       {
         "severity": "medium",
-        "finding": "mcps/ tool JSONs have unknown upstream source; no manifest or README documents provenance",
-        "paths": ["mcps/codebase-memory/", "mcps/chrome-devtools/", "mcps/context7/", "mcps/playwright/", "mcps/tasks/"]
+        "finding": "integrations/ tool JSONs have unknown upstream source; no manifest or README documents provenance",
+        "paths": ["integrations/codebase-memory/", "integrations/chrome-devtools/", "integrations/context7/", "integrations/playwright/", "integrations/tasks/"]
       },
       {
         "severity": "low",
@@ -367,14 +367,14 @@
     "multiple_sources_of_truth_same_contract": [
       {
         "severity": "low",
-        "finding": "guides/02-knowledge-system.md describes budget rules; budgets are canonical in rules/manifest.yaml",
-        "note": "guides are documentation with advisory note not to duplicate budgets"
+        "finding": "docs/guides/02-knowledge-system.md describes budget rules; budgets are canonical in rules/manifest.yaml",
+        "note": "docs/guides are documentation with advisory note not to duplicate budgets"
       }
     ],
     "orphan_files_no_manifest_ref": [
       {
         "severity": "info",
-        "finding": "mcps/ tool JSONs are not referenced by any manifest, build script, or integration registry",
+        "finding": "integrations/ tool JSONs are not referenced by any manifest, build script, or integration registry",
         "recommendation": "Either add a manifest reference or move to an integration subdirectory"
       },
       {
@@ -389,8 +389,8 @@
     "total_generated_files": 299,
     "total_gitignored_files": 1469,
     "top_level_directories": 12,
-    "canonical_source_dirs": ["rules/", "skills/", "platforms/", "projects/", "guides/", "integrations/", "automation/"],
-    "generated_dirs": ["05-generated/"],
+    "canonical_source_dirs": ["rules/", "skills/", "platforms/", "profiles/5fedu/projects/", "docs/guides/", "integrations/", "automation/"],
+    "generated_dirs": ["generated/"],
     "advisory_dirs": [".agent/"],
     "confidence_distribution": {
       "high": "85%",

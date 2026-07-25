@@ -181,7 +181,7 @@ Use more files only when each file has real depth. Avoid `01-start-here.md` if R
 For agent/rules repos:
 
 ```text
-guides/
+docs/guides/
   00-system-map.md
   01-runtime-model.md
   02-knowledge-system.md

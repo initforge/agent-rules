@@ -2,13 +2,13 @@ param([string]$Root = (Split-Path -Parent $PSScriptRoot))
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "path-compat.ps1")
 
-$BuildRoot = Join-Path $Root "05-generated\runtime-build"
+$BuildRoot = Join-Path $Root "generated\runtime-build"
 if (Test-Path $BuildRoot) { Remove-Item -LiteralPath $BuildRoot -Recurse -Force }
 
 $Platforms = @("codex", "grok", "antigravity", "cursor")
 $Core = Join-Path $Root "rules"
 $SkillsRoot = Join-Path $Root "skills"
-$SystemMap = Join-Path $Root "guides"
+$SystemMap = Join-Path $Root "docs\guides"
 $ManifestText = Get-Content -Raw -Encoding UTF8 (Join-Path $Core "manifest.yaml")
 $ModelPolicy = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "automation\model-policy.json") | ConvertFrom-Json
 $ManifestRules = @([regex]::Matches($ManifestText, '(?m)^\s+-\s+(\S+\.md)\s*$') | ForEach-Object { $_.Groups[1].Value })
@@ -16,7 +16,7 @@ $GeneratedCoreImports = ($ManifestRules | ForEach-Object { "@__CODEX_HOME__/rule
 $UserHome = if ($env:USERPROFILE) { $env:USERPROFILE } elseif ($env:HOME) { $env:HOME } else { throw "Cannot resolve user home directory" }
 $CodexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $UserHome ".codex" }
 $ContextGraphScript = Join-Path $PSScriptRoot "build-context-graph.ps1"
-$ContextGraphPath = Join-Path $Root "05-generated\context-graph.json"
+$ContextGraphPath = Join-Path $Root "generated\context-graph.json"
 if (Test-Path -LiteralPath $ContextGraphScript) {
   & $ContextGraphScript -Root $Root -OutputPath $ContextGraphPath
 }
@@ -144,7 +144,7 @@ Get-ChildItem $SkillsRoot -Directory | ForEach-Object {
     version = 1
     platform = $Platform
     generatedFrom = [pscustomobject]@{
-      docs = "guides"
+      docs = "docs/guides"
       core = "rules"
       skills = "skills"
       overlays = "platforms/$Platform"

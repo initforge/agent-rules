@@ -1,11 +1,11 @@
 # 5fedu context map (skill reference)
 
 **Vai trò:** Tóm tắt cho skill `5fedu-project` — chi tiết đầy đủ ở **repo dự án** sau cài.  
-**Ý đồ:** Agent code app đọc `<repo>/context/5fedu/` — không đọc `agent-rules/projects/5fedu/`.
+**Ý đồ:** Agent code app đọc `<repo>/context/5fedu/` — không đọc `agent-rules/profiles/5fedu/projects/`.
 
 ## Dự án thật
 
-Chỉ **tah-app**, **nostime** — `agent-rules/projects/known-5fedu-repos.md`.
+Chỉ **tah-app**, **nostime** — `agent-rules/profiles/5fedu/known-repos.md`.
 
 ## Canonical paths (trong repo sau cài)
 

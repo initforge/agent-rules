@@ -6,18 +6,18 @@
 
 | Folder | Role | Taxonomy |
 |---|---|---|
-| `guides/` | Maintainer docs and system map | stable (human-maintained) |
+| `docs/guides/` | Maintainer docs and system map | stable (human-maintained) |
 | `rules/` | Always-loaded global context (numbered = load priority) | stable |
 | `skills/` | Lazy-loaded capabilities (flat slugs) | stable |
 | `integrations/` | Required / recommended / optional tools | stable |
-| `projects/` | Project context templates | stable |
+| `profiles/5fedu/projects/` | Project context templates | stable |
 | `profiles/` | Optional organization profiles (e.g., `5fedu`) | stable |
 | `platforms/` | Per-runtime overlays (Codex, Grok, Antigravity, Cursor) | stable |
 | `automation/` | Build, install, validate, sync, doctor | stable |
-| `05-generated/` | Build output — do not edit | generated (machine-only) |
+| `generated/` | Build output — do not edit | generated (machine-only) |
 | `.agent/` | Advisory trace log, research notes, tombstones (gitignored) | ephemeral |
 
-**Integrations** — see [generated full registry](05-generated/references/integration-registry.md) for all 5 entries (required/recommended/optional) with profiles, trusts, and capabilities. Canonical source: `integrations/registry.json`. Must regenerate after registry changes:
+**Integrations** — see [generated full registry](generated/references/integration-registry.md) for all 5 entries (required/recommended/optional) with profiles, trusts, and capabilities. Canonical source: `integrations/registry.json`. Must regenerate after registry changes:
 
 ```bash
 python automation/generate-doc-references.py
@@ -44,7 +44,7 @@ Linux/macOS (requires [PowerShell Core](https://github.com/PowerShell/PowerShell
 
 Install targets: `~/.codex`, `~/.grok`, `~/.gemini/config` (Antigravity), `~/.cursor`. MCP format differs per platform — see `platforms/*/runtime.yaml`.
 
-**Important:** The path `~/.gemini/config` is the Antigravity runtime home, not Gemini CLI. The `gemini` CLI binary is the Antigravity host runtime. See [platform capability matrix](guides/06-platform-capability.md) for explicit depth per product.
+**Important:** The path `~/.gemini/config` is the Antigravity runtime home, not Gemini CLI. The `gemini` CLI binary is the Antigravity host runtime. See [platform capability matrix](docs/guides/06-platform-capability.md) for explicit depth per product.
 
 **Grok rules path:** install writes lean always-on to `~/.grok/rules` (manifest) and `~/.grok/.grok/rules` (native inject). Legacy dual trees are archived on install; doctor fails if they return. Restart the Grok session after install.
 
@@ -52,10 +52,10 @@ Install targets: `~/.codex`, `~/.grok`, `~/.gemini/config` (Antigravity), `~/.cu
 
 ## Read next
 
-1. [System map](guides/00-system-map.md)
-2. [Runtime model](guides/01-runtime-model.md)
-3. [Platform capability matrix](guides/06-platform-capability.md)
+1. [System map](docs/guides/00-system-map.md)
+2. [Runtime model](docs/guides/01-runtime-model.md)
+3. [Platform capability matrix](docs/guides/06-platform-capability.md)
 4. Vietnamese overview: [README-vi.md](README-vi.md)
-5. 5fedu projects: [projects/5fedu/AGENTS.md](projects/5fedu/AGENTS.md) (enable profile first)
+5. 5fedu projects: [profiles/5fedu/projects/AGENTS.md](profiles/5fedu/projects/AGENTS.md) (enable profile first)
 
-**Governance:** Edit `rules/` and `skills/` here only — not `05-generated/` or installed mirrors. Reverse sync via `automation/07-import-reviewed-changes.ps1`.
+**Governance:** Edit `rules/` and `skills/` here only — not `generated/` or installed mirrors. Reverse sync via `automation/07-import-reviewed-changes.ps1`.

@@ -11,7 +11,7 @@ $ErrorActionPreference = "Stop"
 
 $Project = (Resolve-Path $ProjectRoot).Path
 $RepoRoot = Split-Path -Parent $PSScriptRoot
-$Template = Join-Path $RepoRoot "projects\5fedu"
+$Template = Join-Path $RepoRoot "profiles\5fedu\projects"
 $Target = Join-Path $Project "context\5fedu"
 $ContextParent = Split-Path -Parent $Target
 
@@ -51,11 +51,11 @@ function Set-ProjectPointers {
 
 Canonical project context: ``$PointerEntry``.
 
-Load from **this repo only** - never from ``agent-rules/projects/5fedu/`` (template source).
+Load from **this repo only** - never from ``agent-rules/profiles/5fedu/projects/`` (template source).
 
 Project-specific facts (sheets, Supabase, decisions): ``context/5fedu/project-local/`` - installer never overwrites this folder.
 
-Known 5fedu repos: tah-app, nostime - see agent-rules ``projects/known-5fedu-repos.md``.
+Known 5fedu repos: tah-app, nostime - see agent-rules ``profiles/5fedu/known-repos.md``.
 "@
   foreach ($Adapter in @(".agents", ".codex")) {
     $Dir = Join-Path $Project $Adapter
