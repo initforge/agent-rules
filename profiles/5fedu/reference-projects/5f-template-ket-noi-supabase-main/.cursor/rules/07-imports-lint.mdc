@@ -1,0 +1,32 @@
+---
+description: Import path alias, Supabase static imports, and lint CI gate
+alwaysApply: true
+---
+
+# Imports & Lint Gate
+
+## Path alias (required)
+
+- Cross-folder imports: **`@/*`** — never `../../*` or deeper (ESLint `no-restricted-imports` **error**).
+- Within the same feature entity: relative `./` and `../` OK (e.g. `../core/schema`, `./chuc-vu-form`).
+- Repair bulk debt: `node scripts/fix-deep-imports.mjs` · regression check: `npm run lint:imports:check`.
+
+## Supabase singleton modules (static only)
+
+- **`@/lib/supabase/client`** — `getSupabase()` via top-level `import`, not `import()`.
+- **`@/lib/supabase/auth`** — `getAuthService()` via top-level `import`, not `import()`.
+- Dynamic import is banned (`no-restricted-syntax`) unless an entire lazy route subtree avoids static imports of the same module.
+
+## Before merge
+
+```bash
+npm run lint:ci   # eslint . --max-warnings 0
+npm run test
+npm run build
+```
+
+Pre-commit runs `lint-staged` on staged `*.{ts,tsx}` only.
+
+## New module checklist
+
+See `docs/checklist-module.md` § 1d. Skill: `.cursor/skills/import-lint/SKILL.md`.

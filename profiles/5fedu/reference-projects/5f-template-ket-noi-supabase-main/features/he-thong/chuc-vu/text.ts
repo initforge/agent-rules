@@ -1,0 +1,98 @@
+/** Chức vụ */
+export const position = {
+  "title": "Chức vụ",
+  "deleteTitle": "Xóa chức vụ",
+  "deleteMessage": "Bạn có chắc chắn muốn xóa chức vụ này không?",
+  "bulkDeleteTitle": "Xóa nhiều chức vụ",
+  "bulkDeleteMessage": "Bạn có chắc chắn muốn xóa {{count}} chức vụ đã chọn?",
+  "statusChangeTitle": "Chuyển trạng thái chức vụ",
+  "statusChangeMessage": "Bạn có muốn chuyển trạng thái {{count}} chức vụ sang",
+  "noExportData": "Không có dữ liệu để xuất",
+  "exportCode": "Mã chức vụ",
+  "exportName": "Tên chức vụ",
+  "exportDesc": "Mô tả",
+  "exportStatus": "Trạng thái",
+  "exportSuccess": "Xuất file thành công",
+  "importDeveloping": "Chức năng Import đang phát triển",
+  "importTemplateName": "Mau_Import_Chuc_Vu",
+  "active": "Hoạt động",
+  "inactive": "Ngừng",
+  "noDescription": "Chưa định nghĩa",
+  "subtitle": "Hạng nhân sự",
+  "noDescFull": "Không có dữ liệu mô tả",
+  "loading": "Đang tải danh sách chức vụ...",
+  "footerRecords": "dòng",
+  "toolbar": {
+    "group": "Nhóm",
+    "groupAll": "Tất cả nhóm",
+    "level": "Cấp bậc",
+    "levelLabel": "Cấp {{value}}"
+  },
+  "empty": "Chưa có chức vụ nào",
+  "emptyHint": "Hãy tạo chức vụ đầu tiên để gán cho nhân viên.",
+  "code": "Mã số",
+  "name": "Tên chức vụ",
+  "form": {
+    "editTitle": "Chỉnh sửa Chức vụ",
+    "createTitle": "Thêm Chức vụ mới",
+    "editSubtitle": "Cập nhật thông tin chức vụ hiện có",
+    "createSubtitle": "Thiết lập vị trí công việc mới",
+    "generalInfo": "Thông tin chung",
+    "code": "Mã chức vụ",
+    "codePlaceholder": "VD: TP_IT",
+    "name": "Tên chức vụ",
+    "namePlaceholder": "VD: Trưởng phòng CNTT",
+    "level": "Cấp bậc",
+    "levelPlaceholder": "VD: 1, 2, 3...",
+    "department": "Phòng ban",
+    "departmentPlaceholder": "Chọn phòng ban...",
+    "description": "Mô tả",
+    "descriptionPlaceholder": "Mô tả nhiệm vụ, trách nhiệm...",
+    "status": "Trạng thái"
+  },
+  "store": {
+    "orderCol": "Thứ tự",
+    "codeCol": "Mã chức vụ",
+    "nameCol": "Tên chức vụ",
+    "levelCol": "Cấp bậc",
+    "deptCol": "Phòng ban",
+    "descCol": "Mô tả",
+    "statusCol": "Trạng thái",
+    "updatedCol": "Cập nhật cuối"
+  },
+  "validation": {
+    "codeMin": "Mã chức vụ phải có ít nhất 2 ký tự",
+    "codeMax": "Mã chức vụ tối đa 50 ký tự",
+    "codeFormat": "Mã chỉ chứa chữ hoa, số và gạch dưới (VD: TP_KINH_DOANH)",
+    "nameMin": "Tên chức vụ phải có ít nhất 3 ký tự",
+    "nameMax": "Tên chức vụ quá dài",
+    "descMax": "Mô tả tối đa 500 ký tự",
+    "statusInvalid": "Trạng thái không hợp lệ",
+    "levelInvalid": "Cấp bậc phải là số nguyên từ 0 đến 32767"
+  },
+  "toast": {
+    "createSuccess": "Tạo chức vụ thành công",
+    "updateSuccess": "Cập nhật thành công",
+    "statusUpdate": "Đã cập nhật trạng thái {{count}} bản ghi",
+    "deleteSuccess": "Đã xóa thành công {{count}} chức vụ",
+    "importSuccess": "Đã nhập {{count}} chức vụ"
+  },
+  "service": {
+    "notFound": "Chức vụ không tồn tại"
+  },
+  "detail": {
+    "title": "Chi tiết chức vụ",
+    "subtitle": "Mã chức vụ",
+    "activate": "Kích hoạt",
+    "deactivate": "Ngưng",
+    "basicInfo": "Thông tin cơ bản",
+    "systemInfo": "Thông tin hệ thống",
+    "description": "Mô tả",
+    "level": "Cấp bậc",
+    "department": "Phòng ban",
+    "order": "Thứ tự hiển thị",
+    "updated": "Cập nhật",
+    "createdAt": "Được tạo lúc",
+    "positionCount": "{{count}} chức vụ"
+  }
+} as const;

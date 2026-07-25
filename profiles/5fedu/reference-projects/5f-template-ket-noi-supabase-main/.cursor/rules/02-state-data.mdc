@@ -1,0 +1,139 @@
+---
+description: TanStack Query v5 and Zustand state management patterns for 5F ERP
+alwaysApply: true
+---
+
+# State & Data — TanStack Query v5 + Zustand
+
+## Separation of concerns
+
+| Concern | Tool | Location |
+|---------|------|----------|
+| Server/async data | TanStack Query v5 | `features/*/hooks/` |
+| Client/UI state (filters, pagination, sort, selection) | Zustand | `features/*/store/` |
+| Query key registry | Centralized | `lib/query-keys.ts` |
+| Shared query config | Centralized | `lib/supabase/query-config.ts` |
+
+**NEVER** store server data in Zustand. **NEVER** use Zustand for data that comes from Supabase/API.
+
+## Query keys
+
+- All query keys live in `lib/query-keys.ts` — no magic string literals scattered in hooks
+- Use factory functions: `queryKeys.employees.detail(id)`, `queryKeys.employees.page(params)`
+- Invalidate with the narrowest key that covers the change:
+  - After create/update/delete list item → patch cache or invalidate `queryKeys.<entity>.all`
+  - After count change → invalidate `queryKeys.<entity>.count`
+  - Server-paginated lists → invalidate prefix keys (e.g. `queryKeys.employees.pagePrefix`), **never** the factory function (`queryKeys.employees.page`)
+
+## Invalidate prefix keys (required)
+
+TanStack Query matches by prefix. For parameterized list keys, register a prefix constant:
+
+```ts
+pagePrefix: ['employees', 'page'] as const,
+page: (params) => ['employees', 'page', params] as const,
+```
+
+```ts
+// ✅ Correct
+queryClient.invalidateQueries({ queryKey: queryKeys.employees.pagePrefix });
+
+// ❌ Wrong — passes a function, not a key array
+queryClient.invalidateQueries({ queryKey: queryKeys.employees.page });
+```
+
+Invalidate hierarchy: patch list cache (`setQueryData` / `setQueriesData`) → invalidate count/page prefix → avoid `invalidate all` except bulk/import.
+
+## Query options factories
+
+When the same query is used in **≥2 places** (hook + prefetch, or multiple hooks), export `queryOptions()` from `features/*/queries/*.ts`:
+
+```ts
+import { queryOptions } from '@tanstack/react-query';
+
+export function departmentsQueryOptions() {
+  return queryOptions({
+    queryKey: queryKeys.departments.all,
+    queryFn: getDepartments,
+    ...masterDataQueryOptions,
+  });
+}
+```
+
+Reuse in hooks: `useQuery(departmentsQueryOptions())` and prefetch: `queryClient.prefetchQuery(departmentsQueryOptions())`.
+
+## Query options (shared stale/gc)
+
+Use shared options from `lib/supabase/query-config.ts`:
+
+```ts
+import {
+  authSensitiveQueryOptions,
+  listQueryOptions,
+  masterDataQueryOptions,
+} from '@/lib/supabase/query-config';
+import { queryKeys } from '@/lib/query-keys';
+
+// List / transaction data
+useQuery({ queryKey: queryKeys.employees.detail(id), queryFn: ..., ...listQueryOptions });
+
+// Master data (departments, positions — changes rarely)
+useQuery({ queryKey: queryKeys.departments.all, queryFn: ..., ...masterDataQueryOptions });
+
+// Session quyền — admin đổi quyền phải có hiệu lực sau reload
+useQuery({ queryKey: queryKeys.permissionGrants.byPosition(id), queryFn: ..., ...authSensitiveQueryOptions });
+```
+
+- `listQueryOptions`: staleTime 5 min, gcTime 30 min
+- `masterDataQueryOptions`: staleTime 30 min, gcTime 30 min
+- `authSensitiveQueryOptions`: staleTime 0, refetchOnMount always — **chỉ** `permissionGrants`; không dùng `masterDataQueryOptions` cho quyền session
+
+## Hooks pattern
+
+Each feature module follows:
+
+```
+features/<module>/
+  hooks/
+    use-<entity>.ts       ← useQuery, useMutation wrappers
+    use-<entity>-list.ts  ← paginated list logic
+  store/
+    use<Entity>Store.ts   ← UI state only (pagination, sort, filters, selectedIds)
+  services/
+    <entity>-service.ts   ← Supabase/API calls (no React)
+```
+
+- Services return typed data; hooks wrap with TanStack Query
+- Mutations: optimistic cache patch where safe, then `invalidateQueries` for count/page keys
+- Error handling: `getErrorMessage(err)` + Sonner toast — see existing hooks in `features/he-thong/nhan-vien/hooks/`
+
+## Zustand
+
+- Use `useShallow` from `zustand/react/shallow` when selecting multiple fields to avoid re-renders
+- Store only: pagination, sort, column visibility, filter UI state, drawer open/close flags
+- Do not duplicate query results in the store
+
+## Mock mode
+
+When `VITE_DATA_SOURCE=mock`, services may return mock data — hooks should work unchanged; do not branch on mock in components.
+
+## Cross-entity cache invalidation
+
+When a master entity affects derived permission UI or auth checks, invalidate **all related query prefixes** in the mutation hook:
+
+| Trigger | Invalidate |
+|---------|------------|
+| Chức vụ: create / update / delete / đổi trạng thái / import | `queryKeys.positions.all`, `queryKeys.positions.active`, `queryKeys.roles.all`, `queryKeys.permissionGrants.all` (+ `permissionGrants.byPosition(id)` khi biết id) |
+| Phân quyền matrix: lưu quyền module | `queryKeys.roles.forModule(moduleId)`, `queryKeys.permissionGrants.all` |
+
+Pattern: patch local list cache (`setQueryData`) → invalidate narrow prefixes → avoid blanket refetch unless bulk/import.
+
+## Active vs full master data
+
+| Use case | Query key / service |
+|----------|---------------------|
+| Toolbar filter, stats, export lookup (cần inactive) | `queryKeys.positions.all` · `getPositions()` |
+| Form picker, bulk edit, import FK, matrix shell | `queryKeys.positions.active` · `getActivePositions()` |
+| Sửa NV đang gán chức vụ ngừng HĐ | `mergeActivePositionsForEmployeeForm(active, employee)` — không refetch full list |
+
+Service validation gán FK (bulk/import): luôn `getActivePositions()` — mock enrich display vẫn dùng `getPositions()` khi cần tên chức vụ inactive.

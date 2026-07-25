@@ -1,0 +1,108 @@
+/** Tài liệu */
+export const taiLieu = {
+  "tabs": {
+    "danhSach": "Danh sách",
+    "ghim": "Ghim",
+    "noiBo": "Nội bộ",
+    "vanBanDenDi": "Văn bản đến - đi"
+  },
+  "huongNoiBo": "Nội bộ",
+  "huongDen": "Văn bản đến",
+  "huongDi": "Văn bản đi",
+  "searchPlaceholder": "Tìm theo trích yếu, số đến, số đi...",
+  "deleteTitle": "Xóa tài liệu",
+  "deleteMessage": "Bạn có chắc chắn muốn xóa tài liệu này?",
+  "bulkDeleteTitle": "Xóa nhiều tài liệu",
+  "bulkDeleteMessage": "Bạn có chắc chắn muốn xóa {{count}} tài liệu đã chọn?",
+  "toast": {
+    "createSuccess": "Thêm tài liệu thành công",
+    "updateSuccess": "Cập nhật tài liệu thành công",
+    "deleteSuccess": "Đã xóa {{count}} tài liệu"
+  },
+  "form": {
+    "createTitle": "Thêm tài liệu",
+    "editTitle": "Chỉnh sửa tài liệu",
+    "basicInfo": "Thông tin chung",
+    "maSo": "Mã số",
+    "maSoPlaceholder": "VD: TL-2025-001",
+    "trichYeu": "Trích yếu",
+    "trichYeuPlaceholder": "Nội dung trích yếu",
+    "loai": "Loại tài liệu",
+    "trangThai": "Trạng thái",
+    "soDen": "Số đến",
+    "ngayDen": "Ngày đến",
+    "noiGui": "Nơi gửi",
+    "soDi": "Số đi",
+    "ngayKy": "Ngày ký",
+    "noiNhan": "Nơi nhận",
+    "ghiChu": "Ghi chú",
+    "hoSo": "Hồ sơ",
+    "hoSoPlaceholder": "Chọn hồ sơ (tùy chọn)",
+    "phongQuanLy": "Phòng quản lý",
+    "phongQuanLyPlaceholder": "Chọn phòng ban",
+    "nhomTaiLieu": "Nhóm tài liệu",
+    "nhomTaiLieuPlaceholder": "Chọn nhóm (tùy chọn)",
+    "save": "Lưu",
+    "create": "Thêm mới"
+  },
+  "store": {
+    "maSoCol": "Mã số",
+    "trichYeuCol": "Trích yếu",
+    "maSoTrichYeuCol": "Mã - Tên tài liệu",
+    "huongCol": "Hướng",
+    "loaiCol": "Loại",
+    "nhomCol": "Nhóm tài liệu",
+    "trangThaiCol": "Trạng thái",
+    "hoSoCol": "Hồ sơ",
+    "phongQuanLyCol": "Phòng quản lý",
+    "phanQuyenCol": "Phân quyền",
+    "soDenCol": "Số đến",
+    "soDiCol": "Số đi",
+    "ngayDenCol": "Ngày đến",
+    "ngayKyCol": "Ngày ký",
+    "updatedCol": "Cập nhật"
+  },
+  "validation": {
+    "huongRequired": "Chọn hướng",
+    "loaiRequired": "Chọn loại tài liệu",
+    "trangThaiRequired": "Chọn trạng thái",
+    "trichYeuRequired": "Nhập trích yếu",
+    "trichYeuMaxLength": "Trích yếu tối đa 500 ký tự"
+  },
+  "service": {
+    "notFound": "Không tìm thấy tài liệu"
+  },
+  "empty": "Chưa có tài liệu",
+  "emptyHint": "Thêm tài liệu mới hoặc chuyển tab.",
+  "phanQuyenEmpty": "Chưa phân quyền",
+  "phanQuyenCount": "{{count}} chức vụ",
+  "detail": {
+    "phanQuyenLabel": "Phân quyền xem",
+    "phanQuyenEmpty": "Chưa cấu hình",
+    "title": "Chi tiết tài liệu",
+    "changeStatus": "Chuyển trạng thái",
+    "changeStatusTitle": "Đổi trạng thái",
+    "changeStatusMessage": "Chọn trạng thái mới cho tài liệu.",
+    "phanQuyen": "Phân quyền",
+    "phanQuyenTitle": "Phân quyền xem tài liệu",
+    "phanQuyenMessage": "Chọn các chức vụ được phép xem tài liệu này. (Tính năng đang phát triển)",
+    "sectionHoSo": "Hồ sơ thuộc tài liệu",
+    "hoSoCount": "{{count}} hồ sơ",
+    "viewHoSoList": "Xem danh sách hồ sơ",
+    "versionsSection": "Phiên bản tệp",
+    "versionsHint": "Lịch sử phiên bản hiển thị tại đây khi đã kết nối API lưu trữ.",
+    "versionColLabel": "Phiên bản / tên tệp",
+    "versionColDate": "Ngày",
+    "versionColAuthor": "Người thao tác"
+  },
+  "pin": "Ghim",
+  "unpin": "Bỏ ghim",
+  "pinnedOnly": "Đã ghim",
+  "pinConfirmTitle": "Ghim tài liệu",
+  "pinConfirmMessage": "Bạn có chắc muốn ghim tài liệu này?",
+  "unpinConfirmTitle": "Bỏ ghim tài liệu",
+  "unpinConfirmMessage": "Bạn có chắc muốn bỏ ghim tài liệu này?",
+  "filterChip": {
+    "search": "Từ khóa"
+  }
+} as const;

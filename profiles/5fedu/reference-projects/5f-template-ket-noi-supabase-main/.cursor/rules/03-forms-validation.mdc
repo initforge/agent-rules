@@ -1,0 +1,58 @@
+---
+description: React Hook Form + Zod validation patterns for 5F ERP forms
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Forms & Validation — React Hook Form + Zod
+
+## When to use
+
+- **≥2 fields:** React Hook Form + Zod — no raw `useState` per field
+- **Single confirm/input:** simple controlled input or dialog is acceptable
+
+## Schema-first
+
+Zod schema in `features/<module>/core/schema.ts` is the single source of truth:
+
+```ts
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+export const employeeSchema = z.object({ ... });
+export type EmployeeFormValues = z.infer<typeof employeeSchema>;
+
+// In form component:
+const form = useForm<EmployeeFormValues>({
+  resolver: zodResolver(employeeSchema),
+  defaultValues: { ... },
+});
+```
+
+- Infer types with `z.infer<typeof schema>` — do not duplicate interfaces
+- Reuse shared validators from `lib/validation/` (`emailSchema`, `phoneVnSchema`, `codeFieldSchema`)
+- Validation messages via `txt('module.validation.key')` from `lib/text`
+
+## Form UI
+
+- Use `RhfDataField` / form primitives from `@/components/views` when available
+- Layout: `FormGrid`, `FormSection` / `Section` with `variant="primary"` (see `06-project-5f.mdc`)
+- Required fields: pass `required={true}` on `Input` / `Textarea` for asterisk display (validation still from Zod)
+- Error messages: `text-xs` under fields (built into Input/Select/Textarea components)
+
+## Drawer forms
+
+- Width: `DRAWER_WIDTH_FORM` or `getDrawerWidthClass(stackLevel)` from `lib/dialog-sizes.ts`
+- Stacked drawer (form opened from detail): `stackLevel={1}` on `GenericDrawer`
+- Submit via `handleSubmit`; disable submit while `isSubmitting`
+
+## Edit vs create
+
+- Same schema; use `defaultValues` from entity for edit mode
+- Reset form when drawer opens with new entity: `form.reset(values)` in effect keyed on `open` + `entityId`
+
+## Do not
+
+- Use Formik, Yup, or uncontrolled forms without RHF in feature modules
+- Put Zod schema inline in component files — keep in `core/schema.ts`
+- Skip server-side validation assumptions — client Zod is UX; Supabase RLS + DB constraints are authoritative
