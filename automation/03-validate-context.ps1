@@ -227,6 +227,20 @@ foreach ($ContractTest in @("test-workctl.py", "test-skill-gate-stack.py", "test
     $Problems.Add("Workflow fixture crashed: $ContractTest - error: $_")
   }
 }
+foreach ($ContractTest in @("test-platform-contracts.py")) {
+  $TestPath = Join-Path $Root "automation\$ContractTest"
+  if (-not $PythonExe -or -not (Test-Path $TestPath)) {
+    $Problems.Add("Missing Python or contract test: $TestPath")
+    continue
+  }
+  try {
+    $Output = & $PythonExe $TestPath 2>&1
+    if ($LASTEXITCODE -ne 0) { $Problems.Add("Contract test failed: $ContractTest`n$Output") }
+    else { Write-Host ($Output -join "`n") }
+  } catch {
+    $Problems.Add("Contract test crashed: $ContractTest - error: $_")
+  }
+}
 
 $WorkflowAudit = Join-Path $Root "automation\audit-workflow-clarity.ps1"
 if (-not (Test-Path $WorkflowAudit)) {

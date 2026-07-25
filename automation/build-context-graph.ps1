@@ -188,7 +188,7 @@ $Graph = [ordered]@{
     rules = "rules/manifest.yaml"
     skills = "SKILL.md frontmatter routing object"
     projects = "project entrypoint and 00-context-map.md"
-    platforms = "platform overlay and runtime.yaml"
+    platforms = "platform overlay and platform-contracts.json"
   }
   nodes = @($Nodes | Sort-Object layer, id)
 }

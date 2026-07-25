@@ -1,15 +1,22 @@
 # Platforms
 
-**Vai trò:** Delta riêng từng runtime — overlay + `runtime.yaml`.  
-**Ý đồ:** Core giống nhau; chỉ khác cách cài MCP và home path.
+Platform-specific behavior lives in overlays. The canonical behavior contract is
+[`platform-contracts.json`](platform-contracts.json).
 
-| Platform | Overlay | Install home |
+Artifact hashes and build output do not prove behavioral parity. Every platform
+needs current live evidence for activation, context delivery, orchestration,
+role permissions, model/effort, and MCP integration. Missing evidence on one
+host makes overall parity `PARTIAL` or `BLOCKED`.
+
+| Platform | Overlay | Rendered build contract |
 |---|---|---|
-| `codex/` | `codex-overlay.md` | `~/.codex` |
-| `grok/` | `grok-overlay.md` | `~/.grok` |
-| `antigravity/` | `antigravity-overlay.md` | `~/.gemini/config` |
-| `cursor/` | `cursor-overlay.md` | `~/.cursor` |
+| `codex/` | `codex-overlay.md` | `runtime-contract.json` |
+| `grok/` | `grok-overlay.md` | `runtime-contract.json` |
+| `antigravity/` | `antigravity-overlay.md` | `runtime-contract.json` |
+| `cursor/` | `cursor-overlay.md` | `runtime-contract.json` |
 
-Build gom tất cả bốn platform trong `01-build-runtime.ps1`.
+`01-build-runtime.ps1` validates the canonical contract and renders one
+`runtime-contract.json` for each platform build.
 
-**Runtime hooks (ngoài build):** `platforms/codex/scripts/`, `platforms/antigravity/scripts/` — cài `./automation/11-install-runtime-hooks.sh`. Chi tiết hooks: **`guides/04-maintenance-and-risks.md`** (không duplicate ở đây).
+Runtime hooks remain outside the build in `platforms/*/scripts/`; install them
+through `automation/11-install-runtime-hooks.sh`.
