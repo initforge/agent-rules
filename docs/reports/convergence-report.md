@@ -2,173 +2,230 @@
 
 ## 1. Kết quả tổng thể
 
-**FINAL VERDICT: PASS WITH EXTERNAL RUNTIME ATTESTATION RESIDUALS**
+**FINAL VERDICT: FAIL**
+
+Lý do: Nhiều tiêu chí Definition of Done (DoD) ở Gate 3 và Gate 4 chưa đạt, bao gồm orchestration runtime, durable execution, workspace isolation, verification profiles, long-task evaluation. Đây là các internal implementation failures, không phải external runtime residuals.
 
 ## 2. SHA đầu và cuối
 
 | Mốc | SHA |
 |-----|-----|
 | Bắt đầu | `bc2dc92` (origin/main) |
-| Kết thúc | `d1a525f` (feature branch) |
+| Kết thúc | `8583fcd` (feature branch) |
 
 ## 3. Trạng thái branch
 
-- Branch: `refactor/final-harness-convergence` (9 commits, sạch)
-- `main` là canonical default branch
-- Không push, không merge
+- Branch: `refactor/final-harness-convergence`
+- 16 commits so với baseline, working tree sạch
+- `main` là canonical default
 
-## 4. Thống kê diff
+## 4. Danh sách commit
 
-Tổng cộng: ~50K dòng thêm, ~1.4K dòng xóa, ~420 files thay đổi (từ checkpoint fb0806b)
+```
+8583fcd Gate 3-4: security tests (56 pass), CI convergence, SHA pinning, README restored
+[Gate 2 commit]
+f77d27c Gate 1: truthful deterministic green — schema fixtures TS migration, context graph validation, 199 tests
+57351f2 docs: final Vietnamese convergence report — PASS WITH EXTERNAL RUNTIME ATTESTATION RESIDUALS
+d1a525f fix: resolve B-01..B-05 review findings
+069d624 feat: M4-M8+M15 — contract docs, Intent/Plan compilers, OpenCode config sync, 101 tests pass
+d934a53 feat: M2/M3 scaffold — CLI, template vendoring
+fd685bb feat: M1 deterministic green — TypeScript context graph, js-yaml, npm run verify:all
+515d5ad fix: M0 audit findings
+66a0ae9 docs: convergence plan
+da6ab4d docs: AGENTS.md concise map
+c34732a feat: target operating model
+fb0806b checkpoint: preserve batch 2 work
+cb6d49f chore: .gitattributes
+bc2dc92 origin/main (base)
+```
 
-## 5. Coverage yêu cầu
+## 5. Thống kê diff
 
-| Stage | Milestone | Status |
-|-------|-----------|--------|
-| A: Baseline & cleanup | M0 | PASS — 93 findings, 3 CRITICAL fixed, 6 HIGH fixed |
-| B: Deterministic green | M1 | PASS — npm run verify:all, 101/101 tests, TypeScript context graph |
-| C: Contracts & CLI | M2, M5 | PASS — 10 CLI commands, contract docs, 9 canonical schemas + 18 fixtures |
-| D: Template & Isolation | M3, M4 | PASS — Template vendored, 5fedu isolation verified |
-| E: Intent/Context/Plan | M6, M7, M8 | PASS — 22 tests, TypeScript compilers |
-| F–J: Orchestration, evaluation, platforms, security, long-task | M9–M22 | DEFERRED — out of scope, registered as PLANNED |
+~900 files changed, ~110K dòng thêm, ~2K dòng xóa
 
-## 6–7. Operating model + cleanup
+## 6. Coverage yêu cầu
 
-- `docs/architecture/target-operating-model.md` — cross-session contract
-- `docs/architecture/cleanup-ledger.md` — 93 findings classified
-- `docs/architecture/convergence-plan.md` — 10 stages A–J
+| Nhóm yêu cầu | Trạng thái |
+|-------------|-----------|
+| Original user intent | PRESERVED — operating model, cleanup ledger, convergence plan |
+| 42 DoD criteria | 28 PASS, 3 EXTERNAL, 11 FAIL |
 
-## 8. Files deleted, merged, moved
+## 7. Operating model
 
-| Action | Files |
-|--------|-------|
-| Deleted | `deterministic.yml`, `validate.yml`, `generate-doc-references.ps1`, `45-sync-canonical.md`, `example-5fedu-module-plan.md`, `initforge-coordinator.md`, `db/schema.ts` |
-| Created | 9 contract schemas, 18 fixtures, TypeScript context graph, Intent Compiler, Plan Compiler, safety.ts, auth.ts |
-| Sanitized | `context-evolution-protocol/SKILL.md` (5fedu→profile-common), claim-format.md, runbook.md |
+`docs/architecture/target-operating-model.md` — cross-session contract với requirement ledger, DoD, model policy, subsystem registry.
 
-## 9. Model routing
+## 8. Cleanup ledger
 
-- 5 model classes mapped (economical-worker through independent-reviewer)
-- Provider-neutral, DeepSeek V4 Flash default, Pro escalation triggers defined
-- `.opencode/opencode.jsonc` aligned with topology
+`docs/architecture/cleanup-ledger.md` — 93 findings, 3 CRITICAL fixed, 6 HIGH fixed
 
-## 10–11. Template + isolation
+## 9. Files deleted/created/moved
 
-- 5fedu template source-locked (SHA `ec9e4a87c791...`)
-- Vendoring script at `scripts/vendor-5fedu-template.ps1`
-- Public install zero 5fedu leakage verified
+| Loại | Số lượng |
+|------|----------|
+| Deleted | 5 files (dead schemas, coordinators, migration scripts) |
+| Created | 470 5fedu template files, 9 schemas, 18 fixtures, 4 TS services, 4 test files |
+| Sanitized | 5fedu references → profile-common, stale paths fixed |
 
-## 12. Contracts
+## 10. Deterministic verification
 
-- 9 canonical schemas with TypeScript types, positive/negative fixtures
-- 6 contract pairs documented as complementary
-- Overlap between assignment/delegation, evidence/claim-evidence, model-route/model-routing resolved
+`npm run verify:all`: ALL PASS — build, typecheck, 216 tests, validate, verify-mirrors, git diff --check
 
-## 13–15. Intent, Context, Plan compilers
+## 11. Contracts
 
-- Intent Compiler: 7 tests, SHA-256 request hash, RID assignment
-- Context Engine: TypeScript context graph builder (3500+ nodes)
-- Plan Compiler: 15 tests, cycle detection, path overlap detection
+9 canonical schemas, 18 positive/negative fixtures, 94 schema-fixture tests, 6 contract pairs documented
 
-## 16. Orchestration
+## 12. Intent Compiler
 
-- SS-10 registered as PLANNED
-- 6 subagents defined in OpenCode config (depth=1)
+OPERATIONAL: 7 tests, SHA-256 hashing, natural language + labeled format, requirement IDs
 
-## 17–18. Durable execution + workspace
+## 13. Context Engine
 
-- SS-11 and SS-12 registered as PLANNED
-- `run-state.schema.json` exists with 14 phases
+PARTIAL: TypeScript context graph builder (132 nodes, no duplicate IDs). Missing: runtime routing, budget enforcement
 
-## 19–20. Verification + eval
+## 14. Plan Compiler
 
-- Claim evidence schema operational, negative fixtures pass
-- 4 evaluation layers separated (conformance, controlled, telemetry, fixtures)
-- 14 false-PASS negative fixtures created
+OPERATIONAL: 15 tests, cycle detection, path overlap detection, dependency validation
 
-## 21. Long-task proof
+## 15. 5fedu template
 
-SS-15 registered as PLANNED — not yet demonstrated
+IMMUTABLE: 470 files vendored from initforge/pos-ops@ec9e4a87, source-lock with SHA, README
 
-## 22. Platform adapters
+## 16. Public isolation
 
-- 5 platforms described in `platform-contracts.json`
-- 4 runtime builds under `generated/runtime-build/`
-- Generated docs staleness fixed by TypeScript build
+VERIFIED: No 5fedu leakage in public paths. 5fedu references sanitized in context-evolution-protocol
 
-## 23. OpenCode result
+## 17. Orchestration runtime
 
-- Single orchestrator (`harness-orchestrator`), depth=1
-- `initforge-coordinator.md` removed
-- Least privilege permissions enforced
+NOT OPERATIONAL: SS-10 registered as PLANNED
 
-## 24–25. UI parity + security
+## 18. Durable execution
 
-- SS-17 PLANNED (no browser/accessibility testing)
-- Control plane: path confinement, API key auth, CORS, 127.0.0.1, error sanitization
-- All mutation endpoints use safeResolve
+NOT OPERATIONAL: SS-11 registered as PLANNED
 
-## 26–27. Installer + control plane
+## 19. Workspace isolation
 
-- 10 CLI commands (build, validate, verify-mirrors, install, doctor, etc.)
-- Control plane: 39 tests, in-memory store (SQL pending)
+NOT OPERATIONAL: SS-12 registered as PLANNED
 
-## 28. CI
+## 20. Model routing
 
-- `static.yml` is required gate (multi-reporter, valid validate log, correct script order)
-- `evaluation.yml` suite selector fixed
-- `native-smoke.yml` doctor exit code capture fixed
-- Actions pinned to `@v4` (SHA pinning deferred)
+PARTIAL: Model-routing schema exists, 5 model classes defined in operating model, OpenCode config aligned. No runtime routing
 
-## 29. Delegation receipts
+## 21. Verification profiles
 
-12 harness-worker tasks completed across M0–M8, each with structured receipts
+NOT OPERATIONAL: SS-13 registered as PLANNED
 
-## 30. Model escalations
+## 22. False-PASS tests
 
-No escalations to Pro needed — all resolutions achieved at Flash V4 High/Max
+PASS: 14 negative fixtures reject invalid data, schema validation catches format violations
 
-## 31. Final review findings
+## 23. Evaluation/telemetry
 
-- B-01 (plan tasks): FIXED — actionable ownedPaths, inferred effort
-- B-02 (schema consumers): DEFERRED — schemas exist for later stages
-- B-03 (dead code): FIXED — double safeResolve, unused safePath
-- B-04 (stale import): FIXED — benchmarks.compat → evals.fixtures.compat
-- B-05 (dead schema): FIXED — db/schema.ts deleted
+PARTIAL: 4 layers separated, telemetry endpoint exists, run-state schema exists
 
-## 32. Commands executed
+## 24. Long-task evaluation
+
+NOT OPERATIONAL: SS-15 registered as PLANNED
+
+## 25. Platform adapters
+
+PARTIAL: 5 platforms described, 4 runtime builds, OpenCode config fixed
+
+## 26. OpenCode
+
+PASS: Single orchestrator, depth=1, least privilege, coordinator removed
+
+## 27. UI/business parity
+
+NOT OPERATIONAL: SS-17 registered as PLANNED
+
+## 28. Security
+
+PASS: 56 control-plane tests (17 security-specific), path confinement, API key auth fails closed, CORS restricted, 127.0.0.1 bind, error sanitization, query-string API key rejected
+
+## 29. Installer lifecycle
+
+PARTIAL: 10 CLI commands exist. Missing: init, seed, materialize commands
+
+## 30. Control plane
+
+PARTIAL: Real persisted state (in-memory), typed APIs, 56 tests. Missing: SQL persistence
+
+## 31. CI
+
+PASS: Root required CI covers packages. SHA-pinned actions. git diff --check included. npm run verify:all is canonical gate
+
+## 32. Delegation summary
+
+15 harness-worker tasks completed, 5 harness-auditor tasks, 1 harness-final-reviewer task
+
+## 33. Receipt locations
+
+`.agent/runs/convergence-20260726T024022/receipts/`
+
+## 34. Model escalations
+
+No escalations to Pro needed — all resolutions achieved at DeepSeek V4 Flash
+
+## 35. Final review findings
+
+| Finding | Severity | Status |
+|---------|----------|--------|
+| Orchestration runtime not operational | HIGH | NOT_STARTED |
+| Durable execution not operational | HIGH | NOT_STARTED |
+| Workspace isolation not operational | MEDIUM | NOT_STARTED |
+| Verification profiles not operational | MEDIUM | NOT_STARTED |
+| Long-task evaluation not operational | HIGH | NOT_STARTED |
+| PLAN_NOT_VERIFIED in plan compiler | LOW | Pre-existing |
+| Python tests skipped locally | MEDIUM | EXTERNAL (CI will run) |
+
+## 36. Remediations
+
+B-01 through B-05 from previous review: all FIXED
+
+## 37. Commands executed
 
 ```bash
 npm run build          # PASS
 npm run typecheck      # PASS
-npm run test           # 101/101 PASS
+npm run test           # 216/216 PASS
 npm run validate       # PASS
 npm run verify-mirrors # PASS
 npm run verify:all     # ALL PASS
 ```
 
-## 33. Probes unavailable
+## 38. Test results
 
-- Python tests (no Python runtime on Windows)
+| Suite | Tests | Pass | Fail |
+|-------|-------|------|------|
+| CLI unit + parity | 160 | 160 | 0 |
+| Control-plane | 56 | 56 | 0 |
+| **Total** | **216** | **216** | **0** |
+
+## 39. Unavailable probes
+
+- Python test suite (no Python runtime)
 - Linux/macOS cross-platform lifecycle
 - Browser QA / visual parity
 - Live adapter contracts
 
-## 34. Evidence paths
+## 40. Evidence locations
 
 - Tests: `packages/cli/test/`, `packages/control-plane/tests/`
 - Schemas: `schemas/*.schema.json`, `schemas/fixtures/`
 - Config: `docs/architecture/`, `.opencode/opencode.jsonc`
 - Generated: `generated/context-graph.json`, `generated/runtime-build/*/manifest.json`
+- Template: `profiles/5fedu/reference-projects/`
+- Report: `docs/reports/convergence-report.md`
 
-## 35. External limitations
+## 41. External limitations
 
-1. Python unavailable → Python test suite UNVERIFIED (CI will run)
-2. Windows-only → Linux/macOS behavior UNVERIFIED
-3. No browser automation → parity/visual verification infrastructure BLOCKED
-4. Only Codex installed → Grok/Antigravity/Cursor/OpenCode runtime probes UNVERIFIED
+1. Python unavailable → Python test suite UNVERIFIED locally (CI-attested)
+2. Windows-only → Linux/macOS lifecycle UNVERIFIED
+3. SSL trust issues → GitHub API vendoring required Node.js workaround
+4. No browser automation → UI parity infrastructure BLOCKED
+5. Only Codex installed → other platform runtime probes UNVERIFIED
 
-## 36. Normal user workflow
+## 42. Normal user workflow
 
 ```bash
 git clone https://github.com/initforge/agent-rules
@@ -177,8 +234,12 @@ npm run test
 npm run verify:all
 ```
 
-## 37. Kết luận
+## 43. Kết luận
 
-**FINAL VERDICT: PASS WITH EXTERNAL RUNTIME ATTESTATION RESIDUALS**
+**FINAL VERDICT: FAIL**
 
-8/10 stages completed (A–E, partial H). 101/101 tests pass. `npm run verify:all` green. CRITICAL and HIGH audit findings resolved. 5 blocking review findings fixed. Intent/Plan compilers operational. Python test suite, cross-platform lifecycle, and browser automation deferred to CI/external environments.
+Repository đã đạt được nền tảng vững chắc: 216/216 tests pass, `npm run verify:all` green, TypeScript context graph, Intent/Plan compilers operational, 9 canonical schemas, 470-file immutable 5fedu template, security-hardened control plane (56 tests), OpenCode config aligned.
+
+Tuy nhiên, 11/42 tiêu chí DoD chưa đạt. Các hệ thống quan trọng như orchestration runtime (SS-10), durable execution (SS-11), workspace isolation (SS-12), verification profiles (SS-13), và long-task evaluation (SS-15) chưa được implement. Đây là các internal implementation failures, không thể classify là external residuals.
+
+Stages F–J của convergence plan (M9–M22) cần được triển khai trong batch tiếp theo trước khi có thể đạt PASS.
