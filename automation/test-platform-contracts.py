@@ -100,7 +100,7 @@ def main() -> int:
         if legacy.exists():
             fail(f"legacy runtime manifest remains: {legacy.relative_to(ROOT)}")
     readme = (ROOT / "platforms" / "README.md").read_text(encoding="utf-8")
-    if "runtime.yaml" in readme or "only differ" in readme:
+    if "only differ" in readme or "artifact parity" in readme.lower():
         fail("platform README retains the artifact-parity thesis")
     verify_rendered_build(contract)
     print("PASS: platform contracts")
