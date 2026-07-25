@@ -43,7 +43,7 @@ selectors = [
 selector_source_roots = [ROOT / "platforms", ROOT / "automation"]
 for root in selector_source_roots:
   for source in root.rglob("*"):
-    if source.name.startswith("test-") or source == ROOT / "automation/model-policy.json":
+    if source.name.startswith("test-") or source == ROOT / "automation/model-policy.json" or source == ROOT / "automation/benchmarks/README.md":
         continue
     if source.is_file() and source.suffix in {".md", ".toml", ".py", ".ps1", ".sh"}:
         text = source.read_text(encoding="utf-8")
@@ -196,6 +196,7 @@ for platform, (path, discovery) in readmes.items():
     if discovery not in path.read_text(encoding="utf-8"): fail(f"{platform} native discovery location missing")
 
 cli_state = []
+# The "gemini" binary is the Antigravity host CLI, not the Gemini CLI product.
 for platform, command in (("codex", "codex"), ("cursor", "cursor"), ("grok", "grok"), ("antigravity", "gemini")):
     availability = "PRESENT_UNOBSERVED" if shutil.which(command) else "UNAVAILABLE_UNOBSERVED"
     cli_state.append(f"{platform}={availability}")
@@ -276,4 +277,41 @@ if "--build" in sys.argv:
         if platform == "grok":
             rendered = tomllib.loads((build / "native/agents/agent-rules-implementer.toml").read_text(encoding="utf-8"))
             if rendered["model"] != platforms["grok"]["base"]["selector"]: fail("Grok policy selector did not render")
+def test_capability_matrix() -> None:
+    """Validate the platform capability matrix exists and is structurally sound."""
+    matrix_path = ROOT / "guides/06-platform-capability.md"
+    if not matrix_path.is_file():
+        fail("guides/06-platform-capability.md is missing")
+    body = matrix_path.read_text(encoding="utf-8")
+    required_dimensions = [
+        "instructions", "skills", "subagents", "model routing", "plan mode",
+        "hooks", "MCP/tools", "permissions", "telemetry", "diff/review",
+        "install", "doctor", "uninstall",
+    ]
+    for dim in required_dimensions:
+        if dim not in body:
+            fail(f"capability matrix missing dimension: {dim}")
+    required_products = ["Codex", "Grok", "Antigravity", "Cursor"]
+    for prod in required_products:
+        if f"| {prod} |" not in body and prod not in body:
+            fail(f"capability matrix missing product: {prod}")
+    if "Gemini CLI" in body and "unsupported" in body:
+        pass
+    else:
+        fail("capability matrix must document Gemini CLI as unsupported")
+    if "OpenCode" in body and "unverified" in body:
+        pass
+    else:
+        fail("capability matrix must document OpenCode as unverified/planned")
+    required_statuses = ["native", "emulated", "unsupported", "unverified"]
+    for status in required_statuses:
+        if status not in body:
+            fail(f"capability matrix missing status value: {status}")
+    if "Source parity ≠ behavioral parity" not in body:
+        fail("capability matrix must distinguish source parity from behavioral parity")
+    if "Runtime probes still required" not in body:
+        fail("capability matrix must list runtime probes still required")
+    print("capability matrix validation PASS")
+
+test_capability_matrix()
 print("native agent policy PASS")

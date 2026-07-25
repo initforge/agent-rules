@@ -1,4 +1,4 @@
-﻿param(
+param(
   [string]$Root = (Split-Path -Parent $PSScriptRoot),
   [ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platform = "all",
   [switch]$SkipIntegrationVerify,
@@ -307,18 +307,22 @@ foreach ($Name in $Selected) {
   if ($Registry -and -not $SkipIntegrationVerify) {
     foreach ($Integration in $Registry.integrations) {
       if ($Integration.policy -eq "optional") { continue }
-      $VerifyScript = Join-Path (Join-Path $Root $Integration.path) "verify.ps1"
+      if ($null -ne $Integration.PSObject.Properties["install"]) {
+        $VerifyScript = Join-Path $Root ($Integration.install.verify)
+      } else {
+        $VerifyScript = Join-Path (Join-Path $Root $Integration.path) "verify.ps1"
+      }
       if (-not (Test-Path $VerifyScript)) {
         $Status = if ($Integration.policy -eq "required") { "MISSING" } else { "WARN" }
-        $Report += [pscustomobject]@{ platform = $Name; check = $Integration.name; status = $Status; detail = "no verify.ps1" }
+        $Report += [pscustomobject]@{ platform = $Name; check = $Integration.id; status = $Status; detail = "no verify.ps1" }
         continue
       }
       try {
         & $VerifyScript | Out-Null
-        $Report += [pscustomobject]@{ platform = $Name; check = $Integration.name; status = "OK"; detail = "verify pass" }
+        $Report += [pscustomobject]@{ platform = $Name; check = $Integration.id; status = "OK"; detail = "verify pass" }
       } catch {
         $Status = if ($Integration.policy -eq "required") { "NOT_LIVE" } else { "WARN" }
-        $Report += [pscustomobject]@{ platform = $Name; check = $Integration.name; status = $Status; detail = $_.Exception.Message }
+        $Report += [pscustomobject]@{ platform = $Name; check = $Integration.id; status = $Status; detail = $_.Exception.Message }
       }
     }
   }

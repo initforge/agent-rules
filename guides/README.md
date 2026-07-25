@@ -11,5 +11,6 @@
 | `03-integrations-and-sync.md` | MCP policy + sync 2 chiều |
 | `04-maintenance-and-risks.md` | Bảo trì, rủi ro sync |
 | `05-maturity.md` | Maturity ladder M0–M3 (structural + advisory) |
+| `06-platform-capability.md` | Platform capability matrix — explicit depth/status |
 
 Token budget canonical: `rules/manifest.yaml` (không nhân bản ở đây).

@@ -1,4 +1,4 @@
-﻿param(
+param(
   [string]$Root = (Split-Path -Parent $PSScriptRoot),
   [string]$OutputPath = (Join-Path $Root "05-generated\context-graph.json")
 )
@@ -31,9 +31,29 @@ function Frontmatter-Value([string]$Body, [string]$Key) {
 }
 
 function Frontmatter-Routing([string]$Body) {
-  $Match = [regex]::Match($Body, '(?m)^routing:\s*(\{.*\})\s*$')
-  if (-not $Match.Success) { return $null }
-  try { return ($Match.Groups[1].Value | ConvertFrom-Json) } catch { return $null }
+  $CompactMatch = [regex]::Match($Body, '(?m)^routing:\s*(\{.*\})\s*$')
+  if ($CompactMatch.Success) {
+    try { return ($CompactMatch.Groups[1].Value | ConvertFrom-Json) } catch { return $null }
+  }
+  # Multi-line YAML routing block: write frontmatter to temp, extract via Python.
+  $Parts = $Body -split '(?m)^---\s*$', 3
+  if ($Parts.Count -lt 3) { return $null }
+  $Frontmatter = $Parts[1]
+  if ($Frontmatter -notmatch '(?m)^routing:') { return $null }
+  $Tmp = [System.IO.Path]::GetTempFileName()
+  try {
+    [System.IO.File]::WriteAllText($Tmp, $Frontmatter)
+    $JsonBlock = & python -c @"
+import yaml, json, sys
+with open(sys.argv[1], encoding='utf-8') as f:
+    data = yaml.safe_load(f)
+r = data.get('routing')
+if r:
+    print(json.dumps(r, ensure_ascii=False))
+"@ $Tmp 2>$null
+    if ($JsonBlock) { return ($JsonBlock | ConvertFrom-Json) }
+  } finally { Remove-Item -LiteralPath $Tmp -Force -ErrorAction SilentlyContinue }
+  return $null
 }
 
 function Default-Routing([string]$Source, [string]$Policy) {
@@ -51,33 +71,35 @@ function Default-Routing([string]$Source, [string]$Policy) {
     default = ($Policy -eq "always")
   }
   $Lower = $Source.ToLowerInvariant()
-  if ($Lower -like "*projects/5fedu/00-context-map.md") {
+  # Use a wildcard anchor so "projects/…" matches without a leading separator.
+  $In5fedu = $Lower -like "*5fedu*" -and ($Lower -like "*projects*5fedu*" -or $Lower -like "*profiles*5fedu*")
+  if ($Lower -like "*00-context-map.md" -and $In5fedu) {
     $Routing.signals = @("5fedu", "context/5fedu", "tah-app", "nostime")
     $Routing.intent_signals = @("5fedu_setup", "5fedu_context")
     $Routing.priority = 30
     $Routing.loads = @("project:5fedu:router")
     $Routing.project_scope = "5fedu"
-  } elseif ($Lower -like "*projects/5fedu/domains/module-mapping.md" -or $Lower -like "*projects/5fedu/domains/ui-delivery.md") {
+  } elseif ($In5fedu -and $Lower -like "*domains*" -and ($Lower -like "*module-mapping.md" -or $Lower -like "*ui-delivery.md")) {
     $Routing.signals = @("5fedu ui", "drawer", "listview", "parity", "ERP module")
     $Routing.intent_signals = @("5fedu_ui")
     $Routing.priority = 70
     $Routing.project_scope = "5fedu"
-  } elseif ($Lower -like "*projects/5fedu/domains/references/*") {
+  } elseif ($In5fedu -and $Lower -like "*domains*references*") {
     $Routing.signals = @("detail", "navigation", "verify", "surface")
     $Routing.intent_signals = @("5fedu_detail")
     $Routing.priority = 40
     $Routing.project_scope = "5fedu"
-  } elseif ($Lower -like "*projects/5fedu/domains/database.md") {
+  } elseif ($In5fedu -and $Lower -like "*domains*database.md") {
     $Routing.signals = @("migration", "rls", "schema", "int8", "uuid", "foreign key", "index")
     $Routing.intent_signals = @("5fedu_database")
     $Routing.priority = 60
     $Routing.project_scope = "5fedu"
-  } elseif ($Lower -like "*projects/5fedu/domains/permissions.md") {
+  } elseif ($In5fedu -and $Lower -like "*domains*permissions.md") {
     $Routing.signals = @("permission", "phân quyền", "cap_bac", "quyền xem", "quyền sửa", "quyền xóa", "quản trị")
     $Routing.intent_signals = @("5fedu_permissions")
     $Routing.priority = 60
     $Routing.project_scope = "5fedu"
-  } elseif ($Lower -like "*projects/5fedu/domains/business.md") {
+  } elseif ($In5fedu -and $Lower -like "*domains*business.md") {
     $Routing.signals = @("master-detail", "duyệt", "rollup", "export", "báo cáo", "thống kê", "excel", "pdf")
     $Routing.intent_signals = @("5fedu_business")
     $Routing.priority = 50
@@ -130,6 +152,31 @@ foreach ($SkillDir in Get-ChildItem $SkillsRoot -Directory) {
     foreach ($Ref in Get-ChildItem $RefRoot -Recurse -File) {
       $RefRel = Normalize-Path ($Ref.FullName.Substring($Root.Length + 1))
       Add-Node $Nodes ("reference:{0}:{1}" -f $SkillId, (Path-Slug $RefRel)) "skills-reference" $RefRel "reference" "skills/$SkillId/SKILL.md" "requires:$SkillId"
+    }
+  }
+}
+
+# Profile skills (e.g., profiles/5fedu/skills/) — referenced by upstream skills
+$ProfileSkillsRoot = Join-Path $Root "profiles"
+if (Test-Path -LiteralPath $ProfileSkillsRoot) {
+  foreach ($ProfileDir in Get-ChildItem $ProfileSkillsRoot -Directory) {
+    $ProfileSkillsDir = Join-Path $ProfileDir.FullName "skills"
+    if (-not (Test-Path -LiteralPath $ProfileSkillsDir)) { continue }
+    foreach ($SkillDir in Get-ChildItem $ProfileSkillsDir -Directory) {
+      $SkillPath = Join-Path $SkillDir.FullName "SKILL.md"
+      if (-not (Test-Path -LiteralPath $SkillPath)) { continue }
+      $Body = Get-Content -Raw -Encoding UTF8 $SkillPath
+      $SkillId = $SkillDir.Name
+      $SkillRouting = Frontmatter-Routing $Body
+      if (-not $SkillRouting) { throw "Missing structured routing metadata: profiles/$($ProfileDir.Name)/skills/$SkillId/SKILL.md" }
+      Add-Node $Nodes "skill:$SkillId" "skills" "profiles/$($ProfileDir.Name)/skills/$SkillId/SKILL.md" "skill" "profiles/$($ProfileDir.Name)/skills/$SkillId/SKILL.md" (Frontmatter-Value $Body "description") @() $SkillRouting
+      $RefRoot = Join-Path $SkillDir.FullName "references"
+      if (Test-Path -LiteralPath $RefRoot) {
+        foreach ($Ref in Get-ChildItem $RefRoot -Recurse -File) {
+          $RefRel = Normalize-Path ($Ref.FullName.Substring($Root.Length + 1))
+          Add-Node $Nodes ("reference:{0}:{1}" -f $SkillId, (Path-Slug $RefRel)) "skills-reference" $RefRel "reference" "profiles/$($ProfileDir.Name)/skills/$SkillId/SKILL.md" "requires:$SkillId"
+        }
+      }
     }
   }
 }

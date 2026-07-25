@@ -23,7 +23,7 @@ def main() -> int:
     assert telemetry["unknown_actor_outcome"] == "UNVERIFIED"
     assert telemetry["hook_error_behavior"] == "fail_open"
     platforms = policy["platforms"]
-    assert set(platforms) == {"codex", "cursor", "antigravity", "grok"}
+    assert set(platforms) == {"codex", "cursor", "antigravity", "grok", "opencode"}
 
     assert platforms["codex"]["standard"] == {"family": "Terra", "selector": "gpt-5.6-terra", "effort": "medium"}
     assert platforms["codex"]["expert"] == {"family": "Sol", "selector": "gpt-5.6-sol", "effort": "medium"}
@@ -50,7 +50,18 @@ def main() -> int:
     assert "Per-role and spawn-time effort overrides are supported" in grok["effort_evidence"]
     assert "requested, resolved, and observed effort separately" in grok["effort_evidence"]
     assert "observed effort unknown" in grok["effort_evidence"]
+    opencode = platforms["opencode"]
+    assert opencode["economy"]["family"] == "user-configured"
+    assert opencode["standard"]["family"] == "user-configured"
+    assert opencode["expert"]["family"] == "user-configured"
+    assert opencode["mapping_contract"]["missing_mapping_behavior"].startswith("visible")
+    assert "requested" in opencode["recorded_evidence"]
+    assert "resolved" in opencode["recorded_evidence"]
+    assert "observed" in opencode["recorded_evidence"]
     assert all(item["denial_behavior"] == "fail_closed_partial" for item in platforms.values() if "denial_behavior" in item)
+
+    # Verify no platform entry for Gemini CLI as a product
+    assert "gemini" not in platforms or platforms["gemini"]["denial_behavior"] == "not_supported"
     print("PASS: model policy contract")
     return 0
 
