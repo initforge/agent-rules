@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 $Problems = [System.Collections.Generic.List[string]]::new()
 . (Join-Path $PSScriptRoot "path-compat.ps1")
@@ -69,9 +69,9 @@ $RequiredPaths = @(
   "guides\00-system-map.md",
   "guides\05-maturity.md",
   "integrations\registry.json",
-  "projects\5fedu\AGENTS.md",
-  "projects\5fedu\00-context-map.md",
-  "projects\5fedu\decisions.md",
+
+
+
   "rules\05-critical-thinking.md",
   "rules\16-context-style.md",
   "rules\25-task-lifecycle.md",
@@ -82,8 +82,8 @@ $RequiredPaths = @(
   "skills\finish-to-completion\references\slice-gate-protocol.md",
   "automation\workctl.py",
   "automation\work-ledger.schema.json",
-  "automation\test-workctl.py",
-  "projects\5fedu\domains\references\pattern-inventory.yaml"
+  "automation\test-workctl.py"
+  # profile-owned: projects\5fedu moved to profiles\5fedu\projects\
 )
 foreach ($Path in $RequiredPaths) {
   if (-not (Test-Path (Join-Path $Root $Path))) { $Problems.Add("Missing required path: $Path") }
@@ -263,7 +263,7 @@ if (Get-Command rg -ErrorAction SilentlyContinue) {
   Write-Warning "ripgrep (rg) is not found, skipping mojibake check."
 }
 
-$PurityAudit = Join-Path $PSScriptRoot "audit-5fedu-template-purity.ps1"
+$PurityAudit = Join-Path $PSScriptRoot "..\profiles\5fedu\automation\audit-5fedu-template-purity.ps1"
 if (Test-Path $PurityAudit) {
   try {
     & $PurityAudit | Out-Null
@@ -452,3 +452,9 @@ Write-Host "Context validation PASS"
 Write-Host "Core tokens (estimated): $CoreTokens"
 Write-Host "Skills: $($Slugs.Count)"
 Write-Host "Trigger audit cases: $((Get-Content -Raw $TriggerAuditPath | ConvertFrom-Json).Count)"
+
+# Profile-owned skill leakage guard: profile skills must not be in public skills/
+$ProfileSkillsInPublic = @(Get-ChildItem (Join-Path $Root "skills") -Directory | Where-Object { $_.Name -like "5fedu-*" })
+if ($ProfileSkillsInPublic.Count -gt 0) {
+    $Problems.Add("Profile-owned skills found in public skills/ directory: $($ProfileSkillsInPublic.Name -join ', '). Skills must live under profiles/.")
+}
