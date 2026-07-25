@@ -27,7 +27,7 @@ The filesystem path `~/.gemini/config` and env vars like `GEMINI_CONFIG_HOME` ar
 | Antigravity | supported | yes | Antigravity-native agents, skill gate hooks, browser/MCP tools |
 | Cursor | supported | yes | Cursor rules, hooks, native agents (Markdown) |
 | Grok | supported | yes | Grok agents (TOML), personas, inject rules, skill gate |
-| OpenCode | planned | no | Adapter not yet implemented |
+| OpenCode | partial | yes (standalone adapter, not pipeline-integrated) | Adapter implemented; not yet in CI build/install pipeline |
 | Gemini CLI | unsupported | no | Not a supported product; Antigravity uses the `gemini` CLI binary |
 
 ## Capability dimensions

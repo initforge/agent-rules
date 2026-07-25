@@ -5,13 +5,15 @@ description: Complete ruleset for agent-rules harness maintenance, sync, build, 
 
 # Harness maintainer & governance
 
+**Hard gate:** Any edit to `rules/**`, `skills/**`, `platforms/**`, `integrations/**`, or `automation/**` requires `context-evolution-protocol` activation (classification → placement → promotion gate → auto-audit on edit). No `PASS` on task context without auto-audit. Slim/rewrite depth changes require Benefit–Harm Gate (`50-context-budget.md`).
+
 ## 1. Canonical Ownership
 - `rules/`: Platform-neutral always-loaded behavior.
 - `skills/`: Lazy procedures grouped by subsystem.
-- `projects/`: Project context and templates.
 - `integrations/`: External tools, manifests, adapters, and policy.
 - `platforms/<name>/`: Platform delta only.
 - `automation/`: Build, install, validation, and sync guards.
+- `profiles/<name>/`: Organization-specific context, including project templates (installed via `profiles/install-profile.ps1`).
 
 Always edit canonical source first. Build outputs and global runtimes are generated targets and must never be reverse-merged by timestamp. Runtime import requires an explicit reviewed diff.
 

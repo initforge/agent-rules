@@ -1,0 +1,3522 @@
+{
+  "version": 2,
+  "generated_from": [
+    "rules/manifest.yaml",
+    "skills/**/SKILL.md",
+    "profiles/**/projects/**/AGENTS.md",
+    "profiles/**/projects/**/00-context-map.md",
+    "platforms/*/*-overlay.md",
+    "integrations/registry.json",
+    "docs/guides/**"
+  ],
+  "source_of_truth": {
+    "rules": "rules/manifest.yaml",
+    "skills": "SKILL.md frontmatter routing object",
+    "projects": "project entrypoint and 00-context-map.md",
+    "platforms": "platform overlay and platform-contracts.json"
+  },
+  "nodes": [
+    {
+      "id": "guide:docs:guides:00:system:map:md",
+      "layer": "guide",
+      "source": "docs/guides/00-system-map.md",
+      "load_policy": "verify-only",
+      "owner": "guides",
+      "trigger": "guide:00-system-map",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "e7d6db0d059ae8586341faad203af255c638dc10a8db67ff9b25f2557b47dc4e",
+      "token_estimate": 1347
+    },
+    {
+      "id": "guide:docs:guides:01:runtime:model:md",
+      "layer": "guide",
+      "source": "docs/guides/01-runtime-model.md",
+      "load_policy": "verify-only",
+      "owner": "guides",
+      "trigger": "guide:01-runtime-model",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "ee41ed001b8c36d3a9bf59ba64bdefab56b4c5e27a16472d6861f7ed2f0e0e75",
+      "token_estimate": 454
+    },
+    {
+      "id": "guide:docs:guides:02:knowledge:system:md",
+      "layer": "guide",
+      "source": "docs/guides/02-knowledge-system.md",
+      "load_policy": "verify-only",
+      "owner": "guides",
+      "trigger": "guide:02-knowledge-system",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "c3fddd16cf1968b2b4f105a8edc035086f18ba234550ebb54f182337fee9ebd3",
+      "token_estimate": 540
+    },
+    {
+      "id": "guide:docs:guides:03:integrations:and:sync:md",
+      "layer": "guide",
+      "source": "docs/guides/03-integrations-and-sync.md",
+      "load_policy": "verify-only",
+      "owner": "guides",
+      "trigger": "guide:03-integrations-and-sync",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "f188c21de2e9442d74e28631953d7d90bbe23ef7124e37b3263c75c200a1e44f",
+      "token_estimate": 498
+    },
+    {
+      "id": "guide:docs:guides:04:maintenance:and:risks:md",
+      "layer": "guide",
+      "source": "docs/guides/04-maintenance-and-risks.md",
+      "load_policy": "verify-only",
+      "owner": "guides",
+      "trigger": "guide:04-maintenance-and-risks",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "38eed8c32bf106af72b13383e981233d327ed48b4ab12278945cf66e598b85d7",
+      "token_estimate": 628
+    },
+    {
+      "id": "guide:docs:guides:05:maturity:md",
+      "layer": "guide",
+      "source": "docs/guides/05-maturity.md",
+      "load_policy": "verify-only",
+      "owner": "guides",
+      "trigger": "guide:05-maturity",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "27cc49f84465dd1bf7187a81e609baecd09c8439880dcae535969b7779af6e4e",
+      "token_estimate": 767
+    },
+    {
+      "id": "guide:docs:guides:06:ci:guide:md",
+      "layer": "guide",
+      "source": "docs/guides/06-ci-guide.md",
+      "load_policy": "verify-only",
+      "owner": "guides",
+      "trigger": "guide:06-ci-guide",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "3d47b207513c4fc8c07eee50b4d757c832cee8514f23e6805d511994b1a4ff80",
+      "token_estimate": 1534
+    },
+    {
+      "id": "guide:docs:guides:06:platform:capability:md",
+      "layer": "guide",
+      "source": "docs/guides/06-platform-capability.md",
+      "load_policy": "verify-only",
+      "owner": "guides",
+      "trigger": "guide:06-platform-capability",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "46417958d01407e6c55921bdafb22c3ed40af76951ac044e1598dce136b2ca06",
+      "token_estimate": 2117
+    },
+    {
+      "id": "guide:docs:guides:readme:md",
+      "layer": "guide",
+      "source": "docs/guides/README.md",
+      "load_policy": "verify-only",
+      "owner": "guides",
+      "trigger": "guide:README",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "cd3e282fa8e305e47a04a352abbae3b177c3daa4eb53b6c5928d97820e7183e6",
+      "token_estimate": 194
+    },
+    {
+      "id": "integration:integrations:optional:caveman:install:ps1",
+      "layer": "integration",
+      "source": "integrations/optional/caveman/install.ps1",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:install.ps1",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "528790640ce50391e9b2f865c21ac4e2dbd6e6b1329703e03e859dcdbbe8df01",
+      "token_estimate": 103
+    },
+    {
+      "id": "integration:integrations:optional:caveman:manifest:json",
+      "layer": "integration",
+      "source": "integrations/optional/caveman/manifest.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:manifest.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "73fec392f6e22e17bd9ad02dbcf4b39614d10eaaaf4917cdd81779cf7709e11b",
+      "token_estimate": 44
+    },
+    {
+      "id": "integration:integrations:optional:caveman:readme:md",
+      "layer": "integration",
+      "source": "integrations/optional/caveman/README.md",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:README.md",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "3675de10839d2b242ac4768c926d71778430947f66d424e5d4f94c4a969a01c4",
+      "token_estimate": 85
+    },
+    {
+      "id": "integration:integrations:optional:caveman:uninstall:ps1",
+      "layer": "integration",
+      "source": "integrations/optional/caveman/uninstall.ps1",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:uninstall.ps1",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "db32c7a47ffae07161dc6e973600ebce43a98dfa41f701912e77588fde52ef49",
+      "token_estimate": 51
+    },
+    {
+      "id": "integration:integrations:readme:md",
+      "layer": "integration",
+      "source": "integrations/README.md",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:README.md",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "f4eb17c685cf9cb2c55755c5caa217e9a16bb10982b6bd9fefe2aceb4740b256",
+      "token_estimate": 531
+    },
+    {
+      "id": "integration:integrations:recommended:chrome:devtools:mcp:adapters:antigravity:json",
+      "layer": "integration",
+      "source": "integrations/recommended/chrome-devtools-mcp/adapters/antigravity.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:antigravity.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "68bab62ab35759d5df21c04c5b6572b5e3009bf44a30db6f616b95aa02bdf118",
+      "token_estimate": 45
+    },
+    {
+      "id": "integration:integrations:recommended:chrome:devtools:mcp:adapters:codex:toml",
+      "layer": "integration",
+      "source": "integrations/recommended/chrome-devtools-mcp/adapters/codex.toml",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:codex.toml",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "e1c8340127e1f60dfe24fd4ad9dab3bc109c198a82a1987dd2218f53df4f3180",
+      "token_estimate": 40
+    },
+    {
+      "id": "integration:integrations:recommended:chrome:devtools:mcp:adapters:cursor:json",
+      "layer": "integration",
+      "source": "integrations/recommended/chrome-devtools-mcp/adapters/cursor.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:cursor.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "68bab62ab35759d5df21c04c5b6572b5e3009bf44a30db6f616b95aa02bdf118",
+      "token_estimate": 45
+    },
+    {
+      "id": "integration:integrations:recommended:chrome:devtools:mcp:adapters:grok:json",
+      "layer": "integration",
+      "source": "integrations/recommended/chrome-devtools-mcp/adapters/grok.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:grok.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "68bab62ab35759d5df21c04c5b6572b5e3009bf44a30db6f616b95aa02bdf118",
+      "token_estimate": 45
+    },
+    {
+      "id": "integration:integrations:recommended:chrome:devtools:mcp:adapters:opencode:json",
+      "layer": "integration",
+      "source": "integrations/recommended/chrome-devtools-mcp/adapters/opencode.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:opencode.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "68bab62ab35759d5df21c04c5b6572b5e3009bf44a30db6f616b95aa02bdf118",
+      "token_estimate": 45
+    },
+    {
+      "id": "integration:integrations:recommended:chrome:devtools:mcp:install:ps1",
+      "layer": "integration",
+      "source": "integrations/recommended/chrome-devtools-mcp/install.ps1",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:install.ps1",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "3e49f3505281da5ae39db5d8a99a4563a65b990e9dd3f9be651fa8b88bb8a2a3",
+      "token_estimate": 110
+    },
+    {
+      "id": "integration:integrations:recommended:chrome:devtools:mcp:manifest:json",
+      "layer": "integration",
+      "source": "integrations/recommended/chrome-devtools-mcp/manifest.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:manifest.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "19f1e04d5f01d42822f9c1ed44d4fe75705101de1da2defb733ebeae02c655ed",
+      "token_estimate": 70
+    },
+    {
+      "id": "integration:integrations:recommended:chrome:devtools:mcp:readme:md",
+      "layer": "integration",
+      "source": "integrations/recommended/chrome-devtools-mcp/README.md",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:README.md",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "c1c6aed9d93d67f5747ca467323583aa3b6c97efcecaf26c3dae46cca2b24a00",
+      "token_estimate": 81
+    },
+    {
+      "id": "integration:integrations:recommended:chrome:devtools:mcp:uninstall:ps1",
+      "layer": "integration",
+      "source": "integrations/recommended/chrome-devtools-mcp/uninstall.ps1",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:uninstall.ps1",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "9592d5af7ff75c30bd34fbfdbe70aa10059bd15599f3f789e16801a43996cb7a",
+      "token_estimate": 30
+    },
+    {
+      "id": "integration:integrations:recommended:chrome:devtools:mcp:verify:ps1",
+      "layer": "integration",
+      "source": "integrations/recommended/chrome-devtools-mcp/verify.ps1",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:verify.ps1",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "a44bda7059472972eab2da057050ec37ec9fc3b31ff099f15e2a4f84eb06b3de",
+      "token_estimate": 89
+    },
+    {
+      "id": "integration:integrations:recommended:context7:adapters:antigravity:json",
+      "layer": "integration",
+      "source": "integrations/recommended/context7/adapters/antigravity.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:antigravity.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "b9a634bee45c904a4d0354818ec831178c7c2edde7ada9c87dd53faca4509b91",
+      "token_estimate": 34
+    },
+    {
+      "id": "integration:integrations:recommended:context7:adapters:codex:toml",
+      "layer": "integration",
+      "source": "integrations/recommended/context7/adapters/codex.toml",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:codex.toml",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "43b3f7eb579dc6b5d2e403ca8aeb1751c06bcfc4138607f72c63dc1712004905",
+      "token_estimate": 29
+    },
+    {
+      "id": "integration:integrations:recommended:context7:adapters:cursor:json",
+      "layer": "integration",
+      "source": "integrations/recommended/context7/adapters/cursor.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:cursor.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "b9a634bee45c904a4d0354818ec831178c7c2edde7ada9c87dd53faca4509b91",
+      "token_estimate": 34
+    },
+    {
+      "id": "integration:integrations:recommended:context7:adapters:grok:json",
+      "layer": "integration",
+      "source": "integrations/recommended/context7/adapters/grok.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:grok.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "b9a634bee45c904a4d0354818ec831178c7c2edde7ada9c87dd53faca4509b91",
+      "token_estimate": 34
+    },
+    {
+      "id": "integration:integrations:recommended:context7:adapters:opencode:json",
+      "layer": "integration",
+      "source": "integrations/recommended/context7/adapters/opencode.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:opencode.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "b9a634bee45c904a4d0354818ec831178c7c2edde7ada9c87dd53faca4509b91",
+      "token_estimate": 34
+    },
+    {
+      "id": "integration:integrations:recommended:context7:install:ps1",
+      "layer": "integration",
+      "source": "integrations/recommended/context7/install.ps1",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:install.ps1",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "079725e9efab301b3956e8a8041787ed3850ac03fc882021cb4b62ab06d92d8c",
+      "token_estimate": 126
+    },
+    {
+      "id": "integration:integrations:recommended:context7:manifest:json",
+      "layer": "integration",
+      "source": "integrations/recommended/context7/manifest.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:manifest.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "e8712e0fffff3d05e9b3a4dd9927213cd03cea0b974bac45968d7795a889fe4e",
+      "token_estimate": 50
+    },
+    {
+      "id": "integration:integrations:recommended:context7:readme:md",
+      "layer": "integration",
+      "source": "integrations/recommended/context7/README.md",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:README.md",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "f2abd1b844ecf95b3b60351bd6123bac3af9af870449364afa3e5c768b9ec7ae",
+      "token_estimate": 91
+    },
+    {
+      "id": "integration:integrations:recommended:context7:uninstall:ps1",
+      "layer": "integration",
+      "source": "integrations/recommended/context7/uninstall.ps1",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:uninstall.ps1",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "2facff4682a65f4a4d469d8f624d5f3c1160db3af09f1164ea88b390281bae69",
+      "token_estimate": 73
+    },
+    {
+      "id": "integration:integrations:recommended:context7:verify:ps1",
+      "layer": "integration",
+      "source": "integrations/recommended/context7/verify.ps1",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:verify.ps1",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "c173919d7b273e31ce30b0a95d765a2a1aeab4e67a78c33b9461711c998bd093",
+      "token_estimate": 82
+    },
+    {
+      "id": "integration:integrations:recommended:playwright:mcp:adapters:antigravity:json",
+      "layer": "integration",
+      "source": "integrations/recommended/playwright-mcp/adapters/antigravity.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:antigravity.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "fe5c5e59e4334b9bb4ec1ade2e6e0572cc684dd9464e74985f8b9fdcdce9ffab",
+      "token_estimate": 42
+    },
+    {
+      "id": "integration:integrations:recommended:playwright:mcp:adapters:codex:toml",
+      "layer": "integration",
+      "source": "integrations/recommended/playwright-mcp/adapters/codex.toml",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:codex.toml",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "e6aad690c9b3601b5555936ae5ba3acc629e0ec38bad378e46a69f2d2292546e",
+      "token_estimate": 38
+    },
+    {
+      "id": "integration:integrations:recommended:playwright:mcp:adapters:cursor:json",
+      "layer": "integration",
+      "source": "integrations/recommended/playwright-mcp/adapters/cursor.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:cursor.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "fe5c5e59e4334b9bb4ec1ade2e6e0572cc684dd9464e74985f8b9fdcdce9ffab",
+      "token_estimate": 42
+    },
+    {
+      "id": "integration:integrations:recommended:playwright:mcp:adapters:grok:json",
+      "layer": "integration",
+      "source": "integrations/recommended/playwright-mcp/adapters/grok.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:grok.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "fe5c5e59e4334b9bb4ec1ade2e6e0572cc684dd9464e74985f8b9fdcdce9ffab",
+      "token_estimate": 42
+    },
+    {
+      "id": "integration:integrations:recommended:playwright:mcp:adapters:opencode:json",
+      "layer": "integration",
+      "source": "integrations/recommended/playwright-mcp/adapters/opencode.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:opencode.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "fe5c5e59e4334b9bb4ec1ade2e6e0572cc684dd9464e74985f8b9fdcdce9ffab",
+      "token_estimate": 42
+    },
+    {
+      "id": "integration:integrations:recommended:playwright:mcp:install:ps1",
+      "layer": "integration",
+      "source": "integrations/recommended/playwright-mcp/install.ps1",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:install.ps1",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "e03d9fa7911a8b48f67bed552e6b372b7dbe2c1b202bc01b0b2ed47a1a036497",
+      "token_estimate": 180
+    },
+    {
+      "id": "integration:integrations:recommended:playwright:mcp:manifest:json",
+      "layer": "integration",
+      "source": "integrations/recommended/playwright-mcp/manifest.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:manifest.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "b81ec7af31fa21ef6ae7bc755881f3b29499034ce31fd8b38a66e633c6cfcc4c",
+      "token_estimate": 62
+    },
+    {
+      "id": "integration:integrations:recommended:playwright:mcp:readme:md",
+      "layer": "integration",
+      "source": "integrations/recommended/playwright-mcp/README.md",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:README.md",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "6be352cff1d321c2cb4e867be2e9ff69c4f579879a91664f49c260d2601d49b1",
+      "token_estimate": 104
+    },
+    {
+      "id": "integration:integrations:recommended:playwright:mcp:uninstall:ps1",
+      "layer": "integration",
+      "source": "integrations/recommended/playwright-mcp/uninstall.ps1",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:uninstall.ps1",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "d6e392b908ae1df37ce0414fdd9139c2601f6c84543f56dfda83bbfea2f55b4a",
+      "token_estimate": 29
+    },
+    {
+      "id": "integration:integrations:recommended:playwright:mcp:verify:ps1",
+      "layer": "integration",
+      "source": "integrations/recommended/playwright-mcp/verify.ps1",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:verify.ps1",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "4762ff7aebbbec73bba37027c0e9728df4a7d11093abf2ae78646e071aea5984",
+      "token_estimate": 86
+    },
+    {
+      "id": "integration:integrations:registry:json",
+      "layer": "integration",
+      "source": "integrations/registry.json",
+      "load_policy": "router",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:registry.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "a904bb847a80b3d8e543faf9f0572f7b0382e37e3374ec698190bc5ab148132b",
+      "token_estimate": 2342
+    },
+    {
+      "id": "integration:integrations:registry:yaml",
+      "layer": "integration",
+      "source": "integrations/registry.yaml",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:registry.yaml",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "75bea562216b312e16709e0b3158be2e412914d3ed2d94f13f6b0306a95ca7a4",
+      "token_estimate": 2262
+    },
+    {
+      "id": "integration:integrations:required:codebase:memory:mcp:adapters:antigravity:json",
+      "layer": "integration",
+      "source": "integrations/required/codebase-memory-mcp/adapters/antigravity.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:antigravity.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "70d395491e4bbeb22a75568b77b2e52757662c633f35aa4b5292acb6fd365b1d",
+      "token_estimate": 34
+    },
+    {
+      "id": "integration:integrations:required:codebase:memory:mcp:adapters:codex:toml",
+      "layer": "integration",
+      "source": "integrations/required/codebase-memory-mcp/adapters/codex.toml",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:codex.toml",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "f131c51dfa54f333c0afebb4b9a412f05ac8d025494ab429e0ba160d9bb47e84",
+      "token_estimate": 30
+    },
+    {
+      "id": "integration:integrations:required:codebase:memory:mcp:adapters:cursor:json",
+      "layer": "integration",
+      "source": "integrations/required/codebase-memory-mcp/adapters/cursor.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:cursor.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "70d395491e4bbeb22a75568b77b2e52757662c633f35aa4b5292acb6fd365b1d",
+      "token_estimate": 34
+    },
+    {
+      "id": "integration:integrations:required:codebase:memory:mcp:adapters:grok:json",
+      "layer": "integration",
+      "source": "integrations/required/codebase-memory-mcp/adapters/grok.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:grok.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "70d395491e4bbeb22a75568b77b2e52757662c633f35aa4b5292acb6fd365b1d",
+      "token_estimate": 34
+    },
+    {
+      "id": "integration:integrations:required:codebase:memory:mcp:adapters:opencode:json",
+      "layer": "integration",
+      "source": "integrations/required/codebase-memory-mcp/adapters/opencode.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:opencode.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "70d395491e4bbeb22a75568b77b2e52757662c633f35aa4b5292acb6fd365b1d",
+      "token_estimate": 34
+    },
+    {
+      "id": "integration:integrations:required:codebase:memory:mcp:install:ps1",
+      "layer": "integration",
+      "source": "integrations/required/codebase-memory-mcp/install.ps1",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:install.ps1",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "7e7de1f5fcabd35eec34c9d758a3baeae4b97d92cd0932d0343c203221ad2a55",
+      "token_estimate": 692
+    },
+    {
+      "id": "integration:integrations:required:codebase:memory:mcp:manifest:json",
+      "layer": "integration",
+      "source": "integrations/required/codebase-memory-mcp/manifest.json",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:manifest.json",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "e2b6ec41dd16176e3342f4b9829d6a717a1d77843ded82bd7fb2fdc6552acb64",
+      "token_estimate": 358
+    },
+    {
+      "id": "integration:integrations:required:codebase:memory:mcp:uninstall:ps1",
+      "layer": "integration",
+      "source": "integrations/required/codebase-memory-mcp/uninstall.ps1",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:uninstall.ps1",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "62e4c539503a89745031007408f89b60a4e9a443739087dfe6ec813bf2ac7509",
+      "token_estimate": 173
+    },
+    {
+      "id": "integration:integrations:required:codebase:memory:mcp:verify:ps1",
+      "layer": "integration",
+      "source": "integrations/required/codebase-memory-mcp/verify.ps1",
+      "load_policy": "verify-only",
+      "owner": "integrations/registry.json",
+      "trigger": "integration:verify.ps1",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "d0cdf47a22ddeffd4bf2c8a33064ee08762dfb67cd4264b730261a8c5949227c",
+      "token_estimate": 290
+    },
+    {
+      "id": "platform:antigravity",
+      "layer": "platform",
+      "source": "platforms/antigravity/antigravity-overlay.md",
+      "load_policy": "platform",
+      "owner": "platforms/antigravity",
+      "trigger": "platform:antigravity",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "cb916e2673f0a199d96135b06fbcb27883e630506225269bfb319ca9a20e300d",
+      "token_estimate": 272
+    },
+    {
+      "id": "platform:codex",
+      "layer": "platform",
+      "source": "platforms/codex/codex-overlay.md",
+      "load_policy": "platform",
+      "owner": "platforms/codex",
+      "trigger": "platform:codex",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "935f8be87b0eaf2c34377fc4209053335f37c58936f18bb1688a02c6af599437",
+      "token_estimate": 317
+    },
+    {
+      "id": "platform:cursor",
+      "layer": "platform",
+      "source": "platforms/cursor/cursor-overlay.md",
+      "load_policy": "platform",
+      "owner": "platforms/cursor",
+      "trigger": "platform:cursor",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "463146b9ba628d1de42b1de37d3d990573364a37007c50c811baf36162c5ade1",
+      "token_estimate": 182
+    },
+    {
+      "id": "platform:grok",
+      "layer": "platform",
+      "source": "platforms/grok/grok-overlay.md",
+      "load_policy": "platform",
+      "owner": "platforms/grok",
+      "trigger": "platform:grok",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "911bfcc90af988b64c77d32e1ad9fe0ab8ee357d525b8e9021b7e4ce1516406b",
+      "token_estimate": 280
+    },
+    {
+      "id": "platform:opencode",
+      "layer": "platform",
+      "source": "platforms/opencode/opencode-overlay.md",
+      "load_policy": "platform",
+      "owner": "platforms/opencode",
+      "trigger": "platform:opencode",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "822b173e262fd2ec71348b348e3c1946b538b0eeac17c6a222814fffc3acb3e5",
+      "token_estimate": 483
+    },
+    {
+      "id": "project:5fedu:entry",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/AGENTS.md",
+      "load_policy": "router",
+      "owner": "profiles/5fedu/projects/AGENTS.md",
+      "trigger": "project:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "1660abd47e6476168304ad6eea3ec0e7160403fb0d8f52d54e8b1ec1f05f0e9a",
+      "token_estimate": 704
+    },
+    {
+      "id": "project:5fedu:entry",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/context-template/AGENTS.md",
+      "load_policy": "router",
+      "owner": "profiles/5fedu/projects/context-template/AGENTS.md",
+      "trigger": "project:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "875d6737d6bc2e6b9374e4f14608724045c3531cb58c46f956f465a0765da378",
+      "token_estimate": 111
+    },
+    {
+      "id": "project:5fedu:entry",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/context-template/root-AGENTS.md",
+      "load_policy": "router",
+      "owner": "profiles/5fedu/projects/context-template/root-AGENTS.md",
+      "trigger": "project:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "6f9f33156fc45aa4e3a994b67700f81c55826e78626cde02081127f1f1efe554",
+      "token_estimate": 107
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:archive:nostime:architecture:and:specs:md",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/archive/nostime/architecture-and-specs.md",
+      "load_policy": "verify-only",
+      "owner": "profiles/5fedu/projects/archive/nostime/architecture-and-specs.md",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "6476598ea35255e812f79748558a0ad5e3ba43f9af218575d84c2b12930f5423",
+      "token_estimate": 1330
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:archive:nostime:backend:notes:md",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/archive/nostime/backend-notes.md",
+      "load_policy": "verify-only",
+      "owner": "profiles/5fedu/projects/archive/nostime/backend-notes.md",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "b650ceb3255d72ea6e71f60471f615e0970d47ed2360626e5937647415db33d8",
+      "token_estimate": 1339
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:archive:nostime:database:specs:md",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/archive/nostime/database-specs.md",
+      "load_policy": "verify-only",
+      "owner": "profiles/5fedu/projects/archive/nostime/database-specs.md",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "f5c54f1983de7afc1a7966aa8b951990c620c048ca1602490ddcc5375722b038",
+      "token_estimate": 4486
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:archive:nostime:decisions:md",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/archive/nostime/decisions.md",
+      "load_policy": "verify-only",
+      "owner": "profiles/5fedu/projects/archive/nostime/decisions.md",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "db01d899d0299888236934de6ec7c0f01ae13fe5549f9a3851684d0e2da0ad1d",
+      "token_estimate": 486
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:archive:nostime:google:sheets:source:map:md",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/archive/nostime/google-sheets-source-map.md",
+      "load_policy": "verify-only",
+      "owner": "profiles/5fedu/projects/archive/nostime/google-sheets-source-map.md",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "e1e3fe89732aa56a47683226e314c698620b187757c21dacab12af665b10471e",
+      "token_estimate": 958
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:archive:nostime:source:specs:and:coverage:md",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/archive/nostime/source-specs-and-coverage.md",
+      "load_policy": "verify-only",
+      "owner": "profiles/5fedu/projects/archive/nostime/source-specs-and-coverage.md",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "1379b4be68d8286c80d7d6e10cf8da8c6938b03adb46c0b2ce7ba682a52cc2af",
+      "token_estimate": 1370
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:domains:business:md",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/domains/business.md",
+      "load_policy": "leaf",
+      "owner": "profiles/5fedu/projects/domains/business.md",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "master-detail",
+          "duyệt",
+          "rollup",
+          "export",
+          "báo cáo",
+          "thống kê",
+          "excel",
+          "pdf"
+        ],
+        "intent_signals": [
+          "5fedu_business"
+        ],
+        "excludes": [],
+        "priority": 50,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "5fedu",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "9714a777e919e76d8f8997957d9f7dd5b85c2a87b9714c0c2a8bcecfaa1716f0",
+      "token_estimate": 1838
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:domains:database:md",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/domains/database.md",
+      "load_policy": "leaf",
+      "owner": "profiles/5fedu/projects/domains/database.md",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "migration",
+          "rls",
+          "schema",
+          "int8",
+          "uuid",
+          "foreign key",
+          "index"
+        ],
+        "intent_signals": [
+          "5fedu_database"
+        ],
+        "excludes": [],
+        "priority": 60,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "5fedu",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "250273e032cf4d7c7255db7a668c53ef8f2eabf2f3ef378cca616c34a6dea8d2",
+      "token_estimate": 515
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:domains:module:mapping:md",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/domains/module-mapping.md",
+      "load_policy": "leaf",
+      "owner": "profiles/5fedu/projects/domains/module-mapping.md",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "5fedu ui",
+          "drawer",
+          "listview",
+          "parity",
+          "ERP module"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ],
+        "excludes": [],
+        "priority": 70,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "5fedu",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "1746e0520f62d798a5b0704ff89f118f5bba46b405579db2cdba247488c8086f",
+      "token_estimate": 1845
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:domains:permissions:md",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/domains/permissions.md",
+      "load_policy": "leaf",
+      "owner": "profiles/5fedu/projects/domains/permissions.md",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "permission",
+          "phân quyền",
+          "cap_bac",
+          "quyền xem",
+          "quyền sửa",
+          "quyền xóa",
+          "quản trị"
+        ],
+        "intent_signals": [
+          "5fedu_permissions"
+        ],
+        "excludes": [],
+        "priority": 60,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "5fedu",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "54aed66346f734157bacd361bdc950adead4ae5cdef3bdb720ab8b0196fcfaae",
+      "token_estimate": 824
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:domains:references:module:inventory:yaml",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/domains/references/module-inventory.yaml",
+      "load_policy": "reference",
+      "owner": "profiles/5fedu/projects/domains/references/module-inventory.yaml",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "detail",
+          "navigation",
+          "verify",
+          "surface"
+        ],
+        "intent_signals": [
+          "5fedu_detail"
+        ],
+        "excludes": [],
+        "priority": 40,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "5fedu",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "ba91a01d2ba85af52f280f4120fb82f27b75817bc2ba2d686e2b74555a8bba77",
+      "token_estimate": 1156
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:domains:references:pattern:inventory:yaml",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/domains/references/pattern-inventory.yaml",
+      "load_policy": "reference",
+      "owner": "profiles/5fedu/projects/domains/references/pattern-inventory.yaml",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "detail",
+          "navigation",
+          "verify",
+          "surface"
+        ],
+        "intent_signals": [
+          "5fedu_detail"
+        ],
+        "excludes": [],
+        "priority": 40,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "5fedu",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "ca28439a89e76922e3cddc10d26f20030a73b001402d9f305a84e7d7db518af8",
+      "token_estimate": 4374
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:domains:references:ui:delivery:detail:md",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/domains/references/ui-delivery-detail.md",
+      "load_policy": "reference",
+      "owner": "profiles/5fedu/projects/domains/references/ui-delivery-detail.md",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "detail",
+          "navigation",
+          "verify",
+          "surface"
+        ],
+        "intent_signals": [
+          "5fedu_detail"
+        ],
+        "excludes": [],
+        "priority": 40,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "5fedu",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "c02a9d3cba48bce919363c90ca8f35a5679ef8b3db789ad63a50abdf49cf7852",
+      "token_estimate": 1222
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:domains:surface:taxonomy:md",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/domains/surface-taxonomy.md",
+      "load_policy": "leaf",
+      "owner": "profiles/5fedu/projects/domains/surface-taxonomy.md",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "3c029e43170856b18a8b32492d80ecdb36697269c2d79faea23f96a70796fcef",
+      "token_estimate": 892
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:domains:tech:stack:md",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/domains/tech-stack.md",
+      "load_policy": "leaf",
+      "owner": "profiles/5fedu/projects/domains/tech-stack.md",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "cdc315e3aee6f0d85ff5bc97e47007c2892b978882d164c21826c76177f98aeb",
+      "token_estimate": 579
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:domains:ui:delivery:md",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/domains/ui-delivery.md",
+      "load_policy": "leaf",
+      "owner": "profiles/5fedu/projects/domains/ui-delivery.md",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "5fedu ui",
+          "drawer",
+          "listview",
+          "parity",
+          "ERP module"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ],
+        "excludes": [],
+        "priority": 70,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "5fedu",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "573cf4b0b036dc5d0c8899c82a19a20b472c52d65f6966bf8a36ad8641285faf",
+      "token_estimate": 1430
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:evidence:coverage:audit:md",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/evidence/coverage-audit.md",
+      "load_policy": "verify-only",
+      "owner": "profiles/5fedu/projects/evidence/coverage-audit.md",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "71575636ae4b2101737fb9b491fc9d6ef34ce5eb87cad37036bd3e674760539c",
+      "token_estimate": 2807
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:evidence:legacy:migration:checklist:md",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/evidence/legacy-migration-checklist.md",
+      "load_policy": "verify-only",
+      "owner": "profiles/5fedu/projects/evidence/legacy-migration-checklist.md",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "0f07bc38ec8fb74235098502b7a0d35776070a2c1732243bc4a352e30f8e6c7b",
+      "token_estimate": 1291
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:evidence:owner:feedback:lessons:md",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/evidence/owner-feedback-lessons.md",
+      "load_policy": "verify-only",
+      "owner": "profiles/5fedu/projects/evidence/owner-feedback-lessons.md",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "7a08714972beb45d2cc34bcb77482d02a818c5aad11785f16b89133b638ab1e5",
+      "token_estimate": 272
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:evidence:owner:feedback:transport:ui:md",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/evidence/owner-feedback-transport-ui.md",
+      "load_policy": "verify-only",
+      "owner": "profiles/5fedu/projects/evidence/owner-feedback-transport-ui.md",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "ec6223a4aec0cd798052ea077073b96223b7d7d24c8aac59cacd86f712029a0d",
+      "token_estimate": 322
+    },
+    {
+      "id": "project:5fedu:profiles:5fedu:projects:evidence:source:examples:md",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/evidence/source-examples.md",
+      "load_policy": "verify-only",
+      "owner": "profiles/5fedu/projects/evidence/source-examples.md",
+      "trigger": "domain:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "6b0923c628e88b34b3706e219b6204322082cf414f883783f90185c5554047d2",
+      "token_estimate": 2409
+    },
+    {
+      "id": "project:5fedu:router",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/00-context-map.md",
+      "load_policy": "router",
+      "owner": "profiles/5fedu/projects/00-context-map.md",
+      "trigger": "project:5fedu:domain",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "5fedu",
+          "context/5fedu",
+          "tah-app",
+          "nostime"
+        ],
+        "intent_signals": [
+          "5fedu_setup",
+          "5fedu_context"
+        ],
+        "excludes": [],
+        "priority": 30,
+        "loads": [
+          "project:5fedu:router"
+        ],
+        "requires": [],
+        "supports": [],
+        "project_scope": "5fedu",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "5dcb8b844a1f3dd50fb64ca85d39071f406160c84c47fe0de4dd8ab9f24598ec",
+      "token_estimate": 1080
+    },
+    {
+      "id": "rule:00-bootstrap",
+      "layer": "rules",
+      "source": "rules/00-bootstrap.md",
+      "load_policy": "always",
+      "owner": "rules/00-bootstrap.md",
+      "trigger": "Runtime identity, intent, proportional planning, and hard boundaries.",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": true
+      },
+      "source_hash": "bf4ac06f19d8d019d3fbf751c72c5afc054f432f4fc9b85b0dbcce94c372ffeb",
+      "token_estimate": 367
+    },
+    {
+      "id": "rule:05-critical-thinking",
+      "layer": "rules",
+      "source": "rules/05-critical-thinking.md",
+      "load_policy": "always",
+      "owner": "rules/05-critical-thinking.md",
+      "trigger": "Constructive pushback when advising or comparing solutions.",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": true
+      },
+      "source_hash": "7ce1b04237407a31362c4ff4e1843dec900c8d3b3872261025122755aa354e46",
+      "token_estimate": 180
+    },
+    {
+      "id": "rule:10-execution",
+      "layer": "rules",
+      "source": "rules/10-execution.md",
+      "load_policy": "always",
+      "owner": "rules/10-execution.md",
+      "trigger": "Scope, execution, verification, and reporting contract.",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": true
+      },
+      "source_hash": "022e4a3912641ba5359ae3ad95f45ad401074682003db6c5041c3160cc9d2369",
+      "token_estimate": 510
+    },
+    {
+      "id": "rule:15-output-economy",
+      "layer": "rules",
+      "source": "rules/15-output-economy.md",
+      "load_policy": "always",
+      "owner": "rules/15-output-economy.md",
+      "trigger": "Output economy and direct communication for token efficiency.",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": true
+      },
+      "source_hash": "3bc41f334eaefbb48bbd1883b2fa7158c1edad3ef1f0d883a8dd09c7ef979529",
+      "token_estimate": 164
+    },
+    {
+      "id": "rule:16-context-style",
+      "layer": "rules",
+      "source": "rules/16-context-style.md",
+      "load_policy": "router",
+      "owner": "rules/16-context-style.md",
+      "trigger": "Living context writing style — short bullets, direct actions, anti-drift.",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "8e740b4a098779f4a34341d1d07f382bca22b602d0f1a60bfba3beb7352b6954",
+      "token_estimate": 1257
+    },
+    {
+      "id": "rule:20-quality-and-safety",
+      "layer": "rules",
+      "source": "rules/20-quality-and-safety.md",
+      "load_policy": "always",
+      "owner": "rules/20-quality-and-safety.md",
+      "trigger": "Engineering quality, mutation safety, and regression boundaries.",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": true
+      },
+      "source_hash": "fecb5194445aedb5bc972d9b3b776945878aa4754018f0ef6aedf2331635c9a2",
+      "token_estimate": 271
+    },
+    {
+      "id": "rule:25-task-lifecycle",
+      "layer": "rules",
+      "source": "rules/25-task-lifecycle.md",
+      "load_policy": "always",
+      "owner": "rules/25-task-lifecycle.md",
+      "trigger": "Workflow classification, proportional work state, and execution ownership.",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": true
+      },
+      "source_hash": "028206d75b91b221319c59d2bd709e51373cd463e6ef2f9a15014b57ccd064b8",
+      "token_estimate": 837
+    },
+    {
+      "id": "rule:30-context-routing",
+      "layer": "rules",
+      "source": "rules/30-context-routing.md",
+      "load_policy": "always",
+      "owner": "rules/30-context-routing.md",
+      "trigger": "Progressive context loading and capability activation.",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": true
+      },
+      "source_hash": "a84522cc07fc44875d59b13466ce5cefd485b77135496fa9a498a38245f4b629",
+      "token_estimate": 564
+    },
+    {
+      "id": "rule:40-harness-governance",
+      "layer": "rules",
+      "source": "rules/40-harness-governance.md",
+      "load_policy": "router",
+      "owner": "rules/40-harness-governance.md",
+      "trigger": "Pointer to 41-harness-maintainer.md for full harness governance.",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "7fc57d6034de4574b85d165abe7233512556b9c923e3b2cd66b0728e497d8bd5",
+      "token_estimate": 87
+    },
+    {
+      "id": "rule:41-harness-maintainer",
+      "layer": "rules",
+      "source": "rules/41-harness-maintainer.md",
+      "load_policy": "router",
+      "owner": "rules/41-harness-maintainer.md",
+      "trigger": "Complete ruleset for agent-rules harness maintenance, sync, build, install, and governance. Trigger when modifying or auditing rules, skills, integrations, platforms, or automation scripts (sửa agent-rules harness, thay đổi rules, cập nhật skill, sửa automation).",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "5d30cc31d11b468cd15fbf35dca46f080ade913c14d2505dcff465b09e51f534",
+      "token_estimate": 1000
+    },
+    {
+      "id": "rule:50-context-budget",
+      "layer": "rules",
+      "source": "rules/50-context-budget.md",
+      "load_policy": "router",
+      "owner": "rules/50-context-budget.md",
+      "trigger": "Context budget, fresh sessions, and code exploration discipline.",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "fb5337b95443e508d81282baa4371bc46e3c2a1306074aeca369b8658691d409",
+      "token_estimate": 819
+    },
+    {
+      "id": "skill:5fedu-module-parity",
+      "layer": "skills",
+      "source": "profiles/5fedu/skills/5fedu-module-parity/SKILL.md",
+      "load_policy": "skill",
+      "owner": "profiles/5fedu/skills/5fedu-module-parity/SKILL.md",
+      "trigger": "5fedu ERP module UI parity — clone/adapt from Nhân viên/Phòng ban template. Use when làm module mới, thêm module, tạo màn hình/trang, sửa module, chỉnh module, refactor module, thêm chức năng vào module, clone module, lệch, sai pattern, thiếu nút, drawer sai, listview sai, toolbar sai, parity, đối chiếu template, nhập hàng lệch. Do NOT use for branding/landing/redesign outside ERP shells (frontend-architect). Do NOT use without context/5fedu in active repo.",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "5fedu",
+          "context/5fedu",
+          "5fedu ui",
+          "làm module",
+          "sửa module",
+          "refactor module",
+          "drawer",
+          "listview",
+          "parity"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ],
+        "excludes": [
+          "branding",
+          "landing",
+          "redesign outside ERP"
+        ],
+        "priority": 80,
+        "loads": [
+          "project:5fedu:router",
+          "pattern-inventory",
+          "module-mapping",
+          "ui-delivery"
+        ],
+        "requires": [
+          "5fedu-project"
+        ],
+        "supports": [
+          "qa-skills",
+          "browser-qa"
+        ],
+        "project_scope": "5fedu",
+        "platform_scope": "all",
+        "max_route_tokens": 10400,
+        "default": false
+      },
+      "source_hash": "01e879f4300305594a8ac926431c12db4cb17bd95e13d44ba9eedde96c6d1295",
+      "token_estimate": 2069
+    },
+    {
+      "id": "skill:5fedu-project",
+      "layer": "skills",
+      "source": "profiles/5fedu/skills/5fedu-project/SKILL.md",
+      "load_policy": "skill",
+      "owner": "profiles/5fedu/skills/5fedu-project/SKILL.md",
+      "trigger": "Scaffold or maintain 5fedu context in a real project repo. Use when 5fedu setup, context/5fedu, tah-app, nostime, owner decisions, Supabase/UI conventions. Trigger — thiết lập 5fedu, cài context dự án, tah-app, nostime. Do NOT read agent-rules/profiles/5fedu/projects/ during app implementation — only <repo>/context/5fedu/ after install. Do NOT use without 5fedu context in the active repo.",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "5fedu",
+          "context/5fedu",
+          "tah-app",
+          "nostime",
+          "thiết lập 5fedu",
+          "cài context dự án",
+          "owner decisions",
+          "supabase"
+        ],
+        "intent_signals": [
+          "5fedu_setup",
+          "5fedu_context"
+        ],
+        "excludes": [
+          "generic module without 5fedu"
+        ],
+        "priority": 70,
+        "loads": [
+          "project:5fedu:entry",
+          "project:5fedu:router"
+        ],
+        "supports": [
+          "5fedu-module-parity"
+        ],
+        "project_scope": "5fedu",
+        "platform_scope": "all",
+        "max_route_tokens": 1800,
+        "default": false
+      },
+      "source_hash": "c6cc85c8520d8413b1ded1a34942e09d07cff1c0fa85211228f2e5838b45e21e",
+      "token_estimate": 565
+    },
+    {
+      "id": "skill:best-of-n",
+      "layer": "skills",
+      "source": "skills/best-of-n/SKILL.md",
+      "load_policy": "skill",
+      "owner": "skills/best-of-n/SKILL.md",
+      "trigger": ">",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "best of n",
+          "try multiple approaches",
+          "parallel implementations",
+          "/best-of-n",
+          "/bon"
+        ],
+        "excludes": [],
+        "priority": 60,
+        "loads": [
+          "skill:best-of-n"
+        ],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "all",
+        "max_route_tokens": 3500,
+        "default": false
+      },
+      "source_hash": "a37af56aa04961cd7e98a452f6dcbfe67cfe0803ae24dbfe86a7da2ca24ae467",
+      "token_estimate": 1045
+    },
+    {
+      "id": "skill:browser-qa",
+      "layer": "skills",
+      "source": "skills/browser-qa/SKILL.md",
+      "load_policy": "skill",
+      "owner": "skills/browser-qa/SKILL.md",
+      "trigger": ">",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "browser",
+          "live/manual",
+          "click-through",
+          "e2e",
+          "smoke",
+          "exploratory",
+          "screenshot",
+          "console/network",
+          "playwright",
+          "chrome-devtools"
+        ],
+        "intent_signals": [
+          "browser_qa",
+          "e2e"
+        ],
+        "excludes": [
+          "static source verification",
+          "unit/api only"
+        ],
+        "priority": 80,
+        "loads": [
+          "skill:browser-qa"
+        ],
+        "requires": [
+          "qa-skills"
+        ],
+        "supports": [
+          "5fedu-module-parity"
+        ],
+        "project_scope": "",
+        "platform_scope": "all",
+        "max_route_tokens": 3500,
+        "default": false
+      },
+      "source_hash": "2e29b2b4f6fe9ecaeeb3a2a6c6a2b1cd7e7cece061fe3cbba33ce1fbf7c97105",
+      "token_estimate": 769
+    },
+    {
+      "id": "skill:clean-code",
+      "layer": "skills",
+      "source": "skills/clean-code/SKILL.md",
+      "load_policy": "skill",
+      "owner": "skills/clean-code/SKILL.md",
+      "trigger": "Distilled clean-code guidelines, 2-phase code quality gate (pre-plan smell scan / post-plan strict review), triage lanes, and hard-block validation rules. Trigger on \"clean code\", \"dọn dẹp code\", \"refactor code\", \"viết code đẹp\", \"tối ưu code\", smell scan, hard-block. Do NOT use for deep maintainability audit — that is skill code-review (user-invoked).",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "clean code",
+          "dọn dẹp code",
+          "refactor code",
+          "viết code đẹp",
+          "tối ưu code",
+          "smell scan",
+          "hard-block"
+        ],
+        "excludes": [
+          "pure q&a"
+        ],
+        "priority": 50,
+        "loads": [
+          "skill:clean-code"
+        ],
+        "supports": [
+          "implementation-discovery",
+          "code-review"
+        ],
+        "project_scope": "",
+        "platform_scope": "all",
+        "max_route_tokens": 3500,
+        "default": false
+      },
+      "source_hash": "07c02ea410ae1142d6af5ddcfc2fa21bfec56967122674bbb50a916725f67c1b",
+      "token_estimate": 703
+    },
+    {
+      "id": "skill:code-review",
+      "layer": "skills",
+      "source": "skills/code-review/SKILL.md",
+      "load_policy": "skill",
+      "owner": "skills/code-review/SKILL.md",
+      "trigger": "Run an extremely strict maintainability review for abstraction quality, giant files, and spaghetti-condition growth. Use for a deep code quality audit or an especially harsh maintainability review.",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "deep code quality audit",
+          "strict maintainability review",
+          "spaghetti",
+          "code judo"
+        ],
+        "excludes": [
+          "ordinary comparison",
+          "obvious fix"
+        ],
+        "priority": 60,
+        "loads": [
+          "skill:code-review"
+        ],
+        "supports": [
+          "clean-code"
+        ],
+        "project_scope": "",
+        "platform_scope": "all",
+        "max_route_tokens": 4000,
+        "default": false
+      },
+      "source_hash": "d849bef155650969e80be3e90ac03f3eb791d1a2d9645e88882ea059a0898b45",
+      "token_estimate": 3579
+    },
+    {
+      "id": "skill:context-evolution-protocol",
+      "layer": "skills",
+      "source": "skills/context-evolution-protocol/SKILL.md",
+      "load_policy": "skill",
+      "owner": "skills/context-evolution-protocol/SKILL.md",
+      "trigger": "Trigger-only protocol for learning from user feedback and evolving agent context safely. Use when modifying, promoting, deduplicating, or auditing AGENTS.md, rules, skills, workflows, .agents, .codex, 5fedu context, or when user feedback reveals repeated agent misunderstanding, context drift, over-specific rules, duplicated lessons, or requests like \"ghi nhớ\", \"bổ sung context\", \"đưa vào rule\", \"đừng lặp lại\", \"context bị loạn\", \"dọn context\", \"sync rule\". Do not use for ordinary coding tasks.",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "AGENTS.md",
+          "rules",
+          "skills",
+          "context",
+          "ghi nhớ",
+          "bổ sung context",
+          "dọn context",
+          "sync rule",
+          "agent-rules"
+        ],
+        "intent_signals": [
+          "context_evolution"
+        ],
+        "excludes": [
+          "ordinary implementation",
+          "cài context",
+          "thiết lập 5fedu"
+        ],
+        "priority": 90,
+        "loads": [
+          "skill:context-evolution-protocol"
+        ],
+        "supports": [
+          "clean-code"
+        ],
+        "project_scope": "",
+        "platform_scope": "all",
+        "max_route_tokens": 2800,
+        "default": false
+      },
+      "source_hash": "c833749438df4c2a387ed3c498368f929c5f45ee6a9cc341aa5f0d410be374f9",
+      "token_estimate": 2563
+    },
+    {
+      "id": "skill:docs-style",
+      "layer": "skills",
+      "source": "skills/docs-style/SKILL.md",
+      "load_policy": "skill",
+      "owner": "skills/docs-style/SKILL.md",
+      "trigger": "Use this skill when creating, reviewing, rewriting, or restructuring high-quality project documentation for README.md, README-vi.md, technical specs, tech stack badges, screenshots, documentation cleanup, or /docs/**. Trigger for source-grounded docs, repo documentation architecture, docs quality complaints, README style, Vietnamese/English README parity, current-vs-legacy tech stack accuracy, or docs that must match/exceed a strong hand-written spec such as vhdg-conhon/SPECS.md.",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "README",
+          "README-vi",
+          "/docs/",
+          "documentation",
+          "tài liệu",
+          "docs cleanup",
+          "tech stack"
+        ],
+        "excludes": [
+          "pure code implementation"
+        ],
+        "priority": 50,
+        "loads": [
+          "skill:docs-style"
+        ],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "all",
+        "max_route_tokens": 4500,
+        "default": false
+      },
+      "source_hash": "0fdd3b14c2f24f5f4f043187df679e5e007648f8432bb210027cf823d2b28b89",
+      "token_estimate": 3499
+    },
+    {
+      "id": "skill:finish-to-completion",
+      "layer": "skills",
+      "source": "skills/finish-to-completion/SKILL.md",
+      "load_policy": "skill",
+      "owner": "skills/finish-to-completion/SKILL.md",
+      "trigger": "Use after an explicit execute pivot for a clear task or executable plan. Complete feasible in-scope work, verify claims with fresh evidence, and continue independent work around genuine blockers. Do not use for plan-only, pure Q&A, or an unbounded multi-part request that first needs plan-and-handoff.",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "làm đi",
+          "implement",
+          "fix",
+          "refactor",
+          "migrate",
+          "hoàn thành",
+          "execute"
+        ],
+        "intent_signals": [
+          "execution"
+        ],
+        "excludes": [
+          "plan-only",
+          "pure q&a"
+        ],
+        "priority": 10,
+        "loads": [
+          "skill:finish-to-completion",
+          "adaptive-work-protocol"
+        ],
+        "supports": [
+          "implementation-discovery",
+          "clean-code"
+        ],
+        "project_scope": "",
+        "platform_scope": "all",
+        "max_route_tokens": 1500,
+        "default": false
+      },
+      "source_hash": "0f59d1de422bd961d0a0b203d6cc688b07d6140d8300496f34fc2e572572427a",
+      "token_estimate": 1172
+    },
+    {
+      "id": "skill:frontend-architect",
+      "layer": "skills",
+      "source": "skills/frontend-architect/SKILL.md",
+      "load_policy": "skill",
+      "owner": "skills/frontend-architect/SKILL.md",
+      "trigger": "UI/UX polish for marketing/landing and non-ERP surfaces — Tailwind, motion, redesign. Use for giao diện đẹp, branding, landing, animation polish outside ERP module shells. Do NOT use when repo has context/5fedu and task is ERP module (tạo/sửa/refactor module, parity, lệch, sai pattern, drawer/listview/toolbar) — use 5fedu-module-parity + ui-delivery + module-mapping. Do NOT use for pure backend. Reference quality, not rigid pipeline.",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "branding",
+          "landing",
+          "marketing",
+          "redesign",
+          "animation",
+          "giao diện đẹp"
+        ],
+        "excludes": [
+          "5fedu",
+          "ERP module",
+          "parity",
+          "drawer",
+          "listview",
+          "toolbar"
+        ],
+        "priority": 60,
+        "loads": [
+          "skill:frontend-architect"
+        ],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "all",
+        "max_route_tokens": 3500,
+        "default": false
+      },
+      "source_hash": "4c7e41858b3b5cc21c642d03bd74d69c1894aecb8668b90b690dd410652fe917",
+      "token_estimate": 850
+    },
+    {
+      "id": "skill:implementation-discovery",
+      "layer": "skills",
+      "source": "skills/implementation-discovery/SKILL.md",
+      "load_policy": "skill",
+      "owner": "skills/implementation-discovery/SKILL.md",
+      "trigger": "Reality-check only when a shared behavior, plan assumption, schema, permission, template or runtime detail may be wrong. Trigger on \"verify trước khi sửa\", \"known-unknowns\", stack vs spec, migration/auth/permission uncertainty, mojibake, orphaned records, stale closure or template gaps. Do NOT use for an obvious one-file fix, pure Q&A or plan-only work.",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "verify trước khi sửa",
+          "known-unknowns",
+          "schema uncertainty",
+          "permission uncertainty",
+          "runtime detail",
+          "template gap",
+          "stale closure",
+          "mojibake"
+        ],
+        "excludes": [
+          "obvious one-file fix",
+          "pure q&a",
+          "plan-only"
+        ],
+        "priority": 60,
+        "loads": [
+          "skill:implementation-discovery"
+        ],
+        "supports": [
+          "finish-to-completion",
+          "clean-code"
+        ],
+        "project_scope": "",
+        "platform_scope": "all",
+        "max_route_tokens": 2600,
+        "default": false
+      },
+      "source_hash": "61e89bfe865149d4f88f2e841c2b094e0e230ace77266577c0bbe5a14c10a309",
+      "token_estimate": 1178
+    },
+    {
+      "id": "skill:master-image-generation",
+      "layer": "skills",
+      "source": "skills/master-image-generation/SKILL.md",
+      "load_policy": "skill",
+      "owner": "skills/master-image-generation/SKILL.md",
+      "trigger": "Mockups, brand visuals, image-to-code. Use when user asks to generate UI mockup, sinh ảnh giao diện, brandkit, image-to-code, thiết kế màn hình từ ảnh. Do NOT use for 5fedu ERP module work (tạo/sửa/refactor module, parity, lệch) — use 5fedu-module-parity + ui-delivery + module-mapping. Do NOT use for ordinary CSS tweaks in ERP modules. Reference standards, not mandatory pipeline.",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "mockup",
+          "brand visuals",
+          "image-to-code",
+          "brandkit",
+          "sinh ảnh giao diện"
+        ],
+        "excludes": [
+          "5fedu ERP module",
+          "ordinary CSS"
+        ],
+        "priority": 50,
+        "loads": [
+          "skill:master-image-generation"
+        ],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "all",
+        "max_route_tokens": 3500,
+        "default": false
+      },
+      "source_hash": "865924fc76f53d659a092d1bedefe00f8cf62414330f804ab38c50526557ae67",
+      "token_estimate": 605
+    },
+    {
+      "id": "skill:parity-verification",
+      "layer": "skills",
+      "source": "skills/parity-verification/SKILL.md",
+      "load_policy": "skill",
+      "owner": "skills/parity-verification/SKILL.md",
+      "trigger": ">",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "parity proof",
+          "parity verification",
+          "parity claim",
+          "verify parity",
+          "diff template",
+          "visual parity",
+          "responsive parity",
+          "behavioral parity",
+          "cross-state parity",
+          "verification loop",
+          "claim-based verification"
+        ],
+        "intent_signals": [
+          "parity_verification"
+        ],
+        "excludes": [
+          "unit/api-only",
+          "static source diff only"
+        ],
+        "priority": 85,
+        "loads": [
+          "skill:parity-verification",
+          "project:<active-profile>:pattern-inventory"
+        ],
+        "requires": [
+          "browser-qa",
+          "qa-skills"
+        ],
+        "supports": [
+          "<active-profile>-module-parity"
+        ],
+        "project_scope": "",
+        "platform_scope": "all",
+        "max_route_tokens": 5000,
+        "default": false
+      },
+      "source_hash": "e9e70981f6f35e604b305768cefa5b3fb580df764149ba88f8bd97afa9799a04",
+      "token_estimate": 1196
+    },
+    {
+      "id": "skill:plan-and-handoff",
+      "layer": "skills",
+      "source": "skills/plan-and-handoff/SKILL.md",
+      "load_policy": "skill",
+      "owner": "skills/plan-and-handoff/SKILL.md",
+      "trigger": "Use for multi-part work, plan mode, handoffs, resumable work, or a request that needs an executable plan before implementation. Do not use for a single clear fix, pure Q&A, or researcher-only work.",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "plan",
+          "plan dài",
+          "nhiều phase",
+          "handoff",
+          "chia nhỏ",
+          "/goal",
+          "PAF",
+          "plan artifact",
+          "Plan Architect",
+          "Plan Scribe"
+        ],
+        "excludes": [
+          "single small fix",
+          "pure q&a"
+        ],
+        "priority": 80,
+        "loads": [
+          "skill:plan-and-handoff",
+          "adaptive-work-protocol"
+        ],
+        "supports": [
+          "implementation-discovery"
+        ],
+        "project_scope": "",
+        "platform_scope": "all",
+        "max_route_tokens": 2200,
+        "default": false
+      },
+      "source_hash": "a42bb500ad4c6e6a9054b19525561b970153e51ae2c4da7161a896cd76f1bdf6",
+      "token_estimate": 1142
+    },
+    {
+      "id": "skill:qa-skills",
+      "layer": "skills",
+      "source": "skills/qa-skills/SKILL.md",
+      "load_policy": "skill",
+      "owner": "skills/qa-skills/SKILL.md",
+      "trigger": ">",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "QA checklist",
+          "exploratory",
+          "edge-case",
+          "test như QA",
+          "manual cases",
+          "bug triage",
+          "permission matrix",
+          "release readiness",
+          "regression plan",
+          "test strategy UI"
+        ],
+        "intent_signals": [
+          "qa"
+        ],
+        "excludes": [
+          "pure unit/api only"
+        ],
+        "priority": 60,
+        "loads": [
+          "skill:qa-skills"
+        ],
+        "supports": [
+          "browser-qa",
+          "5fedu-module-parity"
+        ],
+        "project_scope": "",
+        "platform_scope": "all",
+        "max_route_tokens": 3000,
+        "default": false
+      },
+      "source_hash": "3936f6a5d2e42aa4a4ec5bb8b288ed3a6c24f96bfa22a2087c71e7509697d0cc",
+      "token_estimate": 510
+    },
+    {
+      "id": "skill:researcher",
+      "layer": "skills",
+      "source": "skills/researcher/SKILL.md",
+      "load_policy": "skill",
+      "owner": "skills/researcher/SKILL.md",
+      "trigger": "Use this skill for explicit research, latest/release/changelog documentation, unfamiliar external behavior or a bug stalled after repeated attempts. Do NOT trigger for ordinary comparison, local code reading, obvious fixes or a phased plan; use plan-and-handoff for the latter.",
+      "requires": [],
+      "routing": {
+        "signals": [
+          "research",
+          "latest",
+          "release",
+          "changelog",
+          "external behavior",
+          "stalled",
+          "unfamiliar"
+        ],
+        "excludes": [
+          "ordinary comparison",
+          "local code reading",
+          "obvious fix",
+          "phased plan"
+        ],
+        "priority": 70,
+        "loads": [
+          "skill:researcher"
+        ],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "all",
+        "max_route_tokens": 3000,
+        "default": false
+      },
+      "source_hash": "43f3b4ed2f8a29935d8e4c1fad618d26d1ae4ea98fe2b379c6a29d4bc096f34c",
+      "token_estimate": 541
+    },
+    {
+      "id": "reference:5fedu-project:profiles:5fedu:skills:5fedu:project:references:5fedu:context:map:md",
+      "layer": "skills-reference",
+      "source": "profiles/5fedu/skills/5fedu-project/references/5fedu-context-map.md",
+      "load_policy": "reference",
+      "owner": "profiles/5fedu/skills/5fedu-project/SKILL.md",
+      "trigger": "requires:5fedu-project",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "37fcba2905cb76b0d4f1fdc023cebeebcd0d1a1c4d5618f771a1a90ea8972882",
+      "token_estimate": 240
+    },
+    {
+      "id": "reference:browser-qa:skills:browser:qa:references:dual:mcp:md",
+      "layer": "skills-reference",
+      "source": "skills/browser-qa/references/dual-mcp.md",
+      "load_policy": "reference",
+      "owner": "skills/browser-qa/SKILL.md",
+      "trigger": "requires:browser-qa",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "ba45c56074030c1fff4c7270bd1e6e30faa0fd1ffcbc1a88ce9eceea95426732",
+      "token_estimate": 288
+    },
+    {
+      "id": "reference:browser-qa:skills:browser:qa:references:runbook:md",
+      "layer": "skills-reference",
+      "source": "skills/browser-qa/references/runbook.md",
+      "load_policy": "reference",
+      "owner": "skills/browser-qa/SKILL.md",
+      "trigger": "requires:browser-qa",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "897340b9388d1039e75070ef2443b25442cd036d9f0a11a06f7edff52878f614",
+      "token_estimate": 172
+    },
+    {
+      "id": "reference:clean-code:skills:clean:code:references:clean:code:checklist:md",
+      "layer": "skills-reference",
+      "source": "skills/clean-code/references/clean-code-checklist.md",
+      "load_policy": "reference",
+      "owner": "skills/clean-code/SKILL.md",
+      "trigger": "requires:clean-code",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "be7ed7b99041d72fc6816d6ba1730a3de090bea1565e150fd53b9d599e18d300",
+      "token_estimate": 1105
+    },
+    {
+      "id": "reference:docs-style:skills:docs:style:references:docs:style:reference:md",
+      "layer": "skills-reference",
+      "source": "skills/docs-style/references/docs-style-reference.md",
+      "load_policy": "reference",
+      "owner": "skills/docs-style/SKILL.md",
+      "trigger": "requires:docs-style",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "7058d3039b402ccc59871fd8c41e8874b2333b081d77baa5c18035f981125dac",
+      "token_estimate": 8775
+    },
+    {
+      "id": "reference:finish-to-completion:skills:finish:to:completion:references:completion:ledger:md",
+      "layer": "skills-reference",
+      "source": "skills/finish-to-completion/references/completion-ledger.md",
+      "load_policy": "reference",
+      "owner": "skills/finish-to-completion/SKILL.md",
+      "trigger": "requires:finish-to-completion",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "8567676485d135c1d2a7a95a2884f45154d6e4db4b38854d38897220cf770efc",
+      "token_estimate": 695
+    },
+    {
+      "id": "reference:finish-to-completion:skills:finish:to:completion:references:slice:gate:protocol:md",
+      "layer": "skills-reference",
+      "source": "skills/finish-to-completion/references/slice-gate-protocol.md",
+      "load_policy": "reference",
+      "owner": "skills/finish-to-completion/SKILL.md",
+      "trigger": "requires:finish-to-completion",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "d7416ce098811e22b21997ffcc09f314bebb67f1fc1aaff006884664dfd88b3f",
+      "token_estimate": 509
+    },
+    {
+      "id": "reference:parity-verification:skills:parity:verification:references:claim:format:md",
+      "layer": "skills-reference",
+      "source": "skills/parity-verification/references/claim-format.md",
+      "load_policy": "reference",
+      "owner": "skills/parity-verification/SKILL.md",
+      "trigger": "requires:parity-verification",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "66027a9777c57ba0be060f69e2491353c587ab6c73a2951eec91d08965a3ae81",
+      "token_estimate": 1234
+    },
+    {
+      "id": "reference:parity-verification:skills:parity:verification:references:evidence:schema:json",
+      "layer": "skills-reference",
+      "source": "skills/parity-verification/references/evidence-schema.json",
+      "load_policy": "reference",
+      "owner": "skills/parity-verification/SKILL.md",
+      "trigger": "requires:parity-verification",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "39eb499ebd3db4512a708b23e91615770336e8dddbf4e8cacb96e982c1d973c3",
+      "token_estimate": 2198
+    },
+    {
+      "id": "reference:parity-verification:skills:parity:verification:references:pipeline:md",
+      "layer": "skills-reference",
+      "source": "skills/parity-verification/references/pipeline.md",
+      "load_policy": "reference",
+      "owner": "skills/parity-verification/SKILL.md",
+      "trigger": "requires:parity-verification",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "7996857725b4658e890372e29db036bcccea69906d21fa0eaab93838d4bc7293",
+      "token_estimate": 1212
+    },
+    {
+      "id": "reference:parity-verification:skills:parity:verification:references:runbook:md",
+      "layer": "skills-reference",
+      "source": "skills/parity-verification/references/runbook.md",
+      "load_policy": "reference",
+      "owner": "skills/parity-verification/SKILL.md",
+      "trigger": "requires:parity-verification",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "527e953fb8dc2ebd50f34381a4ac8fd43da50e22ea482826106d69cbc7a7a49c",
+      "token_estimate": 1204
+    },
+    {
+      "id": "reference:plan-and-handoff:skills:plan:and:handoff:references:adaptive:work:protocol:md",
+      "layer": "skills-reference",
+      "source": "skills/plan-and-handoff/references/adaptive-work-protocol.md",
+      "load_policy": "reference",
+      "owner": "skills/plan-and-handoff/SKILL.md",
+      "trigger": "requires:plan-and-handoff",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "920bf25f060edd9c13230d6e1e692a3809aac32922761e0eba41ad32dadb7185",
+      "token_estimate": 2770
+    },
+    {
+      "id": "reference:plan-and-handoff:skills:plan:and:handoff:references:capability:tier:routing:md",
+      "layer": "skills-reference",
+      "source": "skills/plan-and-handoff/references/capability-tier-routing.md",
+      "load_policy": "reference",
+      "owner": "skills/plan-and-handoff/SKILL.md",
+      "trigger": "requires:plan-and-handoff",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "3a2128666d66a1788f4b4d721713bd193e0301c998b31f5a8b116afaa4da148b",
+      "token_estimate": 1004
+    },
+    {
+      "id": "reference:plan-and-handoff:skills:plan:and:handoff:references:example:module:plan:md",
+      "layer": "skills-reference",
+      "source": "skills/plan-and-handoff/references/example-module-plan.md",
+      "load_policy": "reference",
+      "owner": "skills/plan-and-handoff/SKILL.md",
+      "trigger": "requires:plan-and-handoff",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "3fa88596de7d16dfe1d9e3971937d65def67e6f138567ab226f927a164f8ea6e",
+      "token_estimate": 319
+    },
+    {
+      "id": "reference:plan-and-handoff:skills:plan:and:handoff:references:goal:autopilot:md",
+      "layer": "skills-reference",
+      "source": "skills/plan-and-handoff/references/goal-autopilot.md",
+      "load_policy": "reference",
+      "owner": "skills/plan-and-handoff/SKILL.md",
+      "trigger": "requires:plan-and-handoff",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "1676c6c1c441ed464020425c19252f072c678be32b4e80687e3d47d381586535",
+      "token_estimate": 207
+    },
+    {
+      "id": "reference:plan-and-handoff:skills:plan:and:handoff:references:owner:prompts:md",
+      "layer": "skills-reference",
+      "source": "skills/plan-and-handoff/references/owner-prompts.md",
+      "load_policy": "reference",
+      "owner": "skills/plan-and-handoff/SKILL.md",
+      "trigger": "requires:plan-and-handoff",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "6cc97d784c240d67e566cc3f4cf3e47fe6978e6f90566c8e2a62e3626a0cbb57",
+      "token_estimate": 171
+    },
+    {
+      "id": "reference:plan-and-handoff:skills:plan:and:handoff:references:plan:artifact:template:md",
+      "layer": "skills-reference",
+      "source": "skills/plan-and-handoff/references/plan-artifact-template.md",
+      "load_policy": "reference",
+      "owner": "skills/plan-and-handoff/SKILL.md",
+      "trigger": "requires:plan-and-handoff",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "ddf4aa20e633b20f2d8c63794aff542ef64e685c9d89d36a77c4f36903fd5268",
+      "token_estimate": 1347
+    },
+    {
+      "id": "reference:plan-and-handoff:skills:plan:and:handoff:references:portable:plan:contract:md",
+      "layer": "skills-reference",
+      "source": "skills/plan-and-handoff/references/portable-plan-contract.md",
+      "load_policy": "reference",
+      "owner": "skills/plan-and-handoff/SKILL.md",
+      "trigger": "requires:plan-and-handoff",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "27d7ad2f30bb5713465d5a6fe3f147ff9d7958452d4417f0e72192337af2aebc",
+      "token_estimate": 2366
+    },
+    {
+      "id": "reference:qa-skills:skills:qa:skills:references:methodology:md",
+      "layer": "skills-reference",
+      "source": "skills/qa-skills/references/methodology.md",
+      "load_policy": "reference",
+      "owner": "skills/qa-skills/SKILL.md",
+      "trigger": "requires:qa-skills",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "34192ccee793e74166cdfe0660f09ce0bc67414afb795a5002eabe455df39ac3",
+      "token_estimate": 194
+    },
+    {
+      "id": "reference:researcher:skills:researcher:references:usage:md",
+      "layer": "skills-reference",
+      "source": "skills/researcher/references/usage.md",
+      "load_policy": "reference",
+      "owner": "skills/researcher/SKILL.md",
+      "trigger": "requires:researcher",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "0fdd20aba0765e6cd6c17105d27f830ca33fd879c21a3122037fda5d6233c0b2",
+      "token_estimate": 242
+    }
+  ]
+}

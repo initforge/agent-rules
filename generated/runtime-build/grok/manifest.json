@@ -25,6 +25,10 @@
       "sha256": "e2314338025c721fad31b5a00fa30af511ebdd16966e9fcc0dfe730a6d1e068f"
     },
     {
+      "path": "context-graph.json",
+      "sha256": "02624e8d7c5b961ceb0133c1f1aadfc3baa732d028293cb32e7a4899d8a101d5"
+    },
+    {
       "path": "context-route-cases.json",
       "sha256": "1c3cec7ea0f015259456378f83afe155a72330654b956028a9f24217fd8ad9bd"
     },
@@ -34,11 +38,11 @@
     },
     {
       "path": "docs/00-system-map.md",
-      "sha256": "d6c486de3f94b4c4f5dc4d1bd4b5e1704efdb26accccd3d300af4f4338a79be0"
+      "sha256": "e7d6db0d059ae8586341faad203af255c638dc10a8db67ff9b25f2557b47dc4e"
     },
     {
       "path": "docs/01-runtime-model.md",
-      "sha256": "2003323c869339a8ee49a52d42dcb3477e267b7983a8b03f5b0418d9b0b3316e"
+      "sha256": "ee41ed001b8c36d3a9bf59ba64bdefab56b4c5e27a16472d6861f7ed2f0e0e75"
     },
     {
       "path": "docs/02-knowledge-system.md",
@@ -46,7 +50,7 @@
     },
     {
       "path": "docs/03-integrations-and-sync.md",
-      "sha256": "811743ed6813658c7f6ced606df7258314dedfdfc4e616868c2c523eaf858245"
+      "sha256": "f188c21de2e9442d74e28631953d7d90bbe23ef7124e37b3263c75c200a1e44f"
     },
     {
       "path": "docs/04-maintenance-and-risks.md",
@@ -62,7 +66,7 @@
     },
     {
       "path": "docs/06-platform-capability.md",
-      "sha256": "38189d6d1c49c736c13b829022daf2ee48c97e9bfeef0a6834e36dca701fce14"
+      "sha256": "46417958d01407e6c55921bdafb22c3ed40af76951ac044e1598dce136b2ca06"
     },
     {
       "path": "docs/README.md",
@@ -122,7 +126,7 @@
     },
     {
       "path": "rules/10-execution.md",
-      "sha256": "43e7cb29c466558cbd5c5c8da98e93247e1f6abdba4dd70aac2fd006d405a365"
+      "sha256": "022e4a3912641ba5359ae3ad95f45ad401074682003db6c5041c3160cc9d2369"
     },
     {
       "path": "rules/15-output-economy.md",
@@ -138,7 +142,7 @@
     },
     {
       "path": "rules/25-task-lifecycle.md",
-      "sha256": "1b471ff73a76193c60e496cca4b68138c8c09f540a7e090421418b4d22d2eeae"
+      "sha256": "028206d75b91b221319c59d2bd709e51373cd463e6ef2f9a15014b57ccd064b8"
     },
     {
       "path": "rules/30-context-routing.md",
@@ -146,11 +150,11 @@
     },
     {
       "path": "rules/40-harness-governance.md",
-      "sha256": "43f63296607886fb747bb8b2364b3dd32b8f9d015f95a14ab0daf05ac884fc86"
+      "sha256": "7fc57d6034de4574b85d165abe7233512556b9c923e3b2cd66b0728e497d8bd5"
     },
     {
       "path": "rules/41-harness-maintainer.md",
-      "sha256": "2c6f974f638bddcfe0f94b4134e7e3fb279541575aa24ac59d582692c1af6ee4"
+      "sha256": "5d30cc31d11b468cd15fbf35dca46f080ade913c14d2505dcff465b09e51f534"
     },
     {
       "path": "rules/50-context-budget.md",
@@ -194,7 +198,7 @@
     },
     {
       "path": "skills/clean-code/SKILL.md",
-      "sha256": "43f96b970e24f43b25e328ba58567ed87b624e4154ee5e6187b4c4fc29fab1eb"
+      "sha256": "07c02ea410ae1142d6af5ddcfc2fa21bfec56967122674bbb50a916725f67c1b"
     },
     {
       "path": "skills/code-review/SKILL.md",
@@ -202,7 +206,7 @@
     },
     {
       "path": "skills/context-evolution-protocol/SKILL.md",
-      "sha256": "40dece11adcb16928305a60cc6f65d43e9eab412c0585b97af8e517f4aae7be1"
+      "sha256": "c833749438df4c2a387ed3c498368f929c5f45ee6a9cc341aa5f0d410be374f9"
     },
     {
       "path": "skills/docs-style/agents/openai.yaml",
@@ -234,7 +238,7 @@
     },
     {
       "path": "skills/implementation-discovery/SKILL.md",
-      "sha256": "4f17eda6b057cd4c752ba5cf3ac3cb66870efa4c7416c652e3a3d9a724a8d21d"
+      "sha256": "61e89bfe865149d4f88f2e841c2b094e0e230ace77266577c0bbe5a14c10a309"
     },
     {
       "path": "skills/master-image-generation/SKILL.md",
@@ -242,7 +246,7 @@
     },
     {
       "path": "skills/parity-verification/references/claim-format.md",
-      "sha256": "07e6af542129ac5b99f740faa255f2306a6f1d1ddd9a7105b6d5ed4646bfda59"
+      "sha256": "66027a9777c57ba0be060f69e2491353c587ab6c73a2951eec91d08965a3ae81"
     },
     {
       "path": "skills/parity-verification/references/evidence-schema.json",
@@ -254,11 +258,11 @@
     },
     {
       "path": "skills/parity-verification/references/runbook.md",
-      "sha256": "10a12553b301a67512b14db4c2ce66adc0293bfb3f9bd9a849368f40e2171c07"
+      "sha256": "527e953fb8dc2ebd50f34381a4ac8fd43da50e22ea482826106d69cbc7a7a49c"
     },
     {
       "path": "skills/parity-verification/SKILL.md",
-      "sha256": "521eb929bdaaec66f8f41a2f9a327b42c8c485b9087032a9ee33c1c882e9b59e"
+      "sha256": "e9e70981f6f35e604b305768cefa5b3fb580df764149ba88f8bd97afa9799a04"
     },
     {
       "path": "skills/plan-and-handoff/references/adaptive-work-protocol.md",
@@ -270,7 +274,7 @@
     },
     {
       "path": "skills/plan-and-handoff/references/example-module-plan.md",
-      "sha256": "09895160a026411f251bc870f9045d08474c1bb9159ca5c92429716bb551cdf9"
+      "sha256": "3fa88596de7d16dfe1d9e3971937d65def67e6f138567ab226f927a164f8ea6e"
     },
     {
       "path": "skills/plan-and-handoff/references/goal-autopilot.md",

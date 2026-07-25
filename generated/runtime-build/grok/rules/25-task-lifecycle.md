@@ -5,6 +5,9 @@ description: Workflow classification, proportional work state, and execution own
 
 # Task lifecycle
 
+**Domain:** Mode classification, work shapes, role definitions, delegation rules, task state lifecycle, and delegation receipts.
+For execution contract, proof matching, evidence standards, and risk-triggered review, see [10-execution.md](10-execution.md).
+
 ## Decide the mode first
 
 | Mode | Deliverable | Source edits |

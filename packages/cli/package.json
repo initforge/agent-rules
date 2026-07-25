@@ -2,11 +2,17 @@
   "name": "@initforge/agent-rules",
   "version": "0.1.0",
   "description": "Cross-platform CLI control plane for Agent Rules harness",
-  "keywords": ["agent-rules", "harness", "orchestration"],
+  "keywords": [
+    "agent-rules",
+    "harness",
+    "orchestration"
+  ],
   "homepage": "https://github.com/initforge/agent-rules",
   "license": "MIT",
   "private": true,
-  "engines": { "node": ">=18.0.0" },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "type": "module",
   "bin": {
     "agent-rules": "./dist/index.js"
@@ -20,9 +26,11 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "commander": "^13.1.0"
+    "commander": "^13.1.0",
+    "js-yaml": "^4.3.0"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.14.0",
     "rimraf": "^6.0.1",
     "typescript": "^5.8.3",

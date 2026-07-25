@@ -127,7 +127,7 @@ Record at start of session:
   "timezone": "Asia/Ho_Chi_Minh",
   "dpr": 2,
   "font_hint": "Roboto, Arial, sans-serif",
-  "data_fixture": "5fedu-employees-3-records"
+  "data_fixture": "employees-3-records"
 }
 ```
 

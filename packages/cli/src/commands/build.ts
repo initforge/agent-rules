@@ -1,9 +1,9 @@
 import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
 import { getRepoRoot } from "../adapters/powershell.js";
-import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import * as crypto from "node:crypto";
 import path from "node:path";
+import { buildContextGraph } from "../services/context-graph.js";
 
 interface BuildManifest {
   version: number;
@@ -65,31 +65,21 @@ export async function build(
     return { exitCode: ExitCode.Success, message: "Dry-run: build skipped" };
   }
 
-  // Step 1: Build context graph
-  const graphScript = path.join(root, "automation", "build-context-graph.ps1");
-  const graphPath = path.join(root, "generated", "context-graph.json");
+  // Step 1: Build context graph (TypeScript, no Python dependency)
+  const graphDir = path.dirname(path.join(root, "generated", "context-graph.json"));
   try {
-    await fs.access(graphScript);
-    await new Promise<void>((resolve, reject) => {
-      const child = execFile(
-        "powershell",
-        [
-          "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
-          graphScript, "-Root", root, "-OutputPath", graphPath,
-        ],
-        { timeout: 120_000 },
-        (err) => {
-          if (err) reject(new Error(`build-context-graph failed: ${err.message}`));
-          else resolve();
-        }
-      );
-      if (options.verbose) {
-        child.stdout?.pipe(process.stdout);
-        child.stderr?.pipe(process.stderr);
-      }
-    });
-  } catch {
-    errors.push("build-context-graph.ps1 not found or failed");
+    await fs.mkdir(graphDir, { recursive: true });
+    const graph = buildContextGraph(root);
+    await fs.writeFile(
+      path.join(graphDir, "context-graph.json"),
+      JSON.stringify(graph, null, 2) + "\n",
+      "utf-8"
+    );
+    if (options.verbose) {
+      console.log(`Context graph built: ${graph.nodes.length} nodes`);
+    }
+  } catch (e) {
+    errors.push(`Context graph build failed: ${e instanceof Error ? e.message : String(e)}`);
   }
 
   // Remove existing build
@@ -223,9 +213,10 @@ export async function build(
     } catch { /* ok */ }
 
     // Copy context graph
+    const cgPath = path.join(root, "generated", "context-graph.json");
     try {
-      await fs.access(graphPath);
-      await fs.copyFile(graphPath, path.join(target, "context-graph.json"));
+      await fs.access(cgPath);
+      await fs.copyFile(cgPath, path.join(target, "context-graph.json"));
     } catch { /* ok */ }
 
     // Copy route contracts

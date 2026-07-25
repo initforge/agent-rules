@@ -1,6 +1,6 @@
 # Example: ERP module plan
 
-Use this only after the 5fedu router confirms project context.
+Use this only after the [Project Name] router confirms project context.
 
 ```md
 # Add Purchase Receipt module
@@ -11,7 +11,7 @@ Use this only after the 5fedu router confirms project context.
 - Out: redesigning shared ERP shell or changing unrelated stock policy.
 
 ## Execution
-- Interfaces/files: existing Nhân viên/Phòng ban template, module registry, receipt API/schema, permission mapping.
+- Interfaces/files: existing Employee/Department template, module registry, receipt API/schema, permission mapping.
 - Approach: map template behavior, implement disjoint registry and surface/persistence slices, then integrate.
 - Acceptance and proof: source/template comparison, permission tests, API/data tests, and live list/detail interaction at applicable desktop/mobile sizes.
 

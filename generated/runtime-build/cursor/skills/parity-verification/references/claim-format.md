@@ -36,7 +36,7 @@ Each parity claim is a structured JSON object with the following schema.
     "font_hint": "Roboto, Arial, sans-serif",
     "locale": "vi-VN",
     "timezone": "Asia/Ho_Chi_Minh",
-    "data_fixture": "5fedu-employees-3-records",
+    "data_fixture": "employees-3-records",
     "dpr": 2
   }
 }
@@ -105,12 +105,12 @@ Each parity claim is a structured JSON object with the following schema.
 ```json
 {
   "meta": {
-    "name": "5fedu employee list parity",
+    "name": "Employee list parity",
     "version": 1,
     "created_at": "2025-07-25T00:00:00Z",
     "source_template": "/workspace/templates/employee-list",
     "template_commit": "abc123def456",
-    "target_project": "5fedu-erp",
+    "target_project": "[Project Name]",
     "target_branch": "feature/employee-list"
   },
   "environment_defaults": {

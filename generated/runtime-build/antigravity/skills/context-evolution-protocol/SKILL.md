@@ -20,7 +20,7 @@ Use this skill when any of these signals appears:
 - a context paragraph is too specific and could be written as a broader pattern;
 - multiple files contain the same lesson with different wording;
 - a proposed rule is long, example-heavy, or looks like raw chat/log evidence;
-- a lesson moves between layers: project-local -> 5fedu-common -> global rule;
+- a lesson moves between layers: project-local -> profile-common -> global rule;
 - the user says "học lại", "ghi nhớ", "bổ sung context", "lần sau", "đưa vào rule", "đừng lặp lại", "context bị loạn", "dọn context", "sync rule", or "agent làm bậy";
 - before reporting `PASS` for any context/rule/skill/workflow/harness task.
 
@@ -42,7 +42,7 @@ Classify every learning item before editing:
 |---|---|---|
 | `one-off` | Only affects the current task | final note or active plan |
 | `project-specific` | Applies to one repo/client | project-local context |
-| `5fedu-common` | Applies broadly to 5fedu ERP/admin apps | 5fedu living rule/template |
+| `profile-common` | Applies broadly to a specific profile's domain | profile living rule/template |
 | `global-agent-rule` | Applies across projects/platforms | `rules/**` or a shared capability |
 | `raw-evidence` | Chat/log/example kept for traceability | archive/backlog, not default load |
 | `question` | Missing owner/spec decision | `open-questions.md` or decision backlog |
@@ -59,8 +59,8 @@ Chọn file đích theo bản chất, không theo tiện tay:
 | Procedure lazy theo trigger | `skills/<slug>/SKILL.md` + `references/` | rules always-load |
 | Trigger/precedence | skill `description` frontmatter (source of truth) | bảng trigger viết tay |
 | Delta riêng 1 platform | `platforms/<name>/*-overlay.md` | rules chung |
-| Tri thức ERP chung | `profiles/5fedu/projects/` hoặc `context/5fedu/domains/` | rules global |
-| Cấu hình/credential/DDL 1 repo | `<repo>/context/5fedu/project-local/` | global, 5fedu-common |
+| Tri thức ERP chung | `profiles/<name>/projects/` hoặc `context/<name>/domains/` | rules global |
+| Cấu hình/credential/DDL 1 repo | `<repo>/context/<name>/project-local/` | global, profile-common |
 | Ví dụ/log/chat thô | `references/` hoặc `evidence/` (index-only) | file always-load |
 
 Quy tắc: **cùng một concept chỉ có MỘT nơi sở hữu**; nơi khác trỏ tới, không copy (chống drift/nhiễu).
@@ -71,7 +71,7 @@ Before promoting any lesson into living context, answer these checks:
 
 1. What exact failure did the agent make?
 2. Is the root cause missing context, wrong layer, duplicated context, weak trigger, or bad verification?
-3. Which layer owns the fix: project-local, 5fedu-common, global rule, skill, workflow, or script?
+3. Which layer owns the fix: project-local, profile-common, global rule, skill, workflow, or script?
 4. Can the rule be written as a broader pattern without losing enforcement?
 5. Could this wording mislead another domain or platform?
 6. Does an existing rule already cover it?

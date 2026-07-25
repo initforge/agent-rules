@@ -13,12 +13,13 @@ Core rules và skills **phải cùng hash** giữa Codex, Grok, Antigravity, Cur
 
 ## Platform homes & MCP
 
-| Platform | Home | MCP config |
-|---|---|---|
-| Codex | `~/.codex` | TOML `[mcp_servers.*]` |
-| Grok | `~/.grok` | JSON `mcpServers` |
-| Antigravity | `~/.gemini/config` | JSON `mcp_config.json` |
-| Cursor | `~/.cursor` | JSON `~/.cursor/mcp.json` |
+| Platform | Home | Entrypoint | MCP config | Subagents | Notes |
+|---|---|---|---|---|---|---|
+| Codex | `~/.codex` | `AGENTS.md` | TOML `[mcp_servers.*]` | `agents/` subdirectory | native hooks, Plan Mode, MCP |
+| Grok | `~/.grok` | `.grok/rules` | JSON `mcpServers` | `agents/` subdirectory | TOML personas, native hooks |
+| Antigravity | `~/.gemini/config` | `GEMINI.md` | JSON `mcp_config.json` | `agents/` subdirectory | Gemini CLI host, PreInvocation hooks |
+| Cursor | `~/.cursor` | `rules` | JSON `~/.cursor/mcp.json` | `agents/` subdirectory | IDE-native, local plugin |
+| OpenCode | `~/.config/opencode/` | `AGENTS.md` | `opencode.json` (json_mcpServers) | `agents/` subdirectory | standalone adapter, no native hooks |
 
 Adapters: `integrations/required/codebase-memory-mcp/adapters/` (Codex adapter = `codex.toml`).
 
