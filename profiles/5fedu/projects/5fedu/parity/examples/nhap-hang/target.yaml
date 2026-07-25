@@ -1,0 +1,31 @@
+# target.yaml — Example: Nhập hàng (Purchase Receipt) module
+module_key: "nhap-hang"
+module_name: "Nhập hàng"
+surfaces:
+  - crud-list
+  - form-drawer
+  - detail-drawer
+  - row-actions
+  - stats-tab
+target_paths:
+  feature_root: "features/he-thong/nhap-hang/"
+  routes:
+    - "/he-thong/nhap-hang"
+    - "/he-thong/nhap-hang/stats"
+  components:
+    - "features/he-thong/nhap-hang/index.tsx"
+    - "features/he-thong/nhap-hang/components/nhap-hang-list.tsx"
+    - "features/he-thong/nhap-hang/components/nhap-hang-form.tsx"
+    - "features/he-thong/nhap-hang/components/nhap-hang-detail.tsx"
+    - "features/he-thong/nhap-hang/components/nhap-hang-stats.tsx"
+    - "features/he-thong/nhap-hang/components/nhap-hang-table-row-actions.tsx"
+  services:
+    - "features/he-thong/nhap-hang/services/nhap-hang-service.ts"
+  hooks:
+    - "features/he-thong/nhap-hang/hooks/use-nhap-hang.ts"
+  stores:
+    - "features/he-thong/nhap-hang/stores/nhap-hang-store.ts"
+schema_source:
+  type: supabase_table
+  reference: "phieu_nhap"
+  verified: true

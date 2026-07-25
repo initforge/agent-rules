@@ -1,0 +1,15 @@
+# negative-test-permission-denied.yaml
+# Fixture: Negative test for permission-gated actions.
+surface: crud-list
+scenario: "User without nhap_hang_xoa permission must not see Xóa in row actions"
+invariant: "Xóa button must not appear in row actions overflow; backend must reject DELETE"
+expected_outcome: "Row actions menu shows Sửa and Duyệt but not Xóa; API DELETE returns 403"
+mocks:
+  - session:
+      role: "nhan_vien"
+      permissions:
+        - nhap_hang_xem
+        - nhap_hang_them
+        - nhap_hang_sua
+        - nhap_hang_duyet
+        # intentionally no nhap_hang_xoa

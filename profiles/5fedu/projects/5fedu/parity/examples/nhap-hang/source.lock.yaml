@@ -1,0 +1,17 @@
+# source.lock.yaml — Example: Nhập hàng (Purchase Receipt) module
+# Locks the exact template revision used for parity.
+template_identity:
+  workspace_path: "features/he-thong/nhan-vien"
+  package_identity: "5f-template-react-supa"
+  is_fork: false
+snapshot:
+  git_commit: "a1b2c3d4e5f6"
+discovery_method: positive_anchors_match
+anchors_opened:
+  - "features/he-thong/nhan-vien/index.tsx"
+  - "features/he-thong/nhan-vien/components/nhan-vien-list.tsx"
+  - "features/he-thong/nhan-vien/components/nhan-vien-form.tsx"
+  - "features/he-thong/nhan-vien/components/nhan-vien-detail.tsx"
+  - "components/shared/GenericToolbar.tsx"
+  - "components/shared/GenericDrawer.tsx"
+source_revision_note: "Clean main branch at a1b2c3d."

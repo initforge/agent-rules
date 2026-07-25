@@ -1,0 +1,10 @@
+# negative-test-line-item-empty.yaml
+# Fixture: Negative test for embedded child grid empty state.
+surface: detail-drawer (embedded-child-grid)
+scenario: "Detail drawer loads phiếu nhập with zero line items"
+invariant: "Child grid must show empty state, not a broken grid or error"
+expected_outcome: "Chi tiết hàng hóa section shows 'Chưa có hàng hóa' message with Add button"
+mocks:
+  - endpoint: "/rest/v1/phieu_nhap_chi_tiet?select=*,hang_hoa:*&phieu_nhap_id=eq.abc-123"
+    response: []
+    status: 200

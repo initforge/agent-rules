@@ -1,0 +1,81 @@
+# behavior-contract.yaml — Example: Nhập hàng behavior specification
+behaviors:
+  - surface_key: crud-list
+    behavior_must:
+      - "search shortcut and clear filters"
+      - "filter chips are toolbar controls, not form comboboxes"
+      - "row click opens detail drawer"
+      - "permission-gated actions and bulk mode use Nhân viên reference flow"
+      - "'Duyệt' action in row actions triggers confirmation flow"
+    states_must:
+      - "loading, empty, error, filtered-empty, bulk-selection"
+    motion_must:
+      - "normal/bulk toolbar transition via AnimatePresence"
+      - "respect reduced motion"
+    responsive_must:
+      - "mobile toolbar/filter/action sheets use template behavior"
+    interaction_flows:
+      - trigger: "Row click"
+        expected_sequence:
+          - "click row"
+          - "detail drawer opens with loading state"
+          - "data fetched and displayed"
+        negative_invariant: "Must NOT navigate to a separate page"
+      - trigger: "Duyệt action"
+        expected_sequence:
+          - "click Duyệt in row overflow"
+          - "danger confirmation dialog appears"
+          - "confirm → status updates to 'đã duyệt'"
+          - "list refreshes"
+        negative_invariant: "Must NOT execute without confirmation"
+  - surface_key: form-drawer
+    behavior_must:
+      - "schema/RHF validation"
+      - "focus trap, Escape, focus restore, backdrop behavior"
+      - "async submit disables controls and exposes progress/error"
+      - "Nhà cung cấp picker cross-module relation"
+      - "inline line-item editor maintains local state until form submit"
+    states_must:
+      - "create/edit defaults, validating, submitting, field error, submit error, permission-disabled"
+    motion_must:
+      - "backdrop fade and spring drawer transition"
+      - "respect reduced motion"
+    responsive_must:
+      - "mobile full-screen drawer and safe-area footer"
+    accessibility:
+      - requirement: "Focus trap in drawer"
+        reference: "GenericDrawer"
+        verification_method: "tab navigation check"
+      - requirement: "Escape closes drawer"
+        reference: "GenericDrawer"
+        verification_method: "keyboard interaction check"
+  - surface_key: detail-drawer
+    behavior_must:
+      - "opens from row click"
+      - "footer and toolbar actions are permission-gated"
+      - "edit/delete/duyet sync the underlying list without reload"
+      - "line-item child grid scoped to current phiếu nhập"
+    states_must:
+      - "loading, not-found, permission-hidden, delete-confirmation, mutation progress"
+    motion_must:
+      - "reuse shared drawer motion and focus behavior"
+      - "respect reduced motion"
+    responsive_must:
+      - "mobile full-screen and safe-area behavior"
+    interaction_flows:
+      - trigger: "Sửa in detail drawer"
+        expected_sequence:
+          - "click Sửa"
+          - "form drawer opens with current data pre-filled"
+          - "save → detail and list update"
+        negative_invariant: "Must not close detail before form completes"
+  - surface_key: stats-tab
+    behavior_must:
+      - "date/filter state drives every displayed aggregate"
+      - "export respects visible data/filter scope"
+      - "drill-down preserves context"
+    states_must:
+      - "loading, empty date range, no-data chart, filter-empty, export progress/error"
+    motion_must:
+      - "toolbar/card/chart transitions follow template and reduced-motion preference"
+      - "respect reduced motion"
