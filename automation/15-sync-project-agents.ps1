@@ -1,4 +1,4 @@
-﻿param(
+param(
   [Parameter(Mandatory = $true)][string]$ProjectRoot,
   [ValidateSet("default", "tah-app", "nostime")][string]$Profile = "default",
   [switch]$WhatIf
@@ -17,7 +17,7 @@ $MigrateMarker = "## Migrated from root AGENTS"
 
 $ProfileConfig = $null
 if ($Profile -ne "default") {
-  $ProfilePath = Join-Path $PSScriptRoot "profiles\$Profile.json"
+  $ProfilePath = Join-Path $PSScriptRoot "..\profiles\5fedu\automation\profiles\$Profile.json"
   if (Test-Path $ProfilePath) {
     $ProfileConfig = Get-Content -Raw $ProfilePath | ConvertFrom-Json
   }

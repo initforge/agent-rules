@@ -8,3 +8,7 @@ jobs:
       - run: pwsh -File automation/03-validate-context.ps1
       - run: pwsh -File automation/01-build-runtime.ps1
       - run: pwsh -File automation/04-verify-mirrors.ps1
+      - name: Validate documentation drift
+        run: |
+          python automation/generate-doc-references.py
+          python automation/validate-doc-drift.py

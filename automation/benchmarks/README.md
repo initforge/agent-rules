@@ -1,11 +1,87 @@
 # Agent quality benchmark
 
-Evidence-first evaluation for `agent-rules`. The corpus measures two different layers:
+Evidence-first evaluation for `agent-rules`. The corpus has been reorganized into four layers:
 
-- **Deterministic routing:** graph-backed skill/context selection; must be reproducible.
-- **Live behavior:** externally executed agent tasks; results are validated, never invented by this harness.
+1. **Conformance tests** — deterministic routing and schema validation; runnable in PR CI without model calls.
+2. **Runtime telemetry** — event-based telemetry aligned with OpenTelemetry GenAI semantic conventions.
+3. **Controlled evaluations** — compare harness variants (no-harness, core, full, full-minus-one) under fixed conditions.
+4. **Real outcome tracking** — multidimensional tracking: completion, requirement coverage, false PASS rate, owner correction rate, escaped regression, evidence completeness, rework loops, wall time, tokens, context, tools, subagents, changed files, test executions, acceptance.
 
-## Commands
+No single composite score is the primary verdict.
+
+## Directory layout
+
+- `agent-quality-benchmark.json` — case definitions (preserved v1)
+- `agent-quality-benchmark.schema.json` — corpus schema (preserved v1)
+- `live-result.schema.json` — v1 live result schema (preserved)
+- `live-result.v2.schema.json` — v2 multidimensional schema
+- `telemetry.schema.json` — OTel GenAI-aligned telemetry schema
+- `evaluation-result.schema.json` — multidimensional evaluation schema
+- `live-fixtures.json` — fixture definitions (preserved)
+- `fixtures/` — test fixture JSONL files (preserved)
+- `compat/` — compatibility reader for v1 reports
+- `../conformance/` — model-free conformance test module
+- `../telemetry/` — telemetry collector and exporter
+- `../evaluations/` — controlled + native evaluation module
+- `../outcome/` — outcome tracking module
+
+## Conformance (PR CI, no model calls)
+
+```powershell
+python automation/test-conformance.py
+```
+
+Runs corpus integrity checks, routing contract validation against the context graph, and fixture oracle coverage. No model calls, no external dependencies beyond the standard library.
+
+## Full test suite
+
+```powershell
+python automation/test-agent-quality-benchmark.py
+python automation/test-conformance.py
+python automation/test-live-agent-adapter.py
+```
+
+## Telemetry
+
+```powershell
+python -c "from telemetry.collector import TelemetryCollector; c = TelemetryCollector(); c.record(c.build_event('session.end', 'codex', 'gpt-5.6-terra', 'medium', 'main', 'test', 'abc123', 'PASS')); c.flush('events.jsonl')"
+```
+
+Telemetry events follow OpenTelemetry GenAI conventions where practical. Fields include `gen_ai.system`, `gen_ai.request.model`, `gen_ai.response.model`, `gen_ai.usage.*`, plus platform, host version, effort, role, task, tools, context, subagent lifecycle, verification, and outcome. Unobservable fields remain null.
+
+## Controlled evaluations
+
+```powershell
+python -c "from evaluations.controlled import compare_variants; from agent_quality import load_json, read_records; corpus=load_json('automation/benchmarks/agent-quality-benchmark.json'); recs=read_records(['automation/benchmarks/fixtures/live-valid.jsonl']); results=compare_variants(recs, corpus); print(f'{len(results)} evaluation(s)')"
+```
+
+Hold constant: repository SHA, task, environment, tool availability, budget, time limit, model snapshot.
+
+## Native evaluation
+
+Native runs go through the actual platform adapter and produce a capability receipt. Synthetic fixtures are never reported as empirical native results.
+
+## Outcome tracking
+
+Tracks multiple dimensions (never a single score):
+
+- completion
+- requirement coverage
+- false PASS rate
+- owner correction rate
+- escaped regression
+- evidence completeness
+- rework loops
+- wall time
+- input/output/cached tokens
+- context sources and estimated size
+- tool calls/failures/retries
+- subagent spawn and handoff
+- changed files/lines
+- test executions
+- final acceptance
+
+## Legacy commands (preserved)
 
 ```powershell
 python automation/test-agent-quality-benchmark.py
@@ -19,7 +95,22 @@ python automation/collect-live-results.py <result.jsonl> --output .agent/benchma
 python automation/report-agent-quality.py --routing .agent/benchmarks/run/routing.json --live .agent/benchmarks/run/live.jsonl --trace .agent/trace.jsonl --output-dir .agent/benchmarks/run
 ```
 
-`jsonschema` is used when installed; essential contract checks have a standard-library fallback.
+## Compatibility
+
+Old v1 reports are readable through `benchmarks.compat.reader_v1`:
+
+```python
+from benchmarks.compat.reader_v1 import read_v1_report, convert_v1_report
+report = read_v1_report("path/to/v1/report.json")
+converted = convert_v1_report(report)
+```
+
+Live records can be converted individually:
+
+```python
+from benchmarks.compat.reader_v1 import convert_v1_live_record
+new_format = convert_v1_live_record(old_record)
+```
 
 ## Evidence boundary
 
@@ -32,13 +123,3 @@ python automation/report-agent-quality.py --routing .agent/benchmarks/run/routin
 - `fixtures/live-valid.jsonl` uses `evidence_kind=synthetic`; reports exclude it from empirical metrics.
 - Benchmark findings do not edit or promote rules automatically.
 - Route fixtures are tests, not a second runtime trigger source.
-
-## Live scoring
-
-Score each dimension from `0` to `4`: scope, correctness, safety, verification, communication. Record model, platform, reasoning effort, tools, evidence, owner corrections, friction, duration, and optional token/tool counts.
-
-`input_tokens`, cached/uncached input, output and reasoning fields are main-agent-only. `subagent_*` fields are separate sums; reports combine them explicitly. A known false PASS means a PASS later corrected by the owner. Evidence that violates a claim profile is rejected before reporting and is not hidden inside that retrospective metric.
-
-Compare `baseline`, `core`, and `full` only when the task, workspace fixture, model, effort, and tools are comparable. Otherwise mark the run separately; do not infer a causal improvement.
-
-`KEEP` requires at least 6 comparable cases and 12 complete triplets (two repetitions per case). A smaller clean sample proves the adapter works but reports `INSUFFICIENT_EVIDENCE`, not harness strength.

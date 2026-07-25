@@ -112,6 +112,19 @@
       "denial_behavior": "fail_closed_partial",
       "model_attestation": "unconfirmed"
     },
+    "opencode": {
+      "economy": { "family": "user-configured", "selector": "__user_mapped__", "note": "user sets opencode.json model field; adapter does not hardcode" },
+      "standard": { "family": "user-configured", "selector": "__user_mapped__", "note": "user sets opencode.json model field; adapter does not hardcode" },
+      "expert": { "family": "user-configured", "selector": "__user_mapped__", "note": "user sets opencode.json model field; adapter does not hardcode" },
+      "mapping_contract": {
+        "classes": ["economy", "standard", "expert"],
+        "user_config_location": "opencode.json model / agent.<name>.model",
+        "missing_mapping_behavior": "visible: agent frontmatter model field reads 'unset' or '__OPENCODE_MODEL_CLASS__'",
+        "resolve_chain": "opencode.json model -> agent.<name>.model -> session default"
+      },
+      "recorded_evidence": ["requested", "resolved", "observed"],
+      "denial_behavior": "fail_closed_partial"
+    },
     "grok": {
       "adapter_defaults": {
         "model_selectors": {

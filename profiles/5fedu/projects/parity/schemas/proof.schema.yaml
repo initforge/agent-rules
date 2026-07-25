@@ -1,0 +1,111 @@
+# proof.schema.yaml — JSON Schema for proof.yaml
+# Verification evidence for the parity packet.
+$schema: "http://json-schema.org/draft-07/schema#"
+title: Proof
+description: "Verification evidence that the parity packet requirements are met."
+type: object
+required:
+  - template_identity_and_snapshot
+  - target_surface_and_reference_paths
+  - target_paths
+  - shell_behavior_state_motion_responsive_map
+  - variable_map_with_schema_or_spec_source
+  - approved_deviations
+  - verification_evidence
+properties:
+  template_identity_and_snapshot:
+    type: object
+    description: "Cross-reference to source.lock.yaml."
+    properties:
+      source_lock_sha:
+        type: string
+        description: "SHA-256 of source.lock.yaml for integrity."
+      verified_by:
+        type: string
+  target_surface_and_reference_paths:
+    type: array
+    items:
+      type: object
+      required:
+        - surface
+        - reference_path
+        - target_path
+      properties:
+        surface:
+          type: string
+        reference_path:
+          type: string
+        target_path:
+          type: string
+        verified:
+          type: boolean
+  target_paths:
+    type: array
+    items:
+      type: string
+  shell_behavior_state_motion_responsive_map:
+    type: object
+    description: "Cross-reference completed dimensions."
+    properties:
+      structural_map_complete:
+        type: boolean
+      visual_contract_complete:
+        type: boolean
+      behavior_contract_complete:
+        type: boolean
+      architecture_adaptation_complete:
+        type: boolean
+      deviations_recorded:
+        type: boolean
+  variable_map_with_schema_or_spec_source:
+    type: array
+    items:
+      type: object
+      required:
+        - surface
+        - slot
+        - source
+      properties:
+        surface:
+          type: string
+        slot:
+          type: string
+        source:
+          type: string
+        verified_against:
+          type: string
+  approved_deviations:
+    type: array
+    items:
+      type: object
+      description: "Cross-reference to deviations.yaml entries."
+      properties:
+        deviation_id:
+          type: string
+        status:
+          type: string
+          enum: [approved, pending, rejected]
+  verification_evidence:
+    type: array
+    items:
+      type: object
+      required:
+        - type
+        - result
+      properties:
+        type:
+          type: string
+          enum: [lint, typecheck, build, unit_test, interaction_check, visual_compare, export_check, responsive_check, accessibility_check]
+        result:
+          type: string
+          enum: [pass, fail, not_run]
+        detail:
+          type: string
+        command_or_method:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+  planner_notes:
+    type: string
+    description: "Unresolved items the planner explicitly owns."

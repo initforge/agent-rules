@@ -1,0 +1,60 @@
+# behavior-contract.schema.yaml — JSON Schema for behavior-contract.yaml
+# Captures interaction behavior, states, motion, and accessibility requirements.
+$schema: "http://json-schema.org/draft-07/schema#"
+title: BehaviorContract
+description: "Behavioral parity contract — interaction patterns, state machines, motion, and accessibility."
+type: object
+required:
+  - behaviors
+properties:
+  behaviors:
+    type: array
+    items:
+      type: object
+      required:
+        - surface_key
+        - behavior_must
+        - states_must
+      properties:
+        surface_key:
+          type: string
+        behavior_must:
+          type: array
+          items:
+            type: string
+        states_must:
+          type: array
+          items:
+            type: string
+        motion_must:
+          type: array
+          items:
+            type: string
+        responsive_must:
+          type: array
+          items:
+            type: string
+        accessibility:
+          type: array
+          items:
+            type: object
+            properties:
+              requirement:
+                type: string
+              reference:
+                type: string
+              verification_method:
+                type: string
+        interaction_flows:
+          type: array
+          items:
+            type: object
+            properties:
+              trigger:
+                type: string
+              expected_sequence:
+                type: array
+                items:
+                  type: string
+              negative_invariant:
+                type: string

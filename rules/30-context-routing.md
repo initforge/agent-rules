@@ -17,7 +17,7 @@ Load progressively:
 - An unmatched prompt uses core behavior, not an invented capability.
 - When multiple capabilities match, choose one primary and only necessary declared support.
 - Harness edits use `context-evolution-protocol`; load maintainer detail only when syncing or building.
-- 5fedu module parity requires installed `context/5fedu/`; a prompt mention alone is not proof.
+- Organization profile module parity requires an installed profile context; a prompt mention alone is not proof.
 - Plan terms load the work protocol only when task shape requires it.
 - A new signal during execution activates only the bounded supporting capability, then returns to the primary flow.
 - Do not turn mid-flow routing into replanning. If support fails twice, record the reason and continue safely or block.

@@ -9,16 +9,18 @@
 | `implementation-discovery` | Verify gate — read-only in plan-only modes; known-unknowns lúc implement |
 | `finish-to-completion` | Execution mode only — implement locked slice |
 | `clean-code` | Kiểm tra chất lượng mã sạch cuối pha execution |
-| `5fedu-project` | Setup/maintain context 5fedu |
-| `5fedu-module-parity` | Tạo/sửa/refactor module ERP — clone/audit vs Nhân viên template |
 | `researcher` | Cần research trước khi code |
 | `docs-style` | README/spec chất lượng |
 | `code-review` | Review thay đổi |
 | `best-of-n` | User yêu cầu thử N cách |
 | `context-evolution-protocol` | Tiến hoá rules/context |
-| `frontend-architect` | UI/UX polish ngoài ERP parity (cấm khi 5fedu lệch/sai pattern) |
+| `frontend-architect` | UI/UX polish outside ERP (forbidden when profile ERP parity is active) |
 | `master-image-generation` | Mockup / image-to-code |
 | `qa-skills` | Não QA — map `petrkindlmann/qa-skills`; combo với `browser-qa` |
 | `browser-qa` | Mắt+tay coding agent (Chrome DevTools / Playwright MCP) |
+
+Profile skills (enable profile first via `profiles\install-profile.ps1 -Name <name>`):
+| `5fedu-project` | Setup/maintain 5fedu context |
+| `5fedu-module-parity` | Tạo/sửa/refactor module ERP — clone/audit vs template |
 
 Mỗi skill: một thư mục `SKILL.md` + references/scripts tùy nhu cầu.

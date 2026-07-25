@@ -12,6 +12,13 @@ _module = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_module)
 
 has_5fedu_context = _module.has_5fedu_context
+
+def check_profile_enabled(root):
+    """Check if a profile is enabled."""
+    profiles_dir = root / ".agent" / "profiles"
+    if not profiles_dir.is_dir():
+        return False
+    return any(f.suffix == ".enabled" for f in profiles_dir.iterdir())
 load_graph = _module.load_graph
 route = _module.route
 route_signature = _module.route_signature

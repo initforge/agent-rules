@@ -28,7 +28,7 @@
   },
   {
     "phrase": "nhập hàng lệch sai pattern",
-    "file": "projects/5fedu/00-context-map.md",
+    "file": "profiles/5fedu/projects/00-context-map.md",
     "keywords": [
       "nhập hàng",
       "module-mapping",
@@ -37,7 +37,7 @@
   },
   {
     "phrase": "drawer sai thiếu nút",
-    "file": "projects/5fedu/domains/ui-delivery.md",
+    "file": "profiles/5fedu/projects/domains/ui-delivery.md",
     "keywords": [
       "drawer",
       "pattern",
@@ -55,7 +55,7 @@
   },
   {
     "phrase": "phân quyền cap_bac module",
-    "file": "projects/5fedu/domains/permissions.md",
+    "file": "profiles/5fedu/projects/domains/permissions.md",
     "keywords": [
       "cap_bac",
       "quyền",
@@ -64,7 +64,7 @@
   },
   {
     "phrase": "migration RLS schema int8",
-    "file": "projects/5fedu/domains/database.md",
+    "file": "profiles/5fedu/projects/domains/database.md",
     "keywords": [
       "int8",
       "RLS",
@@ -136,7 +136,7 @@
   },
   {
     "phrase": "lệch template thanh lọc",
-    "file": "projects/5fedu/domains/module-mapping.md",
+    "file": "profiles/5fedu/projects/domains/module-mapping.md",
     "keywords": [
       "tham chiếu",
       "Nhân viên",
@@ -145,7 +145,7 @@
   },
   {
     "phrase": "fake email ten_dang_nhap",
-    "file": "projects/5fedu/domains/database.md",
+    "file": "profiles/5fedu/projects/domains/database.md",
     "keywords": [
       "fake",
       "ten_dang_nhap",
@@ -172,7 +172,7 @@
   },
   {
     "phrase": "giao dien lech sai pattern parity",
-    "file": "projects/5fedu/domains/ui-delivery.md",
+    "file": "profiles/5fedu/projects/domains/ui-delivery.md",
     "keywords": [
       "parity",
       "pattern",
@@ -199,7 +199,7 @@
   },
   {
     "phrase": "skill exclusion ui parity router",
-    "file": "projects/5fedu/00-context-map.md",
+    "file": "profiles/5fedu/projects/00-context-map.md",
     "keywords": [
       "Skill exclusion",
       "frontend-architect"
@@ -225,7 +225,7 @@
   },
   {
     "phrase": "refactor module generic monolith",
-    "file": "projects/5fedu/domains/module-mapping.md",
+    "file": "profiles/5fedu/projects/domains/module-mapping.md",
     "keywords": [
       "generic",
       "monolith",

@@ -30,6 +30,14 @@ from agent_quality import (
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = BENCHMARK_DIR / "fixtures"
 
+sys.path.insert(0, str(ROOT / "automation"))
+from conformance.routing import run_all as conformance_run, check_corpus_integrity, check_fixture_oracles
+from telemetry.collector import TelemetryCollector
+from evaluations.controlled import compare_variants, make_blank_dimensions
+from evaluations.native_eval import make_capability_receipt, produce_native_result
+from outcome.tracker import OutcomeTracker
+from benchmarks.compat.reader_v1 import convert_v1_live_record, convert_v1_report
+
 
 def profiled_record(base: dict, case: dict, run_id: str) -> dict:
     profiles = load_json(quality.DEFAULT_EVIDENCE_PROFILES)["profiles"]
@@ -236,16 +244,143 @@ def report_only(output_dir: str | None, routing_report: dict | None = None) -> N
     print(f"PASS: quality report fixture -> {target}")
 
 
+def conformance_only() -> None:
+    report = conformance_run()
+    if report["conformance"] != "PASS":
+        raise AssertionError(f"conformance failed: {report}")
+    counts = check_corpus_integrity()
+    if counts["total"] < 30:
+        raise AssertionError(f"corpus too small: {counts['total']}")
+    issues = check_fixture_oracles()
+    if issues:
+        raise AssertionError(f"fixture oracle issues: {issues}")
+    print("PASS: conformance checks (model-free, PR CI ready)")
+
+
+def telemetry_only() -> None:
+    collector = TelemetryCollector()
+    ev = collector.build_event(
+        event_type="session.end",
+        platform="codex",
+        model="gpt-5.6-terra",
+        effort="medium",
+        role="main",
+        task="conformance test",
+        repository_revision="abc123",
+        outcome="PASS",
+        input_tokens=100,
+        output_tokens=50,
+        cached_input_tokens=60,
+        uncached_input_tokens=40,
+        reasoning_tokens=10,
+    )
+    eid = collector.record(ev)
+    if len(eid) != 64:
+        raise AssertionError(f"unexpected event_id length: {len(eid)}")
+    if len(collector.events) != 1:
+        raise AssertionError("collector did not record event")
+    with tempfile.TemporaryDirectory(prefix="telemetry-test-") as holder:
+        out = Path(holder) / "events.jsonl"
+        collector.flush(out)
+        if not out.is_file():
+            raise AssertionError("telemetry flush did not write file")
+    empty = TelemetryCollector()
+    if empty.events:
+        raise AssertionError("fresh collector should be empty")
+    print("PASS: telemetry collector and exporter")
+
+
+def evaluations_only() -> None:
+    corpus = load_json(DEFAULT_CORPUS)
+    records = read_records([FIXTURES / "live-valid.jsonl"])
+    results = compare_variants(records, corpus)
+    if not results:
+        raise AssertionError("no evaluation results produced")
+    for r in results:
+        dims = r.get("dimensions", {})
+        if "completion" not in dims or "tool_calls" not in dims:
+            raise AssertionError(f"missing dimensions: {list(dims)}")
+    receipt = make_capability_receipt(
+        case_id="live-advisory-no-mutation",
+        observed_model="test-model",
+        observed_effort="medium",
+        outcome="PASS",
+        platform="codex",
+    )
+    if "receipt_id" not in receipt or "claim_hash" not in receipt:
+        raise AssertionError("capability receipt missing required fields")
+    records[0]["evidence_kind"] = "empirical"
+    records[0]["platform"] = "codex"
+    native_results = []
+    for case in corpus["cases"]:
+        if case.get("evaluator") == "live":
+            for rec in records:
+                rec["case_id"] = case["id"]
+                native_results.append(produce_native_result(case, rec))
+            break
+    if native_results:
+        nr = native_results[0]
+        if "capability_receipt" not in nr:
+            raise AssertionError("native evaluation missing capability receipt")
+        if nr["evidence_kind"] != "empirical":
+            raise AssertionError("native evaluation evidence_kind must be empirical")
+    blank = make_blank_dimensions()
+    expected_keys = {"completion", "requirement_coverage", "false_pass_rate", "owner_correction_rate",
+                     "escaped_regression", "evidence_completeness", "rework_loops", "wall_time_seconds",
+                     "input_tokens", "output_tokens", "subagent_input_tokens", "subagent_output_tokens",
+                     "tool_calls", "context_sources", "subagent_lifecycle", "verification", "changed_files", "acceptance"}
+    if set(blank) != expected_keys:
+        raise AssertionError(f"blank dimensions mismatch: extra={set(blank) - expected_keys}, missing={expected_keys - set(blank)}")
+    print("PASS: evaluations layer (controlled + native)")
+
+
+def outcome_only() -> None:
+    records = read_records([FIXTURES / "live-valid.jsonl"])
+    tracker = OutcomeTracker()
+    tracker.extend(records)
+    agg = tracker.aggregate()
+    if agg["total_records"] != 3:
+        raise AssertionError(f"expected 3 records, got {agg['total_records']}")
+    if tracker.records is records:
+        records[0]["outcome"] = "FAIL"
+        if tracker.records[0]["outcome"] == "FAIL":
+            raise AssertionError("tracker returned live reference, not copy")
+    markdown = tracker.render_markdown()
+    if not markdown.startswith("# Outcome Report"):
+        raise AssertionError("markdown header missing")
+    print("PASS: outcome tracking")
+
+
+def compat_only() -> None:
+    records = read_records([FIXTURES / "live-valid.jsonl"])
+    converted = [convert_v1_live_record(r) for r in records]
+    if len(converted) != 3:
+        raise AssertionError(f"expected 3 converted records, got {len(converted)}")
+    for c in converted:
+        if "dimensions" not in c or "completion" not in c.get("dimensions", {}):
+            raise AssertionError("converted record missing dimensions")
+        if c.get("eval_id", "").startswith("compat-") is False:
+            raise AssertionError("converted record missing compat prefix")
+    print("PASS: v1 compatibility reader")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--contracts-only", action="store_true")
     parser.add_argument("--routing-only", action="store_true")
     parser.add_argument("--live-only", action="store_true")
     parser.add_argument("--report-only", action="store_true")
+    parser.add_argument("--conformance-only", action="store_true")
+    parser.add_argument("--telemetry-only", action="store_true")
+    parser.add_argument("--evaluations-only", action="store_true")
+    parser.add_argument("--outcome-only", action="store_true")
+    parser.add_argument("--compat-only", action="store_true")
     parser.add_argument("--output")
     parser.add_argument("--output-dir")
     args = parser.parse_args()
-    selected = any((args.contracts_only, args.routing_only, args.live_only, args.report_only))
+    selected = any((args.contracts_only, args.routing_only, args.live_only, args.report_only,
+                    args.conformance_only, args.telemetry_only, args.evaluations_only,
+                    args.outcome_only, args.compat_only))
 
     try:
         if args.contracts_only or not selected:
@@ -257,6 +392,16 @@ def main() -> int:
             live_only()
         if args.report_only or not selected:
             report_only(args.output_dir, routing_report)
+        if args.conformance_only or not selected:
+            conformance_only()
+        if args.telemetry_only or not selected:
+            telemetry_only()
+        if args.evaluations_only or not selected:
+            evaluations_only()
+        if args.outcome_only or not selected:
+            outcome_only()
+        if args.compat_only or not selected:
+            compat_only()
     except (AssertionError, ContractError, OSError, ValueError) as exc:
         print(f"FAIL: {exc}")
         return 1

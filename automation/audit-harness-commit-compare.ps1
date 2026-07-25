@@ -1,4 +1,4 @@
-﻿# Compare harness execution power across commits - writes NDJSON audit evidence
+# Compare harness execution power across commits - writes NDJSON audit evidence
 param(
   [string]$Base = "15f8834",
   [string]$Mid = "6b485c0",
@@ -135,8 +135,8 @@ Write-AuditLog -HypothesisId "H3" -Location "audit:regressions" -Message "$New r
 
 # Gains from new commit
 $gains = @()
-if (Test-Path (Join-Path $Root "automation/audit-5fedu-template-purity.ps1")) { } else {
-  $purity = Get-GitFile -Commit $New -Path "automation/audit-5fedu-template-purity.ps1"
+if (Test-Path (Join-Path $Root "profiles/5fedu/automation/audit-5fedu-template-purity.ps1")) { } else {
+  $purity = Get-GitFile -Commit $New -Path "profiles/5fedu/automation/audit-5fedu-template-purity.ps1"
   if ($purity) { $gains += "template_purity_audit" }
 }
 $newSkills = @(git diff --name-only $Base $New -- skills/ 2>$null)

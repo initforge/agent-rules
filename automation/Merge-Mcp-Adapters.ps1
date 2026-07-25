@@ -141,7 +141,15 @@ function Get-RegistryAdapterPaths {
   $Paths = @()
   foreach ($Integration in $Registry.integrations) {
     if ($Integration.policy -eq "optional") { continue }
-    $Candidate = Join-Path (Join-Path $Root ($Integration.path -replace "/", "\")) "adapters\$File"
+    # Resolve integration path: v1 uses .path, v2 derives from install.script
+    $IntPath = $null
+    if ($null -ne $Integration.PSObject.Properties["path"]) {
+      $IntPath = $Integration.path -replace "/", "\"
+    } elseif ($null -ne $Integration.PSObject.Properties["install"]) {
+      $IntPath = Split-Path ($Integration.install.script -replace "/", "\") -Parent
+    }
+    if (-not $IntPath) { continue }
+    $Candidate = Join-Path (Join-Path $Root $IntPath) "adapters\$File"
     if (Test-Path $Candidate) { $Paths += $Candidate }
   }
   return $Paths

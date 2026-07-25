@@ -1,0 +1,120 @@
+# 5fedu module inventory — machine-readable module index.
+# Maps each module to its path, dependencies, and the surfaces it provides.
+# Used by the source-lock materialization flow to extract only the modules
+# needed for a given task rather than materialising the entire template.
+#
+# This file is the canonical inventory. The source-lock.json's moduleIndex
+# field should mirror this content after each template update.
+#
+# See source-lock-guide.md for the materialization flow.
+
+modules:
+  nhan-vien:
+    name: "Nhân viên"
+    path: "features/he-thong/nhan-vien/"
+    dependencies: ["shared-components", "shared-hooks"]
+    surfaces: ["crud-list", "form-drawer", "detail-drawer", "row-actions", "stats-tab"]
+    type: module
+    reference_files:
+      - "features/he-thong/nhan-vien/index.tsx"
+      - "features/he-thong/nhan-vien/components/nhan-vien-form.tsx"
+      - "features/he-thong/nhan-vien/components/nhan-vien-detail.tsx"
+      - "features/he-thong/nhan-vien/components/nhan-vien-stats.tsx"
+      - "features/he-thong/nhan-vien/components/employee-table-row-actions.tsx"
+
+  phong-ban:
+    name: "Phòng ban"
+    path: "features/he-thong/phong-ban/"
+    dependencies: ["shared-components", "shared-hooks"]
+    surfaces: ["hierarchy-list", "embedded-child-grid", "detail-drawer"]
+    type: module
+    reference_files:
+      - "features/he-thong/phong-ban/components/phong-ban-detail.tsx"
+
+  chuc-vu:
+    name: "Chức vụ"
+    path: "features/he-thong/chuc-vu/"
+    dependencies: ["shared-components", "shared-hooks"]
+    surfaces: ["entity-in-tree"]
+    type: module
+
+  phan-quyen:
+    name: "Phân quyền"
+    path: "features/he-thong/phan-quyen/"
+    dependencies: ["shared-components"]
+    surfaces: ["permission-matrix"]
+    type: module
+    reference_files:
+      - "features/he-thong/phan-quyen/index.tsx"
+      - "features/he-thong/phan-quyen/components/permission-matrix.tsx"
+
+  thong-tin-cong-ty:
+    name: "Thông tin công ty"
+    path: "features/he-thong/thong-tin-cong-ty/"
+    dependencies: ["shared-components"]
+    surfaces: ["single-record-settings"]
+    type: module
+    reference_files:
+      - "features/he-thong/thong-tin-cong-ty/index.tsx"
+      - "features/he-thong/thong-tin-cong-ty/components/thong-tin-cong-ty-form.tsx"
+
+  shared-components:
+    name: "Shared Components"
+    path: "components/shared/"
+    dependencies: []
+    surfaces: ["export-dialog", "route-breadcrumb"]
+    type: shared
+    critical_files:
+      - "components/shared/GenericToolbar.tsx"
+      - "components/shared/GenericDrawer.tsx"
+      - "components/shared/GenericTable.tsx"
+      - "components/shared/TablePaginationFooter.tsx"
+      - "components/shared/FormDrawerFooter.tsx"
+      - "components/shared/DetailToolbar.tsx"
+      - "components/shared/Breadcrumbs.tsx"
+      - "components/shared/ExportDialog.tsx"
+      - "components/shared/EmbeddedChildDataGrid.tsx"
+      - "components/shared/HierarchyListShell.tsx"
+      - "components/shared/HierarchyTable.tsx"
+      - "components/shared/row-actions/RowActionsOverflowMenu.tsx"
+
+  dashboard:
+    name: "Dashboard"
+    path: "components/dashboard/"
+    dependencies: ["shared-components"]
+    surfaces: ["home-dashboard", "subsystem-dashboard-navigation"]
+    type: shared
+    critical_files:
+      - "components/dashboard/MainCard.tsx"
+      - "components/dashboard/ModuleDashboardLayout.tsx"
+      - "components/dashboard/DashboardToolbar.tsx"
+      - "components/dashboard/StatsKpiGrid.tsx"
+      - "components/dashboard/StatsDataGrid.tsx"
+
+  shared-hooks:
+    name: "Shared Hooks"
+    path: "hooks/"
+    dependencies: []
+    surfaces: []
+    type: utility
+
+  lib-utils:
+    name: "Library Utilities"
+    path: "lib/"
+    dependencies: []
+    surfaces: []
+    type: utility
+    critical_files:
+      - "lib/sidebar-menu.tsx"
+
+# Shared modules that every module depends on but are not themselves modules.
+shared_anchors:
+  - "components/shared/GenericToolbar.tsx"
+  - "components/shared/GenericDrawer.tsx"
+  - "components/shared/GenericTable.tsx"
+  - "lib/sidebar-menu.tsx"
+
+# The minimum dependency set for any ERM module materialization.
+minimum_shared_set:
+  - shared-components
+  - shared-hooks

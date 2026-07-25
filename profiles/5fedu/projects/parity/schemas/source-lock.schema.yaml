@@ -1,0 +1,62 @@
+# source-lock.schema.yaml — YAML/JSON Schema for source.lock.yaml / source-lock.json
+# Validates template identity, revision, and discovery anchors.
+# The canonical contract is source-lock.json with full repository identity,
+# commit SHA, integrity hash, module index, and verification state.
+# This YAML schema validates the parity-packet source.lock.yaml subset.
+$schema: "http://json-schema.org/draft-07/schema#"
+title: SourceLock
+description: "Captures the exact source template revision used for parity mapping. Two formats: (1) parity-packet source.lock.yaml (workspace-local anchors), (2) source-lock.json (reproducible pinned revision with repository identity and integrity)."
+type: object
+required:
+  - template_identity
+  - snapshot
+properties:
+  template_identity:
+    type: object
+    required:
+      - workspace_path
+      - package_identity
+    properties:
+      workspace_path:
+        type: string
+        description: "Relative workspace path to the template root (never absolute)."
+        pattern: "^[^/]"
+      package_identity:
+        type: string
+        description: "Package.json name or owner-confirmed fork identifier."
+      is_fork:
+        type: boolean
+        description: "True if owner confirmed this is a fork, not the canonical template."
+      fork_confirmed_by:
+        type: string
+        description: "Owner reference confirming the fork."
+  snapshot:
+    type: object
+    oneOf:
+      - required: [git_commit]
+        properties:
+          git_commit:
+            type: string
+            pattern: "^[a-f0-9]{7,40}$"
+      - required: [deterministic_hash]
+        properties:
+          deterministic_hash:
+            type: string
+            description: "SHA-256 of concatenated anchor file contents when no Git."
+    required: true
+  discovery_method:
+    type: string
+    enum: [positive_anchors_match, owner_provided, owner_confirmed]
+  anchors_opened:
+    type: array
+    items:
+      type: string
+      description: "Relative file paths opened to verify template identity."
+    minItems: 1
+    uniqueItems: true
+  source_revision_note:
+    type: string
+    description: "Free-text note about template state, e.g. 'dirty working tree — uncommitted changes in list toolbar'."
+  source_lock_ref:
+    type: string
+    description: "Optional reference to the canonical source-lock.json file. When present, the materialization flow uses source-lock.json (repository + commitSha + integrity) instead of workspace-path anchors alone."
