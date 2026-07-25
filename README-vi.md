@@ -43,7 +43,7 @@ Linux/macOS (cần [PowerShell Core](https://github.com/PowerShell/PowerShell)):
 ./automation/09-doctor.ps1
 ```
 
-Cài vào `~/.codex`, `~/.grok`, `~/.gemini/config`, `~/.cursor`. Định dạng MCP khác nhau từng nền — xem `platforms/*/runtime.yaml`.
+Cài vào `~/.codex`, `~/.grok`, `~/.gemini/config`, `~/.cursor`. Định dạng MCP khác nhau từng nền — xem `platforms/platform-contracts.json`.
 
 ## Đọc tiếp
 

@@ -1,7 +1,7 @@
 # Current Repository Inventory and Ownership Map
 
 **Generated:** 2026-07-25  
-**Canonical SHA:** b3b6bddd0e127887769004026d364a821fbc16af  
+**Canonical SHA:** (commit after drift cleanup + inventory update)  
 **Source:** Machine-readable equivalent at `automation/repository-inventory.json`
 
 ---
@@ -189,8 +189,7 @@ projects/5fedu/
 
 | Subdirectory | Tools | Status |
 |-------------|-------|--------|
-| `codebase_memory/` | 13 | active |
-| `codebase-memory/` | 13 | **DUPLICATE** of `codebase_memory/` |
+| `codebase-memory/` | 13 | active (canonical identity) |
 | `chrome-devtools/` | 29 | active |
 | `context7/` | 2 | active |
 | `playwright/` | 27 | active |
@@ -237,8 +236,8 @@ Written mostly in Vietnamese. Not rules — documentation for human maintainers.
 
 | Severity | Finding | Recommendation |
 |----------|---------|----------------|
-| **Medium** | `mcps/codebase_memory/` and `mcps/codebase-memory/` are identical (13 tool JSONs each) | Retain one canonical name; symlink or delete the other |
-| Low | Three scripts share `10-` prefix in `automation/` | Renumber to unique positions or remove numbers |
+| **Medium** **RESOLVED** | `mcps/codebase_memory/` and `mcps/codebase-memory/` were identical (13 tool JSONs each) | Removed `codebase_memory/`; canonical identity is `codebase-memory/` |
+| Low **RESOLVED** | Three scripts shared `10-` prefix in `automation/` | Renumbered: `10-export-5fedu-writeback` → `14-`, `10-sync-project-agents` → `15-` |
 
 ### 3.2 Stale Path References
 
@@ -246,6 +245,7 @@ Written mostly in Vietnamese. Not rules — documentation for human maintainers.
 |----------|---------|--------|
 | Low | `build-context-graph.ps1` previously referenced `runtime.yaml` | **Resolved** in b3b6bdd |
 | Low | `platforms/*/runtime.yaml` were stale artifacts | **Resolved** in b3b6bdd |
+| Low | `README.md` and `README-vi.md` referenced `platforms/*/runtime.yaml` | **Resolved** in current commit |
 
 ### 3.3 Unclear Owner
 
@@ -337,10 +337,10 @@ Written mostly in Vietnamese. Not rules — documentation for human maintainers.
 
 ## 7. Recommended Cleanup Order
 
-1. **Deduplicate mcps/**: Resolve `codebase_memory/` vs `codebase-memory/` duplication
-2. **Renumber `10-` prefix scripts**: Give unique numbers to 3 scripts sharing the prefix
-3. **Add provenance to mcps/**: Create a manifest or README documenting upstream sources
-4. **Archive migration scripts**: Remove or archive the two one-time migration scripts
-5. **Remove or populate `automation/fixtures/`**: Empty directory cleanup
-6. **Add sync mechanism for `qa-skills`**: If upstream changes need tracking
-7. **Investigate `plan_guard` orphan**: Find or remove the orphaned compiled cache
+1. **Add provenance to mcps/**: Create a manifest or README documenting upstream sources
+2. **Archive migration scripts**: Remove or archive the two one-time migration scripts
+3. **Remove or populate `automation/fixtures/`**: Empty directory cleanup
+4. **Add sync mechanism for `qa-skills`**: If upstream changes need tracking
+5. **Investigate `plan_guard` orphan**: Find or remove the orphaned compiled cache
+
+**Resolved:** `mcps/codebase_memory/` vs `codebase-memory/` duplication, `10-` script renumbering, stale `runtime.yaml` references in READMEs.

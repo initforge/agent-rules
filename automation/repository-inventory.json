@@ -137,8 +137,7 @@
       "confidence": "medium",
       "evidence": "Tool JSON schemas for MCP servers; source unknown",
       "entries": [
-        { "path": "mcps/codebase_memory/", "type": "runtime adapter", "status": "active", "server": "codebase-memory-mcp", "tool_count": 13 },
-        { "path": "mcps/codebase-memory/", "type": "runtime adapter", "status": "generated", "canonical_source": "mcps/codebase_memory/", "note": "DUPLICATE: hyphen variant of codebase_memory/", "tool_count": 13 },
+        { "path": "mcps/codebase-memory/", "type": "runtime adapter", "status": "active", "server": "codebase-memory-mcp", "tool_count": 13, "note": "Canonical identity; underscore variant removed in 4dccb80+2" },
         { "path": "mcps/chrome-devtools/", "type": "runtime adapter", "status": "active", "server": "chrome-devtools-mcp", "tool_count": 29 },
         { "path": "mcps/context7/", "type": "runtime adapter", "status": "active", "server": "context7-mcp", "tool_count": 2 },
         { "path": "mcps/playwright/", "type": "runtime adapter", "status": "active", "server": "playwright-mcp", "tool_count": 27 },
@@ -174,7 +173,7 @@
       "public": true,
       "status": "active",
       "recommended_future_location": "projects/",
-      "consumers": ["08-install-5fedu-context.ps1", "10-sync-project-agents.ps1", "5fedu-project skill"],
+      "consumers": ["08-install-5fedu-context.ps1", "15-sync-project-agents.ps1", "5fedu-project skill"],
       "confidence": "high",
       "evidence": "Referenced by AGENTS.md; consumed by 5fedu installer",
       "entries": [
@@ -205,8 +204,8 @@
         { "path": "automation/08-install-5fedu-context.ps1", "type": "installer", "status": "active" },
         { "path": "automation/09-doctor.ps1", "type": "auditor", "status": "active", "pipeline_order": 5 },
         { "path": "automation/10-audit-harness-health.ps1", "type": "auditor", "status": "active" },
-        { "path": "automation/10-export-5fedu-writeback.ps1", "type": "utility", "status": "active" },
-        { "path": "automation/10-sync-project-agents.ps1", "type": "installer", "status": "active" },
+        { "path": "automation/14-export-5fedu-writeback.ps1", "type": "utility", "status": "active" },
+        { "path": "automation/15-sync-project-agents.ps1", "type": "installer", "status": "active" },
         { "path": "automation/11-install-runtime-hooks.sh", "type": "installer", "status": "active" },
         { "path": "automation/12-regression-harness-guards.ps1", "type": "validator", "status": "active" },
         { "path": "automation/13-cutover-context-routing.ps1", "type": "validator", "status": "active" },
@@ -290,14 +289,14 @@
     }
   ],
   "findings": {
-    "duplicates": [
+    "duplicates_resolved": [
       {
         "severity": "medium",
-        "finding": "mcps/codebase_memory/ and mcps/codebase-memory/ are identical (13 tool JSONs each)",
-        "recommendation": "Retain one canonical name; symlink or delete the other"
+        "finding": "mcps/codebase_memory/ and mcps/codebase-memory/ were identical (13 tool JSONs each)",
+        "resolution": "Removed mcps/codebase_memory/; canonical identity is mcps/codebase-memory/"
       }
     ],
-    "stale_path_references": [
+    "stale_path_references_resolved": [
       {
         "severity": "low",
         "finding": "automation/build-context-graph.ps1 metadata previously referenced 'platform overlay and runtime.yaml' (fixed in b3b6bdd)",
@@ -307,13 +306,18 @@
         "severity": "low",
         "finding": "platforms/*/runtime.yaml deleted in b3b6bdd, replaced by platform-contracts.json",
         "status": "resolved"
+      },
+      {
+        "severity": "low",
+        "finding": "README.md and README-vi.md referenced 'platforms/*/runtime.yaml' (fixed in current commit)",
+        "status": "resolved"
       }
     ],
     "unclear_owner": [
       {
         "severity": "medium",
         "finding": "mcps/ tool JSONs have unknown upstream source; no manifest or README documents provenance",
-        "paths": ["mcps/codebase_memory/", "mcps/codebase-memory/", "mcps/chrome-devtools/", "mcps/context7/", "mcps/playwright/", "mcps/tasks/"]
+        "paths": ["mcps/codebase-memory/", "mcps/chrome-devtools/", "mcps/context7/", "mcps/playwright/", "mcps/tasks/"]
       },
       {
         "severity": "low",
@@ -328,11 +332,11 @@
         "paths": ["platforms/codex/scripts/__pycache__/", "platforms/antigravity/scripts/__pycache__/", "platforms/cursor/scripts/__pycache__/", "platforms/shared/scripts/__pycache__/"]
       }
     ],
-    "numbered_scripts_numering_anomalies": [
+    "numbered_scripts_numering_anomalies_resolved": [
       {
         "severity": "low",
-        "finding": "Three scripts share the '10-' prefix: 10-audit-harness-health.ps1, 10-export-5fedu-writeback.ps1, 10-sync-project-agents.ps1 — no unique sequence",
-        "recommendation": "Renumber to unique positions (e.g., 10-, 11-, 12-) or remove numbers from non-pipeline scripts"
+        "finding": "Three scripts shared the '10-' prefix: 10-audit-harness-health.ps1, 10-export-5fedu-writeback.ps1, 10-sync-project-agents.ps1 (renumbered: 10-, 14-, 15-)",
+        "resolution": "10-export-5fedu-writeback.ps1 → 14-export-5fedu-writeback.ps1; 10-sync-project-agents.ps1 → 15-sync-project-agents.ps1"
       },
       {
         "severity": "low",
@@ -346,6 +350,18 @@
         "finding": "automation/migrate-nostime-project-local.ps1 and migrate-tahapp-project-local.ps1 are one-time migrations",
         "status": "deprecated",
         "recommendation": "Archive or remove after confirmation"
+      }
+    ],
+    "budget_and_taxonomy_drift_resolved": [
+      {
+        "severity": "low",
+        "finding": "context-route-cases.json budget key 'core_tokens' conflicted with manifest.yaml 'core_total_tokens'",
+        "resolution": "Renamed to 'core_routing_tokens' to disambiguate core rules budget from core routing budget"
+      },
+      {
+        "severity": "low",
+        "finding": "rules/50-context-budget.md and skills/clean-code/SKILL.md used deprecated 'lane normal' and 'lane high-risk' terms",
+        "resolution": "Replaced with canonical shape taxonomy from rules/25-task-lifecycle.md: 'shape medium', 'shape high-risk'"
       }
     ],
     "multiple_sources_of_truth_same_contract": [

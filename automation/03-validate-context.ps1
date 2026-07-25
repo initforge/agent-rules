@@ -106,7 +106,7 @@ if (Test-Path $CodexAgentsTemplate) {
 $ForbiddenTopLevel = @(
   "00-huong-dan", "00-guides", "01-global", "02-du-an", "02-projects",
   "03-nen-tang", "03-platforms", "04-tu-dong-hoa", "04-automation",
-  "06-ke-hoach", "06-plans", "05-ban-dung", "knowledge", "build", "docs", "plan"
+  "06-ke-hoach", "06-plans", "05-ban-dung", "knowledge", "build", "plan"
 )
 foreach ($Name in $ForbiddenTopLevel) {
   if (Test-Path (Join-Path $Root $Name)) { $Problems.Add("Legacy top-level folder still exists: $Name") }
@@ -318,7 +318,7 @@ if (-not (Test-Path $RouteCasesPath)) {
         break
       }
     }
-    foreach ($BudgetName in @("core_tokens", "normal_execution_tokens", "uncertain_execution_tokens", "plan_authoring_tokens", "harness_edit_tokens", "5fedu_ui_base_tokens")) {
+    foreach ($BudgetName in @("core_routing_tokens", "normal_execution_tokens", "uncertain_execution_tokens", "plan_authoring_tokens", "harness_edit_tokens", "5fedu_ui_base_tokens")) {
       if (-not $RouteCases.budgets.PSObject.Properties.Name -contains $BudgetName) {
         $Problems.Add("Progressive route budget missing: $BudgetName")
       }
@@ -356,6 +356,35 @@ if (-not (Test-Path $RouteCasesPath)) {
     $Problems.Add("Progressive route cases invalid JSON: $RouteCasesPath")
   }
 }
+
+# Drift detection: duplicate canonical paths (normalized name collision)
+$McpDirNames = @(Get-ChildItem (Join-Path $Root "mcps") -Directory | ForEach-Object { $_.Name -replace '[_\-]', '-' })
+$McpDirDups = $McpDirNames | Group-Object | Where-Object Count -gt 1
+foreach ($Dup in $McpDirDups) { $Problems.Add("Duplicate mcps/ directory identity (normalized): $($Dup.Name)") }
+
+# Drift detection: no stale codebase_memory underscore directory
+if (Test-Path (Join-Path $Root "mcps\codebase_memory")) { $Problems.Add("Stale mcps/codebase_memory/ directory must be removed") }
+
+# Drift detection: no stale runtime.yaml references in root READMEs
+$ReadmeBody = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "README.md")
+if ($ReadmeBody -match "runtime\.yaml") { $Problems.Add("README.md contains stale platforms/*/runtime.yaml reference") }
+$ReadmeViBody = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "README-vi.md")
+if ($ReadmeViBody -match "runtime\.yaml") { $Problems.Add("README-vi.md contains stale platforms/*/runtime.yaml reference") }
+
+# Drift detection: no deprecated lifecycle labels in rules/ or skills/
+foreach ($DriftFile in @(Get-ChildItem (Join-Path $Root "rules") -Filter "*.md"; Get-ChildItem (Join-Path $Root "skills") -Recurse -Filter "*.md")) {
+  $DriftBody = Get-Content -Raw -Encoding UTF8 $DriftFile.FullName 2>$null
+  if ($DriftBody -and $DriftBody -match "\*\*Lane\s+`[nN]ormal`\*\*") {
+    $Problems.Add("Deprecated lifecycle label 'lane normal' found in $($DriftFile.FullName)")
+  }
+  if ($DriftBody -and $DriftBody -match "\*\*Lane\s+`[hH]igh-risk`\*\*") {
+    $Problems.Add("Deprecated lifecycle label 'lane high-risk' found in $($DriftFile.FullName)")
+  }
+}
+
+# Drift detection: context-route-cases.json must not have legacy budget key 'core_tokens'
+$RouteCasesBudgets = if ($RouteCases) { $RouteCases.budgets.PSObject.Properties.Name } else { @() }
+if ($RouteCasesBudgets -contains "core_tokens") { $Problems.Add("Legacy budget key 'core_tokens' still present in context-route-cases.json (use 'core_routing_tokens')") }
 
 $RouterTest = Join-Path $Root "automation\test-context-router.py"
 $GraphBuilderForRoute = Join-Path $Root "automation\build-context-graph.ps1"
