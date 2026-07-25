@@ -1,19 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
-import { safeResolve } from './safety';
-
-function findRepoRoot(): string {
-  let dir = __dirname;
-  for (let i = 0; i < 10; i++) {
-    if (fs.existsSync(path.join(dir, 'rules', 'manifest.yaml'))) return dir;
-    const parent = path.dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return path.resolve(__dirname, '..', '..', '..', '..');
-}
-const ROOT = findRepoRoot();
+import { safeResolve, ROOT } from './safety';
 
 function readJson(p: string): unknown {
   const content = fs.readFileSync(p, 'utf-8');

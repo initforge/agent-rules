@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as auditService from '../services/audit';
+import { apiError } from '../services/safety';
 
 const router = Router();
 
@@ -10,7 +11,7 @@ router.get('/', async (req, res) => {
     const events = await auditService.getAuditLog(limit, offset);
     res.json({ ok: true, data: events, limit, offset });
   } catch (err) {
-    res.status(500).json({ ok: false, error: String(err) });
+    apiError(res, 500, err);
   }
 });
 

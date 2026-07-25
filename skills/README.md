@@ -17,6 +17,7 @@
 | `frontend-architect` | UI/UX polish outside ERP (forbidden when profile ERP parity is active) |
 | `master-image-generation` | Mockup / image-to-code |
 | `qa-skills` | Não QA — map `petrkindlmann/qa-skills`; combo với `browser-qa` |
+| `parity-verification` | Visual, responsive, behavioral parity across dimensions; claim-based proof loop |
 | `browser-qa` | Mắt+tay coding agent (Chrome DevTools / Playwright MCP) |
 
 Mỗi skill: một thư mục `SKILL.md` + references/scripts tùy nhu cầu.

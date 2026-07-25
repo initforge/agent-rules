@@ -43,4 +43,12 @@ export function safeResolveAgainst(root: string, relativePath: string): string {
   return resolved;
 }
 
+export function apiError(res: any, code: number, err: unknown): void {
+  if (err instanceof Error && err.message.includes('Path traversal')) {
+    res.status(403).json({ ok: false, error: 'Forbidden' });
+    return;
+  }
+  res.status(code).json({ ok: false, error: 'An internal error occurred' });
+}
+
 export { ROOT };

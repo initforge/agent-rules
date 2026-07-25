@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getStore, addRun, addTelemetry } from '../db';
+import { apiError } from '../services/safety';
 
 const router = Router();
 
@@ -8,7 +9,7 @@ router.get('/', async (_req, res) => {
     const store = getStore();
     res.json({ ok: true, data: store.runs, total: store.runs.length, limit: 50, offset: 0 });
   } catch (err) {
-    res.status(500).json({ ok: false, error: String(err) });
+    apiError(res, 500, err);
   }
 });
 
@@ -17,7 +18,7 @@ router.get('/telemetry', async (_req, res) => {
     const store = getStore();
     res.json({ ok: true, data: store.telemetry, total: store.telemetry.length, limit: 50, offset: 0 });
   } catch (err) {
-    res.status(500).json({ ok: false, error: String(err) });
+    apiError(res, 500, err);
   }
 });
 
@@ -45,7 +46,7 @@ router.post('/import-telemetry', async (req, res) => {
     }
     res.json({ ok: true, imported: count });
   } catch (err) {
-    res.status(500).json({ ok: false, error: String(err) });
+    apiError(res, 500, err);
   }
 });
 
@@ -70,7 +71,7 @@ router.post('/record-run', async (req, res) => {
     });
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ ok: false, error: String(err) });
+    apiError(res, 500, err);
   }
 });
 

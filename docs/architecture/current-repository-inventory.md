@@ -64,10 +64,9 @@ agent-rules/
 | `30-context-routing.md` | 7 | Core rule |
 | `40-harness-governance.md` | Lazy | Core rule (boundary) |
 | `41-harness-maintainer.md` | Lazy | Core rule (boundary) |
-| `45-sync-canonical.md` | Lazy | Core rule (boundary) |
 | `50-context-budget.md` | Lazy | Core rule (budget policy) |
 
-**14 files total, 7 always-load + 5 lazy + 2 metadata.**
+**13 files total, 7 always-load + 4 lazy + 2 metadata.**
 
 ---
 

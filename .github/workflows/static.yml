@@ -92,10 +92,11 @@ jobs:
           sudo apt-get install -y -qq powershell
       - run: npm ci && npx tsc
         working-directory: packages/cli
-      - run: node dist/index.js validate
+      - name: Validate and save log
+        run: node dist/index.js validate 2>&1 | tee packages/cli/validate.log
         working-directory: packages/cli
-      - run: pwsh -File automation/03-validate-context.ps1
       - run: pwsh -File automation/01-build-runtime.ps1
+      - run: pwsh -File automation/03-validate-context.ps1
       - run: pwsh -File automation/04-verify-mirrors.ps1
       - name: Validate documentation drift
         run: |
@@ -106,7 +107,6 @@ jobs:
         with:
           name: validate-log-${{ matrix.os }}
           path: packages/cli/validate.log
-          if-no-files-found: ignore
   verify-mirrors:
     name: verify-mirrors
     needs: [build]
