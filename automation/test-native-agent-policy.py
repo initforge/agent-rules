@@ -34,11 +34,13 @@ def exact_files(folder: Path, expected: set[str]) -> list[Path]:
 policy = json.loads((ROOT / "automation/model-policy.json").read_text(encoding="utf-8"))
 platforms = policy["platforms"]
 telemetry = policy["telemetry_contract"]
-if telemetry["event_fields"] != ["session_id", "actor", "assignment_id", "tool", "tool_class", "timestamp", "outcome"]: fail("telemetry event schema drift")
+if "logical_class" not in telemetry["event_fields"] or "requested_class" not in telemetry["event_fields"] or "attestation_status" not in telemetry["event_fields"]: fail("telemetry event schema missing capability/risk fields")
 selectors = [
-    platforms["codex"]["standard"]["selector"], platforms["codex"]["expert"]["selector"],
-    platforms["cursor"]["implementation"]["selector"], platforms["cursor"]["research_review"]["selector"],
-    platforms["grok"]["base"]["selector"],
+    platforms["codex"]["adapter_defaults"]["model_selectors"]["standard"]["selector"],
+    platforms["codex"]["adapter_defaults"]["model_selectors"]["expert"]["selector"],
+    platforms["cursor"]["adapter_defaults"]["model_selectors"]["implementation"]["selector"],
+    platforms["cursor"]["adapter_defaults"]["model_selectors"]["research_review"]["selector"],
+    platforms["grok"]["adapter_defaults"]["model_selectors"]["base"]["selector"],
 ]
 selector_source_roots = [ROOT / "platforms", ROOT / "automation"]
 for root in selector_source_roots:
@@ -54,7 +56,7 @@ for hook in (ROOT / "platforms/codex/scripts/skill-gate.py", ROOT / "platforms/a
         fail(f"{hook.relative_to(ROOT)} lacks retained telemetry event references")
 if not {"Fast", "Auto"}.issubset(platforms["cursor"]["denied_modes"]): fail("Cursor Fast/Auto denial missing")
 if "Fast" not in platforms["grok"]["denied_modes"]: fail("Grok Fast denial missing")
-if {"family": "Gemini", "version": "3.6", "channel": "Flash"} not in platforms["antigravity"]["denied_models"]: fail("Gemini 3.6 Flash denial missing")
+if {"family": "Gemini", "version": "3.6", "channel": "Flash"} not in platforms["antigravity"]["adapter_defaults"]["denied_models"]: fail("Gemini 3.6 Flash denial missing")
 
 for path in exact_files(ROOT / "platforms/codex/agents", ROLES["codex"]):
     data = tomllib.loads(path.read_text(encoding="utf-8"))
@@ -269,11 +271,11 @@ if "--build" in sys.argv:
                 if manifest.get(manifest_path) != sha(target): fail(f"{platform} manifest hash missing/drift: {manifest_path}")
         if platform == "codex":
             rendered = tomllib.loads((build / "native/agents/agent_rules_implementer.toml").read_text(encoding="utf-8"))
-            if rendered["model"] != platforms["codex"]["standard"]["selector"]: fail("Codex policy selector did not render")
+            if rendered["model"] != platforms["codex"]["adapter_defaults"]["model_selectors"]["standard"]["selector"]: fail("Codex policy selector did not render")
         if platform == "cursor":
             rendered = (build / "native/agents/agent-rules-implementer.md").read_text(encoding="utf-8")
-            if f"model: {platforms['cursor']['implementation']['selector']}" not in rendered: fail("Cursor policy selector did not render")
+            if f"model: {platforms['cursor']['adapter_defaults']['model_selectors']['implementation']['selector']}" not in rendered: fail("Cursor policy selector did not render")
         if platform == "grok":
             rendered = tomllib.loads((build / "native/agents/agent-rules-implementer.toml").read_text(encoding="utf-8"))
-            if rendered["model"] != platforms["grok"]["base"]["selector"]: fail("Grok policy selector did not render")
+            if rendered["model"] != platforms["grok"]["adapter_defaults"]["model_selectors"]["base"]["selector"]: fail("Grok policy selector did not render")
 print("native agent policy PASS")

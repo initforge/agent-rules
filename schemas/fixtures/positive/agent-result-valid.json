@@ -1,0 +1,45 @@
+{
+  "schema": "artifact/agent-result",
+  "version": 1,
+  "assignment_id": "A-S1",
+  "slice_id": "S1",
+  "status": "PASS",
+  "orchestration_status": "healthy",
+  "receipts": [
+    {
+      "id": "RCP-001",
+      "acceptance_id": "AC1",
+      "claim": "Plan schema has explicit version",
+      "claim_hash": "1111222233334444555566667777888899990000aaaabbbbccccddddeeeeffff",
+      "status": "PASS",
+      "provenance": "runner",
+      "proof_kind": "static",
+      "dimensions": ["outcome"],
+      "expected": "schema field equals 'artifact/plan' and version equals 1",
+      "observed": "schema: artifact/plan, version: 1",
+      "environment": "Python jsonschema CLI on Windows",
+      "command": "python -m jsonschema -i fixture.json schema.json",
+      "exit_code": 0,
+      "artifact_evidence": [
+        {
+          "path": "schemas/plan.schema.json",
+          "sha256": "222233334444555566667777888899990000aaaabbbbccccddddeeeeffff0000",
+          "size_bytes": 4500,
+          "modified_at": "2026-07-25T08:30:00Z"
+        }
+      ],
+      "captured_at": "2026-07-25T08:30:00Z"
+    }
+  ],
+  "usage": {
+    "input_tokens": 1200,
+    "cached_input_tokens": 400,
+    "output_tokens": 850,
+    "reasoning_tokens": 200,
+    "tool_calls": 12,
+    "turn_count": 6
+  },
+  "friction": [],
+  "captured_at": "2026-07-25T08:35:00Z",
+  "actor_session": "session-s1-worker"
+}

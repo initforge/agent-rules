@@ -13,8 +13,8 @@ routing: {"signals":["clean code","dọn dẹp code","refactor code","viết cod
 ## 1. Cơ chế Triage Lanes
 
 - **Lane `tiny` (1 file only):** hard-block check nhanh — không smell detect đầy đủ. Skip quy trình lập kế hoạch và review chi tiết.
-- **Lane `normal`:** hard-block at finish; smell detect **optional** — chỉ khi user trigger hoặc high-risk. Lập kế hoạch (`plan-and-handoff`) chỉ khi task dài hoặc multi-phase.
-- **Lane `high-risk`:** smell detect recommended pre-plan; hard-block at finish. Đánh giá chi tiết về rủi ro bảo mật (security) và hiệu năng (performance).
+- **Shape `medium`:** hard-block at finish; smell detect **optional** — chỉ khi user trigger hoặc high-risk. Lập kế hoạch (`plan-and-handoff`) chỉ khi task dài hoặc multi-phase.
+- **Shape `high-risk`:** smell detect recommended pre-plan; hard-block at finish. Đánh giá chi tiết về rủi ro bảo mật (security) và hiệu năng (performance).
 - **Only run in workflow mode=`execution`** — skip in plan-only (optional read-only path).
 
 ## 2. 5fedu Override Guard

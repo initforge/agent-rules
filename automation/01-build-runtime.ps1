@@ -1,11 +1,63 @@
-﻿param([string]$Root = (Split-Path -Parent $PSScriptRoot))
+﻿param(
+  [string]$Root = (Split-Path -Parent $PSScriptRoot),
+  [string]$BuildRoot,
+  [switch]$SkipContextGraph
+)
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "path-compat.ps1")
 
-$BuildRoot = Join-Path $Root "05-generated\runtime-build"
+if (-not $BuildRoot) { $BuildRoot = Join-Path $Root "05-generated\runtime-build" }
 if (Test-Path $BuildRoot) { Remove-Item -LiteralPath $BuildRoot -Recurse -Force }
 
 $Platforms = @("codex", "grok", "antigravity", "cursor")
+$PlatformContractPath = Join-Path $Root "platforms\platform-contracts.json"
+if (-not (Test-Path -LiteralPath $PlatformContractPath)) { throw "Missing platform contract: $PlatformContractPath" }
+try {
+  $PlatformContract = Get-Content -Raw -Encoding UTF8 $PlatformContractPath | ConvertFrom-Json
+} catch {
+  throw "Invalid platform contract JSON: $PlatformContractPath - $_"
+}
+
+function Require-ContractProperties {
+  param(
+    [Parameter(Mandatory = $true)] $Value,
+    [Parameter(Mandatory = $true)] [string[]] $Required,
+    [Parameter(Mandatory = $true)] [string] $Name
+  )
+  if ($null -eq $Value) { throw "Platform contract missing $Name" }
+  $Actual = @($Value.PSObject.Properties.Name)
+  $Missing = @($Required | Where-Object { $Actual -notcontains $_ })
+  $Unexpected = @($Actual | Where-Object { $Required -notcontains $_ })
+  if ($Missing.Count -or $Unexpected.Count) {
+    throw "Platform contract $Name has invalid properties. Missing: $($Missing -join ', '); unexpected: $($Unexpected -join ', ')"
+  }
+  foreach ($Property in $Required) {
+    $RawValue = $Value.$Property
+    if ($RawValue -is [string] -and [string]::IsNullOrWhiteSpace($RawValue)) {
+      throw "Platform contract $Name.$Property must not be blank"
+    }
+  }
+}
+
+Require-ContractProperties -Value $PlatformContract -Required @("version", "parity_contract", "platforms") -Name "root"
+if ([int]$PlatformContract.version -ne 1) { throw "Unsupported platform contract version: $($PlatformContract.version)" }
+Require-ContractProperties -Value $PlatformContract.parity_contract -Required @("required_live_invariants", "static_artifacts_are_sufficient", "aggregate_rule") -Name "parity_contract"
+$RequiredInvariants = @("activation", "context_delivery", "orchestration", "role_permissions", "model_effort", "mcp_integration")
+if ((@($PlatformContract.parity_contract.required_live_invariants | Sort-Object) -join '|') -ne (($RequiredInvariants | Sort-Object) -join '|')) {
+  throw "Platform contract required_live_invariants drift"
+}
+if ($PlatformContract.parity_contract.static_artifacts_are_sufficient -ne $false) { throw "Platform contracts must require live evidence" }
+if ($PlatformContract.parity_contract.aggregate_rule -ne "all_platforms_require_current_live_evidence") { throw "Platform contract aggregate evidence rule drift" }
+Require-ContractProperties -Value $PlatformContract.platforms -Required $Platforms -Name "platforms"
+foreach ($Platform in $Platforms) {
+  $Contract = $PlatformContract.platforms.$Platform
+  Require-ContractProperties -Value $Contract -Required @("runtime", "bootstrap", "routing", "orchestration", "mcp") -Name "platforms.$Platform"
+  Require-ContractProperties -Value $Contract.runtime -Required @("home_env", "home_default", "global_entrypoint") -Name "platforms.$Platform.runtime"
+  Require-ContractProperties -Value $Contract.bootstrap -Required @("strategy", "entrypoint", "restart_action") -Name "platforms.$Platform.bootstrap"
+  Require-ContractProperties -Value $Contract.routing -Required @("hook_lifecycle", "context_delivery") -Name "platforms.$Platform.routing"
+  Require-ContractProperties -Value $Contract.orchestration -Required @("native_spawn_tool", "agent_discovery", "model_attestation", "permission_capability", "isolation_capability") -Name "platforms.$Platform.orchestration"
+  Require-ContractProperties -Value $Contract.mcp -Required @("config_path", "format", "native_inspect", "live_doctor") -Name "platforms.$Platform.mcp"
+}
 $Core = Join-Path $Root "rules"
 $SkillsRoot = Join-Path $Root "skills"
 $SystemMap = Join-Path $Root "guides"
@@ -17,7 +69,7 @@ $UserHome = if ($env:USERPROFILE) { $env:USERPROFILE } elseif ($env:HOME) { $env
 $CodexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $UserHome ".codex" }
 $ContextGraphScript = Join-Path $PSScriptRoot "build-context-graph.ps1"
 $ContextGraphPath = Join-Path $Root "05-generated\context-graph.json"
-if (Test-Path -LiteralPath $ContextGraphScript) {
+if (-not $SkipContextGraph -and (Test-Path -LiteralPath $ContextGraphScript)) {
   & $ContextGraphScript -Root $Root -OutputPath $ContextGraphPath
 }
 
@@ -30,6 +82,14 @@ foreach ($Platform in $Platforms) {
   $Native = Join-Path $Target "native"
   $Tools = Join-Path $Target "agent-rules-tools"
   New-Item -ItemType Directory -Force -Path $Rules, $Skills, $Scripts, $Docs, $Native, $Tools | Out-Null
+
+  $RuntimeContract = [ordered]@{
+    version = 1
+    platform = $Platform
+    source = "platforms/platform-contracts.json"
+    contract = $PlatformContract.platforms.$Platform
+  }
+  $RuntimeContract | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 (Join-Path $Target "runtime-contract.json")
 
   # Portable orchestration must be available outside this repository after install.
   foreach ($ToolName in @("workctl.py", "workctl.ps1", "workctl.sh", "work-ledger.schema.json")) {
@@ -63,11 +123,11 @@ foreach ($Platform in $Platforms) {
   }
 
   $NativeTokens = @{
-    "__CODEX_STANDARD_MODEL__" = $ModelPolicy.platforms.codex.standard.selector
-    "__CODEX_STANDARD_EFFORT__" = $ModelPolicy.platforms.codex.standard.effort
-    "__CURSOR_IMPLEMENTATION_MODEL__" = $ModelPolicy.platforms.cursor.implementation.selector
-    "__CURSOR_RESEARCH_REVIEW_MODEL__" = $ModelPolicy.platforms.cursor.research_review.selector
-    "__GROK_BASE_MODEL__" = $ModelPolicy.platforms.grok.base.selector
+    "__CODEX_STANDARD_MODEL__" = $ModelPolicy.platforms.codex.adapter_defaults.model_selectors.standard.selector
+    "__CODEX_STANDARD_EFFORT__" = $ModelPolicy.platforms.codex.adapter_defaults.model_selectors.standard.effort
+    "__CURSOR_IMPLEMENTATION_MODEL__" = $ModelPolicy.platforms.cursor.adapter_defaults.model_selectors.implementation.selector
+    "__CURSOR_RESEARCH_REVIEW_MODEL__" = $ModelPolicy.platforms.cursor.adapter_defaults.model_selectors.research_review.selector
+    "__GROK_BASE_MODEL__" = $ModelPolicy.platforms.grok.adapter_defaults.model_selectors.base.selector
     "__GROK_MINIMUM_EFFORT__" = $ModelPolicy.platforms.grok.minimum_effort
   }
   Get-ChildItem -LiteralPath $Native -Recurse -File | ForEach-Object {
@@ -143,6 +203,7 @@ foreach ($Platform in $Platforms) {
       core = "rules"
       skills = "skills"
       overlays = "platforms/$Platform"
+      platform_contract = "platforms/platform-contracts.json"
     }
     files = $ManifestItems
   }

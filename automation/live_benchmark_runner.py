@@ -36,7 +36,7 @@ MODEL_POLICY = ROOT / "automation" / "model-policy.json"
 def default_benchmark_model() -> str:
     """Use the policy-owned expert route; benchmark code never owns a selector."""
     policy = load_json(MODEL_POLICY)
-    return str(policy["platforms"]["codex"]["expert"]["selector"])
+    return str(policy["platforms"]["codex"]["adapter_defaults"]["model_selectors"]["expert"]["selector"])
 
 
 def utc_now() -> str:
@@ -305,7 +305,7 @@ def run_one(
 
 
 def self_test() -> None:
-    if default_benchmark_model() != load_json(MODEL_POLICY)["platforms"]["codex"]["expert"]["selector"]:
+    if default_benchmark_model() != load_json(MODEL_POLICY)["platforms"]["codex"]["adapter_defaults"]["model_selectors"]["expert"]["selector"]:
         raise AssertionError("benchmark default drifted from model policy")
     fixtures = load_json(DEFAULT_FIXTURES)["fixtures"]
     corpus = load_json(DEFAULT_CORPUS)

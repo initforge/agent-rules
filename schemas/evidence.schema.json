@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/evidence.schema.json",
+  "title": "Portable Evidence Record",
+  "description": "A claim-to-proof record: what was claimed, how it was proved (environment, command, artifact, result), and what was observed. Platform-neutral; supports traceability from acceptance claim through proof execution to observed outcome.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "version", "id", "claim", "claim_hash",
+    "environment", "provenance", "proof_kind", "dimensions",
+    "expected", "observed", "status", "captured_at"
+  ],
+  "properties": {
+    "schema": { "const": "artifact/evidence" },
+    "version": { "const": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "claim": { "type": "string", "minLength": 1 },
+    "claim_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "contract_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "status": { "enum": ["PASS", "FAIL", "BLOCKED", "UNVERIFIED"] },
+    "provenance": {
+      "type": "string",
+      "enum": ["runner", "external-verifier", "manual", "unverified"]
+    },
+    "proof_kind": {
+      "type": "string",
+      "enum": [
+        "static", "diff", "build", "unit", "integration", "api", "e2e",
+        "browser", "performance", "security", "manual", "artifact",
+        "transcript-review", "pipeline-run", "production-smoke",
+        "source-assertion", "custom-runtime"
+      ]
+    },
+    "dimensions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "host_os"],
+      "properties": {
+        "platform": { "type": "string", "minLength": 1 },
+        "host_os": { "type": "string" },
+        "runtime_version": { "type": "string" },
+        "tool_versions": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "executable": { "type": "string" },
+        "arguments": { "type": "array", "items": { "type": "string" } },
+        "working_directory": { "type": "string" },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "expected_exit_code": { "type": ["integer", "null"] }
+      }
+    },
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "class": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string" },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "modified_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "expected": { "type": ["string", "null"] },
+    "observed": { "type": "string", "minLength": 1 },
+    "exit_code": { "type": ["integer", "null"] },
+    "output_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "captured_at": { "type": "string", "format": "date-time" },
+    "proof_profile": { "type": "string" },
+    "acceptance_id": { "type": "string" },
+    "assignment_id": { "type": "string" },
+    "model_evidence": { "$ref": "#/$defs/modelEvidence" }
+  },
+  "$defs": {
+    "modelEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requested_model", "requested_effort",
+        "resolved_model", "resolved_effort",
+        "observed_model", "observed_effort",
+        "attestation_status", "fallback_reason"
+      ],
+      "properties": {
+        "requested_model": { "type": "string", "minLength": 1 },
+        "requested_effort": { "enum": ["low", "medium", "high", "unset"] },
+        "resolved_model": { "type": ["string", "null"] },
+        "resolved_effort": { "enum": ["low", "medium", "high", "unset", null] },
+        "observed_model": { "type": ["string", "null"] },
+        "observed_effort": { "enum": ["low", "medium", "high", "unset", null] },
+        "attestation_status": {
+          "type": "string",
+          "enum": ["observed", "unobserved", "fallback", "unverified"]
+        },
+        "fallback_reason": { "type": "string" }
+      }
+    }
+  }
+}

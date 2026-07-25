@@ -1,0 +1,17 @@
+{
+  "schema": "artifact/evidence",
+  "version": 1,
+  "id": "EV-INVALID",
+  "claim": "No hash provided",
+  "status": "PASS",
+  "provenance": "runner",
+  "proof_kind": "unit",
+  "dimensions": ["outcome"],
+  "environment": {
+    "platform": "windows",
+    "host_os": "test"
+  },
+  "expected": "pass",
+  "observed": "pass",
+  "captured_at": "2026-07-25T10:00:00Z"
+}

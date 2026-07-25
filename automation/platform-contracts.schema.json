@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent Rules Platform Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "parity_contract", "platforms"],
+  "properties": {
+    "version": {"const": 1},
+    "parity_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required_live_invariants", "static_artifacts_are_sufficient", "aggregate_rule"],
+      "properties": {
+        "required_live_invariants": {"type": "array", "uniqueItems": true, "minItems": 6, "items": {"enum": ["activation", "context_delivery", "orchestration", "role_permissions", "model_effort", "mcp_integration"]}},
+        "static_artifacts_are_sufficient": {"const": false},
+        "aggregate_rule": {"const": "all_platforms_require_current_live_evidence"}
+      }
+    },
+    "platforms": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["codex", "grok", "antigravity", "cursor"],
+      "properties": {"codex": {"$ref": "#/$defs/platform"}, "grok": {"$ref": "#/$defs/platform"}, "antigravity": {"$ref": "#/$defs/platform"}, "cursor": {"$ref": "#/$defs/platform"}}
+    }
+  },
+  "$defs": {
+    "nonempty": {"type": "string", "minLength": 1},
+    "platform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime", "bootstrap", "routing", "orchestration", "mcp"],
+      "properties": {
+        "runtime": {"type": "object", "additionalProperties": false, "required": ["home_env", "home_default", "global_entrypoint"], "properties": {"home_env": {"$ref": "#/$defs/nonempty"}, "home_default": {"$ref": "#/$defs/nonempty"}, "global_entrypoint": {"$ref": "#/$defs/nonempty"}}},
+        "bootstrap": {"type": "object", "additionalProperties": false, "required": ["strategy", "entrypoint", "restart_action"], "properties": {"strategy": {"$ref": "#/$defs/nonempty"}, "entrypoint": {"$ref": "#/$defs/nonempty"}, "restart_action": {"$ref": "#/$defs/nonempty"}}},
+        "routing": {"type": "object", "additionalProperties": false, "required": ["hook_lifecycle", "context_delivery"], "properties": {"hook_lifecycle": {"$ref": "#/$defs/nonempty"}, "context_delivery": {"$ref": "#/$defs/nonempty"}}},
+        "orchestration": {"type": "object", "additionalProperties": false, "required": ["native_spawn_tool", "agent_discovery", "model_attestation", "permission_capability", "isolation_capability"], "properties": {"native_spawn_tool": {"$ref": "#/$defs/nonempty"}, "agent_discovery": {"$ref": "#/$defs/nonempty"}, "model_attestation": {"$ref": "#/$defs/nonempty"}, "permission_capability": {"$ref": "#/$defs/nonempty"}, "isolation_capability": {"$ref": "#/$defs/nonempty"}}},
+        "mcp": {"type": "object", "additionalProperties": false, "required": ["config_path", "format", "native_inspect", "live_doctor"], "properties": {"config_path": {"$ref": "#/$defs/nonempty"}, "format": {"$ref": "#/$defs/nonempty"}, "native_inspect": {"$ref": "#/$defs/nonempty"}, "live_doctor": {"$ref": "#/$defs/nonempty"}}}
+      }
+    }
+  }
+}

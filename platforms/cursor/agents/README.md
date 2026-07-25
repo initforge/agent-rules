@@ -6,17 +6,19 @@ Install these Markdown files directly into `.cursor/agents/` (project) or
 
 Role mapping:
 
-- `agent-rules-researcher` → researcher
+- coordinator — filled by the main agent; no separate agent file
+- architect/integrator — filled by the main agent or a designated senior subagent
+- `agent-rules-researcher` → researcher/utility worker
 - `agent-rules-implementer` → implementer
 - `agent-rules-reviewer` → reviewer
 - `agent-rules-verifier` → verifier
 
 The `agent-rules-` namespace prevents collisions with generic user-owned agents.
 
-The build renders the implementation selector from model policy, the current staff-documented
-custom-agent selector for Composer 2.5 Standard. Researcher, reviewer, and verifier
-use the policy research/review selector and `readonly: true`; implementer explicitly uses
-`readonly: false`.
+The build renders the implementation route from model-policy.json logical classes (standard = implementation,
+expert_review = review/research). Researcher, reviewer, and verifier use `readonly: true`;
+implementer explicitly uses `readonly: false`. Model resolution happens at install time
+via the platform adapter; specific model IDs are never hardcoded in common rules.
 
 The central model-policy validator should parse these exact frontmatter values and
 reject a drift to a display-only Composer value or any Fast selector. The installer

@@ -1,0 +1,109 @@
+{
+  "schema": "artifact/plan",
+  "version": 1,
+  "level": "resumable",
+  "meta": {
+    "id": "plan-resumable-001",
+    "created_at": "2026-07-25T14:00:00Z",
+    "updated_at": "2026-07-25T16:00:00Z",
+    "source_refs": ["USR-005"]
+  },
+  "original_request_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "intent": {
+    "outcome": "Migration from monolith to microservices is complete with data reconciliation",
+    "risk_classification": "high",
+    "in_scope": ["order service extraction", "data migration", "API gateway routing"],
+    "non_goals": ["UI changes", "other service extractions"],
+    "assumptions": [
+      { "statement": "Order data volume is under 500GB", "category": "fact" },
+      { "statement": "Weekend maintenance window is approved", "category": "assumption" },
+      { "statement": "Third-party shipping API compatibility", "category": "unknown" }
+    ]
+  },
+  "requirements": [
+    { "id": "REQ-001", "summary": "Extract order service from monolith", "kind": "original" },
+    { "id": "REQ-002", "summary": "Migrate order data to new service", "kind": "original" },
+    { "id": "REQ-003", "summary": "Route /orders/* to new service", "kind": "original" },
+    { "id": "REQ-004", "summary": "Reconcile data after migration", "kind": "original" },
+    { "id": "REQ-005", "summary": "Rollback plan must exist before cutover", "kind": "injection" }
+  ],
+  "decisions": [
+    { "id": "DEC-001", "statement": "Extract orders before payments", "rationale": "Orders have fewer dependencies", "decided_at": "2026-07-25T14:00:00Z" },
+    { "id": "DEC-002", "statement": "Use dual-write during migration", "rationale": "Zero-downtime requirement", "decided_at": "2026-07-25T14:10:00Z" }
+  ],
+  "repository_facts": {
+    "baseline": "main/e5f6g7h",
+    "branch": "feature/service-extraction",
+    "architecture": ["monolith/src/orders/", "api-gateway/"]
+  },
+  "constraints_and_invariants": {
+    "negative_invariants": ["No order data loss at any step", "API contract must remain backward-compatible"],
+    "migration_constraints": ["Migration must support rollback at migration-unit granularity"]
+  },
+  "change_graph": [
+    { "id": "CG-001", "area": "order service stub", "current_truth": "no order service exists", "exact_change": "create order service with health endpoint", "category": "fact", "files": ["services/order/"], "requirement_ids": ["REQ-001"] },
+    { "id": "CG-002", "area": "dual-write adapter", "current_truth": "monolith writes orders to local DB only", "exact_change": "add dual-write to monolith order module", "category": "fact", "files": ["monolith/src/orders/dual_write.rs"], "depends_on": ["CG-001"], "requirement_ids": ["REQ-002"] },
+    { "id": "CG-003", "area": "API gateway route", "current_truth": "/orders/* routes to monolith", "exact_change": "add conditional route to order service", "category": "fact", "files": ["api-gateway/routes/orders.rs"], "depends_on": ["CG-001"], "requirement_ids": ["REQ-003"] }
+  ],
+  "acceptance": [
+    { "id": "AC1", "claim": "Order service starts and responds to health check", "proof_profile": "static-change", "required_dimensions": ["outcome"], "requirement_ids": ["REQ-001"] },
+    { "id": "AC2", "claim": "Dual-write produces identical data in both stores", "proof_profile": "migration-reconciliation", "required_dimensions": ["blank", "existing-clone", "reconciliation", "failure-path"], "requirement_ids": ["REQ-002", "REQ-004"] },
+    { "id": "AC3", "claim": "API gateway routes /orders/* correctly", "proof_profile": "implementation-runtime", "required_dimensions": ["outcome", "integration", "regression"], "requirement_ids": ["REQ-003"] },
+    { "id": "AC4", "claim": "Rollback restores monolith routing within RTO", "proof_profile": "external-release", "required_dimensions": ["target-identity", "terminal-run", "smoke"], "requirement_ids": ["REQ-005"] }
+  ],
+  "verification_matrix": [
+    { "requirement_id": "REQ-001", "acceptance_ids": ["AC1"] },
+    { "requirement_id": "REQ-002", "acceptance_ids": ["AC2"] },
+    { "requirement_id": "REQ-003", "acceptance_ids": ["AC3"] },
+    { "requirement_id": "REQ-004", "acceptance_ids": ["AC2"] },
+    { "requirement_id": "REQ-005", "acceptance_ids": ["AC4"] }
+  ],
+  "path_ownership": {
+    "exclusive_writers": {
+      "team-a": ["services/order/"],
+      "team-b": ["monolith/src/orders/dual_write.rs"],
+      "devops": ["api-gateway/routes/orders.rs"]
+    },
+    "read_only_paths": ["monolith/src/orders/"],
+    "forbidden_paths": ["secrets/", "production-deploy/"]
+  },
+  "task_graph": [
+    { "id": "S1", "name": "Order service stub", "work": "Create order service with health endpoint, Dockerfile, CI pipeline", "owner": "team-a", "depends_on": [], "capability_class": "standard", "write_paths": ["services/order/"], "acceptance_ids": ["AC1"], "requirement_ids": ["REQ-001"], "review_required": false },
+    { "id": "S2", "name": "Dual-write adapter", "work": "Add dual-write to monolith order module", "owner": "team-b", "depends_on": ["S1"], "capability_class": "expert", "write_paths": ["monolith/src/orders/dual_write.rs"], "acceptance_ids": ["AC2"], "requirement_ids": ["REQ-002"], "review_required": true },
+    { "id": "S3", "name": "API gateway routing", "work": "Add conditional route to API gateway", "owner": "devops", "depends_on": ["S1"], "capability_class": "standard", "acceptance_ids": ["AC3"], "requirement_ids": ["REQ-003"], "review_required": false },
+    { "id": "S4", "name": "Rollback plan", "work": "Document and test rollback procedure", "owner": "devops", "depends_on": ["S2", "S3"], "capability_class": "expert", "acceptance_ids": ["AC4"], "requirement_ids": ["REQ-005"], "rollback_point": "restore monolith routing" }
+  ],
+  "amendments": [
+    {
+      "id": "AMD-001",
+      "reason": "Owner decided dual-write approach, replacing initial ETL-only plan",
+      "changes": [
+        { "field": "change_graph", "action": "added", "target_id": "CG-002", "detail": "Dual-write adapter replaces ETL pipeline" },
+        { "field": "decisions", "action": "superseded", "target_id": "DEC-001", "detail": "DEC-002 (dual-write) supersedes DEC-001 (ETL-only)" }
+      ],
+      "supersedes_prior": true,
+      "applied_at": "2026-07-25T14:10:00Z",
+      "applied_by": "architect"
+    }
+  ],
+  "checkpoints": [
+    { "id": "CK-001", "slice_id": "S1", "commit": "a1b2c3d", "summary": "Order service stub complete, health endpoint responding", "next_action": "start S2 and S3 in parallel", "created_at": "2026-07-25T15:00:00Z" }
+  ],
+  "evidence_ledger": [
+    { "receipt_id": "RCP-001", "acceptance_id": "AC1", "status": "PASS", "proof_kind": "unit", "dimensions": ["outcome"], "captured_at": "2026-07-25T15:00:00Z", "claim_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }
+  ],
+  "execution_contract": {
+    "mode": "automatic",
+    "shape": "resumable",
+    "ledger": "required",
+    "strategy": "parallel",
+    "max_agents": 5,
+    "max_depth": 2,
+    "effort_cap": "high",
+    "authorized_final_actions": ["edit", "commit", "deploy"]
+  },
+  "risks": [
+    { "risk": "Dual-write inconsistency under load", "early_signal": "reconciliation shows mismatches", "prevention": "Add idempotency keys and retry logic", "recovery": "Pause cutover, fix inconsistency, re-reconcile" },
+    { "risk": "Rollback exceeds RTO", "early_signal": "rollback test takes longer than expected", "prevention": "Automated rollback script with progress metrics", "recovery": "Extend maintenance window" }
+  ]
+}
