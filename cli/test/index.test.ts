@@ -130,6 +130,11 @@ describe("Command handler signatures", () => {
     expect(typeof mod.validate).toBe("function");
   });
 
+  it("exports verifyMirrors handler", async () => {
+    const mod = await import("../src/commands/verify-mirrors.js");
+    expect(typeof mod.verifyMirrors).toBe("function");
+  });
+
   it("exports install handler", async () => {
     const mod = await import("../src/commands/install.js");
     expect(typeof mod.installCmd).toBe("function");

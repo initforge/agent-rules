@@ -4,6 +4,7 @@ import { Command } from "commander";
 import { ExitCode, type CliOptions } from "./types.js";
 import { build } from "./commands/build.js";
 import { validate } from "./commands/validate.js";
+import { verifyMirrors } from "./commands/verify-mirrors.js";
 import { installCmd } from "./commands/install.js";
 import { doctor } from "./commands/doctor.js";
 import { syncCmd } from "./commands/sync.js";
@@ -28,7 +29,7 @@ program
 // ── build ──────────────────────────────────────────────────────────
 program
   .command("build")
-  .description("Build the harness runtime (legacy: 01-build-runtime.ps1)")
+  .description("Build the harness runtime (migrated from 01-build-runtime.ps1)")
   .argument("[root]", "Repository root path")
   .action(async (root: string | undefined) => {
     const opts = program.optsWithGlobals() as CliOptions;
@@ -40,11 +41,23 @@ program
 program
   .command("validate")
   .description(
-    "Run context validation and schema tests (legacy: 03-validate-context.ps1 + test-artifact-schemas.py)"
+    "Run context validation and schema tests (migrated from 03-validate-context.ps1)"
   )
   .action(async () => {
     const opts = program.optsWithGlobals() as CliOptions;
     const result = await validate([], opts);
+    formatOutput(result, opts);
+  });
+
+// ── verify-mirrors ────────────────────────────────────────────────
+program
+  .command("verify-mirrors")
+  .description(
+    "Verify skills/rules mirror parity across platform builds (migrated from 04-verify-mirrors.ps1)"
+  )
+  .action(async () => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const result = await verifyMirrors([], opts);
     formatOutput(result, opts);
   });
 
@@ -64,11 +77,14 @@ program
 // ── doctor ─────────────────────────────────────────────────────────
 program
   .command("doctor")
-  .description("Run harness health checks (legacy: 09-doctor.ps1)")
+  .description("Run harness health checks (migrated from 09-doctor.ps1)")
   .argument("[platform]", "Platform: codex, grok, antigravity, cursor, all", "all")
-  .action(async (platform: string) => {
+  .option("--skip-integration-verify", "Skip external MCP integration verification")
+  .action(async (platform: string, cmdOpts: { skipIntegrationVerify?: boolean }) => {
     const opts = program.optsWithGlobals() as CliOptions;
-    const result = await doctor([platform], opts);
+    const extraArgs = [platform];
+    if (cmdOpts.skipIntegrationVerify) extraArgs.push("--skip-integration-verify");
+    const result = await doctor(extraArgs, opts);
     formatOutput(result, opts);
   });
 

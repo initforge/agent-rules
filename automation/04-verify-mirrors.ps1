@@ -1,26 +1,10 @@
-﻿$ErrorActionPreference = "Stop"
-. (Join-Path $PSScriptRoot "path-compat.ps1")
-$Root = Split-Path -Parent $PSScriptRoot
-& (Join-Path $PSScriptRoot "01-build-runtime.ps1") -Root $Root
-& python (Join-Path $PSScriptRoot "test-native-agent-policy.py") --build
-if ($LASTEXITCODE -ne 0) { throw "Native agent policy/build contract failed" }
-
-$Platforms = @("codex", "grok", "antigravity", "cursor")
-$BuildRoot = Join-Path $Root "05-generated\runtime-build"
-$Base = (Get-Content -Raw (Join-Path $BuildRoot "codex\manifest.json") | ConvertFrom-Json).files
-
-foreach ($Platform in $Platforms[1..3]) {
-  $Other = (Get-Content -Raw (Join-Path $BuildRoot "$Platform\manifest.json") | ConvertFrom-Json).files
-
-  foreach ($Item in $Base | Where-Object Path -Like "skills/*") {
-    $Match = $Other | Where-Object Path -EQ $Item.Path
-    if (-not $Match -or $Match.Sha256 -ne $Item.Sha256) { throw "Skill mirror drift: $Platform $($Item.Path)" }
-  }
-
-  foreach ($Item in $Base | Where-Object { $_.Path -like "rules/*" -and $_.Path -notlike "*-overlay.md" }) {
-    $Match = $Other | Where-Object Path -EQ $Item.Path
-    if (-not $Match -or $Match.Sha256 -ne $Item.Sha256) { throw "Core mirror drift: $Platform $($Item.Path)" }
-  }
+﻿# Thin compatibility wrapper — canonical implementation is in TypeScript CLI
+param()
+$ErrorActionPreference = "Stop"
+$CliDir = Join-Path $PSScriptRoot "..\cli"
+$CliEntry = Join-Path $CliDir "dist\index.js"
+if (-not (Test-Path $CliEntry)) {
+  throw "CLI not built: run 'npm install && npm run build' in cli/"
 }
-
-Write-Host "Mirror parity PASS"
+& node $CliEntry verify-mirrors
+exit $LASTEXITCODE
