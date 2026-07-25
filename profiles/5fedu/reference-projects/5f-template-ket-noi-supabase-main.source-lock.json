@@ -1,0 +1,12 @@
+{
+  "repository": "https://github.com/initforge/pos-ops",
+  "sourcePath": "5f-template-ket-noi-supabase-main",
+  "commitSha": "ec9e4a87c7918a48a089a293f70090beb82cebbb",
+  "importedAt": "",
+  "verifiedAt": null,
+  "redistribution": "internal",
+  "updatePolicy": "manual-vendored",
+  "immutable": true,
+  "role": "reference-template",
+  "compatibility": { "node": ">=18", "npm": ">=9" }
+}
