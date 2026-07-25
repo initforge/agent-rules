@@ -1,65 +1,236 @@
 {
-  "version": 1,
+  "version": 2,
+  "description": "Canonical integration and MCP registry — single source of truth for all platform build outputs",
   "integrations": [
     {
-      "name": "codebase-memory-mcp",
+      "id": "codebase-memory-mcp",
+      "displayName": "Codebase Memory MCP",
+      "kind": "mcp",
       "policy": "required",
-      "path": "integrations/required/codebase-memory-mcp",
-      "triggerClasses": ["code-exploration", "impact-analysis", "cross-file-trace"],
-      "capabilityClass": "codebase-intelligence",
+      "profiles": ["core"],
+      "source": {
+        "type": "github",
+        "url": "https://github.com/DeusData/codebase-memory-mcp",
+        "version": "0.8.1",
+        "versionPolicy": "pinned"
+      },
+      "integrity": {
+        "pinned": true,
+        "sha256": {
+          "windows-amd64": "a602ad090ed3f49d86c55472f73f27ad7055222806a82358f2e08513e027f00f",
+          "linux-amd64": "6ab87a6c05d049dde57700803ca0ab4199fcf25973a0606618af0fcee73f5abd",
+          "linux-arm64": "13526acc2a6a0697dff3c763fb443a416589bc10ad8b12015b63d87e515dd72b",
+          "darwin-amd64": "fb62da3016ea12b948351208759b5c083fb1446cf6e78d6db8b7cd28fe86fd54",
+          "darwin-arm64": "fbd047509852021b5446a11141bcb0a3d1dcaebf6e5112460960f29f052c1c58"
+        }
+      },
+      "trust": "adapter-verified",
+      "capabilities": ["codebase-intelligence"],
+      "triggers": ["code-exploration", "impact-analysis", "cross-file-trace"],
       "sideEffects": "read-only",
       "tokenClass": "low",
+      "permissions": ["read-only"],
+      "environment": ["CODEBASE_MEMORY_MCP_BIN"],
+      "install": {
+        "type": "binary",
+        "script": "integrations/required/codebase-memory-mcp/install.ps1",
+        "verify": "integrations/required/codebase-memory-mcp/verify.ps1",
+        "uninstall": "integrations/required/codebase-memory-mcp/uninstall.ps1"
+      },
+      "health": {
+        "command": "{{bin}} --version",
+        "expectedExitCodes": [0]
+      },
+      "schema": {
+        "source": "mcps/codebase-memory/tools/",
+        "generated": "05-generated/mcps/codebase-memory/"
+      },
+      "platform": {
+        "windows": "%LOCALAPPDATA%\\Programs\\codebase-memory-mcp",
+        "linux": "$HOME/.local/share/codebase-memory-mcp",
+        "darwin": "$HOME/Library/Application Support/codebase-memory-mcp"
+      },
       "nativeHosts": ["codex", "grok", "antigravity", "cursor"],
       "fallback": "rg plus targeted reads and native symbol navigation",
-      "proofStatus": "adapter-verified"
+      "deprecatedAliases": ["codebase_memory"]
     },
     {
-      "name": "context7",
+      "id": "context7",
+      "displayName": "Context7",
+      "kind": "mcp",
       "policy": "recommended",
-      "path": "integrations/recommended/context7",
-      "triggerClasses": ["latest-docs", "framework-behavior", "api-reference", "migration-research"],
-      "capabilityClass": "external-documentation",
+      "profiles": ["research"],
+      "source": {
+        "type": "npm",
+        "url": "https://github.com/upstash/context7",
+        "package": "@upstash/context7-mcp",
+        "version": "latest",
+        "versionPolicy": "latest",
+        "commandName": "context7-mcp"
+      },
+      "integrity": {
+        "pinned": false
+      },
+      "trust": "adapter-verified",
+      "capabilities": ["external-documentation"],
+      "triggers": ["latest-docs", "framework-behavior", "api-reference", "migration-research"],
       "sideEffects": "network-read",
       "tokenClass": "medium",
+      "permissions": ["network-read"],
+      "environment": [],
+      "install": {
+        "type": "npm-global",
+        "script": "integrations/recommended/context7/install.ps1",
+        "verify": "integrations/recommended/context7/verify.ps1",
+        "uninstall": "integrations/recommended/context7/uninstall.ps1"
+      },
+      "health": {
+        "command": "npx -y @upstash/context7-mcp --help",
+        "expectedExitCodes": [0]
+      },
+      "schema": {
+        "source": "mcps/context7/tools/"
+      },
       "nativeHosts": ["codex", "grok", "antigravity", "cursor"],
       "fallback": "official primary-source documentation or web research",
-      "proofStatus": "adapter-verified"
+      "deprecatedAliases": []
     },
     {
-      "name": "playwright-mcp",
+      "id": "playwright-mcp",
+      "displayName": "Playwright MCP",
+      "kind": "mcp",
       "policy": "recommended",
-      "path": "integrations/recommended/playwright-mcp",
-      "triggerClasses": ["browser-qa", "ui-e2e", "click-through", "playwright", "agentic-browser"],
-      "capabilityClass": "browser-interaction",
+      "profiles": ["qa", "frontend"],
+      "source": {
+        "type": "npm",
+        "url": "https://github.com/microsoft/playwright-mcp",
+        "package": "@playwright/mcp",
+        "version": "latest",
+        "versionPolicy": "latest",
+        "commandName": "playwright-mcp",
+        "mcpServerKey": "playwright"
+      },
+      "integrity": {
+        "pinned": false
+      },
+      "trust": "adapter-verified",
+      "capabilities": ["browser-interaction"],
+      "triggers": ["browser-qa", "ui-e2e", "click-through", "playwright", "agentic-browser"],
       "sideEffects": "interactive-browser",
       "tokenClass": "high",
+      "permissions": ["interactive-browser"],
+      "environment": [],
+      "install": {
+        "type": "npm-npx",
+        "script": "integrations/recommended/playwright-mcp/install.ps1",
+        "verify": "integrations/recommended/playwright-mcp/verify.ps1",
+        "uninstall": "integrations/recommended/playwright-mcp/uninstall.ps1"
+      },
+      "health": {
+        "command": "npx -y @playwright/mcp --help",
+        "expectedExitCodes": [0]
+      },
+      "schema": {
+        "source": "mcps/playwright/tools/"
+      },
       "nativeHosts": ["codex", "grok", "antigravity", "cursor"],
       "fallback": "report the live-interaction proof gap; do not infer it from build output",
-      "proofStatus": "adapter-verified"
+      "deprecatedAliases": []
     },
     {
-      "name": "chrome-devtools-mcp",
+      "id": "chrome-devtools-mcp",
+      "displayName": "Chrome DevTools MCP",
+      "kind": "mcp",
       "policy": "recommended",
-      "path": "integrations/recommended/chrome-devtools-mcp",
-      "triggerClasses": ["browser-qa", "console-debug", "network-debug", "cdp", "chrome-devtools"],
-      "capabilityClass": "browser-diagnostics",
+      "profiles": ["qa", "frontend"],
+      "source": {
+        "type": "npm",
+        "url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+        "package": "chrome-devtools-mcp",
+        "version": "latest",
+        "versionPolicy": "latest",
+        "commandName": "chrome-devtools-mcp",
+        "mcpServerKey": "chrome-devtools"
+      },
+      "integrity": {
+        "pinned": false
+      },
+      "trust": "adapter-verified",
+      "capabilities": ["browser-diagnostics"],
+      "triggers": ["browser-qa", "console-debug", "network-debug", "cdp", "chrome-devtools"],
       "sideEffects": "browser-read",
       "tokenClass": "high",
+      "permissions": ["browser-read"],
+      "environment": [],
+      "install": {
+        "type": "npm-npx",
+        "script": "integrations/recommended/chrome-devtools-mcp/install.ps1",
+        "verify": "integrations/recommended/chrome-devtools-mcp/verify.ps1",
+        "uninstall": "integrations/recommended/chrome-devtools-mcp/uninstall.ps1"
+      },
+      "health": {
+        "command": "npx -y chrome-devtools-mcp --help",
+        "expectedExitCodes": [0]
+      },
+      "schema": {
+        "source": "mcps/chrome-devtools/tools/"
+      },
       "nativeHosts": ["codex", "grok", "antigravity", "cursor"],
       "fallback": "browser console/network evidence when a host-native DevTools session is available",
-      "proofStatus": "adapter-verified"
+      "deprecatedAliases": []
     },
     {
-      "name": "caveman",
+      "id": "caveman",
+      "displayName": "Caveman",
+      "kind": "tool",
       "policy": "optional",
-      "path": "integrations/optional/caveman",
-      "triggerClasses": ["compression-workflow"],
-      "capabilityClass": "workflow-utility",
+      "profiles": [],
+      "source": {
+        "type": "github",
+        "url": "https://github.com/JuliusBrussee/caveman",
+        "version": "main",
+        "versionPolicy": "branch",
+        "ref": "main"
+      },
+      "integrity": {
+        "pinned": false
+      },
+      "trust": "advisory-only",
+      "capabilities": ["workflow-utility"],
+      "triggers": ["compression-workflow"],
       "sideEffects": "local-write",
       "tokenClass": "medium",
+      "permissions": ["local-write"],
+      "environment": [],
+      "install": {
+        "type": "npx-github",
+        "script": "integrations/optional/caveman/install.ps1",
+        "uninstall": "integrations/optional/caveman/uninstall.ps1"
+      },
       "nativeHosts": [],
       "fallback": "use canonical skills and normal task reasoning",
-      "proofStatus": "advisory-only"
+      "deprecatedAliases": []
     }
-  ]
+  ],
+  "profiles": {
+    "core": {
+      "description": "Essential dependencies for all agent operations",
+      "required": ["codebase-memory-mcp"]
+    },
+    "research": {
+      "description": "External documentation and API reference",
+      "required": [],
+      "recommended": ["context7"]
+    },
+    "qa": {
+      "description": "Browser-based UI quality assurance",
+      "required": [],
+      "recommended": ["playwright-mcp", "chrome-devtools-mcp"]
+    },
+    "frontend": {
+      "description": "Frontend development support",
+      "required": [],
+      "recommended": ["playwright-mcp", "chrome-devtools-mcp"]
+    }
+  }
 }

@@ -23,6 +23,17 @@ $Registry = Get-Content -Raw (Join-Path $Root "integrations\registry.json") | Co
 $IntegrationState = @()
 $SharedIntegrations = @{}
 
+function Get-IntegrationPath {
+  param([pscustomobject]$Integration)
+  if ($null -ne $Integration.PSObject.Properties["path"]) {
+    return $Integration.path
+  }
+  if ($null -ne $Integration.PSObject.Properties["install"]) {
+    return Split-Path $Integration.install.script -Parent
+  }
+  return $null
+}
+
 function Stage-Adapters {
   param(
     [pscustomobject]$Integration,
@@ -30,7 +41,9 @@ function Stage-Adapters {
     [string]$RuntimeHome
   )
 
-  $AdaptersRoot = Join-Path $Root $Integration.path
+  $IntegrationPath = Get-IntegrationPath $Integration
+  if (-not $IntegrationPath) { return $null }
+  $AdaptersRoot = Join-Path $Root $IntegrationPath
   $SourceAdapter = switch ($PlatformName) {
     "codex" { Join-Path $AdaptersRoot "adapters\codex.toml" }
     "grok" { Join-Path $AdaptersRoot "adapters\grok.json" }
@@ -55,7 +68,9 @@ function Install-Integration {
     [switch]$SkipInstall
   )
 
-  $Path = Join-Path $Root $Integration.path
+  $IntegrationPath = Get-IntegrationPath $Integration
+  if (-not $IntegrationPath) { return $null }
+  $Path = Join-Path $Root $IntegrationPath
   $InstallScript = Join-Path $Path "install.ps1"
   $VerifyScript = Join-Path $Path "verify.ps1"
   $State = [ordered]@{
