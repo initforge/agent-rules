@@ -67,7 +67,7 @@ integrations:
       windows: "%LOCALAPPDATA%\\Programs\\codebase-memory-mcp"
       linux: "$HOME/.local/share/codebase-memory-mcp"
       darwin: "$HOME/Library/Application Support/codebase-memory-mcp"
-    nativeHosts: [codex, grok, antigravity, cursor]
+    nativeHosts: [codex, grok, antigravity, cursor, opencode]
     fallback: "rg plus targeted reads and native symbol navigation"
     deprecatedAliases: [codebase_memory]
 
@@ -102,7 +102,7 @@ integrations:
       expectedExitCodes: [0]
     schema:
       source: mcps/context7/tools/
-    nativeHosts: [codex, grok, antigravity, cursor]
+    nativeHosts: [codex, grok, antigravity, cursor, opencode]
     fallback: "official primary-source documentation or web research"
     deprecatedAliases: []
 
@@ -138,7 +138,7 @@ integrations:
       expectedExitCodes: [0]
     schema:
       source: mcps/playwright/tools/
-    nativeHosts: [codex, grok, antigravity, cursor]
+    nativeHosts: [codex, grok, antigravity, cursor, opencode]
     fallback: "report the live-interaction proof gap; do not infer it from build output"
     deprecatedAliases: []
 
@@ -174,7 +174,7 @@ integrations:
       expectedExitCodes: [0]
     schema:
       source: mcps/chrome-devtools/tools/
-    nativeHosts: [codex, grok, antigravity, cursor]
+    nativeHosts: [codex, grok, antigravity, cursor, opencode]
     fallback: "browser console/network evidence when a host-native DevTools session is available"
     deprecatedAliases: []
 
