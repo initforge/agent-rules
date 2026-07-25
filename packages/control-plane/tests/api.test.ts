@@ -170,3 +170,83 @@ describe('API', () => {
     expect(Array.isArray(res.body.data)).toBe(true);
   });
 });
+
+describe('auth skipped when unset', () => {
+  it('auth is skipped when CONTROL_PLANE_API_KEY is unset', async () => {
+    const res = await request(app).get('/api/config/file?path=automation/model-policy.json');
+    expect(res.status).toBe(200);
+  });
+});
+
+describe('path traversal', () => {
+  it('path traversal attack on /api/config/file?path=../ returns 403', async () => {
+    const res = await request(app).get('/api/config/file?path=../');
+    expect(res.status).toBe(403);
+    expect(res.body.ok).toBe(false);
+    expect(res.body.error).toBe('Forbidden');
+  });
+
+  it('encoded traversal returns 403', async () => {
+    const res = await request(app).get('/api/config/file?path=%2e%2e%2f');
+    expect(res.status).toBe(403);
+    expect(res.body.ok).toBe(false);
+  });
+
+  it('unknown config path returns appropriate error', async () => {
+    const res = await request(app).get('/api/config/file?path=nonexistent/file.json');
+    expect(res.status).toBe(500);
+    expect(res.body.ok).toBe(false);
+    expect(res.body.error).toBeTruthy();
+  });
+});
+
+describe('API auth with API key', () => {
+  beforeAll(() => {
+    process.env.CONTROL_PLANE_API_KEY = 'test-api-key-12345';
+  });
+
+  afterAll(() => {
+    delete process.env.CONTROL_PLANE_API_KEY;
+  });
+
+  it('health endpoint bypasses auth', async () => {
+    const res = await request(app).get('/api/health');
+    expect(res.status).toBe(200);
+  });
+
+  it('GET /api/config/file requires auth with API key set', async () => {
+    const res = await request(app).get('/api/config/file?path=automation/model-policy.json');
+    expect(res.status).toBe(401);
+    expect(res.body.ok).toBe(false);
+    expect(res.body.error).toBe('Unauthorized');
+  });
+
+  it('wrong key returns 401', async () => {
+    const res = await request(app)
+      .get('/api/config/file?path=automation/model-policy.json')
+      .set('x-api-key', 'wrong-key');
+    expect(res.status).toBe(401);
+  });
+
+  it('query string api_key is NOT accepted (only x-api-key header)', async () => {
+    const res = await request(app)
+      .get('/api/config/file?path=automation/model-policy.json&api_key=test-api-key-12345');
+    expect(res.status).toBe(401);
+  });
+
+  it('correct x-api-key header passes', async () => {
+    const res = await request(app)
+      .get('/api/config/file?path=automation/model-policy.json')
+      .set('x-api-key', 'test-api-key-12345');
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+  });
+
+  it('mutation endpoints require auth', async () => {
+    const res = await request(app)
+      .post('/api/mutation/diff')
+      .send({ filePath: 'automation/model-policy.json', content: '{}' });
+    expect(res.status).toBe(401);
+    expect(res.body.ok).toBe(false);
+  });
+});

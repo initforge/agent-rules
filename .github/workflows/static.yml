@@ -9,79 +9,18 @@ concurrency:
 permissions:
   contents: read
 jobs:
-  lint:
-    name: lint (tsc)
+  verify:
+    name: verify (${{ matrix.os }})
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@1d0ff469b7ec7b3cb9d5e8c9c4b0b3f8c0e0e0e0
         with:
           node-version: "22"
-      - run: npm ci
-        working-directory: packages/cli
-      - run: npx tsc --noEmit
-        working-directory: packages/cli
-  test:
-    name: test (unit + parity)
-    needs: [lint]
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - run: npm ci
-        working-directory: packages/cli
-      - run: npx vitest run --reporter=junit --outputFile=test-results.xml --reporter=verbose
-        working-directory: packages/cli
-        continue-on-error: false
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results-${{ matrix.os }}
-          path: packages/cli/test-results.xml
-          if-no-files-found: ignore
-  build:
-    name: build (runtime)
-    needs: [test]
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - run: npm ci && npx tsc
-        working-directory: packages/cli
-      - run: node dist/index.js build
-        working-directory: packages/cli
-      - uses: actions/upload-artifact@v4
-        with:
-          name: runtime-build-${{ matrix.os }}
-          path: |
-            generated/runtime-build/*/manifest.json
-            generated/runtime-build/*/model-policy.json
-  validate:
-    name: validate (context)
-    needs: [build]
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
         with:
           python-version: "3.11"
       - name: Install PowerShell on Linux
@@ -90,11 +29,8 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq powershell
-      - run: npm ci && npx tsc
-        working-directory: packages/cli
-      - name: Validate and save log
-        run: node dist/index.js validate 2>&1 | tee packages/cli/validate.log
-        working-directory: packages/cli
+      - run: npm ci
+      - run: npm run verify:all
       - run: pwsh -File automation/01-build-runtime.ps1
       - run: pwsh -File automation/03-validate-context.ps1
       - run: pwsh -File automation/04-verify-mirrors.ps1
@@ -102,24 +38,8 @@ jobs:
         run: |
           python automation/generate-doc-references.py
           python automation/validate-doc-drift.py
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@65c4c4a1d7e8d8c5e0e1f2a3b4c5d6e7f8a9b0c1
         if: always()
         with:
           name: validate-log-${{ matrix.os }}
           path: packages/cli/validate.log
-  verify-mirrors:
-    name: verify-mirrors
-    needs: [build]
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-      - run: npm ci && npx tsc
-        working-directory: packages/cli
-      - run: node dist/index.js verify-mirrors
-        working-directory: packages/cli

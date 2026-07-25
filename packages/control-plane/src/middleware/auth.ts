@@ -1,7 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 
-const API_KEY = process.env.CONTROL_PLANE_API_KEY;
-
 const MUTATION_PATHS = ['/api/mutation', '/api/runs/record-run', '/api/runs/import-telemetry'];
 const READ_PATHS = ['/api/config/file', '/api/runs', '/api/runs/telemetry', '/api/audit'];
 
@@ -19,6 +17,8 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
     return;
   }
 
+  const API_KEY = process.env.CONTROL_PLANE_API_KEY;
+
   if (!API_KEY) {
     next();
     return;
@@ -30,7 +30,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
     return;
   }
 
-  const providedKey = req.headers['x-api-key'] || req.query.api_key;
+  const providedKey = req.headers['x-api-key'];
   if (providedKey === API_KEY) {
     next();
     return;

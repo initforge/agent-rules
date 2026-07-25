@@ -4,6 +4,7 @@ import path from 'path';
 import * as differ from '../src/services/differ';
 import * as validator from '../src/services/validator';
 import * as writer from '../src/services/writer';
+import * as safety from '../src/services/safety';
 
 describe('differ', () => {
   it('detects no changes', () => {
@@ -150,5 +151,45 @@ describe('writer', () => {
     const result = writer.serializeForFile('test.yaml', { a: 1, b: [1, 2] });
     expect(result).toContain('a: 1');
     expect(result).toContain('b:');
+  });
+});
+
+describe('safety', () => {
+  it('rejects absolute paths', () => {
+    const absPath = path.isAbsolute('C:\\') ? 'C:\\etc\\passwd' : '/etc/passwd';
+    expect(() => safety.safeResolve(absPath)).toThrow('Absolute paths are not allowed');
+  });
+
+  it('rejects null bytes', () => {
+    expect(() => safety.safeResolve('valid\0path')).toThrow('Null byte detected in path');
+  });
+
+  it('rejects path traversal with ../', () => {
+    expect(() => safety.safeResolve('../')).toThrow('Path traversal detected');
+    expect(() => safety.safeResolve('../../etc/passwd')).toThrow('Path traversal detected');
+  });
+
+  it('accepts valid relative paths', () => {
+    const result = safety.safeResolve('rules/manifest.yaml');
+    expect(result).toBeTruthy();
+    expect(path.isAbsolute(result)).toBe(true);
+    expect(result.startsWith(safety.ROOT)).toBe(true);
+  });
+
+  it('safeResolveAgainst works with custom root', () => {
+    const customRoot = path.resolve('.');
+    const result = safety.safeResolveAgainst(customRoot, 'some/path/file.txt');
+    expect(path.isAbsolute(result)).toBe(true);
+    expect(result.startsWith(customRoot)).toBe(true);
+  });
+
+  it('safeResolveAgainst rejects traversal', () => {
+    expect(() => safety.safeResolveAgainst(path.resolve('.'), '..\\..\\..\\etc\\passwd')).toThrow('Path traversal detected');
+  });
+
+  it('path must stay within ROOT', () => {
+    expect(() => safety.safeResolve('../')).toThrow('Path traversal detected');
+    const valid = safety.safeResolve('rules/manifest.yaml');
+    expect(valid.startsWith(safety.ROOT)).toBe(true);
   });
 });
