@@ -212,12 +212,22 @@ def main() -> int:
     has_path_ownership = "path_ownership" in plan_props
     print(f"  [{'PASS' if has_path_ownership else 'FAIL'}] Plan supports path_ownership boundaries")
 
-    # 13. Capability schema has 4 mode states
+    # 13. Capability schema has 4 mode states and utility class
     if "capability" in schemas:
         cap = schemas["capability"]
         mode_enum = cap.get("properties", {}).get("mode", {}).get("enum", [])
         has_states = all(s in mode_enum for s in ["native", "emulated", "unsupported", "unverified"])
         print(f"  [{'PASS' if has_states else 'FAIL'}] Capability mode includes all 4 states")
+        class_enum = cap.get("properties", {}).get("class", {}).get("enum", [])
+        has_utility = "utility" in class_enum
+        print(f"  [{'PASS' if has_utility else 'FAIL'}] Capability class includes utility")
+
+    # 14. Model-route schema has utility class
+    if "model-route" in schemas:
+        mr = schemas["model-route"]
+        req_class_enum = mr.get("properties", {}).get("requested", {}).get("properties", {}).get("capability_class", {}).get("enum", [])
+        has_utility_mr = "utility" in req_class_enum
+        print(f"  [{'PASS' if has_utility_mr else 'FAIL'}] Model-route capability_class includes utility")
 
     # --- Level-specific validation ---
     print("\nLevel-specific validation:")

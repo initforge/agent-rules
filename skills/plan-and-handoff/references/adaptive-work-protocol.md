@@ -83,17 +83,32 @@ Capsules and receipts have semantic budgets, not word or token quotas. A capsule
 
 ## 4. Model and effort routing
 
-| Route | Use |
-|---|---|---|
-| Economy | research, inventory, mechanical changes, narrow checks |
-| Standard | ordinary implementation, normal plan/review |
-| Expert | hard architecture or triggered independent review |
+Route by logical class and risk input, never by hardcoded provider model names. The canonical policy is `automation/model-policy.json`; projects use their installed host copy. See [`capability-tier-routing.md`](capability-tier-routing.md) for the full routing reference.
 
-Resolve provider/model/effort through the installed host `model-policy.json`; inside `agent-rules`, `automation/model-policy.json` is canonical source and fallback. Capability class stays portable in plans and assignment packets. Record requested intent, host-resolved selection, and independently observed result separately. Missing host attestation is unknown, never inferred from request or resolution.
+### Logical classes
 
-A denied provider mode/model fails closed. An unavailable allowed choice may use only a policy-allowed fallback and remains `PARTIAL` until resolved and observed.
+| Class | Typical work |
+|---|---|
+| Utility | deterministic commands, search, inventory, stateless lookup |
+| Economy | mechanical edits, narrow checks, retrieval, routine research |
+| Standard | ordinary implementation, planning, integration review |
+| Expert | architecture, shared contracts, security/migration/concurrency, repeated failure |
 
-Never exceed high effort. Escalate after material uncertainty, two failed approaches, or an expert-risk signal—not merely because the task has multiple files.
+### Routing inputs
+
+Evaluate: uncertainty, dependency breadth, shared contract changes, blast radius, reversibility, security/data risk, cross-layer state, architecture ambiguity, proof difficulty, repeated failure, and user model override. The coordinator records the class selection reason when it exceeds economy.
+
+### Escalation
+
+Escalate one class level per trigger, up to expert. Triggers include: uncertainty high, architecture ambiguity unresolved, shared contract changes affecting 3+ dependents, blast radius high, irreversible migration, security/data risk, cross-layer state change, proof difficulty high, repeated failure >= 2, user override. Cost savings cannot override capability. Missing class mapping is an error, never silent fallback.
+
+### Requested/resolved/observed
+
+Every route produces three states: requested (logical class + effort), resolved (provider + model family + effort from adapter), observed (runtime-attested provider/model/effort or UNVERIFIED). Missing host attestation is unknown, never inferred from request or resolution. No model is verified merely because its config file contains the intended ID.
+
+### Fallback and denial
+
+Fallback to the next available class when the requested class is unavailable; record fallback_reason. If no class is available, attestation_status is UNVERIFIED. A denied provider mode/model fails closed. An unavailable allowed choice may use only a policy-allowed fallback and remains `PARTIAL` until resolved and observed.
 
 ## 5. Pivot, automatic execution, and proof
 

@@ -24,7 +24,7 @@
       "properties": {
         "capability_class": {
           "type": "string",
-          "enum": ["economy", "standard", "expert", "unassigned"]
+      "enum": ["utility", "economy", "standard", "expert", "unassigned"]
         },
         "effort": { "enum": ["low", "medium", "high", "unset"] },
         "provider_preference": { "type": "string" }

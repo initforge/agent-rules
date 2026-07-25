@@ -1,50 +1,134 @@
 {
-  "version": 4,
+  "version": 5,
   "owner": "portable-orchestration",
-  "capability_classes": {
-    "economy": "retrieval, inventory, deterministic edits, and narrow checks",
-    "standard": "ordinary planning, implementation, and integration review",
-    "expert": "unresolved material risk or independent expert review"
+  "logical_classes": {
+    "utility": "Deterministic commands, search, inventory, and stateless lookup. No reasoning or planning required.",
+    "economy": "Mechanical edits, narrow checks, retrieval, and routine research. Bounded, low-risk, and highly repetitive.",
+    "standard": "Ordinary implementation, planning, integration review, and normal feature work. Default for productive work.",
+    "expert": "Architecture, shared contracts, security/migration/concurrency, adversarial review, unresolved risk, and repeated failure recovery."
+  },
+  "routing_inputs": {
+    "uncertainty": "How well the outcome is known in advance. Low = deterministic, high = exploratory.",
+    "dependency_breadth": "Number and coupling of affected interfaces or modules.",
+    "shared_contract_changes": "Whether the work modifies contracts other slices depend on.",
+    "blast_radius": "Impact scope if the change fails. Low = isolated, high = cascading.",
+    "reversibility": "Whether the change can be cleanly rolled back.",
+    "security_and_data_risk": "Exposure of credentials, PII, access control, or data integrity.",
+    "cross_layer_state": "Whether the change touches multiple architectural layers (UI, API, DB).",
+    "architecture_ambiguity": "How much architectural discovery is needed before implementation.",
+    "proof_difficulty": "How hard it is to produce fresh evidence for the acceptance claims.",
+    "repeated_failure": "Number of prior failed attempts on the same or adjacent work.",
+    "user_model_override": "Explicit model selection by the user, preserved regardless of policy."
+  },
+  "role_defaults": {
+    "command_search_inventory": "utility",
+    "bounded_mechanical_implementation": "economy",
+    "normal_feature_implementation": "standard",
+    "architecture_shared_contract_integration": "expert",
+    "security_migration_concurrency_review": "expert",
+    "deterministic_verifier": "cheapest sufficient class",
+    "vision_dependent_parity_review": "requires vision capability, independent of intelligence class"
+  },
+  "escalation_policy": {
+    "triggers": [
+      "uncertainty rated high",
+      "architecture ambiguity unresolved after initial investigation",
+      "shared contract changes affecting 3+ dependents",
+      "blast radius rated high or critical",
+      "irreversible migration or data transformation",
+      "security or data risk present",
+      "cross-layer state change touching 2+ layers",
+      "proof difficulty rated high",
+      "repeated failure count >= 2",
+      "user model override requesting higher class"
+    ],
+    "behavior": "Escalate one class level per trigger, up to expert. Record the specific trigger as escalation reason. Multiple triggers may escalate directly to expert.",
+    "cost_savings_cannot_override_capability": true,
+    "unmapped_class_behavior": "error, not silent fallback",
+    "unverified_behavior": "When no mapped class is available or observation fails, status is UNVERIFIED. Config-file intent without runtime observation does not constitute verification."
   },
   "evidence_contract": {
-    "requested": "The route, provider preference, and effort requested by the agent or owner.",
-    "resolved": "The provider/model/effort selected by the host or adapter.",
-    "observed": "Fresh independently attested execution or outcome evidence.",
-    "fail_honest": "Requested and resolved values are not observed evidence. Missing attestation is unknown and cannot support PASS."
+    "requested": "The class, effort, and any user override requested by the agent or owner.",
+    "resolved": "The class, provider, model family, and effort selected by the host or adapter.",
+    "observed": "Fresh independently attested model, effort, and provider as reported by the runtime.",
+    "fail_honest": "Requested and resolved values are not observed evidence. Missing attestation is unknown and cannot support PASS. No model is verified merely because its config file contains the intended ID."
   },
   "telemetry_contract": {
-    "event_fields": ["session_id", "actor", "assignment_id", "tool", "tool_class", "timestamp", "outcome"],
+    "event_fields": ["session_id", "actor", "assignment_id", "logical_class", "requested_class", "resolved_provider", "resolved_model", "observed_model", "attestation_status", "escalation_reason", "fallback_reason", "tool", "tool_class", "timestamp", "outcome"],
     "actors": ["main", "worker", "unknown"],
     "unknown_actor_outcome": "UNVERIFIED",
     "hook_error_behavior": "fail_open"
   },
   "platforms": {
     "codex": {
-      "standard": { "family": "Terra", "selector": "gpt-5.6-terra", "effort": "medium" },
-      "expert": { "family": "Sol", "selector": "gpt-5.6-sol", "effort": "medium" },
-      "expert_escalation": "Use high effort only when material risk requires it."
+      "adapter_defaults": {
+        "model_selectors": {
+          "standard": { "family": "Terra", "selector": "gpt-5.6-terra", "effort": "medium" },
+          "expert": { "family": "Sol", "selector": "gpt-5.6-sol", "effort": "medium" }
+        },
+        "expert_escalation": "Use high effort only when material risk requires it."
+      },
+      "capabilities": {
+        "economy": { "effort": "low" },
+        "standard": { "effort": "medium" },
+        "expert": { "effort": "medium" }
+      },
+      "denied_modes": [],
+      "denial_behavior": "fail_closed_partial",
+      "subagent_model_override": "supported",
+      "model_attestation": "native"
     },
     "cursor": {
-      "implementation": { "family": "Composer", "channel": "Standard", "selector": "composer-2.5[fast=false]", "display": "Composer 2.5 Standard" },
-      "research_review": { "family": "Grok", "channel": "base", "selector": "grok-4.5", "display": "Grok 4.5 base" },
+      "adapter_defaults": {
+        "model_selectors": {
+          "implementation": { "family": "Composer", "channel": "Standard", "selector": "composer-2.5[fast=false]", "display": "Composer 2.5 Standard" },
+          "research_review": { "family": "Grok", "channel": "base", "selector": "grok-4.5", "display": "Grok 4.5 base" }
+        }
+      },
+      "capabilities": {
+        "utility": { "effort": "low" },
+        "standard": { "effort": "medium" },
+        "expert_review": { "effort": "medium" }
+      },
       "denied_modes": ["Fast", "Auto"],
-      "denial_behavior": "fail_closed_partial"
+      "denial_behavior": "fail_closed_partial",
+      "subagent_model_override": "supported",
+      "model_attestation": "native"
     },
     "antigravity": {
-      "standard": { "family": "Gemini", "channel": "Flash-to-Pro", "minimum_effort": "medium" },
-      "denied_models": [{ "family": "Gemini", "version": "3.6", "channel": "Flash" }],
-      "exceptional_expert": { "family": "Claude", "effort": "high", "only_when": "material expert-risk work" },
+      "adapter_defaults": {
+        "model_selectors": {
+          "standard": { "family": "Gemini", "channel": "Flash-to-Pro", "minimum_effort": "medium" }
+        },
+        "denied_models": [{ "family": "Gemini", "version": "3.6", "channel": "Flash" }],
+        "exceptional_expert": { "family": "Claude", "effort": "high", "only_when": "material expert-risk work" }
+      },
+      "capabilities": {
+        "economy": { "effort": "low" },
+        "standard": { "effort": "medium", "minimum_effort": "medium" },
+        "expert": { "effort": "high" }
+      },
       "subagent_model_override": "unconfirmed",
-      "denial_behavior": "fail_closed_partial"
+      "denial_behavior": "fail_closed_partial",
+      "model_attestation": "unconfirmed"
     },
     "grok": {
-      "base": { "selector": "grok-4.5", "channel": "base" },
-      "minimum_effort": "medium",
+      "adapter_defaults": {
+        "model_selectors": {
+          "base": { "selector": "grok-4.5", "channel": "base" }
+        },
+        "minimum_effort": "medium",
+        "subagent_effort_override": "supported/per_role_and_spawn",
+        "effort_evidence": "Per-role and spawn-time effort overrides are supported. Record requested, resolved, and observed effort separately; missing attestation leaves only observed effort unknown."
+      },
+      "capabilities": {
+        "utility": { "effort": "low", "minimum_effort": "low" },
+        "standard": { "effort": "medium", "minimum_effort": "medium" }
+      },
       "denied_modes": ["Fast"],
+      "denial_behavior": "fail_closed_partial",
       "subagent_model_override": "supported",
-      "subagent_effort_override": "supported/per_role_and_spawn",
-      "effort_evidence": "Per-role and spawn-time effort overrides are supported. Record requested, resolved, and observed effort separately; missing attestation leaves only observed effort unknown.",
-      "denial_behavior": "fail_closed_partial"
+      "model_attestation": "native"
     }
   }
 }

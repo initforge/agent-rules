@@ -1,9 +1,8 @@
 # Codex custom subagents
 
 Install these TOML definitions to `$CODEX_HOME/agents/`. They are native custom
-subagent definitions, not CLI configuration profiles. All roles use
-the model-policy standard selector and effort; only the implementer can write inside
-the workspace.
+subagent definitions, not CLI configuration profiles. All roles resolve model and effort from `model-policy.json` logical classes (utility, economy, standard, expert)
+through the platform adapter; only the implementer can write inside the workspace.
 
 Role mapping:
 
@@ -16,6 +15,6 @@ Role mapping:
 
 The `agent_rules_` namespace prevents collisions with generic user-owned agents.
 
-Use the model-policy expert selector only after an explicit expert trigger: unresolved high-risk
+Use the expert class only after an explicit expert trigger: unresolved high-risk
 reasoning, security-sensitive decisions, or a repeated failure that needs a
-different approach.
+different approach. See `capability-tier-routing.md` for escalation triggers.

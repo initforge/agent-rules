@@ -14,7 +14,7 @@
     "version": { "const": 1 },
     "class": {
       "type": "string",
-      "enum": ["economy", "standard", "expert", "unassigned"]
+      "enum": ["utility", "economy", "standard", "expert", "unassigned"]
     },
     "mode": {
       "type": "string",

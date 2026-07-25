@@ -123,11 +123,11 @@ foreach ($Platform in $Platforms) {
   }
 
   $NativeTokens = @{
-    "__CODEX_STANDARD_MODEL__" = $ModelPolicy.platforms.codex.standard.selector
-    "__CODEX_STANDARD_EFFORT__" = $ModelPolicy.platforms.codex.standard.effort
-    "__CURSOR_IMPLEMENTATION_MODEL__" = $ModelPolicy.platforms.cursor.implementation.selector
-    "__CURSOR_RESEARCH_REVIEW_MODEL__" = $ModelPolicy.platforms.cursor.research_review.selector
-    "__GROK_BASE_MODEL__" = $ModelPolicy.platforms.grok.base.selector
+    "__CODEX_STANDARD_MODEL__" = $ModelPolicy.platforms.codex.adapter_defaults.model_selectors.standard.selector
+    "__CODEX_STANDARD_EFFORT__" = $ModelPolicy.platforms.codex.adapter_defaults.model_selectors.standard.effort
+    "__CURSOR_IMPLEMENTATION_MODEL__" = $ModelPolicy.platforms.cursor.adapter_defaults.model_selectors.implementation.selector
+    "__CURSOR_RESEARCH_REVIEW_MODEL__" = $ModelPolicy.platforms.cursor.adapter_defaults.model_selectors.research_review.selector
+    "__GROK_BASE_MODEL__" = $ModelPolicy.platforms.grok.adapter_defaults.model_selectors.base.selector
     "__GROK_MINIMUM_EFFORT__" = $ModelPolicy.platforms.grok.minimum_effort
   }
   Get-ChildItem -LiteralPath $Native -Recurse -File | ForEach-Object {
