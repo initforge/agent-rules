@@ -5,27 +5,17 @@
 
 Canonical agent-rules: **`P:\agent-rules`**.
 
-## Hierarchy sync
-
-| Layer | agent-rules canonical | Synced to repo | Installer |
-|---|---|---|---|
-| Organization | `organization/` | `context/5fedu/organization/` | Ghi đè |
-| Domain | `domains/<domain>/` | `context/5fedu/domains/<domain>/` | Ghi đè |
-| Project facts | `projects/<project-name>/` (shared) | `context/5fedu/project-local/` | **Không đụng** |
-| Evidence | `evidence/` | Không sync | — |
-| Archive | `archive/` | Không sync | — |
-
 ## Đọc (implement)
 
-- Khi code trong repo dự án: chỉ đọc `<repo>/context/5fedu/`, **không** đọc `agent-rules/` làm nguồn sống.
+- Khi code trong repo dự án: chỉ đọc `<repo>/context/5fedu/`, **không** đọc `agent-rules/projects/5fedu/` làm nguồn sống.
 - Nội dung dự án thật (sheets map, Supabase spec, decisions đã chốt): **`context/5fedu/project-local/`** — installer **không bao giờ** ghi đè thư mục này.
 
 ## Hai lớp context
 
 | Lớp | Vị trí | Installer | Nội dung |
 |---|---|---|---|
-| **Template** | `organization/`, `domains/*`, `00-context-map.md`, `decisions.md` | Ghi đè khi `08-install` | Pattern 5fedu chung |
-| **Project-local** | `project-local/*` | **Không đụng** | Sheets, Supabase, spec đã chốt — riêng từng repo |
+| **Template** | `AGENTS.md`, `00-context-map.md`, `domains/*`, `decisions.md` (generic), `archive/nostime/*` (profile nostime) | Ghi đè khi `08-install` | Pattern 5fedu chung |
+| **Project-local** | `project-local/*` | **Không đụng** | Sheets, Supabase, spec đã chốt, transport, e2e — riêng từng repo |
 
 ## Cài từ template → repo (no-wipe)
 
@@ -43,11 +33,9 @@ Canonical agent-rules: **`P:\agent-rules`**.
 Sync **ngay sau khi sửa**, không mirror toàn bộ skills hay `05-generated/`:
 
 | Case | Nguồn sửa | Đích sync | Loại trừ |
-|---|---|---|---|
+|------|-----------|-----------|----------|
 | **1. Global** | `rules/`, `skills/` toàn cục | `agent-rules/rules/`, `agent-rules/skills/` | — |
-| **2. Organization** | `<repo>/context/5fedu/organization/` | `agent-rules/organization/` | `project-local/` |
-| **3. Domain** | `<repo>/context/5fedu/domains/<domain>/` | `agent-rules/domains/<domain>/` | `project-local/` |
-| **4. Project facts** | `<repo>/context/5fedu/project-local/` | **Không write-back** | — |
+| **2. Context 5fedu** | `<repo>/context/5fedu/` (file `.md` template) | `agent-rules/projects/5fedu/` (cùng đường dẫn tương đối) | `project-local/`, `skills/`, README, JSON, file không liên quan |
 
 **Không** write-back `project-local/` lên template harness — đó là dữ liệu sống riêng từng repo.
 
@@ -59,21 +47,20 @@ Sau write-back: chạy `automation/03-validate-context.ps1` rồi `01-build-runt
 
 | Bước | Lệnh | Ghi chú |
 |---|---|---|
-| 1. Sửa generic trong harness | Sửa `organization/` hoặc `domains/<domain>/` | Nguồn canonical |
+| 1. Sửa generic trong harness | Sửa `projects/5fedu/domains/*` | Nguồn canonical |
 | 2. Sync ra Tah-app | `08-install ... -Profile tah-app -Force` | Không đụng project-local |
-| 3. Sync ra nostime | `08-install ... -Profile nostime -Force` | Organization + domains sync |
-| 4. Sửa generic trong repo | Sửa `organization/` hoặc `domains/` trong repo | Khi fix thực tế ở app trước |
-| 5. Write-back | `10-export-5fedu-writeback.ps1 -ProjectRoot ... -RelativePaths domains/<domain>/foo.md -Apply` | Không đụng project-local |
+| 3. Sync ra nostime | `08-install ... -Profile nostime -Force` | Overlay từ archive |
+| 4. Sửa generic trong repo | Sửa `domains/*` trong repo | Khi fix thực tế ở app trước |
+| 5. Write-back | `10-export-5fedu-writeback.ps1 -ProjectRoot ... -RelativePaths domains/foo.md -Apply` | Không đụng project-local |
 | 6. Gate | `03-validate-context.ps1` | Purity + validate PASS |
 | 7. Re-sync cả hai repo | `08-install` tah-app + nostime `-Force` | Propagate generic mới |
 
 ## Quy tắc vàng write-back
 
-- Sửa **generic organization pattern** → write-back `organization/` → re-sync cả hai repo.
-- Sửa **generic domain pattern** → write-back `domains/<domain>/` → re-sync cả hai repo.
+- Sửa **generic ERP pattern** → write-back `domains/` hoặc `decisions.md` generic → re-sync cả hai repo.
 - Sửa **spec Tah-app** (transport, vercel, sheets TAH) → chỉ `Tah-app/project-local/` — **không** write-back.
 - Sửa **spec Nostime** (retail, journal) → chỉ `nostime/project-local/` hoặc trực tiếp `archive/nostime/` trên harness → chỉ re-sync nostime.
-- **Không** promote `project-local/` lên harness template.
+- **Không** promote `project-local/ui-standards.md` (TAH) lên harness template.
 
 ## Chính sách không backup
 
@@ -83,16 +70,16 @@ Sau write-back: chạy `automation/03-validate-context.ps1` rồi `01-build-runt
 ## Được phép
 
 - Cập nhật template canonical rồi chạy `08-install-5fedu-context.ps1 -Force`
-- Promote rule từ `evidence/` sang `domains/<domain>/` sau khi review
-- Cập nhật `decisions.md` generic; quyết định dự án → `project-local/`
-- Write-back file organization/domain đã sửa sang `agent-rules`
+- Promote rule từ `evidence/` sang `domains/` sau khi review
+- Cập nhật `decisions.md` generic khi owner chốt (template); quyết định dự án → `project-local/decisions.md`
+- Write-back file template đã sửa sang `agent-rules` theo case 2 (không gồm project-local)
 
 ## Không được phép
 
 - Copy log/evidence vào global `rules/` hoặc `skills/`
 - Copy nguyên `.agents/`, `.codex/`, `05-generated/` về canonical
 - Sửa `evidence/` rồi coi như rule sống (chỉ promote sau review sang `domains/`)
-- Đưa quyết định Nostime vào `organization/` chung
+- Đưa quyết định Nostime vào `decisions.md` chung — dùng `project-local/` hoặc `archive/nostime/`
 - Sync toàn bộ skills hay runtime generated khi chỉ sửa vài file context
 - Ghi đè hoặc xóa `project-local/` qua installer
 

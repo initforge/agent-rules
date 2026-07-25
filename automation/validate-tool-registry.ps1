@@ -33,7 +33,7 @@ $TokenClasses = @("low", "medium", "high")
 $TrustStatuses = @("advisory-only", "declared", "adapter-verified", "native-live")
 $SourceTypes = @("github", "npm", "git", "local")
 $InstallTypes = @("binary", "npm-global", "npm-npx", "npx-github", "git", "local")
-$Hosts = @("codex", "grok", "antigravity", "cursor")
+$Hosts = @("codex", "grok", "antigravity", "cursor", "opencode")
 
 $Ids = @{}
 $AllAliases = @{}
@@ -128,10 +128,10 @@ foreach ($Tool in @($Registry.integrations)) {
   if ($ProofStatus -eq "native-live" -and $NativeHosts.Count -eq 0) {
     Fail "$Id cannot be native-live without a native host"
   }
-  if ($ProofStatus -eq "adapter-verified") {
+    if ($ProofStatus -eq "adapter-verified") {
     foreach ($NativeHost in $NativeHosts) {
       $Extension = if ($NativeHost -eq "codex") { "toml" } else { "json" }
-      $Path = $Tool.path
+      $Path = if ($null -ne $Tool.PSObject.Properties["path"]) { $Tool.path } else { $null }
       if (-not $Path -and $Tool.install) {
         $Path = Split-Path $Tool.install.script -Parent
         $Path = $Path -replace '^\.\.?\\?', ''

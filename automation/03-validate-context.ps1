@@ -158,8 +158,17 @@ if (Test-Path $TriggerAuditPath) {
     $Body = ""
     if ($Case.skill) {
       $TargetPath = Join-Path $Root "skills\$($Case.skill)\SKILL.md"
+      if (-not (Test-Path $TargetPath)) {
+        $ProfilePath = Join-Path $Root "profiles\5fedu\skills\$($Case.skill)\SKILL.md"
+        if (Test-Path $ProfilePath) { $TargetPath = $ProfilePath }
+      }
     } elseif ($Case.file) {
       $TargetPath = Join-Path $Root ($Case.file -replace "/", "\")
+      # Also check under profiles/ if not found directly
+      if (-not (Test-Path $TargetPath)) {
+        $ProfilePath = Join-Path $Root "profiles\5fedu\$($Case.file -replace "/", "\")"
+        if (Test-Path $ProfilePath) { $TargetPath = $ProfilePath }
+      }
     }
     if (-not $TargetPath -or -not (Test-Path $TargetPath)) {
       $Problems.Add("Trigger audit target missing for '$($Case.phrase)': $TargetPath")

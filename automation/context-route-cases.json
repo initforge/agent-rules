@@ -7,14 +7,14 @@
     "uncertain_execution_tokens": 2700,
     "plan_authoring_tokens": 4200,
     "harness_edit_tokens": 2800,
-    "5fedu_ui_base_tokens": 10400
+    "5fedu_ui_base_tokens": 12000
   },
   "routes": {
     "normal_execution": ["skills/finish-to-completion/SKILL.md"],
     "uncertain_execution": ["skills/finish-to-completion/SKILL.md", "skills/implementation-discovery/SKILL.md"],
     "plan_authoring": ["skills/plan-and-handoff/SKILL.md", "skills/plan-and-handoff/references/plan-artifact-template.md"],
     "harness_edit": ["skills/context-evolution-protocol/SKILL.md"],
-    "5fedu_ui_base": ["projects/5fedu/AGENTS.md", "projects/5fedu/00-context-map.md", "skills/5fedu-module-parity/SKILL.md", "projects/5fedu/domains/references/pattern-inventory.yaml", "projects/5fedu/domains/ui-delivery.md", "projects/5fedu/domains/module-mapping.md"]
+    "5fedu_ui_base": ["profiles/5fedu/projects/AGENTS.md", "profiles/5fedu/projects/00-context-map.md", "profiles/5fedu/skills/5fedu-module-parity/SKILL.md", "profiles/5fedu/projects/domains/references/pattern-inventory.yaml", "profiles/5fedu/projects/domains/ui-delivery.md", "profiles/5fedu/projects/domains/module-mapping.md"]
   },
   "cases": [
     {
@@ -117,13 +117,13 @@
       "id": "5fedu-database",
       "prompt": "Kiểm tra migration RLS và schema int8",
       "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
-      "expect": { "primary": null, "required_skills": [], "context_nodes": ["project:5fedu:projects:5fedu:domains:database:md"], "forbidden_skills": ["5fedu-module-parity", "frontend-architect"] }
+      "expect": { "primary": null, "required_skills": [], "context_nodes": ["project:5fedu:profiles:5fedu:projects:domains:database:md"], "forbidden_skills": ["5fedu-module-parity", "frontend-architect"] }
     },
     {
       "id": "5fedu-permission",
       "prompt": "Kiểm tra quyền cap_bac cho module",
       "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
-      "expect": { "primary": null, "required_skills": [], "context_nodes": ["project:5fedu:projects:5fedu:domains:permissions:md"], "forbidden_skills": ["browser-qa"] }
+      "expect": { "primary": null, "required_skills": [], "context_nodes": ["project:5fedu:profiles:5fedu:projects:domains:permissions:md"], "forbidden_skills": ["browser-qa"] }
     },
     {
       "id": "docs-reference",
@@ -141,7 +141,7 @@
       "id": "export-reference",
       "prompt": "Kiểm tra xuất Excel/PDF tiếng Việt",
       "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
-      "expect": { "primary": null, "required_skills": [], "context_nodes": ["project:5fedu:projects:5fedu:domains:business:md"], "forbidden_skills": ["browser-qa", "5fedu-module-parity"] }
+      "expect": { "primary": null, "required_skills": [], "context_nodes": ["project:5fedu:profiles:5fedu:projects:domains:business:md"], "forbidden_skills": ["browser-qa", "5fedu-module-parity"] }
     },
     {
       "id": "metadata-output",

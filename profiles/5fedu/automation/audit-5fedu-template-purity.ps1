@@ -1,8 +1,8 @@
-﻿$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 $PSScriptRootResolved = $PSScriptRoot
-. (Join-Path $PSScriptRoot "path-compat.ps1")
+. (Join-Path (Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))) "automation\path-compat.ps1")
 $RepoRoot = Split-Path -Parent $PSScriptRootResolved
-$Harness = Join-Path $RepoRoot "projects\5fedu"
+$Harness = Join-Path $RepoRoot "profiles\5fedu\projects"
 
 $Problems = [System.Collections.Generic.List[string]]::new()
 

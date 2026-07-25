@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-rules://projects/5fedu/source-lock.schema.json",
+  "title": "5fedu Source Lock",
+  "description": "Reproducible pinned reference to a 5fedu template repository revision. A source-lock is a small contract that records the exact repository identity, commit SHA, template path, and integrity metadata so that a task can reference an exact template revision without loading the entire template into model context or copying it permanently into the public harness.",
+  "type": "object",
+  "required": [
+    "version",
+    "sourceLock"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Schema version. Must be 1."
+    },
+    "sourceLock": {
+      "type": "object",
+      "description": "The source-lock contract that pins a single template revision.",
+      "required": [
+        "repository",
+        "commitSha",
+        "templatePath",
+        "integrity"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "format": "uri",
+          "description": "Git repository URL containing the canonical template. Example: https://github.com/admin5fedu/5f-template-ket-noi-supabase"
+        },
+        "commitSha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$",
+          "description": "Exact full 40-character hex commit SHA. No abbreviated SHAs are permitted because they are not reproducible."
+        },
+        "templatePath": {
+          "type": "string",
+          "description": "Relative path within the repository to the template root. Use '.' when the entire repo is the template."
+        },
+        "integrity": {
+          "type": "object",
+          "description": "Expected integrity metadata of the template tree at the pinned commit. Used to verify that the materialized copy matches the author's intent and has not been tampered with or corrupted.",
+          "required": [
+            "algorithm",
+            "hash"
+          ],
+          "properties": {
+            "algorithm": {
+              "type": "string",
+              "enum": [
+                "sha256",
+                "sha512"
+              ],
+              "description": "Hash algorithm used to compute the integrity digest."
+            },
+            "hash": {
+              "type": "string",
+              "pattern": "^[a-f0-9]+$",
+              "description": "Hex-encoded hash of the template tree. Computed by hashing the sorted list of relative file paths and their blob SHAs at the pinned commit."
+            }
+          }
+        },
+        "profileCompatibility": {
+          "type": "array",
+          "description": "List of profile names that are compatible with this source lock. When empty or absent, the lock is compatible with all profiles.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "moduleIndex": {
+          "type": "object",
+          "description": "Optional index of available modules within the template. Each key is a module identifier. The value contains the name, relative path, list of direct dependencies, and the surfaces it provides. This index is used to extract only the modules needed for a given task rather than materialising the entire template.",
+          "patternProperties": {
+            "^[a-zA-Z0-9_-]+$": {
+              "type": "object",
+              "required": [
+                "name",
+                "path"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Human-readable module name (e.g. 'Nhân viên')"
+                },
+                "path": {
+                  "type": "string",
+                  "description": "Relative path within the template to this module's root directory"
+                },
+                "dependencies": {
+                  "type": "array",
+                  "description": "List of module identifiers that this module directly depends on",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "surfaces": {
+                  "type": "array",
+                  "description": "List of surface names (from pattern-inventory.yaml) that this module implements",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "type": {
+                  "type": "string",
+                  "enum": ["module", "shared", "utility"],
+                  "description": "Classification: 'module' is a feature module, 'shared' is a shared component library, 'utility' is a utility/helper library"
+                }
+              }
+            }
+          }
+        },
+        "lastVerified": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp of the last successful verification of this source lock against the actual repository."
+        },
+        "verificationState": {
+          "type": "string",
+          "enum": [
+            "verified",
+            "stale",
+            "unverified"
+          ],
+          "description": "Current verification state: 'verified' means the lock matches the materialized copy, 'stale' means the materialized copy differs from the lock, 'unverified' means verification has not been performed."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional human-readable notes explaining why this lock exists, when it was created, and any relevant context for the agent or maintainer."
+        }
+      }
+    }
+  }
+}

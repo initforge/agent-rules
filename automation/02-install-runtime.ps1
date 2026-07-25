@@ -1,4 +1,4 @@
-﻿param([ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platform = "all")
+param([ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platform = "all")
 $ErrorActionPreference = "Stop"
 $SkipRuntimeHooks = $env:AGENT_RULES_SKIP_RUNTIME_HOOKS -eq "1"
 $SkipIntegrationInstall = $env:AGENT_RULES_SKIP_INTEGRATION_INSTALL -eq "1"
@@ -25,8 +25,8 @@ $SharedIntegrations = @{}
 
 function Get-IntegrationPath {
   param([pscustomobject]$Integration)
-  if ($null -ne $Integration.PSObject.Properties["path"]) {
-    return $Integration.path
+  if ($null -ne $Integration.PSObject.Properties["install"]) {
+    return $Integration.install.script -replace "/install\.ps1$", ""
   }
   if ($null -ne $Integration.PSObject.Properties["install"]) {
     return Split-Path $Integration.install.script -Parent
@@ -74,7 +74,7 @@ function Install-Integration {
   $InstallScript = Join-Path $Path "install.ps1"
   $VerifyScript = Join-Path $Path "verify.ps1"
   $State = [ordered]@{
-    name = $Integration.name
+    name = $Integration.id
     policy = $Integration.policy
     platform = $PlatformName
     installed = $false
@@ -318,10 +318,10 @@ foreach ($Name in $Selected) {
   if (-not $SkipIntegrationInstall) {
     foreach ($Integration in $Registry.integrations) {
       if ($Integration.policy -eq "optional") { continue }
-      $reuse = $SharedIntegrations.ContainsKey([string]$Integration.name)
+      $reuse = $SharedIntegrations.ContainsKey([string]$Integration.id)
       $state = Install-Integration -Integration $Integration -PlatformName $Name -RuntimeHome $Dest -SkipInstall:$reuse
       $IntegrationState += $state
-      if ($state.installed -and $state.verified) { $SharedIntegrations[[string]$Integration.name] = $true }
+      if ($state.installed -and $state.verified) { $SharedIntegrations[[string]$Integration.id] = $true }
     }
 
     $StatePath = Join-Path $Dest "agent-rules-integrations.json"

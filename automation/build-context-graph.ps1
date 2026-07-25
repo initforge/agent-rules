@@ -204,6 +204,33 @@ if (Test-Path -LiteralPath $ProjectsRoot) {
   }
 }
 
+# Profile project content (e.g., profiles/5fedu/projects/)
+$ProfileRoot = Join-Path $Root "profiles"
+if (Test-Path -LiteralPath $ProfileRoot) {
+  foreach ($ProfileDir in Get-ChildItem $ProfileRoot -Directory) {
+    $ProfileProjectsDir = Join-Path $ProfileDir.FullName "projects"
+    if (-not (Test-Path -LiteralPath $ProfileProjectsDir)) { continue }
+    $ProfileName = $ProfileDir.Name
+    foreach ($ProjFile in Get-ChildItem $ProfileProjectsDir -Recurse -File) {
+      $Rel = Normalize-Path ($ProjFile.FullName.Substring($Root.Length + 1))
+      if ($ProjFile.Name -eq "AGENTS.md") {
+        Add-Node $Nodes "project:{0}:entry" -f $ProfileName "project" $Rel "router" $Rel "project:$ProfileName"
+        continue
+      }
+      if ($ProjFile.Name -eq "00-context-map.md") {
+        Add-Node $Nodes "project:{0}:router" -f $ProfileName "project" $Rel "router" $Rel "project:${ProfileName}:domain"
+        continue
+      }
+      if ($Rel -match '/(archive|evidence)/') { $Policy = "verify-only" }
+      elseif ($Rel -match '/references?/') { $Policy = "reference" }
+      elseif ($Rel -match '/domains?/') { $Policy = "leaf" }
+      else { continue }
+      $Pslug = Path-Slug $Rel
+      Add-Node $Nodes ("project:{0}:{1}" -f $ProfileName, $Pslug) "project" $Rel $Policy $Rel "domain:$ProfileName"
+    }
+  }
+}
+
 foreach ($PlatformDir in Get-ChildItem (Join-Path $Root "platforms") -Directory) {
   $Overlay = Join-Path $PlatformDir.FullName "$($PlatformDir.Name)-overlay.md"
   if (Test-Path -LiteralPath $Overlay) {

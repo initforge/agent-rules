@@ -1,4 +1,4 @@
-﻿param([string]$Root = (Split-Path -Parent $PSScriptRoot))
+param([string]$Root = (Split-Path -Parent $PSScriptRoot))
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "path-compat.ps1")
 
@@ -118,7 +118,12 @@ foreach ($Platform in $Platforms) {
     Copy-Item $Overlay (Join-Path $Rules "$Platform-overlay.md")
   }
 
-  Get-ChildItem $SkillsRoot -Directory | ForEach-Object {
+  # Profile-owned skills are excluded from public build (loaded via profiles/ mechanism)
+$ProfileSkillPrefixes = @("5fedu-")
+Get-ChildItem $SkillsRoot -Directory | ForEach-Object {
+    $Skip = $false
+    foreach ($Prefix in $ProfileSkillPrefixes) { if ($_.Name -like "$Prefix*") { $Skip = $true; break } }
+    if ($Skip) { Write-Host "Skipping profile-owned skill: $($_.Name)"; return }
     $SkillFile = Join-Path $_.FullName "SKILL.md"
     if (-not (Test-Path $SkillFile)) { return }
     $Slug = $_.Name

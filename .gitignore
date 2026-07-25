@@ -47,7 +47,8 @@ Thumbs.db
 # Runtime/test artifacts
 dist/
 05-generated/
-projects/5fedu/.template-managed.json
+profiles/5fedu/projects/.template-managed.json
+.agent/profiles/
 coverage/
 test-results/
 playwright-report/
@@ -64,3 +65,6 @@ downloads/
 scratch/
 tmp/
 skills-lock.json
+
+# Source-lock cache (isolated per-project)
+.agent/source-lock-cache/
