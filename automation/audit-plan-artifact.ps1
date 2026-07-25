@@ -26,7 +26,8 @@ Test-Contains "skills\plan-and-handoff\SKILL.md" @(
   "Ask only a question",
   "risk-triggered independent reviewer",
   "Source coverage",
-  "automatically classify and begin execution"
+  "automatically classify and begin execution",
+  "portable-plan-contract"
 )
 Test-Contains "skills\plan-and-handoff\references\adaptive-work-protocol.md" @(
   "Small",
@@ -39,7 +40,8 @@ Test-Contains "skills\plan-and-handoff\references\adaptive-work-protocol.md" @(
   "expert",
   "acknowledgment",
   "semantic budgets",
-  "control-plane exception",
+  "subagent_requested",
+  "subagent_completed",
   "Independent review is mandatory"
 )
 Test-Contains "skills\plan-and-handoff\references\portable-plan-contract.md" @(
@@ -89,10 +91,45 @@ Test-Contains "automation\work-ledger.schema.json" @(
   '"usageRecord"'
 )
 Test-Contains "rules\25-task-lifecycle.md" @(
-  "Plan roles",
-  "risk first, then shape",
-  "main agent integrates",
-  "zero main-agent domain work"
+  "Assign clear roles",
+  "Coordinator",
+  "Architect/integrator",
+  "Implementer",
+  "Reviewer",
+  "Verifier",
+  "Researcher/utility",
+  "Delegate when it adds value",
+  "stable boundary",
+  "clear ACs",
+  "non-overlapping writes",
+  "sufficient context",
+  "meaningful parallelism",
+  "Required delegation receipts",
+  "subagent_requested",
+  "subagent_resolved",
+  "subagent_started",
+  "subagent_completed",
+  "result_consumed",
+  "result_rejected",
+  "delegation_skipped"
+)
+Test-Contains "skills\plan-and-handoff\references\adaptive-work-protocol.md" @(
+  "Coordinator",
+  "Architect/integrator",
+  "Implementer",
+  "Researcher/utility",
+  "Reviewer",
+  "Verifier",
+  "stable boundary",
+  "non-overlapping write ownership",
+  "meaningful benefit",
+  "subagent_requested",
+  "subagent_resolved",
+  "subagent_started",
+  "subagent_completed",
+  "result_consumed",
+  "result_rejected",
+  "delegation_skipped"
 )
 
 foreach ($Required in @(

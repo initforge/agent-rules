@@ -18,7 +18,33 @@ All three levels validate against `schemas/plan.schema.json`. See [`portable-pla
 
 Ask only a meaningful question: one whose answer changes architecture, scope, compatibility, migration, behavior, proof level, or an irreversible decision. Read code, schemas, logs, tests, and documentation to discover facts instead. Record unresolved material questions in `unresolved_questions` with their impact category.
 
-The main agent holds the owner’s requirements, later instructions, cross-slice decisions, integration, final review, and terminal status. A sub-agent receives a context capsule, not the whole transcript:
+## 3. Roles and responsibilities
+
+Every execution uses up to six distinct roles. A single agent may fill multiple roles for small work; the separation increases with risk and coordination need.
+
+| Role | Responsibility | May implement? | Read-only? |
+|---|---|---|---|
+| **Coordinator** | Preserves user intent, manages requirement ledger, assigns slices, reports status | Narrow actions only (inspect, route, reconcile, merge, unblock) | no — may write coordination artifacts |
+| **Architect/integrator** | Architecture decisions, shared contracts, state boundaries, cross-domain behavior, integration-critical implementation | Yes — integration-critical code | no |
+| **Implementer** | Bounded slice with stable interfaces, explicit path ownership, clear ACs | Yes — its slice only | no |
+| **Researcher/utility** | Read-only exploration, external research, inventory, mechanical changes | No | yes |
+| **Reviewer** | Independent review of the final integrated diff, not worker summaries | No | yes |
+| **Verifier** | Claim-specific proof checks; cannot convert unverified to PASS | No | yes |
+
+### Delegation rule
+
+Delegate when a slice has all five:
+- a **stable boundary** (known interfaces and scope)
+- **clear acceptance criteria** (provable claims)
+- **non-overlapping write ownership** (exclusive paths)
+- **sufficient context** (facts needed fit in a capsule)
+- a **meaningful benefit** from parallelism or specialization
+
+Do not delegate merely because the task has multiple files. Small tasks do not require ceremonial subagents; the coordinator or architect may implement directly.
+
+### Context capsule
+
+A sub-agent receives a context capsule, not the full transcript:
 
 ```text
 source IDs and applicable later injections
@@ -29,15 +55,33 @@ proof commands/artifacts and return receipt
 
 Keep capsules compact: include only source IDs and facts needed for that slice; size assignments so one owner can implement and prove them without broad repository preload. No two writers own the same path.
 
-The main agent may implement directly only for small, clear work. On medium+ work, zero main-agent domain work is the default: it owns intent, allocation, integration, and final review. A narrow control-plane exception may only inspect, route, reconcile ownership, resolve a mechanical merge conflict, or run claim-matched proof needed to unblock or integrate delegated slices. It must not implement product behavior, domain rules, schema changes, or a planned main implementation slice.
+### Lifecycle and receipts
 
 Every ready assignment begins `pending`; its owner must acknowledge it before the slice starts, transitioning the assignment to `acknowledged`. `NEEDS_CONTEXT`, `CONFLICT`, and `BLOCKED` are recovery signals, not acknowledgment states: use them respectively for a bounded missing fact, ownership/interface overlap, or a decisive external dependency. Recover in order: supply the minimum missing context, reconcile ownership/interface boundaries, reassign a narrow slice, then use sequential execution only when native subagents are unavailable. Preserve acceptance, proof, checkpoints, and context boundaries; never silently fall back or weaken the outcome. Record this as orchestration `UNAVAILABLE`, not task `PARTIAL`; task outcome may still `PASS` when behavior is proven.
 
-Risk-triggered independent review is mandatory for security/auth, authorization, migration/data loss, public contracts, concurrency/distributed consistency, performance/cache/index freshness, resource lifetime, weakened proof, a material unknown, or two failed approaches. The reviewer must be independent of the implementation owner and use an expert route where the risk requires it.
+Required delegation receipts:
+
+| Receipt | When recorded | Required fields |
+|---|---|---|
+| `subagent_requested` | Delegator decided to delegate | slice_id, reason, capability_class |
+| `subagent_resolved` | Model/effort resolved | slice_id, resolved_model, resolved_effort |
+| `subagent_started` | Subagent acknowledged | slice_id, actor_session |
+| `subagent_completed` | Result returned | slice_id, status, receipt_ids, usage |
+| `result_consumed` | Result integrated | slice_id, integration_ref |
+| `result_rejected` | Result rejected | slice_id, rejection_reason |
+| `delegation_skipped` | Delegation not used | slice_id, reason |
+
+Missing receipts are detectable: the coordinator must account for every slice's delegation outcome.
+
+### Risk-triggered review
+
+Independent review is mandatory for security/auth, authorization, migration/data loss, public contracts, concurrency/distributed consistency, performance/cache/index freshness, resource lifetime, weakened proof, a material unknown, or two failed approaches. The reviewer must be independent of the implementation owner and use an expert route where the risk requires it.
+
+### Semantic budgets
 
 Capsules and receipts have semantic budgets, not word or token quotas. A capsule includes only the facts needed to implement and prove its slice; a receipt states changed scope, proof, unresolved risks, and the next recovery action. Do not pad them with transcript, inventory, or status theater.
 
-## 3. Model and effort routing
+## 4. Model and effort routing
 
 | Route | Use |
 |---|---|---|
@@ -51,13 +95,13 @@ A denied provider mode/model fails closed. An unavailable allowed choice may use
 
 Never exceed high effort. Escalate after material uncertainty, two failed approaches, or an expert-risk signal—not merely because the task has multiple files.
 
-## 4. Pivot, automatic execution, and proof
+## 5. Pivot, automatic execution, and proof
 
 Once the owner says execute, the main agent automatically classifies size/risk, chooses tools and agents, implements, reviews, fixes, and continues dependency-ready work. Do not require manual phase relay or default host Stop coercion.
 
 Proof must match the claim. A build proves buildability, not UI parity, runtime behavior, authorization, migration safety, or distributed correctness. Inspect only evidence needed to establish the assigned acceptance claim, its negative invariant, scope boundary, and any review trigger; do not preload unrelated repository state or expose raw owner context. Use the least expensive evidence that actually proves the claim; use live UI/device interaction when that claim requires it.
 
-## 5. Ledger and resume
+## 6. Ledger and resume
 
 Resumable work uses a detailed ledger with `amendments`, `checkpoints`, and `evidence_ledger`. It preserves original requirement IDs, later injections, their allocation to slices/agents, owner decisions, current proof, rollback notes, and next safe action. Standard work uses requirements + decisions + verification matrix without session recovery fields. Small work uses only outcome + acceptance.
 

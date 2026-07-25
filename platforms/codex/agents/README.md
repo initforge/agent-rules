@@ -7,7 +7,9 @@ the workspace.
 
 Role mapping:
 
-- `agent_rules_researcher` → researcher
+- coordinator — filled by the main agent; no separate agent file
+- architect/integrator — filled by the main agent or a designated senior subagent
+- `agent_rules_researcher` → researcher/utility worker
 - `agent_rules_implementer` → implementer
 - `agent_rules_reviewer` → reviewer
 - `agent_rules_verifier` → verifier
