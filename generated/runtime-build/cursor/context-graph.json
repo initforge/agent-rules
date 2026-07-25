@@ -1457,31 +1457,7 @@
       "token_estimate": 483
     },
     {
-      "id": "project:5fedu:entry",
-      "layer": "project",
-      "source": "profiles/5fedu/projects/AGENTS.md",
-      "load_policy": "router",
-      "owner": "profiles/5fedu/projects/AGENTS.md",
-      "trigger": "project:5fedu",
-      "requires": [],
-      "routing": {
-        "signals": [],
-        "intent_signals": [],
-        "excludes": [],
-        "priority": 0,
-        "loads": [],
-        "requires": [],
-        "supports": [],
-        "project_scope": "",
-        "platform_scope": "",
-        "max_route_tokens": 0,
-        "default": false
-      },
-      "source_hash": "1660abd47e6476168304ad6eea3ec0e7160403fb0d8f52d54e8b1ec1f05f0e9a",
-      "token_estimate": 704
-    },
-    {
-      "id": "project:5fedu:entry",
+      "id": "project:5fedu:context:template:agents",
       "layer": "project",
       "source": "profiles/5fedu/projects/context-template/AGENTS.md",
       "load_policy": "router",
@@ -1505,7 +1481,7 @@
       "token_estimate": 111
     },
     {
-      "id": "project:5fedu:entry",
+      "id": "project:5fedu:context:template:root:agents",
       "layer": "project",
       "source": "profiles/5fedu/projects/context-template/root-AGENTS.md",
       "load_policy": "router",
@@ -1527,6 +1503,30 @@
       },
       "source_hash": "6f9f33156fc45aa4e3a994b67700f81c55826e78626cde02081127f1f1efe554",
       "token_estimate": 107
+    },
+    {
+      "id": "project:5fedu:entry",
+      "layer": "project",
+      "source": "profiles/5fedu/projects/AGENTS.md",
+      "load_policy": "router",
+      "owner": "profiles/5fedu/projects/AGENTS.md",
+      "trigger": "project:5fedu",
+      "requires": [],
+      "routing": {
+        "signals": [],
+        "intent_signals": [],
+        "excludes": [],
+        "priority": 0,
+        "loads": [],
+        "requires": [],
+        "supports": [],
+        "project_scope": "",
+        "platform_scope": "",
+        "max_route_tokens": 0,
+        "default": false
+      },
+      "source_hash": "1660abd47e6476168304ad6eea3ec0e7160403fb0d8f52d54e8b1ec1f05f0e9a",
+      "token_estimate": 704
     },
     {
       "id": "project:5fedu:profiles:5fedu:projects:archive:nostime:architecture:and:specs:md",

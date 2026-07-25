@@ -1,16 +1,41 @@
 {
   "schema": "artifact/capability",
   "version": 1,
-  "class": "standard",
-  "mode": "native",
-  "allowed_tool_classes": ["read", "edit", "test", "shell", "git"],
-  "isolation": "workspace",
-  "permission_model": "host-enforced",
-  "subagent_support": "native",
-  "model_attestation": "native",
-  "max_delegation_depth": 1,
-  "max_active_agents": 8,
-  "supported_efforts": ["low", "medium", "high"],
-  "context_delivery": "file-based",
-  "notes": "Standard capability for bounded implementation work"
+  "product_identity": "agent-rules-cli",
+  "runtime_identity": "agent-rules-cli-v1",
+  "plan_mode": "native",
+  "probe_method": "static",
+  "telemetry": "minimal",
+  "diff_review": "native",
+  "permissions": {
+    "allow": ["read", "edit", "test", "shell", "git"],
+    "deny": [],
+    "ask": []
+  },
+  "subagents": [
+    {
+      "name": "coder",
+      "capability_class": "standard",
+      "description": "Bounded implementation work"
+    },
+    {
+      "name": "reviewer",
+      "capability_class": "utility",
+      "description": "Code review support"
+    }
+  ],
+  "skills": [
+    {
+      "name": "code-generation",
+      "description": "Generate code from specifications"
+    },
+    {
+      "name": "testing",
+      "description": "Write and run tests"
+    }
+  ],
+  "install": "npm ci && npm run build",
+  "doctor": "node scripts/doctor.js",
+  "uninstall": "npm run clean",
+  "freshness": "2026-07-26T00:00:00Z"
 }

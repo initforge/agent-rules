@@ -1,36 +1,14 @@
 {
   "schema": "artifact/plan",
   "version": 1,
-  "level": "small",
-  "meta": {
-    "id": "plan-20260725-002",
-    "created_at": "2026-07-25T09:00:00Z",
-    "updated_at": "2026-07-25T09:00:00Z",
-    "source_refs": ["USR-002"]
-  },
-  "intent": {
-    "outcome": "Fix a single typo in README",
-    "risk_classification": "low",
-    "in_scope": ["README.md"],
-    "non_goals": ["any other file"],
-    "scope_lock": {}
-  },
-  "acceptance": [
+  "repository_baseline": "main@abc123",
+  "intent_reference": "intent-20260725-002",
+  "tasks": [
     {
-      "id": "AC1",
-      "claim": "README builds without errors",
-      "proof_profile": "static-change",
-      "required_dimensions": ["outcome"]
+      "id": "T1",
+      "objective": "Fix a single typo in README",
+      "acceptance_criteria": ["README builds without errors"]
     }
   ],
-  "execution_contract": {
-    "mode": "automatic",
-    "shape": "small",
-    "ledger": "off",
-    "strategy": "single-agent",
-    "max_agents": 1,
-    "max_depth": 0,
-    "effort_cap": "low",
-    "authorized_final_actions": ["edit"]
-  }
+  "completion_policy": "all_tasks"
 }

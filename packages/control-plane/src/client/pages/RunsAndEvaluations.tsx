@@ -87,8 +87,8 @@ export default function RunsAndEvaluations() {
       <Card title="Evaluation Configuration">
         <div style={{ fontSize: 12, color: '#e1e4e8', lineHeight: 1.6 }}>
           <p><strong>Evidence Profiles:</strong> Multiple profiles defined in automation/evidence-profiles.json (static-change, implementation-runtime, behavior-safety, ui-parity, api-contract, access-control, etc.)</p>
-          <p><strong>Benchmark Cases:</strong> Defined in automation/benchmarks/agent-quality-benchmark.json (deterministic + live evaluators)</p>
-          <p><strong>Telemetry Schema:</strong> automation/benchmarks/telemetry.schema.json (OpenTelemetry GenAI aligned)</p>
+          <p><strong>Benchmark Cases:</strong> Defined in evals/fixtures/agent-quality-benchmark.json (deterministic + live evaluators)</p>
+          <p><strong>Telemetry Schema:</strong> evals/fixtures/telemetry.schema.json (OpenTelemetry GenAI aligned)</p>
         </div>
       </Card>
     </div>

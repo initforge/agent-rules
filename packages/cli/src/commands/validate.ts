@@ -4,7 +4,7 @@ import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import * as crypto from "node:crypto";
 import path from "node:path";
-import { buildContextGraph } from "../services/context-graph.js";
+import { buildContextGraph, validateGraph } from "../services/context-graph.js";
 
 async function detectPython(root: string): Promise<string | null> {
   const candidates = ["python", "python3"];
@@ -316,9 +316,19 @@ export async function validate(
     errors.push("Missing 5fedu template purity audit");
   }
 
-  // 15. Context graph and routing (TypeScript, no Python dependency)
+  // 15. Context graph validation
   try {
-    buildContextGraph(root);
+    const graph = buildContextGraph(root);
+    const validation = validateGraph(graph);
+    if (!validation.valid) {
+      for (const err of validation.errors) {
+        errors.push(`Context graph: ${err}`);
+      }
+    }
+    if (options.verbose) {
+      const s = validation.stats;
+      output.push(`Graph: ${s.totalNodes} nodes, ${s.totalTokens} tokens, ${s.sourceCount} sources, ${s.missingSources} missing, ${JSON.stringify(s.nodesByLayer)}`);
+    }
   } catch (e) {
     errors.push(`Context graph rebuild failed: ${e instanceof Error ? e.message : String(e)}`);
   }

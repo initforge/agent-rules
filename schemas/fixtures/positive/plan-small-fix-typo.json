@@ -1,35 +1,24 @@
 {
   "schema": "artifact/plan",
   "version": 1,
-  "level": "small",
-  "meta": {
-    "id": "plan-small-001",
-    "created_at": "2026-07-25T12:00:00Z",
-    "updated_at": "2026-07-25T12:00:00Z",
-    "source_refs": ["USR-003"]
-  },
-  "intent": {
-    "outcome": "README.md has correct project name in the title",
-    "risk_classification": "low",
-    "in_scope": ["README.md line 1"],
-    "non_goals": ["any other file", "formatting changes", "content additions"]
-  },
-  "acceptance": [
+  "schema_version": "1.0.0",
+  "repository_baseline": "main@abc123",
+  "intent_reference": "intent-20260725-003",
+  "tasks": [
     {
-      "id": "AC1",
-      "claim": "Project name is 'Agent Rules' not 'Agen Rules'",
-      "proof_profile": "static-change",
-      "required_dimensions": ["outcome"]
+      "id": "T1",
+      "objective": "Fix project name typo in README title",
+      "file_ownership": ["README.md"],
+      "forbidden_files": ["src/"],
+      "acceptance_criteria": [
+        "Project name is 'Agent Rules' not 'Agen Rules'"
+      ],
+      "verification": {
+        "proof_kinds": ["static"],
+        "dimensions": ["outcome"]
+      },
+      "rollback": "Revert README.md change"
     }
   ],
-  "execution_contract": {
-    "mode": "automatic",
-    "shape": "small",
-    "ledger": "off",
-    "strategy": "single-agent",
-    "max_agents": 1,
-    "max_depth": 0,
-    "effort_cap": "low",
-    "authorized_final_actions": ["edit"]
-  }
+  "completion_policy": "all_tasks"
 }

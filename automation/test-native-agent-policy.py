@@ -44,7 +44,7 @@ selectors = [
 selector_source_roots = [ROOT / "platforms", ROOT / "automation"]
 for root in selector_source_roots:
   for source in root.rglob("*"):
-    if source.name.startswith("test-") or source == ROOT / "automation/model-policy.json" or source == ROOT / "automation/benchmarks/README.md":
+    if source.name.startswith("test-") or source == ROOT / "automation/model-policy.json" or source == ROOT / "evals/fixtures/README.md":
         continue
     if source.is_file() and source.suffix in {".md", ".toml", ".py", ".ps1", ".sh"}:
         text = source.read_text(encoding="utf-8")

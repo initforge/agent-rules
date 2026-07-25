@@ -641,7 +641,7 @@ def convert_v1_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
 # ---------------------------------------------------------------------------
 # Boot-time: make new sub-packages importable from the repo root
 # ---------------------------------------------------------------------------
-for _sub in ("conformance", "telemetry", "evaluations", "outcome", "benchmarks.compat"):
+for _sub in ("conformance", "telemetry", "evaluations", "outcome", "evals.fixtures.compat"):
     if str(ROOT) not in sys.path:
         sys.path.insert(0, str(ROOT))
         break
