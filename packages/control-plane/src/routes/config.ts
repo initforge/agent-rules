@@ -70,9 +70,9 @@ router.get('/file', (req, res) => {
     const ext = path.extname(filePath);
     let data: unknown;
     if (ext === '.json') {
-      data = reader.readRawJson(filePath);
+      data = reader.readRawJson(safePath);
     } else if (ext === '.yaml' || ext === '.yml') {
-      data = reader.readRawYaml(filePath);
+      data = reader.readRawYaml(safePath);
     } else {
       data = fs.readFileSync(safePath, 'utf-8');
     }

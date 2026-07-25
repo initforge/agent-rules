@@ -62,8 +62,6 @@ router.post('/apply', async (req, res) => {
       return;
     }
 
-    safeResolve(fp);
-
     const validation = validator.validateAgainstSchema(fp, data);
     if (!validation.valid) {
       res.status(400).json({ ok: false, error: `Validation failed: ${validation.errors.join('; ')}` });

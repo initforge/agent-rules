@@ -69,6 +69,7 @@ describe('compilePlan', () => {
   it('populates repository_baseline from options', () => {
     const plan = compilePlan(
       { requestHash: 'h', requirements: [{ id: 'R1' }] },
+      undefined,
       { branch: 'develop', sha: 'deadbeef'.repeat(5) },
     );
     expect(plan.repository_baseline.branch).toBe('develop');

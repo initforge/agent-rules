@@ -96,10 +96,10 @@ python automation/report-agent-quality.py --routing .agent/benchmarks/run/routin
 
 ## Compatibility
 
-Old v1 reports are readable through `benchmarks.compat.reader_v1`:
+Old v1 reports are readable through `evals.fixtures.compat.reader_v1`:
 
 ```python
-from benchmarks.compat.reader_v1 import read_v1_report, convert_v1_report
+from evals.fixtures.compat.reader_v1 import read_v1_report, convert_v1_report
 report = read_v1_report("path/to/v1/report.json")
 converted = convert_v1_report(report)
 ```
@@ -107,7 +107,7 @@ converted = convert_v1_report(report)
 Live records can be converted individually:
 
 ```python
-from benchmarks.compat.reader_v1 import convert_v1_live_record
+from evals.fixtures.compat.reader_v1 import convert_v1_live_record
 new_format = convert_v1_live_record(old_record)
 ```
 

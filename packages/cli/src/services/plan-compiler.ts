@@ -112,24 +112,50 @@ export function validatePlan(plan: CompiledPlan): PlanValidation {
   };
 }
 
+function inferEffort(description: string): 'small' | 'medium' | 'large' {
+  if (description.length <= 20) return 'small';
+  if (description.length <= 50) return 'medium';
+  return 'large';
+}
+
 export function compilePlan(
   intent: { requestHash: string; requirements: { id: string }[] },
+  tasks?: Partial<PlanTask>[],
   options?: { branch?: string; sha?: string },
 ): CompiledPlan {
-  const tasks: PlanTask[] = intent.requirements.map((req, idx) => ({
-    id: `T-${String(idx + 1).padStart(3, '0')}`,
-    description: `Implement ${req.id}`,
-    requirementIds: [req.id],
-    dependsOn: [],
-    ownedPaths: [],
-    acceptanceCriteria: [
-      `${req.id} is implemented and verified`,
-    ],
-    estimatedEffort: 'small' as const,
-  }));
+  const generatedTasks: PlanTask[] = tasks
+    ? intent.requirements.map((req, idx) => {
+        const partial = tasks[idx] ?? {};
+        const description = partial.description ?? `Implement ${req.id}`;
+        return {
+          id: `T-${String(idx + 1).padStart(3, '0')}`,
+          description,
+          requirementIds: partial.requirementIds ?? [req.id],
+          dependsOn: partial.dependsOn ?? [],
+          ownedPaths: partial.ownedPaths ?? [],
+          acceptanceCriteria: partial.acceptanceCriteria ?? [
+            `${req.id} is implemented and verified`,
+          ],
+          estimatedEffort: partial.estimatedEffort ?? inferEffort(description),
+        };
+      })
+    : intent.requirements.map((req, idx) => {
+        const description = `Implement ${req.id}`;
+        return {
+          id: `T-${String(idx + 1).padStart(3, '0')}`,
+          description,
+          requirementIds: [req.id],
+          dependsOn: [],
+          ownedPaths: [],
+          acceptanceCriteria: [
+            `${req.id} is implemented and verified`,
+          ],
+          estimatedEffort: inferEffort(description),
+        };
+      });
 
   const coverage = intent.requirements.map(req => {
-    const task = tasks.find(t => t.requirementIds.includes(req.id));
+    const task = generatedTasks.find(t => t.requirementIds.includes(req.id));
     return {
       id: req.id,
       covered: !!task,
@@ -148,7 +174,7 @@ export function compilePlan(
       hash: intent.requestHash,
       summary: `Plan covering ${intent.requirements.length} requirements`,
     },
-    tasks,
+    tasks: generatedTasks,
     completion_policy: {
       require_all_tasks: true,
       require_verification: true,

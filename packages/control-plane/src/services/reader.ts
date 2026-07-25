@@ -128,9 +128,9 @@ export function readIntegrations(): unknown[] {
 }
 
 export function readRawJson(filePath: string): unknown {
-  return readJson(safeResolve(filePath));
+  return readJson(filePath);
 }
 
 export function readRawYaml(filePath: string): unknown {
-  return readYaml(safeResolve(filePath));
+  return readYaml(filePath);
 }
