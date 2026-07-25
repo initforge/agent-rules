@@ -10,7 +10,7 @@ def main():
     root = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).resolve().parent.parent
     errors = []
 
-    md_files = list(root.glob("*.md")) + list(root.glob("guides/*.md"))
+    md_files = list(root.glob("*.md")) + list(root.glob("docs/guides/*.md"))
     for f in sorted(md_files):
         text = f.read_text(encoding="utf-8")
         for m in re.finditer(r"\[([^\]]+)\]\(([^)]+)\)", text):

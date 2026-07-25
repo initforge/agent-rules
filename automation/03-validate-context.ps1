@@ -66,8 +66,8 @@ $Duplicates = $Slugs | Group-Object | Where-Object Count -gt 1
 foreach ($Dup in $Duplicates) { $Problems.Add("Duplicate skill slug: $($Dup.Name)") }
 
 $RequiredPaths = @(
-  "guides\00-system-map.md",
-  "guides\05-maturity.md",
+  "docs\guides\00-system-map.md",
+  "docs\guides\05-maturity.md",
   "integrations\registry.json",
 
 
@@ -159,15 +159,15 @@ if (Test-Path $TriggerAuditPath) {
     if ($Case.skill) {
       $TargetPath = Join-Path $Root "skills\$($Case.skill)\SKILL.md"
       if (-not (Test-Path $TargetPath)) {
-        $ProfilePath = Join-Path $Root "profiles\5fedu\skills\$($Case.skill)\SKILL.md"
-        if (Test-Path $ProfilePath) { $TargetPath = $ProfilePath }
+        $ProfilePath = Get-ChildItem -Path (Join-Path $Root "profiles") -Directory -ErrorAction SilentlyContinue | Where-Object { Test-Path (Join-Path $_.FullName "skills\$($Case.skill)\SKILL.md") } | Select-Object -First 1 | ForEach-Object { Join-Path $_.FullName "skills\$($Case.skill)\SKILL.md" }
+        if ($ProfilePath -and (Test-Path $ProfilePath)) { $TargetPath = $ProfilePath }
       }
     } elseif ($Case.file) {
       $TargetPath = Join-Path $Root ($Case.file -replace "/", "\")
       # Also check under profiles/ if not found directly
       if (-not (Test-Path $TargetPath)) {
-        $ProfilePath = Join-Path $Root "profiles\5fedu\$($Case.file -replace "/", "\")"
-        if (Test-Path $ProfilePath) { $TargetPath = $ProfilePath }
+        $ProfilePath = Get-ChildItem -Path (Join-Path $Root "profiles") -Directory -ErrorAction SilentlyContinue | Where-Object { Test-Path (Join-Path $_.FullName ($Case.file -replace "/", "\")) } | Select-Object -First 1 | ForEach-Object { Join-Path $_.FullName ($Case.file -replace "/", "\") }
+        if ($ProfilePath -and (Test-Path $ProfilePath)) { $TargetPath = $ProfilePath }
       }
     }
     if (-not $TargetPath -or -not (Test-Path $TargetPath)) {
@@ -263,7 +263,7 @@ $MojibakePattern = [string]::Join("|", @(
   ([string][char]0x00c6 + "[\x{80}-\x{bf}]")
 ))
 if (Get-Command rg -ErrorAction SilentlyContinue) {
-  $Mojibake = rg -n $MojibakePattern $Root -g "*.md" -g "*.ps1" -g "*.yaml" -g "*.toml" -g "!05-generated/**" -g "!.git/**" 2>$null
+  $Mojibake = rg -n $MojibakePattern $Root -g "*.md" -g "*.ps1" -g "*.yaml" -g "*.toml" -g "!generated/**" -g "!.git/**" 2>$null
   if ($Mojibake) { $Problems.Add("Possible mojibake remains outside archive/build") }
 } else {
   Write-Warning "ripgrep (rg) is not found, skipping mojibake check."
@@ -352,7 +352,7 @@ if (-not (Test-Path $RouteCasesPath)) {
 $RouterTest = Join-Path $Root "automation\test-context-router.py"
 $GraphBuilderForRoute = Join-Path $Root "automation\build-context-graph.ps1"
 if (Test-Path -LiteralPath $GraphBuilderForRoute) {
-  & $GraphBuilderForRoute -Root $Root -OutputPath (Join-Path $Root "05-generated\context-graph.json") 2>&1 | ForEach-Object { Write-Host $_ }
+  & $GraphBuilderForRoute -Root $Root -OutputPath (Join-Path $Root "generated\context-graph.json") 2>&1 | ForEach-Object { Write-Host $_ }
   if ($LASTEXITCODE -ne 0) { $Problems.Add("Context graph rebuild failed before conformance") }
 }
 $PythonCommand = $env:AGENT_RULES_PYTHON
@@ -396,7 +396,7 @@ $ContextGraphSchema = Join-Path $Root "automation\context-graph.schema.json"
 if (-not (Test-Path $ContextGraphSchema)) {
   $Problems.Add("Missing context graph schema: automation/context-graph.schema.json")
 }
-$ContextGraphPath = Join-Path $Root "05-generated\context-graph.json"
+$ContextGraphPath = Join-Path $Root "generated\context-graph.json"
 if (Test-Path $ContextGraphPath) {
   try {
     $ContextGraph = Get-Content -Raw -Encoding UTF8 $ContextGraphPath | ConvertFrom-Json
@@ -441,13 +441,13 @@ $CleanCode = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "skills\clean-code
 if ($CleanCode -match '"review code"' -or $CleanCode -match 'Trigger on.*"review code"') {
   $Problems.Add("skills/clean-code must not claim generic 'review code' (belongs to code-review)")
 }
-$KnowledgeSystem = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "guides\02-knowledge-system.md")
+$KnowledgeSystem = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "docs\guides\02-knowledge-system.md")
 if (
   $KnowledgeSystem -notlike "*routing*" -or
   $KnowledgeSystem -notlike "*Boundary*" -or
   $KnowledgeSystem -notlike "*small/medium/large/resumable*"
 ) {
-  $Problems.Add("guides/02-knowledge-system.md is out of sync with structured routing and lazy boundaries")
+  $Problems.Add("docs/guides/02-knowledge-system.md is out of sync with structured routing and lazy boundaries")
 }
 # Profile leakage guards: detect 5fedu content that escaped into public core
 $ProfileSkillsInPublic = @(Get-ChildItem (Join-Path $Root "skills") -Directory | Where-Object { $_.Name -like "5fedu-*" })

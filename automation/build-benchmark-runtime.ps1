@@ -49,7 +49,7 @@ $priorCodexHome = $env:CODEX_HOME
 try {
   $env:CODEX_HOME = $full
   & (Join-Path $PSScriptRoot "01-build-runtime.ps1") -Root $Root
-  Copy-Item -Path (Join-Path $Root "05-generated\runtime-build\codex\*") -Destination $full -Recurse -Force
+  Copy-Item -Path (Join-Path $Root "generated\runtime-build\codex\*") -Destination $full -Recurse -Force
 } finally {
   $env:CODEX_HOME = $priorCodexHome
 }

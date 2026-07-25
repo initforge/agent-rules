@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "agent-rules://projects/5fedu/source-lock.schema.json",
+  "$id": "agent-rules://profiles/5fedu/projects/source-lock.schema.json",
   "title": "5fedu Source Lock",
   "description": "Reproducible pinned reference to a 5fedu template repository revision. A source-lock is a small contract that records the exact repository identity, commit SHA, template path, and integrity metadata so that a task can reference an exact template revision without loading the entire template into model context or copying it permanently into the public harness.",
   "type": "object",

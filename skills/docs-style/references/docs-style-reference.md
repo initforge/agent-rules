@@ -434,7 +434,7 @@ docs/
 Default tooling/agent map:
 
 ```text
-guides/
+docs/guides/
   00-system-map.md
   01-runtime-model.md
   02-knowledge-system.md

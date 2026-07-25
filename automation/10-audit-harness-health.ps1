@@ -118,21 +118,35 @@ if ((Test-Path $SkillPath) -and (Test-Path $MapPath)) {
   }
 }
 
-# H3: known-5fedu-repos stale layout claim
+# H3: known-repos stale layout claim
+# Checks reference layout claims against a locally-detected repo through
+# known-repos.md discovery rather than a hardcoded developer home path.
 $KnownPath = Join-Path $Root "profiles\5fedu\known-repos.md"
-$TahDomains = Test-Path "/home/linhnxdeveloper/Projects/Tah-app/context/5fedu/domains"
 $KnownBody = if (Test-Path $KnownPath) { Get-Content -Raw -Encoding UTF8 $KnownPath } else { "" }
 $ClaimsLegacy = $KnownBody -like "*layout context cũ*"
+$TahDomains = $false
+$TahAppRepoPath = $env:TAH_APP_REPO_PATH
+if (-not $TahAppRepoPath) {
+  $PossiblePaths = @(
+    Join-Path $env:USERPROFILE "Projects\Tah-app\context\5fedu\domains"
+    Join-Path $env:HOME "Projects/Tah-app/context/5fedu/domains"
+  )
+  foreach ($P in $PossiblePaths) {
+    if ($P -and (Test-Path $P)) { $TahDomains = $true; break }
+  }
+} elseif (Test-Path $TahAppRepoPath) {
+  $TahDomains = $true
+}
 Write-DebugLog "H3" "audit-harness-health.ps1:known-repos" "layout-doc-vs-tah" @{
   docClaimsLegacyLayout = $ClaimsLegacy
   tahHasDomains = $TahDomains
 }
 if ($ClaimsLegacy -and $TahDomains) {
-  Add-Finding "desync" "known-5fedu-repos-stale" "warn" "known-5fedu-repos.md says legacy layout; tah-app already has context/5fedu/domains/" "H3"
+  Add-Finding "desync" "known-repos-stale" "warn" "known-repos.md says legacy layout; tah-app already has context/5fedu/domains/" "H3"
 }
 
 # H4: maturity trigger count drift
-$MaturityPath = Join-Path $Root "guides\05-maturity.md"
+$MaturityPath = Join-Path $Root "docs\guides\05-maturity.md"
 $TriggerPath = Join-Path $Root "automation\trigger-audit.json"
 $TriggerCount = 0
 if (Test-Path $TriggerPath) {
@@ -145,7 +159,7 @@ Write-DebugLog "H4" "audit-harness-health.ps1:maturity" "trigger-count-drift" @{
   actualTriggerCases = $TriggerCount
 }
 if ($Claims23 -and $TriggerCount -ne 23) {
-  Add-Finding "desync" "maturity-trigger-count" "warn" "guides/05-maturity.md says 23/23; trigger-audit.json has $TriggerCount cases" "H4"
+  Add-Finding "desync" "maturity-trigger-count" "warn" "docs/guides/05-maturity.md says 23/23; trigger-audit.json has $TriggerCount cases" "H4"
 }
 
 # H5: duplication token estimate
@@ -176,7 +190,7 @@ $PlFiles = if (Test-Path $PlPath) {
 } else { @() }
 Write-DebugLog "H6" "audit-harness-health.ps1:project-local" "template-project-local" @{ fileCount = $PlFiles.Count }
 if ($PlFiles.Count -gt 0) {
-  Add-Finding "redundant" "canonical-project-local" "warn" "projects/5fedu/project-local/ has $($PlFiles.Count) non-README files in harness template" "H6"
+  Add-Finding "redundant" "canonical-project-local" "warn" "profiles/5fedu/projects/project-local/ has $($PlFiles.Count) non-README files in harness template" "H6"
 }
 
 # H7: legacy references in evidence
@@ -186,7 +200,7 @@ if (Test-Path $CoveragePath) {
   $Refs00Index = ([regex]::Matches($Cov, "00-index\.md")).Count
   Write-DebugLog "H7" "audit-harness-health.ps1:legacy-refs" "coverage-audit-legacy-refs" @{ count00Index = $Refs00Index }
   if ($Refs00Index -gt 5) {
-    Add-Finding "redundant" "evidence-legacy-refs" "warn" "evidence/coverage-audit.md still heavily references 00-index.md ($Refs00Index times) while router is 00-context-map.md" "H7"
+    Add-Finding "redundant" "evidence-legacy-refs" "warn" "profiles/5fedu/projects/evidence/coverage-audit.md still heavily references 00-index.md ($Refs00Index times) while router is 00-context-map.md" "H7"
   }
 }
 
@@ -300,9 +314,9 @@ if (Test-Path $BudgetPath) {
 }
 
 # H14: progressive context graph is generated and structurally usable
-$GraphPath = Join-Path $Root "05-generated\context-graph.json"
+$GraphPath = Join-Path $Root "generated\context-graph.json"
 if (-not (Test-Path $GraphPath)) {
-  Add-Finding "workflow" "context-graph-missing" "fail" "05-generated/context-graph.json is missing; run build-context-graph.ps1" "H14"
+  Add-Finding "workflow" "context-graph-missing" "fail" "generated/context-graph.json is missing; run build-context-graph.ps1" "H14"
 } else {
   try {
     $Graph = Get-Content -Raw -Encoding UTF8 $GraphPath | ConvertFrom-Json
@@ -336,7 +350,7 @@ if (-not (Test-Path $GraphPath)) {
       Add-Finding "workflow" "context-graph-duplicate-ids" "fail" "context graph has $($DuplicateIds.Count) duplicate node ids" "H14"
     }
   } catch {
-    Add-Finding "workflow" "context-graph-invalid-json" "fail" "cannot parse 05-generated/context-graph.json: $($_.Exception.Message)" "H14"
+    Add-Finding "workflow" "context-graph-invalid-json" "fail" "cannot parse generated/context-graph.json: $($_.Exception.Message)" "H14"
   }
 }
 

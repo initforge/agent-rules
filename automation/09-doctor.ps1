@@ -13,16 +13,15 @@ $PlatformHomes = @{
   grok = if ($env:GROK_HOME) { $env:GROK_HOME } else { Join-Path $UserHome ".grok" }
   antigravity = Join-Path $UserHome ".gemini\config"
   cursor = Join-Path $UserHome ".cursor"
+  opencode = Join-Path $UserHome ".config\opencode"
 }
-$PlatformHomes["opencode"] = Join-Path $UserHome ".config\opencode"
-$McpConfigPaths["opencode"] = Join-Path $PlatformHomes["opencode"] "opencode.json"
 $McpConfigPaths = @{
   codex = Join-Path $PlatformHomes["codex"] "config.toml"
   grok = Join-Path $PlatformHomes["grok"] "mcp.json"
   antigravity = Join-Path $PlatformHomes["antigravity"] "mcp_config.json"
   cursor = Join-Path $PlatformHomes["cursor"] "mcp.json"
+  opencode = Join-Path $PlatformHomes["opencode"] "opencode.json"
 }
-$McpConfigPaths["opencode"] = Join-Path $PlatformHomes["opencode"] "opencode.json"
 $Selected = if ($Platform -eq "all") { @("codex", "grok", "antigravity", "cursor", "opencode") } else { @($Platform) }
 
 $Report = @()
@@ -43,7 +42,7 @@ function Test-NativeStructure {
     default { @([pscustomobject]@{ Build = "native\agents"; Destination = "agents"; Manifest = "agent-rules-native-agents.json" }) }
   }
   foreach ($Group in $Groups) {
-    $BuildDir = Join-Path $Root "05-generated\runtime-build\$Name\$($Group.Build)"
+    $BuildDir = Join-Path $Root "generated\runtime-build\$Name\$($Group.Build)"
     $Destination = Join-Path $RuntimeHome $Group.Destination
     $OwnershipManifest = Join-Path $RuntimeHome $Group.Manifest
     if (-not (Test-Path -LiteralPath $BuildDir)) { $Problems += "missing build $($Group.Build)"; continue }
@@ -103,7 +102,7 @@ foreach ($Name in $Selected) {
   $PolicyStatus = if ((Test-Path $SourcePolicy) -and (Test-Path $InstalledPolicy) -and ((Get-FileHash $SourcePolicy -Algorithm SHA256).Hash -eq (Get-FileHash $InstalledPolicy -Algorithm SHA256).Hash)) { "MODEL_POLICY_MATCH" } elseif (Test-Path $InstalledPolicy) { "MODEL_POLICY_DRIFT" } else { "MODEL_POLICY_MISSING" }
   $Report += [pscustomobject]@{ platform = $Name; check = "model-policy-install"; status = $PolicyStatus; detail = "source-to-runtime policy hash only; effective host model remains receipt-gated" }
 
-  $BuildManifest = Join-Path $Root "05-generated\runtime-build\$Name\manifest.json"
+  $BuildManifest = Join-Path $Root "generated\runtime-build\$Name\manifest.json"
   if (Test-Path $BuildManifest) {
     $Installed = Get-Content -Raw $ManifestPath | ConvertFrom-Json
     $Expected = Get-Content -Raw $BuildManifest | ConvertFrom-Json
@@ -471,4 +470,4 @@ $NativeObserved = @($Report | Where-Object status -eq "NATIVE_OBSERVED").Count
 $NativeUnverified = @($Report | Where-Object status -eq "NATIVE_UNVERIFIED").Count
 $OrchestrationObserved = @($Report | Where-Object status -eq "ORCHESTRATION_OBSERVED").Count
 Write-Host "Doctor layered summary: install/parity checks have no blocking failures; native observed=$NativeObserved, native unverified=$NativeUnverified, orchestration observed=$OrchestrationObserved. Capability is not native execution evidence."
-Write-Host "See guides/06-platform-capability.md for the full capability matrix with requested/resolved/observed probe fields."
+Write-Host "See docs/guides/06-platform-capability.md for the full capability matrix with requested/resolved/observed probe fields."

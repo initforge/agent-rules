@@ -251,7 +251,7 @@ if "--build" in sys.argv:
         "antigravity": [(ROOT / "platforms/antigravity/agents", "agents", {"agent.md"})],
     }
     for platform, groups in source_sets.items():
-        build = ROOT / "05-generated/runtime-build" / platform
+        build = ROOT / "generated/runtime-build" / platform
         if not build.is_dir(): fail(f"missing build for {platform}; run 01-build-runtime.ps1 first")
         if platform == "antigravity" and (build / "native/instructions").exists(): fail("Antigravity build retained stale inert guidance")
         if sha(build / "model-policy.json") != sha(ROOT / "automation/model-policy.json"): fail(f"{platform} model policy hash drift")
@@ -280,9 +280,9 @@ if "--build" in sys.argv:
             if rendered["model"] != platforms["grok"]["adapter_defaults"]["model_selectors"]["base"]["selector"]: fail("Grok policy selector did not render")
 def test_capability_matrix() -> None:
     """Validate the platform capability matrix exists and is structurally sound."""
-    matrix_path = ROOT / "guides/06-platform-capability.md"
+    matrix_path = ROOT / "docs/guides/06-platform-capability.md"
     if not matrix_path.is_file():
-        fail("guides/06-platform-capability.md is missing")
+        fail("docs/guides/06-platform-capability.md is missing")
     body = matrix_path.read_text(encoding="utf-8")
     required_dimensions = [
         "instructions", "skills", "subagents", "model routing", "plan mode",

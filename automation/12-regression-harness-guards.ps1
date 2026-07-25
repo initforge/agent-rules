@@ -35,17 +35,17 @@ foreach ($File in @(Get-ChildItem (Join-Path $Root "rules") -Filter "*.md"; Get-
   }
 }
 
-# 6) No duplicate mcps/ directories by name normalization (hyphen vs underscore check)
-$McpDirs = Get-ChildItem (Join-Path $Root "mcps") -Directory
-$McpNorm = @{}
-foreach ($Dir in $McpDirs) {
+# 6) No duplicate integrations/ directories by name normalization (hyphen vs underscore check)
+$IntegrationDirs = Get-ChildItem (Join-Path $Root "integrations") -Directory
+$IntegrationNorm = @{}
+foreach ($Dir in $IntegrationDirs) {
   $Norm = $Dir.Name -replace '[_\-]', '-'
-  if ($McpNorm.ContainsKey($Norm)) { Assert-True $false "Duplicate mcps/ directory name '$($Dir.Name)' (conflicts with '$($McpNorm[$Norm])')" }
-  else { $McpNorm[$Norm] = $Dir.Name }
+  if ($IntegrationNorm.ContainsKey($Norm)) { Assert-True $false "Duplicate integrations/ directory name '$($Dir.Name)' (conflicts with '$($IntegrationNorm[$Norm])')" }
+  else { $IntegrationNorm[$Norm] = $Dir.Name }
 }
 
 # 7) No stale codebase_memory underscore directory
-Assert-True (-not (Test-Path (Join-Path $Root "mcps\codebase_memory"))) "stale mcps/codebase_memory/ directory removed"
+Assert-True (-not (Test-Path (Join-Path $Root "integrations\codebase_memory"))) "stale integrations/codebase_memory/ directory removed"
 
 # 8) No stale runtime.yaml references in root READMEs
 $ReadmeEn = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "README.md")

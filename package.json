@@ -1,0 +1,26 @@
+{
+  "name": "agent-rules",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Agent Rules harness — cross-platform context management for AI coding assistants",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "packageManager": "npm@11.13.0",
+  "workspaces": [
+    "packages/cli",
+    "packages/control-plane"
+  ],
+  "scripts": {
+    "install:all": "npm install --workspaces",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "validate": "node packages/cli/dist/index.js validate",
+    "generate": "node packages/cli/dist/index.js build",
+    "verify-mirrors": "node packages/cli/dist/index.js verify-mirrors",
+    "doctor": "node packages/cli/dist/index.js doctor",
+    "dashboard": "node packages/cli/dist/index.js dashboard",
+    "eval": "node packages/cli/dist/index.js eval"
+  }
+}

@@ -61,8 +61,8 @@ integrations:
       command: "{{bin}} --version"
       expectedExitCodes: [0]
     schema:
-      source: mcps/codebase-memory/tools/
-      generated: 05-generated/mcps/codebase-memory/
+      source: integrations/required/codebase-memory-mcp/
+      generated: generated/integrations/codebase-memory/
     platform:
       windows: "%LOCALAPPDATA%\\Programs\\codebase-memory-mcp"
       linux: "$HOME/.local/share/codebase-memory-mcp"
@@ -101,7 +101,7 @@ integrations:
       command: "npx -y @upstash/context7-mcp --help"
       expectedExitCodes: [0]
     schema:
-      source: mcps/context7/tools/
+      source: integrations/recommended/context7/
     nativeHosts: [codex, grok, antigravity, cursor, opencode]
     fallback: "official primary-source documentation or web research"
     deprecatedAliases: []
@@ -137,7 +137,7 @@ integrations:
       command: "npx -y @playwright/mcp --help"
       expectedExitCodes: [0]
     schema:
-      source: mcps/playwright/tools/
+      source: integrations/recommended/playwright-mcp/
     nativeHosts: [codex, grok, antigravity, cursor, opencode]
     fallback: "report the live-interaction proof gap; do not infer it from build output"
     deprecatedAliases: []
@@ -173,7 +173,7 @@ integrations:
       command: "npx -y chrome-devtools-mcp --help"
       expectedExitCodes: [0]
     schema:
-      source: mcps/chrome-devtools/tools/
+      source: integrations/recommended/chrome-devtools-mcp/
     nativeHosts: [codex, grok, antigravity, cursor, opencode]
     fallback: "browser console/network evidence when a host-native DevTools session is available"
     deprecatedAliases: []

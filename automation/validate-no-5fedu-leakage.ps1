@@ -19,9 +19,9 @@ if (Test-Path $ProjectsDir) {
   if ($LeakedProject.Count -gt 0) {
     $Problems.Add("[LEAK R2] 5fedu project template found in projects/. Must live in profiles/5fedu/projects/.")
   }
-  $LeakedKnown = Test-Path (Join-Path $ProjectsDir "known-5fedu-repos.md")
+  $LeakedKnown = Test-Path (Join-Path $ProjectsDir "known-repos.md")
   if ($LeakedKnown) {
-    $Problems.Add("[LEAK R2] known-5fedu-repos.md found in projects/. Must live in profiles/5fedu/known-repos.md.")
+    $Problems.Add("[LEAK R2] known-repos.md found in projects/. Must live in profiles/5fedu/known-repos.md.")
   }
 }
 

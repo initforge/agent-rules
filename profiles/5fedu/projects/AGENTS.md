@@ -5,7 +5,7 @@
 
 ## Dự án 5fedu đã đăng ký
 
-Xem registry hiện tại tại `known-5fedu-repos.md` (agent-rules). Đây là danh sách repo đã đăng ký hiện tại, **không phải tập đóng vĩnh viễn**; owner có thể đăng ký repo mới và chạy installer trước khi dùng context 5fedu.
+Xem registry hiện tại tại `known-repos.md` (agent-rules). Đây là danh sách repo đã đăng ký hiện tại, **không phải tập đóng vĩnh viễn**; owner có thể đăng ký repo mới và chạy installer trước khi dùng context 5fedu.
 
 ## Đọc theo trigger
 

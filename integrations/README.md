@@ -31,7 +31,7 @@ Profiles group integrations by function:
 
 Tool schema JSON files live under `mcps/<id>/tools/`. Each file is a single tool's JSON Schema description.
 
-Generated manifests at `05-generated/mcps/<id>/schema-manifest.json` list every tool with its SHA-256 and the upstream source/version.
+Generated manifests at `generated/mcps/<id>/schema-manifest.json` list every tool with its SHA-256 and the upstream source/version.
 
 ## Validation
 

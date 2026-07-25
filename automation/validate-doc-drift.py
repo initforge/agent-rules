@@ -27,7 +27,7 @@ def main():
 
     # ── 0. Regenerate references and check drift ──────────────────────
     gen_script = root / "automation" / "generate-doc-references.py"
-    ref_dir = root / "05-generated" / "references"
+    ref_dir = root / "generated" / "references"
 
     if gen_script.exists():
         # Capture pre-generation state
@@ -98,7 +98,7 @@ def main():
             if missing_from_readme:
                 errors.append(
                     f"README integration table missing: {', '.join(sorted(missing_from_readme))}. "
-                    f"Either add them or reference the generated table in 05-generated/references/integration-registry.md"
+                    f"Either add them or reference the generated table in generated/references/integration-registry.md"
                 )
             if extra_in_readme:
                 warnings.append(
@@ -106,7 +106,7 @@ def main():
                 )
 
     # ── 2. Check all referenced paths in guides exist ─────────────────
-    guides_dir = root / "guides"
+    guides_dir = root / "docs" / "guides"
     if guides_dir.exists():
         for guide_file in sorted(guides_dir.glob("*.md")):
             text = guide_file.read_text(encoding="utf-8")
@@ -146,12 +146,12 @@ def main():
             )
 
     # ── 4. Check platform capability guide has last-verified metadata ─
-    cap_guide = root / "guides" / "06-platform-capability.md"
+    cap_guide = root / "docs" / "guides" / "06-platform-capability.md"
     if cap_guide.exists():
         text = cap_guide.read_text(encoding="utf-8")
         if "Last verified" not in text and "last-verified" not in text.lower() and "last_reviewed" not in text.lower():
             warnings.append(
-                "guides/06-platform-capability.md has no last-verified metadata. "
+                "docs/guides/06-platform-capability.md has no last-verified metadata. "
                 "Add a 'Last verified' or 'Last reviewed' date annotation."
             )
 
@@ -159,7 +159,7 @@ def main():
         if "native | emulated | unsupported | unverified" not in text:
             if "Status values" not in text:
                 warnings.append(
-                    "guides/06-platform-capability.md missing status value definitions "
+                    "docs/guides/06-platform-capability.md missing status value definitions "
                     "(native/emulated/unsupported/unverified)"
                 )
 

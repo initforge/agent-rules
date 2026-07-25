@@ -37,7 +37,7 @@ def workspace_for(case: dict) -> tuple[tempfile.TemporaryDirectory[str], Path]:
 
 
 def main() -> int:
-    graph = load_graph(ROOT / "05-generated" / "context-graph.json")
+    graph = load_graph(ROOT / "generated" / "context-graph.json")
     cases_doc = json.loads((ROOT / "automation" / "context-route-cases.json").read_text(encoding="utf-8-sig"))
     if int(cases_doc.get("version", 0)) < 3:
         raise AssertionError("route fixture contract must be version 3+")

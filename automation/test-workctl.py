@@ -113,7 +113,7 @@ def assignment(
         "effort": "medium",
         "source_ids": source_ids,
         "write_paths": [write_path] if write_path else [],
-        "context_paths": ["guides/00-system-map.md"],
+        "context_paths": ["docs/guides/00-system-map.md"],
         "forbidden_paths": ["secrets/**"],
         "acceptance_ids": [acceptance_id],
     }
@@ -269,7 +269,7 @@ def main() -> None:
 
         a1 = assignment("A1", "P1", "worker-1", "AC1", ["REQ-001", "INJ-001"], "rules/**")
         a2 = assignment("A2", "P2", "worker-2", "AC2", ["REQ-001"], "automation/**")
-        a3 = assignment("A3", "P3", "worker-3", "AC3", ["REQ-001"], "guides/**")
+        a3 = assignment("A3", "P3", "worker-3", "AC3", ["REQ-001"], "docs/guides/**")
         reviewer1 = assignment(
             "AR1", "P1", "review-1", "AC1", ["REQ-001", "INJ-001"], "", "reviewer",
         )

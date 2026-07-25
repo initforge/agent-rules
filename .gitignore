@@ -44,6 +44,9 @@ Thumbs.db
 # Grok live mirror — use ~/.grok/ global only (install-grok-global.sh)
 .grok/
 
+# Node packages
+node_modules/
+
 # Runtime/test artifacts
 dist/
 05-generated/

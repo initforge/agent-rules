@@ -8,7 +8,7 @@ $ErrorActionPreference = "Stop"
 
 $Root = Split-Path -Parent $PSScriptRoot
 $ContextGraphScript = Join-Path $PSScriptRoot "build-context-graph.ps1"
-$GraphPath = Join-Path $Root "05-generated\context-graph.json"
+$GraphPath = Join-Path $Root "generated\context-graph.json"
 if (Test-Path -LiteralPath $ContextGraphScript) {
   & $ContextGraphScript -Root $Root -OutputPath $GraphPath | Write-Host
 }

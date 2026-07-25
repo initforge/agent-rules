@@ -19,7 +19,7 @@ $AllowedRoots = @(
   (Join-Path $Root ".agents")
 ) | Where-Object { Test-Path $_ }
 
-if ($Resolved -like (Join-Path $Root "05-generated*")) { throw "Generated build output cannot be imported." }
+if ($Resolved -like (Join-Path $Root "generated*")) { throw "Generated build output cannot be imported." }
 
 $UnderAllowedRoot = $false
 foreach ($Allowed in $AllowedRoots) {

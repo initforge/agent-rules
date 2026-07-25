@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate volatile reference docs from canonical manifests into 05-generated/references/."""
+"""Generate volatile reference docs from canonical manifests into generated/references/."""
 
 import json
 import os
@@ -11,7 +11,7 @@ from pathlib import Path
 
 def main():
     root = Path(os.environ.get("AGENT_RULES_ROOT", Path(__file__).resolve().parent.parent))
-    out = root / "05-generated" / "references"
+    out = root / "generated" / "references"
     out.mkdir(parents=True, exist_ok=True)
 
     def write_ref(name, title, body):
@@ -92,7 +92,7 @@ def main():
         "",
         "**Status values:** native | emulated | unsupported | unverified",
         "",
-        "See full matrix with per-dimension status: guides/06-platform-capability.md",
+        "See full matrix with per-dimension status: docs/guides/06-platform-capability.md",
     ]
     write_ref("capability-matrix.md", "Capability Matrix", "\n".join(lines))
 
@@ -199,12 +199,12 @@ def main():
     lines += [
         "| plans/ (legacy folder) | .agent/plans/ | validate-context.ps1 |",
         "| 00-index.md (legacy always-on) | 00-bootstrap.md | validate-context.ps1 |",
-        "| Gemini CLI (product reference) | Antigravity (runtime binary is gemini) | guides/06-platform-capability.md |",
+        "| Gemini CLI (product reference) | Antigravity (runtime binary is gemini) | docs/guides/06-platform-capability.md |",
     ]
     write_ref("deprecation-list.md", "Deprecation List", "\n".join(lines))
 
     count = len(list(out.glob("*.md")))
-    print(f"Generated {count} reference documents in 05-generated/references/")
+    print(f"Generated {count} reference documents in generated/references/")
 
 
 if __name__ == "__main__":

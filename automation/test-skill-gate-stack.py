@@ -14,7 +14,7 @@ GATE = ROOT / "platforms" / "codex" / "scripts" / "skill-gate.py"
 ANTIGRAVITY_GATE = ROOT / "platforms" / "antigravity" / "scripts" / "antigravity-skill-gate.py"
 CURSOR_GATE = ROOT / "platforms" / "cursor" / "scripts" / "cursor-hook.py"
 DOCTOR = ROOT / "automation" / "09-doctor.ps1"
-GRAPH = ROOT / "05-generated" / "context-graph.json"
+GRAPH = ROOT / "generated" / "context-graph.json"
 SHARED = ROOT / "platforms" / "shared" / "scripts"
 DEAD = ("e2e-qa", "product-ui-craft")
 

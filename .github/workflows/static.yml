@@ -19,11 +19,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
       - run: npm ci
-        working-directory: cli
+        working-directory: packages/cli
       - run: npx tsc --noEmit
-        working-directory: cli
+        working-directory: packages/cli
   test:
     name: test (unit + parity)
     needs: [lint]
@@ -35,17 +35,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
       - run: npm ci
-        working-directory: cli
+        working-directory: packages/cli
       - run: npx vitest run --reporter=junit --outputFile=test-results.xml 2>&1 || npx vitest run 2>&1
-        working-directory: cli
+        working-directory: packages/cli
         continue-on-error: false
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results-${{ matrix.os }}
-          path: cli/test-results.xml
+          path: packages/cli/test-results.xml
           if-no-files-found: ignore
   build:
     name: build (runtime)
@@ -58,17 +58,17 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
       - run: npm ci && npx tsc
-        working-directory: cli
+        working-directory: packages/cli
       - run: node dist/index.js build
-        working-directory: cli
+        working-directory: packages/cli
       - uses: actions/upload-artifact@v4
         with:
           name: runtime-build-${{ matrix.os }}
           path: |
-            05-generated/runtime-build/*/manifest.json
-            05-generated/runtime-build/*/model-policy.json
+            generated/runtime-build/*/manifest.json
+            generated/runtime-build/*/model-policy.json
   validate:
     name: validate (context)
     needs: [build]
@@ -80,7 +80,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -91,14 +91,14 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq powershell
       - run: npm ci && npx tsc
-        working-directory: cli
+        working-directory: packages/cli
       - run: node dist/index.js validate
-        working-directory: cli
+        working-directory: packages/cli
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: validate-log-${{ matrix.os }}
-          path: cli/validate.log
+          path: packages/cli/validate.log
           if-no-files-found: ignore
   verify-mirrors:
     name: verify-mirrors
@@ -111,8 +111,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
       - run: npm ci && npx tsc
-        working-directory: cli
+        working-directory: packages/cli
       - run: node dist/index.js verify-mirrors
-        working-directory: cli
+        working-directory: packages/cli

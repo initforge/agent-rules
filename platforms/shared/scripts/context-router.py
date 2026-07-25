@@ -42,7 +42,7 @@ def phrase_hits(text: str, phrases: Iterable[str]) -> list[str]:
 def has_5fedu_context(workspace_paths: Iterable[str | Path]) -> bool:
     """Only an installed project context activates 5fedu routing.
 
-    The harness repository contains ``projects/5fedu`` as a template; that
+    The harness repository contains ``profiles/5fedu/projects`` as a template; that
     catalog must not make every harness task look like an application task.
     """
     for raw in workspace_paths:
@@ -105,7 +105,7 @@ def _context_nodes(graph: dict[str, Any], prompt: str, has_project: bool) -> lis
         routing = node.get("routing") or {}
         if node.get("layer") != "project" or routing.get("project_scope") not in (None, "", "5fedu"):
             continue
-        if "projects/5fedu/" not in source and "profiles/5fedu/projects/" not in source:
+        if "profiles/5fedu/projects/" not in source:
             continue
         if source.endswith("AGENTS.md") or source.endswith("00-context-map.md"):
             out.append(str(node["id"]))

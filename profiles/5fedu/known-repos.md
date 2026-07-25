@@ -1,7 +1,7 @@
 # Dự án 5fedu đã biết
 
 **Vai trò:** Registry các repo 5fedu đã đăng ký — không thêm dự án ảo.
-**Ý đồ:** Agent chỉ nạp `context/5fedu/` **trong repo đang mở**, không đọc template `agent-rules/projects/5fedu/`.
+**Ý đồ:** Agent chỉ nạp `context/5fedu/` **trong repo đang mở**, không đọc template `agent-rules/profiles/5fedu/projects/`.
 
 ## Repo đăng ký hiện tại
 

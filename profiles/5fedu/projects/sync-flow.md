@@ -7,7 +7,7 @@ Canonical agent-rules: **`P:\agent-rules`**.
 
 ## Đọc (implement)
 
-- Khi code trong repo dự án: chỉ đọc `<repo>/context/5fedu/`, **không** đọc `agent-rules/projects/5fedu/` làm nguồn sống.
+- Khi code trong repo dự án: chỉ đọc `<repo>/context/5fedu/`, **không** đọc `agent-rules/profiles/5fedu/projects/` làm nguồn sống.
 - Nội dung dự án thật (sheets map, Supabase spec, decisions đã chốt): **`context/5fedu/project-local/`** — installer **không bao giờ** ghi đè thư mục này.
 
 ## Hai lớp context
@@ -30,12 +30,12 @@ Canonical agent-rules: **`P:\agent-rules`**.
 
 ## Write-back (sau khi sửa — chỉ phần thay đổi)
 
-Sync **ngay sau khi sửa**, không mirror toàn bộ skills hay `05-generated/`:
+Sync **ngay sau khi sửa**, không mirror toàn bộ skills hay `generated/`:
 
 | Case | Nguồn sửa | Đích sync | Loại trừ |
 |------|-----------|-----------|----------|
 | **1. Global** | `rules/`, `skills/` toàn cục | `agent-rules/rules/`, `agent-rules/skills/` | — |
-| **2. Context 5fedu** | `<repo>/context/5fedu/` (file `.md` template) | `agent-rules/projects/5fedu/` (cùng đường dẫn tương đối) | `project-local/`, `skills/`, README, JSON, file không liên quan |
+| **2. Context 5fedu** | `<repo>/context/5fedu/` (file `.md` template) | `agent-rules/profiles/5fedu/projects/` (cùng đường dẫn tương đối) | `project-local/`, `skills/`, README, JSON, file không liên quan |
 
 **Không** write-back `project-local/` lên template harness — đó là dữ liệu sống riêng từng repo.
 
@@ -47,7 +47,7 @@ Sau write-back: chạy `automation/03-validate-context.ps1` rồi `01-build-runt
 
 | Bước | Lệnh | Ghi chú |
 |---|---|---|
-| 1. Sửa generic trong harness | Sửa `projects/5fedu/domains/*` | Nguồn canonical |
+| 1. Sửa generic trong harness | Sửa `profiles/5fedu/projects/domains/*` | Nguồn canonical |
 | 2. Sync ra Tah-app | `08-install ... -Profile tah-app -Force` | Không đụng project-local |
 | 3. Sync ra nostime | `08-install ... -Profile nostime -Force` | Overlay từ archive |
 | 4. Sửa generic trong repo | Sửa `domains/*` trong repo | Khi fix thực tế ở app trước |
@@ -77,7 +77,7 @@ Sau write-back: chạy `automation/03-validate-context.ps1` rồi `01-build-runt
 ## Không được phép
 
 - Copy log/evidence vào global `rules/` hoặc `skills/`
-- Copy nguyên `.agents/`, `.codex/`, `05-generated/` về canonical
+- Copy nguyên `.agents/`, `.codex/`, `generated/` về canonical
 - Sửa `evidence/` rồi coi như rule sống (chỉ promote sau review sang `domains/`)
 - Đưa quyết định Nostime vào `decisions.md` chung — dùng `project-local/` hoặc `archive/nostime/`
 - Sync toàn bộ skills hay runtime generated khi chỉ sửa vài file context

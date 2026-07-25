@@ -573,7 +573,7 @@
     "harness-runtime": {
       "description": "Agent harness, runtime configuration, context routing, and tool registry",
       "signals": {
-        "file_patterns": ["automation/**", "rules/**", "skills/**/SKILL.md", "integrations/**", "platforms/**", "mcps/**", "AGENTS.md", "opencode.json", "opencode.jsonc", ".opencode/**"],
+        "file_patterns": ["automation/**", "rules/**", "skills/**/SKILL.md", "integrations/**", "platforms/**", "AGENTS.md", "opencode.json", "opencode.jsonc", ".opencode/**"],
         "claim_keywords": ["harness", "runtime", "context", "routing", "tool", "registry", "manifest", "schema", "workflow", "agent", "mcp"],
         "domains": ["harness", "runtime", "automation", "platform"]
       },

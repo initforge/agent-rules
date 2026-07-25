@@ -59,7 +59,7 @@ Chọn file đích theo bản chất, không theo tiện tay:
 | Procedure lazy theo trigger | `skills/<slug>/SKILL.md` + `references/` | rules always-load |
 | Trigger/precedence | skill `description` frontmatter (source of truth) | bảng trigger viết tay |
 | Delta riêng 1 platform | `platforms/<name>/*-overlay.md` | rules chung |
-| Tri thức ERP chung | `projects/5fedu/` hoặc `context/5fedu/domains/` | rules global |
+| Tri thức ERP chung | `profiles/5fedu/projects/` hoặc `context/5fedu/domains/` | rules global |
 | Cấu hình/credential/DDL 1 repo | `<repo>/context/5fedu/project-local/` | global, 5fedu-common |
 | Ví dụ/log/chat thô | `references/` hoặc `evidence/` (index-only) | file always-load |
 
