@@ -1,0 +1,16 @@
+{
+  "schema": "artifact/capability",
+  "version": 1,
+  "class": "standard",
+  "mode": "native",
+  "allowed_tool_classes": ["read", "edit", "test", "shell", "git"],
+  "isolation": "workspace",
+  "permission_model": "host-enforced",
+  "subagent_support": "native",
+  "model_attestation": "native",
+  "max_delegation_depth": 1,
+  "max_active_agents": 8,
+  "supported_efforts": ["low", "medium", "high"],
+  "context_delivery": "file-based",
+  "notes": "Standard capability for bounded implementation work"
+}

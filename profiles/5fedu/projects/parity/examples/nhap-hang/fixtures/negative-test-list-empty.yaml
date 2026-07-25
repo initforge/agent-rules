@@ -1,0 +1,10 @@
+# negative-test-list-empty.yaml
+# Fixture: Negative test for CRUD list empty state.
+surface: crud-list
+scenario: "List renders correctly when phieu_nhap table returns zero rows"
+invariant: "Must show empty state message, not a broken table or infinite spinner"
+expected_outcome: "Table body displays 'Không có dữ liệu' message; toolbar still functional"
+mocks:
+  - endpoint: "/rest/v1/phieu_nhap?select=*"
+    response: []
+    status: 200

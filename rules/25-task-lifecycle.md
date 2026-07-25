@@ -14,8 +14,7 @@ description: Workflow classification, proportional work state, and execution own
 | `execution` | completed change and proof | yes |
 
 - A pasted plan is review input, not authority to edit.
-- An explicit execute pivot authorizes execution; the main agent then owns classification, orchestration, and completion.
-- Plan roles and model routing belong to the lazy work protocol, not this core rule.
+- An explicit execute pivot authorizes execution.
 
 ## Scale the work
 
@@ -26,13 +25,39 @@ description: Workflow classification, proportional work state, and execution own
 | `large` | phased, high-risk, or coordinated work | roadmap, ownership, proof, and ledger |
 | `resumable` | interruptible, multi-session, or externally waiting work | large state plus checkpoints and resume context |
 
-- Classify risk first, then shape from dependencies, coordination, rollback, and proof needs; this is not a file-count or checklist classification.
-- Escalate to `high-risk` for auth, authorization, migration/data loss, security, external providers, or weakened validation.
-- For high-risk ambiguity, stop only for a material owner decision; otherwise investigate and continue safe independent work.
-- Use portable classes: economy for retrieval/mechanical work, standard for ordinary implementation, expert for unresolved material risk.
-- For medium+ work, default to zero main-agent domain work: it owns outcome, allocation, integration, and review. The protocol defines the narrow control-plane exception and recovery ladder.
-- If callable subagents are unavailable, declare the exception and recover without weakening boundaries, acceptance, proof, or checkpoints.
-- Report task outcome (`PASS`/`PARTIAL`/`BLOCKED`) separately from orchestration or model-attestation state (`OBSERVED`/`UNVERIFIED`/`UNAVAILABLE`).
-- Delegate independent bounded work with clear ownership and evidence duties; the main agent integrates and verifies the result.
-- Record durable state only when it improves handoff, recovery, coordination, rollback, or independent proof. Tiny and ordinary work do not need a ledger.
-- Keep trace logs advisory. Repeated friction is evidence for a later context-evolution review, not a task blocker.
+- Classify risk first, then shape from dependencies, coordination, rollback, and proof needs; not a file-count classification.
+- Escalate to `high-risk` for auth, migration/data loss, security, external providers, or weakened validation.
+- Use portable classes: economy for retrieval/mechanical, standard for ordinary, expert for unresolved risk.
+- If subagents are unavailable, declare and recover without weakening boundaries, acceptance, proof, or checkpoints.
+- Report task outcome (`PASS`/`PARTIAL`/`BLOCKED`) separately from model-attestation state (`OBSERVED`/`UNVERIFIED`/`UNAVAILABLE`).
+- Record durable state only when it improves handoff, recovery, coordination, or proof.
+
+## Assign clear roles
+
+**Coordinator** — preserves intent, manages ledger, assigns slices, reports status. Narrow actions: inspect, route, reconcile, merge, unblock.
+
+**Architect/integrator** — architecture, contracts, state boundaries, cross-domain behavior, integration code.
+
+**Implementer** — bounded slices with stable interfaces, explicit paths, clear ACs. No global reinterpretation.
+
+**Researcher/utility** — read-only exploration, research, inventory, mechanical work.
+
+**Reviewer** — reviews final diff, not summaries. Read-only. Risk-triggered.
+
+**Verifier** — claim-specific checks. Read-only. Cannot make unverified into PASS.
+
+## Delegate when it adds value
+
+Delegate when: stable boundary, clear ACs, non-overlapping writes, sufficient context, meaningful parallelism. Not for multiple files alone. Small tasks need no subagents.
+
+## Required delegation receipts
+
+- `subagent_requested` — why delegated
+- `subagent_resolved` — model/effort
+- `subagent_started` — acknowledged
+- `subagent_completed` — result returned
+- `result_consumed` — integrated
+- `result_rejected` — with reason
+- `delegation_skipped` — why skipped
+
+Missing receipts are detectable.

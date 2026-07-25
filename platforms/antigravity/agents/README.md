@@ -7,7 +7,9 @@ body.
 
 Role mapping:
 
-- `agent-rules-researcher` → researcher
+- coordinator — filled by the main agent; no separate agent file
+- architect/integrator — filled by the main agent or a designated senior subagent
+- `agent-rules-researcher` → researcher/utility worker
 - `agent-rules-implementer` → implementer
 - `agent-rules-reviewer` → reviewer
 - `agent-rules-verifier` → verifier

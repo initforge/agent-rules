@@ -1,0 +1,12 @@
+{
+  "schema": "artifact/profile-manifest",
+  "version": 1,
+  "name": "test",
+  "artifact_version": "1.0",
+  "source": {
+    "repository": "test",
+    "path": "test"
+  },
+  "built_at": "2026-07-25T08:00:00Z",
+  "owner": "test"
+}

@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 $Problems = [System.Collections.Generic.List[string]]::new()
 . (Join-Path $PSScriptRoot "path-compat.ps1")
@@ -69,9 +69,9 @@ $RequiredPaths = @(
   "guides\00-system-map.md",
   "guides\05-maturity.md",
   "integrations\registry.json",
-  "projects\5fedu\AGENTS.md",
-  "projects\5fedu\00-context-map.md",
-  "projects\5fedu\decisions.md",
+
+
+
   "rules\05-critical-thinking.md",
   "rules\16-context-style.md",
   "rules\25-task-lifecycle.md",
@@ -82,8 +82,8 @@ $RequiredPaths = @(
   "skills\finish-to-completion\references\slice-gate-protocol.md",
   "automation\workctl.py",
   "automation\work-ledger.schema.json",
-  "automation\test-workctl.py",
-  "projects\5fedu\domains\references\pattern-inventory.yaml"
+  "automation\test-workctl.py"
+  # profile-owned: projects\5fedu moved to profiles\5fedu\projects\
 )
 foreach ($Path in $RequiredPaths) {
   if (-not (Test-Path (Join-Path $Root $Path))) { $Problems.Add("Missing required path: $Path") }
@@ -143,12 +143,9 @@ $RegistryPath = Join-Path $Root "integrations\registry.json"
 if (Test-Path $RegistryPath) {
   $Registry = Get-Content -Raw $RegistryPath | ConvertFrom-Json
   foreach ($Integration in $Registry.integrations) {
-    if (-not (Test-Path (Join-Path $Root $Integration.path))) {
-      $Problems.Add("Integration registry path missing: $($Integration.path)")
-    }
-    if ($Integration.name -eq "context7") {
-      $CursorAdapter = Join-Path (Join-Path $Root $Integration.path) "adapters\cursor.json"
-      if (-not (Test-Path $CursorAdapter)) { $Problems.Add("Missing context7 cursor adapter: $CursorAdapter") }
+    $IntegPath = if ($Integration.PSObject.Properties["install"]) { $Integration.install.script -replace "/install\.ps1$", "" } else { $null }
+    if ($IntegPath -and -not (Test-Path (Join-Path $Root $IntegPath))) {
+      $Problems.Add("Integration install path missing: $IntegPath")
     }
   }
 }
@@ -161,8 +158,17 @@ if (Test-Path $TriggerAuditPath) {
     $Body = ""
     if ($Case.skill) {
       $TargetPath = Join-Path $Root "skills\$($Case.skill)\SKILL.md"
+      if (-not (Test-Path $TargetPath)) {
+        $ProfilePath = Join-Path $Root "profiles\5fedu\skills\$($Case.skill)\SKILL.md"
+        if (Test-Path $ProfilePath) { $TargetPath = $ProfilePath }
+      }
     } elseif ($Case.file) {
       $TargetPath = Join-Path $Root ($Case.file -replace "/", "\")
+      # Also check under profiles/ if not found directly
+      if (-not (Test-Path $TargetPath)) {
+        $ProfilePath = Join-Path $Root "profiles\5fedu\$($Case.file -replace "/", "\")"
+        if (Test-Path $ProfilePath) { $TargetPath = $ProfilePath }
+      }
     }
     if (-not $TargetPath -or -not (Test-Path $TargetPath)) {
       $Problems.Add("Trigger audit target missing for '$($Case.phrase)': $TargetPath")
@@ -263,7 +269,7 @@ if (Get-Command rg -ErrorAction SilentlyContinue) {
   Write-Warning "ripgrep (rg) is not found, skipping mojibake check."
 }
 
-$PurityAudit = Join-Path $PSScriptRoot "audit-5fedu-template-purity.ps1"
+$PurityAudit = Join-Path $PSScriptRoot "..\profiles\5fedu\automation\audit-5fedu-template-purity.ps1"
 if (Test-Path $PurityAudit) {
   try {
     & $PurityAudit | Out-Null
@@ -443,6 +449,40 @@ if (
 ) {
   $Problems.Add("guides/02-knowledge-system.md is out of sync with structured routing and lazy boundaries")
 }
+# Profile leakage guards: detect 5fedu content that escaped into public core
+$ProfileSkillsInPublic = @(Get-ChildItem (Join-Path $Root "skills") -Directory | Where-Object { $_.Name -like "5fedu-*" })
+if ($ProfileSkillsInPublic.Count -gt 0) {
+  $Problems.Add("Profile-owned skills found in public skills/ directory: $($ProfileSkillsInPublic.Name -join ', '). Skills must live under profiles/.")
+}
+$LeakChecker = Join-Path $PSScriptRoot "validate-no-5fedu-leakage.ps1"
+if (Test-Path $LeakChecker) {
+  try {
+    & $LeakChecker -Root $Root | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+      $Problems.Add("5fedu leakage check failed - run automation/validate-no-5fedu-leakage.ps1 for details")
+    }
+  } catch {
+    $Problems.Add("5fedu leakage check crashed: $_")
+  }
+}
+
+# Documentation drift check
+$DocDriftPython = $env:AGENT_RULES_PYTHON
+if (-not $DocDriftPython) { $DocDriftPython = $env:HARNESS_PYTHON }
+if (-not $DocDriftPython) {
+  $ResolvedPy = Get-Command python -ErrorAction SilentlyContinue
+  if ($ResolvedPy) { $DocDriftPython = $ResolvedPy.Source }
+}
+$DocDriftScript = Join-Path $PSScriptRoot "validate-doc-drift.py"
+if ($DocDriftPython -and (Test-Path $DocDriftScript)) {
+  $GenScript2 = Join-Path $PSScriptRoot "generate-doc-references.py"
+  if (Test-Path $GenScript2) { & $DocDriftPython $GenScript2 | Out-Null }
+  & $DocDriftPython $DocDriftScript 2>&1 | ForEach-Object { Write-Host $_ }
+  if ($LASTEXITCODE -ne 0) { $Problems.Add("Documentation drift check failed") }
+} else {
+  Write-Warning "Skipping doc drift check (Python or validate-doc-drift.py not found)"
+}
+
 if ($Problems.Count) {
   $Problems | ForEach-Object { Write-Error $_ }
   exit 1

@@ -31,7 +31,7 @@ Always edit canonical source first. Build outputs and global runtimes are genera
 Before promoting feedback or learning items into living context, answer these checks:
 1. What exact failure did the agent make?
 2. Is the root cause missing context, wrong layer, duplicated context, weak trigger, or bad verification?
-3. Which layer owns the fix: project-local, 5fedu-common, global rule, skill, workflow, or script?
+3. Which layer owns the fix: project-local, profile-common, global rule, skill, workflow, or script?
 4. Can the rule be written as a broader pattern without losing enforcement?
 5. Could this wording mislead another domain or platform?
 6. Does an existing rule already cover it?
@@ -41,7 +41,7 @@ Before promoting feedback or learning items into living context, answer these ch
 Classify feedback before editing:
 - `one-off`: Only affects the current task.
 - `project-specific`: Appends to project-local context.
-- `5fedu-common`: Appends to 5fedu living rule/template.
+- `profile-common`: Appends to organization profile living rule/template.
 - `global-agent-rule`: Appends to `rules/**` or a shared capability.
 - `raw-evidence`: Chat/log/example kept for traceability (put under archive/backlog).
 - `question`: Missing owner/spec decision (put under `open-questions.md`).

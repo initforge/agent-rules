@@ -1,4 +1,4 @@
-param([switch]$Apply, [ValidateSet("codex","gemini","all")][string]$Platform = "codex")
+param([switch]$Apply, [ValidateSet("codex","antigravity","all")][string]$Platform = "codex")
 $ErrorActionPreference = "Stop"
 $Args = @("-y", "github:JuliusBrussee/caveman", "--", "--minimal")
 if ($Platform -ne "all") { $Args += @("--only", $Platform) }

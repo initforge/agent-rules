@@ -20,13 +20,13 @@ that the installed policy hash matches canonical source, not that a host selecte
 | `01-build-runtime.ps1` | Build `05-generated/runtime-build/`, including model policy, native definitions, portable `workctl` bundle, and SHA-256 manifest |
 | `build-context-graph.ps1` | Generate progressive context graph from canonical rules, skills, projects, platforms and integrations |
 | `context-graph.schema.json` | Contract for graph nodes, routing metadata, ownership and source hashes |
-| `02-install-runtime.ps1` | Cài vào ~/.codex, ~/.grok, ~/.gemini/config, ~/.cursor + doctor; hỗ trợ `AGENT_RULES_SKIP_RUNTIME_HOOKS=1`, `AGENT_RULES_SKIP_INTEGRATION_INSTALL=1` và `AGENT_RULES_SKIP_INTEGRATION_VERIFY=1` cho cập nhật cục bộ/parity nhanh |
+| `02-install-runtime.ps1` | Cài vào ~/.codex, ~/.grok, ~/.gemini/config (Antigravity), ~/.cursor + doctor; hỗ trợ `AGENT_RULES_SKIP_RUNTIME_HOOKS=1`, `AGENT_RULES_SKIP_INTEGRATION_INSTALL=1` và `AGENT_RULES_SKIP_INTEGRATION_VERIFY=1` cho cập nhật cục bộ/parity nhanh |
 | `03-validate-context.ps1` | Layout, budget, mojibake, **route conformance**, trigger audit and maturity checks |
 | `04-verify-mirrors.ps1` | Parity skills/rules giữa platforms |
 | `05-verify-runtime-state.ps1` | Manifest + integration state đã cài |
 | `06-export-runtime-state.ps1` | JSON trạng thái runtime (debug) |
 | `07-import-reviewed-changes.ps1` | Import ngược + tombstone (`.agent/tombstones/`) |
-| `08-install-5fedu-context.ps1` | Cài `context/5fedu/` — `-Profile tah-app|nostime`, `-UpdatePointersOnly`, `-Force` |
+| `08-install-5fedu-context.ps1` | [profile] Cài `context/5fedu/` — `-Profile tah-app|nostime`, `-UpdatePointersOnly`, `-Force` (xem `profiles/5fedu/automation/`) |
 | `09-doctor.ps1` | Post-install health (sha256, integrations, MCP); thêm `-SkipIntegrationVerify` khi chỉ cần kiểm tra cấu trúc/runtime parity mà không gọi probe mạng |
 | `10-audit-harness-health.ps1` | Full harness health audit (manual; findings by category) |
 | `audit-plan-artifact.ps1` | Executable-plan contract, adaptive routing and optional `-PlanPath` checks |
@@ -52,9 +52,11 @@ that the installed policy hash matches canonical source, not that a host selecte
 | `trigger-audit.json` | Trigger recall fixtures (dùng bởi 03; không phải runtime router) |
 | `audit-ui-routing.ps1` | Audit routing 5fedu UI parity vs frontend-architect |
 | `audit-context-pre-commit.sh` | Git pre-commit: audit staged context/harness (oversize, dead path, dead @import). WARN default; `CONTEXT_AUDIT_STRICT=1` block |
+| `validate-doc-drift.py` | Detect drift between documentation and canonical sources (registry, manifests, schemas). Run after `generate-doc-references.py` |
 | `install-pre-commit-hook.sh` | Cài pre-commit vào repo hiện tại, path chỉ định, hoặc `--global` (core.hooksPath) |
 | `11-install-runtime-hooks.sh` | Cài Codex/Antigravity/Grok/Cursor hooks + pre-commit; hook chỉ route/nhắc/ghi native receipt và fail-open |
 | `13-cutover-context-routing.ps1` | Bật strict graph routing sau conformance; ghi graph + contract hashes vào `skill-state/routing-mode.json` |
+| `generate-doc-references.py` | Generate volatile reference docs (`05-generated/references/`) từ canonical registry, manifests, schemas, platform runtime.yaml |
 
 ## Linux / macOS
 

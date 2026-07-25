@@ -1,4 +1,4 @@
-﻿param(
+param(
   [string]$Root = (Split-Path -Parent $PSScriptRoot),
   [string]$DebugLog = (Join-Path $Root ".cursor/debug-d2ae37.log"),
   [string]$RunId = "audit-pre"
@@ -91,7 +91,7 @@ if (Test-Path $PlanAudit) {
 }
 
 # H2: keyword gap ui-delivery
-$UiPath = Join-Path $Root "projects\5fedu\domains\ui-delivery.md"
+$UiPath = Join-Path $Root "profiles\5fedu\projects\domains\ui-delivery.md"
 if (Test-Path $UiPath) {
   $UiBody = (Get-Content -Raw -Encoding UTF8 $UiPath).ToLowerInvariant()
   $HasSuaModule = $UiBody -like "*sửa module*"
@@ -102,8 +102,8 @@ if (Test-Path $UiPath) {
 }
 
 # H1: skill references checklist in module-mapping
-$SkillPath = Join-Path $Root "skills\5fedu-module-parity\SKILL.md"
-$MapPath = Join-Path $Root "projects\5fedu\domains\module-mapping.md"
+$SkillPath = Join-Path $Root "profiles\5fedu\skills\5fedu-module-parity\SKILL.md"
+$MapPath = Join-Path $Root "profiles\5fedu\projects\domains\module-mapping.md"
 if ((Test-Path $SkillPath) -and (Test-Path $MapPath)) {
   $Skill = Get-Content -Raw -Encoding UTF8 $SkillPath
   $Map = Get-Content -Raw -Encoding UTF8 $MapPath
@@ -119,7 +119,7 @@ if ((Test-Path $SkillPath) -and (Test-Path $MapPath)) {
 }
 
 # H3: known-5fedu-repos stale layout claim
-$KnownPath = Join-Path $Root "projects\known-5fedu-repos.md"
+$KnownPath = Join-Path $Root "profiles\5fedu\known-repos.md"
 $TahDomains = Test-Path "/home/linhnxdeveloper/Projects/Tah-app/context/5fedu/domains"
 $KnownBody = if (Test-Path $KnownPath) { Get-Content -Raw -Encoding UTF8 $KnownPath } else { "" }
 $ClaimsLegacy = $KnownBody -like "*layout context cũ*"
@@ -170,7 +170,7 @@ if (($ParitySkill + $UiLen + $MapLen) -gt 12000 -and -not $SingleOwnerRouting) {
 }
 
 # H6: project-local in canonical template
-$PlPath = Join-Path $Root "projects\5fedu\project-local"
+$PlPath = Join-Path $Root "profiles\5fedu\projects\project-local"
 $PlFiles = if (Test-Path $PlPath) {
   @(Get-ChildItem $PlPath -File | Where-Object { $_.Name -ne "README.md" })
 } else { @() }
@@ -180,7 +180,7 @@ if ($PlFiles.Count -gt 0) {
 }
 
 # H7: legacy references in evidence
-$CoveragePath = Join-Path $Root "projects\5fedu\evidence\coverage-audit.md"
+$CoveragePath = Join-Path $Root "profiles\5fedu\projects\evidence\coverage-audit.md"
 if (Test-Path $CoveragePath) {
   $Cov = Get-Content -Raw -Encoding UTF8 $CoveragePath
   $Refs00Index = ([regex]::Matches($Cov, "00-index\.md")).Count

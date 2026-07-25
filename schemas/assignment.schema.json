@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/assignment.schema.json",
+  "title": "Portable Assignment Capsule",
+  "description": "A delegation capsule sent to a sub-agent. Contains only the facts needed to implement and prove a slice. Platform-neutral; references capability classes rather than provider model IDs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "version", "id", "slice_id", "mission", "source_ids",
+    "acceptance_ids", "capability_class", "allowed_tool_classes"
+  ],
+  "properties": {
+    "schema": { "const": "artifact/assignment" },
+    "version": { "const": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "slice_id": { "type": "string", "minLength": 1 },
+    "mission": { "type": "string", "minLength": 1 },
+    "source_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "acceptance_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "capability_class": {
+      "type": "string",
+      "enum": ["economy", "standard", "expert", "unassigned"]
+    },
+    "write_paths": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string" }
+    },
+    "context_paths": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string" }
+    },
+    "forbidden_paths": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string" }
+    },
+    "allowed_tool_classes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": ["read", "edit", "test", "shell", "browser", "network", "git", "external-write"]
+      }
+    },
+    "receipt_budget": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    },
+    "ack_status": {
+      "type": "string",
+      "enum": ["pending", "acknowledged", "recovery-signal", "unacknowledgeable"]
+    },
+    "actor_session": { "type": "string" },
+    "capsule_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

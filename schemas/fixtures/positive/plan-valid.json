@@ -1,0 +1,54 @@
+{
+  "schema": "artifact/plan",
+  "version": 1,
+  "level": "small",
+  "meta": {
+    "id": "plan-20260725-001",
+    "created_at": "2026-07-25T08:00:00Z",
+    "updated_at": "2026-07-25T08:30:00Z",
+    "source_refs": ["USR-001"]
+  },
+  "intent": {
+    "outcome": "Portable schemas are defined for all artifact types",
+    "risk_classification": "low",
+    "in_scope": ["schema definitions", "positive fixtures", "validation tests"],
+    "non_goals": ["runtime changes", "installer changes"],
+    "scope_lock": {
+      "allowed_systems": ["agent-rules repository"],
+      "owner_decisions": [{"id": "DEC-001", "statement": "Use schemas/ top-level directory"}]
+    }
+  },
+  "acceptance": [
+    {
+      "id": "AC1",
+      "claim": "Every schema has an explicit version",
+      "proof_profile": "static-change",
+      "required_dimensions": ["outcome"],
+      "required_kinds": ["static"]
+    },
+    {
+      "id": "AC2",
+      "claim": "Positive fixtures validate against their schema",
+      "proof_profile": "static-change",
+      "required_dimensions": ["outcome"],
+      "required_kinds": ["unit"]
+    }
+  ],
+  "execution_contract": {
+    "mode": "automatic",
+    "shape": "medium",
+    "ledger": "off",
+    "strategy": "delegated",
+    "max_agents": 3,
+    "max_depth": 1,
+    "effort_cap": "medium",
+    "authorized_final_actions": ["edit", "commit"]
+  },
+  "risks": [
+    {
+      "risk": "Schema conflicts with existing work-ledger schema",
+      "early_signal": "validation failure",
+      "prevention": "Review work-ledger.schema.json before designing"
+    }
+  ]
+}

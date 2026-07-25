@@ -40,8 +40,11 @@ Test-Contract "rules\25-task-lifecycle.md" @(
   "large",
   "resumable",
   "not a file-count",
-  "zero main-agent domain work",
-  "separately from orchestration"
+  "Assign clear roles",
+  "Coordinator",
+  "Architect/integrator",
+  "Delegate when it adds value",
+  "separately from"
 )
 Test-Contract "skills\plan-and-handoff\references\adaptive-work-protocol.md" @(
   "Automatic execution",
@@ -54,7 +57,8 @@ Test-Contract "skills\plan-and-handoff\references\adaptive-work-protocol.md" @(
   "pending",
   "acknowledged",
   "recovery",
-  "control-plane exception",
+  "Coordinator",
+  "Architect/integrator",
   "semantic budgets",
   "Independent review is mandatory",
   "Inspect only evidence"
@@ -62,10 +66,11 @@ Test-Contract "skills\plan-and-handoff\references\adaptive-work-protocol.md" @(
 Test-Contract "skills\finish-to-completion\SKILL.md" @(
   "execute pivot",
   "dependency-ready",
-  "main agent",
+  "coordinator",
+  "architect/integrator",
   "PARTIAL",
   "BLOCKED",
-  "zero main-agent domain work",
+  "Delegate based on the five conditions",
   'orchestration `UNAVAILABLE`',
   "assignment acknowledgment"
 )

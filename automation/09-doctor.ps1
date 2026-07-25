@@ -1,7 +1,8 @@
-﻿param(
+param(
   [string]$Root = (Split-Path -Parent $PSScriptRoot),
   [ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platform = "all",
-  [switch]$SkipIntegrationVerify
+  [switch]$SkipIntegrationVerify,
+  [switch]$IncludeOpenCode
 )
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "path-compat.ps1")
@@ -13,13 +14,16 @@ $PlatformHomes = @{
   antigravity = Join-Path $UserHome ".gemini\config"
   cursor = Join-Path $UserHome ".cursor"
 }
+$PlatformHomes["opencode"] = Join-Path $UserHome ".config\opencode"
+$McpConfigPaths["opencode"] = Join-Path $PlatformHomes["opencode"] "opencode.json"
 $McpConfigPaths = @{
   codex = Join-Path $PlatformHomes["codex"] "config.toml"
   grok = Join-Path $PlatformHomes["grok"] "mcp.json"
   antigravity = Join-Path $PlatformHomes["antigravity"] "mcp_config.json"
   cursor = Join-Path $PlatformHomes["cursor"] "mcp.json"
 }
-$Selected = if ($Platform -eq "all") { @("codex", "grok", "antigravity", "cursor") } else { @($Platform) }
+$McpConfigPaths["opencode"] = Join-Path $PlatformHomes["opencode"] "opencode.json"
+$Selected = if ($Platform -eq "all") { @("codex", "grok", "antigravity", "cursor", "opencode") } else { @($Platform) }
 
 $Report = @()
 $RegistryPath = Join-Path $Root "integrations\registry.json"
@@ -86,7 +90,7 @@ foreach ($Name in $Selected) {
   }
   $NativeCli = switch ($Name) { "codex" { "codex" }; "cursor" { "cursor" }; "grok" { "grok" }; "antigravity" { "gemini" } }
   $Cli = Get-Command $NativeCli -ErrorAction SilentlyContinue
-  $NativeDetail = if ($Cli) { "$NativeCli CLI is available, but no trusted host-activation receipt exists" } else { "$NativeCli CLI is unavailable; host activation is unobserved" }
+  $NativeDetail = if ($Cli) { "$NativeCli binary is available, but no trusted host-activation receipt exists" } else { "$NativeCli binary is unavailable; Antigravity host activation is unobserved" }
   $Report += [pscustomobject]@{ platform = $Name; check = "native-activation"; status = "NATIVE_UNVERIFIED"; detail = $NativeDetail }
   $ToolsPath = Join-Path $RuntimeHome "agent-rules-tools"
   $ToolFiles = @("workctl.py", "workctl.ps1", "workctl.sh", "work-ledger.schema.json")
@@ -303,18 +307,22 @@ foreach ($Name in $Selected) {
   if ($Registry -and -not $SkipIntegrationVerify) {
     foreach ($Integration in $Registry.integrations) {
       if ($Integration.policy -eq "optional") { continue }
-      $VerifyScript = Join-Path (Join-Path $Root $Integration.path) "verify.ps1"
+      if ($null -ne $Integration.PSObject.Properties["install"]) {
+        $VerifyScript = Join-Path $Root ($Integration.install.verify)
+      } else {
+        $VerifyScript = Join-Path (Join-Path $Root $Integration.path) "verify.ps1"
+      }
       if (-not (Test-Path $VerifyScript)) {
         $Status = if ($Integration.policy -eq "required") { "MISSING" } else { "WARN" }
-        $Report += [pscustomobject]@{ platform = $Name; check = $Integration.name; status = $Status; detail = "no verify.ps1" }
+        $Report += [pscustomobject]@{ platform = $Name; check = $Integration.id; status = $Status; detail = "no verify.ps1" }
         continue
       }
       try {
         & $VerifyScript | Out-Null
-        $Report += [pscustomobject]@{ platform = $Name; check = $Integration.name; status = "OK"; detail = "verify pass" }
+        $Report += [pscustomobject]@{ platform = $Name; check = $Integration.id; status = "OK"; detail = "verify pass" }
       } catch {
         $Status = if ($Integration.policy -eq "required") { "NOT_LIVE" } else { "WARN" }
-        $Report += [pscustomobject]@{ platform = $Name; check = $Integration.name; status = $Status; detail = $_.Exception.Message }
+        $Report += [pscustomobject]@{ platform = $Name; check = $Integration.id; status = $Status; detail = $_.Exception.Message }
       }
     }
   }
@@ -393,6 +401,59 @@ if (Test-Path $GrokInject) {
   }
 }
 
+# --- OpenCode-specific doctor (independent adapter, not in main install pipeline) ---
+if ($IncludeOpenCode) {
+  $OpenCodeHome = $PlatformHomes["opencode"]
+  $OpenCodeOwned = Join-Path $OpenCodeHome "agent-rules-owned.json"
+  $OpenCodeAgents = Join-Path $OpenCodeHome "agents"
+  if (Test-Path -LiteralPath $OpenCodeOwned) {
+    $Report += [pscustomobject]@{ platform = "opencode"; check = "ownership-manifest"; status = "OK"; detail = "found at $OpenCodeOwned" }
+    try {
+      $Owned = Get-Content -Raw -LiteralPath $OpenCodeOwned | ConvertFrom-Json
+      $OwnedCount = @($Owned).Count
+      $Report += [pscustomobject]@{ platform = "opencode"; check = "owned-files"; status = "OK"; detail = "$OwnedCount entries" }
+    } catch {
+      $Report += [pscustomobject]@{ platform = "opencode"; check = "owned-files"; status = "NOT_LIVE"; detail = "unparseable manifest" }
+    }
+  } else {
+    $Report += [pscustomobject]@{ platform = "opencode"; check = "ownership-manifest"; status = "NOT_LIVE"; detail = "adapter not installed; run platforms/opencode/scripts/install-adapter.ps1" }
+  }
+  $InitForgeAgents = @()
+  if (Test-Path -LiteralPath $OpenCodeAgents) {
+    $InitForgeAgents = @(Get-ChildItem -LiteralPath $OpenCodeAgents -File -Filter "initforge-*.md" | ForEach-Object { $_.Name })
+    $UserNative = @(Get-ChildItem -LiteralPath $OpenCodeAgents -File -Filter "*.md" | Where-Object { $_.Name -notlike "initforge-*" -and $_.Name -ne "README.md" } | ForEach-Object { $_.Name })
+    if ($InitForgeAgents.Count -ge 4) {
+      $Report += [pscustomobject]@{ platform = "opencode"; check = "agents"; status = "INSTALL_PASS"; detail = "$($InitForgeAgents.Count) initforge agent(s)" }
+    } else {
+      $Report += [pscustomobject]@{ platform = "opencode"; check = "agents"; status = "PARTIAL"; detail = "only $($InitForgeAgents.Count) initforge agent(s)" }
+    }
+    if ($UserNative.Count -gt 0) {
+      $Report += [pscustomobject]@{ platform = "opencode"; check = "user-native-agents"; status = "PRESERVED"; detail = "$($UserNative.Count) user-native agent(s)" }
+    }
+  }
+  $NativeCli = Get-Command "opencode" -ErrorAction SilentlyContinue
+  $Report += [pscustomobject]@{ platform = "opencode"; check = "native-activation"; status = $(if ($NativeCli) { "NATIVE_UNVERIFIED" } else { "NATIVE_UNVERIFIED" }); detail = $(if ($NativeCli) { "opencode CLI is available; no trusted host-activation receipt exists" } else { "opencode CLI is unavailable; host activation is unobserved" }) }
+  $OpenCodeProbe = Join-Path $Root "platforms\opencode\scripts\adapter-probe.py"
+  if (Test-Path -LiteralPath $OpenCodeProbe) {
+    $PythonCmd = $env:AGENT_RULES_PYTHON
+    if (-not $PythonCmd) { $PythonCmd = $env:HARNESS_PYTHON }
+    if (-not $PythonCmd) {
+      foreach ($Candidate in @("python", "python3")) {
+        $Resolved = Get-Command $Candidate -ErrorAction SilentlyContinue
+        if ($Resolved) { $PythonCmd = $Resolved.Source; break }
+      }
+    }
+    if ($PythonCmd) {
+      $ProbeOut = & $PythonCmd $OpenCodeProbe --opencode-home $OpenCodeHome 2>&1 | Out-String
+      if ($LASTEXITCODE -eq 0) {
+        $Report += [pscustomobject]@{ platform = "opencode"; check = "adapter-probe"; status = "ADAPTER_PASS"; detail = "probes passed" }
+      } else {
+        $Report += [pscustomobject]@{ platform = "opencode"; check = "adapter-probe"; status = "ADAPTER_FAIL"; detail = ($ProbeOut -split "`n")[-1].Trim() }
+      }
+    }
+  }
+}
+
 if ($env:AGENT_RULES_SKIP_RUNTIME_HOOKS -eq "1") {
   foreach ($HookResult in @($Report | Where-Object { $_.check -like "hook*" -or $_.check -eq "hooks-feature" })) {
     $HookResult.status = "HOOK_UNVERIFIED"
@@ -410,3 +471,4 @@ $NativeObserved = @($Report | Where-Object status -eq "NATIVE_OBSERVED").Count
 $NativeUnverified = @($Report | Where-Object status -eq "NATIVE_UNVERIFIED").Count
 $OrchestrationObserved = @($Report | Where-Object status -eq "ORCHESTRATION_OBSERVED").Count
 Write-Host "Doctor layered summary: install/parity checks have no blocking failures; native observed=$NativeObserved, native unverified=$NativeUnverified, orchestration observed=$OrchestrationObserved. Capability is not native execution evidence."
+Write-Host "See guides/06-platform-capability.md for the full capability matrix with requested/resolved/observed probe fields."

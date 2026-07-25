@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/evaluation-result.schema.json",
+  "title": "Multidimensional evaluation result. No single composite score is the primary verdict.",
+  "type": "object",
+  "required": ["schema_version", "eval_id", "variant", "case_id", "dimensions", "outcome", "ts"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "eval_id": { "type": "string", "minLength": 1 },
+    "case_id": { "type": "string", "minLength": 1 },
+    "variant": { "enum": ["no-harness", "baseline", "core", "full", "full-minus-one", "ablation", "native", "custom"] },
+    "variant_label": { "type": "string", "description": "Human-readable variant label" },
+    "repository_sha": { "type": "string", "minLength": 1, "description": "Fixed repository revision for controlled comparison" },
+    "task": { "type": "string", "minLength": 1 },
+    "task_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "environment": { "type": "string", "description": "Environment fingerprint" },
+    "tools_available": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "budget": { "type": ["string", "null"], "description": "e.g. '100-turns', '10-minutes'" },
+    "time_limit_seconds": { "type": ["integer", "null"], "minimum": 0 },
+    "model_snapshot": { "type": ["string", "null"], "description": "Observed model snapshot where available" },
+    "dimensions": {
+      "type": "object",
+      "description": "Multidimensional results. Never collapsed into a single score.",
+      "properties": {
+        "completion": {
+          "type": "object",
+          "properties": {
+            "value": { "enum": ["complete", "partial", "blocked", "failed", "not_run", "pass"] },
+            "evidence": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "requirement_coverage": {
+          "type": "object",
+          "properties": {
+            "value": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+            "covered": { "type": "integer", "minimum": 0 },
+            "total": { "type": "integer", "minimum": 0 },
+            "evidence": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "false_pass_rate": {
+          "type": "object",
+          "properties": {
+            "value": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+            "count": { "type": "integer", "minimum": 0 },
+            "total": { "type": "integer", "minimum": 0 },
+            "evidence": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "owner_correction_rate": {
+          "type": "object",
+          "properties": {
+            "value": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+            "corrected": { "type": "integer", "minimum": 0 },
+            "total": { "type": "integer", "minimum": 0 },
+            "evidence": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "escaped_regression": {
+          "type": "object",
+          "properties": {
+            "value": { "type": ["integer", "null"], "minimum": 0 },
+            "evidence": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "evidence_completeness": {
+          "type": "object",
+          "properties": {
+            "value": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+            "evidence": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "rework_loops": {
+          "type": "object",
+          "properties": {
+            "value": { "type": ["integer", "null"], "minimum": 0 },
+            "evidence": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "wall_time_seconds": {
+          "type": "object",
+          "properties": {
+            "value": { "type": ["number", "null"], "minimum": 0 },
+            "evidence": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "input_tokens": {
+          "type": "object",
+          "properties": {
+            "total": { "type": ["integer", "null"], "minimum": 0 },
+            "cached": { "type": ["integer", "null"], "minimum": 0 },
+            "uncached": { "type": ["integer", "null"], "minimum": 0 },
+            "evidence": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "output_tokens": {
+          "type": "object",
+          "properties": {
+            "total": { "type": ["integer", "null"], "minimum": 0 },
+            "reasoning": { "type": ["integer", "null"], "minimum": 0 },
+            "evidence": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "subagent_input_tokens": {
+          "type": "object",
+          "properties": {
+            "total": { "type": ["integer", "null"], "minimum": 0 },
+            "cached": { "type": ["integer", "null"], "minimum": 0 },
+            "evidence": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "subagent_output_tokens": {
+          "type": "object",
+          "properties": {
+            "total": { "type": ["integer", "null"], "minimum": 0 },
+            "reasoning": { "type": ["integer", "null"], "minimum": 0 },
+            "evidence": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "tool_calls": {
+          "type": "object",
+          "properties": {
+            "total": { "type": "integer", "minimum": 0 },
+            "failures": { "type": "integer", "minimum": 0 },
+            "retries": { "type": "integer", "minimum": 0 },
+            "evidence": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "context_sources": {
+          "type": "object",
+          "properties": {
+            "count": { "type": "integer", "minimum": 0 },
+            "estimated_size": { "type": ["integer", "null"], "minimum": 0 },
+            "sources": { "type": "array", "items": { "type": "string" } },
+            "evidence": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "subagent_lifecycle": {
+          "type": "object",
+          "properties": {
+            "spawned": { "type": "integer", "minimum": 0 },
+            "handoffs": { "type": "integer", "minimum": 0 },
+            "evidence": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "verification": {
+          "type": "object",
+          "properties": {
+            "tests_executed": { "type": ["integer", "null"], "minimum": 0 },
+            "tests_passed": { "type": ["integer", "null"], "minimum": 0 },
+            "tests_failed": { "type": ["integer", "null"], "minimum": 0 },
+            "evidence": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "changed_files": {
+          "type": "object",
+          "properties": {
+            "files": { "type": "integer", "minimum": 0 },
+            "lines": { "type": "integer", "minimum": 0 },
+            "evidence": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "acceptance": {
+          "type": "object",
+          "properties": {
+            "value": { "enum": ["accepted", "rejected", "pending", "unknown"] },
+            "evidence": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": true
+    },
+    "outcome": { "enum": ["PASS", "PARTIAL", "BLOCKED", "FAIL", "NOT_RUN"] },
+    "evidence_kind": { "enum": ["empirical", "synthetic"] },
+    "capability_receipt": {
+      "type": "object",
+      "description": "Verifiable capability receipt for native evaluations. Synthetic runs must omit this.",
+      "properties": {
+        "receipt_id": { "type": "string" },
+        "case_id": { "type": "string" },
+        "claim_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "observed_model": { "type": "string" },
+        "observed_effort": { "type": "string" },
+        "outcome": { "type": "string" },
+        "platform": { "type": "string" },
+        "captured_at": { "type": "string", "format": "date-time" },
+        "verifier": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "ts": { "type": "string", "format": "date-time" },
+    "duration_seconds": { "type": ["number", "null"], "minimum": 0 },
+    "notes": { "type": "string" }
+  },
+  "additionalProperties": false
+}

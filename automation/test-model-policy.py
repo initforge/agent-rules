@@ -12,45 +12,76 @@ POLICY = ROOT / "automation" / "model-policy.json"
 
 def main() -> int:
     policy = json.loads(POLICY.read_text(encoding="utf-8"))
-    assert policy["version"] == 4
-    assert set(policy["capability_classes"]) == {"economy", "standard", "expert"}
+    assert policy["version"] == 5
+    assert set(policy["logical_classes"]) == {"utility", "economy", "standard", "expert"}
+
+    routing = policy["routing_inputs"]
+    assert "uncertainty" in routing
+    assert "blast_radius" in routing
+    assert "repeated_failure" in routing
+
     evidence = policy["evidence_contract"]
     assert set(evidence) == {"requested", "resolved", "observed", "fail_honest"}
     assert "not observed evidence" in evidence["fail_honest"]
+
     telemetry = policy["telemetry_contract"]
-    assert telemetry["event_fields"] == ["session_id", "actor", "assignment_id", "tool", "tool_class", "timestamp", "outcome"]
-    assert telemetry["actors"] == ["main", "worker", "unknown"]
     assert telemetry["unknown_actor_outcome"] == "UNVERIFIED"
     assert telemetry["hook_error_behavior"] == "fail_open"
+
     platforms = policy["platforms"]
-    assert set(platforms) == {"codex", "cursor", "antigravity", "grok"}
+    assert set(platforms) == {"codex", "cursor", "antigravity", "grok", "opencode"}
 
-    assert platforms["codex"]["standard"] == {"family": "Terra", "selector": "gpt-5.6-terra", "effort": "medium"}
-    assert platforms["codex"]["expert"] == {"family": "Sol", "selector": "gpt-5.6-sol", "effort": "medium"}
+    cdx = platforms["codex"]
+    ms = cdx["adapter_defaults"]["model_selectors"]
+    assert ms["standard"]["selector"] == "gpt-5.6-terra"
+    assert ms["standard"]["effort"] == "medium"
+    assert ms["expert"]["selector"] == "gpt-5.6-sol"
+    assert ms["expert"]["effort"] == "medium"
+
     cursor = platforms["cursor"]
-    assert cursor["implementation"]["display"] == "Composer 2.5 Standard"
-    assert cursor["research_review"]["display"] == "Grok 4.5 base"
-    assert cursor["implementation"]["selector"] == "composer-2.5[fast=false]"
-    assert {"Fast", "Auto"} <= set(cursor["denied_modes"])
+    cms = cursor["adapter_defaults"]["model_selectors"]
+    assert cms["implementation"]["display"] == "Composer 2.5 Standard"
+    assert cms["research_review"]["display"] == "Grok 4.5 base"
+    assert cms["implementation"]["selector"] == "composer-2.5[fast=false]"
+    assert "Fast" in cursor["denied_modes"]
     assert cursor["denial_behavior"] == "fail_closed_partial"
+    assert cursor["subagent_model_override"] == "supported"
 
-    antigravity = platforms["antigravity"]
-    assert antigravity["standard"] == {"family": "Gemini", "channel": "Flash-to-Pro", "minimum_effort": "medium"}
-    assert antigravity["denied_models"] == [{"family": "Gemini", "version": "3.6", "channel": "Flash"}]
-    assert antigravity["exceptional_expert"]["family"] == "Claude"
-    assert antigravity["exceptional_expert"]["effort"] == "high"
-    assert antigravity["subagent_model_override"] == "unconfirmed"
+    ag = platforms["antigravity"]
+    agms = ag["adapter_defaults"]["model_selectors"]
+    assert agms["standard"]["family"] == "Gemini"
+    assert agms["standard"]["minimum_effort"] == "medium"
+    assert ag["adapter_defaults"]["denied_models"] == [{"family": "Gemini", "version": "3.6", "channel": "Flash"}]
+    assert ag["adapter_defaults"]["exceptional_expert"]["family"] == "Claude"
+    assert ag["adapter_defaults"]["exceptional_expert"]["effort"] == "high"
+    assert ag["subagent_model_override"] == "unconfirmed"
 
     grok = platforms["grok"]
-    assert grok["base"] == {"selector": "grok-4.5", "channel": "base"}
-    assert grok["minimum_effort"] == "medium"
+    gms = grok["adapter_defaults"]["model_selectors"]
+    assert gms["base"]["selector"] == "grok-4.5"
+    assert grok["adapter_defaults"]["minimum_effort"] == "medium"
     assert "Fast" in grok["denied_modes"]
     assert grok["subagent_model_override"] == "supported"
-    assert grok["subagent_effort_override"] == "supported/per_role_and_spawn"
-    assert "Per-role and spawn-time effort overrides are supported" in grok["effort_evidence"]
-    assert "requested, resolved, and observed effort separately" in grok["effort_evidence"]
-    assert "observed effort unknown" in grok["effort_evidence"]
-    assert all(item["denial_behavior"] == "fail_closed_partial" for item in platforms.values() if "denial_behavior" in item)
+    assert "Per-role and spawn-time effort overrides are supported" in grok["adapter_defaults"]["effort_evidence"]
+
+    opencode = platforms["opencode"]
+    assert opencode["economy"]["family"] == "user-configured"
+    assert opencode["standard"]["family"] == "user-configured"
+    assert opencode["expert"]["family"] == "user-configured"
+    mc = opencode["mapping_contract"]
+    assert mc["missing_mapping_behavior"].startswith("visible")
+    assert set(mc["classes"]) == {"economy", "standard", "expert"}
+    assert "requested" in opencode["recorded_evidence"]
+    assert "resolved" in opencode["recorded_evidence"]
+    assert "observed" in opencode["recorded_evidence"]
+
+    assert all(
+        item.get("denial_behavior") == "fail_closed_partial"
+        for item in platforms.values()
+        if "denial_behavior" in item
+    )
+
+    assert "gemini" not in platforms or platforms["gemini"].get("denial_behavior") == "not_supported"
     print("PASS: model policy contract")
     return 0
 

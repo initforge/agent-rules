@@ -1,0 +1,87 @@
+# visual-contract.yaml — Example: Nhập hàng visual specification
+# A non-vision worker MUST receive this before implementing.
+surfaces:
+  - surface_key: crud-list
+    shell_must:
+      - "tab/page shell fills available module viewport"
+      - "Back button, then search/filter chips/reset on the left"
+      - "column manager, import, export, add button on the right"
+      - "GenericTable and TablePaginationFooter"
+      - "column presets and truncation match Nhân viên reference"
+      - "filter chips: Tất cả, Hôm nay, Tuần này, Tháng này, Khoảng ngày"
+    variables:
+      - slot: filter choices
+        source: spec
+        value_or_reference: "Tất cả, Hôm nay, Tuần này, Tháng này, Khoảng ngày"
+      - slot: columns
+        source: supabase_table phieu_nhap
+        value_or_reference: "Ngày nhập, Nhà cung cấp, Tổng tiền, Trạng thái, Ghi chú"
+      - slot: row-action set
+        source: spec
+        value_or_reference: "Sửa, Xem chi tiết, Duyệt, In phiếu, Xóa"
+      - slot: export map
+        source: spec
+        value_or_reference: "columns as listed + Tổng tiền định dạng #,##0"
+    alignment_notes:
+      - "Tổng tiền column: right-aligned, numeric format #,##0"
+      - "Trạng thái column: centered badge with status colors (da duyet=green, cho duyet=yellow, da huy=red)"
+      - "Ngày nhập column: centered, dd/MM/yyyy format"
+    responsive_breakpoints:
+      - viewport: mobile
+        layout_change: "Toolbar becomes compact; table scrolls horizontally; filter chips collapsible"
+        safe_area: false
+      - viewport: desktop
+        layout_change: "Full toolbar and table width"
+  - surface_key: form-drawer
+    shell_must:
+      - "icon/title/subtitle header with Nhập hàng details"
+      - "sectioned FormSection and responsive FormGrid layout"
+      - "sticky Hủy / Thêm-or-Lưu footer"
+      - "section 1: Thông tin chung (Ngày nhập, Nhà cung cấp, Nhân viên)"
+      - "section 2: Chi tiết hàng hóa (embedded inline line-item editor)"
+    variables:
+      - slot: fields
+        source: supabase_table phieu_nhap
+        value_or_reference: "ngay_nhap (date), nha_cung_cap_id (relation picker), ghi_chu (textarea), nhan_vien_id (hidden/auto)"
+      - slot: section labels
+        source: spec
+        value_or_reference: "Thông tin chung, Chi tiết hàng hóa"
+    alignment_notes:
+      - "Relation picker for Nhà cung cấp uses the same NhaCungCap picker component"
+      - "Line item section uses EmbeddedChildDataGrid for phieu_nhap_chi_tiet rows"
+    responsive_breakpoints:
+      - viewport: mobile
+        layout_change: "Full-screen drawer with safe-area footer"
+        safe_area: true
+  - surface_key: detail-drawer
+    shell_must:
+      - "icon/title/subtitle header with phiếu nhập identifier"
+      - "hero summary: Ngày nhập, Nhà cung cấp, Tổng tiền, Trạng thái badge"
+      - "sectioned detail cards"
+      - "DetailToolbar with permitted actions"
+      - "sticky Đóng / Sửa / Xóa footer"
+    variables:
+      - slot: summary fields
+        source: supabase_table phieu_nhap
+        value_or_reference: "ngay_nhap, nha_cung_cap ten, tong_tien, trang_thai"
+      - slot: detail sections
+        source: spec
+        value_or_reference: "Thông tin chung (card), Chi tiết hàng hóa (embedded child grid)"
+      - slot: permitted business actions
+        source: spec
+        value_or_reference: "Sửa, Duyệt, In phiếu, Xóa"
+    alignment_notes:
+      - "Trạng thái uses colored badge same as list"
+      - "Tổng tiền formatted #,##0 VNĐ"
+    responsive_breakpoints:
+      - viewport: mobile
+        layout_change: "Full-screen drawer with safe-area footer"
+        safe_area: true
+  - surface_key: stats-tab
+    shell_must:
+      - "same tab/page shell as list"
+      - "Back, date range, filter chips, KPI grid, stats grid"
+    variables:
+      - slot: metric keys
+        source: spec
+        value_or_reference: "Tổng phiếu nhập, Tổng tiền, Trung bình/phiếu, NCC nhiều nhất"

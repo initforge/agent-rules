@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/telemetry.schema.json",
+  "title": "Telemetry event aligned with OpenTelemetry GenAI semantic conventions",
+  "description": "Captures platform, model, effort, tool, context, subagent, and outcome dimensions. Unobservable fields remain null, never fabricated.",
+  "type": "object",
+  "required": ["schema_version", "event_id", "event_type", "platform", "host_version", "model", "effort", "role", "task", "repository_revision", "outcome", "ts"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "event_id": { "type": "string", "pattern": "^[a-f0-9]{64}$", "description": "SHA-256 of the event payload for deduplication" },
+    "event_type": { "enum": ["session.start", "session.end", "turn.start", "turn.end", "delegation.start", "delegation.end", "tool.invocation", "tool.result", "context.load", "verification.start", "verification.end", "error"] },
+    "gen_ai": {
+      "type": "object",
+      "description": "OpenTelemetry GenAI attributes",
+      "properties": {
+        "system": { "type": "string", "description": "e.g. 'codex', 'cursor', 'antigravity', 'grok'" },
+        "request.model": { "type": ["string", "null"], "description": "Model requested by the agent or owner" },
+        "response.model": { "type": ["string", "null"], "description": "Model resolved by the host or adapter" },
+        "observed.model": { "type": ["string", "null"], "description": "Independently attested model (null if unobservable)" },
+        "request.max_tokens": { "type": ["integer", "null"], "minimum": 0 },
+        "usage.input_tokens": { "type": ["integer", "null"], "minimum": 0 },
+        "usage.output_tokens": { "type": ["integer", "null"], "minimum": 0 },
+        "usage.cached_input_tokens": { "type": ["integer", "null"], "minimum": 0 },
+        "usage.uncached_input_tokens": { "type": ["integer", "null"], "minimum": 0 },
+        "usage.reasoning_tokens": { "type": ["integer", "null"], "minimum": 0 }
+      },
+      "additionalProperties": true
+    },
+    "platform": { "type": "string", "minLength": 1 },
+    "host_version": { "type": "string", "minLength": 1 },
+    "model": { "type": "string", "minLength": 1, "description": "Requested model identifier" },
+    "model_resolved": { "type": ["string", "null"], "description": "Model selected by the host" },
+    "model_observed": { "type": ["string", "null"], "description": "Model confirmed via attestation" },
+    "effort": { "enum": ["low", "medium", "high", null] },
+    "role": { "enum": ["main", "researcher", "executor", "reviewer", "specialist", "worker", "unknown"] },
+    "task": { "type": "string", "minLength": 1 },
+    "task_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "repository_revision": { "type": "string", "minLength": 1, "description": "Git SHA or repository version at task start" },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "class"],
+        "properties": {
+          "name": { "type": "string" },
+          "class": { "enum": ["read", "edit", "test", "shell", "browser", "network", "git", "external-write"] },
+          "calls": { "type": "integer", "minimum": 0 },
+          "failures": { "type": "integer", "minimum": 0 },
+          "retries": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "context_sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "source": { "type": "string", "description": "e.g. 'rules/', 'skills/', 'projects/', 'automation/'" },
+          "estimated_tokens": { "type": ["integer", "null"], "minimum": 0 },
+          "loaded": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "context_estimated_size": { "type": ["integer", "null"], "minimum": 0, "description": "Total estimated context token size" },
+    "subagent": {
+      "type": "object",
+      "properties": {
+        "spawned": { "type": "integer", "minimum": 0 },
+        "handoffs": { "type": "integer", "minimum": 0 },
+        "input_tokens": { "type": ["integer", "null"], "minimum": 0 },
+        "cached_input_tokens": { "type": ["integer", "null"], "minimum": 0 },
+        "output_tokens": { "type": ["integer", "null"], "minimum": 0 },
+        "reasoning_tokens": { "type": ["integer", "null"], "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "outcome": { "enum": ["PASS", "PARTIAL", "BLOCKED", "FAIL", "NOT_RUN", "UNVERIFIED"] },
+    "verification": {
+      "type": "object",
+      "properties": {
+        "tests_executed": { "type": ["integer", "null"], "minimum": 0 },
+        "tests_passed": { "type": ["integer", "null"], "minimum": 0 },
+        "tests_failed": { "type": ["integer", "null"], "minimum": 0 },
+        "evidence_items": { "type": ["integer", "null"], "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "session_id": { "type": "string", "minLength": 1 },
+    "assignment_id": { "type": ["string", "null"] },
+    "ts": { "type": "string", "format": "date-time" },
+    "duration_ms": { "type": ["integer", "null"], "minimum": 0 },
+    "error": { "type": ["string", "null"], "description": "Error message if event_type is error" },
+    "attributes": {
+      "type": "object",
+      "description": "Additional custom attributes",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

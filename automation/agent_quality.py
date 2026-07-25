@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 import tempfile
 from collections import Counter, defaultdict
 from contextlib import contextmanager
@@ -131,6 +132,21 @@ def _fallback_validate(instance: Any, schema_name: str) -> None:
             "trace",
         )
         return
+    if schema_name == "telemetry.schema.json":
+        _require_keys(
+            instance,
+            {"schema_version", "event_id", "event_type", "platform", "host_version", "model", "effort",
+             "role", "task", "repository_revision", "outcome", "ts"},
+            "telemetry",
+        )
+        return
+    if schema_name == "evaluation-result.schema.json":
+        _require_keys(
+            instance,
+            {"schema_version", "eval_id", "variant", "case_id", "dimensions", "outcome", "ts"},
+            "evaluation-result",
+        )
+        return
     raise ContractError(f"no portable validator for {schema_name}")
 
 
@@ -170,7 +186,7 @@ def benchmark_workspace(case: dict[str, Any]) -> Iterator[Path]:
         return
     with tempfile.TemporaryDirectory(prefix="agent-quality-") as holder:
         root = Path(holder)
-        if workspace.get("has_5fedu_context"):
+        if workspace.get("has_5fedu_context") or (root / ".agent" / "profiles" / "5fedu.enabled").is_file():
             context = root / "context" / "5fedu"
             context.mkdir(parents=True)
             (context / "00-context-map.md").write_text("fixture", encoding="utf-8")
@@ -562,3 +578,72 @@ def write_jsonl(path: str | Path, records: Iterable[dict[str, Any]]) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     body = "".join(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n" for record in records)
     target.write_text(body, encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# New architecture: conformance, telemetry, evaluations, outcome
+# These delegate to the new sub-modules while keeping the original API intact.
+# ---------------------------------------------------------------------------
+
+def run_conformance(corpus_path: str | Path = DEFAULT_CORPUS) -> dict[str, Any]:
+    """Run all model-free conformance checks (PR CI safe)."""
+    from conformance.routing import run_all as conformance_run
+    return conformance_run(corpus_path)
+
+
+def validate_telemetry_record(record: dict[str, Any]) -> None:
+    """Validate a telemetry event against the telemetry schema."""
+    schema_path = BENCHMARK_DIR / "telemetry.schema.json"
+    validate_schema(record, schema_path)
+
+
+def evaluate_records(records: list[dict[str, Any]], corpus: dict[str, Any], fixed_sha: str = "unknown") -> list[dict[str, Any]]:
+    """Convert live records to multidimensional evaluation results."""
+    from evaluations.controlled import compare_variants
+    return compare_variants(records, corpus, fixed_sha=fixed_sha)
+
+
+def produce_native_evaluation(record: dict[str, Any], case: dict[str, Any], fixed_sha: str = "unknown") -> dict[str, Any]:
+    """Produce a native evaluation result with capability receipt."""
+    from evaluations.native_eval import produce_native_result
+    return produce_native_result(case, record, fixed_sha=fixed_sha)
+
+
+def aggregate_outcomes(records: list[dict[str, Any]]) -> dict[str, Any]:
+    """Aggregate multidimensional outcome metrics from live records."""
+    from outcome.tracker import OutcomeTracker
+    tracker = OutcomeTracker()
+    tracker.extend(records)
+    return tracker.aggregate()
+
+
+def render_outcome_markdown(records: list[dict[str, Any]]) -> str:
+    """Render an outcome markdown report."""
+    from outcome.tracker import OutcomeTracker
+    tracker = OutcomeTracker()
+    tracker.extend(records)
+    return tracker.render_markdown()
+
+
+def convert_v1_report(report_path: str | Path) -> dict[str, Any]:
+    """Read and convert a v1 quality report for compatibility."""
+    from benchmarks.compat.reader_v1 import read_v1_report, convert_v1_report
+    report = read_v1_report(report_path)
+    return convert_v1_report(report)
+
+
+def convert_v1_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Convert v1 live result records to the new evaluation format."""
+    from benchmarks.compat.reader_v1 import convert_v1_live_record
+    return [convert_v1_live_record(r) for r in records]
+
+
+# ---------------------------------------------------------------------------
+# Boot-time: make new sub-packages importable from the automation directory
+# ---------------------------------------------------------------------------
+_automation = Path(__file__).resolve().parent
+for _sub in ("conformance", "telemetry", "evaluations", "outcome", "benchmarks.compat"):
+    _path = str(_automation / _sub.replace(".", "/"))
+    if _path not in sys.path:
+        sys.path.insert(0, str(_automation))
+        break  # inserting root once is sufficient

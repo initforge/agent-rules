@@ -13,7 +13,7 @@ description: Context budget, fresh sessions, and code exploration discipline.
 - Khi context lớn: checkpoint ghi state/HANDOFF ngắn và chỉ đọc phần cần cho phase kế; chỉ mở session mới khi nền tảng buộc phải làm vậy, không kéo full chat.
 - Checkpoint chỉ giảm phần chat/log lặp lại; không được cắt scope, an toàn, hoặc verify để tiết kiệm token.
 - Sub-agent/worktree khi task độc lập song song (skill `best-of-n` chỉ khi user yêu cầu).
-- Task ≥2 files = lane `normal`; không tự động ép PAF/ledger nếu task rõ, một phase và rủi ro thấp. PAF/ledger bắt buộc khi multi-phase, high-risk hoặc cần nhiều AC độc lập (`25-task-lifecycle.md`).
+- Task ≥2 files = shape `medium`; không tự động ép PAF/ledger nếu task rõ, một phase và rủi ro thấp. PAF/ledger bắt buộc khi multi-phase, high-risk hoặc cần nhiều AC độc lập (`25-task-lifecycle.md`).
 - Plan-only sessions: prefer one plan artifact, minimal code churn — clearer and cheaper than mistaken execute.
 
 ## Code exploration (webapp)
@@ -38,7 +38,7 @@ Các pack sau **được phép** vượt soft line/token guide vì cohesion / de
 | `plan-and-handoff` (+ refs) | PAF + tier + goal autopilot liền mạch |
 | `finish-to-completion` (+ refs) | Slice completion / ledger depth |
 | `code-review` | User-invoked strict maintainability; depth > soft 3500 |
-| `projects/5fedu/**` domain packs | Progressive domain depth khi lazy-load |
+| `profiles/*/projects/**` domain packs | Progressive domain depth khi lazy-load |
 
 Always-on `rules/` vẫn cứng theo `manifest.yaml` `core_total_tokens`.
 

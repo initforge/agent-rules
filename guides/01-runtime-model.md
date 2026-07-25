@@ -24,6 +24,6 @@ Adapters: `integrations/required/codebase-memory-mcp/adapters/` (Codex adapter =
 
 ## Project pointers
 
-`.agents/AGENTS.md` và `.codex/AGENTS.md` trong repo dự án chỉ trỏ `context/5fedu/` — không mirror full global context.
+`.agents/AGENTS.md` và `.codex/AGENTS.md` trong repo dự án có thể trỏ `context/5fedu/` (nếu profile 5fedu được bật) — không mirror full global context.
 
 Token budgets: single source `rules/manifest.yaml`.

@@ -20,7 +20,7 @@ Mục tiêu là nạp đúng lượng context cần thiết, không preload toà
 | Core | 7 rules trong manifest | luôn nạp |
 | Boundary | style, governance, sync, budget | lazy theo task |
 | Capability | `skills/<slug>/SKILL.md` | theo routing |
-| Project/domain | context cục bộ như 5fedu | theo workspace fact |
+| Project/domain | context cục bộ (vd: profile 5fedu) | theo workspace fact |
 | Automation | build, install, audit, work ledger | agent gọi khi cần |
 | Generated/evidence | output, benchmark result, trace | không dùng làm context mặc định |
 
