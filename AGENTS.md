@@ -1,30 +1,39 @@
-# Agent Rules repository
+# agent-rules
 
-Canonical architecture (real tree):
+Canonical operating model: `docs/architecture/target-operating-model.md`
+Requirement ledger: section 12 of operating model
+Definition of Done: section 8 of operating model
+Subsystem registry: section 6 of operating model
 
-- `.github/workflows/`: CI/CD (static.yml is the single required gate).
-- `rules/`: global context always loaded (lean numbering).
-- `skills/`: kỹ năng lazy-load theo trigger.
-- `schemas/`: canonical portable artifact schemas.
-- `platforms/`: adapter deltas for Codex, Grok, OpenCode, Antigravity, Cursor.
-- `integrations/`: canonical integration & MCP registry (human-editable YAML; JSON generated).
-- `profiles/`: optional organization profiles (e.g., 5fedu).
-- `packages/cli/`: cross-platform TypeScript CLI.
-- `packages/control-plane/`: local harness control plane dashboard + API.
-- `evals/`: evaluation conformance, telemetry, controlled runs, outcomes, fixtures, reports.
-- `docs/`: architecture, concepts, decisions, runbooks, guides, generated references.
-- `generated/`: machine-generated context (never hand-edited).
-- `automation/`: build, install, validate, sync guard scripts.
-- `.agent/`: advisory trace/research/tombstones (gitignored).
-
-**Clone → work (Linux/Windows, pwsh):**
+## Quick start
 
 ```bash
-cd packages/cli && npm install && npm run build
-npm install --workspaces    # root workspace
-./automation/run.sh 03-validate-context
-./automation/run.sh 01-build-runtime
-./automation/run.sh 02-install-runtime
+cd packages/cli && npm ci && npm run build
+npm run test
 ```
 
-Đọc `rules/manifest.yaml` và `docs/guides/00-system-map.md` trước khi sửa harness. Không sửa tay `generated/` hoặc global runtime mirrors như canonical source. Không commit, push hoặc deploy nếu chưa được yêu cầu rõ.
+## Repository map
+
+| Path | Owner | Purpose |
+|------|-------|---------|
+| `.github/workflows/` | harness-maintainer | CI/CD (static.yml = required gate) |
+| `rules/` | harness-maintainer | Always-loaded global context (lean) |
+| `skills/` | harness-maintainer | Lazy-loaded capability workflows |
+| `schemas/` | harness-maintainer | Canonical portable artifact schemas |
+| `platforms/` | harness-maintainer | Per-runtime adapters + contracts |
+| `integrations/` | harness-maintainer | Tool & MCP registry |
+| `profiles/` | profile-owner | Optional org overlays (5fedu, etc.) |
+| `packages/cli/` | harness-maintainer | Cross-platform TypeScript CLI |
+| `packages/control-plane/` | harness-maintainer | Local dashboard + API |
+| `evals/` | harness-maintainer | Conformance, telemetry, controlled evals |
+| `docs/` | harness-maintainer | Architecture, guides, decisions |
+| `generated/` | machine | Build output — never hand-edit |
+| `automation/` | harness-maintainer | Build, install, validate scripts |
+
+## Before editing harness
+
+1. Read `rules/manifest.yaml` and `docs/guides/00-system-map.md`
+2. Understand the target operating model (`docs/architecture/target-operating-model.md`)
+3. Never edit `generated/` or global runtime mirrors by hand
+4. Do not commit, push, or deploy without explicit request
+5. Work on feature branches only
