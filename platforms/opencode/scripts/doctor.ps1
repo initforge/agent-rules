@@ -56,7 +56,6 @@ if (Test-Path -LiteralPath $OwnershipManifest) {
 # Check agent files
 $AgentDir = Join-Path $OpenCodeHome "agents"
 $ExpectedAgents = @(
-  "initforge-coordinator.md",
   "initforge-architect.md",
   "initforge-implementer.md",
   "initforge-reviewer.md",

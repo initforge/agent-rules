@@ -6,7 +6,6 @@ files in these directories with YAML frontmatter.
 
 Role mapping:
 
-- `initforge-coordinator` → coordinator
 - `initforge-architect` → architect
 - `initforge-implementer` → implementer
 - `initforge-reviewer` → reviewer

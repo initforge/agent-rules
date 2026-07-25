@@ -65,7 +65,6 @@ def main() -> None:
     # --- Probe 1: Agent discovery ---
     agent_dir = home / "agents"
     expected_agents = [
-        "initforge-coordinator.md",
         "initforge-architect.md",
         "initforge-implementer.md",
         "initforge-reviewer.md",

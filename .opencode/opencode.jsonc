@@ -9,7 +9,7 @@
     "harness-orchestrator": {
       "description": "Owns the complete agent-rules audit, planning, delegation, integration, implementation governance, and final user-facing result.",
       "mode": "primary",
-      "model": "deepseek/deepseek-v4-pro",
+      "model": "deepseek/deepseek-v4-flash",
       "reasoningEffort": "max",
       "thinking": {
         "type": "enabled"
@@ -43,9 +43,11 @@
         },
         "task": {
           "*": "deny",
+          "harness-architect": "allow",
           "harness-auditor": "allow",
           "harness-worker": "allow",
           "harness-verifier": "allow",
+          "harness-security-reviewer": "allow",
           "harness-final-reviewer": "allow"
         },
         "question": "allow",
@@ -54,20 +56,49 @@
       }
     },
 
+    "harness-architect": {
+      "description": "Analyzes requirements, designs architecture, and produces plans and design decisions for the agent-rules harness. Writes docs/architecture/ and schemas/.",
+      "mode": "subagent",
+      "model": "deepseek/deepseek-v4-flash",
+      "reasoningEffort": "high",
+      "thinking": {
+        "type": "enabled"
+      },
+      "permission": {
+        "edit": "allow",
+        "bash": {
+          "*": "ask",
+          "git status*": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "git rev-parse*": "allow"
+        },
+        "task": "deny",
+        "question": "deny",
+        "webfetch": "allow"
+      }
+    },
+
     "harness-auditor": {
       "description": "Read-only senior auditor for repository architecture, git history, CI, automation, evaluations, profiles, platforms, integrations, rules, skills, security and documentation drift. Returns evidence, not edits.",
       "mode": "subagent",
-      "model": "deepseek/deepseek-v4-pro",
+      "model": "deepseek/deepseek-v4-flash",
       "reasoningEffort": "high",
       "thinking": {
         "type": "enabled"
       },
       "permission": {
         "edit": "deny",
-        "bash": "allow",
+        "bash": {
+          "*": "deny",
+          "git status*": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "git show*": "allow",
+          "git rev-parse*": "allow"
+        },
         "task": "deny",
         "question": "deny",
-        "websearch": "allow",
         "webfetch": "allow"
       }
     },
@@ -82,10 +113,22 @@
       },
       "permission": {
         "edit": "allow",
-        "bash": "allow",
+        "bash": {
+          "*": "ask",
+          "git status*": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "git rev-parse*": "allow",
+          "npm *": "allow",
+          "npx *": "allow",
+          "pnpm *": "allow",
+          "node *": "allow",
+          "pwsh *": "allow",
+          "python *": "allow",
+          "pytest *": "allow"
+        },
         "task": "deny",
         "question": "deny",
-        "websearch": "deny",
         "webfetch": "allow"
       }
     },
@@ -100,26 +143,66 @@
       },
       "permission": {
         "edit": "deny",
-        "bash": "allow",
+        "bash": {
+          "*": "ask",
+          "git status*": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "git rev-parse*": "allow",
+          "npm *": "allow",
+          "npx *": "allow",
+          "pnpm *": "allow",
+          "pytest *": "allow"
+        },
         "task": "deny",
         "question": "deny"
+      }
+    },
+
+    "harness-security-reviewer": {
+      "description": "Read-only security reviewer. Checks path allowlists, auth boundaries, secret exposure, and security policy compliance. Reports findings without editing.",
+      "mode": "subagent",
+      "model": "deepseek/deepseek-v4-flash",
+      "reasoningEffort": "high",
+      "thinking": {
+        "type": "enabled"
+      },
+      "permission": {
+        "edit": "deny",
+        "bash": {
+          "*": "deny",
+          "git status*": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "git show*": "allow",
+          "git rev-parse*": "allow"
+        },
+        "task": "deny",
+        "question": "deny",
+        "webfetch": "allow"
       }
     },
 
     "harness-final-reviewer": {
       "description": "Adversarial senior reviewer for the complete integrated diff. Finds missing requirements, architectural drift, regressions, false claims, incomplete migrations and weak verification. Never edits files.",
       "mode": "subagent",
-      "model": "deepseek/deepseek-v4-pro",
+      "model": "deepseek/deepseek-v4-flash",
       "reasoningEffort": "max",
       "thinking": {
         "type": "enabled"
       },
       "permission": {
         "edit": "deny",
-        "bash": "allow",
+        "bash": {
+          "*": "deny",
+          "git status*": "allow",
+          "git diff*": "allow",
+          "git log*": "allow",
+          "git show*": "allow",
+          "git rev-parse*": "allow"
+        },
         "task": "deny",
         "question": "deny",
-        "websearch": "allow",
         "webfetch": "allow"
       }
     }
