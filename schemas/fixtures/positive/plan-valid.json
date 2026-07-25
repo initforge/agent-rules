@@ -1,6 +1,7 @@
 {
   "schema": "artifact/plan",
   "version": 1,
+  "level": "small",
   "meta": {
     "id": "plan-20260725-001",
     "created_at": "2026-07-25T08:00:00Z",
@@ -14,7 +15,7 @@
     "non_goals": ["runtime changes", "installer changes"],
     "scope_lock": {
       "allowed_systems": ["agent-rules repository"],
-      "owner_decisions": ["Use schemas/ top-level directory"]
+      "owner_decisions": [{"id": "DEC-001", "statement": "Use schemas/ top-level directory"}]
     }
   },
   "acceptance": [
@@ -33,25 +34,6 @@
       "required_kinds": ["unit"]
     }
   ],
-  "task_graph": [
-    {
-      "id": "S1",
-      "name": "Write schemas",
-      "work": "Create 10 portable JSON schemas",
-      "depends_on": [],
-      "capability_class": "standard",
-      "write_paths": ["schemas/"],
-      "acceptance_ids": ["AC1"]
-    },
-    {
-      "id": "S2",
-      "name": "Write fixtures",
-      "work": "Create positive and negative fixtures",
-      "depends_on": ["S1"],
-      "capability_class": "standard",
-      "acceptance_ids": ["AC2"]
-    }
-  ],
   "execution_contract": {
     "mode": "automatic",
     "shape": "medium",
@@ -60,11 +42,7 @@
     "max_agents": 3,
     "max_depth": 1,
     "effort_cap": "medium",
-    "authorized_final_actions": ["edit", "commit"],
-    "proof_profiles": {
-      "AC1": "static-change",
-      "AC2": "static-change"
-    }
+    "authorized_final_actions": ["edit", "commit"]
   },
   "risks": [
     {

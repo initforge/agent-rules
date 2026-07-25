@@ -1,0 +1,73 @@
+{
+  "schema": "artifact/plan",
+  "version": 1,
+  "level": "resumable",
+  "meta": {
+    "id": "plan-amendment-001",
+    "created_at": "2026-07-25T17:00:00Z",
+    "updated_at": "2026-07-25T18:30:00Z",
+    "source_refs": ["USR-006"]
+  },
+  "original_request_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "intent": {
+    "outcome": "Payment processing supports Stripe and PayPal",
+    "risk_classification": "high",
+    "in_scope": ["Stripe integration", "PayPal integration", "payment routing"],
+    "non_goals": ["refund workflow", "subscription billing"]
+  },
+  "requirements": [
+    { "id": "REQ-001", "summary": "Process payments through Stripe", "kind": "original" },
+    { "id": "REQ-002", "summary": "Process payments through PayPal", "kind": "injection" }
+  ],
+  "decisions": [
+    { "id": "DEC-001", "statement": "Use Stripe as primary processor", "rationale": "Lower fees for US customers", "decided_at": "2026-07-25T17:00:00Z" },
+    { "id": "DEC-002", "statement": "Add PayPal as secondary processor", "rationale": "EU customer preference", "supersedes_id": "DEC-001", "decided_at": "2026-07-25T18:00:00Z" }
+  ],
+  "change_graph": [
+    { "id": "CG-001", "area": "Stripe integration", "current_truth": "no Stripe SDK", "exact_change": "add Stripe payment processing", "category": "fact", "files": ["payment/stripe.rs"], "requirement_ids": ["REQ-001"] },
+    { "id": "CG-002", "area": "PayPal integration", "current_truth": "no PayPal SDK", "exact_change": "add PayPal payment processing", "category": "fact", "files": ["payment/paypal.rs"], "requirement_ids": ["REQ-002"] }
+  ],
+  "acceptance": [
+    { "id": "AC1", "claim": "Stripe payment succeeds and webhook is received", "proof_profile": "implementation-runtime", "required_dimensions": ["outcome", "integration"], "requirement_ids": ["REQ-001"] },
+    { "id": "AC2", "claim": "PayPal payment succeeds and webhook is received", "proof_profile": "implementation-runtime", "required_dimensions": ["outcome", "integration"], "requirement_ids": ["REQ-002"] }
+  ],
+  "verification_matrix": [
+    { "requirement_id": "REQ-001", "acceptance_ids": ["AC1"] },
+    { "requirement_id": "REQ-002", "acceptance_ids": ["AC2"] }
+  ],
+  "task_graph": [
+    { "id": "S1", "name": "Stripe integration", "work": "Implement Stripe payment flow", "owner": "team-a", "depends_on": [], "capability_class": "standard", "acceptance_ids": ["AC1"], "requirement_ids": ["REQ-001"] },
+    { "id": "S2", "name": "PayPal integration", "work": "Implement PayPal payment flow", "owner": "team-a", "depends_on": [], "capability_class": "standard", "acceptance_ids": ["AC2"], "requirement_ids": ["REQ-002"] }
+  ],
+  "amendments": [
+    {
+      "id": "AMD-001",
+      "reason": "Owner added PayPal requirement mid-implementation",
+      "changes": [
+        { "field": "requirements", "action": "added", "target_id": "REQ-002", "detail": "PayPal payment processing requirement added" },
+        { "field": "decisions", "action": "superseded", "target_id": "DEC-001", "detail": "Stripe-only decision superseded; now dual-processor" },
+        { "field": "change_graph", "action": "added", "target_id": "CG-002", "detail": "PayPal integration change node added" },
+        { "field": "task_graph", "action": "added", "target_id": "S2", "detail": "PayPal implementation slice added" }
+      ],
+      "supersedes_prior": true,
+      "applied_at": "2026-07-25T18:00:00Z",
+      "applied_by": "architect"
+    }
+  ],
+  "checkpoints": [
+    { "id": "CK-001", "slice_id": "S1", "commit": "f1g2h3i", "summary": "Stripe integration complete, tests passing", "next_action": "start S2", "created_at": "2026-07-25T18:30:00Z" }
+  ],
+  "evidence_ledger": [
+    { "receipt_id": "RCP-001", "acceptance_id": "AC1", "status": "PASS", "proof_kind": "integration", "dimensions": ["outcome", "integration"], "captured_at": "2026-07-25T18:30:00Z", "claim_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" }
+  ],
+  "execution_contract": {
+    "mode": "automatic",
+    "shape": "resumable",
+    "ledger": "required",
+    "strategy": "parallel",
+    "max_agents": 3,
+    "max_depth": 1,
+    "effort_cap": "medium",
+    "authorized_final_actions": ["edit", "commit"]
+  }
+}

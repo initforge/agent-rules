@@ -3,22 +3,21 @@
   "version": 1,
   "level": "small",
   "meta": {
-    "id": "plan-20260725-002",
-    "created_at": "2026-07-25T09:00:00Z",
-    "updated_at": "2026-07-25T09:00:00Z",
-    "source_refs": ["USR-002"]
+    "id": "plan-small-001",
+    "created_at": "2026-07-25T12:00:00Z",
+    "updated_at": "2026-07-25T12:00:00Z",
+    "source_refs": ["USR-003"]
   },
   "intent": {
-    "outcome": "Fix a single typo in README",
+    "outcome": "README.md has correct project name in the title",
     "risk_classification": "low",
-    "in_scope": ["README.md"],
-    "non_goals": ["any other file"],
-    "scope_lock": {}
+    "in_scope": ["README.md line 1"],
+    "non_goals": ["any other file", "formatting changes", "content additions"]
   },
   "acceptance": [
     {
       "id": "AC1",
-      "claim": "README builds without errors",
+      "claim": "Project name is 'Agent Rules' not 'Agen Rules'",
       "proof_profile": "static-change",
       "required_dimensions": ["outcome"]
     }

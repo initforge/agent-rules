@@ -29,10 +29,9 @@ Test-Contains "skills\plan-and-handoff\SKILL.md" @(
   "automatically classify and begin execution"
 )
 Test-Contains "skills\plan-and-handoff\references\adaptive-work-protocol.md" @(
-  "small",
-  "medium",
-  "large",
-  "resumable",
+  "Small",
+  "Standard",
+  "Resumable",
   "Context capsule",
   "main agent",
   "economy",
@@ -43,19 +42,25 @@ Test-Contains "skills\plan-and-handoff\references\adaptive-work-protocol.md" @(
   "control-plane exception",
   "Independent review is mandatory"
 )
-Test-Contains "skills\plan-and-handoff\references\plan-artifact-template.md" @(
-  "Repository truth",
-  "Change map",
-  "Acceptance and proof contract",
-  "Negative invariant",
-  "Task graph and ownership",
-  "Automatic execution contract",
-  "Rollback",
-  "Later injections",
-  "Authorized final actions",
-  "Risk classification",
-  "Acknowledgment",
-  "Status separation"
+Test-Contains "skills\plan-and-handoff\references\portable-plan-contract.md" @(
+  "small",
+  "standard",
+  "resumable",
+  "acceptance",
+  "execution_contract",
+  "requirements",
+  "decisions",
+  "change_graph",
+  "verification_matrix",
+  "task_graph",
+  "amendments",
+  "checkpoints",
+  "evidence_ledger",
+  "supersedes",
+  "fact",
+  "assumption",
+  "unknown",
+  "user_decision"
 )
 Test-Contains "skills\finish-to-completion\references\completion-ledger.md" @(
   "workctl.py",

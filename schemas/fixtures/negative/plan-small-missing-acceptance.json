@@ -1,0 +1,17 @@
+{
+  "schema": "artifact/plan",
+  "version": 1,
+  "level": "small",
+  "meta": {
+    "id": "plan-neg-001",
+    "created_at": "2026-07-25T12:00:00Z",
+    "updated_at": "2026-07-25T12:00:00Z",
+    "source_refs": ["USR-003"]
+  },
+  "intent": {
+    "outcome": "Fix typo in README",
+    "risk_classification": "low",
+    "in_scope": ["README.md"],
+    "non_goals": []
+  }
+}

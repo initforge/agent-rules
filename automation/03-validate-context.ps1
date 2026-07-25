@@ -77,7 +77,7 @@ $RequiredPaths = @(
   "rules\25-task-lifecycle.md",
   "skills\plan-and-handoff\SKILL.md",
   "skills\plan-and-handoff\references\adaptive-work-protocol.md",
-  "skills\plan-and-handoff\references\plan-artifact-template.md",
+  "skills\plan-and-handoff\references\portable-plan-contract.md",
   "skills\plan-and-handoff\references\capability-tier-routing.md",
   "skills\finish-to-completion\references\slice-gate-protocol.md",
   "automation\workctl.py",

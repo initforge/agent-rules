@@ -2,20 +2,21 @@
 
 This is the shared protocol for planning, execution, handoff, and review. It favors a complete, evidence-backed outcome over workflow theater.
 
-## 1. Classify risk, then act
+## 1. Classify risk, then select plan level
 
-| Shape | Plan detail | Ledger | Delegation |
+| Level | Plan detail | Ledger | Delegation |
 |---|---|---|---|
-| Small/clear | outcome, scope, approach, proof | optional | main-direct or none |
-| Medium | executable plan with files/interfaces, acceptance criteria, proof, rollback note | optional when useful | independent bounded slices |
-| Large | roadmap, task graph, ownership, proof and rollback | required | independent disjoint slices only |
-| Resumable | large plan plus checkpoints and resume context capsules | required, detailed | independent disjoint slices only |
+| Small | outcome, scope, acceptance, verification | optional | main-direct or none |
+| Standard | requirements + decisions + change graph + verification matrix + constraints | optional when useful | delegated bounded slices |
+| Resumable | standard + task graph + amendments + checkpoints + evidence ledger | required, detailed | independent disjoint slices only |
 
-Start with the observable outcome and classify risk before operational shape. A plan names outcome, in/out scope, affected interfaces or files, implementation approach, acceptance/proof, and next safe action. Long work adds dependencies, ownership, rollback/handoff, and resume state; it does not add a mandatory phase ceremony.
+Start with the observable outcome and classify risk before selecting the plan level. A small plan uses only intent + acceptance. A standard plan adds traceable requirements (REQ-N), decisions (DEC-N), a change graph with fact/assumption/unknown/user_decision categories, and a verification matrix mapping requirements to acceptance criteria. A resumable plan adds slices with owners and dependencies, an amendment mechanism, session checkpoints, and an accumulated evidence ledger.
+
+All three levels validate against `schemas/plan.schema.json`. See [`portable-plan-contract.md`](portable-plan-contract.md) for the full contract.
 
 ## 2. Meaningful questions and ownership
 
-Ask only a meaningful question: one whose answer changes scope, behavior, safety, authority, or proof. Read code, schemas, logs, tests, and documentation to discover facts instead.
+Ask only a meaningful question: one whose answer changes architecture, scope, compatibility, migration, behavior, proof level, or an irreversible decision. Read code, schemas, logs, tests, and documentation to discover facts instead. Record unresolved material questions in `unresolved_questions` with their impact category.
 
 The main agent holds the owner’s requirements, later instructions, cross-slice decisions, integration, final review, and terminal status. A sub-agent receives a context capsule, not the whole transcript:
 
@@ -58,6 +59,8 @@ Proof must match the claim. A build proves buildability, not UI parity, runtime 
 
 ## 5. Ledger and resume
 
-Large/resumable work uses a detailed ledger. It preserves original requirement IDs, later injections, their allocation to slices/agents, owner decisions, current proof, rollback notes, and next safe action. Medium/small work may use it when interruption, coordination, proof, or rollback risk justifies it.
+Resumable work uses a detailed ledger with `amendments`, `checkpoints`, and `evidence_ledger`. It preserves original requirement IDs, later injections, their allocation to slices/agents, owner decisions, current proof, rollback notes, and next safe action. Standard work uses requirements + decisions + verification matrix without session recovery fields. Small work uses only outcome + acceptance.
+
+When an amendment supersedes a prior decision, record it both in `decisions[].supersedes_id` and the `amendments` array. No code or agent may silently reverse a user decision (`category: user_decision` in `change_graph` or `intent.assumptions`).
 
 The ledger is a continuity and evidence aid, not permission to declare success. A plan artifact remains intent; fresh runner-backed or observed evidence establishes completion. Keep task outcome separate from execution-control status: `PASS`, `PARTIAL`, or `BLOCKED` applies to delivery; acknowledgments, host observation, and orchestration availability remain distinct fields.
