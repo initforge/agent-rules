@@ -1,4 +1,4 @@
-# Agent quality benchmark
+# Agent quality evaluation
 
 Evidence-first evaluation for `agent-rules`. The corpus has been reorganized into four layers:
 
@@ -14,7 +14,6 @@ No single composite score is the primary verdict.
 - `agent-quality-benchmark.json` — case definitions (preserved v1)
 - `agent-quality-benchmark.schema.json` — corpus schema (preserved v1)
 - `live-result.schema.json` — v1 live result schema (preserved)
-- `live-result.v2.schema.json` — v2 multidimensional schema
 - `telemetry.schema.json` — OTel GenAI-aligned telemetry schema
 - `evaluation-result.schema.json` — multidimensional evaluation schema
 - `live-fixtures.json` — fixture definitions (preserved)
@@ -22,8 +21,8 @@ No single composite score is the primary verdict.
 - `compat/` — compatibility reader for v1 reports
 - `../conformance/` — model-free conformance test module
 - `../telemetry/` — telemetry collector and exporter
-- `../evaluations/` — controlled + native evaluation module
-- `../outcome/` — outcome tracking module
+- `../controlled/` — controlled + native evaluation module
+- `../outcomes/` — outcome tracking module
 
 ## Conformance (PR CI, no model calls)
 
@@ -44,7 +43,7 @@ python automation/test-live-agent-adapter.py
 ## Telemetry
 
 ```powershell
-python -c "from telemetry.collector import TelemetryCollector; c = TelemetryCollector(); c.record(c.build_event('session.end', 'codex', 'gpt-5.6-terra', 'medium', 'main', 'test', 'abc123', 'PASS')); c.flush('events.jsonl')"
+python -c "from evals.telemetry.collector import TelemetryCollector; c = TelemetryCollector(); c.record(c.build_event('session.end', 'codex', 'gpt-5.6-terra', 'medium', 'main', 'test', 'abc123', 'PASS')); c.flush('events.jsonl')"
 ```
 
 Telemetry events follow OpenTelemetry GenAI conventions where practical. Fields include `gen_ai.system`, `gen_ai.request.model`, `gen_ai.response.model`, `gen_ai.usage.*`, plus platform, host version, effort, role, task, tools, context, subagent lifecycle, verification, and outcome. Unobservable fields remain null.
@@ -52,7 +51,7 @@ Telemetry events follow OpenTelemetry GenAI conventions where practical. Fields 
 ## Controlled evaluations
 
 ```powershell
-python -c "from evaluations.controlled import compare_variants; from agent_quality import load_json, read_records; corpus=load_json('automation/benchmarks/agent-quality-benchmark.json'); recs=read_records(['automation/benchmarks/fixtures/live-valid.jsonl']); results=compare_variants(recs, corpus); print(f'{len(results)} evaluation(s)')"
+python -c "from evals.controlled.controlled import compare_variants; from evals.fixtures.compat.reader_v1 import load_json, read_records; corpus=load_json('evals/fixtures/agent-quality-benchmark.json'); recs=read_records(['evals/fixtures/fixtures/live-valid.jsonl']); results=compare_variants(recs, corpus); print(f'{len(results)} evaluation(s)')"
 ```
 
 Hold constant: repository SHA, task, environment, tool availability, budget, time limit, model snapshot.

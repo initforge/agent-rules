@@ -201,8 +201,26 @@ export async function validate(
     const cases = JSON.parse(await fs.readFile(triggerPath, "utf-8"));
     for (const c of cases) {
       let targetPath = "";
-      if (c.skill) targetPath = path.join(root, "skills", c.skill, "SKILL.md");
-      else if (c.file) targetPath = path.join(root, ...c.file.replace(/\\/g, "/").split("/"));
+      if (c.skill) {
+        targetPath = path.join(root, "skills", c.skill, "SKILL.md");
+        if (!(await checkFile(targetPath))) {
+          // Fallback: search profile skills
+          const profilesDir = path.join(root, "profiles");
+          try {
+            const profileDirs = await fs.readdir(profilesDir, { withFileTypes: true });
+            for (const pd of profileDirs) {
+              if (!pd.isDirectory() || pd.name.startsWith(".")) continue;
+              const profileSkillPath = path.join(profilesDir, pd.name, "skills", c.skill, "SKILL.md");
+              if (await checkFile(profileSkillPath)) {
+                targetPath = profileSkillPath;
+                break;
+              }
+            }
+          } catch { /* profiles dir may not exist */ }
+        }
+      } else if (c.file) {
+        targetPath = path.join(root, ...c.file.replace(/\\/g, "/").split("/"));
+      }
 
       if (!targetPath || !(await checkFile(targetPath))) {
         errors.push(`Trigger audit target missing for '${c.phrase}': ${targetPath}`);
@@ -269,7 +287,7 @@ export async function validate(
   }
 
   // 14. 5fedu template purity
-  const purityAudit = path.join(automationDir, "audit-5fedu-template-purity.ps1");
+  const purityAudit = path.join(root, "profiles", "5fedu", "automation", "audit-5fedu-template-purity.ps1");
   if (await checkFile(purityAudit)) {
     const r = await runPowershell(purityAudit, [], root);
     if (!r.ok) errors.push("5fedu template purity audit failed");

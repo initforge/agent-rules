@@ -24,10 +24,10 @@ except ImportError:  # pragma: no cover - exercised only on minimal Python hosts
 
 
 ROOT = Path(__file__).resolve().parents[1]
-BENCHMARK_DIR = ROOT / "automation" / "benchmarks"
-DEFAULT_CORPUS = BENCHMARK_DIR / "agent-quality-benchmark.json"
-DEFAULT_CORPUS_SCHEMA = BENCHMARK_DIR / "agent-quality-benchmark.schema.json"
-DEFAULT_LIVE_SCHEMA = BENCHMARK_DIR / "live-result.schema.json"
+FIXTURES_DIR = ROOT / "evals" / "fixtures"
+DEFAULT_CORPUS = FIXTURES_DIR / "agent-quality-benchmark.json"
+DEFAULT_CORPUS_SCHEMA = FIXTURES_DIR / "agent-quality-benchmark.schema.json"
+DEFAULT_LIVE_SCHEMA = FIXTURES_DIR / "live-result.schema.json"
 DEFAULT_TRACE_SCHEMA = ROOT / "automation" / "trace-schema.json"
 DEFAULT_GRAPH = ROOT / "generated" / "context-graph.json"
 DEFAULT_EVIDENCE_PROFILES = ROOT / "automation" / "evidence-profiles.json"
@@ -587,31 +587,31 @@ def write_jsonl(path: str | Path, records: Iterable[dict[str, Any]]) -> None:
 
 def run_conformance(corpus_path: str | Path = DEFAULT_CORPUS) -> dict[str, Any]:
     """Run all model-free conformance checks (PR CI safe)."""
-    from conformance.routing import run_all as conformance_run
+    from evals.conformance.routing import run_all as conformance_run
     return conformance_run(corpus_path)
 
 
 def validate_telemetry_record(record: dict[str, Any]) -> None:
     """Validate a telemetry event against the telemetry schema."""
-    schema_path = BENCHMARK_DIR / "telemetry.schema.json"
+    schema_path = FIXTURES_DIR / "telemetry.schema.json"
     validate_schema(record, schema_path)
 
 
 def evaluate_records(records: list[dict[str, Any]], corpus: dict[str, Any], fixed_sha: str = "unknown") -> list[dict[str, Any]]:
     """Convert live records to multidimensional evaluation results."""
-    from evaluations.controlled import compare_variants
+    from evals.controlled.controlled import compare_variants
     return compare_variants(records, corpus, fixed_sha=fixed_sha)
 
 
 def produce_native_evaluation(record: dict[str, Any], case: dict[str, Any], fixed_sha: str = "unknown") -> dict[str, Any]:
     """Produce a native evaluation result with capability receipt."""
-    from evaluations.native_eval import produce_native_result
+    from evals.controlled.native_eval import produce_native_result
     return produce_native_result(case, record, fixed_sha=fixed_sha)
 
 
 def aggregate_outcomes(records: list[dict[str, Any]]) -> dict[str, Any]:
     """Aggregate multidimensional outcome metrics from live records."""
-    from outcome.tracker import OutcomeTracker
+    from evals.outcomes.tracker import OutcomeTracker
     tracker = OutcomeTracker()
     tracker.extend(records)
     return tracker.aggregate()
@@ -619,7 +619,7 @@ def aggregate_outcomes(records: list[dict[str, Any]]) -> dict[str, Any]:
 
 def render_outcome_markdown(records: list[dict[str, Any]]) -> str:
     """Render an outcome markdown report."""
-    from outcome.tracker import OutcomeTracker
+    from evals.outcomes.tracker import OutcomeTracker
     tracker = OutcomeTracker()
     tracker.extend(records)
     return tracker.render_markdown()
@@ -627,23 +627,21 @@ def render_outcome_markdown(records: list[dict[str, Any]]) -> str:
 
 def convert_v1_report(report_path: str | Path) -> dict[str, Any]:
     """Read and convert a v1 quality report for compatibility."""
-    from benchmarks.compat.reader_v1 import read_v1_report, convert_v1_report
+    from evals.fixtures.compat.reader_v1 import read_v1_report, convert_v1_report as _convert
     report = read_v1_report(report_path)
-    return convert_v1_report(report)
+    return _convert(report)
 
 
 def convert_v1_records(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Convert v1 live result records to the new evaluation format."""
-    from benchmarks.compat.reader_v1 import convert_v1_live_record
+    from evals.fixtures.compat.reader_v1 import convert_v1_live_record
     return [convert_v1_live_record(r) for r in records]
 
 
 # ---------------------------------------------------------------------------
-# Boot-time: make new sub-packages importable from the automation directory
+# Boot-time: make new sub-packages importable from the repo root
 # ---------------------------------------------------------------------------
-_automation = Path(__file__).resolve().parent
 for _sub in ("conformance", "telemetry", "evaluations", "outcome", "benchmarks.compat"):
-    _path = str(_automation / _sub.replace(".", "/"))
-    if _path not in sys.path:
-        sys.path.insert(0, str(_automation))
-        break  # inserting root once is sufficient
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+        break

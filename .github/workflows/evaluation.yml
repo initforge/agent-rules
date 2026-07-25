@@ -51,6 +51,7 @@ jobs:
   benchmark-contracts:
     name: benchmark-contracts
     needs: [build]
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.suite == 'all' || github.event.inputs.suite == 'benchmark-contracts' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -67,6 +68,7 @@ jobs:
   agent-quality:
     name: agent-quality
     needs: [build]
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.suite == 'all' || github.event.inputs.suite == 'agent-quality' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -88,6 +90,7 @@ jobs:
   live-adapter-contracts:
     name: live-adapter-contracts
     needs: [build]
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.suite == 'all' || github.event.inputs.suite == 'live-benchmark' }}
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:

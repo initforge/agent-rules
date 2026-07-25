@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import os from 'os';
 import * as differ from '../src/services/differ';
 import * as validator from '../src/services/validator';
 import * as writer from '../src/services/writer';
@@ -105,8 +104,9 @@ describe('validator', () => {
 });
 
 describe('writer', () => {
-  const tmpDir = path.join(os.tmpdir(), 'control-plane-test-' + Date.now());
+  const tmpDir = path.join(__dirname, '..', '.test-tmp-' + Date.now());
   const testFile = path.join(tmpDir, 'test.json');
+  const relPath = 'packages/control-plane/' + path.basename(tmpDir) + '/test.json';
 
   beforeAll(() => {
     fs.mkdirSync(tmpDir, { recursive: true });
@@ -119,10 +119,7 @@ describe('writer', () => {
 
   it('writes atomically and returns hashes', () => {
     const newContent = JSON.stringify({ version: 1, data: 'modified' }, null, 2) + '\n';
-    const result = writer.atomicWrite(
-      path.relative(process.cwd(), testFile),
-      newContent
-    );
+    const result = writer.atomicWrite(relPath, newContent);
     expect(result.success).toBe(true);
     expect(result.oldHash).toBeTruthy();
     expect(result.newHash).toBeTruthy();
@@ -132,10 +129,7 @@ describe('writer', () => {
 
   it('detects no changes', () => {
     const content = fs.readFileSync(testFile, 'utf-8');
-    const result = writer.atomicWrite(
-      path.relative(process.cwd(), testFile),
-      content
-    );
+    const result = writer.atomicWrite(relPath, content);
     expect(result.success).toBe(true);
     expect(result.error).toContain('No changes');
   });

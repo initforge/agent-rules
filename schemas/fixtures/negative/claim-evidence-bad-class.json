@@ -1,0 +1,10 @@
+{
+  "schema": "artifact/claim-evidence",
+  "version": 1,
+  "claim_id": "CLM-002",
+  "requirement_id": "REQ-003",
+  "statement": "Should work",
+  "evidence_class": "INVALID_CLASS",
+  "status": "PASS",
+  "timestamp": "2026-07-26T10:00:00Z"
+}

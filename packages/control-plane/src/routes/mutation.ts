@@ -7,20 +7,17 @@ import * as differ from '../services/differ';
 import * as validator from '../services/validator';
 import * as audit from '../services/audit';
 import { computeDiff } from '../services/differ';
-
-function findRoot(): string {
-  let dir = __dirname;
-  for (let i = 0; i < 10; i++) {
-    if (fs.existsSync(path.join(dir, 'rules', 'manifest.yaml'))) return dir;
-    const parent = path.dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return path.resolve(__dirname, '..', '..', '..');
-}
+import { safeResolve } from '../services/safety';
 
 const router = Router();
-const ROOT = findRoot();
+
+function apiError(res: any, code: number, err: unknown): void {
+  if (err instanceof Error && err.message.includes('Path traversal')) {
+    res.status(403).json({ ok: false, error: 'Forbidden' });
+    return;
+  }
+  res.status(code).json({ ok: false, error: 'An internal error occurred' });
+}
 
 router.post('/diff', (req, res) => {
   try {
@@ -29,12 +26,12 @@ router.post('/diff', (req, res) => {
       res.status(400).json({ ok: false, error: 'filePath and content required' });
       return;
     }
-    const fullPath = path.resolve(ROOT, fp);
+    const fullPath = safeResolve(fp);
     const oldContent = fs.readFileSync(fullPath, 'utf-8');
     const diff = computeDiff(oldContent, content, fp);
     res.json({ ok: true, diff });
   } catch (err) {
-    res.status(500).json({ ok: false, error: String(err) });
+    apiError(res, 500, err);
   }
 });
 
@@ -46,14 +43,14 @@ router.post('/preview', (req, res) => {
       return;
     }
 
-    const fullPath = path.resolve(ROOT, fp);
+    const fullPath = safeResolve(fp);
     const currentRawStr = fs.readFileSync(fullPath, 'utf-8');
     const newRaw = writer.serializeForFile(fp, data);
     const diff = computeDiff(currentRawStr, newRaw, fp);
 
     res.json({ ok: true, diff, current: currentRawStr, proposed: newRaw });
   } catch (err) {
-    res.status(500).json({ ok: false, error: String(err) });
+    apiError(res, 500, err);
   }
 });
 
@@ -65,6 +62,8 @@ router.post('/apply', async (req, res) => {
       return;
     }
 
+    safeResolve(fp);
+
     const validation = validator.validateAgainstSchema(fp, data);
     if (!validation.valid) {
       res.status(400).json({ ok: false, error: `Validation failed: ${validation.errors.join('; ')}` });
@@ -72,7 +71,7 @@ router.post('/apply', async (req, res) => {
     }
 
     const newContent = writer.serializeForFile(fp, data);
-    const fullPath = path.resolve(ROOT, fp);
+    const fullPath = safeResolve(fp);
     const currentRawStr = fs.readFileSync(fullPath, 'utf-8');
     const diff = computeDiff(currentRawStr, newContent, fp);
 
@@ -98,7 +97,7 @@ router.post('/apply', async (req, res) => {
       diff,
     });
   } catch (err) {
-    res.status(500).json({ ok: false, error: String(err) });
+    apiError(res, 500, err);
   }
 });
 
@@ -109,6 +108,7 @@ router.post('/rollback', async (req, res) => {
       res.status(400).json({ ok: false, error: 'backupPath and targetPath required' });
       return;
     }
+    safeResolve(targetPath);
     const ok = writer.rollback(backupPath, targetPath);
     if (!ok) {
       res.status(404).json({ ok: false, error: 'Backup not found' });
@@ -117,7 +117,7 @@ router.post('/rollback', async (req, res) => {
     await audit.recordMutation('rollback', targetPath, '', '', backupPath);
     res.json({ ok: true, rolledBack: true, targetPath, backupPath });
   } catch (err) {
-    res.status(500).json({ ok: false, error: String(err) });
+    apiError(res, 500, err);
   }
 });
 
@@ -126,7 +126,7 @@ router.get('/backups', (_req, res) => {
     const backups = writer.listBackups();
     res.json({ ok: true, data: backups });
   } catch (err) {
-    res.status(500).json({ ok: false, error: String(err) });
+    apiError(res, 500, err);
   }
 });
 

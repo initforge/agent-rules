@@ -1,0 +1,57 @@
+{
+  "schema": "artifact/run-state",
+  "version": 1,
+  "schema_version": "1.0.0",
+  "run_id": "run-20260726-0042",
+  "current_phase": "EXECUTING",
+  "tasks": [
+    {
+      "id": "T1",
+      "status": "completed",
+      "assigned_to": "worker-1",
+      "started_at": "2026-07-26T09:10:00Z",
+      "completed_at": "2026-07-26T09:45:00Z",
+      "evidence_refs": ["ev-clm-001", "ev-clm-002"]
+    },
+    {
+      "id": "T2",
+      "status": "in_progress",
+      "assigned_to": "worker-2",
+      "started_at": "2026-07-26T09:45:00Z"
+    },
+    {
+      "id": "T3",
+      "status": "pending"
+    }
+  ],
+  "attempts": 0,
+  "checkpoints": [
+    {
+      "id": "cp-001",
+      "phase": "PLAN_VALIDATED",
+      "summary": "Plan validated by architect, ready to execute",
+      "commit_hash": "a1b2c3d4",
+      "created_at": "2026-07-26T09:05:00Z"
+    }
+  ],
+  "workspace": "/home/runner/work/project",
+  "artifacts": [
+    {
+      "path": "build/output.tar.gz",
+      "sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+      "size_bytes": 204800,
+      "generated_at": "2026-07-26T09:50:00Z"
+    }
+  ],
+  "failures": [],
+  "next_action": "Complete T2 middleware tests, then start T3",
+  "resumability": {
+    "can_resume": true,
+    "resume_from_phase": "EXECUTING",
+    "resume_checkpoint_id": "cp-001",
+    "notes": "T1 completed, T2 in progress"
+  },
+  "cancellation_state": {
+    "cancelled": false
+  }
+}

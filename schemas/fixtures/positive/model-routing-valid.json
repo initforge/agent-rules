@@ -1,0 +1,33 @@
+{
+  "schema": "artifact/model-routing",
+  "version": 1,
+  "schema_version": "1.0.0",
+  "task_class": "code_generation",
+  "risk": "medium",
+  "complexity": "moderate",
+  "initial_model_class": "standard",
+  "effort": "medium",
+  "escalation_rules": [
+    {
+      "trigger": "task_failure",
+      "target_model_class": "expert",
+      "reason": "Standard model failed, escalate to expert model for retry"
+    },
+    {
+      "trigger": "context_overflow",
+      "target_model_class": "expert",
+      "reason": "Context exceeds standard budget, escalate to larger context model"
+    }
+  ],
+  "fallback_rules": [
+    {
+      "condition": "model_unavailable",
+      "fallback_model_class": "economy",
+      "reason": "Use economy model as emergency fallback"
+    }
+  ],
+  "context_budget": 128000,
+  "retry_budget": 3,
+  "cost_budget": 5.0,
+  "independent_review_required": false
+}

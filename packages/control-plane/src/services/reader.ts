@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
+import { safeResolve } from './safety';
 
 function findRepoRoot(): string {
   let dir = __dirname;
@@ -139,9 +140,9 @@ export function readIntegrations(): unknown[] {
 }
 
 export function readRawJson(filePath: string): unknown {
-  return readJson(resolve(filePath));
+  return readJson(safeResolve(filePath));
 }
 
 export function readRawYaml(filePath: string): unknown {
-  return readYaml(resolve(filePath));
+  return readYaml(safeResolve(filePath));
 }

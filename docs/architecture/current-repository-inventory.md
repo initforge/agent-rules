@@ -19,8 +19,7 @@ agent-rules/
 ├── README-vi.md      Vietnamese landing page
 ├── automation/       Build, install, validate, sync, doctor scripts
 ├── docs/guides/           Maintainer documentation
-├── integrations/     Required/recommended/optional tool registry
-├── mcps/             MCP tool JSON schemas (vendor origin)
+├── integrations/     Required/recommended/optional tool registry + MCP schemas
 ├── platforms/        Per-runtime overlays + platform contracts
 ├── profiles/5fedu/projects/         5fedu template pack + known repos registry
 ├── rules/            Always-loaded global context (numbered)
@@ -35,7 +34,9 @@ agent-rules/
 
 | Item | Type | Owner | Status |
 |------|------|-------|--------|
-| `.github/workflows/validate.yml` | workflow | harness-maintainer | active |
+| `.github/workflows/static.yml` | workflow | harness-maintainer | active (required gate) |
+| `.github/workflows/native-smoke.yml` | workflow | harness-maintainer | advisory |
+| `.github/workflows/evaluation.yml` | workflow | harness-maintainer | advisory |
 
 **Consumers:** GitHub Actions  
 **Purpose:** Validates context, builds runtime, verifies mirrors on push/PR.
@@ -181,19 +182,10 @@ profiles/5fedu/projects/
 
 ---
 
-### 2.8 `mcps/` — MCP Tool Schemas
+### 2.8 `mcps/` — Removed (consolidated into `integrations/`)
 
-**Status:** Active  
-**Owner:** Unknown (vendor origin)  
-**Note:** No manifest, README, or build reference documents provenance.
-
-| Subdirectory | Tools | Status |
-|-------------|-------|--------|
-| `codebase-memory/` | 13 | active (canonical identity) |
-| `chrome-devtools/` | 29 | active |
-| `context7/` | 2 | active |
-| `playwright/` | 27 | active |
-| `tasks/` | 7 | active |
+**Status:** Removed  
+**Note:** MCP tool schemas previously under `mcps/` have been consolidated into corresponding `integrations/<policy>/<id>/` directories. Generated manifests are now at `generated/integrations/<id>/schema-manifest.json`. See section 2.7.
 
 ---
 
@@ -201,7 +193,7 @@ profiles/5fedu/projects/
 
 **Status:** Active  
 **Owner:** harness-maintainer  
-**7 files:** `README.md`, `00-system-map.md` through `05-maturity.md`.
+**9 files:** `README.md`, `00-system-map.md` through `06-platform-capability.md`.
 
 Written mostly in Vietnamese. Not rules — documentation for human maintainers.
 
@@ -236,7 +228,7 @@ Written mostly in Vietnamese. Not rules — documentation for human maintainers.
 
 | Severity | Finding | Recommendation |
 |----------|---------|----------------|
-| **Medium** **RESOLVED** | `mcps/codebase_memory/` and `mcps/codebase-memory/` were identical (13 tool JSONs each) | Removed `codebase_memory/`; canonical identity is `codebase-memory/` |
+| **Medium** **RESOLVED** | `integrations/required/codebase-memory-mcp/` conflicted with an older `mcps/codebase_memory/` duplicate | Removed `mcps/codebase_memory/`; canonical identity is `integrations/required/codebase-memory-mcp/` |
 | Low **RESOLVED** | Three scripts shared `10-` prefix in `automation/` | Renumbered: `10-export-5fedu-writeback` → `14-`, `10-sync-project-agents` → `15-` |
 
 ### 3.2 Stale Path References
@@ -251,7 +243,6 @@ Written mostly in Vietnamese. Not rules — documentation for human maintainers.
 
 | Severity | Finding | Paths |
 |----------|---------|-------|
-| **Medium** | `mcps/` tool JSONs have unknown upstream source; no manifest or README documents provenance | All 6 subdirectories |
 | Low | `skills/qa-skills` references upstream but has no sync mechanism | `skills/qa-skills/SKILL.md` |
 
 ### 3.4 Generated Files from Unknown Sources
@@ -279,7 +270,7 @@ Written mostly in Vietnamese. Not rules — documentation for human maintainers.
 
 | Finding | Paths |
 |---------|-------|
-| `mcps/` tool JSONs not referenced by any manifest, build script, or registry | All 6 subdirectories |
+| `mcps/` has been removed; MCP tool JSONs are now under `integrations/<policy>/<id>/` and referenced by registry | — |
 
 ### 3.8 Multiple Sources of Truth
 
@@ -297,7 +288,6 @@ Written mostly in Vietnamese. Not rules — documentation for human maintainers.
 | **5fedu-maintainer** | `skills/5fedu-*`, `profiles/5fedu/projects/` |
 | **agent-sessions** | `.agent/` |
 | **agent-user** | `.opencode/` |
-| **upstream-vendor** | `mcps/` |
 | **unknown** | `platforms/*/scripts/__pycache__/plan_guard` compiled cache |
 
 ---
@@ -337,10 +327,9 @@ Written mostly in Vietnamese. Not rules — documentation for human maintainers.
 
 ## 7. Recommended Cleanup Order
 
-1. **Add provenance to mcps/**: Create a manifest or README documenting upstream sources
-2. **Archive migration scripts**: Remove or archive the two one-time migration scripts
-3. **Remove or populate `automation/fixtures/`**: Empty directory cleanup
-4. **Add sync mechanism for `qa-skills`**: If upstream changes need tracking
-5. **Investigate `plan_guard` orphan**: Find or remove the orphaned compiled cache
+1. **Archive migration scripts**: Remove or archive the two one-time migration scripts
+2. **Remove or populate `automation/fixtures/`**: Empty directory cleanup
+3. **Add sync mechanism for `qa-skills`**: If upstream changes need tracking
+4. **Investigate `plan_guard` orphan**: Find or remove the orphaned compiled cache
 
-**Resolved:** `mcps/codebase_memory/` vs `codebase-memory/` duplication, `10-` script renumbering, stale `runtime.yaml` references in READMEs.
+**Resolved:** `mcps/` consolidated into `integrations/`, `10-` script renumbering, stale `runtime.yaml` references in READMEs.

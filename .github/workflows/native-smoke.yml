@@ -50,15 +50,16 @@ jobs:
         id: doctor
         continue-on-error: true
         run: |
-          node dist/index.js doctor ${{ matrix.platform }} --json > doctor-${{ matrix.platform }}.json 2>&1 || true
+          node dist/index.js doctor ${{ matrix.platform }} --json > doctor-${{ matrix.platform }}.json 2>&1; exit_code=$?
           cat doctor-${{ matrix.platform }}.json
+          echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
         working-directory: packages/cli
       - name: Parse and summarize
         id: summary
         shell: python
         run: |
           import json, os
-           path = f"packages/cli/doctor-{os.environ['MATRIX_PLATFORM']}.json"
+          path = f"packages/cli/doctor-{os.environ['MATRIX_PLATFORM']}.json"
           try:
             with open(path) as f:
               data = json.load(f)

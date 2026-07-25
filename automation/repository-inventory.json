@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-25T09:40:00Z",
-  "canonical_sha": "b3b6bddd0e127887769004026d364a821fbc16af",
+  "generated_at": "2026-07-25T23:45:00Z",
+  "canonical_sha": "bc2dc92dc8648de51e50d92065d85a4b35ddac4b",
   "top_level": [
     { "path": "AGENTS.md", "type": "documentation", "owner": "harness-maintainer", "canonical_source": null, "consumers": ["subagents", "workctl"], "public": true, "status": "active", "recommended_future_location": "root", "confidence": "high", "evidence": "Referenced by every work session" },
     { "path": "README.md", "type": "documentation", "owner": "harness-maintainer", "canonical_source": null, "public": true, "status": "active", "recommended_future_location": "root", "confidence": "high", "evidence": "GitHub landing page" },
@@ -22,7 +22,9 @@
       "confidence": "high",
       "evidence": "CI/CD pipeline",
       "entries": [
-        { "path": ".github/workflows/validate.yml", "type": "workflow", "owner": "harness-maintainer", "public": true, "status": "active", "consumers": ["03-validate-context.ps1", "01-build-runtime.ps1", "04-verify-mirrors.ps1"] }
+        { "path": ".github/workflows/static.yml", "type": "workflow", "owner": "harness-maintainer", "public": true, "status": "active", "consumers": ["all-agents", "CI/CD gate"] },
+        { "path": ".github/workflows/native-smoke.yml", "type": "workflow", "owner": "harness-maintainer", "public": true, "status": "advisory", "consumers": ["maintainers"] },
+        { "path": ".github/workflows/evaluation.yml", "type": "workflow", "owner": "harness-maintainer", "public": true, "status": "advisory", "consumers": ["maintainers"] }
       ]
     },
     {
@@ -71,7 +73,6 @@
         { "path": "rules/30-context-routing.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "load_order": 7 },
         { "path": "rules/40-harness-governance.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "load_order": "lazy" },
         { "path": "rules/41-harness-maintainer.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "load_order": "lazy" },
-        { "path": "rules/45-sync-canonical.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "load_order": "lazy" },
         { "path": "rules/50-context-budget.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "load_order": "lazy" }
       ]
     },
@@ -244,13 +245,13 @@
         { "path": "automation/audit-ui-routing.ps1", "type": "auditor", "status": "active" },
         { "path": "automation/audit-plan-artifact.ps1", "type": "auditor", "status": "active" },
         { "path": "automation/audit-workflow-clarity.ps1", "type": "auditor", "status": "active" },
-        { "path": "automation/audit-5fedu-template-purity.ps1", "type": "auditor", "status": "active" },
+        { "path": "profiles/5fedu/automation/audit-5fedu-template-purity.ps1", "type": "auditor", "status": "active" },
         { "path": "automation/audit-harness-commit-compare.ps1", "type": "auditor", "status": "active" },
         { "path": "automation/audit-context-pre-commit.sh", "type": "auditor", "status": "active" },
         { "path": "automation/validate-tool-registry.ps1", "type": "validator", "status": "active" },
         { "path": "automation/profiles/tah-app.json", "type": "organization-specific profile", "status": "active" },
         { "path": "automation/profiles/nostime.json", "type": "organization-specific profile", "status": "active" },
-        { "path": "automation/benchmarks/", "type": "benchmark", "status": "active" },
+        { "path": "evals/fixtures/", "type": "evaluation fixtures", "status": "active" },
         { "path": "automation/migrate-nostime-project-local.ps1", "type": "migration", "status": "deprecated" },
         { "path": "automation/migrate-tahapp-project-local.ps1", "type": "migration", "status": "deprecated" },
         { "path": "automation/install-pre-commit-hook.sh", "type": "installer", "status": "active" },

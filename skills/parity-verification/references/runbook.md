@@ -98,7 +98,7 @@ Write structured JSON report to `.agent/parity-reports/<run-id>/report.json`.
 
 ## Evidence collection commands
 
-Using Playwright MCP tools (from `mcps/playwright/tools/`):
+Using Playwright MCP tools (from `integrations/recommended/playwright-mcp/`):
 
 - `browser_navigate` — navigate to URL
 - `browser_resize` — set viewport
@@ -107,7 +107,7 @@ Using Playwright MCP tools (from `mcps/playwright/tools/`):
 - `browser_click` / `browser_hover` — interaction
 - `browser_wait_for` — wait for selector or state
 
-Using Chrome DevTools MCP tools (from `mcps/chrome-devtools/tools/`):
+Using Chrome DevTools MCP tools (from `integrations/recommended/chrome-devtools-mcp/`):
 
 - `list_console_messages` — capture console
 - `list_network_requests` — capture network
@@ -127,7 +127,7 @@ Record at start of session:
   "timezone": "Asia/Ho_Chi_Minh",
   "dpr": 2,
   "font_hint": "Roboto, Arial, sans-serif",
-  "data_fixture": "5fedu-employees-3-records"
+  "data_fixture": "employees-3-records"
 }
 ```
 

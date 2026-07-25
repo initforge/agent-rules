@@ -15,9 +15,9 @@ except ImportError:
 
 
 ROOT = Path(__file__).resolve().parents[2]
-EVAL_SCHEMA = ROOT / "automation" / "benchmarks" / "evaluation-result.schema.json"
-BENCHMARK_DIR = ROOT / "automation" / "benchmarks"
-DEFAULT_CORPUS = BENCHMARK_DIR / "agent-quality-benchmark.json"
+FIXTURES_DIR = ROOT / "evals" / "fixtures"
+EVAL_SCHEMA = FIXTURES_DIR / "evaluation-result.schema.json"
+DEFAULT_CORPUS = FIXTURES_DIR / "agent-quality-benchmark.json"
 
 
 def load_json(path: str | Path) -> Any:

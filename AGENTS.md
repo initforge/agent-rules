@@ -2,7 +2,7 @@
 
 Canonical architecture (real tree):
 
-- `.github/workflows/`: CI/CD (deterministic.yml is the single required gate).
+- `.github/workflows/`: CI/CD (static.yml is the single required gate).
 - `rules/`: global context always loaded (lean numbering).
 - `skills/`: kỹ năng lazy-load theo trigger.
 - `schemas/`: canonical portable artifact schemas.

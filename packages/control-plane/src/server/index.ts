@@ -5,7 +5,8 @@ const PORT = parseInt(process.env.PORT || '3099');
 
 async function start() {
   await getDb();
-  const server = app.listen(PORT, () => {
+  const HOST = process.env.HOST || '127.0.0.1';
+  const server = app.listen(PORT, HOST, () => {
     console.log(`[control-plane] Server running on http://localhost:${PORT}`);
     console.log(`[control-plane] API: http://localhost:${PORT}/api`);
   });

@@ -42,7 +42,7 @@ Linux/macOS (requires [PowerShell Core](https://github.com/PowerShell/PowerShell
 ./automation/09-doctor.ps1
 ```
 
-Install targets: `~/.codex`, `~/.grok`, `~/.gemini/config` (Antigravity), `~/.cursor`. MCP format differs per platform — see `platforms/*/runtime.yaml`.
+Install targets: `~/.codex`, `~/.grok`, `~/.gemini/config` (Antigravity), `~/.cursor`. MCP format differs per platform — see `platforms/platform-contracts.json`.
 
 **Important:** The path `~/.gemini/config` is the Antigravity runtime home, not Gemini CLI. The `gemini` CLI binary is the Antigravity host runtime. See [platform capability matrix](docs/guides/06-platform-capability.md) for explicit depth per product.
 

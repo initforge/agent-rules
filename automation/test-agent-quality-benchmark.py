@@ -11,7 +11,7 @@ from pathlib import Path
 
 import agent_quality as quality
 from agent_quality import (
-    BENCHMARK_DIR,
+    FIXTURES_DIR,
     DEFAULT_CORPUS,
     DEFAULT_GRAPH,
     ContractError,
@@ -28,15 +28,15 @@ from agent_quality import (
 
 
 ROOT = Path(__file__).resolve().parents[1]
-FIXTURES = BENCHMARK_DIR / "fixtures"
+FIXTURES = FIXTURES_DIR / "fixtures"
 
-sys.path.insert(0, str(ROOT / "automation"))
-from conformance.routing import run_all as conformance_run, check_corpus_integrity, check_fixture_oracles
-from telemetry.collector import TelemetryCollector
-from evaluations.controlled import compare_variants, make_blank_dimensions
-from evaluations.native_eval import make_capability_receipt, produce_native_result
-from outcome.tracker import OutcomeTracker
-from benchmarks.compat.reader_v1 import convert_v1_live_record, convert_v1_report
+sys.path.insert(0, str(ROOT))
+from evals.conformance.routing import run_all as conformance_run, check_corpus_integrity, check_fixture_oracles
+from evals.telemetry.collector import TelemetryCollector
+from evals.controlled.controlled import compare_variants, make_blank_dimensions
+from evals.controlled.native_eval import make_capability_receipt, produce_native_result
+from evals.outcomes.tracker import OutcomeTracker
+from evals.fixtures.compat.reader_v1 import convert_v1_live_record, convert_v1_report
 
 
 def profiled_record(base: dict, case: dict, run_id: str) -> dict:

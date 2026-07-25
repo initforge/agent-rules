@@ -1,7 +1,8 @@
 # Platforms
 
-**Vai trò:** Delta riêng từng runtime — overlay + `runtime.yaml`.  
-**Ý đồ:** Core giống nhau; chỉ khác cách cài MCP và home path.
+**Vai trò:** Delta riêng từng runtime — overlay + platform adapters.  
+
+Contracts: `platforms/platform-contracts.json`
 
 | Platform | Overlay | Install home | Install method |
 |---|---|---|---|---|

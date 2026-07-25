@@ -33,6 +33,13 @@
       "routing": {"hook_lifecycle": "beforeSubmitPrompt", "context_delivery": "local_plugin_route_capsule"},
       "orchestration": {"native_spawn_tool": "Task", "agent_discovery": "$CURSOR_HOME/agents", "model_attestation": "host_attested", "permission_capability": "host_declared", "isolation_capability": "host_declared"},
       "mcp": {"config_path": "$CURSOR_HOME/mcp.json", "format": "json_mcpServers", "native_inspect": "cursor_mcp_ui", "live_doctor": "native_mcp_ping"}
+    },
+    "opencode": {
+      "runtime": {"home_env": "OPENCODE_HOME", "home_default": "~/.config/opencode", "global_entrypoint": "AGENTS.md"},
+      "bootstrap": {"strategy": "managed_directory", "entrypoint": "AGENTS.md", "restart_action": "restart_or_reload"},
+      "routing": {"hook_lifecycle": "none", "context_delivery": "route_capsule_injection"},
+      "orchestration": {"native_spawn_tool": "none", "agent_discovery": "$OPENCODE_HOME/agents", "model_attestation": "host_declared", "permission_capability": "role_prompt", "isolation_capability": "host_declared"},
+      "mcp": {"config_path": "$OPENCODE_HOME/opencode.json", "format": "json_mcpServers", "native_inspect": "opencode_mcp_ui", "live_doctor": "native_mcp_ping"}
     }
   }
 }

@@ -12,9 +12,9 @@ except ImportError:
 
 
 ROOT = Path(__file__).resolve().parents[2]
-BENCHMARK_DIR = ROOT / "automation" / "benchmarks"
-DEFAULT_CORPUS = BENCHMARK_DIR / "agent-quality-benchmark.json"
-DEFAULT_CORPUS_SCHEMA = BENCHMARK_DIR / "agent-quality-benchmark.schema.json"
+FIXTURES_DIR = ROOT / "evals" / "fixtures"
+DEFAULT_CORPUS = FIXTURES_DIR / "agent-quality-benchmark.json"
+DEFAULT_CORPUS_SCHEMA = FIXTURES_DIR / "agent-quality-benchmark.schema.json"
 DEFAULT_GRAPH = ROOT / "generated" / "context-graph.json"
 
 
@@ -93,7 +93,7 @@ def check_fixture_oracles(corpus_path: str | Path = DEFAULT_CORPUS) -> list[str]
     they may be defined externally or created at runtime.
     """
     corpus = load_json(corpus_path)
-    fixtures_path = BENCHMARK_DIR / "live-fixtures.json"
+    fixtures_path = FIXTURES_DIR / "live-fixtures.json"
     fixtures = load_json(fixtures_path).get("fixtures", {})
     issues = []
     for case in corpus.get("cases", []):

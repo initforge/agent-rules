@@ -56,7 +56,7 @@ that the installed policy hash matches canonical source, not that a host selecte
 | `install-pre-commit-hook.sh` | Cài pre-commit vào repo hiện tại, path chỉ định, hoặc `--global` (core.hooksPath) |
 | `11-install-runtime-hooks.sh` | Cài Codex/Antigravity/Grok/Cursor hooks + pre-commit; hook chỉ route/nhắc/ghi native receipt và fail-open |
 | `13-cutover-context-routing.ps1` | Bật strict graph routing sau conformance; ghi graph + contract hashes vào `skill-state/routing-mode.json` |
-| `generate-doc-references.py` | Generate volatile reference docs (`generated/references/`) từ canonical registry, manifests, schemas, platform runtime.yaml |
+| `generate-doc-references.py` | Generate volatile reference docs (`generated/references/`) từ canonical registry, manifests, schemas, platform-contracts.json |
 
 ## Linux / macOS
 

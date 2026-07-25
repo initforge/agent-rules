@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/context.schema.json",
+  "title": "Portable Context Contract",
+  "description": "Schema for context sources loaded into a prompt. Platform-neutral; tracks which sources were loaded, their authority, scope, trigger, priority, freshness, content integrity, token budget, profile requirements, and loading agent.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "version", "sources"
+  ],
+  "properties": {
+    "schema": { "const": "artifact/context" },
+    "version": { "const": 1 },
+    "schema_version": { "type": "string", "minLength": 1 },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "type"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "type": { "type": "string", "minLength": 1 },
+          "authority": { "type": "string" },
+          "scope": { "type": "string" },
+          "trigger": { "type": "string" },
+          "priority": { "type": "integer", "minimum": 0 },
+          "freshness": { "type": "string", "format": "date-time" },
+          "commit_hash": { "type": "string" },
+          "content_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "token_budget": { "type": "integer", "minimum": 0 },
+          "profile_requirements": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "loaded_by": { "type": "string" }
+        }
+      }
+    }
+  }
+}

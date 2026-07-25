@@ -2,27 +2,24 @@ import { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
 import * as reader from '../services/reader';
-
-function findRoot(): string {
-  let dir = __dirname;
-  for (let i = 0; i < 10; i++) {
-    if (fs.existsSync(path.join(dir, 'rules', 'manifest.yaml'))) return dir;
-    const parent = path.dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return path.resolve(__dirname, '..', '..', '..');
-}
-const ROOT = findRoot();
+import { safeResolve } from '../services/safety';
 
 const router = Router();
+
+function apiError(res: any, code: number, err: unknown): void {
+  if (err instanceof Error && err.message.includes('Path traversal')) {
+    res.status(403).json({ ok: false, error: 'Forbidden' });
+    return;
+  }
+  res.status(code).json({ ok: false, error: 'An internal error occurred' });
+}
 
 router.get('/all', (_req, res) => {
   try {
     const data = reader.readAll();
     res.json({ ok: true, data });
   } catch (err) {
-    res.status(500).json({ ok: false, error: String(err) });
+    apiError(res, 500, err);
   }
 });
 
@@ -31,7 +28,7 @@ router.get('/platforms', (_req, res) => {
     const platforms = reader.readPlatforms();
     res.json({ ok: true, data: platforms });
   } catch (err) {
-    res.status(500).json({ ok: false, error: String(err) });
+    apiError(res, 500, err);
   }
 });
 
@@ -40,7 +37,7 @@ router.get('/skills', (_req, res) => {
     const skills = reader.readSkills();
     res.json({ ok: true, data: skills });
   } catch (err) {
-    res.status(500).json({ ok: false, error: String(err) });
+    apiError(res, 500, err);
   }
 });
 
@@ -49,7 +46,7 @@ router.get('/profiles', (_req, res) => {
     const profiles = reader.readProfiles();
     res.json({ ok: true, data: profiles });
   } catch (err) {
-    res.status(500).json({ ok: false, error: String(err) });
+    apiError(res, 500, err);
   }
 });
 
@@ -58,7 +55,7 @@ router.get('/agents', (_req, res) => {
     const agents = reader.readAgents();
     res.json({ ok: true, data: agents });
   } catch (err) {
-    res.status(500).json({ ok: false, error: String(err) });
+    apiError(res, 500, err);
   }
 });
 
@@ -69,6 +66,7 @@ router.get('/file', (req, res) => {
       res.status(400).json({ ok: false, error: 'path query parameter required' });
       return;
     }
+    const safePath = safeResolve(filePath);
     const ext = path.extname(filePath);
     let data: unknown;
     if (ext === '.json') {
@@ -76,11 +74,11 @@ router.get('/file', (req, res) => {
     } else if (ext === '.yaml' || ext === '.yml') {
       data = reader.readRawYaml(filePath);
     } else {
-      data = fs.readFileSync(path.resolve(ROOT, filePath), 'utf-8');
+      data = fs.readFileSync(safePath, 'utf-8');
     }
     res.json({ ok: true, data });
   } catch (err) {
-    res.status(500).json({ ok: false, error: String(err) });
+    apiError(res, 500, err);
   }
 });
 

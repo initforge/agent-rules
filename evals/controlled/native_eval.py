@@ -11,7 +11,7 @@ from typing import Any
 from . import controlled as eval_ctl
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_CORPUS = ROOT / "automation" / "benchmarks" / "agent-quality-benchmark.json"
+DEFAULT_CORPUS = ROOT / "evals" / "fixtures" / "agent-quality-benchmark.json"
 
 
 def load_json(path: str | Path) -> Any:

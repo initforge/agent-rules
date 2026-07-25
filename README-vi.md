@@ -42,7 +42,7 @@ Linux/macOS (cần [PowerShell Core](https://github.com/PowerShell/PowerShell)):
 ./automation/09-doctor.ps1
 ```
 
-Cài vào `~/.codex`, `~/.grok`, `~/.gemini/config` (Antigravity), `~/.cursor`. Định dạng MCP khác nhau từng nền — xem `platforms/*/runtime.yaml`.
+Cài vào `~/.codex`, `~/.grok`, `~/.gemini/config` (Antigravity), `~/.cursor`. Định dạng MCP khác nhau từng nền — xem `platforms/platform-contracts.json`.
 
 **Lưu ý:** `~/.gemini/config` là đường dẫn cài đặt của Antigravity, không phải Gemini CLI. Trình CLI `gemini` là runtime host của Antigravity. Xem [ma trận năng lực nền tảng](docs/guides/06-platform-capability.md) để biết mức hỗ trợ từng sản phẩm.
 

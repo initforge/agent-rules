@@ -6,11 +6,19 @@ import mutationRouter from '../routes/mutation';
 import healthRouter from '../routes/health';
 import runsRouter from '../routes/runs';
 import auditRouter from '../routes/audit';
+import { authMiddleware } from '../middleware/auth';
 
 const app = express();
 
-app.use(cors());
+app.set('x-powered-by', false);
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type', 'X-API-Key'],
+}));
 app.use(express.json({ limit: '10mb' }));
+
+app.use(authMiddleware);
 
 app.use('/api/config', configRouter);
 app.use('/api/mutation', mutationRouter);

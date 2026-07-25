@@ -15,7 +15,7 @@ except ImportError:
 
 
 ROOT = Path(__file__).resolve().parents[2]
-TELEMETRY_SCHEMA = ROOT / "automation" / "benchmarks" / "telemetry.schema.json"
+TELEMETRY_SCHEMA = ROOT / "evals" / "fixtures" / "telemetry.schema.json"
 
 
 def load_json(path: str | Path) -> Any:

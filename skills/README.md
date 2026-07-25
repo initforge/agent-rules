@@ -19,8 +19,6 @@
 | `qa-skills` | Não QA — map `petrkindlmann/qa-skills`; combo với `browser-qa` |
 | `browser-qa` | Mắt+tay coding agent (Chrome DevTools / Playwright MCP) |
 
-Profile skills (enable profile first via `profiles\install-profile.ps1 -Name <name>`):
-| `5fedu-project` | Setup/maintain 5fedu context |
-| `5fedu-module-parity` | Tạo/sửa/refactor module ERP — clone/audit vs template |
-
 Mỗi skill: một thư mục `SKILL.md` + references/scripts tùy nhu cầu.
+
+Profile skills (e.g. `5fedu-project`, `5fedu-module-parity`) live under `profiles/<name>/skills/` and are installed via `profiles\install-profile.ps1 -Name <name>`. They are not listed in the main table above.

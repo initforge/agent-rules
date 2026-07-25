@@ -38,7 +38,7 @@ jobs:
           node-version: "22"
       - run: npm ci
         working-directory: packages/cli
-      - run: npx vitest run --reporter=junit --outputFile=test-results.xml 2>&1 || npx vitest run 2>&1
+      - run: npx vitest run --reporter=junit --outputFile=test-results.xml --reporter=verbose
         working-directory: packages/cli
         continue-on-error: false
       - uses: actions/upload-artifact@v4
@@ -94,6 +94,13 @@ jobs:
         working-directory: packages/cli
       - run: node dist/index.js validate
         working-directory: packages/cli
+      - run: pwsh -File automation/03-validate-context.ps1
+      - run: pwsh -File automation/01-build-runtime.ps1
+      - run: pwsh -File automation/04-verify-mirrors.ps1
+      - name: Validate documentation drift
+        run: |
+          python automation/generate-doc-references.py
+          python automation/validate-doc-drift.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

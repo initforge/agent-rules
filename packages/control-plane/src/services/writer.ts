@@ -2,19 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import yaml from 'js-yaml';
+import { safeResolve, safeResolveAgainst } from './safety';
 
-function findRoot(): string {
-  let dir = __dirname;
-  for (let i = 0; i < 10; i++) {
-    if (fs.existsSync(path.join(dir, 'rules', 'manifest.yaml'))) return dir;
-    const parent = path.dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return path.resolve(__dirname, '..', '..', '..');
-}
-const ROOT = findRoot();
-const BACKUP_DIR = path.join(ROOT, 'packages', 'control-plane', 'backups');
+const BACKUP_DIR = path.join(safeResolve('.'), 'packages', 'control-plane', 'backups');
 
 function ensureBackupDir(): void {
   if (!fs.existsSync(BACKUP_DIR)) {
@@ -35,7 +25,7 @@ export interface WriteResult {
 }
 
 export function atomicWrite(relativePath: string, newContent: string): WriteResult {
-  const fullPath = path.resolve(ROOT, relativePath);
+  const fullPath = safeResolve(relativePath);
   if (!fs.existsSync(fullPath)) {
     return { success: false, oldHash: '', newHash: '', backupPath: '', error: `File not found: ${relativePath}` };
   }
@@ -61,9 +51,10 @@ export function atomicWrite(relativePath: string, newContent: string): WriteResu
 }
 
 export function rollback(backupPath: string, targetPath: string): boolean {
-  if (!fs.existsSync(backupPath)) return false;
-  const fullTarget = path.resolve(ROOT, targetPath);
-  fs.copyFileSync(backupPath, fullTarget);
+  const safeBackup = safeResolveAgainst(BACKUP_DIR, path.basename(backupPath));
+  const safeTarget = safeResolve(targetPath);
+  if (!fs.existsSync(safeBackup)) return false;
+  fs.copyFileSync(safeBackup, safeTarget);
   return true;
 }
 
