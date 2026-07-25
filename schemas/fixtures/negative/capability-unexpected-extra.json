@@ -1,0 +1,10 @@
+{
+  "schema": "artifact/capability",
+  "version": 1,
+  "class": "standard",
+  "mode": "native",
+  "allowed_tool_classes": ["read"],
+  "isolation": "workspace",
+  "permission_model": "host-enforced",
+  "unknown_prop": "should be rejected"
+}

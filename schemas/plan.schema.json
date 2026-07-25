@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/plan.schema.json",
+  "title": "Portable Executable Plan",
+  "description": "An executable plan contract describing intent, change map, acceptance criteria, task graph, and execution guardrails. Platform-neutral; references capability classes (economy/standard/expert) rather than provider model IDs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "version", "meta", "intent", "acceptance", "task_graph", "execution_contract"
+  ],
+  "properties": {
+    "schema": { "const": "artifact/plan" },
+    "version": { "const": 1 },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "created_at", "updated_at", "source_refs"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" },
+        "source_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome", "risk_classification", "in_scope", "non_goals", "scope_lock"],
+      "properties": {
+        "outcome": { "type": "string", "minLength": 1 },
+        "risk_classification": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "unclassified"]
+        },
+        "in_scope": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "non_goals": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "scope_lock": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "allowed_systems": { "type": "array", "items": { "type": "string" } },
+            "forbidden_systems": { "type": "array", "items": { "type": "string" } },
+            "owner_decisions": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "open_questions": { "type": "array", "items": { "type": "string" } },
+        "assumptions": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "change_map": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["area", "current_truth", "exact_change"],
+        "properties": {
+          "area": { "type": "string", "minLength": 1 },
+          "current_truth": { "type": "string", "minLength": 1 },
+          "exact_change": { "type": "string", "minLength": 1 },
+          "files": { "type": "array", "items": { "type": "string" } },
+          "compatibility": { "type": "string" }
+        }
+      }
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "claim", "proof_profile", "required_dimensions"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^AC[0-9]+$" },
+          "claim": { "type": "string", "minLength": 1 },
+          "proof_profile": { "type": "string", "minLength": 1 },
+          "required_dimensions": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "required_kinds": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "static", "diff", "build", "unit", "integration", "api", "e2e",
+                "browser", "performance", "security", "manual", "artifact",
+                "transcript-review", "pipeline-run", "production-smoke"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "task_graph": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "depends_on", "capability_class", "acceptance_ids"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z0-9._-]+$" },
+          "name": { "type": "string", "minLength": 1 },
+          "work": { "type": "string", "minLength": 1 },
+          "depends_on": { "type": "array", "items": { "type": "string" } },
+          "capability_class": {
+            "type": "string",
+            "enum": ["economy", "standard", "expert", "unassigned"]
+          },
+          "write_paths": { "type": "array", "items": { "type": "string" } },
+          "context_paths": { "type": "array", "items": { "type": "string" } },
+          "forbidden_paths": { "type": "array", "items": { "type": "string" } },
+          "acceptance_ids": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string" }
+          },
+          "review_required": { "type": "boolean" },
+          "rollback_point": { "type": "string" }
+        }
+      }
+    },
+    "execution_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode", "shape", "ledger", "strategy", "max_agents", "max_depth",
+        "effort_cap", "authorized_final_actions"
+      ],
+      "properties": {
+        "mode": { "const": "automatic" },
+        "shape": {
+          "type": "string",
+          "enum": ["small", "medium", "large", "resumable"]
+        },
+        "ledger": { "type": "string", "enum": ["off", "auto", "required"] },
+        "strategy": {
+          "type": "string",
+          "enum": ["single-agent", "delegated", "parallel", "sequential-recovery"]
+        },
+        "max_agents": { "type": "integer", "minimum": 1 },
+        "max_depth": { "type": "integer", "minimum": 0, "maximum": 2 },
+        "effort_cap": { "type": "string", "enum": ["low", "medium", "high", "unset"] },
+        "authorized_final_actions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["edit", "commit", "push", "deploy", "external-write", "none"]
+          }
+        },
+        "proof_profiles": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "repository_truth": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "baseline": { "type": "string", "minLength": 1 },
+        "branch": { "type": "string" },
+        "architecture": { "type": "array", "items": { "type": "string" } },
+        "reference_map": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["risk", "early_signal", "prevention"],
+        "properties": {
+          "risk": { "type": "string", "minLength": 1 },
+          "early_signal": { "type": "string", "minLength": 1 },
+          "prevention": { "type": "string", "minLength": 1 },
+          "regression_surface": { "type": "string" },
+          "recovery": { "type": "string" }
+        }
+      }
+    },
+    "long_ledger": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requirement_ids": { "type": "array", "items": { "type": "string" } },
+        "decision_ids": { "type": "array", "items": { "type": "string" } },
+        "injection_ids": { "type": "array", "items": { "type": "string" } },
+        "discovery_ids": { "type": "array", "items": { "type": "string" } },
+        "receipt_ids": { "type": "array", "items": { "type": "string" } },
+        "usage": { "type": "object" },
+        "resume_point": { "type": "string" }
+      }
+    }
+  }
+}
