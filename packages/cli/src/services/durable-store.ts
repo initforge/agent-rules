@@ -110,7 +110,7 @@ export class DurableStore {
     const completedTaskIds: string[] = [];
     for (const task of run.tasks) {
       const t = task as Record<string, unknown>;
-      if (t.status === 'completed' || t.completed === true) {
+      if (t.state === 'COMPLETED' || t.status === 'completed' || t.completed === true) {
         if (typeof t.id === 'string') completedTaskIds.push(t.id);
       }
     }

@@ -1,4 +1,3 @@
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
@@ -14,11 +13,13 @@ import {
 } from './orchestrator.js';
 import type { OrchestrationRun, TaskState, DelegationReceipt } from './orchestrator.js';
 import { DurableStore } from './durable-store.js';
+import { LocalWorkerAdapter } from '../adapters/local-worker.js';
 
 export interface RunOptions {
   project?: string;
   profile?: string;
   platform?: string;
+  adapter?: string;
   dryRun?: boolean;
   autonomy?: number;
 }
@@ -73,20 +74,6 @@ function discoverRepoFacts(
   } catch {
     return { branch: 'unknown', sha: '0'.repeat(40) };
   }
-}
-
-function simulateTaskExecution(taskId: string): DelegationReceipt {
-  return {
-    taskId,
-    filesChanged: [],
-    commandsRun: [],
-    testsRun: [],
-    evidencePaths: [],
-    status: 'PASS',
-    retries: 0,
-    assumptions: [],
-    unresolvedFindings: [],
-  };
 }
 
 function rebuildOrchestrationFromRun(
@@ -168,16 +155,36 @@ export async function executeRun(
   await store.checkpoint(runId);
 
   const receipts: DelegationReceipt[] = [];
+  const adapterName = options?.adapter ?? 'local-worker';
+  if (adapterName !== 'local-worker') {
+    throw new Error(`Unknown adapter: ${adapterName}`);
+  }
+  const adapter = new LocalWorkerAdapter();
 
   while (true) {
     const readyTasks = getNextReadyTasks(orcRun);
     if (readyTasks.length === 0) break;
 
     for (const task of readyTasks) {
-      assignTask(orcRun, task.taskId, 'simulated-platform');
+      assignTask(orcRun, task.taskId, 'local-worker');
       syncTasksToStore(basePath, runId, orcRun.tasks);
 
-      const receipt = simulateTaskExecution(task.taskId);
+      let receipt: DelegationReceipt;
+      try {
+        receipt = await adapter.submitAssignment(task.assignment!);
+      } catch (err) {
+        receipt = {
+          taskId: task.taskId,
+          filesChanged: [],
+          commandsRun: [],
+          testsRun: [],
+          evidencePaths: [],
+          status: 'FAIL',
+          retries: 0,
+          assumptions: [],
+          unresolvedFindings: [(err as Error).message],
+        };
+      }
       completeTask(orcRun, task.taskId, receipt);
       receipts.push(receipt);
 
@@ -247,16 +254,36 @@ export async function resumeRun(
   }
 
   const allReceipts = [...storedReceipts];
+  const adapterName = options?.adapter ?? 'local-worker';
+  if (adapterName !== 'local-worker') {
+    throw new Error(`Unknown adapter: ${adapterName}`);
+  }
+  const adapter = new LocalWorkerAdapter();
 
   while (true) {
     const readyTasks = getNextReadyTasks(orcRun);
     if (readyTasks.length === 0) break;
 
     for (const task of readyTasks) {
-      assignTask(orcRun, task.taskId, 'simulated-platform');
+      assignTask(orcRun, task.taskId, 'local-worker');
       syncTasksToStore(basePath, runId, orcRun.tasks);
 
-      const receipt = simulateTaskExecution(task.taskId);
+      let receipt: DelegationReceipt;
+      try {
+        receipt = await adapter.submitAssignment(task.assignment!);
+      } catch (err) {
+        receipt = {
+          taskId: task.taskId,
+          filesChanged: [],
+          commandsRun: [],
+          testsRun: [],
+          evidencePaths: [],
+          status: 'FAIL',
+          retries: 0,
+          assumptions: [],
+          unresolvedFindings: [(err as Error).message],
+        };
+      }
       completeTask(orcRun, task.taskId, receipt);
       allReceipts.push(receipt);
 

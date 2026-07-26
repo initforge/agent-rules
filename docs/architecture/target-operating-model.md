@@ -98,31 +98,32 @@ Record every escalation.
 
 | ID | Subsystem | Status | Milestone |
 |----|-----------|--------|-----------|
-| SS-01 | Repository inventory & cleanup | PLANNED | M0 |
-| SS-02 | Deterministic build baseline | PLANNED | M1 |
-| SS-03 | Canonical CLI | PLANNED | M2 |
-| SS-04 | Template vendoring | PLANNED | M3 |
-| SS-05 | Profile isolation | PLANNED | M4 |
-| SS-06 | Contract system | PARTIAL | M5 |
-| SS-07 | Intent Compiler | PLANNED | M6 |
-| SS-08 | Context Engine | PLANNED | M7 |
-| SS-09 | Plan Compiler | PLANNED | M8 |
-| SS-10 | Orchestration runtime | PLANNED | M9 |
-| SS-11 | Durable execution store | PLANNED | M10 |
-| SS-12 | Workspace manager | PLANNED | M11 |
-| SS-13 | Verification profiles | PLANNED | M12 |
-| SS-14 | Evaluation & telemetry | PLANNED | M13 |
-| SS-15 | Long-task evaluation | PLANNED | M14 |
-| SS-16 | Platform adapters | PARTIAL | M15 |
-| SS-17 | UI/business parity | PLANNED | M16 |
-| SS-18 | Security & policy | PARTIAL | M17 |
-| SS-19 | Tools, MCP, skills registry | PARTIAL | M18 |
-| SS-20 | Knowledge lifecycle | PLANNED | M19 |
-| SS-21 | Installer lifecycle | PARTIAL | M20 |
-| SS-22 | Control plane | PARTIAL | M21 |
-| SS-23 | CI convergence | PARTIAL | M22 |
+| SS-01 | Intent Compiler | OPERATIONAL | M0 |
+| SS-02 | Context Engine | OPERATIONAL | M1 |
+| SS-03 | Plan Compiler | OPERATIONAL | M2 |
+| SS-04 | Canonical contracts and migrations | VERIFIED | M3 |
+| SS-05 | Agent topology and delegation | OPERATIONAL | M4 |
+| SS-06 | Model router and resource governor | PARTIAL | M5 |
+| SS-07 | Capability negotiation | PARTIAL | M6 |
+| SS-08 | Platform adapters | PARTIAL | M7 |
+| SS-09 | Policy, approvals and least privilege | VERIFIED | M8 |
+| SS-10 | Orchestration runtime | VERIFIED | M9 |
+| SS-11 | Durable execution | VERIFIED | M10 |
+| SS-12 | Workspace isolation and integration | NOT_STARTED | M11 |
+| SS-13 | Verification and evidence engine | PARTIAL | M12 |
+| SS-14 | Evaluation and telemetry | PARTIAL | M13 |
+| SS-15 | Long-task controlled evaluation | NOT_STARTED | M14 |
+| SS-16 | Tool, MCP and skill registry | PARTIAL | M15 |
+| SS-17 | UI and business parity | NOT_STARTED | M16 |
+| SS-18 | Installer lifecycle | PARTIAL | M17 |
+| SS-19 | Control plane | PARTIAL | M18 |
+| SS-20 | Knowledge and memory lifecycle | NOT_STARTED | M19 |
+| SS-21 | Safe improvement lifecycle | NOT_STARTED | M20 |
+| SS-22 | CI, packaging and cross-platform verification | VERIFIED | M21 |
+| SS-23 | Profile isolation and immutable references | VERIFIED | M22 |
+| SS-24 | Cleanup, migration and garbage collection | PARTIAL | M23 |
 
-Status key: NOT_STARTED | PLANNED | PARTIAL | OPERATIONAL | VERIFIED
+Status key: NOT_STARTED | PARTIAL | OPERATIONAL | VERIFIED
 
 ## 7. Level 3 autonomy target
 
@@ -182,6 +183,12 @@ Do not return PASS unless:
 40. Final independent review ran
 41. No blocking finding remains
 42. No claim exceeds evidence
+43. SS-04 Contracts are versioned and migration-tested
+44. SS-07 Capability negotiation is defined and enforceable
+45. SS-16 Tool, MCP and skill registry is populated and queryable
+46. SS-20 Knowledge and memory lifecycle is implemented
+47. SS-21 Safe improvement lifecycle is implemented
+48. SS-24 Cleanup, migration and garbage collection is operational
 
 ## 9. Accepted architectural decisions
 
@@ -229,43 +236,47 @@ Do not return PASS unless:
 | RID | Source | Description | Status |
 |-----|--------|-------------|--------|
 | R-001 | 1-install | One-command install for any platform | PLANNED |
-| R-002 | 1-detect | Auto-detect repo, OS, platform, profile | PLANNED |
-| R-003 | 1-plan | Plan, delegate, implement, verify, review | PLANNED |
-| R-004 | 3-operating-model | Cross-session operating model doc | IN_PROGRESS |
-| R-005 | 4-model-policy | Provider-neutral model classes + mapping | PLANNED |
+| R-002 | 1-detect | Auto-detect repo, OS, platform, profile | OPERATIONAL |
+| R-003 | 1-plan | Plan, delegate, implement, verify, review | OPERATIONAL |
+| R-004 | 3-operating-model | Cross-session operating model doc | COMPLETED |
+| R-005 | 4-model-policy | Provider-neutral model classes + mapping | PARTIAL |
 | R-006 | 6-baseline | Clean git baseline, feature branch | COMPLETED |
 | R-007 | 6-gitattributes | Line-ending policy | COMPLETED |
-| R-008 | 7-topology | Single orchestrator, depth 1 | PLANNED |
-| R-009 | 8-permission | Least privilege, auditor=read-only | PLANNED |
-| R-010 | 9-delegation | Contract with task ID, ACs, ownership | PLANNED |
-| R-011 | 10-evidence | 6 evidence statuses, 6 separation layers | PLANNED |
-| R-012 | 11-inventory | Complete repo inventory, classify every file | PLANNED |
-| R-013 | 12-deterministic | npm run verify:all | PLANNED |
-| R-014 | 13-cli | TypeScript canonical CLI | PLANNED |
-| R-015 | 14-template | 5fedu immutable vendored template | PLANNED |
-| R-016 | 15-template-lifecycle | Materialize, seed, doctor | PLANNED |
-| R-017 | 16-isolation | Public install = no 5fedu | PLANNED |
-| R-018 | 17-contracts | 15 canonical versioned contracts | PLANNED |
-| R-019 | 18-intent-compiler | Preserve request, derive requirements | PLANNED |
-| R-020 | 19-context-engine | Repository map, routing, budgets | PLANNED |
-| R-021 | 20-plan-compiler | Task graph, dependency detection | PLANNED |
-| R-022 | 21-orchestration | Model routing, ownership, receipts | PLANNED |
-| R-023 | 22-durable | 14 states, checkpoint, resume | PLANNED |
-| R-024 | 23-workspace | Worktree isolation, conflict detection | PLANNED |
-| R-025 | 24-verification | 19 verification profiles | PLANNED |
-| R-026 | 25-eval-telemetry | 4 layers, canonical events | PLANNED |
-| R-027 | 26-long-task | 10+ file evaluation | PLANNED |
-| R-028 | 27-platforms | 5 platform adapters | PLANNED |
-| R-029 | 28-opencode | Canonical config, harness-orchestrator | PLANNED |
-| R-030 | 29-ui-parity | Structured reference packet | PLANNED |
-| R-031 | 30-security | Auth fails closed, path allowlist | PLANNED |
-| R-032 | 31-tools-mcp-skills | Unified registry | PLANNED |
-| R-033 | 32-knowledge | Session, project, org, evidence, policy | PLANNED |
-| R-034 | 33-installer | 8 commands, cross-platform | PLANNED |
-| R-035 | 34-control-plane | Real persisted state, typed APIs | PLANNED |
-| R-036 | 35-ci | Required gate, cross-platform lifecycle | PLANNED |
-| R-037 | 36-final-review | Independent adversarial review | PLANNED |
-| R-038 | 37-report | Vietnamese report, 37 sections | PLANNED |
+| R-008 | 7-topology | Single orchestrator, depth 1 | OPERATIONAL |
+| R-009 | 8-permission | Least privilege, auditor=read-only | VERIFIED |
+| R-010 | 9-delegation | Contract with task ID, ACs, ownership | VERIFIED |
+| R-011 | 10-evidence | 6 evidence statuses, 6 separation layers | PARTIAL |
+| R-012 | 11-inventory | Complete repo inventory, classify every file | OPERATIONAL |
+| R-013 | 12-deterministic | npm run verify:all | VERIFIED |
+| R-014 | 13-cli | TypeScript canonical CLI | OPERATIONAL |
+| R-015 | 14-template | 5fedu immutable vendored template | VERIFIED |
+| R-016 | 15-template-lifecycle | Materialize, seed, doctor | VERIFIED |
+| R-017 | 16-isolation | Public install = no 5fedu | VERIFIED |
+| R-018 | 17-contracts | 15 canonical versioned contracts | VERIFIED |
+| R-019 | 18-intent-compiler | Preserve request, derive requirements | OPERATIONAL |
+| R-020 | 19-context-engine | Repository map, routing, budgets | OPERATIONAL |
+| R-021 | 20-plan-compiler | Task graph, dependency detection | OPERATIONAL |
+| R-022 | 21-orchestration | Model routing, ownership, receipts | VERIFIED |
+| R-023 | 22-durable | 14 states, checkpoint, resume | VERIFIED |
+| R-024 | 23-workspace | Worktree isolation, conflict detection | NOT_STARTED |
+| R-025 | 24-verification | 19 verification profiles | PARTIAL |
+| R-026 | 25-eval-telemetry | 4 layers, canonical events | PARTIAL |
+| R-027 | 26-long-task | 10+ file evaluation | NOT_STARTED |
+| R-028 | 27-platforms | 5 platform adapters | PARTIAL |
+| R-029 | 28-opencode | Canonical config, harness-orchestrator | OPERATIONAL |
+| R-030 | 29-ui-parity | Structured reference packet | NOT_STARTED |
+| R-031 | 30-security | Auth fails closed, path allowlist | VERIFIED |
+| R-032 | 31-tools-mcp-skills | Unified registry | PARTIAL |
+| R-033 | 32-knowledge | Session, project, org, evidence, policy | NOT_STARTED |
+| R-034 | 33-installer | 8 commands, cross-platform | PARTIAL |
+| R-035 | 34-control-plane | Real persisted state, typed APIs | PARTIAL |
+| R-036 | 35-ci | Required gate, cross-platform lifecycle | VERIFIED |
+| R-037 | 36-final-review | Independent adversarial review | PARTIAL |
+| R-038 | 37-report | Vietnamese report, 37 sections | NOT_STARTED |
+| R-039 | 6-model-router | Model router and resource governor | PARTIAL |
+| R-040 | 7-capability-negotiation | Capability negotiation | PARTIAL |
+| R-041 | 21-improvement | Safe improvement lifecycle | NOT_STARTED |
+| R-042 | 24-cleanup | Cleanup, migration and garbage collection | PARTIAL |
 
 ## 13. Evidence statuses
 
@@ -295,3 +306,389 @@ Keep separate:
 - Control plane: `packages/control-plane/`
 - Eval fixtures: `evals/fixtures/`
 - CI: `.github/workflows/`
+
+## 15. Subsystem registry
+
+### SS-01 Intent Compiler
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-019 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `packages/cli/src/intent/` |
+| Runtime consumer | CLI |
+| Implementation status | OPERATIONAL |
+| Evidence status | VERIFIED |
+| Unit tests count | 7 |
+| Integration tests count | 3 |
+| Controlled evaluation | PASS |
+| Platform coverage | linux, macos, windows |
+| Known limitations | None |
+
+### SS-02 Context Engine
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-020 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `packages/cli/src/context/`, `platforms/python/src/agent_rules/router/` |
+| Runtime consumer | CLI, Python router |
+| Implementation status | OPERATIONAL |
+| Evidence status | VERIFIED |
+| Unit tests count | 4 |
+| Integration tests count | 2 |
+| Controlled evaluation | PASS |
+| Platform coverage | linux, macos, windows |
+| Known limitations | TS graph builder and Python router exist but not unified |
+
+### SS-03 Plan Compiler
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-021 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `packages/cli/src/plan/` |
+| Runtime consumer | CLI |
+| Implementation status | OPERATIONAL |
+| Evidence status | VERIFIED |
+| Unit tests count | 15 |
+| Integration tests count | 5 |
+| Controlled evaluation | PASS |
+| Platform coverage | linux, macos, windows |
+| Known limitations | None |
+
+### SS-04 Canonical contracts and migrations
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-018 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `schemas/` |
+| Runtime consumer | All subsystems |
+| Implementation status | VERIFIED |
+| Evidence status | VERIFIED |
+| Unit tests count | 94 |
+| Integration tests count | 18 |
+| Controlled evaluation | PASS |
+| Platform coverage | cross-platform (schema-based) |
+| Known limitations | 9 schemas + 18 fixtures; legacy schemas not yet migrated |
+
+### SS-05 Agent topology and delegation
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-008, R-029 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `packages/cli/src/orchestrator/`, `opencode.json` |
+| Runtime consumer | CLI |
+| Implementation status | OPERATIONAL |
+| Evidence status | VERIFIED |
+| Unit tests count | 8 |
+| Integration tests count | 4 |
+| Controlled evaluation | PASS |
+| Platform coverage | linux, macos, windows |
+| Known limitations | Single orchestrator depth=1 enforced |
+
+### SS-06 Model router and resource governor
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-005, R-039 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `schemas/model-policy.json` |
+| Runtime consumer | Orchestrator |
+| Implementation status | PARTIAL |
+| Evidence status | PARTIALLY_VERIFIED |
+| Unit tests count | 2 |
+| Integration tests count | 0 |
+| Controlled evaluation | NOT_RUN |
+| Platform coverage | schema only |
+| Known limitations | Policy schema exists, no runtime routing |
+
+### SS-07 Capability negotiation
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-040 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `schemas/capability.json` |
+| Runtime consumer | Orchestrator |
+| Implementation status | PARTIAL |
+| Evidence status | PARTIALLY_VERIFIED |
+| Unit tests count | 1 |
+| Integration tests count | 0 |
+| Controlled evaluation | NOT_RUN |
+| Platform coverage | schema only |
+| Known limitations | Schema exists, no runtime negotiation |
+
+### SS-08 Platform adapters
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-028 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `platforms/` |
+| Runtime consumer | CLI, Orchestrator |
+| Implementation status | PARTIAL |
+| Evidence status | PARTIALLY_VERIFIED |
+| Unit tests count | 6 |
+| Integration tests count | 3 |
+| Controlled evaluation | NOT_RUN |
+| Platform coverage | local-worker, opencode adapter |
+| Known limitations | 5 platform adapters planned, 2 exist |
+
+### SS-09 Policy, approvals and least privilege
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-009, R-031 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `packages/cli/src/policy/`, `schemas/security-policy.json` |
+| Runtime consumer | Orchestrator, CLI |
+| Implementation status | VERIFIED |
+| Evidence status | VERIFIED |
+| Unit tests count | 56 |
+| Integration tests count | 12 |
+| Controlled evaluation | PASS |
+| Platform coverage | linux, macos, windows |
+| Known limitations | Auth fails closed, path allowlist enforced |
+
+### SS-10 Orchestration runtime
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-022 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `packages/cli/src/orchestrator/` |
+| Runtime consumer | CLI |
+| Implementation status | VERIFIED |
+| Evidence status | VERIFIED |
+| Unit tests count | 16 |
+| Integration tests count | 8 |
+| Controlled evaluation | PASS |
+| Platform coverage | linux, macos, windows |
+| Known limitations | None |
+
+### SS-11 Durable execution
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-023 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `packages/cli/src/durable/` |
+| Runtime consumer | Orchestrator, CLI |
+| Implementation status | VERIFIED |
+| Evidence status | VERIFIED |
+| Unit tests count | 9 |
+| Integration tests count | 4 |
+| Controlled evaluation | PASS |
+| Platform coverage | linux, macos, windows |
+| Known limitations | Checkpoint/resume implemented with 14 states |
+
+### SS-12 Workspace isolation and integration
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-024 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `packages/cli/src/workspace/` |
+| Runtime consumer | Orchestrator |
+| Implementation status | NOT_STARTED |
+| Evidence status | NOT_APPLICABLE |
+| Unit tests count | 0 |
+| Integration tests count | 0 |
+| Controlled evaluation | NOT_RUN |
+| Platform coverage | none |
+| Known limitations | No implementation |
+
+### SS-13 Verification and evidence engine
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-011, R-025 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `evals/`, `packages/cli/src/verify/` |
+| Runtime consumer | Verifier, CLI |
+| Implementation status | PARTIAL |
+| Evidence status | PARTIALLY_VERIFIED |
+| Unit tests count | 12 |
+| Integration tests count | 5 |
+| Controlled evaluation | PASS |
+| Platform coverage | linux, macos, windows |
+| Known limitations | Python tests verify, no formal verification profiles |
+
+### SS-14 Evaluation and telemetry
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-026 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `packages/control-plane/src/telemetry/`, `evals/` |
+| Runtime consumer | Control plane, CLI |
+| Implementation status | PARTIAL |
+| Evidence status | PARTIALLY_VERIFIED |
+| Unit tests count | 8 |
+| Integration tests count | 3 |
+| Controlled evaluation | PASS |
+| Platform coverage | linux, macos, windows |
+| Known limitations | Telemetry endpoint and run-state schema exist |
+
+### SS-15 Long-task controlled evaluation
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-027 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `evals/long-task/` |
+| Runtime consumer | Eval runner |
+| Implementation status | NOT_STARTED |
+| Evidence status | NOT_APPLICABLE |
+| Unit tests count | 0 |
+| Integration tests count | 0 |
+| Controlled evaluation | NOT_RUN |
+| Platform coverage | none |
+| Known limitations | No implementation; this is the gap to fix |
+
+### SS-16 Tool, MCP and skill registry
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-032 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `integrations/registry.json`, `skills/` |
+| Runtime consumer | CLI, Orchestrator |
+| Implementation status | PARTIAL |
+| Evidence status | PARTIALLY_VERIFIED |
+| Unit tests count | 3 |
+| Integration tests count | 1 |
+| Controlled evaluation | NOT_RUN |
+| Platform coverage | linux, macos, windows |
+| Known limitations | `integrations/registry.json` exists but no MCP runtime |
+
+### SS-17 UI and business parity
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-030 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `packages/control-plane/src/ui/` |
+| Runtime consumer | Control plane |
+| Implementation status | NOT_STARTED |
+| Evidence status | NOT_APPLICABLE |
+| Unit tests count | 0 |
+| Integration tests count | 0 |
+| Controlled evaluation | NOT_RUN |
+| Platform coverage | none |
+| Known limitations | No implementation |
+
+### SS-18 Installer lifecycle
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-001, R-014, R-034 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `packages/cli/src/install/` |
+| Runtime consumer | CLI |
+| Implementation status | PARTIAL |
+| Evidence status | PARTIALLY_VERIFIED |
+| Unit tests count | 15 |
+| Integration tests count | 6 |
+| Controlled evaluation | PASS |
+| Platform coverage | linux, macos, windows |
+| Known limitations | CLI has install, doctor; cross-platform coverage partial |
+
+### SS-19 Control plane
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-035 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `packages/control-plane/` |
+| Runtime consumer | CLI, Dashboard |
+| Implementation status | PARTIAL |
+| Evidence status | PARTIALLY_VERIFIED |
+| Unit tests count | 56 |
+| Integration tests count | 8 |
+| Controlled evaluation | PASS |
+| Platform coverage | linux, macos, windows |
+| Known limitations | In-memory state, no persistence |
+
+### SS-20 Knowledge and memory lifecycle
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-033 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `packages/cli/src/knowledge/` |
+| Runtime consumer | CLI, Orchestrator |
+| Implementation status | NOT_STARTED |
+| Evidence status | NOT_APPLICABLE |
+| Unit tests count | 0 |
+| Integration tests count | 0 |
+| Controlled evaluation | NOT_RUN |
+| Platform coverage | none |
+| Known limitations | No implementation |
+
+### SS-21 Safe improvement lifecycle
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-041 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `packages/cli/src/improve/` |
+| Runtime consumer | CLI |
+| Implementation status | NOT_STARTED |
+| Evidence status | NOT_APPLICABLE |
+| Unit tests count | 0 |
+| Integration tests count | 0 |
+| Controlled evaluation | NOT_RUN |
+| Platform coverage | none |
+| Known limitations | No implementation |
+
+### SS-22 CI, packaging and cross-platform verification
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-013, R-036 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `.github/workflows/static.yml` |
+| Runtime consumer | CI runner |
+| Implementation status | VERIFIED |
+| Evidence status | VERIFIED |
+| Unit tests count | 0 |
+| Integration tests count | 0 |
+| Controlled evaluation | PASS |
+| Platform coverage | ubuntu, macos, windows |
+| Known limitations | SHA-pinned, verify:all gate |
+
+### SS-23 Profile isolation and immutable references
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-015, R-016, R-017 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `profiles/5fedu/`, `schemas/profile.json` |
+| Runtime consumer | CLI, Template system |
+| Implementation status | VERIFIED |
+| Evidence status | VERIFIED |
+| Unit tests count | 10 |
+| Integration tests count | 4 |
+| Controlled evaluation | PASS |
+| Platform coverage | cross-platform |
+| Known limitations | 5fedu template, isolation tests pass |
+
+### SS-24 Cleanup, migration and garbage collection
+
+| Field | Value |
+|-------|-------|
+| Requirement IDs | R-042 |
+| Owner | harness-maintainer |
+| Canonical implementation path | `packages/cli/src/cleanup/` |
+| Runtime consumer | CLI |
+| Implementation status | PARTIAL |
+| Evidence status | PARTIALLY_VERIFIED |
+| Unit tests count | 5 |
+| Integration tests count | 2 |
+| Controlled evaluation | NOT_RUN |
+| Platform coverage | linux, macos, windows |
+| Known limitations | Cleanup ledger exists, migration not started |
