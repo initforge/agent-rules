@@ -41,7 +41,7 @@ Thumbs.db
 /.codex/
 /.agent/
 
-# Grok live mirror — use ~/.grok/ global only (install-grok-global.sh)
+# Grok live mirror â€” use ~/.grok/ global only (install-grok-global.sh)
 .grok/
 
 # Node packages
