@@ -12,6 +12,12 @@ import { profileCmd } from "./commands/profile.js";
 import { platformCmd } from "./commands/platform.js";
 import { evalCmd } from "./commands/eval.js";
 import { dashboard } from "./commands/dashboard.js";
+import {
+  executeRun,
+  getRunStatus,
+  resumeRun,
+  cancelRunById,
+} from "./services/runner.js";
 
 const program = new Command();
 
@@ -166,14 +172,133 @@ Subcommands:
     formatOutput(result, opts);
   });
 
-// ── dashboard ──────────────────────────────────────────────────────
+// ── run ────────────────────────────────────────────────────────────
 program
-  .command("dashboard")
-  .description("Start web dashboard (not yet implemented)")
-  .action(async () => {
+  .command("run")
+  .description("Execute a natural-language request through the harness")
+  .argument("<request>", "Natural language request to execute")
+  .option("--project <path>", "Project root directory")
+  .option("--profile <name>", "Profile name")
+  .option("--platform <name>", "Target platform")
+  .option("--dry-run", "Compile and validate without executing")
+  .option("--autonomy <level>", "Autonomy level (0-10)", "5")
+  .action(async (request: string, cmdOpts: Record<string, string | undefined>) => {
     const opts = program.optsWithGlobals() as CliOptions;
-    const result = await dashboard([], opts);
-    formatOutput(result, opts);
+    try {
+      const result = await executeRun(request, {
+        project: cmdOpts.project,
+        profile: cmdOpts.profile,
+        platform: cmdOpts.platform,
+        dryRun: cmdOpts.dryRun === "true" || cmdOpts.dryRun === "" || opts.dryRun,
+        autonomy: cmdOpts.autonomy ? parseInt(cmdOpts.autonomy, 10) : undefined,
+      });
+      if (opts.json) {
+        process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+      } else {
+        console.log(`Run ${result.runId} [${result.state}]`);
+        console.log(`  Tasks: ${(result.tasks as { taskId: string; state: string }[]).length}`);
+        console.log(`  Receipts: ${result.receipts.length}`);
+      }
+      process.exit(ExitCode.Success);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (opts.json) {
+        process.stdout.write(JSON.stringify({ exitCode: ExitCode.GeneralError, message }) + "\n");
+      } else {
+        console.error(`Error: ${message}`);
+      }
+      process.exit(ExitCode.GeneralError);
+    }
+  });
+
+// ── status ──────────────────────────────────────────────────────────
+program
+  .command("status")
+  .description("Show run status")
+  .argument("<runId>", "Run ID to inspect")
+  .action(async (runId: string) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    try {
+      const result = await getRunStatus(runId);
+      if (!result) {
+        const msg = `Run not found: ${runId}`;
+        if (opts.json) {
+          process.stdout.write(JSON.stringify({ exitCode: ExitCode.GeneralError, message: msg }) + "\n");
+        } else {
+          console.error(msg);
+        }
+        process.exit(ExitCode.GeneralError);
+      }
+      if (opts.json) {
+        process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+      } else {
+        console.log(`Run:      ${result.runId}`);
+        console.log(`State:    ${result.state}`);
+        console.log(`Created:  ${result.createdAt}`);
+        console.log(`Updated:  ${result.updatedAt}`);
+        console.log(`Receipts: ${result.receipts.length}`);
+        const tasks = result.tasks as { taskId: string; state: string }[];
+        console.log(`Tasks:`);
+        for (const t of tasks) {
+          console.log(`  ${t.taskId}: ${t.state}`);
+        }
+      }
+      process.exit(ExitCode.Success);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`Error: ${message}`);
+      process.exit(ExitCode.GeneralError);
+    }
+  });
+
+// ── resume ──────────────────────────────────────────────────────────
+program
+  .command("resume")
+  .description("Resume a previously interrupted run")
+  .argument("<runId>", "Run ID to resume")
+  .option("--project <path>", "Project root directory")
+  .action(async (runId: string, cmdOpts: Record<string, string | undefined>) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    try {
+      const result = await resumeRun(runId, { project: cmdOpts.project });
+      if (opts.json) {
+        process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+      } else {
+        console.log(`Run ${result.runId} resumed — state: ${result.state}`);
+        console.log(`  Receipts: ${result.receipts.length}`);
+      }
+      process.exit(ExitCode.Success);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`Error: ${message}`);
+      process.exit(ExitCode.GeneralError);
+    }
+  });
+
+// ── cancel ──────────────────────────────────────────────────────────
+program
+  .command("cancel")
+  .description("Cancel a run and mark pending tasks as cancelled")
+  .argument("<runId>", "Run ID to cancel")
+  .action(async (runId: string) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    try {
+      const result = await cancelRunById(runId);
+      if (opts.json) {
+        process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+      } else {
+        console.log(`Run ${result.runId} cancelled`);
+        const tasks = result.tasks as { taskId: string; state: string }[];
+        for (const t of tasks) {
+          console.log(`  ${t.taskId}: ${t.state}`);
+        }
+      }
+      process.exit(ExitCode.Success);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`Error: ${message}`);
+      process.exit(ExitCode.GeneralError);
+    }
   });
 
 function formatOutput(

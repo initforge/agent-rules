@@ -71,3 +71,6 @@ skills-lock.json
 
 # Source-lock cache (isolated per-project)
 .agent/source-lock-cache/
+
+# Source distribution archive
+agent-rules-source.zip

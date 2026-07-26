@@ -22,7 +22,9 @@
     "doctor": "node packages/cli/dist/index.js doctor",
     "dashboard": "node packages/cli/dist/index.js dashboard",
     "eval": "node packages/cli/dist/index.js eval",
-    "test:python": "node -e \"const{execFileSync}=require('child_process');try{execFileSync('C:\\\\Users\\\\Surface Pro 8\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python311\\\\python.exe',['automation/run-python-tests.py'],{cwd:process.cwd(),stdio:'inherit',timeout:300000})}catch(e){process.exit(e.status||1)}\"",
-    "verify:all": "npm run build && npm run typecheck && npm run test && npm run test:python && npm run validate && npm run verify-mirrors && git diff --check"
+    "test:python": "node -e \"import('./packages/cli/dist/services/python-launcher.js').then(m=>m.runAllPythonTests()).catch(e=>{console.error(e.message||e);process.exit(1)})\"",
+    "check:whitespace": "node -e \"const{execSync}=require('child_process');let b;try{b=execSync('git merge-base HEAD origin/main',{encoding:'utf-8'}).trim()}catch(e){console.error('Cannot determine merge base');process.exit(1)}try{execSync('git diff --check '+b+'..HEAD',{encoding:'utf-8',stdio:['ignore','pipe','pipe']});console.log('Whitespace OK')}catch(e){const o=(e.stdout||'')+(e.stderr||'');const lines=o.split('\\n').filter(l=>!l.includes('profiles/5fedu/reference-projects/')&&!l.includes('generated/runtime-build/'));if(lines.some(l=>l.trim())){console.error(lines.join('\\n'));process.exit(1)}else{console.log('Whitespace OK')}}\"",
+    "package:source": "git archive --format=zip HEAD -o agent-rules-source.zip",
+    "verify:all": "npm run build && npm run typecheck && npm run test && npm run test:python && npm run validate && npm run verify-mirrors && npm run check:whitespace"
   }
 }

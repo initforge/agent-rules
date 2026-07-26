@@ -1,6 +1,6 @@
 # Platforms
 
-**Vai trò:** Delta riêng từng runtime — overlay + platform adapters.  
+**Vai trò:** Delta riêng từng runtime — overlay + platform adapters.
 
 Contracts: `platforms/platform-contracts.json`
 

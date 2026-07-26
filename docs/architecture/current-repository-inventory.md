@@ -183,7 +183,7 @@ profiles/5fedu/projects/
 
 ### 2.8 `mcps/` — Removed (consolidated into `integrations/`)
 
-**Status:** Removed  
+**Status:** Removed
 **Note:** MCP tool schemas previously under `mcps/` have been consolidated into corresponding `integrations/<policy>/<id>/` directories. Generated manifests are now at `generated/integrations/<id>/schema-manifest.json`. See section 2.7.
 
 ---
