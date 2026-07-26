@@ -5,13 +5,14 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_FIXTURES = ROOT / "automation" / "benchmarks" / "live-fixtures.json"
+DEFAULT_FIXTURES = ROOT / "evals" / "fixtures" / "live-fixtures.json"
 
 
 def load_json(path: Path) -> Any:
@@ -101,6 +102,10 @@ def verify(
 
     command_checks: list[bool] = []
     for command in fixture.get("verification_commands", []):
+        if command.strip().startswith("python "):
+            python_exe = str(Path(sys.executable).resolve())
+            quoted = f'"{python_exe}"'
+            command = command.replace("python", quoted, 1)
         result = subprocess.run(
             command,
             cwd=workspace,

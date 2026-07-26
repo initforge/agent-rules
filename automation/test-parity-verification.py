@@ -143,7 +143,7 @@ def validate_pipeline_docs() -> int:
     assert "parity verification" in skill_content.lower(), "DOC-004: SKILL.md missing expected content"
     assert "browser-qa" in skill_content, "DOC-005: SKILL.md missing browser-qa reference"
     assert "qa-skills" in skill_content, "DOC-006: SKILL.md missing qa-skills reference"
-    assert "5fedu-module-parity" in skill_content, "DOC-007: SKILL.md missing 5fedu-module-parity reference"
+    assert "active-profile" in skill_content or "<active-profile>" in skill_content, "DOC-007: SKILL.md missing active-profile reference"
     cases += 1
 
     pipeline_content = PIPELINE_PATH.read_text(encoding="utf-8")

@@ -2899,16 +2899,13 @@
         ],
         "priority": 85,
         "loads": [
-          "skill:parity-verification",
-          "project:<active-profile>:pattern-inventory"
+          "skill:parity-verification"
         ],
         "requires": [
           "browser-qa",
           "qa-skills"
         ],
-        "supports": [
-          "<active-profile>-module-parity"
-        ],
+        "supports": [],
         "project_scope": "",
         "platform_scope": "all",
         "max_route_tokens": 5000,

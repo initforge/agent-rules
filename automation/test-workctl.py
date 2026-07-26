@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,12 +18,19 @@ WORKCTL = ROOT / "automation" / "workctl.py"
 
 
 def run(root: Path, *args: str, expect: int = 0) -> dict:
-    result = subprocess.run(
-        [sys.executable, str(WORKCTL), "--root", str(root), *args],
-        text=True,
-        capture_output=True,
-        encoding="utf-8",
-    )
+    try:
+        result = subprocess.run(
+            [sys.executable, str(WORKCTL), "--root", str(root), *args],
+            text=True,
+            capture_output=True,
+            encoding="utf-8",
+            timeout=60,
+            stdin=subprocess.DEVNULL,
+        )
+    except subprocess.TimeoutExpired:
+        raise AssertionError(
+            f"subprocess timed out after 60s\ncmd=python {WORKCTL} --root {root} {' '.join(args)}"
+        )
     if result.returncode != expect:
         raise AssertionError(
             f"command exit={result.returncode}, expected={expect}\n"
@@ -37,9 +45,16 @@ def run_launcher(root: Path, launcher: Path, *args: str, expect: int = 0) -> dic
         if os.name == "nt"
         else ["sh", str(launcher)]
     )
-    result = subprocess.run(
-        [*command, "--root", str(root), *args], text=True, capture_output=True, encoding="utf-8",
-    )
+    try:
+        result = subprocess.run(
+            [*command, "--root", str(root), *args], text=True, capture_output=True, encoding="utf-8",
+            timeout=60,
+            stdin=subprocess.DEVNULL,
+        )
+    except subprocess.TimeoutExpired:
+        raise AssertionError(
+            f"launcher subprocess timed out after 60s\ncmd={' '.join(command)} --root {root} {' '.join(args)}"
+        )
     if result.returncode != expect:
         raise AssertionError(
             f"launcher exit={result.returncode}, expected={expect}\n"
@@ -864,11 +879,31 @@ def main() -> None:
         resumed = run(root, "adopt", "--work-id", "adopt-work", "--plan-file", str(plan), "--payload-json", compact(adopt_payload))
         if resumed["status"] != "LEDGER_RESUMED":
             raise AssertionError(f"adopt did not resume atomically: {resumed}")
+        popen_kwargs: dict[str, Any] = dict(
+            text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            encoding="utf-8", stdin=subprocess.DEVNULL,
+        )
+        if os.name == "nt":
+            popen_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
         concurrent = [
-            subprocess.Popen([sys.executable, str(WORKCTL), "--root", str(root), "adopt", "--work-id", "concurrent-work", "--plan-file", str(plan), "--payload-json", compact(adopt_payload)], text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8")
+            subprocess.Popen(
+                [sys.executable, str(WORKCTL), "--root", str(root), "adopt",
+                 "--work-id", "concurrent-work", "--plan-file", str(plan),
+                 "--payload-json", compact(adopt_payload)],
+                **popen_kwargs,
+            )
             for _ in range(2)
         ]
-        concurrent_results = [json.loads(process.communicate(timeout=20)[0]) for process in concurrent]
+        try:
+            concurrent_results = [
+                json.loads(process.communicate(timeout=20)[0])
+                for process in concurrent
+            ]
+        finally:
+            for process in concurrent:
+                if process.poll() is None:
+                    process.kill()
+                    process.wait(timeout=5)
         if sorted(result["status"] for result in concurrent_results) != ["LEDGER_CREATED", "LEDGER_RESUMED"]:
             raise AssertionError(f"concurrent adopt was not atomic: {concurrent_results}")
         plan.write_text('{"outcome":"different plan"}\n', encoding="utf-8")

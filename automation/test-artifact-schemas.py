@@ -196,15 +196,18 @@ def main() -> int:
     has_completion_policy = "completion_policy" in plan_props
     print(f"  [{'PASS' if has_completion_policy else 'FAIL'}] Plan has completion_policy")
 
-    # 13. Capability schema has 4 mode states and utility class
+    # 13. Capability schema has 4 plan_mode states and utility class under subagents
     if "capability" in schemas:
         cap = schemas["capability"]
-        mode_enum = cap.get("properties", {}).get("mode", {}).get("enum", [])
+        mode_enum = cap.get("properties", {}).get("plan_mode", {}).get("enum", [])
         has_states = all(s in mode_enum for s in ["native", "emulated", "unsupported", "unverified"])
-        print(f"  [{'PASS' if has_states else 'FAIL'}] Capability mode includes all 4 states")
-        class_enum = cap.get("properties", {}).get("class", {}).get("enum", [])
-        has_utility = "utility" in class_enum
-        print(f"  [{'PASS' if has_utility else 'FAIL'}] Capability class includes utility")
+        print(f"  [{'PASS' if has_states else 'FAIL'}] Capability plan_mode includes all 4 states")
+        subagent_class = (cap.get("properties", {}).get("subagents", {}).get("items", {})
+                          .get("properties", {}).get("capability_class", {}).get("enum", []))
+        has_utility = "utility" in subagent_class
+        print(f"  [{'PASS' if has_utility else 'FAIL'}] Capability subagent capability_class includes utility")
+        if not has_states or not has_utility:
+            errors.append("Capability acceptance criteria failed")
 
     # 14. Model-route schema has utility class
     if "model-route" in schemas:

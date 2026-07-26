@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -16,10 +17,16 @@ SELECTOR = ROOT / "automation" / "select-verification.py"
 
 def run(*args: str, expect: int = 0, root: str | None = None) -> dict:
     cmd = [sys.executable, str(SELECTOR), "--root", str(root or ROOT), *args]
-    result = subprocess.run(
-        cmd,
-        text=True, capture_output=True, encoding="utf-8",
-    )
+    try:
+        result = subprocess.run(
+            cmd,
+            text=True, capture_output=True, encoding="utf-8",
+            timeout=30, stdin=subprocess.DEVNULL,
+        )
+    except subprocess.TimeoutExpired:
+        raise AssertionError(
+            f"subprocess timed out after 30s\ncmd={' '.join(cmd)}"
+        )
     if result.returncode != expect:
         raise AssertionError(
             f"exit={result.returncode}, expected={expect}\n"
@@ -280,6 +287,39 @@ def test_run_selects_without_error() -> None:
         print(f"  run results: {summary['total_checks']} checks, statuses={summary['by_status']}")
 
 
+def report_diagnostics() -> None:
+    """Report tool availability explaining why checks are blocked/skipped."""
+    profiles_raw = json.loads((ROOT / "automation" / "verification-profiles.json").read_text(encoding="utf-8"))
+    domain_profiles = profiles_raw.get("domain_profiles", {})
+    all_tools: set[str] = set()
+    tool_profiles: dict[str, list[str]] = {}
+    for pid, profile in domain_profiles.items():
+        for check in profile.get("checks", []):
+            for tool in check.get("tools", []):
+                all_tools.add(tool)
+                tool_profiles.setdefault(tool, []).append(pid)
+
+    found: list[str] = []
+    missing: list[str] = []
+    for tool in sorted(all_tools):
+        if shutil.which(tool.split()[0]):
+            found.append(tool)
+        else:
+            missing.append(tool)
+
+    print(f"\n  tool diagnostics: {len(found)} available, {len(missing)} missing")
+    for t in found:
+        print(f"    available: {t}")
+    for t in missing:
+        profiles_using = sorted(set(tool_profiles[t]))
+        print(f"    missing:   {t}  (affects: {', '.join(profiles_using)})")
+
+    if not found:
+        print("  => all checks will be BLOCKED or SKIPPED because no required tools are installed")
+    elif missing:
+        print("  => some checks are BLOCKED/SKIPPED; install missing tools to make them RUNNABLE")
+
+
 def main() -> None:
     test_empty_context()
     test_frontend_file_match()
@@ -295,6 +335,8 @@ def main() -> None:
     test_no_false_pass_on_missing_tool()
     test_profile_extensible()
     test_run_selects_without_error()
+
+    report_diagnostics()
 
     print(
         "PASS: context selection, profile matching, check filtering, "

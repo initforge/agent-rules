@@ -130,12 +130,22 @@ function addNode(
   if (nodes.some(n => n.id === id)) {
     throw new Error(`Duplicate node ID: ${id}`);
   }
+  const cleanRouting: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(routing || {})) {
+    if (Array.isArray(v) && (k === 'requires' || k === 'supports' || k === 'loads')) {
+      cleanRouting[k] = (v as unknown[]).filter(
+        (e) => typeof e === 'string' && !/[<>]/.test(e)
+      );
+    } else {
+      cleanRouting[k] = v;
+    }
+  }
   nodes.push({
     id, layer, source: normalizePath(source),
     load_policy: policy, owner,
     trigger: trigger || `path:${source}`,
     requires: _requires,
-    routing,
+    routing: cleanRouting,
     source_hash: sourceHash,
     token_estimate: tokenEst,
   });

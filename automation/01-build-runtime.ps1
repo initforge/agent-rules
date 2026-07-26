@@ -1,8 +1,10 @@
-param([string]$Root = (Split-Path -Parent $PSScriptRoot))
+param(
+  [string]$Root = (Split-Path -Parent $PSScriptRoot),
+  [string]$BuildRoot = (Join-Path $Root "generated\runtime-build"),
+  [switch]$SkipContextGraph
+)
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "path-compat.ps1")
-
-$BuildRoot = Join-Path $Root "generated\runtime-build"
 if (Test-Path $BuildRoot) { Remove-Item -LiteralPath $BuildRoot -Recurse -Force }
 
 $Platforms = @("codex", "grok", "antigravity", "cursor")
@@ -15,10 +17,12 @@ $ManifestRules = @([regex]::Matches($ManifestText, '(?m)^\s+-\s+(\S+\.md)\s*$') 
 $GeneratedCoreImports = ($ManifestRules | ForEach-Object { "@__CODEX_HOME__/rules/$($_)" }) -join "`n"
 $UserHome = if ($env:USERPROFILE) { $env:USERPROFILE } elseif ($env:HOME) { $env:HOME } else { throw "Cannot resolve user home directory" }
 $CodexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $UserHome ".codex" }
-$ContextGraphScript = Join-Path $PSScriptRoot "build-context-graph.ps1"
 $ContextGraphPath = Join-Path $Root "generated\context-graph.json"
-if (Test-Path -LiteralPath $ContextGraphScript) {
-  & $ContextGraphScript -Root $Root -OutputPath $ContextGraphPath
+if (-not $SkipContextGraph) {
+  $ContextGraphScript = Join-Path $PSScriptRoot "build-context-graph.ps1"
+  if (Test-Path -LiteralPath $ContextGraphScript) {
+    & $ContextGraphScript -Root $Root -OutputPath $ContextGraphPath
+  }
 }
 
 foreach ($Platform in $Platforms) {
