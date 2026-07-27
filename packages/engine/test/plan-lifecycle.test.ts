@@ -3,10 +3,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import {
-  adoptPlan, finalizePlan, reconcilePlan, detectStaleReviews, sha256Bytes,
+  adoptPlan, finalizePlan, reconcilePlan, detectStaleReviews, detectStaleReceipts,
+  lockFile, lockDirectory, sha256Bytes,
   type PlanIdentity, type Reconciliation,
 } from '../src/plan-lifecycle.js';
-import type { WorkLedger } from '../src/contracts.js';
+import { exportPlanBundle, importPlanBundle } from '../src/export-bundle.js';
+import type { WorkLedger, ReviewReceipt } from '../src/contracts.js';
 import { planAnchorId } from '../src/contracts.js';
 
 const tmpDirs: string[] = [];
@@ -229,5 +231,167 @@ describe('reconcilePlan', () => {
 
     const result = reconcilePlan(ledgerPath, originalPath, 'test-fingerprint');
     expect(result.status).toBe('DEVIATED');
+  });
+});
+
+describe('lockFile', () => {
+  it('acquires and releases cross-process lock', () => {
+    const dir = tmpDir();
+    const lockTarget = path.join(dir, 'data.json');
+
+    const lock1 = lockFile(lockTarget);
+    expect(lock1.fd).toBeGreaterThanOrEqual(0);
+
+    expect(() => lockFile(lockTarget)).toThrow();
+
+    lock1.unlock();
+
+    const lock2 = lockFile(lockTarget);
+    expect(lock2.fd).toBeGreaterThanOrEqual(0);
+    lock2.unlock();
+  });
+});
+
+describe('lockDirectory', () => {
+  it('prevents concurrent writes', () => {
+    const dir = tmpDir();
+
+    const lock1 = lockDirectory(dir);
+    expect(lock1.fd).toBeGreaterThanOrEqual(0);
+
+    expect(() => lockDirectory(dir)).toThrow();
+
+    lock1.unlock();
+
+    const lock2 = lockDirectory(dir);
+    expect(lock2.fd).toBeGreaterThanOrEqual(0);
+    lock2.unlock();
+  });
+});
+
+describe('detectStaleReceipts', () => {
+  const baseReceipt: ReviewReceipt = {
+    reviewId: 'R1',
+    stale: false,
+    originalSha256: 'a'.repeat(64),
+    amendmentsSha256: 'b'.repeat(64),
+    diffFingerprint: 'fp-original',
+    receiptEvidenceFingerprint: 'c'.repeat(64),
+    evidenceHashes: ['e1'.repeat(32), 'e2'.repeat(32)],
+    shadowRevision: 1,
+    reviewerIdentity: 'reviewer-1',
+  };
+
+  it('finds stale reviews after code change (diff fingerprint mismatch)', () => {
+    const receipts: ReviewReceipt[] = [{ ...baseReceipt }];
+    const currentEvidenceHashes = { 'file1.md': 'e1'.repeat(32), 'file2.md': 'e2'.repeat(32) };
+
+    const stale = detectStaleReceipts('fp-changed', currentEvidenceHashes, receipts);
+    expect(stale).toHaveLength(1);
+    expect(stale[0]).toBe('R1');
+  });
+
+  it('preserves fresh reviews when everything matches', () => {
+    const receipts: ReviewReceipt[] = [{ ...baseReceipt }];
+    const currentEvidenceHashes = { 'file1.md': 'e1'.repeat(32), 'file2.md': 'e2'.repeat(32) };
+
+    const stale = detectStaleReceipts('fp-original', currentEvidenceHashes, receipts);
+    expect(stale).toHaveLength(0);
+  });
+
+  it('finds stale reviews when evidence hash is missing', () => {
+    const receipts: ReviewReceipt[] = [{ ...baseReceipt }];
+    const currentEvidenceHashes = { 'file1.md': 'different-hash' };
+
+    const stale = detectStaleReceipts('fp-original', currentEvidenceHashes, receipts);
+    expect(stale).toHaveLength(1);
+    expect(stale[0]).toBe('R1');
+  });
+
+  it('handles empty receipts array', () => {
+    const stale = detectStaleReceipts('fp', {}, []);
+    expect(stale).toHaveLength(0);
+  });
+});
+
+describe('exportPlanBundle', () => {
+  it('creates bundle with all receipts and hashes', async () => {
+    const dir = tmpDir();
+    fs.mkdirSync(path.join(dir, 'amendments'), { recursive: true });
+    fs.mkdirSync(path.join(dir, 'lineage'), { recursive: true });
+
+    writeFile(path.join(dir, 'original.md'), '# Original Plan\nContent');
+    writeFile(path.join(dir, 'amendments', 'am1.md'), '# Amendment 1');
+    writeFile(path.join(dir, 'lineage', 'v1.json'), JSON.stringify({ version: 1 }));
+
+    const ledger: WorkLedger = stubLedger({
+      receipts: [{ receiptId: 'R1', assignmentId: 'A1', workerIdentity: 'w1', host: 'host', model: 'model', artifactUris: [], artifactHashes: [], filesChanged: [], commands: [{ executable: 'test', args: [] }], exitCodes: [0], logUris: [], logHashes: [], testEvidenceUris: [], testEvidenceHashes: [], startedAt: new Date().toISOString(), completedAt: new Date().toISOString() }],
+    });
+    writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+
+    const bundle = await exportPlanBundle(dir);
+    expect(bundle.formatVersion).toBe('1.0');
+    expect(bundle.originalSha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(bundle.effectivePlanSha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(bundle.amendments).toHaveLength(1);
+    expect(bundle.amendments[0].id).toBe('am1');
+    expect(bundle.receipts).toHaveLength(1);
+    expect(bundle.receipts[0].assignmentId).toBe('A1');
+    expect(bundle.lineage).toHaveLength(1);
+    expect(bundle.exportedAt).toBeTruthy();
+  });
+
+  it('throws for non-existent directory', async () => {
+    await expect(exportPlanBundle('/nonexistent/plan-dir')).rejects.toThrow('does not exist');
+  });
+});
+
+describe('importPlanBundle', () => {
+  it('restores plan from bundle', async () => {
+    const srcDir = tmpDir();
+    const dstDir = tmpDir();
+
+    fs.mkdirSync(path.join(srcDir, 'amendments'), { recursive: true });
+    writeFile(path.join(srcDir, 'original.md'), '# Plan for export\nContent');
+    writeFile(path.join(srcDir, 'amendments', 'am1.md'), '# Amendment text');
+
+    const bundle = await exportPlanBundle(srcDir);
+
+    fs.mkdirSync(path.join(dstDir, 'amendments'), { recursive: true });
+    writeFile(path.join(dstDir, 'original.md'), '# Plan for export\nContent');
+    writeFile(path.join(dstDir, 'amendments', 'am1.md'), '# Amendment text');
+
+    const result = await importPlanBundle(bundle, dstDir);
+    expect(result.success).toBe(true);
+
+    const bundleFile = path.join(dstDir, 'bundle.json');
+    expect(fs.existsSync(bundleFile)).toBe(true);
+    const saved = JSON.parse(fs.readFileSync(bundleFile, 'utf-8'));
+    expect(saved.planId).toBe(bundle.planId);
+    expect(saved.originalSha256).toBe(bundle.originalSha256);
+  });
+
+  it('fails on invalid bundle', async () => {
+    const dir = tmpDir();
+    writeFile(path.join(dir, 'original.md'), '# content');
+    const result = await importPlanBundle({} as any, dir);
+    expect(result.success).toBe(false);
+    expect(result.error).toBeTruthy();
+  });
+
+  it('fails on original SHA mismatch', async () => {
+    const srcDir = tmpDir();
+    const dstDir = tmpDir();
+    writeFile(path.join(srcDir, 'original.md'), '# Original content');
+
+    const bundle = await exportPlanBundle(srcDir);
+
+    writeFile(path.join(dstDir, 'original.md'), '# Different content');
+
+    bundle.originalSha256 = 'f'.repeat(64);
+
+    const result = await importPlanBundle(bundle, dstDir);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('SHA-256 mismatch');
   });
 });

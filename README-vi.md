@@ -2,6 +2,20 @@
 
 **Luận đề:** Một harness canonical duy nhất cho AI agents — tổ chức thư mục phẳng theo vai trò, lazy skills, platform delta, và automation đồng bộ runtime mirror không cần sửa generated output bằng tay.
 
+## Kiến trúc
+
+| Subsystem | Trạng thái | Đường dẫn |
+|-----------|-----------|-----------|
+| Intent Compiler (P3) | OPERATIONAL | `packages/cli/src/compiler/` |
+| Canonical Contracts (P4) | VERIFIED | `packages/engine/src/contracts.ts` |
+| Plan Lifecycle (P5) | OPERATIONAL | `packages/engine/src/plan-lifecycle.ts` |
+| **Evaluation & Telemetry (P7)** | **PARTIAL** | `packages/engine/src/telemetry.ts` |
+| Orchestration Runtime (P8) | VERIFIED | `packages/engine/src/controller.ts` |
+
+### P7 Telemetry
+
+`packages/engine/src/telemetry.ts` — Bộ thu thập sự kiện canonical. Ghi lại các sự kiện có cấu trúc (`run_start`, `agent_start`, `task_start`, `tool_call`, `model_turn`, `verification`, `review`, `handoff`, `run_end`) trong toàn bộ vòng đời agent. Hỗ trợ lưu trữ JSONL cục bộ và xuất OTLP. Có thể cấu hình thời gian lưu giữ (mặc định 30 ngày cho metadata, 7 ngày cho raw content).
+
 ## Cấu trúc
 
 | Thư mục | Vai trò | Phân loại |
@@ -10,14 +24,24 @@
 | `rules/` | Always-loaded global context (đánh số = thứ tự nạp) | stable |
 | `skills/` | Lazy-loaded capabilities (flat slugs) | stable |
 | `integrations/` | Required / optional tools | stable |
-| `profiles/5fedu/projects/` | Project context templates | stable |
 | `profiles/` | Optional organization profiles (e.g., `5fedu`) | stable |
-| `platforms/` | Per-runtime overlays (Codex, Grok, Antigravity, Cursor, OpenCode) | stable |
+| `platforms/` | Per-runtime overlays (Codex, Grok, Antigravity, Cursor) | stable |
 | `automation/` | Build, install, validate, sync, doctor | stable |
 | `generated/` | Build output — không sửa tay | generated (machine-only) |
 | `.agent/` | Advisory trace log, research notes, tombstones (gitignored) | ephemeral |
 
-**Integrations** — canonical registry tại `integrations/registry.json`. Bao gồm các integration required (codebase-memory-mcp, playwright-mcp, chrome-devtools-mcp) và optional (caveman).
+## Tích hợp
+
+Canonical registry: `integrations/registry.json` (v2, 4 mục):
+
+| Tích hợp | Chính sách | Khả năng | Trust |
+|----------|-----------|----------|-------|
+| codebase-memory-mcp | bắt buộc | codebase-intelligence | adapter-verified |
+| playwright-mcp | bắt buộc | browser-interaction | adapter-verified |
+| chrome-devtools-mcp | bắt buộc | browser-diagnostics | adapter-verified |
+| caveman | tùy chọn | workflow-utility | advisory-only |
+
+Hồ sơ: `core` (codebase-memory-mcp), `qa` (playwright-mcp + chrome-devtools-mcp), `frontend` (playwright-mcp + chrome-devtools-mcp).
 
 ## Chạy nhanh
 
@@ -26,31 +50,31 @@ cd packages/cli && npm ci && npm run build
 npm run test
 ```
 
-Linux/macOS:
+Chạy engine tests:
 
 ```bash
-./automation/run.sh 03-validate-context
+cd packages/engine && npx vitest run
 ```
+
+Chạy conformance evals:
 
 ```bash
-./automation/01-build-runtime.ps1
-./automation/04-verify-mirrors.ps1
-./automation/02-install-runtime.ps1 -Platform all
-./automation/09-doctor.ps1
+cd evals/conformance && python -m pytest
 ```
 
-Các thư mục cài đặt: `~/.codex`, `~/.grok`, `~/.gemini/config` (Antigravity), `~/.cursor`, và OpenCode schema native. Định dạng MCP khác nhau giữa các platform — xem `platforms/platform-contracts.json`.
+## CI/CD
 
-**Grok rules path:** install ghi lean always-on vào `~/.grok/rules` (manifest) và `~/.grok/.grok/rules` (native inject). Khởi động lại Grok session sau khi cài.
-
-**Source parity ≠ behavioral parity:** Tất cả platform được hỗ trợ chia sẻ source files tương đương. Điều này chỉ chứng minh *source parity*. Behavioral parity — hành vi agent giống hệt nhau trên các platform — vẫn chưa được chứng minh nếu thiếu per-platform runtime attestation. Doctor báo cáo điều này trung thực qua layered statuses (NATIVE_UNVERIFIED, NATIVE_OBSERVED, v.v.).
+| Workflow | Kích hoạt | Ma trận | Các bước |
+|----------|-----------|---------|----------|
+| Quality (`quality.yml`) | push, pull_request | ubuntu, windows, macos | build → check → test → ci:quality |
+| Certification (`certification.yml`) | push to main, release | opencode, grok, codex | build → ci:certify --host |
 
 ## Đọc tiếp
 
 1. [System map](docs/guides/00-system-map.md)
 2. [Runtime model](docs/guides/01-runtime-model.md)
-3. [Platform capability matrix](docs/guides/06-platform-capability.md)
-4. English overview: [README.md](README.md)
-5. 5fedu projects: [profiles/5fedu/projects/AGENTS.md](profiles/5fedu/projects/AGENTS.md) (bật profile trước)
+3. [Target operating model](docs/architecture/target-operating-model.md)
+4. [Platform capability matrix](docs/guides/06-platform-capability.md)
+5. English overview: [README.md](README.md)
 
 **Governance:** Chỉ sửa `rules/` và `skills/` tại đây — không sửa `generated/` hoặc installed mirrors. Reverse sync qua `automation/07-import-reviewed-changes.ps1`.

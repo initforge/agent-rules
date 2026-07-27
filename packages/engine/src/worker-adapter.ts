@@ -263,3 +263,116 @@ export function validateReceipt(receipt: WorkerReceipt): { valid: boolean; reaso
 
   return { valid: true };
 }
+
+export class FixtureRepoWorker implements WorkerAdapter {
+  private jobs = new Map<string, { assignment: TaskAssignment; fixturePath: string }>();
+
+  constructor(
+    private readonly fixturePath: string,
+    private readonly misimplement = false,
+  ) {}
+
+  async detect(): Promise<{ available: boolean; version?: string }> {
+    const exists = fs.existsSync(this.fixturePath);
+    return { available: exists, version: exists ? 'fixture-v1' : undefined };
+  }
+
+  async health(): Promise<{ ok: boolean; detail?: string }> {
+    return { ok: fs.existsSync(this.fixturePath), detail: `fixture at ${this.fixturePath}` };
+  }
+
+  async submit(assignment: TaskAssignment): Promise<{ jobId: string }> {
+    const jobId = `fixture-job-${createHash('sha256').update(assignment.assignmentId + Date.now().toString()).digest('hex').slice(0, 16)}`;
+    const indexPath = path.join(this.fixturePath, 'src', 'index.js');
+
+    if (fs.existsSync(indexPath)) {
+      const body = this.misimplement ? 'a - b' : 'a + b';
+      fs.writeFileSync(indexPath, `export function add(a, b) {
+  return ${body};
+}
+`);
+    }
+
+    this.jobs.set(jobId, { assignment, fixturePath: this.fixturePath });
+    return { jobId };
+  }
+
+  async cancel(jobId: string): Promise<void> {
+    this.jobs.delete(jobId);
+  }
+
+  async collectReceipt(jobId: string): Promise<WorkerReceipt> {
+    const job = this.jobs.get(jobId);
+    if (!job) throw new Error(`Unknown job: ${jobId}`);
+
+    const { assignment, fixturePath } = job;
+    const startedAt = new Date().toISOString();
+    const filesChanged: string[] = [];
+    const diffSha256 = this.computeDiffFingerprint([fixturePath], filesChanged);
+
+    const receipt: WorkerReceipt = {
+      receiptId: `fixture-receipt-${createHash('sha256').update(jobId + Date.now().toString()).digest('hex').slice(0, 16)}`,
+      assignmentId: assignment.assignmentId,
+      workerIdentity: 'fixture-repo-worker',
+      host: os.hostname(),
+      model: 'fixture',
+      diffSha256: diffSha256 ?? undefined,
+      artifactUris: [],
+      artifactHashes: [],
+      filesChanged,
+      commands: [...(assignment.verificationCommands ?? [])],
+      exitCodes: (assignment.verificationCommands ?? []).map(() => 0),
+      logUris: [],
+      logHashes: [],
+      testEvidenceUris: [],
+      testEvidenceHashes: [],
+      startedAt,
+      completedAt: new Date().toISOString(),
+    };
+
+    this.jobs.delete(jobId);
+    return receipt;
+  }
+
+  private computeDiffFingerprint(ownedPaths: string[], filesChanged: string[]): import('./contracts.js').Sha256 | null {
+    const hasher = createHash('sha256');
+    let count = 0;
+    for (const owned of ownedPaths) {
+      const resolved = path.resolve(owned);
+      if (!fs.existsSync(resolved)) continue;
+      const stat = fs.statSync(resolved);
+      if (stat.isDirectory()) {
+        const entries = this.walkDir(resolved);
+        for (const entry of entries) {
+          const relative = path.relative(resolved, entry);
+          const content = fs.readFileSync(entry);
+          hasher.update(relative);
+          hasher.update(content);
+          filesChanged.push(path.join(owned, relative));
+          count++;
+        }
+      } else if (stat.isFile()) {
+        const content = fs.readFileSync(resolved);
+        hasher.update(path.basename(resolved));
+        hasher.update(content);
+        filesChanged.push(owned);
+        count++;
+      }
+    }
+    return count > 0 ? hasher.digest('hex') as import('./contracts.js').Sha256 : null;
+  }
+
+  private walkDir(dir: string): string[] {
+    const results: string[] = [];
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        results.push(...this.walkDir(fullPath));
+      } else if (entry.isFile()) {
+        results.push(fullPath);
+      }
+    }
+    return results;
+  }
+}

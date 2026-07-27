@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 interface Agent {
   platform: string;
@@ -6,20 +6,39 @@ interface Agent {
   path: string;
 }
 
+interface ManifestData {
+  load_order?: string[];
+}
+
+type LoadState = 'loading' | 'loaded' | 'error';
+
 const ROLES = ['coordinator', 'architect', 'worker', 'reviewer', 'verifier'];
 
 export default function WorkflowGraph() {
   const [agents, setAgents] = useState<Agent[]>([]);
-  const [manifest, setManifest] = useState<any>(null);
+  const [manifest, setManifest] = useState<ManifestData | null>(null);
+  const [loadState, setLoadState] = useState<LoadState>('loading');
+  const [error, setError] = useState('');
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    mountedRef.current = true;
+
     Promise.all([
-      fetch('/api/config/agents').then(r => r.json()),
-      fetch('/api/config/all').then(r => r.json()),
+      fetch('/api/config/agents').then(r => { if (!r.ok) throw new Error('Failed to fetch agents'); return r.json(); }),
+      fetch('/api/config/all').then(r => { if (!r.ok) throw new Error('Failed to fetch config'); return r.json(); }),
     ]).then(([a, c]) => {
+      if (!mountedRef.current) return;
       if (a.ok) setAgents(a.data);
       if (c.ok) setManifest(c.data.manifest);
-    }).catch(() => {});
+      setLoadState('loaded');
+    }).catch(err => {
+      if (!mountedRef.current) return;
+      setError(err instanceof Error ? err.message : String(err));
+      setLoadState('error');
+    });
+
+    return () => { mountedRef.current = false; };
   }, []);
 
   const agentMap: Record<string, Agent[]> = {};
@@ -29,28 +48,39 @@ export default function WorkflowGraph() {
     agentMap[role].push(a);
   }
 
+  if (loadState === 'loading') {
+    return (
+      <div>
+        <h1 className="page-title">Workflow Graph</h1>
+        <div className="state-loading"><div className="spinner" /> Loading...</div>
+      </div>
+    );
+  }
+
+  if (loadState === 'error') {
+    return (
+      <div>
+        <h1 className="page-title">Workflow Graph</h1>
+        <div className="state-error">{error}</div>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 24 }}>Workflow Graph</h1>
+      <h1 className="page-title">Workflow Graph</h1>
 
-      <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
+      <div className="flex-row flex-wrap mb-lg" style={{ gap: 16, alignItems: 'stretch' }}>
         {ROLES.map(role => (
-          <div key={role} style={{
-            background: '#161b22',
-            border: '1px solid #30363d',
-            borderRadius: 8,
-            padding: 16,
-            minWidth: 180,
-            flex: 1,
-          }}>
-            <div style={{ fontSize: 11, color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>{role}</div>
+          <div key={role} className="card" style={{ minWidth: 180, flex: 1 }}>
+            <div className="text-xs text-secondary" style={{ textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>{role}</div>
             {(agentMap[role] || []).length === 0 ? (
-              <div style={{ fontSize: 12, color: '#8b949e' }}>No agents defined</div>
+              <div className="text-xs text-secondary">No agents defined</div>
             ) : (
               agentMap[role].map((a, i) => (
-                <div key={i} style={{ fontSize: 12, color: '#e1e4e8', padding: '4px 0', borderBottom: '1px solid #21262d' }}>
-                  <div style={{ color: '#58a6ff' }}>{a.file?.replace('.md', '')}</div>
-                  <div style={{ fontSize: 10, color: '#8b949e' }}>{a.platform}</div>
+                <div key={i} className="list-item--compact" style={{ borderBottom: '1px solid var(--border-secondary)', padding: '4px 0' }}>
+                  <div className="text-link">{a.file?.replace('.md', '')}</div>
+                  <div className="text-xs text-secondary">{a.platform}</div>
                 </div>
               ))
             )}
@@ -58,24 +88,24 @@ export default function WorkflowGraph() {
         ))}
       </div>
 
-      <div style={{ background: '#161b22', border: '1px solid #30363d', borderRadius: 8, padding: 16 }}>
-        <h3 style={{ fontSize: 13, fontWeight: 600, color: '#8b949e', textTransform: 'uppercase', marginBottom: 12 }}>Dependency & Active Status</h3>
-        <div style={{ fontSize: 12, color: '#e1e4e8', lineHeight: 1.6 }}>
-          <p><strong>Coordinator</strong> → routes tasks to Architect, Workers, and Reviewer/Verifier chain.</p>
-          <p><strong>Architect</strong> → produces plan artifacts consumed by Workers.</p>
-          <p><strong>Workers</strong> → execute assigned slices, output receipts.</p>
-          <p><strong>Reviewer</strong> → reviews evidence, produces findings.</p>
-          <p><strong>Verifier</strong> → final gate before acceptance.</p>
+      <div className="card mb-lg">
+        <h3 className="card-title">Dependency & Active Status</h3>
+        <div className="text-sm" style={{ lineHeight: 1.6 }}>
+          <p><strong>Coordinator</strong> &rarr; routes tasks to Architect, Workers, and Reviewer/Verifier chain.</p>
+          <p><strong>Architect</strong> &rarr; produces plan artifacts consumed by Workers.</p>
+          <p><strong>Workers</strong> &rarr; execute assigned slices, output receipts.</p>
+          <p><strong>Reviewer</strong> &rarr; reviews evidence, produces findings.</p>
+          <p><strong>Verifier</strong> &rarr; final gate before acceptance.</p>
         </div>
 
         {manifest?.load_order && (
-          <div style={{ marginTop: 16 }}>
-            <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 4 }}>Context Load Order (from manifest.yaml):</div>
+          <div className="mt-md">
+            <div className="text-xs text-secondary mb-sm">Context Load Order (from manifest.yaml):</div>
             {manifest.load_order.map((r: string, i: number) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', fontSize: 12 }}>
-                <span style={{ color: '#8b949e', width: 20 }}>#{i}</span>
-                <span style={{ color: '#e1e4e8' }}>{r}</span>
-                <span style={{ color: '#3fb950', fontSize: 10 }}>● active</span>
+              <div key={i} className="flex-row" style={{ padding: '4px 0', gap: 8 }}>
+                <span className="text-secondary" style={{ width: 20 }}>#{i}</span>
+                <span>{r}</span>
+                <span className="text-success text-xs"><span className="dot dot--success" />active</span>
               </div>
             ))}
           </div>

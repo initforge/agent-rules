@@ -1,10 +1,13 @@
 import { createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { sha256Bytes, type Sha256 } from './contracts.js';
 import type {
   WorkLedger, WorkerReceipt, TaskAssignment, PortablePlan, ReconciliationEntry,
 } from './contracts.js';
+import type { WorkerAdapter } from './worker-adapter.js';
+import type { VerifierAdapter, VerificationEvidence } from './verifier.js';
 
 export { type Sha256, sha256Bytes };
 
@@ -28,6 +31,7 @@ export class Controller {
   private revision = 0;
   private readonly ledgerPath: string;
   private ledger: WorkLedger | null = null;
+  private retryCountMap = new Map<string, number>();
 
   constructor(ledgerPath: string) {
     this.ledgerPath = path.resolve(ledgerPath);
@@ -212,5 +216,116 @@ export class Controller {
     this.taskStates.set(assignmentId, 'PENDING');
     this.checkpointState = 'RECONCILING';
     this.revision++;
+  }
+
+  async runTask(
+    assignmentId: string,
+    worker: WorkerAdapter,
+    verifier: VerifierAdapter,
+  ): Promise<{ success: boolean; state: TaskState; attempt: number }> {
+    const maxRetries = 3;
+    let attempt = this.retryCountMap.get(assignmentId) ?? 0;
+
+    while (attempt <= maxRetries) {
+      const current = this.taskStates.get(assignmentId);
+      if (current === 'CLOSED_MATCH') {
+        return { success: true, state: 'CLOSED_MATCH', attempt };
+      }
+
+      if (current === 'READY') {
+        this.startWork(assignmentId);
+      } else if (current !== 'IN_PROGRESS') {
+        if (current === 'PENDING') {
+          const d = await this.dispatchNext();
+          if (d !== assignmentId) {
+            throw new Error(`dispatchNext returned ${d} instead of ${assignmentId}`);
+          }
+          this.startWork(assignmentId);
+        } else {
+          throw new Error(`Cannot run task ${assignmentId}: unexpected state ${current}`);
+        }
+      }
+
+      const assignment = this.getAssignment(assignmentId);
+      if (!assignment) throw new Error(`Unknown assignment: ${assignmentId}`);
+
+      const { jobId } = await worker.submit(assignment);
+      const receipt = await worker.collectReceipt(jobId);
+      await this.submitReceipt(assignmentId, receipt);
+
+      let probeExitCode = 0;
+      const probeCmds: string[] = [];
+      for (const cmd of assignment.verificationCommands) {
+        const cmdStr = [cmd.executable, ...cmd.args].join(' ');
+        probeCmds.push(cmdStr);
+        const cwd = cmd.cwd ? path.resolve(cmd.cwd) : undefined;
+        try {
+          const result = spawnSync(cmd.executable, [...cmd.args], {
+            cwd, stdio: 'pipe', timeout: 30000,
+          });
+          probeExitCode = result.status ?? 1;
+          if (probeExitCode !== 0) break;
+        } catch {
+          probeExitCode = 1;
+          break;
+        }
+      }
+
+      const evidenceUri = receipt.artifactUris.length > 0
+        ? receipt.artifactUris[0]
+        : (receipt.filesChanged.length > 0 ? `file://${receipt.filesChanged[0]}` : 'file:///tmp/evidence');
+      const evidenceHash = receipt.artifactHashes.length > 0
+        ? receipt.artifactHashes[0]
+        : (receipt.diffSha256 ?? ('a'.repeat(64) as import('./contracts.js').Sha256));
+
+      const evidence: VerificationEvidence = {
+        source: 'verifier',
+        probeCommand: probeCmds.join(' && '),
+        probeExitCode,
+        evidenceUris: [evidenceUri],
+        evidenceHashes: [evidenceHash],
+        rawOutput: JSON.stringify({ filesChanged: receipt.filesChanged, diffSha256: receipt.diffSha256 }),
+      };
+
+      const result = await verifier.verify(receipt, evidence);
+
+      if (result.passed) {
+        await this.verifyReceipt(assignmentId, true);
+        this.retryCountMap.delete(assignmentId);
+        return { success: true, state: 'CLOSED_MATCH', attempt };
+      }
+
+      await this.verifyReceipt(assignmentId, false);
+      attempt++;
+
+      if (attempt <= maxRetries) {
+        this.retryCountMap.set(assignmentId, attempt);
+        await this.retry(assignmentId);
+      } else {
+        this.retryCountMap.delete(assignmentId);
+        return { success: false, state: 'CLOSED_FAILED', attempt };
+      }
+    }
+
+    return { success: false, state: 'CLOSED_FAILED', attempt };
+  }
+
+  async runFullPlan(
+    worker: WorkerAdapter,
+    verifier: VerifierAdapter,
+  ): Promise<{ completed: number; failed: number }> {
+    let completed = 0;
+    let failed = 0;
+
+    while (true) {
+      const assignmentId = await this.dispatchNext();
+      if (!assignmentId) break;
+
+      const result = await this.runTask(assignmentId, worker, verifier);
+      if (result.success) completed++;
+      else failed++;
+    }
+
+    return { completed, failed };
   }
 }

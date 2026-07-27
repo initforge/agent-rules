@@ -209,3 +209,67 @@ export function detectStaleReviews(
 
   return result;
 }
+
+export function lockFile(filePath: string): { fd: number; unlock: () => void } {
+  requireValue(typeof filePath === 'string' && filePath.length > 0, 'filePath must be non-empty');
+  const lockPath = `${filePath}.lock`;
+  const fd = fs.openSync(lockPath, 'wx');
+  return {
+    fd,
+    unlock: () => {
+      try { fs.closeSync(fd); } catch { /* already closed */ }
+      try { fs.unlinkSync(lockPath); } catch { /* already deleted */ }
+    },
+  };
+}
+
+export function lockDirectory(dirPath: string): { fd: number; unlock: () => void } {
+  requireValue(typeof dirPath === 'string' && dirPath.length > 0, 'dirPath must be non-empty');
+  const lockPath = path.join(dirPath, '.lock');
+  const fd = fs.openSync(lockPath, 'wx');
+  return {
+    fd,
+    unlock: () => {
+      try { fs.closeSync(fd); } catch { /* already closed */ }
+      try { fs.unlinkSync(lockPath); } catch { /* already deleted */ }
+    },
+  };
+}
+
+export function detectStaleReceipts(
+  currentDiffFingerprint: string,
+  currentEvidenceHashes: Record<string, string>,
+  receipts: readonly ReviewReceipt[],
+): string[] {
+  requireValue(typeof currentDiffFingerprint === 'string' && currentDiffFingerprint.length > 0, 'currentDiffFingerprint must be non-empty');
+  requireValue(typeof currentEvidenceHashes === 'object' && currentEvidenceHashes !== null, 'currentEvidenceHashes must be an object');
+  requireValue(Array.isArray(receipts), 'receipts must be an array');
+
+  const staleIds: string[] = [];
+
+  for (const receipt of receipts) {
+    let stale = false;
+
+    if (receipt.diffFingerprint !== currentDiffFingerprint) {
+      stale = true;
+    } else {
+      const currentValues = new Set(Object.values(currentEvidenceHashes));
+      let evidenceMatch = true;
+      for (const hash of receipt.evidenceHashes) {
+        if (!currentValues.has(hash)) {
+          evidenceMatch = false;
+          break;
+        }
+      }
+      if (!evidenceMatch) {
+        stale = true;
+      }
+    }
+
+    if (stale) {
+      staleIds.push(receipt.reviewId);
+    }
+  }
+
+  return staleIds;
+}

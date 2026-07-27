@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Overview from './pages/Overview';
 import Platforms from './pages/Platforms';
 import ModelsAndRoutes from './pages/ModelsAndRoutes';
@@ -9,6 +9,12 @@ import PlanAndEvidence from './pages/PlanAndEvidence';
 import AuditLog from './pages/AuditLog';
 
 type Page = 'overview' | 'platforms' | 'models-routes' | 'workflow' | 'skills' | 'runs' | 'plan' | 'audit';
+
+interface HealthData {
+  ok?: boolean;
+  status?: string;
+  commit?: string;
+}
 
 const NAV: { id: Page; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -21,12 +27,40 @@ const NAV: { id: Page; label: string }[] = [
   { id: 'audit', label: 'Audit Log' },
 ];
 
+function getPageFromHash(): Page {
+  const hash = window.location.hash.replace('#', '');
+  const valid = NAV.find(n => n.id === hash);
+  return valid ? valid.id : 'overview';
+}
+
 export default function App() {
-  const [page, setPage] = useState<Page>('overview');
-  const [health, setHealth] = useState<{ commit?: string; status?: string }>({});
+  const [page, setPage] = useState<Page>(getPageFromHash);
+  const [health, setHealth] = useState<HealthData>({});
+  const [healthError, setHealthError] = useState(false);
+  const [dark, setDark] = useState(() => document.documentElement.getAttribute('data-theme') === 'dark');
 
   useEffect(() => {
-    fetch('/api/health').then(r => r.json()).then(d => setHealth(d)).catch(() => {});
+    const onHashChange = () => setPage(getPageFromHash());
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/health')
+      .then(r => r.json())
+      .then(d => setHealth(d))
+      .catch(() => setHealthError(true));
+  }, []);
+
+  const navigate = useCallback((id: Page) => {
+    window.location.hash = id;
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('cp-theme', next);
+    setDark(next === 'dark');
   }, []);
 
   const pages: Record<Page, React.ReactNode> = {
@@ -41,36 +75,40 @@ export default function App() {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <nav style={{ width: 260, background: '#161b22', borderRight: '1px solid #30363d', padding: '16px 0' }}>
-        <div style={{ padding: '0 16px 16px', borderBottom: '1px solid #30363d', marginBottom: 8 }}>
-          <h2 style={{ fontSize: 14, fontWeight: 600, color: '#f0f6fc' }}>Control Plane</h2>
-          <div style={{ fontSize: 11, color: '#8b949e', marginTop: 4 }}>
-            {health.commit ? `#${health.commit.slice(0, 7)}` : ''} <span style={{ color: health.status === 'healthy' ? '#3fb950' : '#f85149' }}>●</span>
+    <div className="app-layout">
+      <nav className="app-nav">
+        <div className="app-nav-header">
+          <div className="app-nav-title">Control Plane</div>
+          <div className="app-nav-status">
+            {healthError ? (
+              <span><span className="app-nav-status-dot app-nav-status-dot--unhealthy" /> offline</span>
+            ) : (
+              <>
+                {health.commit ? `#${health.commit.slice(0, 7)}` : ''}
+                <span className={`app-nav-status-dot ${health.status === 'healthy' ? 'app-nav-status-dot--healthy' : 'app-nav-status-dot--unhealthy'}`} />
+                {health.status || '?'}
+              </>
+            )}
           </div>
         </div>
-        {NAV.map(n => (
-          <button
-            key={n.id}
-            onClick={() => setPage(n.id)}
-            style={{
-              display: 'block',
-              width: '100%',
-              textAlign: 'left',
-              padding: '8px 16px',
-              background: page === n.id ? '#1f2937' : 'transparent',
-              color: page === n.id ? '#f0f6fc' : '#8b949e',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: 13,
-              fontWeight: page === n.id ? 600 : 400,
-            }}
-          >
-            {n.label}
+        <div className="app-nav-items">
+          {NAV.map(n => (
+            <button
+              key={n.id}
+              onClick={() => navigate(n.id)}
+              className={`app-nav-item${page === n.id ? ' app-nav-item--active' : ''}`}
+            >
+              {n.label}
+            </button>
+          ))}
+        </div>
+        <div className="app-nav-footer">
+          <button className="theme-toggle" onClick={toggleTheme} title="Toggle theme">
+            {dark ? '\u2600' : '\uD83C\uDF19'}
           </button>
-        ))}
+        </div>
       </nav>
-      <main style={{ flex: 1, padding: 24, overflow: 'auto' }}>
+      <main className="app-content">
         {pages[page]}
       </main>
     </div>

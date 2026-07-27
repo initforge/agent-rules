@@ -1,123 +1,201 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+
+interface FileStatusEntry {
+  exists: boolean;
+  size: number;
+}
+
+interface DirStatusEntry {
+  exists: boolean;
+  entryCount: number;
+}
 
 interface HealthData {
+  ok?: boolean;
+  status?: string;
   commit?: string;
   manifestHash?: string;
-  status?: string;
-  fileStatus?: Record<string, { exists: boolean; size: number }>;
-  dirStatus?: Record<string, { exists: boolean; entryCount: number }>;
+  fileStatus?: Record<string, FileStatusEntry>;
+  dirStatus?: Record<string, DirStatusEntry>;
+}
+
+interface ManifestData {
+  version?: number;
+  load_order?: string[];
+  budgets?: Record<string, number>;
+}
+
+interface ProfileManifestProfile {
+  enabledByDefault?: boolean;
+  name?: string;
+  displayName?: string;
+}
+
+interface ProfileManifest {
+  version?: number;
+  profiles?: Record<string, ProfileManifestProfile>;
+}
+
+interface ModelPolicy {
+  version?: number;
+  platforms?: Record<string, unknown>;
 }
 
 interface ConfigData {
-  manifest?: { version?: number; load_order?: string[]; budgets?: Record<string, number> };
+  manifest?: ManifestData;
   registry?: { version?: number; integrations?: unknown[]; profiles?: Record<string, unknown> };
-  profileManifest?: { version?: number; profiles?: Record<string, { enabledByDefault?: boolean; name?: string; displayName?: string }> };
-  modelPolicy?: { version?: number; platforms?: Record<string, unknown> };
+  profileManifest?: ProfileManifest;
+  modelPolicy?: ModelPolicy;
 }
+
+type LoadState = 'loading' | 'loaded' | 'error' | 'offline';
 
 export default function Overview() {
   const [health, setHealth] = useState<HealthData | null>(null);
   const [config, setConfig] = useState<ConfigData | null>(null);
+  const [loadState, setLoadState] = useState<LoadState>('loading');
   const [error, setError] = useState('');
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    mountedRef.current = true;
+    let stale = false;
+    const timer = setTimeout(() => { if (mountedRef.current && loadState === 'loading') stale = true; }, 5000);
+
     Promise.all([
-      fetch('/api/health').then(r => r.json()),
-      fetch('/api/config/all').then(r => r.json()),
+      fetch('/api/health').then(r => { if (!r.ok) throw new Error('Health check failed'); return r.json(); }),
+      fetch('/api/config/all').then(r => { if (!r.ok) throw new Error('Config fetch failed'); return r.json(); }),
     ]).then(([h, c]) => {
+      if (!mountedRef.current) return;
       if (h.ok) setHealth(h);
       if (c.ok) setConfig(c.data);
-    }).catch(e => setError(String(e)));
+      setLoadState('loaded');
+    }).catch(err => {
+      if (!mountedRef.current) return;
+      if (stale) setLoadState('offline');
+      else { setError(err instanceof Error ? err.message : String(err)); setLoadState('error'); }
+    }).finally(() => clearTimeout(timer));
+
+    return () => { mountedRef.current = false; clearTimeout(timer); };
   }, []);
 
-  const enabledProfiles = config?.profileManifest?.profiles
+  const enabledProfiles: [string, ProfileManifestProfile][] = config?.profileManifest?.profiles
     ? Object.entries(config.profileManifest.profiles).filter(([, v]) => v.enabledByDefault)
     : [];
 
-  const platforms = config?.modelPolicy?.platforms ? Object.keys(config.modelPolicy.platforms) : [];
+  const platforms: string[] = config?.modelPolicy?.platforms ? Object.keys(config.modelPolicy.platforms) : [];
+
+  if (loadState === 'loading') {
+    return (
+      <div>
+        <h1 className="page-title">Repository Overview</h1>
+        <div className="state-loading"><div className="spinner" /> Loading...</div>
+      </div>
+    );
+  }
+
+  if (loadState === 'error') {
+    return (
+      <div>
+        <h1 className="page-title">Repository Overview</h1>
+        <div className="state-error">{error}</div>
+      </div>
+    );
+  }
+
+  if (loadState === 'offline') {
+    return (
+      <div>
+        <h1 className="page-title">Repository Overview</h1>
+        <div className="state-offline">Server unreachable. Showing cached data if available.</div>
+        {health && (
+          <div className="state-stale">Data may be stale — last known status: {health.status}</div>
+        )}
+      </div>
+    );
+  }
+
+  const fileStats = health?.fileStatus ? Object.values(health.fileStatus) : null;
+  const filesFound = fileStats ? fileStats.filter(v => v.exists).length : 0;
+  const filesTotal = fileStats ? fileStats.length : 0;
+  const dirCount = health?.dirStatus ? Object.keys(health.dirStatus).length : 0;
 
   return (
     <div>
-      <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 24 }}>Repository Overview</h1>
-      {error && <div style={{ color: '#f85149', marginBottom: 16 }}>{error}</div>}
+      <h1 className="page-title">Repository Overview</h1>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16, marginBottom: 24 }}>
-        <Card title="Repository Health">
-          <Stat label="Status" value={health?.status || 'unknown'} />
-          <Stat label="Commit" value={health?.commit ? health.commit.slice(0, 7) : 'unknown'} />
-          <Stat label="Manifest Hash" value={health?.manifestHash || 'unknown'} />
-        </Card>
+      {error && <div className="state-error">{error}</div>}
 
-        <Card title="CI Status">
-          <Stat label="Last Commit" value={health?.commit ? health.commit.slice(0, 7) : 'N/A'} />
-          <div style={{ fontSize: 12, color: '#8b949e', marginTop: 8 }}>
-            CI imported from available data (git log)
-          </div>
-        </Card>
+      <div className="grid">
+        <div className="card">
+          <h3 className="card-title">Repository Health</h3>
+          <div className="stat-row"><span className="stat-label">Status</span><span className="stat-value">{health?.status || 'unknown'}</span></div>
+          <div className="stat-row"><span className="stat-label">Commit</span><span className="stat-value">{health?.commit ? health.commit.slice(0, 7) : 'unknown'}</span></div>
+          <div className="stat-row"><span className="stat-label">Manifest Hash</span><span className="stat-value">{health?.manifestHash || 'unknown'}</span></div>
+        </div>
 
-        <Card title="Sync Drift">
-          <Stat label="Config Files Found" value={Object.values(health?.fileStatus || {}).filter(v => v.exists).length + '/' + Object.values(health?.fileStatus || {}).length} />
-          <Stat label="Directories" value={Object.keys(health?.dirStatus || {}).length} />
-        </Card>
+        <div className="card">
+          <h3 className="card-title">CI Status</h3>
+          <div className="stat-row"><span className="stat-label">Last Commit</span><span className="stat-value">{health?.commit ? health.commit.slice(0, 7) : 'N/A'}</span></div>
+          <div className="text-xs text-secondary mt-sm">CI imported from available data (git log)</div>
+        </div>
 
-        <Card title="Enabled Profiles">
-          {enabledProfiles.length === 0
-            ? <div style={{ color: '#8b949e', fontSize: 13 }}>No profiles enabled by default</div>
-            : enabledProfiles.map(([id]) => (
-                <div key={id} style={{ fontSize: 13, padding: '2px 0', color: '#7ee787' }}>● {id}</div>
-              ))}
-        </Card>
+        <div className="card">
+          <h3 className="card-title">Sync Drift</h3>
+          <div className="stat-row"><span className="stat-label">Config Files Found</span><span className="stat-value">{filesFound}/{filesTotal}</span></div>
+          <div className="stat-row"><span className="stat-label">Directories</span><span className="stat-value">{dirCount}</span></div>
+        </div>
 
-        <Card title="Platform Health">
-          {platforms.length === 0
-            ? <div style={{ color: '#8b949e', fontSize: 13 }}>No platforms configured</div>
-            : platforms.map(p => (
-                <div key={p} style={{ fontSize: 13, padding: '2px 0', color: '#58a6ff' }}>● {p}</div>
-              ))}
-        </Card>
+        <div className="card">
+          <h3 className="card-title">Enabled Profiles</h3>
+          {enabledProfiles.length === 0 ? (
+            <div className="state-empty">No profiles enabled by default</div>
+          ) : (
+            enabledProfiles.map(([id]) => (
+              <div key={id} className="list-item--compact"><span className="dot dot--success" />{id}</div>
+            ))
+          )}
+        </div>
 
-        <Card title="Config Sources">
-          {config?.manifest?.load_order && (
+        <div className="card">
+          <h3 className="card-title">Platform Health</h3>
+          {platforms.length === 0 ? (
+            <div className="state-empty">No platforms configured</div>
+          ) : (
+            platforms.map(p => (
+              <div key={p} className="list-item--compact"><span className="dot dot--accent" />{p}</div>
+            ))
+          )}
+        </div>
+
+        <div className="card">
+          <h3 className="card-title">Config Sources</h3>
+          {config?.manifest?.load_order ? (
             <div>
-              <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 4 }}>Load Order:</div>
+              <div className="text-xs text-secondary mb-sm">Load Order:</div>
               {config.manifest.load_order.map((r, i) => (
-                <div key={i} style={{ fontSize: 12, color: '#e1e4e8', padding: '1px 0' }}>{r}</div>
+                <div key={i} className="detail-row">{r}</div>
               ))}
             </div>
+          ) : (
+            <div className="state-empty">No load order defined</div>
           )}
-        </Card>
+        </div>
       </div>
 
       {config?.manifest?.budgets && (
-        <Card title="Token Budgets">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
+        <div className="card mb-md">
+          <h3 className="card-title">Token Budgets</h3>
+          <div className="grid grid--narrow" style={{ gap: 8 }}>
             {Object.entries(config.manifest.budgets).map(([k, v]) => (
               <div key={k}>
-                <span style={{ fontSize: 11, color: '#8b949e' }}>{k}</span>
-                <div style={{ fontSize: 13, color: '#e1e4e8' }}>{v?.toLocaleString()}</div>
+                <div className="text-xs text-secondary">{k}</div>
+                <div className="text-sm">{v?.toLocaleString()}</div>
               </div>
             ))}
           </div>
-        </Card>
+        </div>
       )}
-    </div>
-  );
-}
-
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div style={{ background: '#161b22', border: '1px solid #30363d', borderRadius: 8, padding: 16 }}>
-      <h3 style={{ fontSize: 13, fontWeight: 600, color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>{title}</h3>
-      {children}
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #21262d' }}>
-      <span style={{ fontSize: 12, color: '#8b949e' }}>{label}</span>
-      <span style={{ fontSize: 12, color: '#e1e4e8', fontWeight: 500 }}>{value}</span>
     </div>
   );
 }

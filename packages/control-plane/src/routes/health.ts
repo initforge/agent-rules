@@ -2,6 +2,7 @@ import { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import os from 'os';
 
 function findRoot(): string {
   let dir = __dirname;
@@ -16,6 +17,7 @@ function findRoot(): string {
 
 const router = Router();
 const ROOT = findRoot();
+const START_TIME = Date.now();
 
 router.get('/', (_req, res) => {
   try {
@@ -65,6 +67,9 @@ router.get('/', (_req, res) => {
       }
     }
 
+    const memUsage = process.memoryUsage();
+    const cpus = os.cpus();
+
     res.json({
       ok: true,
       status: 'healthy',
@@ -73,9 +78,32 @@ router.get('/', (_req, res) => {
       fileStatus,
       dirStatus,
       timestamp: new Date().toISOString(),
+      uptime: Math.floor((Date.now() - START_TIME) / 1000),
+      system: {
+        nodeVersion: process.version,
+        platform: process.platform,
+        arch: process.arch,
+        hostname: os.hostname(),
+        cpus: cpus.length,
+        cpuModel: cpus.length > 0 ? cpus[0].model : 'unknown',
+        memory: {
+          rss: Math.round(memUsage.rss / 1024 / 1024),
+          heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024),
+          heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024),
+        },
+        totalMemory: Math.round(os.totalmem() / 1024 / 1024),
+        freeMemory: Math.round(os.freemem() / 1024 / 1024),
+        loadAvg: os.loadavg().map(v => Math.round(v * 100) / 100),
+      },
     });
   } catch (err) {
-    res.status(500).json({ ok: false, error: String(err) });
+    res.status(500).json({
+      ok: false,
+      status: 'error',
+      error: String(err),
+      timestamp: new Date().toISOString(),
+      uptime: Math.floor((Date.now() - START_TIME) / 1000),
+    });
   }
 });
 

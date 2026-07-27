@@ -1,21 +1,70 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+
+interface RouteCases {
+  version?: number;
+  cases?: unknown[];
+  routes?: Record<string, string[]>;
+  budgets?: Record<string, number>;
+}
+
+interface ModelPolicy {
+  version?: number;
+  capability_classes?: Record<string, string>;
+  platforms?: Record<string, unknown>;
+}
+
+interface DiffResult {
+  linesAdded: number;
+  linesRemoved: number;
+  hunks: unknown[];
+  patch: string;
+}
+
+interface CardProps {
+  title: string;
+  children: React.ReactNode;
+}
+
+type LoadState = 'loading' | 'loaded' | 'error';
+
+function Card({ title, children }: CardProps) {
+  return (
+    <div className="card">
+      <h3 className="card-title">{title}</h3>
+      {children}
+    </div>
+  );
+}
 
 export default function ModelsAndRoutes() {
-  const [modelPolicy, setModelPolicy] = useState<any>(null);
-  const [routeCases, setRouteCases] = useState<any>(null);
+  const [modelPolicy, setModelPolicy] = useState<ModelPolicy | null>(null);
+  const [routeCases, setRouteCases] = useState<RouteCases | null>(null);
+  const [loadState, setLoadState] = useState<LoadState>('loading');
+  const [error, setError] = useState('');
   const [showEditor, setShowEditor] = useState(false);
   const [editContent, setEditContent] = useState('');
-  const [diffResult, setDiffResult] = useState<any>(null);
+  const [diffResult, setDiffResult] = useState<DiffResult | null>(null);
   const [message, setMessage] = useState('');
+  const mountedRef = useRef(true);
 
   useEffect(() => {
+    mountedRef.current = true;
+
     Promise.all([
-      fetch('/api/config/file?path=automation/model-policy.json').then(r => r.json()),
-      fetch('/api/config/file?path=automation/context-route-cases.json').then(r => r.json()),
+      fetch('/api/config/file?path=automation/model-policy.json').then(r => { if (!r.ok) throw new Error('Failed to fetch model policy'); return r.json(); }),
+      fetch('/api/config/file?path=automation/context-route-cases.json').then(r => { if (!r.ok) throw new Error('Failed to fetch route cases'); return r.json(); }),
     ]).then(([m, r]) => {
+      if (!mountedRef.current) return;
       if (m.ok) setModelPolicy(m.data);
       if (r.ok) setRouteCases(r.data);
-    }).catch(() => {});
+      setLoadState('loaded');
+    }).catch(err => {
+      if (!mountedRef.current) return;
+      setError(err instanceof Error ? err.message : String(err));
+      setLoadState('error');
+    });
+
+    return () => { mountedRef.current = false; };
   }, []);
 
   async function handlePreview() {
@@ -29,7 +78,9 @@ export default function ModelsAndRoutes() {
       const r = await res.json();
       if (r.ok) setDiffResult(r.diff);
       else setMessage(`Preview error: ${r.error}`);
-    } catch (e) { setMessage(`Invalid JSON: ${e}`); }
+    } catch (e) {
+      setMessage(`Invalid JSON: ${e instanceof Error ? e.message : String(e)}`);
+    }
   }
 
   async function handleApply() {
@@ -45,116 +96,125 @@ export default function ModelsAndRoutes() {
         setMessage(r.applied ? `Applied. Backup: ${r.backupPath}` : 'No changes.');
         setDiffResult(null);
         setModelPolicy(data);
-      } else setMessage(`Apply error: ${r.error}`);
-    } catch (e) { setMessage(`Invalid JSON: ${e}`); }
+      } else {
+        setMessage(`Apply error: ${r.error}`);
+      }
+    } catch (e) {
+      setMessage(`Invalid JSON: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
+  if (loadState === 'loading') {
+    return (
+      <div>
+        <h1 className="page-title">Models & Routes</h1>
+        <div className="state-loading"><div className="spinner" /> Loading...</div>
+      </div>
+    );
+  }
+
+  if (loadState === 'error') {
+    return (
+      <div>
+        <h1 className="page-title">Models & Routes</h1>
+        <div className="state-error">{error}</div>
+      </div>
+    );
   }
 
   return (
     <div>
-      <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 24 }}>Models & Routes</h1>
+      <h1 className="page-title">Models & Routes</h1>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: 16, marginBottom: 24 }}>
-        <Card title="Model Policy (v{modelPolicy?.version || '?'})">
+      <div className="grid grid--wide mb-lg">
+        <Card title={`Model Policy (v${modelPolicy?.version || '?'})`}>
           {modelPolicy?.capability_classes && (
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 4 }}>Capability Classes</div>
+            <div className="mb-sm">
+              <div className="text-xs text-secondary mb-sm">Capability Classes</div>
               {Object.entries(modelPolicy.capability_classes).map(([k, v]) => (
-                <div key={k} style={{ fontSize: 12, color: '#e1e4e8', padding: '2px 0' }}>
-                  <strong>{k}</strong>: {v as string}
-                </div>
+                <div key={k} className="detail-row"><strong>{k}</strong>: {v}</div>
               ))}
             </div>
           )}
           {modelPolicy?.platforms && (
             <div>
-              <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 4 }}>Platform Mappings</div>
-              {Object.entries(modelPolicy.platforms).map(([name, config]: [string, any]) => (
-                <div key={name} style={{ fontSize: 12, color: '#e1e4e8', padding: '4px 0', borderBottom: '1px solid #21262d' }}>
-                  <strong style={{ color: '#58a6ff', textTransform: 'capitalize' }}>{name}</strong>
-                  <pre style={{ fontSize: 10, color: '#8b949e', marginTop: 2 }}>{JSON.stringify(config, null, 2)}</pre>
+              <div className="text-xs text-secondary mb-sm">Platform Mappings</div>
+              {Object.entries(modelPolicy.platforms).map(([name, config]) => (
+                <div key={name} className="detail-row">
+                  <strong className="text-link text-capitalize">{name}</strong>
+                  <pre className="code-block code-block--compact mt-sm text-xs">{JSON.stringify(config, null, 2)}</pre>
                 </div>
               ))}
             </div>
           )}
+          {!modelPolicy?.capability_classes && !modelPolicy?.platforms && (
+            <div className="state-empty">No model policy data available</div>
+          )}
         </Card>
 
-        <Card title="Context Route Cases (v{routeCases?.version || '?'})">
-          <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 8 }}>
+        <Card title={`Context Route Cases (v${routeCases?.version || '?'})`}>
+          <div className="text-xs text-secondary mb-sm">
             {routeCases?.cases?.length || 0} route cases defined
           </div>
           {routeCases?.routes && (
             <div>
-              <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 4 }}>Named Routes</div>
-              {Object.entries(routeCases.routes).map(([name, files]: [string, any]) => (
-                <div key={name} style={{ fontSize: 11, padding: '2px 0', color: '#e1e4e8' }}>
-                  <strong>{name}</strong>: {(files as string[]).length} files
-                </div>
+              <div className="text-xs text-secondary mb-sm">Named Routes</div>
+              {Object.entries(routeCases.routes).map(([name, files]) => (
+                <div key={name} className="detail-row"><strong>{name}</strong>: {(files as string[]).length} files</div>
               ))}
             </div>
           )}
           {routeCases?.budgets && (
-            <div style={{ marginTop: 8 }}>
-              <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 4 }}>Token Budgets</div>
+            <div className="mt-sm">
+              <div className="text-xs text-secondary mb-sm">Token Budgets</div>
               {Object.entries(routeCases.budgets).map(([k, v]) => (
-                <div key={k} style={{ fontSize: 11, padding: '1px 0', color: '#e1e4e8' }}>
-                  {k}: {v?.toLocaleString()}
-                </div>
+                <div key={k} className="detail-row">{k}: {v?.toLocaleString()}</div>
               ))}
             </div>
           )}
+          {!routeCases && <div className="state-empty">No route cases loaded</div>}
         </Card>
       </div>
 
-      <div style={{ background: '#161b22', border: '1px solid #30363d', borderRadius: 8, padding: 16, marginBottom: 16 }}>
-        <h3 style={{ fontSize: 13, fontWeight: 600, color: '#8b949e', textTransform: 'uppercase', marginBottom: 12 }}>
-          Safe Edit: Model Policy
-          <button onClick={() => setShowEditor(!showEditor)} style={{ marginLeft: 12, background: '#21262d', color: '#e1e4e8', border: '1px solid #30363d', borderRadius: 4, padding: '2px 8px', fontSize: 11, cursor: 'pointer' }}>
+      <div className="card mb-md">
+        <div className="card-header">
+          <h3 className="card-title">Safe Edit: Model Policy</h3>
+          <button onClick={() => setShowEditor(!showEditor)} className="btn btn--sm">
             {showEditor ? 'Hide' : 'Edit'}
           </button>
-        </h3>
+        </div>
 
         {message && (
-          <div style={{ fontSize: 12, color: message.includes('error') ? '#f85149' : '#7ee787', marginBottom: 8, padding: 8, background: '#0d1117', borderRadius: 4 }}>
+          <div className={`message ${message.includes('error') ? 'message--error' : 'message--success'}`}>
             {message}
           </div>
         )}
 
         {showEditor && (
           <div>
-            <div style={{ marginBottom: 8, fontSize: 11, color: '#8b949e' }}>Edit JSON directly (validates against schema):</div>
+            <div className="text-xs text-secondary mb-sm">Edit JSON directly (validates against schema):</div>
             <textarea
               value={editContent}
               onChange={e => setEditContent(e.target.value)}
-              style={{ width: '100%', height: 200, background: '#0d1117', color: '#e1e4e8', border: '1px solid #30363d', borderRadius: 4, padding: 8, fontSize: 11, fontFamily: 'monospace', resize: 'vertical' }}
+              className="editor"
               placeholder={JSON.stringify(modelPolicy, null, 2)}
             />
-            <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-              <button onClick={handlePreview} style={{ background: '#21262d', color: '#e1e4e8', border: '1px solid #30363d', borderRadius: 4, padding: '6px 16px', fontSize: 12, cursor: 'pointer' }}>Preview Diff</button>
-              <button onClick={handleApply} style={{ background: '#238636', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 16px', fontSize: 12, cursor: 'pointer' }}>Apply</button>
+            <div className="flex-row mt-sm">
+              <button onClick={handlePreview} className="btn">Preview Diff</button>
+              <button onClick={handleApply} className="btn btn--success">Apply</button>
             </div>
           </div>
         )}
 
         {diffResult && (
-          <div style={{ marginTop: 12 }}>
-            <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 4 }}>
+          <div className="mt-md">
+            <div className="text-xs text-secondary mb-sm">
               Diff: +{diffResult.linesAdded}/-{diffResult.linesRemoved} lines, {diffResult.hunks?.length || 0} hunks
             </div>
-            <pre style={{ fontSize: 10, background: '#0d1117', padding: 8, borderRadius: 4, maxHeight: 300, overflow: 'auto', color: '#e1e4e8' }}>
-              {diffResult.patch?.slice(0, 2000)}
-            </pre>
+            <pre className="code-block code-block--scroll">{diffResult.patch?.slice(0, 2000)}</pre>
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div style={{ background: '#161b22', border: '1px solid #30363d', borderRadius: 8, padding: 16 }}>
-      <h3 style={{ fontSize: 13, fontWeight: 600, color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>{title}</h3>
-      {children}
     </div>
   );
 }
