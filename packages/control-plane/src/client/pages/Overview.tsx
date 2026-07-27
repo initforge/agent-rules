@@ -1,14 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 
-interface FileStatusEntry {
-  exists: boolean;
-  size: number;
-}
-
-interface DirStatusEntry {
-  exists: boolean;
-  entryCount: number;
-}
+interface FileStatusEntry { exists: boolean; size: number; }
+interface DirStatusEntry { exists: boolean; entryCount: number; }
 
 interface HealthData {
   ok?: boolean;
@@ -17,40 +10,28 @@ interface HealthData {
   manifestHash?: string;
   fileStatus?: Record<string, FileStatusEntry>;
   dirStatus?: Record<string, DirStatusEntry>;
+  uptime?: number;
+  system?: {
+    nodeVersion?: string;
+    platform?: string;
+    cpus?: number;
+    memory?: { rss?: number; heapUsed?: number; };
+    loadAvg?: number[];
+  };
 }
 
-interface ManifestData {
-  version?: number;
-  load_order?: string[];
-  budgets?: Record<string, number>;
-}
-
-interface ProfileManifestProfile {
-  enabledByDefault?: boolean;
-  name?: string;
-  displayName?: string;
-}
-
-interface ProfileManifest {
-  version?: number;
-  profiles?: Record<string, ProfileManifestProfile>;
-}
-
-interface ModelPolicy {
-  version?: number;
-  platforms?: Record<string, unknown>;
-}
-
-interface ConfigData {
-  manifest?: ManifestData;
-  registry?: { version?: number; integrations?: unknown[]; profiles?: Record<string, unknown> };
-  profileManifest?: ProfileManifest;
-  modelPolicy?: ModelPolicy;
-}
+interface ManifestData { version?: number; load_order?: string[]; budgets?: Record<string, number>; }
+interface ProfileManifest { version?: number; profiles?: Record<string, { enabledByDefault?: boolean; name?: string; displayName?: string }>; }
+interface ModelPolicy { version?: number; platforms?: Record<string, unknown>; }
+interface ConfigData { manifest?: ManifestData; profileManifest?: ProfileManifest; modelPolicy?: ModelPolicy; }
 
 type LoadState = 'loading' | 'loaded' | 'error' | 'offline';
 
-export default function Overview() {
+interface OverviewProps {
+  navigate: (path: string) => void;
+}
+
+export default function Overview({ navigate }: OverviewProps) {
   const [health, setHealth] = useState<HealthData | null>(null);
   const [config, setConfig] = useState<ConfigData | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
@@ -79,16 +60,21 @@ export default function Overview() {
     return () => { mountedRef.current = false; clearTimeout(timer); };
   }, []);
 
-  const enabledProfiles: [string, ProfileManifestProfile][] = config?.profileManifest?.profiles
+  const enabledProfiles = config?.profileManifest?.profiles
     ? Object.entries(config.profileManifest.profiles).filter(([, v]) => v.enabledByDefault)
     : [];
-
-  const platforms: string[] = config?.modelPolicy?.platforms ? Object.keys(config.modelPolicy.platforms) : [];
+  const platforms = config?.modelPolicy?.platforms ? Object.keys(config.modelPolicy.platforms) : [];
+  const fileStats = health?.fileStatus ? Object.values(health.fileStatus) : null;
+  const filesFound = fileStats ? fileStats.filter(v => v.exists).length : 0;
+  const filesTotal = fileStats ? fileStats.length : 0;
 
   if (loadState === 'loading') {
     return (
-      <div>
-        <h1 className="page-title">Repository Overview</h1>
+      <div className="page">
+        <div className="page-header">
+          <h1 className="typography-title">Repository Overview</h1>
+          <p className="typography-caption">System health, CI status, and configuration drift</p>
+        </div>
         <div className="state-loading"><div className="spinner" /> Loading...</div>
       </div>
     );
@@ -96,8 +82,11 @@ export default function Overview() {
 
   if (loadState === 'error') {
     return (
-      <div>
-        <h1 className="page-title">Repository Overview</h1>
+      <div className="page">
+        <div className="page-header">
+          <h1 className="typography-title">Repository Overview</h1>
+          <p className="typography-caption">System health, CI status, and configuration drift</p>
+        </div>
         <div className="state-error">{error}</div>
       </div>
     );
@@ -105,78 +94,99 @@ export default function Overview() {
 
   if (loadState === 'offline') {
     return (
-      <div>
-        <h1 className="page-title">Repository Overview</h1>
+      <div className="page">
+        <div className="page-header">
+          <h1 className="typography-title">Repository Overview</h1>
+          <p className="typography-caption">System health, CI status, and configuration drift</p>
+        </div>
         <div className="state-offline">Server unreachable. Showing cached data if available.</div>
-        {health && (
-          <div className="state-stale">Data may be stale — last known status: {health.status}</div>
-        )}
+        {health && <div className="state-stale">Data may be stale — last known status: {health.status}</div>}
       </div>
     );
   }
 
-  const fileStats = health?.fileStatus ? Object.values(health.fileStatus) : null;
-  const filesFound = fileStats ? fileStats.filter(v => v.exists).length : 0;
-  const filesTotal = fileStats ? fileStats.length : 0;
-  const dirCount = health?.dirStatus ? Object.keys(health.dirStatus).length : 0;
-
   return (
-    <div>
-      <h1 className="page-title">Repository Overview</h1>
+    <div className="page">
+      <div className="page-header">
+        <h1 className="typography-title">Repository Overview</h1>
+        <p className="typography-caption">System health, CI status, and configuration drift</p>
+      </div>
 
-      {error && <div className="state-error">{error}</div>}
-
-      <div className="grid">
-        <div className="card">
-          <h3 className="card-title">Repository Health</h3>
-          <div className="stat-row"><span className="stat-label">Status</span><span className="stat-value">{health?.status || 'unknown'}</span></div>
-          <div className="stat-row"><span className="stat-label">Commit</span><span className="stat-value">{health?.commit ? health.commit.slice(0, 7) : 'unknown'}</span></div>
-          <div className="stat-row"><span className="stat-label">Manifest Hash</span><span className="stat-value">{health?.manifestHash || 'unknown'}</span></div>
+      <div className="overview-grid">
+        <div className="surface overview-card">
+          <div className="overview-card-header">
+            <h3 className="typography-title3">Repository Health</h3>
+            <span className={`status-dot ${health?.status === 'healthy' ? 'status-dot--success' : 'status-dot--danger'}`} />
+          </div>
+          <div className="overview-stat"><span className="typography-caption">Status</span><span className="typography-body">{health?.status || 'unknown'}</span></div>
+          <div className="overview-stat"><span className="typography-caption">Commit</span><span className="typography-mono">{health?.commit ? health.commit.slice(0, 7) : 'unknown'}</span></div>
+          <div className="overview-stat"><span className="typography-caption">Manifest</span><span className="typography-mono">{health?.manifestHash || 'unknown'}</span></div>
+          <div className="overview-stat"><span className="typography-caption">Uptime</span><span className="typography-body">{health?.uptime ? `${Math.floor(health.uptime / 60)}m` : '?'}</span></div>
         </div>
 
-        <div className="card">
-          <h3 className="card-title">CI Status</h3>
-          <div className="stat-row"><span className="stat-label">Last Commit</span><span className="stat-value">{health?.commit ? health.commit.slice(0, 7) : 'N/A'}</span></div>
-          <div className="text-xs text-secondary mt-sm">CI imported from available data (git log)</div>
+        <div className="surface overview-card">
+          <div className="overview-card-header">
+            <h3 className="typography-title3">CI Readiness</h3>
+          </div>
+          <div className="overview-stat"><span className="typography-caption">Last Commit</span><span className="typography-mono">{health?.commit ? health.commit.slice(0, 7) : 'N/A'}</span></div>
+          <div className="overview-stat"><span className="typography-caption">Config Drift</span><span className="typography-body">{filesFound}/{filesTotal} files found</span></div>
+          <div className="overview-progress-bar"><div className="overview-progress-fill" style={{ width: `${filesTotal > 0 ? (filesFound / filesTotal) * 100 : 0}%` }} /></div>
         </div>
 
-        <div className="card">
-          <h3 className="card-title">Sync Drift</h3>
-          <div className="stat-row"><span className="stat-label">Config Files Found</span><span className="stat-value">{filesFound}/{filesTotal}</span></div>
-          <div className="stat-row"><span className="stat-label">Directories</span><span className="stat-value">{dirCount}</span></div>
-        </div>
-
-        <div className="card">
-          <h3 className="card-title">Enabled Profiles</h3>
-          {enabledProfiles.length === 0 ? (
-            <div className="state-empty">No profiles enabled by default</div>
-          ) : (
-            enabledProfiles.map(([id]) => (
-              <div key={id} className="list-item--compact"><span className="dot dot--success" />{id}</div>
-            ))
-          )}
-        </div>
-
-        <div className="card">
-          <h3 className="card-title">Platform Health</h3>
+        <div className="surface overview-card">
+          <div className="overview-card-header">
+            <h3 className="typography-title3">Platform Health</h3>
+          </div>
           {platforms.length === 0 ? (
             <div className="state-empty">No platforms configured</div>
           ) : (
             platforms.map(p => (
-              <div key={p} className="list-item--compact"><span className="dot dot--accent" />{p}</div>
+              <div key={p} className="overview-platform-row">
+                <span className="status-dot status-dot--success" />
+                <span className="typography-body">{p}</span>
+              </div>
             ))
           )}
         </div>
 
-        <div className="card">
-          <h3 className="card-title">Config Sources</h3>
+        <div className="surface overview-card">
+          <div className="overview-card-header">
+            <h3 className="typography-title3">Enabled Profiles</h3>
+            <span className="typography-caption">{enabledProfiles.length}</span>
+          </div>
+          {enabledProfiles.length === 0 ? (
+            <div className="state-empty">No profiles enabled by default</div>
+          ) : (
+            enabledProfiles.map(([id]) => (
+              <div key={id} className="overview-platform-row">
+                <span className="status-dot status-dot--success" />
+                <span className="typography-body">{id}</span>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="surface overview-card">
+          <div className="overview-card-header">
+            <h3 className="typography-title3">System Resources</h3>
+          </div>
+          <div className="overview-stat"><span className="typography-caption">Node</span><span className="typography-mono">{health?.system?.nodeVersion || '?'}</span></div>
+          <div className="overview-stat"><span className="typography-caption">Platform</span><span className="typography-body">{health?.system?.platform || '?'}</span></div>
+          <div className="overview-stat"><span className="typography-caption">CPUs</span><span className="typography-body">{health?.system?.cpus || '?'}</span></div>
+          <div className="overview-stat"><span className="typography-caption">Heap</span><span className="typography-body">{health?.system?.memory?.heapUsed ? `${health.system.memory.heapUsed}MB` : '?'}</span></div>
+        </div>
+
+        <div className="surface overview-card">
+          <div className="overview-card-header">
+            <h3 className="typography-title3">Config Sources</h3>
+          </div>
           {config?.manifest?.load_order ? (
-            <div>
-              <div className="text-xs text-secondary mb-sm">Load Order:</div>
-              {config.manifest.load_order.map((r, i) => (
-                <div key={i} className="detail-row">{r}</div>
-              ))}
-            </div>
+            config.manifest.load_order.map((r, i) => (
+              <div key={i} className="overview-platform-row">
+                <span className="typography-code" style={{ fontSize: 11, color: 'var(--color-text-secondary)', width: 24 }}>#{i}</span>
+                <span className="typography-body">{r}</span>
+              </div>
+            ))
           ) : (
             <div className="state-empty">No load order defined</div>
           )}
@@ -184,13 +194,13 @@ export default function Overview() {
       </div>
 
       {config?.manifest?.budgets && (
-        <div className="card mb-md">
-          <h3 className="card-title">Token Budgets</h3>
-          <div className="grid grid--narrow" style={{ gap: 8 }}>
+        <div className="surface" style={{ marginTop: 16, padding: 16 }}>
+          <h3 className="typography-title3" style={{ marginBottom: 12 }}>Token Budgets</h3>
+          <div className="overview-budgets">
             {Object.entries(config.manifest.budgets).map(([k, v]) => (
-              <div key={k}>
-                <div className="text-xs text-secondary">{k}</div>
-                <div className="text-sm">{v?.toLocaleString()}</div>
+              <div key={k} className="overview-budget-item">
+                <span className="typography-caption">{k}</span>
+                <span className="typography-body">{v?.toLocaleString()}</span>
               </div>
             ))}
           </div>
