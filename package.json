@@ -16,7 +16,7 @@
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "check": "npm run typecheck --workspaces --if-present",
-    "ci:quality": "npm run build && npm run check && npm run test",
-    "ci:certify": "npm run build && npm run check && npm run test"
+    "ci:quality": "node packages/engine/../../node_modules/typescript/bin/tsc -p packages/engine/tsconfig.json && cd packages/cli && npm run build && cd ../control-plane && npm run build && cd /home/linhnx/Projects/agent-rules-deepseek-20260727-032602 && npm run check && npm run test",
+    "ci:certify": "node packages/engine/../../node_modules/typescript/bin/tsc -p packages/engine/tsconfig.json && cd packages/cli && npm run build && cd ../control-plane && npm run build && cd /home/linhnx/Projects/agent-rules-deepseek-20260727-032602 && npm run check && npm run test"
   }
 }

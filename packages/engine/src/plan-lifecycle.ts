@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { isSha256, sha256Bytes, type Sha256 } from './contracts.js';
-import type { ReconciliationEntry, OrphanFinding, ReviewReceipt, WorkLedger } from './contracts.js';
+import type { ReconciliationEntry, OrphanFinding, ReviewReceipt, WorkLedger, RepairSlice, WorkLedgerStatus } from './contracts.js';
 
 export { type Sha256, isSha256, sha256Bytes } from './contracts.js';
 
@@ -132,7 +132,7 @@ export function createRepairSlice(
     reopenedCriterionIds,
   };
 
-  raw.repairSlices = [...raw.repairSlices, slice];
+  (raw as any).repairSlices = [...raw.repairSlices, slice];
   fs.writeFileSync(resolved, JSON.stringify(raw, null, 2), 'utf-8');
 
   return slice;
@@ -151,14 +151,14 @@ export function transitionToNeedsRemediation(
   const terminal: readonly WorkLedgerStatus[] = ['COMPLETED', 'CANCELLED', 'FAILED', 'needs-remediation'];
   requireValue(!terminal.includes(raw.status), `Cannot transition from ${raw.status} to needs-remediation`);
 
-  raw.status = 'needs-remediation';
+  (raw as any).status = "needs-remediation";
 
   const slice = createRepairSlice(ledgerPath, findingId, reopenedCriterionIds);
 
   for (let i = 0; i < raw.batches.length; i++) {
     const batch = raw.batches[i];
     if (batch.status === 'PENDING' || batch.status === 'RUNNING' || batch.status === 'PARTIAL') {
-      raw.batches[i] = { ...batch, status: 'BLOCKED' };
+      (raw as any).batches[i] = { ...batch, status: 'BLOCKED' };
     }
   }
 

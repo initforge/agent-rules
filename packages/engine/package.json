@@ -22,7 +22,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "node ../../node_modules/typescript/bin/tsc",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
