@@ -94,17 +94,17 @@ export default function Layout({ currentPath, onNavigate, health, healthError, c
             <span className={`status-indicator ${health.status === 'healthy' ? '' : 'status-indicator--warn'}`}>
               <span className={`status-dot ${health.status === 'healthy' ? 'status-dot--success' : 'status-dot--warning'}`} />
               {health.status || '?'}
-              {health.commit ? <span className="status-commit">#{health.commit.slice(0, 7)}</span> : null}
+              {health.commit ? <span className="status-commit" style={{color: "#e6edf3"}}>#{health.commit.slice(0, 7)}</span> : null}
             </span>
           )}
         </div>
       </div>
 
-      <div className="layout-sidebar-nav" role="list">
+      <div className="layout-sidebar-nav" role="navigation">
         {NAV_ITEMS.map(item => (
           <a
             key={item.id}
-            role="listitem"
+            
             onClick={() => onNavigate(item.path)}
             className={`layout-nav-item ${activeId === item.id ? 'layout-nav-item--active' : ''}`}
             aria-current={activeId === item.id ? 'page' : undefined}
@@ -165,7 +165,7 @@ export default function Layout({ currentPath, onNavigate, health, healthError, c
         />
       )}
 
-      <main className="layout-content" role="main">
+      <main className="layout-content" role="main" tabIndex={0}>
         {children}
       </main>
 

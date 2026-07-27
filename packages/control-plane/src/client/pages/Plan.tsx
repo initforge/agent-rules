@@ -188,7 +188,7 @@ export default function Plan({ navigate }: PlanProps) {
             </div>
           </div>
 
-          <div className="plan-tree">
+          <div className="plan-tree" role="tree">
             {profileEntries.length === 0 ? (
               <div className="state-empty">No requirements loaded</div>
             ) : (

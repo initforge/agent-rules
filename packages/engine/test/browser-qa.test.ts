@@ -5,23 +5,30 @@ import { AxeBuilder } from '@axe-core/playwright';
 const BASE_URL = 'http://localhost:3099';
 
 const ROUTES = [
-  { id: 'overview', label: 'Overview', path: '/overview' },
-  { id: 'plan', label: 'Plan', path: '/plan' },
-  { id: 'runs', label: 'Runs', path: '/runs' },
-  { id: 'evaluations', label: 'Evaluations', path: '/evaluations' },
-  { id: 'architecture', label: 'Architecture', path: '/architecture/dag' },
-  { id: 'configuration', label: 'Configuration', path: '/configuration/general' },
-  { id: 'profiles', label: 'Profiles', path: '/profiles' },
-  { id: 'audit', label: 'Audit', path: '/audit' },
+  { id: 'overview', label: 'Overview' },
+  { id: 'platforms', label: 'Platforms' },
+  { id: 'models-routes', label: 'Models & Routes' },
+  { id: 'workflow', label: 'Workflow Graph' },
+  { id: 'skills', label: 'Skills / Integrations / Profiles' },
+  { id: 'runs', label: 'Runs & Evaluations' },
+  { id: 'plan', label: 'Plan & Evidence' },
+  { id: 'audit', label: 'Audit Log' },
 ] as const;
 
 let browser: Browser;
 let context: BrowserContext;
 let page: Page;
 
-async function navigateToRoute(route: typeof ROUTES[number]) {
-  await page.goto(`${BASE_URL}${route.path}`, { waitUntil: 'networkidle', timeout: 10000 });
-  await page.waitForTimeout(1000);
+async function navigateToRoute(label: string) {
+  const btn = page.locator('nav button', { hasText: label });
+  await btn.click();
+  await page.waitForTimeout(1500);
+  await page.waitForSelector(".app-nav", { timeout: 5000 }).catch(() => {});
+}
+
+async function navigateToRouteById(id: string) {
+  const route = ROUTES.find(r => r.id === id);
+  if (route) await navigateToRoute(route.label);
 }
 
 function getInteractiveElements(p: Page) {
@@ -72,8 +79,8 @@ describe('WCAG & Accessibility (Playwright)', () => {
         await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
         await page.waitForSelector('nav', { timeout: 5000 });
 
-        await navigateToRoute(route);
-        await page.waitForTimeout(1000);
+        await navigateToRoute(route.label);
+        await page.waitForTimeout(600);
 
         const results = await new AxeBuilder({ page })
           .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice'])
@@ -128,11 +135,11 @@ describe('WCAG & Accessibility (Playwright)', () => {
       await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
       await page.waitForSelector('nav', { timeout: 5000 });
 
-      const btn = page.locator('nav a', { hasText: 'Overview' });
+      const btn = page.locator('nav button', { hasText: 'Platforms' });
       await btn.focus();
       await page.keyboard.press('Enter');
       await page.waitForTimeout(500);
-      const platformsHeading = page.locator('main h1', { hasText: 'Overview' });
+      const platformsHeading = page.locator('main h1', { hasText: 'Platforms' });
       expect(await platformsHeading.isVisible()).toBe(true);
 
       await page.keyboard.press('Tab');
@@ -179,7 +186,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
       console.log(`Tablet 1024x768: docWidth=${overflow.docWidth}, viewport=${overflow.viewportWidth}`);
       expect(overflow.hasHorizontalScroll).toBe(false);
 
-      await page.goto(`${BASE_URL}/plan`, { waitUntil: 'networkidle', timeout: 10000 });
+      await navigateToRouteById('platforms');
       await page.waitForTimeout(500);
       const overflow2 = await page.evaluate(() => ({
         hasHorizontalScroll: document.documentElement.scrollWidth > window.innerWidth,
@@ -195,7 +202,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
       const navVisible = page.locator('nav');
       expect(await navVisible.isVisible()).toBe(true);
 
-      await page.goto(`${BASE_URL}/audit`, { waitUntil: 'networkidle', timeout: 10000 });
+      await navigateToRouteById('audit');
       await page.waitForTimeout(500);
 
       const auditHeading = page.locator('main h1', { hasText: 'Audit Log' });
