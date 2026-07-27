@@ -68,11 +68,137 @@ const STYLE_KEYS = [
   'width', 'height', 'margin', 'padding', 'display',
 ] as const;
 
+function rectsOverlap(
+  a: { x: number; y: number; width: number; height: number },
+  b: { x: number; y: number; width: number; height: number },
+): boolean {
+  return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+}
+
+function pairKey(i: number, j: number): string {
+  return `${Math.min(i, j)}:${Math.max(i, j)}`;
+}
+
+function detectOverlaps(doms: VisualEvidenceBundle['domSnapshot']): VisualFinding[] {
+  const findings: VisualFinding[] = [];
+  const checked = new Set<string>();
+  for (let i = 0; i < doms.length; i++) {
+    for (let j = i + 1; j < doms.length; j++) {
+      const key = pairKey(i, j);
+      if (checked.has(key)) continue;
+      checked.add(key);
+      const a = doms[i];
+      const b = doms[j];
+      if (a.boundingBox.width === 0 || a.boundingBox.height === 0 || b.boundingBox.width === 0 || b.boundingBox.height === 0) continue;
+      if (rectsOverlap(a.boundingBox, b.boundingBox)) {
+        findings.push({
+          selector: `${a.selector} / ${b.selector}`,
+          component: 'layout',
+          sourceHint: 'element overlap detected',
+          detector: 'reduceVisualConformance',
+          severity: 'critical',
+          expected: `no overlap between elements`,
+          actual: `${a.selector} (${a.boundingBox.x},${a.boundingBox.y},${a.boundingBox.width}×${a.boundingBox.height}) overlaps ${b.selector} (${b.boundingBox.x},${b.boundingBox.y},${b.boundingBox.width}×${b.boundingBox.height})`,
+        });
+      }
+    }
+  }
+  return findings;
+}
+
+function detectSpacingAlignmentDrift(
+  doms: VisualEvidenceBundle['domSnapshot'],
+  ref: ParsedReference,
+): VisualFinding[] {
+  const findings: VisualFinding[] = [];
+  const refElements = ref.geometry.elements;
+
+  const domBySelector = new Map(doms.map((d) => [d.selector, d]));
+
+  const alignedByX = new Map<number, string[]>();
+  const alignedByY = new Map<number, string[]>();
+
+  for (const domNode of doms) {
+    const ex = refElements.get(domNode.selector);
+    if (!ex) continue;
+
+    if (domNode.boundingBox.x !== ex.x) {
+      const delta = Math.abs(domNode.boundingBox.x - ex.x);
+      if (delta > 2) {
+        findings.push({
+          selector: domNode.selector,
+          component: 'layout',
+          sourceHint: 'horizontal alignment drift',
+          detector: 'reduceVisualConformance',
+          severity: 'moderate',
+          expected: `x = ${ex.x}`,
+          actual: `x = ${domNode.boundingBox.x} (Δ${delta})`,
+        });
+      }
+    }
+    if (domNode.boundingBox.y !== ex.y) {
+      const delta = Math.abs(domNode.boundingBox.y - ex.y);
+      if (delta > 2) {
+        findings.push({
+          selector: domNode.selector,
+          component: 'layout',
+          sourceHint: 'vertical alignment drift',
+          detector: 'reduceVisualConformance',
+          severity: 'moderate',
+          expected: `y = ${ex.y}`,
+          actual: `y = ${domNode.boundingBox.y} (Δ${delta})`,
+        });
+      }
+    }
+
+    const rx = Math.round(domNode.boundingBox.x / 10) * 10;
+    const ry = Math.round(domNode.boundingBox.y / 10) * 10;
+    if (!alignedByX.has(rx)) alignedByX.set(rx, []);
+    alignedByX.get(rx)!.push(domNode.selector);
+    if (!alignedByY.has(ry)) alignedByY.set(ry, []);
+    alignedByY.get(ry)!.push(domNode.selector);
+  }
+
+  return findings;
+}
+
+function detectLineCountDrift(
+  doms: VisualEvidenceBundle['domSnapshot'],
+): VisualFinding[] {
+  const findings: VisualFinding[] = [];
+  for (const domNode of doms) {
+    const lineHeightStr = domNode.computedStyles['line-height'];
+    const height = domNode.boundingBox.height;
+    if (lineHeightStr && lineHeightStr.endsWith('px') && height > 0) {
+      const lineHeightPx = parseFloat(lineHeightStr);
+      if (lineHeightPx > 0) {
+        const estimatedLines = Math.round(height / lineHeightPx);
+        if (estimatedLines > 5) {
+          findings.push({
+            selector: domNode.selector,
+            component: 'layout',
+            sourceHint: 'element exceeds typical line count',
+            detector: 'reduceVisualConformance',
+            severity: 'moderate',
+            expected: `lines ≤ 5`,
+            actual: `~${estimatedLines} lines (height=${height}px / line-height=${lineHeightPx}px)`,
+          });
+        }
+      }
+    }
+  }
+  return findings;
+}
+
 function detectIssues(bundle: VisualEvidenceBundle, ref: ParsedReference): VisualFinding[] {
   const findings: VisualFinding[] = [];
 
   const viewportW = ref.geometry.viewport.width;
   const viewportH = ref.geometry.viewport.height;
+
+  findings.push(...detectOverlaps(bundle.domSnapshot));
+  findings.push(...detectSpacingAlignmentDrift(bundle.domSnapshot, ref));
+  findings.push(...detectLineCountDrift(bundle.domSnapshot));
 
   for (const domNode of bundle.domSnapshot) {
     const { selector, boundingBox, computedStyles } = domNode;

@@ -32,7 +32,7 @@ export default function SkillsIntegrationsProfiles() {
           {skills.map((s, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #21262d', fontSize: 12 }}>
               <span style={{ color: '#e1e4e8' }}>{s.id}</span>
-              <span style={{ color: s.hasSkill ? '#3fb950' : '#484f58' }}>{s.hasSkill ? '● SKILL.md' : '○ no skill file'}</span>
+              <span style={{ color: s.hasSkill ? '#3fb950' : '#8b949e' }}>{s.hasSkill ? '● SKILL.md' : '○ no skill file'}</span>
             </div>
           ))}
         </Card>
@@ -67,7 +67,7 @@ export default function SkillsIntegrationsProfiles() {
             <div key={id} style={{ padding: '8px 0', borderBottom: '1px solid #21262d' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
                 <span style={{ color: '#58a6ff' }}>{id}</span>
-                <span style={{ color: p.enabledByDefault ? '#3fb950' : '#484f58' }}>
+                <span style={{ color: p.enabledByDefault ? '#3fb950' : '#8b949e' }}>
                   {p.enabledByDefault ? 'enabled by default' : 'disabled by default'}
                 </span>
               </div>

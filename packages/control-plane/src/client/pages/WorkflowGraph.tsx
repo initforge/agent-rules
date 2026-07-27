@@ -45,7 +45,7 @@ export default function WorkflowGraph() {
           }}>
             <div style={{ fontSize: 11, color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>{role}</div>
             {(agentMap[role] || []).length === 0 ? (
-              <div style={{ fontSize: 12, color: '#484f58' }}>No agents defined</div>
+              <div style={{ fontSize: 12, color: '#8b949e' }}>No agents defined</div>
             ) : (
               agentMap[role].map((a, i) => (
                 <div key={i} style={{ fontSize: 12, color: '#e1e4e8', padding: '4px 0', borderBottom: '1px solid #21262d' }}>
@@ -73,7 +73,7 @@ export default function WorkflowGraph() {
             <div style={{ fontSize: 11, color: '#8b949e', marginBottom: 4 }}>Context Load Order (from manifest.yaml):</div>
             {manifest.load_order.map((r: string, i: number) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', fontSize: 12 }}>
-                <span style={{ color: '#484f58', width: 20 }}>#{i}</span>
+                <span style={{ color: '#8b949e', width: 20 }}>#{i}</span>
                 <span style={{ color: '#e1e4e8' }}>{r}</span>
                 <span style={{ color: '#3fb950', fontSize: 10 }}>● active</span>
               </div>
