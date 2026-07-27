@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import * as reader from '../services/reader';
@@ -6,7 +6,7 @@ import { safeResolve } from '../services/safety';
 
 const router = Router();
 
-function apiError(res: any, code: number, err: unknown): void {
+function apiError(res: Response, code: number, err: unknown): void {
   if (err instanceof Error && err.message.includes('Path traversal')) {
     res.status(403).json({ ok: false, error: 'Forbidden' });
     return;

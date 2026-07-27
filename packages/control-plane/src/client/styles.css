@@ -221,7 +221,8 @@ pre, code {
 
 .app-nav-status {
   font-size: 11px;
-  color: var(--text-secondary);
+  color: var(--text);
+  opacity: 0.85;
   margin-top: var(--space-xs);
 }
 
@@ -247,7 +248,8 @@ pre, code {
   text-align: left;
   padding: var(--space-sm) var(--space-md);
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--text);
+  opacity: 0.85;
   border: none;
   cursor: pointer;
   font-size: 13px;
@@ -277,7 +279,7 @@ pre, code {
 .app-content {
   flex: 1;
   padding: var(--space-lg);
-  overflow: auto;
+  overflow: auto;\n  tabindex: 0;
   min-width: 0;
 }
 
@@ -292,7 +294,8 @@ pre, code {
 
 .page-subtitle {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--text);
+  opacity: 0.85;
   margin-bottom: var(--space-lg);
 }
 
@@ -326,7 +329,8 @@ pre, code {
 .card-title {
   font-size: 11px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--text);
+  opacity: 0.85;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: var(--space-sm);
@@ -353,7 +357,8 @@ pre, code {
 
 .stat-label {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--text);
+  opacity: 0.85;
 }
 
 .stat-value {
@@ -377,7 +382,8 @@ table {
 th {
   padding: 6px 8px;
   border-bottom: 1px solid var(--border);
-  color: var(--text-secondary);
+  color: var(--text);
+  opacity: 0.85;
   text-align: left;
   font-weight: 500;
 }
@@ -404,7 +410,8 @@ tr:last-child td {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  color: var(--text-secondary);
+  color: var(--text);
+  opacity: 0.85;
   padding: var(--space-xl) 0;
   justify-content: center;
 }
@@ -417,7 +424,8 @@ tr:last-child td {
 }
 
 .state-empty {
-  color: var(--text-secondary);
+  color: var(--text);
+  opacity: 0.85;
   text-align: center;
   padding: var(--space-xl) var(--space-md);
   font-size: 13px;
@@ -513,7 +521,8 @@ tr:last-child td {
   padding: 4px;
   border: none;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--text);
+  opacity: 0.85;
   cursor: pointer;
   border-radius: var(--radius-sm);
   line-height: 1;
@@ -534,7 +543,8 @@ tr:last-child td {
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--text);
+  opacity: 0.85;
   cursor: pointer;
   font-size: 14px;
   line-height: 1;
@@ -565,7 +575,8 @@ tr:last-child td {
 }
 .badge--default {
   background: var(--bg-tertiary);
-  color: var(--text-secondary);
+  color: var(--text);
+  opacity: 0.85;
 }
 .badge--warning {
   background: var(--warning);
@@ -588,7 +599,8 @@ tr:last-child td {
   font-size: 11px;
 }
 .text-secondary {
-  color: var(--text-secondary);
+  color: var(--text);
+  opacity: 0.85;
 }
 .text-success {
   color: var(--success);
@@ -622,7 +634,7 @@ tr:last-child td {
   color: var(--text);
   padding: var(--space-sm);
   border-radius: var(--radius-sm);
-  overflow: auto;
+  overflow: auto;\n  tabindex: 0;
 }
 .code-block--compact {
   padding: var(--space-xs) var(--space-sm);

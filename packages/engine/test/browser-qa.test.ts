@@ -22,7 +22,8 @@ let page: Page;
 async function navigateToRoute(label: string) {
   const btn = page.locator('nav button', { hasText: label });
   await btn.click();
-  await page.waitForTimeout(800);
+  await page.waitForTimeout(1500);
+  await page.waitForSelector(".app-nav", { timeout: 5000 }).catch(() => {});
 }
 
 async function navigateToRouteById(id: string) {

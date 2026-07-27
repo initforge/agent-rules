@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs';
+import type { Response } from 'express';
 
 function findRoot(): string {
   let dir = __dirname;
@@ -51,7 +52,7 @@ export function safeResolveAgainst(root: string, relativePath: string): string {
   return resolved;
 }
 
-export function apiError(res: any, code: number, err: unknown): void {
+export function apiError(res: Response, code: number, err: unknown): void {
   if (err instanceof Error && err.message.includes('Path traversal')) {
     res.status(403).json({ ok: false, error: 'Forbidden' });
     return;

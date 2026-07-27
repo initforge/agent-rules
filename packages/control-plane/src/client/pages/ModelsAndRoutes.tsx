@@ -211,7 +211,7 @@ export default function ModelsAndRoutes() {
             <div className="text-xs text-secondary mb-sm">
               Diff: +{diffResult.linesAdded}/-{diffResult.linesRemoved} lines, {diffResult.hunks?.length || 0} hunks
             </div>
-            <pre className="code-block code-block--scroll">{diffResult.patch?.slice(0, 2000)}</pre>
+            <pre className="code-block code-block--scroll" tabIndex={0}>{diffResult.patch?.slice(0, 2000)}</pre>
           </div>
         )}
       </div>
