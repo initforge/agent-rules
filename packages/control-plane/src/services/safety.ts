@@ -14,19 +14,26 @@ function findRoot(): string {
 
 const ROOT = findRoot();
 
-export function safeResolve(relativePath: string): string {
-  if (path.isAbsolute(relativePath)) {
+function normalizeRelativePath(relativePath: string): string {
+  const hasWindowsRoot = /^[A-Za-z]:/.test(relativePath)
+    || /^(?:\\\\|\/\/)/.test(relativePath);
+  if (hasWindowsRoot || path.isAbsolute(relativePath) || path.win32.isAbsolute(relativePath)) {
     throw new Error('Absolute paths are not allowed');
   }
   if (relativePath.includes('\0')) {
     throw new Error('Null byte detected in path');
   }
-  const normalized = path.normalize(relativePath);
-  if (normalized.startsWith('..' + path.sep) || normalized === '..') {
+
+  const normalized = path.posix.normalize(relativePath.replaceAll('\\', '/'));
+  if (normalized === '..' || normalized.startsWith('../')) {
     throw new Error('Path traversal detected');
   }
-  const cleaned = normalized.replace(/^(\.\.(\/|\\|$))+/, '');
-  const resolved = path.resolve(ROOT, cleaned);
+  return normalized;
+}
+
+export function safeResolve(relativePath: string): string {
+  const normalized = normalizeRelativePath(relativePath);
+  const resolved = path.resolve(ROOT, normalized);
   const rootNormalized = path.resolve(ROOT) + path.sep;
   if (!resolved.startsWith(rootNormalized) && resolved !== path.resolve(ROOT)) {
     throw new Error('Path traversal detected');
@@ -35,15 +42,8 @@ export function safeResolve(relativePath: string): string {
 }
 
 export function safeResolveAgainst(root: string, relativePath: string): string {
-  if (relativePath.includes('\0')) {
-    throw new Error('Null byte detected in path');
-  }
-  const normalized = path.normalize(relativePath);
-  if (normalized.startsWith('..' + path.sep) || normalized === '..') {
-    throw new Error('Path traversal detected');
-  }
-  const cleaned = normalized.replace(/^(\.\.(\/|\\|$))+/, '');
-  const resolved = path.resolve(root, cleaned);
+  const normalized = normalizeRelativePath(relativePath);
+  const resolved = path.resolve(root, normalized);
   const rootNormalized = path.resolve(root) + path.sep;
   if (!resolved.startsWith(rootNormalized) && resolved !== path.resolve(root)) {
     throw new Error('Path traversal detected');

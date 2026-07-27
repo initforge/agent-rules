@@ -12,6 +12,12 @@ import { profileCmd } from "./commands/profile.js";
 import { platformCmd } from "./commands/platform.js";
 import { evalCmd } from "./commands/eval.js";
 import { dashboard } from "./commands/dashboard.js";
+import { contextGraphCmd } from "./commands/context-graph.js";
+import { planCmd } from "./commands/plan.js";
+import { verifyCmd } from "./commands/verify.js";
+import { runtimeCmd } from "./commands/runtime.js";
+import { modelsCmd } from "./commands/models.js";
+import { skillsCmd } from "./commands/skills.js";
 import {
   executeRun,
   getRunStatus,
@@ -41,6 +47,16 @@ program
     const opts = program.optsWithGlobals() as CliOptions;
     const result = await build(root ? [root] : [], opts);
     formatOutput(result, opts);
+  });
+
+program
+  .command("context-graph")
+  .description("Build the canonical context graph")
+  .argument("<subcommand>", "Subcommand: build")
+  .argument("[output]", "Output JSON path")
+  .action(async (subcommand: string, output: string | undefined) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    formatOutput(await contextGraphCmd(output ? [subcommand, output] : [subcommand], opts), opts);
   });
 
 // ── validate ───────────────────────────────────────────────────────
@@ -169,6 +185,108 @@ Subcommands:
     const args = program.args;
     const subArgs = subcommand ? [subcommand, ...args.slice(args.indexOf(subcommand) + 1)] : [];
     const result = await evalCmd(subArgs, opts);
+    formatOutput(result, opts);
+  });
+
+// ── plan ────────────────────────────────────────────────────────────
+program
+  .command("plan")
+  .description("Manage execution plans")
+  .argument("[subcommand]", "Subcommand: inventory, adopt, status, checkpoint, lineage, reconcile, repair, export, finalize")
+  .addHelpText(
+    "after",
+    `
+Subcommands:
+  inventory                    List all plans/runs
+  adopt <planPath>             Adopt a plan artifact
+  status <runId>               Show plan execution status
+  checkpoint <runId>           Persist a checkpoint snapshot
+  lineage <runId>              Show plan artifact lineage
+  reconcile <runId>            Reconcile requirements against tasks
+  repair <runId>               Reset failed tasks to PENDING
+  export <runId> <outputPath>  Export plan bundle
+  finalize <runId>             Finalize a completed plan
+    `
+  )
+  .action(async (subcommand: string | undefined) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const args = program.args;
+    const subArgs = subcommand ? [subcommand, ...args.slice(args.indexOf(subcommand) + 1)] : [];
+    const result = await planCmd(subArgs, opts);
+    formatOutput(result, opts);
+  });
+
+// ── verify ──────────────────────────────────────────────────────────
+program
+  .command("verify")
+  .description("Run validation and mirror verification")
+  .argument("[path]", "Repository root path")
+  .action(async (pathArg: string | undefined) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const result = await verifyCmd(pathArg ? [pathArg] : [], opts);
+    formatOutput(result, opts);
+  });
+
+// ── runtime ─────────────────────────────────────────────────────────
+program
+  .command("runtime")
+  .description("Manage harness runtime installations")
+  .argument("[subcommand]", "Subcommand: install, update, rollback, uninstall")
+  .addHelpText(
+    "after",
+    `
+Subcommands:
+  install [platform]     Install runtime to platform (default: all)
+  update [platform]      Update runtime on platform
+  rollback [platform]    Rollback runtime on platform
+  uninstall [platform]   Uninstall runtime from platform
+    `
+  )
+  .action(async (subcommand: string | undefined) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const args = program.args;
+    const subArgs = subcommand ? [subcommand, ...args.slice(args.indexOf(subcommand) + 1)] : [];
+    const result = await runtimeCmd(subArgs, opts);
+    formatOutput(result, opts);
+  });
+
+// ── models ───────────────────────────────────────────────────────────
+program
+  .command("models")
+  .description("Manage model catalog")
+  .argument("[subcommand]", "Subcommand: refresh")
+  .addHelpText(
+    "after",
+    `
+Subcommands:
+  refresh         Refresh the model catalog
+    `
+  )
+  .action(async (subcommand: string | undefined) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const args = program.args;
+    const subArgs = subcommand ? [subcommand, ...args.slice(args.indexOf(subcommand) + 1)] : [];
+    const result = await modelsCmd(subArgs, opts);
+    formatOutput(result, opts);
+  });
+
+// ── skills ──────────────────────────────────────────────────────────
+program
+  .command("skills")
+  .description("Manage skill capabilities")
+  .argument("[subcommand]", "Subcommand: doctor")
+  .addHelpText(
+    "after",
+    `
+Subcommands:
+  doctor          Audit skill manifests and references
+    `
+  )
+  .action(async (subcommand: string | undefined) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const args = program.args;
+    const subArgs = subcommand ? [subcommand, ...args.slice(args.indexOf(subcommand) + 1)] : [];
+    const result = await skillsCmd(subArgs, opts);
     formatOutput(result, opts);
   });
 

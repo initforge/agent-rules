@@ -27,7 +27,7 @@ function Get-ProfileOwnedFiles {
   if (-not (Test-Path $ConfigPath)) { return @() }
   $InOwned = $false
   $Files = @()
-  foreach ($Line in (Get-Content -Raw -Encoding UTF8 $ConfigPath -split "`r?`n")) {
+  foreach ($Line in ((Get-Content -Raw -Encoding UTF8 $ConfigPath) -split "`r?`n")) {
     if ($Line -match '^ownedFiles:') { $InOwned = $true; continue }
     if ($InOwned) {
       if ($Line -match '^\s+- "(.+)"') { $Files += $Matches[1] }
@@ -76,7 +76,7 @@ function Test-ProfileOwnedFile {
   $Owned = Get-ProfileOwnedFiles $Name
   foreach ($Pattern in $Owned) {
     $Normalized = $RelativePath.Replace('\', '/')
-    $PatNormalized = $Pattern.Replace('\', '/').Replace('**', '.*').Replace('*', '[^/]*')
+    $PatNormalized = $Pattern.Replace('\', '/').Replace('**', '__RECURSIVE__').Replace('*', '[^/]*').Replace('__RECURSIVE__', '.*')
     if ($Normalized -match "^$PatNormalized$") { return $true }
   }
   return $false

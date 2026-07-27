@@ -58,8 +58,11 @@ Cấu trúc packet:
 | `deviations.yaml` | Approved deviations (theo custom_deviation_contract của inventory) |
 | `proof.yaml` | Verification evidence, cross-reference packet integrity |
 
-Schema xác thực tại `parity/schemas/*.schema.yaml`. Packet phải validate trước khi giao worker.
-Xem workflow chi tiết tại `parity/workflow/planning-workflow.md` và example tại `parity/examples/nhap-hang/`.
+Schema xác thực tại `skills/5fedu-module-parity/references/schemas/*.schema.yaml`.
+Packet phải validate trước khi giao worker bằng
+`references/validate-parity-packet.py`. Xem workflow chi tiết tại
+`references/workflow/planning-workflow.md` và example tại
+`references/examples/nhap-hang/` của skill đã load.
 
 ### Clone checklist (module mới)
 
@@ -70,7 +73,8 @@ Xem workflow chi tiết tại `parity/workflow/planning-workflow.md` và example
 - Thêm shell cần thiết: module factory/page, list + toolbar, form drawer, detail drawer, row/bulk actions; thêm stats, hierarchy hoặc child grid khi surface/spec yêu cầu.
 - Thêm core (type/schema/constants/select), hooks, service và store/utils theo **reference đã mở**. Không tạo generic monolith/config page để né feature structure.
 - Nối full route chain ở trên, rồi verify theo `ui-delivery.md` và detail reference.
-- Worker chỉ implement sau khi nhận packet hoàn chỉnh theo `parity/contracts/no-vision-worker-contract.md`.
+- Worker chỉ implement sau khi nhận packet hoàn chỉnh theo
+  `references/contracts/no-vision-worker-contract.md` của skill đã load.
 - Không có template source đúng hoặc identity còn mơ hồ: block parity slice và hỏi owner; không dựng theo trí nhớ.
 
 ## Audit checklist (module cũ hoặc user báo lệch)

@@ -5,6 +5,10 @@ routing: {"signals":["deep code quality audit","strict maintainability review","
 disable-model-invocation: true
 ---
 
+# DEPRECATED — use `quality` skill
+
+This skill is superseded by `skills/quality/SKILL.md` which merges clean-code + code-review. Retained for reference material only.
+
 # Strict Code Quality Review
 
 Use this skill for an unusually strict review focused on implementation quality, maintainability, abstraction quality, and codebase health.

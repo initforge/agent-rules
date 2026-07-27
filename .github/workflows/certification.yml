@@ -1,0 +1,18 @@
+name: Certification
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+jobs:
+  certify:
+    strategy:
+      matrix:
+        host: [opencode, grok, codex]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - run: npm ci
+      - run: npm run build
+      - run: npm run ci:certify -- --host ${{ matrix.host }}

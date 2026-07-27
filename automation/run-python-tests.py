@@ -7,6 +7,7 @@ TESTS = [
     ("test-context-router.py", []),
     ("test-agent-quality-benchmark.py", ["--contracts-only"]),
     ("test-live-agent-adapter.py", ["--contracts-only"]),
+    ("test-5fedu-parity-packet.py", []),
     ("test-parity-verification.py", []),
     ("test-platform-contracts.py", []),
     ("test-skill-gate-stack.py", []),

@@ -28,7 +28,7 @@ function Test-FileContains {
 # Only audit skills in the public skills/ directory (not profile-owned)
 $PublicSkillPath = Join-Path $Root "skills\5fedu-module-parity\SKILL.md"
 if (Test-Path $PublicSkillPath) {
-  Test-FileContains $PublicSkillPath @("l�m module m?i", "s?a module", "refactor module", "frontend-architect", "pattern-inventory", "shell parity", "variable map") | Out-Null
+  Test-FileContains $PublicSkillPath @("làm module mới", "sửa module", "refactor module", "frontend-architect", "pattern-inventory", "shell parity", "variable map") | Out-Null
 }
 
 $FaPath = Join-Path $Root "skills\frontend-architect\SKILL.md"

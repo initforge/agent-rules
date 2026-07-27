@@ -44,4 +44,10 @@ Mặc định là fidelity tuyệt đối ngoài variable slot. Custom chỉ h�
 - User báo lệch/sai pattern: audit toàn surface liên quan; cập nhật packet; phân biệt toolbar filter chip với form combobox, và form/detail drawer là cặp reference.
 - Không generic hóa feature để né structure của reference. Report parity phải nêu `Shell parity` (structural-map.yaml + visual-contract.yaml) và `Variable map` (visual-contract.yaml variables), không lặp toàn bộ inventory.
 - Navigation, breadcrumb, motion/accessibility và proof interaction: xem lazy detail tại `references/ui-delivery-detail.md`.
-- PASS chỉ khi parity packet đủ (validate theo `parity/schemas/`) và evidence phù hợp risk. Local proof mặc định gồm lint/typecheck/build/tests phù hợp + interaction check (add drawer, row-click detail, form popup, filter/dropdown); kiểm tra desktop và mobile khi surface hỗ trợ mobile. Production/screenshot chỉ bắt buộc khi owner yêu cầu deploy/production proof.
+- PASS chỉ khi parity packet đủ (validate theo loaded skill
+  `5fedu-module-parity/references/validate-parity-packet.py`) và evidence
+  phù hợp risk. Bắt buộc có browser interaction + trace, desktop + touch,
+  reduced-motion, responsive, console/network và independent verification bind
+  đúng source/target revision; lint/typecheck/build không thay thế các proof
+  này. Local proof còn gồm interaction check (add drawer, row-click detail,
+  form popup, filter/dropdown).

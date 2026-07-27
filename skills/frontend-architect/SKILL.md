@@ -15,7 +15,8 @@ routing: {"signals":["branding","landing","marketing","redesign","animation","gi
 ## Scope
 
 - Marketing, landing, branding, motion polish **ngoài** shell CRUD ERP 5fedu.
-- Vai trò: Senior UI/UX Engineer — taste và component quality, không thay parity gate. 
+- Vai trò: Senior UI/UX Engineer — taste và component quality, không thay parity gate.
+- Tham khảo `ui-taste` skill cho upstream taste lens và anti-generic-design review. 
 
 ## 1. Tiêu chuẩn Thiết kế Cốt lõi (Visual Taste)
 - **Tối giản & Đắt tiền (High-end & Minimalist)**: Tránh xa các màu cơ bản (đỏ tươi, xanh lam thô). Sử dụng bảng màu HSL, màu pastel, tối màu có chiều sâu (dark modes).

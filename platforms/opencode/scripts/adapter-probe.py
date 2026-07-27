@@ -14,8 +14,8 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
-import yaml  # type: ignore[import]
 from pathlib import Path
 
 
@@ -23,18 +23,40 @@ def fail(message: str) -> None:
     raise SystemExit(f"PROBE FAIL: {message}")
 
 
-def try_load_yaml_frontmatter(path: Path) -> dict | None:
-    """Try to load YAML frontmatter from a markdown file."""
+def try_load_frontmatter_metadata(path: Path) -> dict[str, object] | None:
+    """Parse the compact metadata used by harness-owned OpenCode agents.
+
+    The probe only needs top-level keys and the presence of ``permission``.
+    Keeping this parser deliberately small avoids making a native attestation
+    depend on an optional PyYAML installation or accepting arbitrary YAML tags.
+    """
     try:
         text = path.read_text(encoding="utf-8")
         if not text.startswith("---\n"):
             return None
-        parts = text.split("---", 2)
-        if len(parts) < 3:
+        closing = text.find("\n---", 4)
+        if closing < 0:
             return None
-        return dict(yaml.safe_load(parts[1]) or {})
-    except Exception:
+        metadata: dict[str, object] = {}
+        for line in text[4:closing].splitlines():
+            if not line or line.startswith((" ", "\t", "#")):
+                continue
+            match = re.match(r"^([A-Za-z][A-Za-z0-9_-]*):(?:\s*(.*))?$", line)
+            if not match:
+                return None
+            key, value = match.groups()
+            metadata[key] = value.strip().strip('"') if value else {}
+        return metadata
+    except OSError:
         return None
+
+
+def discover_public_skills(skill_dir: Path) -> list[Path]:
+    """Discover only direct host skills; nested reference packs are not skills."""
+    return sorted(
+        path for path in skill_dir.iterdir()
+        if path.is_dir() and (path / "SKILL.md").is_file()
+    )
 
 
 def main() -> None:
@@ -89,7 +111,7 @@ def main() -> None:
     # Parse agent frontmatter
     all_parseable = True
     for agent_file in agent_dir.glob("initforge-*.md"):
-        fm = try_load_yaml_frontmatter(agent_file)
+        fm = try_load_frontmatter_metadata(agent_file)
         if fm is None:
             results.append({
                 "probe": "agent_parse",
@@ -108,7 +130,7 @@ def main() -> None:
     agents_with_permission = 0
     agents_no_permission = 0
     for agent_file in agent_dir.glob("initforge-*.md"):
-        fm = try_load_yaml_frontmatter(agent_file)
+        fm = try_load_frontmatter_metadata(agent_file)
         if fm and "permission" in fm:
             agents_with_permission += 1
         else:
@@ -130,12 +152,13 @@ def main() -> None:
     # --- Probe 3: Skill discovery ---
     skill_dir = home / "skills"
     if skill_dir.is_dir():
-        skill_count = len([p for p in skill_dir.iterdir() if p.is_dir()])
-        skmd_count = len(list(skill_dir.rglob("SKILL.md")))
+        public_skills = discover_public_skills(skill_dir)
+        skill_count = len(public_skills)
+        skmd_count = len(public_skills)
         results.append({
             "probe": "skill_discovery",
             "status": "PASS",
-            "detail": f"found {skill_count} skill dir(s), {skmd_count} SKILL.md file(s)",
+            "detail": f"found {skill_count} public skill dir(s), {skmd_count} public SKILL.md file(s)",
         })
     else:
         results.append({

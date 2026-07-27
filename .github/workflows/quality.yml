@@ -1,0 +1,16 @@
+name: Quality
+on: [push, pull_request]
+jobs:
+  quality:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - run: npm ci
+      - run: npm run build
+      - run: npm run check
+      - run: npm run test
+      - run: npm run ci:quality

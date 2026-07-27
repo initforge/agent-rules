@@ -55,51 +55,10 @@
       "deprecatedAliases": ["codebase_memory"]
     },
     {
-      "id": "context7",
-      "displayName": "Context7",
-      "kind": "mcp",
-      "policy": "recommended",
-      "profiles": ["research"],
-      "source": {
-        "type": "npm",
-        "url": "https://github.com/upstash/context7",
-        "package": "@upstash/context7-mcp",
-        "version": "latest",
-        "versionPolicy": "latest",
-        "commandName": "context7-mcp"
-      },
-      "integrity": {
-        "pinned": false
-      },
-      "trust": "adapter-verified",
-      "capabilities": ["external-documentation"],
-      "triggers": ["latest-docs", "framework-behavior", "api-reference", "migration-research"],
-      "sideEffects": "network-read",
-      "tokenClass": "medium",
-      "permissions": ["network-read"],
-      "environment": [],
-      "install": {
-        "type": "npm-global",
-        "script": "integrations/recommended/context7/install.ps1",
-        "verify": "integrations/recommended/context7/verify.ps1",
-        "uninstall": "integrations/recommended/context7/uninstall.ps1"
-      },
-      "health": {
-        "command": "npx -y @upstash/context7-mcp --help",
-        "expectedExitCodes": [0]
-      },
-      "schema": {
-        "source": "integrations/recommended/context7/tools/"
-      },
-      "nativeHosts": ["codex", "grok", "antigravity", "cursor", "opencode"],
-      "fallback": "official primary-source documentation or web research",
-      "deprecatedAliases": []
-    },
-    {
       "id": "playwright-mcp",
       "displayName": "Playwright MCP",
       "kind": "mcp",
-      "policy": "recommended",
+      "policy": "required",
       "profiles": ["qa", "frontend"],
       "source": {
         "type": "npm",
@@ -122,16 +81,16 @@
       "environment": [],
       "install": {
         "type": "npm-npx",
-        "script": "integrations/recommended/playwright-mcp/install.ps1",
-        "verify": "integrations/recommended/playwright-mcp/verify.ps1",
-        "uninstall": "integrations/recommended/playwright-mcp/uninstall.ps1"
+        "script": "integrations/required/playwright-mcp/install.ps1",
+        "verify": "integrations/required/playwright-mcp/verify.ps1",
+        "uninstall": "integrations/required/playwright-mcp/uninstall.ps1"
       },
       "health": {
         "command": "npx -y @playwright/mcp --help",
         "expectedExitCodes": [0]
       },
       "schema": {
-        "source": "integrations/recommended/playwright-mcp/tools/"
+        "source": "integrations/required/playwright-mcp/"
       },
       "nativeHosts": ["codex", "grok", "antigravity", "cursor", "opencode"],
       "fallback": "report the live-interaction proof gap; do not infer it from build output",
@@ -141,7 +100,7 @@
       "id": "chrome-devtools-mcp",
       "displayName": "Chrome DevTools MCP",
       "kind": "mcp",
-      "policy": "recommended",
+      "policy": "required",
       "profiles": ["qa", "frontend"],
       "source": {
         "type": "npm",
@@ -164,16 +123,16 @@
       "environment": [],
       "install": {
         "type": "npm-npx",
-        "script": "integrations/recommended/chrome-devtools-mcp/install.ps1",
-        "verify": "integrations/recommended/chrome-devtools-mcp/verify.ps1",
-        "uninstall": "integrations/recommended/chrome-devtools-mcp/uninstall.ps1"
+        "script": "integrations/required/chrome-devtools-mcp/install.ps1",
+        "verify": "integrations/required/chrome-devtools-mcp/verify.ps1",
+        "uninstall": "integrations/required/chrome-devtools-mcp/uninstall.ps1"
       },
       "health": {
         "command": "npx -y chrome-devtools-mcp --help",
         "expectedExitCodes": [0]
       },
       "schema": {
-        "source": "integrations/recommended/chrome-devtools-mcp/tools/"
+        "source": "integrations/required/chrome-devtools-mcp/"
       },
       "nativeHosts": ["codex", "grok", "antigravity", "cursor", "opencode"],
       "fallback": "browser console/network evidence when a host-native DevTools session is available",
@@ -217,20 +176,13 @@
       "description": "Essential dependencies for all agent operations",
       "required": ["codebase-memory-mcp"]
     },
-    "research": {
-      "description": "External documentation and API reference",
-      "required": [],
-      "recommended": ["context7"]
-    },
     "qa": {
       "description": "Browser-based UI quality assurance",
-      "required": [],
-      "recommended": ["playwright-mcp", "chrome-devtools-mcp"]
+      "required": ["playwright-mcp", "chrome-devtools-mcp"]
     },
     "frontend": {
       "description": "Frontend development support",
-      "required": [],
-      "recommended": ["playwright-mcp", "chrome-devtools-mcp"]
+      "required": ["playwright-mcp", "chrome-devtools-mcp"]
     }
   }
 }

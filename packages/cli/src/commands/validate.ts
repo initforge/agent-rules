@@ -177,7 +177,13 @@ export async function validate(
   // 5. Required paths
   const required = [
     "docs/guides/00-system-map.md", "docs/guides/05-maturity.md", "integrations/registry.json",
-    "profiles/5fedu/projects/AGENTS.md", "profiles/5fedu/projects/00-context-map.md", "profiles/5fedu/projects/decisions.md",
+    "profiles/5fedu/profile.yaml", "profiles/5fedu/README.md",
+    "profiles/5fedu/behaviors/activation.md",
+    "profiles/5fedu/rules/business.md", "profiles/5fedu/rules/data-auth.md", "profiles/5fedu/rules/permissions.md",
+    "profiles/5fedu/module-mapping/modules.yaml", "profiles/5fedu/module-mapping/ui-contracts.md",
+    "profiles/5fedu/automation/08-install-5fedu-context.ps1",
+    "profiles/5fedu/automation/test-5fedu-lean-installer.ps1",
+    "skills/5fedu-project/SKILL.md", "skills/5fedu-module-parity/SKILL.md",
     "rules/05-critical-thinking.md", "rules/16-context-style.md", "rules/25-task-lifecycle.md",
     "skills/plan-and-handoff/SKILL.md",
     "skills/plan-and-handoff/references/adaptive-work-protocol.md",
@@ -186,7 +192,6 @@ export async function validate(
     "skills/finish-to-completion/references/slice-gate-protocol.md",
     "automation/workctl.py", "automation/work-ledger.schema.json",
     "automation/test-workctl.py",
-    "profiles/5fedu/projects/domains/references/pattern-inventory.yaml",
   ];
   for (const rp of required) {
     if (!(await checkFile(path.join(root, ...rp.split("/"))))) {
@@ -277,7 +282,12 @@ export async function validate(
   }
 
   // 11. Python contract tests
-  const pyTests = ["test-workctl.py", "test-skill-gate-stack.py", "test-external-receipt.py"];
+  const pyTests = [
+    "test-workctl.py",
+    "test-skill-gate-stack.py",
+    "test-external-receipt.py",
+    "test-5fedu-parity-packet.py",
+  ];
   for (const t of pyTests) {
     const tp = path.join(automationDir, t);
     if (await checkFile(tp)) {
@@ -307,13 +317,18 @@ export async function validate(
     output.push("[WARN] Missing tool registry validator (advisory)");
   }
 
-  // 14. 5fedu template purity
-  const purityAudit = path.join(root, "profiles", "5fedu", "automation", "audit-5fedu-template-purity.ps1");
-  if (await checkFile(purityAudit)) {
-    const r = await runPowershell(purityAudit, [], root);
-    if (!r.ok) errors.push("5fedu template purity audit failed");
+  // 14. Lean 5fedu installer: exact pack, update preservation, rollback, and path safety
+  const leanInstallerTest = path.join(root, "profiles", "5fedu", "automation", "test-5fedu-lean-installer.ps1");
+  if (await checkFile(leanInstallerTest)) {
+    const r = await runPowershell(leanInstallerTest, [], root);
+    if (!r.ok) {
+      errors.push("5fedu lean installer regression failed");
+      if (options.verbose) output.push(r.output);
+    } else if (options.verbose) {
+      output.push(r.output);
+    }
   } else {
-    errors.push("Missing 5fedu template purity audit");
+    errors.push("Missing 5fedu lean installer regression");
   }
 
   // 15. Context graph validation

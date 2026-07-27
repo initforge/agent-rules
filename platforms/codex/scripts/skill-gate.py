@@ -407,15 +407,27 @@ def workspace_root() -> Path | None:
     return Path(raw)
 
 
+def valid_payload_workspace(raw: object) -> Path | None:
+    if not isinstance(raw, str) or not raw.strip():
+        return None
+    try:
+        candidate = Path(raw)
+        if not candidate.is_absolute():
+            return None
+        return candidate if candidate.is_dir() and not candidate.is_symlink() else None
+    except (OSError, ValueError):
+        return None
+
+
 def payload_workspace(payload: dict[str, Any]) -> Path | None:
     for key in ("cwd", "workspaceRoot", "workspace_root", "projectDir", "project_dir"):
-        raw = payload.get(key)
-        if isinstance(raw, str) and raw.strip():
-            return Path(raw)
+        candidate = valid_payload_workspace(payload.get(key))
+        if candidate is not None:
+            return candidate
     return workspace_root()
 
 
-def graph_decision(prompt: str) -> dict[str, Any] | None:
+def graph_decision(prompt: str, workspace: Path | None = None) -> dict[str, Any] | None:
     if load_graph is None or graph_route is None:
         return None
     candidates = [
@@ -427,7 +439,7 @@ def graph_decision(prompt: str) -> dict[str, Any] | None:
         return None
     try:
         graph = load_graph(graph_path)
-        roots = [workspace_root()] if workspace_root() else []
+        roots = [workspace] if workspace is not None else ([workspace_root()] if workspace_root() else [])
         decision = graph_route(prompt, roots, graph)
         decision["graph_path"] = str(graph_path)
         return decision
@@ -629,7 +641,7 @@ def handle_user_prompt_submit(payload: dict[str, Any]) -> None:
     admission_hint = ""
     if prompt:
         root = payload_workspace(payload)
-        graph = graph_decision(prompt)
+        graph = graph_decision(prompt, root)
         record_graph_routing(st, graph)
         signals = (graph or {}).get("signals", [])
         stack = (graph or {}).get("stack", [])

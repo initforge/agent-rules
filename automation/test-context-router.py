@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -17,10 +18,48 @@ router = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(router)
 load_graph = router.load_graph
 route = router.route
+MANAGED_LEAN_PACK = {
+    "README.md": "profiles/5fedu/README.md",
+    "behaviors/activation.md": "profiles/5fedu/behaviors/activation.md",
+    "rules/business.md": "profiles/5fedu/rules/business.md",
+    "rules/data-auth.md": "profiles/5fedu/rules/data-auth.md",
+    "rules/permissions.md": "profiles/5fedu/rules/permissions.md",
+    "module-mapping/modules.yaml": "profiles/5fedu/module-mapping/modules.yaml",
+    "module-mapping/ui-contracts.md": "profiles/5fedu/module-mapping/ui-contracts.md",
+}
 
 
 def fail(case_id: str, message: str) -> None:
     raise AssertionError(f"{case_id}: {message}")
+
+
+def materialize_workspace_facts(workspace: Path, facts: dict) -> None:
+    """Materialize only current structured facts; retired context maps are never fixtures."""
+    pack = facts.get("lean_pack")
+    if pack is None and facts.get("has_5fedu_context"):
+        pack = "valid"
+    context = workspace / "context" / "5fedu"
+    if pack in {"valid", "hash-tampered"}:
+        for relative, source in MANAGED_LEAN_PACK.items():
+            target = context / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / source, target)
+        if pack == "hash-tampered":
+            (context / "behaviors" / "activation.md").write_text("tampered", encoding="utf-8")
+    elif pack in {"empty", "partial", "junk-readme-or-legacy-map"}:
+        context.mkdir(parents=True)
+        if pack == "partial":
+            shutil.copyfile(ROOT / MANAGED_LEAN_PACK["README.md"], context / "README.md")
+        elif pack == "junk-readme-or-legacy-map":
+            (context / "README.md").write_text("junk", encoding="utf-8")
+    elif pack == "ancestor-symlink":
+        outside = workspace / "outside-context"
+        outside.mkdir()
+        (workspace / "context").symlink_to(outside, target_is_directory=True)
+    if facts.get("profile_marker"):
+        marker = workspace / ".agent" / "profiles" / "5fedu.enabled"
+        marker.parent.mkdir(parents=True)
+        marker.write_bytes(b"")
 
 
 def workspace_for(case: dict) -> tuple[tempfile.TemporaryDirectory[str], Path]:
@@ -29,10 +68,7 @@ def workspace_for(case: dict) -> tuple[tempfile.TemporaryDirectory[str], Path]:
     kind = case["workspace"]["kind"]
     if kind == "harness":
         return holder, ROOT
-    if case["workspace"].get("has_5fedu_context"):
-        context = workspace / "context" / "5fedu"
-        context.mkdir(parents=True)
-        (context / "00-context-map.md").write_text("fixture", encoding="utf-8")
+    materialize_workspace_facts(workspace, case["workspace"])
     return holder, workspace
 
 
@@ -83,9 +119,18 @@ def main() -> int:
         missing_context = set(expected.get("context_nodes", [])) - context_nodes
         if missing_context:
             fail(case_id, f"missing context nodes: {sorted(missing_context)}")
+        if "exact_context_nodes" in expected:
+            exact_context = sorted(str(node_id) for node_id in expected["exact_context_nodes"])
+            if sorted(context_nodes) != exact_context:
+                fail(case_id, f"context nodes={sorted(context_nodes)!r}; expected {exact_context!r}")
+        if case_id.startswith("5fedu-ui") and any("profiles/5fedu/projects/" in str(node_id) for node_id in context_nodes):
+            fail(case_id, "legacy 5fedu projects node leaked into module-parity route")
         missing_intents = set(expected.get("intent_signals", [])) - intents
         if missing_intents:
             fail(case_id, f"missing intent signals: {sorted(missing_intents)}")
+        for fact, expected_value in expected.get("workspace_facts", {}).items():
+            if decision.get("workspace_facts", {}).get(fact) != expected_value:
+                fail(case_id, f"workspace fact {fact} did not match {expected_value!r}")
 
     print(f"PASS: graph context router conformance ({len(seen)} cases)")
     return 0

@@ -35,6 +35,51 @@ async function copyDir(src: string, dest: string): Promise<void> {
   }
 }
 
+export async function verifyUiTasteSourcePack(root: string): Promise<void> {
+  const lockPath = path.join(root, "skills", "ui-taste", "references", "upstream-lock.json");
+  if (!await fs.stat(lockPath).then(() => true).catch(() => false)) return;
+  const lock = JSON.parse(await fs.readFile(lockPath, "utf-8")) as {
+    content?: { files?: Record<string, string>; packaged_paths?: Record<string, string>; git_blob_sha1?: Record<string, string>; aggregate_sha256?: string; tree_listing_sha256?: string };
+  };
+  const content = lock.content;
+  if (!content?.files || !content.packaged_paths || !content.git_blob_sha1 || !content.aggregate_sha256 || !content.tree_listing_sha256) {
+    throw new Error("ui-taste source-pack lock is incomplete");
+  }
+  const upstreamRoot = path.join(root, "skills", "ui-taste", "references", "upstream");
+  const originals = Object.keys(content.files).sort();
+  const expectedPackaged = originals.map(original => content.packaged_paths![original]).sort();
+  if (expectedPackaged.some(entry => !entry) || new Set(expectedPackaged).size !== expectedPackaged.length) {
+    throw new Error("ui-taste source-pack lock has invalid packaged paths");
+  }
+  const actualPackaged = (await walkDir(upstreamRoot)).map(file => escapePath(path.relative(upstreamRoot, file))).sort();
+  if (JSON.stringify(actualPackaged) !== JSON.stringify(expectedPackaged)) {
+    throw new Error("ui-taste source-pack files do not match lock");
+  }
+  const aggregateLines: string[] = [];
+  const treeLines: string[] = [];
+  for (const original of originals) {
+    const packaged = content.packaged_paths[original];
+    const bytes = await fs.readFile(path.join(upstreamRoot, packaged));
+    const digest = crypto.createHash("sha256").update(bytes).digest("hex");
+    if (digest !== content.files[original]) throw new Error(`ui-taste source-pack hash mismatch: ${original}`);
+    const blob = crypto.createHash("sha1").update(Buffer.concat([Buffer.from(`blob ${bytes.length}\0`), bytes])).digest("hex");
+    if (blob !== content.git_blob_sha1[original]) throw new Error(`ui-taste source-pack blob mismatch: ${original}`);
+    aggregateLines.push(`${digest}  .agent/source-lock-cache/taste-skill/skills/${original}\n`);
+    treeLines.push(`100644 blob ${blob}\tskills/${original}\n`);
+  }
+  const aggregate = crypto.createHash("sha256").update(aggregateLines.join("")).digest("hex");
+  const listing = crypto.createHash("sha256").update(treeLines.join("")).digest("hex");
+  if (aggregate !== content.aggregate_sha256 || listing !== content.tree_listing_sha256) {
+    throw new Error("ui-taste source-pack aggregate integrity mismatch");
+  }
+}
+
+export async function writeContextGraph(root: string, outputPath: string): Promise<void> {
+  const graph = buildContextGraph(root);
+  await fs.mkdir(path.dirname(outputPath), { recursive: true });
+  await fs.writeFile(outputPath, JSON.stringify(graph, null, 2) + "\n", "utf-8");
+}
+
 async function replaceTokensInDir(
   dir: string,
   tokens: Record<string, string>
@@ -65,18 +110,20 @@ export async function build(
     return { exitCode: ExitCode.Success, message: "Dry-run: build skipped" };
   }
 
+  try {
+    await verifyUiTasteSourcePack(root);
+  } catch (e) {
+    return { exitCode: ExitCode.GeneralError, message: e instanceof Error ? e.message : String(e) };
+  }
+
   // Step 1: Build context graph (TypeScript, no Python dependency)
   const graphDir = path.dirname(path.join(root, "generated", "context-graph.json"));
   try {
     await fs.mkdir(graphDir, { recursive: true });
-    const graph = buildContextGraph(root);
-    await fs.writeFile(
-      path.join(graphDir, "context-graph.json"),
-      JSON.stringify(graph, null, 2) + "\n",
-      "utf-8"
-    );
+    const graphOutput = path.join(graphDir, "context-graph.json");
+    await writeContextGraph(root, graphOutput);
     if (options.verbose) {
-      console.log(`Context graph built: ${graph.nodes.length} nodes`);
+      console.log(`Context graph built: ${buildContextGraph(root).nodes.length} nodes`);
     }
   } catch (e) {
     errors.push(`Context graph build failed: ${e instanceof Error ? e.message : String(e)}`);

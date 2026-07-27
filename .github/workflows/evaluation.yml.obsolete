@@ -1,0 +1,140 @@
+# OBSOLETE — replaced by quality.yml + certification.yml
+name: evaluation
+on:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: "Benchmark suite to run"
+        required: false
+        default: "all"
+        type: choice
+        options:
+          - all
+          - agent-quality
+          - live-benchmark
+          - benchmark-contracts
+          - route-conformance
+  schedule:
+    - cron: "0 2 * * 1"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install PowerShell
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq powershell
+      - run: npm ci && npx tsc
+        working-directory: packages/cli
+      - run: node dist/index.js build
+        working-directory: packages/cli
+      - run: node dist/index.js validate
+        working-directory: packages/cli
+      - uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-build
+          path: |
+            generated/
+            !generated/.gitignore
+  benchmark-contracts:
+    name: benchmark-contracts
+    needs: [build]
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.suite == 'all' || github.event.inputs.suite == 'benchmark-contracts' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python automation/test-agent-quality-benchmark.py --contracts-only 2>&1 | tee benchmark-contracts.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-contracts-report
+          path: benchmark-contracts.log
+          if-no-files-found: ignore
+  agent-quality:
+    name: agent-quality
+    needs: [build]
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.suite == 'all' || github.event.inputs.suite == 'agent-quality' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python automation/agent_quality.py 2>&1 | tee agent-quality.log
+        continue-on-error: true
+      - run: python automation/report-agent-quality.py 2>&1 | tee -a agent-quality.log
+        continue-on-error: true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: agent-quality-report
+          path: |
+            agent-quality.log
+            automation/evidence-profiles.json
+          if-no-files-found: ignore
+  live-adapter-contracts:
+    name: live-adapter-contracts
+    needs: [build]
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.suite == 'all' || github.event.inputs.suite == 'live-benchmark' }}
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python automation/test-live-agent-adapter.py --contracts-only 2>&1 | tee live-adapter-contracts.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-adapter-contracts-report
+          path: live-adapter-contracts.log
+          if-no-files-found: ignore
+  route-conformance:
+    name: route-conformance
+    needs: [build]
+    if: ${{ github.event_name == 'schedule' || github.event.inputs.suite == 'all' || github.event.inputs.suite == 'route-conformance' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python automation/test-context-router.py 2>&1 | tee route-conformance.log
+        continue-on-error: true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: route-conformance-report
+          path: route-conformance.log
+          if-no-files-found: ignore
+  summary:
+    name: summary
+    if: always()
+    needs: [benchmark-contracts, agent-quality, live-adapter-contracts, route-conformance]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "## Evaluation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "This evaluation ran as a non-required workflow. Results are advisory." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Download evaluation artifacts from the workflow run page." >> $GITHUB_STEP_SUMMARY
+        shell: bash

@@ -1,0 +1,207 @@
+# proof.schema.yaml — declarative companion to the executable proof gate
+$schema: "http://json-schema.org/draft-07/schema#"
+title: Proof
+description: "Revision-bound, independently verified parity evidence."
+type: object
+additionalProperties: false
+required:
+  - template_identity_and_snapshot
+  - target_revision
+  - worker_identity
+  - target_surface_and_reference_paths
+  - target_paths
+  - shell_behavior_state_motion_responsive_map
+  - variable_map_with_schema_or_spec_source
+  - approved_deviations
+  - verification_evidence
+properties:
+  template_identity_and_snapshot:
+    type: object
+    additionalProperties: false
+    required: [source_lock_sha, verified_by]
+    properties:
+      source_lock_sha:
+        type: string
+        pattern: "^[a-f0-9]{64}$"
+      verified_by:
+        $ref: "common.schema.yaml#/definitions/nonBlank"
+  target_revision:
+    type: string
+    pattern: "^[a-f0-9]{40}$"
+  worker_identity:
+    $ref: "#/definitions/workerIdentity"
+  target_surface_and_reference_paths:
+    type: object
+    minProperties: 1
+    propertyNames:
+      $ref: "common.schema.yaml#/definitions/nonBlank"
+    additionalProperties:
+      type: object
+      additionalProperties: false
+      required: [reference_path, target_path, verified]
+      properties:
+        reference_path:
+          $ref: "common.schema.yaml#/definitions/portablePath"
+        target_path:
+          $ref: "common.schema.yaml#/definitions/portablePath"
+        verified:
+          const: true
+  target_paths:
+    type: array
+    minItems: 1
+    uniqueItems: true
+    items:
+      $ref: "common.schema.yaml#/definitions/portablePath"
+  shell_behavior_state_motion_responsive_map:
+    type: object
+    additionalProperties: false
+    required:
+      - structural_map_complete
+      - visual_contract_complete
+      - behavior_contract_complete
+      - architecture_adaptation_complete
+      - deviations_recorded
+    properties:
+      structural_map_complete:
+        const: true
+      visual_contract_complete:
+        const: true
+      behavior_contract_complete:
+        const: true
+      architecture_adaptation_complete:
+        const: true
+      deviations_recorded:
+        const: true
+  variable_map_with_schema_or_spec_source:
+    type: object
+    minProperties: 1
+    propertyNames:
+      $ref: "common.schema.yaml#/definitions/nonBlank"
+    additionalProperties:
+      type: object
+      minProperties: 1
+      propertyNames:
+        $ref: "common.schema.yaml#/definitions/nonBlank"
+      additionalProperties:
+        type: object
+        additionalProperties: false
+        required: [source, verified_against]
+        properties:
+          source:
+            $ref: "common.schema.yaml#/definitions/nonBlank"
+          verified_against:
+            $ref: "common.schema.yaml#/definitions/nonBlank"
+  approved_deviations:
+    type: object
+    minProperties: 0
+    propertyNames:
+      $ref: "common.schema.yaml#/definitions/nonBlank"
+    additionalProperties:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          const: approved
+  verification_evidence:
+    type: array
+    minItems: 15
+    maxItems: 15
+    items:
+      type: object
+      additionalProperties: false
+      required:
+        - type
+        - result
+        - command_or_method
+        - source_revision
+        - target_revision
+        - artifact_uri
+        - artifact_sha256
+      properties:
+        type:
+          type: string
+          enum:
+            - structural_parity
+            - visual_parity
+            - behavioral_parity
+            - architectural_parity
+            - browser_interaction
+            - accessibility
+            - console
+            - network
+            - browser_trace
+            - responsive_states
+            - keyboard
+            - touch
+            - reduced_motion
+            - permission_state_matrix
+            - independent_revision_verification
+        result:
+          const: pass
+        command_or_method:
+          $ref: "common.schema.yaml#/definitions/nonBlank"
+        source_revision:
+          type: string
+          pattern: "^(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+        target_revision:
+          type: string
+          pattern: "^[a-f0-9]{40}$"
+        artifact_uri:
+          type: string
+          pattern: "^[a-z][a-z0-9+.-]*://[^\\s?#]+$"
+        artifact_sha256:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+        verifier_identity:
+          $ref: "#/definitions/verifierIdentity"
+      allOf:
+        - if:
+            properties:
+              type:
+                const: independent_revision_verification
+            required: [type]
+          then:
+            required: [verifier_identity]
+            properties:
+              verifier_identity:
+                $ref: "#/definitions/verifierIdentity"
+          else:
+            not:
+              properties:
+                verifier_identity: {}
+              required: [verifier_identity]
+  planner_notes:
+    $ref: "common.schema.yaml#/definitions/nonBlank"
+    description: "Allowed for historical/incomplete examples; it cannot certify them."
+definitions:
+  canonicalSubjectId:
+    type: string
+    pattern: "^[a-z][a-z0-9+.-]*://[a-z0-9](?:[a-z0-9._~-]*[a-z0-9])?(?:/[a-z0-9](?:[a-z0-9._~-]*[a-z0-9])?)*$"
+  workerIdentity:
+    type: object
+    additionalProperties: false
+    required: [subject_id, display_name, role]
+    properties:
+      subject_id:
+        $ref: "#/definitions/canonicalSubjectId"
+      display_name:
+        $ref: "common.schema.yaml#/definitions/nonBlank"
+      role:
+        const: worker
+  verifierIdentity:
+    type: object
+    additionalProperties: false
+    required: [subject_id, display_name, role]
+    properties:
+      subject_id:
+        $ref: "#/definitions/canonicalSubjectId"
+      display_name:
+        $ref: "common.schema.yaml#/definitions/nonBlank"
+      role:
+        const: independent_verifier
+
+# Draft-07 represents conditional verifier presence and the two closed roles.
+# Equality with source-lock receipts and inequality between worker/verifier
+# subject IDs remain cross-document/value relations after canonical engine
+# shape validation.

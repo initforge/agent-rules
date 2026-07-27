@@ -1,0 +1,90 @@
+# proof.yaml — Example: Nhập hàng module
+# Verification evidence for the parity packet.
+template_identity_and_snapshot:
+  source_lock_sha: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  verified_by: "planner"
+target_surface_and_reference_paths:
+  crud-list:
+    reference_path: "features/he-thong/nhan-vien/components/nhan-vien-list.tsx"
+    target_path: "features/he-thong/nhap-hang/components/nhap-hang-list.tsx"
+    verified: true
+  form-drawer:
+    reference_path: "features/he-thong/nhan-vien/components/nhan-vien-form.tsx"
+    target_path: "features/he-thong/nhap-hang/components/nhap-hang-form.tsx"
+    verified: true
+  detail-drawer:
+    reference_path: "features/he-thong/nhan-vien/components/nhan-vien-detail.tsx"
+    target_path: "features/he-thong/nhap-hang/components/nhap-hang-detail.tsx"
+    verified: true
+  row-actions:
+    reference_path: "features/he-thong/nhan-vien/components/employee-table-row-actions.tsx"
+    target_path: "features/he-thong/nhap-hang/components/nhap-hang-table-row-actions.tsx"
+    verified: true
+  stats-tab:
+    reference_path: "features/he-thong/nhan-vien/components/nhan-vien-stats.tsx"
+    target_path: "features/he-thong/nhap-hang/components/nhap-hang-stats.tsx"
+    verified: false
+target_paths:
+  - "features/he-thong/nhap-hang/index.tsx"
+  - "features/he-thong/nhap-hang/components/nhap-hang-list.tsx"
+  - "features/he-thong/nhap-hang/components/nhap-hang-form.tsx"
+  - "features/he-thong/nhap-hang/components/nhap-hang-detail.tsx"
+  - "features/he-thong/nhap-hang/components/nhap-hang-stats.tsx"
+  - "features/he-thong/nhap-hang/components/nhap-hang-table-row-actions.tsx"
+  - "features/he-thong/nhap-hang/services/nhap-hang-service.ts"
+  - "features/he-thong/nhap-hang/hooks/use-nhap-hang.ts"
+  - "features/he-thong/nhap-hang/stores/nhap-hang-store.ts"
+shell_behavior_state_motion_responsive_map:
+  structural_map_complete: true
+  visual_contract_complete: true
+  behavior_contract_complete: true
+  architecture_adaptation_complete: true
+  deviations_recorded: true
+variable_map_with_schema_or_spec_source:
+  crud-list:
+    columns:
+      source: "supabase_table phieu_nhap"
+      verified_against: "types/supabase.ts PhieuNhap type"
+    filter choices:
+      source: "spec section 3.1"
+      verified_against: "owner spec"
+  form-drawer:
+    fields:
+      source: "supabase_table phieu_nhap columns"
+      verified_against: "types/supabase.ts"
+  detail-drawer:
+    summary fields:
+      source: "supabase_table phieu_nhap"
+      verified_against: "types/supabase.ts"
+  stats-tab:
+    metric keys:
+      source: "spec section 6"
+      verified_against: "owner spec"
+approved_deviations:
+  DEV-001:
+    status: approved
+  DEV-002:
+    status: approved
+  DEV-003:
+    status: approved
+verification_evidence:
+  - type: typecheck
+    result: pass
+    detail: "All types resolve against generated supabase types"
+  - type: lint
+    result: pass
+    detail: "ESLint pass with project config"
+  - type: build
+    result: pass
+    detail: "Vite build succeeds"
+  - type: interaction_check
+    result: not_run
+    detail: "Pending implementation"
+    command_or_method: "Manual interaction test: add drawer, row-click detail, form validation, filter/dropdown, Duyệt approval flow"
+  - type: responsive_check
+    result: not_run
+    detail: "Pending implementation"
+  - type: export_check
+    result: not_run
+    detail: "Pending implementation; verify Excel number format #,##0"
+planner_notes: "Stats-tab surface mapping marked uncertain (uncertainty: true in structural-map). Planner must verify StatsKpiGrid compatibility with phieu_nhap aggregate queries before implementation."

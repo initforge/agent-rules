@@ -50,6 +50,7 @@ node_modules/
 # Runtime/test artifacts
 dist/
 05-generated/
+generated/
 profiles/5fedu/projects/.template-managed.json
 .agent/profiles/
 coverage/

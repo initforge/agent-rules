@@ -41,6 +41,11 @@ function pathSlug(p: string): string {
   return normalizePath(p).replace(/[^A-Za-z0-9]+/g, ':').replace(/^:|:$/g, '').toLowerCase();
 }
 
+function isNonLoadableReferenceSourcePack(refRoot: string, filePath: string): boolean {
+  const relative = normalizePath(path.relative(refRoot, filePath));
+  return relative === 'upstream' || relative.startsWith('upstream/');
+}
+
 function extractRouting(body: string): Record<string, unknown> | null {
   const compactMatch = body.match(/^routing:\s*(\{.*\})\s*$/m);
   if (compactMatch) {
@@ -71,6 +76,43 @@ function defaultRouting(source: string, policy: string): Record<string, unknown>
     default: policy === 'always',
   };
   const lower = source.toLowerCase();
+  if (lower === 'profiles/5fedu/readme.md') {
+    routing.signals = ['5fedu', 'context/5fedu', 'tah-app', 'nostime'];
+    routing.intent_signals = ['5fedu_context'];
+    routing.priority = 20;
+    routing.project_scope = '5fedu';
+  } else if (lower === 'profiles/5fedu/rules/business.md') {
+    routing.signals = ['master-detail', 'duyệt', 'rollup', 'export', 'báo cáo', 'thống kê', 'excel', 'pdf'];
+    routing.intent_signals = ['5fedu_business'];
+    routing.priority = 50;
+    routing.project_scope = '5fedu';
+  } else if (lower === 'profiles/5fedu/rules/data-auth.md') {
+    routing.signals = ['migration', 'rls', 'schema', 'int8', 'uuid', 'foreign key', 'index'];
+    routing.intent_signals = ['5fedu_database'];
+    routing.priority = 60;
+    routing.project_scope = '5fedu';
+  } else if (lower === 'profiles/5fedu/rules/permissions.md') {
+    routing.signals = ['permission', 'phân quyền', 'cap_bac', 'quyền xem', 'quyền sửa', 'quyền xóa', 'quản trị'];
+    routing.intent_signals = ['5fedu_permissions'];
+    routing.priority = 60;
+    routing.project_scope = '5fedu';
+  } else if (lower === 'profiles/5fedu/module-mapping/modules.yaml' || lower === 'profiles/5fedu/module-mapping/ui-contracts.md') {
+    routing.signals = ['5fedu ui', 'drawer', 'listview', 'toolbar', 'parity', 'erp module'];
+    routing.intent_signals = ['5fedu_ui'];
+    routing.priority = 70;
+    routing.project_scope = '5fedu';
+  } else if (lower === 'profiles/5fedu/behaviors/activation.md') {
+    // Activation is lifecycle metadata, not ordinary ERP UI context. Keep its
+    // triggers aligned with the router's explicit setup vocabulary so a
+    // module-parity request cannot load it merely by naming 5fedu.
+    routing.signals = [
+      'activate 5fedu', '5fedu activation', 'kích hoạt 5fedu', 'thiết lập 5fedu',
+      'cài context dự án', 'cài context cho project', 'context/5fedu', 'tah-app', 'nostime',
+    ];
+    routing.intent_signals = ['5fedu_activation', '5fedu_setup'];
+    routing.priority = 40;
+    routing.project_scope = '5fedu';
+  } else {
   const in5fedu = lower.includes('5fedu') && (lower.includes('projects') || lower.includes('profiles'));
   if (lower.includes('00-context-map.md') && in5fedu) {
     routing.signals = ['5fedu', 'context/5fedu', 'tah-app', 'nostime'];
@@ -106,6 +148,7 @@ function defaultRouting(source: string, policy: string): Record<string, unknown>
     routing.intent_signals = ['5fedu_business'];
     routing.priority = 50;
     routing.project_scope = '5fedu';
+  }
   }
   return routing;
 }
@@ -151,6 +194,90 @@ function addNode(
   });
 }
 
+function profileNodeId(profileName: string, kind: string, source: string): string {
+  const base = path.basename(source, path.extname(source));
+  if (kind === 'readme') return `profile:${profileName}:readme`;
+  if (kind === 'rule') return `profile:${profileName}:rule:${base}`;
+  if (kind === 'behavior') return `profile:${profileName}:behavior:${base}`;
+  if (kind === 'module-mapping' && base === 'modules') return `profile:${profileName}:module-mapping`;
+  if (kind === 'module-mapping' && base === 'ui-contracts') return `profile:${profileName}:ui-contracts`;
+  return `profile:${profileName}:${kind}:${base}`;
+}
+
+function addProfileNodes(nodes: RoutingNode[], root: string, profileName: string): void {
+  const profileDir = path.join(root, 'profiles', profileName);
+  const profileFiles: Array<{ source: string; kind: string; policy: string }> = [];
+  const readme = path.join(profileDir, 'README.md');
+  if (fs.existsSync(readme)) {
+    profileFiles.push({ source: `profiles/${profileName}/README.md`, kind: 'readme', policy: 'always' });
+  }
+  for (const [directory, kind, policy] of [
+    ['rules', 'rule', 'router'],
+    ['behaviors', 'behavior', 'router'],
+    ['module-mapping', 'module-mapping', 'router'],
+  ] as const) {
+    const fullDir = path.join(profileDir, directory);
+    if (!fs.existsSync(fullDir)) continue;
+    for (const file of walkFiles(fullDir)) {
+      const source = normalizePath(path.relative(root, file));
+      profileFiles.push({ source, kind, policy });
+    }
+  }
+  for (const file of profileFiles) {
+    addNode(
+      nodes,
+      profileNodeId(profileName, file.kind, file.source),
+      'profile',
+      file.source,
+      file.policy,
+      `profiles/${profileName}/profile.yaml`,
+      `profile:${profileName}:${file.kind}`,
+      [],
+      null,
+      root,
+    );
+  }
+}
+
+function loadAliases(nodes: RoutingNode[]): Map<string, string[]> {
+  const aliases = new Map<string, string[]>();
+  const add = (alias: string, nodeId: string): void => {
+    if (!alias) return;
+    aliases.set(alias, [...(aliases.get(alias) || []), nodeId]);
+  };
+  for (const node of nodes) {
+    add(node.id, node.id);
+    add(node.source, node.id);
+    const stem = path.basename(node.source, path.extname(node.source));
+    add(stem, node.id);
+    if (node.id.startsWith('skill:')) add(node.id.slice('skill:'.length), node.id);
+  }
+  return aliases;
+}
+
+function validateSkillLoads(nodes: RoutingNode[]): string[] {
+  const aliases = loadAliases(nodes);
+  const errors: string[] = [];
+  for (const node of nodes) {
+    if (node.layer !== 'skills') continue;
+    const loads = node.routing.loads;
+    if (!Array.isArray(loads)) {
+      errors.push(`Skill ${node.id} has invalid loads metadata`);
+      continue;
+    }
+    for (const target of loads) {
+      if (typeof target !== 'string' || !target) {
+        errors.push(`Skill ${node.id} has invalid loads target`);
+        continue;
+      }
+      const matches = [...new Set(aliases.get(target) || [])];
+      if (matches.length === 0) errors.push(`Skill ${node.id} has unresolved loads target: ${target}`);
+      if (matches.length > 1) errors.push(`Skill ${node.id} has ambiguous loads target: ${target}`);
+    }
+  }
+  return errors;
+}
+
 export function buildContextGraph(root: string): ContextGraph {
   const nodes: RoutingNode[] = [];
 
@@ -187,6 +314,7 @@ export function buildContextGraph(root: string): ContextGraph {
     const refRoot = path.join(skillsRoot, dir.name, 'references');
     if (fs.existsSync(refRoot)) {
       for (const ref of walkFiles(refRoot)) {
+        if (isNonLoadableReferenceSourcePack(refRoot, ref)) continue;
         const refRel = normalizePath(path.relative(root, ref));
         addNode(nodes, `reference:${skillId}:${pathSlug(refRel)}`, 'skills-reference',
           refRel, 'reference', `skills/${skillId}/SKILL.md`, `requires:${skillId}`, [], null, root);
@@ -198,6 +326,7 @@ export function buildContextGraph(root: string): ContextGraph {
   if (fs.existsSync(profileRoot)) {
     for (const profileDir of fs.readdirSync(profileRoot, { withFileTypes: true })) {
       if (!profileDir.isDirectory()) continue;
+      addProfileNodes(nodes, root, profileDir.name);
       const profileSkillsDir = path.join(profileRoot, profileDir.name, 'skills');
       if (!fs.existsSync(profileSkillsDir)) continue;
       for (const skillDir of fs.readdirSync(profileSkillsDir, { withFileTypes: true })) {
@@ -229,6 +358,9 @@ export function buildContextGraph(root: string): ContextGraph {
   if (fs.existsSync(profileProjectsRoot)) {
     for (const profileDir of fs.readdirSync(profileProjectsRoot, { withFileTypes: true })) {
       if (!profileDir.isDirectory()) continue;
+      // 5fedu's historical project template is a migration input, never a
+      // routed context owner. Its live profile nodes are declared above.
+      if (profileDir.name === '5fedu') continue;
       const projDir = path.join(profileProjectsRoot, profileDir.name, 'projects');
       if (!fs.existsSync(projDir)) continue;
       const profileName = profileDir.name;
@@ -263,13 +395,15 @@ export function buildContextGraph(root: string): ContextGraph {
   }
 
   const platformsDir = path.join(root, 'platforms');
-  for (const platformDir of fs.readdirSync(platformsDir, { withFileTypes: true })) {
-    if (!platformDir.isDirectory()) continue;
-    const overlay = path.join(platformsDir, platformDir.name, `${platformDir.name}-overlay.md`);
-    if (fs.existsSync(overlay)) {
-      addNode(nodes, `platform:${platformDir.name}`, 'platform',
-        `platforms/${platformDir.name}/${platformDir.name}-overlay.md`,
-        'platform', `platforms/${platformDir.name}`, `platform:${platformDir.name}`, [], null, root);
+  if (fs.existsSync(platformsDir)) {
+    for (const platformDir of fs.readdirSync(platformsDir, { withFileTypes: true })) {
+      if (!platformDir.isDirectory()) continue;
+      const overlay = path.join(platformsDir, platformDir.name, `${platformDir.name}-overlay.md`);
+      if (fs.existsSync(overlay)) {
+        addNode(nodes, `platform:${platformDir.name}`, 'platform',
+          `platforms/${platformDir.name}/${platformDir.name}-overlay.md`,
+          'platform', `platforms/${platformDir.name}`, `platform:${platformDir.name}`, [], null, root);
+      }
     }
   }
 
@@ -297,17 +431,25 @@ export function buildContextGraph(root: string): ContextGraph {
     return a.id.localeCompare(b.id);
   });
 
+  const loadErrors = validateSkillLoads(nodes);
+  if (loadErrors.length > 0) {
+    throw new Error(loadErrors.join('; '));
+  }
+
   return {
     version: 2,
     generated_from: [
       'rules/manifest.yaml', 'skills/**/SKILL.md',
-      'profiles/**/projects/**/AGENTS.md', 'profiles/**/projects/**/00-context-map.md',
+      'profiles/**/README.md', 'profiles/**/rules/**', 'profiles/**/behaviors/**',
+      'profiles/**/module-mapping/**', 'profiles/**/projects/**/AGENTS.md',
+      'profiles/**/projects/**/00-context-map.md',
       'platforms/*/*-overlay.md', 'integrations/registry.json', 'docs/guides/**',
     ],
     source_of_truth: {
       rules: 'rules/manifest.yaml',
       skills: 'SKILL.md frontmatter routing object',
-      projects: 'project entrypoint and 00-context-map.md',
+      profiles: 'profile README, rules, behaviors, and module mapping',
+      projects: 'project entrypoint and 00-context-map.md (non-5fedu profiles)',
       platforms: 'platform overlay and platform-contracts.json',
     },
     nodes,
@@ -356,6 +498,8 @@ export function validateGraph(graph: ContextGraph): ValidationResult {
     sources.add(node.source);
   }
 
+  errors.push(...validateSkillLoads(graph.nodes));
+
   return {
     valid: errors.length === 0,
     errors,
@@ -371,10 +515,40 @@ export function validateGraph(graph: ContextGraph): ValidationResult {
 
 function walkFiles(dir: string): string[] {
   const results: string[] = [];
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => {
+    if (a.name === b.name) return 0;
+    return a.name < b.name ? -1 : 1;
+  })) {
+    if (isIgnoredSourceEntry(entry)) continue;
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) results.push(...walkFiles(fullPath));
     else if (entry.isFile()) results.push(fullPath);
   }
   return results;
+}
+
+const IGNORED_SOURCE_DIRECTORIES = new Set([
+  '__pycache__', 'node_modules', 'dist', 'build', 'coverage', 'generated', 'out',
+  '.cache', '.git', '.agent', '.codex', '.cursor', '.grok', '.idea', '.vscode',
+  '.next', '.pytest_cache', '.mypy_cache', '.ruff_cache', '.tox', '.turbo', '.venv', 'venv',
+]);
+
+const IGNORED_SOURCE_EXTENSIONS = new Set([
+  '.pyc', '.pyo', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif', '.ico',
+  '.pdf', '.zip', '.gz', '.tar', '.tgz', '.woff', '.woff2', '.ttf', '.otf',
+  '.mp3', '.mp4', '.mov', '.webm', '.wasm', '.exe', '.dll', '.so', '.dylib',
+]);
+
+/** Source graph discovery accepts portable text artifacts only.
+ *
+ * Runtime/cache/build directories are neither context nor evidence. Skipping
+ * them here prevents a local interpreter or editor artifact from changing a
+ * graph hash, route budget, or canonical runtime package.
+ */
+function isIgnoredSourceEntry(entry: fs.Dirent): boolean {
+  const lowerName = entry.name.toLowerCase();
+  if (entry.isDirectory()) {
+    return entry.name.startsWith('.') || IGNORED_SOURCE_DIRECTORIES.has(lowerName);
+  }
+  return entry.name.startsWith('.') || IGNORED_SOURCE_EXTENSIONS.has(path.extname(lowerName));
 }

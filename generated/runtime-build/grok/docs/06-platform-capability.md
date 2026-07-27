@@ -4,7 +4,7 @@
 **Distinguish:** product identity from host/runtime identity from historical install path from compatibility path.
 
 > **Last verified:** 2026-07-25  
-> **Verification method:** Manual review of platform overlays, platform-contracts.json, and adapters.  
+> **Verification method:** Manual review of platform overlays, platform-contracts.json, and adapters.
 > **Next scheduled review:** 2026-10-25 (quarterly)  
 > **Change trigger:** Platform adapter addition/removal, new runtime support, or capability status change.
 

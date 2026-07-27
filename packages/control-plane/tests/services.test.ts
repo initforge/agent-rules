@@ -160,6 +160,16 @@ describe('safety', () => {
     expect(() => safety.safeResolve(absPath)).toThrow('Absolute paths are not allowed');
   });
 
+  it.each([
+    'C:relative\\file.txt',
+    'C:\\absolute\\file.txt',
+    '\\\\server\\share\\file.txt',
+    '\\\\?\\C:\\device\\file.txt',
+    '\\\\.\\C:\\device\\file.txt',
+  ])('rejects Windows rooted or drive-prefixed path %s', (candidate) => {
+    expect(() => safety.safeResolveAgainst(path.resolve('.'), candidate)).toThrow('Absolute paths are not allowed');
+  });
+
   it('rejects null bytes', () => {
     expect(() => safety.safeResolve('valid\0path')).toThrow('Null byte detected in path');
   });
@@ -167,6 +177,7 @@ describe('safety', () => {
   it('rejects path traversal with ../', () => {
     expect(() => safety.safeResolve('../')).toThrow('Path traversal detected');
     expect(() => safety.safeResolve('../../etc/passwd')).toThrow('Path traversal detected');
+    expect(() => safety.safeResolve('safe/../../etc/passwd')).toThrow('Path traversal detected');
   });
 
   it('accepts valid relative paths', () => {
@@ -185,6 +196,7 @@ describe('safety', () => {
 
   it('safeResolveAgainst rejects traversal', () => {
     expect(() => safety.safeResolveAgainst(path.resolve('.'), '..\\..\\..\\etc\\passwd')).toThrow('Path traversal detected');
+    expect(() => safety.safeResolveAgainst(path.resolve('.'), '../..\\..\\etc/passwd')).toThrow('Path traversal detected');
   });
 
   it('path must stay within ROOT', () => {

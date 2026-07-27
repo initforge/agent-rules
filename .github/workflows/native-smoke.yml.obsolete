@@ -1,0 +1,108 @@
+# OBSOLETE — replaced by quality.yml + certification.yml
+name: native-smoke
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci && npx tsc
+        working-directory: packages/cli
+      - run: node dist/index.js build
+        working-directory: packages/cli
+      - uses: actions/upload-artifact@v4
+        with:
+          name: runtime-build
+          path: generated/runtime-build/
+  doctor:
+    name: doctor-${{ matrix.platform }}
+    needs: [build]
+    strategy:
+      matrix:
+        platform: [codex, cursor, grok, antigravity]
+      fail-fast: false
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Restore build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: runtime-build
+          path: generated/runtime-build/
+      - run: npm ci && npx tsc
+        working-directory: packages/cli
+      - name: Run doctor
+        id: doctor
+        continue-on-error: true
+        run: |
+          node dist/index.js doctor ${{ matrix.platform }} --json > doctor-${{ matrix.platform }}.json 2>&1; exit_code=$?
+          cat doctor-${{ matrix.platform }}.json
+          echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
+        working-directory: packages/cli
+      - name: Parse and summarize
+        id: summary
+        shell: python
+        run: |
+          import json, os
+          path = f"packages/cli/doctor-{os.environ['MATRIX_PLATFORM']}.json"
+          try:
+            with open(path) as f:
+              data = json.load(f)
+            ec = data.get("exitCode", -1)
+            issues = len(data.get("data", {}).get("report", [])) if isinstance(data.get("data"), dict) else 0
+            print(f"Platform={os.environ['MATRIX_PLATFORM']} exitCode={ec} checks={issues}")
+          except (FileNotFoundError, json.JSONDecodeError):
+            print(f"Platform={os.environ['MATRIX_PLATFORM']} no doctor output (native CLI unavailable)")
+        env:
+          MATRIX_PLATFORM: ${{ matrix.platform }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: doctor-report-${{ matrix.platform }}
+          path: packages/cli/doctor-${{ matrix.platform }}.json
+          if-no-files-found: ignore
+  report:
+    name: report
+    if: always()
+    needs: [doctor]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        if: always()
+        continue-on-error: true
+        with:
+          pattern: doctor-report-*
+          path: doctor-reports
+      - name: Summarize
+        shell: python
+        run: |
+          import glob, json, os
+          summary = "## Native Platform Availability\n\n| Platform | Status | Details |\n|----------|--------|--------|\n"
+          for f in sorted(glob.glob("doctor-reports/doctor-report-*/doctor-*.json")):
+            plat = os.path.basename(f).replace("doctor-", "").replace(".json", "")
+            try:
+              with open(f) as fh:
+                data = json.load(fh)
+              ec = data.get("exitCode", -1)
+              msg = data.get("message", "no message")[:60]
+              summary += f"| {plat} | exit={ec} | {msg} |\n"
+            except Exception:
+              summary += f"| {plat} | no output | native CLI unavailable |\n"
+          with open(os.environ.get("GITHUB_STEP_SUMMARY", "/dev/null"), "w") as out:
+            out.write(summary)

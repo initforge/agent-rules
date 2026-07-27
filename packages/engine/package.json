@@ -1,0 +1,38 @@
+{
+  "name": "@initforge/agent-rules-engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Canonical contracts and execution engine for Agent Rules",
+  "type": "module",
+  "exports": {
+    "./contracts": {
+      "types": "./dist/contracts.d.ts",
+      "import": "./dist/contracts.js"
+    },
+    "./parity-contracts": {
+      "types": "./dist/parity-contracts.d.ts",
+      "import": "./dist/parity-contracts.js"
+    },
+    "./plan-lifecycle": {
+      "types": "./dist/plan-lifecycle.d.ts",
+      "import": "./dist/plan-lifecycle.js"
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "ajv": "8.20.0",
+    "yaml": "2.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
+  }
+}

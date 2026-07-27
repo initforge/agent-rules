@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "canonical_owner": "profiles/5fedu/module-mapping",
+  "purpose": "Route a 5fedu ERP module to a verified reference role without carrying vendored source into the live profile.",
+  "routed_context": {
+    "max_tokens": 8000,
+    "default_load": ["modules.yaml", "ui-contracts.md"],
+    "lazy_only": ["project-local decisions", "parity packet", "verified source checkout"],
+    "forbidden_default_load": ["vendored source", "archive", "evidence", "historical migration scripts"]
+  },
+  "source_repositories": {
+    "shared-template": {
+      "repository_url": "https://github.com/admin5fedu/5f-template-ket-noi-supabase",
+      "commit_sha": null,
+      "integrity_sha256": null,
+      "verification_state": "BLOCKED",
+      "verification_evidence": {
+        "checked_at": "2026-07-27",
+        "remote_probe": "Repository endpoint returned 'Repository not found'.",
+        "rejected_legacy_lock": "The legacy lock uses an all-zero commit and empty integrity; it is not a source revision.",
+        "rejected_vendored_tree": "The retained reference tree is inside this harness worktree, so its harness commit cannot attest a template revision."
+      },
+      "clear_blocker": "Owner provides an accessible repository URL plus a reachable 40-character commit and deterministic tree SHA-256; a source-lock receipt then records the verified checkout."
+    }
+  },
+  "contract_split": {
+    "shell_owner": "ui-contracts.md",
+    "variable_slot_owner": "active project schema/spec and the parity packet",
+    "rule": "Never infer a variable slot from a reference shell. Never claim parity until the selected source repository is VERIFIED."
+  },
+  "module_roles": {
+    "nhan-vien": {
+      "label": "Nhân viên",
+      "role": "standard internal-entity CRUD baseline",
+      "surfaces": ["crud-list", "form-drawer", "detail-drawer", "row-actions", "stats-tab"],
+      "reference_paths": ["features/he-thong/nhan-vien/index.tsx", "features/he-thong/nhan-vien/components/nhan-vien-form.tsx", "features/he-thong/nhan-vien/components/nhan-vien-detail.tsx", "features/he-thong/nhan-vien/components/nhan-vien-stats.tsx"],
+      "dependencies": ["shared-components", "shared-hooks"],
+      "use_when": "A project module is an internal entity with list, form, detail, guarded actions, or statistics.",
+      "source_repository": "shared-template"
+    },
+    "phong-ban": {
+      "label": "Phòng ban",
+      "role": "parent-child hierarchy baseline",
+      "surfaces": ["hierarchy-list", "embedded-child-grid", "detail-drawer"],
+      "reference_paths": ["features/he-thong/phong-ban/index.tsx", "features/he-thong/phong-ban/components/phong-ban-detail.tsx"],
+      "dependencies": ["shared-components", "shared-hooks"],
+      "use_when": "The specification contains a real parent-child relation that must remain visible and scoped.",
+      "source_repository": "shared-template"
+    },
+    "chuc-vu": {
+      "label": "Chức vụ",
+      "role": "entity constrained by the department axis",
+      "surfaces": ["entity-in-tree"],
+      "reference_paths": ["features/he-thong/chuc-vu/"],
+      "dependencies": ["phong-ban", "shared-components", "shared-hooks"],
+      "use_when": "The entity belongs to a parent organization axis; do not flatten it into independent CRUD.",
+      "source_repository": "shared-template"
+    },
+    "phan-quyen": {
+      "label": "Phân quyền",
+      "role": "module navigation and permission-matrix baseline",
+      "surfaces": ["permission-matrix"],
+      "reference_paths": ["features/he-thong/phan-quyen/index.tsx", "features/he-thong/phan-quyen/components/permission-matrix.tsx"],
+      "dependencies": ["shared-components"],
+      "use_when": "A change affects module registry, action rights, save state, or the permission matrix.",
+      "source_repository": "shared-template"
+    },
+    "thong-tin-cong-ty": {
+      "label": "Thông tin công ty",
+      "role": "single-record settings baseline",
+      "surfaces": ["single-record-settings"],
+      "reference_paths": ["features/he-thong/thong-tin-cong-ty/index.tsx", "features/he-thong/thong-tin-cong-ty/components/thong-tin-cong-ty-form.tsx"],
+      "dependencies": ["shared-components"],
+      "use_when": "The module edits one configuration record rather than a collection.",
+      "source_repository": "shared-template"
+    },
+    "shared-components": {
+      "label": "Shared UI primitives",
+      "role": "shell primitives only",
+      "surfaces": ["export-dialog", "route-breadcrumb", "toolbar", "table", "form-drawer", "detail-drawer", "hierarchy"],
+      "reference_paths": ["components/shared/GenericToolbar.tsx", "components/shared/GenericDrawer.tsx", "components/shared/GenericTable.tsx", "components/shared/TablePaginationFooter.tsx", "components/shared/FormDrawerFooter.tsx", "components/shared/DetailToolbar.tsx", "components/shared/Breadcrumbs.tsx", "components/shared/ExportDialog.tsx"],
+      "dependencies": [],
+      "use_when": "A selected module role requires a shared shell primitive.",
+      "source_repository": "shared-template"
+    },
+    "shared-hooks": {
+      "label": "Shared hooks",
+      "role": "permission, responsive, export, and data-refresh support",
+      "surfaces": [],
+      "reference_paths": ["hooks/"],
+      "dependencies": [],
+      "use_when": "The selected module needs a referenced supporting behavior.",
+      "source_repository": "shared-template"
+    },
+    "dashboard": {
+      "label": "Dashboard primitives",
+      "role": "permission-filtered module navigation and statistics composition",
+      "surfaces": ["home-dashboard", "subsystem-dashboard-navigation", "stats-tab"],
+      "reference_paths": ["components/dashboard/MainCard.tsx", "components/dashboard/ModuleDashboardLayout.tsx", "components/shared/stats/StatsKpiGrid.tsx", "components/shared/stats/StatsDataGrid.tsx"],
+      "dependencies": ["shared-components"],
+      "use_when": "The approved spec requires navigation cards or a statistics surface; do not invent a dashboard for ordinary CRUD.",
+      "source_repository": "shared-template"
+    }
+  },
+  "project_conditions": {
+    "tah-app": {
+      "activation": "Load only for the active Tah-app project.",
+      "requirements": ["Use the project-local transport specification for vt_* fields, actions, and route placement.", "Do not promote transport mappings to the shared module roles."]
+    },
+    "nostime": {
+      "activation": "Load only for the active Nostime project.",
+      "requirements": ["Use the project-local luxury-retail specification for serial inventory, NXT, journal, and dashboard decisions.", "Do not add generic reports or category inventory when the approved Nostime scope excludes them."]
+    }
+  },
+  "selection_rules": [
+    "Select one or more module roles by the requested surface and data relationship, not by visual resemblance.",
+    "A parity packet anchors every selected role, target path, acceptance criterion, and verified source receipt.",
+    "If source verification is BLOCKED, planning may continue but implementation and parity PASS are BLOCKED.",
+    "A project-specific exception is valid only when its active project-local decision or owner-approved amendment anchors it."
+  ]
+}

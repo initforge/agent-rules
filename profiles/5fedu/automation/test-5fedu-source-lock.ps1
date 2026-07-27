@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "path-compat.ps1")
 
 $Root = Split-Path -Parent $PSScriptRoot
-$SchemaPath = Join-Path $Root "profiles\5fedu\projects\5fedu\parity\schemas\source-lock.schema.yaml"
+$SchemaPath = Join-Path $Root "skills\5fedu-module-parity\references\schemas\source-lock.schema.yaml"
 $TestRoot = Join-Path $env:TEMP "5fedu-source-lock-test"
 $PassCount = 0
 $FailCount = 0
