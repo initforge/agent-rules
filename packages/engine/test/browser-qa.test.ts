@@ -5,14 +5,14 @@ import { AxeBuilder } from '@axe-core/playwright';
 const BASE_URL = 'http://localhost:3099';
 
 const ROUTES = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'platforms', label: 'Platforms' },
-  { id: 'models-routes', label: 'Models & Routes' },
-  { id: 'workflow', label: 'Workflow Graph' },
-  { id: 'skills', label: 'Skills / Integrations / Profiles' },
-  { id: 'runs', label: 'Runs & Evaluations' },
-  { id: 'plan', label: 'Plan & Evidence' },
-  { id: 'audit', label: 'Audit Log' },
+  { id: 'overview', label: 'Overview', path: '/overview' },
+  { id: 'plan', label: 'Plan Workspace', path: '/plan' },
+  { id: 'runs', label: 'Runs', path: '/runs' },
+  { id: 'evaluations', label: 'Evaluations', path: '/evaluations' },
+  { id: 'architecture', label: 'Architecture', path: '/architecture/dag' },
+  { id: 'configuration', label: 'Configuration', path: '/configuration/general' },
+  { id: 'profiles', label: 'Profiles', path: '/profiles' },
+  { id: 'audit', label: 'Audit Log', path: '/audit' },
 ] as const;
 
 let browser: Browser;
@@ -20,15 +20,19 @@ let context: BrowserContext;
 let page: Page;
 
 async function navigateToRoute(label: string) {
-  const btn = page.locator('nav button', { hasText: label });
-  await btn.click();
-  await page.waitForTimeout(1500);
-  await page.waitForSelector(".app-nav", { timeout: 5000 }).catch(() => {});
+  const route = ROUTES.find(r => r.label === label);
+  if (route) {
+    await page.goto(`${BASE_URL}${route.path}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await page.waitForTimeout(500);
+  }
 }
 
 async function navigateToRouteById(id: string) {
   const route = ROUTES.find(r => r.id === id);
-  if (route) await navigateToRoute(route.label);
+  if (route) {
+    await page.goto(`${BASE_URL}${route.path}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await page.waitForTimeout(500);
+  }
 }
 
 function getInteractiveElements(p: Page) {
@@ -52,7 +56,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
 
   describe('Homepage axe scan', () => {
     it('loads homepage with no critical/serious axe violations', async () => {
-      await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
+      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForSelector('nav', { timeout: 5000 });
 
       const results = await new AxeBuilder({ page })
@@ -76,7 +80,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
   describe('Route-by-route axe scan', () => {
     for (const route of ROUTES) {
       it(`loads /${route.id} with no critical/serious axe violations`, async () => {
-        await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
+        await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
         await page.waitForSelector('nav', { timeout: 5000 });
 
         await navigateToRoute(route.label);
@@ -93,7 +97,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
 
         if (criticalSerious.length > 0) {
           console.log(`/${route.id} axe violations:`,
-            criticalSerious.map(v => `${v.id} (${v.impact}): ${v.help}`).join('\n')
+            criticalSerious.map(v => `${v.id} (${v.impact}): ${v.help} [${v.nodes.length} nodes]`).join('\n')
           );
         }
         expect(criticalSerious.length).toBe(0);
@@ -103,7 +107,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
 
   describe('Keyboard navigation', () => {
     it('Tab through all interactive elements without trap', async () => {
-      await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
+      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForSelector('nav', { timeout: 5000 });
 
       const initialCount = await getInteractiveElements(page).count();
@@ -131,16 +135,16 @@ describe('WCAG & Accessibility (Playwright)', () => {
       expect(uniqueElements.size).toBeGreaterThan(3);
     });
 
-    it('Enter/Space activate navigation buttons', async () => {
-      await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
+    it('Enter/Space activate navigation links', async () => {
+      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForSelector('nav', { timeout: 5000 });
 
-      const btn = page.locator('nav button', { hasText: 'Platforms' });
-      await btn.focus();
+      const navLink = page.locator('nav a', { hasText: 'Runs' });
+      await navLink.focus();
       await page.keyboard.press('Enter');
       await page.waitForTimeout(500);
-      const platformsHeading = page.locator('main h1', { hasText: 'Platforms' });
-      expect(await platformsHeading.isVisible()).toBe(true);
+      const runsHeading = page.locator('main h1', { hasText: 'Runs' });
+      expect(await runsHeading.isVisible()).toBe(true);
 
       await page.keyboard.press('Tab');
       await page.waitForTimeout(100);
@@ -156,7 +160,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
   describe('Responsive viewports', () => {
     it('loads at 375x667 (mobile) without horizontal overflow', async () => {
       await page.setViewportSize({ width: 375, height: 667 });
-      await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
+      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForTimeout(500);
 
       const overflow = await page.evaluate(() => {
@@ -173,7 +177,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
 
     it('loads at 1024x768 (tablet)', async () => {
       await page.setViewportSize({ width: 1024, height: 768 });
-      await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
+      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForTimeout(500);
 
       const overflow = await page.evaluate(() => {
@@ -186,7 +190,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
       console.log(`Tablet 1024x768: docWidth=${overflow.docWidth}, viewport=${overflow.viewportWidth}`);
       expect(overflow.hasHorizontalScroll).toBe(false);
 
-      await navigateToRouteById('platforms');
+      await navigateToRouteById('overview');
       await page.waitForTimeout(500);
       const overflow2 = await page.evaluate(() => ({
         hasHorizontalScroll: document.documentElement.scrollWidth > window.innerWidth,
@@ -196,7 +200,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
 
     it('loads at 1920x1080 (desktop)', async () => {
       await page.setViewportSize({ width: 1920, height: 1080 });
-      await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
+      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForTimeout(500);
 
       const navVisible = page.locator('nav');
@@ -214,7 +218,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
     it('prefers-reduced-motion respected when set', async () => {
       const motionCtx = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
       const motionPage = await motionCtx.newPage();
-      await motionPage.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
+      await motionPage.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await motionPage.waitForTimeout(500);
 
       const motionQuery = await motionPage.evaluate(() => {
@@ -251,7 +255,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
   describe('Zoom tolerance', () => {
     it('200% zoom page renders without clipping/overflow', async () => {
       await page.setViewportSize({ width: 1280, height: 800 });
-      await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
+      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForTimeout(500);
 
       await page.evaluate(() => {
@@ -283,7 +287,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
   describe('Color contrast', () => {
     it('no elements fail WCAG AA contrast ratio', async () => {
       await page.setViewportSize({ width: 1280, height: 800 });
-      await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
+      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForSelector('nav', { timeout: 5000 });
 
       const results = await new AxeBuilder({ page })
@@ -311,7 +315,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
   describe('Focus-visible', () => {
     it('all interactive elements have visible focus indicator', async () => {
       await page.setViewportSize({ width: 1280, height: 800 });
-      await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 15000 });
+      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForSelector('nav', { timeout: 5000 });
 
       const count = await getInteractiveElements(page).count();

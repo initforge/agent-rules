@@ -183,7 +183,7 @@ export default function Overview({ navigate }: OverviewProps) {
           {config?.manifest?.load_order ? (
             config.manifest.load_order.map((r, i) => (
               <div key={i} className="overview-platform-row">
-                <span className="typography-code" style={{ fontSize: 11, color: 'var(--color-text-secondary)', width: 24 }}>#{i}</span>
+                <span className="typography-code" style={{ fontSize: 11, width: 24 }}>#{i}</span>
                 <span className="typography-body">{r}</span>
               </div>
             ))

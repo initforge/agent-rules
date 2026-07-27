@@ -99,11 +99,11 @@
   --color-text-secondary: var(--gray-400);
   --color-text-tertiary: var(--gray-300);
   --color-text-inverse: var(--color-white);
-  --color-text-link: var(--blue-500);
-  --color-text-link-hover: var(--blue-600);
+  --color-text-link: var(--blue-600);
+  --color-text-link-hover: var(--blue-700);
 
-  --color-accent: var(--blue-500);
-  --color-accent-hover: var(--blue-600);
+  --color-accent: var(--blue-600);
+  --color-accent-hover: var(--blue-700);
   --color-accent-soft: var(--blue-50);
 
   --color-success: var(--green-500);
@@ -112,7 +112,7 @@
   --color-warning-soft: var(--orange-50);
   --color-danger: var(--red-500);
   --color-danger-soft: var(--red-50);
-  --color-info: var(--blue-500);
+  --color-info: var(--blue-600);
   --color-info-soft: var(--blue-50);
 
   --color-code-bg: var(--gray-50);
@@ -293,11 +293,11 @@
   --color-text-secondary: var(--gray-400);
   --color-text-tertiary: var(--gray-300);
   --color-text-inverse: var(--color-white);
-  --color-text-link: var(--blue-500);
-  --color-text-link-hover: var(--blue-600);
+  --color-text-link: var(--blue-600);
+  --color-text-link-hover: var(--blue-700);
 
-  --color-accent: var(--blue-500);
-  --color-accent-hover: var(--blue-600);
+  --color-accent: var(--blue-600);
+  --color-accent-hover: var(--blue-700);
   --color-accent-soft: var(--blue-50);
 
   --color-success: var(--green-500);
@@ -306,7 +306,7 @@
   --color-warning-soft: var(--orange-50);
   --color-danger: var(--red-500);
   --color-danger-soft: var(--red-50);
-  --color-info: var(--blue-500);
+  --color-info: var(--blue-600);
   --color-info-soft: var(--blue-50);
 
   --color-code-bg: var(--gray-50);

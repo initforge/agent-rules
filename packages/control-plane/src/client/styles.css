@@ -80,7 +80,7 @@
 
 .layout-nav-item--active {
   background: var(--color-accent-soft);
-  color: var(--color-accent);
+  color: var(--color-text);
   font-weight: var(--font-weight-medium);
 }
 
@@ -116,7 +116,7 @@
 
 .layout-sidebar-version {
   font-size: var(--font-size-caption);
-  color: var(--color-text-tertiary);
+  color: var(--color-text);
 }
 
 .layout-content {
@@ -388,11 +388,11 @@
   white-space: nowrap;
 }
 
-.badge--success { background: var(--color-success-soft); color: var(--color-success); }
-.badge--accent { background: var(--color-accent-soft); color: var(--color-accent); }
+.badge--success { background: var(--color-success-soft); color: var(--green-700); }
+.badge--accent { background: var(--color-accent-soft); color: var(--color-text); }
 .badge--default { background: var(--color-bg-tertiary); color: var(--color-text); }
-.badge--warning { background: var(--color-warning-soft); color: var(--color-warning); }
-.badge--danger { background: var(--color-danger-soft); color: var(--color-danger); }
+.badge--warning { background: var(--color-warning-soft); color: var(--orange-700); }
+.badge--danger { background: var(--color-danger-soft); color: var(--red-600); }
 .badge--immutable { background: var(--color-bg-tertiary); color: var(--color-text); border: 1px solid var(--color-border); }
 
 .badge-icon {

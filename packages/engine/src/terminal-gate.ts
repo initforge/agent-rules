@@ -183,3 +183,42 @@ export function assertCertifiable(gateResult: TerminalGateResult): void {
     throw new Error(`Terminal gate FAILED on gates: ${gateResult.failedGates.join(', ')}`);
   }
 }
+
+export function assertNoResidualBeforeFinal(ledgerPath: string, _headCommit: string): void {
+  const raw = readLedger(ledgerPath);
+  const isRemediation = raw.status === 'needs-remediation';
+  const openFindings = raw.orphanFindings.filter((f) => f.status === 'OPEN');
+
+  if (isRemediation || openFindings.length > 0) {
+    const message = isRemediation
+      ? `Ledger is in needs-remediation state`
+      : `${openFindings.length} open finding(s): ${openFindings.map((f) => f.findingId).join(', ')}`;
+
+    console.error(`[terminal-gate] Residual before final: ${message}`);
+
+    const resolved = path.resolve(ledgerPath);
+    const updated = { ...raw, status: 'needs-remediation' as const };
+    fs.writeFileSync(resolved, JSON.stringify(updated, null, 2), 'utf-8');
+
+    throw new Error(`Cannot proceed: ${message}`);
+  }
+}
+
+export function terminalGateCheck(ledgerPath: string, _headCommit: string): { passed: boolean; message: string } {
+  try {
+    const raw = readLedger(ledgerPath);
+    const isRemediation = raw.status === 'needs-remediation';
+    const openFindings = raw.orphanFindings.filter((f) => f.status === 'OPEN');
+
+    const passed = !isRemediation && openFindings.length === 0;
+    const message = passed
+      ? 'No residual issues found'
+      : isRemediation
+        ? 'Ledger is in needs-remediation state'
+        : `${openFindings.length} open finding(s)`;
+
+    return { passed, message };
+  } catch (err) {
+    return { passed: false, message: `Error reading ledger: ${(err as Error).message}` };
+  }
+}

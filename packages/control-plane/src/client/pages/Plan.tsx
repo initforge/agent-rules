@@ -226,8 +226,8 @@ export default function Plan({ navigate }: PlanProps) {
             </div>
           </div>
 
-          <div className="reconciliation-matrix">
-            <div className="reconciliation-table-wrap">
+          <div className="reconciliation-matrix" tabIndex={0}>
+            <div className="reconciliation-table-wrap" tabIndex={0}>
               <table className="reconciliation-table">
                 <thead>
                   <tr>
@@ -279,7 +279,7 @@ export default function Plan({ navigate }: PlanProps) {
 
           <div className="plan-section">
             <h3 className="typography-title3">Proof Requirements Map</h3>
-            <div className="reconciliation-table-wrap" style={{ marginTop: 8 }}>
+            <div className="reconciliation-table-wrap" tabIndex={0} style={{ marginTop: 8 }}>
               <table className="reconciliation-table">
                 <thead>
                   <tr>

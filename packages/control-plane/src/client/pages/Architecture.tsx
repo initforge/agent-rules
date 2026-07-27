@@ -180,7 +180,7 @@ export default function Architecture({ segments, navigate }: ArchitectureProps) 
               <h4 className="typography-title3" style={{ marginBottom: 8 }}>Context Load Order</h4>
               {manifest.load_order.map((r, i) => (
                 <div key={i} className="arch-flow-step" style={{ padding: '6px 0' }}>
-                  <span className="typography-mono" style={{ color: 'var(--color-text-secondary)', width: 24 }}>#{i}</span>
+                  <span className="typography-mono" style={{ width: 24 }}>#{i}</span>
                   <span className="typography-body">{r}</span>
                   <span className="badge badge--success" style={{ marginLeft: 8 }}>active</span>
                 </div>

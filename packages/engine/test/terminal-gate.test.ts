@@ -5,6 +5,8 @@ import os from 'node:os';
 import {
   verifyTerminalGate,
   assertCertifiable,
+  assertNoResidualBeforeFinal,
+  terminalGateCheck,
   TERMINAL_GATES,
   type TerminalGateResult,
 } from '../src/terminal-gate.js';
@@ -247,5 +249,105 @@ describe('assertCertifiable', () => {
       timestamp: new Date().toISOString(),
     };
     expect(() => assertCertifiable(result)).not.toThrow();
+  });
+});
+
+describe('assertNoResidualBeforeFinal', () => {
+  it('run with residual cannot issue CERTIFIED_READY_FOR_REVIEW', () => {
+    const dir = tmpDir();
+    const ledger = stubLedger({
+      orphanFindings: [
+        { findingId: 'F-001', status: 'OPEN', requirementId: 'REQ-001', statement: 'test finding', severity: 'medium' },
+      ],
+    });
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+
+    const result = verifyTerminalGate(ledgerPath, hash, { hostAttestations: 5, ciQualityPassed: true, ciCertifyPassed: true });
+    expect(result.passed).toBe(false);
+    expect(result.failedGates).toContain('NO_OPEN_FINDINGS');
+  });
+
+  it('run with residual cannot ask owner review question', () => {
+    const dir = tmpDir();
+    const ledger = stubLedger({
+      orphanFindings: [
+        { findingId: 'F-002', status: 'OPEN', requirementId: 'REQ-001', statement: 'test finding', severity: 'high' },
+      ],
+    });
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+
+    expect(() => assertNoResidualBeforeFinal(ledgerPath, hash)).toThrow('Cannot proceed');
+  });
+
+  it('terminal gate transitions to needs-remediation on bypass attempt', () => {
+    const dir = tmpDir();
+    const ledger = stubLedger({
+      orphanFindings: [
+        { findingId: 'F-003', status: 'OPEN', requirementId: 'REQ-001', statement: 'test finding', severity: 'low' },
+      ],
+    });
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+
+    expect(() => assertNoResidualBeforeFinal(ledgerPath, hash)).toThrow('Cannot proceed');
+
+    const updatedLedger = JSON.parse(fs.readFileSync(ledgerPath, 'utf-8'));
+    expect(updatedLedger.status).toBe('needs-remediation');
+  });
+
+  it('after repair, terminal gate passes', () => {
+    const dir = tmpDir();
+    const ledger = stubLedger({
+      orphanFindings: [
+        { findingId: 'F-004', status: 'CLOSED', requirementId: 'REQ-001', statement: 'fixed finding', severity: 'low' },
+      ],
+    });
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+
+    expect(() => assertNoResidualBeforeFinal(ledgerPath, hash)).not.toThrow();
+
+    const result = verifyTerminalGate(ledgerPath, hash, { hostAttestations: 5, ciQualityPassed: true, ciCertifyPassed: true });
+    expect(result.passed).toBe(true);
+  });
+});
+
+describe('terminalGateCheck', () => {
+  it('returns passed when no residual', () => {
+    const dir = tmpDir();
+    const ledger = stubLedger();
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+
+    const result = terminalGateCheck(ledgerPath, hash);
+    expect(result.passed).toBe(true);
+    expect(result.message).toBe('No residual issues found');
+  });
+
+  it('returns failed when open findings exist', () => {
+    const dir = tmpDir();
+    const ledger = stubLedger({
+      orphanFindings: [
+        { findingId: 'F-005', status: 'OPEN', requirementId: 'REQ-001', statement: 'test', severity: 'low' },
+      ],
+    });
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+
+    const result = terminalGateCheck(ledgerPath, hash);
+    expect(result.passed).toBe(false);
+    expect(result.message).toContain('open finding');
+  });
+
+  it('returns failed when ledger is in needs-remediation', () => {
+    const dir = tmpDir();
+    const ledger = stubLedger({ status: 'needs-remediation' });
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+
+    const result = terminalGateCheck(ledgerPath, hash);
+    expect(result.passed).toBe(false);
+    expect(result.message).toBe('Ledger is in needs-remediation state');
+  });
+
+  it('handles missing ledger gracefully', () => {
+    const result = terminalGateCheck('/nonexistent/ledger.json', hash);
+    expect(result.passed).toBe(false);
+    expect(result.message).toContain('Error reading ledger');
   });
 });

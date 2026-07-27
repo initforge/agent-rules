@@ -127,7 +127,7 @@ th {
 .typography-caption {
   font-size: var(--font-size-footnote);
   line-height: var(--line-height-body);
-  color: var(--color-text-secondary);
+  color: var(--color-text);
   letter-spacing: var(--letter-spacing-caption);
 }
 
