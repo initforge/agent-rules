@@ -26,10 +26,10 @@ app.use('/api/health', healthRouter);
 app.use('/api/runs', runsRouter);
 app.use('/api/audit', auditRouter);
 
-app.use(express.static(path.join(__dirname, '..', '..', 'dist', 'client')));
+app.use(express.static(path.join(__dirname, '..', '..', 'client')));
 
 app.get('*', (_req, res) => {
-  res.sendFile(path.join(__dirname, '..', '..', 'dist', 'client', 'index.html'));
+  res.sendFile(path.join(__dirname, '..', '..', 'client', 'index.html'));
 });
 
 export { app };
