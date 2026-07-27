@@ -84,7 +84,7 @@ export class TelemetryCollector {
       this.flushed = true;
 
       await new Promise<void>((resolve, reject) => {
-        stream.end((err) => {
+        stream.end((err: Error | null) => {
           if (err) reject(err);
           else resolve();
         });
