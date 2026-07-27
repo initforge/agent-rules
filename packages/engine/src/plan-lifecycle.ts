@@ -110,6 +110,62 @@ export function finalizePlan(ledgerPath: string): { passed: boolean; reason?: st
   return { passed: true };
 }
 
+export function createRepairSlice(
+  ledgerPath: string,
+  findingId: string,
+  reopenedCriterionIds: string[],
+): RepairSlice {
+  requireValue(typeof ledgerPath === 'string' && ledgerPath.length > 0, 'ledgerPath must be non-empty');
+  requireValue(typeof findingId === 'string' && findingId.length > 0, 'findingId must be non-empty');
+  requireValue(Array.isArray(reopenedCriterionIds) && reopenedCriterionIds.length > 0, 'reopenedCriterionIds must be a non-empty array');
+
+  const resolved = path.resolve(ledgerPath);
+  requireValue(fs.existsSync(resolved), `Ledger does not exist: ${ledgerPath}`);
+
+  const raw = JSON.parse(fs.readFileSync(resolved, 'utf-8')) as WorkLedger;
+
+  const repairSliceId = `RS-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const slice: RepairSlice = {
+    repairSliceId,
+    status: 'PENDING',
+    findingIds: [findingId],
+    reopenedCriterionIds,
+  };
+
+  raw.repairSlices = [...raw.repairSlices, slice];
+  fs.writeFileSync(resolved, JSON.stringify(raw, null, 2), 'utf-8');
+
+  return slice;
+}
+
+export function transitionToNeedsRemediation(
+  ledgerPath: string,
+  findingId: string,
+  reopenedCriterionIds: string[],
+): string {
+  requireValue(typeof ledgerPath === 'string' && ledgerPath.length > 0, 'ledgerPath must be non-empty');
+  const resolved = path.resolve(ledgerPath);
+  requireValue(fs.existsSync(resolved), `Ledger does not exist: ${ledgerPath}`);
+
+  const raw = JSON.parse(fs.readFileSync(resolved, 'utf-8')) as WorkLedger;
+  const terminal: readonly WorkLedgerStatus[] = ['COMPLETED', 'CANCELLED', 'FAILED', 'needs-remediation'];
+  requireValue(!terminal.includes(raw.status), `Cannot transition from ${raw.status} to needs-remediation`);
+
+  raw.status = 'needs-remediation';
+
+  const slice = createRepairSlice(ledgerPath, findingId, reopenedCriterionIds);
+
+  for (let i = 0; i < raw.batches.length; i++) {
+    const batch = raw.batches[i];
+    if (batch.status === 'PENDING' || batch.status === 'RUNNING' || batch.status === 'PARTIAL') {
+      raw.batches[i] = { ...batch, status: 'BLOCKED' };
+    }
+  }
+
+  fs.writeFileSync(resolved, JSON.stringify(raw, null, 2), 'utf-8');
+  return slice.repairSliceId;
+}
+
 export function reconcilePlan(ledgerPath: string, originalPath: string, diffFingerprint: string): Reconciliation {
   requireValue(typeof ledgerPath === 'string' && ledgerPath.length > 0, 'ledgerPath must be non-empty');
   requireValue(typeof originalPath === 'string' && originalPath.length > 0, 'originalPath must be non-empty');

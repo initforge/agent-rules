@@ -7,10 +7,22 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871
+      - uses: actions/setup-node@49933ea528edca7b2ff3cafa812a68a5159f62e4
       - run: npm ci
       - run: npm run build
       - run: npm run check
       - run: npm run test
       - run: npm run ci:quality
+
+  quality-aggregate:
+    if: always()
+    needs: [quality]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo '${{ toJSON(needs.quality.result) }}'
+          if [ "${{ needs.quality.result }}" != "success" ]; then
+            echo "Quality check failed on one or more matrix jobs"
+            exit 1
+          fi
