@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeAll, afterAll } from 'vitest';
+import { describe, expect, it, beforeAll, afterAll, beforeEach } from 'vitest';
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
 import { AxeBuilder } from '@axe-core/playwright';
 
@@ -395,7 +395,77 @@ describe('WCAG & Accessibility (Playwright)', () => {
     });
   });
 
-  describe('Focus-visible', () => {
+  describe('Route rendering assertions', () => {
+  const ROUTE_HEADINGS: Record<string, string> = {
+    overview: 'Repository Overview',
+    plan: 'Plan Workspace',
+    runs: 'Runs',
+    evaluations: 'Evaluations',
+    architecture: 'Architecture',
+    configuration: 'Configuration',
+    profiles: 'Profiles',
+    audit: 'Audit Log',
+  };
+
+  for (const route of ROUTES) {
+    it(`renders ${route.id} with expected heading, no console/network errors, and non-stub content`, async () => {
+      const consoleErrors: string[] = [];
+      const networkErrors: string[] = [];
+
+      const onConsole = (msg: { type: () => string; text: () => string }) => {
+        if (msg.type() === 'error') consoleErrors.push(msg.text());
+      };
+      const onRequestFailed = (req: { url: () => string; failure: () => { errorText: string } | null }) => {
+        networkErrors.push(`${req.url()} failed: ${req.failure()?.errorText}`);
+      };
+
+      page.on('console', onConsole);
+      page.on('requestfailed', onRequestFailed);
+
+      await page.goto(`${BASE_URL}${route.path}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await page.waitForTimeout(1500);
+
+      page.removeListener('console', onConsole);
+      page.removeListener('requestfailed', onRequestFailed);
+
+      const expectedHeading = ROUTE_HEADINGS[route.id];
+      if (expectedHeading) {
+        const heading = page.locator('main h1', { hasText: expectedHeading });
+        expect(await heading.isVisible()).toBe(true);
+      }
+
+      expect(consoleErrors.length).toBe(0);
+      expect(networkErrors.length).toBe(0);
+
+      const mainContent = page.locator('main');
+      const contentText = await mainContent.textContent();
+      expect(contentText!.length).toBeGreaterThan(50);
+    });
+  }
+});
+
+describe('404 handling', () => {
+  it('non-existent route shows NotFound content', async () => {
+    const consoleErrors: string[] = [];
+    page.on('console', msg => { if (msg.type() === 'error') consoleErrors.push(msg.text()); });
+
+    await page.goto(`${BASE_URL}/nonexistent-route-xyz`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await page.waitForTimeout(500);
+
+    const four04 = page.locator('.typography-headline', { hasText: '404' });
+    expect(await four04.isVisible()).toBe(true);
+
+    const notFoundText = page.locator('text=Page not found');
+    expect(await notFoundText.isVisible()).toBe(true);
+
+    const goToOverview = page.locator('text=Go to Overview');
+    expect(await goToOverview.isVisible()).toBe(true);
+
+    expect(consoleErrors.length).toBe(0);
+  });
+});
+
+describe('Focus-visible', () => {
     it('all interactive elements have visible focus indicator (outline or ring)', async () => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });

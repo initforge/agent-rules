@@ -9,6 +9,7 @@ import Configuration from './pages/Configuration';
 import Profiles from './pages/Profiles';
 import Audit from './pages/Audit';
 import NotFound from './pages/NotFound';
+import ErrorBoundary from './components/ErrorBoundary';
 
 interface HealthData {
   ok?: boolean;
@@ -54,7 +55,7 @@ export default function App() {
       case 'overview':
         return <Overview navigate={navigate} />;
       case 'plan':
-        return <Plan navigate={navigate} />;
+        return <ErrorBoundary><Plan navigate={navigate} /></ErrorBoundary>;
       case 'runs':
         return <Runs segments={segments} navigate={navigate} />;
       case 'evaluations':

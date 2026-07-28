@@ -200,7 +200,7 @@ export default function Plan({ navigate }: PlanProps) {
             <div className="typography-code" style={{ fontSize: 11 }}>Original: {planData.originalSha256 ? planData.originalSha256.slice(0, 12) : '—'}</div>
             <div className="typography-code" style={{ fontSize: 11 }}>Effective: {planData.effectiveSha256 ? planData.effectiveSha256.slice(0, 12) : '—'}</div>
             {planData.shadowRevision && (
-              <div className="typography-code" style={{ fontSize: 11 }}>Shadow: <span className="typography-mono">{planData.shadowRevision.slice(0, 12)}</span></div>
+              <div className="typography-code" style={{ fontSize: 11 }}>Shadow: <span className="typography-mono">{String(planData.shadowRevision).slice(0, 12)}</span></div>
             )}
           </div>
         )}
