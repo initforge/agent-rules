@@ -1,8 +1,56 @@
 import { describe, expect, it, beforeAll, afterAll, beforeEach } from 'vitest';
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
 import { AxeBuilder } from '@axe-core/playwright';
+import { spawn, execSync, type ChildProcess } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const BASE_URL = 'http://localhost:3099';
+
+const TEST_DIR = path.dirname(fileURLToPath(import.meta.url));
+const CP_DIR = path.resolve(TEST_DIR, '..', '..', 'control-plane');
+const SERVER_ENTRY = path.join(CP_DIR, 'dist', 'server', 'server', 'index.js');
+const CLIENT_INDEX = path.join(CP_DIR, 'dist', 'client', 'index.html');
+
+let serverProc: ChildProcess | undefined;
+let serverLog = '';
+
+async function isServerUp(): Promise<boolean> {
+  try {
+    const res = await fetch(BASE_URL, { signal: AbortSignal.timeout(1000) });
+    return res.status < 500;
+  } catch {
+    return false;
+  }
+}
+
+async function waitForServer(timeoutMs = 30000): Promise<void> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    if (await isServerUp()) return;
+    if (serverProc && serverProc.exitCode !== null) {
+      throw new Error(`control-plane server exited early (code ${serverProc.exitCode}):\n${serverLog}`);
+    }
+    await new Promise(r => setTimeout(r, 300));
+  }
+  throw new Error(`control-plane not ready at ${BASE_URL} within ${timeoutMs}ms:\n${serverLog}`);
+}
+
+async function ensureServer(): Promise<void> {
+  if (await isServerUp()) return;
+  if (!existsSync(SERVER_ENTRY) || !existsSync(CLIENT_INDEX)) {
+    execSync('npm run build', { cwd: CP_DIR, stdio: 'inherit' });
+  }
+  serverProc = spawn('node', [SERVER_ENTRY], {
+    cwd: CP_DIR,
+    env: { ...process.env, PORT: '3099', HOST: '127.0.0.1', NODE_ENV: 'test' },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  serverProc.stdout?.on('data', d => { serverLog += d.toString(); });
+  serverProc.stderr?.on('data', d => { serverLog += d.toString(); });
+  await waitForServer();
+}
 
 const ROUTES = [
   { id: 'overview', label: 'Overview', path: '/overview' },
@@ -42,14 +90,18 @@ function getInteractiveElements(p: Page) {
 }
 
 beforeAll(async () => {
+  await ensureServer();
   browser = await chromium.launch({ headless: true });
   context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   page = await context.newPage();
-});
+}, 60000);
 
 afterAll(async () => {
-  await context.close();
-  await browser.close();
+  await context?.close();
+  await browser?.close();
+  if (serverProc && serverProc.exitCode === null) {
+    serverProc.kill('SIGTERM');
+  }
 });
 
 describe('WCAG & Accessibility (Playwright)', () => {
