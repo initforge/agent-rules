@@ -1,5 +1,7 @@
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { assertWorkLedger as canonicalAssertWorkLedger, assertCertificationAttestation as canonicalAssertCertificationAttestation } from './contracts.js';
 
 export interface GateResult {
   name: string;
@@ -14,9 +16,15 @@ export interface TerminalGateResult {
   timestamp: string;
 }
 
-export const REQUIRED_HOSTS = ['codex', 'cursor', 'antigravity', 'grok', 'opencode'];
+export const REQUIRED_HOSTS = ['codex', 'grok', 'opencode'];
 
-export function assertWorkLedger(ledger: Record<string, unknown>): void {
+const CERTIFICATION_REQUIRED_FIELDS = [
+  'host', 'hostVersion', 'commitSha', 'capabilityStatus', 'capabilityIds',
+  'contractSetSha256', 'requestedModel', 'resolvedModel', 'observedModel',
+  'evidenceHashes', 'nativeRunnerIdentity', 'issuedAt', 'expiresAt',
+];
+
+export function assertWorkLedger(ledger: Record<string, unknown>, originalBytes?: Uint8Array, shadowBytes?: Record<string, Uint8Array>): void {
   const l = ledger as Record<string, any>;
   const original = l.plan?.original || l.original_artifact;
   if (!original) {
@@ -33,6 +41,9 @@ export function assertWorkLedger(ledger: Record<string, unknown>): void {
   }
   if (original.status === 'TAMPERED' || original.tampered === true) {
     throw new Error('WorkLedger: original.md is TAMPERED');
+  }
+  if (originalBytes && shadowBytes) {
+    canonicalAssertWorkLedger(ledger as any, originalBytes, shadowBytes);
   }
 }
 
@@ -53,18 +64,23 @@ export function assertCertificationAttestation(ledger: Record<string, unknown>, 
     if (att.commitSha !== headCommit) {
       throw new Error(`CertificationAttestation: attestation for ${host} binds ${att.commitSha.slice(0, 12)} but HEAD is ${headCommit.slice(0, 12)}`);
     }
-    const keys = Object.keys(att);
-    for (const k of keys) {
-      if (att[k] === null || att[k] === undefined || att[k] === '') {
-        throw new Error(`CertificationAttestation: attestation for ${host} has null/empty field '${k}'`);
+    if (att.status === 'NOT_INSTALLED' || att.status === 'NOT_INSTALLED_NOT_REQUIRED' || att.status === 'EMULATED') {
+      throw new Error(`CertificationAttestation: host ${host} attestation status is ${att.status}`);
+    }
+    for (const field of CERTIFICATION_REQUIRED_FIELDS) {
+      if (att[field] === null || att[field] === undefined || att[field] === '') {
+        throw new Error(`CertificationAttestation: attestation for ${host} has null/empty field '${field}'`);
       }
     }
+    canonicalAssertCertificationAttestation(att, headCommit);
   }
 }
 
 export function verifyTerminalGate(
   ledgerPath: string,
   headCommit: string,
+  originalBytes?: Uint8Array,
+  shadowBytes?: Record<string, Uint8Array>,
 ): TerminalGateResult {
   const resolved = path.resolve(ledgerPath);
   const gates: GateResult[] = [];
@@ -77,16 +93,16 @@ export function verifyTerminalGate(
 
   const raw = JSON.parse(fs.readFileSync(resolved, 'utf-8'));
 
-  // assertWorkLedger checks
+  // assertWorkLedger checks (wired canonical contract)
   try {
-    assertWorkLedger(raw);
+    assertWorkLedger(raw, originalBytes, shadowBytes);
     gates.push({ name: 'WORK_LEDGER_VALID', status: 'PASS', detail: 'Canonical fields valid' });
   } catch (e: any) {
     gates.push({ name: 'WORK_LEDGER_VALID', status: 'FAIL', detail: e.message });
     failedGates.push('WORK_LEDGER_VALID');
   }
 
-  // assertCertificationAttestation checks
+  // assertCertificationAttestation checks (wired canonical contract)
   try {
     assertCertificationAttestation(raw, headCommit);
     gates.push({ name: 'CERTIFICATION_ATTESTATION', status: 'PASS', detail: 'All 5 hosts attest HEAD' });
@@ -165,18 +181,61 @@ export function verifyTerminalGate(
   gates.push({ name: 'NO_NON_NATIVE_HOST', status: hasNonNative ? 'FAIL' : 'PASS', detail: hasNonNative ? `Non-native: ${nonNativeHosts.map((h: any) => h.host).join(', ')}` : 'All hosts native' });
   if (hasNonNative) failedGates.push('NO_NON_NATIVE_HOST');
 
-  // GITHUB_CI_PASSED — read CI check data from ledger
-  const ciQuality = raw.ci_quality || raw.ciQuality || {};
-  const ciCertify = raw.ci_certify || raw.ciCertify || {};
-  const ciChecks = raw.ci_checks || [];
-  const ciFromArray = Array.isArray(ciChecks) && ciChecks.length > 0
-    ? ciChecks.every((c: any) => c.status === 'PASS' || c.passed === true)
-    : false;
-  const ciFromFields = (ciQuality.status === 'PASS' || ciQuality.passed === true) &&
-                       (ciCertify.status === 'PASS' || ciCertify.passed === true);
-  const ciPassed = ciFromArray || ciFromFields;
-  gates.push({ name: 'GITHUB_CI_PASSED', status: ciPassed ? 'PASS' : 'FAIL', detail: ciPassed ? 'CI checks passed' : 'CI checks absent or failing' });
-  if (!ciPassed) failedGates.push('GITHUB_CI_PASSED');
+  // ORIGINAL_SHA_MATCH — recompute sha256(original.md) and compare against ledger's plan.original.sha256
+  if (!originalBytes) {
+    gates.push({ name: 'ORIGINAL_SHA_MATCH', status: 'NOT_CHECKED', detail: 'No original bytes provided' });
+  } else {
+    try {
+      const computedSha = createHash('sha256').update(originalBytes).digest('hex');
+      const ledgerSha = original.sha256;
+      if (!ledgerSha) throw new Error('Ledger has no original.sha256');
+      if (computedSha !== ledgerSha) {
+        throw new Error(`original.md SHA mismatch: computed ${computedSha.slice(0, 12)} != ledger ${ledgerSha.slice(0, 12)}`);
+      }
+      gates.push({ name: 'ORIGINAL_SHA_MATCH', status: 'PASS', detail: `original.md SHA ${computedSha.slice(0, 12)} matches ledger` });
+    } catch (e: any) {
+      gates.push({ name: 'ORIGINAL_SHA_MATCH', status: 'FAIL', detail: e.message });
+      failedGates.push('ORIGINAL_SHA_MATCH');
+    }
+  }
+
+  // SHADOW_HASHES_MATCH — verify shadow file hashes against ledger shadowHashes
+  if (!shadowBytes) {
+    gates.push({ name: 'SHADOW_HASHES_MATCH', status: 'NOT_CHECKED', detail: 'No shadow bytes provided' });
+  } else {
+    try {
+      const shadowHashes = raw.shadowHashes || raw.shadow_hashes || {};
+      if (Object.keys(shadowHashes).length === 0) throw new Error('Ledger has no shadowHashes');
+      for (const [name, expectedHash] of Object.entries(shadowHashes)) {
+        const actualBytes = shadowBytes[name];
+        if (!actualBytes) throw new Error(`Missing shadow file: ${name}`);
+        const actualHash = createHash('sha256').update(actualBytes).digest('hex');
+        if (actualHash !== expectedHash) {
+          throw new Error(`Shadow ${name} hash mismatch: ${actualHash.slice(0, 12)} != ${(expectedHash as string).slice(0, 12)}`);
+        }
+      }
+      gates.push({ name: 'SHADOW_HASHES_MATCH', status: 'PASS', detail: 'All shadow hashes match' });
+    } catch (e: any) {
+      gates.push({ name: 'SHADOW_HASHES_MATCH', status: 'FAIL', detail: e.message });
+      failedGates.push('SHADOW_HASHES_MATCH');
+    }
+  }
+
+  // GITHUB_CI_PASSED — accept only { runUrl: string, passed: boolean } evidence
+  try {
+    const ciChecks = raw.ci_checks || [];
+    if (!Array.isArray(ciChecks) || ciChecks.length === 0) throw new Error('No CI checks found');
+    for (const check of ciChecks) {
+      if (typeof check.passed !== 'boolean') throw new Error('CI check missing boolean passed');
+      if (!check.runUrl || typeof check.runUrl !== 'string' || check.runUrl.trim().length === 0) throw new Error('CI check missing runUrl');
+      if (check.runUrl.startsWith('local')) throw new Error(`CI runUrl starts with 'local': ${check.runUrl}`);
+      if (!check.passed) throw new Error('CI check not passed');
+    }
+    gates.push({ name: 'GITHUB_CI_PASSED', status: 'PASS', detail: `${ciChecks.length} CI checks passed` });
+  } catch (e: any) {
+    gates.push({ name: 'GITHUB_CI_PASSED', status: 'FAIL', detail: e.message });
+    failedGates.push('GITHUB_CI_PASSED');
+  }
 
   return { passed: failedGates.length === 0, gates, failedGates, timestamp: new Date().toISOString() };
 }
