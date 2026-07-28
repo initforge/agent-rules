@@ -70,11 +70,42 @@ router.get('/', (_req, res) => {
     const memUsage = process.memoryUsage();
     const cpus = os.cpus();
 
+    let ledgerStatus = 'NOT_FOUND';
+    const ledgerDir = path.join(ROOT, '.agent', 'ledger');
+    if (fs.existsSync(ledgerDir)) {
+      const files = fs.readdirSync(ledgerDir).filter(f => f.endsWith('.json'));
+      if (files.length > 0) {
+        const latestLedger = path.join(ledgerDir, files.sort().reverse()[0]);
+        try {
+          const ledger = JSON.parse(fs.readFileSync(latestLedger, 'utf-8'));
+          ledgerStatus = ledger.execution_state || ledger.status || 'IN_PROGRESS';
+        } catch { ledgerStatus = 'PARSE_ERROR'; }
+      }
+    }
+
+    let attestationStaleness: Record<string, unknown> = {};
+    const ledgerFiles = fs.existsSync(ledgerDir) ? fs.readdirSync(ledgerDir).filter(f => f.endsWith('.json')) : [];
+    if (ledgerFiles.length > 0) {
+      try {
+        const ledger = JSON.parse(fs.readFileSync(path.join(ledgerDir, ledgerFiles[0]), 'utf-8'));
+        const attestations = ledger.attestations || [];
+        const unbound = attestations.filter((a: Record<string, unknown>) => a.status !== 'BOUND');
+        if (unbound.length > 0) {
+          attestationStaleness = { stale: true, unboundCount: unbound.length, unboundProfiles: unbound.map((a: Record<string, unknown>) => a.profile) };
+        } else {
+          attestationStaleness = { stale: false, unboundCount: 0 };
+        }
+      } catch { attestationStaleness = { stale: true, unboundCount: -1, error: 'parse_failed' }; }
+    }
+
     res.json({
       ok: true,
       status: 'healthy',
       commit,
       manifestHash,
+      ledgerStatus,
+      ledgerFiles: ledgerFiles.length,
+      attestationStaleness,
       fileStatus,
       dirStatus,
       timestamp: new Date().toISOString(),

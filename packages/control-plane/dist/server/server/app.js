@@ -12,6 +12,7 @@ const mutation_1 = __importDefault(require("../routes/mutation"));
 const health_1 = __importDefault(require("../routes/health"));
 const runs_1 = __importDefault(require("../routes/runs"));
 const audit_1 = __importDefault(require("../routes/audit"));
+const plans_1 = __importDefault(require("../routes/plans"));
 const auth_1 = require("../middleware/auth");
 const app = (0, express_1.default)();
 exports.app = app;
@@ -28,6 +29,7 @@ app.use('/api/mutation', mutation_1.default);
 app.use('/api/health', health_1.default);
 app.use('/api/runs', runs_1.default);
 app.use('/api/audit', audit_1.default);
+app.use('/api/plans', plans_1.default);
 app.use(express_1.default.static(path_1.default.join(__dirname, '..', '..', 'client')));
 app.get('*', (_req, res) => {
     res.sendFile(path_1.default.join(__dirname, '..', '..', 'client', 'index.html'));

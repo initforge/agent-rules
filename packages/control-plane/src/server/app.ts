@@ -6,6 +6,7 @@ import mutationRouter from '../routes/mutation';
 import healthRouter from '../routes/health';
 import runsRouter from '../routes/runs';
 import auditRouter from '../routes/audit';
+import plansRouter from '../routes/plans';
 import { authMiddleware } from '../middleware/auth';
 
 const app = express();
@@ -25,6 +26,7 @@ app.use('/api/mutation', mutationRouter);
 app.use('/api/health', healthRouter);
 app.use('/api/runs', runsRouter);
 app.use('/api/audit', auditRouter);
+app.use('/api/plans', plansRouter);
 
 app.use(express.static(path.join(__dirname, '..', '..', 'client')));
 

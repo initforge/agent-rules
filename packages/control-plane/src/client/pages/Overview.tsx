@@ -3,11 +3,21 @@ import React, { useEffect, useState, useRef } from 'react';
 interface FileStatusEntry { exists: boolean; size: number; }
 interface DirStatusEntry { exists: boolean; entryCount: number; }
 
+interface AttestationStaleness {
+  stale?: boolean;
+  unboundCount?: number;
+  unboundProfiles?: string[];
+  error?: string;
+}
+
 interface HealthData {
   ok?: boolean;
   status?: string;
   commit?: string;
   manifestHash?: string;
+  ledgerStatus?: string;
+  ledgerFiles?: number;
+  attestationStaleness?: AttestationStaleness;
   fileStatus?: Record<string, FileStatusEntry>;
   dirStatus?: Record<string, DirStatusEntry>;
   uptime?: number;
@@ -131,6 +141,40 @@ export default function Overview({ navigate }: OverviewProps) {
           <div className="overview-stat"><span className="typography-caption">Last Commit</span><span className="typography-mono">{health?.commit ? health.commit.slice(0, 7) : 'N/A'}</span></div>
           <div className="overview-stat"><span className="typography-caption">Config Drift</span><span className="typography-body">{filesFound}/{filesTotal} files found</span></div>
           <div className="overview-progress-bar"><div className="overview-progress-fill" style={{ width: `${filesTotal > 0 ? (filesFound / filesTotal) * 100 : 0}%` }} /></div>
+          {health?.attestationStaleness?.stale && (
+            <div className="overview-stat" style={{ marginTop: 8 }}>
+              <span className="typography-caption">Attestation Staleness</span>
+              <span className="badge badge--warning" style={{ marginLeft: 8 }}>
+                {health.attestationStaleness.unboundCount} unbound
+              </span>
+            </div>
+          )}
+          {health?.attestationStaleness?.unboundProfiles && health.attestationStaleness.unboundProfiles.length > 0 && (
+            <div className="cluster cluster--xs" style={{ marginTop: 4 }}>
+              {health.attestationStaleness.unboundProfiles.map((p: string) => (
+                <span key={p} className="tag tag--warning">{p}</span>
+              ))}
+            </div>
+          )}
+          {(!health?.attestationStaleness?.stale && health?.ledgerFiles && health.ledgerFiles > 0) && (
+            <div className="overview-stat" style={{ marginTop: 8 }}>
+              <span className="typography-caption">Attestations</span>
+              <span className="badge badge--success" style={{ marginLeft: 8 }}>All bound</span>
+            </div>
+          )}
+        </div>
+
+        <div className="surface overview-card">
+          <div className="overview-card-header">
+            <h3 className="typography-title3">Ledger State</h3>
+          </div>
+          <div className="overview-stat"><span className="typography-caption">Status</span><span className="typography-body">{health?.ledgerStatus || 'N/A'}</span></div>
+          <div className="overview-stat"><span className="typography-caption">Files</span><span className="typography-body">{health?.ledgerFiles || 0}</span></div>
+          {health?.attestationStaleness?.stale && (
+            <div className="overview-stat">
+              <span className="badge badge--warning">Stale — attestations don't bind current HEAD</span>
+            </div>
+          )}
         </div>
 
         <div className="surface overview-card">

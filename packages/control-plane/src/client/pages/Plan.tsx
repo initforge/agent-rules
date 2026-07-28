@@ -152,7 +152,7 @@ export default function Plan({ navigate }: PlanProps) {
         </div>
       </div>
 
-      <div className="plan-mobile-tabs" role="tablist" aria-label="Plan panes">
+      <div className="plan-mobile-tabs" aria-label="Plan panes">
         {(['navigator' as const, 'canvas' as const, 'inspector' as const]).map(pane => (
           <button
             key={pane}
