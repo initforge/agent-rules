@@ -16,6 +16,10 @@
     "./plan-lifecycle": {
       "types": "./dist/plan-lifecycle.d.ts",
       "import": "./dist/plan-lifecycle.js"
+    },
+    "./terminal-gate": {
+      "types": "./dist/terminal-gate.d.ts",
+      "import": "./dist/terminal-gate.js"
     }
   },
   "engines": {

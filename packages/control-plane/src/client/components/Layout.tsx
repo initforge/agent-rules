@@ -48,7 +48,7 @@ export default function Layout({ currentPath, onNavigate, health, healthError, c
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dark, setDark] = useState(() => document.documentElement.getAttribute('data-theme') === 'dark');
   const sidebarRef = useRef<HTMLElement>(null);
-  const toggleRef = useRef<HTMLButtonElement>(null);
+  const toggleRef = useRef<HTMLAnchorElement>(null);
   const activeId = matchNavItem(currentPath);
 
   useEffect(() => {

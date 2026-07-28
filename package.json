@@ -13,10 +13,10 @@
     "packages/engine"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
+    "build": "npm run build -w packages/engine && npm run build -w packages/cli && npm run build -w packages/control-plane",
     "test": "npm run test --workspaces --if-present",
     "check": "npm run typecheck --workspaces --if-present",
     "ci:quality": "npm run build && npm run check && npm run test",
-    "ci:certify": "npm run build && npm run test && node -e \"console.log(\"CERTIFICATION: all 5 hosts validated on HEAD\")\""
+    "ci:certify": "npm run build && npm run test -w packages/engine && npm run test -w packages/cli && npm run test -w packages/control-plane && node -e \"var g=require('./packages/engine/dist/terminal-gate.js');var r=g.verifyTerminalGate('.agent/ledger/agent-rules-harness-v3-rearchitecture-20260726-r1.json',require('child_process').execSync('git rev-parse HEAD').toString().trim());console.log('Terminal gate:',r.passed?'PASS':'FAIL');process.exit(r.passed?0:1)\""
   }
 }
