@@ -16,6 +16,23 @@ interface JsonSchema {
 
 type LoadState = 'loading' | 'loaded' | 'error' | 'stale' | 'offline';
 
+interface PlanData {
+  planId: string;
+  originalSha256: string | null;
+  effectiveSha256: string | null;
+  amendments: Array<{ id: string; sha256: string }>;
+  status: string;
+  reconciliations: Array<Record<string, unknown>>;
+  attestations: Array<Record<string, unknown>>;
+  findings: Array<Record<string, unknown>>;
+  auditEvents: Array<Record<string, unknown>>;
+  shadowRevision: string | null;
+}
+
+interface PlanListItem {
+  planId: string;
+}
+
 const PROOF_KINDS = [
   { kind: 'static-change', dims: ['outcome', 'regression'], requiredEvidence: ['source-assertion', 'unit-test', 'integration-test'] },
   { kind: 'implementation-runtime', dims: ['outcome', 'integration', 'regression'], requiredEvidence: ['unit-test', 'integration-test', 'component-test'] },
@@ -35,6 +52,8 @@ export default function Plan({ navigate }: PlanProps) {
   const [evidenceProfiles, setEvidenceProfiles] = useState<EvidenceProfile | null>(null);
   const [workLedgerSchema, setWorkLedgerSchema] = useState<JsonSchema | null>(null);
   const [traceSchema, setTraceSchema] = useState<JsonSchema | null>(null);
+  const [planData, setPlanData] = useState<PlanData | null>(null);
+  const [plans, setPlans] = useState<PlanListItem[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [error, setError] = useState('');
   const [activePane, setActivePane] = useState<'navigator' | 'canvas' | 'inspector'>('canvas');
@@ -54,12 +73,22 @@ export default function Plan({ navigate }: PlanProps) {
       fetch('/api/config/file?path=automation/evidence-profiles.json').then(r => { if (!r.ok) throw new Error('Failed to fetch evidence profiles'); return r.json(); }),
       fetch('/api/config/file?path=automation/work-ledger.schema.json').then(r => { if (!r.ok) throw new Error('Failed to fetch work ledger schema'); return r.json(); }),
       fetch('/api/config/file?path=automation/trace-schema.json').then(r => { if (!r.ok) throw new Error('Failed to fetch trace schema'); return r.json(); }),
-    ]).then(([e, w, t]) => {
+      fetch('/api/plans').then(r => { if (!r.ok) throw new Error('Failed to fetch plans'); return r.json(); }),
+    ]).then(([e, w, t, p]) => {
       if (!mountedRef.current) return;
       if (e.ok) setEvidenceProfiles(e.data);
       if (w.ok) setWorkLedgerSchema(w.data);
       if (t.ok) setTraceSchema(t.data);
+      if (p.plans && p.plans.length > 0) {
+        setPlans(p.plans);
+        const firstPlanId = p.plans[0].planId;
+        return fetch(`/api/plans/${firstPlanId}`).then(r => r.json()).then(pd => {
+          if (mountedRef.current) setPlanData(pd);
+        });
+      }
       setLoadState('loaded');
+    }).then(() => {
+      if (mountedRef.current) setLoadState('loaded');
     }).catch(err => {
       if (!mountedRef.current) return;
       if (stale) setLoadState('offline');
@@ -71,6 +100,10 @@ export default function Plan({ navigate }: PlanProps) {
 
   const COVERAGE_FILTERS: CoverageFilter[] = ['ALL', 'MATCH', 'PARTIAL', 'MISSING', 'DEVIATED', 'EXTRA', 'SUPERSEDED'];
   const profileEntries = evidenceProfiles?.profiles ? Object.entries(evidenceProfiles.profiles) : [];
+  const attestationCount = planData?.attestations?.length || 0;
+  const boundCount = planData?.attestations?.filter((a: Record<string, unknown>) => a.status === 'BOUND').length || 0;
+  const openFindings = planData?.findings?.length || 0;
+  const reconciled = planData?.status === 'RECONCILED' || planData?.status === 'COMPLETED';
 
   function getPaneClass(pane: typeof activePane) {
     return `plan-pane plan-pane--${pane} ${activePane === pane ? 'plan-pane--active' : ''}`;
@@ -90,6 +123,12 @@ export default function Plan({ navigate }: PlanProps) {
       <span className="coverage-dot" style={{ background: colors[status], display: 'inline-block', width: 8, height: 8, borderRadius: '50%', marginRight: 6 }} />
     );
   };
+
+  function getProfileCoverage(name: string): CoverageFilter {
+    if (planData?.attestations?.some((a: Record<string, unknown>) => a.profile === name && a.status === 'BOUND')) return 'MATCH';
+    if (planData?.attestations?.some((a: Record<string, unknown>) => a.profile === name)) return 'PARTIAL';
+    return 'MISSING';
+  }
 
   if (loadState === 'loading') {
     return (
@@ -127,29 +166,44 @@ export default function Plan({ navigate }: PlanProps) {
     );
   }
 
+  if (!planData && plans.length === 0) {
+    return (
+      <div className="page">
+        <div className="page-header">
+          <h1 className="typography-title">Plan Workspace</h1>
+          <p className="typography-caption">Requirement evidence tracking and reconciliation</p>
+        </div>
+        <div className="state-empty">No plans found in ledger</div>
+      </div>
+    );
+  }
+
   return (
     <div className="page plan-page">
       <div className="page-header">
         <div className="page-header-row">
           <div>
             <h1 className="typography-title">Plan Workspace</h1>
-            <p className="typography-caption">Plan ID: <span className="typography-mono">am-0005-redesign</span></p>
+            <p className="typography-caption">Plan ID: <span className="typography-mono">{planData?.planId || '—'}</span></p>
           </div>
           <div className="cluster cluster--sm">
-            <span className="badge badge--immutable">
-              <span className="badge-icon">⊡</span> Immutable Original
-            </span>
-            <span className="badge badge--success">Reconciled</span>
+            {reconciled ? (
+              <span className="badge badge--success">Reconciled</span>
+            ) : (
+              <span className="badge badge--warning">{planData?.status || 'Unknown'}</span>
+            )}
+            <span className="badge badge--default">{attestationCount} attestation{attestationCount !== 1 ? 's' : ''}</span>
           </div>
         </div>
-        <div className="plan-hashes">
-          <div className="typography-code" style={{ fontSize: 11 }}>Original: a1b2c3d4e5f6</div>
-          <div className="typography-code" style={{ fontSize: 11 }}>Effective: f6e5d4c3b2a1</div>
-          <div className="typography-code" style={{ fontSize: 11 }}>Baseline: main@{' '}
-            <span className="typography-mono">abc1234</span>
+        {planData && (
+          <div className="plan-hashes">
+            <div className="typography-code" style={{ fontSize: 11 }}>Original: {planData.originalSha256 ? planData.originalSha256.slice(0, 12) : '—'}</div>
+            <div className="typography-code" style={{ fontSize: 11 }}>Effective: {planData.effectiveSha256 ? planData.effectiveSha256.slice(0, 12) : '—'}</div>
+            {planData.shadowRevision && (
+              <div className="typography-code" style={{ fontSize: 11 }}>Shadow: <span className="typography-mono">{planData.shadowRevision.slice(0, 12)}</span></div>
+            )}
           </div>
-          <div className="typography-code" style={{ fontSize: 11 }}>Final HEAD: <span className="typography-mono">def5678</span></div>
-        </div>
+        )}
       </div>
 
       <div className="plan-mobile-tabs" aria-label="Plan panes">
@@ -193,27 +247,34 @@ export default function Plan({ navigate }: PlanProps) {
               <div className="state-empty">No requirements loaded</div>
             ) : (
               profileEntries
-                .filter(([name]) => coverageFilter === 'ALL' || (coverageFilter === 'MATCH' && name.includes('proof')))
-                .map(([name, profile]) => (
-                  <div
-                    key={name}
-                    className={`plan-tree-item ${selectedProfile === name ? 'plan-tree-item--selected' : ''}`}
-                    onClick={() => setSelectedProfile(name)}
-                    role="treeitem"
-                    aria-selected={selectedProfile === name}
-                    tabIndex={0}
-                    onKeyDown={e => { if (e.key === 'Enter') setSelectedProfile(name); }}
-                  >
-                    <div className="plan-tree-item-header">
-                      <span className="coverage-dot" style={{ background: 'var(--color-success)', display: 'inline-block', width: 8, height: 8, borderRadius: '50%', marginRight: 8 }} />
-                      <span className="plan-tree-item-name">{name}</span>
-                      <span className="badge badge--success">MATCH</span>
+                .filter(([name]) => {
+                  if (coverageFilter === 'ALL') return true;
+                  const cov = getProfileCoverage(name);
+                  return cov === coverageFilter;
+                })
+                .map(([name, profile]) => {
+                  const cov = getProfileCoverage(name);
+                  return (
+                    <div
+                      key={name}
+                      className={`plan-tree-item ${selectedProfile === name ? 'plan-tree-item--selected' : ''}`}
+                      onClick={() => setSelectedProfile(name)}
+                      role="treeitem"
+                      aria-selected={selectedProfile === name}
+                      tabIndex={0}
+                      onKeyDown={e => { if (e.key === 'Enter') setSelectedProfile(name); }}
+                    >
+                      <div className="plan-tree-item-header">
+                        <span className="coverage-dot" style={{ background: `var(--color-${cov === 'MATCH' ? 'success' : cov === 'PARTIAL' ? 'warning' : 'text-tertiary'})`, display: 'inline-block', width: 8, height: 8, borderRadius: '50%', marginRight: 8 }} />
+                        <span className="plan-tree-item-name">{name}</span>
+                        <span className={`badge badge--${cov === 'MATCH' ? 'success' : cov === 'PARTIAL' ? 'warning' : 'default'}`}>{cov}</span>
+                      </div>
+                      <div className="plan-tree-item-dims typography-caption">
+                        {(profile.required_dimensions || []).join(', ')}
+                      </div>
                     </div>
-                    <div className="plan-tree-item-dims typography-caption">
-                      {(profile.required_dimensions || []).join(', ')}
-                    </div>
-                  </div>
-                ))
+                  );
+                })
             )}
           </div>
         </div>
@@ -232,7 +293,7 @@ export default function Plan({ navigate }: PlanProps) {
                 <thead>
                   <tr>
                     <th>Requirement</th>
-                    <th>Implementation</th>
+                    <th>Coverage</th>
                     <th>Evidence</th>
                     <th>Reviewer</th>
                   </tr>
@@ -243,34 +304,37 @@ export default function Plan({ navigate }: PlanProps) {
                       <td colSpan={4}><div className="state-empty">No reconciliation data</div></td>
                     </tr>
                   ) : (
-                    profileEntries.map(([name, profile]) => (
-                      <tr
-                        key={name}
-                        className="reconciliation-row"
-                        onClick={() => setSelectedProfile(name)}
-                      >
-                        <td className="reconciliation-cell-name">
-                          <span className="coverage-dot" style={{ background: 'var(--color-success)', display: 'inline-block', width: 8, height: 8, borderRadius: '50%', marginRight: 8 }} />
-                          {name}
-                        </td>
-                        <td>
-                          <span className="badge badge--success">Verified</span>
-                        </td>
-                        <td>
-                          <div className="cluster cluster--xs">
-                            {(profile.allowed_kinds || []).slice(0, 2).map(k => (
-                              <span key={k} className="badge badge--accent">{k}</span>
-                            ))}
-                            {(profile.allowed_kinds || []).length > 2 && (
-                              <span className="badge badge--default">+{profile.allowed_kinds!.length - 2}</span>
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <span className="typography-caption">Pending</span>
-                        </td>
-                      </tr>
-                    ))
+                    profileEntries.map(([name, profile]) => {
+                      const cov = getProfileCoverage(name);
+                      return (
+                        <tr
+                          key={name}
+                          className="reconciliation-row"
+                          onClick={() => setSelectedProfile(name)}
+                        >
+                          <td className="reconciliation-cell-name">
+                            <span className="coverage-dot" style={{ background: `var(--color-${cov === 'MATCH' ? 'success' : cov === 'PARTIAL' ? 'warning' : 'text-tertiary'})`, display: 'inline-block', width: 8, height: 8, borderRadius: '50%', marginRight: 8 }} />
+                            {name}
+                          </td>
+                          <td>
+                            <span className={`badge badge--${cov === 'MATCH' ? 'success' : cov === 'PARTIAL' ? 'warning' : 'default'}`}>{cov}</span>
+                          </td>
+                          <td>
+                            <div className="cluster cluster--xs">
+                              {(profile.allowed_kinds || []).slice(0, 2).map(k => (
+                                <span key={k} className="badge badge--accent">{k}</span>
+                              ))}
+                              {(profile.allowed_kinds || []).length > 2 && (
+                                <span className="badge badge--default">+{profile.allowed_kinds!.length - 2}</span>
+                              )}
+                            </div>
+                          </td>
+                          <td>
+                            <span className="typography-caption">Pending</span>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -291,7 +355,7 @@ export default function Plan({ navigate }: PlanProps) {
                 <tbody>
                   {PROOF_KINDS.map((p, i) => (
                     <tr key={i}>
-                      <td className="typography-mono" style={{ color: 'var(--color-text-link)' }}>{p.kind}</td>
+                      <td className="typography-mono" style={{ color: 'var(--color-accent)' }}>{p.kind}</td>
                       <td><span className="typography-caption">{p.dims.join(', ')}</span></td>
                       <td><span className="typography-caption">{p.requiredEvidence.join(', ')}</span></td>
                     </tr>
@@ -334,6 +398,12 @@ export default function Plan({ navigate }: PlanProps) {
                       <span className="badge badge--warning">Runtime evidence required</span>
                     </div>
                   )}
+                  {planData?.attestations?.filter((a: Record<string, unknown>) => a.profile === selectedProfile).length ? (
+                    <div className="inspector-field">
+                      <span className="typography-caption">Attestations</span>
+                      <span className="badge badge--accent">{planData.attestations.filter((a: Record<string, unknown>) => a.profile === selectedProfile).length} record(s)</span>
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
@@ -341,13 +411,6 @@ export default function Plan({ navigate }: PlanProps) {
                 <h3 className="typography-title3">Evidence Receipts</h3>
                 <div className="state-empty" style={{ padding: '12px 0' }}>
                   No evidence receipts recorded for this profile
-                </div>
-              </div>
-
-              <div className="surface inspector-section">
-                <h3 className="typography-title3">Verification</h3>
-                <div className="state-empty" style={{ padding: '12px 0' }}>
-                  No verification results yet
                 </div>
               </div>
             </div>

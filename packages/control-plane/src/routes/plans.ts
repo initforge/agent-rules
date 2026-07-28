@@ -16,6 +16,27 @@ function findRoot(): string {
 
 const router = Router();
 
+router.get('/', (_req, res: Response) => {
+  try {
+    const ROOT = findRoot();
+    const ledgerDir = path.join(ROOT, '.agent', 'ledger');
+    if (!fs.existsSync(ledgerDir)) {
+      res.json({ plans: [] });
+      return;
+    }
+    const files = fs.readdirSync(ledgerDir)
+      .filter(f => f.endsWith('.json'))
+      .sort();
+    const plans = files.map(f => ({
+      planId: f.replace(/\.json$/, ''),
+      path: f,
+    }));
+    res.json({ plans });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: String(err) });
+  }
+});
+
 router.get('/:planId', (req, res) => {
   try {
     const ROOT = findRoot();

@@ -139,7 +139,7 @@ export default function Profiles({ segments, navigate }: ProfilesProps) {
                   onKeyDown={e => { if (e.key === 'Enter') navigate(`/profiles/${id}`); }}
                 >
                   <div className="flex-between">
-                    <span className="typography-body" style={{ color: 'var(--color-text-link)' }}>{id}</span>
+                    <span className="typography-body" style={{ color: 'var(--color-accent)' }}>{id}</span>
                     <span className={`badge ${p.enabledByDefault ? 'badge--success' : 'badge--default'}`}>
                       {p.enabledByDefault ? 'enabled' : 'disabled'}
                     </span>

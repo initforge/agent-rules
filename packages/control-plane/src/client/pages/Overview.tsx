@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 
 interface FileStatusEntry { exists: boolean; size: number; }
 interface DirStatusEntry { exists: boolean; entryCount: number; }
@@ -21,6 +21,7 @@ interface HealthData {
   fileStatus?: Record<string, FileStatusEntry>;
   dirStatus?: Record<string, DirStatusEntry>;
   uptime?: number;
+  timestamp?: string;
   system?: {
     nodeVersion?: string;
     platform?: string;
@@ -35,6 +36,12 @@ interface ProfileManifest { version?: number; profiles?: Record<string, { enable
 interface ModelPolicy { version?: number; platforms?: Record<string, unknown>; }
 interface ConfigData { manifest?: ManifestData; profileManifest?: ProfileManifest; modelPolicy?: ModelPolicy; }
 
+interface PlanSummary {
+  planId: string;
+  status?: string;
+  attestations?: Array<Record<string, unknown>>;
+}
+
 type LoadState = 'loading' | 'loaded' | 'error' | 'offline';
 
 interface OverviewProps {
@@ -44,31 +51,50 @@ interface OverviewProps {
 export default function Overview({ navigate }: OverviewProps) {
   const [health, setHealth] = useState<HealthData | null>(null);
   const [config, setConfig] = useState<ConfigData | null>(null);
+  const [plans, setPlans] = useState<PlanSummary[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [error, setError] = useState('');
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const mountedRef = useRef(true);
 
-  useEffect(() => {
-    mountedRef.current = true;
+  const fetchData = useCallback(() => {
     let stale = false;
     const timer = setTimeout(() => { if (mountedRef.current && loadState === 'loading') stale = true; }, 5000);
 
     Promise.all([
       fetch('/api/health').then(r => { if (!r.ok) throw new Error('Health check failed'); return r.json(); }),
       fetch('/api/config/all').then(r => { if (!r.ok) throw new Error('Config fetch failed'); return r.json(); }),
-    ]).then(([h, c]) => {
+      fetch('/api/plans').then(r => r.json()).catch(() => ({ plans: [] })),
+    ]).then(([h, c, p]) => {
       if (!mountedRef.current) return;
-      if (h.ok) setHealth(h);
+      setHealth(h);
       if (c.ok) setConfig(c.data);
+      if (p.plans && p.plans.length > 0) setPlans(p.plans);
+      setLastUpdated(new Date().toISOString());
       setLoadState('loaded');
     }).catch(err => {
       if (!mountedRef.current) return;
       if (stale) setLoadState('offline');
       else { setError(err instanceof Error ? err.message : String(err)); setLoadState('error'); }
     }).finally(() => clearTimeout(timer));
-
-    return () => { mountedRef.current = false; clearTimeout(timer); };
   }, []);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    fetchData();
+    const interval = setInterval(() => {
+      if (mountedRef.current && loadState === 'loaded') {
+        fetch('/api/health').then(r => r.json()).then(h => {
+          if (mountedRef.current) {
+            setHealth(h);
+            setLastUpdated(new Date().toISOString());
+            setLoadState('loaded');
+          }
+        }).catch(() => {});
+      }
+    }, 30000);
+    return () => { mountedRef.current = false; clearInterval(interval); };
+  }, [fetchData]);
 
   const enabledProfiles = config?.profileManifest?.profiles
     ? Object.entries(config.profileManifest.profiles).filter(([, v]) => v.enabledByDefault)
@@ -77,6 +103,9 @@ export default function Overview({ navigate }: OverviewProps) {
   const fileStats = health?.fileStatus ? Object.values(health.fileStatus) : null;
   const filesFound = fileStats ? fileStats.filter(v => v.exists).length : 0;
   const filesTotal = fileStats ? fileStats.length : 0;
+  const totalAttestations = plans.reduce((sum, p) => sum + (p.attestations?.length || 0), 0);
+  const totalPlans = plans.length;
+  const staleMinutes = lastUpdated ? Math.floor((Date.now() - new Date(lastUpdated).getTime()) / 60000) : null;
 
   if (loadState === 'loading') {
     return (
@@ -118,8 +147,17 @@ export default function Overview({ navigate }: OverviewProps) {
   return (
     <div className="page">
       <div className="page-header">
-        <h1 className="typography-title">Repository Overview</h1>
-        <p className="typography-caption">System health, CI status, and configuration drift</p>
+        <div className="page-header-row">
+          <div>
+            <h1 className="typography-title">Repository Overview</h1>
+            <p className="typography-caption">System health, CI status, and configuration drift</p>
+          </div>
+          {staleMinutes !== null && (
+            <span className="typography-caption" style={{ flexShrink: 0 }}>
+              Updated {staleMinutes < 1 ? 'just now' : `${staleMinutes}m ago`}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="overview-grid">
@@ -137,18 +175,28 @@ export default function Overview({ navigate }: OverviewProps) {
         <div className="surface overview-card">
           <div className="overview-card-header">
             <h3 className="typography-title3">CI Readiness</h3>
+            {staleMinutes !== null && staleMinutes > 5 && (
+              <span className="badge badge--warning">Stale {staleMinutes}m</span>
+            )}
           </div>
           <div className="overview-stat"><span className="typography-caption">Last Commit</span><span className="typography-mono">{health?.commit ? health.commit.slice(0, 7) : 'N/A'}</span></div>
           <div className="overview-stat"><span className="typography-caption">Config Drift</span><span className="typography-body">{filesFound}/{filesTotal} files found</span></div>
           <div className="overview-progress-bar"><div className="overview-progress-fill" style={{ width: `${filesTotal > 0 ? (filesFound / filesTotal) * 100 : 0}%` }} /></div>
-          {health?.attestationStaleness?.stale && (
-            <div className="overview-stat" style={{ marginTop: 8 }}>
-              <span className="typography-caption">Attestation Staleness</span>
-              <span className="badge badge--warning" style={{ marginLeft: 8 }}>
-                {health.attestationStaleness.unboundCount} unbound
+          <div className="overview-stat" style={{ marginTop: 8 }}>
+            <span className="typography-caption">Data Freshness</span>
+            <span className="typography-body">{staleMinutes !== null ? (staleMinutes < 1 ? 'Current' : `${staleMinutes}m old`) : '?'}</span>
+          </div>
+          {health?.attestationStaleness?.stale ? (
+            <div className="overview-stat" style={{ marginTop: 4 }}>
+              <span className="badge badge--warning">
+                {health.attestationStaleness.unboundCount} unbound attestation{health.attestationStaleness.unboundCount !== 1 ? 's' : ''}
               </span>
             </div>
-          )}
+          ) : health?.ledgerFiles && health.ledgerFiles > 0 ? (
+            <div className="overview-stat" style={{ marginTop: 4 }}>
+              <span className="badge badge--success">All attestations bound</span>
+            </div>
+          ) : null}
           {health?.attestationStaleness?.unboundProfiles && health.attestationStaleness.unboundProfiles.length > 0 && (
             <div className="cluster cluster--xs" style={{ marginTop: 4 }}>
               {health.attestationStaleness.unboundProfiles.map((p: string) => (
@@ -156,10 +204,19 @@ export default function Overview({ navigate }: OverviewProps) {
               ))}
             </div>
           )}
-          {(!health?.attestationStaleness?.stale && health?.ledgerFiles && health.ledgerFiles > 0) && (
-            <div className="overview-stat" style={{ marginTop: 8 }}>
-              <span className="typography-caption">Attestations</span>
-              <span className="badge badge--success" style={{ marginLeft: 8 }}>All bound</span>
+        </div>
+
+        <div className="surface overview-card">
+          <div className="overview-card-header">
+            <h3 className="typography-title3">Plan Summary</h3>
+            <span className="typography-caption">{totalPlans} plan{totalPlans !== 1 ? 's' : ''}</span>
+          </div>
+          <div className="overview-stat"><span className="typography-caption">Active Plans</span><span className="typography-body">{totalPlans}</span></div>
+          <div className="overview-stat"><span className="typography-caption">Total Attestations</span><span className="typography-body">{totalAttestations}</span></div>
+          {totalPlans > 0 && (
+            <div className="overview-stat">
+              <span className="typography-caption">Latest</span>
+              <span className="typography-mono">{plans[plans.length - 1]?.planId?.slice(0, 16) || '—'}</span>
             </div>
           )}
         </div>
@@ -167,6 +224,11 @@ export default function Overview({ navigate }: OverviewProps) {
         <div className="surface overview-card">
           <div className="overview-card-header">
             <h3 className="typography-title3">Ledger State</h3>
+            {health?.attestationStaleness?.stale ? (
+              <span className="badge badge--warning">Stale</span>
+            ) : (
+              <span className={`status-dot ${health?.ledgerFiles && health.ledgerFiles > 0 ? 'status-dot--success' : 'status-dot--accent'}`} />
+            )}
           </div>
           <div className="overview-stat"><span className="typography-caption">Status</span><span className="typography-body">{health?.ledgerStatus || 'N/A'}</span></div>
           <div className="overview-stat"><span className="typography-caption">Files</span><span className="typography-body">{health?.ledgerFiles || 0}</span></div>

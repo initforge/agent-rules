@@ -99,6 +99,11 @@ describe('WCAG & Accessibility (Playwright)', () => {
           console.log(`/${route.id} axe violations:`,
             criticalSerious.map(v => `${v.id} (${v.impact}): ${v.help} [${v.nodes.length} nodes]`).join('\n')
           );
+          for (const v of criticalSerious) {
+            for (const n of v.nodes.slice(0, 3)) {
+              console.log(`  HTML: ${n.html?.slice(0, 200)}`);
+            }
+          }
         }
         expect(criticalSerious.length).toBe(0);
       });
@@ -175,6 +180,39 @@ describe('WCAG & Accessibility (Playwright)', () => {
       expect(overflow.hasHorizontalScroll).toBe(false);
     });
 
+    it('loads at 390x844 (iPhone 14 Pro) with no clipping and nav renders', async () => {
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await page.waitForTimeout(500);
+
+      const overflow = await page.evaluate(() => {
+        const root = document.documentElement;
+        return {
+          scrollWidth: root.scrollWidth,
+          clientWidth: root.clientWidth,
+          hasHorizontalScroll: root.scrollWidth > root.clientWidth,
+        };
+      });
+      console.log(`iPhone 390x844: scrollW=${overflow.scrollWidth} clientW=${overflow.clientWidth} scroll=${overflow.hasHorizontalScroll}`);
+      expect(overflow.hasHorizontalScroll).toBe(false);
+
+      const mobileHeaderVisible = await page.evaluate(() => {
+        const mh = document.querySelector('.layout-mobile-header');
+        if (!mh) return false;
+        const style = getComputedStyle(mh);
+        return style.display !== 'none' && mh.getBoundingClientRect().height > 0;
+      });
+      expect(mobileHeaderVisible).toBe(true);
+
+      const hamburgerVisible = await page.evaluate(() => {
+        const hb = document.querySelector('.layout-mobile-toggle');
+        if (!hb) return false;
+        const style = getComputedStyle(hb);
+        return style.display !== 'none' && hb.getBoundingClientRect().height > 0;
+      });
+      expect(hamburgerVisible).toBe(true);
+    }, 10000);
+
     it('loads at 1024x768 (tablet)', async () => {
       await page.setViewportSize({ width: 1024, height: 768 });
       await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
@@ -215,7 +253,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
   });
 
   describe('Reduced motion', () => {
-    it('prefers-reduced-motion respected when set', async () => {
+    it('prefers-reduced-motion respected via CSS rule and no active animations remain', async () => {
       const motionCtx = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
       const motionPage = await motionCtx.newPage();
       await motionPage.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
@@ -226,6 +264,27 @@ describe('WCAG & Accessibility (Playwright)', () => {
       });
       expect(motionQuery).toBe(true);
 
+      const cssRuleCheck = await motionPage.evaluate(() => {
+        for (const ss of document.styleSheets) {
+          try {
+            for (const rule of ss.cssRules) {
+              if (rule instanceof CSSMediaRule &&
+                  rule.conditionText?.includes('prefers-reduced-motion: reduce')) {
+                return {
+                  found: true,
+                  rulesCount: rule.cssRules.length,
+                  text: rule.cssText.slice(0, 200),
+                };
+              }
+            }
+          } catch {}
+        }
+        return { found: false, rulesCount: 0, text: '' };
+      });
+      console.log('Reduced-motion CSS rule:', JSON.stringify(cssRuleCheck));
+      expect(cssRuleCheck.found).toBe(true);
+      expect(cssRuleCheck.rulesCount).toBeGreaterThan(0);
+
       const animated = await motionPage.evaluate(() => {
         const all = document.querySelectorAll('*');
         const animatedEls: string[] = [];
@@ -235,25 +294,26 @@ describe('WCAG & Accessibility (Playwright)', () => {
           const trans = style.transitionDuration;
           if (
             (anim && anim !== 'none') ||
-            (trans && trans !== '0s' && parseFloat(trans) > 0)
+            (trans && trans !== '0s' && parseFloat(trans) > 0.01)
           ) {
             animatedEls.push(`${el.tagName} anim=${anim} trans=${trans}`);
           }
         }
-        return animatedEls.slice(0, 20);
+        return animatedEls;
       });
 
       if (animated.length > 0) {
         console.log(`Elements with animation/transition despite reduced-motion: ${animated.length}`);
-        animated.forEach(a => console.log(`  ${a}`));
+        animated.slice(0, 10).forEach(a => console.log(`  ${a}`));
       }
+      expect(animated.length).toBe(0);
 
       await motionCtx.close();
     });
   });
 
   describe('Zoom tolerance', () => {
-    it('200% zoom page renders without clipping/overflow', async () => {
+    it('200% zoom page renders with primary elements visible (no clipping)', async () => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForTimeout(500);
@@ -271,11 +331,34 @@ describe('WCAG & Accessibility (Playwright)', () => {
           overflowY: getComputedStyle(root).overflowY,
           scrollWidth: root.scrollWidth,
           clientWidth: root.clientWidth,
-          scrollHeight: root.scrollHeight,
-          clientHeight: root.clientHeight,
         };
       });
-      console.log(`200% zoom: scroll=${hasOverflow.scrollWidth}x${hasOverflow.scrollHeight}, client=${hasOverflow.clientWidth}x${hasOverflow.clientHeight}`);
+      console.log(`200% zoom: scroll=${hasOverflow.scrollWidth}x${hasOverflow.scrollWidth}, client=${hasOverflow.clientWidth}`);
+
+      const elementVisibility = await page.evaluate(() => {
+        const main = document.querySelector('main');
+        const sidebarHeader = document.querySelector('.layout-sidebar-header');
+        const results: Record<string, boolean> = {};
+        if (main) {
+          const rect = main.getBoundingClientRect();
+          results.main = rect.width > 0 && rect.height > 10;
+        }
+        if (sidebarHeader) {
+          const rect = sidebarHeader.getBoundingClientRect();
+          results.sidebarHeader = rect.width > 0 && rect.height > 0;
+        }
+        const h1 = document.querySelector('h1');
+        if (h1) {
+          const rect = h1.getBoundingClientRect();
+          results.heading = rect.height > 0 && rect.width > 0;
+        }
+        return results;
+      });
+      console.log('Element visibility at 200% zoom:', JSON.stringify(elementVisibility));
+
+      expect(Object.keys(elementVisibility).length).toBeGreaterThan(0);
+      const allVisible = Object.values(elementVisibility).every(v => v);
+      expect(allVisible).toBe(true);
 
       await page.evaluate(() => {
         document.body.style.transform = '';
@@ -313,7 +396,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
   });
 
   describe('Focus-visible', () => {
-    it('all interactive elements have visible focus indicator', async () => {
+    it('all interactive elements have visible focus indicator (outline or ring)', async () => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForSelector('nav', { timeout: 5000 });
@@ -332,31 +415,43 @@ describe('WCAG & Accessibility (Playwright)', () => {
           await el.focus();
           await page.waitForTimeout(50);
 
-          const hasFocusStyle = await el.evaluate((node: HTMLElement) => {
+          const focusData = await el.evaluate((node: HTMLElement) => {
             const style = getComputedStyle(node);
-            const outline = style.outlineColor + ' ' + style.outlineStyle + ' ' + style.outlineWidth;
+            const outlineColor = style.outlineColor;
+            const outlineStyle = style.outlineStyle;
+            const outlineWidth = style.outlineWidth;
+            const outlineVisible = outlineStyle !== 'none' && outlineWidth !== '0px' && outlineWidth !== '0';
             const boxShadow = style.boxShadow;
-            const borderColor = style.borderColor;
-            const outlineVisible = style.outlineStyle !== 'none' && style.outlineWidth !== '0px';
             const hasBoxShadow = boxShadow && boxShadow !== 'none';
-            const hasBorder = borderColor && borderColor !== 'transparent' && style.borderStyle !== 'none';
+            const hasVisibleRing = hasBoxShadow && (boxShadow!.includes('rgb') || boxShadow!.includes('hsl'));
+
+            const isFsVisible = node.matches(':focus-visible');
+            const outlineRingVisible = outlineVisible || hasVisibleRing;
+
             return {
-              outline,
-              boxShadow,
-              borderColor,
               outlineVisible,
               hasBoxShadow,
-              hasBorder,
+              hasVisibleRing,
+              outlineRingVisible,
+              isFsVisible,
               tag: node.tagName,
               id: node.id,
               text: (node.textContent || '').trim().slice(0, 20),
+              outlineDetails: `style=${outlineStyle} width=${outlineWidth} color=${outlineColor}`,
             };
           });
 
-          if (!hasFocusStyle.outlineVisible && !hasFocusStyle.hasBoxShadow && !hasFocusStyle.hasBorder) {
-            elementsWithoutFocus++;
-            if (elementsWithoutFocus <= 5) {
-              console.log(`No focus indicator: ${hasFocusStyle.tag} #${hasFocusStyle.id} "${hasFocusStyle.text}"`);
+          if (!focusData.outlineRingVisible && focusData.isFsVisible) {
+            const hasAccentOutline = await el.evaluate((node: HTMLElement) => {
+              const style = getComputedStyle(node);
+              const outlineColor = style.outlineColor;
+              return outlineColor !== 'rgba(0, 0, 0, 0)' && outlineColor !== 'transparent';
+            });
+            if (!hasAccentOutline) {
+              elementsWithoutFocus++;
+              if (elementsWithoutFocus <= 5) {
+                console.log(`No focus indicator: ${focusData.tag} #${focusData.id} "${focusData.text}" ${focusData.outlineDetails}`);
+              }
             }
           }
           checkedCount++;

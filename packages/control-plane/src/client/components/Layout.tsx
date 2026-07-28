@@ -49,6 +49,7 @@ export default function Layout({ currentPath, onNavigate, health, healthError, c
   const [dark, setDark] = useState(() => document.documentElement.getAttribute('data-theme') === 'dark');
   const sidebarRef = useRef<HTMLElement>(null);
   const toggleRef = useRef<HTMLAnchorElement>(null);
+  const hamburgerRef = useRef<HTMLAnchorElement>(null);
   const activeId = matchNavItem(currentPath);
 
   useEffect(() => {
@@ -59,7 +60,7 @@ export default function Layout({ currentPath, onNavigate, health, healthError, c
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape' && mobileMenuOpen) {
         setMobileMenuOpen(false);
-        toggleRef.current?.focus();
+        hamburgerRef.current?.focus();
       }
     }
     document.addEventListener('keydown', handleKeyDown);
@@ -137,12 +138,14 @@ export default function Layout({ currentPath, onNavigate, health, healthError, c
 
       <div className="layout-mobile-header">
         <a
-          ref={toggleRef}
+          ref={hamburgerRef}
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="layout-mobile-toggle"
           aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
           aria-expanded={mobileMenuOpen}
           aria-controls="sidebar-navigation"
+          tabIndex={0}
+          role="button"
         >
           <span className={`layout-hamburger ${mobileMenuOpen ? 'layout-hamburger--open' : ''}`}>
             <span /><span /><span />
@@ -153,6 +156,8 @@ export default function Layout({ currentPath, onNavigate, health, healthError, c
           onClick={toggleTheme}
           className="theme-toggle-btn theme-toggle-btn--mobile"
           aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          tabIndex={0}
+          role="button"
         >
           {dark ? '\u2600' : '\uD83C\uDF19'}
         </a>
