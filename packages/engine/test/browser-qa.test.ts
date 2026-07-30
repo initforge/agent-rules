@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, expect, it, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
 import { AxeBuilder } from '@axe-core/playwright';
 import { spawn, execSync, type ChildProcess } from 'node:child_process';
@@ -6,7 +6,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const BASE_URL = 'http://localhost:3099';
+const BASE_URL = 'http://127.0.0.1:3099';
 
 const TEST_DIR = path.dirname(fileURLToPath(import.meta.url));
 const CP_DIR = path.resolve(TEST_DIR, '..', '..', 'control-plane');
@@ -15,6 +15,7 @@ const CLIENT_INDEX = path.join(CP_DIR, 'dist', 'client', 'index.html');
 
 let serverProc: ChildProcess | undefined;
 let serverLog = '';
+let browserErrors: string[] = [];
 
 const SERVER_STARTUP_TIMEOUT_MS = 30_000;
 const SERVER_SHUTDOWN_TIMEOUT_MS = 5_000;
@@ -62,7 +63,9 @@ async function stopServer(): Promise<void> {
     if (!(error instanceof Error) || !('code' in error) || error.code !== 'ESRCH') throw error;
   }
 
-  await waitForProcessExit(proc, SERVER_SHUTDOWN_TIMEOUT_MS);
+  if (!(await waitForProcessExit(proc, SERVER_SHUTDOWN_TIMEOUT_MS))) {
+    throw new Error(`control-plane server did not exit after SIGKILL (pid ${proc.pid})`);
+  }
 }
 
 async function isServerUp(): Promise<boolean> {
@@ -87,11 +90,14 @@ async function waitForServer(timeoutMs = SERVER_STARTUP_TIMEOUT_MS): Promise<voi
 }
 
 async function ensureServer(): Promise<void> {
-  if (await isServerUp()) return;
+  if (await isServerUp()) {
+    throw new Error(`${BASE_URL} is already occupied; refusing to use an unowned QA server`);
+  }
   if (!existsSync(SERVER_ENTRY) || !existsSync(CLIENT_INDEX)) {
     execSync('npm run build', { cwd: CP_DIR, stdio: 'inherit' });
   }
-  serverProc = spawn('node', [SERVER_ENTRY], {
+  serverLog = '';
+  serverProc = spawn(process.execPath, [SERVER_ENTRY], {
     cwd: CP_DIR,
     env: { ...process.env, PORT: '3099', HOST: '127.0.0.1', NODE_ENV: 'test' },
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -102,6 +108,7 @@ async function ensureServer(): Promise<void> {
   serverProc.stderr?.on('data', d => { serverLog += d.toString(); });
   try {
     await waitForServer();
+    if (serverProc.exitCode !== null) throw new Error(`control-plane server disappeared after readiness:\n${serverLog}`);
   } catch (error) {
     await stopServer();
     throw error;
@@ -150,7 +157,24 @@ beforeAll(async () => {
   browser = await chromium.launch({ headless: true });
   context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   page = await context.newPage();
+  page.on('console', msg => {
+    if (msg.type() === 'error') browserErrors.push(`console: ${msg.text()}`);
+  });
+  page.on('requestfailed', req => {
+    browserErrors.push(`network: ${req.url()} failed: ${req.failure()?.errorText}`);
+  });
 }, 60000);
+
+beforeEach(async () => {
+  browserErrors = [];
+  if (!serverProc || serverProc.exitCode !== null || !(await isServerUp())) {
+    throw new Error(`owned control-plane server disappeared before test:\n${serverLog}`);
+  }
+});
+
+afterEach(() => {
+  expect(browserErrors, 'browser console/network errors').toEqual([]);
+});
 
 afterAll(async () => {
   try {
