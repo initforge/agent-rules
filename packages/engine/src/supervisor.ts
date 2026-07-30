@@ -167,7 +167,7 @@ function initializeState(config?: Partial<SupervisorConfig> & { completionVerifi
   const statePath = config?.statePath ? path.resolve(config.statePath) : undefined;
   const defaultConfig = {
     maxWriters: 2, maxReviewers: 1, childDepth: 1,
-    backpressureRssMb: 2048, backpressureCpuPct: 99,
+    backpressureRssMb: 2048, backpressureCpuPct: 200,
     assignmentTimeoutMs: 600000, defaultProvider: 'openai', defaultModel: 'gpt-4', defaultEffort: 'high',
   };
 
@@ -611,8 +611,8 @@ function resolveNativeModeImpl(s: InternalState, reason: NativeModeReason): { al
 
 function checkResourcesImpl(rssThreshold?: number, cpuThreshold?: number): { rssMb: number; cpuPct: number; underPressure: boolean } {
   const rssMb = Math.round(process.memoryUsage().rss / 1024 / 1024);
-  const cpuPct = Math.min(100, Math.round((os.loadavg()[0] / os.cpus().length) * 100));
+  const cpuPct = Math.round((os.loadavg()[0] / os.cpus().length) * 100);
   const rssLimit = rssThreshold ?? 2048;
-  const cpuLimit = cpuThreshold ?? 99;
+  const cpuLimit = cpuThreshold ?? 200;
   return { rssMb, cpuPct, underPressure: rssMb >= rssLimit || cpuPct >= cpuLimit };
 }
