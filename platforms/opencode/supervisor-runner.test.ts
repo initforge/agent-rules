@@ -235,6 +235,40 @@ function startErrorServer(): Promise<TrackedServer> {
   });
 }
 
+function mockWindowsDirectoryFsyncEperm(directory: string, statePath: string) {
+  const directoryFds = new Set<number>();
+  const stateFileOpenFlags: Array<string | number> = [];
+  const realOpenSync = fs.openSync;
+  const realFsyncSync = fs.fsyncSync;
+  let fileFsyncCalls = 0;
+
+  const openSpy = vi.spyOn(fs, 'openSync').mockImplementation(((file: fs.PathLike, flags: string | number, ...rest: unknown[]) => {
+    const fd = realOpenSync(file, flags as never, ...(rest as []));
+    const resolved = path.resolve(String(file));
+    if (resolved === path.resolve(directory)) directoryFds.add(fd);
+    if (resolved === path.resolve(`${statePath}.tmp`)) stateFileOpenFlags.push(flags);
+    return fd;
+  }) as typeof fs.openSync);
+  const fsyncSpy = vi.spyOn(fs, 'fsyncSync').mockImplementation(((fd: number) => {
+    if (directoryFds.delete(fd)) {
+      const error = new Error('Windows directory fsync is unavailable') as NodeJS.ErrnoException;
+      error.code = 'EPERM';
+      throw error;
+    }
+    fileFsyncCalls++;
+    return realFsyncSync(fd);
+  }) as typeof fs.fsyncSync);
+
+  return {
+    stateFileOpenFlags,
+    get fileFsyncCalls() { return fileFsyncCalls; },
+    restore: () => {
+      fsyncSpy.mockRestore();
+      openSpy.mockRestore();
+    },
+  };
+}
+
 describe('SupervisorRunner', () => {
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
@@ -540,6 +574,39 @@ describe('SupervisorRunner', () => {
       const parentPosts = log.filter(e => e.method === 'POST' && e.url === '/session');
       expect(parentPosts.length).toBe(1);
     } finally {
+      server.close();
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it('persists initialization, restart, and non-2xx failures when directory fsync returns Windows EPERM', async () => {
+    const { server, port } = await startBindErrorServer();
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'runner-windows-fsync-'));
+    const statePath = path.join(tmpDir, 'state.json');
+    const fault = mockWindowsDirectoryFsyncEperm(tmpDir, statePath);
+    try {
+      const runner1 = new SupervisorRunner({
+        adapter: { baseUrl: `http://localhost:${port}`, fetchFn: fetch },
+        supervisor: { statePath },
+      });
+      expect((await runner1.initialize()).ok).toBe(true);
+
+      const runner2 = new SupervisorRunner({
+        adapter: { baseUrl: `http://localhost:${port}`, fetchFn: fetch },
+        supervisor: { statePath },
+      });
+      expect((await runner2.initialize()).ok).toBe(true);
+      expect(runner2.supervisor.sessionId).toBe(runner1.supervisor.sessionId);
+
+      const result = await runner2.runAssignment({
+        assignmentId: 'windows-bind-error', kind: 'writer', ownedPaths: ['src/'], forbiddenPaths: [], contextKey: stubContextKey,
+      });
+      expect(result.ok).toBe(false);
+      expect(runner2.supervisor.children.find((child) => child.assignmentId === 'windows-bind-error')?.status).toBe('FAILED');
+      expect(fault.stateFileOpenFlags).toContain('r+');
+      expect(fault.fileFsyncCalls).toBeGreaterThan(0);
+    } finally {
+      fault.restore();
       server.close();
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }

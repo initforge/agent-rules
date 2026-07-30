@@ -2,6 +2,95 @@ import { describe, it, expect } from 'vitest'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
+import { execFileSync } from 'child_process'
+
+const REQUIRED_HOSTS = ['codex', 'claude', 'grok', 'opencode']
+
+function git(root: string, args: string[]): string {
+  return execFileSync('git', args, { cwd: root, encoding: 'utf-8' }).trim()
+}
+
+function scorecard(head: string, branch: string, overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    schema: 'am0015/scorecard-evidence/v2',
+    _git: { commit: head, branch },
+    dimensions: Array.from({ length: 18 }, (_, index) => ({ id: `d${String(index + 1).padStart(2, '0')}`, score: 10, maxScore: 10, status: 'pass' })),
+    ...overrides,
+  }
+}
+
+function attestation(host: string, head: string): Record<string, unknown> {
+  const issuedAt = new Date(Date.now() - 60_000).toISOString()
+  const expiresAt = new Date(Date.now() + 60 * 60_000).toISOString()
+  return {
+    host,
+    hostVersion: '1.0.0',
+    commitSha: head,
+    capabilityStatus: 'HOST_NATIVE',
+    capabilityIds: ['run'],
+    contractSetSha256: 'a'.repeat(64),
+    requestedModel: 'standard',
+    resolvedModel: 'standard',
+    observedModel: 'standard',
+    evidenceHashes: ['a'.repeat(64)],
+    nativeRunnerIdentity: `${host}-runner`,
+    issuedAt,
+    expiresAt,
+  }
+}
+
+function ledger(head: string, overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    plan_id: 'truth-plan',
+    status: 'COMPLETED',
+    execution_state: 'COMPLETED',
+    findings: [],
+    orphanFindings: [],
+    reconciliations: [{ status: 'MATCH', headCommit: head, detail: `HEAD ${head.slice(0, 12)}` }],
+    attestations: REQUIRED_HOSTS.map(host => attestation(host, head)),
+    plan_anchors: Array.from({ length: 25 }, (_, index) => ({ requirementId: `REQ-${index + 1}` })),
+    amendments: [],
+    shadowRevision: 1,
+    latestShadowRevision: 1,
+    latestReview: { reviewId: 'review', stale: false },
+    headCommit: head,
+    commitSha: head,
+    ci_checks: [{ passed: true, runUrl: 'https://github.com/initforge/agent-rules/actions/runs/1', repository: 'initforge/agent-rules', workflow: 'quality', check: 'test', commitSha: head }],
+    plan: { original: { artifactId: 'plan', sha256: 'a'.repeat(64), status: 'ADOPTED' } },
+    ...overrides,
+  }
+}
+
+function createTruthHarness(options: { ledger?: Record<string, unknown>; scorecard?: Record<string, unknown> } = {}): string {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-rules-c4-truth-'))
+  fs.mkdirSync(path.join(root, 'rules'), { recursive: true })
+  fs.mkdirSync(path.join(root, 'automation'), { recursive: true })
+  fs.writeFileSync(path.join(root, 'rules', 'manifest.yaml'), 'version: 1\n')
+  fs.writeFileSync(path.join(root, '.gitignore'), '.agent/\nautomation/scorecard-evidence.json\n')
+  git(root, ['init'])
+  git(root, ['config', 'user.email', 'c4@example.test'])
+  git(root, ['config', 'user.name', 'C4 Test'])
+  git(root, ['add', 'rules/manifest.yaml', '.gitignore'])
+  git(root, ['commit', '-m', 'fixture'])
+  const head = git(root, ['rev-parse', 'HEAD'])
+  const branch = git(root, ['branch', '--show-current'])
+  fs.mkdirSync(path.join(root, '.agent', 'ledger'), { recursive: true })
+  fs.writeFileSync(path.join(root, '.agent', 'ledger', 'truth-plan.json'), JSON.stringify(options.ledger ?? ledger(head)))
+  fs.writeFileSync(path.join(root, 'automation', 'scorecard-evidence.json'), JSON.stringify(options.scorecard ?? scorecard(head, branch)))
+  return root
+}
+
+async function withTruthHarness<T>(root: string, run: () => Promise<T>): Promise<T> {
+  const previous = process.env.HARNESS_ROOT
+  process.env.HARNESS_ROOT = root
+  try {
+    return await run()
+  } finally {
+    if (previous === undefined) delete process.env.HARNESS_ROOT
+    else process.env.HARNESS_ROOT = previous
+    fs.rmSync(root, { recursive: true, force: true })
+  }
+}
 
 const ROOT = path.resolve(__dirname, '..')
 
@@ -117,8 +206,9 @@ describe('C4 API', () => {
     const request = (await import('supertest')).default
     const res = await request(app).get('/api/c4/health')
     expect(res.status).toBe(200)
-    expect(res.body.ok).toBe(true)
-    expect(res.body.status).toBe('healthy')
+    expect(res.body.ok).toBe(false)
+    expect(res.body.status).toBe('degraded')
+    expect(res.body.operational.source).toBe('canonical-ledger')
   })
 })
 
@@ -164,11 +254,12 @@ describe('C4 accessibility', () => {
 })
 
 describe('C4 data invariants', () => {
-  it('returns healthy when manifest exists', async () => {
+  it('does not report healthy from a manifest when canonical ledger remediation is pending', async () => {
     const { app } = await import('../src/server/app')
     const request = (await import('supertest')).default
     const res = await request(app).get('/api/c4/health')
-    expect(res.body.status).toBe('healthy')
+    expect(res.body.status).toBe('degraded')
+    expect(res.body.operational.ledgers[0].executionState).toBe('NEEDS_REMEDIATION')
   })
 
   it('context data has valid scope', async () => {
@@ -212,11 +303,10 @@ describe('C4 data invariants', () => {
     expect(res.body.ok).toBe(true)
     expect(res.body.data).toBeDefined()
     expect(res.body.data.dimensions).toHaveLength(18)
-    const evidencePath = path.resolve(ROOT, '..', '..', 'automation', 'scorecard-evidence.json')
-    const hasEvidence = fs.existsSync(evidencePath)
-    expect(res.body.data.health).toBe(hasEvidence ? 'healthy' : 'unknown')
-    expect(res.body.data.evidencePresent).toBe(hasEvidence)
-    expect(res.body.data.summary[hasEvidence ? 'pass' : 'unknown']).toBe(18)
+    expect(res.body.data.health).toBe('degraded')
+    expect(res.body.data.evidencePresent).toBe(true)
+    expect(res.body.data.summary.pass).toBe(18)
+    expect(res.body.data.operational.source).toBe('canonical-ledger')
   })
 
   it('scorecard dimensions from evidence API, not hardcoded scores', async () => {
@@ -246,6 +336,66 @@ describe('C4 data invariants', () => {
       if (previous === undefined) delete process.env.C4_SCORECARD_EVIDENCE_PATH
       else process.env.C4_SCORECARD_EVIDENCE_PATH = previous
     }
+  })
+})
+
+describe('C4 canonical operational truth', () => {
+  async function requestTruth(root: string, endpoint: '/api/c4/health' | '/api/c4/scorecard') {
+    return withTruthHarness(root, async () => {
+      const { app } = await import('../src/server/app')
+      const request = (await import('supertest')).default
+      return request(app).get(endpoint)
+    })
+  }
+
+  it('rejects a stale all-pass scorecard even when its ledger is otherwise current', async () => {
+    const root = createTruthHarness()
+    const head = git(root, ['rev-parse', 'HEAD'])
+    const branch = git(root, ['branch', '--show-current'])
+    fs.writeFileSync(path.join(root, 'automation', 'scorecard-evidence.json'), JSON.stringify(scorecard('b'.repeat(64), branch)))
+    const res = await requestTruth(root, '/api/c4/scorecard')
+    expect(res.body.data.operational.ledgers[0].failedGates).toEqual([])
+    expect(res.body.data.operational.status).toBe('healthy')
+    expect(res.body.data.scorecardFreshness).toBe('stale')
+    expect(res.body.data.health).toBe('degraded')
+    expect(head).not.toBe('b'.repeat(64))
+  })
+
+  it('rejects configured scores when ledger has no attestations or CI evidence', async () => {
+    const root = createTruthHarness()
+    const head = git(root, ['rev-parse', 'HEAD'])
+    fs.writeFileSync(path.join(root, '.agent', 'ledger', 'truth-plan.json'), JSON.stringify(ledger(head, { attestations: [], ci_checks: [] })))
+    const res = await requestTruth(root, '/api/c4/scorecard')
+    expect(res.body.data.health).toBe('degraded')
+    expect(res.body.data.operational.ledgers[0].failedGates).toEqual(expect.arrayContaining(['CERTIFICATION_ATTESTATION', 'GITHUB_CI_PASSED']))
+  })
+
+  it('rejects configured scores when ledger HEAD binding mismatches the repository HEAD', async () => {
+    const root = createTruthHarness()
+    const head = git(root, ['rev-parse', 'HEAD'])
+    fs.writeFileSync(path.join(root, '.agent', 'ledger', 'truth-plan.json'), JSON.stringify(ledger(head, { headCommit: 'c'.repeat(64), commitSha: 'c'.repeat(64) })))
+    const res = await requestTruth(root, '/api/c4/health')
+    expect(res.body.status).toBe('degraded')
+    expect(res.body.operational.ledgers[0].failedGates).toContain('HEAD_MATCH')
+  })
+
+  it('rejects configured scores while the canonical ledger is NEEDS_REMEDIATION', async () => {
+    const root = createTruthHarness()
+    const head = git(root, ['rev-parse', 'HEAD'])
+    fs.writeFileSync(path.join(root, '.agent', 'ledger', 'truth-plan.json'), JSON.stringify(ledger(head, { status: 'NEEDS_REMEDIATION', execution_state: 'NEEDS_REMEDIATION' })))
+    const res = await requestTruth(root, '/api/c4/scorecard')
+    expect(res.body.data.health).toBe('degraded')
+    expect(res.body.data.operational.ledgers[0]).toMatchObject({ executionState: 'NEEDS_REMEDIATION' })
+    expect(res.body.data.operational.ledgers[0].failedGates).toContain('EXECUTION_STATE_COMPLETED')
+  })
+
+  it('rejects a foreign attestation host', async () => {
+    const root = createTruthHarness()
+    const head = git(root, ['rev-parse', 'HEAD'])
+    fs.writeFileSync(path.join(root, '.agent', 'ledger', 'truth-plan.json'), JSON.stringify(ledger(head, { attestations: [...REQUIRED_HOSTS.map(host => attestation(host, head)), attestation('foreign-host', head)] })))
+    const res = await requestTruth(root, '/api/c4/health')
+    expect(res.body.status).toBe('degraded')
+    expect(res.body.operational.ledgers[0].failedGates).toContain('NO_NON_NATIVE_HOST')
   })
 })
 

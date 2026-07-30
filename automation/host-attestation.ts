@@ -1,13 +1,19 @@
 import { createHash } from 'node:crypto';
-import { access, realpath, readFile, stat, mkdtemp, writeFile, chmod, unlink, rmdir, open } from 'node:fs/promises';
+import { access, lstat, realpath, mkdtemp, chmod, unlink, rmdir, open, readdir } from 'node:fs/promises';
 import { constants as fsConstants, constants } from 'node:fs';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import {
   isSha256,
   assertProvenanceTimestamp,
   CERTIFICATION_REQUIRED_HOSTS,
+  HOST_ATTESTATION_EVIDENCE_ROLES,
+  hostAttestationEvidenceRef,
+  hostAttestationEvidenceSubjectSha256,
+  type HostAttestation,
+  type HostAttestationEvidenceRef,
+  type HostAttestationEvidenceRole,
 } from '../packages/engine/src/contracts.js';
 
 const NATIVE_HOSTS = CERTIFICATION_REQUIRED_HOSTS;
@@ -41,34 +47,351 @@ export interface CollectedModelEvidence {
   readonly observed: ModelEvidenceRecord;
 }
 
-/** Create immutable restricted snapshot of executable in temp dir using O_NOFOLLOW fd.
- *  1. Open source by fd with O_NOFOLLOW (reject symlinks)
+/** Create an immutable, OS-restricted snapshot of an executable.
+ *  1. On POSIX, open with O_NOFOLLOW. On Windows, bind pre/open/post file
+ *     identity and canonical path because O_NOFOLLOW is ignored.
  *  2. fstat fd to confirm regular file
  *  3. Read bytes from same fd (TOCTOU-safe: same fd, no re-open)
- *  4. Write the exact rawBytes to snapshot path (mode 0o500 restrictive)
+ *  4. Write the exact rawBytes to snapshot path (POSIX 0o500 or Windows ACL)
  *  5. Hash rawBytes (same bytes, no re-read from disk)
- *  6. Verify snapshot file exists and is regular
+ *  6. Verify snapshot identity and platform-native permissions
  *  7. No fallback: if snapshot fails, error propagates — never runs original executable
  *  8. Cleanup errors surfaced (fail-closed)
- *  Identity = dev:ino from fd.stat() + input label + sha256(rawBytes)
- *  No realpath() after read (TOCTOU-safe — identity from same fd) */
+ *  Identity = dev:ino from fd.stat() + input label + sha256(rawBytes) */
 export interface ExecutableSnapshot {
   readonly snapshotPath: string;
   readonly identity: string;
   readonly cleanup: () => Promise<void>;
 }
 
-export async function createExecutableSnapshot(executable: string): Promise<ExecutableSnapshot> {
+export interface FileIdentityStats {
+  readonly dev: number;
+  readonly ino: number;
+  readonly mode: number;
+  isFile(): boolean;
+  isDirectory(): boolean;
+  isSymbolicLink(): boolean;
+}
+
+export type WindowsAclHardener = (target: string, kind: 'directory' | 'file') => Promise<void>;
+export type WindowsReparseInspector = (target: string) => Promise<void>;
+
+export interface ExecutableSnapshotOptions {
+  readonly platform?: NodeJS.Platform;
+  readonly windowsAclHardener?: WindowsAclHardener;
+  readonly windowsReparseInspector?: WindowsReparseInspector;
+}
+
+function sameFileIdentity(left: FileIdentityStats, right: FileIdentityStats, platform: NodeJS.Platform): boolean {
+  if (platform === 'win32' && left.dev === 0 && left.ino === 0) return false;
+  return left.dev === right.dev && left.ino === right.ino;
+}
+
+/** Exported for deterministic adversarial tests of the open/lstat race boundary. */
+export function assertStableExecutableIdentity(
+  before: FileIdentityStats,
+  opened: FileIdentityStats,
+  after: FileIdentityStats,
+  platform: NodeJS.Platform,
+): void {
+  if (before.isSymbolicLink() || after.isSymbolicLink()) throw new Error('source path is a symlink or reparse point');
+  if (!before.isFile() || !opened.isFile() || !after.isFile()) throw new Error('source path is not a regular file');
+  if (!sameFileIdentity(before, opened, platform) || !sameFileIdentity(opened, after, platform)) {
+    throw new Error('source executable identity changed during secure open');
+  }
+}
+
+function normalizedWindowsPath(value: string): string {
+  const normalized = path.win32.normalize(value);
+  const withoutNamespace = normalized.toLowerCase().startsWith('\\\\?\\unc\\')
+    ? `\\\\${normalized.slice(8)}`
+    : normalized.replace(/^\\\\\?\\/, '');
+  return withoutNamespace.toLowerCase();
+}
+
+/** Exported for mocks: the resolved source path must not drift around open(). */
+export function assertStableWindowsCanonicalPath(before: string, after: string): void {
+  if (normalizedWindowsPath(before) !== normalizedWindowsPath(after)) {
+    throw new Error('source canonical path changed during secure open');
+  }
+}
+
+function runFixedCommand(
+  executable: string,
+  args: readonly string[],
+  extraEnv: Readonly<Record<string, string>> = {},
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(executable, [...args], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+      env: { ...process.env, ...extraEnv },
+    });
+    const stdout: Buffer[] = [];
+    const stderr: Buffer[] = [];
+    child.stdout.on('data', (chunk: Buffer) => stdout.push(chunk));
+    child.stderr.on('data', (chunk: Buffer) => stderr.push(chunk));
+    child.once('error', reject);
+    child.once('close', (code) => {
+      const output = Buffer.concat(stdout).toString('utf8');
+      if (code === 0) resolve(output);
+      else reject(new Error(`${path.basename(executable)} exited ${code}: ${Buffer.concat(stderr).toString('utf8').trim()}`));
+    });
+  });
+}
+
+let windowsSidPromise: Promise<string> | null = null;
+
+function windowsSystemExecutable(...segments: readonly string[]): string {
+  const systemRoot = process.env.SystemRoot ?? 'C:\\Windows';
+  const resolvedRoot = path.win32.resolve(systemRoot);
+  const parsedRoot = path.win32.parse(resolvedRoot);
+  if (
+    !path.win32.isAbsolute(systemRoot)
+    || path.win32.dirname(resolvedRoot).toLowerCase() !== parsedRoot.root.toLowerCase()
+    || path.win32.basename(resolvedRoot).toLowerCase() !== 'windows'
+  ) {
+    throw new Error('SystemRoot is not a trusted drive-root Windows directory');
+  }
+  return path.win32.join(resolvedRoot, ...segments);
+}
+
+async function currentWindowsSid(): Promise<string> {
+  if (!windowsSidPromise) {
+    const whoami = windowsSystemExecutable('System32', 'whoami.exe');
+    windowsSidPromise = runFixedCommand(whoami, ['/user', '/fo', 'csv', '/nh']).then((output) => {
+      const sid = output.match(/S-\d-\d+(?:-\d+)+/i)?.[0];
+      if (!sid) throw new Error('whoami did not report a Windows SID');
+      return sid;
+    });
+  }
+  return windowsSidPromise;
+}
+
+export interface WindowsAclRuleReceipt {
+  readonly sid: string;
+  readonly type: number;
+  readonly rights: number;
+  readonly inheritance: number;
+  readonly propagation: number;
+  readonly inherited: boolean;
+}
+
+export interface WindowsAclReceipt {
+  readonly protected: boolean;
+  readonly owner: string;
+  readonly rules: readonly WindowsAclRuleReceipt[];
+}
+
+export interface WindowsAclReadCommand {
+  readonly executable: string;
+  readonly args: readonly string[];
+  readonly env: Readonly<Record<string, string>>;
+}
+
+export type WindowsAclWriteCommand = WindowsAclReadCommand;
+
+const WINDOWS_ALLOW_ACE = 0;
+const WINDOWS_INHERIT_NONE = 0;
+const WINDOWS_INHERIT_OBJECT_AND_CONTAINER = 3;
+const WINDOWS_PROPAGATION_NONE = 0;
+// Allow ACEs automatically include Synchronize (0x100000) on Windows.
+const WINDOWS_READ_AND_EXECUTE = 131241 | 1048576;
+const WINDOWS_FULL_CONTROL = 2032127;
+
+/** Validate an independently read DACL, not merely the ACL mutation command. */
+export function assertRestrictedWindowsAcl(
+  receipt: WindowsAclReceipt,
+  sid: string,
+  kind: 'directory' | 'file',
+): void {
+  const expectedRights = kind === 'directory' ? WINDOWS_FULL_CONTROL : WINDOWS_READ_AND_EXECUTE;
+  const expectedInheritance = kind === 'directory'
+    ? WINDOWS_INHERIT_OBJECT_AND_CONTAINER
+    : WINDOWS_INHERIT_NONE;
+  if (!receipt.protected || receipt.owner.toLowerCase() !== sid.toLowerCase() || receipt.rules.length !== 1) {
+    throw new Error('Windows ACL is not restricted to the current SID');
+  }
+  const [rule] = receipt.rules;
+  if (
+    rule.sid.toLowerCase() !== sid.toLowerCase()
+    || rule.type !== WINDOWS_ALLOW_ACE
+    || rule.rights !== expectedRights
+    || rule.inheritance !== expectedInheritance
+    || rule.propagation !== WINDOWS_PROPAGATION_NONE
+    || rule.inherited
+  ) {
+    throw new Error(`Windows ${kind} ACL does not match the required access policy`);
+  }
+}
+
+export function buildWindowsAclReadCommand(target: string, kind: 'directory' | 'file'): WindowsAclReadCommand {
+  const powershell = windowsSystemExecutable('System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+  const script = [
+    '$ErrorActionPreference="Stop";',
+    '$sections=[System.Security.AccessControl.AccessControlSections]::Access -bor ',
+    '[System.Security.AccessControl.AccessControlSections]::Owner;',
+    'if($env:CODEX_ATTEST_ACL_KIND -ceq "directory"){',
+    '$acl=[System.IO.Directory]::GetAccessControl($env:CODEX_ATTEST_ACL_TARGET,$sections);',
+    '}elseif($env:CODEX_ATTEST_ACL_KIND -ceq "file"){',
+    '$acl=[System.IO.File]::GetAccessControl($env:CODEX_ATTEST_ACL_TARGET,$sections);',
+    '}else{throw "Invalid ACL target kind"};',
+    '$rules=$acl.GetAccessRules($true,$true,[System.Security.Principal.SecurityIdentifier]);',
+    '[Console]::Out.WriteLine("protected="+[int]$acl.AreAccessRulesProtected);',
+    '[Console]::Out.WriteLine("owner="+$acl.GetOwner([System.Security.Principal.SecurityIdentifier]).Value);',
+    'for($i=0;$i -lt $rules.Count;$i++){',
+    '$rule=$rules[$i];',
+    '[Console]::Out.WriteLine("rule="+$rule.IdentityReference.Value+","',
+    '+[int]$rule.AccessControlType+","+[int64]$rule.FileSystemRights+","',
+    '+[int]$rule.InheritanceFlags+","+[int]$rule.PropagationFlags+","',
+    '+[int]$rule.IsInherited);',
+    '}',
+  ].join('');
+  return {
+    executable: powershell,
+    args: ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', script],
+    env: {
+      CODEX_ATTEST_ACL_TARGET: target,
+      CODEX_ATTEST_ACL_KIND: kind,
+    },
+  };
+}
+
+/**
+ * Build a module-independent ACL replacement command.
+ *
+ * A fresh security descriptor is intentional: mutating an existing DACL can
+ * replace only matching ACEs and leave unrelated explicit ACEs behind. The
+ * readback below therefore cannot certify an exact one-ACE policy unless the
+ * DACL itself is replaced.
+ */
+export function buildWindowsAclWriteCommand(
+  target: string,
+  kind: 'directory' | 'file',
+  sid: string,
+): WindowsAclWriteCommand {
+  const powershell = windowsSystemExecutable('System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+  const script = [
+    '$ErrorActionPreference="Stop";',
+    '$sid=[System.Security.Principal.SecurityIdentifier]::new($env:CODEX_ATTEST_ACL_SID);',
+    '$accessType=[System.Security.AccessControl.AccessControlType]::Allow;',
+    '$propagation=[System.Security.AccessControl.PropagationFlags]::None;',
+    'if($env:CODEX_ATTEST_ACL_KIND -ceq "directory"){',
+    '$acl=[System.Security.AccessControl.DirectorySecurity]::new();',
+    '$acl.SetAccessRuleProtection($true,$false);',
+    '$acl.SetOwner($sid);',
+    '$rights=[System.Security.AccessControl.FileSystemRights]::FullControl;',
+    '$inheritance=[System.Security.AccessControl.InheritanceFlags]::ObjectInherit -bor ',
+    '[System.Security.AccessControl.InheritanceFlags]::ContainerInherit;',
+    '$rule=[System.Security.AccessControl.FileSystemAccessRule]::new(',
+    '$sid,$rights,$inheritance,$propagation,$accessType);',
+    '[void]$acl.AddAccessRule($rule);',
+    '[System.IO.Directory]::SetAccessControl($env:CODEX_ATTEST_ACL_TARGET,$acl);',
+    '}elseif($env:CODEX_ATTEST_ACL_KIND -ceq "file"){',
+    '$acl=[System.Security.AccessControl.FileSecurity]::new();',
+    '$acl.SetAccessRuleProtection($true,$false);',
+    '$acl.SetOwner($sid);',
+    '$rights=[System.Security.AccessControl.FileSystemRights]::ReadAndExecute;',
+    '$inheritance=[System.Security.AccessControl.InheritanceFlags]::None;',
+    '$rule=[System.Security.AccessControl.FileSystemAccessRule]::new(',
+    '$sid,$rights,$inheritance,$propagation,$accessType);',
+    '[void]$acl.AddAccessRule($rule);',
+    '[System.IO.File]::SetAccessControl($env:CODEX_ATTEST_ACL_TARGET,$acl);',
+    '}else{throw "Invalid ACL target kind"};',
+  ].join('');
+  return {
+    executable: powershell,
+    args: ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', script],
+    env: {
+      CODEX_ATTEST_ACL_TARGET: target,
+      CODEX_ATTEST_ACL_KIND: kind,
+      CODEX_ATTEST_ACL_SID: sid,
+    },
+  };
+}
+
+export function parseWindowsAclReceipt(output: string): WindowsAclReceipt {
+  const lines = output.replace(/^\uFEFF/, '').trim().split(/\r?\n/);
+  if (lines.length < 2 || !/^protected=[01]$/.test(lines[0]) || !/^owner=S-\d-\d+(?:-\d+)+$/i.test(lines[1])) {
+    throw new Error('PowerShell did not return a valid Windows ACL receipt header');
+  }
+  const rules = lines.slice(2).map((line): WindowsAclRuleReceipt => {
+    const match = /^rule=(S-\d-\d+(?:-\d+)+),(-?\d+),(-?\d+),(-?\d+),(-?\d+),([01])$/i.exec(line);
+    if (!match) throw new Error('PowerShell did not return a valid Windows ACL rule receipt');
+    return {
+      sid: match[1],
+      type: Number(match[2]),
+      rights: Number(match[3]),
+      inheritance: Number(match[4]),
+      propagation: Number(match[5]),
+      inherited: match[6] === '1',
+    };
+  });
+  return {
+    protected: lines[0] === 'protected=1',
+    owner: lines[1].slice('owner='.length),
+    rules,
+  };
+}
+
+async function readWindowsAcl(target: string, kind: 'directory' | 'file'): Promise<WindowsAclReceipt> {
+  const command = buildWindowsAclReadCommand(target, kind);
+  const output = await runFixedCommand(command.executable, command.args, command.env);
+  return parseWindowsAclReceipt(output);
+}
+
+export const hardenWindowsAcl: WindowsAclHardener = async (target, kind) => {
+  const sid = await currentWindowsSid();
+  const command = buildWindowsAclWriteCommand(target, kind, sid);
+  await runFixedCommand(command.executable, command.args, command.env);
+  assertRestrictedWindowsAcl(await readWindowsAcl(target, kind), sid, kind);
+};
+
+const rejectWindowsReparseComponents: WindowsReparseInspector = async (target) => {
+  const resolved = path.win32.resolve(target);
+  const root = path.win32.parse(resolved).root;
+  let current = root;
+  for (const segment of resolved.slice(root.length).split(path.win32.sep).filter(Boolean)) {
+    current = path.win32.join(current, segment);
+    if ((await lstat(current)).isSymbolicLink()) {
+      throw new Error(`source path traverses a Windows symlink or reparse point: ${current}`);
+    }
+  }
+};
+
+async function verifyPosixMode(target: string, expected: number, label: string): Promise<void> {
+  const metadata = await lstat(target);
+  if (metadata.isSymbolicLink() || (metadata.mode & 0o777) !== expected) {
+    throw new Error(`${label} permissions are not ${expected.toString(8)}`);
+  }
+}
+
+export async function createExecutableSnapshot(
+  executable: string,
+  options: ExecutableSnapshotOptions = {},
+): Promise<ExecutableSnapshot> {
+  const platform = options.platform ?? process.platform;
+  const windowsAcl = options.windowsAclHardener ?? hardenWindowsAcl;
+  const windowsReparseInspector = options.windowsReparseInspector ?? rejectWindowsReparseComponents;
   let fd: any = null;
   let tmpDir: string | null = null;
   let snapshotPath: string | null = null;
   let identity: string | null = null;
   try {
-    // Open with O_NOFOLLOW to reject symlinks — only regular files accepted
-    fd = await open(executable, constants.O_RDONLY | constants.O_NOFOLLOW);
+    if (platform === 'win32') await windowsReparseInspector(executable);
+    const sourceBefore = await lstat(executable);
+    const canonicalBefore = platform === 'win32' ? await realpath(executable) : executable;
+    // O_NOFOLLOW is authoritative on POSIX. Windows ignores it, so Windows
+    // additionally binds pre/post lstat identity to the opened handle below.
+    const sourceFlags = constants.O_RDONLY | (platform === 'win32' ? 0 : constants.O_NOFOLLOW);
+    fd = await open(executable, sourceFlags);
     const stats = await fd.stat();
-    if (!stats.isFile()) {
-      throw new Error(`not a regular file: ${executable} (${stats.isDirectory() ? 'directory' : 'special'})`);
+    const sourceAfter = await lstat(executable);
+    assertStableExecutableIdentity(sourceBefore, stats, sourceAfter, platform);
+    if (platform === 'win32') {
+      const canonicalAfter = await realpath(executable);
+      assertStableWindowsCanonicalPath(canonicalBefore, canonicalAfter);
+      await windowsReparseInspector(executable);
     }
     // Read bytes from same fd (TOCTOU-safe: no re-open of path)
     const buf = await fd.readFile();
@@ -80,16 +403,37 @@ export async function createExecutableSnapshot(executable: string): Promise<Exec
 
     // Create temp directory with restrictive mode
     tmpDir = await mkdtemp(path.join(tmpdir(), 'attest-snapshot-'));
-    await chmod(tmpDir, 0o700);
+    if (platform === 'win32') {
+      await windowsAcl(tmpDir, 'directory');
+    } else {
+      await chmod(tmpDir, 0o700);
+      await verifyPosixMode(tmpDir, 0o700, 'snapshot directory');
+    }
     snapshotPath = path.join(tmpDir, path.basename(executable));
 
-    // Write the exact rawBytes to snapshot path (no re-read from source path)
-    await writeFile(snapshotPath, rawBytes, { mode: 0o500 });
-
-    // Verify snapshot file is regular (defense-in-depth)
-    const snapStat = await stat(snapshotPath);
-    if (!snapStat.isFile()) {
-      throw new Error('snapshot is not a regular file after write');
+    // Create through an O_EXCL|O_NOFOLLOW fd, then write and verify through that
+    // same fd. This prevents a path substitution from changing the snapshot bytes.
+    const snapshotFd = await open(
+      snapshotPath,
+      constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | (platform === 'win32' ? 0 : constants.O_NOFOLLOW),
+      platform === 'win32' ? 0o600 : 0o500,
+    );
+    try {
+      await snapshotFd.writeFile(rawBytes);
+      if (platform !== 'win32') await snapshotFd.chmod(0o500);
+      const snapStat = await snapshotFd.stat();
+      if (!snapStat.isFile()) throw new Error('snapshot is not a regular file after write');
+      const snapshotPathStat = await lstat(snapshotPath);
+      if (snapshotPathStat.isSymbolicLink() || !sameFileIdentity(snapStat, snapshotPathStat, platform)) {
+        throw new Error('snapshot path identity changed during secure creation');
+      }
+    } finally {
+      await snapshotFd.close();
+    }
+    if (platform === 'win32') {
+      await windowsAcl(snapshotPath, 'file');
+    } else {
+      await verifyPosixMode(snapshotPath, 0o500, 'snapshot file');
     }
 
     return {
@@ -151,12 +495,15 @@ function framedEvidenceHash(stdoutRaw: Uint8Array, stderrRaw: Uint8Array): strin
   return sha256Bytes(frame);
 }
 
-async function executableExists(candidate: string): Promise<boolean> {
+async function safeAbsoluteExecutable(candidate: string): Promise<string | null> {
+  if (!path.isAbsolute(candidate)) return null;
   try {
+    const metadata = await lstat(candidate);
+    if (metadata.isSymbolicLink() || !metadata.isFile()) return null;
     await access(candidate, fsConstants.X_OK);
-    return true;
+    return candidate;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -309,20 +656,107 @@ function evidenceExactModelValueForRole(rawBytes: Uint8Array, declaredValue: str
   return parsed !== null && typeof parsed === 'string' && parsed === declaredValue;
 }
 
-/** Exported for testing: returns platform-specific Codex Desktop candidate paths. */
-export function codexDesktopCandidates(platform: string = process.platform): string[] {
-  if (platform === 'linux') return ['/usr/bin/codex-desktop', '/opt/codex-desktop'];
-  if (platform === 'darwin') return ['/Applications/Codex.app/Contents/MacOS/Codex'];
-  return [];
+export interface NativeExecutableResolutionOptions {
+  readonly env?: NodeJS.ProcessEnv;
+  readonly homeDir?: string;
+  readonly platform?: NodeJS.Platform;
 }
 
-async function resolveExecutable(host: NativeHost): Promise<string> {
-  if (host !== 'codex') return host;
-  const candidates = codexDesktopCandidates();
-  for (const candidate of candidates) {
-    if (await executableExists(candidate)) return candidate;
+function commandFileNames(command: string, platform: NodeJS.Platform, env: NodeJS.ProcessEnv): string[] {
+  if (platform !== 'win32') return [command];
+  const extensions = (env.PATHEXT ?? '.EXE;.CMD;.BAT')
+    .split(';')
+    .map((extension) => extension.trim())
+    .filter(Boolean);
+  return [command, ...extensions.map((extension) => `${command}${extension.toLowerCase()}`)];
+}
+
+function pathCommandCandidates(command: string, platform: NodeJS.Platform, env: NodeJS.ProcessEnv): string[] {
+  const names = commandFileNames(command, platform, env);
+  return (env.PATH ?? '').split(path.delimiter)
+    .map((entry) => entry.trim())
+    .filter((entry) => path.isAbsolute(entry))
+    .flatMap((entry) => names.map((name) => path.join(entry, name)));
+}
+
+async function childFiles(directory: string, predicate: (name: string) => boolean): Promise<string[]> {
+  try {
+    const entries = await readdir(directory, { withFileTypes: true });
+    return entries.filter((entry) => entry.isFile() && predicate(entry.name)).map((entry) => path.join(directory, entry.name));
+  } catch {
+    return [];
   }
-  throw new Error(`codex: Codex Desktop executable not found. Checked: ${candidates.join(', ')}`);
+}
+
+async function bundledCodexCandidates(platform: NodeJS.Platform, homeDir: string): Promise<string[]> {
+  const platformPrefix = platform === 'win32' ? 'codex-win32-' : `codex-${platform}-`;
+  const packageRoot = path.join(homeDir, '.codex-cli-npm', 'lib', 'node_modules', '@openai', 'codex', 'node_modules', '@openai');
+  let packageEntries: string[] = [];
+  try {
+    packageEntries = (await readdir(packageRoot, { withFileTypes: true }))
+      .filter((entry) => entry.isDirectory() && entry.name.startsWith(platformPrefix))
+      .map((entry) => path.join(packageRoot, entry.name));
+  } catch { /* no bundled CLI in this installation */ }
+
+  const candidates: string[] = [];
+  for (const packageDir of packageEntries) {
+    const vendorDir = path.join(packageDir, 'vendor');
+    try {
+      const targets = await readdir(vendorDir, { withFileTypes: true });
+      for (const target of targets) {
+        if (target.isDirectory()) candidates.push(path.join(vendorDir, target.name, 'bin', platform === 'win32' ? 'codex.exe' : 'codex'));
+      }
+    } catch { /* invalid bundle layout is not an attestation candidate */ }
+  }
+  return candidates;
+}
+
+/**
+ * Resolves an actual local CLI to an absolute, non-symlink regular executable.
+ * GUI launchers are intentionally absent: they cannot truthfully attest CLI help.
+ * The snapshot step re-opens this returned path with O_NOFOLLOW before execution,
+ * so a later replacement cannot change the probed runner.
+ */
+export async function resolveNativeExecutable(
+  host: string,
+  options: NativeExecutableResolutionOptions = {},
+): Promise<string> {
+  const env = options.env ?? process.env;
+  const homeDir = options.homeDir ?? homedir();
+  const platform = options.platform ?? process.platform;
+  const candidates: string[] = [];
+
+  switch (host) {
+    case 'codex':
+      candidates.push(...await bundledCodexCandidates(platform, homeDir));
+      if (env.CODEX_CLI_PATH && path.isAbsolute(env.CODEX_CLI_PATH)) candidates.push(env.CODEX_CLI_PATH);
+      candidates.push(...pathCommandCandidates('codex', platform, env));
+      break;
+    case 'claude':
+      candidates.push(...await childFiles(path.join(homeDir, '.local', 'share', 'claude', 'versions'), () => true));
+      candidates.push(...pathCommandCandidates('claude', platform, env));
+      break;
+    case 'grok':
+      candidates.push(...await childFiles(path.join(homeDir, '.grok', 'downloads'), (name) => /^grok(?:-|$)/.test(name)));
+      candidates.push(...pathCommandCandidates('grok', platform, env));
+      break;
+    case 'opencode':
+      candidates.push(path.join(homeDir, '.opencode', 'bin', platform === 'win32' ? 'opencode.exe' : 'opencode'));
+      candidates.push(...pathCommandCandidates('opencode', platform, env));
+      break;
+    case 'antigravity':
+      candidates.push(path.join(homeDir, '.local', 'bin', platform === 'win32' ? 'agy.exe' : 'agy'));
+      candidates.push(...pathCommandCandidates('agy', platform, env));
+      break;
+    default:
+      throw new Error(`${host}: no native CLI resolver is defined`);
+  }
+
+  for (const candidate of [...new Set(candidates)]) {
+    const executable = await safeAbsoluteExecutable(candidate);
+    if (executable) return executable;
+  }
+  throw new Error(`${host}: no absolute non-symlink executable was found`);
 }
 
 function successfulOutput(result: ProbeResult): string {
@@ -331,17 +765,92 @@ function successfulOutput(result: ProbeResult): string {
   return output;
 }
 
-function versionFrom(output: string): string {
-  const match = output.match(/(?:version|v)?\s*(\d+\.\d+(?:\.\d+)?(?:[-+][\w.-]+)?)/i);
-  if (!match) throw new Error('version probe did not report a parseable version');
+interface HelpCapability {
+  readonly id: string;
+  readonly kind: 'command' | 'option';
+  readonly token: string;
+}
+
+interface HostProbeSpec {
+  readonly version: RegExp;
+  readonly capabilities: readonly HelpCapability[];
+}
+
+const HOST_PROBE_SPECS: Readonly<Record<string, HostProbeSpec>> = {
+  codex: {
+    version: /^codex(?:-cli)?\s+(\d+\.\d+\.\d+(?:[-+][\w.-]+)?)$/i,
+    capabilities: [
+      { id: 'codex:exec', kind: 'command', token: 'exec' },
+      { id: 'codex:review', kind: 'command', token: 'review' },
+      { id: 'codex:model', kind: 'option', token: '--model' },
+    ],
+  },
+  claude: {
+    version: /^(\d+\.\d+\.\d+(?:[-+][\w.-]+)?)(?:\s+\(Claude Code\))?$/,
+    capabilities: [
+      { id: 'claude:model', kind: 'option', token: '--model' },
+      { id: 'claude:agent', kind: 'option', token: '--agent' },
+      { id: 'claude:print', kind: 'option', token: '--print' },
+    ],
+  },
+  grok: {
+    version: /^grok\s+(\d+\.\d+\.\d+(?:[-+][\w.-]+)?)(?:\s+\([^)]+\))?(?:\s+\[[^\]]+\])?$/i,
+    capabilities: [
+      { id: 'grok:model', kind: 'option', token: '--model' },
+      { id: 'grok:agent', kind: 'option', token: '--agent' },
+      { id: 'grok:single-prompt', kind: 'option', token: '--single' },
+    ],
+  },
+  opencode: {
+    version: /^(\d+\.\d+\.\d+(?:[-+][\w.-]+)?)$/,
+    capabilities: [
+      { id: 'opencode:run', kind: 'command', token: 'opencode run' },
+      { id: 'opencode:mcp', kind: 'command', token: 'opencode mcp' },
+      { id: 'opencode:model', kind: 'option', token: '--model' },
+    ],
+  },
+  antigravity: {
+    version: /^(\d+\.\d+\.\d+(?:[-+][\w.-]+)?)$/,
+    capabilities: [
+      { id: 'antigravity:model', kind: 'option', token: '--model' },
+      { id: 'antigravity:agent', kind: 'option', token: '--agent' },
+      { id: 'antigravity:print', kind: 'option', token: '--print' },
+    ],
+  },
+};
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function tokenOccursOnce(help: string, capability: HelpCapability): boolean {
+  const token = escapeRegExp(capability.token);
+  const pattern = capability.kind === 'command'
+    ? new RegExp(`^\\s*${token}(?:\\s{2,}|\\t+|\\s*$)`, 'gm')
+    : new RegExp(`^\\s*(?:-[A-Za-z],\\s*)?${token}(?:\\s|<|\\[|$)`, 'gm');
+  return [...help.matchAll(pattern)].length === 1;
+}
+
+function hostSpec(host: NativeHost): HostProbeSpec {
+  const spec = HOST_PROBE_SPECS[host];
+  if (!spec) throw new Error(`unsupported native host '${host}'`);
+  return spec;
+}
+
+function versionFrom(host: NativeHost, output: string): string {
+  const lines = output.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const match = lines.length === 1 ? lines[0].match(hostSpec(host).version) : null;
+  if (!match) throw new Error(`${host}: version output does not match the supported CLI format`);
   return match[1];
 }
 
-function capabilityIdsFrom(output: string): string[] {
-  const capabilities = [...output.matchAll(/\bcapabilit(?:y|ies)\s*[:=]\s*([^\n\r]+)/ig)]
-    .flatMap((match) => match[1].split(',').map((value) => value.trim()).filter(Boolean));
-  if (capabilities.length === 0) throw new Error('capability probe did not report capability IDs');
-  return [...new Set(capabilities)].sort();
+function capabilityIdsFrom(host: NativeHost, output: string): string[] {
+  const spec = hostSpec(host);
+  const missing = spec.capabilities.filter((capability) => !tokenOccursOnce(output, capability));
+  if (missing.length > 0) {
+    throw new Error(`${host}: help output drifted or lacks required stable tokens: ${missing.map((capability) => capability.token).join(', ')}`);
+  }
+  return spec.capabilities.map((capability) => capability.id).sort();
 }
 
 /**
@@ -360,7 +869,7 @@ export interface CollectedHostAttestation {
   readonly requestedModel: string;
   readonly resolvedModel: string;
   readonly observedModel: string;
-  readonly evidenceHashes: readonly string[];
+  readonly evidenceRefs: readonly HostAttestationEvidenceRef[];
   readonly nativeRunnerIdentity: string;
   readonly issuedAt: string;
   readonly expiresAt: string;
@@ -421,7 +930,8 @@ export async function collectHostAttestations(
   return Promise.all(NATIVE_HOSTS.map(async (host) => {
     let snapshot: ExecutableSnapshot | null = null;
     try {
-      const executable = await (options.resolveExecutable ?? resolveExecutable)(host);
+      const executable = await (options.resolveExecutable ?? resolveNativeExecutable)(host);
+      if (!path.isAbsolute(executable)) throw new Error('resolver returned a non-absolute executable path');
 
       // V5: create immutable snapshot via O_NOFOLLOW fd, probe snapshot only, never original
       snapshot = await snapshotProvider(executable);
@@ -446,10 +956,10 @@ export async function collectHostAttestations(
       // Model evidence: role-aware exact parser
       const hostModelEv = me[host];
       const encoder = new TextEncoder();
-      const modelHashes: string[] = [];
+      const modelHashes = new Map<HostAttestationEvidenceRole, string>();
       for (const [role, record] of [['requestedModel', hostModelEv.requested], ['resolvedModel', hostModelEv.resolved], ['observedModel', hostModelEv.observed]] as const) {
         const p = record.provenance;
-        modelHashes.push(sha256Bytes(concatUint8(
+        modelHashes.set(role, sha256Bytes(concatUint8(
           encoder.encode(`role:${role}`),
           encoder.encode(`value:${record.value}`),
           record.rawEvidenceBytes,
@@ -459,22 +969,40 @@ export async function collectHostAttestations(
         )));
       }
 
-      const attestation: CollectedHostAttestation = {
+      const attestationFields: Omit<CollectedHostAttestation, 'evidenceRefs'> = {
         host,
-        hostVersion: versionFrom(versionOutput),
+        hostVersion: versionFrom(host, versionOutput),
         commitSha,
         capabilityStatus: 'HOST_NATIVE',
-        capabilityIds: capabilityIdsFrom(capabilityOutput),
+        capabilityIds: capabilityIdsFrom(host, capabilityOutput),
         contractSetSha256: options.contractSetSha256,
         requestedModel: hostModelEv.requested.value,
         resolvedModel: hostModelEv.resolved.value,
         observedModel: hostModelEv.observed.value,
-        evidenceHashes: [versionHash, capabilityHash, ...modelHashes],
         nativeRunnerIdentity,
         issuedAt: now.toISOString(),
         expiresAt: expiresAt.toISOString(),
       };
-      return attestation;
+      const contentHashes = new Map<HostAttestationEvidenceRole, string>([
+        ['version', versionHash],
+        ['capabilities', capabilityHash],
+        ...modelHashes,
+      ]);
+      const subject: HostAttestation = attestationFields;
+      const evidenceRefs: HostAttestationEvidenceRef[] = HOST_ATTESTATION_EVIDENCE_ROLES.map((role) => {
+        const evidenceSha256 = contentHashes.get(role);
+        if (!evidenceSha256) throw new Error(`missing content hash for evidence role '${role}'`);
+        return {
+          role,
+          host,
+          commitSha,
+          evidenceSha256,
+          evidenceRef: hostAttestationEvidenceRef(host, commitSha, role, evidenceSha256),
+          subjectSha256: hostAttestationEvidenceSubjectSha256(role, subject),
+          observedAt: now.toISOString(),
+        };
+      });
+      return { ...attestationFields, evidenceRefs };
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       throw new Error(`${host}: unable to collect native attestation: ${detail}`);

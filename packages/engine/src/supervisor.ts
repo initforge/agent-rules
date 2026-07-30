@@ -101,6 +101,31 @@ export type NativeModeReason = 'initial_architecture_boundary' | 'final_certific
 function sha256(data: string): string { return createHash('sha256').update(data).digest('hex'); }
 function deepClone<T>(obj: T): T { return JSON.parse(JSON.stringify(obj)) as T; }
 
+/** State contents must be durable before their atomic rename. */
+function fsyncStateFile(filePath: string): void {
+  // Windows can reject FlushFileBuffers on a descriptor reopened read-only.
+  const fd = fs.openSync(filePath, 'r+');
+  try { fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
+}
+
+/**
+ * POSIX directory fsync makes a rename durable. Windows does not support
+ * opening/flushing directories this way, so keep the strict file fsync and
+ * tolerate only the documented "directory flush unavailable" error codes.
+ */
+function fsyncRenameDirectory(dir: string): void {
+  let fd: number | undefined;
+  try {
+    fd = fs.openSync(dir, 'r');
+    fs.fsyncSync(fd);
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (!['EPERM', 'EINVAL', 'ENOTSUP', 'EOPNOTSUPP'].includes(code ?? '')) throw error;
+  } finally {
+    if (fd !== undefined) fs.closeSync(fd);
+  }
+}
+
 // ── Internal state — held in WeakMap, not accessible from outside module ──
 interface InternalState {
   config: Required<Pick<SupervisorConfig, 'maxWriters'|'maxReviewers'|'childDepth'|'backpressureRssMb'|'backpressureCpuPct'|'assignmentTimeoutMs'|'defaultProvider'|'defaultModel'|'defaultEffort'>> & { statePath?: string };
@@ -251,11 +276,9 @@ function loadStateFile(statePath: string): SupervisorState | null {
 
   if (chosen.source === 'temp') {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    const tmpFd = fs.openSync(tmpPath, 'r');
-    try { fs.fsyncSync(tmpFd); } finally { fs.closeSync(tmpFd); }
+    fsyncStateFile(tmpPath);
     fs.renameSync(tmpPath, resolvedPath);
-    const dirFd = fs.openSync(dir, 'r');
-    try { fs.fsyncSync(dirFd); } finally { fs.closeSync(dirFd); }
+    fsyncRenameDirectory(dir);
   }
 
   // F8 (R8): load reconciliation journal — reprocess unresolved markers
@@ -360,11 +383,9 @@ function writeState(s: InternalState): void {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   const state: SupervisorState = { supervisorId: s.supervisorId, revision: s._revision, children: s.childrenList.map(toPersisted), auditEvents: s.auditEvents };
   fs.writeFileSync(tmpPath, JSON.stringify(state, null, 2), 'utf-8');
-  const tmpFd = fs.openSync(tmpPath, 'r');
-  try { fs.fsyncSync(tmpFd); } finally { fs.closeSync(tmpFd); }
+  fsyncStateFile(tmpPath);
   fs.renameSync(tmpPath, resolvedPath);
-  const dirFd = fs.openSync(dir, 'r');
-  try { fs.fsyncSync(dirFd); } finally { fs.closeSync(dirFd); }
+  fsyncRenameDirectory(dir);
 }
 
 // ── F10 (R10): reconciliation journal — read-only in supervisor (write in runner) ──
@@ -427,19 +448,16 @@ function processReconciliationJournal(state: SupervisorState, statePath: string)
     if (changed) {
       const tmpPath = statePath + '.tmp';
       fs.writeFileSync(tmpPath, JSON.stringify(state, null, 2), 'utf-8');
-      const tmpFd = fs.openSync(tmpPath, 'r');
-      try { fs.fsyncSync(tmpFd); } finally { fs.closeSync(tmpFd); }
+      fsyncStateFile(tmpPath);
       fs.renameSync(tmpPath, statePath);
-      const dirFd = fs.openSync(path.dirname(statePath), 'r');
-      try { fs.fsyncSync(dirFd); } finally { fs.closeSync(dirFd); }
+      fsyncRenameDirectory(path.dirname(statePath));
     }
 
     // Unlink journal after processing
     const unlinkFd = fs.openSync(jPath, fs.constants.O_WRONLY | fs.constants.O_NOFOLLOW);
     fs.closeSync(unlinkFd);
     try { fs.unlinkSync(jPath); } catch { /* ok */ }
-    const dirFd = fs.openSync(path.dirname(jPath), 'r');
-    try { fs.fsyncSync(dirFd); } finally { fs.closeSync(dirFd); }
+    fsyncRenameDirectory(path.dirname(jPath));
   } catch { /* best-effort */ }
 }
 

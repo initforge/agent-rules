@@ -109,15 +109,15 @@ describe('Workflow structure validation', () => {
     }
   });
 
-  it('quality.yml has no duplicate build step', () => {
+  it('quality.yml has one root build step and no duplicate root build', () => {
     const wf = loadWorkflow('quality.yml');
     let buildCount = 0;
     for (const job of Object.values(wf.jobs!)) {
       for (const step of job.steps || []) {
-        if (step.run && step.run.includes('npm run build')) buildCount++;
+        if (step.run && /^npm run build\s*$/m.test(step.run)) buildCount++;
       }
     }
-    expect(buildCount).toBeLessThanOrEqual(1);
+    expect(buildCount).toBe(1);
   });
 
   it('certification.yml uses self-hosted runners, never on pull_request (only trusted push/manual/schedule/release)', () => {
@@ -185,6 +185,18 @@ describe('Quality workflow validation', () => {
     expect(cleanupStep).toBeTruthy();
     expect(cleanupStep!['if']).toBe('always()');
     expect(cleanupStep!.run).toContain('node automation/control-plane-ci.mjs stop');
+  });
+
+  it('builds the engine dependency before generating the context graph', () => {
+    const wf = loadWorkflow('quality.yml');
+    const pythonSteps = wf.jobs!['python-tests']!.steps!;
+    const dependencyBuildIndex = pythonSteps.findIndex(s => s.name === 'Build context graph dependency');
+    const contextGraphIndex = pythonSteps.findIndex(s => s.name === 'Generate context graph');
+
+    expect(dependencyBuildIndex).toBeGreaterThanOrEqual(0);
+    expect(pythonSteps[dependencyBuildIndex]!.run).toBe('npm run build -w packages/engine');
+    expect(contextGraphIndex).toBeGreaterThan(dependencyBuildIndex);
+    expect(pythonSteps[contextGraphIndex]!.run).toContain('npx tsx packages/cli/src/index.ts context-graph build');
   });
 
   it('has security job with audit, semgrep, and gitleaks', () => {

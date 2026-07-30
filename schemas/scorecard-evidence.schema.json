@@ -28,11 +28,46 @@
         "properties": {
           "id": { "type": "string" },
           "branch": { "type": "string" },
+          "head_sha": { "type": "string" },
           "status": { "type": "string" },
           "conclusion": { "type": "string" },
-          "started_at": { "type": "string" }
+          "started_at": { "type": "string" },
+          "updated_at": { "type": "string" },
+          "workflow": { "type": "string" }
         }
       }
+    },
+    "_binding": {
+      "type": "object",
+      "description": "Independent bindings required before any evidence can promote a score.",
+      "properties": {
+        "head_commit": { "type": "string", "pattern": "^[a-f0-9]{7,40}$" },
+        "head_verified": { "type": "boolean" },
+        "effective_plan": {
+          "type": "object",
+          "properties": {
+            "sha256": { "type": "string", "pattern": "^([a-f0-9]{64})?$" },
+            "ledger_uri": { "type": "string" },
+            "ledger_hash": { "type": "string", "pattern": "^(sha256:[a-f0-9]{64})?$" },
+            "verified": { "type": "boolean" },
+            "reason": { "type": "string" }
+          },
+          "required": ["sha256", "ledger_uri", "ledger_hash", "verified", "reason"]
+        },
+        "ci": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["passed", "failed", "pending", "stale", "unavailable"] },
+            "head_commit": { "type": "string" },
+            "freshness_seconds": { "type": "number", "minimum": -1 },
+            "run_ids": { "type": "array", "items": { "type": "string" } },
+            "reason": { "type": "string" }
+          },
+          "required": ["status", "head_commit", "freshness_seconds", "run_ids", "reason"]
+        },
+        "verified": { "type": "boolean" }
+      },
+      "required": ["head_commit", "head_verified", "effective_plan", "ci", "verified"]
     },
     "_evidence_sources": {
       "type": "array",
@@ -59,6 +94,16 @@
           "severity": { "type": "string", "enum": ["Critical", "High", "Medium", "Low"] },
           "score": { "type": "integer", "minimum": 0 },
           "maxScore": { "type": "integer", "minimum": 0 },
+          "score_cap": {
+            "type": "object",
+            "description": "A cap is allowed only for an unresolved Critical or High finding; closed history never caps a score.",
+            "properties": {
+              "applied": { "type": "boolean" },
+              "limit": { "type": "integer", "minimum": 0, "maximum": 10 },
+              "finding_ids": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["applied", "limit", "finding_ids"]
+          },
           "status": { "type": "string", "enum": ["pass", "warn", "fail", "unknown"] },
           "evidence_items": {
             "type": "array",
@@ -70,9 +115,12 @@
                 "freshness_seconds": { "type": "number", "minimum": -1 },
                 "kind": { "type": "string" },
                 "passed": { "type": "boolean" },
+                "head_commit": { "type": "string" },
+                "effective_plan_sha256": { "type": "string" },
+                "ci_run_ids": { "type": "array", "items": { "type": "string" } },
                 "finding": { "type": "string" }
               },
-              "required": ["uri", "hash", "freshness_seconds", "kind", "passed"]
+              "required": ["uri", "hash", "freshness_seconds", "kind", "passed", "head_commit", "effective_plan_sha256", "ci_run_ids"]
             }
           },
           "findings": {
@@ -80,11 +128,11 @@
             "items": { "type": "string" }
           }
         },
-        "required": ["id", "label", "severity", "score", "maxScore", "status", "evidence_items", "findings"]
+        "required": ["id", "label", "severity", "score", "maxScore", "score_cap", "status", "evidence_items", "findings"]
       },
       "minItems": 18,
       "maxItems": 18
     }
   },
-  "required": ["schema", "updated_at", "dimensions"]
+  "required": ["schema", "updated_at", "_binding", "dimensions"]
 }

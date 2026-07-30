@@ -53,6 +53,40 @@ function noVerifierSupervisor(config?: Record<string, unknown>): {s: SupervisorP
   return { s, complete: internals.complete, _internal: internals._internal };
 }
 
+function mockWindowsDirectoryFsyncEperm(directory: string, statePath: string) {
+  const directoryFds = new Set<number>();
+  const stateFileOpenFlags: Array<string | number> = [];
+  const realOpenSync = fs.openSync;
+  const realFsyncSync = fs.fsyncSync;
+  let fileFsyncCalls = 0;
+
+  const openSpy = vi.spyOn(fs, 'openSync').mockImplementation(((file: fs.PathLike, flags: string | number, ...rest: unknown[]) => {
+    const fd = realOpenSync(file, flags as never, ...(rest as []));
+    const resolved = path.resolve(String(file));
+    if (resolved === path.resolve(directory)) directoryFds.add(fd);
+    if (resolved === path.resolve(`${statePath}.tmp`)) stateFileOpenFlags.push(flags);
+    return fd;
+  }) as typeof fs.openSync);
+  const fsyncSpy = vi.spyOn(fs, 'fsyncSync').mockImplementation(((fd: number) => {
+    if (directoryFds.delete(fd)) {
+      const error = new Error('Windows directory fsync is unavailable') as NodeJS.ErrnoException;
+      error.code = 'EPERM';
+      throw error;
+    }
+    fileFsyncCalls++;
+    return realFsyncSync(fd);
+  }) as typeof fs.fsyncSync);
+
+  return {
+    stateFileOpenFlags,
+    get fileFsyncCalls() { return fileFsyncCalls; },
+    restore: () => {
+      fsyncSpy.mockRestore();
+      openSpy.mockRestore();
+    },
+  };
+}
+
 describe('Supervisor', () => {
   let supervisor: SupervisorPublicView;
 
@@ -971,6 +1005,24 @@ if (result.ok) {
       const child = s2.children.find(c => c.assignmentId === 'r1');
       expect(child?.status).toBe('FAILED');
     });
+
+    it('persists and restores when Windows rejects directory fsync', () => {
+      const fault = mockWindowsDirectoryFsyncEperm(tmpDir, statePath);
+      try {
+        const s1 = simpleSupervisor({ statePath });
+        const assigned = s1.assignChild({ assignmentId: 'windows-fsync', kind: 'writer', ownedPaths: ['src/'], forbiddenPaths: [], contextKey: stubContextKey });
+
+        expect(assigned.ok).toBe(true);
+        expect(fs.existsSync(statePath)).toBe(true);
+        expect(fault.stateFileOpenFlags).toContain('r+');
+        expect(fault.fileFsyncCalls).toBeGreaterThan(0);
+
+        const s2 = simpleSupervisor({ statePath });
+        expect(s2.children.map((child) => child.assignmentId)).toContain('windows-fsync');
+      } finally {
+        fault.restore();
+      }
+    });
   });
 
   describe('atomic recovery', () => {
@@ -1370,4 +1422,3 @@ if (result.ok) {
     });
   });
 });
-

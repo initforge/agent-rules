@@ -3,15 +3,30 @@ import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  assertCertificationAttestation,
+  HOST_ATTESTATION_EVIDENCE_ROLES,
+  hostAttestationEvidenceRef,
+  hostAttestationEvidenceSubjectSha256,
+} from '../packages/engine/src/contracts.js';
+import {
+  assertStableExecutableIdentity,
+  assertStableWindowsCanonicalPath,
+  assertRestrictedWindowsAcl,
+  buildWindowsAclReadCommand,
+  buildWindowsAclWriteCommand,
   collectHostAttestations,
   NATIVE_HOSTS,
-  codexDesktopCandidates,
   createExecutableSnapshot,
+  hardenWindowsAcl,
   parseEvidenceModelValueForRole,
+  parseWindowsAclReceipt,
+  resolveNativeExecutable,
   type ProbeRunner,
   type CollectedModelEvidence,
   type ModelEvidenceProvenance,
   type ExecutableSnapshot,
+  type FileIdentityStats,
+  type WindowsAclReceipt,
 } from './host-attestation.js';
 
 const commitSha = 'a'.repeat(64);
@@ -44,13 +59,56 @@ const allModelEvidence: Record<string, CollectedModelEvidence> = {
   claude: modelEvidence('claude'),
   grok: modelEvidence('grok'),
   opencode: modelEvidence('opencode'),
+  antigravity: modelEvidence('antigravity'),
 };
 
 const enc = (s: string) => encoder.encode(s);
 
-const run: ProbeRunner = async (_executable, args) => {
-  const versionOut = `host ${version}\n`;
-  const capOut = 'Capabilities: chat, edit\nModel: native-test-model\n';
+function identityStats(
+  dev: number,
+  ino: number,
+  options: { readonly file?: boolean; readonly symlink?: boolean } = {},
+): FileIdentityStats {
+  const file = options.file ?? true;
+  const symlink = options.symlink ?? false;
+  return {
+    dev,
+    ino,
+    mode: file ? 0o100755 : 0o040755,
+    isFile: () => file,
+    isDirectory: () => !file && !symlink,
+    isSymbolicLink: () => symlink,
+  };
+}
+
+const hostVersionOutput: Record<string, string> = {
+  codex: `codex-cli ${version}\n`,
+  claude: `${version} (Claude Code)\n`,
+  grok: `grok ${version} (abcdef) [stable]\n`,
+  opencode: `${version}\n`,
+  antigravity: `${version}\n`,
+};
+
+const hostHelpOutput: Record<string, string> = {
+  codex: 'Commands:\n  exec  Run non-interactively\n  review  Review code\nOptions:\n  -m, --model <MODEL>\n',
+  claude: 'Options:\n  --model <MODEL>\n  --agent <AGENT>\n  -p, --print [PROMPT]\n',
+  grok: 'Options:\n  --model <MODEL>\n  --agent <NAME>\n  -p, --single <PROMPT>\n',
+  opencode: 'Commands:\n  opencode run  run a prompt\n  opencode mcp  manage MCP\nOptions:\n  -m, --model  model to use\n',
+  antigravity: 'Usage of agy:\n  --model  Model\n  --agent  Agent\n  -p, --print  Print\n',
+};
+
+const capabilityIds: Record<string, string[]> = {
+  codex: ['codex:exec', 'codex:model', 'codex:review'],
+  claude: ['claude:agent', 'claude:model', 'claude:print'],
+  grok: ['grok:agent', 'grok:model', 'grok:single-prompt'],
+  opencode: ['opencode:mcp', 'opencode:model', 'opencode:run'],
+  antigravity: ['antigravity:agent', 'antigravity:model', 'antigravity:print'],
+};
+
+const run: ProbeRunner = async (executable, args) => {
+  const host = executable.split('/').at(-1)!;
+  const versionOut = hostVersionOutput[host];
+  const capOut = hostHelpOutput[host];
   return args[0] === '--version'
     ? { exitCode: 0, stdout: versionOut, stderr: '', stdoutRaw: enc(versionOut), stderrRaw: enc('') }
     : { exitCode: 0, stdout: capOut, stderr: '', stdoutRaw: enc(capOut), stderrRaw: enc('') };
@@ -79,7 +137,7 @@ function expectedModelHash(role: string, value: string, rawBytes: Uint8Array, pr
 }
 
 describe('collectHostAttestations', () => {
-  it('collects deterministic, contract-valid evidence for exactly four required native hosts', async () => {
+  it('roundtrips content-bound evidence through canonical certification for all five required hosts', async () => {
     const result = await collectHostAttestations(commitSha, {
       contractSetSha256,
       run,
@@ -90,16 +148,15 @@ describe('collectHostAttestations', () => {
       modelEvidence: allModelEvidence,
     });
 
-    expect(NATIVE_HOSTS).toEqual(['codex', 'claude', 'grok', 'opencode']);
-    expect(result.map((item) => item.host)).toEqual(['codex', 'claude', 'grok', 'opencode']);
+    expect(NATIVE_HOSTS).toEqual(['codex', 'claude', 'grok', 'opencode', 'antigravity']);
+    expect(result.map((item) => item.host)).toEqual([...NATIVE_HOSTS]);
     expect(result.map((item) => item.host)).not.toContain('cursor');
-    expect(result.map((item) => item.host)).not.toContain('antigravity');
     for (const item of result) {
       expect(item).toMatchObject({
         hostVersion: version,
         commitSha,
         capabilityStatus: 'HOST_NATIVE',
-        capabilityIds: ['chat', 'edit'],
+        capabilityIds: capabilityIds[item.host],
         contractSetSha256,
         requestedModel: modelValue,
         resolvedModel: modelValue,
@@ -109,21 +166,36 @@ describe('collectHostAttestations', () => {
       });
       // version evidence: framed hash of raw stdout|stderr bytes (no UTF-8 re-encode)
       const expectedVersionHash = sha256Bytes(
-        concat(encoder.encode('stdout:'), enc(`host ${version}\n`), encoder.encode('|stderr:'), enc('')),
+        concat(encoder.encode('stdout:'), enc(hostVersionOutput[item.host]), encoder.encode('|stderr:'), enc('')),
       );
-      expect(item.evidenceHashes[0]).toBe(expectedVersionHash);
       // capability evidence
       const expectedCapHash = sha256Bytes(
-        concat(encoder.encode('stdout:'), enc('Capabilities: chat, edit\nModel: native-test-model\n'), encoder.encode('|stderr:'), enc('')),
+        concat(encoder.encode('stdout:'), enc(hostHelpOutput[item.host]), encoder.encode('|stderr:'), enc('')),
       );
-      expect(item.evidenceHashes[1]).toBe(expectedCapHash);
-      // model evidence hashes (indices 2-4): binds role+value+raw+provenance
+      // model evidence hashes bind role+value+raw+provenance
       const hostKey = item.host;
       const ev = allModelEvidence[hostKey];
-      expect(item.evidenceHashes[2]).toBe(expectedModelHash('requestedModel', modelValue, ev.requested.rawEvidenceBytes, ev.requested.provenance));
-      expect(item.evidenceHashes[3]).toBe(expectedModelHash('resolvedModel', modelValue, ev.resolved.rawEvidenceBytes, ev.resolved.provenance));
-      expect(item.evidenceHashes[4]).toBe(expectedModelHash('observedModel', modelValue, ev.observed.rawEvidenceBytes, ev.observed.provenance));
-      expect(item.evidenceHashes).toHaveLength(5);
+      const expectedHashes = {
+        version: expectedVersionHash,
+        capabilities: expectedCapHash,
+        requestedModel: expectedModelHash('requestedModel', modelValue, ev.requested.rawEvidenceBytes, ev.requested.provenance),
+        resolvedModel: expectedModelHash('resolvedModel', modelValue, ev.resolved.rawEvidenceBytes, ev.resolved.provenance),
+        observedModel: expectedModelHash('observedModel', modelValue, ev.observed.rawEvidenceBytes, ev.observed.provenance),
+      };
+      expect(item).not.toHaveProperty('evidenceHashes');
+      expect(item.evidenceRefs.map((evidence) => evidence.role)).toEqual(HOST_ATTESTATION_EVIDENCE_ROLES);
+      for (const evidence of item.evidenceRefs) {
+        expect(evidence).toEqual({
+          role: evidence.role,
+          host: item.host,
+          commitSha,
+          evidenceSha256: expectedHashes[evidence.role],
+          evidenceRef: hostAttestationEvidenceRef(item.host, commitSha, evidence.role, expectedHashes[evidence.role]),
+          subjectSha256: hostAttestationEvidenceSubjectSha256(evidence.role, item),
+          observedAt: now.toISOString(),
+        });
+      }
+      expect(() => assertCertificationAttestation(item, commitSha, now)).not.toThrow();
       // nativeRunnerIdentity binds dev:ino|inputLabel|sha (from same fd)
       expect(item.nativeRunnerIdentity).toBe(`0:0|/native/${item.host}|${mockSnapshotId.split('|')[2]}`);
     }
@@ -143,9 +215,9 @@ describe('collectHostAttestations', () => {
     })).rejects.toThrow('claude: unable to collect native attestation: not on PATH');
   });
 
-  it('fails rather than fabricating a version, model, or capabilities from an incomplete probe', async () => {
+  it('fails rather than fabricating capability IDs from an incomplete help probe', async () => {
     const incompleteRun: ProbeRunner = async (_executable, args) => {
-      const vOut = 'host version 1.2.3\n';
+      const vOut = `codex-cli ${version}\n`;
       const cOut = 'usage: host\n';
       return args[0] === '--version'
         ? { exitCode: 0, stdout: vOut, stderr: '', stdoutRaw: enc(vOut), stderrRaw: enc('') }
@@ -159,7 +231,25 @@ describe('collectHostAttestations', () => {
       resolveExecutable,
       createSnapshot,
       modelEvidence: allModelEvidence,
-    })).rejects.toThrow('capability probe did not report capability IDs');
+    })).rejects.toThrow('help output drifted or lacks required stable tokens');
+  });
+
+  it('fails closed on unrecognized version output instead of extracting a stray number', async () => {
+    const driftedVersionRun: ProbeRunner = async (_executable, args) => {
+      const output = args[0] === '--version' ? 'release candidate build 1.2.3\n' : hostHelpOutput.codex;
+      return { exitCode: 0, stdout: output, stderr: '', stdoutRaw: enc(output), stderrRaw: enc('') };
+    };
+    await expect(collectHostAttestations(commitSha, {
+      contractSetSha256, run: driftedVersionRun, now, resolveExecutable, createSnapshot,
+      modelEvidence: allModelEvidence,
+    })).rejects.toThrow('version output does not match the supported CLI format');
+  });
+
+  it('fails closed when an injected resolver returns a relative executable path', async () => {
+    await expect(collectHostAttestations(commitSha, {
+      contractSetSha256, run, now, createSnapshot, modelEvidence: allModelEvidence,
+      resolveExecutable: async () => 'not-an-absolute-cli',
+    })).rejects.toThrow('resolver returned a non-absolute executable path');
   });
 
   it('fails closed when modelEvidence is missing', async () => {
@@ -419,21 +509,66 @@ describe('collectHostAttestations', () => {
   });
 });
 
-describe('codexDesktopCandidates', () => {
-  it('returns Linux paths for linux platform', () => {
-    expect(codexDesktopCandidates('linux')).toEqual(['/usr/bin/codex-desktop', '/opt/codex-desktop']);
+describe('resolveNativeExecutable', () => {
+  it('discovers the bundled Codex CLI and never selects a GUI launcher candidate', async () => {
+    const fs = await import('node:fs/promises');
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'attest-codex-cli-'));
+    const cli = path.join(homeDir, '.codex-cli-npm', 'lib', 'node_modules', '@openai', 'codex', 'node_modules', '@openai', 'codex-linux-x64', 'vendor', 'x86_64-unknown-linux-musl', 'bin', 'codex');
+    const gui = path.join(homeDir, 'gui-launcher', 'codex');
+    await fs.mkdir(path.dirname(cli), { recursive: true });
+    await fs.writeFile(cli, '#!/bin/sh\nexit 0');
+    await fs.chmod(cli, 0o755);
+    await fs.mkdir(path.dirname(gui), { recursive: true });
+    await fs.writeFile(gui, '#!/bin/sh\nexit 0');
+    await fs.chmod(gui, 0o755);
+
+    await expect(resolveNativeExecutable('codex', {
+      homeDir,
+      platform: 'linux',
+      env: { CODEX_CLI_PATH: gui, PATH: path.dirname(gui) },
+    })).resolves.toBe(cli);
+    await fs.rm(homeDir, { recursive: true, force: true });
   });
-  it('returns macOS path for darwin platform', () => {
-    expect(codexDesktopCandidates('darwin')).toEqual(['/Applications/Codex.app/Contents/MacOS/Codex']);
+
+  it('resolves each non-GUI host to an absolute regular executable', async () => {
+    const fs = await import('node:fs/promises');
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'attest-native-cli-'));
+    const paths = {
+      claude: path.join(homeDir, '.local', 'share', 'claude', 'versions', '2.1.220'),
+      grok: path.join(homeDir, '.grok', 'downloads', 'grok-linux-x86_64'),
+      opencode: path.join(homeDir, '.opencode', 'bin', 'opencode'),
+      antigravity: path.join(homeDir, '.local', 'bin', 'agy'),
+    };
+    for (const executable of Object.values(paths)) {
+      await fs.mkdir(path.dirname(executable), { recursive: true });
+      await fs.writeFile(executable, '#!/bin/sh\nexit 0');
+      await fs.chmod(executable, 0o755);
+    }
+    for (const [host, executable] of Object.entries(paths)) {
+      await expect(resolveNativeExecutable(host, { homeDir, platform: 'linux', env: { PATH: '' } })).resolves.toBe(executable);
+    }
+    await fs.rm(homeDir, { recursive: true, force: true });
   });
-  it('returns empty array for unknown platform', () => {
-    expect(codexDesktopCandidates('win32')).toEqual([]);
+
+  it('fails closed on a symlink or directory rather than returning it as a CLI', async () => {
+    const fs = await import('node:fs/promises');
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'attest-unsafe-cli-'));
+    const bin = path.join(homeDir, '.opencode', 'bin');
+    await fs.mkdir(bin, { recursive: true });
+    await fs.symlink('/bin/true', path.join(bin, 'opencode'));
+    await expect(resolveNativeExecutable('opencode', { homeDir, platform: 'linux', env: { PATH: '' } }))
+      .rejects.toThrow('no absolute non-symlink executable');
+    await fs.unlink(path.join(bin, 'opencode'));
+    await fs.mkdir(path.join(bin, 'opencode'));
+    await expect(resolveNativeExecutable('opencode', { homeDir, platform: 'linux', env: { PATH: '' } }))
+      .rejects.toThrow('no absolute non-symlink executable');
+    await fs.rm(homeDir, { recursive: true, force: true });
   });
 });
 
 // V5 adversarial: createExecutableSnapshot TOCTOU and permissions
 describe('createExecutableSnapshot', () => {
-  it('rejects symlink targets via O_NOFOLLOW', async () => {
+  it.skipIf(process.platform === 'win32')('rejects POSIX symlink targets via O_NOFOLLOW', async () => {
     const tmpDir = await import('node:fs/promises').then(m => m.mkdtemp(path.join(os.tmpdir(), 'attest-symlink-test-')));
     const realFile = `${tmpDir}/real`;
     const linkFile = `${tmpDir}/link`;
@@ -443,7 +578,85 @@ describe('createExecutableSnapshot', () => {
     await import('node:fs/promises').then(m => m.rm(tmpDir, { recursive: true, force: true }));
   });
 
-  it('creates snapshot with 0o500 mode and verifies hash', async () => {
+  it('rejects a Windows symlink even when O_NOFOLLOW is unavailable', async () => {
+    const fs = await import('node:fs/promises');
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'attest-win-symlink-test-'));
+    const realFile = path.join(tmpDir, 'real');
+    const linkFile = path.join(tmpDir, 'link');
+    await fs.writeFile(realFile, 'content');
+    await fs.symlink(realFile, linkFile);
+    await expect(createExecutableSnapshot(linkFile, {
+      platform: 'win32',
+      windowsReparseInspector: async () => {},
+      windowsAclHardener: async () => {
+        throw new Error('ACL hardening must not be reached for a reparse source');
+      },
+    })).rejects.toThrow(/symlink|reparse/);
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('accepts only a stable regular-file identity across lstat and open', () => {
+    const stable = identityStats(7, 19);
+    expect(() => assertStableExecutableIdentity(stable, stable, stable, 'win32')).not.toThrow();
+    expect(() => assertStableExecutableIdentity(
+      identityStats(7, 19),
+      identityStats(7, 20),
+      identityStats(7, 20),
+      'win32',
+    )).toThrow('identity changed');
+    expect(() => assertStableExecutableIdentity(
+      identityStats(7, 19),
+      identityStats(7, 19),
+      identityStats(7, 20),
+      'win32',
+    )).toThrow('identity changed');
+  });
+
+  it('fails closed when Windows cannot provide a usable file identity', () => {
+    const unavailable = identityStats(0, 0);
+    expect(() => assertStableExecutableIdentity(unavailable, unavailable, unavailable, 'win32'))
+      .toThrow('identity changed');
+  });
+
+  it('rejects mocked Windows leaf reparse metadata before or after open', () => {
+    const regular = identityStats(7, 19);
+    const reparse = identityStats(7, 19, { file: false, symlink: true });
+    expect(() => assertStableExecutableIdentity(reparse, regular, regular, 'win32')).toThrow(/symlink|reparse/);
+    expect(() => assertStableExecutableIdentity(regular, regular, reparse, 'win32')).toThrow(/symlink|reparse/);
+  });
+
+  it('rejects Windows canonical path drift around open', () => {
+    const input = String.raw`C:\safe\runner.exe`;
+    expect(() => assertStableWindowsCanonicalPath(input, input)).not.toThrow();
+    expect(() => assertStableWindowsCanonicalPath(
+      String.raw`\\?\C:\safe\runner.exe`,
+      String.raw`\\?\C:\safe\runner.exe`,
+    )).not.toThrow();
+    expect(() => assertStableWindowsCanonicalPath(
+      input,
+      String.raw`C:\replacement\runner.exe`,
+    )).toThrow('canonical path changed');
+  });
+
+  it('fails closed when Windows component inspection finds an ancestor junction', async () => {
+    const fs = await import('node:fs/promises');
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'attest-win-junction-test-'));
+    const exe = path.join(tmpDir, 'runner');
+    let inspections = 0;
+    await fs.writeFile(exe, '#!/bin/sh\necho ok');
+    await expect(createExecutableSnapshot(exe, {
+      platform: 'win32',
+      windowsReparseInspector: async () => {
+        inspections += 1;
+        throw new Error('source path traverses a Windows junction');
+      },
+      windowsAclHardener: async () => {},
+    })).rejects.toThrow(/junction/);
+    expect(inspections).toBe(1);
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it.skipIf(process.platform === 'win32')('applies and verifies POSIX 0o500 snapshot mode', async () => {
     const tmpDir = await import('node:fs/promises').then(m => m.mkdtemp(path.join(os.tmpdir(), 'attest-perm-test-')));
     const exe = `${tmpDir}/runner`;
     await import('node:fs/promises').then(m => m.writeFile(exe, '#!/bin/sh\necho ok'));
@@ -457,6 +670,194 @@ describe('createExecutableSnapshot', () => {
     expect(mode).toBe(0o500);
     await snap.cleanup();
     await import('node:fs/promises').then(m => m.rm(tmpDir, { recursive: true, force: true }));
+  });
+
+  it('uses Windows ACL hardening for both the directory and snapshot file', async () => {
+    const fs = await import('node:fs/promises');
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'attest-win-acl-test-'));
+    const exe = path.join(tmpDir, 'runner');
+    const hardened: Array<{ readonly target: string; readonly kind: 'directory' | 'file' }> = [];
+    await fs.writeFile(exe, '#!/bin/sh\necho ok');
+    const snap = await createExecutableSnapshot(exe, {
+      platform: 'win32',
+      windowsReparseInspector: async () => {},
+      windowsAclHardener: async (target, kind) => {
+        hardened.push({ target, kind });
+      },
+    });
+    expect(hardened).toEqual([
+      { target: path.dirname(snap.snapshotPath), kind: 'directory' },
+      { target: snap.snapshotPath, kind: 'file' },
+    ]);
+    expect((await fs.lstat(snap.snapshotPath)).isSymbolicLink()).toBe(false);
+    await snap.cleanup();
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('fails closed when Windows ACL hardening cannot be verified', async () => {
+    const fs = await import('node:fs/promises');
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'attest-win-acl-fail-test-'));
+    const exe = path.join(tmpDir, 'runner');
+    let rejectedSnapshotPath = '';
+    await fs.writeFile(exe, '#!/bin/sh\necho ok');
+    await expect(createExecutableSnapshot(exe, {
+      platform: 'win32',
+      windowsReparseInspector: async () => {},
+      windowsAclHardener: async (target, kind) => {
+        if (kind === 'file') {
+          rejectedSnapshotPath = target;
+          throw new Error('Windows ACL verification failed');
+        }
+      },
+    })).rejects.toThrow('Windows ACL verification failed');
+    expect(rejectedSnapshotPath).not.toBe('');
+    await expect(fs.access(rejectedSnapshotPath)).rejects.toThrow();
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('accepts only the exact protected Windows ACL policy', () => {
+    const sid = 'S-1-5-21-1-2-3-1001';
+    const directory: WindowsAclReceipt = {
+      protected: true,
+      owner: sid,
+      rules: [{
+        sid,
+        type: 0,
+        rights: 2032127,
+        inheritance: 3,
+        propagation: 0,
+        inherited: false,
+      }],
+    };
+    const file: WindowsAclReceipt = {
+      protected: true,
+      owner: sid,
+      rules: [{
+        sid,
+        type: 0,
+        rights: 1179817,
+        inheritance: 0,
+        propagation: 0,
+        inherited: false,
+      }],
+    };
+    expect(() => assertRestrictedWindowsAcl(directory, sid, 'directory')).not.toThrow();
+    expect(() => assertRestrictedWindowsAcl(file, sid, 'file')).not.toThrow();
+  });
+
+  it('rejects inherited, extra-principal, and writable Windows ACL receipts', () => {
+    const sid = 'S-1-5-21-1-2-3-1001';
+    const expectedRule = {
+      sid,
+      type: 0,
+      rights: 1179817,
+      inheritance: 0,
+      propagation: 0,
+      inherited: false,
+    };
+    expect(() => assertRestrictedWindowsAcl({
+      protected: false,
+      owner: sid,
+      rules: [{ ...expectedRule, inherited: true }],
+    }, sid, 'file')).toThrow(/not restricted/);
+    expect(() => assertRestrictedWindowsAcl({
+      protected: true,
+      owner: sid,
+      rules: [expectedRule, { ...expectedRule, sid: 'S-1-1-0' }],
+    }, sid, 'file')).toThrow(/not restricted/);
+    expect(() => assertRestrictedWindowsAcl({
+      protected: true,
+      owner: sid,
+      rules: [{ ...expectedRule, rights: 1180063 }],
+    }, sid, 'file')).toThrow(/access policy/);
+  });
+
+  it('builds a fixed module-independent .NET Windows ACL read command', () => {
+    const target = String.raw`C:\safe path\snapshot.exe`;
+    const command = buildWindowsAclReadCommand(target, 'file');
+    const script = command.args.at(-1)!;
+
+    expect(command.executable).toMatch(
+      /^[A-Za-z]:\\Windows\\System32\\WindowsPowerShell\\v1\.0\\powershell\.exe$/i,
+    );
+    expect(command.args.slice(0, 4)).toEqual(['-NoLogo', '-NoProfile', '-NonInteractive', '-Command']);
+    expect(command.env).toEqual({
+      CODEX_ATTEST_ACL_TARGET: target,
+      CODEX_ATTEST_ACL_KIND: 'file',
+    });
+    expect(script).toContain('[System.IO.File]::GetAccessControl');
+    expect(script).toContain('[System.IO.Directory]::GetAccessControl');
+    expect(script).not.toMatch(/Get-Acl|Import-Module|ConvertTo-Json|\|/);
+  });
+
+  it('builds a fresh module-independent .NET security descriptor with exactly one intended ACE', () => {
+    const target = String.raw`C:\safe path\snapshot.exe`;
+    const sid = 'S-1-5-21-1-2-3-1001';
+    const file = buildWindowsAclWriteCommand(target, 'file', sid);
+    const directory = buildWindowsAclWriteCommand(path.win32.dirname(target), 'directory', sid);
+    const fileScript = file.args.at(-1)!;
+    const directoryScript = directory.args.at(-1)!;
+
+    expect(file.executable).toMatch(
+      /^[A-Za-z]:\\Windows\\System32\\WindowsPowerShell\\v1\.0\\powershell\.exe$/i,
+    );
+    expect(file.args.slice(0, 4)).toEqual(['-NoLogo', '-NoProfile', '-NonInteractive', '-Command']);
+    expect(file.env).toEqual({
+      CODEX_ATTEST_ACL_TARGET: target,
+      CODEX_ATTEST_ACL_KIND: 'file',
+      CODEX_ATTEST_ACL_SID: sid,
+    });
+    expect(directory.env.CODEX_ATTEST_ACL_KIND).toBe('directory');
+    expect(fileScript).toContain('[System.Security.AccessControl.FileSecurity]::new()');
+    expect(fileScript).toContain('[System.Security.AccessControl.DirectorySecurity]::new()');
+    expect(fileScript).toContain('$acl.SetAccessRuleProtection($true,$false)');
+    expect(fileScript).toContain('$acl.SetOwner($sid)');
+    expect(fileScript).toContain('[System.Security.AccessControl.FileSystemRights]::ReadAndExecute');
+    expect(directoryScript).toContain('[System.Security.AccessControl.FileSystemRights]::FullControl');
+    expect(directoryScript).toContain('[System.Security.AccessControl.InheritanceFlags]::ObjectInherit');
+    expect(directoryScript).toContain('[System.Security.AccessControl.InheritanceFlags]::ContainerInherit');
+    expect(fileScript.match(/AddAccessRule/g)).toHaveLength(2);
+    expect(fileScript).toContain('[System.IO.File]::SetAccessControl');
+    expect(fileScript).toContain('[System.IO.Directory]::SetAccessControl');
+    expect(fileScript).not.toMatch(/icacls|\/grant|Get-Acl|Set-Acl|Import-Module|New-Object|\|/i);
+  });
+
+  it.runIf(process.platform === 'win32')(
+    'replaces Windows file and directory DACLs and verifies the exact one-ACE policy',
+    async () => {
+      const fs = await import('node:fs/promises');
+      const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'attest-native-acl-test-'));
+      const snapshot = path.join(tmpDir, 'snapshot.exe');
+      try {
+        await fs.writeFile(snapshot, 'test');
+        await hardenWindowsAcl(tmpDir, 'directory');
+        await hardenWindowsAcl(snapshot, 'file');
+      } finally {
+        await fs.rm(tmpDir, { recursive: true, force: true });
+      }
+    },
+  );
+
+  it('parses exact module-independent Windows ACL receipts and rejects malformed output', () => {
+    const sid = 'S-1-5-21-1-2-3-1001';
+    expect(parseWindowsAclReceipt([
+      'protected=1',
+      `owner=${sid}`,
+      `rule=${sid},0,1179817,0,0,0`,
+    ].join('\r\n'))).toEqual({
+      protected: true,
+      owner: sid,
+      rules: [{
+        sid,
+        type: 0,
+        rights: 1179817,
+        inheritance: 0,
+        propagation: 0,
+        inherited: false,
+      }],
+    });
+    expect(() => parseWindowsAclReceipt(`owner=${sid}`)).toThrow(/receipt header/);
+    expect(() => parseWindowsAclReceipt(`protected=1\nowner=${sid}\nlocalized output`)).toThrow(/rule receipt/);
   });
 
   it('cleanup removes snapshot dir and surfaces errors', async () => {

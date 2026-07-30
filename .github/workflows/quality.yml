@@ -10,6 +10,11 @@ permissions:
 jobs:
   quality:
     timeout-minutes: 30
+    # Keep browser binaries in the workspace cache on every OS.  Setting this
+    # at job scope is required because npm test launches Playwright in a later
+    # step than the install preflight.
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: '0'
     strategy:
       matrix:
         include:
@@ -71,6 +76,11 @@ jobs:
         with:
           python-version: '3.11'
       - run: npm ci
+      # The tsx CLI entrypoint eagerly imports the engine package, whose
+      # workspace export points at packages/engine/dist. Build only that
+      # dependency here instead of repeating the root build from quality.
+      - name: Build context graph dependency
+        run: npm run build -w packages/engine
       - name: Generate context graph
         run: npx tsx packages/cli/src/index.ts context-graph build
       - run: pip install --require-hashes -r requirements.txt
@@ -82,7 +92,12 @@ jobs:
     permissions:
       contents: read
     steps:
+      # Gitleaks computes the diff against the previous commit/base ref. A
+      # shallow checkout can omit that object and make the strict scan fail
+      # before scanning any content.
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
         with:
           node-version: lts/*

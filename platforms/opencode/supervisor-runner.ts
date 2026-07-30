@@ -316,8 +316,22 @@ export class SupervisorRunner {
   get openReviewerSlots(): number { return this._supervisor.availableReviewerSlots; }
 }
 
-// F10 (R10): single journal layer — secure O_NOFOLLOW|O_APPEND|O_CREAT, mode 0o600, dedup PRE
 function journalPath(statePath: string): string { return statePath + '.reconcile'; }
+
+function fsyncJournalDirectory(dir: string): void {
+  let fd: number | undefined;
+  try {
+    fd = fs.openSync(dir, 'r');
+    fs.fsyncSync(fd);
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (!['EPERM', 'EINVAL', 'ENOTSUP', 'EOPNOTSUPP'].includes(code ?? '')) throw error;
+  } finally {
+    if (fd !== undefined) fs.closeSync(fd);
+  }
+}
+
+// F10 (R10): single journal layer — secure O_NOFOLLOW|O_APPEND|O_CREAT, mode 0o600, dedup PRE
 
 function writeJournalEntry(jPath: string, entry: string): void {
   try {
@@ -330,8 +344,6 @@ function writeJournalEntry(jPath: string, entry: string): void {
     } finally {
       fs.closeSync(fd);
     }
-    // Fsync dir
-    const dirFd = fs.openSync(path.dirname(jPath), 'r');
-    try { fs.fsyncSync(dirFd); } finally { fs.closeSync(dirFd); }
+    fsyncJournalDirectory(path.dirname(jPath));
   } catch { /* best-effort */ }
 }

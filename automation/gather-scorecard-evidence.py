@@ -4,8 +4,10 @@
 Collects exact git candidate/effective identity, local gate receipts, GitHub runs
 (via gh/read-only if available), ledger state, and install/doctor evidence.
 Validates evidence URIs + hashes + freshness. Derives scores strictly from the
-AM0015 rubric with caps (no CI/install/native evidence => honest low score;
-Critical/High cap <8). All 18 dimensions. No self-claim.
+AM0015 rubric with evidence bound to the exact Git HEAD, verified effective
+plan identity, and a fresh successful CI run for that HEAD. Critical/High
+dimensions are capped only while an applicable finding remains unresolved.
+All 18 dimensions. No self-claim.
 
 Writes automation/scorecard-evidence.json atomically (tempfile + rename).
 """
@@ -32,14 +34,24 @@ SCHEMA_PATH = ROOT / "schemas" / "scorecard-evidence.schema.json"
 FIXTURES_DIR = ROOT / "evals" / "fixtures"
 
 SEVERITY_MAX: dict[str, int] = {
-    "Critical": 7,
-    "High": 7,
+    "Critical": 10,
+    "High": 10,
     "Medium": 10,
     "Low": 10,
 }
+OPEN_FINDING_CAP = 7
+CI_MAX_AGE_SECONDS = 24 * 60 * 60
 
 _GIT_RE = re.compile(r"^[a-f0-9]{7,40}$")
 _SHA256_PREFIX = "sha256:"
+_SHA256_RE = re.compile(r"^[a-f0-9]{64}$")
+_CLOSED_FINDING_STATUSES = {"RESOLVED", "SUPERSEDED", "ACCEPTED"}
+_SELF_CLAIM_PATHS = {
+    "automation/gather-scorecard-evidence.py",
+    "automation/test-scorecard-evidence.py",
+    "automation/scorecard-evidence.json",
+    "schemas/scorecard-evidence.schema.json",
+}
 
 RUBRIC: list[dict[str, Any]] = [
     {
@@ -295,6 +307,20 @@ def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _run_git(root: Path, args: list[str]) -> subprocess.CompletedProcess[str] | None:
+    try:
+        return subprocess.run(
+            ["git", *args], cwd=root, capture_output=True, text=True,
+            timeout=15, check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+
+
 def gather_git_identity(root: Path) -> dict[str, str]:
     info: dict[str, str] = {
         "commit": "unknown",
@@ -354,7 +380,7 @@ def gather_git_identity(root: Path) -> dict[str, str]:
 def _gh_runs_with_timeout(root: Path) -> list[dict[str, Any]]:
     try:
         result = subprocess.run(
-            ["gh", "run", "list", "--limit", "5", "--json", "databaseId,headBranch,status,conclusion,startedAt"],
+            ["gh", "run", "list", "--limit", "20", "--json", "databaseId,headBranch,headSha,status,conclusion,startedAt,updatedAt,workflowName"],
             cwd=root, capture_output=True, text=True, timeout=10, check=False,
         )
         if result.returncode != 0:
@@ -365,9 +391,12 @@ def _gh_runs_with_timeout(root: Path) -> list[dict[str, Any]]:
         return [{
             "id": str(r.get("databaseId", "")),
             "branch": str(r.get("headBranch", "")),
+            "head_sha": str(r.get("headSha", "")),
             "status": str(r.get("status", "")),
             "conclusion": str(r.get("conclusion", "")),
             "started_at": str(r.get("startedAt", "")),
+            "updated_at": str(r.get("updatedAt", "")),
+            "workflow": str(r.get("workflowName", "")),
         } for r in data]
     except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError, UnicodeDecodeError):
         return []
@@ -393,6 +422,106 @@ def check_evidence(root: Path, rel_path: str) -> dict[str, Any]:
         return {"uri": rel_path, "hash": "", "freshness_seconds": -1, "exists": False}
 
 
+def is_self_claim_path(rel_path: str) -> bool:
+    return rel_path.replace("\\", "/") in _SELF_CLAIM_PATHS
+
+
+def is_head_bound(root: Path, rel_path: str, head_commit: str) -> bool:
+    """Return true only for a tracked, clean path that is present at exact HEAD."""
+    if not _GIT_RE.fullmatch(head_commit) or is_self_claim_path(rel_path):
+        return False
+    tracked = _run_git(root, ["ls-tree", "-r", "--name-only", head_commit, "--", rel_path])
+    if tracked is None or tracked.returncode != 0 or not tracked.stdout.strip():
+        return False
+    worktree = _run_git(root, ["diff", "--quiet", head_commit, "--", rel_path])
+    index = _run_git(root, ["diff", "--cached", "--quiet", head_commit, "--", rel_path])
+    return bool(worktree and index and worktree.returncode == 0 and index.returncode == 0)
+
+
+def _parse_time(value: str) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def collect_effective_plan_binding(root: Path) -> dict[str, Any]:
+    """Read one canonical ledger and verify its serialized effective-plan identity."""
+    ledgers = sorted((root / ".agent" / "ledger").glob("*.json"))
+    unavailable = {
+        "sha256": "", "ledger_uri": "", "ledger_hash": "", "verified": False,
+        "reason": "expected exactly one readable canonical ledger",
+    }
+    if len(ledgers) != 1:
+        return unavailable
+    ledger_path = ledgers[0]
+    try:
+        ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+        identity = dict(ledger.get("effective_plan_identity") or {})
+        plan_sha = str(identity.get("sha256") or "")
+        canonical = str(identity.get("canonical_json_utf8") or "")
+        if not _SHA256_RE.fullmatch(plan_sha) or not canonical or sha256_text(canonical) != plan_sha:
+            return {**unavailable, "ledger_uri": str(ledger_path.relative_to(root))}
+        return {
+            "sha256": plan_sha,
+            "ledger_uri": str(ledger_path.relative_to(root)),
+            "ledger_hash": file_hash(ledger_path),
+            "verified": True,
+            "reason": "effective plan SHA-256 matches its canonical identity payload",
+        }
+    except (OSError, ValueError, json.JSONDecodeError):
+        return unavailable
+
+
+def collect_ci_binding(git_info: dict[str, str], gh_runs: list[dict[str, Any]]) -> dict[str, Any]:
+    head_commit = git_info.get("commit", "")
+    base = {
+        "status": "unavailable", "head_commit": head_commit,
+        "freshness_seconds": -1, "run_ids": [], "reason": "no fresh successful CI run for exact HEAD",
+    }
+    if not _GIT_RE.fullmatch(head_commit):
+        return {**base, "reason": "Git HEAD is unavailable"}
+    matched = [run for run in gh_runs if run.get("head_sha") == head_commit]
+    if not matched:
+        return {**base, "reason": "no GitHub Actions run binds exact HEAD"}
+    completed = [run for run in matched if str(run.get("status", "")).lower() == "completed"]
+    if any(str(run.get("conclusion", "")).lower() != "success" for run in completed):
+        return {**base, "status": "failed", "run_ids": [run["id"] for run in completed], "reason": "a completed CI run for exact HEAD failed"}
+    successful = [run for run in completed if str(run.get("conclusion", "")).lower() == "success"]
+    if not successful:
+        return {**base, "status": "pending", "run_ids": [run["id"] for run in matched], "reason": "CI for exact HEAD is not successfully completed"}
+    ages = []
+    for run in successful:
+        timestamp = _parse_time(str(run.get("updated_at") or run.get("started_at") or ""))
+        if timestamp is not None:
+            ages.append(max(0, round((datetime.now(timezone.utc) - timestamp).total_seconds())))
+    if not ages:
+        return {**base, "status": "stale", "run_ids": [run["id"] for run in successful], "reason": "successful CI has no verifiable completion freshness"}
+    age = min(ages)
+    if age > CI_MAX_AGE_SECONDS:
+        return {**base, "status": "stale", "freshness_seconds": age, "run_ids": [run["id"] for run in successful], "reason": "successful CI for exact HEAD is stale"}
+    return {
+        "status": "passed", "head_commit": head_commit, "freshness_seconds": age,
+        "run_ids": [run["id"] for run in successful], "reason": "fresh successful CI binds exact HEAD",
+    }
+
+
+def collect_binding(root: Path, git_info: dict[str, str], gh_runs: list[dict[str, Any]]) -> dict[str, Any]:
+    plan = collect_effective_plan_binding(root)
+    ci = collect_ci_binding(git_info, gh_runs)
+    head_commit = git_info.get("commit", "")
+    head_verified = bool(_GIT_RE.fullmatch(head_commit))
+    return {
+        "head_commit": head_commit,
+        "head_verified": head_verified,
+        "effective_plan": plan,
+        "ci": ci,
+        "verified": bool(head_verified and plan["verified"] and ci["status"] == "passed"),
+    }
+
+
 def validate_evidence_hash(ev: dict[str, Any]) -> list[str]:
     findings: list[str] = []
     if not ev["exists"]:
@@ -407,30 +536,88 @@ def validate_evidence_hash(ev: dict[str, Any]) -> list[str]:
     return findings
 
 
-def score_dimension(dim: dict[str, Any], evidence_map: dict[str, dict[str, Any]]) -> dict[str, Any]:
+def is_unresolved_finding(finding: dict[str, Any]) -> bool:
+    status = str(finding.get("status") or "").strip().upper()
+    return not (status in _CLOSED_FINDING_STATUSES or status.startswith("CLOSED") or status.startswith("RESOLVED") or status.startswith("REPLACED"))
+
+
+def finding_applies_to_dimension(finding: dict[str, Any], dimension_id: str) -> bool:
+    targets = finding.get("dimension_ids", finding.get("dimensions", finding.get("scorecard_dimensions")))
+    if targets is None:
+        target = finding.get("dimension_id", finding.get("scorecard_dimension"))
+        return target is None or target == dimension_id
+    if isinstance(targets, str):
+        return targets == dimension_id
+    return isinstance(targets, list) and dimension_id in targets
+
+
+def applicable_open_findings(dim: dict[str, Any], findings: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    if dim["severity"] not in ("Critical", "High"):
+        return []
+    return [
+        finding for finding in findings
+        if is_unresolved_finding(finding)
+        and str(finding.get("severity") or "").strip().lower() in ("critical", "high")
+        and finding_applies_to_dimension(finding, dim["id"])
+    ]
+
+
+def evidence_is_trusted(ev: dict[str, Any], binding: dict[str, Any], is_ci: bool) -> tuple[bool, list[str]]:
+    findings = validate_evidence_hash(ev)
+    if is_self_claim_path(str(ev.get("uri", ""))):
+        findings.append(f"self-claim:{ev.get('uri', '')}")
+    if not ev.get("head_bound", False):
+        findings.append(f"head-mismatch:{ev.get('uri', '')}")
+    if not binding.get("effective_plan", {}).get("verified", False):
+        findings.append("effective-plan-unverified")
+    ci = dict(binding.get("ci") or {})
+    if ci.get("status") != "passed":
+        findings.append(f"ci-{ci.get('status', 'unavailable')}")
+    if is_ci and not ci.get("run_ids"):
+        findings.append("ci-run-missing")
+    return not findings, findings
+
+
+def score_dimension(
+    dim: dict[str, Any],
+    evidence_map: dict[str, dict[str, Any]],
+    binding: dict[str, Any] | None = None,
+    findings: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    binding = binding or {"head_commit": "", "effective_plan": {"sha256": "", "verified": False}, "ci": {"status": "unavailable"}, "verified": False}
+    findings = findings or []
     max_allowed = SEVERITY_MAX[dim["severity"]]
+    open_findings = applicable_open_findings(dim, findings)
+    score_cap = OPEN_FINDING_CAP if open_findings else max_allowed
     score_float = 0.0
     evidence_items: list[dict[str, Any]] = []
-    findings: list[str] = []
+    score_findings: list[str] = []
     for check in dim["checks"]:
         ev = evidence_map.get(check["path"], {"uri": check["path"], "hash": "", "freshness_seconds": -1, "exists": False})
-        passed = ev["exists"]
+        passed, check_findings = evidence_is_trusted(ev, binding, check["kind"] == "ci")
         item = {
             "uri": check["path"],
             "hash": ev.get("hash", ""),
             "freshness_seconds": ev.get("freshness_seconds", -1),
             "kind": check["kind"],
             "passed": passed,
+            "head_commit": binding.get("head_commit", ""),
+            "effective_plan_sha256": binding.get("effective_plan", {}).get("sha256", ""),
+            "ci_run_ids": list(binding.get("ci", {}).get("run_ids", [])),
             "finding": "",
         }
-        check_findings = validate_evidence_hash(ev)
         if check_findings:
             item["finding"] = "; ".join(check_findings)
-            findings.extend(check_findings)
+            score_findings.extend(check_findings)
         if passed:
             score_float += check["weight"] * max_allowed
         evidence_items.append(item)
-    score = min(round(score_float), max_allowed)
+    if open_findings:
+        finding_ids = [str(finding.get("finding_id") or finding.get("id") or "unidentified-open-finding") for finding in open_findings]
+        score_findings.extend(f"open-finding-cap:{finding_id}" for finding_id in finding_ids)
+    else:
+        finding_ids = []
+    score = min(round(score_float), score_cap)
     if score >= max_allowed:
         status = "pass"
     elif score >= max_allowed * 0.5:
@@ -443,15 +630,24 @@ def score_dimension(dim: dict[str, Any], evidence_map: dict[str, dict[str, Any]]
         "severity": dim["severity"],
         "score": score,
         "maxScore": max_allowed,
+        "score_cap": {"applied": bool(open_findings), "limit": score_cap, "finding_ids": finding_ids},
         "status": status,
         "evidence_items": evidence_items,
-        "findings": findings,
+        "findings": score_findings,
     }
 
 
 def gather_scores(rubric: list[dict[str, Any]], root: Path) -> dict[str, Any]:
     git_info = gather_git_identity(root)
     gh_runs = gather_gh_runs(root)
+    binding = collect_binding(root, git_info, gh_runs)
+    ledger_path = binding.get("effective_plan", {}).get("ledger_uri", "")
+    ledger_findings: list[dict[str, Any]] = []
+    if ledger_path:
+        try:
+            ledger_findings = list(json.loads((root / ledger_path).read_text(encoding="utf-8")).get("findings") or [])
+        except (OSError, ValueError, json.JSONDecodeError):
+            pass
     all_evidence: dict[str, dict[str, Any]] = {}
     evidence_kinds: dict[str, set[str]] = {}
     for dim in rubric:
@@ -460,8 +656,9 @@ def gather_scores(rubric: list[dict[str, Any]], root: Path) -> dict[str, Any]:
             kind = check["kind"]
             if path not in all_evidence:
                 all_evidence[path] = check_evidence(root, path)
+                all_evidence[path]["head_bound"] = is_head_bound(root, path, git_info.get("commit", ""))
             evidence_kinds.setdefault(path, set()).add(kind)
-    scored = [score_dimension(d, all_evidence) for d in rubric]
+    scored = [score_dimension(d, all_evidence, binding, ledger_findings) for d in rubric]
     evidence_sources = []
     for path, ev in all_evidence.items():
         if ev.get("exists"):
@@ -480,6 +677,7 @@ def gather_scores(rubric: list[dict[str, Any]], root: Path) -> dict[str, Any]:
         "_gathered_at": now,
         "_git": git_info,
         "_gh_runs": gh_runs,
+        "_binding": binding,
         "_evidence_sources": evidence_sources,
         "dimensions": scored,
     }
@@ -505,19 +703,48 @@ def validate_output(output: dict[str, Any], schema_path: Path | None = None) -> 
     if len(dims) != 18:
         errors.append(f"expected 18 dimensions, got {len(dims)}")
     seen_ids: set[str] = set()
+    binding = dict(output.get("_binding") or {})
+    effective_plan = dict(binding.get("effective_plan") or {})
+    ci_binding = dict(binding.get("ci") or {})
+    if not _GIT_RE.fullmatch(str(binding.get("head_commit") or "")):
+        errors.append("binding has no exact Git HEAD")
+    if not _SHA256_RE.fullmatch(str(effective_plan.get("sha256") or "")):
+        errors.append("binding has no effective plan SHA-256")
     for d in dims:
         if d["id"] in seen_ids:
             errors.append(f"duplicate dimension id: {d['id']}")
         seen_ids.add(d["id"])
-        if d.get("severity", "") in ("Critical", "High") and d.get("maxScore", 0) >= 8:
-            errors.append(f"{d['id']}: {d['severity']} cap violation (maxScore={d['maxScore']} >= 8)")
+        if d.get("maxScore") != SEVERITY_MAX.get(d.get("severity")):
+            errors.append(f"{d['id']}: maxScore must be {SEVERITY_MAX.get(d.get('severity'))} for {d.get('severity')}")
+        score_cap = dict(d.get("score_cap") or {})
+        cap_applied = score_cap.get("applied") is True
+        cap_limit = score_cap.get("limit")
+        cap_ids = score_cap.get("finding_ids")
+        if cap_applied:
+            if d.get("severity") not in ("Critical", "High") or cap_limit != OPEN_FINDING_CAP or not cap_ids:
+                errors.append(f"{d['id']}: invalid unresolved-finding cap")
+            if d.get("score", 0) > OPEN_FINDING_CAP:
+                errors.append(f"{d['id']}: score exceeds unresolved-finding cap")
+        elif cap_limit != d.get("maxScore") or cap_ids:
+            errors.append(f"{d['id']}: cap metadata claims a cap without an unresolved finding")
         if d.get("score", -1) < 0 or d.get("maxScore", 0) <= 0:
             errors.append(f"{d['id']}: invalid score={d['score']} maxScore={d['maxScore']}")
         if d.get("score", 0) > d.get("maxScore", 0):
             errors.append(f"{d['id']}: score {d['score']} exceeds maxScore {d['maxScore']}")
         for ev in d.get("evidence_items", []):
-            if ev.get("passed") and not ev.get("hash"):
-                errors.append(f"{d['id']}: passed evidence without hash: {ev['uri']}")
+            if ev.get("passed"):
+                if not re.fullmatch(r"sha256:[a-f0-9]{64}", str(ev.get("hash") or "")):
+                    errors.append(f"{d['id']}: passed evidence without full SHA-256: {ev['uri']}")
+                if ev.get("freshness_seconds", -1) < 0:
+                    errors.append(f"{d['id']}: passed stale evidence: {ev['uri']}")
+                if ev.get("head_commit") != binding.get("head_commit"):
+                    errors.append(f"{d['id']}: passed evidence does not bind report HEAD: {ev['uri']}")
+                if ev.get("effective_plan_sha256") != effective_plan.get("sha256"):
+                    errors.append(f"{d['id']}: passed evidence does not bind effective plan: {ev['uri']}")
+                if ci_binding.get("status") != "passed" or not ev.get("ci_run_ids"):
+                    errors.append(f"{d['id']}: passed evidence lacks fresh successful CI: {ev['uri']}")
+                if is_self_claim_path(str(ev.get("uri") or "")):
+                    errors.append(f"{d['id']}: self-claim evidence is forbidden: {ev['uri']}")
     return errors
 
 

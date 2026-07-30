@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import { createHash } from 'node:crypto';
 import { verifyTerminalGate, assertCertifiable, assertNoResidualBeforeFinal, terminalGateCheck, assertWorkLedger, assertCertificationAttestation, REQUIRED_HOSTS } from '../src/terminal-gate.js';
+import { HOST_ATTESTATION_EVIDENCE_ROLES, hostAttestationEvidenceRef, hostAttestationEvidenceSubjectSha256, type HostAttestation } from '../src/contracts.js';
 
 const hash = 'a'.repeat(64);
 const badHash = 'b'.repeat(64);
@@ -11,7 +13,7 @@ const expiresAtVal = new Date(issuedAtBase.getTime() + 3600_000).toISOString();
 const issuedAtVal = issuedAtBase.toISOString();
 
 function fullAttestation(host: string, overrides: Record<string, unknown> = {}): Record<string, unknown> {
-  return {
+  const value = {
     host,
     hostVersion: '1.0.0',
     commitSha: hash,
@@ -21,13 +23,30 @@ function fullAttestation(host: string, overrides: Record<string, unknown> = {}):
     requestedModel: 'gpt-4',
     resolvedModel: 'gpt-4',
     observedModel: 'gpt-4',
-    evidenceHashes: [hash],
     nativeRunnerIdentity: 'runner-1',
     issuedAt: issuedAtVal,
     expiresAt: expiresAtVal,
+  };
+  const attestation = value as HostAttestation;
+  return {
+    ...value,
+    evidenceRefs: HOST_ATTESTATION_EVIDENCE_ROLES.map((role) => {
+      const evidenceSha256 = hashFor(`evidence:${host}:${role}`);
+      return {
+        role,
+        host,
+        commitSha: hash,
+        evidenceRef: hostAttestationEvidenceRef(host as HostAttestation['host'], hash, role, evidenceSha256),
+        evidenceSha256,
+        subjectSha256: hostAttestationEvidenceSubjectSha256(role, attestation),
+        observedAt: issuedAtVal,
+      };
+    }),
     ...overrides,
   };
 }
+
+function hashFor(value: string): string { return createHash('sha256').update(value).digest('hex'); }
 
 function stubLedger(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   const ledger: Record<string, unknown> = {
@@ -41,6 +60,7 @@ function stubLedger(overrides: Record<string, unknown> = {}): Record<string, unk
       fullAttestation('claude'),
       fullAttestation('grok'),
       fullAttestation('opencode'),
+      fullAttestation('antigravity'),
     ],
     plan_anchors: Array.from({ length: 25 }, (_, i) => ({ requirementId: `REQ-${String(i + 1).padStart(3, '0')}` })),
     amendments: [],
@@ -172,13 +192,13 @@ describe('verifyTerminalGate', () => {
     expect(result.failedGates).toContain('NO_OPEN_FINDINGS');
   });
 
-  it('requires exactly codex, claude, grok, and opencode', () => {
-    expect(REQUIRED_HOSTS).toEqual(['codex', 'claude', 'grok', 'opencode']);
+  it('requires exactly codex, claude, grok, opencode, and antigravity', () => {
+    expect(REQUIRED_HOSTS).toEqual(['codex', 'claude', 'grok', 'opencode', 'antigravity']);
     expect(REQUIRED_HOSTS).not.toContain('cursor');
-    expect(REQUIRED_HOSTS).not.toContain('antigravity');
+    expect(REQUIRED_HOSTS).toContain('antigravity');
   });
 
-  it('rejects when attestations < 4', () => {
+  it('rejects when attestations < 5', () => {
     const dir = tmpDir();
     const ledger = stubLedger({ attestations: [fullAttestation('codex')] });
     const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
@@ -460,8 +480,9 @@ describe('assertCertificationAttestation', () => {
       fullAttestation('codex'),
       fullAttestation('claude'),
       fullAttestation('grok'),
+      fullAttestation('antigravity'),
     ] });
-    expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/expected 4.*got 3/);
+    expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/expected 5.*got 4/);
   });
 
   it('rejects empty commitSha', () => {
@@ -470,16 +491,18 @@ describe('assertCertificationAttestation', () => {
       fullAttestation('claude'),
       fullAttestation('grok', { commitSha: '' }),
       fullAttestation('opencode'),
+      fullAttestation('antigravity'),
     ] });
     expect(() => assertCertificationAttestation(ledger, hash)).toThrow('empty commitSha');
   });
 
-  it('rejects null field in attestation (all 4 hosts present)', () => {
+  it('rejects null field in attestation (all 5 hosts present)', () => {
     const ledger = stubLedger({ attestations: [
       fullAttestation('codex', { hostVersion: null }),
       fullAttestation('claude'),
       fullAttestation('grok'),
       fullAttestation('opencode'),
+      fullAttestation('antigravity'),
     ] });
     expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/null\/empty/);
   });
@@ -491,16 +514,18 @@ describe('assertCertificationAttestation', () => {
       fullAttestation('claude'),
       fullAttestation('grok'),
       fullAttestation('opencode'),
+      fullAttestation('antigravity'),
     ] });
     expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/duplicate/);
   });
 
-  it('rejects extra host beyond required four', () => {
+  it('rejects extra host beyond required five', () => {
     const ledger = stubLedger({ attestations: [
       fullAttestation('codex'),
       fullAttestation('claude'),
       fullAttestation('grok'),
       fullAttestation('opencode'),
+      fullAttestation('antigravity'),
       fullAttestation('cursor'),
     ] });
     expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/unexpected.*cursor/);
@@ -512,7 +537,7 @@ describe('assertCertificationAttestation', () => {
       fullAttestation('claude'),
       fullAttestation('grok'),
     ] });
-    expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/expected 4.*got 3/);
+    expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/expected 5.*got 3/);
   });
 
   it('rejects wrong HEAD binding', () => {
@@ -521,6 +546,7 @@ describe('assertCertificationAttestation', () => {
       fullAttestation('claude'),
       fullAttestation('grok'),
       fullAttestation('opencode', { commitSha: 'c'.repeat(64) }),
+      fullAttestation('antigravity'),
     ] });
     expect(() => assertCertificationAttestation(ledger, hash)).toThrow('HEAD');
   });

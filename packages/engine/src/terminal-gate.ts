@@ -21,7 +21,7 @@ export const REQUIRED_HOSTS = CERTIFICATION_REQUIRED_HOSTS;
 const CERTIFICATION_REQUIRED_FIELDS = [
   'host', 'hostVersion', 'commitSha', 'capabilityStatus', 'capabilityIds',
   'contractSetSha256', 'requestedModel', 'resolvedModel', 'observedModel',
-  'evidenceHashes', 'nativeRunnerIdentity', 'issuedAt', 'expiresAt',
+  'evidenceRefs', 'nativeRunnerIdentity', 'issuedAt', 'expiresAt',
 ];
 
 export function assertWorkLedger(ledger: Record<string, unknown>, originalBytes?: Uint8Array, shadowBytes?: Record<string, Uint8Array>): void {
@@ -126,7 +126,7 @@ export function verifyTerminalGate(
   // assertCertificationAttestation checks (wired canonical contract)
   try {
     assertCertificationAttestation(raw, headCommit);
-    gates.push({ name: 'CERTIFICATION_ATTESTATION', status: 'PASS', detail: 'All 4 required native hosts attest HEAD' });
+    gates.push({ name: 'CERTIFICATION_ATTESTATION', status: 'PASS', detail: `All ${REQUIRED_HOSTS.length} required native hosts attest HEAD with content-addressed evidence` });
   } catch (e: any) {
     gates.push({ name: 'CERTIFICATION_ATTESTATION', status: 'FAIL', detail: e.message });
     failedGates.push('CERTIFICATION_ATTESTATION');

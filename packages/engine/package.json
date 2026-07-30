@@ -41,6 +41,10 @@
       "types": "./dist/ledger-activation.d.ts",
       "import": "./dist/ledger-activation.js"
     },
+    "./ledger-migration": {
+      "types": "./dist/ledger-migration.d.ts",
+      "import": "./dist/ledger-migration.js"
+    },
     "./plan-identity": {
       "types": "./dist/plan-identity.d.ts",
       "import": "./dist/plan-identity.js"

@@ -401,7 +401,7 @@ describe('C1 Resource Governor', () => {
     it('governor has detectable platform', async () => {
       const gov = createResourceGovernor(EFFECTIVE_IDENTITY);
       const result = await gov.detect();
-      expect(['linux-native', 'portable']).toContain(result.platform);
+      expect([`${process.platform}-native`, 'portable']).toContain(result.platform);
     });
   });
 
