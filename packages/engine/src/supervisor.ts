@@ -103,7 +103,7 @@ function deepClone<T>(obj: T): T { return JSON.parse(JSON.stringify(obj)) as T; 
 
 /** Canonical repository-relative form. Deliberately case-sensitive: repository path identity is not host-dependent. */
 function normalizeRepoPath(value: string): string | null {
-  if (!value || value.includes('\0') || /^(?:[a-zA-Z]:[\\/]|[\\/]{1,2})/.test(value)) return null;
+  if (!value || value.includes('\0') || /^(?:[a-zA-Z]:|[\\/]{1,2})/.test(value)) return null;
   const parts = value.replace(/\\/g, '/').split('/').filter(part => part !== '' && part !== '.');
   if (parts.length === 0 || parts.includes('..')) return null;
   return parts.join('/');
@@ -344,6 +344,12 @@ function validateStateIntegrity(state: SupervisorState): void {
     ids.add(c.assignmentId);
     if (!['PENDING','DISPATCHED','RUNNING','COMPLETED','FAILED','ABORTED'].includes(c.status)) throw new Error(`Invalid status: ${c.status}`);
     if (!state.auditEvents.some(e => e.assignmentId === c.assignmentId)) throw new Error(`No audit for ${c.assignmentId}`);
+    if (!Array.isArray(c.ownedPaths) || !Array.isArray(c.forbiddenPaths)) throw new Error(`Invalid paths for ${c.assignmentId}`);
+    const ownedPaths = normalizeRepoPaths(c.ownedPaths);
+    const forbiddenPaths = normalizeRepoPaths(c.forbiddenPaths);
+    if (!ownedPaths || !forbiddenPaths) throw new Error(`Unsafe paths for ${c.assignmentId}`);
+    c.ownedPaths = ownedPaths;
+    c.forbiddenPaths = forbiddenPaths;
   }
 }
 

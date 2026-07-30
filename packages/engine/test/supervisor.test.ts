@@ -500,7 +500,7 @@ describe('Supervisor', () => {
       expect(s.assignChild({ assignmentId: 'case', kind: 'writer', ownedPaths: ['Packages/Engine'], forbiddenPaths: [], contextKey: stubContextKey }).ok).toBe(true);
     });
 
-    it.each(['../outside', 'packages/../outside', '/absolute', 'C:\\absolute', '\\\\server\\share'])('rejects unsafe repository path %s', (unsafePath) => {
+    it.each(['../outside', 'packages/../outside', '/absolute', 'C:\\absolute', 'C:relative', 'C:', '\\\\server\\share'])('rejects unsafe repository path %s', (unsafePath) => {
       const result = supervisor.assignChild({ assignmentId: `unsafe-${unsafePath}`, kind: 'writer', ownedPaths: [unsafePath], forbiddenPaths: [], contextKey: stubContextKey });
       expect(result.ok).toBe(false);
       if (!result.ok) expect(result.reason).toContain('repository-relative');
@@ -1048,6 +1048,31 @@ if (result.ok) {
       } finally {
         fault.restore();
       }
+    });
+
+    it('canonicalizes persisted Windows owned and forbidden paths on load', () => {
+      const s1 = simpleSupervisor({ statePath });
+      s1.assignChild({ assignmentId: 'persisted-windows', kind: 'writer', ownedPaths: ['packages/engine'], forbiddenPaths: ['fixtures/windows'], contextKey: stubContextKey });
+      const state = JSON.parse(fs.readFileSync(statePath, 'utf-8'));
+      state.children[0].ownedPaths = ['packages\\engine'];
+      state.children[0].forbiddenPaths = ['fixtures\\windows'];
+      fs.writeFileSync(statePath, JSON.stringify(state));
+
+      const s2 = simpleSupervisor({ statePath });
+      expect(s2.children[0].ownedPaths).toEqual(['packages/engine']);
+      expect(s2.children[0].forbiddenPaths).toEqual(['fixtures/windows']);
+    });
+
+    it.each(['C:relative', 'C:'])('fails closed on persisted drive-relative path %s', (unsafePath) => {
+      const s1 = simpleSupervisor({ statePath });
+      s1.assignChild({ assignmentId: 'persisted-drive', kind: 'writer', ownedPaths: ['packages/engine'], forbiddenPaths: [], contextKey: stubContextKey });
+      const state = JSON.parse(fs.readFileSync(statePath, 'utf-8'));
+      state.children[0].ownedPaths = [unsafePath];
+      fs.writeFileSync(statePath, JSON.stringify(state));
+
+      const s2 = simpleSupervisor({ statePath });
+      expect(s2.children).toHaveLength(0);
+      expect(s2.revision).toBe(0);
     });
   });
 
