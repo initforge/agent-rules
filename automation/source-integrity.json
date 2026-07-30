@@ -8,7 +8,7 @@
     "automation/13-cutover-context-routing.ps1": "c03f01fa38d8283db7c6e0f62b151b217aa236b21efd137846c891bb16bf8faa",
     "automation/09-doctor.ps1": "2d2219b787117a7e945611ae87d0cc4ca6ede16cc3ec1e181d3765a1b03f7f64",
     "automation/path-compat.ps1": "f021581753b3f9f8c983d531731621fa7224bdcff18bd7a924439239477ff721",
-    "automation/01-build-runtime.ps1": "9d15adab7bf6bc611bc01f6fa43e7004d3bf38ef2e8c96f9294e6f4e2d49d906",
+    "automation/01-build-runtime.ps1": "1a8b7e15290322d3caea18d63279cdd0e1a0344437d4a3fab21a3c348d59b066",
     "integrations/required/codebase-memory-mcp/install.ps1": "6ccfb1ab4dde49d0935aea85e1e4c34265937ea24c17387a8a1536bcfa722188",
     "integrations/required/codebase-memory-mcp/verify.ps1": "a2bb174033efdb5641ffc16627acdb0574555cdef15bbb963f5a00a55b32e4ca",
     "integrations/required/codebase-memory-mcp/uninstall.ps1": "f5d3235fdd333ad367079f5a5261861fac30cbe9bfbb6bdd42186f18c3eee2fc",

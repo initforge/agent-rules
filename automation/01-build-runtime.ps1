@@ -7,12 +7,13 @@ $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "path-compat.ps1")
 if (Test-Path $BuildRoot) { Remove-Item -LiteralPath $BuildRoot -Recurse -Force }
 
-$Platforms = @("codex", "grok", "antigravity", "cursor")
+$Platforms = @("codex", "claude", "grok", "opencode", "antigravity", "cursor")
 $Core = Join-Path $Root "rules"
 $SkillsRoot = Join-Path $Root "skills"
 $SystemMap = Join-Path $Root "docs\guides"
 $ManifestText = Get-Content -Raw -Encoding UTF8 (Join-Path $Core "manifest.yaml")
 $ModelPolicy = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "automation\model-policy.json") | ConvertFrom-Json
+$PlatformContracts = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "platforms\platform-contracts.json") | ConvertFrom-Json
 $ManifestRules = @([regex]::Matches($ManifestText, '(?m)^\s+-\s+(\S+\.md)\s*$') | ForEach-Object { $_.Groups[1].Value })
 $GeneratedCoreImports = ($ManifestRules | ForEach-Object { "@__CODEX_HOME__/rules/$($_)" }) -join "`n"
 $UserHome = if ($env:USERPROFILE) { $env:USERPROFILE } elseif ($env:HOME) { $env:HOME } else { throw "Cannot resolve user home directory" }
@@ -34,6 +35,9 @@ foreach ($Platform in $Platforms) {
   $Native = Join-Path $Target "native"
   $Tools = Join-Path $Target "agent-rules-tools"
   New-Item -ItemType Directory -Force -Path $Rules, $Skills, $Scripts, $Docs, $Native, $Tools | Out-Null
+  if (-not ($PlatformContracts.platforms.PSObject.Properties.Name -contains $Platform)) { throw "Missing platform contract: $Platform" }
+  [pscustomobject]@{ version = 1; platform = $Platform; source = "platforms/platform-contracts.json"; contract = $PlatformContracts.platforms.$Platform } |
+    ConvertTo-Json -Depth 10 | Set-Content -Encoding UTF8 (Join-Path $Target "runtime-contract.json")
 
   # Portable orchestration must be available outside this repository after install.
   foreach ($ToolName in @("workctl.py", "workctl.ps1", "workctl.sh", "work-ledger.schema.json")) {
