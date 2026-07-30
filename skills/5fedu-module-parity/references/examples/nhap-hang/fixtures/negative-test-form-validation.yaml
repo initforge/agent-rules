@@ -1,0 +1,10 @@
+# negative-test-form-validation.yaml
+# Fixture: Negative test for form validation.
+surface: form-drawer
+scenario: "Submit form with empty required fields must show validation errors"
+invariant: "Form must not submit; errors must be shown inline on fields"
+expected_outcome: "Ngày nhập and Nhà cung cấp required errors shown; submit button remains enabled; no API call made"
+mocks:
+  - endpoint: "/rest/v1/phieu_nhap"
+    method: POST
+    expected_calls: 0

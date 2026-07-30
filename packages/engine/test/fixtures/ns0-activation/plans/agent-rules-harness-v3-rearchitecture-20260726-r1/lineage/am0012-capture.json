@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "plan_id": "agent-rules-harness-v3-rearchitecture-20260726-r1",
+  "amendment_id": "AM-0012",
+  "status": "OWNER_APPROVED_PENDING_ACTIVATION",
+  "source_kind": "owner-chat",
+  "captured_at": "2026-07-29T00:00:00.000Z",
+  "original": {
+    "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/original.md",
+    "sha256": "1e1b06e7388c49b076111fc8edf4878407991f269d656b0dc1c7c5dbaeace26b"
+  },
+  "amendment": {
+    "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0012-native-swarm-artifact-handoff-and-fitness-closure.md",
+    "sha256": "e21bb21b6898cb2f6f37a58c47db0c07ade9701e18081c3e2023b5a0e5698daf"
+  },
+  "audit": {
+    "path": ".agent/audits/agent-rules-harness-v3-rearchitecture-20260726-r1/2026-07-29-micro-fitness-baseline.md",
+    "sha256": "405594d8921300b350534f1921bbd5b5b5fdcd715a66cd10599f2e8206656ee5"
+  },
+  "handoff": {
+    "path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/continue-from-am0012.md",
+    "sha256": "9ec3e9b2b9af7301f0f1a91f6be13c7b0186ef5e310c6518e54381f30d57c52f"
+  },
+  "continuation_prompt": {
+    "path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/opencode-continuation-prompt.md",
+    "sha256": "1d25954e4c82d2e52f8e085f90c20ec0e07130043c9f7af31580086888c2ee25"
+  },
+  "repository_baselines": {
+    "canonical_main": "0000000000000000000000000000000000000000",
+    "active_integration": "0000000000000000000000000000000000000000"
+  },
+  "activation_rule": "Minimal fixture rule."
+}

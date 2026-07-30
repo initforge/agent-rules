@@ -1,0 +1,8 @@
+{
+  "schema": "artifact/model-routing",
+  "version": 1,
+  "task_class": "code_generation",
+  "risk": "extreme",
+  "initial_model_class": "standard",
+  "effort": "medium"
+}

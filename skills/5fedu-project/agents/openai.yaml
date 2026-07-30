@@ -1,0 +1,4 @@
+interface:
+  display_name: "5fedu Project"
+  short_description: "Setup and apply 5fedu project conventions."
+  default_prompt: "Use the 5fedu Project skill to set up or apply 5fedu frontend, Supabase, auth, permission, and delivery conventions for this repo."

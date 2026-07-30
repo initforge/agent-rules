@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/capability.schema.json",
+  "title": "Portable Capability Contract",
+  "description": "A capability contract describing a product's identity, runtime identity, version, instructions, skills, subagents, model routing, plan mode, hooks, MCP tools, permissions, telemetry, diff review, install/doctor/uninstall probes, and observed evidence. Platform-neutral; supports capability discovery and attestation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "version", "product_identity", "runtime_identity"
+  ],
+  "properties": {
+    "schema": { "const": "artifact/capability" },
+    "version": { "const": 1 },
+    "schema_version": { "type": "string", "minLength": 1 },
+    "product_identity": { "type": "string", "minLength": 1 },
+    "runtime_identity": { "type": "string", "minLength": 1 },
+    "instructions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "description": { "type": "string" },
+          "trigger": { "type": "string" }
+        }
+      }
+    },
+    "subagents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "capability_class": {
+            "type": "string",
+            "enum": ["utility", "economy", "standard", "expert", "unassigned"]
+          },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "model_routing": { "type": "object" },
+    "plan_mode": {
+      "type": "string",
+      "enum": ["native", "emulated", "unsupported", "unverified"]
+    },
+    "hooks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["event"],
+        "properties": {
+          "event": { "type": "string", "minLength": 1 },
+          "command": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "mcp_tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "server": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "deny": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "ask": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "telemetry": {
+      "type": "string",
+      "enum": ["enabled", "disabled", "minimal", "full", "unverified"]
+    },
+    "diff_review": {
+      "type": "string",
+      "enum": ["native", "emulated", "unsupported", "unverified"]
+    },
+    "install": { "type": "string" },
+    "doctor": { "type": "string" },
+    "uninstall": { "type": "string" },
+    "probe_method": {
+      "type": "string",
+      "enum": ["static", "runtime", "attestation", "unverified"]
+    },
+    "observed_evidence": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "freshness": { "type": "string", "format": "date-time" }
+  }
+}

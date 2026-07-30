@@ -1,0 +1,18 @@
+{
+  "schema": "artifact/policy-approval",
+  "version": 1,
+  "risk_levels": {
+    "read": "low",
+    "edit": "medium",
+    "package_installation": "high",
+    "external_network": "medium",
+    "migrations": "high",
+    "secrets": "critical",
+    "commit": "medium",
+    "push": "high",
+    "merge": "high",
+    "deployment": "critical",
+    "destructive_operations": "critical"
+  },
+  "autonomy_level": 7
+}

@@ -1,0 +1,77 @@
+# Secrets and local configs
+*.local.json
+*local*.json
+secrets.json
+.env
+.env.*
+credentials.json
+*.credentials.json
+
+# API keys and tokens
+*.key
+*.pem
+*.crt
+
+# Backup files
+*.bak
+codex.bak*/
+*.tmp
+*.temp
+*.log
+
+# Python cache
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# MCP local configs
+*mcp_config*.json
+
+# Project adapters are local/generated in this harness repo.
+/.agents/
+/.codex/
+/.agent/
+
+# Grok live mirror â€” use ~/.grok/ global only (install-grok-global.sh)
+.grok/
+
+# Node packages
+node_modules/
+
+# Runtime/test artifacts
+dist/
+05-generated/
+generated/
+profiles/5fedu/projects/.template-managed.json
+.agent/profiles/
+coverage/
+test-results/
+playwright-report/
+output/
+downloads/
+*.qa.png
+*.qa.jpg
+*.qa.jpeg
+*.qa.webp
+*.qa.mp4
+*.trace.zip
+
+# One-off scratch scripts should live outside tracked runtime scripts.
+scratch/
+tmp/
+skills-lock.json
+
+# Source-lock cache (isolated per-project)
+.agent/source-lock-cache/
+
+# Source distribution archive
+agent-rules-source.zip

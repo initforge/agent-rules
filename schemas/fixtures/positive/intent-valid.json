@@ -1,0 +1,45 @@
+{
+  "schema": "artifact/intent",
+  "version": 1,
+  "schema_version": "1.0.0",
+  "request": "Add user authentication with OAuth2 support to the API",
+  "outcomes": [
+    "Users can register and login via OAuth2 providers",
+    "JWT tokens are issued and validated"
+  ],
+  "constraints": [
+    "Must use existing PostgreSQL database",
+    "Must not break existing API v1 endpoints"
+  ],
+  "non_goals": [
+    "Social media integration",
+    "Password-based authentication"
+  ],
+  "quality_attributes": [
+    "Security: OWASP Top 10 compliant",
+    "Performance: <200ms p95 auth latency"
+  ],
+  "assumptions": [
+    "OAuth2 providers (Google, GitHub) are configured and reachable",
+    "PostgreSQL is already running"
+  ],
+  "unknowns": [
+    "Rate limiting policy for auth endpoints",
+    "Refresh token rotation strategy"
+  ],
+  "irreversible_decisions": [
+    "JWT signing algorithm: RS256"
+  ],
+  "requirements": [
+    {
+      "id": "REQ-001",
+      "description": "Support Google OAuth2 login flow",
+      "provenance": "user_story_US-042"
+    },
+    {
+      "id": "REQ-002",
+      "description": "Issue JWT access tokens with 15-minute expiry",
+      "provenance": "security_audit_2026"
+    }
+  ]
+}

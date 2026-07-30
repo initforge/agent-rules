@@ -1,0 +1,10 @@
+platform: opencode
+core: rules
+capabilities: skills
+overlay: platforms/opencode/opencode-overlay.md
+runtime_home: ~/.config/opencode
+mcp_config: opencode.json
+mcp_format: json_mcpServers
+project_config: .opencode/opencode.json
+agent_dir: agents
+skill_dir: skills

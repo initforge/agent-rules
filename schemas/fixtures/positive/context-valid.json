@@ -1,0 +1,34 @@
+{
+  "schema": "artifact/context",
+  "version": 1,
+  "schema_version": "1.0.0",
+  "sources": [
+    {
+      "path": "rules/security-policy.md",
+      "type": "rule",
+      "authority": "global",
+      "scope": "all",
+      "trigger": "always",
+      "priority": 10,
+      "freshness": "2026-07-26T08:00:00Z",
+      "commit_hash": "abc123def456",
+      "content_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "token_budget": 500,
+      "loaded_by": "main-agent"
+    },
+    {
+      "path": "skills/deploy.agent.md",
+      "type": "skill",
+      "authority": "lazy",
+      "scope": "deploy",
+      "trigger": "on_demand",
+      "priority": 5,
+      "freshness": "2026-07-25T12:00:00Z",
+      "commit_hash": "def789abc012",
+      "content_hash": "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592",
+      "token_budget": 1200,
+      "profile_requirements": ["5fedu"],
+      "loaded_by": "main-agent"
+    }
+  ]
+}

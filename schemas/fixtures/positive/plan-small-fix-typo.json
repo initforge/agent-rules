@@ -1,0 +1,24 @@
+{
+  "schema": "artifact/plan",
+  "version": 1,
+  "schema_version": "1.0.0",
+  "repository_baseline": "main@abc123",
+  "intent_reference": "intent-20260725-003",
+  "tasks": [
+    {
+      "id": "T1",
+      "objective": "Fix project name typo in README title",
+      "file_ownership": ["README.md"],
+      "forbidden_files": ["src/"],
+      "acceptance_criteria": [
+        "Project name is 'Agent Rules' not 'Agen Rules'"
+      ],
+      "verification": {
+        "proof_kinds": ["static"],
+        "dimensions": ["outcome"]
+      },
+      "rollback": "Revert README.md change"
+    }
+  ],
+  "completion_policy": "all_tasks"
+}

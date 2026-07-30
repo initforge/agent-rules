@@ -1,0 +1,75 @@
+# source-lock.schema.yaml — source and authoritative target receipt
+$schema: "http://json-schema.org/draft-07/schema#"
+title: SourceLock
+description: "Pins the selected template and binds proof to the captured target contract/revision."
+type: object
+additionalProperties: false
+required:
+  - template_identity
+  - snapshot
+  - discovery_method
+  - anchors_opened
+  - target_receipt
+properties:
+  template_identity:
+    type: object
+    additionalProperties: false
+    required: [workspace_path, package_identity]
+    properties:
+      workspace_path:
+        $ref: "common.schema.yaml#/definitions/portablePath"
+      package_identity:
+        $ref: "common.schema.yaml#/definitions/nonBlank"
+      is_fork:
+        type: boolean
+      fork_confirmed_by:
+        $ref: "common.schema.yaml#/definitions/nonBlank"
+    allOf:
+      - if:
+          properties:
+            is_fork:
+              const: true
+          required: [is_fork]
+        then:
+          required: [fork_confirmed_by]
+          properties:
+            fork_confirmed_by:
+              $ref: "common.schema.yaml#/definitions/nonBlank"
+  snapshot:
+    type: object
+    additionalProperties: false
+    minProperties: 1
+    maxProperties: 1
+    properties:
+      git_commit:
+        type: string
+        pattern: "^[a-f0-9]{40}$"
+      deterministic_hash:
+        type: string
+        pattern: "^[a-f0-9]{64}$"
+  discovery_method:
+    type: string
+    enum: [positive_anchors_match, owner_provided, owner_confirmed]
+  anchors_opened:
+    type: array
+    minItems: 1
+    uniqueItems: true
+    items:
+      $ref: "common.schema.yaml#/definitions/portablePath"
+  target_receipt:
+    type: object
+    additionalProperties: false
+    required: [revision, target_contract_sha256, captured_by]
+    properties:
+      revision:
+        type: string
+        pattern: "^[a-f0-9]{40}$"
+      target_contract_sha256:
+        type: string
+        pattern: "^[a-f0-9]{64}$"
+      captured_by:
+        $ref: "common.schema.yaml#/definitions/nonBlank"
+  source_revision_note:
+    $ref: "common.schema.yaml#/definitions/nonBlank"
+  source_lock_ref:
+    $ref: "common.schema.yaml#/definitions/portablePath"

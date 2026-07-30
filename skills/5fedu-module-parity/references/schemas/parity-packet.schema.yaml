@@ -1,0 +1,35 @@
+# parity-packet.schema.yaml — executable-parity Draft-07 aggregate contract
+$schema: "http://json-schema.org/draft-07/schema#"
+title: ParityPacket
+description: "Exact eight-file V3 parity packet keyed by canonical filename."
+type: object
+additionalProperties: false
+required:
+  - source.lock.yaml
+  - target.yaml
+  - structural-map.yaml
+  - visual-contract.yaml
+  - behavior-contract.yaml
+  - architecture-adaptation.yaml
+  - deviations.yaml
+  - proof.yaml
+properties:
+  source.lock.yaml:
+    $ref: "source-lock.schema.yaml"
+  target.yaml:
+    $ref: "target.schema.yaml"
+  structural-map.yaml:
+    $ref: "structural-map.schema.yaml"
+  visual-contract.yaml:
+    $ref: "visual-contract.schema.yaml"
+  behavior-contract.yaml:
+    $ref: "behavior-contract.schema.yaml"
+  architecture-adaptation.yaml:
+    $ref: "architecture-adaptation.schema.yaml"
+  deviations.yaml:
+    $ref: "deviations.schema.yaml"
+  proof.yaml:
+    $ref: "proof.schema.yaml"
+
+# Cross-document equality, revision freshness, evidence reconciliation, and
+# identity independence remain staged semantic invariants for later slices.

@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "parity_contract": {
+    "required_live_invariants": ["activation", "context_delivery", "orchestration", "role_permissions", "model_effort", "mcp_integration"],
+    "static_artifacts_are_sufficient": false,
+    "aggregate_rule": "all_platforms_require_current_live_evidence"
+  },
+  "platforms": {
+    "codex": {
+      "runtime": {"home_env": "CODEX_HOME", "home_default": "~/.codex", "global_entrypoint": "$CODEX_HOME/AGENTS.md"},
+      "bootstrap": {"strategy": "managed_file", "entrypoint": "AGENTS.md", "restart_action": "start_new_task"},
+      "routing": {"hook_lifecycle": "UserPromptSubmit", "context_delivery": "route_capsule_injection"},
+      "orchestration": {"native_spawn_tool": "spawn_agent", "agent_discovery": "$CODEX_HOME/agents", "model_attestation": "host_attested", "permission_capability": "sandbox_enforced", "isolation_capability": "worktree_or_shared"},
+      "mcp": {"config_path": "$CODEX_HOME/config.toml", "format": "toml_mcp_servers", "native_inspect": "codex mcp list", "live_doctor": "native_mcp_ping"}
+    },
+    "grok": {
+      "runtime": {"home_env": "GROK_HOME", "home_default": "~/.grok", "global_entrypoint": "$GROK_HOME/.grok/rules"},
+      "bootstrap": {"strategy": "managed_directory", "entrypoint": ".grok/rules", "restart_action": "restart_or_reload"},
+      "routing": {"hook_lifecycle": "host_native_prompt_hook", "context_delivery": "route_capsule_injection"},
+      "orchestration": {"native_spawn_tool": "native_subagent", "agent_discovery": "$GROK_HOME/agents", "model_attestation": "host_attested", "permission_capability": "host_declared", "isolation_capability": "host_declared"},
+      "mcp": {"config_path": "$GROK_HOME/mcp.json", "format": "json_mcpServers", "native_inspect": "grok mcp list", "live_doctor": "native_mcp_ping"}
+    },
+    "antigravity": {
+      "runtime": {"home_env": "ANTIGRAVITY_HOME", "home_default": "~/.gemini/config", "global_entrypoint": "~/.gemini/GEMINI.md"},
+      "bootstrap": {"strategy": "managed_marked_block", "entrypoint": "GEMINI.md", "restart_action": "restart_or_reload"},
+      "routing": {"hook_lifecycle": "PreInvocation", "context_delivery": "injectSteps.ephemeralMessage"},
+      "orchestration": {"native_spawn_tool": "invoke_subagent", "agent_discovery": "$ANTIGRAVITY_HOME/agents", "model_attestation": "host_attested", "permission_capability": "host_declared", "isolation_capability": "workspace_mode"},
+      "mcp": {"config_path": "$ANTIGRAVITY_HOME/mcp_config.json", "format": "json_mcpServers", "native_inspect": "antigravity_mcp_ui", "live_doctor": "native_mcp_ping"}
+    },
+    "cursor": {
+      "runtime": {"home_env": "CURSOR_HOME", "home_default": "~/.cursor", "global_entrypoint": "$CURSOR_HOME/rules"},
+      "bootstrap": {"strategy": "local_plugin", "entrypoint": "rules", "restart_action": "reload_window"},
+      "routing": {"hook_lifecycle": "beforeSubmitPrompt", "context_delivery": "local_plugin_route_capsule"},
+      "orchestration": {"native_spawn_tool": "Task", "agent_discovery": "$CURSOR_HOME/agents", "model_attestation": "host_attested", "permission_capability": "host_declared", "isolation_capability": "host_declared"},
+      "mcp": {"config_path": "$CURSOR_HOME/mcp.json", "format": "json_mcpServers", "native_inspect": "cursor_mcp_ui", "live_doctor": "native_mcp_ping"}
+    },
+    "opencode": {
+      "runtime": {"home_env": "OPENCODE_HOME", "home_default": "~/.config/opencode", "global_entrypoint": "AGENTS.md"},
+      "bootstrap": {"strategy": "managed_directory", "entrypoint": "AGENTS.md", "restart_action": "restart_or_reload"},
+      "routing": {"hook_lifecycle": "none", "context_delivery": "route_capsule_injection"},
+      "orchestration": {"native_spawn_tool": "none", "agent_discovery": "$OPENCODE_HOME/agents", "model_attestation": "host_declared", "permission_capability": "role_prompt", "isolation_capability": "host_declared"},
+      "mcp": {"config_path": "$OPENCODE_HOME/opencode.json", "format": "json_mcpServers", "native_inspect": "opencode_mcp_ui", "live_doctor": "native_mcp_ping"}
+    }
+  }
+}

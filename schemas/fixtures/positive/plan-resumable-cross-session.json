@@ -1,0 +1,109 @@
+{
+  "schema": "artifact/plan",
+  "version": 1,
+  "schema_version": "1.0.0",
+  "repository_baseline": "main/e5f6g7h",
+  "intent_reference": "intent-20260725-005",
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "statement": "Extract orders before payments",
+      "rationale": "Orders have fewer dependencies",
+      "decided_by": "architect",
+      "decided_at": "2026-07-25T14:00:00Z"
+    },
+    {
+      "id": "DEC-002",
+      "statement": "Use dual-write during migration",
+      "rationale": "Zero-downtime requirement",
+      "decided_by": "architect",
+      "decided_at": "2026-07-25T14:10:00Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1",
+      "objective": "Create order service stub with health endpoint",
+      "requirements": ["REQ-001"],
+      "file_ownership": ["services/order/"],
+      "acceptance_criteria": [
+        "Order service starts and responds to health check"
+      ],
+      "verification": {
+        "proof_kinds": ["unit"],
+        "dimensions": ["outcome"]
+      },
+      "evidence_requirements": ["health_check_output"],
+      "rollback": "Remove order service",
+      "portability": {
+        "platforms": ["linux", "darwin"],
+        "constraints": ["postgres >= 15"]
+      }
+    },
+    {
+      "id": "T2",
+      "objective": "Add dual-write to monolith order module",
+      "requirements": ["REQ-002"],
+      "file_ownership": ["monolith/src/orders/dual_write.rs"],
+      "acceptance_criteria": [
+        "Dual-write produces identical data in both stores"
+      ],
+      "verification": {
+        "proof_kinds": ["integration"],
+        "dimensions": ["reconciliation", "failure-path"]
+      },
+      "evidence_requirements": ["dual_write_reconciliation"],
+      "rollback": "Disable dual-write adapter",
+      "portability": {}
+    },
+    {
+      "id": "T3",
+      "objective": "Add conditional route to API gateway for order service",
+      "requirements": ["REQ-003"],
+      "file_ownership": ["api-gateway/routes/orders.rs"],
+      "acceptance_criteria": [
+        "API gateway routes /orders/* to new service correctly"
+      ],
+      "verification": {
+        "proof_kinds": ["integration", "e2e"],
+        "dimensions": ["outcome", "integration", "regression"]
+      },
+      "evidence_requirements": ["gateway_routing_test"],
+      "rollback": "Restore monolith routing",
+      "portability": {}
+    },
+    {
+      "id": "T4",
+      "objective": "Reconcile data after migration",
+      "requirements": ["REQ-004"],
+      "file_ownership": ["services/order/reconciliation/"],
+      "acceptance_criteria": [
+        "Data reconciliation completes without mismatches"
+      ],
+      "verification": {
+        "proof_kinds": ["integration"],
+        "dimensions": ["reconciliation"]
+      },
+      "evidence_requirements": ["reconciliation_report"],
+      "rollback": "Run reverse reconciliation",
+      "portability": {}
+    },
+    {
+      "id": "T5",
+      "objective": "Create and test rollback plan before cutover",
+      "requirements": ["REQ-005"],
+      "file_ownership": ["docs/rollback/"],
+      "acceptance_criteria": [
+        "Rollback restores monolith routing within RTO"
+      ],
+      "verification": {
+        "proof_kinds": ["manual"],
+        "dimensions": ["target-identity", "smoke"]
+      },
+      "evidence_requirements": ["rollback_test_report"],
+      "rollback": "N/A — rollback plan itself is the deliverable",
+      "portability": {}
+    }
+  ],
+  "completion_policy": "all_tasks"
+}

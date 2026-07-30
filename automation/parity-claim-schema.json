@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/parity-claim.schema.json",
+  "title": "Parity Claim Packet",
+  "description": "Schema for a parity claim packet — a set of structured parity assertions with environment defaults",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["meta", "claims"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "created_at"],
+      "properties": {
+        "name": { "type": "string", "description": "Human-readable name for this parity check" },
+        "version": { "type": "integer", "minimum": 1, "description": "Packet schema version" },
+        "created_at": { "type": "string", "format": "date-time", "description": "ISO 8601 timestamp" },
+        "source_template": { "type": "string", "description": "Path or reference to the template being compared against" },
+        "template_commit": { "type": "string", "description": "Git commit hash of the template snapshot" },
+        "target_project": { "type": "string", "description": "Target project name" },
+        "target_branch": { "type": "string", "description": "Target project branch" }
+      }
+    },
+    "environment_defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "browser": { "type": "string", "default": "chromium" },
+        "locale": { "type": "string", "default": "vi-VN" },
+        "timezone": { "type": "string", "default": "Asia/Ho_Chi_Minh" },
+        "dpr": { "type": "number", "default": 2 },
+        "font_hint": { "type": "string" }
+      }
+    },
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/claim" }
+    }
+  },
+  "$defs": {
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "dimension",
+        "claim",
+        "viewport",
+        "state",
+        "expected",
+        "proof_profile",
+        "required_evidence"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^PC-[0-9]{3}$",
+          "description": "Unique claim identifier (e.g., PC-001)"
+        },
+        "dimension": {
+          "enum": ["visual", "responsive", "behavioral", "accessibility", "console", "network", "data-state"],
+          "description": "Parity dimension being verified"
+        },
+        "claim": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable claim statement"
+        },
+        "viewport": {
+          "enum": ["desktop", "mobile", "both"],
+          "description": "Viewport to verify against"
+        },
+        "viewport_width": {
+          "type": "integer",
+          "minimum": 320,
+          "maximum": 3840,
+          "description": "Viewport width in pixels (default: 1280 desktop, 375 mobile)"
+        },
+        "viewport_height": {
+          "type": "integer",
+          "minimum": 480,
+          "maximum": 2160,
+          "description": "Viewport height in pixels (default: 720 desktop, 812 mobile)"
+        },
+        "state": {
+          "enum": ["loading", "populated", "empty", "error", "hover", "focus", "keyboard", "touch"],
+          "description": "Application state to verify"
+        },
+        "target_selector": {
+          "type": "string",
+          "description": "CSS selector for the target element"
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["description"],
+          "properties": {
+            "description": { "type": "string", "description": "Human-readable expected outcome" },
+            "reference_selector": { "type": "string", "description": "CSS selector on reference/template page" },
+            "visual_baseline_path": { "type": "string", "description": "Path to expected screenshot baseline" },
+            "a11y_role": { "type": "string", "description": "Expected ARIA role" },
+            "a11y_children_min": { "type": "integer", "minimum": 0, "description": "Minimum number of a11y children" },
+            "console_errors": { "type": "integer", "minimum": 0, "default": 0, "description": "Maximum allowed console errors" },
+            "network_errors": { "type": "integer", "minimum": 0, "default": 0, "description": "Maximum allowed network failures" },
+            "behavior_assertions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["type", "target"],
+                "properties": {
+                  "type": { "enum": ["visible", "hidden", "enabled", "disabled", "contains_text", "has_class", "attribute_equals", "count_equals"], "description": "Type of behavioral assertion" },
+                  "target": { "type": "string", "description": "CSS selector or element target" },
+                  "value": { "type": "string", "description": "Expected value for the assertion" }
+                }
+              }
+            }
+          }
+        },
+        "proof_profile": {
+          "type": "string",
+          "description": "Evidence profile from automation/evidence-profiles.json"
+        },
+        "required_evidence": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": ["screenshot", "a11y_snapshot", "console_log", "network_log", "source_assertion", "visual_diff"]
+          },
+          "description": "Required evidence kinds"
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "viewport": { "type": "string", "description": "Viewport override" },
+            "browser": { "type": "string", "description": "Browser override" },
+            "font_hint": { "type": "string", "description": "Expected font stack" },
+            "locale": { "type": "string", "description": "Locale override" },
+            "timezone": { "type": "string", "description": "Timezone override" },
+            "data_fixture": { "type": "string", "description": "Data fixture identifier" },
+            "dpr": { "type": "number", "description": "Device pixel ratio override" }
+          }
+        },
+        "accepted_deviation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["field", "expected", "actual", "reason", "approved_by"],
+          "properties": {
+            "field": { "type": "string", "description": "Field or aspect that deviates" },
+            "expected": { "type": "string", "description": "Expected value" },
+            "actual": { "type": "string", "description": "Actual value in target" },
+            "reason": { "type": "string", "description": "Reason for accepting the deviation" },
+            "approved_by": { "type": "string", "description": "Who approved the deviation" },
+            "approved_at": { "type": "string", "format": "date-time", "description": "When the deviation was approved" }
+          }
+        }
+      }
+    }
+  }
+}

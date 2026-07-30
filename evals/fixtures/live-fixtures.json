@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "fixtures": {
+    "read-only-repo": {
+      "sandbox": "read-only",
+      "files": {
+        "README.md": "# Order service\n\nRequests flow through Gateway -> OrderService -> OrderRepository.\n",
+        "src/architecture.txt": "Gateway validates transport input.\nOrderService owns business rules.\nOrderRepository owns persistence.\n"
+      },
+      "expected_changed_files": [],
+      "response_contains": ["Gateway", "OrderService", "OrderRepository"],
+      "verification_commands": []
+    },
+    "tiny-one-file": {
+      "sandbox": "workspace-write",
+      "files": {
+        "message.txt": "Agent qualty matters.\n",
+        "test_message.py": "import pathlib\nimport unittest\n\nclass MessageTest(unittest.TestCase):\n    def test_message(self):\n        self.assertEqual(pathlib.Path('message.txt').read_text(encoding='utf-8'), 'Agent quality matters.\\n')\n\nif __name__ == '__main__':\n    unittest.main()\n"
+      },
+      "expected_changed_files": ["message.txt"],
+      "expected_files": {"message.txt": "Agent quality matters.\n"},
+      "response_contains": ["message.txt"],
+      "verification_commands": ["python -m unittest -q"]
+    },
+    "normal-multifile": {
+      "sandbox": "workspace-write",
+      "files": {
+        ".gitignore": "__pycache__/\n",
+        "TASK.md": "# Internal label API change\n\n`api.build_label` must require a keyword-only `kind` argument and return `\"{kind}:{trimmed value}\"`. Before editing source, record every direct consumer in `consumer-trace.json` as exactly `{\"api\":\"api.build_label\",\"consumers\":[\"consumers/audit.py\",\"consumers/invoice.py\"]}` followed by a newline. Update only the API and those two consumers; do not change `unrelated.py` or tests.\n",
+        "api.py": "def build_label(value: str) -> str:\n    return value.strip()\n",
+        "consumers/__init__.py": "",
+        "consumers/invoice.py": "from api import build_label\n\n\ndef invoice_label(customer: str) -> str:\n    return build_label(customer)\n",
+        "consumers/audit.py": "from api import build_label\n\n\ndef audit_label(actor: str) -> str:\n    return build_label(actor)\n",
+        "unrelated.py": "# This legacy formatting is deliberately out of scope.\nVALUE    =    1\n",
+        "test_api.py": "import unittest\n\nfrom api import build_label\n\n\nclass BuildLabelTest(unittest.TestCase):\n    def test_kind_is_required_and_formats_trimmed_value(self):\n        self.assertEqual(build_label(' Ada ', kind='invoice'), 'invoice:Ada')\n\n    def test_kind_is_keyword_only(self):\n        with self.assertRaises(TypeError):\n            build_label('Ada', 'invoice')\n\n\nif __name__ == '__main__':\n    unittest.main()\n",
+        "test_consumers.py": "import unittest\n\nfrom consumers.audit import audit_label\nfrom consumers.invoice import invoice_label\n\n\nclass ConsumerTest(unittest.TestCase):\n    def test_invoice_consumer_uses_its_kind(self):\n        self.assertEqual(invoice_label(' Ada '), 'invoice:Ada')\n\n    def test_audit_consumer_uses_its_kind(self):\n        self.assertEqual(audit_label(' Lin '), 'audit:Lin')\n\n\nif __name__ == '__main__':\n    unittest.main()\n"
+      },
+      "expected_changed_files": ["api.py", "consumer-trace.json", "consumers/audit.py", "consumers/invoice.py"],
+      "required_change_order": {
+        "before": ["consumer-trace.json"],
+        "after": ["api.py", "consumers/audit.py", "consumers/invoice.py"]
+      },
+      "expected_files": {
+        "consumer-trace.json": "{\"api\":\"api.build_label\",\"consumers\":[\"consumers/audit.py\",\"consumers/invoice.py\"]}\n"
+      },
+      "solution_files": {
+        "api.py": "def build_label(value: str, *, kind: str) -> str:\n    return f'{kind}:{value.strip()}'\n",
+        "consumer-trace.json": "{\"api\":\"api.build_label\",\"consumers\":[\"consumers/audit.py\",\"consumers/invoice.py\"]}\n",
+        "consumers/audit.py": "from api import build_label\n\n\ndef audit_label(actor: str) -> str:\n    return build_label(actor, kind='audit')\n",
+        "consumers/invoice.py": "from api import build_label\n\n\ndef invoice_label(customer: str) -> str:\n    return build_label(customer, kind='invoice')\n"
+      },
+      "response_contains": ["build_label", "consumer"],
+      "verification_commands": ["python -m unittest -q"]
+    },
+    "permission-service": {
+      "sandbox": "workspace-write",
+      "files": {
+        "permission.py": "def can_view(role: str, owner_id: int, actor_id: int) -> bool:\n    return role == 'admin' or owner_id != actor_id\n",
+        "test_permission.py": "import unittest\nfrom permission import can_view\n\nclass PermissionTest(unittest.TestCase):\n    def test_admin_allowed(self):\n        self.assertTrue(can_view('admin', 7, 9))\n\n    def test_owner_allowed(self):\n        self.assertTrue(can_view('member', 7, 7))\n\n    def test_other_denied(self):\n        self.assertFalse(can_view('member', 7, 9))\n\nif __name__ == '__main__':\n    unittest.main()\n"
+      },
+      "expected_changed_files": ["permission.py"],
+      "response_contains": ["allowed", "denied"],
+      "verification_commands": ["python -m unittest -q"]
+    },
+    "plan-migration": {
+      "sandbox": "read-only",
+      "files": {
+        "README.md": "# Account migration\n\nMove account status from free text to an enum without downtime.\n",
+        "schema.sql": "CREATE TABLE accounts (id INTEGER PRIMARY KEY, status TEXT NOT NULL);\n",
+        "migration-constraints.md": "Deployments must be backward compatible. Rollback must preserve existing rows.\n"
+      },
+      "expected_changed_files": [],
+      "response_contains": ["phase", "rollback", "verification"],
+      "verification_commands": []
+    },
+    "pasted-plan": {
+      "sandbox": "read-only",
+      "files": {
+        "PLAN.md": "# Draft\n\n1. Change the schema.\n2. Deploy the application.\n",
+        "CONSTRAINTS.md": "Zero downtime is required. Old and new application versions overlap for ten minutes.\n"
+      },
+      "expected_changed_files": [],
+      "response_contains": ["gap", "evidence", "rollback"],
+      "verification_commands": []
+    },
+    "scope-expansion": {
+      "sandbox": "workspace-write",
+      "files": {
+        "calculator.py": "def divide(total: float, count: int) -> float:\n    return total / count\n",
+        "unrelated.py": "# Legacy formatting intentionally remains out of scope.\nVALUE    =    1\n",
+        "test_calculator.py": "import unittest\nfrom calculator import divide\n\nclass DivideTest(unittest.TestCase):\n    def test_regular(self):\n        self.assertEqual(divide(8, 2), 4)\n\n    def test_zero_count(self):\n        self.assertEqual(divide(8, 0), 0)\n\nif __name__ == '__main__':\n    unittest.main()\n"
+      },
+      "expected_changed_files": ["calculator.py"],
+      "response_contains": ["calculator.py"],
+      "verification_commands": ["python -m unittest -q"]
+    }
+  }
+}

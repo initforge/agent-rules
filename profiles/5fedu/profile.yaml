@@ -1,0 +1,29 @@
+name: 5fedu
+displayName: "5fedu ERP/Admin"
+description: "Optional, project-routed ERP context; it is not public default context."
+version: "1.1.0"
+author: "5fedu-maintainer"
+enabledByDefault: false
+constraints:
+  minHarnessVersion: "1.0.0"
+  platforms: ["all"]
+dependencies: []
+context:
+  identity: "5fedu ERP/Admin profile"
+  activation: "Only .agent/profiles/5fedu.enabled or a validated installed context/5fedu README/rules/behavior/module-mapping lean pack may route these rules; prompts never activate the profile."
+  activationMarker: ".agent/profiles/5fedu.enabled"
+  leanPack:
+    readme: "context/5fedu/README.md"
+    requiredFiles: ["behaviors/activation.md", "rules/business.md", "rules/data-auth.md", "rules/permissions.md", "module-mapping/modules.yaml", "module-mapping/ui-contracts.md"]
+  alwaysLoaded: ["README.md"]
+  alwaysLoadedTokenBudget: 1500
+  routes:
+    activation: "behaviors/activation.md"
+    business: "rules/business.md"
+    data_auth: "rules/data-auth.md"
+    permissions: "rules/permissions.md"
+excludedPaths:
+  - path: "evals/fixtures/5fedu/template-source/5f-template-ket-noi-supabase-main"
+    load: false
+ownedFiles:
+  - "profiles/5fedu/**"

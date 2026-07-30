@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/plan.schema.json",
+  "title": "Portable Plan Contract",
+  "description": "A structured plan contract describing the repository baseline, intent reference, owner decisions, task breakdown with ownership and acceptance criteria, verification requirements, evidence requirements, rollback, and portability. Platform-neutral; supports task-level ownership, acceptance, and verification-by-claim traceability.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "version", "repository_baseline", "intent_reference",
+    "tasks", "completion_policy"
+  ],
+  "properties": {
+    "schema": { "const": "artifact/plan" },
+    "version": { "const": 1 },
+    "schema_version": { "type": "string", "minLength": 1 },
+    "repository_baseline": {
+      "description": "The repository baseline commit or tag at plan time.",
+      "type": "string", "minLength": 1
+    },
+    "intent_reference": {
+      "description": "Reference to the intent contract this plan addresses.",
+      "type": "string", "minLength": 1
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "statement", "rationale"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^DEC-[0-9]+$" },
+          "statement": { "type": "string", "minLength": 1 },
+          "rationale": { "type": "string", "minLength": 1 },
+          "decided_by": { "type": "string" },
+          "decided_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "objective", "acceptance_criteria"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "objective": { "type": "string", "minLength": 1 },
+          "requirements": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "file_ownership": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "forbidden_files": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "acceptance_criteria": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "verification": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "proof_kinds": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "static", "diff", "build", "unit", "integration", "api", "e2e",
+                    "browser", "performance", "security", "manual", "artifact",
+                    "transcript-review", "pipeline-run", "production-smoke"
+                  ]
+                }
+              },
+              "dimensions": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          },
+          "evidence_requirements": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "rollback": { "type": "string" },
+          "portability": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "platforms": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "constraints": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "completion_policy": {
+      "type": "string",
+      "enum": ["all_tasks", "any_accepted", "manual_review", "pipeline_gate"]
+    }
+  }
+}

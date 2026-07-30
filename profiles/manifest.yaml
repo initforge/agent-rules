@@ -1,0 +1,15 @@
+version: 1
+description: "Optional organization profiles for the agent-rules harness."
+profiles:
+  5fedu:
+    name: "5fedu"
+    displayName: "5fedu ERP/Admin"
+    description: "5fedu ERP/Admin conventions, project templates, and module parity skills"
+    version: "1.0.0"
+    enabledByDefault: false
+    constraints:
+      minHarnessVersion: "1.0.0"
+      platforms: ["all"]
+    dependencies: []
+    ownedFiles:
+      - "profiles/5fedu/**"

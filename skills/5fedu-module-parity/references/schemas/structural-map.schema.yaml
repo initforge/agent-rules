@@ -1,0 +1,143 @@
+# structural-map.schema.yaml — executable-parity Draft-07 contract
+$schema: "http://json-schema.org/draft-07/schema#"
+title: StructuralMap
+description: "Complete source-to-target structure, route, state, data, and event mapping."
+type: object
+additionalProperties: false
+required:
+  - component_mappings
+  - nesting_hierarchy
+  - routes
+  - state_ownership
+  - data_contracts
+  - event_flows
+  - planner_owns
+properties:
+  planner_owns:
+    type: array
+    uniqueItems: true
+    items:
+      $ref: "common.schema.yaml#/definitions/nonBlank"
+  component_mappings:
+    type: array
+    minItems: 1
+    uniqueItems: true
+    items:
+      type: object
+      additionalProperties: false
+      required: [source_component, target_component, decision]
+      properties:
+        source_component:
+          $ref: "common.schema.yaml#/definitions/portablePath"
+        target_component:
+          $ref: "common.schema.yaml#/definitions/portablePath"
+        decision:
+          type: string
+          enum: [create, adapt, reuse, not_applicable]
+        uncertainty:
+          const: false
+        rationale:
+          description: "Optional annotation; executable validation treats its value as opaque."
+        key_properties:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: "common.schema.yaml#/definitions/nonBlank"
+  nesting_hierarchy:
+    type: object
+    minProperties: 1
+    propertyNames:
+      $ref: "common.schema.yaml#/definitions/nonBlank"
+    additionalProperties:
+      type: array
+      minItems: 1
+      uniqueItems: true
+      items:
+        $ref: "common.schema.yaml#/definitions/nonBlank"
+  routes:
+    type: object
+    minProperties: 1
+    description: "Deterministic route declarations keyed by canonical target route."
+    propertyNames:
+      $ref: "common.schema.yaml#/definitions/routePath"
+    additionalProperties:
+      $ref: "#/definitions/routeDeclaration"
+  state_ownership:
+    type: array
+    minItems: 1
+    uniqueItems: true
+    items:
+      type: object
+      additionalProperties: false
+      required: [state_key, owner]
+      properties:
+        state_key:
+          $ref: "common.schema.yaml#/definitions/nonBlank"
+        owner:
+          $ref: "common.schema.yaml#/definitions/nonBlank"
+        shared_with:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: "common.schema.yaml#/definitions/nonBlank"
+  data_contracts:
+    type: array
+    minItems: 1
+    uniqueItems: true
+    items:
+      type: object
+      additionalProperties: false
+      required: [interface_or_type, source]
+      properties:
+        interface_or_type:
+          $ref: "common.schema.yaml#/definitions/nonBlank"
+        source:
+          $ref: "common.schema.yaml#/definitions/nonBlank"
+        fields:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: object
+            additionalProperties: false
+            required: [name, type, nullable]
+            properties:
+              name:
+                $ref: "common.schema.yaml#/definitions/nonBlank"
+              type:
+                $ref: "common.schema.yaml#/definitions/nonBlank"
+              nullable:
+                type: boolean
+  event_flows:
+    type: array
+    minItems: 1
+    uniqueItems: true
+    items:
+      type: object
+      additionalProperties: false
+      required: [event, producer, consumer]
+      properties:
+        event:
+          $ref: "common.schema.yaml#/definitions/nonBlank"
+        producer:
+          $ref: "common.schema.yaml#/definitions/nonBlank"
+        consumer:
+          $ref: "common.schema.yaml#/definitions/nonBlank"
+        payload_type:
+          $ref: "common.schema.yaml#/definitions/nonBlank"
+definitions:
+  routeDeclaration:
+    type: object
+    additionalProperties: false
+    required: [component, breadcrumb_label]
+    properties:
+      component:
+        $ref: "common.schema.yaml#/definitions/nonBlank"
+      breadcrumb_label:
+        $ref: "common.schema.yaml#/definitions/nonBlank"
+      parent_path:
+        $ref: "common.schema.yaml#/definitions/routePath"
+      guard:
+        $ref: "common.schema.yaml#/definitions/nonBlank"
+      permission_key:
+        $ref: "common.schema.yaml#/definitions/nonBlank"
