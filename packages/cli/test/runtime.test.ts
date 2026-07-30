@@ -11,6 +11,7 @@ import {
   type RuntimeInstallerOptions,
   verifyRuntimeReceipt,
 } from "../src/runtime/installer.js";
+import { compareRuntimeManifest } from "../src/commands/doctor.js";
 
 const runtimeDirectory = "agent-rules-runtime";
 
@@ -112,6 +113,21 @@ describe("RuntimeInstaller", () => {
     expect(await fs.readFile(path.join(runtimePath, "rules", "base.md"), "utf8")).toBe("first\n");
     const hostEntrypoint = await fs.readFile(path.join(targetRoot, "AGENTS.md"), "utf8");
     expect(hostEntrypoint).toContain(`${runtimePath}/.activation/AGENTS.md`);
+  });
+
+  it("reports transactional manifest missing and extra paths with generated activation excluded", async () => {
+    const result = await installer().install("codex");
+    const installed = result.receipt!.files;
+    const expected = [
+      { path: "rules/base.md", sha256: sha256("first\n") },
+      { path: "rules/missing.md", sha256: sha256("missing\n") },
+    ];
+
+    expect(compareRuntimeManifest(installed, expected)).toEqual({
+      missing: ["rules/missing.md"],
+      extra: ["skills/example/SKILL.md"],
+      hashMismatch: [],
+    });
   });
 
   it("explicitly migrates only manifest-owned legacy files and can roll back exactly", async () => {

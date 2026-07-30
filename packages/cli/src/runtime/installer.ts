@@ -1,14 +1,16 @@
 import { execFile } from "node:child_process";
-import { createHash, randomUUID } from "node:crypto";
-import { constants as fsConstants } from "node:fs";
+import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
+import { assertDirectoryNotLinked, exists, fsyncDirectory, fsyncRegularFile, hash, readRegularFileNoFollow, removeIfExists, writeJsonDurable } from "./filesystem.js";
+import { RUNTIME_PLATFORMS, type ActivationRecord, type RuntimeFile, type RuntimeInstallerOptions, type RuntimeLifecycleResult, type RuntimePlatform, type RuntimeReceipt, type SourceManifest } from "./contracts.js";
+
+export { fsyncDirectory, fsyncRegularFile } from "./filesystem.js";
+export { RUNTIME_PLATFORMS } from "./contracts.js";
+export type { RuntimeFile, RuntimeInstallerOptions, RuntimeLifecycleResult, RuntimePlatform, RuntimeReceipt } from "./contracts.js";
 
 const execFileAsync = promisify(execFile);
-
-export const RUNTIME_PLATFORMS = ["codex", "grok", "antigravity", "cursor"] as const;
-export type RuntimePlatform = (typeof RUNTIME_PLATFORMS)[number];
 
 const RUNTIME_DIRECTORY = "agent-rules-runtime";
 const RECEIPT_FILE = "agent-rules-runtime-receipt.json";
@@ -18,45 +20,6 @@ const LEGACY_MANIFEST_FILE = "agent-rules-manifest.json";
 const LEGACY_MIGRATION_JOURNAL_FILE = ".agent-rules-legacy-migration.json";
 const LEGACY_MIGRATION_RECEIPT_FILE = "agent-rules-legacy-migration-receipt.json";
 const LEGACY_ARCHIVE_PREFIX = ".agent-rules-legacy-archive-";
-
-export interface RuntimeFile {
-  path: string;
-  sha256: string;
-}
-
-interface SourceManifest {
-  version: number;
-  platform: RuntimePlatform;
-  files: RuntimeFile[];
-}
-
-export interface RuntimeReceipt {
-  schema: "agent-rules/runtime-receipt";
-  version: 1;
-  platform: RuntimePlatform;
-  installedAt: string;
-  source: {
-    manifestSha256: string;
-    artifactSha256: string;
-    effectivePlanSha256: string;
-    effectivePlanLedger: string;
-    effectivePlanLedgerSha256: string;
-    repositoryContext: {
-      gitHead: string;
-      gitTree: string;
-      relation: "context-only-not-artifact-attestation";
-    };
-  };
-  activation: ActivationRecord;
-  files: RuntimeFile[];
-}
-
-interface ActivationRecord {
-  kind: "managed-file" | "managed-directory-link";
-  id: "global-instructions" | "global-rules";
-  sha256?: string;
-  linkTarget?: string;
-}
 
 interface TransactionJournal {
   schema: "agent-rules/runtime-transaction";
@@ -69,39 +32,6 @@ interface TransactionJournal {
   backup: string;
   expectedPlanSha256?: string;
   expectedArtifactSha256?: string;
-}
-
-export interface RuntimeInstallerOptions {
-  repositoryRoot: string;
-  platformRoots?: Partial<Record<RuntimePlatform, string>>;
-  dryRun?: boolean;
-  /** Test-only failure injection. Never exposed by the public CLI help. */
-  failpoint?:
-    | "after-stage"
-    | "after-backup"
-    | "crash-after-backup"
-    | "crash-after-swap-before-activation"
-    | "crash-after-swap"
-    | "crash-rollback-after-target-move"
-    | "crash-rollback-after-backed-up-journal"
-    | "crash-rollback-after-backup-restore"
-    | "crash-rollback-after-staging-backup"
-    | "crash-rollback-after-commit-journal"
-    | "crash-migration-after-archive";
-}
-
-export interface RuntimeLifecycleResult {
-  platform: RuntimePlatform;
-  targetRoot: string;
-  runtimePath: string;
-  dryRun: boolean;
-  receipt?: RuntimeReceipt;
-  migration?: {
-    receiptPath: string;
-    archivePath: string;
-    legacyManifestSha256: string;
-    fileCount: number;
-  };
 }
 
 interface LegacyOwnedFile {
@@ -131,10 +61,6 @@ interface LegacyMigrationReceipt {
   files: LegacyOwnedFile[];
 }
 
-function hash(content: Buffer | string): string {
-  return createHash("sha256").update(content).digest("hex");
-}
-
 function isSafeRelativePath(value: unknown): value is string {
   if (typeof value !== "string" || value.length === 0 || value.includes("\\") || value.startsWith("/")) return false;
   const parts = value.split("/");
@@ -144,47 +70,6 @@ function isSafeRelativePath(value: unknown): value is string {
 function inside(root: string, candidate: string): boolean {
   const relative = path.relative(root, candidate);
   return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
-}
-
-async function exists(filePath: string): Promise<boolean> {
-  try {
-    await fs.lstat(filePath);
-    return true;
-  } catch (error: unknown) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return false;
-    throw error;
-  }
-}
-
-async function assertDirectoryNotLinked(directory: string): Promise<void> {
-  const stat = await fs.lstat(directory);
-  if (!stat.isDirectory() || stat.isSymbolicLink()) {
-    throw new Error(`Refusing linked or non-directory path: ${directory}`);
-  }
-}
-
-async function readRegularFileNoFollow(filePath: string): Promise<Buffer> {
-  const before = await fs.lstat(filePath);
-  if (!before.isFile() || before.isSymbolicLink()) throw new Error(`Refusing linked or non-regular file: ${filePath}`);
-  let handle: fs.FileHandle | undefined;
-  try {
-    const flags = process.platform === "win32"
-      ? fsConstants.O_RDONLY
-      : fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW;
-    handle = await fs.open(filePath, flags);
-    const opened = await handle.stat();
-    if (!opened.isFile() || opened.dev !== before.dev || opened.ino !== before.ino) {
-      throw new Error(`File changed while opening: ${filePath}`);
-    }
-    const body = await handle.readFile();
-    const after = await fs.lstat(filePath);
-    if (!after.isFile() || after.isSymbolicLink() || after.dev !== opened.dev || after.ino !== opened.ino) {
-      throw new Error(`File changed while reading: ${filePath}`);
-    }
-    return body;
-  } finally {
-    await handle?.close();
-  }
 }
 
 async function assertSafeSourceFile(sourceRoot: string, relativePath: string): Promise<string> {
@@ -200,45 +85,6 @@ async function assertSafeSourceFile(sourceRoot: string, relativePath: string): P
   const stat = await fs.lstat(candidate);
   if (!stat.isFile()) throw new Error(`Manifest entry is not a regular file: ${relativePath}`);
   return candidate;
-}
-
-export async function fsyncRegularFile(filePath: string, platform = process.platform): Promise<void> {
-  let handle: fs.FileHandle | undefined;
-  try {
-    // FlushFileBuffers on Windows requires a write-capable handle. Failure to
-    // open or flush a regular file is never suppressed: that would make the
-    // transaction journal claim durability it did not obtain.
-    handle = await fs.open(filePath, platform === "win32" ? "r+" : "r");
-    await handle.sync();
-  } finally {
-    await handle?.close();
-  }
-}
-
-export async function fsyncDirectory(directory: string): Promise<void> {
-  let handle: fs.FileHandle | undefined;
-  try {
-    handle = await fs.open(directory, "r");
-    await handle.sync();
-  } catch (error: unknown) {
-    // Directory flush is unavailable on Windows and some network filesystems.
-    if (!["EACCES", "EBADF", "EINVAL", "EISDIR", "ENOTSUP", "EPERM"].includes((error as NodeJS.ErrnoException).code ?? "")) throw error;
-  } finally {
-    await handle?.close();
-  }
-}
-
-async function writeJsonDurable(filePath: string, value: unknown): Promise<void> {
-  const tempPath = `${filePath}.${randomUUID()}.tmp`;
-  const body = `${JSON.stringify(value, null, 2)}\n`;
-  await fs.writeFile(tempPath, body, { mode: 0o600 });
-  await fsyncRegularFile(tempPath);
-  await fs.rename(tempPath, filePath);
-  await fsyncDirectory(path.dirname(filePath));
-}
-
-async function removeIfExists(filePath: string): Promise<void> {
-  await fs.rm(filePath, { recursive: true, force: true, maxRetries: 2 });
 }
 
 function defaultPlatformRoots(): Record<RuntimePlatform, string> {

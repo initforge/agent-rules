@@ -4,12 +4,30 @@ import { execFile } from "node:child_process";
 import * as crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { verifyRuntimeReceipt, type RuntimePlatform } from "../runtime/installer.js";
 
 interface DoctorCheck {
   platform: string;
   check: string;
   status: string;
   detail: string;
+}
+
+interface ManifestFile { path: string; sha256: string }
+
+export function compareRuntimeManifest(installed: ManifestFile[], expected: ManifestFile[]): {
+  missing: string[]; extra: string[]; hashMismatch: string[];
+} {
+  const installedByPath = new Map(installed.map((file) => [file.path, file.sha256]));
+  const expectedByPath = new Map(expected.map((file) => [file.path, file.sha256]));
+  const missing = expected.filter((file) => !installedByPath.has(file.path)).map((file) => file.path);
+  const extra = installed
+    .filter((file) => !file.path.startsWith(".activation/") && !expectedByPath.has(file.path))
+    .map((file) => file.path);
+  const hashMismatch = expected
+    .filter((file) => !file.path.startsWith("native/") && installedByPath.has(file.path) && installedByPath.get(file.path) !== file.sha256)
+    .map((file) => file.path);
+  return { missing, extra, hashMismatch };
 }
 
 async function sha256(filePath: string): Promise<string> {
@@ -101,15 +119,27 @@ export async function doctor(
   }
 
   for (const name of platforms) {
-    const runtimeHome = homes[name];
-    const manifestPath = path.join(runtimeHome, "agent-rules-manifest.json");
+    const platformHome = homes[name];
+    let runtimeHome = platformHome;
+    let manifestPath = path.join(platformHome, "agent-rules-manifest.json");
+    const transactionalRuntime = path.join(platformHome, "agent-rules-runtime");
+    if (name !== "opencode" && await checkFile(path.join(transactionalRuntime, "agent-rules-runtime-receipt.json"))) {
+      try {
+        await verifyRuntimeReceipt(transactionalRuntime, name as RuntimePlatform);
+        runtimeHome = transactionalRuntime;
+        manifestPath = path.join(transactionalRuntime, "agent-rules-runtime-receipt.json");
+      } catch (error) {
+        report.push({ platform: name, check: "install", status: "NOT_LIVE", detail: (error as Error).message });
+        continue;
+      }
+    }
 
     if (!(await checkFile(manifestPath))) {
       report.push({ platform: name, check: "runtime-manifest", status: "MISSING", detail: manifestPath });
       continue;
     }
 
-    report.push({ platform: name, check: "install", status: "INSTALL_PASS", detail: "runtime manifest is present" });
+    report.push({ platform: name, check: "install", status: "INSTALL_PASS", detail: runtimeHome === transactionalRuntime ? "transactional runtime receipt verified" : "legacy runtime manifest is present" });
 
     // Check native structure
     const buildDir = path.join(root, "generated", "runtime-build", name);
@@ -205,20 +235,12 @@ export async function doctor(
       try {
         const installed = JSON.parse(await fs.readFile(manifestPath, "utf-8"));
         const expected = JSON.parse(await fs.readFile(buildManifest, "utf-8"));
-        const instPaths = installed.files.map((f: any) => f.path).sort();
-        const expPaths = expected.files.map((f: any) => f.path).sort();
-        const extra = expPaths.filter((p: string) => !instPaths.includes(p));
-        const missing = instPaths.filter((p: string) => !expPaths.includes(p));
+        const { missing, extra, hashMismatch } = compareRuntimeManifest(installed.files, expected.files);
 
         if (extra.length > 0) report.push({ platform: name, check: "stale-files", status: "WARN", detail: extra.join(", ") });
         if (missing.length > 0) report.push({ platform: name, check: "missing-files", status: "MISSING", detail: missing.join(", ") });
 
         // Check hashes for non-native files
-        const hashMismatch: string[] = [];
-        for (const exp of expected.files.filter((f: any) => !f.path.startsWith("native/"))) {
-          const ins = installed.files.find((f: any) => f.path === exp.path);
-          if (ins && ins.sha256 !== exp.sha256) hashMismatch.push(exp.path);
-        }
         if (hashMismatch.length > 0) {
           report.push({ platform: name, check: "sha256-drift", status: "NOT_LIVE", detail: hashMismatch.join(", ") });
         }
