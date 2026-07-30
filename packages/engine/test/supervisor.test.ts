@@ -485,6 +485,32 @@ describe('Supervisor', () => {
       expect(second.ok).toBe(true);
     });
 
+    it('normalizes Windows separators before nested overlap checks', () => {
+      const s = simpleSupervisor({ maxWriters: 3 });
+      expect(s.assignChild({ assignmentId: 'win1', kind: 'writer', ownedPaths: ['packages\\engine'], forbiddenPaths: [], contextKey: stubContextKey }).ok).toBe(true);
+      const nested = s.assignChild({ assignmentId: 'win2', kind: 'writer', ownedPaths: ['packages/engine/src'], forbiddenPaths: [], contextKey: stubContextKey });
+      expect(nested.ok).toBe(false);
+      expect(s.children[0].ownedPaths).toEqual(['packages/engine']);
+    });
+
+    it('does not confuse sibling prefixes or repository path case', () => {
+      const s = simpleSupervisor({ maxWriters: 3 });
+      expect(s.assignChild({ assignmentId: 'prefix1', kind: 'writer', ownedPaths: ['packages/engine'], forbiddenPaths: [], contextKey: stubContextKey }).ok).toBe(true);
+      expect(s.assignChild({ assignmentId: 'prefix2', kind: 'writer', ownedPaths: ['packages/engine-tools'], forbiddenPaths: [], contextKey: stubContextKey }).ok).toBe(true);
+      expect(s.assignChild({ assignmentId: 'case', kind: 'writer', ownedPaths: ['Packages/Engine'], forbiddenPaths: [], contextKey: stubContextKey }).ok).toBe(true);
+    });
+
+    it.each(['../outside', 'packages/../outside', '/absolute', 'C:\\absolute', '\\\\server\\share'])('rejects unsafe repository path %s', (unsafePath) => {
+      const result = supervisor.assignChild({ assignmentId: `unsafe-${unsafePath}`, kind: 'writer', ownedPaths: [unsafePath], forbiddenPaths: [], contextKey: stubContextKey });
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.reason).toContain('repository-relative');
+    });
+
+    it('rejects mixed-separator traversal', () => {
+      const result = supervisor.assignChild({ assignmentId: 'mixed-traversal', kind: 'writer', ownedPaths: ['packages\\engine/..\\outside'], forbiddenPaths: [], contextKey: stubContextKey });
+      expect(result.ok).toBe(false);
+    });
+
     it('does not check path overlap for non-writer kinds', () => {
       const s = simpleSupervisor({ maxReviewers: 3 });
       const first = s.assignChild({

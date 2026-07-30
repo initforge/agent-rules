@@ -101,6 +101,19 @@ export type NativeModeReason = 'initial_architecture_boundary' | 'final_certific
 function sha256(data: string): string { return createHash('sha256').update(data).digest('hex'); }
 function deepClone<T>(obj: T): T { return JSON.parse(JSON.stringify(obj)) as T; }
 
+/** Canonical repository-relative form. Deliberately case-sensitive: repository path identity is not host-dependent. */
+function normalizeRepoPath(value: string): string | null {
+  if (!value || value.includes('\0') || /^(?:[a-zA-Z]:[\\/]|[\\/]{1,2})/.test(value)) return null;
+  const parts = value.replace(/\\/g, '/').split('/').filter(part => part !== '' && part !== '.');
+  if (parts.length === 0 || parts.includes('..')) return null;
+  return parts.join('/');
+}
+
+function normalizeRepoPaths(values: readonly string[]): readonly string[] | null {
+  const normalized = values.map(normalizeRepoPath);
+  return normalized.includes(null) ? null : normalized as string[];
+}
+
 /** State contents must be durable before their atomic rename. */
 function fsyncStateFile(filePath: string): void {
   // Windows can reject FlushFileBuffers on a descriptor reopened read-only.
@@ -465,9 +478,12 @@ function processReconciliationJournal(state: SupervisorState, statePath: string)
 
 function assignChildImpl(s: InternalState, p: Parameters<SupervisorPublicView['assignChild']>[0]): ReturnType<SupervisorPublicView['assignChild']> {
   if (s.config.childDepth > 1) return { ok: false, reason: 'childDepth must be exactly 1' } as const;
+  const ownedPaths = normalizeRepoPaths(p.ownedPaths);
+  const forbiddenPaths = normalizeRepoPaths(p.forbiddenPaths);
+  if (!ownedPaths || !forbiddenPaths) return { ok: false, reason: 'Paths must be repository-relative without traversal' } as const;
   const existing = s.childrenList.find(c => c.assignmentId === p.assignmentId);
   if (existing) {
-    const same = p.kind === existing.kind && JSON.stringify([...p.ownedPaths].sort()) === JSON.stringify([...existing.ownedPaths].sort()) && JSON.stringify([...p.forbiddenPaths].sort()) === JSON.stringify([...existing.forbiddenPaths].sort());
+    const same = p.kind === existing.kind && JSON.stringify([...ownedPaths].sort()) === JSON.stringify([...existing.ownedPaths].sort()) && JSON.stringify([...forbiddenPaths].sort()) === JSON.stringify([...existing.forbiddenPaths].sort());
     if (same) return { ok: true, assignment: toPublicView(existing) } as const;
     return { ok: false, reason: `Conflict: assignmentId ${p.assignmentId} already exists with different parameters` } as const;
   }
@@ -478,17 +494,16 @@ function assignChildImpl(s: InternalState, p: Parameters<SupervisorPublicView['a
   if (p.kind === 'writer') {
     for (const ex of s.childrenList) {
       if (ex.kind !== 'writer' || (ex.status !== 'RUNNING' && ex.status !== 'DISPATCHED' && ex.status !== 'PENDING')) continue;
-      for (const np of p.ownedPaths) {
+      for (const np of ownedPaths) {
         for (const ep of ex.ownedPaths) {
-          const nn = path.normalize(np).replace(/\/$/, ''), ne = path.normalize(ep).replace(/\/$/, '');
-          if (nn.startsWith(ne + '/') || ne.startsWith(nn + '/') || nn === ne) return { ok: false, reason: `Writer path overlap with ${ex.assignmentId}: ${np}` } as const;
+          if (np.startsWith(ep + '/') || ep.startsWith(np + '/') || np === ep) return { ok: false, reason: `Writer path overlap with ${ex.assignmentId}: ${np}` } as const;
         }
       }
     }
   }
   if (!p.contextKey) return { ok: false, reason: 'contextKey required' } as const;
   const now = new Date().toISOString();
-  const a: ChildAssignment = { assignmentId: p.assignmentId, parentSessionId: s.supervisorId, childSessionId: null, depth: 1, kind: p.kind, agentProfile: p.kind === 'writer' ? 'writer-s' : p.kind === 'reviewer' ? 'reviewer-s' : 'verifier-s', provider: p.provider ?? s.config.defaultProvider, model: p.model ?? s.config.defaultModel, effort: p.effort ?? s.config.defaultEffort, ownedPaths: p.ownedPaths, forbiddenPaths: p.forbiddenPaths, contextCapsuleKey: p.contextKey, dispatchFingerprint: randomUUID(), status: 'PENDING', createdAt: now, updatedAt: now };
+  const a: ChildAssignment = { assignmentId: p.assignmentId, parentSessionId: s.supervisorId, childSessionId: null, depth: 1, kind: p.kind, agentProfile: p.kind === 'writer' ? 'writer-s' : p.kind === 'reviewer' ? 'reviewer-s' : 'verifier-s', provider: p.provider ?? s.config.defaultProvider, model: p.model ?? s.config.defaultModel, effort: p.effort ?? s.config.defaultEffort, ownedPaths, forbiddenPaths, contextCapsuleKey: p.contextKey, dispatchFingerprint: randomUUID(), status: 'PENDING', createdAt: now, updatedAt: now };
   const snap = snapshot(s);
   s.childrenList.push(a);
   s._revision++;
