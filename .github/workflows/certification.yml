@@ -13,24 +13,25 @@ concurrency:
 permissions:
   contents: read
 jobs:
+  runner-requirements:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Report external runner requirements
+        env:
+          REQUIRED_LABELS: codex-native,claude-native,grok-native,opencode-native,antigravity-native
+        run: |
+          echo "Required external self-hosted labels: ${REQUIRED_LABELS}"
+          echo "GitHub-hosted CI cannot truthfully assert external runner availability."
+
   certify:
+    needs: [runner-requirements]
     timeout-minutes: 60
     strategy:
+      fail-fast: false
       matrix:
-        include:
-          - host: codex
-            runner: [self-hosted, codex-native]
-          - host: cursor
-            runner: [self-hosted, cursor-native]
-          - host: antigravity
-            runner: [self-hosted, antigravity-native]
-          - host: grok
-            runner: [self-hosted, grok-native]
-          - host: opencode
-            runner: [self-hosted, opencode-native]
-    runs-on:
-      - self-hosted
-      - ${{ matrix.host }}-native
+        host: [codex, claude, grok, opencode, antigravity]
+    runs-on: [self-hosted, "${{ matrix.host }}-native"]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -39,142 +40,63 @@ jobs:
       - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
         with:
           node-version: lts/*
+          cache: npm
       - run: npm ci
       - run: npm run build
       - run: npm run check
       - run: npm test
-      - name: Generate CI evidence
-        id: ci-evidence
-        run: |
-          echo "commitSha=${{ github.sha }}" >> $GITHUB_OUTPUT
-          echo "runUrl=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
-          echo "repository=${{ github.repository }}" >> $GITHUB_OUTPUT
-          echo "workflow=${{ github.workflow }}" >> $GITHUB_OUTPUT
-          echo "check=${{ github.job }}" >> $GITHUB_OUTPUT
-          echo "runId=${{ github.run_id }}" >> $GITHUB_OUTPUT
-      - run: npm run ci:certify -- --host ${{ matrix.host }}
+      - name: Certify externally observed native attestation
         env:
-          CI_COMMIT_SHA: ${{ steps.ci-evidence.outputs.commitSha }}
-          CI_RUN_URL: ${{ steps.ci-evidence.outputs.runUrl }}
-          CI_REPOSITORY: ${{ steps.ci-evidence.outputs.repository }}
-          CI_WORKFLOW: ${{ steps.ci-evidence.outputs.workflow }}
-          CI_CHECK: ${{ steps.ci-evidence.outputs.check }}
-      - name: Generate artifact manifest
-        id: manifest
-        run: |
-          ATTESTATION_FILE=$(ls .agent/ledger/*.json 2>/dev/null | head -1)
-          if [ -z "$ATTESTATION_FILE" ]; then
-            echo "No attestation file found in .agent/ledger/"
-            exit 1
-          fi
-          ATTESTATION_SHA=$(sha256sum "$ATTESTATION_FILE" | cut -d' ' -f1)
-          MANIFEST_FILE=".agent/ledger/manifest-${{ matrix.host }}.json"
-          cat > "$MANIFEST_FILE" <<EOF
-          {
-            "attestationSha": "${ATTESTATION_SHA}",
-            "commitSha": "${{ github.sha }}",
-            "repository": "${{ github.repository }}",
-            "runId": "${{ github.run_id }}",
-            "runUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-            "host": "${{ matrix.host }}",
-            "workflow": "${{ github.workflow }}"
-          }
-          EOF
-          echo "manifestSha=$(sha256sum "$MANIFEST_FILE" | cut -d' ' -f1)" >> $GITHUB_OUTPUT
-          echo "Manifest generated for ${{ matrix.host }} — attestation SHA: ${ATTESTATION_SHA}"
+          CERTIFICATION_HOST: ${{ matrix.host }}
+          CERTIFICATION_COMMIT_SHA: ${{ github.sha }}
+          HOST_ATTESTATION_FILE: ${{ runner.temp }}/host-attestation.json
+        run: bash automation/ci-certify.sh
+      - name: Build exact artifact manifest
+        env:
+          CERTIFICATION_HOST: ${{ matrix.host }}
+          CERTIFICATION_COMMIT_SHA: ${{ github.sha }}
+          CERTIFICATION_REPOSITORY: ${{ github.repository }}
+          CERTIFICATION_RUN_ID: ${{ github.run_id }}
+          CERTIFICATION_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          CERTIFICATION_WORKFLOW: ${{ github.workflow }}
+          CERTIFICATION_CHECK: ${{ github.job }}
+          HOST_ATTESTATION_FILE: ${{ runner.temp }}/host-attestation.json
+          CERTIFICATION_OUTPUT: ${{ runner.temp }}/certification-artifact
+        run: node automation/control-plane-ci.mjs certification-build
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: attestation-${{ matrix.host }}
-          path: .agent/ledger/*.json
+          path: ${{ runner.temp }}/certification-artifact
           if-no-files-found: error
+          retention-days: 7
 
   certify-aggregate:
     if: always()
-    needs: [certify]
+    needs: [runner-requirements, certify]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           pattern: attestation-*
+          path: ${{ runner.temp }}/attestations
           merge-multiple: true
-      - name: Verify attestations via manifest content, hash, metadata and host uniqueness
-        shell: bash
-        run: |
-          set -euo pipefail
-          EXPECTED_COMMIT="${{ github.sha }}"
-          EXPECTED_REPO="${{ github.repository }}"
-          EXPECTED_RUN_ID="${{ github.run_id }}"
-
-          DECLARED_HOSTS=()
-
-          for f in .agent/ledger/manifest-*.json; do
-            [ -f "$f" ] || continue
-            echo "=== Verifying manifest: $f ==="
-
-            HOST=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$f','utf-8')).host)")
-            ATTESTATION_SHA_DECLARED=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$f','utf-8')).attestationSha)")
-            COMMIT_SHA_DECLARED=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$f','utf-8')).commitSha)")
-            REPO_DECLARED=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$f','utf-8')).repository)")
-            RUN_ID_DECLARED=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$f','utf-8')).runId)")
-
-            # Verify exact commit/repo/run metadata
-            if [ "$COMMIT_SHA_DECLARED" != "$EXPECTED_COMMIT" ]; then
-              echo "FAIL: manifest commitSha mismatch — declared: $COMMIT_SHA_DECLARED, expected: $EXPECTED_COMMIT"
-              exit 1
-            fi
-            if [ "$REPO_DECLARED" != "$EXPECTED_REPO" ]; then
-              echo "FAIL: manifest repository mismatch — declared: $REPO_DECLARED, expected: $EXPECTED_REPO"
-              exit 1
-            fi
-            if [ "$RUN_ID_DECLARED" != "$EXPECTED_RUN_ID" ]; then
-              echo "FAIL: manifest runId mismatch — declared: $RUN_ID_DECLARED, expected: $EXPECTED_RUN_ID"
-              exit 1
-            fi
-
-            # Verify host uniqueness
-            if [[ " ${DECLARED_HOSTS[*]} " =~ " ${HOST} " ]]; then
-              echo "FAIL: duplicate host '${HOST}' in attestation manifests"
-              exit 1
-            fi
-            DECLARED_HOSTS+=("$HOST")
-
-            # Find matching attestation by host prefix
-            ATTESTATION_FILE=""
-            for af in .agent/ledger/attestation-*.json .agent/ledger/*.json; do
-              [ -f "$af" ] || continue
-              BASE=$(basename "$af")
-              if [[ "$BASE" != manifest-* ]] && [[ "$BASE" != *manifest* ]]; then
-                ATTESTATION_FILE="$af"
-                break
-              fi
-            done
-            if [ -z "$ATTESTATION_FILE" ]; then
-              echo "FAIL: no attestation file found for host ${HOST}"
-              exit 1
-            fi
-
-            # Verify attestation content is valid JSON
-            node -e "JSON.parse(require('fs').readFileSync('$ATTESTATION_FILE','utf-8'))" || {
-              echo "FAIL: attestation $ATTESTATION_FILE is not valid JSON"
-              exit 1
-            }
-
-            # Verify content hash matches manifest
-            ACTUAL_SHA=$(sha256sum "$ATTESTATION_FILE" | cut -d' ' -f1)
-            if [ "$ACTUAL_SHA" != "$ATTESTATION_SHA_DECLARED" ]; then
-              echo "FAIL: attestation SHA mismatch for host ${HOST} — actual: ${ACTUAL_SHA}, declared: ${ATTESTATION_SHA_DECLARED}"
-              exit 1
-            fi
-
-            echo "PASS: host=${HOST} commit=${COMMIT_SHA_DECLARED} repo=${REPO_DECLARED} sha=${ACTUAL_SHA}"
-          done
-
-          echo "All ${#DECLARED_HOSTS[@]} attestations verified (content, hash, commit, repo, run, uniqueness)"
-      - name: Verify aggregate
-        run: |
-          echo '${{ toJSON(needs.certify.result) }}'
-          if [ "${{ needs.certify.result }}" != "success" ]; then
-            echo "Certification check failed on one or more matrix jobs"
-            exit 1
-          fi
+      - name: Verify exact host set, hashes, metadata, TTL, and model evidence
+        env:
+          CERTIFICATION_COMMIT_SHA: ${{ github.sha }}
+          CERTIFICATION_REPOSITORY: ${{ github.repository }}
+          CERTIFICATION_RUN_ID: ${{ github.run_id }}
+          CERTIFICATION_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          CERTIFICATION_WORKFLOW: ${{ github.workflow }}
+          CERTIFICATION_ARTIFACTS: ${{ runner.temp }}/attestations
+        run: node automation/control-plane-ci.mjs certification-verify
+      - name: Verify matrix result
+        env:
+          CERTIFY_RESULT: ${{ needs.certify.result }}
+        run: test "$CERTIFY_RESULT" = success

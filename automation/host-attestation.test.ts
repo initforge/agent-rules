@@ -463,16 +463,12 @@ describe('collectHostAttestations', () => {
     expect(result[0].issuedAt).toBe(futureNow.toISOString());
   });
 
-  // --- V4: adversarial — unbounded TTL passes collector, caught by contract ---
-  it('attestation with unbounded TTL is caught by contract validation', async () => {
-    const result = await collectHostAttestations(commitSha, {
+  it('rejects an unbounded TTL before probing hosts', async () => {
+    await expect(collectHostAttestations(commitSha, {
       contractSetSha256, run, resolveExecutable, createSnapshot,
       now, ttlMs: 48 * 60 * 60 * 1000,
       modelEvidence: allModelEvidence,
-    });
-    const expiresAt = new Date(result[0].expiresAt).getTime();
-    const issuedAt = new Date(result[0].issuedAt).getTime();
-    expect(expiresAt - issuedAt).toBe(48 * 60 * 60 * 1000);
+    })).rejects.toThrow('at most 86400000ms');
   });
 
   // --- V4: cleanup called after error ---

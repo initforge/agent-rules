@@ -19,8 +19,8 @@
     "platforms": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["codex", "grok", "antigravity", "cursor"],
-      "properties": {"codex": {"$ref": "#/$defs/platform"}, "grok": {"$ref": "#/$defs/platform"}, "antigravity": {"$ref": "#/$defs/platform"}, "cursor": {"$ref": "#/$defs/platform"}}
+      "required": ["codex", "grok", "antigravity", "cursor", "opencode"],
+      "properties": {"codex": {"$ref": "#/$defs/platform"}, "grok": {"$ref": "#/$defs/platform"}, "antigravity": {"$ref": "#/$defs/platform"}, "cursor": {"$ref": "#/$defs/platform"}, "opencode": {"$ref": "#/$defs/platform"}}
     }
   },
   "$defs": {

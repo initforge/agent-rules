@@ -17,6 +17,7 @@ import {
 } from '../packages/engine/src/contracts.js';
 
 const NATIVE_HOSTS = CERTIFICATION_REQUIRED_HOSTS;
+const MAX_ATTESTATION_TTL_MS = 86_400_000;
 type NativeHost = typeof NATIVE_HOSTS[number];
 
 export interface ProbeResult {
@@ -882,7 +883,11 @@ export async function collectHostAttestations(
   if (!commitSha.trim()) throw new Error('commit SHA is required');
   if (!isSha256(options.contractSetSha256)) throw new Error('contractSetSha256 must be a SHA-256');
   const now = options.now ?? new Date();
-  const expiresAt = new Date(now.getTime() + (options.ttlMs ?? 60 * 60 * 1000));
+  const ttlMs = options.ttlMs ?? 60 * 60 * 1000;
+  if (!Number.isFinite(ttlMs) || ttlMs <= 0 || ttlMs > MAX_ATTESTATION_TTL_MS) {
+    throw new Error(`attestation TTL must be positive and at most ${MAX_ATTESTATION_TTL_MS}ms`);
+  }
+  const expiresAt = new Date(now.getTime() + ttlMs);
   if (!(expiresAt.getTime() > now.getTime())) throw new Error('attestation TTL must be positive');
   const run = options.run ?? runProcess;
 
