@@ -173,10 +173,9 @@ export class Controller {
     const stateDir = path.join(path.dirname(this.ledgerPath), '.controller');
     // lstat-walked mkdir (no recursive:true that follows symlinks)
     {
-      const isAbs = path.isAbsolute(stateDir);
-      const parts = stateDir.split(/[\\/]/).filter(Boolean);
-      let cur = isAbs ? parts.shift()! : '.';
-      if (isAbs) cur = `/${cur}`;
+      const root = path.parse(stateDir).root;
+      const parts = stateDir.slice(root.length).split(/[\\/]/).filter(Boolean);
+      let cur = root || '.';
       for (const part of parts) {
         cur = path.join(cur, part);
         try {

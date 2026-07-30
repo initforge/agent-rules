@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -46,6 +46,51 @@ function runInventory(repo: string, output: string): void {
   command(temporaryRoot, process.execPath, [SCRIPT, '--repo', repo, '--output', output]);
 }
 
+function sameFile(left: string, right: string): boolean {
+  return sameFileWith(left, right, process.platform, realpathSync.native, fsStat);
+}
+
+function fsStat(value: string) { return statSync(value, { bigint: true }); }
+
+function sameFileWith(
+  left: string,
+  right: string,
+  platform: NodeJS.Platform,
+  nativeRealpath: (value: string) => string,
+  stat: (value: string) => { dev: bigint; ino: bigint },
+): boolean {
+  const normalize = (value: string) => {
+    const canonical = nativeRealpath(value).replace(/\\/g, '/').replace(/\/+$/, '');
+    return platform === 'win32' ? canonical.toLocaleLowerCase('en-US') : canonical;
+  };
+  if (normalize(left) === normalize(right)) return true;
+  const a = stat(left); const b = stat(right);
+  return a.dev !== 0n && a.ino !== 0n && b.dev !== 0n && b.ino !== 0n && a.dev === b.dev && a.ino === b.ino;
+}
+
+describe('filesystem path identity', () => {
+  const zeroStat = () => ({ dev: 0n, ino: 0n });
+
+  it('matches Windows case and separator aliases by native realpath spelling', () => {
+    const native = (value: string) => value === 'short' ? 'C:\\Users\\RUNNER~1\\Repo' : 'c:/users/runner~1/repo';
+    expect(sameFileWith('short', 'long', 'win32', native, zeroStat)).toBe(true);
+  });
+
+  it('does not trust zero filesystem identity when canonical paths differ', () => {
+    expect(sameFileWith('a', 'b', 'win32', (value) => `C:\\${value}`, zeroStat)).toBe(false);
+  });
+
+  it('uses stable nonzero filesystem identity only as fallback', () => {
+    expect(sameFileWith('short', 'long', 'win32', (value) => `C:\\${value}`, () => ({ dev: 7n, ino: 11n }))).toBe(true);
+  });
+
+  it('uses realpathSync.native path spelling', () => {
+    const seen: string[] = [];
+    sameFileWith('a', 'b', 'win32', (value) => { seen.push(value); return `C:\\${value}`; }, zeroStat);
+    expect(seen).toEqual(['a', 'b']);
+  });
+});
+
 describe('worktree candidate inventory', () => {
   it('deterministically inventories worktrees, local branches, and stashes without Git side effects', () => {
     const { repo, worktree } = createRepository();
@@ -82,7 +127,7 @@ describe('worktree candidate inventory', () => {
     expect(inventory.stashes).toHaveLength(1);
     expect(inventory.stashes[0]).toMatchObject({ reference: 'stash@{0}', message: 'On main: inventory fixture', classification: 'PENDING_REVIEW' });
 
-    const candidate = inventory.worktrees.find((entry) => entry.path === realpathSync(worktree))!;
+    const candidate = inventory.worktrees.find((entry) => sameFile(entry.path, worktree))!;
     expect(candidate).toMatchObject({ branch: 'candidate', classification: 'PENDING_REVIEW' });
     expect(candidate.head).toMatch(/^[a-f0-9]{40}$/);
     expect(candidate.tree).toMatch(/^[a-f0-9]{40}$/);
@@ -109,8 +154,8 @@ describe('worktree candidate inventory', () => {
 
     expect(readFileSync(realpathSync(aliasOutput), 'utf8')).toBe(readFileSync(realpathSync(directOutput), 'utf8'));
     const inventory = JSON.parse(readFileSync(realpathSync(aliasOutput), 'utf8')) as { repository: string; worktrees: Array<{ path: string }> };
-    expect(inventory.repository).toBe(realpathSync(repo));
-    expect(inventory.worktrees.map((entry) => entry.path)).toContain(realpathSync(worktree));
+    expect(sameFile(inventory.repository, repo)).toBe(true);
+    expect(inventory.worktrees.some((entry) => sameFile(entry.path, worktree))).toBe(true);
     expect(() => runInventory(repoAlias, path.join(repoAlias, 'inventory.json'))).toThrow(/outside every inventoried worktree/);
   });
 });

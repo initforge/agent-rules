@@ -190,11 +190,11 @@ export class SecureFsRoot {
       }
       fs.renameSync(tmpPath, resolved);
       // Durable rename: fsync the parent directory
-      const dirFd = fs.openSync(dir, fs.constants.O_RDONLY);
-      try {
-        fs.fsyncSync(dirFd);
-      } finally {
-        fs.closeSync(dirFd);
+      // Windows cannot fsync directory handles; rename remains atomic but its
+      // directory-entry durability cannot be requested through Node there.
+      if (process.platform !== 'win32') {
+        const dirFd = fs.openSync(dir, fs.constants.O_RDONLY);
+        try { fs.fsyncSync(dirFd); } finally { fs.closeSync(dirFd); }
       }
       // Truthful durability: readback verify content
       const verify = fs.readFileSync(resolved);
@@ -275,6 +275,8 @@ export class SecureFsRoot {
     const resolved = this.resolve(relative);
     const st = fs.statSync(resolved);
     if (!st.isDirectory()) throw new Error(`SecureFsRoot: not a directory: ${relative}`);
+    // Windows stat ownership/mode values do not represent POSIX trust bits.
+    if (process.platform === 'win32') return;
     const uid = opts?.uid ?? process.getuid?.() ?? 0;
     const gid = opts?.gid ?? process.getgid?.() ?? 0;
     const modeMask = opts?.modeMask ?? 0o755;

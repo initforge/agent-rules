@@ -7,11 +7,16 @@
  * indexes, worktrees, or stashes.
  */
 import { createHash } from 'node:crypto';
-import { lstat, mkdtemp, readFile, readlink, realpath, rename, rm, writeFile } from 'node:fs/promises';
+import { realpathSync } from 'node:fs';
+import { lstat, mkdtemp, readFile, readlink, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const CLASSIFICATION = 'PENDING_REVIEW';
+
+function realpath(value) {
+  return Promise.resolve(realpathSync.native(value));
+}
 
 function usage(message) {
   if (message) process.stderr.write(`error: ${message}\n`);

@@ -237,7 +237,7 @@ describe('SecureFsRoot', () => {
       const root = new SecureFsRoot(tmpBase);
       await root.atomicWrite('atomic.txt', Buffer.from('data'));
       const st = fs.statSync(tmpPath('atomic.txt'));
-      expect(st.mode & 0o777).toBe(0o600);
+      if (process.platform !== 'win32') expect(st.mode & 0o777).toBe(0o600);
     });
 
     it('readback verifies content (truthful durability)', async () => {
@@ -261,7 +261,7 @@ describe('SecureFsRoot', () => {
       expect(fs.existsSync(tmpPath('a/b/c'))).toBe(true);
       expect(fs.statSync(tmpPath('a/b/c')).isDirectory()).toBe(true);
       const st = fs.statSync(tmpPath('a/b/c'));
-      expect(st.mode & 0o777).toBe(0o700);
+      if (process.platform !== 'win32') expect(st.mode & 0o777).toBe(0o700);
     });
 
     it('no-op on existing directory', async () => {
@@ -278,7 +278,7 @@ describe('SecureFsRoot', () => {
       await root.assertTrustedDir('trusted');
     });
 
-    it('rejects unsafe permissions', async () => {
+    it.skipIf(process.platform === 'win32')('rejects unsafe permissions', async () => {
       const root = new SecureFsRoot(tmpBase);
       fs.mkdirSync(tmpPath('open'), { mode: 0o700 });
       fs.chmodSync(tmpPath('open'), 0o777);
