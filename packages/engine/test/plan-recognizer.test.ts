@@ -158,7 +158,10 @@ describe('detectPlanFromFile', () => {
 
   it('blocks traversal via absolute path', () => {
     const dir = tmpDir();
-    expect(() => detectPlanFromFile('/etc/passwd', dir)).toThrow('traversal');
+    const outside = tmpDir();
+    const outsideFile = path.join(outside, 'original.md');
+    fs.writeFileSync(outsideFile, '# Outside\n', 'utf-8');
+    expect(() => detectPlanFromFile(outsideFile, dir)).toThrow('traversal');
   });
 
   it('rejects symlink within plans dir', () => {

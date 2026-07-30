@@ -178,7 +178,7 @@ describe("Runtime CLI options", () => {
   const cliEntry = path.join(root, "packages", "cli", "dist", "index.js");
 
   it("accepts the typed runtime root override without mutating it during dry-run", () => {
-    const target = path.join("/tmp", "agent-rules-runtime-cli-dry-run");
+    const target = path.join(os.tmpdir(), `agent-rules-runtime-cli-dry-run-${process.pid}`);
     const output = require("node:child_process").execFileSync(
       "node",
       [cliEntry, "--json", "--dry-run", "runtime", "install", "codex", "--root", target],
