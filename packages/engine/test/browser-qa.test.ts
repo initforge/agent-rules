@@ -537,6 +537,10 @@ describe('WCAG & Accessibility (Playwright)', () => {
       page.removeListener('console', onConsole);
       page.removeListener('requestfailed', onRequestFailed);
 
+      if (consoleErrors.length || networkErrors.length) {
+        console.log(`${route.path} browser errors:`, JSON.stringify({ consoleErrors, networkErrors }));
+      }
+
       const expectedHeading = ROUTE_HEADINGS[route.id];
       if (expectedHeading) {
         const heading = page.locator('main h1', { hasText: expectedHeading });

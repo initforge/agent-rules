@@ -25,7 +25,10 @@ function sendError(res: Response, status: number, code: string, message: string,
 router.get('/', (_req, res: Response) => {
   try {
     const root = findRoot()
-    const plans = listPlans(root)
+    const plans = listPlans(root).filter(({ planId }) => {
+      try { readPlanWorkspace(planId, root); return true }
+      catch (err) { if (err instanceof LegacyRejectionError) return false; throw err }
+    })
     res.json({ ok: true, data: plans, total: plans.length })
   } catch (err) {
     if (err instanceof PlanValidationError) {

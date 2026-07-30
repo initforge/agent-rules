@@ -106,7 +106,7 @@
   --color-accent-hover: var(--blue-700);
   --color-accent-soft: var(--blue-50);
 
-  --color-success: var(--green-500);
+  --color-success: var(--green-700);
   --color-success-soft: var(--green-50);
   --color-warning: var(--orange-500);
   --color-warning-soft: var(--orange-50);
@@ -318,7 +318,7 @@
   --color-accent-hover: var(--blue-700);
   --color-accent-soft: var(--blue-50);
 
-  --color-success: var(--green-500);
+  --color-success: var(--green-700);
   --color-success-soft: var(--green-50);
   --color-warning: var(--orange-500);
   --color-warning-soft: var(--orange-50);

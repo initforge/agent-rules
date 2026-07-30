@@ -21,6 +21,25 @@ interface PlanData {
   shadowRevision: string | null;
 }
 
+function normalizePlan(raw: Record<string, unknown>): PlanData {
+  const identity = (raw.identity || {}) as Record<string, unknown>;
+  return {
+    planId: String(raw.planId || ''),
+    originalSha256: typeof identity.originalSha256 === 'string' ? identity.originalSha256 : null,
+    effectiveSha256: typeof identity.effectiveSha256 === 'string' ? identity.effectiveSha256 : null,
+    amendments: Array.isArray(raw.amendments) ? raw.amendments.map((a) => {
+      const amendment = a as Record<string, unknown>;
+      return { id: String(amendment.amendmentId || ''), sha256: String(amendment.sha256 || '') };
+    }) : [],
+    status: String(raw.status || identity.status || ''),
+    reconciliations: Array.isArray(raw.reconciliations) ? raw.reconciliations as Array<Record<string, unknown>> : [],
+    attestations: Array.isArray(raw.attestations) ? raw.attestations as Array<Record<string, unknown>> : [],
+    findings: Array.isArray(raw.orphanFindings) ? raw.orphanFindings as Array<Record<string, unknown>> : [],
+    auditEvents: Array.isArray(raw.auditEvents) ? raw.auditEvents as Array<Record<string, unknown>> : [],
+    shadowRevision: identity.shadowRevision == null ? null : String(identity.shadowRevision),
+  };
+}
+
 type LoadState = 'loading' | 'loaded' | 'error' | 'stale' | 'offline';
 type CoverageFilter = 'ALL' | 'MATCH' | 'PARTIAL' | 'MISSING' | 'DEVIATED' | 'EXTRA' | 'SUPERSEDED';
 type PaneId = 'navigator' | 'canvas' | 'inspector';
@@ -629,14 +648,15 @@ export default function PlanWorkspace({ navigate }: PlanWorkspaceProps) {
       .then(([e, p]) => {
         if (!mountedRef.current) return;
         if (e.ok) setEvidenceProfiles(e.data);
-        if (p.plans && p.plans.length > 0) {
-          setPlans(p.plans);
-          const firstPlanId = p.plans[p.plans.length - 1].planId;
+        const listed = Array.isArray(p.data) ? p.data : [];
+        if (listed.length > 0) {
+          setPlans(listed);
+          const firstPlanId = listed[listed.length - 1].planId;
           return fetch(`/api/plans/${firstPlanId}`)
-            .then((r) => r.json())
+            .then((r) => { if (!r.ok) throw new Error(`Failed to fetch plan (${r.status})`); return r.json(); })
             .then((pd) => {
               if (mountedRef.current) {
-                setPlanData(pd);
+                setPlanData(normalizePlan(pd));
                 if (pd.status === 'RECONCILING') setReconciling(true);
               }
             });
