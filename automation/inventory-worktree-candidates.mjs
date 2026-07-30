@@ -203,16 +203,17 @@ async function atomicWrite(output, inventory) {
 async function main() {
   const { repo, output } = parseArgs(process.argv.slice(2));
   const canonicalRepo = await realpath(repo);
+  const canonicalOutput = path.join(await realpath(path.dirname(output)), path.basename(output));
   git(canonicalRepo, ['rev-parse', '--is-inside-work-tree']);
   const worktreeRecords = parseWorktrees(git(canonicalRepo, ['worktree', 'list', '--porcelain']).stdout);
   const worktrees = await Promise.all(worktreeRecords.map(inspectWorktree));
   const outputInsideWorktree = worktrees.some((entry) => {
-    const relative = path.relative(entry.path, output);
+    const relative = path.relative(entry.path, canonicalOutput);
     return relative === '' || (!relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
   });
   if (outputInsideWorktree) throw new Error('output path must be outside every inventoried worktree');
 
-  await atomicWrite(output, {
+  await atomicWrite(canonicalOutput, {
     schema: 'artifact/worktree-inventory',
     version: 1,
     repository: canonicalRepo,

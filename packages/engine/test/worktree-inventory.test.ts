@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -93,5 +93,24 @@ describe('worktree candidate inventory', () => {
   it('rejects an output path inside an inventoried worktree', () => {
     const { repo } = createRepository();
     expect(() => runInventory(repo, path.join(repo, 'inventory.json'))).toThrow(/outside every inventoried worktree/);
+  });
+
+  it('canonicalizes repository, worktree, and output aliases deterministically', () => {
+    const { repo, worktree } = createRepository();
+    const repoAlias = path.join(temporaryRoot, 'repository-alias');
+    const outputParentAlias = path.join(temporaryRoot, 'output-parent-alias');
+    symlinkSync(repo, repoAlias, 'dir');
+    symlinkSync(temporaryRoot, outputParentAlias, 'dir');
+
+    const directOutput = path.join(temporaryRoot, 'direct.json');
+    const aliasOutput = path.join(outputParentAlias, 'alias.json');
+    runInventory(repo, directOutput);
+    runInventory(repoAlias, aliasOutput);
+
+    expect(readFileSync(aliasOutput, 'utf8')).toBe(readFileSync(directOutput, 'utf8'));
+    const inventory = JSON.parse(readFileSync(aliasOutput, 'utf8')) as { repository: string; worktrees: Array<{ path: string }> };
+    expect(inventory.repository).toBe(realpathSync(repo));
+    expect(inventory.worktrees.map((entry) => entry.path)).toContain(realpathSync(worktree));
+    expect(() => runInventory(repoAlias, path.join(repoAlias, 'inventory.json'))).toThrow(/outside every inventoried worktree/);
   });
 });
