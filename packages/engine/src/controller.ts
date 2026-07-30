@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -23,6 +23,71 @@ export interface ControllerSnapshot {
   ledgerPath: string;
 }
 
+const MAX_LEDGER_BYTES = 16 * 1024 * 1024;
+const MAX_CHECKPOINT_BYTES = 16 * 1024 * 1024;
+type Identity = { dev: bigint; ino: bigint };
+
+function identity(st: fs.Stats): Identity {
+  return { dev: BigInt(st.dev), ino: BigInt(st.ino) };
+}
+
+function sameIdentity(a: Identity, b: Identity): boolean {
+  return a.dev === b.dev && a.ino === b.ino;
+}
+
+function directoryIdentity(dir: string): Identity {
+  const st = fs.statSync(dir, { bigint: false });
+  if (!st.isDirectory()) throw new Error(`Controller: not a directory: ${dir}`);
+  return identity(st);
+}
+
+function canonicalParent(file: string): string {
+  return fs.realpathSync.native(path.dirname(path.resolve(file)));
+}
+
+function readRegularFile(file: string, limit: number, label: string): { raw: string; id: Identity } {
+  const parent = canonicalParent(file);
+  const parentBefore = directoryIdentity(parent);
+  const fd = fs.openSync(path.join(parent, path.basename(file)), fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+  try {
+    const st = fs.fstatSync(fd);
+    if (!st.isFile() || st.nlink !== 1) throw new Error(`Controller: ${label} is not a private regular file`);
+    if (st.size > limit) throw new Error(`Controller: ${label} exceeds ${limit} bytes`);
+    const buf = Buffer.alloc(st.size);
+    let off = 0;
+    while (off < buf.length) {
+      const n = fs.readSync(fd, buf, off, buf.length - off, off);
+      if (n === 0) throw new Error(`Controller: unexpected EOF reading ${label}`);
+      off += n;
+    }
+    const after = fs.fstatSync(fd);
+    if (!sameIdentity(identity(st), identity(after)) || after.size !== st.size
+      || !sameIdentity(parentBefore, directoryIdentity(parent))) {
+      throw new Error(`Controller: ${label} identity changed during read`);
+    }
+    return { raw: new TextDecoder('utf-8', { fatal: true }).decode(buf), id: identity(st) };
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+
+function parseLedger(raw: string): WorkLedger {
+  const value = JSON.parse(raw) as Partial<WorkLedger>;
+  if (!Array.isArray(value.assignments) || !Array.isArray(value.receipts)
+    || !Number.isSafeInteger(value.shadowRevision)) throw new Error('Controller: malformed ledger');
+  return value as WorkLedger;
+}
+
+function syncDirectory(dir: string): void {
+  try {
+    const fd = fs.openSync(dir, fs.constants.O_RDONLY);
+    try { fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
+  } catch (error) {
+    // ponytail: Windows cannot open directories; use native FlushFileBuffers if Node exposes directory handles.
+    if (process.platform !== 'win32') throw error;
+  }
+}
+
 export class Controller {
   private checkpointState: CheckpointState = 'INITIAL';
   private taskStates = new Map<string, TaskState>();
@@ -30,38 +95,25 @@ export class Controller {
   private receipts: WorkerReceipt[] = [];
   private revision = 0;
   private readonly ledgerPath: string;
+  private readonly ledgerDir: string;
+  private readonly ledgerDirId: Identity;
   private ledger: WorkLedger | null = null;
   private retryCountMap = new Map<string, number>();
 
   constructor(ledgerPath: string) {
     this.ledgerPath = path.resolve(ledgerPath);
+    this.ledgerDir = canonicalParent(this.ledgerPath);
+    this.ledgerDirId = directoryIdentity(this.ledgerDir);
     try {
-      const fd = fs.openSync(this.ledgerPath, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
-      let raw: string;
-      try {
-        const st = fs.fstatSync(fd);
-        if (!st.isFile()) throw new Error('Controller: ledger path is not a regular file');
-        const size = st.size;
-        const buf = Buffer.allocUnsafeSlow(size);
-        let off = 0;
-        while (off < size) {
-          const n = fs.readSync(fd, buf, off, size - off, off);
-          if (n === 0) throw new Error('Controller: unexpected EOF on ledger');
-          off += n;
-        }
-        raw = new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(buf));
-      } finally {
-        fs.closeSync(fd);
-      }
-      const parsed = JSON.parse(raw) as WorkLedger;
+      const parsed = parseLedger(readRegularFile(this.ledgerPath, MAX_LEDGER_BYTES, 'ledger').raw);
       this.ledger = parsed;
       for (const assignment of parsed.assignments) {
         this.taskStates.set(assignment.assignmentId, 'PENDING');
       }
       this.receipts = [...parsed.receipts];
       this.revision = parsed.shadowRevision;
-    } catch {
-      // File doesn't exist or is not a regular file — ledger stays null
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
     }
   }
 
@@ -170,31 +222,26 @@ export class Controller {
       ledgerPath: this.ledgerPath,
     };
 
-    const stateDir = path.join(path.dirname(this.ledgerPath), '.controller');
-    // lstat-walked mkdir (no recursive:true that follows symlinks)
-    {
-      const root = path.parse(stateDir).root;
-      const parts = stateDir.slice(root.length).split(/[\\/]/).filter(Boolean);
-      let cur = root || '.';
-      for (const part of parts) {
-        cur = path.join(cur, part);
-        try {
-          const lst = fs.lstatSync(cur);
-          if (lst.isSymbolicLink()) throw new Error(`Controller: symlink in stateDir chain: ${cur}`);
-          if (!lst.isDirectory()) throw new Error(`Controller: exists but not a directory: ${cur}`);
-        } catch (e2: any) {
-          if (e2.code !== 'ENOENT') throw e2;
-          fs.mkdirSync(cur, { mode: 0o700 });
-        }
-      }
+    const ledgerDir = canonicalParent(this.ledgerPath);
+    if (ledgerDir !== this.ledgerDir || !sameIdentity(this.ledgerDirId, directoryIdentity(ledgerDir)))
+      throw new Error('Controller: ledger directory identity changed');
+    const ledgerDirId = this.ledgerDirId;
+    const stateDir = path.join(ledgerDir, '.controller');
+    try { fs.mkdirSync(stateDir, { mode: 0o700 }); } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
     }
+    const stateLstat = fs.lstatSync(stateDir);
+    if (!stateLstat.isDirectory() || stateLstat.isSymbolicLink()) throw new Error('Controller: unsafe state directory');
+    const stateDirId = identity(stateLstat);
 
     const snapshotBytes = new TextEncoder().encode(JSON.stringify(snapshot, null, 2));
     const snapshotSha = sha256Bytes(snapshotBytes);
     const revisionStr = String(this.revision).padStart(10, '0');
     const filename = `checkpoint-${revisionStr}-${snapshotSha.slice(0, 16)}.json`;
     const filepath = path.join(stateDir, filename);
-    const fd = fs.openSync(filepath, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_TRUNC | fs.constants.O_NOFOLLOW, 0o600);
+    if (snapshotBytes.length > MAX_CHECKPOINT_BYTES) throw new Error('Controller: checkpoint exceeds size limit');
+    const temp = path.join(stateDir, `.checkpoint-${process.pid}-${randomBytes(16).toString('hex')}.tmp`);
+    const fd = fs.openSync(temp, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW, 0o600);
     try {
       let off = 0;
       while (off < snapshotBytes.length) {
@@ -206,38 +253,52 @@ export class Controller {
     } finally {
       fs.closeSync(fd);
     }
+    try {
+      const tempStat = fs.lstatSync(temp);
+      if (!tempStat.isFile() || tempStat.isSymbolicLink() || tempStat.nlink !== 1
+        || !sameIdentity(stateDirId, directoryIdentity(stateDir))
+        || !sameIdentity(ledgerDirId, directoryIdentity(ledgerDir))) throw new Error('Controller: storage identity changed');
+      fs.linkSync(temp, filepath);
+      const published = fs.lstatSync(filepath);
+      if (!sameIdentity(identity(tempStat), identity(published)) || published.nlink !== 2) {
+        throw new Error('Controller: checkpoint publish identity mismatch');
+      }
+      fs.unlinkSync(temp);
+      syncDirectory(stateDir);
+    } catch (error) {
+      try { fs.unlinkSync(temp); } catch { /* preserve original failure */ }
+      throw error;
+    }
     return revisionStr;
   }
 
   async resume(fromRevision: string): Promise<void> {
-    const stateDir = path.join(path.dirname(this.ledgerPath), '.controller');
-    if (!fs.existsSync(stateDir)) {
-      throw new Error(`No checkpoint directory found at ${stateDir}`);
+    const ledgerDir = canonicalParent(this.ledgerPath);
+    if (ledgerDir !== this.ledgerDir || !sameIdentity(this.ledgerDirId, directoryIdentity(ledgerDir)))
+      throw new Error('Controller: ledger directory identity changed');
+    const ledgerDirId = this.ledgerDirId;
+    const stateDir = path.join(ledgerDir, '.controller');
+    let stateStat: fs.Stats;
+    try { stateStat = fs.lstatSync(stateDir); } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') throw new Error(`No checkpoint directory found at ${stateDir}`);
+      throw error;
     }
+    if (!stateStat.isDirectory() || stateStat.isSymbolicLink()) throw new Error('Controller: unsafe state directory');
+    const stateDirId = identity(stateStat);
 
     const entries = fs.readdirSync(stateDir).sort().reverse();
-    const checkpointFile = entries.find((e) => e.includes(`checkpoint-${fromRevision}`));
+    if (!/^\d{10}$/.test(fromRevision)) throw new Error('Controller: invalid checkpoint revision');
+    const checkpointFile = entries.find((e) => new RegExp(`^checkpoint-${fromRevision}-[0-9a-f]{16}\\.json$`).test(e));
     if (!checkpointFile) {
       throw new Error(`No checkpoint found for revision ${fromRevision}`);
     }
 
     const filepath = path.join(stateDir, checkpointFile);
-    const fd = fs.openSync(filepath, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
-    let raw: string;
-    try {
-      const st = fs.fstatSync(fd);
-      const size = st.size;
-      const buf = Buffer.allocUnsafeSlow(size);
-      let off = 0;
-      while (off < size) {
-        const n = fs.readSync(fd, buf, off, size - off, off);
-        if (n === 0) throw new Error('Controller: resume checkpoint EOF');
-        off += n;
-      }
-      raw = new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(buf));
-    } finally {
-      fs.closeSync(fd);
-    }
+    const { raw } = readRegularFile(filepath, MAX_CHECKPOINT_BYTES, 'checkpoint');
+    if (!sameIdentity(stateDirId, directoryIdentity(stateDir)) || !sameIdentity(ledgerDirId, directoryIdentity(ledgerDir)))
+      throw new Error('Controller: storage identity changed');
+    const expectedHash = checkpointFile.split('-')[2]!.slice(0, 16);
+    if (sha256Bytes(new TextEncoder().encode(raw)).slice(0, 16) !== expectedHash) throw new Error('Controller: checkpoint hash mismatch');
     const snapshot = JSON.parse(raw) as ControllerSnapshot;
 
     this.checkpointState = snapshot.checkpointState;
@@ -246,25 +307,8 @@ export class Controller {
     this.receipts = snapshot.receipts;
     this.revision = snapshot.revision;
 
-    try {
-      const ldFd = fs.openSync(this.ledgerPath, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
-      try {
-        const st = fs.fstatSync(ldFd);
-        const size = st.size;
-        const buf = Buffer.allocUnsafeSlow(size);
-        let off = 0;
-        while (off < size) {
-          const n = fs.readSync(ldFd, buf, off, size - off, off);
-          if (n === 0) throw new Error('Controller: resume ledger EOF');
-          off += n;
-        }
-        this.ledger = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(buf))) as WorkLedger;
-      } finally {
-        fs.closeSync(ldFd);
-      }
-    } catch {
-      // Ledger missing or unreadable — that's ok
-    }
+    try { this.ledger = parseLedger(readRegularFile(this.ledgerPath, MAX_LEDGER_BYTES, 'ledger').raw); }
+    catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; this.ledger = null; }
   }
 
   async cancel(assignmentId: string): Promise<void> {

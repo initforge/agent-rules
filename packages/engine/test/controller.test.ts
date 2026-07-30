@@ -247,6 +247,77 @@ describe('Controller', () => {
 
       expect(controller2.getTaskState(assignmentId!)).toBe('IN_PROGRESS');
     });
+
+    it('accepts a trusted macOS-style ancestor alias', async () => {
+      const dir = tmpDir();
+      const real = path.join(dir, 'real');
+      const alias = path.join(dir, 'alias');
+      fs.mkdirSync(real);
+      fs.symlinkSync(real, alias, 'dir');
+      const controller = new Controller(writeLedger(alias, stubLedger()));
+      expect(await controller.checkpoint()).toBe('0000000001');
+    });
+
+    it('fails closed when an ancestor alias is retargeted', async () => {
+      const dir = tmpDir();
+      const first = path.join(dir, 'first');
+      const second = path.join(dir, 'second');
+      const alias = path.join(dir, 'alias');
+      fs.mkdirSync(first); fs.mkdirSync(second); fs.symlinkSync(first, alias, 'dir');
+      const controller = new Controller(writeLedger(alias, stubLedger()));
+      fs.unlinkSync(alias); fs.symlinkSync(second, alias, 'dir');
+      await expect(controller.checkpoint()).rejects.toThrow(/identity changed/);
+    });
+
+    it('does not clobber an existing checkpoint', async () => {
+      const dir = tmpDir();
+      const controller = new Controller(writeLedger(dir, stubLedger()));
+      await controller.checkpoint();
+      await expect(controller.checkpoint()).rejects.toMatchObject({ code: 'EEXIST' });
+    });
+
+    it('rejects stateDir replacement and checkpoint links', async () => {
+      const dir = tmpDir();
+      const ledger = writeLedger(dir, stubLedger());
+      const controller = new Controller(ledger);
+      fs.symlinkSync(tmpDir(), path.join(dir, '.controller'), 'dir');
+      await expect(controller.checkpoint()).rejects.toThrow(/unsafe state directory/);
+      fs.unlinkSync(path.join(dir, '.controller')); fs.mkdirSync(path.join(dir, '.controller'));
+      const revision = await controller.checkpoint();
+      const checkpoint = fs.readdirSync(path.join(dir, '.controller'))[0]!;
+      const linked = path.join(dir, 'linked');
+      fs.linkSync(path.join(dir, '.controller', checkpoint), linked);
+      await expect(new Controller(ledger).resume(revision)).rejects.toThrow(/private regular file/);
+    });
+
+    it('rejects oversized and malformed checkpoints', async () => {
+      const dir = tmpDir();
+      const ledger = writeLedger(dir, stubLedger());
+      const controller = new Controller(ledger);
+      const revision = await controller.checkpoint();
+      const state = path.join(dir, '.controller');
+      const checkpoint = path.join(state, fs.readdirSync(state)[0]!);
+      fs.truncateSync(checkpoint, 16 * 1024 * 1024 + 1);
+      await expect(new Controller(ledger).resume(revision)).rejects.toThrow(/exceeds/);
+      fs.rmSync(state, { recursive: true }); fs.mkdirSync(state);
+      fs.writeFileSync(path.join(state, `checkpoint-${revision}-${hash.slice(0, 16)}.json`), '{');
+      await expect(new Controller(ledger).resume(revision)).rejects.toThrow();
+    });
+  });
+
+  it('distinguishes missing ledgers from malformed, linked, and oversized ledgers', () => {
+    const dir = tmpDir();
+    expect(new Controller(path.join(dir, 'missing.json')).getLedger()).toBeNull();
+    const malformed = path.join(dir, 'malformed.json'); fs.writeFileSync(malformed, '{');
+    expect(() => new Controller(malformed)).toThrow();
+    const oversized = path.join(dir, 'oversized.json'); fs.writeFileSync(oversized, '');
+    fs.truncateSync(oversized, 16 * 1024 * 1024 + 1);
+    expect(() => new Controller(oversized)).toThrow(/exceeds/);
+    const source = path.join(dir, 'source.json'); fs.writeFileSync(source, JSON.stringify(stubLedger()));
+    const linked = path.join(dir, 'linked.json'); fs.linkSync(source, linked);
+    expect(() => new Controller(linked)).toThrow(/private regular file/);
+    const symlink = path.join(dir, 'symlink.json'); fs.symlinkSync(source, symlink);
+    expect(() => new Controller(symlink)).toThrow();
   });
 
   describe('cancel', () => {
