@@ -3,9 +3,27 @@ import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { SupervisorRunner } from './supervisor-runner.js';
 import type { ContextCapsuleKey } from '../../packages/engine/src/context-cache.js';
+
+// Prevent false backpressure on CI (macOS runners with high load average)
+// checkResourcesImpl uses os.loadavg() and will reject all assignChild calls
+// if load / num_cpus * 100 >= 200. On shared CI runners this is common.
+beforeAll(() => {
+  vi.spyOn(os, 'loadavg').mockReturnValue([0, 0, 0]);
+  vi.spyOn(process, 'memoryUsage').mockReturnValue({
+    rss: 100 * 1024 * 1024,
+    heapTotal: 64 * 1024 * 1024,
+    heapUsed: 48 * 1024 * 1024,
+    external: 10 * 1024 * 1024,
+    arrayBuffers: 0,
+  });
+});
+
+afterAll(() => {
+  vi.restoreAllMocks();
+});
 
 interface RequestLogEntry {
   method: string;
