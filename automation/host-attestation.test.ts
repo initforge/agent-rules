@@ -1,4 +1,6 @@
 import { createHash } from 'node:crypto';
+import os from 'node:os';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   collectHostAttestations,
@@ -401,7 +403,7 @@ describe('collectHostAttestations', () => {
 
   // --- V7: adversarial — snapshot captures original bytes regardless of file replacement ---
   it('snapshot captures original fd bytes even if source replaced', async () => {
-    const tmpDir = await import('node:fs/promises').then(m => m.mkdtemp('/tmp/attest-replace-test-'));
+    const tmpDir = await import('node:fs/promises').then(m => m.mkdtemp(path.join(os.tmpdir(), 'attest-replace-test-')));
     const exe = `${tmpDir}/runner`;
     await import('node:fs/promises').then(m => m.writeFile(exe, '#!/bin/sh\necho v1'));
     await import('node:fs/promises').then(m => m.chmod(exe, 0o755));
@@ -432,7 +434,7 @@ describe('codexDesktopCandidates', () => {
 // V5 adversarial: createExecutableSnapshot TOCTOU and permissions
 describe('createExecutableSnapshot', () => {
   it('rejects symlink targets via O_NOFOLLOW', async () => {
-    const tmpDir = await import('node:fs/promises').then(m => m.mkdtemp('/tmp/attest-symlink-test-'));
+    const tmpDir = await import('node:fs/promises').then(m => m.mkdtemp(path.join(os.tmpdir(), 'attest-symlink-test-')));
     const realFile = `${tmpDir}/real`;
     const linkFile = `${tmpDir}/link`;
     await import('node:fs/promises').then(m => m.writeFile(realFile, 'content'));
@@ -442,13 +444,13 @@ describe('createExecutableSnapshot', () => {
   });
 
   it('creates snapshot with 0o500 mode and verifies hash', async () => {
-    const tmpDir = await import('node:fs/promises').then(m => m.mkdtemp('/tmp/attest-perm-test-'));
+    const tmpDir = await import('node:fs/promises').then(m => m.mkdtemp(path.join(os.tmpdir(), 'attest-perm-test-')));
     const exe = `${tmpDir}/runner`;
     await import('node:fs/promises').then(m => m.writeFile(exe, '#!/bin/sh\necho ok'));
     await import('node:fs/promises').then(m => m.chmod(exe, 0o755));
     const snap = await createExecutableSnapshot(exe);
     expect(snap.snapshotPath).not.toBe(exe);
-    expect(snap.identity).toMatch(/^\d+:\d+\|\/tmp\/attest-perm-test-.*\/[^|]+\|[a-f0-9]{64}$/);
+    expect(snap.identity).toMatch(/^\d+:\d+\|.+[/\\][^|]+\|[a-f0-9]{64}$/);
     // Verify 0o500 mode on snapshot
     const snapStat = await import('node:fs/promises').then(m => m.stat(snap.snapshotPath));
     const mode = snapStat.mode & 0o777;
@@ -458,7 +460,7 @@ describe('createExecutableSnapshot', () => {
   });
 
   it('cleanup removes snapshot dir and surfaces errors', async () => {
-    const tmpDir = await import('node:fs/promises').then(m => m.mkdtemp('/tmp/attest-cleanup-test-'));
+    const tmpDir = await import('node:fs/promises').then(m => m.mkdtemp(path.join(os.tmpdir(), 'attest-cleanup-test-')));
     const exe = `${tmpDir}/runner`;
     await import('node:fs/promises').then(m => m.writeFile(exe, '#!/bin/sh\necho ok'));
     await import('node:fs/promises').then(m => m.chmod(exe, 0o755));
@@ -495,7 +497,7 @@ describe('createExecutableSnapshot', () => {
   });
 
   it('rejects non-regular file (directory)', async () => {
-    const tmpDir = await import('node:fs/promises').then(m => m.mkdtemp('/tmp/attest-dir-test-'));
+    const tmpDir = await import('node:fs/promises').then(m => m.mkdtemp(path.join(os.tmpdir(), 'attest-dir-test-')));
     await expect(createExecutableSnapshot(tmpDir)).rejects.toThrow(/not a regular file|directory/);
     await import('node:fs/promises').then(m => m.rm(tmpDir, { recursive: true, force: true }));
   });

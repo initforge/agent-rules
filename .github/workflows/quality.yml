@@ -65,6 +65,8 @@ jobs:
           python-version: '3.11'
       - run: npm ci
       - run: npm run build
+      - name: Generate context graph
+        run: npx tsx packages/cli/src/index.ts context-graph build
       - run: pip install --require-hashes -r requirements.txt
       - run: python automation/run-python-tests.py
 

@@ -31,7 +31,9 @@ def ok(msg: str) -> None:
 
 
 def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    content = path.read_bytes()
+    normalized = content.replace(b'\r\n', b'\n')
+    return hashlib.sha256(normalized).hexdigest()
 
 
 def test_source_integrity_manifest_exists() -> None:
