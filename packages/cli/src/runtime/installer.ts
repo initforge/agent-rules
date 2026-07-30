@@ -5,6 +5,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { assertDirectoryNotLinked, exists, fsyncDirectory, fsyncRegularFile, hash, readRegularFileNoFollow, removeIfExists, writeJsonDurable } from "./filesystem.js";
 import { RUNTIME_PLATFORMS, type ActivationRecord, type RuntimeFile, type RuntimeInstallerOptions, type RuntimeLifecycleResult, type RuntimePlatform, type RuntimeReceipt, type SourceManifest } from "./contracts.js";
+import { previewRecovery as previewTransactionRecovery, recover as recoverTransaction, writeJournal as writeTransactionJournal, type TransactionJournal } from "./recovery.js";
 
 export { fsyncDirectory, fsyncRegularFile } from "./filesystem.js";
 export { RUNTIME_PLATFORMS } from "./contracts.js";
@@ -20,19 +21,6 @@ const LEGACY_MANIFEST_FILE = "agent-rules-manifest.json";
 const LEGACY_MIGRATION_JOURNAL_FILE = ".agent-rules-legacy-migration.json";
 const LEGACY_MIGRATION_RECEIPT_FILE = "agent-rules-legacy-migration-receipt.json";
 const LEGACY_ARCHIVE_PREFIX = ".agent-rules-legacy-archive-";
-
-interface TransactionJournal {
-  schema: "agent-rules/runtime-transaction";
-  version: 1;
-  operation: "install" | "update" | "rollback";
-  phase: "prepared" | "backed-up" | "committed";
-  platform: RuntimePlatform;
-  target: string;
-  staging: string;
-  backup: string;
-  expectedPlanSha256?: string;
-  expectedArtifactSha256?: string;
-}
 
 interface LegacyOwnedFile {
   path: string;
@@ -545,10 +533,6 @@ async function recoverLegacyMigration(root: string, platform: RuntimePlatform): 
   await fsyncDirectory(root);
 }
 
-async function writeJournal(root: string, journal: TransactionJournal): Promise<void> {
-  await writeJsonDurable(path.join(root, JOURNAL_FILE), journal);
-}
-
 async function validateJournal(root: string, expectedPlatform: RuntimePlatform, journalPath: string, journal: TransactionJournal): Promise<void> {
   const journalStat = await fs.lstat(journalPath);
   const target = path.join(root, RUNTIME_DIRECTORY);
@@ -598,102 +582,20 @@ async function validateJournal(root: string, expectedPlatform: RuntimePlatform, 
   }
 }
 
-async function recover(root: string, expectedPlatform: RuntimePlatform): Promise<void> {
-  const journalPath = path.join(root, JOURNAL_FILE);
-  if (!(await exists(journalPath))) return;
-  let journal: TransactionJournal;
-  try {
-    journal = JSON.parse(await fs.readFile(journalPath, "utf8")) as TransactionJournal;
-  } catch {
-    throw new Error(`Refusing recovery from invalid transaction journal: ${journalPath}`);
-  }
-  const target = path.join(root, RUNTIME_DIRECTORY);
-  const rollback = path.join(root, ROLLBACK_DIRECTORY);
-  await validateJournal(root, expectedPlatform, journalPath, journal);
-
-  const targetExists = await exists(target);
-  const backupExists = await exists(journal.backup);
-  if (journal.phase === "prepared") {
-    if (journal.operation === "rollback" && await exists(journal.staging) && !targetExists) {
-      await fs.rename(journal.staging, target);
-      await fsyncDirectory(root);
-    } else {
-      await removeIfExists(journal.staging);
-    }
-  } else if (journal.phase === "backed-up") {
-    if (journal.operation === "rollback") {
-      const stagingExists = await exists(journal.staging);
-      if (!targetExists && backupExists && stagingExists) {
-        await fs.rename(journal.backup, target);
-        await fs.rename(journal.staging, journal.backup);
-        await fsyncDirectory(root);
-      } else if (targetExists && !backupExists && stagingExists) {
-        await fs.rename(journal.staging, journal.backup);
-        await fsyncDirectory(root);
-      } else if (!targetExists || !backupExists) {
-        throw new Error(`Ambiguous interrupted rollback transaction: ${journalPath}`);
-      }
-    } else if (!targetExists && backupExists) {
-      await fs.rename(journal.backup, target);
-      await fsyncDirectory(root);
-    } else if (targetExists && backupExists) {
-      const current = await readReceipt(target);
-      if (current?.source.effectivePlanSha256 === journal.expectedPlanSha256 &&
-          current?.source.artifactSha256 === journal.expectedArtifactSha256) {
-        // The staged runtime won the rename. Keep the verified old tree as the
-        // explicit rollback snapshot rather than silently discarding recovery.
-        await assertOwnedRuntime(journal.backup, journal.platform);
-      } else {
-        throw new Error(`Ambiguous interrupted transaction; target is not the staged runtime: ${target}`);
-      }
-    } else if (journal.operation === "install" && targetExists && !backupExists) {
-      const current = await assertOwnedRuntime(target, expectedPlatform, false);
-      if (current.source.effectivePlanSha256 !== journal.expectedPlanSha256 ||
-          current.source.artifactSha256 !== journal.expectedArtifactSha256) {
-        throw new Error(`Interrupted install target identity mismatch: ${target}`);
-      }
-      const spec = activationSpec(expectedPlatform, root, target);
-      if (await exists(spec.destination)) await assertActivationOwned(spec, current);
-      else await createActivation(spec);
-      await assertOwnedRuntime(target, expectedPlatform);
-    } else if (journal.operation === "update") {
-      throw new Error(`Ambiguous interrupted update transaction: ${journalPath}`);
-    }
-  } else if (journal.phase === "committed" && backupExists) {
-    await assertOwnedRuntime(journal.backup, journal.platform);
-  }
-  await removeIfExists(journal.staging);
-  await fs.unlink(journalPath).catch((error: unknown) => {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-  });
-  await fsyncDirectory(root);
-  // Keep the rollback directory only when it is a verified owned snapshot.
-  if (await exists(rollback)) await assertOwnedRuntime(rollback);
-}
-
-async function previewRecovery(root: string, expectedPlatform: RuntimePlatform): Promise<RuntimeReceipt> {
-  const journalPath = path.join(root, JOURNAL_FILE);
-  const target = path.join(root, RUNTIME_DIRECTORY);
-  if (!(await exists(journalPath))) return assertOwnedRuntime(target, expectedPlatform);
-  let journal: TransactionJournal;
-  try {
-    journal = JSON.parse(await fs.readFile(journalPath, "utf8")) as TransactionJournal;
-  } catch {
-    throw new Error(`Refusing recovery from invalid transaction journal: ${journalPath}`);
-  }
-  await validateJournal(root, expectedPlatform, journalPath, journal);
-  const targetExists = await exists(target);
-  const backupExists = await exists(journal.backup);
-  const stagingExists = await exists(journal.staging);
-  let outcome = target;
-  if (journal.phase === "prepared" && journal.operation === "rollback" && stagingExists && !targetExists) outcome = journal.staging;
-  else if (journal.phase === "backed-up" && journal.operation === "rollback") {
-    if (!targetExists && backupExists && stagingExists) outcome = journal.backup;
-    else if (!targetExists || (!backupExists && !stagingExists)) throw new Error(`Ambiguous interrupted rollback transaction: ${journalPath}`);
-  } else if (journal.phase === "backed-up" && !targetExists && backupExists) outcome = journal.backup;
-  else if (!targetExists) throw new Error(`Recovery would not produce an owned runtime: ${target}`);
-  return assertOwnedRuntime(outcome, expectedPlatform, outcome === target);
-}
+const recoveryOperations = {
+  runtimeDirectory: RUNTIME_DIRECTORY,
+  journalFile: JOURNAL_FILE,
+  rollbackDirectory: ROLLBACK_DIRECTORY,
+  validateJournal,
+  assertOwnedRuntime,
+  readReceipt,
+  activationSpec,
+  assertActivationOwned,
+  createActivation,
+};
+const writeJournal = (root: string, journal: TransactionJournal) => writeTransactionJournal(root, journal, recoveryOperations);
+const recover = (root: string, platform: RuntimePlatform) => recoverTransaction(root, platform, recoveryOperations);
+const previewRecovery = (root: string, platform: RuntimePlatform) => previewTransactionRecovery(root, platform, recoveryOperations);
 
 export class RuntimeInstaller {
   private readonly platformRoots: Record<RuntimePlatform, string>;
