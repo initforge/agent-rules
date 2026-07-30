@@ -249,7 +249,7 @@ function loadStateFile(statePath: string): SupervisorState | null {
   const tmpPath = resolvedPath + '.tmp';
   const dir = path.dirname(resolvedPath);
 
-  interface Candidate { raw: string; rev: number; source: string; }
+  interface Candidate { state: SupervisorState; rev: number; source: string; }
   const candidates: Candidate[] = [];
   let stateFileExists = false;
 
@@ -260,16 +260,14 @@ function loadStateFile(statePath: string): SupervisorState | null {
       const raw = fs.readFileSync(candidate, 'utf-8');
       const parsed = JSON.parse(raw);
       const state = validateStateShape(parsed);
-      candidates.push({ raw, rev: state.revision, source: label });
+      candidates.push({ state, rev: state.revision, source: label });
     } catch { /* skip */ }
   }
 
   const validCandidates: Candidate[] = [];
   for (const cand of candidates) {
     try {
-      const parsed = JSON.parse(cand.raw);
-      const state = validateStateShape(parsed);
-      validateStateIntegrity(state);
+      validateStateIntegrity(cand.state);
       validCandidates.push(cand);
     } catch { /* skip */ }
   }
@@ -284,8 +282,7 @@ function loadStateFile(statePath: string): SupervisorState | null {
   const chosen = validCandidates[0] ?? null;
   if (!chosen) return null;
 
-  const parsed = JSON.parse(chosen.raw);
-  const state = validateStateShape(parsed);
+  const state = chosen.state;
 
   if (chosen.source === 'temp') {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });

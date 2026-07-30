@@ -1063,6 +1063,19 @@ if (result.ok) {
       expect(s2.children[0].forbiddenPaths).toEqual(['fixtures/windows']);
     });
 
+    it('uses canonicalized persisted paths for writer overlap checks', () => {
+      const s1 = simpleSupervisor({ statePath, maxWriters: 2 });
+      s1.assignChild({ assignmentId: 'persisted-owner', kind: 'writer', ownedPaths: ['packages/engine'], forbiddenPaths: [], contextKey: stubContextKey });
+      const state = JSON.parse(fs.readFileSync(statePath, 'utf-8'));
+      state.children[0].ownedPaths = ['packages\\engine'];
+      fs.writeFileSync(statePath, JSON.stringify(state));
+
+      const s2 = simpleSupervisor({ statePath, maxWriters: 2 });
+      const nested = s2.assignChild({ assignmentId: 'nested-writer', kind: 'writer', ownedPaths: ['packages/engine/src'], forbiddenPaths: [], contextKey: stubContextKey });
+      expect(nested.ok).toBe(false);
+      if (!nested.ok) expect(nested.reason).toContain('Writer path overlap');
+    });
+
     it.each(['C:relative', 'C:'])('fails closed on persisted drive-relative path %s', (unsafePath) => {
       const s1 = simpleSupervisor({ statePath });
       s1.assignChild({ assignmentId: 'persisted-drive', kind: 'writer', ownedPaths: ['packages/engine'], forbiddenPaths: [], contextKey: stubContextKey });
