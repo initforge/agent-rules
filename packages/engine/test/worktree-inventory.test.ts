@@ -82,7 +82,7 @@ describe('worktree candidate inventory', () => {
     expect(inventory.stashes).toHaveLength(1);
     expect(inventory.stashes[0]).toMatchObject({ reference: 'stash@{0}', message: 'On main: inventory fixture', classification: 'PENDING_REVIEW' });
 
-    const candidate = inventory.worktrees.find((entry) => entry.path === worktree)!;
+    const candidate = inventory.worktrees.find((entry) => entry.path === realpathSync(worktree))!;
     expect(candidate).toMatchObject({ branch: 'candidate', classification: 'PENDING_REVIEW' });
     expect(candidate.head).toMatch(/^[a-f0-9]{40}$/);
     expect(candidate.tree).toMatch(/^[a-f0-9]{40}$/);
@@ -107,8 +107,8 @@ describe('worktree candidate inventory', () => {
     runInventory(repo, directOutput);
     runInventory(repoAlias, aliasOutput);
 
-    expect(readFileSync(aliasOutput, 'utf8')).toBe(readFileSync(directOutput, 'utf8'));
-    const inventory = JSON.parse(readFileSync(aliasOutput, 'utf8')) as { repository: string; worktrees: Array<{ path: string }> };
+    expect(readFileSync(realpathSync(aliasOutput), 'utf8')).toBe(readFileSync(realpathSync(directOutput), 'utf8'));
+    const inventory = JSON.parse(readFileSync(realpathSync(aliasOutput), 'utf8')) as { repository: string; worktrees: Array<{ path: string }> };
     expect(inventory.repository).toBe(realpathSync(repo));
     expect(inventory.worktrees.map((entry) => entry.path)).toContain(realpathSync(worktree));
     expect(() => runInventory(repoAlias, path.join(repoAlias, 'inventory.json'))).toThrow(/outside every inventoried worktree/);
