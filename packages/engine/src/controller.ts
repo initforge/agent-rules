@@ -264,6 +264,9 @@ export class Controller {
     if (state !== 'IN_PROGRESS') {
       throw new Error(`Cannot submit receipt for ${assignmentId}: state is ${state}`);
     }
+    if (receipt.assignmentId !== assignmentId) {
+      throw new Error(`Receipt assignment mismatch: ${receipt.assignmentId} !== ${assignmentId}`);
+    }
 
     const existing = this.receipts.find((r) => r.receiptId === receipt.receiptId);
     if (existing) {
@@ -384,6 +387,9 @@ export class Controller {
     const expectedHash = checkpointFile.split('-')[2]!.slice(0, 16);
     if (sha256Bytes(new TextEncoder().encode(raw)).slice(0, 16) !== expectedHash) throw new Error('Controller: checkpoint hash mismatch');
     const snapshot = parseSnapshot(raw, this.ledgerPath);
+    if (String(snapshot.revision).padStart(10, '0') !== fromRevision) {
+      throw new Error('Controller: checkpoint revision mismatch');
+    }
     let ledger: WorkLedger | null;
     try { ledger = parseLedger(readRegularFile(this.ledgerPath, MAX_LEDGER_BYTES, 'ledger').raw); }
     catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; ledger = null; }

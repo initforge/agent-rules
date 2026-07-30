@@ -243,6 +243,20 @@ describe('Controller', () => {
     expect(controller.getTaskState(assignmentId!)).toBe('CLOSED_MATCH');
   });
 
+  it('rejects a receipt bound to another assignment without mutation', async () => {
+    const dir = tmpDir();
+    const controller = new Controller(writeLedger(dir, stubLedger()));
+    const assignmentId = await controller.dispatchNext();
+    controller.startWork(assignmentId!);
+    const receipt: WorkerReceipt = {
+      receiptId: 'R-WRONG', assignmentId: 'A-TASK-B', workerIdentity: 'worker', host: 'localhost', model: 'test',
+      artifactUris: [], artifactHashes: [], filesChanged: [], commands: [], exitCodes: [], logUris: [], logHashes: [],
+      testEvidenceUris: [], testEvidenceHashes: [], startedAt: '2026-07-27T00:00:00.000Z', completedAt: '2026-07-27T00:01:00.000Z',
+    };
+    await expect(controller.submitReceipt(assignmentId!, receipt)).rejects.toThrow(/assignment mismatch/);
+    expect(controller.getTaskState(assignmentId!)).toBe('IN_PROGRESS');
+  });
+
   describe('checkpoint/resume', () => {
     it('checkpoint/resume roundtrip preserves state', async () => {
       const dir = tmpDir();
@@ -260,6 +274,15 @@ describe('Controller', () => {
       await controller2.resume(revision!);
 
       expect(controller2.getTaskState(assignmentId!)).toBe('IN_PROGRESS');
+    });
+
+    it('rejects filename revision differing from snapshot revision', async () => {
+      const dir = tmpDir();
+      const ledger = writeLedger(dir, stubLedger());
+      const source = new Controller(ledger);
+      const revision = await source.checkpoint();
+      mutateCheckpoint(dir, (value) => { value.revision++; });
+      await expect(new Controller(ledger).resume(revision)).rejects.toThrow(/revision mismatch/);
     });
 
     it('accepts a trusted macOS-style ancestor alias', async () => {
