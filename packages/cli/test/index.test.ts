@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ExitCode } from "../src/types.js";
+import { createHash } from "node:crypto";
 import * as path from "node:path";
 import * as fs from "node:fs";
+import * as os from "node:os";
 
 // ── Helper to get repo root ────────────────────────────────────
 function getRepoRoot(): string {
@@ -168,6 +170,72 @@ describe("Command handler signatures", () => {
   it("exports dashboard handler", async () => {
     const mod = await import("../src/commands/dashboard.js");
     expect(typeof mod.dashboard).toBe("function");
+  });
+});
+
+describe("Runtime CLI options", () => {
+  const root = getRepoRoot();
+  const cliEntry = path.join(root, "packages", "cli", "dist", "index.js");
+
+  it("accepts the typed runtime root override without mutating it during dry-run", () => {
+    const target = path.join("/tmp", "agent-rules-runtime-cli-dry-run");
+    const output = require("node:child_process").execFileSync(
+      "node",
+      [cliEntry, "--json", "--dry-run", "runtime", "install", "codex", "--root", target],
+      { encoding: "utf8" },
+    );
+    const result = JSON.parse(output);
+    expect(result.exitCode).toBe(ExitCode.Success);
+    expect(result.data.results[0].targetRoot).toBe(target);
+    expect(fs.existsSync(target)).toBe(false);
+  });
+
+  it("runs the native install and uninstall lifecycle against an explicit temporary root", () => {
+    const target = fs.mkdtempSync(path.join(os.tmpdir(), "agent-rules-runtime-cli-"));
+    const child = require("node:child_process");
+    child.execFileSync("node", [cliEntry, "runtime", "install", "codex", "--root", target], { encoding: "utf8" });
+    expect(fs.existsSync(path.join(target, "agent-rules-runtime", "agent-rules-runtime-receipt.json"))).toBe(true);
+
+    child.execFileSync("node", [cliEntry, "runtime", "uninstall", "codex", "--root", target], { encoding: "utf8" });
+    expect(fs.existsSync(path.join(target, "agent-rules-runtime"))).toBe(false);
+  });
+
+  it("requires explicit --migrate-legacy and preserves unrelated files during CLI migration", () => {
+    const target = fs.mkdtempSync(path.join(os.tmpdir(), "agent-rules-runtime-cli-migration-"));
+    const agents = "legacy agents\n";
+    const legacyRule = "legacy rule\n";
+    try {
+      fs.mkdirSync(path.join(target, "rules"), { recursive: true });
+      fs.writeFileSync(path.join(target, "AGENTS.md"), agents);
+      fs.writeFileSync(path.join(target, "rules", "legacy.md"), legacyRule);
+      fs.writeFileSync(path.join(target, "settings.json"), "keep\n");
+      fs.writeFileSync(path.join(target, "agent-rules-manifest.json"), JSON.stringify({
+        version: 1,
+        platform: "codex",
+        files: [
+          { Path: "AGENTS.md", Sha256: createHash("sha256").update(agents).digest("hex") },
+          { Path: "rules/legacy.md", Sha256: createHash("sha256").update(legacyRule).digest("hex") },
+        ],
+      }));
+
+      const child = require("node:child_process");
+      expect(() => child.execFileSync(
+        "node",
+        [cliEntry, "runtime", "install", "codex", "--root", target],
+        { encoding: "utf8", stdio: "pipe" },
+      )).toThrow();
+
+      child.execFileSync(
+        "node",
+        [cliEntry, "runtime", "install", "codex", "--root", target, "--migrate-legacy"],
+        { encoding: "utf8" },
+      );
+      expect(fs.readFileSync(path.join(target, "settings.json"), "utf8")).toBe("keep\n");
+      expect(fs.existsSync(path.join(target, "agent-rules-runtime", "agent-rules-runtime-receipt.json"))).toBe(true);
+      expect(fs.existsSync(path.join(target, "agent-rules-legacy-migration-receipt.json"))).toBe(true);
+    } finally {
+      fs.rmSync(target, { recursive: true, force: true });
+    }
   });
 });
 

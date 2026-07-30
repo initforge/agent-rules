@@ -34,6 +34,7 @@ const contractSetSha256 = 'b'.repeat(64);
 const now = new Date('2026-07-29T00:00:00.000Z');
 const version = '1.2.3';
 const modelValue = 'native-test-model';
+const SNAPSHOT_REPLACEMENT_TIMEOUT_MS = process.platform === 'win32' ? 30_000 : 5_000;
 
 const sha256Bytes = (data: Uint8Array) => createHash('sha256').update(data).digest('hex');
 
@@ -506,7 +507,7 @@ describe('collectHostAttestations', () => {
     expect(snap.identity).toMatch(/^\d+:\d+\|/);
     await snap.cleanup();
     await import('node:fs/promises').then(m => m.rm(tmpDir, { recursive: true, force: true }));
-  });
+  }, SNAPSHOT_REPLACEMENT_TIMEOUT_MS);
 });
 
 describe('resolveNativeExecutable', () => {

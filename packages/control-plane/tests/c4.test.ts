@@ -3,8 +3,14 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 import { execFileSync } from 'child_process'
+import {
+  HOST_ATTESTATION_EVIDENCE_ROLES,
+  hostAttestationEvidenceRef,
+  hostAttestationEvidenceSubjectSha256,
+  type HostAttestation,
+} from '@initforge/agent-rules-engine/contracts'
 
-const REQUIRED_HOSTS = ['codex', 'claude', 'grok', 'opencode']
+const REQUIRED_HOSTS = ['codex', 'claude', 'grok', 'opencode', 'antigravity']
 
 function git(root: string, args: string[]): string {
   return execFileSync('git', args, { cwd: root, encoding: 'utf-8' }).trim()
@@ -22,8 +28,8 @@ function scorecard(head: string, branch: string, overrides: Record<string, unkno
 function attestation(host: string, head: string): Record<string, unknown> {
   const issuedAt = new Date(Date.now() - 60_000).toISOString()
   const expiresAt = new Date(Date.now() + 60 * 60_000).toISOString()
-  return {
-    host,
+  const subject: HostAttestation = {
+    host: host as HostAttestation['host'],
     hostVersion: '1.0.0',
     commitSha: head,
     capabilityStatus: 'HOST_NATIVE',
@@ -32,10 +38,24 @@ function attestation(host: string, head: string): Record<string, unknown> {
     requestedModel: 'standard',
     resolvedModel: 'standard',
     observedModel: 'standard',
-    evidenceHashes: ['a'.repeat(64)],
     nativeRunnerIdentity: `${host}-runner`,
     issuedAt,
     expiresAt,
+  }
+  return {
+    ...subject,
+    evidenceRefs: HOST_ATTESTATION_EVIDENCE_ROLES.map((role, index) => {
+      const evidenceSha256 = String(index + 1).repeat(64)
+      return {
+        role,
+        host: subject.host,
+        commitSha: head,
+        evidenceSha256,
+        evidenceRef: hostAttestationEvidenceRef(subject.host, head, role, evidenceSha256),
+        subjectSha256: hostAttestationEvidenceSubjectSha256(role, subject),
+        observedAt: issuedAt,
+      }
+    }),
   }
 }
 

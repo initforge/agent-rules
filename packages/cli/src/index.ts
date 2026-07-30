@@ -232,6 +232,9 @@ program
   .command("runtime")
   .description("Manage harness runtime installations")
   .argument("[subcommand]", "Subcommand: install, update, rollback, uninstall")
+  .argument("[platform]", "Platform: codex, grok, antigravity, cursor, all", "all")
+  .option("--root <absolute>", "Override the selected platform root (single platform only)")
+  .option("--migrate-legacy", "Explicitly migrate a manifest-owned legacy runtime (single platform only)")
   .addHelpText(
     "after",
     `
@@ -242,10 +245,11 @@ Subcommands:
   uninstall [platform]   Uninstall runtime from platform
     `
   )
-  .action(async (subcommand: string | undefined) => {
+  .action(async (subcommand: string | undefined, platform: string, cmdOpts: { root?: string; migrateLegacy?: boolean }) => {
     const opts = program.optsWithGlobals() as CliOptions;
-    const args = program.args;
-    const subArgs = subcommand ? [subcommand, ...args.slice(args.indexOf(subcommand) + 1)] : [];
+    const subArgs = subcommand ? [subcommand, platform] : [];
+    if (cmdOpts.root) subArgs.push("--root", cmdOpts.root);
+    if (cmdOpts.migrateLegacy) subArgs.push("--migrate-legacy");
     const result = await runtimeCmd(subArgs, opts);
     formatOutput(result, opts);
   });
