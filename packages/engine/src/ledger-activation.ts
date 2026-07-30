@@ -10,6 +10,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { computeCanonicalEffectivePlanIdentity } from './plan-identity.js';
 export type Sha256 = string;
 export interface ActivationInput {
   canonicalRoot: string; ledgerPath: string; amendmentPath: string;
@@ -114,8 +115,7 @@ function stableJson(v:unknown):string{
   return 'null';
 }
 function computeIdentity(origSha:Sha256,approved:Array<{amendment_id:string;sha256:Sha256}>):{sha256:Sha256;canonical:string;bytes:number}{
-  const m={algorithm:'SHA-256',approved_amendments:approved,composition:'original-plus-ordered-approved-amendment-sha256',original_plan_sha256:origSha,version:1};
-  const c=stableJson(m);return{sha256:sha256s(c),canonical:c,bytes:Buffer.byteLength(c,'utf-8')};
+  return computeCanonicalEffectivePlanIdentity(origSha as import('./contracts.js').Sha256,approved as Array<{amendment_id:string;sha256:import('./contracts.js').Sha256}>);
 }
 function dirDevIno(p:string):{dev:number;ino:number}{
   const st=fs.lstatSync(p);
@@ -694,7 +694,7 @@ function brInner(input:BoundedRepairInput,root:string,res:SecureResolver):Activa
   // fully committed and ledger identity updated past input.priorEffectiveSha256.
   const jE=readJournalBounded(jP);
   if(jE){const vj=validateJournal(jE,root,res);if(vj){let ok=true;for(const[n,h]of Object.entries(vj.newHashes)){const p=n==='ledger.json'?input.ledgerPath:path.join(input.shadowDir,n);const b=res.readBuf(p);if(b===null||sha256(b)!==h){ok=false;break}}
-  if(ok){const rb=res.readBuf(input.ledgerPath);if(rb){const rl=validateLedger(rb);const pc=recomputePriorIdentity(rl,res);if(pc){if(brVerifyAll(rl,input,res)){remJournal(jP);if(fs.existsSync(path.dirname(jP)))fsyncPath(path.dirname(jP));return{success:true,mutated:true,recovered:true,effectiveIdentity:(rl.effective_plan_identity as Record<string,unknown>)?.sha256 as Sha256,shadowRevision:rl.shadow_revision as number}}}}
+  if(ok){const rb=res.readBuf(input.ledgerPath);if(rb){const rl=validateLedger(rb);if(brVerifyAll(rl,input,res)){remJournal(jP);if(fs.existsSync(path.dirname(jP)))fsyncPath(path.dirname(jP));return{success:true,mutated:true,recovered:true,effectiveIdentity:(rl.effective_plan_identity as Record<string,unknown>)?.sha256 as Sha256,shadowRevision:rl.shadow_revision as number}}}
   writeJournal(vj,jP);return{success:false,error:'BR: recovery verifyAll failed',mutated:true,recovered:true}}}}
   const ei=ledger.effective_plan_identity as Record<string,unknown>|undefined;
   if(!ei||typeof ei.sha256!=='string')return{success:false,error:'BR: no identity',mutated:false};
@@ -714,8 +714,7 @@ function brInner(input:BoundedRepairInput,root:string,res:SecureResolver):Activa
   }
   const fAm=[...eAm];for(const r of nb){if(!fAm.some((a:Record<string,unknown>)=>a.amendment_id===r.amendment_id))fAm.push(r)}
   const ap=fAm.filter((a:Record<string,unknown>)=>a.status==='OWNER_APPROVED_EFFECTIVE'||a.status==='APPROVED').map((a:Record<string,unknown>)=>({amendment_id:a.amendment_id as string,sha256:a.sha256 as Sha256}));
-  const m={algorithm:'SHA-256',approved_amendments:ap,composition:'original-plus-ordered-approved-amendment-sha256',original_plan_sha256:oS,version:1};
-  const c=stableJson(m);const nId={sha256:sha256s(c)as Sha256,canonical:c,bytes:Buffer.byteLength(c,'utf-8')};
+  const nId=computeIdentity(oS,ap);
   const oEff=input.priorEffectiveSha256;
   if(nb.length===0&&nId.sha256===cId)return{success:true,mutated:false,effectiveIdentity:nId.sha256,shadowRevision:ledger.shadow_revision as number};
   const sE=staleEvidence(ledger,oEff,nId.sha256);const nR=(ledger.shadow_revision as number)+1;

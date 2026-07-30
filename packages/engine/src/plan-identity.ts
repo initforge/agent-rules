@@ -2,6 +2,7 @@ import { sha256Bytes, isSha256, type Sha256 } from './contracts.js';
 
 export type { Sha256 } from './contracts.js';
 
+/** Historical IDs only. Identity validation has no amendment-number ceiling. */
 export const APPROVED_AMENDMENT_IDS = ['AM-0001', 'AM-0002', 'AM-0003', 'AM-0005', 'AM-0006', 'AM-0007', 'AM-0008'] as const;
 export const APPROVED_AMENDMENT_SET = new Set<string>(APPROVED_AMENDMENT_IDS);
 export const SHADOW_ALLOWLIST = ['tasks.md', 'progress.md', 'amendments.md', 'reconciliation.md'];
@@ -42,7 +43,8 @@ function requireSha(value: string, label: string): asserts value is Sha256 {
   }
 }
 
-export function computeEffectivePlanSha256(
+/** Explicit compatibility algorithm for pre-canonical NUL-joined identities. */
+export function computeLegacyEffectivePlanSha256(
   originalSha256: Sha256,
   amendmentSha256s: readonly string[],
 ): Sha256 {
@@ -53,6 +55,45 @@ export function computeEffectivePlanSha256(
   const ordered = [originalSha256, ...amendmentSha256s];
   return sha256Bytes(new TextEncoder().encode(ordered.join('\x00')));
 }
+
+export interface IdentityAmendment { readonly amendment_id: string; readonly sha256: Sha256 }
+export interface EffectivePlanIdentity { readonly sha256: Sha256; readonly canonical: string; readonly bytes: number }
+
+function amendmentNumber(id: string): number {
+  const match = /^AM-(\d{4})$/.exec(id);
+  if (!match) throw new PlanValidationError(`Non-canonical amendment ID: ${id}`);
+  return Number(match[1]);
+}
+
+/** Canonical effective-plan identity shared by readers and activation writers. */
+export function computeCanonicalEffectivePlanIdentity(
+  originalSha256: Sha256,
+  approvedAmendments: readonly IdentityAmendment[],
+): EffectivePlanIdentity {
+  requireSha(originalSha256, 'originalSha256');
+  let previous = 0;
+  for (let i = 0; i < approvedAmendments.length; i++) {
+    const amendment = approvedAmendments[i];
+    requireSha(amendment.sha256, `approvedAmendments[${i}].sha256`);
+    const number = amendmentNumber(amendment.amendment_id);
+    const expected = previous === 3 ? 5 : previous + 1; // AM-0004 is permanently tombstoned.
+    if (number !== expected) throw new PlanValidationError(`Amendment order/gap at ${amendment.amendment_id}; expected AM-${String(expected).padStart(4, '0')}`);
+    previous = number;
+  }
+  const manifest = { algorithm: 'SHA-256', approved_amendments: approvedAmendments, composition: 'original-plus-ordered-approved-amendment-sha256', original_plan_sha256: originalSha256, version: 1 };
+  const canonical = canonicalJson(manifest);
+  return { sha256: sha256Bytes(new TextEncoder().encode(canonical)), canonical, bytes: new TextEncoder().encode(canonical).byteLength };
+}
+
+function canonicalJson(value: unknown): string {
+  if (value === null || typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
+  const record = value as Record<string, unknown>;
+  return `{${Object.keys(record).sort().map(key => `${JSON.stringify(key)}:${canonicalJson(record[key])}`).join(',')}}`;
+}
+
+/** Compatibility wrapper. Hash-only callers are legacy and intentionally retain the old algorithm. */
+export const computeEffectivePlanSha256 = computeLegacyEffectivePlanSha256;
 
 export function isLegacyShape(j: Record<string, unknown>): boolean {
   return LEGACY_KEYS.some(k => k in j);
