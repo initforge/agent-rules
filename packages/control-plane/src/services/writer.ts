@@ -2,9 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import yaml from 'js-yaml';
-import { safeResolve, safeResolveAgainst } from './safety';
+import { safeResolve, safeResolveAgainst } from './safety.js';
 
 const BACKUP_DIR = path.join(safeResolve('.'), 'packages', 'control-plane', 'backups');
+
+const BACKUP_PATTERN = /^.+_[a-f0-9]{12}\.bak$/;
 
 function ensureBackupDir(): void {
   if (!fs.existsSync(BACKUP_DIR)) {
@@ -51,7 +53,11 @@ export function atomicWrite(relativePath: string, newContent: string): WriteResu
 }
 
 export function rollback(backupPath: string, targetPath: string): boolean {
-  const safeBackup = safeResolveAgainst(BACKUP_DIR, path.basename(backupPath));
+  const backupName = path.basename(backupPath);
+  if (!BACKUP_PATTERN.test(backupName)) {
+    return false;
+  }
+  const safeBackup = safeResolveAgainst(BACKUP_DIR, backupName);
   const safeTarget = safeResolve(targetPath);
   if (!fs.existsSync(safeBackup)) return false;
   fs.copyFileSync(safeBackup, safeTarget);

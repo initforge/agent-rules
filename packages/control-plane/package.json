@@ -2,6 +2,7 @@
   "name": "agent-rules-control-plane",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "description": "Local read-first harness control plane for agent-rules",
   "scripts": {
     "dev": "concurrently \"tsx watch src/server/index.ts\" \"vite\"",
@@ -12,9 +13,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.server.json && tsc --noEmit -p tsconfig.client.json"
   },
   "dependencies": {
+    "@initforge/agent-rules-engine": "0.1.0",
     "ajv": "^8.20.0",
     "cors": "^2.8.5",
-    "diff": "^7.0.0",
+    "diff": "^9.0.0",
     "express": "^4.21.1",
     "js-yaml": "^4.1.0",
     "react": "^18.3.1",
@@ -36,6 +38,6 @@
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vite": "^6.0.3",
-    "vitest": "^2.1.8"
+    "vitest": "^3.2.7"
   }
 }

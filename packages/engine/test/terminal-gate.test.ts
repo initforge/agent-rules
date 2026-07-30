@@ -6,7 +6,9 @@ import { verifyTerminalGate, assertCertifiable, assertNoResidualBeforeFinal, ter
 
 const hash = 'a'.repeat(64);
 const badHash = 'b'.repeat(64);
-const expiresAt = '3026-07-27T00:00:00.000Z';
+const issuedAtBase = new Date();
+const expiresAtVal = new Date(issuedAtBase.getTime() + 3600_000).toISOString();
+const issuedAtVal = issuedAtBase.toISOString();
 
 function fullAttestation(host: string, overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
@@ -21,8 +23,8 @@ function fullAttestation(host: string, overrides: Record<string, unknown> = {}):
     observedModel: 'gpt-4',
     evidenceHashes: [hash],
     nativeRunnerIdentity: 'runner-1',
-    issuedAt: '2026-07-27T00:00:00.000Z',
-    expiresAt,
+    issuedAt: issuedAtVal,
+    expiresAt: expiresAtVal,
     ...overrides,
   };
 }
@@ -36,6 +38,7 @@ function stubLedger(overrides: Record<string, unknown> = {}): Record<string, unk
     reconciliations: [{ status: 'MATCH', headCommit: hash, detail: `HEAD ${hash.slice(0, 12)}` }],
     attestations: [
       fullAttestation('codex'),
+      fullAttestation('claude'),
       fullAttestation('grok'),
       fullAttestation('opencode'),
     ],
@@ -56,7 +59,7 @@ function stubLedger(overrides: Record<string, unknown> = {}): Record<string, unk
     },
     headCommit: hash,
     commitSha: hash,
-    ci_checks: [{ passed: true, runUrl: 'https://github.com/example/actions/runs/1' }],
+    ci_checks: [{ passed: true, runUrl: 'https://github.com/initforge/agent-rules/actions/runs/1', repository: 'initforge/agent-rules', workflow: 'CI', check: 'quality', commitSha: hash }],
     plan: {
       original: {
         artifactId: 'PLAN-001',
@@ -122,6 +125,7 @@ describe('verifyTerminalGate', () => {
     const dir = tmpDir();
     const ledger = stubLedger({ attestations: [
       fullAttestation('codex'),
+      fullAttestation('claude'),
       fullAttestation('grok'),
       fullAttestation('opencode'),
       fullAttestation('unknown-llm'),
@@ -168,7 +172,13 @@ describe('verifyTerminalGate', () => {
     expect(result.failedGates).toContain('NO_OPEN_FINDINGS');
   });
 
-  it('rejects when attestations < 3', () => {
+  it('requires exactly codex, claude, grok, and opencode', () => {
+    expect(REQUIRED_HOSTS).toEqual(['codex', 'claude', 'grok', 'opencode']);
+    expect(REQUIRED_HOSTS).not.toContain('cursor');
+    expect(REQUIRED_HOSTS).not.toContain('antigravity');
+  });
+
+  it('rejects when attestations < 4', () => {
     const dir = tmpDir();
     const ledger = stubLedger({ attestations: [fullAttestation('codex')] });
     const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
@@ -253,7 +263,7 @@ describe('verifyTerminalGate', () => {
 
   it('rejects local-only CI runUrl', () => {
     const dir = tmpDir();
-    const ledger = stubLedger({ ci_checks: [{ passed: true, runUrl: 'local://ci' }] });
+    const ledger = stubLedger({ ci_checks: [{ passed: true, runUrl: 'local://ci', repository: 'r', workflow: 'w', check: 'c', commitSha: hash }] });
     const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
     const result = verifyTerminalGate(ledgerPath, hash);
     expect(result.passed).toBe(false);
@@ -262,7 +272,7 @@ describe('verifyTerminalGate', () => {
 
   it('rejects empty CI runUrl', () => {
     const dir = tmpDir();
-    const ledger = stubLedger({ ci_checks: [{ passed: true, runUrl: '' }] });
+    const ledger = stubLedger({ ci_checks: [{ passed: true, runUrl: '', repository: 'r', workflow: 'w', check: 'c', commitSha: hash }] });
     const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
     const result = verifyTerminalGate(ledgerPath, hash);
     expect(result.passed).toBe(false);
@@ -271,7 +281,52 @@ describe('verifyTerminalGate', () => {
 
   it('rejects CI check without passed boolean', () => {
     const dir = tmpDir();
-    const ledger = stubLedger({ ci_checks: [{ status: 'PASS', runUrl: 'https://ci.example.com' }] });
+    const ledger = stubLedger({ ci_checks: [{ status: 'PASS', runUrl: 'https://github.com/x/actions/runs/1', repository: 'r', workflow: 'w', check: 'c', commitSha: hash }] });
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+    const result = verifyTerminalGate(ledgerPath, hash);
+    expect(result.passed).toBe(false);
+    expect(result.failedGates).toContain('GITHUB_CI_PASSED');
+  });
+
+  it('rejects repository not matching runUrl', () => {
+    const dir = tmpDir();
+    const ledger = stubLedger({ ci_checks: [{ passed: true, runUrl: 'https://github.com/initforge/agent-rules/actions/runs/1', repository: 'other/repo', workflow: 'w', check: 'c', commitSha: hash }] });
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+    const result = verifyTerminalGate(ledgerPath, hash);
+    expect(result.passed).toBe(false);
+    expect(result.failedGates).toContain('GITHUB_CI_PASSED');
+  });
+
+  it('rejects missing workflow field in CI', () => {
+    const dir = tmpDir();
+    const ledger = stubLedger({ ci_checks: [{ passed: true, runUrl: 'https://github.com/x/actions/runs/1', repository: 'x', check: 'c', commitSha: hash }] });
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+    const result = verifyTerminalGate(ledgerPath, hash);
+    expect(result.passed).toBe(false);
+    expect(result.failedGates).toContain('GITHUB_CI_PASSED');
+  });
+
+  it('rejects missing check field in CI', () => {
+    const dir = tmpDir();
+    const ledger = stubLedger({ ci_checks: [{ passed: true, runUrl: 'https://github.com/x/actions/runs/1', repository: 'x', workflow: 'w', commitSha: hash }] });
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+    const result = verifyTerminalGate(ledgerPath, hash);
+    expect(result.passed).toBe(false);
+    expect(result.failedGates).toContain('GITHUB_CI_PASSED');
+  });
+
+  it('rejects non-GitHub runUrl in CI', () => {
+    const dir = tmpDir();
+    const ledger = stubLedger({ ci_checks: [{ passed: true, runUrl: 'https://ci.example.com/run/1', repository: 'r', workflow: 'w', check: 'c', commitSha: hash }] });
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+    const result = verifyTerminalGate(ledgerPath, hash);
+    expect(result.passed).toBe(false);
+    expect(result.failedGates).toContain('GITHUB_CI_PASSED');
+  });
+
+  it('rejects CI commitSha not matching HEAD', () => {
+    const dir = tmpDir();
+    const ledger = stubLedger({ ci_checks: [{ passed: true, runUrl: 'https://github.com/initforge/agent-rules/actions/runs/1', repository: 'initforge/agent-rules', workflow: 'CI', check: 'quality', commitSha: 'c'.repeat(64) }] });
     const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
     const result = verifyTerminalGate(ledgerPath, hash);
     expect(result.passed).toBe(false);
@@ -284,6 +339,15 @@ describe('verifyTerminalGate', () => {
     const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
     const result = verifyTerminalGate(ledgerPath, hash);
     expect(result.passed).toBe(true);
+  });
+
+  it('rejects empty headCommit in ledger', () => {
+    const dir = tmpDir();
+    const ledger = stubLedger({ headCommit: '', commitSha: '' });
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+    const result = verifyTerminalGate(ledgerPath, hash);
+    expect(result.passed).toBe(false);
+    expect(result.failedGates).toContain('HEAD_MATCH');
   });
 });
 
@@ -394,32 +458,67 @@ describe('assertCertificationAttestation', () => {
   it('rejects missing host', () => {
     const ledger = stubLedger({ attestations: [
       fullAttestation('codex'),
+      fullAttestation('claude'),
       fullAttestation('grok'),
     ] });
-    expect(() => assertCertificationAttestation(ledger, hash)).toThrow('opencode');
+    expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/expected 4.*got 3/);
   });
 
   it('rejects empty commitSha', () => {
     const ledger = stubLedger({ attestations: [
       fullAttestation('codex'),
+      fullAttestation('claude'),
       fullAttestation('grok', { commitSha: '' }),
       fullAttestation('opencode'),
     ] });
     expect(() => assertCertificationAttestation(ledger, hash)).toThrow('empty commitSha');
   });
 
-  it('rejects null field in attestation', () => {
+  it('rejects null field in attestation (all 4 hosts present)', () => {
     const ledger = stubLedger({ attestations: [
       fullAttestation('codex', { hostVersion: null }),
+      fullAttestation('claude'),
       fullAttestation('grok'),
       fullAttestation('opencode'),
     ] });
     expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/null\/empty/);
   });
 
+  it('rejects duplicate attestation for same host', () => {
+    const ledger = stubLedger({ attestations: [
+      fullAttestation('codex'),
+      fullAttestation('codex'),
+      fullAttestation('claude'),
+      fullAttestation('grok'),
+      fullAttestation('opencode'),
+    ] });
+    expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/duplicate/);
+  });
+
+  it('rejects extra host beyond required four', () => {
+    const ledger = stubLedger({ attestations: [
+      fullAttestation('codex'),
+      fullAttestation('claude'),
+      fullAttestation('grok'),
+      fullAttestation('opencode'),
+      fullAttestation('cursor'),
+    ] });
+    expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/unexpected.*cursor/);
+  });
+
+  it('rejects wrong attestation count', () => {
+    const ledger = stubLedger({ attestations: [
+      fullAttestation('codex'),
+      fullAttestation('claude'),
+      fullAttestation('grok'),
+    ] });
+    expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/expected 4.*got 3/);
+  });
+
   it('rejects wrong HEAD binding', () => {
     const ledger = stubLedger({ attestations: [
       fullAttestation('codex'),
+      fullAttestation('claude'),
       fullAttestation('grok'),
       fullAttestation('opencode', { commitSha: 'c'.repeat(64) }),
     ] });

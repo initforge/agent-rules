@@ -4,92 +4,71 @@
 
 | Workflow | Trigger | Required | Jobs |
 |---|---|---|---|
-| `static` | PR + push to main | **Yes** | lint (tsc), test (vitest), build (runtime), validate (context), verify-mirrors |
-| `native-smoke` | manual + weekly Mon 06:00 | No | build, doctor per platform, summary report |
-| `evaluation` | manual + weekly Mon 02:00 | No | benchmark-contracts, agent-quality, live-adapter-contracts, route-conformance |
+| `quality` | PR + push to any branch | **Yes** | quality (cross-platform matrix), security (audit/SAST/scan), quality-aggregate |
+| `certification` | push main, manual, weekly Mon 06:00, release | No | certify (self-hosted native matrix), certify-aggregate (manifest+hash+metadata verification) |
 
 ## Required check configuration (manual GitHub setting)
 
 Navigate to **Settings → Branches → main → Edit rules → Require status checks**.
 
-Add the following required checks. GitHub displays matrix entries as `<job name> / <matrix label>`. The exact names appear after the first `static` workflow run:
+Add the following required checks. GitHub displays matrix entries as `<job name> / <matrix label>`. The exact names appear after the first `quality` workflow run:
 
 | Status check | Rationale |
 |---|---|
-| `lint (tsc) / (ubuntu-latest)` | TypeScript compilation |
-| `lint (tsc) / (windows-latest)` | Cross-platform TS compilation |
-| `test (unit + parity) / (ubuntu-latest)` | Unit + parity tests (Linux) |
-| `test (unit + parity) / (windows-latest)` | Unit + parity tests (Windows) |
-| `build (runtime) / (ubuntu-latest)` | Runtime build (Linux) |
-| `build (runtime) / (windows-latest)` | Runtime build (Windows) |
-| `validate (context) / (ubuntu-latest)` | Schema, contracts, audits (Linux) |
-| `validate (context) / (windows-latest)` | Schema, contracts, audits (Windows) |
-| `verify-mirrors / (ubuntu-latest)` | Mirror hash parity (Linux) |
-| `verify-mirrors / (windows-latest)` | Mirror hash parity (Windows) |
+| `quality (linux) / (ubuntu-latest)` | Build + test + control plane (Linux) |
+| `quality (windows) / (windows-latest)` | Build + test (Windows) |
+| `quality (macos) / (macos-latest)` | Build + test (macOS) |
+| `security / (ubuntu-latest)` | npm audit, Semgrep SAST, secret scanning |
+| `quality-aggregate / (ubuntu-latest)` | Gates merge on quality + security pass |
 
-Do NOT add `native-smoke` or `evaluation` as required. They are advisory.
+Do **NOT** add `certification` as required. It is advisory and runs only on trusted events (push main, manual, schedule, release), never on pull_request.
 
 ## Required vs advisory
 
-### Required (`static`)
+### Required (`quality`)
 - **Deterministic**: never depends on native CLI availability, network access, or model inference.
-- **Fast fails**: `lint` runs first; subsequent jobs depend on it via `needs:`.
+- **Fast fails**: `quality` runs build+check+test first; `security` runs in parallel.
 - **All-or-nothing**: no path filters — every PR runs every job. A passing required CI guarantees:
   - TypeScript compiles without errors.
-  - All unit and parity tests pass on both platforms.
-  - Runtime builds successfully (rules + skills + overlays + tools → `generated/runtime-build/`).
-  - Context validation passes (token budgets, required paths, legacy file audit, skill BOM, trigger audit, routing conformance, contract tests).
-  - Mirror verification passes (skills and core rules are byte-identical across platform builds).
+  - All unit and parity tests pass on all three platforms.
+  - Runtime builds successfully.
+  - Security audit, SAST, and secret scanning pass.
+- **Timeout**: 30 minutes per matrix job, 15 minutes for security.
+- **Playwright preflight**: Linux runner installs Playwright Chromium with system deps. Preflight check confirms readiness before tests.
 - **Permissions**: `contents: read` only. No secrets or deploy keys.
 
-### Advisory (`native-smoke`)
-- **Non-deterministic**: depends on which native CLIs (codex, cursor, grok, gemini) are installed on the runner.
-- **Never blocks a PR**: `continue-on-error: true` on the doctor step. The workflow always succeeds even when no native CLI is available.
-- **Records availability**: each platform's doctor output is archived as an artifact.
-- **Scheduled**: runs weekly to track native tool availability trends.
-
-### Advisory (`evaluation`)
-- **Non-deterministic**: benchmark quality metrics vary by model version and inference cost.
-- **Never blocks a PR**: `continue-on-error: true` on quality jobs. Benchmarks that produce low scores do not fail the workflow.
-- **Artifacts only**: results are published as downloadable artifacts, never enforced as gates.
-- **Scheduled**: runs weekly; can be triggered on demand with specific suite selection.
+### Advisory (`certification`)
+- **Non-deterministic**: depends on which native CLIs (codex, cursor, antigravity, grok, opencode) are installed on the self-hosted runner.
+- **Never runs on pull_request**: only trusted events (push to main, workflow_dispatch, schedule, release) — untrusted PR code never reaches native runners.
+- **Artifact manifest**: each certify job generates a JSON manifest containing the attestation SHA, commit SHA, repository, run ID, and host identity.
+- **Aggregate verification**: downloads all attestation+manifest artifacts, verifies content hash matches manifest, confirms exact commit/repo/run metadata, and checks host uniqueness.
+- **Timeout**: 60 minutes per self-hosted certify job.
+- **Scheduled**: runs weekly to track native host availability trends.
 
 ## Security model
 
 | Concern | Decision |
 |---|---|
 | Secret exposure | No workflow uses `secrets.*`. All dependencies are public npm/pypi packages. |
-| PR fork access | `pull_request` trigger (not `pull_request_target`) — no privileged context. |
-| Script injection | All dynamic values (`matrix.platform`) used in positional arguments, never interpolated into shell. |
+| PR fork access | `pull_request` trigger (not `pull_request_target`) on quality — no privileged context. Certification omits pull_request entirely. |
+| Script injection | All dynamic values (`matrix.host`) used in positional arguments, never interpolated into shell. |
 | Dependency caching | Not configured — all installs are `npm ci` (locked, no `package-lock.json` mutation). |
-| Third-party actions | Only `actions/*` — `checkout`, `setup-node`, `setup-python`, `upload-artifact`, `download-artifact`. No unverified actions. |
-| PowerShell | Installed via official Ubuntu package only on Linux. |
+| Third-party actions | Only `actions/*` — `checkout`, `setup-node`, `upload-artifact`, `download-artifact`. Semgrep and gitleaks SHA-pinned. No unverified actions. |
 
 ## Artifacts
 
 | Workflow | Artifact | Contents |
 |---|---|---|
-| `static` | `test-results-<os>` | JUnit XML test report (if vitest reporter succeeded) |
-| `static` | `runtime-build-<os>` | `manifest.json` + `model-policy.json` per platform |
-| `static` | `validate-log-<os>` | Validate stdout/stderr (if any) |
-| `native-smoke` | `runtime-build` | Full build output for all 4 platforms |
-| `native-smoke` | `doctor-report-<platform>` | JSON doctor output per platform |
-| `evaluation` | `evaluation-build` | Full `generated/` tree |
-| `evaluation` | `benchmark-contracts-report` | Contract test log |
-| `evaluation` | `agent-quality-report` | Agent quality log + evidence profiles |
-| `evaluation` | `live-adapter-contracts-report` | Live adapter contract log |
-| `evaluation` | `route-conformance-report` | Route conformance log |
+| `certification` | `attestation-<host>` | Attestation ledger JSON + manifest JSON per host |
 
 ## Concurrency
 
-- **`static` on PR**: Cancel in-progress runs when a new push supersedes them. Does NOT cancel on `main` — every main branch run completes.
-- **`native-smoke`**: Always cancel in-progress — only the latest run matters.
-- **`evaluation`**: Always cancel in-progress — only the latest run matters.
+- **`quality` on PR**: Cancel in-progress runs when a new push supersedes them. Does NOT cancel on `main` — every main branch run completes.
+- **`certification`**: Always cancel in-progress — only the latest run matters.
 
 ## Failure semantics
 
 | Workflow | Job failure → workflow outcome |
 |---|---|
-| `static` | Red. Any failed job fails the workflow. A PR with a red static check must not merge. |
-| `native-smoke` | Green. `continue-on-error: true` on all doctor jobs. The summary step always runs. |
-| `evaluation` | Green. `continue-on-error: true` on quality jobs. The summary step always runs. |
+| `quality` | Red. Any failed job fails the workflow. A PR with a red quality check must not merge. |
+| `certification` | Red per-job. Aggregate verifies manifest content, hash, metadata, and host uniqueness. The workflow reflects the actual certify result. |

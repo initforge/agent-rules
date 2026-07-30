@@ -3,6 +3,38 @@ $Root = Split-Path -Parent $PSScriptRoot
 $Problems = [System.Collections.Generic.List[string]]::new()
 . (Join-Path $PSScriptRoot "path-compat.ps1")
 
+function Assert-ScriptIntegrity {
+  param([string]$ScriptPath, [string]$IntegrityManifestPath = (Join-Path $PSScriptRoot "source-integrity.json"))
+  $RootFull = [IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
+  $Item = Get-Item -LiteralPath $ScriptPath -Force -ErrorAction Stop
+  if ($Item.LinkType -in @("SymbolicLink", "HardLink") -or $Item.Target) { throw "Refusing linked executable: $ScriptPath" }
+  $Full = [IO.Path]::GetFullPath($ScriptPath)
+  if (-not $Full.StartsWith($RootFull, [StringComparison]::OrdinalIgnoreCase)) { throw "Executable escapes repository root: $ScriptPath" }
+  $Rel = $Full.Substring($RootFull.Length).TrimStart([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar).Replace('\','/')
+  $Manifest = Get-Content -Raw -LiteralPath $IntegrityManifestPath | ConvertFrom-Json
+  $Expected = [string]$Manifest.files.$Rel
+  if (-not $Expected) { throw "No integrity entry for $Rel" }
+  $Actual = (Get-FileHash -LiteralPath $ScriptPath -Algorithm SHA256).Hash.ToLowerInvariant()
+  if ($Actual -ne $Expected.ToLowerInvariant()) { throw "Integrity check failed for $Rel" }
+}
+
+# Validate the complete executable fixture set before any validation subprocess
+# is started. This keeps indirect installer execution inside the same boundary.
+$ExecutableSet = @(
+  "automation/test-native-agent-policy.py", "automation/audit-ui-routing.ps1",
+  "automation/audit-plan-artifact.ps1", "automation/test-workctl.py",
+  "automation/test-skill-gate-stack.py", "automation/test-external-receipt.py",
+  "automation/audit-workflow-clarity.ps1", "automation/validate-tool-registry.ps1",
+  "automation/build-context-graph.ps1", "automation/test-context-router.py",
+  "automation/test-agent-quality-benchmark.py", "automation/test-live-agent-adapter.py",
+  "automation/validate-no-5fedu-leakage.ps1", "automation/generate-doc-references.py",
+  "automation/validate-doc-drift.py", "automation/workctl.py"
+)
+foreach ($Executable in $ExecutableSet) {
+  $Candidate = Join-Path $Root ($Executable -replace '/', [IO.Path]::DirectorySeparatorChar)
+  if (Test-Path -LiteralPath $Candidate -PathType Leaf) { Assert-ScriptIntegrity -ScriptPath $Candidate }
+}
+
 $NativePolicyTest = Join-Path $PSScriptRoot "test-native-agent-policy.py"
 if (-not (Test-Path -LiteralPath $NativePolicyTest)) {
   $Problems.Add("Missing native agent policy test: $NativePolicyTest")

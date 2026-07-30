@@ -1,0 +1,1309 @@
+{
+  "schema": "am0015/scorecard-evidence/v2",
+  "updated_at": "2026-07-30T01:13:17.152068+00:00",
+  "_gathered_at": "2026-07-30T01:13:17.152068+00:00",
+  "_git": {
+    "commit": "8631ff31bac48ac357a569e2a72c234c6f9ec232",
+    "author": "Linh NX <linhnx@initforge.com>",
+    "branch": "integration/harness-v3-certified",
+    "identity_candidate": "Linh NX",
+    "identity_effective": "Linh NX"
+  },
+  "_gh_runs": [
+    {
+      "id": "30324304995",
+      "branch": "deepseek-implement",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-07-28T02:51:41Z"
+    },
+    {
+      "id": "30324304922",
+      "branch": "deepseek-implement",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-07-28T02:51:41Z"
+    },
+    {
+      "id": "30324302561",
+      "branch": "deepseek-implement",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-07-28T02:51:38Z"
+    },
+    {
+      "id": "30323857360",
+      "branch": "deepseek-implement",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-07-28T02:42:10Z"
+    },
+    {
+      "id": "30323857359",
+      "branch": "deepseek-implement",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-07-28T02:42:10Z"
+    }
+  ],
+  "_evidence_sources": [
+    {
+      "uri": "rules/manifest.yaml",
+      "hash": "sha256:3bd4c19e78191db01ec281203e13284eabab0dc34cdbb0292a7912d8539fc2fd",
+      "freshness_seconds": 21179,
+      "kind": "source"
+    },
+    {
+      "uri": "automation/context-graph-router.py",
+      "hash": "sha256:50b9ed4f28230d81e4c4d3db51ea152906e99277cd88031c1f0e3321f41ed817",
+      "freshness_seconds": 130724,
+      "kind": "source"
+    },
+    {
+      "uri": "evals/conformance/routing.py",
+      "hash": "sha256:473a8f640dc10890c1fb0711d87e1856e3f5a4ccba7060576f01c29b9190fe8f",
+      "freshness_seconds": 130724,
+      "kind": "test"
+    },
+    {
+      "uri": "automation/test-context-router.py",
+      "hash": "sha256:db96bfcccdf6d1f70301add011b03b421df417fe7052acc859b47f5f20c5bb76",
+      "freshness_seconds": 130724,
+      "kind": "test"
+    },
+    {
+      "uri": "automation/test-conformance.py",
+      "hash": "sha256:13eb95f1c866a8cbf745abe36116dfb414ecc3fdc10bd546351d23bd033f78d2",
+      "freshness_seconds": 130724,
+      "kind": "gate"
+    },
+    {
+      "uri": ".github/workflows/quality.yml",
+      "hash": "sha256:b9955ee304a865edac57c7d93713634ef992b3c87df9f49036c4e2a03825eb99",
+      "freshness_seconds": 5013,
+      "kind": "ci"
+    },
+    {
+      "uri": ".github/workflows/quality.yml",
+      "hash": "sha256:b9955ee304a865edac57c7d93713634ef992b3c87df9f49036c4e2a03825eb99",
+      "freshness_seconds": 5013,
+      "kind": "source"
+    },
+    {
+      "uri": "packages/engine/src/plan-identity.ts",
+      "hash": "sha256:d6dfaac3c6d0e0821d26b336b69eaad02eba22ba171746f841c8a40e91808ea6",
+      "freshness_seconds": 22887,
+      "kind": "source"
+    },
+    {
+      "uri": "schemas/plan.schema.json",
+      "hash": "sha256:858c215c6517cc28eed5b8936a4f65223536312c7e223e4ee24e6bd407136aff",
+      "freshness_seconds": 130724,
+      "kind": "source"
+    },
+    {
+      "uri": "automation/workctl.py",
+      "hash": "sha256:6516d4beb4ffeb0bda38f16f7ef8a7e47022f3ea36b4e5da0d1068d30c4ebb5d",
+      "freshness_seconds": 130724,
+      "kind": "gate"
+    },
+    {
+      "uri": "automation/workctl.py",
+      "hash": "sha256:6516d4beb4ffeb0bda38f16f7ef8a7e47022f3ea36b4e5da0d1068d30c4ebb5d",
+      "freshness_seconds": 130724,
+      "kind": "source"
+    },
+    {
+      "uri": "automation/workctl.py",
+      "hash": "sha256:6516d4beb4ffeb0bda38f16f7ef8a7e47022f3ea36b4e5da0d1068d30c4ebb5d",
+      "freshness_seconds": 130724,
+      "kind": "test"
+    },
+    {
+      "uri": "automation/agent_quality.py",
+      "hash": "sha256:756b51a41e3cf8d3b694239d0ea511611393f552fa37291692fb169f9b8a4890",
+      "freshness_seconds": 130724,
+      "kind": "gate"
+    },
+    {
+      "uri": "automation/agent_quality.py",
+      "hash": "sha256:756b51a41e3cf8d3b694239d0ea511611393f552fa37291692fb169f9b8a4890",
+      "freshness_seconds": 130724,
+      "kind": "source"
+    },
+    {
+      "uri": "automation/agent_quality.py",
+      "hash": "sha256:756b51a41e3cf8d3b694239d0ea511611393f552fa37291692fb169f9b8a4890",
+      "freshness_seconds": 130724,
+      "kind": "test"
+    },
+    {
+      "uri": "packages/cli/package.json",
+      "hash": "sha256:9b0751ef02a42f4b3b472a581507afd17bc0daaff5a87a2d65f0b793ab5b53d2",
+      "freshness_seconds": 130724,
+      "kind": "install"
+    },
+    {
+      "uri": "schemas/evidence.schema.json",
+      "hash": "sha256:35f232f42a8a5303e03828081214c6c8072eb5f2e43c75da3ca5cd83d58279d5",
+      "freshness_seconds": 130724,
+      "kind": "source"
+    },
+    {
+      "uri": "schemas/claim-evidence.schema.json",
+      "hash": "sha256:40942fae7a19616afdd674f840a2842a52746259b0fa77107b58067240689685",
+      "freshness_seconds": 130724,
+      "kind": "gate"
+    },
+    {
+      "uri": "schemas/claim-evidence.schema.json",
+      "hash": "sha256:40942fae7a19616afdd674f840a2842a52746259b0fa77107b58067240689685",
+      "freshness_seconds": 130724,
+      "kind": "source"
+    },
+    {
+      "uri": "automation/test-agent-quality-benchmark.py",
+      "hash": "sha256:4f97ae119910d56c0d5287e1471ea91e40471e1df116f75ae1f0d67bc0271fb2",
+      "freshness_seconds": 22325,
+      "kind": "test"
+    },
+    {
+      "uri": "automation/evidence-profiles.json",
+      "hash": "sha256:99fbc438edcb971c3e564115e096e9298765b30dc7890280ac70007d1bf54875",
+      "freshness_seconds": 130724,
+      "kind": "gate"
+    },
+    {
+      "uri": "automation/evidence-profiles.json",
+      "hash": "sha256:99fbc438edcb971c3e564115e096e9298765b30dc7890280ac70007d1bf54875",
+      "freshness_seconds": 130724,
+      "kind": "source"
+    },
+    {
+      "uri": "schemas/run-state.schema.json",
+      "hash": "sha256:a196975fe22bdb725100d098d8016f6d21db90b66b829d9a0e318d866604ca1a",
+      "freshness_seconds": 130724,
+      "kind": "source"
+    },
+    {
+      "uri": "schemas/assignment.schema.json",
+      "hash": "sha256:c868e3e0e27843403cc43db5a09243ce442d7f0e6ca3f1c28a30fd01fc6dfc90",
+      "freshness_seconds": 130724,
+      "kind": "gate"
+    },
+    {
+      "uri": "automation/host-attestation.ts",
+      "hash": "sha256:996e7d590541f73aa5f2598dff9d41260bedd647e522bb4bf80f0cfa9210ca0d",
+      "freshness_seconds": 73224,
+      "kind": "source"
+    },
+    {
+      "uri": "automation/host-attestation.test.ts",
+      "hash": "sha256:02051fe169afb57da7609b08c5e407abe27b542e9bcc72a4bfb6fbfa29344de9",
+      "freshness_seconds": 73197,
+      "kind": "source"
+    },
+    {
+      "uri": "automation/host-attestation.test.ts",
+      "hash": "sha256:02051fe169afb57da7609b08c5e407abe27b542e9bcc72a4bfb6fbfa29344de9",
+      "freshness_seconds": 73197,
+      "kind": "test"
+    },
+    {
+      "uri": "docs/architecture/target-operating-model.md",
+      "hash": "sha256:6dc15293a9e5bead66823260f8267a9eba3f4b8e52e9c4311d4f66ba931d0691",
+      "freshness_seconds": 20223,
+      "kind": "source"
+    },
+    {
+      "uri": "automation/report-agent-quality.py",
+      "hash": "sha256:f1987393b6acf9de45dff2ece1c4af1b91de7397d82587e14329d297a20920b9",
+      "freshness_seconds": 130724,
+      "kind": "test"
+    },
+    {
+      "uri": "schemas/requirement.schema.json",
+      "hash": "sha256:c1dc0dadfcb80b72a7d5f8e88ad2908153675fc2ead027bfb314b0575276fdab",
+      "freshness_seconds": 130724,
+      "kind": "gate"
+    },
+    {
+      "uri": "schemas/delegation.schema.json",
+      "hash": "sha256:d64f9f5862ee3becc815e8c6c280d79ffa5216739967d20bc3c39627edb1291b",
+      "freshness_seconds": 130724,
+      "kind": "source"
+    },
+    {
+      "uri": "packages/engine/src/contracts.ts",
+      "hash": "sha256:2680a0eef7efa2c6a46c98721089c4fab6f82a2ab57a8cfcc411182c8a87c4e0",
+      "freshness_seconds": 22325,
+      "kind": "gate"
+    },
+    {
+      "uri": "schemas/telemetry-event.schema.json",
+      "hash": "sha256:f9196fbc04d7a3bb7f0d387aceae16f4446d0549ea74ef0e3f9087963e09a7ac",
+      "freshness_seconds": 130724,
+      "kind": "gate"
+    },
+    {
+      "uri": "schemas/",
+      "hash": "sha256:362a31af373550642b45cccf4f1277859310ada9f1aaf63c48cd7acfc91de86b",
+      "freshness_seconds": 6720,
+      "kind": "source"
+    },
+    {
+      "uri": "automation/test-artifact-schemas.py",
+      "hash": "sha256:4ba246ee1cdf82ab9334212637987f4b902b39cf273e85e86df242863c80c772",
+      "freshness_seconds": 6679,
+      "kind": "test"
+    },
+    {
+      "uri": "packages/control-plane/src/routes/c4.ts",
+      "hash": "sha256:4b5499277b5cc70e59217ef2b819c67dac7ce9060b089659e4fbfdd9cb363f15",
+      "freshness_seconds": 5968,
+      "kind": "source"
+    },
+    {
+      "uri": "packages/control-plane/src/client/pages/C4.tsx",
+      "hash": "sha256:51c96a4539cb47b3ad3d3cf0e66b57a1e7fda005fb571e3322b973baa3761c73",
+      "freshness_seconds": 22887,
+      "kind": "source"
+    },
+    {
+      "uri": "packages/control-plane/tests/c4.test.ts",
+      "hash": "sha256:75ae22d6fa04d2873480412906f7840f1e5b389a5a62f6f638f4050b67186a0d",
+      "freshness_seconds": 22887,
+      "kind": "test"
+    },
+    {
+      "uri": "packages/control-plane/vitest.config.ts",
+      "hash": "sha256:ee5e5979502bec720397cfd1f70cb504083f8d2b166e084ec349d8a6402f35f7",
+      "freshness_seconds": 130724,
+      "kind": "gate"
+    },
+    {
+      "uri": "platforms/",
+      "hash": "sha256:8fe77e685affb31563d7ef2826205d10fd8ab65624ab8891ef57ff624e32219f",
+      "freshness_seconds": 21739,
+      "kind": "source"
+    },
+    {
+      "uri": "platforms/platform-contracts.json",
+      "hash": "sha256:15a9c8181a28a56093ffb0ddd048f826321f9d84f55e7333fb2f741f16637245",
+      "freshness_seconds": 130724,
+      "kind": "source"
+    },
+    {
+      "uri": "platforms/opencode/adapter.test.ts",
+      "hash": "sha256:761c1ae1190746483b3333f9e6245fc079a7030904ad0c5b681f77157c790dcb",
+      "freshness_seconds": 21750,
+      "kind": "test"
+    },
+    {
+      "uri": "automation/ci-certify.sh",
+      "hash": "sha256:027ef8d2b5a86e064ebeadc9ed7b1e107024f9f1e8256cb8f69777c5101f3f40",
+      "freshness_seconds": 22325,
+      "kind": "gate"
+    },
+    {
+      "uri": "automation/ci-certify.sh",
+      "hash": "sha256:027ef8d2b5a86e064ebeadc9ed7b1e107024f9f1e8256cb8f69777c5101f3f40",
+      "freshness_seconds": 22325,
+      "kind": "test"
+    },
+    {
+      "uri": ".github/workflows/certification.yml",
+      "hash": "sha256:13342be307574b4374fd723c35a74035122bdf4fc3efdbbb856e2fe9112ef6fa",
+      "freshness_seconds": 20245,
+      "kind": "ci"
+    },
+    {
+      "uri": ".github/workflows/certification.yml",
+      "hash": "sha256:13342be307574b4374fd723c35a74035122bdf4fc3efdbbb856e2fe9112ef6fa",
+      "freshness_seconds": 20245,
+      "kind": "gate"
+    },
+    {
+      "uri": "packages/control-plane/src/middleware/",
+      "hash": "sha256:8eb6918ad68c3ca0140f6755cdb0c873679721bd8d59da37bf15f0c820493c3e",
+      "freshness_seconds": 130724,
+      "kind": "source"
+    },
+    {
+      "uri": "packages/control-plane/src/routes/",
+      "hash": "sha256:c01f6aef05cec221616a9ea89bef0c8dc7ad9ced2756f39074e86afb76743741",
+      "freshness_seconds": 22325,
+      "kind": "source"
+    },
+    {
+      "uri": "packages/control-plane/tests/",
+      "hash": "sha256:682d6e49310939ab0e0d5bca44920be962d83d4c06240b0912436d05fd9162b0",
+      "freshness_seconds": 22887,
+      "kind": "test"
+    },
+    {
+      "uri": "schemas/policy-approval.schema.json",
+      "hash": "sha256:c83a93ae0b329493a800bf7e7fa22b4c640ac300b3b6155ddeb85f53bcc0673c",
+      "freshness_seconds": 130724,
+      "kind": "gate"
+    },
+    {
+      "uri": "evals/telemetry/",
+      "hash": "sha256:cd3554e77768f608a491bbd225eeec79605f91997180bd852b4d6ce68663a90e",
+      "freshness_seconds": 22325,
+      "kind": "source"
+    },
+    {
+      "uri": "evals/fixtures/telemetry.schema.json",
+      "hash": "sha256:a93d3dd82af68b23b26a2b4501187de13eda1e3e79a7e9159e319e038f2b0f3e",
+      "freshness_seconds": 22325,
+      "kind": "source"
+    },
+    {
+      "uri": "evals/conformance/telemetry.test.ts",
+      "hash": "sha256:da6c1a7fcffb46d532acf9758f5f478345d4261d85fced464a7e1464f5a6e43c",
+      "freshness_seconds": 130724,
+      "kind": "test"
+    },
+    {
+      "uri": "package.json",
+      "hash": "sha256:801e5590618f0a8601d7a9975b0a585d1e62dbd6c15211019daab9d4b5382bd0",
+      "freshness_seconds": 22325,
+      "kind": "source"
+    },
+    {
+      "uri": "automation/09-doctor.ps1",
+      "hash": "sha256:7fc7220c6a2e5da02d182088858e1e57c42f65eba8ca7131bb962c82e9429f79",
+      "freshness_seconds": 2573,
+      "kind": "doctor"
+    }
+  ],
+  "dimensions": [
+    {
+      "id": "d01",
+      "label": "Context Routing",
+      "severity": "Critical",
+      "score": 7,
+      "maxScore": 7,
+      "status": "pass",
+      "evidence_items": [
+        {
+          "uri": "rules/manifest.yaml",
+          "hash": "sha256:3bd4c19e78191db01ec281203e13284eabab0dc34cdbb0292a7912d8539fc2fd",
+          "freshness_seconds": 21179,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/context-graph-router.py",
+          "hash": "sha256:50b9ed4f28230d81e4c4d3db51ea152906e99277cd88031c1f0e3321f41ed817",
+          "freshness_seconds": 130724,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "evals/conformance/routing.py",
+          "hash": "sha256:473a8f640dc10890c1fb0711d87e1856e3f5a4ccba7060576f01c29b9190fe8f",
+          "freshness_seconds": 130724,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/test-context-router.py",
+          "hash": "sha256:db96bfcccdf6d1f70301add011b03b421df417fe7052acc859b47f5f20c5bb76",
+          "freshness_seconds": 130724,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/test-conformance.py",
+          "hash": "sha256:13eb95f1c866a8cbf745abe36116dfb414ecc3fdc10bd546351d23bd033f78d2",
+          "freshness_seconds": 130724,
+          "kind": "gate",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": ".github/workflows/quality.yml",
+          "hash": "sha256:b9955ee304a865edac57c7d93713634ef992b3c87df9f49036c4e2a03825eb99",
+          "freshness_seconds": 5013,
+          "kind": "ci",
+          "passed": true,
+          "finding": ""
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "d02",
+      "label": "Plan Identity Integrity",
+      "severity": "Critical",
+      "score": 7,
+      "maxScore": 7,
+      "status": "pass",
+      "evidence_items": [
+        {
+          "uri": "packages/engine/src/plan-identity.ts",
+          "hash": "sha256:d6dfaac3c6d0e0821d26b336b69eaad02eba22ba171746f841c8a40e91808ea6",
+          "freshness_seconds": 22887,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "schemas/plan.schema.json",
+          "hash": "sha256:858c215c6517cc28eed5b8936a4f65223536312c7e223e4ee24e6bd407136aff",
+          "freshness_seconds": 130724,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/workctl.py",
+          "hash": "sha256:6516d4beb4ffeb0bda38f16f7ef8a7e47022f3ea36b4e5da0d1068d30c4ebb5d",
+          "freshness_seconds": 130724,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/agent_quality.py",
+          "hash": "sha256:756b51a41e3cf8d3b694239d0ea511611393f552fa37291692fb169f9b8a4890",
+          "freshness_seconds": 130724,
+          "kind": "gate",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": ".github/workflows/quality.yml",
+          "hash": "sha256:b9955ee304a865edac57c7d93713634ef992b3c87df9f49036c4e2a03825eb99",
+          "freshness_seconds": 5013,
+          "kind": "ci",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "packages/cli/package.json",
+          "hash": "sha256:9b0751ef02a42f4b3b472a581507afd17bc0daaff5a87a2d65f0b793ab5b53d2",
+          "freshness_seconds": 130724,
+          "kind": "install",
+          "passed": true,
+          "finding": ""
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "d03",
+      "label": "Evidence Binding",
+      "severity": "High",
+      "score": 7,
+      "maxScore": 7,
+      "status": "pass",
+      "evidence_items": [
+        {
+          "uri": "schemas/evidence.schema.json",
+          "hash": "sha256:35f232f42a8a5303e03828081214c6c8072eb5f2e43c75da3ca5cd83d58279d5",
+          "freshness_seconds": 130724,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "schemas/claim-evidence.schema.json",
+          "hash": "sha256:40942fae7a19616afdd674f840a2842a52746259b0fa77107b58067240689685",
+          "freshness_seconds": 130724,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/agent_quality.py",
+          "hash": "sha256:756b51a41e3cf8d3b694239d0ea511611393f552fa37291692fb169f9b8a4890",
+          "freshness_seconds": 130724,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/test-agent-quality-benchmark.py",
+          "hash": "sha256:4f97ae119910d56c0d5287e1471ea91e40471e1df116f75ae1f0d67bc0271fb2",
+          "freshness_seconds": 22325,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/evidence-profiles.json",
+          "hash": "sha256:99fbc438edcb971c3e564115e096e9298765b30dc7890280ac70007d1bf54875",
+          "freshness_seconds": 130724,
+          "kind": "gate",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": ".github/workflows/quality.yml",
+          "hash": "sha256:b9955ee304a865edac57c7d93713634ef992b3c87df9f49036c4e2a03825eb99",
+          "freshness_seconds": 5013,
+          "kind": "ci",
+          "passed": true,
+          "finding": ""
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "d04",
+      "label": "Amendment Tracking",
+      "severity": "Medium",
+      "score": 10,
+      "maxScore": 10,
+      "status": "pass",
+      "evidence_items": [
+        {
+          "uri": "automation/workctl.py",
+          "hash": "sha256:6516d4beb4ffeb0bda38f16f7ef8a7e47022f3ea36b4e5da0d1068d30c4ebb5d",
+          "freshness_seconds": 130724,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "schemas/run-state.schema.json",
+          "hash": "sha256:a196975fe22bdb725100d098d8016f6d21db90b66b829d9a0e318d866604ca1a",
+          "freshness_seconds": 130724,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/workctl.py",
+          "hash": "sha256:6516d4beb4ffeb0bda38f16f7ef8a7e47022f3ea36b4e5da0d1068d30c4ebb5d",
+          "freshness_seconds": 130724,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "schemas/assignment.schema.json",
+          "hash": "sha256:c868e3e0e27843403cc43db5a09243ce442d7f0e6ca3f1c28a30fd01fc6dfc90",
+          "freshness_seconds": 130724,
+          "kind": "gate",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": ".github/workflows/quality.yml",
+          "hash": "sha256:b9955ee304a865edac57c7d93713634ef992b3c87df9f49036c4e2a03825eb99",
+          "freshness_seconds": 5013,
+          "kind": "ci",
+          "passed": true,
+          "finding": ""
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "d05",
+      "label": "Shadow Hash Verification",
+      "severity": "High",
+      "score": 7,
+      "maxScore": 7,
+      "status": "pass",
+      "evidence_items": [
+        {
+          "uri": "automation/workctl.py",
+          "hash": "sha256:6516d4beb4ffeb0bda38f16f7ef8a7e47022f3ea36b4e5da0d1068d30c4ebb5d",
+          "freshness_seconds": 130724,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/host-attestation.ts",
+          "hash": "sha256:996e7d590541f73aa5f2598dff9d41260bedd647e522bb4bf80f0cfa9210ca0d",
+          "freshness_seconds": 73224,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/host-attestation.test.ts",
+          "hash": "sha256:02051fe169afb57da7609b08c5e407abe27b542e9bcc72a4bfb6fbfa29344de9",
+          "freshness_seconds": 73197,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/workctl.py",
+          "hash": "sha256:6516d4beb4ffeb0bda38f16f7ef8a7e47022f3ea36b4e5da0d1068d30c4ebb5d",
+          "freshness_seconds": 130724,
+          "kind": "gate",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": ".github/workflows/quality.yml",
+          "hash": "sha256:b9955ee304a865edac57c7d93713634ef992b3c87df9f49036c4e2a03825eb99",
+          "freshness_seconds": 5013,
+          "kind": "ci",
+          "passed": true,
+          "finding": ""
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "d06",
+      "label": "Reconciliation Accuracy",
+      "severity": "Medium",
+      "score": 10,
+      "maxScore": 10,
+      "status": "pass",
+      "evidence_items": [
+        {
+          "uri": "automation/workctl.py",
+          "hash": "sha256:6516d4beb4ffeb0bda38f16f7ef8a7e47022f3ea36b4e5da0d1068d30c4ebb5d",
+          "freshness_seconds": 130724,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "docs/architecture/target-operating-model.md",
+          "hash": "sha256:6dc15293a9e5bead66823260f8267a9eba3f4b8e52e9c4311d4f66ba931d0691",
+          "freshness_seconds": 20223,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/report-agent-quality.py",
+          "hash": "sha256:f1987393b6acf9de45dff2ece1c4af1b91de7397d82587e14329d297a20920b9",
+          "freshness_seconds": 130724,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "schemas/requirement.schema.json",
+          "hash": "sha256:c1dc0dadfcb80b72a7d5f8e88ad2908153675fc2ead027bfb314b0575276fdab",
+          "freshness_seconds": 130724,
+          "kind": "gate",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": ".github/workflows/quality.yml",
+          "hash": "sha256:b9955ee304a865edac57c7d93713634ef992b3c87df9f49036c4e2a03825eb99",
+          "freshness_seconds": 5013,
+          "kind": "ci",
+          "passed": true,
+          "finding": ""
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "d07",
+      "label": "Verification Claims Coverage",
+      "severity": "Medium",
+      "score": 10,
+      "maxScore": 10,
+      "status": "pass",
+      "evidence_items": [
+        {
+          "uri": "automation/evidence-profiles.json",
+          "hash": "sha256:99fbc438edcb971c3e564115e096e9298765b30dc7890280ac70007d1bf54875",
+          "freshness_seconds": 130724,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/agent_quality.py",
+          "hash": "sha256:756b51a41e3cf8d3b694239d0ea511611393f552fa37291692fb169f9b8a4890",
+          "freshness_seconds": 130724,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/test-agent-quality-benchmark.py",
+          "hash": "sha256:4f97ae119910d56c0d5287e1471ea91e40471e1df116f75ae1f0d67bc0271fb2",
+          "freshness_seconds": 22325,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "schemas/claim-evidence.schema.json",
+          "hash": "sha256:40942fae7a19616afdd674f840a2842a52746259b0fa77107b58067240689685",
+          "freshness_seconds": 130724,
+          "kind": "gate",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": ".github/workflows/quality.yml",
+          "hash": "sha256:b9955ee304a865edac57c7d93713634ef992b3c87df9f49036c4e2a03825eb99",
+          "freshness_seconds": 5013,
+          "kind": "ci",
+          "passed": true,
+          "finding": ""
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "d08",
+      "label": "Batch Execution",
+      "severity": "Low",
+      "score": 10,
+      "maxScore": 10,
+      "status": "pass",
+      "evidence_items": [
+        {
+          "uri": "automation/workctl.py",
+          "hash": "sha256:6516d4beb4ffeb0bda38f16f7ef8a7e47022f3ea36b4e5da0d1068d30c4ebb5d",
+          "freshness_seconds": 130724,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "schemas/delegation.schema.json",
+          "hash": "sha256:d64f9f5862ee3becc815e8c6c280d79ffa5216739967d20bc3c39627edb1291b",
+          "freshness_seconds": 130724,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/workctl.py",
+          "hash": "sha256:6516d4beb4ffeb0bda38f16f7ef8a7e47022f3ea36b4e5da0d1068d30c4ebb5d",
+          "freshness_seconds": 130724,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "schemas/assignment.schema.json",
+          "hash": "sha256:c868e3e0e27843403cc43db5a09243ce442d7f0e6ca3f1c28a30fd01fc6dfc90",
+          "freshness_seconds": 130724,
+          "kind": "gate",
+          "passed": true,
+          "finding": ""
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "d09",
+      "label": "Attestation Completeness",
+      "severity": "High",
+      "score": 7,
+      "maxScore": 7,
+      "status": "pass",
+      "evidence_items": [
+        {
+          "uri": "automation/host-attestation.ts",
+          "hash": "sha256:996e7d590541f73aa5f2598dff9d41260bedd647e522bb4bf80f0cfa9210ca0d",
+          "freshness_seconds": 73224,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/host-attestation.test.ts",
+          "hash": "sha256:02051fe169afb57da7609b08c5e407abe27b542e9bcc72a4bfb6fbfa29344de9",
+          "freshness_seconds": 73197,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/host-attestation.test.ts",
+          "hash": "sha256:02051fe169afb57da7609b08c5e407abe27b542e9bcc72a4bfb6fbfa29344de9",
+          "freshness_seconds": 73197,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "packages/engine/src/contracts.ts",
+          "hash": "sha256:2680a0eef7efa2c6a46c98721089c4fab6f82a2ab57a8cfcc411182c8a87c4e0",
+          "freshness_seconds": 22325,
+          "kind": "gate",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": ".github/workflows/quality.yml",
+          "hash": "sha256:b9955ee304a865edac57c7d93713634ef992b3c87df9f49036c4e2a03825eb99",
+          "freshness_seconds": 5013,
+          "kind": "ci",
+          "passed": true,
+          "finding": ""
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "d10",
+      "label": "Audit Trail Integrity",
+      "severity": "Critical",
+      "score": 7,
+      "maxScore": 7,
+      "status": "pass",
+      "evidence_items": [
+        {
+          "uri": "automation/workctl.py",
+          "hash": "sha256:6516d4beb4ffeb0bda38f16f7ef8a7e47022f3ea36b4e5da0d1068d30c4ebb5d",
+          "freshness_seconds": 130724,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "schemas/run-state.schema.json",
+          "hash": "sha256:a196975fe22bdb725100d098d8016f6d21db90b66b829d9a0e318d866604ca1a",
+          "freshness_seconds": 130724,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/workctl.py",
+          "hash": "sha256:6516d4beb4ffeb0bda38f16f7ef8a7e47022f3ea36b4e5da0d1068d30c4ebb5d",
+          "freshness_seconds": 130724,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "schemas/telemetry-event.schema.json",
+          "hash": "sha256:f9196fbc04d7a3bb7f0d387aceae16f4446d0549ea74ef0e3f9087963e09a7ac",
+          "freshness_seconds": 130724,
+          "kind": "gate",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": ".github/workflows/quality.yml",
+          "hash": "sha256:b9955ee304a865edac57c7d93713634ef992b3c87df9f49036c4e2a03825eb99",
+          "freshness_seconds": 5013,
+          "kind": "ci",
+          "passed": true,
+          "finding": ""
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "d11",
+      "label": "Path Traversal Protection",
+      "severity": "Critical",
+      "score": 7,
+      "maxScore": 7,
+      "status": "pass",
+      "evidence_items": [
+        {
+          "uri": "automation/workctl.py",
+          "hash": "sha256:6516d4beb4ffeb0bda38f16f7ef8a7e47022f3ea36b4e5da0d1068d30c4ebb5d",
+          "freshness_seconds": 130724,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/host-attestation.ts",
+          "hash": "sha256:996e7d590541f73aa5f2598dff9d41260bedd647e522bb4bf80f0cfa9210ca0d",
+          "freshness_seconds": 73224,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/host-attestation.test.ts",
+          "hash": "sha256:02051fe169afb57da7609b08c5e407abe27b542e9bcc72a4bfb6fbfa29344de9",
+          "freshness_seconds": 73197,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "packages/engine/src/contracts.ts",
+          "hash": "sha256:2680a0eef7efa2c6a46c98721089c4fab6f82a2ab57a8cfcc411182c8a87c4e0",
+          "freshness_seconds": 22325,
+          "kind": "gate",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": ".github/workflows/quality.yml",
+          "hash": "sha256:b9955ee304a865edac57c7d93713634ef992b3c87df9f49036c4e2a03825eb99",
+          "freshness_seconds": 5013,
+          "kind": "ci",
+          "passed": true,
+          "finding": ""
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "d12",
+      "label": "Symlink Protection",
+      "severity": "High",
+      "score": 7,
+      "maxScore": 7,
+      "status": "pass",
+      "evidence_items": [
+        {
+          "uri": "automation/host-attestation.ts",
+          "hash": "sha256:996e7d590541f73aa5f2598dff9d41260bedd647e522bb4bf80f0cfa9210ca0d",
+          "freshness_seconds": 73224,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/host-attestation.test.ts",
+          "hash": "sha256:02051fe169afb57da7609b08c5e407abe27b542e9bcc72a4bfb6fbfa29344de9",
+          "freshness_seconds": 73197,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/host-attestation.test.ts",
+          "hash": "sha256:02051fe169afb57da7609b08c5e407abe27b542e9bcc72a4bfb6fbfa29344de9",
+          "freshness_seconds": 73197,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": ".github/workflows/quality.yml",
+          "hash": "sha256:b9955ee304a865edac57c7d93713634ef992b3c87df9f49036c4e2a03825eb99",
+          "freshness_seconds": 5013,
+          "kind": "ci",
+          "passed": true,
+          "finding": ""
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "d13",
+      "label": "Schema Validation Rigor",
+      "severity": "Medium",
+      "score": 10,
+      "maxScore": 10,
+      "status": "pass",
+      "evidence_items": [
+        {
+          "uri": "schemas/",
+          "hash": "sha256:362a31af373550642b45cccf4f1277859310ada9f1aaf63c48cd7acfc91de86b",
+          "freshness_seconds": 6720,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/agent_quality.py",
+          "hash": "sha256:756b51a41e3cf8d3b694239d0ea511611393f552fa37291692fb169f9b8a4890",
+          "freshness_seconds": 130724,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/test-artifact-schemas.py",
+          "hash": "sha256:4ba246ee1cdf82ab9334212637987f4b902b39cf273e85e86df242863c80c772",
+          "freshness_seconds": 6679,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/agent_quality.py",
+          "hash": "sha256:756b51a41e3cf8d3b694239d0ea511611393f552fa37291692fb169f9b8a4890",
+          "freshness_seconds": 130724,
+          "kind": "gate",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": ".github/workflows/quality.yml",
+          "hash": "sha256:b9955ee304a865edac57c7d93713634ef992b3c87df9f49036c4e2a03825eb99",
+          "freshness_seconds": 5013,
+          "kind": "ci",
+          "passed": true,
+          "finding": ""
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "d14",
+      "label": "C4 Visualization Maturity",
+      "severity": "Low",
+      "score": 10,
+      "maxScore": 10,
+      "status": "pass",
+      "evidence_items": [
+        {
+          "uri": "packages/control-plane/src/routes/c4.ts",
+          "hash": "sha256:4b5499277b5cc70e59217ef2b819c67dac7ce9060b089659e4fbfdd9cb363f15",
+          "freshness_seconds": 5968,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "packages/control-plane/src/client/pages/C4.tsx",
+          "hash": "sha256:51c96a4539cb47b3ad3d3cf0e66b57a1e7fda005fb571e3322b973baa3761c73",
+          "freshness_seconds": 22887,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "packages/control-plane/tests/c4.test.ts",
+          "hash": "sha256:75ae22d6fa04d2873480412906f7840f1e5b389a5a62f6f638f4050b67186a0d",
+          "freshness_seconds": 22887,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "packages/control-plane/vitest.config.ts",
+          "hash": "sha256:ee5e5979502bec720397cfd1f70cb504083f8d2b166e084ec349d8a6402f35f7",
+          "freshness_seconds": 130724,
+          "kind": "gate",
+          "passed": true,
+          "finding": ""
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "d15",
+      "label": "Multi-Platform Support",
+      "severity": "Medium",
+      "score": 10,
+      "maxScore": 10,
+      "status": "pass",
+      "evidence_items": [
+        {
+          "uri": "platforms/",
+          "hash": "sha256:8fe77e685affb31563d7ef2826205d10fd8ab65624ab8891ef57ff624e32219f",
+          "freshness_seconds": 21739,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "platforms/platform-contracts.json",
+          "hash": "sha256:15a9c8181a28a56093ffb0ddd048f826321f9d84f55e7333fb2f741f16637245",
+          "freshness_seconds": 130724,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "platforms/opencode/adapter.test.ts",
+          "hash": "sha256:761c1ae1190746483b3333f9e6245fc079a7030904ad0c5b681f77157c790dcb",
+          "freshness_seconds": 21750,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/ci-certify.sh",
+          "hash": "sha256:027ef8d2b5a86e064ebeadc9ed7b1e107024f9f1e8256cb8f69777c5101f3f40",
+          "freshness_seconds": 22325,
+          "kind": "gate",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": ".github/workflows/certification.yml",
+          "hash": "sha256:13342be307574b4374fd723c35a74035122bdf4fc3efdbbb856e2fe9112ef6fa",
+          "freshness_seconds": 20245,
+          "kind": "ci",
+          "passed": true,
+          "finding": ""
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "d16",
+      "label": "API Security Posture",
+      "severity": "Critical",
+      "score": 7,
+      "maxScore": 7,
+      "status": "pass",
+      "evidence_items": [
+        {
+          "uri": "packages/control-plane/src/middleware/",
+          "hash": "sha256:8eb6918ad68c3ca0140f6755cdb0c873679721bd8d59da37bf15f0c820493c3e",
+          "freshness_seconds": 130724,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "packages/control-plane/src/routes/",
+          "hash": "sha256:c01f6aef05cec221616a9ea89bef0c8dc7ad9ced2756f39074e86afb76743741",
+          "freshness_seconds": 22325,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "packages/control-plane/tests/",
+          "hash": "sha256:682d6e49310939ab0e0d5bca44920be962d83d4c06240b0912436d05fd9162b0",
+          "freshness_seconds": 22887,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "schemas/policy-approval.schema.json",
+          "hash": "sha256:c83a93ae0b329493a800bf7e7fa22b4c640ac300b3b6155ddeb85f53bcc0673c",
+          "freshness_seconds": 130724,
+          "kind": "gate",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": ".github/workflows/quality.yml",
+          "hash": "sha256:b9955ee304a865edac57c7d93713634ef992b3c87df9f49036c4e2a03825eb99",
+          "freshness_seconds": 5013,
+          "kind": "ci",
+          "passed": true,
+          "finding": ""
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "d17",
+      "label": "Telemetry & Monitoring",
+      "severity": "Medium",
+      "score": 10,
+      "maxScore": 10,
+      "status": "pass",
+      "evidence_items": [
+        {
+          "uri": "evals/telemetry/",
+          "hash": "sha256:cd3554e77768f608a491bbd225eeec79605f91997180bd852b4d6ce68663a90e",
+          "freshness_seconds": 22325,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "evals/fixtures/telemetry.schema.json",
+          "hash": "sha256:a93d3dd82af68b23b26a2b4501187de13eda1e3e79a7e9159e319e038f2b0f3e",
+          "freshness_seconds": 22325,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "evals/conformance/telemetry.test.ts",
+          "hash": "sha256:da6c1a7fcffb46d532acf9758f5f478345d4261d85fced464a7e1464f5a6e43c",
+          "freshness_seconds": 130724,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/agent_quality.py",
+          "hash": "sha256:756b51a41e3cf8d3b694239d0ea511611393f552fa37291692fb169f9b8a4890",
+          "freshness_seconds": 130724,
+          "kind": "gate",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": ".github/workflows/quality.yml",
+          "hash": "sha256:b9955ee304a865edac57c7d93713634ef992b3c87df9f49036c4e2a03825eb99",
+          "freshness_seconds": 5013,
+          "kind": "ci",
+          "passed": true,
+          "finding": ""
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": "d18",
+      "label": "Release Readiness",
+      "severity": "High",
+      "score": 7,
+      "maxScore": 7,
+      "status": "pass",
+      "evidence_items": [
+        {
+          "uri": "package.json",
+          "hash": "sha256:801e5590618f0a8601d7a9975b0a585d1e62dbd6c15211019daab9d4b5382bd0",
+          "freshness_seconds": 22325,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": ".github/workflows/quality.yml",
+          "hash": "sha256:b9955ee304a865edac57c7d93713634ef992b3c87df9f49036c4e2a03825eb99",
+          "freshness_seconds": 5013,
+          "kind": "source",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/ci-certify.sh",
+          "hash": "sha256:027ef8d2b5a86e064ebeadc9ed7b1e107024f9f1e8256cb8f69777c5101f3f40",
+          "freshness_seconds": 22325,
+          "kind": "test",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": ".github/workflows/certification.yml",
+          "hash": "sha256:13342be307574b4374fd723c35a74035122bdf4fc3efdbbb856e2fe9112ef6fa",
+          "freshness_seconds": 20245,
+          "kind": "gate",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "packages/cli/package.json",
+          "hash": "sha256:9b0751ef02a42f4b3b472a581507afd17bc0daaff5a87a2d65f0b793ab5b53d2",
+          "freshness_seconds": 130724,
+          "kind": "install",
+          "passed": true,
+          "finding": ""
+        },
+        {
+          "uri": "automation/09-doctor.ps1",
+          "hash": "sha256:7fc7220c6a2e5da02d182088858e1e57c42f65eba8ca7131bb962c82e9429f79",
+          "freshness_seconds": 2573,
+          "kind": "doctor",
+          "passed": true,
+          "finding": ""
+        }
+      ],
+      "findings": []
+    }
+  ]
+}

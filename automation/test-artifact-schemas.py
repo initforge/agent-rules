@@ -26,7 +26,7 @@ KNOWN_PREFIXES = sorted([
     "agent", "assignment", "capability", "claim-evidence", "context",
     "decision", "delegation", "evidence", "intent", "model-route",
     "model-routing", "plan", "policy-approval", "profile", "requirement",
-    "run-state", "telemetry",
+    "run-state", "scorecard-evidence", "telemetry",
 ], key=lambda p: -len(p))
 
 
@@ -56,6 +56,7 @@ def fixture_prefix_to_schema(prefix: str) -> str:
         "policy-approval": "policy-approval",
         "profile": "profile-manifest",
         "run-state": "run-state",
+        "scorecard-evidence": "scorecard-evidence",
         "telemetry": "telemetry-event",
     }
     return mapping.get(prefix, prefix)

@@ -218,7 +218,7 @@ def run_isolated_install_test() -> None:
             "AGENT_RULES_SKIP_INTEGRATION_INSTALL": "1",
             "AGENT_RULES_SKIP_INTEGRATION_VERIFY": "1",
         })
-        command = [shell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "automation/02-install-runtime.ps1"), "-Platform", "all"]
+        command = [shell, "-NoProfile", "-File", str(ROOT / "automation/02-install-runtime.ps1"), "-Platform", "all"]
         result = subprocess.run(command, cwd=ROOT, env=env, capture_output=True, text=True, timeout=180)
         output = result.stdout + "\n" + result.stderr
         if result.returncode != 0: fail(f"isolated installer/doctor returned {result.returncode}: {output[-3000:]}")

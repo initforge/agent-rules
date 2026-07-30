@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "plan_id": "agent-rules-harness-v3-rearchitecture-20260726-r1",
+  "amendment_id": "AM-0014",
+  "status": "OWNER_APPROVED_PENDING_ACTIVATION",
+  "source_kind": "owner-chat",
+  "captured_at": "2026-07-29T00:00:00.000Z",
+  "original": {
+    "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/original.md",
+    "sha256": "1e1b06e7388c49b076111fc8edf4878407991f269d656b0dc1c7c5dbaeace26b"
+  },
+  "amendment": {
+    "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0014-clustered-native-swarm-and-resource-safety.md",
+    "sha256": "14ef202ff45ee443d4d9301d71bd223ddda06df59f4d56fb0429f6daac3c60ab"
+  },
+  "prior_amendments": [
+    {
+      "amendment_id": "AM-0012",
+      "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0012-native-swarm-artifact-handoff-and-fitness-closure.md",
+      "sha256": "e21bb21b6898cb2f6f37a58c47db0c07ade9701e18081c3e2023b5a0e5698daf"
+    },
+    {
+      "amendment_id": "AM-0013",
+      "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0013-rolling-wavefront-critical-path-pipeline.md",
+      "sha256": "707a39e3760b6445ee51d40926865c9bf0dd3544f044929597994513cebd64e6"
+    }
+  ],
+  "audit": {
+    "path": ".agent/audits/agent-rules-harness-v3-rearchitecture-20260726-r1/2026-07-29-cluster-and-resource-ground-truth.md",
+    "sha256": "67d050b2a261f8dcfc0bf213152ec074573717ed58ef87ac2f1cf24d0f05abf4"
+  },
+  "handoff": {
+    "path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/continue-from-am0014-clustered-native-swarm.md",
+    "sha256": "f4384bc59e1c18dd6b3c470041bd07461444c7b0105cfdf348ec073488d038b2"
+  },
+  "claude_scaffold_prompt": {
+    "path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/claude-code-context-scaffold-prompt.md",
+    "sha256": "974389a434c8a99599cb0371919c00f70a2ec36769a849dc271f44d225db42fd"
+  },
+  "claude_implementation_prompt": {
+    "path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/claude-code-implementation-prompt.md",
+    "sha256": "70e94789574883cd827e44a1db2544c8733c92d1c8685d5683cb0cf45cede446"
+  },
+  "observed_topology": {
+    "worktrees": 1,
+    "local_branches": 1,
+    "remote_branches": [
+      "main"
+    ],
+    "canonical_ledger_revision": 46,
+    "canonical_ledger_execution_state": "NEEDS_REMEDIATION",
+    "canonical_ledger_chain_tip": "AM-0011"
+  },
+  "repository_baselines": {
+    "canonical_main": "0000000000000000000000000000000000000000",
+    "active_integration": "0000000000000000000000000000000000000000"
+  },
+  "activation_rule": "Minimal fixture rule."
+}

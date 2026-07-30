@@ -641,10 +641,19 @@ $schema: "${DRAFT_07_SCHEMA_URI}"
       'nested/foo.schema.yaml': `${draftHeader}$ref: "FOO.schema.yaml"\n`,
       'nested/FOO.schema.yaml': `${draftHeader}type: object\n`,
     });
-    expect(() => runtime(root)).toThrowError(expect.objectContaining({
-      code: 'INVALID_SCHEMA_PATH',
-      details: ['nested/FOO.schema.yaml', 'nested/foo.schema.yaml'],
-    }));
+    const nestedEntries = fs.readdirSync(path.join(root, 'nested'));
+    if (nestedEntries.includes('FOO.schema.yaml') && nestedEntries.includes('foo.schema.yaml')) {
+      expect(() => runtime(root)).toThrowError(expect.objectContaining({
+        code: 'INVALID_SCHEMA_PATH',
+        details: ['nested/FOO.schema.yaml', 'nested/foo.schema.yaml'],
+      }));
+    } else {
+      // A case-insensitive checkout cannot represent both entries; the
+      // filesystem has already collapsed the collision before the runtime can
+      // inspect it. The portable path policy still rejects the pair whenever
+      // both entries are representable.
+      expect(() => runtime(root)).not.toThrow();
+    }
   });
 
   it('rejects exact duplicate schema IDs as well as case variants', () => {

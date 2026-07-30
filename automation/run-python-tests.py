@@ -12,6 +12,10 @@ TESTS = [
     ("test-platform-contracts.py", []),
     ("test-skill-gate-stack.py", []),
     ("test-select-verification.py", []),
+    # Installer trust-boundary checks are a required CI gate, not an advisory
+    # local-only fixture.
+    ("test-installer-trust-boundary.py", []),
+    ("test-installer-staging.py", []),
 ]
 
 HERE = os.path.dirname(os.path.abspath(__file__))

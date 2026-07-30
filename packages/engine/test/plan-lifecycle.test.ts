@@ -250,6 +250,17 @@ describe('lockFile', () => {
     expect(lock2.fd).toBeGreaterThanOrEqual(0);
     lock2.unlock();
   });
+
+  it('rejects symlink at lock path (O_NOFOLLOW)', () => {
+    const dir = tmpDir();
+    const lockTarget = path.join(dir, 'data.json');
+    const fakeLock = path.join(dir, 'data.json.lock');
+    const outside = path.join(dir, 'outside');
+    fs.writeFileSync(outside, '');
+    fs.symlinkSync(outside, fakeLock);
+    // lockFile uses O_EXCL|O_NOFOLLOW — existing symlink causes EEXIST
+    expect(() => lockFile(lockTarget)).toThrow();
+  });
 });
 
 describe('lockDirectory', () => {
@@ -266,6 +277,16 @@ describe('lockDirectory', () => {
     const lock2 = lockDirectory(dir);
     expect(lock2.fd).toBeGreaterThanOrEqual(0);
     lock2.unlock();
+  });
+
+  it('rejects symlink at lock path (O_NOFOLLOW)', () => {
+    const dir = tmpDir();
+    const lockPath = path.join(dir, '.lock');
+    const outside = path.join(dir, 'outside');
+    fs.writeFileSync(outside, '');
+    fs.symlinkSync(outside, lockPath);
+    // lockDirectory uses O_EXCL|O_NOFOLLOW — existing symlink causes EEXIST
+    expect(() => lockDirectory(dir)).toThrow();
   });
 });
 

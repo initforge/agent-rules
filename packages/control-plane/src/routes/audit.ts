@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import * as auditService from '../services/audit';
-import { apiError } from '../services/safety';
+import * as auditService from '../services/audit.js';
+import { apiError } from '../services/safety.js';
 
 const router = Router();
 
