@@ -1,21 +1,18 @@
 import { Router, type Response } from 'express';
 import fs from 'fs';
 import path from 'path';
-import * as writer from '../services/writer.js';
-import * as differ from '../services/differ.js';
-import * as validator from '../services/validator.js';
-import * as audit from '../services/audit.js';
-import { computeDiff } from '../services/differ.js';
-import { safeResolve, checkCanonicalAllowlist, checkMutationAllowlist } from '../services/safety.js';
+import * as reader from '../services/reader';
+import * as writer from '../services/writer';
+import * as differ from '../services/differ';
+import * as validator from '../services/validator';
+import * as audit from '../services/audit';
+import { computeDiff } from '../services/differ';
+import { safeResolve } from '../services/safety';
 
 const router = Router();
 
 function apiError(res: Response, code: number, err: unknown): void {
   if (err instanceof Error && err.message.includes('Path traversal')) {
-    res.status(403).json({ ok: false, error: 'Forbidden' });
-    return;
-  }
-  if (err instanceof Error && err.message.includes('allowlist')) {
     res.status(403).json({ ok: false, error: 'Forbidden' });
     return;
   }
@@ -29,7 +26,6 @@ router.post('/diff', (req, res) => {
       res.status(400).json({ ok: false, error: 'filePath and content required' });
       return;
     }
-    checkCanonicalAllowlist(fp);
     const fullPath = safeResolve(fp);
     const oldContent = fs.readFileSync(fullPath, 'utf-8');
     const diff = computeDiff(oldContent, content, fp);
@@ -46,7 +42,7 @@ router.post('/preview', (req, res) => {
       res.status(400).json({ ok: false, error: 'filePath and data required' });
       return;
     }
-    checkCanonicalAllowlist(fp);
+
     const fullPath = safeResolve(fp);
     const currentRawStr = fs.readFileSync(fullPath, 'utf-8');
     const newRaw = writer.serializeForFile(fp, data);
@@ -65,7 +61,6 @@ router.post('/apply', async (req, res) => {
       res.status(400).json({ ok: false, error: 'filePath and data required' });
       return;
     }
-    checkMutationAllowlist(fp);
 
     const validation = validator.validateAgainstSchema(fp, data);
     if (!validation.valid) {
@@ -111,7 +106,6 @@ router.post('/rollback', async (req, res) => {
       res.status(400).json({ ok: false, error: 'backupPath and targetPath required' });
       return;
     }
-    checkMutationAllowlist(targetPath);
     safeResolve(targetPath);
     const ok = writer.rollback(backupPath, targetPath);
     if (!ok) {

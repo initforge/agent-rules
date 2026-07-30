@@ -10,7 +10,7 @@ Baseline SHA: da6ab4d (HEAD before cleanup)
 |---|--------|------|---------|--------|
 | C-01 | Control plane | runs.ts, audit.ts | Error details leak to clients | Add apiError sanitization |
 | C-02 | Automation | test-artifact-schemas.py:37-44 | Prefix collision: model-routing fixtures validated against wrong schema | Fix prefix extraction |
-| C-03 | CI | quality.yml | Stale validate.log artifact — file never created | Remove artifact or write log |
+| C-03 | CI | static.yml:104-109 | Stale validate.log artifact — file never created | Remove artifact or write log |
 
 ## HIGH findings
 
@@ -20,7 +20,7 @@ Baseline SHA: da6ab4d (HEAD before cleanup)
 | H-02 | Platform | generated/runtime-build/*/docs/06-platform-capability.md:30 | Stale: says "planned" should be "partial" | Rebuild runtime |
 | H-03 | CI | evaluation.yml:108-124 | Suite selector incomplete — route-conformance has no if conditional | Add conditional |
 | H-04 | Automation | build-context-graph.ps1:42-57 | Silent Python/yaml dependency corrupts graph | Add pre-check, surface as hard error |
-| H-05 | Automation | CI quality.yml | pyyaml not installed for build-context-graph | Add pip install pyyaml |
+| H-05 | Automation | CI static.yml | pyyaml not installed for build-context-graph | Add pip install pyyaml |
 | H-06 | Control plane | safety.ts, auth.ts | Zero test coverage | Add tests |
 | H-07 | Control plane | safety.ts vs reader.ts | Duplicate root-resolution logic | Export ROOT from safety.ts |
 
@@ -38,7 +38,7 @@ Baseline SHA: da6ab4d (HEAD before cleanup)
 | M-08 | Control plane | mutation.ts:65,74 | Double safeResolve with discarded first result | Reuse result |
 | M-09 | Control plane | config.ts:69-75 | safePath computed but unused for JSON/YAML | Pass to reader or remove |
 | M-10 | Control plane | db/schema.ts | Dead SQL schema code, never imported | Remove or integrate |
-| M-11 | CI | quality.yml | Automation scripts execute out of order | Reorder to 01→03→04 |
+| M-11 | CI | static.yml:97-99 | Automation scripts execute out of order | Reorder to 01→03→04 |
 | M-12 | Control plane | test-artifact-schemas.py | plan-decision-supersedes-nonexistent fixture | Update or remove |
 
 ## LOW findings (documentation, drift)
@@ -47,7 +47,7 @@ Baseline SHA: da6ab4d (HEAD before cleanup)
 |---|--------|------|---------|
 | L-01 | CI | All workflows | Actions pinned to mutable semver tags |
 | L-02 | CI | evaluation.yml | Build artifact never consumed |
-| L-03 | CI | quality.yml, certification.yml | Duplicate test execution across jobs |
+| L-03 | CI | static.yml, evaluation.yml | Duplicate test execution across jobs |
 | L-04 | Platform | platforms/README.md:18 | Ambiguous install script path |
 | L-05 | Evals | schemas/fixtures/positive/ | 25 positive vs 24 negative fixtures |
 | L-06 | Skills | schemas/README.md | evidence vs claim-evidence boundary undocumented |

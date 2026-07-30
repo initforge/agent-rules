@@ -1,4 +1,4 @@
-import { addAudit, getStore } from '../db/index.js';
+import { addAudit, getStore } from '../db';
 
 export interface AuditEvent {
   id?: number;

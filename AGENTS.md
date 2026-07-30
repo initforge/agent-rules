@@ -16,7 +16,7 @@ npm run test
 
 | Path | Owner | Purpose |
 |------|-------|---------|
-| `.github/workflows/` | harness-maintainer | CI/CD (quality.yml = required gate, certification.yml = native-only advisory) |
+| `.github/workflows/` | harness-maintainer | CI/CD (static.yml = required gate) |
 | `rules/` | harness-maintainer | Always-loaded global context (lean) |
 | `skills/` | harness-maintainer | Lazy-loaded capability workflows |
 | `schemas/` | harness-maintainer | Canonical portable artifact schemas |

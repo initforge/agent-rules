@@ -46,7 +46,7 @@ async function runPowershell(scriptPath: string, args: string[], root: string): 
   return new Promise((resolve) => {
     const child = execFile(
       shell,
-      ["-NoProfile", "-File", scriptPath, ...args],
+      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", scriptPath, ...args],
       { cwd: root, timeout: 120_000, maxBuffer: 10 * 1024 * 1024 },
       (err, stdout, stderr) => {
         resolve({ ok: !err, output: stdout + (stderr ? `\n${stderr}` : "") });

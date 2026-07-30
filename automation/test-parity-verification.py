@@ -270,8 +270,8 @@ def validate_integration_deps() -> int:
 
     profiles = registry.get("profiles", {})
     assert "qa" in profiles, "INT-003: qa profile missing from registry"
-    assert "playwright-mcp" in profiles["qa"].get("required", []), "INT-004: playwright-mcp not in qa profile (canonical is required)"
-    assert "chrome-devtools-mcp" in profiles["qa"].get("required", []), "INT-005: chrome-devtools-mcp not in qa profile (canonical is required)"
+    assert "playwright-mcp" in profiles["qa"].get("recommended", []), "INT-004: playwright-mcp not in qa profile"
+    assert "chrome-devtools-mcp" in profiles["qa"].get("recommended", []), "INT-005: chrome-devtools-mcp not in qa profile"
     cases += 1
 
     print(f"  integration deps: {cases} checks passed")

@@ -35,33 +35,14 @@ export class Controller {
 
   constructor(ledgerPath: string) {
     this.ledgerPath = path.resolve(ledgerPath);
-    try {
-      const fd = fs.openSync(this.ledgerPath, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
-      let raw: string;
-      try {
-        const st = fs.fstatSync(fd);
-        if (!st.isFile()) throw new Error('Controller: ledger path is not a regular file');
-        const size = st.size;
-        const buf = Buffer.allocUnsafeSlow(size);
-        let off = 0;
-        while (off < size) {
-          const n = fs.readSync(fd, buf, off, size - off, off);
-          if (n === 0) throw new Error('Controller: unexpected EOF on ledger');
-          off += n;
-        }
-        raw = new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(buf));
-      } finally {
-        fs.closeSync(fd);
-      }
-      const parsed = JSON.parse(raw) as WorkLedger;
-      this.ledger = parsed;
-      for (const assignment of parsed.assignments) {
+    if (fs.existsSync(this.ledgerPath)) {
+      const raw = JSON.parse(fs.readFileSync(this.ledgerPath, 'utf-8')) as WorkLedger;
+      this.ledger = raw;
+      for (const assignment of raw.assignments) {
         this.taskStates.set(assignment.assignmentId, 'PENDING');
       }
-      this.receipts = [...parsed.receipts];
-      this.revision = parsed.shadowRevision;
-    } catch {
-      // File doesn't exist or is not a regular file — ledger stays null
+      this.receipts = [...raw.receipts];
+      this.revision = raw.shadowRevision;
     }
   }
 
@@ -171,42 +152,14 @@ export class Controller {
     };
 
     const stateDir = path.join(path.dirname(this.ledgerPath), '.controller');
-    // lstat-walked mkdir (no recursive:true that follows symlinks)
-    {
-      const isAbs = path.isAbsolute(stateDir);
-      const parts = stateDir.split(/[\\/]/).filter(Boolean);
-      let cur = isAbs ? parts.shift()! : '.';
-      if (isAbs) cur = `/${cur}`;
-      for (const part of parts) {
-        cur = path.join(cur, part);
-        try {
-          const lst = fs.lstatSync(cur);
-          if (lst.isSymbolicLink()) throw new Error(`Controller: symlink in stateDir chain: ${cur}`);
-          if (!lst.isDirectory()) throw new Error(`Controller: exists but not a directory: ${cur}`);
-        } catch (e2: any) {
-          if (e2.code !== 'ENOENT') throw e2;
-          fs.mkdirSync(cur, { mode: 0o700 });
-        }
-      }
-    }
+    fs.mkdirSync(stateDir, { recursive: true });
 
     const snapshotBytes = new TextEncoder().encode(JSON.stringify(snapshot, null, 2));
     const snapshotSha = sha256Bytes(snapshotBytes);
     const revisionStr = String(this.revision).padStart(10, '0');
     const filename = `checkpoint-${revisionStr}-${snapshotSha.slice(0, 16)}.json`;
     const filepath = path.join(stateDir, filename);
-    const fd = fs.openSync(filepath, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_TRUNC | fs.constants.O_NOFOLLOW, 0o600);
-    try {
-      let off = 0;
-      while (off < snapshotBytes.length) {
-        const n = fs.writeSync(fd, snapshotBytes, off, snapshotBytes.length - off);
-        if (n === 0) throw new Error('Controller: checkpoint write returned 0');
-        off += n;
-      }
-      fs.fsyncSync(fd);
-    } finally {
-      fs.closeSync(fd);
-    }
+    fs.writeFileSync(filepath, snapshotBytes);
     return revisionStr;
   }
 
@@ -223,48 +176,16 @@ export class Controller {
     }
 
     const filepath = path.join(stateDir, checkpointFile);
-    const fd = fs.openSync(filepath, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
-    let raw: string;
-    try {
-      const st = fs.fstatSync(fd);
-      const size = st.size;
-      const buf = Buffer.allocUnsafeSlow(size);
-      let off = 0;
-      while (off < size) {
-        const n = fs.readSync(fd, buf, off, size - off, off);
-        if (n === 0) throw new Error('Controller: resume checkpoint EOF');
-        off += n;
-      }
-      raw = new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(buf));
-    } finally {
-      fs.closeSync(fd);
-    }
-    const snapshot = JSON.parse(raw) as ControllerSnapshot;
+    const raw = JSON.parse(fs.readFileSync(filepath, 'utf-8')) as ControllerSnapshot;
 
-    this.checkpointState = snapshot.checkpointState;
-    this.taskStates = new Map(Object.entries(snapshot.taskStates));
-    this.runningAssignments = new Set(snapshot.runningAssignments);
-    this.receipts = snapshot.receipts;
-    this.revision = snapshot.revision;
+    this.checkpointState = raw.checkpointState;
+    this.taskStates = new Map(Object.entries(raw.taskStates));
+    this.runningAssignments = new Set(raw.runningAssignments);
+    this.receipts = raw.receipts;
+    this.revision = raw.revision;
 
-    try {
-      const ldFd = fs.openSync(this.ledgerPath, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
-      try {
-        const st = fs.fstatSync(ldFd);
-        const size = st.size;
-        const buf = Buffer.allocUnsafeSlow(size);
-        let off = 0;
-        while (off < size) {
-          const n = fs.readSync(ldFd, buf, off, size - off, off);
-          if (n === 0) throw new Error('Controller: resume ledger EOF');
-          off += n;
-        }
-        this.ledger = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(buf))) as WorkLedger;
-      } finally {
-        fs.closeSync(ldFd);
-      }
-    } catch {
-      // Ledger missing or unreadable — that's ok
+    if (fs.existsSync(this.ledgerPath)) {
+      this.ledger = JSON.parse(fs.readFileSync(this.ledgerPath, 'utf-8')) as WorkLedger;
     }
   }
 

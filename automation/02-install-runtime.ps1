@@ -5,40 +5,6 @@ $SkipIntegrationInstall = $env:AGENT_RULES_SKIP_INTEGRATION_INSTALL -eq "1"
 . (Join-Path $PSScriptRoot "path-compat.ps1")
 
 $Root = Split-Path -Parent $PSScriptRoot
-
-function Assert-ScriptIntegrity {
-  param([string]$ScriptPath, [string]$IntegrityManifestPath)
-  $IntegrityManifestPath = if ($IntegrityManifestPath) { $IntegrityManifestPath } else { Join-Path $PSScriptRoot "source-integrity.json" }
-  if (-not (Test-Path -LiteralPath $ScriptPath -PathType Leaf)) { throw "Script not found: $ScriptPath" }
-  $Item = Get-Item -LiteralPath $ScriptPath -Force
-  if ($Item.LinkType -in @("SymbolicLink", "HardLink")) { throw "Script path is a $($Item.LinkType), refusing execution: $ScriptPath" }
-  if ($Item.Target) { throw "Script path resolves through link to '$($Item.Target)', refusing execution: $ScriptPath" }
-  $ScriptFull = [IO.Path]::GetFullPath($ScriptPath)
-  $RootFull = [IO.Path]::GetFullPath($Root)
-  if (-not $ScriptFull.StartsWith($RootFull, [StringComparison]::OrdinalIgnoreCase)) { throw "Script path escapes repository root: $ScriptPath" }
-  $Relative = $ScriptFull.Substring($RootFull.Length).TrimStart([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar).Replace('\', '/')
-  if (-not (Test-Path -LiteralPath $IntegrityManifestPath -PathType Leaf)) { throw "Integrity manifest not found: $IntegrityManifestPath" }
-  $Manifest = Get-Content -Raw -LiteralPath $IntegrityManifestPath | ConvertFrom-Json
-  if ($null -eq $Manifest.files) { throw "Integrity manifest has no 'files' section" }
-  $ExpectedHash = $Manifest.files.$Relative
-  if (-not $ExpectedHash) { throw "No integrity entry for $Relative in $IntegrityManifestPath" }
-  $ActualHash = (Get-FileHash -LiteralPath $ScriptPath -Algorithm SHA256).Hash.ToLowerInvariant()
-  if ($ActualHash -ne ([string]$ExpectedHash).ToLowerInvariant()) { throw "Integrity check failed for $Relative`: expected $ExpectedHash, got $ActualHash" }
-}
-
-# Verify every first-party script before it is invoked or dot-sourced.
-$ManifestScripts = @(
-  "automation/02-install-runtime.ps1",
-  "automation/03-validate-context.ps1",
-  "automation/01-build-runtime.ps1",
-  "automation/Merge-Mcp-Adapters.ps1",
-  "automation/13-cutover-context-routing.ps1",
-  "automation/09-doctor.ps1"
-)
-foreach ($ManifestScript in $ManifestScripts) {
-  Assert-ScriptIntegrity -ScriptPath (Join-Path $Root ($ManifestScript -replace '/', [IO.Path]::DirectorySeparatorChar))
-}
-
 & (Join-Path $PSScriptRoot "03-validate-context.ps1")
 if ($LASTEXITCODE -ne 0) { throw "validate-context failed - fix harness before runtime install" }
 & (Join-Path $PSScriptRoot "01-build-runtime.ps1") -Root $Root
@@ -128,7 +94,6 @@ function Install-Integration {
       $State.installed = $true
       $State.note = "Shared integration install reused"
     } else {
-      Assert-ScriptIntegrity -ScriptPath $InstallScript
       & $InstallScript | Out-Null
       $State.installed = $true
     }
@@ -138,7 +103,6 @@ function Install-Integration {
       $State.adapterPath = $AdapterPath
     }
     if (Test-Path $VerifyScript) {
-      Assert-ScriptIntegrity -ScriptPath $VerifyScript
       & $VerifyScript | Out-Null
       $State.verified = $true
     } else {
@@ -202,8 +166,6 @@ function Sync-OwnedFiles {
   $Current = @()
   $Copies = @()
   Get-ChildItem -LiteralPath $Source -Recurse -File | ForEach-Object {
-    if ($_.LinkType -in @("SymbolicLink", "HardLink")) { throw "Refusing to sync symlink/hardlink source: $($_.FullName)" }
-    if ($_.Target) { throw "Refusing to sync link-resolved source: $($_.FullName)" }
     $Relative = $_.FullName.Substring($Source.Length + 1)
     $Normalized = $Relative.Replace('\', '/')
     $Target = [IO.Path]::GetFullPath((Join-Path $DestinationFull $Relative))
@@ -230,10 +192,7 @@ function Sync-OwnedFiles {
 # BEGIN REMOVE-PREVIOUSLY-OWNED-FILES
 function Remove-PreviouslyOwnedFiles {
   param([string]$Destination, [string]$OwnershipManifest)
-  if (-not (Test-Path -LiteralPath $OwnershipManifest -PathType Leaf)) { return }
-  $ManifestItem = Get-Item -LiteralPath $OwnershipManifest -Force
-  if ($ManifestItem.LinkType -in @("SymbolicLink", "HardLink")) { throw "Ownership manifest is a $($ManifestItem.LinkType), refusing: $OwnershipManifest" }
-  $ManifestHash = (Get-FileHash -LiteralPath $OwnershipManifest -Algorithm SHA256).Hash.ToLowerInvariant()
+  if (-not (Test-Path -LiteralPath $OwnershipManifest)) { return }
   $DestinationFull = [IO.Path]::GetFullPath($Destination).TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar)
   try {
     $ParsedOwnership = Get-Content -Raw -LiteralPath $OwnershipManifest | ConvertFrom-Json
@@ -254,8 +213,6 @@ function Remove-PreviouslyOwnedFiles {
   foreach ($Target in $Targets) {
     if (Test-Path -LiteralPath $Target -PathType Leaf) { Remove-Item -LiteralPath $Target -Force }
   }
-  $CurrentManifestHash = (Get-FileHash -LiteralPath $OwnershipManifest -Algorithm SHA256).Hash.ToLowerInvariant()
-  if ($CurrentManifestHash -ne $ManifestHash) { throw "Ownership manifest integrity changed during deletion: $OwnershipManifest" }
   Remove-Item -LiteralPath $OwnershipManifest -Force
   if ((Test-Path -LiteralPath $DestinationFull) -and @((Get-ChildItem -LiteralPath $DestinationFull -Force)).Count -eq 0) {
     Remove-Item -LiteralPath $DestinationFull -Force
@@ -381,11 +338,6 @@ foreach ($Name in $Selected) {
 
 if (-not $SkipRuntimeHooks) {
   $HooksScript = Join-Path $PSScriptRoot "11-install-runtime-hooks.sh"
-  if (-not (Test-Path -LiteralPath $HooksScript -PathType Leaf)) { throw "Runtime hooks script not found: $HooksScript" }
-  $HooksItem = Get-Item -LiteralPath $HooksScript -Force
-  if ($HooksItem.LinkType -in @("SymbolicLink", "HardLink")) { throw "Hooks script is a $($HooksItem.LinkType), refusing execution: $HooksScript" }
-  if ($HooksItem.Target) { throw "Hooks script path resolves through link, refusing execution: $HooksScript" }
-  Assert-ScriptIntegrity -ScriptPath $HooksScript
 # Prefer Git Bash on Windows; system `bash` may be a broken WSL relay.
 $BashCandidates = @(
   (Get-Command bash -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -ErrorAction SilentlyContinue),

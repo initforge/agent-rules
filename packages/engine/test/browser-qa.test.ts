@@ -16,55 +16,6 @@ const CLIENT_INDEX = path.join(CP_DIR, 'dist', 'client', 'index.html');
 let serverProc: ChildProcess | undefined;
 let serverLog = '';
 
-const SERVER_STARTUP_TIMEOUT_MS = 30_000;
-const SERVER_SHUTDOWN_TIMEOUT_MS = 5_000;
-
-function waitForProcessExit(proc: ChildProcess, timeoutMs: number): Promise<boolean> {
-  if (proc.exitCode !== null) return Promise.resolve(true);
-
-  return new Promise(resolve => {
-    const timer = setTimeout(() => {
-      proc.removeListener('exit', onExit);
-      resolve(proc.exitCode !== null);
-    }, timeoutMs);
-    const onExit = () => {
-      clearTimeout(timer);
-      resolve(true);
-    };
-    proc.once('exit', onExit);
-  });
-}
-
-async function stopServer(): Promise<void> {
-  const proc = serverProc;
-  serverProc = undefined;
-  if (!proc || proc.exitCode !== null) return;
-
-  const signalProcessGroup = (signal: NodeJS.Signals) => {
-    if (process.platform !== 'win32' && proc.pid) {
-      process.kill(-proc.pid, signal);
-      return;
-    }
-    proc.kill(signal);
-  };
-
-  try {
-    signalProcessGroup('SIGTERM');
-  } catch (error: unknown) {
-    if (!(error instanceof Error) || !('code' in error) || error.code !== 'ESRCH') throw error;
-  }
-
-  if (await waitForProcessExit(proc, SERVER_SHUTDOWN_TIMEOUT_MS)) return;
-
-  try {
-    signalProcessGroup('SIGKILL');
-  } catch (error: unknown) {
-    if (!(error instanceof Error) || !('code' in error) || error.code !== 'ESRCH') throw error;
-  }
-
-  await waitForProcessExit(proc, SERVER_SHUTDOWN_TIMEOUT_MS);
-}
-
 async function isServerUp(): Promise<boolean> {
   try {
     const res = await fetch(BASE_URL, { signal: AbortSignal.timeout(1000) });
@@ -74,7 +25,7 @@ async function isServerUp(): Promise<boolean> {
   }
 }
 
-async function waitForServer(timeoutMs = SERVER_STARTUP_TIMEOUT_MS): Promise<void> {
+async function waitForServer(timeoutMs = 30000): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     if (await isServerUp()) return;
@@ -95,17 +46,10 @@ async function ensureServer(): Promise<void> {
     cwd: CP_DIR,
     env: { ...process.env, PORT: '3099', HOST: '127.0.0.1', NODE_ENV: 'test' },
     stdio: ['ignore', 'pipe', 'pipe'],
-    // Own a process group so timeout/teardown can terminate every descendant.
-    detached: process.platform !== 'win32',
   });
   serverProc.stdout?.on('data', d => { serverLog += d.toString(); });
   serverProc.stderr?.on('data', d => { serverLog += d.toString(); });
-  try {
-    await waitForServer();
-  } catch (error) {
-    await stopServer();
-    throw error;
-  }
+  await waitForServer();
 }
 
 const ROUTES = [
@@ -153,13 +97,12 @@ beforeAll(async () => {
 }, 60000);
 
 afterAll(async () => {
-  try {
-    await context?.close();
-    await browser?.close();
-  } finally {
-    await stopServer();
+  await context?.close();
+  await browser?.close();
+  if (serverProc && serverProc.exitCode === null) {
+    serverProc.kill('SIGTERM');
   }
-}, 15_000);
+});
 
 describe('WCAG & Accessibility (Playwright)', () => {
 
@@ -183,7 +126,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
         );
       }
       expect(criticalSerious.length).toBe(0);
-    }, 30000);
+    });
   });
 
   describe('Route-by-route axe scan', () => {
@@ -215,7 +158,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
           }
         }
         expect(criticalSerious.length).toBe(0);
-      }, 30000);
+      });
     }
   });
 
@@ -501,7 +444,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
       }
 
       expect(contrastViolations.length).toBe(0);
-    }, 30000);
+    });
   });
 
   describe('Route rendering assertions', () => {

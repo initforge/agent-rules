@@ -80,7 +80,7 @@ See [`06-platform-capability.md`](06-platform-capability.md) for full definition
 
 ### Deprecated file paths
 
-Full list: [generated/references/deprecation-list.md](../../generated/references/deprecation-list.md).  
+Full list: [generated/references/deprecation-list.md](../generated/references/deprecation-list.md).  
 Key renames relevant to maintainers:
 
 | Old | New | Reason |

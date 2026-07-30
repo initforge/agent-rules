@@ -34,8 +34,9 @@ agent-rules/
 
 | Item | Type | Owner | Status |
 |------|------|-------|--------|
-| `.github/workflows/quality.yml` | workflow | harness-maintainer | active (required gate) |
-| `.github/workflows/certification.yml` | workflow | harness-maintainer | native-only advisory |
+| `.github/workflows/static.yml` | workflow | harness-maintainer | active (required gate) |
+| `.github/workflows/native-smoke.yml` | workflow | harness-maintainer | advisory |
+| `.github/workflows/evaluation.yml` | workflow | harness-maintainer | advisory |
 
 **Consumers:** GitHub Actions  
 **Purpose:** Validates context, builds runtime, verifies mirrors on push/PR.

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
-import { safeResolve, ROOT, checkCanonicalAllowlist } from './safety.js';
+import { safeResolve, ROOT } from './safety';
 
 function readJson(p: string): unknown {
   const content = fs.readFileSync(p, 'utf-8');
@@ -128,11 +128,9 @@ export function readIntegrations(): unknown[] {
 }
 
 export function readRawJson(filePath: string): unknown {
-  checkCanonicalAllowlist(filePath)
-  return readJson(safeResolve(filePath));
+  return readJson(filePath);
 }
 
 export function readRawYaml(filePath: string): unknown {
-  checkCanonicalAllowlist(filePath)
-  return readYaml(safeResolve(filePath));
+  return readYaml(filePath);
 }

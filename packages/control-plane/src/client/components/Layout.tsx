@@ -31,7 +31,6 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'configuration', label: 'Configuration', icon: '⊞', path: '/configuration/general' },
   { id: 'profiles', label: 'Profiles', icon: '⊡', path: '/profiles' },
   { id: 'audit', label: 'Audit Log', icon: '⊡', path: '/audit' },
-  { id: 'c4', label: 'C4 Architecture', icon: '⊞', path: '/c4' },
 ];
 
 function matchNavItem(path: string): string {
@@ -42,7 +41,6 @@ function matchNavItem(path: string): string {
   if (base === 'architecture') return 'architecture';
   if (base === 'configuration') return 'configuration';
   if (base === 'profiles') return 'profiles';
-  if (base === 'c4') return 'c4';
   return 'overview';
 }
 

@@ -4,11 +4,11 @@
   "title": "Telemetry event aligned with OpenTelemetry GenAI semantic conventions",
   "description": "Captures platform, model, effort, tool, context, subagent, and outcome dimensions. Unobservable fields remain null, never fabricated.",
   "type": "object",
-  "required": ["schema_version", "event_id", "event_type", "platform", "host_version", "model", "effort", "role", "repository_revision", "outcome", "ts"],
+  "required": ["schema_version", "event_id", "event_type", "platform", "host_version", "model", "effort", "role", "task", "repository_revision", "outcome", "ts"],
   "properties": {
     "schema_version": { "const": 1 },
     "event_id": { "type": "string", "pattern": "^[a-f0-9]{64}$", "description": "SHA-256 of the event payload for deduplication" },
-    "event_type": { "enum": ["session.start", "session.end", "turn.start", "turn.end", "delegation.start", "delegation.end", "tool.invocation", "tool.result", "context.load", "verification.start", "verification.end", "error", "attestation.collected"] },
+    "event_type": { "enum": ["session.start", "session.end", "turn.start", "turn.end", "delegation.start", "delegation.end", "tool.invocation", "tool.result", "context.load", "verification.start", "verification.end", "error"] },
     "gen_ai": {
       "type": "object",
       "description": "OpenTelemetry GenAI attributes",
@@ -92,33 +92,6 @@
     "ts": { "type": "string", "format": "date-time" },
     "duration_ms": { "type": ["integer", "null"], "minimum": 0 },
     "error": { "type": ["string", "null"], "description": "Error message if event_type is error" },
-    "attestation": {
-      "type": "object",
-      "description": "Host attestation evidence for model certification; never contains raw probe bytes or PII",
-      "required": ["host", "provenance", "evidence_hashes", "expires_at", "native_runner_identity"],
-      "properties": {
-        "host": { "type": "string", "enum": ["codex", "claude", "grok", "opencode"], "description": "Only required native hosts (codex, claude, grok, opencode). Cursor/Antigravity deferred — never attestation.collected." },
-        "provenance": {
-          "type": "object",
-          "required": ["source_uri", "producer_identity", "timestamp"],
-          "properties": {
-            "source_uri": { "type": "string", "format": "uri", "description": "Command or URI that produced the evidence" },
-            "producer_identity": { "type": "string", "minLength": 1, "description": "Binary or CLI identity that produced the evidence" },
-            "timestamp": { "type": "string", "format": "date-time", "description": "ISO-8601 timestamp of evidence capture" }
-          },
-          "additionalProperties": false
-        },
-        "evidence_hashes": {
-          "type": "array",
-          "items": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
-          "minItems": 1,
-          "description": "SHA-256 hashes binding evidence content; never the raw content itself"
-        },
-        "expires_at": { "type": "string", "format": "date-time" },
-        "native_runner_identity": { "type": "string", "minLength": 1, "description": "realpath|sha256 of the native runner binary" }
-      },
-      "additionalProperties": false
-    },
     "attributes": {
       "type": "object",
       "description": "Additional custom attributes",

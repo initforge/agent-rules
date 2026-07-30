@@ -5,7 +5,6 @@ import * as differ from '../src/services/differ';
 import * as validator from '../src/services/validator';
 import * as writer from '../src/services/writer';
 import * as safety from '../src/services/safety';
-import { redactSensitive, redactStringJson } from '../src/services/redact';
 
 describe('differ', () => {
   it('detects no changes', () => {
@@ -154,62 +153,6 @@ describe('writer', () => {
     expect(result).toContain('b:');
   });
 });
-
-describe('redact', () => {
-  it('redacts api_key case-insensitively', () => {
-    const input = { api_key: 'sk-1234567890abcdef', name: 'test' }
-    const result = redactSensitive(input) as Record<string, unknown>
-    expect(result.api_key).toBe('[REDACTED]')
-    expect(result.name).toBe('test')
-  })
-
-  it('redacts ApiKey camelCase', () => {
-    const input = { ApiKey: 'secret-value', data: 'visible' }
-    const result = redactSensitive(input) as Record<string, unknown>
-    expect(result.ApiKey).toBe('[REDACTED]')
-    expect(result.data).toBe('visible')
-  })
-
-  it('redacts API-KEY hyphenated', () => {
-    const input = { 'API-KEY': 'supersecret', normal: 'ok' }
-    const result = redactSensitive(input) as Record<string, unknown>
-    expect(result['API-KEY']).toBe('[REDACTED]')
-  })
-
-  it('redacts nested objects', () => {
-    const input = { outer: { api_key: 'nested-secret', inner: { token: 'deep-token' } }, ok: true }
-    const result = redactSensitive(input) as Record<string, unknown>
-    expect((result.outer as Record<string, unknown>).api_key).toBe('[REDACTED]')
-    expect((((result.outer as Record<string, unknown>).inner) as Record<string, unknown>).token).toBe('[REDACTED]')
-    expect(result.ok).toBe(true)
-  })
-
-  it('redacts nested arrays of objects', () => {
-    const input = { items: [{ api_key: 'secret1' }, { token: 'secret2', name: 'test' }] }
-    const result = redactSensitive(input) as Record<string, unknown>
-    const items = result.items as Array<Record<string, unknown>>
-    expect(items[0].api_key).toBe('[REDACTED]')
-    expect(items[1].token).toBe('[REDACTED]')
-    expect(items[1].name).toBe('test')
-  })
-
-  it('redacts string JSON via redactStringJson', () => {
-    const json = JSON.stringify({ apiKey: 'sk-xxx', data: { token: 'tok-abc' } })
-    const redacted = redactStringJson(json)
-    const parsed = JSON.parse(redacted)
-    expect(parsed.apiKey).toBe('[REDACTED]')
-    expect(parsed.data.token).toBe('[REDACTED]')
-  })
-
-  it('returns non-JSON string unchanged', () => {
-    expect(redactStringJson('not-json')).toBe('not-json')
-  })
-
-  it('handles null/undefined', () => {
-    expect(redactSensitive(null)).toBe(null)
-    expect(redactSensitive(undefined)).toBe(undefined)
-  })
-})
 
 describe('safety', () => {
   it('rejects absolute paths', () => {

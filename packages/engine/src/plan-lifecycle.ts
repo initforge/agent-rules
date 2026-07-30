@@ -268,8 +268,8 @@ export function detectStaleReviews(
 
 export function lockFile(filePath: string): { fd: number; unlock: () => void } {
   requireValue(typeof filePath === 'string' && filePath.length > 0, 'filePath must be non-empty');
-  const lockPath = `${path.resolve(filePath)}.lock`;
-  const fd = fs.openSync(lockPath, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW, 0o600);
+  const lockPath = `${filePath}.lock`;
+  const fd = fs.openSync(lockPath, 'wx');
   return {
     fd,
     unlock: () => {
@@ -281,8 +281,8 @@ export function lockFile(filePath: string): { fd: number; unlock: () => void } {
 
 export function lockDirectory(dirPath: string): { fd: number; unlock: () => void } {
   requireValue(typeof dirPath === 'string' && dirPath.length > 0, 'dirPath must be non-empty');
-  const lockPath = path.join(path.resolve(dirPath), '.lock');
-  const fd = fs.openSync(lockPath, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW, 0o600);
+  const lockPath = path.join(dirPath, '.lock');
+  const fd = fs.openSync(lockPath, 'wx');
   return {
     fd,
     unlock: () => {

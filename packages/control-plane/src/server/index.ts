@@ -1,5 +1,5 @@
-import { app } from './app.js';
-import { getDb, closeDb } from '../db/index.js';
+import { app } from './app';
+import { getDb, closeDb } from '../db';
 
 const PORT = parseInt(process.env.PORT || '3099');
 

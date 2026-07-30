@@ -1,114 +1,88 @@
-import { Router, type Response } from 'express'
-import {
-  listPlans,
-  readPlanWorkspace,
-  findRoot,
-  computeVerificationSummary,
-  computeReconciliationMatrix,
-} from '../schemas/plan-workspace.js'
-import {
-  PlanValidationError,
-  PlanNotFoundError,
-  PlanIntegrityError,
-  LegacyRejectionError,
-} from '@initforge/agent-rules-engine/plan-identity'
-import type { WorkLedger } from '@initforge/agent-rules-engine/contracts'
+import { Router, type Response } from 'express';
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
 
-const router = Router()
-
-function sendError(res: Response, status: number, code: string, message: string, details?: unknown): void {
-  const body: Record<string, unknown> = { ok: false, error: message, code }
-  if (details) body.details = details
-  res.status(status).json(body)
+function findRoot(): string {
+  let dir = path.resolve(__dirname, '..', '..', '..');
+  for (let i = 0; i < 10; i++) {
+    if (fs.existsSync(path.join(dir, 'rules', 'manifest.yaml'))) return dir;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return path.resolve(__dirname, '..', '..', '..', '..');
 }
+
+const router = Router();
 
 router.get('/', (_req, res: Response) => {
   try {
-    const root = findRoot()
-    const plans = listPlans(root)
-    res.json({ ok: true, data: plans, total: plans.length })
-  } catch (err) {
-    if (err instanceof PlanValidationError) {
-      sendError(res, 400, 'VALIDATION_ERROR', err.message)
-    } else if (err instanceof PlanIntegrityError) {
-      if (err.findings?.some((f: { kind?: string }) => String(f.kind).startsWith('MISSING_'))) {
-        res.json({ ok: true, data: [], total: 0 })
-      } else {
-        sendError(res, 409, 'INTEGRITY_FAILURE', err.message, { findings: err.findings })
-      }
-    } else {
-      sendError(res, 500, 'INTERNAL', err instanceof Error ? err.message : String(err))
+    const ROOT = findRoot();
+    const ledgerDir = path.join(ROOT, '.agent', 'ledger');
+    if (!fs.existsSync(ledgerDir)) {
+      res.json({ plans: [] });
+      return;
     }
+    const files = fs.readdirSync(ledgerDir)
+      .filter(f => f.endsWith('.json'))
+      .sort();
+    const plans = files.map(f => ({
+      planId: f.replace(/\.json$/, ''),
+      path: f,
+    }));
+    res.json({ plans });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: String(err) });
   }
-})
+});
 
-router.get('/:planId', (req, res: Response) => {
+router.get('/:planId', (req, res) => {
   try {
-    const planId = req.params.planId || ''
-    const workspace = readPlanWorkspace(planId)
+    const ROOT = findRoot();
+    const planId = req.params.planId;
+    const ledgerPath = path.join(ROOT, '.agent', 'ledger', planId + '.json');
 
-    const ledger: WorkLedger = {
-      status: workspace.identity.status,
-      plan: workspace.plan,
-      planAnchors: workspace.planAnchors,
-      batches: workspace.batches,
-      amendments: workspace.amendments,
-      assignments: workspace.assignments,
-      receipts: workspace.receipts,
-      verificationClaims: workspace.verificationClaims,
-      attestations: workspace.attestations,
-      reconciliations: workspace.reconciliations,
-      repairSlices: workspace.repairSlices,
-      sourceAcquisitionReceipts: workspace.sourceAcquisitionReceipts,
-      orphanFindings: workspace.orphanFindings,
-      shadowRevision: workspace.identity.shadowRevision,
-      shadowHashes: workspace.shadowHashes,
-      latestReview: workspace.latestReview,
+    if (!fs.existsSync(ledgerPath)) {
+      res.status(404).json({ error: 'Plan not found' });
+      return;
     }
 
-    const verification = computeVerificationSummary(workspace.verificationClaims)
-    const reconciliationMatrix = computeReconciliationMatrix(ledger)
+    const ledgerRaw = fs.readFileSync(ledgerPath, 'utf-8');
+    const ledger = JSON.parse(ledgerRaw);
 
-    const response: Record<string, unknown> = {
-      ok: true,
-      planId: workspace.planId,
-      identity: workspace.identity,
-      integrity: workspace.identity.integrity,
-      integrityFindings: workspace.identity.integrityFindings,
-      status: workspace.identity.status,
-      plan: workspace.plan,
-      originalMarkdown: workspace.originalMarkdown,
-      amendments: workspace.amendments,
-      planAnchors: workspace.planAnchors,
-      reconciliations: workspace.reconciliations,
-      reconciliationMatrix,
-      batches: workspace.batches,
-      assignments: workspace.assignments,
-      receipts: workspace.receipts,
-      verificationClaims: workspace.verificationClaims,
-      verificationSummary: verification,
-      attestations: workspace.attestations,
-      repairSlices: workspace.repairSlices,
-      orphanFindings: workspace.orphanFindings,
-      sourceAcquisitionReceipts: workspace.sourceAcquisitionReceipts,
-      latestReview: workspace.latestReview,
-      shadowHashes: workspace.shadowHashes,
+    const planDir = path.join(ROOT, '.agent', 'plans', planId);
+    const originalPath = path.join(planDir, 'original.md');
+    let originalSha256: string | null = null;
+    if (fs.existsSync(originalPath)) {
+      originalSha256 = crypto.createHash('sha256').update(fs.readFileSync(originalPath)).digest('hex');
     }
 
-    res.json(response)
+    res.json({
+      planId,
+      originalSha256: originalSha256 || ledger.effective_plan_identity?.original_sha256 || null,
+      effectiveSha256: ledger.effective_plan_identity?.sha256 || null,
+      amendments: (ledger.amendments || []).map((a: Record<string, unknown>) => ({
+        id: a.amendment_id || a.id,
+        sha256: a.sha256,
+      })),
+      status: ledger.execution_state || ledger.status || 'unknown',
+      reconciliations: (ledger.reconciliations || []).slice(-5),
+      attestations: ledger.attestations || [],
+      findings: (ledger.findings || ledger.orphanFindings || []).filter((f: Record<string, unknown>) =>
+        typeof f.status === 'string' && f.status.includes('OPEN')
+      ),
+      auditEvents: (ledger.audit_events || []).slice(-10),
+      shadowRevision: ledger.shadow_revision || null,
+      timestamp: new Date().toISOString(),
+    });
   } catch (err) {
-    if (err instanceof PlanValidationError) {
-      sendError(res, 400, 'VALIDATION_ERROR', err.message)
-    } else if (err instanceof PlanNotFoundError) {
-      sendError(res, 404, 'NOT_FOUND', err.message)
-    } else if (err instanceof LegacyRejectionError) {
-      sendError(res, 422, 'LEGACY_SHAPE', err.message)
-    } else if (err instanceof PlanIntegrityError) {
-      sendError(res, 409, 'INTEGRITY_FAILURE', err.message, { findings: err.findings })
-    } else {
-      sendError(res, 500, 'INTERNAL', err instanceof Error ? err.message : String(err))
-    }
+    res.status(500).json({
+      ok: false,
+      error: String(err),
+      timestamp: new Date().toISOString(),
+    });
   }
-})
+});
 
-export default router
+export default router;

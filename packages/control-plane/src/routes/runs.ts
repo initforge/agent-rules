@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { getStore, addRun, addTelemetry } from '../db/index.js';
-import { apiError } from '../services/safety.js';
+import { getStore, addRun, addTelemetry } from '../db';
+import { apiError } from '../services/safety';
 
 const router = Router();
 

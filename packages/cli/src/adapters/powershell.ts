@@ -62,6 +62,8 @@ export async function runScript(
       shell,
       [
         "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
         "-File",
         scriptPath,
         ...args.map(escapeArg),

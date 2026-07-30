@@ -17,7 +17,7 @@ Core rules và skills **phải cùng hash** giữa Codex, Grok, Antigravity, Cur
 |---|---|---|---|---|---|---|
 | Codex | `~/.codex` | `AGENTS.md` | TOML `[mcp_servers.*]` | `agents/` subdirectory | native hooks, Plan Mode, MCP |
 | Grok | `~/.grok` | `.grok/rules` | JSON `mcpServers` | `agents/` subdirectory | TOML personas, native hooks |
-| Antigravity | `~/.gemini/config` | `GEMINI.md` | JSON `mcp_config.json` | `agents/` subdirectory | Antigravity host, PreInvocation hooks |
+| Antigravity | `~/.gemini/config` | `GEMINI.md` | JSON `mcp_config.json` | `agents/` subdirectory | Gemini CLI host, PreInvocation hooks |
 | Cursor | `~/.cursor` | `rules` | JSON `~/.cursor/mcp.json` | `agents/` subdirectory | IDE-native, local plugin |
 | OpenCode | `~/.config/opencode/` | `AGENTS.md` | `opencode.json` (json_mcpServers) | `agents/` subdirectory | standalone adapter, no native hooks |
 

@@ -73,7 +73,7 @@ def verify_rendered_build(contract: dict[str, object], platforms: tuple[str, ...
     with tempfile.TemporaryDirectory(prefix="agent-rules-platform-contract-") as raw:
         build_root = Path(raw) / "runtime-build"
         result = subprocess.run(
-            [shell, "-NoProfile", "-File", str(ROOT / "automation/01-build-runtime.ps1"), "-Root", str(ROOT), "-BuildRoot", str(build_root), "-SkipContextGraph"],
+            [shell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ROOT / "automation/01-build-runtime.ps1"), "-Root", str(ROOT), "-BuildRoot", str(build_root), "-SkipContextGraph"],
             cwd=ROOT,
             capture_output=True,
             text=True,

@@ -1,17 +1,15 @@
 import { Router, type Response } from 'express';
 import fs from 'fs';
 import path from 'path';
-import * as reader from '../services/reader.js';
-import { safeResolve, checkCanonicalAllowlist } from '../services/safety.js';
+import * as reader from '../services/reader';
+import { safeResolve } from '../services/safety';
 
 const router = Router();
 
 function apiError(res: Response, code: number, err: unknown): void {
-  if (err instanceof Error) {
-    if (err.message.includes('Path traversal') || err.message.includes('not allowed') || err.message.includes('allowlist')) {
-      res.status(403).json({ ok: false, error: 'Forbidden' });
-      return;
-    }
+  if (err instanceof Error && err.message.includes('Path traversal')) {
+    res.status(403).json({ ok: false, error: 'Forbidden' });
+    return;
   }
   res.status(code).json({ ok: false, error: 'An internal error occurred' });
 }
@@ -68,16 +66,15 @@ router.get('/file', (req, res) => {
       res.status(400).json({ ok: false, error: 'path query parameter required' });
       return;
     }
-    safeResolve(filePath);
+    const safePath = safeResolve(filePath);
     const ext = path.extname(filePath);
     let data: unknown;
     if (ext === '.json') {
-      data = reader.readRawJson(filePath);
+      data = reader.readRawJson(safePath);
     } else if (ext === '.yaml' || ext === '.yml') {
-      data = reader.readRawYaml(filePath);
+      data = reader.readRawYaml(safePath);
     } else {
-      checkCanonicalAllowlist(filePath);
-      data = fs.readFileSync(safeResolve(filePath), 'utf-8');
+      data = fs.readFileSync(safePath, 'utf-8');
     }
     res.json({ ok: true, data });
   } catch (err) {
