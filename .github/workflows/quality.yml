@@ -52,6 +52,8 @@ jobs:
       - run: npm run build
       - run: npm run check
       - run: npm run test
+      - name: Packaged runtime lifecycle smoke
+        run: npm run test:package-smoke -w packages/cli
       - name: Start Control Plane
         run: node automation/control-plane-ci.mjs start
       - name: Wait for Control Plane

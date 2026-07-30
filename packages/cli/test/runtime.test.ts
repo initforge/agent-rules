@@ -28,6 +28,21 @@ async function pathExists(value: string): Promise<boolean> {
   }
 }
 
+async function snapshotTree(root: string): Promise<Record<string, string>> {
+  const snapshot: Record<string, string> = {};
+  async function visit(directory: string): Promise<void> {
+    for (const entry of await fs.readdir(directory, { withFileTypes: true })) {
+      const full = path.join(directory, entry.name);
+      const relative = path.relative(root, full).replace(/\\/g, "/");
+      if (entry.isDirectory()) await visit(full);
+      else if (entry.isSymbolicLink()) snapshot[relative] = `link:${await fs.readlink(full)}`;
+      else snapshot[relative] = sha256(await fs.readFile(full, "utf8"));
+    }
+  }
+  await visit(root);
+  return snapshot;
+}
+
 describe("RuntimeInstaller", () => {
   let temp: string;
   let repositoryRoot: string;
@@ -285,6 +300,18 @@ describe("RuntimeInstaller", () => {
     expect(await pathExists(path.join(targetRoot, ".agent-rules-runtime.transaction.json"))).toBe(false);
   });
 
+  it("cleans journal and staging after a normal failure immediately after journal creation", async () => {
+    await installer().install("codex");
+    await writeBuild({ "rules/base.md": "second\n" });
+
+    await expect(installer({ failpoint: "after-journal" }).install("codex", "update")).rejects.toThrow("after journal creation");
+
+    expect(await fs.readFile(path.join(targetRoot, runtimeDirectory, "rules", "base.md"), "utf8")).toBe("first\n");
+    expect(await pathExists(path.join(targetRoot, ".agent-rules-runtime.transaction.json"))).toBe(false);
+    expect(await pathExists(path.join(targetRoot, ".agent-rules-runtime.rollback"))).toBe(false);
+    expect((await fs.readdir(targetRoot)).some((name) => name.startsWith(".agent-rules-runtime.stage-"))).toBe(false);
+  });
+
   it("recovers a durable crash journal before retrying an update", async () => {
     await installer().install("codex");
     await writeBuild({ "rules/base.md": "second\n" });
@@ -296,6 +323,31 @@ describe("RuntimeInstaller", () => {
     await installer().install("codex", "update");
     expect(await fs.readFile(path.join(targetRoot, runtimeDirectory, "rules", "base.md"), "utf8")).toBe("second\n");
     expect(await pathExists(path.join(targetRoot, ".agent-rules-runtime.transaction.json"))).toBe(false);
+  });
+
+  it("validates recover dry-run without filesystem mutation", async () => {
+    await installer().install("codex");
+    const before = await snapshotTree(targetRoot);
+
+    const result = await installer({ dryRun: true }).recover("codex");
+
+    expect(result.dryRun).toBe(true);
+    expect(await snapshotTree(targetRoot)).toEqual(before);
+  });
+
+  it("previews crash-after-backup recovery from its journal without mutation", async () => {
+    await installer().install("codex");
+    await writeBuild({ "rules/base.md": "second\n" });
+    await expect(installer({ failpoint: "crash-after-backup" }).install("codex", "update")).rejects.toThrow("Injected crash");
+    const before = await snapshotTree(targetRoot);
+
+    const result = await installer({ dryRun: true }).recover("codex");
+
+    expect(result.dryRun).toBe(true);
+    expect(result.receipt?.platform).toBe("codex");
+    expect(await snapshotTree(targetRoot)).toEqual(before);
+    expect(await pathExists(path.join(targetRoot, runtimeDirectory))).toBe(false);
+    expect(await pathExists(path.join(targetRoot, ".agent-rules-runtime.transaction.json"))).toBe(true);
   });
 
   it("repairs missing activation after a crash between runtime swap and activation", async () => {

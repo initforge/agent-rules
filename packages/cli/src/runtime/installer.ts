@@ -671,6 +671,30 @@ async function recover(root: string, expectedPlatform: RuntimePlatform): Promise
   if (await exists(rollback)) await assertOwnedRuntime(rollback);
 }
 
+async function previewRecovery(root: string, expectedPlatform: RuntimePlatform): Promise<RuntimeReceipt> {
+  const journalPath = path.join(root, JOURNAL_FILE);
+  const target = path.join(root, RUNTIME_DIRECTORY);
+  if (!(await exists(journalPath))) return assertOwnedRuntime(target, expectedPlatform);
+  let journal: TransactionJournal;
+  try {
+    journal = JSON.parse(await fs.readFile(journalPath, "utf8")) as TransactionJournal;
+  } catch {
+    throw new Error(`Refusing recovery from invalid transaction journal: ${journalPath}`);
+  }
+  await validateJournal(root, expectedPlatform, journalPath, journal);
+  const targetExists = await exists(target);
+  const backupExists = await exists(journal.backup);
+  const stagingExists = await exists(journal.staging);
+  let outcome = target;
+  if (journal.phase === "prepared" && journal.operation === "rollback" && stagingExists && !targetExists) outcome = journal.staging;
+  else if (journal.phase === "backed-up" && journal.operation === "rollback") {
+    if (!targetExists && backupExists && stagingExists) outcome = journal.backup;
+    else if (!targetExists || (!backupExists && !stagingExists)) throw new Error(`Ambiguous interrupted rollback transaction: ${journalPath}`);
+  } else if (journal.phase === "backed-up" && !targetExists && backupExists) outcome = journal.backup;
+  else if (!targetExists) throw new Error(`Recovery would not produce an owned runtime: ${target}`);
+  return assertOwnedRuntime(outcome, expectedPlatform, outcome === target);
+}
+
 export class RuntimeInstaller {
   private readonly platformRoots: Record<RuntimePlatform, string>;
 
@@ -754,6 +778,7 @@ export class RuntimeInstaller {
 
       await writeJournal(root, journal);
       journalWritten = true;
+      if (this.options.failpoint === "after-journal") throw new Error("Injected failure after journal creation");
       if (runtimeExists) {
         if (await exists(backup)) {
           await assertOwnedRuntime(backup, platform);
@@ -857,6 +882,10 @@ export class RuntimeInstaller {
     const runtimePath = path.join(root, RUNTIME_DIRECTORY);
     if (!(await exists(root))) throw new Error(`No runtime root exists for ${platform}: ${root}`);
     await assertDirectoryNotLinked(root);
+    if (this.options.dryRun) {
+      const receipt = await previewRecovery(root, platform);
+      return { platform, targetRoot: root, runtimePath, dryRun: true, receipt };
+    }
     await recover(root, platform);
     await recoverLegacyMigration(root, platform);
     const receipt = await assertOwnedRuntime(runtimePath, platform);

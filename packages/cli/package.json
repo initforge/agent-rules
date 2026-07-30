@@ -17,12 +17,16 @@
   "bin": {
     "agent-rules": "./dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
     "clean": "rimraf dist",
     "prepack": "npm run build",
     "test": "vitest run",
+    "test:package-smoke": "node test/runtime-package-smoke.mjs",
     "test:watch": "vitest"
   },
   "dependencies": {

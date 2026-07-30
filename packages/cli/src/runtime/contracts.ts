@@ -29,7 +29,7 @@ export interface RuntimeInstallerOptions {
   repositoryRoot: string;
   platformRoots?: Partial<Record<RuntimePlatform, string>>;
   dryRun?: boolean;
-  failpoint?: "after-stage" | "after-backup" | "crash-after-backup" | "crash-after-swap-before-activation" |
+  failpoint?: "after-stage" | "after-journal" | "after-backup" | "crash-after-backup" | "crash-after-swap-before-activation" |
     "crash-after-swap" | "crash-rollback-after-target-move" | "crash-rollback-after-backed-up-journal" |
     "crash-rollback-after-backup-restore" | "crash-rollback-after-staging-backup" |
     "crash-rollback-after-commit-journal" | "crash-migration-after-archive";

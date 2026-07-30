@@ -39,7 +39,7 @@ function parseRuntimeArguments(args: string[]): RuntimeArguments | string {
 }
 
 async function runLifecycle(
-  operation: "install" | "update" | "rollback" | "uninstall",
+  operation: "install" | "update" | "rollback" | "reinstall" | "uninstall" | "recover",
   args: string[],
   opts: CliOptions,
 ): Promise<CommandResult> {
@@ -57,6 +57,8 @@ async function runLifecycle(
       else if (operation === "install") results.push(await installer.install(platform));
       else if (operation === "update") results.push(await installer.install(platform, "update"));
       else if (operation === "rollback") results.push(await installer.rollback(platform));
+      else if (operation === "reinstall") results.push(await installer.install(platform, "update"));
+      else if (operation === "recover") results.push(await installer.recover(platform));
       else results.push(await installer.uninstall(platform));
     }
     return {
@@ -111,12 +113,16 @@ export async function runtimeCmd(
       return runtimeUpdate(rest, opts);
     case "rollback":
       return runtimeRollback(rest, opts);
+    case "reinstall":
+      return runLifecycle("reinstall", rest, opts);
+    case "recover":
+      return runLifecycle("recover", rest, opts);
     case "uninstall":
       return runtimeUninstall(rest, opts);
     default:
       return {
         exitCode: ExitCode.InvalidArgument,
-        message: `Unknown runtime subcommand: ${subcommand}. Available: install, update, rollback, uninstall`,
+        message: `Unknown runtime subcommand: ${subcommand}. Available: install, update, rollback, reinstall, uninstall, recover`,
       };
   }
 }

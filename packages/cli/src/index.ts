@@ -231,7 +231,7 @@ program
 program
   .command("runtime")
   .description("Manage harness runtime installations")
-  .argument("[subcommand]", "Subcommand: install, update, rollback, uninstall")
+  .argument("[subcommand]", "Subcommand: install, update, rollback, reinstall, uninstall, recover")
   .argument("[platform]", "Platform: codex, grok, antigravity, cursor, all", "all")
   .option("--root <absolute>", "Override the selected platform root (single platform only)")
   .option("--migrate-legacy", "Explicitly migrate a manifest-owned legacy runtime (single platform only)")
@@ -242,7 +242,9 @@ Subcommands:
   install [platform]     Install runtime to platform (default: all)
   update [platform]      Update runtime on platform
   rollback [platform]    Rollback runtime on platform
+  reinstall [platform]   Reinstall runtime transactionally
   uninstall [platform]   Uninstall runtime from platform
+  recover [platform]     Recover an interrupted transaction
     `
   )
   .action(async (subcommand: string | undefined, platform: string, cmdOpts: { root?: string; migrateLegacy?: boolean }) => {
