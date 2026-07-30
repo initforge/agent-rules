@@ -181,6 +181,9 @@ function getInteractiveElements(p: Page) {
 }
 
 function trackBrowserErrors(trackedPage: Page): void {
+  trackedPage.on('pageerror', error => {
+    browserErrors.push(`pageerror: ${error.message}`);
+  });
   trackedPage.on('console', msg => {
     if (msg.type() === 'error') browserErrors.push(`console: ${msg.text()}`);
   });
@@ -205,7 +208,7 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
-  expect(browserErrors, 'browser console/network errors').toEqual([]);
+  expect(browserErrors, 'browser page/console/network errors').toEqual([]);
 });
 
 afterAll(async () => {
@@ -254,6 +257,20 @@ describe('owned server lifecycle', () => {
       serverPort = qaPort;
       baseUrl = qaUrl;
     }
+  });
+});
+
+describe('browser error tracking', () => {
+  it('captures uncaught page errors from every context page', async () => {
+    const errorContext = await browser.newContext();
+    errorContext.on('page', trackBrowserErrors);
+    const errorPage = await errorContext.newPage();
+    const pageError = errorPage.waitForEvent('pageerror');
+    await errorPage.evaluate(() => setTimeout(() => { throw new Error('qa-pageerror-regression'); }, 0));
+    await pageError;
+    expect(browserErrors).toContain('pageerror: qa-pageerror-regression');
+    browserErrors = [];
+    await errorContext.close();
   });
 });
 
