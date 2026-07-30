@@ -59,21 +59,21 @@ The filesystem path `~/.gemini/config` and env vars like `GEMINI_CONFIG_HOME` ar
 
 ## Capability matrix
 
-| Dimension | Codex | Grok | Antigravity | Cursor | OpenCode | Gemini CLI |
+| Dimension | Codex | Grok | Antigravity | Cursor | OpenCode |
 |---|---|---|---|---|---|---|
-| instructions | native | native | native | native | unverified | unsupported |
-| skills | native | native | native | native | unverified | unsupported |
-| subagents | native | native | unverified | native | unverified | unsupported |
-| model routing | native | native | native | native | unverified | unsupported |
-| plan mode | native | emulated | native | emulated | unverified | unsupported |
-| hooks | native | native | native | native | unverified | unsupported |
-| MCP/tools | native | native | native | native | unverified | unsupported |
-| permissions | native | native | native | native | unverified | unsupported |
-| telemetry | native | native | native | native | unverified | unsupported |
-| diff/review | native | emulated | native | emulated | unverified | unsupported |
-| install | native | native | native | native | unverified | unsupported |
-| doctor | native | native | native | native | unverified | unsupported |
-| uninstall | native | native | native | native | unverified | unsupported |
+| instructions | native | native | native | native | unverified |
+| skills | native | native | native | native | unverified |
+| subagents | native | native | unverified | native | unverified |
+| model routing | native | native | native | native | unverified |
+| plan mode | native | emulated | native | emulated | unverified |
+| hooks | native | native | native | native | unverified |
+| MCP/tools | native | native | native | native | unverified |
+| permissions | native | native | native | native | unverified |
+| telemetry | native | native | native | native | unverified |
+| diff/review | native | emulated | native | emulated | unverified |
+| install | native | native | native | native | unverified |
+| doctor | native | native | native | native | unverified |
+| uninstall | native | native | native | native | unverified |
 
 ### Key findings
 

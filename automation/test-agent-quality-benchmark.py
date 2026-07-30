@@ -61,6 +61,16 @@ def profiled_record(base: dict, case: dict, run_id: str) -> dict:
     return item
 
 
+def expect_raises(fn, *args, exc=(ContractError,), msg="", **kwargs):
+    """Assert that fn raises one of the expected exception types.
+    Does NOT catch AssertionError — sentinel failures always propagate."""
+    try:
+        fn(*args, **kwargs)
+    except exc:
+        return
+    raise AssertionError(msg)
+
+
 def contracts_only() -> None:
     corpus = load_json(DEFAULT_CORPUS)
     graph = load_json(DEFAULT_GRAPH)
@@ -103,72 +113,44 @@ def live_only() -> list[dict]:
     valid = read_records([FIXTURES / "live-valid.jsonl"])
     validate_live_results(valid, corpus)
     invalid = read_records([FIXTURES / "live-invalid.jsonl"])
-    try:
-        validate_live_results(invalid, corpus)
-    except ContractError:
-        pass
-    else:
-        raise AssertionError("invalid live result fixture was accepted")
+    expect_raises(validate_live_results, invalid, corpus, exc=(ContractError,),
+                  msg="invalid live result fixture was accepted")
     duplicate = [valid[0], copy.deepcopy(valid[0])]
-    try:
-        validate_live_results(duplicate, corpus)
-    except ContractError:
-        pass
-    else:
-        raise AssertionError("duplicate live result key was accepted")
+    expect_raises(validate_live_results, duplicate, corpus, exc=(ContractError,),
+                  msg="duplicate live result key was accepted")
     false_pass = read_records([FIXTURES / "false-pass-invalid.jsonl"])
     for record in false_pass:
-        try:
-            validate_live_results([record], corpus)
-        except ContractError:
-            pass
-        else:
-            raise AssertionError(f"build-only deep-behavior fixture was accepted: {record['case_id']}")
+        expect_raises(validate_live_results, [record], corpus, exc=(ContractError,),
+                      msg=f"build-only deep-behavior fixture was accepted: {record['case_id']}")
     live_cases = [case for case in corpus["cases"] if case["evaluator"] == "live"]
     for case in live_cases:
         record = profiled_record(valid[0], case, f"build-only-{case['id']}")
         record["evidence"][0]["kind"] = "build"
-        try:
-            validate_live_results([record], corpus)
-        except ContractError:
-            pass
-        else:
-            raise AssertionError(f"build-only evidence was accepted for live case: {case['id']}")
+        expect_raises(validate_live_results, [record], corpus, exc=(ContractError,),
+                      msg=f"build-only evidence was accepted for live case: {case['id']}")
     ui_missing_reference = copy.deepcopy(
         next(record for record in false_pass if record["case_id"] == "live-5fedu-ui-parity")
     )
     ui_missing_reference["evidence"][0]["kind"] = "browser-test"
     ui_missing_reference["evidence"][0]["dimensions"].remove("reference")
     ui_missing_reference["proof_dimensions"].remove("reference")
-    try:
-        validate_live_results([ui_missing_reference], corpus)
-    except ContractError:
-        pass
-    else:
-        raise AssertionError("5fedu parity proof without reference dimension was accepted")
+    expect_raises(validate_live_results, [ui_missing_reference], corpus, exc=(ContractError,),
+                  msg="5fedu parity proof without reference dimension was accepted")
     inconsistent_tokens = copy.deepcopy(valid[0])
     inconsistent_tokens.update({
         "input_tokens": 100,
         "cached_input_tokens": 80,
         "uncached_input_tokens": 30,
     })
-    try:
-        validate_live_results([inconsistent_tokens], corpus)
-    except ContractError:
-        pass
-    else:
-        raise AssertionError("inconsistent cached/uncached token accounting was accepted")
+    expect_raises(validate_live_results, [inconsistent_tokens], corpus, exc=(ContractError,),
+                  msg="inconsistent cached/uncached token accounting was accepted")
 
     previous = quality.jsonschema
     try:
         quality.jsonschema = None
         quality.validate_schema(valid[0], quality.DEFAULT_LIVE_SCHEMA)
-        try:
-            quality.validate_schema(invalid[0], quality.DEFAULT_LIVE_SCHEMA)
-        except ContractError:
-            pass
-        else:
-            raise AssertionError("portable fallback accepted invalid live result")
+        expect_raises(quality.validate_schema, invalid[0], quality.DEFAULT_LIVE_SCHEMA, exc=(ContractError,),
+                      msg="portable fallback accepted invalid live result")
     finally:
         quality.jsonschema = previous
     print(f"PASS: live-result contracts ({len(valid)} valid; invalid fixture rejected)")
@@ -287,7 +269,233 @@ def telemetry_only() -> None:
     empty = TelemetryCollector()
     if empty.events:
         raise AssertionError("fresh collector should be empty")
+
+    # Finding 6: AM-0011 attestation provenance/hash/expiry/executable identity via telemetry
+    att_ev = collector.build_event(
+        event_type="attestation.collected",
+        platform="codex",
+        model="gpt-4",
+        effort="medium",
+        role="main",
+        task="certification",
+        repository_revision="abc123",
+        outcome="PASS",
+        attestation={
+            "host": "codex",
+            "provenance": {
+                "source_uri": "command://codex --version",
+                "producer_identity": "codex-cli",
+                "timestamp": "2026-07-29T00:00:00.000Z",
+            },
+            "evidence_hashes": ["a" * 64],
+            "expires_at": "2026-07-29T01:00:00.000Z",
+            "native_runner_identity": "/usr/bin/codex|abc123",
+        },
+    )
+    att_eid = collector.record(att_ev)
+    if len(att_eid) != 64:
+        raise AssertionError(f"attestation event_id length: {len(att_eid)}")
+    recorded_att = collector.events[-1].get("attestation")
+    if recorded_att is None:
+        raise AssertionError("telemetry event missing attestation field")
+    if recorded_att.get("native_runner_identity") != "/usr/bin/codex|abc123":
+        raise AssertionError("telemetry attestation missing executable identity")
+
+    # Finding 2: Schema-driven validation rejects missing required field
+    expect_raises(collector.record, {"event_type": "session.end"}, exc=(ValueError,),
+                  msg="schema: accepted event with missing required fields")
+
+    # Finding 2: Schema-driven validation rejects unknown event_type
+    bad = collector.build_event(
+        event_type="unknown.type", platform="codex", model="gpt-4",
+        effort="medium", role="main", task="test",
+        repository_revision="abc123", outcome="PASS",
+    )
+    expect_raises(collector.record, bad, exc=(ValueError,),
+                  msg="schema: accepted unknown event_type")
+
+    # Finding 2: Schema-driven validation rejects unknown role
+    bad = collector.build_event(
+        event_type="session.start", platform="codex", model="gpt-4",
+        effort="medium", role="hacker", task="test",
+        repository_revision="abc123", outcome="PASS",
+    )
+    expect_raises(collector.record, bad, exc=(ValueError,),
+                  msg="schema: accepted unknown role")
+
+    # Finding 2: Schema-driven validation rejects attestation with disallowed host (cursor/antigravity)
+    bad = collector.build_event(
+        event_type="attestation.collected", platform="codex", model="gpt-4",
+        effort="medium", role="main", task="certification",
+        repository_revision="abc123", outcome="PASS",
+        attestation={"host": "cursor", "provenance": {
+            "source_uri": "command://x",
+            "producer_identity": "x",
+            "timestamp": "2026-07-29T00:00:00.000Z",
+        }, "evidence_hashes": ["a" * 64], "expires_at": "2026-07-29T01:00:00.000Z",
+          "native_runner_identity": "/x|x"},
+    )
+    expect_raises(collector.record, bad, exc=(ValueError,),
+                  msg="schema: accepted cursor attestation host (deferred)")
+
+    # Finding 2: Schema-driven validation rejects attestation with non-SHA hash
+    bad = collector.build_event(
+        event_type="attestation.collected", platform="codex", model="gpt-4",
+        effort="medium", role="main", task="certification",
+        repository_revision="abc123", outcome="PASS",
+        attestation={"host": "codex", "provenance": {
+            "source_uri": "command://x",
+            "producer_identity": "x",
+            "timestamp": "2026-07-29T00:00:00.000Z",
+        }, "evidence_hashes": ["not-a-sha"], "expires_at": "2026-07-29T01:00:00.000Z",
+          "native_runner_identity": "/x|x"},
+    )
+    expect_raises(collector.record, bad, exc=(ValueError,),
+                  msg="schema: accepted non-SHA evidence hash")
+
+    # Finding 2 (V4): Attestation privacy — attestation.collected silently strips task/error/attributes
+    # build_event adds "task" — verify it's silently pruned
+    priv_ev = collector.build_event(
+        event_type="attestation.collected", platform="codex", model="gpt-4",
+        effort="medium", role="main", task="should-be-stripped",
+        repository_revision="abc123", outcome="PASS",
+        attestation={"host": "codex", "provenance": {
+            "source_uri": "command://x",
+            "producer_identity": "x",
+            "timestamp": "2026-07-29T00:00:00.000Z",
+        }, "evidence_hashes": ["a" * 64], "expires_at": "2026-07-29T01:00:00.000Z",
+          "native_runner_identity": "/x|x"},
+    )
+    priv_eid = collector.record(priv_ev)
+    recorded_priv = collector.events[-1]
+    if "task" in recorded_priv:
+        raise AssertionError("privacy: attestation still has task after record")
+    if "error" in recorded_priv:
+        raise AssertionError("privacy: attestation still has error after record")
+    if "attributes" in recorded_priv:
+        raise AssertionError("privacy: attestation still has attributes after record")
+    if "tools" in recorded_priv:
+        raise AssertionError("privacy: attestation still has tools after record")
+    if "subagent" in recorded_priv:
+        raise AssertionError("privacy: attestation still has subagent after record")
+
+    # Finding 2 (V4): Attestation privacy — raw/PII in attestation is rejected
+    from evals.telemetry.collector import _reject_raw_in_attestation
+    raw_att = {
+        "event_type": "attestation.collected",
+        "attestation": {"host": "codex", "provenance": {
+            "source_uri": "command://x", "producer_identity": "x",
+            "timestamp": "2026-07-29T00:00:00.000Z",
+        }, "evidence_hashes": ["a" * 64], "expires_at": "2026-07-29T01:00:00.000Z",
+          "native_runner_identity": "/x|x", "raw_probe_bytes": "secret"},
+    }
+    expect_raises(_reject_raw_in_attestation, raw_att, exc=(ValueError,),
+                  msg="privacy: attestation with raw_probe_bytes was not rejected")
+
+    # Finding 2 (V4): Attestation host enum — cursor/antigravity rejected (deferred)
+    for deferred_host in ("cursor", "antigravity"):
+        bad = collector.build_event(
+            event_type="attestation.collected", platform="codex", model="gpt-4",
+            effort="medium", role="main", task="certification",
+            repository_revision="abc123", outcome="PASS",
+            attestation={"host": deferred_host, "provenance": {
+                "source_uri": "command://x", "producer_identity": "x",
+                "timestamp": "2026-07-29T00:00:00.000Z",
+            }, "evidence_hashes": ["a" * 64], "expires_at": "2026-07-29T01:00:00.000Z",
+              "native_runner_identity": "/x|x"},
+        )
+        expect_raises(collector.record, bad, exc=(ValueError,),
+                      msg=f"schema: accepted {deferred_host} in attestation")
+
+    # Finding 2 (V4): RFC3339 timezone enforcement
+    bad = collector.build_event(
+        event_type="session.start", platform="codex", model="gpt-4",
+        effort="medium", role="main", task="test",
+        repository_revision="abc123", outcome="PASS",
+    )
+    bad["ts"] = "2026-07-29T00:00:00"  # no timezone
+    expect_raises(collector.record, bad, exc=(ValueError,),
+                  msg="schema: accepted non-RFC3339 timestamp")
+
+    # Finding 2 (V4): task_hash validation
+    bad = collector.build_event(
+        event_type="session.start", platform="codex", model="gpt-4",
+        effort="medium", role="main", task="test",
+        repository_revision="abc123", outcome="PASS",
+    )
+    bad["task_hash"] = "not-a-sha"
+    expect_raises(collector.record, bad, exc=(ValueError,),
+                  msg="schema: accepted invalid task_hash")
+
+    # Finding 2 (V4): Valid model_observed and model_resolved pass through
+    valid = collector.build_event(
+        event_type="session.start", platform="codex", model="gpt-4",
+        effort="medium", role="main", task="test",
+        repository_revision="abc123", outcome="PASS",
+        model_resolved="gpt-4-turbo",
+        model_observed="gpt-4-turbo",
+    )
+    valid["event_id"] = "a" * 64
+    collector.record(valid)
+    if collector.events[-1].get("model_resolved") != "gpt-4-turbo":
+        raise AssertionError("schema: model_resolved should be preserved")
+
+    # Finding 2 (V4): schema_version default generated before validation
+    minimal = {
+        "event_type": "session.start",
+        "platform": "codex", "host_version": "1.0",
+        "model": "gpt-4", "effort": "medium", "role": "main",
+        "task": "test", "repository_revision": "abc", "outcome": "PASS",
+    }
+    eid = collector.record(minimal)
+    if len(eid) != 64:
+        raise AssertionError("schema: default generation failed")
+
+    # V5: Schema missing — fail-closed raises RuntimeError
+    from evals.telemetry.collector import _load_schema, TELEMETRY_SCHEMA
+    import importlib
+    from evals.telemetry import collector as col_mod
+    saved_path = col_mod.TELEMETRY_SCHEMA
+    col_mod._SCHEMA = None
+    nonexistent = Path(__file__).parent / ".nonexistent-schema.json"
+    col_mod.TELEMETRY_SCHEMA = nonexistent
+    try:
+        expect_raises(col_mod._load_schema, exc=(RuntimeError,),
+                      msg="schema missing should have raised")
+    finally:
+        col_mod._SCHEMA = None
+        col_mod.TELEMETRY_SCHEMA = saved_path
+        _load_schema()  # re-cache correct schema
+
+    # V5: Attestation full top-level schema validation passes after prune
+    attest_top = collector.build_event(
+        event_type="attestation.collected", platform="codex", model="gpt-4",
+        effort="medium", role="main", task="irrelevant",
+        repository_revision="abc123", outcome="PASS",
+        attestation={"host": "codex", "provenance": {
+            "source_uri": "command://codex --version",
+            "producer_identity": "codex-cli",
+            "timestamp": "2026-07-29T00:00:00.000Z",
+        }, "evidence_hashes": ["a" * 64], "expires_at": "2026-07-29T01:00:00.000Z",
+          "native_runner_identity": "/usr/bin/codex|abc"},
+    )
+    top_eid = collector.record(attest_top)
+    recorded_top = collector.events[-1]
+    # After prune + schema validation, task is absent but schema allows it
+    # Key required fields should still be present
+    for req in ("schema_version", "event_id", "event_type", "platform", "model", "outcome", "ts"):
+        if req not in recorded_top:
+            raise AssertionError(f"full top-level attestation missing required field '{req}' after prune")
+
     print("PASS: telemetry collector and exporter")
+    print("PASS: telemetry attestation integration")
+    print("PASS: telemetry schema-driven validation (missing fields, event_type, role, host, hash)")
+    print("PASS: telemetry attestation privacy (reject task/error/attributes, deferred host)")
+    print("PASS: telemetry RFC3339 timezone enforcement")
+    print("PASS: telemetry task_hash validation")
+    print("PASS: telemetry default generation (schema_version, ts)")
+    print("PASS: telemetry schema missing fail-closed")
+    print("PASS: telemetry full top-level attestation after prune")
 
 
 def evaluations_only() -> None:
@@ -364,7 +572,26 @@ def compat_only() -> None:
     print("PASS: v1 compatibility reader")
 
 
+def _self_check_expect_raises() -> None:
+    """Verify expect_raises does NOT swallow AssertionError (the sentinel).
+    Must match exact message from lambda — not helper's own sentinel."""
+    def _raise_ae(): raise AssertionError("self-check-sentinel")
+    def _raise_ve(): raise ValueError("expected")
+    # AssertionError must propagate through expect_raises with exc=(ValueError,)
+    try:
+        expect_raises(_raise_ae, exc=(ValueError,), msg="should never be reached")
+    except AssertionError as e:
+        assert "self-check-sentinel" in str(e), \
+            f"self-check: caught wrong AssertionError: {e}"
+    else:
+        raise RuntimeError("FAIL: expect_raises swallowed AssertionError — self-check failed")
+    # ValueError must be caught
+    expect_raises(_raise_ve, exc=(ValueError,), msg="should catch ValueError")
+    print("PASS: expect_raises self-check (AssertionError not caught, ValueError caught)")
+
+
 def main() -> int:
+    _self_check_expect_raises()
     parser = argparse.ArgumentParser()
     parser.add_argument("--contracts-only", action="store_true")
     parser.add_argument("--routing-only", action="store_true")

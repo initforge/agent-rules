@@ -21,13 +21,14 @@ npm run test -w packages/control-plane
 export HOST_PARAM="${HOST:-}"
 HEAD_COMMIT=$(git rev-parse HEAD)
 
-node -e "
-const g = require('./packages/engine/dist/terminal-gate.js');
+node --input-type=module -e "
+import { verifyTerminalGate } from './packages/engine/dist/terminal-gate.js';
+import { execSync } from 'node:child_process';
 const host = process.env.HOST_PARAM || '';
 const ledgerPath = host ? '.agent/ledger/agent-rules-harness-v3-rearchitecture-20260726-r1--' + host + '.json' : '.agent/ledger/agent-rules-harness-v3-rearchitecture-20260726-r1.json';
-const headCommit = require('child_process').execSync('git rev-parse HEAD').toString().trim();
+const headCommit = execSync('git rev-parse HEAD').toString().trim();
 console.log('Terminal gate - ledger:', ledgerPath, 'host:', host || '(all)');
-const r = g.verifyTerminalGate(ledgerPath, headCommit);
+const r = verifyTerminalGate(ledgerPath, headCommit);
 console.log('Terminal gate:', r.passed ? 'PASS' : 'FAIL');
 process.exit(r.passed ? 0 : 1);
 "

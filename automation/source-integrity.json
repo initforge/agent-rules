@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "description": "Canonical SHA256 hashes for all scripts the installer may execute. Scripts are verified against this manifest before execution.",
+  "generated_at": "2026-07-30T07:57:00Z",
+  "files": {
+    "automation/02-install-runtime.ps1": "564b6e3409b8e536e4752490ab894157fb6cd172cacf9e165e391658efbbdbae",
+    "automation/11-install-runtime-hooks.sh": "0b7ec19e30100165dee8eca04582146df2333aa0f4701176fb7cb9f9b8a59be2",
+    "automation/13-cutover-context-routing.ps1": "8dba2c09d90eb7b8065f1f14362d554439dbdb398b5e86f4bbdaa7f80c50465f",
+    "automation/09-doctor.ps1": "7fc7220c6a2e5da02d182088858e1e57c42f65eba8ca7131bb962c82e9429f79",
+    "automation/path-compat.ps1": "c64633e6ad30ddca9bbd1e5f257bb7db3600d0b022e2719e92f367dc677c7039",
+    "automation/01-build-runtime.ps1": "52d7a4945391c4b7650150301acfe5488461a6075c84a5dc057e1d0102b9cebe",
+    "integrations/required/codebase-memory-mcp/install.ps1": "7e7de1f5fcabd35eec34c9d758a3baeae4b97d92cd0932d0343c203221ad2a55",
+    "integrations/required/codebase-memory-mcp/verify.ps1": "d0cdf47a22ddeffd4bf2c8a33064ee08762dfb67cd4264b730261a8c5949227c",
+    "integrations/required/codebase-memory-mcp/uninstall.ps1": "62e4c539503a89745031007408f89b60a4e9a443739087dfe6ec813bf2ac7509",
+    "integrations/optional/caveman/install.ps1": "528790640ce50391e9b2f865c21ac4e2dbd6e6b1329703e03e859dcdbbe8df01",
+    "integrations/optional/caveman/uninstall.ps1": "db32c7a47ffae07161dc6e973600ebce43a98dfa41f701912e77588fde52ef49",
+    "automation/03-validate-context.ps1": "66d7bc5d39bdcb037892910a77de6cb158889a21d0ce2c79804aa014728f38b4",
+    "automation/Merge-Mcp-Adapters.ps1": "d0f7efadaf4e28e4412aa10178949dbf6d774b9646111b14e4a235b6210147b0"
+  }
+}

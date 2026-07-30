@@ -4,16 +4,9 @@ load_order:
   - 05-critical-thinking.md
   - 10-execution.md
   - 15-output-economy.md
-  - 16-context-style.md
   - 20-quality-and-safety.md
   - 25-task-lifecycle.md
   - 30-context-routing.md
-  - 40-harness-governance.md
-  - 41-harness-maintainer.md
-  - 50-context-budget.md
-behaviors:
-  lifecycle: behaviors/00-lifecycle.md
-  default_operating_policy: behaviors/01-default-operating-policy.md
 budgets:
   bootstrap_tokens: 300
   core_total_tokens: 3000

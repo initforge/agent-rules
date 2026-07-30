@@ -158,7 +158,7 @@ export interface VerificationClaim {
 }
 
 export interface HostAttestation {
-  readonly host: 'codex' | 'cursor' | 'antigravity' | 'grok' | 'opencode';
+  readonly host: 'codex' | 'claude' | 'cursor' | 'antigravity' | 'grok' | 'opencode';
   readonly hostVersion: string;
   readonly commitSha: string;
   readonly capabilityStatus: CapabilityStatus;
@@ -172,6 +172,11 @@ export interface HostAttestation {
   readonly issuedAt: string;
   readonly expiresAt: string;
 }
+
+/** Supported host identity union (all known hosts). Certification requires only the subset below. */
+export type SupportedHost = HostAttestation['host'];
+/** Hosts that MUST produce attestations for certification. Cursor/Antigravity are deferred. */
+export const CERTIFICATION_REQUIRED_HOSTS: readonly SupportedHost[] = ['codex', 'claude', 'grok', 'opencode'];
 
 export interface ManifestSubsystem { readonly subsystemId: string; readonly owner: string; readonly capabilities: readonly string[]; }
 export interface ManifestCapability { readonly capabilityId: string; readonly dependencies: readonly string[]; readonly requiredEvidence: readonly string[]; readonly routingMetadata: Readonly<Record<string, string>>; }
@@ -422,9 +427,30 @@ export function assertPortablePlanIdentity(plan: PortablePlan, originalBytes: Ui
 export function assertCertificationAttestation(attestation: HostAttestation, commitSha: string, now = new Date()): void {
   requireValue(attestation.capabilityStatus === 'HOST_NATIVE' && Boolean(attestation.nativeRunnerIdentity), 'Certification requires native host attestation');
   requireValue(attestation.commitSha === commitSha, 'Host attestation commit mismatch');
-  requireValue(new Date(attestation.expiresAt).getTime() > now.getTime(), 'Host attestation is stale');
+  const issuedAt = new Date(attestation.issuedAt);
+  const expiresAt = new Date(attestation.expiresAt);
+  requireValue(!isNaN(issuedAt.getTime()), 'Host attestation issuedAt is not parseable');
+  requireValue(!isNaN(expiresAt.getTime()), 'Host attestation expiresAt is not parseable');
+  requireValue(issuedAt.getTime() <= now.getTime(), 'Host attestation issuedAt is in the future');
+  requireValue(expiresAt.getTime() > now.getTime(), 'Host attestation is stale');
+  const MAX_TTL_MS = 86_400_000;
+  const ttl = expiresAt.getTime() - issuedAt.getTime();
+  requireValue(ttl > 0 && ttl <= MAX_TTL_MS, `Host attestation TTL ${ttl}ms exceeds maximum ${MAX_TTL_MS}ms`);
   requireSha(attestation.contractSetSha256, 'HostAttestation.contractSetSha256');
   requireValue(attestation.evidenceHashes.length > 0 && attestation.evidenceHashes.every(isSha256), 'Host attestation evidence is invalid');
+}
+
+/** Canonical provenance timestamp contract: parseable, not future, within issuedAt..expiresAt. */
+export function assertProvenanceTimestamp(provenanceTimestamp: string, issuedAt: string, expiresAt: string, now = new Date(), maxClockSkewMs = 5000): void {
+  const provTs = new Date(provenanceTimestamp);
+  requireValue(!isNaN(provTs.getTime()), `Provenance timestamp '${provenanceTimestamp}' is not parseable`);
+  requireValue(provTs.getTime() <= now.getTime() + maxClockSkewMs, `Provenance timestamp '${provenanceTimestamp}' is in the future`);
+  const issTs = new Date(issuedAt);
+  requireValue(!isNaN(issTs.getTime()), 'issuedAt is not parseable');
+  requireValue(provTs.getTime() >= issTs.getTime() - maxClockSkewMs, `Provenance timestamp '${provenanceTimestamp}' is before issuedAt '${issuedAt}'`);
+  const expTs = new Date(expiresAt);
+  requireValue(!isNaN(expTs.getTime()), 'expiresAt is not parseable');
+  requireValue(provTs.getTime() <= expTs.getTime() + maxClockSkewMs, `Provenance timestamp '${provenanceTimestamp}' is after expiresAt '${expiresAt}'`);
 }
 
 function planAnchorKey(anchor: PlanAnchor): string {

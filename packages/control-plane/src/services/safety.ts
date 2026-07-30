@@ -1,6 +1,9 @@
 import path from 'path';
+import { fileURLToPath } from 'url';
 import fs from 'fs';
 import type { Response } from 'express';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function findRoot(): string {
   let dir = __dirname;
@@ -14,6 +17,45 @@ function findRoot(): string {
 }
 
 const ROOT = findRoot();
+
+const CANONICAL_READ_ALLOWLIST = new Set([
+  'rules/manifest.yaml',
+  'integrations/registry.json',
+  'profiles/manifest.yaml',
+  'automation/model-policy.json',
+  'automation/evidence-profiles.json',
+  'automation/trigger-audit.json',
+  'automation/context-route-cases.json',
+  'automation/efficiency-policy.json',
+  'automation/trace-schema.json',
+  'automation/context-graph.schema.json',
+  'automation/work-ledger.schema.json',
+  'docs/guides/06-platform-capability.md',
+  'docs/guides/01-runtime-model.md',
+  'docs/guides/03-integrations-and-sync.md',
+  'platforms/platform-contracts.json',
+])
+
+const MUTATION_ALLOWLIST = new Set([
+  'automation/model-policy.json',
+  'automation/trigger-audit.json',
+  'integrations/registry.json',
+  'profiles/manifest.yaml',
+])
+
+export function checkCanonicalAllowlist(relativePath: string): void {
+  if (!CANONICAL_READ_ALLOWLIST.has(relativePath)) {
+    const dirs = relativePath.split('/')
+    if (dirs[0] === 'platforms' || dirs[0] === 'skills' || dirs[0] === 'profiles') return
+    throw new Error(`Path not in canonical read allowlist: ${relativePath}`)
+  }
+}
+
+export function checkMutationAllowlist(relativePath: string): void {
+  if (!MUTATION_ALLOWLIST.has(relativePath)) {
+    throw new Error(`Path not in mutation allowlist: ${relativePath}`)
+  }
+}
 
 function normalizeRelativePath(relativePath: string): string {
   const hasWindowsRoot = /^[A-Za-z]:/.test(relativePath)
@@ -53,9 +95,11 @@ export function safeResolveAgainst(root: string, relativePath: string): string {
 }
 
 export function apiError(res: Response, code: number, err: unknown): void {
-  if (err instanceof Error && err.message.includes('Path traversal')) {
-    res.status(403).json({ ok: false, error: 'Forbidden' });
-    return;
+  if (err instanceof Error) {
+    if (err.message.includes('Path traversal') || err.message.includes('not allowed') || err.message.includes('allowlist')) {
+      res.status(403).json({ ok: false, error: 'Forbidden' });
+      return;
+    }
   }
   res.status(code).json({ ok: false, error: 'An internal error occurred' });
 }

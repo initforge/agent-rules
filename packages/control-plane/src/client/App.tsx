@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Layout from './components/Layout';
 import Overview from './pages/Overview';
-import Plan from './pages/Plan';
+import PlanWorkspace from './PlanWorkspace';
 import Runs from './pages/Runs';
 import Evaluations from './pages/Evaluations';
 import Architecture from './pages/Architecture';
 import Configuration from './pages/Configuration';
 import Profiles from './pages/Profiles';
 import Audit from './pages/Audit';
+import C4Page from './pages/C4';
 import NotFound from './pages/NotFound';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -55,7 +56,7 @@ export default function App() {
       case 'overview':
         return <Overview navigate={navigate} />;
       case 'plan':
-        return <ErrorBoundary><Plan navigate={navigate} /></ErrorBoundary>;
+        return <ErrorBoundary><PlanWorkspace navigate={navigate} /></ErrorBoundary>;
       case 'runs':
         return <Runs segments={segments} navigate={navigate} />;
       case 'evaluations':
@@ -68,6 +69,8 @@ export default function App() {
         return <Profiles segments={segments} navigate={navigate} />;
       case 'audit':
         return <Audit segments={segments} navigate={navigate} />;
+      case 'c4':
+        return <ErrorBoundary><C4Page navigate={navigate} /></ErrorBoundary>;
       default:
         return <NotFound path={currentPath} navigate={navigate} />;
     }

@@ -7,6 +7,22 @@ param(
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "path-compat.ps1")
 
+function Assert-ScriptIntegrity {
+  param([string]$ScriptPath, [string]$IntegrityManifestPath = (Join-Path $PSScriptRoot "source-integrity.json"))
+  if (-not (Test-Path -LiteralPath $ScriptPath -PathType Leaf)) { throw "Script not found: $ScriptPath" }
+  $Item = Get-Item -LiteralPath $ScriptPath -Force
+  if ($Item.LinkType -in @("SymbolicLink", "HardLink") -or $Item.Target) { throw "Refusing linked script: $ScriptPath" }
+  $RootFull = [IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
+  $ScriptFull = [IO.Path]::GetFullPath($ScriptPath)
+  if (-not $ScriptFull.StartsWith($RootFull, [StringComparison]::OrdinalIgnoreCase)) { throw "Script escapes repository root: $ScriptPath" }
+  $Relative = $ScriptFull.Substring($RootFull.Length).TrimStart([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar).Replace('\', '/')
+  $Manifest = Get-Content -Raw -LiteralPath $IntegrityManifestPath | ConvertFrom-Json
+  $Expected = [string]$Manifest.files.$Relative
+  if (-not $Expected) { throw "No integrity entry for $Relative" }
+  $Actual = (Get-FileHash -LiteralPath $ScriptPath -Algorithm SHA256).Hash.ToLowerInvariant()
+  if ($Actual -ne $Expected.ToLowerInvariant()) { throw "Integrity check failed for $Relative" }
+}
+
 $UserHome = if ($env:USERPROFILE) { $env:USERPROFILE } elseif ($env:HOME) { $env:HOME } else { throw "Cannot resolve user home" }
 $PlatformHomes = @{
   codex = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $UserHome ".codex" }
@@ -317,6 +333,7 @@ foreach ($Name in $Selected) {
         continue
       }
       try {
+        Assert-ScriptIntegrity -ScriptPath $VerifyScript
         & $VerifyScript | Out-Null
         $Report += [pscustomobject]@{ platform = $Name; check = $Integration.id; status = "OK"; detail = "verify pass" }
       } catch {

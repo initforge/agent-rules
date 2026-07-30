@@ -106,7 +106,7 @@
   --color-accent-hover: var(--blue-700);
   --color-accent-soft: var(--blue-50);
 
-  --color-success: var(--green-700);
+  --color-success: var(--green-500);
   --color-success-soft: var(--green-50);
   --color-warning: var(--orange-500);
   --color-warning-soft: var(--orange-50);
@@ -178,9 +178,27 @@
   --motion-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   --sidebar-width: 240px;
-  --inspector-width: 320px;
+  --inspector-width: 360px;
   --header-height: 0px;
-  --content-max-width: 1200px;
+  --content-max-width: 1280px;
+
+  --motion-reduced-duration: 0.01ms;
+  --motion-reduced-ease: cubic-bezier(0, 0, 1, 1);
+
+  --plan-lineage-node-size: 28px;
+  --plan-lineage-connector-width: 2px;
+  --plan-timeline-dot-size: 10px;
+  --plan-visualization-min-height: 320px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration-instant: var(--motion-reduced-duration);
+    --motion-duration-fast: var(--motion-reduced-duration);
+    --motion-duration-normal: var(--motion-reduced-duration);
+    --motion-duration-slow: var(--motion-reduced-duration);
+    --motion-duration-xslow: var(--motion-reduced-duration);
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -300,7 +318,7 @@
   --color-accent-hover: var(--blue-700);
   --color-accent-soft: var(--blue-50);
 
-  --color-success: var(--green-700);
+  --color-success: var(--green-500);
   --color-success-soft: var(--green-50);
   --color-warning: var(--orange-500);
   --color-warning-soft: var(--orange-50);

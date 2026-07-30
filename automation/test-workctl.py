@@ -41,7 +41,7 @@ def run(root: Path, *args: str, expect: int = 0) -> dict:
 
 def run_launcher(root: Path, launcher: Path, *args: str, expect: int = 0) -> dict:
     command = (
-        ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(launcher)]
+        ["powershell", "-NoProfile", "-File", str(launcher)]
         if os.name == "nt"
         else ["sh", str(launcher)]
     )

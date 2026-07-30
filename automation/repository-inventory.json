@@ -22,9 +22,8 @@
       "confidence": "high",
       "evidence": "CI/CD pipeline",
       "entries": [
-        { "path": ".github/workflows/static.yml", "type": "workflow", "owner": "harness-maintainer", "public": true, "status": "active", "consumers": ["all-agents", "CI/CD gate"] },
-        { "path": ".github/workflows/native-smoke.yml", "type": "workflow", "owner": "harness-maintainer", "public": true, "status": "advisory", "consumers": ["maintainers"] },
-        { "path": ".github/workflows/evaluation.yml", "type": "workflow", "owner": "harness-maintainer", "public": true, "status": "advisory", "consumers": ["maintainers"] }
+        { "path": ".github/workflows/quality.yml", "type": "workflow", "owner": "harness-maintainer", "public": true, "status": "active", "consumers": ["all-agents", "CI/CD gate"] },
+        { "path": ".github/workflows/certification.yml", "type": "workflow", "owner": "harness-maintainer", "public": true, "status": "advisory", "consumers": ["maintainers"] }
       ]
     },
     {

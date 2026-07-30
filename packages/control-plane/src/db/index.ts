@@ -1,5 +1,9 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+import { redactStringJson } from '../services/redact.js';
 
 export interface AuditRecord {
   id: number;
@@ -104,6 +108,9 @@ export function addAudit(record: Omit<AuditRecord, 'id'>): AuditRecord {
 export function addRun(record: Omit<RunRecord, 'id'>): RunRecord {
   store.counters.runs++;
   const entry: RunRecord = { id: store.counters.runs, ...record };
+  if (entry.details) {
+    entry.details = redactStringJson(entry.details);
+  }
   store.runs.unshift(entry);
   dirty = true;
   return entry;
@@ -112,6 +119,9 @@ export function addRun(record: Omit<RunRecord, 'id'>): RunRecord {
 export function addTelemetry(record: Omit<TelemetryRecord, 'id'>): TelemetryRecord {
   store.counters.telemetry++;
   const entry: TelemetryRecord = { id: store.counters.telemetry, ...record };
+  if (entry.payload) {
+    entry.payload = redactStringJson(entry.payload);
+  }
   store.telemetry.unshift(entry);
   dirty = true;
   return entry;

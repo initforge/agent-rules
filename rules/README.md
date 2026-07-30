@@ -18,7 +18,8 @@ Lazy boundary rules:
 | File | Vai trò |
 |---|---|
 | `16-context-style.md` | Phong cách viết context |
-| `40-harness-governance.md` | Sửa harness + sync canonical |
+| `40-harness-governance.md` | Pointer to maintainer |
+| `41-harness-maintainer.md` | Governance & sync canonical |
 | `50-context-budget.md` | Session dài / exploration |
 
 Skills: `skills/` (lazy theo trigger).

@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "am0015/scorecard-evidence/v2",
+  "title": "AM0015 Scorecard Evidence",
+  "description": "Machine-verified evidence for the 18-dimension AM0015 maturity scorecard. Populated by automation/gather-scorecard-evidence.py. Each dimension carries scored evidence with validated URIs, content hashes, and freshness.",
+  "type": "object",
+  "properties": {
+    "schema": { "type": "string", "pattern": "^am0015/scorecard-evidence/v" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "_gathered_at": { "type": "string", "format": "date-time" },
+    "_git": {
+      "type": "object",
+      "description": "Exact git identity at gather time",
+      "properties": {
+        "commit": { "type": "string", "pattern": "^[a-f0-9]{7,40}$" },
+        "author": { "type": "string" },
+        "branch": { "type": "string" },
+        "identity_candidate": { "type": "string", "description": "git config user.name for the candidate identity" },
+        "identity_effective": { "type": "string", "description": "Verified effective identity (committer or author)" }
+      },
+      "required": ["commit", "author", "branch"]
+    },
+    "_gh_runs": {
+      "type": "array",
+      "description": "Recent GitHub Actions runs (best-effort, empty when gh unavailable or no network)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "branch": { "type": "string" },
+          "status": { "type": "string" },
+          "conclusion": { "type": "string" },
+          "started_at": { "type": "string" }
+        }
+      }
+    },
+    "_evidence_sources": {
+      "type": "array",
+      "description": "Aggregate list of evidence URIs that exist on disk, with their content hash, freshness, and kind. Missing/unreachable paths are omitted.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "uri": { "type": "string" },
+          "hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+          "freshness_seconds": { "type": "number", "minimum": 0 },
+          "kind": { "type": "string", "enum": ["source", "test", "gate", "ci", "install", "doctor", "ledger"] }
+        },
+        "required": ["uri", "hash", "freshness_seconds", "kind"]
+      }
+    },
+    "dimensions": {
+      "type": "array",
+      "description": "18 AM0015 maturity dimensions with scored evidence",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "pattern": "^d\\d{2}$" },
+          "label": { "type": "string" },
+          "severity": { "type": "string", "enum": ["Critical", "High", "Medium", "Low"] },
+          "score": { "type": "integer", "minimum": 0 },
+          "maxScore": { "type": "integer", "minimum": 0 },
+          "status": { "type": "string", "enum": ["pass", "warn", "fail", "unknown"] },
+          "evidence_items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "uri": { "type": "string" },
+                "hash": { "type": "string", "pattern": "^(sha256:[a-f0-9]{64})?$" },
+                "freshness_seconds": { "type": "number", "minimum": -1 },
+                "kind": { "type": "string" },
+                "passed": { "type": "boolean" },
+                "finding": { "type": "string" }
+              },
+              "required": ["uri", "hash", "freshness_seconds", "kind", "passed"]
+            }
+          },
+          "findings": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["id", "label", "severity", "score", "maxScore", "status", "evidence_items", "findings"]
+      },
+      "minItems": 18,
+      "maxItems": 18
+    }
+  },
+  "required": ["schema", "updated_at", "dimensions"]
+}

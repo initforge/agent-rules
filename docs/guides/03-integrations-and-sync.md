@@ -14,7 +14,7 @@ Một canonical registry duy nhất cho mọi integration và MCP server.
 | `optional` | Không cài mặc định |
 
 **Generated full registry** (including profiles, trusts, capabilities):  
-[generated/references/integration-registry.md](../generated/references/integration-registry.md)  
+[generated/references/integration-registry.md](../../generated/references/integration-registry.md)  
 Canonical source: `integrations/registry.json`. Regenerate after changes:
 
 ```bash
@@ -44,6 +44,6 @@ MCP tool schemas tại `integrations/<policy>/<id>/`; generated manifest tại `
 
 - **Outbound:** `automation/01-build-runtime.ps1` → `02-install-runtime.ps1` (wipe target, merge MCP adapters)
 - **Inbound:** chỉ `automation/07-import-reviewed-changes.ps1` + tombstone `.agent/tombstones/`
-- Rule: [`rules/40-harness-governance.md`](../rules/40-harness-governance.md)
+- Rule: [`rules/40-harness-governance.md`](../../rules/40-harness-governance.md)
 
 Chi tiết runtime homes: [`01-runtime-model.md`](01-runtime-model.md).

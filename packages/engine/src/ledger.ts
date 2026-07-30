@@ -49,12 +49,26 @@ export class WorkLedger {
     };
 
     ensureDir(path.dirname(this.path));
-    fs.writeFileSync(this.tmpPath, JSON.stringify(envelope, null, 2), 'utf-8');
-    const tmpFd = fs.openSync(this.tmpPath, 'r+');
+    // O_NOFOLLOW on temp file creation prevents symlink-redirect of tmp path
+    const tmpFd2 = fs.openSync(this.tmpPath, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_TRUNC | fs.constants.O_NOFOLLOW, 0o600);
     try {
-      fs.fsyncSync(tmpFd);
+      const encoded = new TextEncoder().encode(JSON.stringify(envelope, null, 2) + '\n');
+      let off = 0;
+      while (off < encoded.length) {
+        const n = fs.writeSync(tmpFd2, encoded, off, encoded.length - off);
+        if (n === 0) throw new Error('WorkLedger: write returned 0');
+        off += n;
+      }
+      fs.fsyncSync(tmpFd2);
     } finally {
-      fs.closeSync(tmpFd);
+      fs.closeSync(tmpFd2);
+    }
+    // Check target before rename: reject symlinks
+    try {
+      const lst = fs.lstatSync(this.path);
+      if (lst.isSymbolicLink()) throw new Error('WorkLedger: target path is a symlink');
+    } catch (e: any) {
+      if (e.code !== 'ENOENT') throw e;
     }
     fs.renameSync(this.tmpPath, this.path);
     const dirFd = fs.openSync(path.dirname(this.path), 'r');
@@ -70,8 +84,26 @@ export class WorkLedger {
       if (!fs.existsSync(this.path)) {
         return { data: {}, valid: false, error: 'Ledger file does not exist' };
       }
-
-      const raw = fs.readFileSync(this.path, 'utf-8');
+      // O_NOFOLLOW: reject symlink targets
+      let raw: string;
+      {
+        const fd = fs.openSync(this.path, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+        try {
+          const st = fs.fstatSync(fd);
+          if (!st.isFile()) return { data: {}, valid: false, error: 'Ledger path is not a regular file' };
+          const size = st.size;
+          const buf = Buffer.allocUnsafeSlow(size);
+          let off = 0;
+          while (off < size) {
+            const n = fs.readSync(fd, buf, off, size - off, off);
+            if (n === 0) throw new Error('WorkLedger: unexpected EOF');
+            off += n;
+          }
+          raw = new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(buf));
+        } finally {
+          fs.closeSync(fd);
+        }
+      }
       const envelope = JSON.parse(raw) as LedgerEnvelope;
 
       if (envelope.schema !== CURRENT_SCHEMA) {
@@ -113,7 +145,19 @@ export class WorkLedger {
         const content = JSON.stringify(sectionData, null, 2);
         const contentHash = sha256(content);
         const shadowPath = path.join(shadowDir, `${section}.md`);
-        fs.writeFileSync(shadowPath, content, 'utf-8');
+        const fd = fs.openSync(shadowPath, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_TRUNC | fs.constants.O_NOFOLLOW, 0o600);
+        try {
+          const encoded = new TextEncoder().encode(content);
+          let off = 0;
+          while (off < encoded.length) {
+            const n = fs.writeSync(fd, encoded, off, encoded.length - off);
+            if (n === 0) throw new Error('WorkLedger: shadow write zero bytes');
+            off += n;
+          }
+          fs.fsyncSync(fd);
+        } finally {
+          fs.closeSync(fd);
+        }
         shadowHashes.push(contentHash);
       }
     }
@@ -121,7 +165,21 @@ export class WorkLedger {
     const fullContent = JSON.stringify(data, null, 2);
     const fullHash = sha256(fullContent);
     const fullShadowPath = path.join(shadowDir, 'full.md');
-    fs.writeFileSync(fullShadowPath, fullContent, 'utf-8');
+    {
+      const fd = fs.openSync(fullShadowPath, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_TRUNC | fs.constants.O_NOFOLLOW, 0o600);
+      try {
+        const encoded = new TextEncoder().encode(fullContent);
+        let off = 0;
+        while (off < encoded.length) {
+          const n = fs.writeSync(fd, encoded, off, encoded.length - off);
+          if (n === 0) throw new Error('WorkLedger: full shadow write zero bytes');
+          off += n;
+        }
+        fs.fsyncSync(fd);
+      } finally {
+        fs.closeSync(fd);
+      }
+    }
     shadowHashes.push(fullHash);
 
     return shadowHashes;
@@ -146,14 +204,31 @@ export class WorkLedger {
 
       for (const [fileName, expectedHash] of Object.entries(shadowHashes)) {
         const filePath = path.join(shadowDir, fileName);
-        if (!fs.existsSync(filePath)) {
-          drift.push({ file: filePath, expected: expectedHash, actual: '(missing)' });
-        } else {
-          const content = fs.readFileSync(filePath, 'utf-8');
-          const actualHash = sha256(content);
-          if (actualHash !== expectedHash) {
-            drift.push({ file: filePath, expected: expectedHash, actual: actualHash });
+        let content: string;
+        try {
+          const fd = fs.openSync(filePath, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+          try {
+            const st = fs.fstatSync(fd);
+            if (!st.isFile()) { drift.push({ file: filePath, expected: expectedHash, actual: '(not a file)' }); continue; }
+            const size = st.size;
+            const buf = Buffer.allocUnsafeSlow(size);
+            let off = 0;
+            while (off < size) {
+              const n = fs.readSync(fd, buf, off, size - off, off);
+              if (n === 0) break;
+              off += n;
+            }
+            content = new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(buf));
+          } finally {
+            fs.closeSync(fd);
           }
+        } catch {
+          drift.push({ file: filePath, expected: expectedHash, actual: '(missing)' });
+          continue;
+        }
+        const actualHash = sha256(content);
+        if (actualHash !== expectedHash) {
+          drift.push({ file: filePath, expected: expectedHash, actual: actualHash });
         }
       }
     }

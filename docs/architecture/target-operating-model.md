@@ -651,7 +651,7 @@ Keep separate:
 |-------|-------|
 | Requirement IDs | R-013, R-036 |
 | Owner | harness-maintainer |
-| Canonical implementation path | `.github/workflows/static.yml` |
+| Canonical implementation path | `.github/workflows/quality.yml` |
 | Runtime consumer | CI runner |
 | Implementation status | VERIFIED |
 | Evidence status | VERIFIED |

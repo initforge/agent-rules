@@ -1,4 +1,4 @@
-import Ajv, { type ValidateFunction } from 'ajv';
+import { Ajv, type ValidateFunction } from 'ajv';
 
 const ajv = new Ajv({ allErrors: true, verbose: true });
 
@@ -71,7 +71,7 @@ export function validateEdit(target: EditTarget, data: unknown): ValidationResul
   const valid = validate(data) as boolean;
   return {
     valid,
-    errors: valid ? [] : (validate.errors || []).map(e => `${e.instancePath} ${e.message}`),
+    errors: valid ? [] : (validate.errors || []).map((e: { instancePath: string; message?: string }) => `${e.instancePath} ${e.message}`),
   };
 }
 
@@ -106,6 +106,6 @@ export function validateAgainstSchema(filePath: string, data: unknown): Validati
   const valid = validate(data) as boolean;
   return {
     valid,
-    errors: valid ? [] : (validate.errors || []).map(e => `${e.instancePath} ${e.message}`),
+    errors: valid ? [] : (validate.errors || []).map((e: { instancePath: string; message?: string }) => `${e.instancePath} ${e.message}`),
   };
 }
