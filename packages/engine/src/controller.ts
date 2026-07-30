@@ -25,7 +25,12 @@ export interface ControllerSnapshot {
 
 const MAX_LEDGER_BYTES = 16 * 1024 * 1024;
 const MAX_CHECKPOINT_BYTES = 16 * 1024 * 1024;
+const MAX_COLLECTION_ITEMS = 100_000;
+const MAX_STRING_BYTES = 64 * 1024;
 type Identity = { dev: bigint; ino: bigint };
+const taskStates = new Set<TaskState>(['PENDING', 'READY', 'IN_PROGRESS', 'UNDER_REVIEW', 'CLOSED_MATCH', 'CLOSED_FAILED']);
+const checkpointStates = new Set<CheckpointState>(['INITIAL', 'DISPATCHING', 'IMPLEMENTING', 'VERIFYING', 'REVIEWING', 'RECONCILING', 'COMPLETED', 'FAILED']);
+const ledgerStatuses = new Set(['ADOPTED', 'DISCOVERING', 'PLANNED', 'VALIDATED', 'DISPATCHING', 'EXECUTING', 'VERIFYING', 'REVIEWING', 'needs-remediation', 'needs-replan', 'COMPLETED', 'PARTIAL', 'BLOCKED', 'FAILED', 'CANCELLED']);
 
 function identity(st: fs.Stats): Identity {
   return { dev: BigInt(st.dev), ino: BigInt(st.ino) };
@@ -71,11 +76,90 @@ function readRegularFile(file: string, limit: number, label: string): { raw: str
   }
 }
 
+function record(value: unknown, field: string): Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new Error(`Controller: invalid ${field}`);
+  return value as Record<string, unknown>;
+}
+
+function string(value: unknown, field: string): string {
+  if (typeof value !== 'string' || value.length === 0 || Buffer.byteLength(value) > MAX_STRING_BYTES)
+    throw new Error(`Controller: invalid ${field}`);
+  return value;
+}
+
+function array(value: unknown, field: string): unknown[] {
+  if (!Array.isArray(value) || value.length > MAX_COLLECTION_ITEMS) throw new Error(`Controller: invalid ${field}`);
+  return value;
+}
+
+function strings(value: unknown, field: string): string[] {
+  return array(value, field).map((item, index) => string(item, `${field}[${index}]`));
+}
+
+function safeRevision(value: unknown, field: string): number {
+  if (!Number.isSafeInteger(value) || (value as number) < 0) throw new Error(`Controller: invalid ${field}`);
+  return value as number;
+}
+
+function receipt(value: unknown, field: string): WorkerReceipt {
+  const item = record(value, field);
+  for (const key of ['receiptId', 'assignmentId', 'workerIdentity', 'host', 'model', 'startedAt', 'completedAt']) string(item[key], `${field}.${key}`);
+  for (const key of ['artifactUris', 'artifactHashes', 'filesChanged', 'logUris', 'logHashes', 'testEvidenceUris', 'testEvidenceHashes']) strings(item[key], `${field}.${key}`);
+  array(item.commands, `${field}.commands`).forEach((command, index) => {
+    const invocation = record(command, `${field}.commands[${index}]`);
+    string(invocation.executable, `${field}.commands[${index}].executable`);
+    strings(invocation.args, `${field}.commands[${index}].args`);
+    if (invocation.cwd !== undefined) string(invocation.cwd, `${field}.commands[${index}].cwd`);
+  });
+  array(item.exitCodes, `${field}.exitCodes`).forEach((code) => safeRevision(code, `${field}.exitCodes`));
+  if (item.diffSha256 !== undefined && !/^[a-f0-9]{64}$/.test(string(item.diffSha256, `${field}.diffSha256`))) throw new Error(`Controller: invalid ${field}.diffSha256`);
+  return item as unknown as WorkerReceipt;
+}
+
+function assignment(value: unknown, field: string): TaskAssignment {
+  const item = record(value, field);
+  string(item.assignmentId, `${field}.assignmentId`);
+  string(item.taskId, `${field}.taskId`);
+  strings(item.dependencies, `${field}.dependencies`);
+  array(item.verificationCommands, `${field}.verificationCommands`).forEach((command, index) => {
+    const invocation = record(command, `${field}.verificationCommands[${index}]`);
+    string(invocation.executable, `${field}.verificationCommands[${index}].executable`);
+    strings(invocation.args, `${field}.verificationCommands[${index}].args`);
+  });
+  return item as unknown as TaskAssignment;
+}
+
 function parseLedger(raw: string): WorkLedger {
-  const value = JSON.parse(raw) as Partial<WorkLedger>;
-  if (!Array.isArray(value.assignments) || !Array.isArray(value.receipts)
-    || !Number.isSafeInteger(value.shadowRevision)) throw new Error('Controller: malformed ledger');
-  return value as WorkLedger;
+  const value = record(JSON.parse(raw), 'ledger');
+  if (!ledgerStatuses.has(string(value.status, 'ledger.status'))) throw new Error('Controller: invalid ledger.status');
+  record(value.plan, 'ledger.plan');
+  for (const key of ['planAnchors', 'batches', 'amendments', 'verificationClaims', 'attestations', 'reconciliations', 'repairSlices', 'sourceAcquisitionReceipts', 'orphanFindings'])
+    array(value[key], `ledger.${key}`).forEach((item, index) => record(item, `ledger.${key}[${index}]`));
+  const assignments = array(value.assignments, 'ledger.assignments').map((item, index) => assignment(item, `ledger.assignments[${index}]`));
+  const receipts = array(value.receipts, 'ledger.receipts').map((item, index) => receipt(item, `ledger.receipts[${index}]`));
+  safeRevision(value.shadowRevision, 'ledger.shadowRevision');
+  record(value.shadowHashes, 'ledger.shadowHashes');
+  record(value.latestReview, 'ledger.latestReview');
+  if (new Set(assignments.map((item) => item.assignmentId)).size !== assignments.length) throw new Error('Controller: duplicate assignmentId');
+  if (new Set(receipts.map((item) => item.receiptId)).size !== receipts.length) throw new Error('Controller: duplicate receiptId');
+  return value as unknown as WorkLedger;
+}
+
+function parseSnapshot(raw: string, ledgerPath: string): ControllerSnapshot {
+  const value = record(JSON.parse(raw), 'checkpoint');
+  if (!checkpointStates.has(value.checkpointState as CheckpointState)) throw new Error('Controller: invalid checkpointState');
+  const revision = safeRevision(value.revision, 'checkpoint.revision');
+  if (string(value.ledgerPath, 'checkpoint.ledgerPath') !== ledgerPath) throw new Error('Controller: checkpoint ledgerPath mismatch');
+  const states = record(value.taskStates, 'checkpoint.taskStates');
+  if (Object.keys(states).length > MAX_COLLECTION_ITEMS) throw new Error('Controller: invalid checkpoint.taskStates');
+  for (const [id, state] of Object.entries(states)) {
+    string(id, 'checkpoint.taskStates key');
+    if (!taskStates.has(state as TaskState)) throw new Error('Controller: invalid task state');
+  }
+  const running = strings(value.runningAssignments, 'checkpoint.runningAssignments');
+  const receipts = array(value.receipts, 'checkpoint.receipts').map((item, index) => receipt(item, `checkpoint.receipts[${index}]`));
+  if (new Set(running).size !== running.length || running.some((id) => states[id] !== 'IN_PROGRESS')) throw new Error('Controller: invalid runningAssignments');
+  return { checkpointState: value.checkpointState as CheckpointState, taskStates: states as Record<string, TaskState>, runningAssignments: running, receipts, revision, ledgerPath };
 }
 
 function syncDirectory(dir: string): void {
@@ -299,16 +383,23 @@ export class Controller {
       throw new Error('Controller: storage identity changed');
     const expectedHash = checkpointFile.split('-')[2]!.slice(0, 16);
     if (sha256Bytes(new TextEncoder().encode(raw)).slice(0, 16) !== expectedHash) throw new Error('Controller: checkpoint hash mismatch');
-    const snapshot = JSON.parse(raw) as ControllerSnapshot;
+    const snapshot = parseSnapshot(raw, this.ledgerPath);
+    let ledger: WorkLedger | null;
+    try { ledger = parseLedger(readRegularFile(this.ledgerPath, MAX_LEDGER_BYTES, 'ledger').raw); }
+    catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; ledger = null; }
+    if (ledger) {
+      const assignmentIds = new Set(ledger.assignments.map((item) => item.assignmentId));
+      if (Object.keys(snapshot.taskStates).some((id) => !assignmentIds.has(id))
+        || snapshot.runningAssignments.some((id) => !assignmentIds.has(id))
+        || snapshot.receipts.some((item) => !assignmentIds.has(item.assignmentId))) throw new Error('Controller: checkpoint references unknown assignment');
+    }
 
     this.checkpointState = snapshot.checkpointState;
     this.taskStates = new Map(Object.entries(snapshot.taskStates));
     this.runningAssignments = new Set(snapshot.runningAssignments);
     this.receipts = snapshot.receipts;
     this.revision = snapshot.revision;
-
-    try { this.ledger = parseLedger(readRegularFile(this.ledgerPath, MAX_LEDGER_BYTES, 'ledger').raw); }
-    catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; this.ledger = null; }
+    this.ledger = ledger;
   }
 
   async cancel(assignmentId: string): Promise<void> {

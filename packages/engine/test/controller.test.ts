@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import { createHash } from 'node:crypto';
 import { Controller } from '../src/controller.js';
 import type { WorkLedger, TaskAssignment, WorkerReceipt } from '../src/contracts.js';
 
@@ -134,6 +135,19 @@ function writeLedger(dir: string, ledger: WorkLedger): string {
   const ledgerPath = path.join(dir, 'ledger.json');
   fs.writeFileSync(ledgerPath, JSON.stringify(ledger, null, 2));
   return ledgerPath;
+}
+
+function mutateCheckpoint(dir: string, mutate: (value: Record<string, any>) => void): string {
+  const state = path.join(dir, '.controller');
+  const old = fs.readdirSync(state)[0]!;
+  const value = JSON.parse(fs.readFileSync(path.join(state, old), 'utf8'));
+  const revision = old.slice('checkpoint-'.length, 'checkpoint-'.length + 10);
+  mutate(value);
+  const raw = JSON.stringify(value, null, 2);
+  const digest = createHash('sha256').update(raw).digest('hex').slice(0, 16);
+  fs.unlinkSync(path.join(state, old));
+  fs.writeFileSync(path.join(state, `checkpoint-${revision}-${digest}.json`), raw);
+  return revision;
 }
 
 afterEach(() => {
@@ -303,6 +317,34 @@ describe('Controller', () => {
       fs.writeFileSync(path.join(state, `checkpoint-${revision}-${hash.slice(0, 16)}.json`), '{');
       await expect(new Controller(ledger).resume(revision)).rejects.toThrow();
     });
+
+    it.each([
+      ['enum', (v: any) => { v.checkpointState = 'EVIL'; }],
+      ['revision', (v: any) => { v.revision = -1; }],
+      ['record', (v: any) => { v.taskStates = []; }],
+      ['string', (v: any) => { v.runningAssignments = [3]; }],
+      ['receipt', (v: any) => { v.receipts = [{}]; }],
+      ['ledgerPath', (v: any) => { v.ledgerPath += '.other'; }],
+      ['state', (v: any) => { v.taskStates['A-TASK-A'] = 'EVIL'; }],
+      ['running identity', (v: any) => { v.runningAssignments = ['UNKNOWN']; }],
+    ])('rejects invalid checkpoint %s atomically', async (_kind, mutate) => {
+      const dir = tmpDir();
+      const ledger = writeLedger(dir, stubLedger());
+      const source = new Controller(ledger);
+      const assignment = await source.dispatchNext(); source.startWork(assignment!); await source.checkpoint();
+      const target = new Controller(ledger);
+      expect(target.getTaskState('A-TASK-A')).toBe('PENDING');
+      const revision = mutateCheckpoint(dir, mutate);
+      await expect(target.resume(revision)).rejects.toThrow();
+      expect(target.getTaskState('A-TASK-A')).toBe('PENDING');
+    });
+
+    it('rejects bounded checkpoint collections', async () => {
+      const dir = tmpDir(); const ledger = writeLedger(dir, stubLedger()); const source = new Controller(ledger);
+      await source.checkpoint();
+      const revision = mutateCheckpoint(dir, (v) => { v.runningAssignments = Array(100_001).fill('A'); });
+      await expect(new Controller(ledger).resume(revision)).rejects.toThrow(/runningAssignments/);
+    });
   });
 
   it('distinguishes missing ledgers from malformed, linked, and oversized ledgers', () => {
@@ -318,6 +360,19 @@ describe('Controller', () => {
     expect(() => new Controller(linked)).toThrow(/private regular file/);
     const symlink = path.join(dir, 'symlink.json'); fs.symlinkSync(source, symlink);
     expect(() => new Controller(symlink)).toThrow();
+  });
+
+  it.each([
+    ['enum', (v: any) => { v.status = 'EVIL'; }],
+    ['revision', (v: any) => { v.shadowRevision = -1; }],
+    ['collection', (v: any) => { v.assignments = Array(100_001).fill({}); }],
+    ['record', (v: any) => { v.plan = []; }],
+    ['string', (v: any) => { v.assignments[0].assignmentId = 4; }],
+    ['assignment', (v: any) => { delete v.assignments[0].verificationCommands; }],
+    ['receipt', (v: any) => { v.receipts = [{}]; }],
+  ])('rejects invalid ledger %s', (_kind, mutate) => {
+    const dir = tmpDir(); const value: any = stubLedger(); mutate(value);
+    expect(() => new Controller(writeLedger(dir, value))).toThrow();
   });
 
   describe('cancel', () => {
