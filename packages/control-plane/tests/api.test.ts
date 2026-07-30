@@ -463,13 +463,12 @@ function orderSensitivityFixture(root: string, pid: string, orderIds: string[]):
   fs.writeFileSync(path.join(ld, pid + '.json'), JSON.stringify({ status: 'REVIEWING', plan: pp, planAnchors: [anchor], batches: [{ batchId: 'P0', status: 'PASSED', taskIds: ['T1'] }], amendments: ledgerAmends, assignments: [], receipts: [], verificationClaims: [], attestations: [{ host: 'codex', hostVersion: '1', commitSha: 'deadbeef', capabilityStatus: 'HOST_NATIVE', capabilityIds: ['run'], contractSetSha256: hash, requestedModel: 'standard', resolvedModel: 'gpt', observedModel: 'gpt', evidenceHashes: [hash], nativeRunnerIdentity: 'codex-cli', issuedAt: '2026-01-01T00:00:00Z', expiresAt: '2099-01-01T00:00:00Z' }], reconciliations: [{ requirementId: 'R1', status: 'PARTIAL', anchorIds: [aid], verificationClaimIds: [] }], repairSlices: [], sourceAcquisitionReceipts: [], orphanFindings: [], shadowRevision: 1, shadowHashes: sHashes, latestReview: { reviewId: 'R1', stale: false, originalSha256: oSha, amendmentsSha256: agg(ledgerAmends.map(a => JSON.stringify([a.amendmentId, a.sha256, a.sourceRef]))), diffFingerprint: agg([]), receiptEvidenceFingerprint: agg([]), evidenceHashes: [], shadowRevision: 1, reviewerIdentity: 'r' } }))
 }
 
-const tmp = require('node:path').join(require('node:os').tmpdir(), 'cp-plan-test-' + Date.now())
+const tmp = require('node:fs').mkdtempSync(require('node:path').join(require('node:fs').realpathSync(require('node:os').tmpdir()), 'cp-plan-test-'))
 
 describe('Plan workspace API', () => {
   beforeAll(() => {
     const fs = require('node:fs'); const path = require('node:path')
-    if (fs.existsSync(tmp)) fs.rmSync(tmp, { recursive: true, force: true })
-    fs.mkdirSync(tmp, { recursive: true }); process.env.HARNESS_ROOT = tmp
+    process.env.HARNESS_ROOT = tmp
   })
   afterAll(() => {
     delete process.env.HARNESS_ROOT
