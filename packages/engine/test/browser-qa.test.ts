@@ -2,11 +2,13 @@ import { describe, expect, it, beforeAll, afterAll, beforeEach, afterEach } from
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
 import { AxeBuilder } from '@axe-core/playwright';
 import { spawn, execSync, type ChildProcess } from 'node:child_process';
+import { createServer } from 'node:net';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const BASE_URL = 'http://127.0.0.1:3099';
+let baseUrl = '';
+let serverPort = 0;
 
 const TEST_DIR = path.dirname(fileURLToPath(import.meta.url));
 const CP_DIR = path.resolve(TEST_DIR, '..', '..', 'control-plane');
@@ -19,6 +21,15 @@ let browserErrors: string[] = [];
 
 const SERVER_STARTUP_TIMEOUT_MS = 30_000;
 const SERVER_SHUTDOWN_TIMEOUT_MS = 5_000;
+
+async function unusedLoopbackPort(): Promise<number> {
+  const socket = createServer();
+  await new Promise<void>((resolve, reject) => socket.once('error', reject).listen(0, '127.0.0.1', resolve));
+  const address = socket.address();
+  if (!address || typeof address === 'string') throw new Error('failed to allocate loopback port');
+  await new Promise<void>((resolve, reject) => socket.close(error => error ? reject(error) : resolve()));
+  return address.port;
+}
 
 function waitForProcessExit(proc: ChildProcess, timeoutMs: number): Promise<boolean> {
   if (proc.exitCode !== null) return Promise.resolve(true);
@@ -42,7 +53,11 @@ async function stopServer(): Promise<void> {
   if (!proc || proc.exitCode !== null) return;
 
   const signalProcessGroup = (signal: NodeJS.Signals) => {
-    if (process.platform !== 'win32' && proc.pid) {
+    if (process.platform === 'win32' && proc.pid) {
+      execSync(`taskkill /pid ${proc.pid} /T ${signal === 'SIGKILL' ? '/F' : ''}`, { stdio: 'ignore' });
+      return;
+    }
+    if (proc.pid) {
       process.kill(-proc.pid, signal);
       return;
     }
@@ -55,7 +70,10 @@ async function stopServer(): Promise<void> {
     if (!(error instanceof Error) || !('code' in error) || error.code !== 'ESRCH') throw error;
   }
 
-  if (await waitForProcessExit(proc, SERVER_SHUTDOWN_TIMEOUT_MS)) return;
+  if (await waitForProcessExit(proc, SERVER_SHUTDOWN_TIMEOUT_MS)) {
+    if (await isServerUp()) throw new Error(`control-plane endpoint remained live after owned process ${proc.pid} exited`);
+    return;
+  }
 
   try {
     signalProcessGroup('SIGKILL');
@@ -66,11 +84,12 @@ async function stopServer(): Promise<void> {
   if (!(await waitForProcessExit(proc, SERVER_SHUTDOWN_TIMEOUT_MS))) {
     throw new Error(`control-plane server did not exit after SIGKILL (pid ${proc.pid})`);
   }
+  if (await isServerUp()) throw new Error(`control-plane endpoint remained live after killing owned process ${proc.pid}`);
 }
 
 async function isServerUp(): Promise<boolean> {
   try {
-    const res = await fetch(BASE_URL, { signal: AbortSignal.timeout(1000) });
+    const res = await fetch(baseUrl, { signal: AbortSignal.timeout(1000) });
     return res.status < 500;
   } catch {
     return false;
@@ -79,27 +98,27 @@ async function isServerUp(): Promise<boolean> {
 
 async function waitForServer(timeoutMs = SERVER_STARTUP_TIMEOUT_MS): Promise<void> {
   const start = Date.now();
+  const readyLine = `[control-plane] Server running on http://localhost:${serverPort}`;
   while (Date.now() - start < timeoutMs) {
-    if (await isServerUp()) return;
     if (serverProc && serverProc.exitCode !== null) {
       throw new Error(`control-plane server exited early (code ${serverProc.exitCode}):\n${serverLog}`);
     }
+    if (serverLog.includes(readyLine) && await isServerUp()) return;
     await new Promise(r => setTimeout(r, 300));
   }
-  throw new Error(`control-plane not ready at ${BASE_URL} within ${timeoutMs}ms:\n${serverLog}`);
+  throw new Error(`owned control-plane not ready at ${baseUrl} within ${timeoutMs}ms:\n${serverLog}`);
 }
 
 async function ensureServer(): Promise<void> {
-  if (await isServerUp()) {
-    throw new Error(`${BASE_URL} is already occupied; refusing to use an unowned QA server`);
-  }
+  serverPort = await unusedLoopbackPort();
+  baseUrl = `http://127.0.0.1:${serverPort}`;
   if (!existsSync(SERVER_ENTRY) || !existsSync(CLIENT_INDEX)) {
     execSync('npm run build', { cwd: CP_DIR, stdio: 'inherit' });
   }
   serverLog = '';
   serverProc = spawn(process.execPath, [SERVER_ENTRY], {
     cwd: CP_DIR,
-    env: { ...process.env, PORT: '3099', HOST: '127.0.0.1', NODE_ENV: 'test' },
+    env: { ...process.env, PORT: String(serverPort), HOST: '127.0.0.1', NODE_ENV: 'test' },
     stdio: ['ignore', 'pipe', 'pipe'],
     // Own a process group so timeout/teardown can terminate every descendant.
     detached: process.platform !== 'win32',
@@ -133,7 +152,7 @@ let page: Page;
 async function navigateToRoute(label: string) {
   const route = ROUTES.find(r => r.label === label);
   if (route) {
-    await page.goto(`${BASE_URL}${route.path}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await page.goto(`${baseUrl}${route.path}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await page.waitForTimeout(500);
   }
 }
@@ -141,7 +160,7 @@ async function navigateToRoute(label: string) {
 async function navigateToRouteById(id: string) {
   const route = ROUTES.find(r => r.id === id);
   if (route) {
-    await page.goto(`${BASE_URL}${route.path}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await page.goto(`${baseUrl}${route.path}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await page.waitForTimeout(500);
   }
 }
@@ -152,17 +171,21 @@ function getInteractiveElements(p: Page) {
   );
 }
 
+function trackBrowserErrors(trackedPage: Page): void {
+  trackedPage.on('console', msg => {
+    if (msg.type() === 'error') browserErrors.push(`console: ${msg.text()}`);
+  });
+  trackedPage.on('requestfailed', req => {
+    browserErrors.push(`network: ${req.url()} failed: ${req.failure()?.errorText}`);
+  });
+}
+
 beforeAll(async () => {
   await ensureServer();
   browser = await chromium.launch({ headless: true });
   context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  context.on('page', trackBrowserErrors);
   page = await context.newPage();
-  page.on('console', msg => {
-    if (msg.type() === 'error') browserErrors.push(`console: ${msg.text()}`);
-  });
-  page.on('requestfailed', req => {
-    browserErrors.push(`network: ${req.url()} failed: ${req.failure()?.errorText}`);
-  });
 }, 60000);
 
 beforeEach(async () => {
@@ -185,11 +208,22 @@ afterAll(async () => {
   }
 }, 15_000);
 
+describe('owned server lifecycle', () => {
+  it('uses a live spawned process on an ephemeral loopback port', async () => {
+    expect(serverPort).toBeGreaterThan(0);
+    expect(serverPort).not.toBe(3099);
+    expect(serverProc?.pid).toBeGreaterThan(0);
+    expect(serverProc?.exitCode).toBeNull();
+    expect(serverLog).toContain(`[control-plane] Server running on http://localhost:${serverPort}`);
+    expect(await isServerUp()).toBe(true);
+  });
+});
+
 describe('WCAG & Accessibility (Playwright)', () => {
 
   describe('Homepage axe scan', () => {
     it('loads homepage with no critical/serious axe violations', async () => {
-      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+       await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForSelector('nav', { timeout: 5000 });
 
       const results = await new AxeBuilder({ page })
@@ -213,7 +247,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
   describe('Route-by-route axe scan', () => {
     for (const route of ROUTES) {
       it(`loads /${route.id} with no critical/serious axe violations`, async () => {
-        await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+        await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
         await page.waitForSelector('nav', { timeout: 5000 });
 
         await navigateToRoute(route.label);
@@ -245,7 +279,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
 
   describe('Keyboard navigation', () => {
     it('Tab through all interactive elements without trap', async () => {
-      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForSelector('nav', { timeout: 5000 });
 
       const initialCount = await getInteractiveElements(page).count();
@@ -274,7 +308,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
     });
 
     it('Enter/Space activate navigation links', async () => {
-      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForSelector('nav', { timeout: 5000 });
 
       const navLink = page.locator('nav a', { hasText: 'Runs' });
@@ -298,7 +332,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
   describe('Responsive viewports', () => {
     it('loads at 375x667 (mobile) without horizontal overflow', async () => {
       await page.setViewportSize({ width: 375, height: 667 });
-      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForTimeout(500);
 
       const overflow = await page.evaluate(() => {
@@ -315,7 +349,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
 
     it('loads at 390x844 (iPhone 14 Pro) with no clipping and nav renders', async () => {
       await page.setViewportSize({ width: 390, height: 844 });
-      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForTimeout(500);
 
       const overflow = await page.evaluate(() => {
@@ -348,7 +382,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
 
     it('loads at 1024x768 (tablet)', async () => {
       await page.setViewportSize({ width: 1024, height: 768 });
-      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForTimeout(500);
 
       const overflow = await page.evaluate(() => {
@@ -371,7 +405,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
 
     it('loads at 1920x1080 (desktop)', async () => {
       await page.setViewportSize({ width: 1920, height: 1080 });
-      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForTimeout(500);
 
       const navVisible = page.locator('nav');
@@ -388,8 +422,9 @@ describe('WCAG & Accessibility (Playwright)', () => {
   describe('Reduced motion', () => {
     it('prefers-reduced-motion respected via CSS rule and no active animations remain', async () => {
       const motionCtx = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
+      motionCtx.on('page', trackBrowserErrors);
       const motionPage = await motionCtx.newPage();
-      await motionPage.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await motionPage.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await motionPage.waitForTimeout(500);
 
       const motionQuery = await motionPage.evaluate(() => {
@@ -448,7 +483,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
   describe('Zoom tolerance', () => {
     it('200% zoom page renders with primary elements visible (no clipping)', async () => {
       await page.setViewportSize({ width: 1280, height: 800 });
-      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForTimeout(500);
 
       await page.evaluate(() => {
@@ -503,7 +538,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
   describe('Color contrast', () => {
     it('no elements fail WCAG AA contrast ratio', async () => {
       await page.setViewportSize({ width: 1280, height: 800 });
-      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForSelector('nav', { timeout: 5000 });
 
       const results = await new AxeBuilder({ page })
@@ -555,7 +590,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
       page.on('console', onConsole);
       page.on('requestfailed', onRequestFailed);
 
-      await page.goto(`${BASE_URL}${route.path}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await page.goto(`${baseUrl}${route.path}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForTimeout(1500);
 
       page.removeListener('console', onConsole);
@@ -586,7 +621,7 @@ describe('404 handling', () => {
     const consoleErrors: string[] = [];
     page.on('console', msg => { if (msg.type() === 'error') consoleErrors.push(msg.text()); });
 
-    await page.goto(`${BASE_URL}/nonexistent-route-xyz`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await page.goto(`${baseUrl}/nonexistent-route-xyz`, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await page.waitForTimeout(500);
 
     const four04 = page.locator('.typography-headline', { hasText: '404' });
@@ -605,7 +640,7 @@ describe('404 handling', () => {
 describe('Focus-visible', () => {
     it('all interactive elements have visible focus indicator (outline or ring)', async () => {
       await page.setViewportSize({ width: 1280, height: 800 });
-      await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await page.waitForSelector('nav', { timeout: 5000 });
 
       const count = await getInteractiveElements(page).count();
