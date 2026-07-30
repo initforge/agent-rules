@@ -50,7 +50,7 @@ function waitForProcessExit(proc: ChildProcess, timeoutMs: number): Promise<bool
 async function stopServer(): Promise<void> {
   const proc = serverProc;
   serverProc = undefined;
-  if (!proc || proc.exitCode !== null) return;
+  if (!proc) return;
 
   const signalProcessGroup = (signal: NodeJS.Signals) => {
     if (process.platform === 'win32' && proc.pid) {
@@ -70,8 +70,8 @@ async function stopServer(): Promise<void> {
     if (!(error instanceof Error) || !('code' in error) || error.code !== 'ESRCH') throw error;
   }
 
-  if (await waitForProcessExit(proc, SERVER_SHUTDOWN_TIMEOUT_MS)) {
-    if (await isServerUp()) throw new Error(`control-plane endpoint remained live after owned process ${proc.pid} exited`);
+  if (proc.exitCode !== null || await waitForProcessExit(proc, SERVER_SHUTDOWN_TIMEOUT_MS)) {
+    if (!(await waitForServerDown())) throw new Error(`control-plane endpoint remained live after owned process group ${proc.pid} exited`);
     return;
   }
 
@@ -84,7 +84,7 @@ async function stopServer(): Promise<void> {
   if (!(await waitForProcessExit(proc, SERVER_SHUTDOWN_TIMEOUT_MS))) {
     throw new Error(`control-plane server did not exit after SIGKILL (pid ${proc.pid})`);
   }
-  if (await isServerUp()) throw new Error(`control-plane endpoint remained live after killing owned process ${proc.pid}`);
+  if (!(await waitForServerDown())) throw new Error(`control-plane endpoint remained live after killing owned process ${proc.pid}`);
 }
 
 async function isServerUp(): Promise<boolean> {
@@ -94,6 +94,15 @@ async function isServerUp(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+async function waitForServerDown(timeoutMs = SERVER_SHUTDOWN_TIMEOUT_MS): Promise<boolean> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    if (!(await isServerUp())) return true;
+    await new Promise(r => setTimeout(r, 50));
+  }
+  return !(await isServerUp());
 }
 
 async function waitForServer(timeoutMs = SERVER_STARTUP_TIMEOUT_MS): Promise<void> {
@@ -216,6 +225,35 @@ describe('owned server lifecycle', () => {
     expect(serverProc?.exitCode).toBeNull();
     expect(serverLog).toContain(`[control-plane] Server running on http://localhost:${serverPort}`);
     expect(await isServerUp()).toBe(true);
+  });
+
+  it('terminates descendants after their process-group leader exits', async () => {
+    if (process.platform === 'win32') return; // Windows cannot address descendants after their leader exits; stopServer fails closed on a live endpoint.
+    const qaProc = serverProc;
+    const qaPort = serverPort;
+    const qaUrl = baseUrl;
+    const port = await unusedLoopbackPort();
+    const childScript = `require('node:http').createServer((_,r)=>r.end('ok')).listen(${port},'127.0.0.1')`;
+    const leader = spawn(process.execPath, ['-e', `require('node:child_process').spawn(process.execPath,['-e',${JSON.stringify(childScript)}],{stdio:'ignore'}).unref()`], {
+      detached: true,
+      stdio: 'ignore',
+    });
+    await waitForProcessExit(leader, SERVER_SHUTDOWN_TIMEOUT_MS);
+    serverProc = leader;
+    serverPort = port;
+    baseUrl = `http://127.0.0.1:${port}`;
+    const start = Date.now();
+    while (!(await isServerUp()) && Date.now() - start < SERVER_SHUTDOWN_TIMEOUT_MS) await new Promise(r => setTimeout(r, 50));
+    expect(leader.exitCode).not.toBeNull();
+    expect(await isServerUp()).toBe(true);
+    try {
+      await stopServer();
+      expect(await isServerUp()).toBe(false);
+    } finally {
+      serverProc = qaProc;
+      serverPort = qaPort;
+      baseUrl = qaUrl;
+    }
   });
 });
 
