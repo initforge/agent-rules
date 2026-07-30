@@ -87,6 +87,16 @@ jobs:
         run: npx tsx packages/cli/src/index.ts context-graph build
       - run: pip install --require-hashes -r requirements.txt
       - run: python automation/run-python-tests.py
+      - name: Test AM0015 evidence gate
+        run: python automation/test-scorecard-evidence.py
+      - name: Gather AM0015 evidence candidate
+        run: python automation/gather-scorecard-evidence.py --candidate-sha "${{ github.sha }}"
+        env:
+          SCORECARD_OUTPUT: ${{ runner.temp }}/scorecard-evidence.json
+      - name: Validate AM0015 evidence candidate
+        run: python automation/gather-scorecard-evidence.py --validate-only --candidate-sha "${{ github.sha }}"
+        env:
+          SCORECARD_OUTPUT: ${{ runner.temp }}/scorecard-evidence.json
 
   security:
     timeout-minutes: 15
