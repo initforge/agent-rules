@@ -18,6 +18,74 @@ export interface TerminalGateResult {
 
 export const M10_TERMINAL_TOKEN = 'HARNESS_V3_10_OF_10_COMPLETE';
 export const M8_REQUIRED_REQUIREMENTS = 15;
+export const M95_REQUIRED_RECONCILIATIONS = 15;
+const FRESH_EVIDENCE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+function effectiveIdentity(ledger: Record<string, any>): string | undefined {
+  return ledger.effective_plan_identity?.sha256 || ledger.effectivePlanIdentity || ledger.effective_plan_identity;
+}
+
+function freshEpoch(value: any, now: number): boolean {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value <= now && now - value <= FRESH_EVIDENCE_MAX_AGE_MS;
+}
+
+function sha256Json(value: unknown): string {
+  return createHash('sha256').update(JSON.stringify(value)).digest('hex');
+}
+
+/** M10 proof is content-derived; callers cannot choose its digest independently. */
+export function deriveM10ProofHash(input: {
+  headCommit: string;
+  effectivePlanIdentity: string;
+  reconciliationIds: readonly string[];
+  evidenceHashes: readonly string[];
+  epoch: number;
+}): string {
+  return sha256Json({
+    headCommit: input.headCommit,
+    effectivePlanIdentity: input.effectivePlanIdentity,
+    reconciliationIds: [...input.reconciliationIds],
+    evidenceHashes: [...input.evidenceHashes],
+    epoch: input.epoch,
+  });
+}
+
+function verifyM95(ledger: Record<string, any>, now: number): { passed: boolean; reason: string; packet?: any } {
+  const packet = ledger.milestones?.['M9.5'] || ledger.milestoneEvidence?.['M9.5'] || ledger.m95;
+  const identity = effectiveIdentity(ledger);
+  if (!packet || typeof identity !== 'string' || identity.length === 0) return { passed: false, reason: 'M9.5 packet or effective plan identity missing' };
+  if (packet.identity !== undefined && packet.identity !== identity) return { passed: false, reason: 'M9.5 identity mismatch' };
+  if (typeof packet.reviewerIdentity !== 'string' || packet.reviewerIdentity.length === 0) return { passed: false, reason: 'M9.5 reviewer identity missing' };
+  const timestamp = Date.parse(packet.observedAt || packet.timestamp || '');
+  if (Number.isNaN(timestamp) || !freshEpoch(packet.epoch, now) || packet.epoch !== timestamp) return { passed: false, reason: 'M9.5 timestamp or epoch is stale/mismatched' };
+  if (now - timestamp > FRESH_EVIDENCE_MAX_AGE_MS || timestamp > now) return { passed: false, reason: 'M9.5 timestamp is stale or future-dated' };
+  const evidence = Array.isArray(packet.evidence) ? packet.evidence : [];
+  if (evidence.length === 0) return { passed: false, reason: 'M9.5 fresh evidence missing' };
+  for (const item of evidence) {
+    if (item.identity !== identity && item.effectivePlanIdentity !== identity) return { passed: false, reason: 'M9.5 evidence identity mismatch' };
+    const at = Date.parse(item.observedAt || '');
+    if (item.fresh !== true || item.stale === true || Number.isNaN(at) || at > now || now - at > FRESH_EVIDENCE_MAX_AGE_MS) return { passed: false, reason: 'M9.5 evidence is stale' };
+    if (typeof item.evidenceHash !== 'string' && typeof item.sha256 !== 'string') return { passed: false, reason: 'M9.5 evidence hash missing' };
+  }
+  return { passed: true, reason: 'fresh M9.5 timestamp, epoch, identity, and reviewer binding', packet };
+}
+
+function verifyM10Proof(ledger: Record<string, any>, headCommit: string, m95: any, now: number): { passed: boolean; reason: string } {
+  const proof = ledger.m10Proof || ledger.m10_proof || ledger.terminalProof;
+  const identity = effectiveIdentity(ledger);
+  if (!proof || typeof identity !== 'string') return { passed: false, reason: 'M10 proof or effective plan identity missing' };
+  if (proof.headCommit !== headCommit || proof.effectivePlanIdentity !== identity) return { passed: false, reason: 'M10 proof HEAD or identity mismatch' };
+  if (proof.reviewerIdentity !== m95.reviewerIdentity) return { passed: false, reason: 'M10 reviewer binding mismatch' };
+  if (!freshEpoch(proof.epoch, now) || proof.epoch !== m95.epoch) return { passed: false, reason: 'M10 proof epoch is stale or mismatched' };
+  const ids = proof.reconciliationIds;
+  const hashes = proof.evidenceHashes;
+  if (!Array.isArray(ids) || ids.length !== M95_REQUIRED_RECONCILIATIONS || new Set(ids).size !== ids.length || ids.some((id: any) => typeof id !== 'string')) return { passed: false, reason: 'M10 proof requires 15 unique reconciliation IDs' };
+  if (!Array.isArray(hashes) || hashes.length === 0 || new Set(hashes).size !== hashes.length || hashes.some((h: any) => typeof h !== 'string' || !/^[a-f0-9]{64}$/.test(h))) return { passed: false, reason: 'M10 proof evidence hashes are invalid' };
+  const recs = Array.isArray(ledger.reconciliations) ? ledger.reconciliations : [];
+  if (ids.some((id: string) => !recs.some((rec: any) => (rec.requirementId || rec.id) === id && rec.status === 'MATCH' && (rec.headCommit === headCommit || rec.detail?.includes(headCommit.slice(0, 12)))))) return { passed: false, reason: 'M10 proof reconciliation set is not an exact fresh MATCH set' };
+  const expected = deriveM10ProofHash({ headCommit, effectivePlanIdentity: identity, reconciliationIds: ids, evidenceHashes: hashes, epoch: proof.epoch });
+  return { passed: proof.proofHash === expected, reason: proof.proofHash === expected ? 'M10 proof content binding passes' : 'M10 proof hash mismatch' };
+}
 
 export interface MilestoneGateResult {
   passed: boolean;
@@ -38,6 +106,10 @@ export function verifyMilestoneGate(
   }
   const state = l.execution_state || l.status;
   if (state === M10_TERMINAL_TOKEN || state === 'COMPLETED') return { passed: false, milestone, reason: 'terminal state cannot certify a nonterminal milestone' };
+  if (milestone === 'M9.5') {
+    const result = verifyM95(l, now);
+    return { passed: result.passed, milestone, reason: result.reason };
+  }
   const identity = expectedIdentity || l.effective_plan_identity?.sha256 || l.effectivePlanIdentity;
   if (typeof identity !== 'string' || identity.length === 0) return { passed: false, milestone, reason: 'missing effective plan identity' };
   const packet = l.milestones?.[milestone] || l.milestoneEvidence?.[milestone] || l[milestone === 'M8' ? 'm8' : 'm95'];
@@ -185,6 +257,16 @@ export function verifyTerminalGate(
     const m8 = verifyMilestoneGate(raw, 'M8');
     gates.push({ name: 'M8_CANONICAL_GATE', status: m8.passed ? 'PASS' : 'FAIL', detail: m8.reason });
     if (!m8.passed) failedGates.push('M8_CANONICAL_GATE');
+  }
+
+  const m95 = verifyM95(raw, Date.now());
+  gates.push({ name: 'M9_5_CANONICAL_GATE', status: m95.passed ? 'PASS' : 'FAIL', detail: m95.reason });
+  if (!m95.passed) failedGates.push('M9_5_CANONICAL_GATE');
+
+  if (m95.passed) {
+    const proof = verifyM10Proof(raw, headCommit, m95.packet, Date.now());
+    gates.push({ name: 'M10_PROOF_BINDING', status: proof.passed ? 'PASS' : 'FAIL', detail: proof.reason });
+    if (!proof.passed) failedGates.push('M10_PROOF_BINDING');
   }
 
   // No open findings

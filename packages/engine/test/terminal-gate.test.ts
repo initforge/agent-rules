@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { createHash } from 'node:crypto';
-import { verifyTerminalGate, verifyMilestoneGate, assertCertifiable, assertNoResidualBeforeFinal, terminalGateCheck, assertWorkLedger, assertCertificationAttestation, REQUIRED_HOSTS, M10_TERMINAL_TOKEN } from '../src/terminal-gate.js';
+import { verifyTerminalGate, verifyMilestoneGate, assertCertifiable, assertNoResidualBeforeFinal, terminalGateCheck, assertWorkLedger, assertCertificationAttestation, REQUIRED_HOSTS, M10_TERMINAL_TOKEN, deriveM10ProofHash } from '../src/terminal-gate.js';
 import { HOST_ATTESTATION_EVIDENCE_ROLES, hostAttestationEvidenceRef, hostAttestationEvidenceSubjectSha256, type HostAttestation } from '../src/contracts.js';
 
 const hash = 'a'.repeat(64);
@@ -49,12 +49,19 @@ function fullAttestation(host: string, overrides: Record<string, unknown> = {}):
 function hashFor(value: string): string { return createHash('sha256').update(value).digest('hex'); }
 
 function stubLedger(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  const epoch = Date.now();
+  const effectivePlanIdentity = 'e'.repeat(64);
+  const reconciliationIds = Array.from({ length: 15 }, (_, i) => `REQ-${String(i + 1).padStart(3, '0')}`);
+  const evidenceHashes = Array.from({ length: 15 }, (_, i) => hashFor(`m95-evidence-${i}`));
+  const evidence = evidenceHashes.map((evidenceHash) => ({ identity: effectivePlanIdentity, fresh: true, observedAt: new Date(epoch).toISOString(), evidenceHash }));
   const ledger: Record<string, unknown> = {
     status: 'COMPLETED',
     execution_state: M10_TERMINAL_TOKEN,
     findings: [],
     orphanFindings: [],
-    reconciliations: [{ status: 'MATCH', headCommit: hash, detail: `HEAD ${hash.slice(0, 12)}` }],
+    reconciliations: reconciliationIds.map((requirementId) => ({ requirementId, status: 'MATCH', headCommit: hash, detail: `HEAD ${hash.slice(0, 12)}` })),
+    effective_plan_identity: { sha256: effectivePlanIdentity },
+    milestones: { 'M9.5': { identity: effectivePlanIdentity, reviewerIdentity: 'final-reviewer', epoch, observedAt: new Date(epoch).toISOString(), evidence } },
     attestations: [
       fullAttestation('codex'),
       fullAttestation('claude'),
@@ -88,8 +95,10 @@ function stubLedger(overrides: Record<string, unknown> = {}): Record<string, unk
         status: 'ADOPTED',
       },
     },
-    ...overrides,
   };
+  (ledger as any).m10Proof = { headCommit: hash, effectivePlanIdentity, reviewerIdentity: 'final-reviewer', epoch, reconciliationIds, evidenceHashes };
+  (ledger as any).m10Proof.proofHash = deriveM10ProofHash({ headCommit: hash, effectivePlanIdentity, reconciliationIds, evidenceHashes, epoch });
+  Object.assign(ledger, overrides);
   return ledger;
 }
 
@@ -172,6 +181,31 @@ describe('verifyTerminalGate', () => {
     const result = verifyTerminalGate(ledgerPath, hash);
     expect(result.passed).toBe(true);
     expect(result.failedGates).toEqual([]);
+  });
+
+  it.each([
+    ['forged reviewer', { reviewerIdentity: 'forged' }],
+    ['stale epoch', { epoch: 0 }],
+    ['forged identity', { identity: 'f'.repeat(64) }],
+  ])('rejects M9.5 %s', (_name, patch) => {
+    const dir = tmpDir();
+    const ledger = stubLedger({ milestones: { 'M9.5': { ...(stubLedger() as any).milestones['M9.5'], ...patch } } });
+    const result = verifyTerminalGate(writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger)), hash);
+    expect(result.passed).toBe(false);
+    expect(result.failedGates).toContain('M9_5_CANONICAL_GATE');
+  });
+
+  it.each([
+    ['duplicate reconciliation IDs', (p: any) => ({ ...p, reconciliationIds: [...p.reconciliationIds.slice(0, 14), p.reconciliationIds[0]] })],
+    ['wrong proof hash', (p: any) => ({ ...p, proofHash: badHash })],
+    ['mismatched HEAD', (p: any) => ({ ...p, headCommit: badHash })],
+  ])('rejects forged M10 proof: %s', (_name, mutate) => {
+    const dir = tmpDir();
+    const base = stubLedger() as any;
+    const ledger = stubLedger({ m10Proof: mutate(base.m10Proof) });
+    const result = verifyTerminalGate(writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger)), hash);
+    expect(result.passed).toBe(false);
+    expect(result.failedGates).toContain('M10_PROOF_BINDING');
   });
 
   it('rejects nonterminal state', () => {
