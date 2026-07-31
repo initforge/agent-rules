@@ -13,6 +13,7 @@ export const MISSING_CAPABILITIES = [
 ] as const;
 export type MissingCapability = typeof MISSING_CAPABILITIES[number];
 export type DiagnosticState = 'OBSERVED' | 'MISSING' | 'UNVERIFIED';
+export type CertificationAvailability = 'READY' | 'WAITING_EXTERNAL';
 
 export interface DiagnosticValue {
   readonly state: DiagnosticState;
@@ -48,9 +49,16 @@ export interface HostDiagnosticOptions {
   readonly run?: (executable: string, args: readonly string[]) => Promise<{ exitCode: number; stdout: string; stderr: string }>;
 }
 
+export interface LocalCertificationDiagnostics {
+  readonly schema: 'local-host-certification-diagnostics/v1';
+  readonly requestedModel: string;
+  readonly status: CertificationAvailability;
+  readonly hosts: readonly HostCertificationDiagnostic[];
+}
+
 const defaultRun: HostDiagnosticOptions['run'] = async (executable, args) => {
   try {
-    const result = await execFileAsync(executable, [...args], { maxBuffer: 1024 * 1024 });
+    const result = await execFileAsync(executable, [...args], { maxBuffer: 1024 * 1024, timeout: 5000 });
     return { exitCode: 0, stdout: result.stdout, stderr: result.stderr };
   } catch (error: any) {
     return { exitCode: error.code ?? 1, stdout: error.stdout ?? '', stderr: error.stderr ?? String(error) };
@@ -61,6 +69,13 @@ const sha256 = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest(
 const observed = (value: string, evidence: Uint8Array): DiagnosticValue => ({ state: 'OBSERVED', value, evidenceSha256: sha256(evidence) });
 const missing = (missingCapability: MissingCapability, reason: string): DiagnosticValue => ({ state: 'MISSING', missingCapability, reason });
 const unverified = (reason: string): DiagnosticValue => ({ state: 'UNVERIFIED', reason });
+
+const localResolver = async (host: typeof REQUIRED_DIAGNOSTIC_HOSTS[number]) => {
+  const command = process.platform === 'win32' ? 'where.exe' : 'which';
+  const result = await defaultRun(command, [host]);
+  if (result.exitCode !== 0 || !result.stdout.trim()) throw new Error(`${host} is not on PATH`);
+  return result.stdout.trim().split(/\r?\n/)[0];
+};
 
 async function gitCommit(root: string): Promise<DiagnosticValue> {
   try {
@@ -88,7 +103,7 @@ export async function collectHostCertificationDiagnostics(options: HostDiagnosti
   return Promise.all(REQUIRED_DIAGNOSTIC_HOSTS.map(async (host) => {
     let executable: string;
     try {
-      executable = await (options.resolveExecutable ?? (async () => { throw new Error('resolver not supplied'); }))(host);
+      executable = await (options.resolveExecutable ?? localResolver)(host);
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
       return { host, requestedModel: options.requestedModel, installed: missing('MISSING_HOST', reason), version: missing('MISSING_VERSION', 'host is not installed'), nativeExecution: missing('MISSING_NATIVE_EXECUTION', 'host executable unavailable'), sessionModel: options.sessionModels?.[host] ? unverified('session evidence supplied without executable') : missing('MISSING_SESSION_MODEL', 'no session observation supplied'), commit, artifact: artifactValue };
@@ -101,9 +116,18 @@ export async function collectHostCertificationDiagnostics(options: HostDiagnosti
       host, requestedModel: options.requestedModel,
       installed: observed(executable, new TextEncoder().encode(executable)),
       version: version.exitCode === 0 && value ? observed(value, raw) : missing('MISSING_VERSION', 'version probe failed'),
-      nativeExecution: version.exitCode === 0 ? observed('executed --version', raw) : missing('MISSING_NATIVE_EXECUTION', 'native version probe failed'),
+      nativeExecution: version.exitCode === 0 ? unverified('version probe is not native model execution') : missing('MISSING_NATIVE_EXECUTION', 'native version probe failed'),
       sessionModel: session ? observed(session.value, session.rawEvidence) : missing('MISSING_SESSION_MODEL', 'no session observation supplied'),
       commit, artifact: artifactValue,
     };
   }));
+}
+
+export async function collectLocalCertificationDiagnostics(requestedModel: string, repositoryRoot: string): Promise<LocalCertificationDiagnostics> {
+  const hosts = await collectHostCertificationDiagnostics({ requestedModel, repositoryRoot });
+  return {
+    schema: 'local-host-certification-diagnostics/v1', requestedModel,
+    status: hosts.every(host => Object.values(host).every(value => typeof value !== 'object' || value.state === 'OBSERVED')) ? 'READY' : 'WAITING_EXTERNAL',
+    hosts,
+  };
 }

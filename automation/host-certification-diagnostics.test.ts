@@ -13,9 +13,18 @@ describe('host certification diagnostics', () => {
     });
     expect(result).toHaveLength(5);
     expect(result.every((item) => item.requestedModel === model)).toBe(true);
-    expect(result.every((item) => item.nativeExecution.state === 'OBSERVED')).toBe(true);
+    expect(result.every((item) => item.nativeExecution.state === 'UNVERIFIED')).toBe(true);
     expect(result.every((item) => item.artifact.missingCapability === 'MISSING_ARTIFACT')).toBe(true);
     expect(result[0]).not.toHaveProperty('capabilityStatus');
+  });
+
+  it('never treats a version probe as native model execution', async () => {
+    const [item] = await collectHostCertificationDiagnostics({
+      requestedModel: model, repositoryRoot: process.cwd(), resolveExecutable: async () => '/native/opencode',
+      run: async () => ({ exitCode: 0, stdout: '1.2.3\n', stderr: '' }),
+    });
+    expect(item.nativeExecution).toMatchObject({ state: 'UNVERIFIED' });
+    expect(item.nativeExecution).not.toHaveProperty('evidenceSha256');
   });
 
   it('distinguishes absent host, session, commit, and artifact capabilities', async () => {
