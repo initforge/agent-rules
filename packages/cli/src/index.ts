@@ -37,7 +37,10 @@ program.command("autopilot")
   .argument("[value]", "Session ID, CI result, checkpoint, or continuation text")
   .action(async (action: string, runId: string, value?: string) => {
     try { const client = action === 'continue' ? createOpencodeClient({ baseUrl: process.env.OPENCODE_URL ?? 'http://127.0.0.1:4096' }) : undefined; const native = client ? new OpenCodeNativeSessionAdapter(client, process.env.OPENCODE_CONTINUATION_PROMPT ?? 'Continue') : undefined; formatOutput({ exitCode: ExitCode.Success, message: 'autopilot', data: { result: await autopilotCmd([action, runId, value].filter((v): v is string => Boolean(v)), process.cwd(), native) } }, program.optsWithGlobals() as CliOptions); }
-    catch (err) { console.error(`Error: ${err instanceof Error ? err.message : String(err)}`); process.exit(ExitCode.GeneralError); }
+     catch (err) {
+       console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+       process.exit(ExitCode.GeneralError);
+     }
   });
 
 program

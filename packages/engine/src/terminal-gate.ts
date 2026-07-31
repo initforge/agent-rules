@@ -254,11 +254,10 @@ export function verifyTerminalGate(
   gates.push({ name: 'EXECUTION_STATE_COMPLETED', status: isCompleted ? 'PASS' : 'FAIL', detail: isCompleted ? 'Exact M10 terminal token' : `Nonterminal state: ${state}` });
   if (!isCompleted) failedGates.push('EXECUTION_STATE_COMPLETED');
 
-  if (raw.milestones?.M8 || raw.milestoneEvidence?.M8 || raw.m8) {
-    const m8 = verifyMilestoneGate(raw, 'M8');
-    gates.push({ name: 'M8_CANONICAL_GATE', status: m8.passed ? 'PASS' : 'FAIL', detail: m8.reason });
-    if (!m8.passed) failedGates.push('M8_CANONICAL_GATE');
-  }
+  const hasM8 = Boolean(raw.milestones?.M8 || raw.milestoneEvidence?.M8 || raw.m8);
+  const m8 = hasM8 ? verifyMilestoneGate(raw, 'M8') : undefined;
+  gates.push({ name: 'M8_CANONICAL_GATE', status: m8 ? (m8.passed ? 'PASS' : 'FAIL') : 'NOT_CHECKED', detail: m8?.reason ?? 'M8 evidence not supplied' });
+  if (m8 && !m8.passed) failedGates.push('M8_CANONICAL_GATE');
 
   const m95 = verifyM95(raw, Date.now());
   gates.push({ name: 'M9_5_CANONICAL_GATE', status: m95.passed ? 'PASS' : 'FAIL', detail: m95.reason });

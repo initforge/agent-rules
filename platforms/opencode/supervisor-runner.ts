@@ -3,7 +3,7 @@ import path from 'node:path';
 import { createSupervisor, _resolveSupervisorInternals, type SupervisorConfig, type SupervisorPublicView, type _InternalOps, type ChildAssignmentView } from '../../packages/engine/src/supervisor.js';
 import { OpenCodeV2Adapter, type OpenCodeV2Config, type MessagePart, type SSEEvent } from './adapter.js';
 import type { OpencodeClient } from '@opencode-ai/sdk/v2';
-import { OpenCodeNativeSessionAdapter, type NativeSessionBoundary } from '../../packages/engine/src/native-session-adapter.js';
+import { OpenCodeNativeSessionAdapter, type NativeSessionBoundary } from '@initforge/agent-rules-engine/native-session-adapter';
 
 export interface SupervisorRunnerConfig {
   supervisor?: Partial<SupervisorConfig>;
