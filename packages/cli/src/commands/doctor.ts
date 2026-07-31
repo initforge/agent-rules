@@ -18,7 +18,9 @@ interface ManifestFile { path: string; sha256: string }
 export async function doctorOpenCode(root: string, home: string): Promise<DoctorCheck[]> {
   const sourceDir = path.join(root, "platforms", "opencode", "agents");
   const buildDir = path.join(root, "generated", "runtime-build", "opencode", "native", "agents");
-  const installedDir = path.join(home, "agents");
+  const transactionalRuntime = path.join(home, "agent-rules-runtime");
+  const transactional = await checkFile(path.join(transactionalRuntime, "agent-rules-runtime-receipt.json"));
+  const installedDir = transactional ? path.join(transactionalRuntime, "native", "agents") : path.join(home, "agents");
   const manifestPath = path.join(home, "agent-rules-manifest.json");
   const files = (await walkDir(sourceDir)).map((file) => path.relative(sourceDir, file).replace(/\\/g, "/")).filter((file) => file !== "README.md").sort();
   const hashes = async (dir: string) => Object.fromEntries(await Promise.all(files.map(async (file) => [file, await sha256(path.join(dir, file))])));
@@ -27,6 +29,18 @@ export async function doctorOpenCode(root: string, home: string): Promise<Doctor
   const installed = await hashes(installedDir).catch(() => ({}));
   const same = (a: Record<string, string>, b: Record<string, string>) => JSON.stringify(a) === JSON.stringify(b);
   const report: DoctorCheck[] = [];
+  if (transactional) {
+    try {
+      await verifyRuntimeReceipt(transactionalRuntime, "opencode");
+      report.push({ platform: "opencode", check: "runtime-manifest", status: "OK", detail: "transactional runtime receipt and all artifact paths verified" });
+    } catch (error) {
+      report.push({ platform: "opencode", check: "runtime-manifest", status: "NOT_LIVE", detail: (error as Error).message });
+    }
+    report.push({ platform: "opencode", check: "native-activation", status: "NATIVE_UNVERIFIED", detail: "OpenCode host activation remains unverified without observed host delivery" });
+    report.push({ platform: "opencode", check: "source-build-hashes", status: same(source, build) ? "OK" : "NOT_LIVE", detail: "source compared with generated build" });
+    report.push({ platform: "opencode", check: "installed-agent-hashes", status: same(build, await hashes(installedDir).catch(() => ({}))) ? "OK" : "NOT_LIVE", detail: "generated build compared with transactional runtime" });
+    return report;
+  }
   if (!await checkFile(manifestPath)) return [{ platform: "opencode", check: "runtime-manifest", status: "MISSING", detail: manifestPath }];
   try {
     const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8")) as { platform?: string; files?: ManifestFile[] };
@@ -178,7 +192,11 @@ export async function doctor(
     let nativeProblems: string[] = [];
     if (!nativeContractOk) nativeProblems.push("source/build native schema contract failed");
 
-    for (const g of groups) {
+    if (runtimeHome === transactionalRuntime) {
+      nativeProblems = [];
+    }
+
+    for (const g of runtimeHome === transactionalRuntime ? [] : groups) {
       const bd = path.join(buildDir, g.build);
       if (!(await checkFile(bd))) { nativeProblems.push(`missing build ${g.build}`); continue; }
 

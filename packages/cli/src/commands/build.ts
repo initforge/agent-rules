@@ -86,8 +86,9 @@ async function replaceTokensInDir(
 ): Promise<void> {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   for (const entry of entries) {
-    if (!entry.isFile()) continue;
     const fp = path.join(dir, entry.name);
+    if (entry.isDirectory()) { await replaceTokensInDir(fp, tokens); continue; }
+    if (!entry.isFile()) continue;
     let content = await fs.readFile(fp, "utf-8");
     for (const [key, val] of Object.entries(tokens)) {
       content = content.replaceAll(key, val);

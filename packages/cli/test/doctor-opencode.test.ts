@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { doctorOpenCode } from "../src/commands/doctor.js";
+import { RuntimeInstaller } from "../src/runtime/installer.js";
 
 const hash = (value: string) => createHash("sha256").update(value).digest("hex");
 
@@ -21,5 +22,19 @@ describe("doctorOpenCode", () => {
     const result = await doctorOpenCode(root, home);
     expect(result.some((check) => check.status === "NOT_LIVE")).toBe(true);
     await fs.rm(root, { recursive: true, force: true });
+  });
+
+  it("validates a clean transactional home and leaves native activation unverified", async () => {
+    const repositoryRoot = process.cwd();
+    const home = await fs.mkdtemp(path.join(os.tmpdir(), "doctor-opencode-clean-"));
+    try {
+      await new RuntimeInstaller({ repositoryRoot, platformRoots: { opencode: home } }).install("opencode");
+      const report = await doctorOpenCode(repositoryRoot, home);
+      expect(report.find((check) => check.check === "runtime-manifest")?.status).toBe("OK");
+      expect(report.find((check) => check.check === "native-activation")?.status).toBe("NATIVE_UNVERIFIED");
+      expect(await fs.stat(path.join(home, "agent-rules-runtime", "agent-rules-runtime-receipt.json"))).toBeTruthy();
+    } finally {
+      await fs.rm(home, { recursive: true, force: true });
+    }
   });
 });
