@@ -208,7 +208,7 @@ Subcommands:
 program
   .command("plan")
   .description("Manage execution plans")
-  .argument("[subcommand]", "Subcommand: inventory, adopt, status, checkpoint, lineage, reconcile, repair, export, finalize")
+  .argument("[args...]", "Subcommand and its arguments")
   .addHelpText(
     "after",
     `
@@ -224,11 +224,9 @@ Subcommands:
   finalize <runId>             Finalize a completed plan
     `
   )
-  .action(async (subcommand: string | undefined) => {
+  .action(async (args: string[]) => {
     const opts = program.optsWithGlobals() as CliOptions;
-    const args = program.args;
-    const subArgs = subcommand ? [subcommand, ...args.slice(args.indexOf(subcommand) + 1)] : [];
-    const result = await planCmd(subArgs, opts);
+    const result = await planCmd(args, opts);
     formatOutput(result, opts);
   });
 
@@ -338,8 +336,13 @@ program
         console.log(`Run ${result.runId} [${result.state}]`);
         console.log(`  Tasks: ${(result.tasks as { taskId: string; state: string }[]).length}`);
         console.log(`  Receipts: ${result.receipts.length}`);
+        if (result.error) console.log(`  Error: ${result.error}`);
       }
-      process.exit(ExitCode.Success);
+      process.exit(
+        result.state === "FAILED" || result.state === "BLOCKED"
+          ? ExitCode.GeneralError
+          : ExitCode.Success
+      );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       if (opts.json) {
@@ -406,8 +409,13 @@ program
       } else {
         console.log(`Run ${result.runId} resumed — state: ${result.state}`);
         console.log(`  Receipts: ${result.receipts.length}`);
+        if (result.error) console.log(`  Error: ${result.error}`);
       }
-      process.exit(ExitCode.Success);
+      process.exit(
+        result.state === "FAILED" || result.state === "BLOCKED"
+          ? ExitCode.GeneralError
+          : ExitCode.Success
+      );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.error(`Error: ${message}`);

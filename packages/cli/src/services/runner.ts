@@ -12,7 +12,8 @@ import {
   cancelRun as orchestratorCancelRun,
 } from './orchestrator.js';
 import type { OrchestrationRun, TaskState, DelegationReceipt } from './orchestrator.js';
-import { DurableStore } from './durable-store.js';
+import { DurableStore, RUN_LOCKED_ERROR, RUN_ACTIVE_ERROR } from './durable-store.js';
+import type { RunState } from './durable-store.js';
 import { LocalWorkerAdapter } from '../adapters/local-worker.js';
 
 export interface RunOptions {
@@ -31,6 +32,9 @@ export interface RunResult {
   tasks: unknown[];
   createdAt: string;
   updatedAt: string;
+  error?: string;
+  staleProcess?: boolean;
+  orphanPid?: number;
 }
 
 const _hasTaskStatus = (
@@ -96,6 +100,7 @@ function runResultFromOrchestration(
   orcRun: OrchestrationRun,
   receipts: DelegationReceipt[],
   state: string,
+  error?: string,
 ): RunResult {
   return {
     runId: orcRun.runId,
@@ -104,7 +109,54 @@ function runResultFromOrchestration(
     tasks: orcRun.tasks,
     createdAt: orcRun.createdAt,
     updatedAt: orcRun.updatedAt,
+    error,
   };
+}
+
+// BUG-2: honest terminal state per completion_policy. A run is COMPLETED only
+// when every task is COMPLETED with a PASS receipt backed by evidence.
+function computeFinalState(
+  orcRun: OrchestrationRun,
+): { state: RunState; reason?: string } {
+  const plan = orcRun.plan;
+  const tasks = orcRun.tasks;
+
+  let hasFailed = false;
+  let hasBlocked = false;
+  let allBlocked = tasks.length > 0;
+  for (const t of tasks) {
+    if (t.state === 'FAILED') hasFailed = true;
+    if (t.state === 'BLOCKED') hasBlocked = true;
+    if (t.state !== 'BLOCKED') allBlocked = false;
+  }
+
+  if (hasFailed) return { state: 'FAILED', reason: 'One or more tasks failed' };
+  if (allBlocked && hasBlocked) return { state: 'BLOCKED', reason: 'All tasks blocked' };
+  if (hasBlocked) return { state: 'FAILED', reason: 'One or more tasks blocked' };
+
+  if (plan.completion_policy.require_all_tasks) {
+    const pending = tasks.find(t => t.state !== 'COMPLETED');
+    if (pending) {
+      return { state: 'FAILED', reason: `Task not completed: ${pending.taskId} (${pending.state})` };
+    }
+  }
+
+  if (plan.completion_policy.require_verification) {
+    for (const t of tasks) {
+      const receipt = t.receipt;
+      if (!receipt || receipt.status !== 'PASS') {
+        return { state: 'FAILED', reason: `Task ${t.taskId} lacks a PASS receipt` };
+      }
+      const fakePass = receipt.evidencePaths.length === 0
+        && receipt.filesChanged.length === 0
+        && receipt.testsRun.length === 0;
+      if (fakePass) {
+        return { state: 'FAILED', reason: `Task ${t.taskId} fake PASS with no evidence` };
+      }
+    }
+  }
+
+  return { state: 'COMPLETED' };
 }
 
 export async function executeRun(
@@ -160,45 +212,56 @@ export async function executeRun(
     throw new Error(`Unknown adapter: ${adapterName}`);
   }
   const adapter = new LocalWorkerAdapter();
+  store.registerProcess(runId);
 
-  while (true) {
-    const readyTasks = getNextReadyTasks(orcRun);
-    if (readyTasks.length === 0) break;
+  try {
+    while (true) {
+      const readyTasks = getNextReadyTasks(orcRun);
+      if (readyTasks.length === 0) break;
 
-    for (const task of readyTasks) {
-      assignTask(orcRun, task.taskId, 'local-worker');
-      syncTasksToStore(basePath, runId, orcRun.tasks);
+      for (const task of readyTasks) {
+        assignTask(orcRun, task.taskId, 'local-worker', basePath);
+        syncTasksToStore(basePath, runId, orcRun.tasks);
 
-      let receipt: DelegationReceipt;
-      try {
-        receipt = await adapter.submitAssignment(task.assignment!);
-      } catch (err) {
-        receipt = {
-          taskId: task.taskId,
-          filesChanged: [],
-          commandsRun: [],
-          testsRun: [],
-          evidencePaths: [],
-          status: 'FAIL',
-          retries: 0,
-          assumptions: [],
-          unresolvedFindings: [(err as Error).message],
-        };
+        let receipt: DelegationReceipt;
+        try {
+          receipt = await adapter.submitAssignment(task.assignment!);
+        } catch (err) {
+          receipt = {
+            taskId: task.taskId,
+            filesChanged: [],
+            commandsRun: [],
+            testsRun: [],
+            evidencePaths: [],
+            status: 'FAIL',
+            retries: 0,
+            assumptions: [],
+            unresolvedFindings: [(err as Error).message],
+          };
+        }
+        completeTask(orcRun, task.taskId, receipt);
+        receipts.push(receipt);
+
+        await store.addReceipt(runId, receipt);
+        syncTasksToStore(basePath, runId, orcRun.tasks);
+        await store.checkpoint(runId);
       }
-      completeTask(orcRun, task.taskId, receipt);
-      receipts.push(receipt);
-
-      await store.addReceipt(runId, receipt);
-      syncTasksToStore(basePath, runId, orcRun.tasks);
-      await store.checkpoint(runId);
     }
+
+    // BUG-2: honest terminal state — never mark COMPLETED on failed/fake-pass work.
+    const final = computeFinalState(orcRun);
+    if (final.state !== 'COMPLETED' && final.reason) {
+      await store.updateError(runId, final.reason);
+    }
+    await store.updateState(runId, final.state);
+    syncTasksToStore(basePath, runId, orcRun.tasks);
+    await store.checkpoint(runId);
+
+    return runResultFromOrchestration(orcRun, receipts, final.state, final.reason);
+  } finally {
+    store.unregisterProcess(runId);
+    store.releaseLock(runId);
   }
-
-  await store.updateState(runId, 'COMPLETED');
-  syncTasksToStore(basePath, runId, orcRun.tasks);
-  await store.checkpoint(runId);
-
-  return runResultFromOrchestration(orcRun, receipts, 'COMPLETED');
 }
 
 export async function getRunStatus(
@@ -206,6 +269,7 @@ export async function getRunStatus(
   basePath?: string,
 ): Promise<RunResult | null> {
   const store = new DurableStore(basePath || process.cwd());
+  await store.checkAndFlagStaleProcess(runId);
   const run = await store.getRun(runId);
   if (!run) return null;
   return {
@@ -215,6 +279,9 @@ export async function getRunStatus(
     tasks: run.tasks,
     createdAt: run.createdAt,
     updatedAt: run.updatedAt,
+    error: run.error,
+    staleProcess: run.staleProcess,
+    orphanPid: run.orphanPid,
   };
 }
 
@@ -229,10 +296,37 @@ export async function resumeRun(
   const durableRun = await store.getRun(runId);
   if (!durableRun) throw new Error(`Run not found: ${runId}`);
 
+  // GAP-4: a live foreign lock refuses the resume — state stays BLOCKED.
+  if (durableRun.state === 'BLOCKED' && durableRun.error === RUN_LOCKED_ERROR) {
+    return {
+      runId: durableRun.runId,
+      state: durableRun.state,
+      receipts: durableRun.receipts,
+      tasks: durableRun.tasks,
+      createdAt: durableRun.createdAt,
+      updatedAt: durableRun.updatedAt,
+      error: durableRun.error,
+    };
+  }
+
+  // GAP-2: a live foreign process owns the run — refuse double-execution.
+  if (durableRun.error === RUN_ACTIVE_ERROR) {
+    return {
+      runId: durableRun.runId,
+      state: durableRun.state,
+      receipts: durableRun.receipts,
+      tasks: durableRun.tasks,
+      createdAt: durableRun.createdAt,
+      updatedAt: durableRun.updatedAt,
+      error: durableRun.error,
+    };
+  }
+
   if (
     durableRun.state === 'COMPLETED' ||
     durableRun.state === 'FAILED' ||
-    durableRun.state === 'CANCELLED'
+    durableRun.state === 'CANCELLED' ||
+    durableRun.state === 'BLOCKED'
   ) {
     return {
       runId: durableRun.runId,
@@ -241,6 +335,9 @@ export async function resumeRun(
       tasks: durableRun.tasks,
       createdAt: durableRun.createdAt,
       updatedAt: durableRun.updatedAt,
+      error: durableRun.error,
+      staleProcess: durableRun.staleProcess,
+      orphanPid: durableRun.orphanPid,
     };
   }
 
@@ -259,45 +356,57 @@ export async function resumeRun(
     throw new Error(`Unknown adapter: ${adapterName}`);
   }
   const adapter = new LocalWorkerAdapter();
+  store.acquireLock(runId);
+  store.registerProcess(runId);
 
-  while (true) {
-    const readyTasks = getNextReadyTasks(orcRun);
-    if (readyTasks.length === 0) break;
+  try {
+    while (true) {
+      const readyTasks = getNextReadyTasks(orcRun);
+      if (readyTasks.length === 0) break;
 
-    for (const task of readyTasks) {
-      assignTask(orcRun, task.taskId, 'local-worker');
-      syncTasksToStore(basePath, runId, orcRun.tasks);
+      for (const task of readyTasks) {
+        assignTask(orcRun, task.taskId, 'local-worker', basePath);
+        syncTasksToStore(basePath, runId, orcRun.tasks);
 
-      let receipt: DelegationReceipt;
-      try {
-        receipt = await adapter.submitAssignment(task.assignment!);
-      } catch (err) {
-        receipt = {
-          taskId: task.taskId,
-          filesChanged: [],
-          commandsRun: [],
-          testsRun: [],
-          evidencePaths: [],
-          status: 'FAIL',
-          retries: 0,
-          assumptions: [],
-          unresolvedFindings: [(err as Error).message],
-        };
+        let receipt: DelegationReceipt;
+        try {
+          receipt = await adapter.submitAssignment(task.assignment!);
+        } catch (err) {
+          receipt = {
+            taskId: task.taskId,
+            filesChanged: [],
+            commandsRun: [],
+            testsRun: [],
+            evidencePaths: [],
+            status: 'FAIL',
+            retries: 0,
+            assumptions: [],
+            unresolvedFindings: [(err as Error).message],
+          };
+        }
+        completeTask(orcRun, task.taskId, receipt);
+        allReceipts.push(receipt);
+
+        await store.addReceipt(runId, receipt);
+        syncTasksToStore(basePath, runId, orcRun.tasks);
+        await store.checkpoint(runId);
       }
-      completeTask(orcRun, task.taskId, receipt);
-      allReceipts.push(receipt);
-
-      await store.addReceipt(runId, receipt);
-      syncTasksToStore(basePath, runId, orcRun.tasks);
-      await store.checkpoint(runId);
     }
+
+    // BUG-2: same honest terminal-state logic as executeRun.
+    const final = computeFinalState(orcRun);
+    if (final.state !== 'COMPLETED' && final.reason) {
+      await store.updateError(runId, final.reason);
+    }
+    await store.updateState(runId, final.state);
+    syncTasksToStore(basePath, runId, orcRun.tasks);
+    await store.checkpoint(runId);
+
+    return runResultFromOrchestration(orcRun, allReceipts, final.state, final.reason);
+  } finally {
+    store.unregisterProcess(runId);
+    store.releaseLock(runId);
   }
-
-  await store.updateState(runId, 'COMPLETED');
-  syncTasksToStore(basePath, runId, orcRun.tasks);
-  await store.checkpoint(runId);
-
-  return runResultFromOrchestration(orcRun, allReceipts, 'COMPLETED');
 }
 
 export async function cancelRunById(

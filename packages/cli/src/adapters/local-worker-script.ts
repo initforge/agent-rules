@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import { execSync } from 'node:child_process';
 
 interface DelegationAssignment {
@@ -11,6 +12,7 @@ interface DelegationAssignment {
   verificationCommands: string[];
   model: string;
   effort: string;
+  root?: string;
 }
 
 interface DelegationReceipt {
@@ -48,6 +50,8 @@ function main(): void {
   if (!assignment.objective) fatal('Missing objective in assignment');
   if (!Array.isArray(assignment.ownedPaths)) fatal('Missing ownedPaths in assignment');
 
+  const root = path.resolve(assignment.root ?? process.cwd());
+
   const filesChanged: string[] = [];
   const commandsRun: string[] = [];
   const testsRun: string[] = [];
@@ -55,7 +59,15 @@ function main(): void {
   const unresolvedFindings: string[] = [];
 
   for (const p of assignment.ownedPaths) {
-    const fullPath = p;
+    // GAP-1: confine ownedPaths to the project root — reject absolute paths
+    // outside root and parent traversal (mirrors engine SecureFsRoot policy).
+    const abs = path.isAbsolute(p) ? p : path.resolve(root, p);
+    const rel = path.relative(root, abs);
+    if (rel.startsWith('..') || path.isAbsolute(rel)) {
+      unresolvedFindings.push(`Owned path escapes project root (${root}): ${p}`);
+      continue;
+    }
+    const fullPath = abs;
     if (fs.existsSync(fullPath)) {
       try {
         const stat = fs.statSync(fullPath);

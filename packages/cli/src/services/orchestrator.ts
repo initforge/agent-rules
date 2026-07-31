@@ -34,6 +34,8 @@ export interface DelegationAssignment {
   verificationCommands: string[];
   model: string;
   effort: string;
+  /** Project root that ownedPaths are confined to. */
+  root?: string;
 }
 
 export interface DelegationReceipt {
@@ -111,7 +113,7 @@ export function getNextReadyTasks(run: OrchestrationRun): TaskState[] {
   return ready;
 }
 
-export function assignTask(run: OrchestrationRun, taskId: string, worker: string): DelegationAssignment {
+export function assignTask(run: OrchestrationRun, taskId: string, worker: string, root?: string): DelegationAssignment {
   const task = run.tasks.find(t => t.taskId === taskId);
   if (!task) throw new Error(`Task ${taskId} not found`);
 
@@ -134,6 +136,7 @@ export function assignTask(run: OrchestrationRun, taskId: string, worker: string
     verificationCommands: [],
     model: task.model || 'gpt-4o',
     effort: task.effort || planTask.estimatedEffort,
+    root,
   };
 
   task.assignment = assignment;

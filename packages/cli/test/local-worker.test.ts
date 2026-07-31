@@ -70,4 +70,17 @@ describe('LocalWorkerAdapter', () => {
 
     await expect(adapter.submitAssignment(assignment)).rejects.toThrow(/timed out/i);
   });
+
+  it('GAP-1: refuses owned paths that escape the project root', async () => {
+    const adapter = new LocalWorkerAdapter();
+    const assignment = validAssignment({
+      taskId: 'T-005',
+      root: process.cwd(),
+      ownedPaths: ['/etc/hostname'],
+    });
+    const receipt = await adapter.submitAssignment(assignment);
+    expect(receipt.status).toBe('FAIL');
+    expect(receipt.filesChanged).toEqual([]);
+    expect(receipt.unresolvedFindings.some(f => /escapes/.test(f))).toBe(true);
+  });
 });

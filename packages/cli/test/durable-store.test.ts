@@ -2,7 +2,12 @@ import { describe, it, expect, afterAll } from "vitest";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
-import { DurableStore } from "../src/services/durable-store.js";
+import { spawn } from "node:child_process";
+import {
+  DurableStore,
+  RUN_LOCKED_ERROR,
+  RUN_ACTIVE_ERROR,
+} from "../src/services/durable-store.js";
 
 const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "durable-store-test-"));
 const store = new DurableStore(tmpDir);
@@ -167,5 +172,125 @@ describe("DurableStore", () => {
     expect(pendingTasks[0].id).toBe("i3");
 
     await store2.deleteRun(interruptionId);
+  });
+
+  it("GAP-3: checkpoint filenames embed a sha256 hash of the canonical JSON", async () => {
+    const cpRunId = "hash-cp-test";
+    await store.createRun(cpRunId, {});
+    await store.checkpoint(cpRunId);
+    const cpDir = path.join(tmpDir, ".agent", "runs", cpRunId, "checkpoints");
+    const files = fs.readdirSync(cpDir);
+    expect(files.length).toBe(1);
+    expect(files[0]).toMatch(/^checkpoint-.+-[0-9a-f]{16}\.json$/);
+    await store.deleteRun(cpRunId);
+  });
+
+  it("GAP-3: tampered checkpoint is detected, NOT absorbed, run set to FAILED", async () => {
+    const tamperId = "tamper-test";
+    await store.createRun(tamperId, {});
+    await store.updateState(tamperId, "EXECUTING");
+    await store.addReceipt(tamperId, { taskId: "T-1", status: "PASS", evidencePaths: ["e"] });
+    await store.checkpoint(tamperId);
+
+    // Tamper: wipe receipts, rewrite under the same filename (hash now stale).
+    const cpDir = path.join(tmpDir, ".agent", "runs", tamperId, "checkpoints");
+    const file = fs.readdirSync(cpDir)[0];
+    const cp = JSON.parse(fs.readFileSync(path.join(cpDir, file), "utf-8"));
+    cp.data.receipts = [];
+    fs.writeFileSync(path.join(cpDir, file), JSON.stringify(cp, null, 2));
+
+    const resumed = await store.resume(tamperId);
+    expect(resumed!.state).toBe("FAILED");
+    expect(resumed!.error).toMatch(/tamper/);
+
+    // Receipts must NOT be absorbed from the tampered checkpoint.
+    const run = await store.getRun(tamperId);
+    expect(run!.receipts).toHaveLength(1);
+    expect(run!.receipts[0]).toMatchObject({ taskId: "T-1" });
+
+    await store.deleteRun(tamperId);
+  });
+
+  it("GAP-4: resume refuses a run locked by a live foreign process (BLOCKED)", async () => {
+    const lockId = "lock-live-test";
+    await store.createRun(lockId, {});
+    const child = spawn(process.execPath, ["-e", "setInterval(()=>{},1000)"], { stdio: "ignore" });
+    try {
+      // Wait for the child to be alive.
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      fs.writeFileSync(
+        path.join(tmpDir, ".agent", "runs", lockId, "run.json.lock"),
+        `${child.pid}\n${Date.now()}`,
+      );
+      const resumed = await store.resume(lockId);
+      expect(resumed!.state).toBe("BLOCKED");
+      expect(resumed!.error).toBe(RUN_LOCKED_ERROR);
+    } finally {
+      child.kill("SIGKILL");
+    }
+    await store.deleteRun(lockId);
+  });
+
+  it("GAP-4: stale lock (dead PID) is cleaned and resume proceeds", async () => {
+    const staleLockId = "lock-stale-test";
+    await store.createRun(staleLockId, {});
+    await store.updateState(staleLockId, "EXECUTING");
+    await store.checkpoint(staleLockId);
+
+    // Dead PID: spawn a child that exits immediately and use its PID.
+    const child = spawn(process.execPath, ["-e", "process.exit(0)"], { stdio: "ignore" });
+    await new Promise((resolve) => child.on("exit", resolve));
+    fs.writeFileSync(
+      path.join(tmpDir, ".agent", "runs", staleLockId, "run.json.lock"),
+      `${child.pid}\n${Date.now()}`,
+    );
+
+    const resumed = await store.resume(staleLockId);
+    expect(resumed!.state).toBe("EXECUTING");
+    expect(fs.existsSync(
+      path.join(tmpDir, ".agent", "runs", staleLockId, "run.json.lock"),
+    )).toBe(false);
+
+    await store.deleteRun(staleLockId);
+  });
+
+  it("GAP-2: stale process.json (dead PID) is flagged as orphan and cleaned", async () => {
+    const staleProcId = "proc-stale-test";
+    await store.createRun(staleProcId, {});
+    const child = spawn(process.execPath, ["-e", "process.exit(0)"], { stdio: "ignore" });
+    await new Promise((resolve) => child.on("exit", resolve));
+    fs.writeFileSync(
+      path.join(tmpDir, ".agent", "runs", staleProcId, "process.json"),
+      JSON.stringify({ pid: child.pid, startedAt: new Date().toISOString() }),
+    );
+
+    await store.checkAndFlagStaleProcess(staleProcId);
+    const run = await store.getRun(staleProcId);
+    expect(run!.staleProcess).toBe(true);
+    expect(run!.orphanPid).toBe(child.pid);
+    expect(fs.existsSync(
+      path.join(tmpDir, ".agent", "runs", staleProcId, "process.json"),
+    )).toBe(false);
+
+    await store.deleteRun(staleProcId);
+  });
+
+  it("GAP-2: resume refuses double-execution when a live foreign process owns the run", async () => {
+    const liveProcId = "proc-live-test";
+    await store.createRun(liveProcId, {});
+    const child = spawn(process.execPath, ["-e", "setInterval(()=>{},1000)"], { stdio: "ignore" });
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      fs.writeFileSync(
+        path.join(tmpDir, ".agent", "runs", liveProcId, "process.json"),
+        JSON.stringify({ pid: child.pid, startedAt: new Date().toISOString() }),
+      );
+      const resumed = await store.resume(liveProcId);
+      expect(resumed!.state).toBe("CREATED"); // state stays as-is
+      expect(resumed!.error).toBe(RUN_ACTIVE_ERROR);
+    } finally {
+      child.kill("SIGKILL");
+    }
+    await store.deleteRun(liveProcId);
   });
 });

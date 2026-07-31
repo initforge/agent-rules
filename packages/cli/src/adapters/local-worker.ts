@@ -37,9 +37,18 @@ export class LocalWorkerAdapter implements WorkerAdapter {
 
     fs.writeFileSync(assignmentPath, JSON.stringify(assignment, null, 2));
 
-    const scriptPath = path.resolve(__dirname, 'local-worker-script.ts');
+    // BUG-1: built layout emits .js siblings; dev layout (tsx/vitest from src)
+    // still runs the .ts script and needs --experimental-strip-types.
+    const jsScript = path.resolve(__dirname, 'local-worker-script.js');
+    const scriptPath = fs.existsSync(jsScript)
+      ? jsScript
+      : path.resolve(__dirname, 'local-worker-script.ts');
 
-    const proc = spawn(process.execPath, ['--experimental-strip-types', scriptPath, assignmentPath], {
+    const spawnArgs = scriptPath.endsWith('.js')
+      ? [scriptPath, assignmentPath]
+      : ['--experimental-strip-types', scriptPath, assignmentPath];
+
+    const proc = spawn(process.execPath, spawnArgs, {
       stdio: ['pipe', 'pipe', 'pipe'],
       cwd: process.cwd(),
     });

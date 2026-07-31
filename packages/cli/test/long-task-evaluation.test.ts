@@ -152,13 +152,15 @@ function makeVerifier(orcRun: ReturnType<typeof createRun>, scaffoldDir: string)
 
 describe('Long-task evaluation: agent-rules init command', () => {
   // ── Phase 1: Basic executeRun (proves end-to-end pipeline works) ──
-  it('executeRun compiles intent, plan, and completes a basic request', async () => {
+  it('executeRun compiles intent, plan, and honestly reports FAILED on fake PASS', async () => {
     const projectDir = fs.mkdtempSync(path.join(tmpRoot, 'basic-'));
     const result = await executeRun('Goal: Implement a CLI init command', {
       project: projectDir,
     });
     expect(result.runId).toBeTruthy();
-    expect(result.state).toBe('COMPLETED');
+    // BUG-2: naive request has no ownedPaths → worker PASS carries no evidence → honest FAILED.
+    expect(result.state).toBe('FAILED');
+    expect(result.error).toBeTruthy();
     expect(result.receipts.length).toBeGreaterThan(0);
     expect(result.tasks.length).toBeGreaterThan(0);
 
@@ -169,7 +171,7 @@ describe('Long-task evaluation: agent-rules init command', () => {
     const store = new DurableStore(projectDir);
     const stored = await store.getRun(result.runId);
     expect(stored).not.toBeNull();
-    expect(stored!.state).toBe('COMPLETED');
+    expect(stored!.state).toBe('FAILED');
   });
 
   // ── Phase 2: Full orchestration lifecycle ──
@@ -237,7 +239,7 @@ describe('Long-task evaluation: agent-rules init command', () => {
       await store.updateState(runId, 'EXECUTING');
 
       async function dispatch(taskId: string): Promise<DelegationReceipt> {
-        const assignment = assignTask(orcRun, taskId, 'local-worker');
+        const assignment = assignTask(orcRun, taskId, 'local-worker', scaffoldDir);
         const receipt = await adapter.submitAssignment(assignment);
         completeTask(orcRun, taskId, receipt);
         allReceipts.push(receipt);

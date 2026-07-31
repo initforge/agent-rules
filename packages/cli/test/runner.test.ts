@@ -33,13 +33,15 @@ beforeEach(async () => {
 });
 
 describe('executeRun', () => {
-  it('compiles intent, plan, persists run and returns runId', async () => {
+  it('compiles intent, plan, persists run and honestly reports FAILED on fake PASS', async () => {
     const result = await withTmpBase((basePath) =>
       executeRun('Goal: Build a CLI tool\nConstraint: Use TypeScript', { project: basePath }),
     );
 
     expect(result.runId).toBeTruthy();
-    expect(result.state).toBe('COMPLETED');
+    // BUG-2: tasks complete with empty evidence (no ownedPaths) → fake PASS → FAILED.
+    expect(result.state).toBe('FAILED');
+    expect(result.error).toBeTruthy();
     expect(result.receipts.length).toBeGreaterThan(0);
     expect(result.tasks.length).toBeGreaterThan(0);
     expect(result.createdAt).toBeTruthy();
@@ -47,7 +49,8 @@ describe('executeRun', () => {
 
     const stored = await store.getRun(result.runId);
     expect(stored).not.toBeNull();
-    expect(stored!.state).toBe('COMPLETED');
+    expect(stored!.state).toBe('FAILED');
+    expect(stored!.error).toBeTruthy();
     expect(stored!.receipts).toHaveLength(result.receipts.length);
   });
 
@@ -73,7 +76,7 @@ describe('executeRun', () => {
       executeRun(request, { project: basePath }),
     );
 
-    expect(result.state).toBe('COMPLETED');
+    expect(result.state).toBe('FAILED'); // fake PASS → honest FAILED
     expect(result.tasks.length).toBeGreaterThanOrEqual(3);
     expect(result.receipts.length).toBe(result.tasks.length);
   });
@@ -88,7 +91,7 @@ describe('getRunStatus', () => {
     const status = await getRunStatus(runId, tmpDir);
     expect(status).not.toBeNull();
     expect(status!.runId).toBe(runId);
-    expect(status!.state).toBe('COMPLETED');
+    expect(status!.state).toBe('FAILED'); // honest final state persists
     expect(status!.receipts.length).toBeGreaterThan(0);
     expect(status!.createdAt).toBeTruthy();
   });
@@ -100,19 +103,23 @@ describe('getRunStatus', () => {
 });
 
 describe('resumeRun', () => {
-  it('loads existing run and continues', async () => {
+  it('loads existing run and returns its terminal state without re-executing', async () => {
     const { runId } = await withTmpBase((basePath) =>
       executeRun('Goal: Resume test\nGoal: Complete all steps', { project: basePath }),
     );
 
     const resumed = await resumeRun(runId, { project: tmpDir });
     expect(resumed.runId).toBe(runId);
-    expect(resumed.state).toBe('COMPLETED');
+    expect(resumed.state).toBe('FAILED'); // naive run ended FAILED (fake PASS)
     expect(resumed.receipts.length).toBeGreaterThan(0);
   });
 
   it('resumes interrupted run and completes remaining tasks', async () => {
     const partialId = `resume-partial-${Date.now()}`;
+    // Seed real files so worker receipts carry honest evidence (BUG-2).
+    for (const f of ['r1.txt', 'r2.txt', 'r3.txt']) {
+      fs.writeFileSync(path.join(tmpDir, f), `content of ${f}\n`, 'utf-8');
+    }
     const plan = {
       schema: 'artifact/plan',
       version: 1,
@@ -124,7 +131,7 @@ describe('resumeRun', () => {
           description: 'Step one',
           requirementIds: ['R-001'],
           dependsOn: [],
-          ownedPaths: [],
+          ownedPaths: ['r1.txt'],
           acceptanceCriteria: ['R-001 complete'],
           estimatedEffort: 'small' as const,
         },
@@ -133,7 +140,7 @@ describe('resumeRun', () => {
           description: 'Step two',
           requirementIds: ['R-002'],
           dependsOn: ['T-001'],
-          ownedPaths: [],
+          ownedPaths: ['r2.txt'],
           acceptanceCriteria: ['R-002 complete'],
           estimatedEffort: 'small' as const,
         },
@@ -142,7 +149,7 @@ describe('resumeRun', () => {
           description: 'Step three',
           requirementIds: ['R-003'],
           dependsOn: ['T-002'],
-          ownedPaths: [],
+          ownedPaths: ['r3.txt'],
           acceptanceCriteria: ['R-003 complete'],
           estimatedEffort: 'small' as const,
         },
@@ -165,10 +172,10 @@ describe('resumeRun', () => {
     await store.updateState(partialId, 'EXECUTING');
     await store.addReceipt(partialId, {
       taskId: 'T-001',
-      filesChanged: [],
+      filesChanged: ['r1.txt'],
       commandsRun: [],
       testsRun: [],
-      evidencePaths: [],
+      evidencePaths: ['r1.txt'],
       status: 'PASS',
       retries: 0,
       assumptions: [],
@@ -247,7 +254,7 @@ describe('Full end-to-end', () => {
       executeRun(request, { project: basePath }),
     );
 
-    expect(result.state).toBe('COMPLETED');
+    expect(result.state).toBe('FAILED'); // naive tasks carry no evidence → honest FAILED
     expect(result.runId).toBeTruthy();
 
     const tasks = result.tasks as { taskId: string; state: string }[];
@@ -255,22 +262,27 @@ describe('Full end-to-end', () => {
     expect(allCompleted).toBe(true);
 
     const stored = await store.getRun(result.runId);
-    expect(stored!.state).toBe('COMPLETED');
+    expect(stored!.state).toBe('FAILED');
+    expect(stored!.error).toBeTruthy();
     expect(stored!.receipts.length).toBe(tasks.length);
   });
 });
 
 describe('Simulated interruption and resume', () => {
   it('checkpoint -> new DurableStore -> resume -> completed tasks not re-run', async () => {
+    // Seed real files so resumed tasks produce honest PASS evidence (BUG-2).
+    for (const f of ['i1.txt', 'i2.txt', 'i3.txt']) {
+      fs.writeFileSync(path.join(tmpDir, f), `content of ${f}\n`, 'utf-8');
+    }
     const plan = {
       schema: 'artifact/plan',
       version: 1,
       repository_baseline: { branch: 'main', sha: 'a'.repeat(40) },
       intent_reference: { hash: 'interrupt', summary: 'Interruption test' },
       tasks: [
-        { id: 'T-001', description: 'Install', requirementIds: ['R-001'], dependsOn: [], ownedPaths: [], acceptanceCriteria: ['done'], estimatedEffort: 'small' as const },
-        { id: 'T-002', description: 'Build', requirementIds: ['R-002'], dependsOn: ['T-001'], ownedPaths: [], acceptanceCriteria: ['done'], estimatedEffort: 'small' as const },
-        { id: 'T-003', description: 'Test', requirementIds: ['R-003'], dependsOn: ['T-002'], ownedPaths: [], acceptanceCriteria: ['done'], estimatedEffort: 'small' as const },
+        { id: 'T-001', description: 'Install', requirementIds: ['R-001'], dependsOn: [], ownedPaths: ['i1.txt'], acceptanceCriteria: ['done'], estimatedEffort: 'small' as const },
+        { id: 'T-002', description: 'Build', requirementIds: ['R-002'], dependsOn: ['T-001'], ownedPaths: ['i2.txt'], acceptanceCriteria: ['done'], estimatedEffort: 'small' as const },
+        { id: 'T-003', description: 'Test', requirementIds: ['R-003'], dependsOn: ['T-002'], ownedPaths: ['i3.txt'], acceptanceCriteria: ['done'], estimatedEffort: 'small' as const },
       ],
       completion_policy: { require_all_tasks: true, require_verification: true },
       validation: { valid: true, errors: [], warnings: [], requirementCoverage: [
@@ -295,10 +307,10 @@ describe('Simulated interruption and resume', () => {
     await store1.updateState(interruptId, 'EXECUTING');
     await store1.addReceipt(interruptId, {
       taskId: 'T-001',
-      filesChanged: [],
+      filesChanged: ['i1.txt'],
       commandsRun: [],
       testsRun: [],
-      evidencePaths: [],
+      evidencePaths: ['i1.txt'],
       status: 'PASS',
       retries: 0,
       assumptions: [],
