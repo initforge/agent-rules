@@ -1,9 +1,13 @@
 import type { OpencodeClient, SessionDurableEventStream } from '@opencode-ai/sdk/v2';
 
-export type OpenCodeNativeClient = Pick<OpencodeClient, 'v2'>;
+export type OpenCodeNativeClient = OpencodeClient;
 export type NativeSessionStatus = 'idle' | 'running' | 'failed' | 'done';
 export interface NativeSessionBoundary { status(sessionId: string): Promise<NativeSessionStatus>; continue(sessionId: string, promptId: string): Promise<void>; }
-type EventEnvelope = { data: SessionDurableEventStream | string; event?: string };
+type EventEnvelope = { data?: SessionDurableEventStream | Record<string, unknown>; event?: string; type?: string };
+const object = (value: unknown): Record<string, unknown> | undefined => {
+  if (typeof value === 'string') { try { value = JSON.parse(value); } catch { return undefined; } }
+  return value && typeof value === 'object' ? value as Record<string, unknown> : undefined;
+};
 
 export class OpenCodeNativeSessionAdapter implements NativeSessionBoundary {
   constructor(private readonly client: OpenCodeNativeClient, private readonly continuationText: string, private readonly timeoutMs = 30_000) {}
@@ -13,14 +17,16 @@ export class OpenCodeNativeSessionAdapter implements NativeSessionBoundary {
     const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('status timeout')), this.timeoutMs));
     try {
       for await (const envelope of await Promise.race([Promise.resolve(stream), timeout])) {
-        const raw = typeof (envelope as EventEnvelope).data === 'string' ? JSON.parse((envelope as EventEnvelope).data) : (envelope as EventEnvelope).data;
-        const event = raw as Record<string, unknown>;
-        const data = (event.data as Record<string, unknown> | undefined) ?? event;
+        const envelopeObject = object(envelope);
+        const event = object(envelopeObject?.data) ?? envelopeObject;
+        if (!event) continue;
+        const data = object(event.data) ?? event;
         if (data.sessionID && data.sessionID !== sessionId) continue;
-        const type = (event.type ?? data.type ?? (envelope as EventEnvelope).event) as string;
-        if (type === 'session.idle' || (type === 'session.status' && (data.status as { type?: string } | undefined)?.type === 'idle')) return 'idle';
-        if (type === 'session.status' && (data.status as { type?: string } | undefined)?.type === 'busy') return 'running';
-        if (type === 'session.status' && (data.status as { type?: string } | undefined)?.type === 'retry') return 'failed';
+        const type = String(event.type ?? data.type ?? envelopeObject?.event ?? '');
+        const status = object(data.status)?.type ?? data.status;
+        if (type === 'session.idle' || type === 'session.status' && status === 'idle') return 'idle';
+        if (type === 'session.status' && status === 'busy') return 'running';
+        if (type === 'session.status' && (status === 'retry' || status === 'error')) return 'failed';
       }
     } catch (error) { throw new Error(`OpenCode native session status unavailable: ${sessionId}: ${String(error)}`); }
     throw new Error(`OpenCode native session status unavailable: ${sessionId}`);

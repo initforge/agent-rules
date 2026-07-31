@@ -2,10 +2,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createSupervisor, _resolveSupervisorInternals, type SupervisorConfig, type SupervisorPublicView, type _InternalOps, type ChildAssignmentView } from '../../packages/engine/src/supervisor.js';
 import { OpenCodeV2Adapter, type OpenCodeV2Config, type MessagePart, type SSEEvent } from './adapter.js';
+import type { OpencodeClient } from '@opencode-ai/sdk/v2';
 
 export interface SupervisorRunnerConfig {
   supervisor?: Partial<SupervisorConfig>;
   adapter?: OpenCodeV2Config;
+  nativeClient?: OpencodeClient;
 }
 
 interface TerminalEvidence {
@@ -23,6 +25,7 @@ export class SupervisorRunner {
   private parentSessionId: string | null = null;
   private initialized = false;
   private readonly terminalEvidence = new Map<string, TerminalEvidence>();
+  readonly nativeClient?: OpencodeClient;
 
   constructor(config: SupervisorRunnerConfig) {
     this.supervisorConfig = config.supervisor ?? {};
@@ -40,6 +43,7 @@ export class SupervisorRunner {
     this._complete = internals.complete;
     this._internal = internals._internal;
     this.adapter = new OpenCodeV2Adapter(config.adapter ?? { baseUrl: 'http://127.0.0.1:4096', fetchFn: fetch });
+    this.nativeClient = config.nativeClient;
   }
 
   /** F10 (R10): public view — no completion methods, no internal methods */

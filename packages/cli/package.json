@@ -30,6 +30,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@opencode-ai/sdk": "^1.18.10",
     "@initforge/agent-rules-engine": "0.1.0",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",

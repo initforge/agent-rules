@@ -122,14 +122,13 @@ export class ActivationTransaction {
       seen.add(t.name);
     }
 
+    const genDir = path.join(this.#txDir, String(generation));
+    if (fs.existsSync(genDir)) throw new Error(`Transaction: generation ${generation} exists, recover first`);
     this.#generation = generation;
     this.#targets = targets;
     this.#entries = [];
     this.#committed = false;
     this.#rolledBack = false;
-
-    const genDir = path.join(this.#txDir, String(generation));
-    if (fs.existsSync(genDir)) throw new Error(`Transaction: generation ${generation} exists, recover first`);
     // Create each directory level with lstat check (no recursive:true that follows symlinks)
     {
       const dirs = [this.#txDir, genDir];

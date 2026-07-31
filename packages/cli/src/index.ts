@@ -19,6 +19,7 @@ import { runtimeCmd } from "./commands/runtime.js";
 import { modelsCmd } from "./commands/models.js";
 import { skillsCmd } from "./commands/skills.js";
 import { autopilotCmd } from "./commands/autopilot.js";
+import { createOpencodeClient } from "@opencode-ai/sdk/v2/client";
 import {
   executeRun,
   getRunStatus,
@@ -34,7 +35,7 @@ program.command("autopilot")
   .argument("[runId]", "Run identity", "default")
   .argument("[value]", "Session ID, CI result, checkpoint, or continuation text")
   .action(async (action: string, runId: string, value?: string) => {
-    try { formatOutput({ exitCode: ExitCode.Success, message: 'autopilot', data: { result: await autopilotCmd([action, runId, value].filter((v): v is string => Boolean(v)), process.cwd()) } }, program.optsWithGlobals() as CliOptions); }
+    try { const client = action === 'continue' ? createOpencodeClient({ baseUrl: process.env.OPENCODE_URL ?? 'http://127.0.0.1:4096' }) : undefined; const boundary = client ? { status: async (sessionId: string) => { for await (const item of (await client.v2.session.events({ sessionID: sessionId })).stream) { const raw = typeof item === 'string' ? JSON.parse(item) : item; const type = (raw as Record<string, unknown>).type; if (type === 'session.idle') return 'idle' as const; if (type === 'session.status' && ((raw as Record<string, unknown>).status as Record<string, unknown>)?.type === 'busy') return 'running' as const; } throw new Error('native session status unavailable'); }, continue: async (sessionId: string, promptId: string) => { await client.v2.session.prompt({ sessionID: sessionId, id: promptId, prompt: { text: process.env.OPENCODE_CONTINUATION_PROMPT ?? 'Continue' }, resume: true }); } } : undefined; formatOutput({ exitCode: ExitCode.Success, message: 'autopilot', data: { result: await autopilotCmd([action, runId, value].filter((v): v is string => Boolean(v)), process.cwd(), boundary) } }, program.optsWithGlobals() as CliOptions); }
     catch (err) { console.error(`Error: ${err instanceof Error ? err.message : String(err)}`); process.exit(ExitCode.GeneralError); }
   });
 
