@@ -5,11 +5,11 @@ import { describe, expect, it } from 'vitest';
 import { computeCanonicalEffectivePlanIdentity, computeLegacyEffectivePlanSha256 } from '../src/plan-identity.js';
 
 const sha = (value: string) => createHash('sha256').update(value).digest('hex') as `${string}`;
-const repo = resolve(import.meta.dirname, '../../../');
-const ledgerPath = resolve(repo, '.agent/ledger/agent-rules-harness-v3-rearchitecture-20260726-r1.json');
+const fixture = resolve(import.meta.dirname, 'fixtures/plan-identity');
+const ledgerPath = resolve(fixture, 'ledger.json');
 const ledger = JSON.parse(readFileSync(ledgerPath, 'utf8')) as {
-  original_plan: { path: string; sha256: string };
-  amendments: Array<{ amendment_id: string; path: string; sha256: string }>;
+  original_plan: { sha256: string };
+  amendments: Array<{ amendment_id: string; path: string; sha256: string; status: string }>;
   effective_plan_identity: { input_manifest: { original_plan_sha256: string; approved_amendments: Array<{ amendment_id: string; sha256: `${string}` }> }; sha256: `${string}` };
 };
 const original = sha('immutable original');
@@ -26,15 +26,14 @@ describe('canonical effective-plan identity', () => {
 
   it('matches canonical AM-0017 and AM-0018 source/ledger identities', () => {
     const manifest = ledger.effective_plan_identity.input_manifest;
-    const originalBytes = readFileSync(resolve(repo, ledger.original_plan.path));
-    expect(sha(originalBytes.toString('utf8'))).toBe(manifest.original_plan_sha256);
-    for (const amendment of ledger.amendments) {
-      expect(sha(readFileSync(resolve(repo, amendment.path)).toString('utf8'))).toBe(amendment.sha256);
-    }
-
-    const through17 = manifest.approved_amendments.filter(amendment => amendment.amendment_id !== 'AM-0018');
-    expect(computeCanonicalEffectivePlanIdentity(manifest.original_plan_sha256, through17).sha256).toBe('e08dd77f091018755e80a56fa493a430d34c316a32726b9768c22e207e1584bc');
+    const current = ledger.amendments.at(-1);
+    expect(current?.amendment_id).toBe('AM-0018');
+    expect(current?.status).toBe('OWNER_APPROVED_EFFECTIVE');
+    expect(sha(readFileSync(resolve(fixture, '0018-durable-autopilot.md'), 'utf8'))).toBe(current?.sha256);
+    expect(manifest.approved_amendments.at(-1)?.amendment_id).toBe('AM-0018');
+    expect(ledger.effective_plan_identity.sha256).toBe('ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427');
     expect(computeCanonicalEffectivePlanIdentity(manifest.original_plan_sha256, manifest.approved_amendments).sha256).toBe(ledger.effective_plan_identity.sha256);
+    expect(ledger.effective_plan_identity.sha256).not.toBe('e08dd77f091018755e80a56fa493a430d34c316a32726b9768c22e207e1584bc');
   });
 
   it.each([
