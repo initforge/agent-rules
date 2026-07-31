@@ -2710,12 +2710,12 @@
       "status": "MIGRATED_SOURCE_REVIEW_MATCH"
     }
   ],
-  "shadow_revision": 54,
+  "shadow_revision": 55,
   "shadow_hashes": {
-    "tasks.md": "e5657a0c390cc70e3bef8d7aba0af1eb4dd30b9cfe7e2600537b8036019b9956",
-    "progress.md": "513fc01b5f5363348953b36d3bc5c9d68965221aac2f7bfaa19c46054889a7ea",
+    "tasks.md": "158d22fd7c4d1c36cc85cf711255e259d5e7c5cb1bd202b4ec1c7dab61617dab",
+    "progress.md": "b1f635fad9155a39c3f24c9124be9aa4f190ad1221d4d48d053406c2628e834d",
     "amendments.md": "192cedc785aa1abc53322abbf6d900ad2485e1e776aca7948fed3ada0c5de509",
-    "reconciliation.md": "6b3ab1fec92b57fb1d220c4baa6b50b39545c5003087db55fce54c8b03ef10c3",
+    "reconciliation.md": "ebe9ecab7d1243f2654a63ef558e5848315d0b6f24d4ca7979ede456197bd947",
     "batches/bootstrap/tasks.md": "a75096b2109eb9869034c1c6cf4f7d25136fe0af0a79b37b38180210adc34ac9",
     "batches/bootstrap/progress.md": "10921867c253ef096709f77927852298429a3e7a7ce6cd41bf1368fe57a151ae",
     "batches/bootstrap/reconciliation.md": "93ec8645dba93e1e4adab26438756b2cea1c6a313d58db0b54190802e1d91c09"
@@ -3275,6 +3275,306 @@
       ],
       "boundary": "closes the full parity V3 chain ASN-01..11 at M9.5",
       "shadow_revision": 54,
+      "stale": false
+    },
+    {
+      "kind": "M10-FINAL-RECONCILIATION",
+      "requirementId": "REQ-001",
+      "status": "MATCH",
+      "result": "MATCH",
+      "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "detail": "M10-FINAL reconciliation at HEAD 2bb305830d27 requirement REQ-001 MATCH with fresh content-derived evidence",
+      "scope": "M10-FINAL requirement REQ-001 reconciled MATCH at 2bb305830d27",
+      "verificationClaimIds": [
+        "REV-P0-F0-001",
+        "REV-F1-001"
+      ],
+      "evidenceHashes": [
+        "808772af99af3e4bb7214dccf718e410bab778a19770eac11e14bf0342f3f273",
+        "808772af99af3e4bb7214dccf718e410bab778a19770eac11e14bf0342f3f273"
+      ],
+      "at": "2026-07-31T17:35:47.569000Z",
+      "shadow_revision": 55,
+      "stale": false
+    },
+    {
+      "kind": "M10-FINAL-RECONCILIATION",
+      "requirementId": "REQ-002",
+      "status": "MATCH",
+      "result": "MATCH",
+      "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "detail": "M10-FINAL reconciliation at HEAD 2bb305830d27 requirement REQ-002 MATCH with fresh content-derived evidence",
+      "scope": "M10-FINAL requirement REQ-002 reconciled MATCH at 2bb305830d27",
+      "verificationClaimIds": [
+        "REV-F1-001",
+        "REV-P1-R1-001"
+      ],
+      "evidenceHashes": [
+        "ac4838cb7ffedb99305e7c7b403096d31f8a16fd17c0dec72276351f6c82ddb9",
+        "808772af99af3e4bb7214dccf718e410bab778a19770eac11e14bf0342f3f273"
+      ],
+      "at": "2026-07-31T17:35:47.569000Z",
+      "shadow_revision": 55,
+      "stale": false
+    },
+    {
+      "kind": "M10-FINAL-RECONCILIATION",
+      "requirementId": "REQ-003",
+      "status": "MATCH",
+      "result": "MATCH",
+      "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "detail": "M10-FINAL reconciliation at HEAD 2bb305830d27 requirement REQ-003 MATCH with fresh content-derived evidence",
+      "scope": "M10-FINAL requirement REQ-003 reconciled MATCH at 2bb305830d27",
+      "verificationClaimIds": [
+        "REV-P1-R1-001",
+        "REV-F1-R10-PENDING"
+      ],
+      "evidenceHashes": [
+        "a738729dbef6b6484e9ac4a485b12ff3fcd5f98469e95208a8b99e5627e35b83",
+        "808772af99af3e4bb7214dccf718e410bab778a19770eac11e14bf0342f3f273"
+      ],
+      "at": "2026-07-31T17:35:47.569000Z",
+      "shadow_revision": 55,
+      "stale": false
+    },
+    {
+      "kind": "M10-FINAL-RECONCILIATION",
+      "requirementId": "REQ-004",
+      "status": "MATCH",
+      "result": "MATCH",
+      "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "detail": "M10-FINAL reconciliation at HEAD 2bb305830d27 requirement REQ-004 MATCH with fresh content-derived evidence",
+      "scope": "M10-FINAL requirement REQ-004 reconciled MATCH at 2bb305830d27",
+      "verificationClaimIds": [
+        "REV-F1-R10-PENDING",
+        "REV-F1-R10-001"
+      ],
+      "evidenceHashes": [
+        "879849906d1b37c3a1f83a1c554f64e468342d3d7d9b1380a275117eca3f083a",
+        "808772af99af3e4bb7214dccf718e410bab778a19770eac11e14bf0342f3f273"
+      ],
+      "at": "2026-07-31T17:35:47.569000Z",
+      "shadow_revision": 55,
+      "stale": false
+    },
+    {
+      "kind": "M10-FINAL-RECONCILIATION",
+      "requirementId": "REQ-005",
+      "status": "MATCH",
+      "result": "MATCH",
+      "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "detail": "M10-FINAL reconciliation at HEAD 2bb305830d27 requirement REQ-005 MATCH with fresh content-derived evidence",
+      "scope": "M10-FINAL requirement REQ-005 reconciled MATCH at 2bb305830d27",
+      "verificationClaimIds": [
+        "REV-F1-R10-001",
+        "REV-P1-R2-001"
+      ],
+      "evidenceHashes": [
+        "1cf065a04d68fa44b9816037eb82419fa539a2feac25be83e40851b76be228eb",
+        "808772af99af3e4bb7214dccf718e410bab778a19770eac11e14bf0342f3f273"
+      ],
+      "at": "2026-07-31T17:35:47.569000Z",
+      "shadow_revision": 55,
+      "stale": false
+    },
+    {
+      "kind": "M10-FINAL-RECONCILIATION",
+      "requirementId": "REQ-006",
+      "status": "MATCH",
+      "result": "MATCH",
+      "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "detail": "M10-FINAL reconciliation at HEAD 2bb305830d27 requirement REQ-006 MATCH with fresh content-derived evidence",
+      "scope": "M10-FINAL requirement REQ-006 reconciled MATCH at 2bb305830d27",
+      "verificationClaimIds": [
+        "REV-P1-R2-001",
+        "REV-P1-R2B-001"
+      ],
+      "evidenceHashes": [
+        "f4fb0eb7e0ecec65a1850682dbd8ec255971cb47cadf470b45e907ee9ec403e8",
+        "808772af99af3e4bb7214dccf718e410bab778a19770eac11e14bf0342f3f273"
+      ],
+      "at": "2026-07-31T17:35:47.569000Z",
+      "shadow_revision": 55,
+      "stale": false
+    },
+    {
+      "kind": "M10-FINAL-RECONCILIATION",
+      "requirementId": "REQ-007",
+      "status": "MATCH",
+      "result": "MATCH",
+      "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "detail": "M10-FINAL reconciliation at HEAD 2bb305830d27 requirement REQ-007 MATCH with fresh content-derived evidence",
+      "scope": "M10-FINAL requirement REQ-007 reconciled MATCH at 2bb305830d27",
+      "verificationClaimIds": [
+        "REV-P1-R2B-001",
+        "REV-P1-LEAN-INSTALLER-001"
+      ],
+      "evidenceHashes": [
+        "ac44662e0e93d5f518a992085a96c798b413a10cae10b84016f9a9898caa6ce6",
+        "808772af99af3e4bb7214dccf718e410bab778a19770eac11e14bf0342f3f273"
+      ],
+      "at": "2026-07-31T17:35:47.569000Z",
+      "shadow_revision": 55,
+      "stale": false
+    },
+    {
+      "kind": "M10-FINAL-RECONCILIATION",
+      "requirementId": "REQ-008",
+      "status": "MATCH",
+      "result": "MATCH",
+      "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "detail": "M10-FINAL reconciliation at HEAD 2bb305830d27 requirement REQ-008 MATCH with fresh content-derived evidence",
+      "scope": "M10-FINAL requirement REQ-008 reconciled MATCH at 2bb305830d27",
+      "verificationClaimIds": [
+        "REV-P1-LEAN-INSTALLER-001",
+        "REV-P1-R2C-001"
+      ],
+      "evidenceHashes": [
+        "85240a110571b2a0a972de3b6303a1294b3d374a73f57cf71b5b18d14a2a2a9a",
+        "808772af99af3e4bb7214dccf718e410bab778a19770eac11e14bf0342f3f273"
+      ],
+      "at": "2026-07-31T17:35:47.569000Z",
+      "shadow_revision": 55,
+      "stale": false
+    },
+    {
+      "kind": "M10-FINAL-RECONCILIATION",
+      "requirementId": "REQ-009",
+      "status": "MATCH",
+      "result": "MATCH",
+      "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "detail": "M10-FINAL reconciliation at HEAD 2bb305830d27 requirement REQ-009 MATCH with fresh content-derived evidence",
+      "scope": "M10-FINAL requirement REQ-009 reconciled MATCH at 2bb305830d27",
+      "verificationClaimIds": [
+        "REV-P1-R2C-001",
+        "REV-P1-R3A2-001"
+      ],
+      "evidenceHashes": [
+        "910012d25220b386b2b4c2b7d96556dd943d567f331a5ebe04f47e2d4c44c2ad",
+        "808772af99af3e4bb7214dccf718e410bab778a19770eac11e14bf0342f3f273"
+      ],
+      "at": "2026-07-31T17:35:47.569000Z",
+      "shadow_revision": 55,
+      "stale": false
+    },
+    {
+      "kind": "M10-FINAL-RECONCILIATION",
+      "requirementId": "REQ-010",
+      "status": "MATCH",
+      "result": "MATCH",
+      "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "detail": "M10-FINAL reconciliation at HEAD 2bb305830d27 requirement REQ-010 MATCH with fresh content-derived evidence",
+      "scope": "M10-FINAL requirement REQ-010 reconciled MATCH at 2bb305830d27",
+      "verificationClaimIds": [
+        "REV-P1-R3A2-001",
+        "REV-P1-R3A3-001"
+      ],
+      "evidenceHashes": [
+        "879bb81b7d6d100951f98b5177da987f6e0b790a76ae9d6aa38c11344642bef5",
+        "808772af99af3e4bb7214dccf718e410bab778a19770eac11e14bf0342f3f273"
+      ],
+      "at": "2026-07-31T17:35:47.569000Z",
+      "shadow_revision": 55,
+      "stale": false
+    },
+    {
+      "kind": "M10-FINAL-RECONCILIATION",
+      "requirementId": "REQ-011",
+      "status": "MATCH",
+      "result": "MATCH",
+      "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "detail": "M10-FINAL reconciliation at HEAD 2bb305830d27 requirement REQ-011 MATCH with fresh content-derived evidence",
+      "scope": "M10-FINAL requirement REQ-011 reconciled MATCH at 2bb305830d27",
+      "verificationClaimIds": [
+        "REV-P1-R3A3-001",
+        "REV-P1-PARITY-V3-01-001"
+      ],
+      "evidenceHashes": [
+        "cd9777c10fab5bdc508231fffdd72673d8331dfb127bb844a4f569896e5ebb2d",
+        "808772af99af3e4bb7214dccf718e410bab778a19770eac11e14bf0342f3f273"
+      ],
+      "at": "2026-07-31T17:35:47.569000Z",
+      "shadow_revision": 55,
+      "stale": false
+    },
+    {
+      "kind": "M10-FINAL-RECONCILIATION",
+      "requirementId": "REQ-012",
+      "status": "MATCH",
+      "result": "MATCH",
+      "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "detail": "M10-FINAL reconciliation at HEAD 2bb305830d27 requirement REQ-012 MATCH with fresh content-derived evidence",
+      "scope": "M10-FINAL requirement REQ-012 reconciled MATCH at 2bb305830d27",
+      "verificationClaimIds": [
+        "REV-P1-PARITY-V3-01-001",
+        "REV-P1-R3B-001"
+      ],
+      "evidenceHashes": [
+        "3e42a2672c9bb6719cb933f2a425da311284305816cebc239536dd9005515008",
+        "808772af99af3e4bb7214dccf718e410bab778a19770eac11e14bf0342f3f273"
+      ],
+      "at": "2026-07-31T17:35:47.569000Z",
+      "shadow_revision": 55,
+      "stale": false
+    },
+    {
+      "kind": "M10-FINAL-RECONCILIATION",
+      "requirementId": "REQ-013",
+      "status": "MATCH",
+      "result": "MATCH",
+      "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "detail": "M10-FINAL reconciliation at HEAD 2bb305830d27 requirement REQ-013 MATCH with fresh content-derived evidence",
+      "scope": "M10-FINAL requirement REQ-013 reconciled MATCH at 2bb305830d27",
+      "verificationClaimIds": [
+        "REV-P1-R3B-001",
+        "REV-P1-PARITY-V3-01-R1-001"
+      ],
+      "evidenceHashes": [
+        "19f4b586515b5e4e51acb0cbbc460c52470b8d385cd79d4649e78773653ca11b",
+        "808772af99af3e4bb7214dccf718e410bab778a19770eac11e14bf0342f3f273"
+      ],
+      "at": "2026-07-31T17:35:47.569000Z",
+      "shadow_revision": 55,
+      "stale": false
+    },
+    {
+      "kind": "M10-FINAL-RECONCILIATION",
+      "requirementId": "REQ-014",
+      "status": "MATCH",
+      "result": "MATCH",
+      "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "detail": "M10-FINAL reconciliation at HEAD 2bb305830d27 requirement REQ-014 MATCH with fresh content-derived evidence",
+      "scope": "M10-FINAL requirement REQ-014 reconciled MATCH at 2bb305830d27",
+      "verificationClaimIds": [
+        "REV-P1-PARITY-V3-01-R1-001",
+        "REV-P1-R3B-R1-001"
+      ],
+      "evidenceHashes": [
+        "70fc9781ae03e37fb761412e60c9725c45d93b457d40bc9c75e2912b6a58fbb3",
+        "808772af99af3e4bb7214dccf718e410bab778a19770eac11e14bf0342f3f273"
+      ],
+      "at": "2026-07-31T17:35:47.569000Z",
+      "shadow_revision": 55,
+      "stale": false
+    },
+    {
+      "kind": "M10-FINAL-RECONCILIATION",
+      "requirementId": "REQ-015",
+      "status": "MATCH",
+      "result": "MATCH",
+      "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "detail": "M10-FINAL reconciliation at HEAD 2bb305830d27 requirement REQ-015 MATCH with fresh content-derived evidence",
+      "scope": "M10-FINAL requirement REQ-015 reconciled MATCH at 2bb305830d27",
+      "verificationClaimIds": [
+        "REV-P1-R3B-R1-001",
+        "REV-P1-PARITY-V3-01-R2-001"
+      ],
+      "evidenceHashes": [
+        "7a04d0345e5316391267105fe61284522727378fcc9a7a1d23a510a211c194ac",
+        "808772af99af3e4bb7214dccf718e410bab778a19770eac11e14bf0342f3f273"
+      ],
+      "at": "2026-07-31T17:35:47.569000Z",
+      "shadow_revision": 55,
       "stale": false
     }
   ],
@@ -6132,6 +6432,495 @@
       "effective_sha256": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
       "shadow_revision": 54,
       "at": "2026-07-31T22:45:00+07:00"
+    },
+    {
+      "event_id": "E-REC-55",
+      "type": "RECONCILIATION_M10_FINAL",
+      "summary": "M10-FINAL evidence constructed at HEAD 2bb3058: 15 fresh MATCH reconciliations REQ-001..REQ-015 bound to HEAD, M8/M9.5 packets content-addressed, M10 proof derived (proofHash from deriveM10ProofHash), shadow_revision 54->55, identity unchanged ddb68fa. CI on HEAD (run 30651074787) FAILED on quality-macos (F2 symlink escape, passes locally 8/8) -> GITHUB_CI_PASSED blocked -> execution_state stays NEEDS_REMEDIATION. CERTIFICATION_ATTESTATION and M8 scorecard WAITING_EXTERNAL.",
+      "actor": "harness-maintainer",
+      "prior_effective_sha256": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+      "new_effective_sha256": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+      "amendment_ids": [],
+      "head_commit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "shadow_revision": 55,
+      "at": "2026-08-01T00:35:47+07:00"
+    },
+    {
+      "event_id": "E-MS-56",
+      "type": "MILESTONE_M10",
+      "summary": "M10 evidence note: burn-in accepted; terminal gate run against HEAD 2bb3058 with ledger r55. Local gates pass; only external/blocked remain: GITHUB_CI_PASSED (quality-macos failed run 30651074787), CERTIFICATION_ATTESTATION (no native hosts on this box), M8 scorecard (AM0015 permanently UNVERIFIED). execution_state stays NEEDS_REMEDIATION until CI green on exact HEAD and native attestations supplied.",
+      "actor": "harness-maintainer",
+      "head_commit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "effective_sha256": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+      "shadow_revision": 55,
+      "at": "2026-08-01T00:35:47+07:00"
     }
-  ]
+  ],
+  "ci_checks": [
+    {
+      "passed": false,
+      "runUrl": "https://github.com/initforge/agent-rules/actions/runs/30651074787",
+      "repository": "initforge/agent-rules",
+      "workflow": "Quality",
+      "check": "quality-macos",
+      "commitSha": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "conclusion": "failure",
+      "note": "quality (macos, macos-latest) failed: F2 symlink escape test (expected false to be true); passes locally 8/8"
+    }
+  ],
+  "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+  "commitSha": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+  "plan": {
+    "original": {
+      "artifactId": "agent-rules-harness-v3-rearchitecture-20260726-r1",
+      "sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
+      "bytes": 31085,
+      "status": "ADOPTED",
+      "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/original.md"
+    }
+  },
+  "attestations": [],
+  "milestones": {
+    "M8": {
+      "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+      "requirements": [
+        {
+          "id": "REQ-001",
+          "status": "MATCH",
+          "evidence": [
+            {
+              "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "fresh": true,
+              "stale": false,
+              "observedAt": "2026-07-31T17:35:47.569000Z",
+              "evidenceHash": "808772af99af3e4bb7214dccf718e410bab778a19770eac11e14bf0342f3f273"
+            }
+          ]
+        },
+        {
+          "id": "REQ-002",
+          "status": "MATCH",
+          "evidence": [
+            {
+              "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "fresh": true,
+              "stale": false,
+              "observedAt": "2026-07-31T17:35:47.569000Z",
+              "evidenceHash": "ac4838cb7ffedb99305e7c7b403096d31f8a16fd17c0dec72276351f6c82ddb9"
+            }
+          ]
+        },
+        {
+          "id": "REQ-003",
+          "status": "MATCH",
+          "evidence": [
+            {
+              "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "fresh": true,
+              "stale": false,
+              "observedAt": "2026-07-31T17:35:47.569000Z",
+              "evidenceHash": "a738729dbef6b6484e9ac4a485b12ff3fcd5f98469e95208a8b99e5627e35b83"
+            }
+          ]
+        },
+        {
+          "id": "REQ-004",
+          "status": "MATCH",
+          "evidence": [
+            {
+              "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "fresh": true,
+              "stale": false,
+              "observedAt": "2026-07-31T17:35:47.569000Z",
+              "evidenceHash": "879849906d1b37c3a1f83a1c554f64e468342d3d7d9b1380a275117eca3f083a"
+            }
+          ]
+        },
+        {
+          "id": "REQ-005",
+          "status": "MATCH",
+          "evidence": [
+            {
+              "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "fresh": true,
+              "stale": false,
+              "observedAt": "2026-07-31T17:35:47.569000Z",
+              "evidenceHash": "1cf065a04d68fa44b9816037eb82419fa539a2feac25be83e40851b76be228eb"
+            }
+          ]
+        },
+        {
+          "id": "REQ-006",
+          "status": "MATCH",
+          "evidence": [
+            {
+              "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "fresh": true,
+              "stale": false,
+              "observedAt": "2026-07-31T17:35:47.569000Z",
+              "evidenceHash": "f4fb0eb7e0ecec65a1850682dbd8ec255971cb47cadf470b45e907ee9ec403e8"
+            }
+          ]
+        },
+        {
+          "id": "REQ-007",
+          "status": "MATCH",
+          "evidence": [
+            {
+              "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "fresh": true,
+              "stale": false,
+              "observedAt": "2026-07-31T17:35:47.569000Z",
+              "evidenceHash": "ac44662e0e93d5f518a992085a96c798b413a10cae10b84016f9a9898caa6ce6"
+            }
+          ]
+        },
+        {
+          "id": "REQ-008",
+          "status": "MATCH",
+          "evidence": [
+            {
+              "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "fresh": true,
+              "stale": false,
+              "observedAt": "2026-07-31T17:35:47.569000Z",
+              "evidenceHash": "85240a110571b2a0a972de3b6303a1294b3d374a73f57cf71b5b18d14a2a2a9a"
+            }
+          ]
+        },
+        {
+          "id": "REQ-009",
+          "status": "MATCH",
+          "evidence": [
+            {
+              "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "fresh": true,
+              "stale": false,
+              "observedAt": "2026-07-31T17:35:47.569000Z",
+              "evidenceHash": "910012d25220b386b2b4c2b7d96556dd943d567f331a5ebe04f47e2d4c44c2ad"
+            }
+          ]
+        },
+        {
+          "id": "REQ-010",
+          "status": "MATCH",
+          "evidence": [
+            {
+              "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "fresh": true,
+              "stale": false,
+              "observedAt": "2026-07-31T17:35:47.569000Z",
+              "evidenceHash": "879bb81b7d6d100951f98b5177da987f6e0b790a76ae9d6aa38c11344642bef5"
+            }
+          ]
+        },
+        {
+          "id": "REQ-011",
+          "status": "MATCH",
+          "evidence": [
+            {
+              "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "fresh": true,
+              "stale": false,
+              "observedAt": "2026-07-31T17:35:47.569000Z",
+              "evidenceHash": "cd9777c10fab5bdc508231fffdd72673d8331dfb127bb844a4f569896e5ebb2d"
+            }
+          ]
+        },
+        {
+          "id": "REQ-012",
+          "status": "MATCH",
+          "evidence": [
+            {
+              "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "fresh": true,
+              "stale": false,
+              "observedAt": "2026-07-31T17:35:47.569000Z",
+              "evidenceHash": "3e42a2672c9bb6719cb933f2a425da311284305816cebc239536dd9005515008"
+            }
+          ]
+        },
+        {
+          "id": "REQ-013",
+          "status": "MATCH",
+          "evidence": [
+            {
+              "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "fresh": true,
+              "stale": false,
+              "observedAt": "2026-07-31T17:35:47.569000Z",
+              "evidenceHash": "19f4b586515b5e4e51acb0cbbc460c52470b8d385cd79d4649e78773653ca11b"
+            }
+          ]
+        },
+        {
+          "id": "REQ-014",
+          "status": "MATCH",
+          "evidence": [
+            {
+              "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "fresh": true,
+              "stale": false,
+              "observedAt": "2026-07-31T17:35:47.569000Z",
+              "evidenceHash": "70fc9781ae03e37fb761412e60c9725c45d93b457d40bc9c75e2912b6a58fbb3"
+            }
+          ]
+        },
+        {
+          "id": "REQ-015",
+          "status": "MATCH",
+          "evidence": [
+            {
+              "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+              "fresh": true,
+              "stale": false,
+              "observedAt": "2026-07-31T17:35:47.569000Z",
+              "evidenceHash": "7a04d0345e5316391267105fe61284522727378fcc9a7a1d23a510a211c194ac"
+            }
+          ]
+        }
+      ],
+      "scorecard": {
+        "dimensions": [
+          {
+            "id": "d01",
+            "score": null,
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "d02",
+            "score": null,
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "d03",
+            "score": null,
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "d04",
+            "score": null,
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "d05",
+            "score": null,
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "d06",
+            "score": null,
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "d07",
+            "score": null,
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "d08",
+            "score": null,
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "d09",
+            "score": null,
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "d10",
+            "score": null,
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "d11",
+            "score": null,
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "d12",
+            "score": null,
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "d13",
+            "score": null,
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "d14",
+            "score": null,
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "d15",
+            "score": null,
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "d16",
+            "score": null,
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "d17",
+            "score": null,
+            "status": "UNVERIFIED"
+          },
+          {
+            "id": "d18",
+            "score": null,
+            "status": "UNVERIFIED"
+          }
+        ],
+        "policy": "AM0015: evidence-gathering only, scores permanently UNVERIFIED (honest, WAITING_EXTERNAL)"
+      },
+      "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "collectedAt": 1785519347569,
+      "evidenceEpoch": {
+        "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+        "collectedAt": 1785519347569
+      },
+      "packetSha256": "808772af99af3e4bb7214dccf718e410bab778a19770eac11e14bf0342f3f273"
+    },
+    "M9.5": {
+      "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+      "reviewerIdentity": "independent-high-risk-review",
+      "epoch": 1785519347569,
+      "observedAt": "2026-07-31T17:35:47.569000Z",
+      "timestamp": "2026-07-31T17:35:47.569000Z",
+      "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+      "evidence": [
+        {
+          "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+          "fresh": true,
+          "stale": false,
+          "observedAt": "2026-07-31T17:35:47.569000Z",
+          "evidenceHash": "381cc4f8f465c0cd4a9ce80331bed7b6e601068a7c9b6dde1499f3c4a9111ed2"
+        },
+        {
+          "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+          "fresh": true,
+          "stale": false,
+          "observedAt": "2026-07-31T17:35:47.569000Z",
+          "evidenceHash": "36b75e40ad2fc3e45a91bc2b55734690a4d951503988b1adf004c8eea60d83b5"
+        },
+        {
+          "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+          "fresh": true,
+          "stale": false,
+          "observedAt": "2026-07-31T17:35:47.569000Z",
+          "evidenceHash": "85240a110571b2a0a972de3b6303a1294b3d374a73f57cf71b5b18d14a2a2a9a"
+        },
+        {
+          "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+          "fresh": true,
+          "stale": false,
+          "observedAt": "2026-07-31T17:35:47.569000Z",
+          "evidenceHash": "19f4b586515b5e4e51acb0cbbc460c52470b8d385cd79d4649e78773653ca11b"
+        },
+        {
+          "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+          "fresh": true,
+          "stale": false,
+          "observedAt": "2026-07-31T17:35:47.569000Z",
+          "evidenceHash": "70fc9781ae03e37fb761412e60c9725c45d93b457d40bc9c75e2912b6a58fbb3"
+        },
+        {
+          "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+          "fresh": true,
+          "stale": false,
+          "observedAt": "2026-07-31T17:35:47.569000Z",
+          "evidenceHash": "879849906d1b37c3a1f83a1c554f64e468342d3d7d9b1380a275117eca3f083a"
+        },
+        {
+          "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+          "fresh": true,
+          "stale": false,
+          "observedAt": "2026-07-31T17:35:47.569000Z",
+          "evidenceHash": "cd9777c10fab5bdc508231fffdd72673d8331dfb127bb844a4f569896e5ebb2d"
+        },
+        {
+          "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+          "fresh": true,
+          "stale": false,
+          "observedAt": "2026-07-31T17:35:47.569000Z",
+          "evidenceHash": "879bb81b7d6d100951f98b5177da987f6e0b790a76ae9d6aa38c11344642bef5"
+        }
+      ]
+    }
+  },
+  "latestReview": {
+    "reviewId": "REV-P1-PARITY-V3-11-M95-001",
+    "stale": false,
+    "originalSha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
+    "amendmentsSha256": "d0d2001ca7f9916d68f4bc66bcfc0545445d33220dc97e5b981d64c7ef1dab52",
+    "diffFingerprint": "feb3ed644d62f6123ef33f7013aa7e33818fa3aa45ba5d3f7098b39d17f2fe15",
+    "receiptEvidenceFingerprint": "36b75e40ad2fc3e45a91bc2b55734690a4d951503988b1adf004c8eea60d83b5",
+    "evidenceHashes": [
+      "381cc4f8f465c0cd4a9ce80331bed7b6e601068a7c9b6dde1499f3c4a9111ed2",
+      "36b75e40ad2fc3e45a91bc2b55734690a4d951503988b1adf004c8eea60d83b5"
+    ],
+    "shadowRevision": 55,
+    "reviewerIdentity": "independent-high-risk-review",
+    "at": "2026-07-31T17:35:47.569000Z"
+  },
+  "m10Proof": {
+    "headCommit": "2bb305830d27d8ac0be4c834c1419263ad02075b",
+    "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+    "reviewerIdentity": "independent-high-risk-review",
+    "epoch": 1785519347569,
+    "reconciliationIds": [
+      "REQ-001",
+      "REQ-002",
+      "REQ-003",
+      "REQ-004",
+      "REQ-005",
+      "REQ-006",
+      "REQ-007",
+      "REQ-008",
+      "REQ-009",
+      "REQ-010",
+      "REQ-011",
+      "REQ-012",
+      "REQ-013",
+      "REQ-014",
+      "REQ-015"
+    ],
+    "evidenceHashes": [
+      "85240a110571b2a0a972de3b6303a1294b3d374a73f57cf71b5b18d14a2a2a9a",
+      "910012d25220b386b2b4c2b7d96556dd943d567f331a5ebe04f47e2d4c44c2ad",
+      "879bb81b7d6d100951f98b5177da987f6e0b790a76ae9d6aa38c11344642bef5",
+      "cd9777c10fab5bdc508231fffdd72673d8331dfb127bb844a4f569896e5ebb2d",
+      "3e42a2672c9bb6719cb933f2a425da311284305816cebc239536dd9005515008",
+      "19f4b586515b5e4e51acb0cbbc460c52470b8d385cd79d4649e78773653ca11b",
+      "70fc9781ae03e37fb761412e60c9725c45d93b457d40bc9c75e2912b6a58fbb3",
+      "808772af99af3e4bb7214dccf718e410bab778a19770eac11e14bf0342f3f273",
+      "ac4838cb7ffedb99305e7c7b403096d31f8a16fd17c0dec72276351f6c82ddb9",
+      "a738729dbef6b6484e9ac4a485b12ff3fcd5f98469e95208a8b99e5627e35b83",
+      "879849906d1b37c3a1f83a1c554f64e468342d3d7d9b1380a275117eca3f083a",
+      "1cf065a04d68fa44b9816037eb82419fa539a2feac25be83e40851b76be228eb",
+      "f4fb0eb7e0ecec65a1850682dbd8ec255971cb47cadf470b45e907ee9ec403e8",
+      "ac44662e0e93d5f518a992085a96c798b413a10cae10b84016f9a9898caa6ce6",
+      "36b75e40ad2fc3e45a91bc2b55734690a4d951503988b1adf004c8eea60d83b5"
+    ],
+    "proofHash": "71ee88c15b71a66feb11f09393a3828eaf02a8ad1ba48881c22857d17955e670"
+  },
+  "shadowRevision": 55,
+  "latestShadowRevision": 55
 }

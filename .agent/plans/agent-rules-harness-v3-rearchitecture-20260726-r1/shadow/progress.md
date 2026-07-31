@@ -8,3 +8,6 @@
 | RECONCILIATION_M9_5 | Parity V3 chain closure at revision 54: ASN-08 DEVIATION-MAPS plus disjoint R1/R2 repairs, ASN-09 PROOF-MAPS, ASN-10 DOC | - | 54 |
 | MILESTONE_M9_5 | M9.5 parity closure plus release hardening: chain ASN-08/09/10/11 CLOSED_MATCH; engine 1142/1142, parity-contracts 85/85 | - | 54 |
 | AMENDMENT_CHAIN_ACTIVATION | Activated AM-0012 identity ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427→ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427 | AM-0012 | R54 |
+
+| RECONCILIATION_M10_FINAL | M10-FINAL evidence constructed at HEAD 2bb3058: 15 fresh MATCH reconciliations REQ-001..REQ-015 bound to HEAD, M | - | 55 |
+| MILESTONE_M10 | M10 evidence note: burn-in accepted; terminal gate run against HEAD 2bb3058 with ledger r55. Local gates pass; o | - | 55 |

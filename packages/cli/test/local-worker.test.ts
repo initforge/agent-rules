@@ -90,18 +90,26 @@ describe('LocalWorkerAdapter', () => {
   it('F2: rejects owned paths that escape via symlink to an outside file', async () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'local-worker-leak-'));
     try {
-      fs.symlinkSync('/etc/hostname', path.join(tmp, 'leak'));
-      const adapter = new LocalWorkerAdapter();
-      const assignment = validAssignment({
-        taskId: 'T-006',
-        root: tmp,
-        ownedPaths: ['leak'],
-      });
-      const receipt = await adapter.submitAssignment(assignment);
-      expect(receipt.status).toBe('FAIL');
-      expect(receipt.filesChanged).toEqual([]);
-      expect(receipt.unresolvedFindings.some(f => /escapes/.test(f))).toBe(true);
-      expect(receipt.unresolvedFindings.some(f => /does not exist/.test(f))).toBe(false);
+      // Self-contained outside file (deterministic on all platforms — /etc/hostname
+      // does not exist on macOS, which would produce a dangling symlink).
+      const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'local-worker-outside-'));
+      try {
+        fs.writeFileSync(path.join(outside, 'secret.txt'), 'secret\n', 'utf-8');
+        fs.symlinkSync(path.join(outside, 'secret.txt'), path.join(tmp, 'leak'));
+        const adapter = new LocalWorkerAdapter();
+        const assignment = validAssignment({
+          taskId: 'T-006',
+          root: tmp,
+          ownedPaths: ['leak'],
+        });
+        const receipt = await adapter.submitAssignment(assignment);
+        expect(receipt.status).toBe('FAIL');
+        expect(receipt.filesChanged).toEqual([]);
+        expect(receipt.unresolvedFindings.some(f => /escapes/.test(f))).toBe(true);
+        expect(receipt.unresolvedFindings.some(f => /does not exist/.test(f))).toBe(false);
+      } finally {
+        fs.rmSync(outside, { recursive: true, force: true });
+      }
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
