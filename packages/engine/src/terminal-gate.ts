@@ -16,6 +16,49 @@ export interface TerminalGateResult {
   timestamp: string;
 }
 
+export const M10_TERMINAL_TOKEN = 'HARNESS_V3_10_OF_10_COMPLETE';
+export const M8_REQUIRED_REQUIREMENTS = 15;
+
+export interface MilestoneGateResult {
+  passed: boolean;
+  milestone: 'M8' | 'M9.5' | 'M10';
+  reason: string;
+}
+
+/** Canonical milestone reducer. Milestone labels are never terminal state. */
+export function verifyMilestoneGate(
+  ledger: Record<string, unknown>,
+  milestone: 'M8' | 'M9.5' | 'M10',
+  expectedIdentity?: string,
+  now = Date.now(),
+): MilestoneGateResult {
+  const l = ledger as Record<string, any>;
+  if (milestone === 'M10') {
+    return { passed: l.execution_state === M10_TERMINAL_TOKEN, milestone, reason: l.execution_state === M10_TERMINAL_TOKEN ? 'exact M10 terminal token' : 'M10 terminal token missing' };
+  }
+  const state = l.execution_state || l.status;
+  if (state === M10_TERMINAL_TOKEN || state === 'COMPLETED') return { passed: false, milestone, reason: 'terminal state cannot certify a nonterminal milestone' };
+  const identity = expectedIdentity || l.effective_plan_identity?.sha256 || l.effectivePlanIdentity;
+  if (typeof identity !== 'string' || identity.length === 0) return { passed: false, milestone, reason: 'missing effective plan identity' };
+  const packet = l.milestones?.[milestone] || l.milestoneEvidence?.[milestone] || l[milestone === 'M8' ? 'm8' : 'm95'];
+  if (packet?.identity !== undefined && packet.identity !== identity) return { passed: false, milestone, reason: 'milestone identity mismatch' };
+  const requirements = packet?.requirements;
+  if (!Array.isArray(requirements) || requirements.length < (milestone === 'M8' ? M8_REQUIRED_REQUIREMENTS : 1)) return { passed: false, milestone, reason: 'missing canonical milestone requirements' };
+  for (const requirement of requirements) {
+    if (requirement.status !== 'MATCH' || !Array.isArray(requirement.evidence) || requirement.evidence.length === 0) return { passed: false, milestone, reason: `requirement ${requirement.id || '(missing id)'} lacks MATCH evidence` };
+    for (const evidence of requirement.evidence) {
+      if (evidence.identity !== identity && evidence.effectivePlanIdentity !== identity) return { passed: false, milestone, reason: `requirement ${requirement.id || '(missing id)'} evidence identity mismatch` };
+      if (evidence.fresh !== true || evidence.stale === true) return { passed: false, milestone, reason: `requirement ${requirement.id || '(missing id)'} evidence is not fresh` };
+      if (typeof evidence.observedAt !== 'string' || Number.isNaN(Date.parse(evidence.observedAt)) || now - Date.parse(evidence.observedAt) < 0) return { passed: false, milestone, reason: `requirement ${requirement.id || '(missing id)'} evidence timestamp invalid` };
+    }
+  }
+  if (milestone === 'M8') {
+    const dimensions = packet.scorecard?.dimensions;
+    if (!Array.isArray(dimensions) || dimensions.length !== 18 || dimensions.some((d: any) => typeof d.score !== 'number' || d.score < 8)) return { passed: false, milestone, reason: 'M8 scorecard is incomplete or below 8/10' };
+  }
+  return { passed: true, milestone, reason: 'canonical requirements, identity, and fresh evidence pass' };
+}
+
 export const REQUIRED_HOSTS = CERTIFICATION_REQUIRED_HOSTS;
 
 const CERTIFICATION_REQUIRED_FIELDS = [
@@ -134,9 +177,15 @@ export function verifyTerminalGate(
 
   // Execution state check
   const state = raw.execution_state || raw.status || '';
-  const isCompleted = state === 'COMPLETED';
-  gates.push({ name: 'EXECUTION_STATE_COMPLETED', status: isCompleted ? 'PASS' : 'FAIL', detail: `State: ${state}` });
+  const isCompleted = state === M10_TERMINAL_TOKEN;
+  gates.push({ name: 'EXECUTION_STATE_COMPLETED', status: isCompleted ? 'PASS' : 'FAIL', detail: isCompleted ? 'Exact M10 terminal token' : `Nonterminal state: ${state}` });
   if (!isCompleted) failedGates.push('EXECUTION_STATE_COMPLETED');
+
+  if (raw.milestones?.M8 || raw.milestoneEvidence?.M8 || raw.m8) {
+    const m8 = verifyMilestoneGate(raw, 'M8');
+    gates.push({ name: 'M8_CANONICAL_GATE', status: m8.passed ? 'PASS' : 'FAIL', detail: m8.reason });
+    if (!m8.passed) failedGates.push('M8_CANONICAL_GATE');
+  }
 
   // No open findings
   const findings = raw.findings || raw.orphanFindings || [];

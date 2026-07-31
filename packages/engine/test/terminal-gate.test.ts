@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { createHash } from 'node:crypto';
-import { verifyTerminalGate, assertCertifiable, assertNoResidualBeforeFinal, terminalGateCheck, assertWorkLedger, assertCertificationAttestation, REQUIRED_HOSTS } from '../src/terminal-gate.js';
+import { verifyTerminalGate, verifyMilestoneGate, assertCertifiable, assertNoResidualBeforeFinal, terminalGateCheck, assertWorkLedger, assertCertificationAttestation, REQUIRED_HOSTS, M10_TERMINAL_TOKEN } from '../src/terminal-gate.js';
 import { HOST_ATTESTATION_EVIDENCE_ROLES, hostAttestationEvidenceRef, hostAttestationEvidenceSubjectSha256, type HostAttestation } from '../src/contracts.js';
 
 const hash = 'a'.repeat(64);
@@ -51,7 +51,7 @@ function hashFor(value: string): string { return createHash('sha256').update(val
 function stubLedger(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   const ledger: Record<string, unknown> = {
     status: 'COMPLETED',
-    execution_state: 'COMPLETED',
+    execution_state: M10_TERMINAL_TOKEN,
     findings: [],
     orphanFindings: [],
     reconciliations: [{ status: 'MATCH', headCommit: hash, detail: `HEAD ${hash.slice(0, 12)}` }],
@@ -174,13 +174,40 @@ describe('verifyTerminalGate', () => {
     expect(result.failedGates).toEqual([]);
   });
 
-  it('rejects non-COMPLETED state', () => {
+  it('rejects nonterminal state', () => {
     const dir = tmpDir();
     const ledger = stubLedger({ execution_state: 'NEEDS_REMEDIATION', status: 'NEEDS_REMEDIATION' });
     const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
     const result = verifyTerminalGate(ledgerPath, hash);
     expect(result.passed).toBe(false);
     expect(result.failedGates).toContain('EXECUTION_STATE_COMPLETED');
+  });
+
+  it('rejects fake M8 pass with non-created marker', () => {
+    const dir = tmpDir();
+    const ledger = stubLedger({ execution_state: 'NEEDS_REMEDIATION', status: 'NEEDS_REMEDIATION', milestones: { M8: { status: 'INTERNAL_READY' } } });
+    const result = verifyTerminalGate(writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger)), hash);
+    expect(result.passed).toBe(false);
+    expect(result.failedGates).toContain('M8_CANONICAL_GATE');
+  });
+
+  it('rejects M8 evidence with forged identity or stale freshness', () => {
+    const identity = 'i'.repeat(64);
+    const requirement = { id: 'M8-REQ-1', status: 'MATCH', evidence: [{ identity: 'forged', fresh: false, observedAt: new Date().toISOString() }] };
+    const ledger = { milestones: { M8: { requirements: [requirement], scorecard: { dimensions: Array.from({ length: 18 }, () => ({ score: 8 })) } } }, effective_plan_identity: { sha256: identity } };
+    expect(verifyMilestoneGate(ledger, 'M8', identity).passed).toBe(false);
+  });
+
+  it('accepts M8 only with all requirements, scorecard, identity, and fresh evidence', () => {
+    const identity = 'i'.repeat(64);
+    const evidence = { identity, fresh: true, observedAt: new Date().toISOString() };
+    const ledger = { milestones: { M8: { requirements: Array.from({ length: 15 }, (_, i) => ({ id: `M8-${i}`, status: 'MATCH', evidence: [evidence] })), scorecard: { dimensions: Array.from({ length: 18 }, () => ({ score: 8 })) } } }, effective_plan_identity: { sha256: identity } };
+    expect(verifyMilestoneGate(ledger, 'M8').passed).toBe(true);
+  });
+
+  it('recognizes only the exact M10 terminal token', () => {
+    expect(verifyMilestoneGate({ execution_state: 'M10_COMPLETE' }, 'M10').passed).toBe(false);
+    expect(verifyMilestoneGate({ execution_state: M10_TERMINAL_TOKEN }, 'M10').passed).toBe(true);
   });
 
   it('rejects open findings', () => {
