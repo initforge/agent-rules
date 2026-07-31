@@ -1,5 +1,7 @@
 import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
 import { runScript } from "../adapters/powershell.js";
+import { getRepoRoot } from "../adapters/powershell.js";
+import { RuntimeInstaller } from "../runtime/installer.js";
 
 /**
  * Install: currently delegated to 02-install-runtime.ps1.
@@ -10,13 +12,30 @@ export async function installCmd(
   options: CliOptions
 ): Promise<CommandResult> {
   const platform = args[0] || "all";
-  const validPlatforms = ["codex", "grok", "antigravity", "cursor", "all"];
+  const validPlatforms = ["codex", "grok", "antigravity", "cursor", "opencode", "all"];
 
   if (!validPlatforms.includes(platform)) {
     return {
       exitCode: ExitCode.InvalidArgument,
       message: `Invalid platform: ${platform}. Valid: ${validPlatforms.join(", ")}`,
     };
+  }
+
+  if (platform === "opencode") {
+    try {
+      const native = new RuntimeInstaller({
+        repositoryRoot: getRepoRoot(),
+        dryRun: options.dryRun,
+      });
+      const result = await native.install("opencode");
+      return {
+        exitCode: ExitCode.Success,
+        message: options.dryRun ? "Dry-run: runtime validated" : "Runtime installed",
+        data: { platform, native: true, result },
+      };
+    } catch (error) {
+      return { exitCode: ExitCode.GeneralError, message: `OpenCode install failed: ${(error as Error).message}` };
+    }
   }
 
   const result = await runScript("02-install-runtime", ["-Platform", platform], {

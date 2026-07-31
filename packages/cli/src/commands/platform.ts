@@ -29,7 +29,7 @@ export async function platformCmd(
   const subcommand = args[0] || "list";
   const root = getRepoRoot();
   const platformsDir = path.join(root, "platforms");
-  const platformNames = ["codex", "grok", "antigravity", "cursor"];
+  const platformNames = ["codex", "grok", "antigravity", "cursor", "opencode"];
 
   if (options.dryRun) {
     console.log(`[dry-run] Would run platform ${subcommand}`);
