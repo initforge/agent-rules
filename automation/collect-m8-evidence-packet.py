@@ -7,6 +7,7 @@ from pathlib import Path
 
 MODEL = "qwencoder/glm-5.2"
 DIMENSIONS = [f"d{i:02d}" for i in range(1, 19)]
+FIXTURE = Path("packages/engine/test/fixtures/plan-identity")
 
 def run(root: Path, command: list[str]) -> dict:
     try:
@@ -25,6 +26,9 @@ def collect(root: Path) -> dict:
         canonical = str((ledger.get("effective_plan_identity") or {}).get("canonical_json_utf8") or "")
         identity_verified = bool(identity and canonical and hashlib.sha256(canonical.encode()).hexdigest() == identity)
         revision = ledger.get("shadow_revision")
+    fixture_meta = json.loads((root / FIXTURE / "provenance.json").read_text())
+    fixture_bytes = (root / FIXTURE / "original.md").read_bytes()
+    fixture_verified = len(fixture_bytes) == fixture_meta["bytes"] and hashlib.sha256(fixture_bytes).hexdigest() == fixture_meta["sha256"]
     receipts = {
         "test": run(root, ["npm", "run", "test", "--workspace", "packages/engine", "--", "--run", "test/evidence-packet.test.ts"]),
         "browser": run(root, ["npm", "run", "test", "--workspace", "packages/control-plane", "--", "--run", "tests/c4.test.ts"]),
@@ -36,6 +40,7 @@ def collect(root: Path) -> dict:
         "headCommit": head, "effectivePlanIdentity": identity, "r53": revision,
         "requestedModel": MODEL, "resolvedModel": None,
         "identityVerified": identity_verified, "nativeAttestation": "UNVERIFIED: no native attestation supplied",
+        "canonicalPlanFixture": {"path": str(FIXTURE / "original.md"), "sha256": fixture_meta["sha256"], "verified": fixture_verified},
         "dimensions": [{"id": d, "score": None, "status": "UNVERIFIED"} for d in DIMENSIONS],
         "receipts": receipts,
         "findings": ["UNVERIFIED: resolved model, native attestation, authenticated packet receipt, and 18 scores >=8 are missing"],

@@ -13,6 +13,16 @@ export type { RuntimeFile, RuntimeInstallerOptions, RuntimeLifecycleResult, Runt
 
 const execFileAsync = promisify(execFile);
 
+async function repositoryRoot(candidate: string): Promise<string> {
+  let current = path.resolve(candidate);
+  while (true) {
+    if (await exists(path.join(current, ".git"))) return current;
+    const parent = path.dirname(current);
+    if (parent === current) return path.resolve(candidate);
+    current = parent;
+  }
+}
+
 const RUNTIME_DIRECTORY = "agent-rules-runtime";
 const RECEIPT_FILE = "agent-rules-runtime-receipt.json";
 const JOURNAL_FILE = ".agent-rules-runtime.transaction.json";
@@ -145,7 +155,12 @@ async function readEffectivePlanBinding(repositoryRoot: string): Promise<{
 }
 
 async function readSourceManifest(repositoryRoot: string, platform: RuntimePlatform): Promise<{ manifest: SourceManifest; sourceRoot: string; manifestSha256: string }> {
-  const sourceRoot = path.resolve(repositoryRoot, "generated", "runtime-build", platform);
+  const candidates = [
+    path.resolve(repositoryRoot, "generated", "runtime-build", platform),
+    path.resolve(repositoryRoot, "..", "generated", "runtime-build", platform),
+    path.resolve(repositoryRoot, "..", "..", "generated", "runtime-build", platform),
+  ];
+  const sourceRoot = (await Promise.all(candidates.map(async (candidate) => (await exists(candidate)) ? candidate : null))).find(Boolean) ?? candidates[0];
   await assertDirectoryNotLinked(sourceRoot);
   const manifestPath = path.join(sourceRoot, "manifest.json");
   const body = await readRegularFileNoFollow(manifestPath);
@@ -179,7 +194,11 @@ async function readSourceManifest(repositoryRoot: string, platform: RuntimePlatf
   const listed = files.map((file) => file.path).sort();
   if (JSON.stringify(observed) !== JSON.stringify(listed)) throw new Error(`Built runtime manifest missing or extra files: ${manifestPath}`);
   if (platform === "opencode") {
-    const sourceAgents = path.resolve(repositoryRoot, "platforms", "opencode", "agents");
+    const sourceAgents = (await Promise.all([
+      path.resolve(repositoryRoot, "platforms", "opencode", "agents"),
+      path.resolve(repositoryRoot, "..", "platforms", "opencode", "agents"),
+      path.resolve(repositoryRoot, "..", "..", "platforms", "opencode", "agents"),
+    ].map(async (candidate) => (await exists(candidate)) ? candidate : null))).find(Boolean) ?? path.resolve(repositoryRoot, "platforms", "opencode", "agents");
     const sourceFiles = await listRuntimeFiles(sourceAgents);
     const expectedAgents = sourceFiles.filter((file) => file !== "README.md").sort();
     const builtAgents = files.map((file) => file.path.replace(/^native\/agents\//, "")).filter((file) => expectedAgents.includes(file)).sort();
@@ -638,9 +657,10 @@ export class RuntimeInstaller {
   async install(platform: RuntimePlatform, mode: "install" | "update" = "install", skipLegacyRecovery = false): Promise<RuntimeLifecycleResult> {
     const root = this.rootFor(platform);
     const runtimePath = path.join(root, RUNTIME_DIRECTORY);
-    const { manifest, sourceRoot, manifestSha256 } = await readSourceManifest(this.options.repositoryRoot, platform);
-    const provenance = await gitProvenance(this.options.repositoryRoot);
-    const effectivePlan = await readEffectivePlanBinding(this.options.repositoryRoot);
+    const repo = await repositoryRoot(this.options.repositoryRoot);
+    const { manifest, sourceRoot, manifestSha256 } = await readSourceManifest(repo, platform);
+    const provenance = await gitProvenance(repo);
+    const effectivePlan = await readEffectivePlanBinding(repo);
     const payload = activationPayload(platform, runtimePath, manifest);
     const payloadContent = activationPayloadContent(platform, runtimePath, manifest);
     const installedFiles = [...manifest.files, ...(payload ? [payload] : [])]

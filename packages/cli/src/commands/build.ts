@@ -17,6 +17,16 @@ async function sha256(filePath: string): Promise<string> {
   return crypto.createHash("sha256").update(content).digest("hex");
 }
 
+async function verifyCanonicalFixture(root: string): Promise<void> {
+  const fixture = path.join(root, "packages", "engine", "test", "fixtures", "plan-identity", "original.md");
+  const provenance = path.join(root, "packages", "engine", "test", "fixtures", "plan-identity", "provenance.json");
+  const meta = JSON.parse(await fs.readFile(provenance, "utf8")) as { sha256?: string; bytes?: number };
+  const bytes = await fs.readFile(fixture);
+  if (bytes.length !== meta.bytes || crypto.createHash("sha256").update(bytes).digest("hex") !== meta.sha256) {
+    throw new Error("canonical plan fixture integrity mismatch");
+  }
+}
+
 function escapePath(p: string): string {
   return p.replace(/\\/g, "/");
 }
@@ -112,6 +122,7 @@ export async function build(
   }
 
   try {
+    await verifyCanonicalFixture(root);
     await verifyUiTasteSourcePack(root);
   } catch (e) {
     return { exitCode: ExitCode.GeneralError, message: e instanceof Error ? e.message : String(e) };

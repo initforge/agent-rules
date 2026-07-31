@@ -16,8 +16,17 @@ interface DoctorCheck {
 interface ManifestFile { path: string; sha256: string }
 
 export async function doctorOpenCode(root: string, home: string): Promise<DoctorCheck[]> {
-  const sourceDir = path.join(root, "platforms", "opencode", "agents");
-  const buildDir = path.join(root, "generated", "runtime-build", "opencode", "native", "agents");
+  const repo = await (async () => {
+    let current = path.resolve(root);
+    while (!(await fs.access(path.join(current, "platforms", "opencode", "agents")).then(() => true).catch(() => false))) {
+      const parent = path.dirname(current);
+      if (parent === current) return path.resolve(root);
+      current = parent;
+    }
+    return current;
+  })();
+  const sourceDir = path.join(repo, "platforms", "opencode", "agents");
+  const buildDir = path.join(repo, "generated", "runtime-build", "opencode", "native", "agents");
   const transactionalRuntime = path.join(home, "agent-rules-runtime");
   const transactional = await checkFile(path.join(transactionalRuntime, "agent-rules-runtime-receipt.json"));
   const installedDir = transactional ? path.join(transactionalRuntime, "native", "agents") : path.join(home, "agents");

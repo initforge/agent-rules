@@ -7,6 +7,7 @@ import { computeCanonicalEffectivePlanIdentity, computeLegacyEffectivePlanSha256
 const sha = (value: string) => createHash('sha256').update(value).digest('hex') as `${string}`;
 const fixture = resolve(import.meta.dirname, 'fixtures/plan-identity');
 const ledgerPath = resolve(fixture, 'ledger.json');
+const provenance = JSON.parse(readFileSync(resolve(fixture, 'provenance.json'), 'utf8')) as { sha256: string; bytes: number };
 const ledger = JSON.parse(readFileSync(ledgerPath, 'utf8')) as {
   original_plan: { sha256: string };
   amendments: Array<{ amendment_id: string; path: string; sha256: string; status: string }>;
@@ -26,6 +27,8 @@ describe('canonical effective-plan identity', () => {
 
   it('matches canonical AM-0017 and AM-0018 source/ledger identities', () => {
     expect(original).toBe('c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31');
+    expect(readFileSync(resolve(fixture, 'original.md')).byteLength).toBe(provenance.bytes);
+    expect(original).toBe(provenance.sha256);
     const manifest = ledger.effective_plan_identity.input_manifest;
     const current = ledger.amendments.at(-1);
     expect(current?.amendment_id).toBe('AM-0018');

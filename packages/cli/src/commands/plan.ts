@@ -12,6 +12,7 @@ import {
 } from "@initforge/agent-rules-engine/plan-lifecycle";
 import path from "node:path";
 import fs from "node:fs";
+import { createHash } from "node:crypto";
 
 function resolveStoreBase(root?: string): string {
   return root ?? process.cwd();
@@ -19,6 +20,18 @@ function resolveStoreBase(root?: string): string {
 
 function makeStore(basePath: string): DurableStore {
   return new DurableStore(basePath);
+}
+
+function resolveCanonicalOriginal(root: string, planId: string, ledgerPath: string): string {
+  const runtime = path.join(root, ".agent", "plans", planId, "original.md");
+  if (fs.existsSync(runtime)) return runtime;
+  const fixture = path.join(root, "packages", "engine", "test", "fixtures", "plan-identity", "original.md");
+  const ledger = JSON.parse(fs.readFileSync(ledgerPath, "utf8")) as { original_plan?: { sha256?: string } };
+  const expected = ledger.original_plan?.sha256;
+  if (!expected || !fs.existsSync(fixture) || createHash("sha256").update(fs.readFileSync(fixture)).digest("hex") !== expected) {
+    throw new Error(`Canonical original fixture unavailable or hash mismatch for ${planId}`);
+  }
+  return fixture;
 }
 
 export async function planInventory(
@@ -206,7 +219,7 @@ export async function planReconcile(
     const ledgerPath = path.join(".agent", "ledger", `${planId}.json`);
     if (fs.existsSync(ledgerPath)) {
       try {
-        const originalPath = path.join(".agent", "plans", planId, "original.md");
+        const originalPath = resolveCanonicalOriginal(process.cwd(), planId, ledgerPath);
         const diffFingerprint = opts.dryRun ? "dry-run-fingerprint" : `reconcile-${Date.now()}`;
         const reconciliation = engineReconcilePlan(ledgerPath, originalPath, diffFingerprint);
         return {
