@@ -132,7 +132,8 @@ describe("RuntimeInstaller", () => {
     expect(await fs.readFile(path.join(targetRoot, "user-settings.json"), "utf8")).toBe("keep");
     expect(await fs.readFile(path.join(runtimePath, "rules", "base.md"), "utf8")).toBe("first\n");
     const hostEntrypoint = await fs.readFile(path.join(targetRoot, "AGENTS.md"), "utf8");
-    expect(hostEntrypoint).toContain(`${runtimePath}/.activation/AGENTS.md`);
+    // Installer emits portable forward-slash paths in the entrypoint; normalize for Windows.
+    expect(hostEntrypoint).toContain(`${runtimePath.replaceAll("\\", "/")}/.activation/AGENTS.md`);
   });
 
   it("rejects tampered OpenCode output, then accepts deterministic regeneration", async () => {
@@ -390,7 +391,7 @@ describe("RuntimeInstaller", () => {
     const recovered = await installer().recover("codex");
     expect(recovered.receipt?.activation.kind).toBe("managed-file");
     expect(await fs.readFile(path.join(runtimePath, "rules", "base.md"), "utf8")).toBe("first\n");
-    expect(await fs.readFile(path.join(targetRoot, "AGENTS.md"), "utf8")).toContain(`${runtimePath}/.activation/AGENTS.md`);
+    expect(await fs.readFile(path.join(targetRoot, "AGENTS.md"), "utf8")).toContain(`${runtimePath.replaceAll("\\", "/")}/.activation/AGENTS.md`);
     expect(await pathExists(path.join(targetRoot, ".agent-rules-runtime.transaction.json"))).toBe(false);
   });
 
@@ -563,7 +564,7 @@ describe("RuntimeInstaller", () => {
       const runtimeRules = path.join(result.runtimePath, "rules");
       if (platform === "antigravity") {
         const entrypoint = await fs.readFile(path.join(path.dirname(root), "GEMINI.md"), "utf8");
-        expect(entrypoint).toContain(`${result.runtimePath}/.activation/GEMINI.md`);
+        expect(entrypoint).toContain(`${result.runtimePath.replaceAll("\\", "/")}/.activation/GEMINI.md`);
       } else {
         const entrypoint = platform === "grok" ? path.join(root, ".grok", "rules") : path.join(root, "rules");
         expect(await fs.realpath(entrypoint)).toBe(await fs.realpath(runtimeRules));
