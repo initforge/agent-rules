@@ -50,7 +50,14 @@ function main(): void {
   if (!assignment.objective) fatal('Missing objective in assignment');
   if (!Array.isArray(assignment.ownedPaths)) fatal('Missing ownedPaths in assignment');
 
-  const root = path.resolve(assignment.root ?? process.cwd());
+  // F2: resolve root once; realpath is authoritative against symlink escape.
+  const lexicalRoot = path.resolve(assignment.root ?? process.cwd());
+  let root: string;
+  try {
+    root = fs.realpathSync(lexicalRoot);
+  } catch {
+    root = lexicalRoot;
+  }
 
   const filesChanged: string[] = [];
   const commandsRun: string[] = [];
@@ -67,22 +74,36 @@ function main(): void {
       unresolvedFindings.push(`Owned path escapes project root (${root}): ${p}`);
       continue;
     }
-    const fullPath = abs;
-    if (fs.existsSync(fullPath)) {
-      try {
-        const stat = fs.statSync(fullPath);
-        if (stat.isFile()) {
-          const content = fs.readFileSync(fullPath, 'utf-8');
-          const lines = content.split('\n');
-          if (lines.length > 0) {
-            filesChanged.push(p);
-          }
-        }
-      } catch {
-        unresolvedFindings.push(`Could not read owned path: ${p}`);
-      }
-    } else {
+    // F2: statSync/readFileSync follow symlinks, so the lexical check is not
+    // enough — verify the resolved (realpath) target stays inside the root.
+    if (!fs.existsSync(abs)) {
       unresolvedFindings.push(`Owned path does not exist: ${p}`);
+      continue;
+    }
+    let resolvedAbs: string;
+    try {
+      resolvedAbs = fs.realpathSync(abs);
+    } catch {
+      unresolvedFindings.push(`Owned path does not exist: ${p}`);
+      continue;
+    }
+    const resolvedRel = path.relative(root, resolvedAbs);
+    if (resolvedRel.startsWith('..') || path.isAbsolute(resolvedRel)) {
+      unresolvedFindings.push(`Owned path escapes project root (${root}): ${p} (resolves to ${resolvedAbs})`);
+      continue;
+    }
+    const fullPath = resolvedAbs;
+    try {
+      const stat = fs.statSync(fullPath);
+      if (stat.isFile()) {
+        const content = fs.readFileSync(fullPath, 'utf-8');
+        const lines = content.split('\n');
+        if (lines.length > 0) {
+          filesChanged.push(p);
+        }
+      }
+    } catch {
+      unresolvedFindings.push(`Could not read owned path: ${p}`);
     }
   }
 
@@ -90,7 +111,8 @@ function main(): void {
   for (const cmd of verifyCmds) {
     commandsRun.push(cmd);
     try {
-      execSync(cmd, { stdio: 'pipe', timeout: 30_000, cwd: process.cwd() });
+      // F2: run verification from the assignment root, not the caller cwd.
+      execSync(cmd, { stdio: 'pipe', timeout: 30_000, cwd: root });
       testsRun.push(cmd);
     } catch (err) {
       unresolvedFindings.push(`Verification command failed: ${cmd} – ${(err as Error).message}`);

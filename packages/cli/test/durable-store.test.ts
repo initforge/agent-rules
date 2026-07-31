@@ -211,6 +211,22 @@ describe("DurableStore", () => {
     await store.deleteRun(tamperId);
   });
 
+  it("F3: getCompletedTaskIds throws on tampered checkpoint instead of returning []", async () => {
+    const tamperGetId = "tamper-get-test";
+    await store.createRun(tamperGetId, {});
+    await store.checkpoint(tamperGetId);
+
+    const cpDir = path.join(tmpDir, ".agent", "runs", tamperGetId, "checkpoints");
+    const file = fs.readdirSync(cpDir)[0];
+    const cp = JSON.parse(fs.readFileSync(path.join(cpDir, file), "utf-8"));
+    cp.completedTaskIds = ["t1"];
+    fs.writeFileSync(path.join(cpDir, file), JSON.stringify(cp, null, 2));
+
+    await expect(store.getCompletedTaskIds(tamperGetId)).rejects.toThrow(/tamper/);
+
+    await store.deleteRun(tamperGetId);
+  });
+
   it("GAP-4: resume refuses a run locked by a live foreign process (BLOCKED)", async () => {
     const lockId = "lock-live-test";
     await store.createRun(lockId, {});

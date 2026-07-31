@@ -1,4 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
 import { LocalWorkerAdapter } from '../src/adapters/local-worker.js';
 import type { DelegationAssignment, DelegationReceipt } from '../src/services/orchestrator.js';
 
@@ -82,5 +85,44 @@ describe('LocalWorkerAdapter', () => {
     expect(receipt.status).toBe('FAIL');
     expect(receipt.filesChanged).toEqual([]);
     expect(receipt.unresolvedFindings.some(f => /escapes/.test(f))).toBe(true);
+  });
+
+  it('F2: rejects owned paths that escape via symlink to an outside file', async () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'local-worker-leak-'));
+    try {
+      fs.symlinkSync('/etc/hostname', path.join(tmp, 'leak'));
+      const adapter = new LocalWorkerAdapter();
+      const assignment = validAssignment({
+        taskId: 'T-006',
+        root: tmp,
+        ownedPaths: ['leak'],
+      });
+      const receipt = await adapter.submitAssignment(assignment);
+      expect(receipt.status).toBe('FAIL');
+      expect(receipt.filesChanged).toEqual([]);
+      expect(receipt.unresolvedFindings.some(f => /escapes/.test(f))).toBe(true);
+      expect(receipt.unresolvedFindings.some(f => /does not exist/.test(f))).toBe(false);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('F2: symlink that stays inside the root is allowed', async () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'local-worker-link-'));
+    try {
+      fs.writeFileSync(path.join(tmp, 'real.txt'), 'content\n', 'utf-8');
+      fs.symlinkSync('real.txt', path.join(tmp, 'link.txt'));
+      const adapter = new LocalWorkerAdapter();
+      const assignment = validAssignment({
+        taskId: 'T-007',
+        root: tmp,
+        ownedPaths: ['link.txt'],
+      });
+      const receipt = await adapter.submitAssignment(assignment);
+      expect(receipt.status).toBe('PASS');
+      expect(receipt.filesChanged).toEqual(['link.txt']);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
   });
 });

@@ -259,12 +259,9 @@ export class DurableStore {
       .sort();
     if (files.length === 0) return [];
     const latest = files[files.length - 1];
-    try {
-      const cp = this.readVerifiedCheckpoint(cpDir, latest);
-      return cp.completedTaskIds;
-    } catch {
-      return [];
-    }
+    // F3: tamper must throw, not silently return [] (matches resume()).
+    const cp = this.readVerifiedCheckpoint(cpDir, latest);
+    return cp.completedTaskIds;
   }
 
   // ── GAP-4: exclusive run lock ────────────────────────────────────────────

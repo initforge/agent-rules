@@ -183,38 +183,40 @@ export async function executeRun(
   const store = new DurableStore(basePath);
 
   await store.createRun(runId, plan);
-  syncTasksToStore(basePath, runId, orcRun.tasks);
-  await store.checkpoint(runId);
-
-  await store.updateState(runId, 'DISCOVERING');
-  syncTasksToStore(basePath, runId, orcRun.tasks);
-  await store.checkpoint(runId);
-
-  await store.updateState(runId, 'PLANNED');
-  syncTasksToStore(basePath, runId, orcRun.tasks);
-  await store.checkpoint(runId);
-
-  await store.updateState(runId, 'PLAN_VALIDATED');
-  syncTasksToStore(basePath, runId, orcRun.tasks);
-  await store.checkpoint(runId);
-
-  if (options?.dryRun) {
-    return runResultFromOrchestration(orcRun, [], 'PLAN_VALIDATED');
-  }
-
-  await store.updateState(runId, 'EXECUTING');
-  syncTasksToStore(basePath, runId, orcRun.tasks);
-  await store.checkpoint(runId);
-
-  const receipts: DelegationReceipt[] = [];
-  const adapterName = options?.adapter ?? 'local-worker';
-  if (adapterName !== 'local-worker') {
-    throw new Error(`Unknown adapter: ${adapterName}`);
-  }
-  const adapter = new LocalWorkerAdapter();
-  store.registerProcess(runId);
-
+  // F5: single try/finally covering dry-run return, adapter validation and
+  // error paths so the createRun lock is always released exactly once.
   try {
+    syncTasksToStore(basePath, runId, orcRun.tasks);
+    await store.checkpoint(runId);
+
+    await store.updateState(runId, 'DISCOVERING');
+    syncTasksToStore(basePath, runId, orcRun.tasks);
+    await store.checkpoint(runId);
+
+    await store.updateState(runId, 'PLANNED');
+    syncTasksToStore(basePath, runId, orcRun.tasks);
+    await store.checkpoint(runId);
+
+    await store.updateState(runId, 'PLAN_VALIDATED');
+    syncTasksToStore(basePath, runId, orcRun.tasks);
+    await store.checkpoint(runId);
+
+    if (options?.dryRun) {
+      return runResultFromOrchestration(orcRun, [], 'PLAN_VALIDATED');
+    }
+
+    await store.updateState(runId, 'EXECUTING');
+    syncTasksToStore(basePath, runId, orcRun.tasks);
+    await store.checkpoint(runId);
+
+    const receipts: DelegationReceipt[] = [];
+    const adapterName = options?.adapter ?? 'local-worker';
+    if (adapterName !== 'local-worker') {
+      throw new Error(`Unknown adapter: ${adapterName}`);
+    }
+    const adapter = new LocalWorkerAdapter();
+    store.registerProcess(runId);
+
     while (true) {
       const readyTasks = getNextReadyTasks(orcRun);
       if (readyTasks.length === 0) break;

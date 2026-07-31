@@ -374,6 +374,14 @@ export async function planFinalize(
   if (!run) {
     return { exitCode: ExitCode.GeneralError, message: `Run not found: ${runId}` };
   }
+  // F1: never promote a FAILED/BLOCKED run to COMPLETED.
+  if (run.state === "FAILED" || run.state === "BLOCKED") {
+    return {
+      exitCode: ExitCode.GeneralError,
+      message: `Cannot finalize: run is ${run.state}`,
+      data: { runId, state: run.state },
+    };
+  }
   const tasks = (run.tasks as Array<Record<string, unknown>>) ?? [];
   const pending = tasks.filter((t) => {
     const s = t.state ?? t.status;
@@ -386,6 +394,19 @@ export async function planFinalize(
       message: `Cannot finalize: ${pending.length} task(s) still pending`,
       data: { runId, pendingTasks: pending.map((t) => t.id ?? t.taskId) },
     };
+  }
+  if (run.state !== "COMPLETED") {
+    const notCompleted = tasks.filter((t) => {
+      const s = t.state ?? t.status;
+      return s !== "COMPLETED" && s !== "completed" && t.completed !== true;
+    });
+    if (notCompleted.length > 0) {
+      return {
+        exitCode: ExitCode.GeneralError,
+        message: `Cannot finalize: ${notCompleted.length} task(s) not completed (FAILED/BLOCKED/CANCELLED)`,
+        data: { runId, failedTasks: notCompleted.map((t) => t.id ?? t.taskId) },
+      };
+    }
   }
   await store.updateState(runId, "COMPLETED");
   return {
