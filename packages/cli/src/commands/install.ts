@@ -19,7 +19,7 @@ export async function installCmd(
     };
   }
 
-  const result = await runScript("02-install-runtime", [`-Platform ${platform}`], {
+  const result = await runScript("02-install-runtime", ["-Platform", platform], {
     dryRun: options.dryRun,
   });
 

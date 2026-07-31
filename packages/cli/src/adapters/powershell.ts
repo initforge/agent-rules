@@ -20,10 +20,6 @@ export interface PowershellResult {
   exitCode: number;
 }
 
-function escapeArg(arg: string): string {
-  return `'${arg.replace(/'/g, "''")}'`;
-}
-
 export async function findPowershell(): Promise<string> {
   const candidates = ["pwsh", "powershell"];
   for (const cmd of candidates) {
@@ -70,7 +66,7 @@ export async function runScript(
         "-NoProfile",
         "-File",
         scriptPath,
-        ...args.map(escapeArg),
+        ...args,
       ],
       {
         cwd: REPO_ROOT,

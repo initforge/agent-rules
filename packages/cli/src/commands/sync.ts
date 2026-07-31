@@ -32,9 +32,7 @@ export async function syncCmd(
   }
 
   // Step 2: Install (delegates to PS)
-  const installResult = await runScript("02-install-runtime", [
-    `-Platform ${platform}`,
-  ]);
+  const installResult = await runScript("02-install-runtime", ["-Platform", platform]);
   if (installResult.exitCode !== 0) {
     return {
       exitCode: ExitCode.LegacyFailed,
