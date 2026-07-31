@@ -21,6 +21,10 @@
       "types": "./dist/terminal-gate.d.ts",
       "import": "./dist/terminal-gate.js"
     },
+    "./evidence-packet": {
+      "types": "./dist/evidence-packet.d.ts",
+      "import": "./dist/evidence-packet.js"
+    },
     "./activation-transaction": {
       "types": "./dist/activation-transaction.d.ts",
       "import": "./dist/activation-transaction.js"

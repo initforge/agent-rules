@@ -4,6 +4,7 @@ import path from 'path'
 import { execFileSync } from 'child_process'
 import { fileURLToPath } from 'url'
 import { verifyTerminalGate, type TerminalGateResult } from '@initforge/agent-rules-engine/terminal-gate'
+import { verifyEvidencePacket } from '@initforge/agent-rules-engine/evidence-packet'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
@@ -208,6 +209,9 @@ interface ScorecardEvidence {
   dimensions: Record<string, { score: number; maxScore: number; status: string }>
   commit?: string
   branch?: string
+  packet?: unknown
+  packetStatus?: 'VERIFIED' | 'UNVERIFIED'
+  packetReason?: string
 }
 
 interface GitState {
@@ -323,6 +327,7 @@ function loadScorecardEvidence(): ScorecardEvidence | null {
       dimensions,
       commit: typeof raw?._git?.commit === 'string' ? raw._git.commit : undefined,
       branch: typeof raw?._git?.branch === 'string' ? raw._git.branch : undefined,
+      packet: raw?._review?.packet,
     }
   } catch {
     return null
@@ -383,6 +388,7 @@ router.get('/scorecard', (_req: Request, res: Response) => {
     const evidencePresent = evidence !== null
     const evidenceMeaningful = evidencePresent && Object.values(evidence.dimensions).some(e => (e.score ?? 0) > 0)
     const operational = canonicalLedgerTruth(harnessRoot())
+    const packet = verifyEvidencePacket(evidence?.packet, operational.head || '')
     const scorecardFreshness = !evidenceMeaningful
       ? 'unverified'
       : evidence!.commit !== operational.head || (evidence!.branch && evidence!.branch !== operational.branch)
@@ -412,7 +418,7 @@ router.get('/scorecard', (_req: Request, res: Response) => {
     // Scorecard evidence enriches canonical ledger truth; it cannot promote an
     // unverified, stale, foreign, or dirty operational state to healthy.
     const health = !evidenceMeaningful ? 'unknown'
-      : operational.status === 'healthy' && scorecardFreshness === 'current' && overallPct >= 80
+      : operational.status === 'healthy' && packet.verified && scorecardFreshness === 'current' && overallPct >= 80
         ? 'healthy'
         : 'degraded'
     res.json({
@@ -423,6 +429,7 @@ router.get('/scorecard', (_req: Request, res: Response) => {
         health,
         evidencePresent: evidenceMeaningful,
         scorecardFreshness,
+        evidencePacket: packet,
         operational,
         overall: { score: overallScore, maxScore: overallMax, pct: overallPct },
         summary: { pass: passCount, warn: warnCount, fail: failCount, unknown: unknownCount, total: dimensions.length },
