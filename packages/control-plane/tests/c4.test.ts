@@ -9,6 +9,7 @@ import {
   hostAttestationEvidenceSubjectSha256,
   type HostAttestation,
 } from '@initforge/agent-rules-engine/contracts'
+import { M10_TERMINAL_TOKEN, deriveM10ProofHash } from '@initforge/agent-rules-engine/terminal-gate'
 
 const REQUIRED_HOSTS = ['codex', 'claude', 'grok', 'opencode', 'antigravity']
 
@@ -17,10 +18,18 @@ function git(root: string, args: string[]): string {
 }
 
 function scorecard(head: string, branch: string, overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  const labels = [
+    'Context Routing', 'Plan Identity Integrity', 'Evidence Binding', 'Amendment Tracking',
+    'Shadow Hash Verification', 'Reconciliation Accuracy', 'Verification Claims Coverage',
+    'Batch Execution', 'Attestation Completeness', 'Audit Trail Integrity',
+    'Path Traversal Protection', 'Symlink Protection', 'Schema Validation Rigor',
+    'C4 Visualization Maturity', 'Multi-Platform Support', 'API Security Posture',
+    'Telemetry & Monitoring', 'Release Readiness',
+  ]
   return {
     schema: 'am0015/scorecard-evidence/v2',
     _git: { commit: head, branch },
-    dimensions: Array.from({ length: 18 }, (_, index) => ({ id: `d${String(index + 1).padStart(2, '0')}`, score: 10, maxScore: 10, status: 'pass' })),
+    dimensions: labels.map((label, index) => ({ id: `d${String(index + 1).padStart(2, '0')}`, label, score: 10, maxScore: 10, status: 'pass' })),
     ...overrides,
   }
 }
@@ -60,21 +69,42 @@ function attestation(host: string, head: string): Record<string, unknown> {
 }
 
 function ledger(head: string, overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  const epoch = Date.now()
+  const identity = 'e'.repeat(64)
+  const reconciliations = Array.from({ length: 15 }, (_, index) => ({ requirementId: `REQ-${String(index + 1).padStart(3, '0')}`, status: 'MATCH', headCommit: head, detail: `HEAD ${head.slice(0, 12)}` }))
+  const evidenceHashes = Array.from({ length: 15 }, (_, index) => `${String(index + 1).padStart(2, '0')}${'a'.repeat(62)}`)
+  const proof = { headCommit: head, effectivePlanIdentity: identity, reviewerIdentity: 'c4-fixture', epoch, reconciliationIds: reconciliations.map(r => r.requirementId), evidenceHashes }
   return {
     plan_id: 'truth-plan',
     status: 'COMPLETED',
-    execution_state: 'COMPLETED',
+    execution_state: M10_TERMINAL_TOKEN,
     findings: [],
     orphanFindings: [],
-    reconciliations: [{ status: 'MATCH', headCommit: head, detail: `HEAD ${head.slice(0, 12)}` }],
+    reconciliations,
     attestations: REQUIRED_HOSTS.map(host => attestation(host, head)),
     plan_anchors: Array.from({ length: 25 }, (_, index) => ({ requirementId: `REQ-${index + 1}` })),
     amendments: [],
     shadowRevision: 1,
     latestShadowRevision: 1,
-    latestReview: { reviewId: 'review', stale: false },
+    latestReview: { reviewId: 'review', stale: false, reviewerIdentity: 'c4-fixture' },
     headCommit: head,
     commitSha: head,
+    effective_plan_identity: { sha256: identity },
+    m10Proof: { ...proof, proofHash: deriveM10ProofHash(proof) },
+    milestones: {
+      'M9.5': {
+        identity,
+        reviewerIdentity: 'c4-fixture',
+        epoch,
+        observedAt: new Date(epoch).toISOString(),
+        evidence: Array.from({ length: 15 }, (_, index) => ({
+          identity,
+          fresh: true,
+          observedAt: new Date(epoch).toISOString(),
+          evidenceHash: `${String(index + 1).padStart(2, '0')}${'a'.repeat(62)}`,
+        })),
+      },
+    },
     ci_checks: [{ passed: true, runUrl: 'https://github.com/initforge/agent-rules/actions/runs/1', repository: 'initforge/agent-rules', workflow: 'quality', check: 'test', commitSha: head }],
     plan: { original: { artifactId: 'plan', sha256: 'a'.repeat(64), status: 'ADOPTED' } },
     ...overrides,

@@ -189,7 +189,8 @@ describe('verifyTerminalGate', () => {
     ['forged identity', { identity: 'f'.repeat(64) }],
   ])('rejects M9.5 %s', (_name, patch) => {
     const dir = tmpDir();
-    const ledger = stubLedger({ milestones: { 'M9.5': { ...(stubLedger() as any).milestones['M9.5'], ...patch } } });
+    const base = stubLedger() as any;
+    const ledger = stubLedger({ milestones: { 'M9.5': { ...base.milestones['M9.5'], ...patch } }, m10Proof: undefined });
     const result = verifyTerminalGate(writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger)), hash);
     expect(result.passed).toBe(false);
     expect(result.failedGates).toContain('M9_5_CANONICAL_GATE');

@@ -56,6 +56,7 @@ function verifyM95(ledger: Record<string, any>, now: number): { passed: boolean;
   if (!packet || typeof identity !== 'string' || identity.length === 0) return { passed: false, reason: 'M9.5 packet or effective plan identity missing' };
   if (packet.identity !== undefined && packet.identity !== identity) return { passed: false, reason: 'M9.5 identity mismatch' };
   if (typeof packet.reviewerIdentity !== 'string' || packet.reviewerIdentity.length === 0) return { passed: false, reason: 'M9.5 reviewer identity missing' };
+  if (packet.reviewerIdentity !== ledger.latestReview?.reviewerIdentity) return { passed: false, reason: 'M9.5 reviewer binding mismatch' };
   const timestamp = Date.parse(packet.observedAt || packet.timestamp || '');
   if (Number.isNaN(timestamp) || !freshEpoch(packet.epoch, now) || packet.epoch !== timestamp) return { passed: false, reason: 'M9.5 timestamp or epoch is stale/mismatched' };
   if (now - timestamp > FRESH_EVIDENCE_MAX_AGE_MS || timestamp > now) return { passed: false, reason: 'M9.5 timestamp is stale or future-dated' };
