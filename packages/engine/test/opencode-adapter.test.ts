@@ -45,7 +45,9 @@ describe('buildOpenCodeProfile', () => {
     expect(profile.mode).toBe('INTERACTIVE');
     expect(profile.capabilities).toContain('mode_detection');
     expect(profile.capabilityStatus).toBe('ADAPTER_ENFORCED');
-    expect(profile.attestation.nativeRunnerIdentity).toBe('opencode-harness');
+    expect(profile.attestation).toBeNull();
+    expect(profile.attestationStatus).toBe('UNVERIFIED');
+    expect(profile.attestationReason).toBe('NATIVE_ATTESTATION_MISSING');
   });
 
   it('builds a profile with ARTIFACT_PLAN mode when a plan exists', () => {
@@ -57,10 +59,13 @@ describe('buildOpenCodeProfile', () => {
     expect(profile.plan!.planId).toBe('plan-001');
   });
 
-  it('builds a profile with ADAPTER_ENFORCED capability status', () => {
+  it('does not turn adapter metadata into native attestation', () => {
     const dir = tmpDir();
     const profile = buildOpenCodeProfile(dir);
-    expect(profile.attestation.capabilityStatus).toBe('ADAPTER_ENFORCED');
+    expect(profile.capabilityStatus).toBe('ADAPTER_ENFORCED');
+    expect(profile.attestation).toBeNull();
+    expect(profile.attestationStatus).toBe('UNVERIFIED');
+    expect(profile.attestationReason).toBe('NATIVE_ATTESTATION_MISSING');
   });
 
   it('reports truthful capabilities list', () => {
@@ -79,7 +84,7 @@ describe('buildOpenCodeProfile', () => {
   it('does not claim HOST_NATIVE or child-session capabilities', () => {
     const dir = tmpDir();
     const profile = buildOpenCodeProfile(dir);
-    expect(profile.attestation.capabilityStatus).not.toBe('HOST_NATIVE');
+    expect(profile.attestation).toBeNull();
     expect(profile.capabilities).not.toContain('live_child_session');
     expect(profile.capabilities).not.toContain('cross_host_process_control');
   });
@@ -143,7 +148,7 @@ describe('detectCommitSha (git ref security)', () => {
     fs.writeFileSync(path.join(dir, '.git/HEAD'), 'ref: refs/heads/main\n', 'utf-8');
     fs.writeFileSync(path.join(dir, '.git/refs/heads/main'), 'deadbeefcafebabedeadbeefcafebabedeadbeef\n', 'utf-8');
     const profile = buildOpenCodeProfile(dir);
-    expect(profile.attestation.commitSha).toBe('deadbeefcafebabedeadbeefcafebabedeadbeef');
+    expect(profile.attestation).toBeNull();
   });
 
   it('rejects ref: traversal outside refs/', () => {
@@ -151,7 +156,7 @@ describe('detectCommitSha (git ref security)', () => {
     fs.mkdirSync(path.join(dir, '.git'), { recursive: true });
     fs.writeFileSync(path.join(dir, '.git/HEAD'), 'ref: ../../etc/passwd\n', 'utf-8');
     const profile = buildOpenCodeProfile(dir);
-    expect(profile.attestation.commitSha).toBe('unknown');
+    expect(profile.attestation).toBeNull();
   });
 
   it('rejects symbolic link HEAD', () => {
@@ -161,7 +166,7 @@ describe('detectCommitSha (git ref security)', () => {
     try {
       fs.symlinkSync(path.join(dir, '.git/refs/heads/main'), path.join(dir, '.git/HEAD'));
       const profile = buildOpenCodeProfile(dir);
-      expect(profile.attestation.commitSha).toBe('unknown');
+      expect(profile.attestation).toBeNull();
     } catch {
       // symlink may not be supported
     }
@@ -174,7 +179,7 @@ describe('detectCommitSha (git ref security)', () => {
     try {
       fs.symlinkSync('/etc/passwd', path.join(dir, '.git/refs/heads/main'));
       const profile = buildOpenCodeProfile(dir);
-      expect(profile.attestation.commitSha).toBe('unknown');
+      expect(profile.attestation).toBeNull();
     } catch {
       // symlink may not be supported
     }
@@ -185,7 +190,7 @@ describe('detectCommitSha (git ref security)', () => {
     fs.mkdirSync(path.join(dir, '.git'), { recursive: true });
     fs.writeFileSync(path.join(dir, '.git/HEAD'), 'ref: refs/../../etc/passwd\n', 'utf-8');
     const profile = buildOpenCodeProfile(dir);
-    expect(profile.attestation.commitSha).toBe('unknown');
+    expect(profile.attestation).toBeNull();
   });
 });
 

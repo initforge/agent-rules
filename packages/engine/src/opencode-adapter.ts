@@ -1,9 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import os from 'node:os';
-import { createHash } from 'node:crypto';
-import type { Sha256, HostAttestation, CapabilityStatus, WorkerReceipt, TaskAssignment } from './contracts.js';
-import { sha256Bytes, isSha256 } from './contracts.js';
+import type { Sha256 } from './contracts.js';
+import { sha256Bytes } from './contracts.js';
+import type { CapabilityStatus, WorkerReceipt } from './contracts.js';
 import type { ExecutionMode, OpenCodeModeProfile } from './execution-mode.js';
 import { detectExecutionMode, assertOpenCodeMode } from './execution-mode.js';
 import type { RecognizedPlan, PlanRecognitionResult } from './plan-recognizer.js';
@@ -30,8 +29,11 @@ export interface OpenCodeHostProfile {
   plan: RecognizedPlan | null;
   handoff: HandoffArtifact | null;
   capabilities: OpenCodeCapability[];
+  /** Adapter observations do not attest the native host runner. */
   capabilityStatus: CapabilityStatus;
-  attestation: HostAttestation;
+  attestationStatus: 'UNVERIFIED';
+  attestationReason: 'NATIVE_ATTESTATION_MISSING';
+  attestation: null;
 }
 
 export function buildOpenCodeProfile(baseDir: string = process.cwd()): OpenCodeHostProfile {
@@ -55,27 +57,6 @@ export function buildOpenCodeProfile(baseDir: string = process.cwd()): OpenCodeH
   ];
 
   const hostVersion = process.env.OPENCODE_VERSION || '0.0.0';
-  const issuedAt = new Date().toISOString();
-  const expiresAt = new Date(Date.now() + 3600_000).toISOString();
-
-  const capabilityIds = capabilities.map((c) => `opencode:${c}`);
-
-  const attestation: HostAttestation = {
-    host: 'opencode',
-    hostVersion,
-    commitSha: detectCommitSha(baseDir),
-    capabilityStatus: 'ADAPTER_ENFORCED',
-    capabilityIds,
-    contractSetSha256: computeContractSetSha(),
-    requestedModel: process.env.OPENCODE_MODEL || 'unknown',
-    resolvedModel: process.env.OPENCODE_MODEL || 'unknown',
-    observedModel: process.env.OPENCODE_MODEL || 'unknown',
-    evidenceHashes: [],
-    nativeRunnerIdentity: 'opencode-harness',
-    issuedAt,
-    expiresAt,
-  };
-
   return {
     host: 'opencode',
     hostVersion,
@@ -85,7 +66,9 @@ export function buildOpenCodeProfile(baseDir: string = process.cwd()): OpenCodeH
     handoff: activeHandoff,
     capabilities,
     capabilityStatus: 'ADAPTER_ENFORCED',
-    attestation,
+    attestationStatus: 'UNVERIFIED',
+    attestationReason: 'NATIVE_ATTESTATION_MISSING',
+    attestation: null,
   };
 }
 
@@ -163,14 +146,12 @@ function assertPathWithin(resolved: string, root: string): void {
   }
 }
 
-function safeResolveGitRef(baseDir: string, gitDir: string, refContent: string): string | null {
+function safeResolveGitRef(gitDir: string, refContent: string): string | null {
   const refSpec = refContent.slice(5).trim();
   if (!refSpec.startsWith('refs/')) return null;
   const refPath = path.resolve(gitDir, refSpec);
   assertPathWithin(refPath, gitDir);
-  if (!fs.existsSync(refPath)) return null;
-  const stat = fs.lstatSync(refPath);
-  if (stat.isSymbolicLink()) return null;
+  if (!fs.existsSync(refPath) || fs.lstatSync(refPath).isSymbolicLink()) return null;
   return fs.readFileSync(refPath, 'utf-8').trim();
 }
 
@@ -178,27 +159,15 @@ function detectCommitSha(baseDir: string): string {
   try {
     const gitDir = path.resolve(baseDir, '.git');
     const headPath = path.join(gitDir, 'HEAD');
-    if (fs.existsSync(headPath)) {
-      const lstat = fs.lstatSync(headPath);
-      if (lstat.isSymbolicLink()) return 'unknown';
-      const head = fs.readFileSync(headPath, 'utf-8').trim();
-      if (head.startsWith('ref: ')) {
-        const sha = safeResolveGitRef(baseDir, gitDir, head);
-        if (sha) return sha;
-      }
-      if (/^[0-9a-f]{40}$/i.test(head)) return head;
-    }
+    if (!fs.existsSync(headPath) || fs.lstatSync(headPath).isSymbolicLink()) return 'unknown';
+    const head = fs.readFileSync(headPath, 'utf-8').trim();
+    if (head.startsWith('ref: ')) return safeResolveGitRef(gitDir, head) ?? 'unknown';
+    return /^[0-9a-f]{40}$/i.test(head) ? head : 'unknown';
   } catch {
-    // ignore
+    return 'unknown';
   }
-  return 'unknown';
 }
 
 function computeContractSetSha(): Sha256 {
-  const components = [
-    'harness/portable-plan/v3',
-    'opencode/adapter/v1',
-    'artifact-handoff/v1',
-  ];
-  return sha256Bytes(new TextEncoder().encode(components.join(':')));
+  return sha256Bytes(new TextEncoder().encode('harness/portable-plan/v3:opencode/adapter/v1:artifact-handoff/v1'));
 }
