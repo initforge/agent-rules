@@ -12,7 +12,7 @@ const ledger = JSON.parse(readFileSync(ledgerPath, 'utf8')) as {
   amendments: Array<{ amendment_id: string; path: string; sha256: string; status: string }>;
   effective_plan_identity: { input_manifest: { original_plan_sha256: string; approved_amendments: Array<{ amendment_id: string; sha256: `${string}` }> }; sha256: `${string}` };
 };
-const original = sha('immutable original');
+const original = sha(readFileSync(resolve(fixture, 'original.md'), 'utf8'));
 const amendments = Array.from({ length: 17 }, (_, index) => index + 1).filter(number => number !== 4).map(number => ({ amendment_id: `AM-${String(number).padStart(4, '0')}`, sha256: sha(`AM-${number}`) }));
 
 describe('canonical effective-plan identity', () => {
@@ -25,6 +25,7 @@ describe('canonical effective-plan identity', () => {
   });
 
   it('matches canonical AM-0017 and AM-0018 source/ledger identities', () => {
+    expect(original).toBe('c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31');
     const manifest = ledger.effective_plan_identity.input_manifest;
     const current = ledger.amendments.at(-1);
     expect(current?.amendment_id).toBe('AM-0018');
