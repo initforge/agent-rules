@@ -974,6 +974,12 @@ describe('canonical V3 aggregate and deviations schemas', () => {
       schema: 'parity-packet.schema.yaml',
       value: canonicalPacketValue(),
     })).toMatchObject({ valid: true, diagnostics: [] });
+
+    const packet = canonicalPacketValue();
+    const architecture = packet['architecture-adaptation.yaml'] as Record<string, unknown>;
+    const deviations = packet['deviations.yaml'] as Record<string, unknown>;
+    expect(architecture.accepted_deviations).toEqual(deviations.deviations);
+    expect(Object.keys(architecture.accepted_deviations as Record<string, unknown>)).toEqual(['DEV-001']);
   });
 
   it.each([
