@@ -21,7 +21,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node test/opencode-artifact-smoke.mjs",
     "start": "node dist/index.js",
     "clean": "rimraf dist",
     "prepack": "npm run build",

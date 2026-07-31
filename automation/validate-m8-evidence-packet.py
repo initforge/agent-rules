@@ -4,12 +4,17 @@ from __future__ import annotations
 import argparse, json, subprocess, sys
 from pathlib import Path
 
+def policy_reviewer(root: Path) -> str:
+    policy = json.loads((root / "automation" / "model-policy.json").read_text(encoding="utf-8"))
+    return policy["platforms"]["codex"]["adapter_defaults"]["model_selectors"]["expert"]["selector"]
+
 def validate(packet: dict, root: Path) -> list[str]:
     errors = []
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
     if packet.get("headCommit") != head: errors.append("HEAD mismatch")
     if packet.get("status") not in {"WAITING_EXTERNAL", "UNVERIFIED"}: errors.append("status must be WAITING_EXTERNAL or UNVERIFIED")
-    expected = {"reviewer": "gpt-5.6-sol", "primary": "qwencoder/qwen3.7-max", "secondary": "qwencoder/glm-5.2"}
+    # Reviewer selector renders from the canonical policy (codex expert), never re-hardcoded.
+    expected = {"reviewer": policy_reviewer(root), "primary": "qwencoder/qwen3.7-max", "secondary": "qwencoder/glm-5.2"}
     route = packet.get("modelRoute")
     if set(route or {}) != set(expected): errors.append("exact per-role model route required")
     for role, model in expected.items():

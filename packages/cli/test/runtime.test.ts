@@ -12,7 +12,7 @@ import {
   verifyRuntimeReceipt,
 } from "../src/runtime/installer.js";
 import { compareRuntimeManifest } from "../src/commands/doctor.js";
-import { OPENCODE_MODEL } from "../src/commands/build.js";
+import { resolveOpenCodeModel } from "../src/runtime/opencode.js";
 
 const runtimeDirectory = "agent-rules-runtime";
 
@@ -54,6 +54,10 @@ describe("RuntimeInstaller", () => {
     repositoryRoot = path.join(temp, "repository");
     targetRoot = path.join(temp, "target");
     await fs.mkdir(repositoryRoot, { recursive: true });
+    // The opencode verification path resolves the model from the repo root's
+    // policy, so the temp repository carries the canonical selector file.
+    await fs.mkdir(path.join(repositoryRoot, "automation"), { recursive: true });
+    await fs.copyFile(path.join(import.meta.dirname, "../../..", "automation", "model-policy.json"), path.join(repositoryRoot, "automation", "model-policy.json"));
     await writeBuild({ "rules/base.md": "first\n", "skills/example/SKILL.md": "skill\n" });
     await writeEffectivePlanIdentity();
     execFileSync("git", ["init", "-q", repositoryRoot]);
@@ -136,7 +140,7 @@ describe("RuntimeInstaller", () => {
     const build = path.join(repositoryRoot, "generated/runtime-build/opencode/native/agents");
     const agent = "initforge-implementer.md";
     const template = "---\nmodel: __OPENCODE_MODEL_CLASS__\n---\nworker\n";
-    const generated = template.replace("__OPENCODE_MODEL_CLASS__", OPENCODE_MODEL);
+    const generated = template.replace("__OPENCODE_MODEL_CLASS__", await resolveOpenCodeModel(repositoryRoot));
     await fs.mkdir(source, { recursive: true });
     await fs.mkdir(build, { recursive: true });
     await fs.writeFile(path.join(source, agent), template);

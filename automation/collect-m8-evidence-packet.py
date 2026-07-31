@@ -5,8 +5,12 @@ from __future__ import annotations
 import argparse, hashlib, json, subprocess, sys, time
 from pathlib import Path
 
+POLICY_PATH = Path(__file__).resolve().parent / "model-policy.json"
+POLICY = json.loads(POLICY_PATH.read_text(encoding="utf-8"))
+# Reviewer selector renders from the canonical policy (codex expert), never re-hardcoded.
+REVIEWER_MODEL = POLICY["platforms"]["codex"]["adapter_defaults"]["model_selectors"]["expert"]["selector"]
 ROUTE = {
-    "reviewer": "gpt-5.6-sol",
+    "reviewer": REVIEWER_MODEL,
     "primary": "qwencoder/qwen3.7-max",
     "secondary": "qwencoder/glm-5.2",
 }

@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import * as crypto from "node:crypto";
 import path from "node:path";
 import { buildContextGraph } from "../services/context-graph.js";
+import { resolveOpenCodeModel, buildOpenCodeArtifact } from "../runtime/opencode.js";
 
 interface BuildManifest {
   version: number;
@@ -11,8 +12,6 @@ interface BuildManifest {
   generatedFrom: Record<string, string>;
   files: { path: string; sha256: string }[];
 }
-
-export const OPENCODE_MODEL = "qwencoder/qwen3.7-max";
 
 async function sha256(filePath: string): Promise<string> {
   const content = await fs.readFile(filePath);
@@ -160,6 +159,15 @@ export async function build(
     };
   }
 
+  // OpenCode model binds the policy selector lazily (fail-closed at use time,
+  // never at module load). Resolve once for token replacement below.
+  let openCodeModel: string;
+  try {
+    openCodeModel = await resolveOpenCodeModel(root);
+  } catch (e) {
+    return { exitCode: ExitCode.GeneralError, message: e instanceof Error ? e.message : String(e) };
+  }
+
   // Read manifest.yaml for load order
   const manifestPath = path.join(root, "rules", "manifest.yaml");
   let manifestText = "";
@@ -241,7 +249,7 @@ export async function build(
         tokens["__CODEX_STANDARD_MODEL__"] = String(platformPolicy.standard.selector ?? "");
         tokens["__CODEX_STANDARD_EFFORT__"] = String(platformPolicy.standard.effort ?? "");
       }
-      if (platform === "opencode") tokens["__OPENCODE_MODEL_CLASS__"] = OPENCODE_MODEL;
+      if (platform === "opencode") tokens["__OPENCODE_MODEL_CLASS__"] = openCodeModel;
       if (platformPolicy.implementation) {
         tokens["__CURSOR_IMPLEMENTATION_MODEL__"] = String(platformPolicy.implementation.selector ?? "");
       }
@@ -258,7 +266,7 @@ export async function build(
         await replaceTokensInDir(nativeDir, tokens);
       } catch { errors.push(`Token replacement failed for ${platform}`); }
     } else if (platform === "opencode") {
-      try { await replaceTokensInDir(nativeDir, { "__OPENCODE_MODEL_CLASS__": OPENCODE_MODEL }); }
+      try { await replaceTokensInDir(nativeDir, { "__OPENCODE_MODEL_CLASS__": openCodeModel }); }
       catch { errors.push("Token replacement failed for opencode"); }
     }
 
@@ -393,6 +401,12 @@ export async function build(
       message: `Build completed with errors: ${errors.join("; ")}`,
       data: { buildRoot, errors },
     };
+  }
+
+  try {
+    await buildOpenCodeArtifact(root, buildRoot);
+  } catch (e) {
+    return { exitCode: ExitCode.GeneralError, message: `OpenCode artifact build failed: ${e instanceof Error ? e.message : String(e)}`, data: { buildRoot } };
   }
 
   console.log(`Runtime builds created: ${buildRoot}`);
