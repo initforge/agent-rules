@@ -11,3 +11,7 @@
 
 | RECONCILIATION_M10_FINAL | M10-FINAL evidence constructed at HEAD 2bb3058: 15 fresh MATCH reconciliations REQ-001..REQ-015 bound to HEAD, M | - | 55 |
 | MILESTONE_M10 | M10 evidence note: burn-in accepted; terminal gate run against HEAD 2bb3058 with ledger r55. Local gates pass; o | - | 55 |
+
+| RECONCILIATION_M10_FINAL_BIND | M10-FINAL evidence re-bound at HEAD 56284ad436a6: 15 fresh MATCH reconciliations REQ-001..REQ-015 bound to HEAD, | - | 56 |
+| MILESTONE_M10 | M10 terminal evidence note: ledger r56 binds HEAD 56284ad436a6; local gates green (build/check/test/package-smok | - | 56 |
+| HARNESS_V3_10_OF_10_COMPLETE | Final M10 terminal marker HARNESS_V3_10_OF_10_COMPLETE emitted at ledger r56 bound to HEAD 56284ad436a6 (AM-0015 | - | 56 |
