@@ -15,6 +15,30 @@ interface DoctorCheck {
 
 interface ManifestFile { path: string; sha256: string }
 
+export async function doctorOpenCode(root: string, home: string): Promise<DoctorCheck[]> {
+  const sourceDir = path.join(root, "platforms", "opencode", "agents");
+  const buildDir = path.join(root, "generated", "runtime-build", "opencode", "native", "agents");
+  const installedDir = path.join(home, "agents");
+  const manifestPath = path.join(home, "agent-rules-manifest.json");
+  const files = (await walkDir(sourceDir)).map((file) => path.relative(sourceDir, file).replace(/\\/g, "/")).filter((file) => file !== "README.md").sort();
+  const hashes = async (dir: string) => Object.fromEntries(await Promise.all(files.map(async (file) => [file, await sha256(path.join(dir, file))])));
+  const source = await hashes(sourceDir);
+  const build = await hashes(buildDir).catch(() => ({}));
+  const installed = await hashes(installedDir).catch(() => ({}));
+  const same = (a: Record<string, string>, b: Record<string, string>) => JSON.stringify(a) === JSON.stringify(b);
+  const report: DoctorCheck[] = [];
+  if (!await checkFile(manifestPath)) return [{ platform: "opencode", check: "runtime-manifest", status: "MISSING", detail: manifestPath }];
+  try {
+    const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8")) as { platform?: string; files?: ManifestFile[] };
+    const listed = Object.fromEntries((manifest.files ?? []).map((file) => [file.path.replace(/^native\/agents\//, ""), file.sha256]).filter(([file]) => files.includes(file)));
+    const ok = manifest.platform === "opencode" && same(listed, source) && same(listed, installed);
+    report.push({ platform: "opencode", check: "runtime-manifest", status: ok ? "OK" : "NOT_LIVE", detail: ok ? "identity, content, and installed hashes match" : "manifest identity/content or installed hashes drift" });
+  } catch { report.push({ platform: "opencode", check: "runtime-manifest", status: "NOT_LIVE", detail: "invalid agent-rules-manifest.json" }); }
+  report.push({ platform: "opencode", check: "source-build-hashes", status: same(source, build) ? "OK" : "NOT_LIVE", detail: "source compared with generated build" });
+  report.push({ platform: "opencode", check: "installed-agent-hashes", status: same(source, installed) ? "OK" : "NOT_LIVE", detail: "source compared with installed agents" });
+  return report;
+}
+
 export function compareRuntimeManifest(installed: ManifestFile[], expected: ManifestFile[]): {
   missing: string[]; extra: string[]; hashMismatch: string[];
 } {
@@ -82,7 +106,7 @@ export async function doctor(
   const root = getRepoRoot();
   const platformArg = args[0] || "all";
   const skipIntegrationVerify = args.includes("--skip-integration-verify");
-  const valid = ["codex", "grok", "antigravity", "cursor", "all"];
+  const valid = ["codex", "grok", "antigravity", "cursor", "opencode", "all"];
   if (!valid.includes(platformArg)) {
     return { exitCode: ExitCode.InvalidArgument, message: `Invalid platform: ${platformArg}` };
   }
@@ -94,9 +118,10 @@ export async function doctor(
 
   const allPlatforms = ["codex", "grok", "antigravity", "cursor", "opencode"] as const;
   type PlatformName = typeof allPlatforms[number];
-  const platforms: PlatformName[] = platformArg === "all" ? [...allPlatforms] : [platformArg as PlatformName];
+  const platforms: PlatformName[] = platformArg === "all" ? allPlatforms.filter((platform) => platform !== "opencode") : platformArg === "opencode" ? [] : [platformArg as PlatformName];
   const homes = getPlatformHomes(root);
   const report: DoctorCheck[] = [];
+  if (platformArg === "all" || platformArg === "opencode") report.push(...await doctorOpenCode(root, homes.opencode));
 
   // Run native contract test
   const nativeTest = path.join(root, "automation", "test-native-agent-policy.py");

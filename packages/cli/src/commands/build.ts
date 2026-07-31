@@ -102,7 +102,7 @@ export async function build(
 ): Promise<CommandResult> {
   const root = getRepoRoot();
   const buildRoot = path.join(root, "generated", "runtime-build");
-  const platforms = ["codex", "grok", "antigravity", "cursor"];
+  const platforms = ["codex", "grok", "antigravity", "cursor", "opencode"];
   const errors: string[] = [];
 
   if (options.dryRun) {
