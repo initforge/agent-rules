@@ -3,11 +3,13 @@ import path from 'node:path';
 import { createSupervisor, _resolveSupervisorInternals, type SupervisorConfig, type SupervisorPublicView, type _InternalOps, type ChildAssignmentView } from '../../packages/engine/src/supervisor.js';
 import { OpenCodeV2Adapter, type OpenCodeV2Config, type MessagePart, type SSEEvent } from './adapter.js';
 import type { OpencodeClient } from '@opencode-ai/sdk/v2';
+import { OpenCodeNativeSessionAdapter, type NativeSessionBoundary } from '../../packages/engine/src/native-session-adapter.js';
 
 export interface SupervisorRunnerConfig {
   supervisor?: Partial<SupervisorConfig>;
   adapter?: OpenCodeV2Config;
   nativeClient?: OpencodeClient;
+  nativeContinuationText?: string;
 }
 
 interface TerminalEvidence {
@@ -26,6 +28,7 @@ export class SupervisorRunner {
   private initialized = false;
   private readonly terminalEvidence = new Map<string, TerminalEvidence>();
   readonly nativeClient?: OpencodeClient;
+  readonly nativeSession?: NativeSessionBoundary;
 
   constructor(config: SupervisorRunnerConfig) {
     this.supervisorConfig = config.supervisor ?? {};
@@ -44,6 +47,9 @@ export class SupervisorRunner {
     this._internal = internals._internal;
     this.adapter = new OpenCodeV2Adapter(config.adapter ?? { baseUrl: 'http://127.0.0.1:4096', fetchFn: fetch });
     this.nativeClient = config.nativeClient;
+    this.nativeSession = config.nativeClient
+      ? new OpenCodeNativeSessionAdapter(config.nativeClient, config.nativeContinuationText ?? 'Continue')
+      : undefined;
   }
 
   /** F10 (R10): public view — no completion methods, no internal methods */
@@ -145,7 +151,7 @@ export class SupervisorRunner {
       await this.adapter.promptAsync({
         sessionId: assignment.childSessionId!, parts,
         model: { providerID: assignment.provider, modelID: assignment.model },
-        agent: params.agentProfile ?? 'writer',
+        agent: params.agentProfile ?? 'initforge-implementer',
       });
 
       const ackResult = this._supervisor.ackAssignment(params.assignmentId);
