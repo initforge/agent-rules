@@ -5891,6 +5891,16 @@
       ],
       "shadow_revision": 53,
       "at": "2026-07-31T20:29:37+07:00"
+    },
+    {
+      "event_id": "E-MS-54",
+      "type": "MILESTONE_M8",
+      "summary": "M8 accepted: clean HEAD 88d1d7a; selector convergence, browser QA 31/31, package smoke PASS; packet validates PASS (WAITING_EXTERNAL native attestation); ledger r53 identity ddb68fa; independent terminal review ACCEPT.",
+      "actor": "harness-maintainer",
+      "head_commit": "88d1d7af0d1919a04af8f2bf748cb5cf71eec4ee",
+      "effective_sha256": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+      "shadow_revision": 53,
+      "at": "2026-07-31T20:51:00+07:00"
     }
   ]
 }
