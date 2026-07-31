@@ -12,6 +12,7 @@ import {
   verifyRuntimeReceipt,
 } from "../src/runtime/installer.js";
 import { compareRuntimeManifest } from "../src/commands/doctor.js";
+import { OPENCODE_MODEL } from "../src/commands/build.js";
 
 const runtimeDirectory = "agent-rules-runtime";
 
@@ -128,6 +129,31 @@ describe("RuntimeInstaller", () => {
     expect(await fs.readFile(path.join(runtimePath, "rules", "base.md"), "utf8")).toBe("first\n");
     const hostEntrypoint = await fs.readFile(path.join(targetRoot, "AGENTS.md"), "utf8");
     expect(hostEntrypoint).toContain(`${runtimePath}/.activation/AGENTS.md`);
+  });
+
+  it("rejects tampered OpenCode output, then accepts deterministic regeneration", async () => {
+    const source = path.join(repositoryRoot, "platforms/opencode/agents");
+    const build = path.join(repositoryRoot, "generated/runtime-build/opencode/native/agents");
+    const agent = "initforge-implementer.md";
+    const template = "---\nmodel: __OPENCODE_MODEL_CLASS__\n---\nworker\n";
+    const generated = template.replace("__OPENCODE_MODEL_CLASS__", OPENCODE_MODEL);
+    await fs.mkdir(source, { recursive: true });
+    await fs.mkdir(build, { recursive: true });
+    await fs.writeFile(path.join(source, agent), template);
+    await fs.writeFile(path.join(build, agent), "tampered\n");
+    await fs.writeFile(path.join(repositoryRoot, "generated/runtime-build/opencode/manifest.json"), JSON.stringify({
+      version: 1, platform: "opencode", files: [{ path: `native/agents/${agent}`, sha256: sha256("tampered\n") }],
+    }));
+
+    await expect(new RuntimeInstaller({ repositoryRoot, platformRoots: { opencode: targetRoot } }).install("opencode"))
+      .rejects.toThrow("OpenCode artifact identity mismatch");
+
+    await fs.writeFile(path.join(build, agent), generated);
+    await fs.writeFile(path.join(repositoryRoot, "generated/runtime-build/opencode/manifest.json"), JSON.stringify({
+      version: 1, platform: "opencode", files: [{ path: `native/agents/${agent}`, sha256: sha256(generated) }],
+    }));
+    await expect(new RuntimeInstaller({ repositoryRoot, platformRoots: { opencode: targetRoot } }).install("opencode"))
+      .resolves.toMatchObject({ platform: "opencode" });
   });
 
   it("reports transactional manifest missing and extra paths with generated activation excluded", async () => {

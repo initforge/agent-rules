@@ -12,6 +12,8 @@ interface BuildManifest {
   files: { path: string; sha256: string }[];
 }
 
+export const OPENCODE_MODEL = "qwencoder/qwen3.7-max";
+
 async function sha256(filePath: string): Promise<string> {
   const content = await fs.readFile(filePath);
   return crypto.createHash("sha256").update(content).digest("hex");
@@ -239,7 +241,7 @@ export async function build(
         tokens["__CODEX_STANDARD_MODEL__"] = String(platformPolicy.standard.selector ?? "");
         tokens["__CODEX_STANDARD_EFFORT__"] = String(platformPolicy.standard.effort ?? "");
       }
-      if (platform === "opencode") tokens["__OPENCODE_MODEL_CLASS__"] = "qwencoder/qwen3.7-max";
+      if (platform === "opencode") tokens["__OPENCODE_MODEL_CLASS__"] = OPENCODE_MODEL;
       if (platformPolicy.implementation) {
         tokens["__CURSOR_IMPLEMENTATION_MODEL__"] = String(platformPolicy.implementation.selector ?? "");
       }
@@ -256,7 +258,7 @@ export async function build(
         await replaceTokensInDir(nativeDir, tokens);
       } catch { errors.push(`Token replacement failed for ${platform}`); }
     } else if (platform === "opencode") {
-      try { await replaceTokensInDir(nativeDir, { "__OPENCODE_MODEL_CLASS__": "qwencoder/qwen3.7-max" }); }
+      try { await replaceTokensInDir(nativeDir, { "__OPENCODE_MODEL_CLASS__": OPENCODE_MODEL }); }
       catch { errors.push("Token replacement failed for opencode"); }
     }
 

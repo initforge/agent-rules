@@ -5,6 +5,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { assertDirectoryNotLinked, exists, fsyncDirectory, fsyncRegularFile, hash, readRegularFileNoFollow, removeIfExists, writeJsonDurable } from "./filesystem.js";
 import { RUNTIME_PLATFORMS, type ActivationRecord, type RuntimeFile, type RuntimeInstallerOptions, type RuntimeLifecycleResult, type RuntimePlatform, type RuntimeReceipt, type SourceManifest } from "./contracts.js";
+import { OPENCODE_MODEL } from "../commands/build.js";
 import { previewRecovery as previewTransactionRecovery, recover as recoverTransaction, writeJournal as writeTransactionJournal, type TransactionJournal } from "./recovery.js";
 
 export { fsyncDirectory, fsyncRegularFile } from "./filesystem.js";
@@ -208,9 +209,9 @@ async function readSourceManifest(repositoryRoot: string, platform: RuntimePlatf
       const builtPath = await assertSafeSourceFile(sourceRoot, `native/agents/${relative}`);
       const rawSource = await fs.readFile(sourcePath, "utf8");
       if (!rawSource.includes("model: __OPENCODE_MODEL_CLASS__")) throw new Error(`OpenCode source identity mismatch: ${relative}`);
-      const source = rawSource.replaceAll("__OPENCODE_MODEL_CLASS__", "qwencoder/qwen3.7-max");
+      const source = rawSource.replaceAll("__OPENCODE_MODEL_CLASS__", OPENCODE_MODEL);
       const built = await fs.readFile(builtPath, "utf8");
-      if (!built.includes("model: qwencoder/qwen3.7-max")) throw new Error(`OpenCode artifact identity mismatch: ${relative}`);
+      if (!built.includes(`model: ${OPENCODE_MODEL}`)) throw new Error(`OpenCode artifact identity mismatch: ${relative}`);
       if (source !== built) throw new Error(`OpenCode source/build tamper: ${relative}`);
     }
   }
