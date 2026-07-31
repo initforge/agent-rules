@@ -2699,11 +2699,11 @@
       "status": "MIGRATED_SOURCE_REVIEW_MATCH"
     }
   ],
-  "shadow_revision": 52,
+  "shadow_revision": 53,
   "shadow_hashes": {
-    "tasks.md": "b0243ab0189ef0e085a6a4a58b74f24e365a6e5e147bf518aa1bc7c23a04da75",
-    "progress.md": "2ef6293d454decd060eb4548d85430235a38538f96e4bcf0129d8ec8f0476670",
-    "amendments.md": "d1d790efa9216957983983651058fd78af3980b7c371dbb1e7af3abcb2584264",
+    "tasks.md": "dc77bf032913d1973a43dcb439a1c26b3b807e9a143cdf0eb1a041de9d0ad265",
+    "progress.md": "7950a49cfd9fc0992b943718341bb4e49f9a3d46a27e2adadd26d1bddb192deb",
+    "amendments.md": "192cedc785aa1abc53322abbf6d900ad2485e1e776aca7948fed3ada0c5de509",
     "reconciliation.md": "8add959fbc211688868a7c99afd543a46c02a6c3bd3d133fc79d6d858655a025",
     "batches/bootstrap/tasks.md": "a75096b2109eb9869034c1c6cf4f7d25136fe0af0a79b37b38180210adc34ac9",
     "batches/bootstrap/progress.md": "10921867c253ef096709f77927852298429a3e7a7ce6cd41bf1368fe57a151ae",
@@ -2891,6 +2891,18 @@
       "supplements_plan_id": "agent-rules-harness-v3-rearchitecture-20260726-r1",
       "supplements_original_sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
       "activation_state": "EFFECTIVE"
+    },
+    {
+      "amendment_id": "AM-0018",
+      "status": "OWNER_APPROVED_EFFECTIVE",
+      "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0018-durable-autopilot.md",
+      "sha256": "d0d2001ca7f9916d68f4bc66bcfc0545445d33220dc97e5b981d64c7ef1dab52",
+      "bytes": 6333,
+      "lines": 119,
+      "capture_sha256": "1c243b65dd0c4fe1d29af766417234705b2240b65ba870a0c8b1f187aacd588c",
+      "supplements_plan_id": "agent-rules-harness-v3-rearchitecture-20260726-r1",
+      "supplements_original_sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
+      "activation_state": "EFFECTIVE"
     }
   ],
   "effective_plan_identity": {
@@ -2961,15 +2973,19 @@
         {
           "amendment_id": "AM-0017",
           "sha256": "9477e2a8b23d0d973eafb138870071f6fa9eed831965f7ed14063d205d408730"
+        },
+        {
+          "amendment_id": "AM-0018",
+          "sha256": "d0d2001ca7f9916d68f4bc66bcfc0545445d33220dc97e5b981d64c7ef1dab52"
         }
       ],
       "composition": "original-plus-ordered-approved-amendment-sha256",
       "original_plan_sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
       "version": 1
     },
-    "canonical_json_utf8": "{\"algorithm\":\"SHA-256\",\"approved_amendments\":[{\"amendment_id\":\"AM-0001\",\"sha256\":\"90b5f0e478e6a6762aba7976d73b0078152795b590ee147b1278da01d76a9528\"},{\"amendment_id\":\"AM-0002\",\"sha256\":\"c68c3cbac57d44ef3aae543dc221de0a05319e034eec87226bfffbbd6e962fa4\"},{\"amendment_id\":\"AM-0003\",\"sha256\":\"9637aa2f50177aa981ee3a2a00d7d5cb51c48bb81e7a5ace9f3a8c158152d9c4\"},{\"amendment_id\":\"AM-0005\",\"sha256\":\"5a23ce82685729dd0f2be31f559edea54bbe86876f8806666ab4eab5744613a9\"},{\"amendment_id\":\"AM-0006\",\"sha256\":\"65f550d58d1e5a02f1b76ccb86cd6c9a7ebc1d40db3aecfb47b9ce8be1583ade\"},{\"amendment_id\":\"AM-0007\",\"sha256\":\"66905c862e5bba558e460219b67ddae4b5e3f9dbcda4f0849ea1d6782afbf73c\"},{\"amendment_id\":\"AM-0008\",\"sha256\":\"13d458df692bd46100415f55fa980fc09b57faa66062ee89086fb2631eb08334\"},{\"amendment_id\":\"AM-0009\",\"sha256\":\"7a4569e099ac93391a837e08e50c4eadc9d34f59008d12c273665b35f9283113\"},{\"amendment_id\":\"AM-0010\",\"sha256\":\"c9bce7721a18305c7c7ab6ba78ff165cc8fc41feb4b0312443b85cd8dd196aee\"},{\"amendment_id\":\"AM-0011\",\"sha256\":\"d295ba000b728d5029b473466d6738a71d07352d59336cc104786d2be008bf91\"},{\"amendment_id\":\"AM-0012\",\"sha256\":\"2147aa9631fab0aab10a1e81b7339ba1b1b420d57080d2ef99bf2a88674b41a2\"},{\"amendment_id\":\"AM-0013\",\"sha256\":\"a8989935c5e0b188b42279b19b167ffad6458d39a17ecad5397ef29301433f0b\"},{\"amendment_id\":\"AM-0014\",\"sha256\":\"951fe2028c3ed6db85530979ec910ed8fc14a7a5dfb041bb829da2f5e41fa209\"},{\"amendment_id\":\"AM-0015\",\"sha256\":\"e6482360189a653ef2a3c5074162f75e5376f2e266062f38615fdfa34b32fbc3\"},{\"amendment_id\":\"AM-0016\",\"sha256\":\"90eb7a6d70652205cbe4e2a1adc5b4981e73a060bf69fe6b8d459c83e3543d15\"},{\"amendment_id\":\"AM-0017\",\"sha256\":\"9477e2a8b23d0d973eafb138870071f6fa9eed831965f7ed14063d205d408730\"}],\"composition\":\"original-plus-ordered-approved-amendment-sha256\",\"original_plan_sha256\":\"c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31\",\"version\":1}",
-    "canonical_json_utf8_bytes": 1861,
-    "sha256": "e08dd77f091018755e80a56fa493a430d34c316a32726b9768c22e207e1584bc"
+    "canonical_json_utf8": "{\"algorithm\":\"SHA-256\",\"approved_amendments\":[{\"amendment_id\":\"AM-0001\",\"sha256\":\"90b5f0e478e6a6762aba7976d73b0078152795b590ee147b1278da01d76a9528\"},{\"amendment_id\":\"AM-0002\",\"sha256\":\"c68c3cbac57d44ef3aae543dc221de0a05319e034eec87226bfffbbd6e962fa4\"},{\"amendment_id\":\"AM-0003\",\"sha256\":\"9637aa2f50177aa981ee3a2a00d7d5cb51c48bb81e7a5ace9f3a8c158152d9c4\"},{\"amendment_id\":\"AM-0005\",\"sha256\":\"5a23ce82685729dd0f2be31f559edea54bbe86876f8806666ab4eab5744613a9\"},{\"amendment_id\":\"AM-0006\",\"sha256\":\"65f550d58d1e5a02f1b76ccb86cd6c9a7ebc1d40db3aecfb47b9ce8be1583ade\"},{\"amendment_id\":\"AM-0007\",\"sha256\":\"66905c862e5bba558e460219b67ddae4b5e3f9dbcda4f0849ea1d6782afbf73c\"},{\"amendment_id\":\"AM-0008\",\"sha256\":\"13d458df692bd46100415f55fa980fc09b57faa66062ee89086fb2631eb08334\"},{\"amendment_id\":\"AM-0009\",\"sha256\":\"7a4569e099ac93391a837e08e50c4eadc9d34f59008d12c273665b35f9283113\"},{\"amendment_id\":\"AM-0010\",\"sha256\":\"c9bce7721a18305c7c7ab6ba78ff165cc8fc41feb4b0312443b85cd8dd196aee\"},{\"amendment_id\":\"AM-0011\",\"sha256\":\"d295ba000b728d5029b473466d6738a71d07352d59336cc104786d2be008bf91\"},{\"amendment_id\":\"AM-0012\",\"sha256\":\"2147aa9631fab0aab10a1e81b7339ba1b1b420d57080d2ef99bf2a88674b41a2\"},{\"amendment_id\":\"AM-0013\",\"sha256\":\"a8989935c5e0b188b42279b19b167ffad6458d39a17ecad5397ef29301433f0b\"},{\"amendment_id\":\"AM-0014\",\"sha256\":\"951fe2028c3ed6db85530979ec910ed8fc14a7a5dfb041bb829da2f5e41fa209\"},{\"amendment_id\":\"AM-0015\",\"sha256\":\"e6482360189a653ef2a3c5074162f75e5376f2e266062f38615fdfa34b32fbc3\"},{\"amendment_id\":\"AM-0016\",\"sha256\":\"90eb7a6d70652205cbe4e2a1adc5b4981e73a060bf69fe6b8d459c83e3543d15\"},{\"amendment_id\":\"AM-0017\",\"sha256\":\"9477e2a8b23d0d973eafb138870071f6fa9eed831965f7ed14063d205d408730\"},{\"amendment_id\":\"AM-0018\",\"sha256\":\"d0d2001ca7f9916d68f4bc66bcfc0545445d33220dc97e5b981d64c7ef1dab52\"}],\"composition\":\"original-plus-ordered-approved-amendment-sha256\",\"original_plan_sha256\":\"c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31\",\"version\":1}",
+    "canonical_json_utf8_bytes": 1964,
+    "sha256": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427"
   },
   "reconciliations": [
     {
@@ -5862,6 +5878,19 @@
         "AM-0017"
       ],
       "shadow_revision": 52
+    },
+    {
+      "event_id": "E-REC-53",
+      "type": "RECONCILIATION_M8_R53",
+      "summary": "Reconciled ledger to owner-declared canonical identity ddb68fa… at revision 53: activated AM-0018 (durable autopilot) per fixture packages/engine/test/fixtures/plan-identity; approved amendments now AM-0001..AM-0018 (AM-0004 tombstoned); original unchanged c8798fa…; execution_state stays NEEDS_REMEDIATION because M8 packet is WAITING_EXTERNAL.",
+      "actor": "harness-maintainer",
+      "prior_effective_sha256": "e08dd77f091018755e80a56fa493a430d34c316a32726b9768c22e207e1584bc",
+      "new_effective_sha256": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+      "amendment_ids": [
+        "AM-0018"
+      ],
+      "shadow_revision": 53,
+      "at": "2026-07-31T20:29:37+07:00"
     }
   ]
 }
