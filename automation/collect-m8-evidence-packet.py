@@ -5,7 +5,12 @@ from __future__ import annotations
 import argparse, hashlib, json, subprocess, sys, time
 from pathlib import Path
 
-MODEL = "qwencoder/glm-5.2"
+ROUTE = {
+    "reviewer": "gpt-5.6-sol",
+    "primary": "qwen3.7-max",
+    "secondary": "qwencoder/glm-5.2",
+}
+REQUESTED_SECONDARY = "qwencoder/glm-5.2"
 DIMENSIONS = [f"d{i:02d}" for i in range(1, 19)]
 FIXTURE = Path("packages/engine/test/fixtures/plan-identity")
 
@@ -35,21 +40,27 @@ def collect(root: Path) -> dict:
         "security": run(root, ["npm", "run", "typecheck", "--workspace", "packages/engine"]),
         "install": run(root, ["npm", "run", "build", "--workspace", "packages/cli"]),
     }
+    model_route = {
+        role: {"requested": model, "resolved": None, "observed": None}
+        for role, model in ROUTE.items()
+    }
     return {
-        "schema": "worker-secondary/m8-evidence-packet/v1", "status": "UNVERIFIED",
+        "schema": "worker-secondary/m8-evidence-packet/v1", "status": "WAITING_EXTERNAL",
         "headCommit": head, "effectivePlanIdentity": identity, "r53": revision,
-        "requestedModel": MODEL, "resolvedModel": None,
+        "modelRoute": model_route,
+        # Compatibility fields remain secondary-only; never copy reviewer data here.
+        "requestedModel": REQUESTED_SECONDARY, "resolvedModel": None, "observedModel": None,
         "identityVerified": identity_verified, "nativeAttestation": "UNVERIFIED: no native attestation supplied",
         "canonicalPlanFixture": {"path": str(FIXTURE / "original.md"), "sha256": fixture_meta["sha256"], "verified": fixture_verified},
         "dimensions": [{"id": d, "score": None, "status": "UNVERIFIED"} for d in DIMENSIONS],
         "receipts": receipts,
-        "findings": ["UNVERIFIED: resolved model, native attestation, authenticated packet receipt, and 18 scores >=8 are missing"],
+        "findings": ["WAITING_EXTERNAL: provider resolution/observation, native attestation, authenticated packet receipt, and 18 scores >=8 are missing"],
         "collectedAt": int(time.time() * 1000),
     }
 
 def main() -> int:
     p = argparse.ArgumentParser(); p.add_argument("--root", type=Path, default=Path(__file__).resolve().parent.parent); p.add_argument("--output", type=Path, required=True)
     a = p.parse_args(); packet = collect(a.root.resolve()); a.output.parent.mkdir(parents=True, exist_ok=True); a.output.write_text(json.dumps(packet, indent=2) + "\n")
-    print(f"WROTE: {a.output}; status UNVERIFIED"); return 0
+    print(f"WROTE: {a.output}; status WAITING_EXTERNAL"); return 0
 
 if __name__ == "__main__": sys.exit(main())

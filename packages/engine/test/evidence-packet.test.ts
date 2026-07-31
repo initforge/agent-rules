@@ -7,7 +7,7 @@ function makePacket() {
   const receipt = { receiptId: 'independent-1', content: 'external verifier result' };
   const signed = { ...receipt, contentSha256: createHash('sha256').update(JSON.stringify(receipt.content)).digest('hex') };
   const bytes = Buffer.from(JSON.stringify(receipt));
-  return { packet: { schema: 'worker-secondary/evidence-packet/v1', headCommit: 'a'.repeat(40), effectivePlanIdentity: 'b'.repeat(64), requestedModel: 'qwencoder/glm-5.2', resolvedModel: 'qwencoder/glm-5.2', epoch: Date.now(), reconciliationIds: [...CANONICAL_RECONCILIATION_IDS], receipt: { ...signed, signature: sign(null, bytes, privateKey).toString('base64'), publicKey: publicKey.export({ format: 'der', type: 'spki' }).toString('base64') } }, privateKey,
+  return { packet: { schema: 'worker-secondary/evidence-packet/v1', headCommit: 'a'.repeat(40), effectivePlanIdentity: 'b'.repeat(64), modelRoute: { reviewer: { requested: 'gpt-5.6-sol', resolved: 'gpt-5.6-sol', observed: 'gpt-5.6-sol' }, primary: { requested: 'qwen3.7-max', resolved: 'qwen3.7-max', observed: 'qwen3.7-max' }, secondary: { requested: 'qwencoder/glm-5.2', resolved: 'glm-5.2', observed: 'glm-5.2' } }, requestedModel: 'qwencoder/glm-5.2', resolvedModel: 'glm-5.2', observedModel: 'glm-5.2', epoch: Date.now(), reconciliationIds: [...CANONICAL_RECONCILIATION_IDS], receipt: { ...signed, signature: sign(null, bytes, privateKey).toString('base64'), publicKey: publicKey.export({ format: 'der', type: 'spki' }).toString('base64') } }, privateKey,
   };
 }
 

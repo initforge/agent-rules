@@ -8,9 +8,16 @@ def validate(packet: dict, root: Path) -> list[str]:
     errors = []
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
     if packet.get("headCommit") != head: errors.append("HEAD mismatch")
-    if packet.get("status") != "UNVERIFIED": errors.append("status must be UNVERIFIED")
-    if packet.get("requestedModel") != "qwencoder/glm-5.2": errors.append("requested model mismatch")
-    if packet.get("resolvedModel") != "qwencoder/glm-5.2": errors.append("resolved model unavailable")
+    if packet.get("status") not in {"WAITING_EXTERNAL", "UNVERIFIED"}: errors.append("status must be WAITING_EXTERNAL or UNVERIFIED")
+    expected = {"reviewer": "gpt-5.6-sol", "primary": "qwen3.7-max", "secondary": "qwencoder/glm-5.2"}
+    route = packet.get("modelRoute")
+    if set(route or {}) != set(expected): errors.append("exact per-role model route required")
+    for role, model in expected.items():
+        item = (route or {}).get(role, {})
+        if item.get("requested") != model: errors.append(f"{role} requested model mismatch")
+        if item.get("resolved") is not None or item.get("observed") is not None: errors.append(f"{role} unresolved provider must remain null")
+    if packet.get("requestedModel") != "qwencoder/glm-5.2": errors.append("secondary requested model mismatch")
+    if packet.get("resolvedModel") is not None or packet.get("observedModel") is not None: errors.append("secondary unresolved fields must remain null")
     if packet.get("r53") != 53: errors.append("R53 mismatch or unavailable")
     if not packet.get("identityVerified"): errors.append("effective identity unverified")
     dims = packet.get("dimensions", [])

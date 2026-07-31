@@ -6,6 +6,7 @@ export const CANONICAL_RECONCILIATION_IDS = Object.freeze(
 
 const SHA256 = /^[a-f0-9]{64}$/;
 const COMMIT = /^[a-f0-9]{40}$/;
+const MODEL_ROUTE = Object.freeze({ reviewer: 'gpt-5.6-sol', primary: 'qwen3.7-max', secondary: 'qwencoder/glm-5.2' });
 
 function receiptBytes(receipt: Record<string, unknown>): Buffer {
   const { contentSha256, signature, publicKey, ...signed } = receipt;
@@ -28,7 +29,14 @@ export function verifyEvidencePacket(packet: unknown, expectedHead: string, now 
   if (p.schema !== 'worker-secondary/evidence-packet/v1') return { verified: false, status: 'UNVERIFIED', reason: 'UNVERIFIED: unsupported evidence packet schema' };
   if (!COMMIT.test(expectedHead) || p.headCommit !== expectedHead) return { verified: false, status: 'UNVERIFIED', reason: 'UNVERIFIED: packet HEAD mismatch' };
   if (!SHA256.test(p.effectivePlanIdentity || '')) return { verified: false, status: 'UNVERIFIED', reason: 'UNVERIFIED: effective identity missing' };
-  if (p.requestedModel !== 'qwencoder/glm-5.2' || p.resolvedModel !== p.requestedModel) return { verified: false, status: 'UNVERIFIED', reason: 'UNVERIFIED: requested/resolved model mismatch' };
+  const route = p.modelRoute;
+  if (!route || JSON.stringify(Object.keys(route).sort()) !== JSON.stringify(Object.keys(MODEL_ROUTE).sort())) return { verified: false, status: 'UNVERIFIED', reason: 'UNVERIFIED: exact per-role model route missing' };
+  for (const [role, model] of Object.entries(MODEL_ROUTE)) {
+    const item = route[role];
+    const resolved = role === 'secondary' ? 'glm-5.2' : model;
+    if (!item || item.requested !== model || item.resolved !== resolved || item.observed !== resolved) return { verified: false, status: 'UNVERIFIED', reason: `UNVERIFIED: ${role} model route mismatch` };
+  }
+  if (p.requestedModel !== 'qwencoder/glm-5.2' || p.resolvedModel !== 'glm-5.2' || p.observedModel !== 'glm-5.2') return { verified: false, status: 'UNVERIFIED', reason: 'UNVERIFIED: secondary artifact route mismatch' };
   if (!Number.isSafeInteger(p.epoch) || p.epoch > now || now - p.epoch > 24 * 60 * 60 * 1000) return { verified: false, status: 'UNVERIFIED', reason: 'UNVERIFIED: epoch is stale or future-dated' };
   if (JSON.stringify(p.reconciliationIds) !== JSON.stringify(CANONICAL_RECONCILIATION_IDS)) return { verified: false, status: 'UNVERIFIED', reason: 'UNVERIFIED: reconciliation IDs are not the exact canonical 15' };
   const receipt = p.receipt;
