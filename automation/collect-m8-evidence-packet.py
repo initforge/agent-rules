@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROUTE = {
     "reviewer": "gpt-5.6-sol",
-    "primary": "qwen3.7-max",
+    "primary": "qwencoder/qwen3.7-max",
     "secondary": "qwencoder/glm-5.2",
 }
 REQUESTED_SECONDARY = "qwencoder/glm-5.2"
@@ -47,6 +47,8 @@ def collect(root: Path) -> dict:
     return {
         "schema": "worker-secondary/m8-evidence-packet/v1", "status": "WAITING_EXTERNAL",
         "headCommit": head, "effectivePlanIdentity": identity, "r53": revision,
+        "identityEpoch": {"effectivePlanIdentity": identity, "shadowRevision": revision, "verified": identity_verified},
+        "evidenceEpoch": {"headCommit": head, "collectedAt": int(time.time() * 1000)},
         "modelRoute": model_route,
         # Compatibility fields remain secondary-only; never copy reviewer data here.
         "requestedModel": REQUESTED_SECONDARY, "resolvedModel": None, "observedModel": None,

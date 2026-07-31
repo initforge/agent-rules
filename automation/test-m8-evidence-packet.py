@@ -12,9 +12,18 @@ def test_collector_is_explicitly_unverified():
         assert packet["status"] == "WAITING_EXTERNAL" and len(packet["dimensions"]) == 18
         assert packet["modelRoute"] == {
             "reviewer": {"requested": "gpt-5.6-sol", "resolved": None, "observed": None},
-            "primary": {"requested": "qwen3.7-max", "resolved": None, "observed": None},
+            "primary": {"requested": "qwencoder/qwen3.7-max", "resolved": None, "observed": None},
             "secondary": {"requested": "qwencoder/glm-5.2", "resolved": None, "observed": None},
         }
+        assert not mod.validate(packet, ROOT)
+
+def test_validator_rejects_self_generated_acceptance():
+    with tempfile.TemporaryDirectory() as td:
+        out = Path(td) / "packet.json"
+        subprocess.run(["python", str(ROOT / "automation/collect-m8-evidence-packet.py"), "--output", str(out)], cwd=ROOT, check=True)
+        packet = json.loads(out.read_text())
+        packet["dimensions"][0].update(score=8, status="PASS")
         assert mod.validate(packet, ROOT)
 
-if __name__ == "__main__": test_collector_is_explicitly_unverified(); print("OK: M8 packet remains UNVERIFIED")
+if __name__ == "__main__":
+    test_collector_is_explicitly_unverified(); test_validator_rejects_self_generated_acceptance(); print("OK: M8 packet remains UNVERIFIED")

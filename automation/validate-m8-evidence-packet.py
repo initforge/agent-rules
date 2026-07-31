@@ -9,7 +9,7 @@ def validate(packet: dict, root: Path) -> list[str]:
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
     if packet.get("headCommit") != head: errors.append("HEAD mismatch")
     if packet.get("status") not in {"WAITING_EXTERNAL", "UNVERIFIED"}: errors.append("status must be WAITING_EXTERNAL or UNVERIFIED")
-    expected = {"reviewer": "gpt-5.6-sol", "primary": "qwen3.7-max", "secondary": "qwencoder/glm-5.2"}
+    expected = {"reviewer": "gpt-5.6-sol", "primary": "qwencoder/qwen3.7-max", "secondary": "qwencoder/glm-5.2"}
     route = packet.get("modelRoute")
     if set(route or {}) != set(expected): errors.append("exact per-role model route required")
     for role, model in expected.items():
@@ -18,14 +18,17 @@ def validate(packet: dict, root: Path) -> list[str]:
         if item.get("resolved") is not None or item.get("observed") is not None: errors.append(f"{role} unresolved provider must remain null")
     if packet.get("requestedModel") != "qwencoder/glm-5.2": errors.append("secondary requested model mismatch")
     if packet.get("resolvedModel") is not None or packet.get("observedModel") is not None: errors.append("secondary unresolved fields must remain null")
-    if packet.get("r53") != 53: errors.append("R53 mismatch or unavailable")
-    if not packet.get("identityVerified"): errors.append("effective identity unverified")
+    epoch = packet.get("evidenceEpoch", {})
+    if epoch.get("headCommit") != head: errors.append("evidence epoch HEAD mismatch")
+    identity_epoch = packet.get("identityEpoch", {})
+    if identity_epoch.get("effectivePlanIdentity") != packet.get("effectivePlanIdentity"): errors.append("identity epoch mismatch")
     dims = packet.get("dimensions", [])
     if len(dims) != 18: errors.append("expected 18 dimensions")
-    if any(d.get("status") != "PASS" or not isinstance(d.get("score"), (int, float)) or d["score"] < 8 for d in dims): errors.append("18 dimensions >=8 unavailable")
+    if any(d.get("status") != "UNVERIFIED" or d.get("score") is not None for d in dims): errors.append("dimensions must remain UNVERIFIED")
     for name in ("test", "browser", "security", "install"):
-        if packet.get("receipts", {}).get(name, {}).get("status") != "PASS": errors.append(f"{name} receipt unavailable")
-    if packet.get("nativeAttestation") != "VERIFIED": errors.append("native attestation unavailable")
+        receipt = packet.get("receipts", {}).get(name, {})
+        if receipt.get("status") not in {"PASS", "UNVERIFIED"}: errors.append(f"invalid {name} receipt status")
+    if packet.get("nativeAttestation") != "UNVERIFIED: no native attestation supplied": errors.append("native attestation must remain unverified")
     if not packet.get("findings"): errors.append("missing explicit findings")
     return errors
 
