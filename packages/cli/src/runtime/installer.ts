@@ -83,6 +83,7 @@ function defaultPlatformRoots(): Record<RuntimePlatform, string> {
     grok: process.env.GROK_HOME || path.join(home, ".grok"),
     antigravity: path.join(home, ".gemini", "config"),
     cursor: path.join(home, ".cursor"),
+    opencode: process.env.OPENCODE_HOME || path.join(home, ".config", "opencode"),
   };
 }
 
@@ -174,6 +175,26 @@ async function readSourceManifest(repositoryRoot: string, platform: RuntimePlatf
     const sourcePath = await assertSafeSourceFile(sourceRoot, file.path);
     if (hash(await fs.readFile(sourcePath)) !== file.sha256) throw new Error(`Source hash mismatch for ${file.path}`);
   }
+  const observed = (await listRuntimeFiles(sourceRoot)).filter((file) => file !== "manifest.json").sort();
+  const listed = files.map((file) => file.path).sort();
+  if (JSON.stringify(observed) !== JSON.stringify(listed)) throw new Error(`Built runtime manifest missing or extra files: ${manifestPath}`);
+  if (platform === "opencode") {
+    const sourceAgents = path.resolve(repositoryRoot, "platforms", "opencode", "agents");
+    const sourceFiles = await listRuntimeFiles(sourceAgents);
+    const expectedAgents = sourceFiles.filter((file) => file !== "README.md").sort();
+    const builtAgents = files.map((file) => file.path.replace(/^native\/agents\//, "")).filter((file) => expectedAgents.includes(file)).sort();
+    if (JSON.stringify(expectedAgents) !== JSON.stringify(builtAgents)) throw new Error("OpenCode source/build agent set mismatch");
+    for (const relative of expectedAgents) {
+      const sourcePath = await assertSafeSourceFile(sourceAgents, relative);
+      const builtPath = await assertSafeSourceFile(sourceRoot, `native/agents/${relative}`);
+      const rawSource = await fs.readFile(sourcePath, "utf8");
+      if (!rawSource.includes("model: __OPENCODE_MODEL_CLASS__")) throw new Error(`OpenCode source identity mismatch: ${relative}`);
+      const source = rawSource.replaceAll("__OPENCODE_MODEL_CLASS__", "qwencoder/qwen3.7-max");
+      const built = await fs.readFile(builtPath, "utf8");
+      if (!built.includes("model: qwencoder/qwen3.7-max")) throw new Error(`OpenCode artifact identity mismatch: ${relative}`);
+      if (source !== built) throw new Error(`OpenCode source/build tamper: ${relative}`);
+    }
+  }
   return { manifest: { version: 1, platform, files }, sourceRoot, manifestSha256: hash(body) };
 }
 
@@ -220,6 +241,10 @@ function activationSpec(platform: RuntimePlatform, root: string, runtimePath: st
   if (platform === "antigravity") {
     const content = `# Managed by agent-rules\n@${path.join(runtimePath, ".activation", "GEMINI.md").replace(/\\/g, "/")}\n`;
     return { id: "global-instructions", kind: "managed-file", destination: path.join(path.dirname(root), "GEMINI.md"), content, sha256: hash(content) };
+  }
+  if (platform === "opencode") {
+    const content = `# Managed by agent-rules\n@${path.join(runtimePath, "AGENTS.md").replace(/\\/g, "/")}\n`;
+    return { id: "global-instructions", kind: "managed-file", destination: path.join(root, "AGENTS.md"), content, sha256: hash(content) };
   }
   const destination = platform === "grok" ? path.join(root, ".grok", "rules") : path.join(root, "rules");
   return { id: "global-rules", kind: "managed-directory-link", destination, linkTarget: path.join(runtimePath, "rules") };

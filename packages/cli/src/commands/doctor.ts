@@ -78,7 +78,7 @@ function getPlatformHomes(root: string): PlatformHomeMap {
     grok: process.env.GROK_HOME || path.join(userHome, ".grok"),
     antigravity: path.join(userHome, ".gemini", "config"),
     cursor: path.join(userHome, ".cursor"),
-    opencode: path.join(userHome, ".config", "opencode"),
+    opencode: process.env.OPENCODE_HOME || path.join(userHome, ".config", "opencode"),
   };
 }
 

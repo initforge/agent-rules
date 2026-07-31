@@ -227,6 +227,7 @@ export async function build(
         tokens["__CODEX_STANDARD_MODEL__"] = String(platformPolicy.standard.selector ?? "");
         tokens["__CODEX_STANDARD_EFFORT__"] = String(platformPolicy.standard.effort ?? "");
       }
+      if (platform === "opencode") tokens["__OPENCODE_MODEL_CLASS__"] = "qwencoder/qwen3.7-max";
       if (platformPolicy.implementation) {
         tokens["__CURSOR_IMPLEMENTATION_MODEL__"] = String(platformPolicy.implementation.selector ?? "");
       }
@@ -242,6 +243,9 @@ export async function build(
       try {
         await replaceTokensInDir(nativeDir, tokens);
       } catch { errors.push(`Token replacement failed for ${platform}`); }
+    } else if (platform === "opencode") {
+      try { await replaceTokensInDir(nativeDir, { "__OPENCODE_MODEL_CLASS__": "qwencoder/qwen3.7-max" }); }
+      catch { errors.push("Token replacement failed for opencode"); }
     }
 
     // Copy shared scripts
