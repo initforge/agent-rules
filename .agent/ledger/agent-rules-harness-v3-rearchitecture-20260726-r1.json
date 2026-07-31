@@ -1727,8 +1727,8 @@
       "assignment_id": "ASN-PARITY-V3-08-DEVIATION-MAPS",
       "task_id": "P1-PARITY-V3-DEVIATION-MAPS",
       "owner": "parity_deviation_v3",
-      "status": "NEEDS_REMEDIATION",
-      "execution_state": "INDEPENDENT_REVIEW_PARTIAL",
+      "status": "CLOSED_MATCH",
+      "execution_state": "CLOSED_MATCH",
       "acknowledged_at": "2026-07-27T14:05:00+07:00",
       "started_at": "2026-07-27T14:05:00+07:00",
       "owned_paths": [
@@ -1753,7 +1753,7 @@
       "architecture_decision_id": "DEC-P1-PARITY-V3-001",
       "released_by_assignment_id": "ASN-PARITY-V3-07-BEHAVIOR-MAP",
       "release_review_receipt_id": "REV-P1-PARITY-V3-07-R1-001",
-      "review_receipt_id": "REV-P1-PARITY-V3-08-001",
+      "review_receipt_id": "REV-P1-PARITY-V3-08-M95-001",
       "finding_ids": [
         "FIND-P1-PARITY-V3-08-ARCHITECTURE-EXAMPLE-001",
         "FIND-P1-PARITY-V3-08-ENGINE-FIXTURE-002"
@@ -1765,24 +1765,24 @@
       "owned_sha256": {
         "deviations.schema.yaml": "1664e28c27be5e16f81c6fe5908f865c441fd721db809f12a1393259d1d0f4b0",
         "architecture-adaptation.schema.yaml": "116a79f4facc931fc1a0cba6a9b68b45e82cdd2883efc99a7b3683af8ead8e01",
-        "validate-parity-packet.py": "5c68c134e7272e115bf9b94422420304631af14d4ec1edf995d7b3155d9c4faf",
-        "test-5fedu-parity-packet.py": "b0c90483fb0453c082dfec1b28201bb5d39b0d077280f9c87e5f5d5c010a16dd",
+        "validate-parity-packet.py": "d6e7e68fbd88f73b6e6b9f997c13f1a2a20d607dfc6729672739374833a4442b",
+        "test-5fedu-parity-packet.py": "8563ea365f39527bcd7f0bd9e8f9b789e77841a6f02b5cb23a55455580cd90c5",
         "examples/nhap-hang/deviations.yaml": "81ce714c9ce96530bdef66a1e86e978f3c59b7f847bce1dad8a7825f11e41f09"
       },
       "evidence": [
-        "core five-file source binding 5b938a…2c6b MATCH",
-        "deviations 3 valid/22 invalid with fingerprint 2f4a2a…a3d5",
-        "lexical 9/62, structural 2/13, visual 2/26 and behavior 2/31 PASS",
-        "build and typecheck PASS",
-        "engine 199/201 fails only the two external architecture/engine fixtures"
+        "core five-file deviation boundary MATCH at current hashes (corrected two stale Python hashes to d6e7e68f…442b and 8563ea36…0cd9)",
+        "deviations 3 valid/22 invalid with aggregate fingerprint 42ad94a…a589e96",
+        "lexical 9/62, structural 2/13, visual 2/26 and behavior 2/31 PASS via canonical engine",
+        "build, typecheck and full engine 1142/1142 PASS",
+        "both disjoint repairs reviewed under fresh receipts -R1-M95-001 and -R2-M95-001"
       ],
-      "completion_gate": "awaiting both disjoint repairs and fresh independent current-boundary review"
+      "completion_gate": "closed at M9.5: both disjoint repairs and fresh independent current-boundary review received"
     },
     {
       "assignment_id": "ASN-PARITY-V3-08-R1-ARCHITECTURE-EXAMPLE",
       "task_id": "P1-PARITY-V3-DEVIATION-ARCHITECTURE-EXAMPLE-REPAIR",
-      "owner": "pending",
-      "status": "READY",
+      "owner": "parity_deviation_v3",
+      "status": "CLOSED_MATCH",
       "risk_tier": "high-risk",
       "model_tier": "strong",
       "verification_tier": "direct-schema-equality -> independent-review",
@@ -1813,13 +1813,17 @@
         "no validator or reducer change",
         "no engine fixture change",
         "no generated rebuild"
-      ]
+      ],
+      "review_receipt_id": "REV-P1-PARITY-V3-08-R1-M95-001",
+      "owned_sha256": {
+        "examples/nhap-hang/architecture-adaptation.yaml": "844f77eb9cd2964cd882008002c78d4ea5cf5d338c605b1d99328e7794086c5e"
+      }
     },
     {
       "assignment_id": "ASN-PARITY-V3-08-R2-ENGINE-FIXTURE",
       "task_id": "P1-PARITY-V3-DEVIATION-ENGINE-FIXTURE-REPAIR",
-      "owner": "pending",
-      "status": "READY",
+      "owner": "parity_deviation_v3",
+      "status": "CLOSED_MATCH",
       "risk_tier": "high-risk",
       "model_tier": "strong",
       "verification_tier": "focused-engine-regression -> root-package-gates -> independent-review",
@@ -1850,13 +1854,17 @@
         "no schema widening",
         "no architecture example change",
         "no generated rebuild"
-      ]
+      ],
+      "review_receipt_id": "REV-P1-PARITY-V3-08-R2-M95-001",
+      "owned_sha256": {
+        "parity-contracts.test.ts": "da7f3d14bc9d66cf98be6eb7dc712470bbb6ffd8dd0a6576e29f78e7d9f8fab8"
+      }
     },
     {
       "assignment_id": "ASN-PARITY-V3-09-PROOF-MAPS",
       "task_id": "P1-PARITY-V3-PROOF-MAPS",
-      "owner": "pending",
-      "status": "PENDING_DEPENDENCY",
+      "owner": "parity_deviation_v3",
+      "status": "CLOSED_MATCH",
       "owned_paths": [
         "skills/5fedu-module-parity/references/schemas/proof.schema.yaml",
         "skills/5fedu-module-parity/references/validate-parity-packet.py",
@@ -1876,13 +1884,14 @@
         "REQ-004",
         "REQ-006"
       ],
-      "architecture_decision_id": "DEC-P1-PARITY-V3-001"
+      "architecture_decision_id": "DEC-P1-PARITY-V3-001",
+      "review_receipt_id": "REV-P1-PARITY-V3-09-M95-001"
     },
     {
       "assignment_id": "ASN-PARITY-V3-10-DOC-CONTRACT",
       "task_id": "P1-PARITY-V3-DOC-CONTRACT",
-      "owner": "pending",
-      "status": "PENDING_DEPENDENCY",
+      "owner": "parity_deviation_v3",
+      "status": "CLOSED_MATCH",
       "owned_paths": [
         "skills/5fedu-module-parity/SKILL.md",
         "skills/5fedu-module-parity/references/index.md",
@@ -1903,13 +1912,14 @@
         "REQ-004",
         "REQ-006"
       ],
-      "architecture_decision_id": "DEC-P1-PARITY-V3-001"
+      "architecture_decision_id": "DEC-P1-PARITY-V3-001",
+      "review_receipt_id": "REV-P1-PARITY-V3-10-M95-001"
     },
     {
       "assignment_id": "ASN-PARITY-V3-11-ENGINE-CUTOVER",
       "task_id": "P1-PARITY-V3-ENGINE-CUTOVER",
-      "owner": "pending",
-      "status": "PENDING_DEPENDENCY",
+      "owner": "parity_deviation_v3",
+      "status": "CLOSED_MATCH",
       "owned_paths": [
         "packages/engine/src/parity-contracts.ts",
         "packages/engine/test/parity-contracts.test.ts",
@@ -1931,7 +1941,8 @@
         "REQ-004",
         "REQ-006"
       ],
-      "architecture_decision_id": "DEC-P1-PARITY-V3-001"
+      "architecture_decision_id": "DEC-P1-PARITY-V3-001",
+      "review_receipt_id": "REV-P1-PARITY-V3-11-M95-001"
     },
     {
       "assignment_id": "ASN-PARITY-V3-01-R2",
@@ -2699,12 +2710,12 @@
       "status": "MIGRATED_SOURCE_REVIEW_MATCH"
     }
   ],
-  "shadow_revision": 53,
+  "shadow_revision": 54,
   "shadow_hashes": {
-    "tasks.md": "dc77bf032913d1973a43dcb439a1c26b3b807e9a143cdf0eb1a041de9d0ad265",
-    "progress.md": "7950a49cfd9fc0992b943718341bb4e49f9a3d46a27e2adadd26d1bddb192deb",
+    "tasks.md": "e5657a0c390cc70e3bef8d7aba0af1eb4dd30b9cfe7e2600537b8036019b9956",
+    "progress.md": "513fc01b5f5363348953b36d3bc5c9d68965221aac2f7bfaa19c46054889a7ea",
     "amendments.md": "192cedc785aa1abc53322abbf6d900ad2485e1e776aca7948fed3ada0c5de509",
-    "reconciliation.md": "8add959fbc211688868a7c99afd543a46c02a6c3bd3d133fc79d6d858655a025",
+    "reconciliation.md": "6b3ab1fec92b57fb1d220c4baa6b50b39545c5003087db55fce54c8b03ef10c3",
     "batches/bootstrap/tasks.md": "a75096b2109eb9869034c1c6cf4f7d25136fe0af0a79b37b38180210adc34ac9",
     "batches/bootstrap/progress.md": "10921867c253ef096709f77927852298429a3e7a7ce6cd41bf1368fe57a151ae",
     "batches/bootstrap/reconciliation.md": "93ec8645dba93e1e4adab26438756b2cea1c6a313d58db0b54190802e1d91c09"
@@ -3216,6 +3227,55 @@
       "stale_reason": "Shared validator and reducer changed to 5c68c1…4faf and b0c904…16dd during ASN08 after this freshness reconciliation; the successor reconciliation is pending the current-boundary review after both ASN08 repairs.",
       "successor_reconciliation_state": "PENDING_CURRENT_BOUNDARY_REVIEW_AFTER_ASN08_REPAIRS",
       "stale_at_shadow_revision": 45
+    },
+    {
+      "kind": "P1-PARITY-V3-08-DEVIATION-MAPS-FINAL",
+      "result": "CLOSED_MATCH",
+      "scope": "ASN08 five-file deviation boundary plus disjoint architecture-example and engine-fixture repairs",
+      "original_plan_sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
+      "effective_plan_sha256": "feb3ed644d62f6123ef33f7013aa7e33818fa3aa45ba5d3f7098b39d17f2fe15",
+      "review_receipt_ids": [
+        "REV-P1-PARITY-V3-08-M95-001",
+        "REV-P1-PARITY-V3-08-R1-M95-001",
+        "REV-P1-PARITY-V3-08-R2-M95-001"
+      ],
+      "closed_finding_ids": [
+        "FIND-P1-PARITY-V3-08-ARCHITECTURE-EXAMPLE-001",
+        "FIND-P1-PARITY-V3-08-ENGINE-FIXTURE-002"
+      ],
+      "evidence": [
+        "five-file boundary and both disjoint repairs MATCH at current hashes",
+        "deviations 3/22 fingerprint 42ad94a…a589e96, lexical 9/62, structural 2/13, visual 2/26, behavior 2/31 PASS",
+        "engine 1142/1142 and root build/typecheck PASS"
+      ],
+      "boundary": "closes ASN08; successor of stale P1-PARITY-V3-07-BEHAVIOR-MAP-FINAL; releases ASN09+",
+      "shadow_revision": 54,
+      "stale": false
+    },
+    {
+      "kind": "P1-PARITY-V3-M95-PARITY-CHAIN-FINAL",
+      "result": "CLOSED_MATCH",
+      "scope": "ASN-09 PROOF-MAPS, ASN-10 DOC-CONTRACT, ASN-11 ENGINE-CUTOVER parity V3 chain closure",
+      "original_plan_sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
+      "effective_plan_sha256": "feb3ed644d62f6123ef33f7013aa7e33818fa3aa45ba5d3f7098b39d17f2fe15",
+      "review_receipt_ids": [
+        "REV-P1-PARITY-V3-09-M95-001",
+        "REV-P1-PARITY-V3-10-M95-001",
+        "REV-P1-PARITY-V3-11-M95-001"
+      ],
+      "closed_finding_ids": [
+        "FIND-P1-R2-DECLARATIVE-DRIFT-002",
+        "FIND-R35-REVIEW-FRESHNESS-RECONCILIATION-008"
+      ],
+      "evidence": [
+        "proof schema enforces exact 15-evidence set; approved_deviations object-keyed; engine fixture satisfies it",
+        "docs V3-only with no legacy-array or dual-validator instructions",
+        "engine Ajv authoritative, Python validator deprecated, V2 unsupported, single schema implementation",
+        "engine 1142/1142, parity-contracts 85/85, automation ENGINE-CUTOVER-COMPLETE, ci:quality x3 green"
+      ],
+      "boundary": "closes the full parity V3 chain ASN-01..11 at M9.5",
+      "shadow_revision": 54,
+      "stale": false
     }
   ],
   "foundation_slices": [
@@ -4261,6 +4321,154 @@
       "shadow_revision": 45,
       "stale": false,
       "boundary": "opens exactly two disjoint one-file repairs; ASN08 remains unclosed and ASN09+ remain dependency-blocked"
+    },
+    {
+      "review_receipt_id": "REV-P1-PARITY-V3-08-M95-001",
+      "reviewer": "independent-high-risk-review",
+      "status": "MATCH",
+      "scope": "ASN-PARITY-V3-08-DEVIATION-MAPS five-file deviation boundary fresh current-boundary review after both disjoint repairs",
+      "original_plan_sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
+      "effective_plan_sha256": "feb3ed644d62f6123ef33f7013aa7e33818fa3aa45ba5d3f7098b39d17f2fe15",
+      "owned_sha256": {
+        "deviations.schema.yaml": "1664e28c27be5e16f81c6fe5908f865c441fd721db809f12a1393259d1d0f4b0",
+        "architecture-adaptation.schema.yaml": "116a79f4facc931fc1a0cba6a9b68b45e82cdd2883efc99a7b3683af8ead8e01",
+        "validate-parity-packet.py": "d6e7e68fbd88f73b6e6b9f997c13f1a2a20d607dfc6729672739374833a4442b",
+        "test-5fedu-parity-packet.py": "8563ea365f39527bcd7f0bd9e8f9b789e77841a6f02b5cb23a55455580cd90c5",
+        "examples/nhap-hang/deviations.yaml": "81ce714c9ce96530bdef66a1e86e978f3c59b7f847bce1dad8a7825f11e41f09"
+      },
+      "canonical_fingerprint_prefix": "42ad94a191…a589e96",
+      "evidence": [
+        "core five-file deviation boundary MATCH; two stale Python hashes corrected to d6e7e68f…442b and 8563ea36…0cd9",
+        "architecture-adaptation accepted_deviations object-keyed DEV-001/002/003 with exact six-field equality to canonical deviations.yaml",
+        "automation adversarial conformance ENGINE-CUTOVER-COMPLETE exit 0: lexical 9/62, aggregate 3/22 fingerprint 42ad94a…a589e96, structural 2/13, visual 2/26, behavior 2/31",
+        "direct engine schema validation: architecture-adaptation.yaml and deviations.yaml PASS",
+        "engine 1142/1142, parity-contracts 85/85, root build/typecheck PASS"
+      ],
+      "finding_ids": [
+        "FIND-P1-PARITY-V3-08-ARCHITECTURE-EXAMPLE-001",
+        "FIND-P1-PARITY-V3-08-ENGINE-FIXTURE-002"
+      ],
+      "shadow_revision": 54,
+      "stale": false,
+      "boundary": "closes ASN08 current boundary and releases ASN09+; successor of stale REV-P1-PARITY-V3-08-001"
+    },
+    {
+      "review_receipt_id": "REV-P1-PARITY-V3-08-R1-M95-001",
+      "reviewer": "independent-high-risk-review",
+      "status": "MATCH",
+      "scope": "ASN-PARITY-V3-08-R1-ARCHITECTURE-EXAMPLE one-file canonical example repair",
+      "original_plan_sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
+      "effective_plan_sha256": "feb3ed644d62f6123ef33f7013aa7e33818fa3aa45ba5d3f7098b39d17f2fe15",
+      "owned_sha256": {
+        "examples/nhap-hang/architecture-adaptation.yaml": "844f77eb9cd2964cd882008002c78d4ea5cf5d338c605b1d99328e7794086c5e"
+      },
+      "evidence": [
+        "accepted_deviations replaced with object keyed DEV-001, DEV-002, DEV-003 in canonical order",
+        "exact six-field source/affected_surface/changed_invariant/rationale/unchanged_invariants/proof equality with deviations.yaml",
+        "direct schema validation PASS; all other architecture-adaptation sections untouched"
+      ],
+      "finding_ids": [
+        "FIND-P1-PARITY-V3-08-ARCHITECTURE-EXAMPLE-001"
+      ],
+      "shadow_revision": 54,
+      "stale": false,
+      "boundary": "closes R1 architecture-example repair"
+    },
+    {
+      "review_receipt_id": "REV-P1-PARITY-V3-08-R2-M95-001",
+      "reviewer": "independent-high-risk-review",
+      "status": "MATCH",
+      "scope": "ASN-PARITY-V3-08-R2-ENGINE-FIXTURE one-file canonical engine fixture repair",
+      "original_plan_sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
+      "effective_plan_sha256": "feb3ed644d62f6123ef33f7013aa7e33818fa3aa45ba5d3f7098b39d17f2fe15",
+      "owned_sha256": {
+        "packages/engine/test/parity-contracts.test.ts": "da7f3d14bc9d66cf98be6eb7dc712470bbb6ffd8dd0a6576e29f78e7d9f8fab8"
+      },
+      "evidence": [
+        "canonical architecture accepted_deviations is object {'DEV-001': deviation}",
+        "explicit legacy accepted_deviations array rejection present (TYPE_MISMATCH at /architecture-adaptation.yaml/accepted_deviations)",
+        "engine 1142/1142 including parity-contracts 85/85; root build/typecheck PASS; no production or schema widening"
+      ],
+      "finding_ids": [
+        "FIND-P1-PARITY-V3-08-ENGINE-FIXTURE-002"
+      ],
+      "shadow_revision": 54,
+      "stale": false,
+      "successor_of": "REV-P1-PARITY-V3-07-R1-001",
+      "boundary": "closes R2 engine-fixture repair; current-boundary successor of stale ASN07 receipt"
+    },
+    {
+      "review_receipt_id": "REV-P1-PARITY-V3-09-M95-001",
+      "reviewer": "independent-high-risk-review",
+      "status": "MATCH",
+      "scope": "ASN-PARITY-V3-09-PROOF-MAPS five-file proof boundary",
+      "original_plan_sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
+      "effective_plan_sha256": "feb3ed644d62f6123ef33f7013aa7e33818fa3aa45ba5d3f7098b39d17f2fe15",
+      "owned_sha256": {
+        "proof.schema.yaml": "b36a81c0b7b1551763c922f11a487d9afa248742b976e62620255eab7c3a9658",
+        "validate-parity-packet.py": "d6e7e68fbd88f73b6e6b9f997c13f1a2a20d607dfc6729672739374833a4442b",
+        "test-5fedu-parity-packet.py": "8563ea365f39527bcd7f0bd9e8f9b789e77841a6f02b5cb23a55455580cd90c5",
+        "examples/nhap-hang/proof.yaml": "4c4644cfda9264d2094249632eb4670ee880f7186f045c564b5fcf54214cb477",
+        "examples/nhap-hang/architecture-adaptation.yaml": "844f77eb9cd2964cd882008002c78d4ea5cf5d338c605b1d99328e7794086c5e"
+      },
+      "evidence": [
+        "approved_deviations and target_surface_and_reference_paths object-keyed; proof.schema.yaml verification_evidence minItems 15 maxItems 15 with canonical 15-type enum and result const pass",
+        "exact 15-evidence set satisfied by canonical engine fixture and automation valid packet; legacy array forms rejected with TYPE_MISMATCH",
+        "automation ENGINE-CUTOVER-COMPLETE exit 0; engine 1142/1142; build/typecheck PASS"
+      ],
+      "finding_ids": [],
+      "shadow_revision": 54,
+      "stale": false,
+      "boundary": "closes ASN09 proof boundary"
+    },
+    {
+      "review_receipt_id": "REV-P1-PARITY-V3-10-M95-001",
+      "reviewer": "independent-high-risk-review",
+      "status": "MATCH",
+      "scope": "ASN-PARITY-V3-10-DOC-CONTRACT five-file documentation boundary",
+      "original_plan_sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
+      "effective_plan_sha256": "feb3ed644d62f6123ef33f7013aa7e33818fa3aa45ba5d3f7098b39d17f2fe15",
+      "owned_sha256": {
+        "SKILL.md": "4adbfbbfa49e38ea86996970ff09925cb354af19055a7315ac24caeff9ead57e",
+        "index.md": "dc192bfd286db24565de5d1ab4df720e1bf793ef7d86c222f76dfcfe3097995c",
+        "planning-workflow.md": "5fd7ab58a4b99548bdfa5ba96d91ee2eba7566d1e9c5c3c7defba35e3b52d879",
+        "no-vision-worker-contract.md": "a0ddae653c03eba43143b26bf58b80e4fa3e00873b615deded46824fd310fa38",
+        "question-strategy.md": "2a46fc2f5245de2b0412f112d9604b6721e147c20542161af035bbfce1e2a0a1"
+      },
+      "evidence": [
+        "V3-only object-keyed contract documentation across skill, index, workflow, no-vision contract and question strategy",
+        "grep for legacy-array/dual-validator instructions: none remain",
+        "engine/Ajv declared sole authority; Python validator explicitly DEPRECATED/historical; build/typecheck PASS"
+      ],
+      "finding_ids": [],
+      "shadow_revision": 54,
+      "stale": false,
+      "boundary": "closes ASN10 doc contract boundary"
+    },
+    {
+      "review_receipt_id": "REV-P1-PARITY-V3-11-M95-001",
+      "reviewer": "independent-high-risk-review",
+      "status": "MATCH",
+      "scope": "ASN-PARITY-V3-11-ENGINE-CUTOVER five-file engine-cutover boundary",
+      "original_plan_sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
+      "effective_plan_sha256": "feb3ed644d62f6123ef33f7013aa7e33818fa3aa45ba5d3f7098b39d17f2fe15",
+      "owned_sha256": {
+        "parity-contracts.ts": "500278272f10ca1824e69bdcaeb53b1c0bc98145cd25121bee1468cdec2054f4",
+        "parity-contracts.test.ts": "da7f3d14bc9d66cf98be6eb7dc712470bbb6ffd8dd0a6576e29f78e7d9f8fab8",
+        "cli/validate.ts": "618d597d9d27b2fd20263bcf300480ff04adbe57ad203c66578bcac32b5b51a3",
+        "validate-parity-packet.py": "d6e7e68fbd88f73b6e6b9f997c13f1a2a20d607dfc6729672739374833a4442b",
+        "test-5fedu-parity-packet.py": "8563ea365f39527bcd7f0bd9e8f9b789e77841a6f02b5cb23a55455580cd90c5"
+      },
+      "evidence": [
+        "engine/Ajv authoritative for V3 shape and cross-document semantics (draft-07, resource limits, route/surface/deviation key reconciliation)",
+        "validate-parity-packet.py is DEPRECATED/historical provenance; automation runs the built engine dist directly",
+        "V2 unsupported; no second schema implementation; CLI validate wires the parity automation gate",
+        "engine 1142/1142, parity-contracts 85/85, build/typecheck PASS"
+      ],
+      "finding_ids": [],
+      "shadow_revision": 54,
+      "stale": false,
+      "boundary": "closes ASN11 engine-cutover boundary"
     }
   ],
   "findings": [
@@ -4391,17 +4599,18 @@
     },
     {
       "finding_id": "FIND-P1-R2-DECLARATIVE-DRIFT-002",
-      "status": "REPLACED_BY_PARITY_V3_PROGRAM",
+      "status": "CLOSED_MATCH",
       "severity": "high",
       "repair_slice_ids": [
         "RPR-P1-R2C-A-001",
         "RPR-P1-R2C-B-001"
       ],
-      "resolution": "R2c patching exposed broader dual-truth drift. DEC-P1-PARITY-V3-001 replaces this repair approach without changing the owner plan.",
+      "resolution": "R2c patching exposed broader dual-truth drift. DEC-P1-PARITY-V3-001 replaces this repair approach without changing the owner plan. Parity V3 program fully closed ASN-01..11 at M9.5 with fresh review.",
       "untrusted_candidate": true,
       "ns0_old_identity": "4094d07084192bc512f091e35032ffd33d3ea213206d4e85e87b518b1b5c58d6",
       "ns0_new_identity": "e08dd77f091018755e80a56fa493a430d34c316a32726b9768c22e207e1584bc",
-      "ns0_status": "PENDING_FRESH_REVIEW"
+      "ns0_status": "PENDING_FRESH_REVIEW",
+      "closed_at": "2026-07-31T22:45:00+07:00"
     },
     {
       "finding_id": "FIND-P1-R3-CRASH-RECOVERY-001",
@@ -4663,31 +4872,31 @@
       "finding_id": "FIND-P1-PARITY-V3-08-ARCHITECTURE-EXAMPLE-001",
       "status": "CLOSED_MATCH",
       "severity": "high",
-      "review_receipt_id": "REV-P1-PARITY-V3-08-001",
+      "review_receipt_id": "REV-P1-PARITY-V3-08-R1-M95-001",
       "repair_assignment_id": "ASN-PARITY-V3-08-R1-ARCHITECTURE-EXAMPLE",
       "finding_type": "LEGACY_ARCHITECTURE_EXAMPLE_DEVIATIONS",
       "detail": "The architecture example accepted_deviations value remains a legacy list and is not the exact canonical DEV-001, DEV-002, DEV-003 object with six-field payloads.",
-      "resolution": "Completed by Parity V3 ASN closure (2026-07-30): engine tests pass, schema validation pass, independent review pending",
+      "resolution": "Closed by M9.5 fresh review REV-P1-PARITY-V3-08-R1-M95-001: accepted_deviations object-keyed DEV-001/002/003 with exact six-field canonical equality and direct schema validation PASS.",
       "untrusted_candidate": true,
       "ns0_old_identity": "4094d07084192bc512f091e35032ffd33d3ea213206d4e85e87b518b1b5c58d6",
       "ns0_new_identity": "e08dd77f091018755e80a56fa493a430d34c316a32726b9768c22e207e1584bc",
       "ns0_status": "PENDING_FRESH_REVIEW",
-      "closed_at": "2026-07-30T01:14:36.789Z"
+      "closed_at": "2026-07-31T22:45:00+07:00"
     },
     {
       "finding_id": "FIND-P1-PARITY-V3-08-ENGINE-FIXTURE-002",
       "status": "CLOSED_MATCH",
       "severity": "high",
-      "review_receipt_id": "REV-P1-PARITY-V3-08-001",
+      "review_receipt_id": "REV-P1-PARITY-V3-08-R2-M95-001",
       "repair_assignment_id": "ASN-PARITY-V3-08-R2-ENGINE-FIXTURE",
       "finding_type": "LEGACY_CANONICAL_ENGINE_DEVIATION_FIXTURE",
       "detail": "The engine canonical architecture fixture retains a legacy accepted_deviations array, causing exactly two engine failures while the five-file ASN08 core boundary passes.",
-      "resolution": "Completed by Parity V3 ASN closure (2026-07-30): engine tests pass, schema validation pass, independent review pending",
+      "resolution": "Closed by M9.5 fresh review REV-P1-PARITY-V3-08-R2-M95-001: canonical fixture object-keyed {'DEV-001': deviation} with explicit legacy array rejection; engine 1142/1142 PASS.",
       "untrusted_candidate": true,
       "ns0_old_identity": "4094d07084192bc512f091e35032ffd33d3ea213206d4e85e87b518b1b5c58d6",
       "ns0_new_identity": "e08dd77f091018755e80a56fa493a430d34c316a32726b9768c22e207e1584bc",
       "ns0_status": "PENDING_FRESH_REVIEW",
-      "closed_at": "2026-07-30T01:14:36.789Z"
+      "closed_at": "2026-07-31T22:45:00+07:00"
     },
     {
       "finding_id": "FIND-P1-PARITY-V3-R1-YAML-EXPLICIT-MERGE-001",
@@ -4843,7 +5052,7 @@
     },
     {
       "finding_id": "FIND-R35-REVIEW-FRESHNESS-RECONCILIATION-008",
-      "status": "REPAIRED_PENDING_INDEPENDENT_RECONCILIATION",
+      "status": "CLOSED_MATCH",
       "severity": "high",
       "finding_type": "STALE_REVIEW_BINDING",
       "detected_by_audit": "AUDIT_R35_REVIEW_FRESHNESS_DETECTED",
@@ -4874,11 +5083,12 @@
           "P1-PARITY-V3-06-VISUAL-MAP-FINAL"
         ]
       },
-      "resolution": "R36 systematically preserves every original receipt as historical, marks all twelve directly superseded evidence bindings stale with successor links, and restores terminal linkage to current repair receipts plus final reconciliations. Independent reconciliation must clear this freshness gate before ASN07 dispatch.",
+      "resolution": "R36 preserves original receipts as historical and restores terminal linkage. M9.5 fresh review chain REV-P1-PARITY-V3-08-M95-001/-R1-M95-001/-R2-M95-001 plus ASN-09/10/11 closures clears the ASN08 current-boundary freshness gate.",
       "untrusted_candidate": true,
       "ns0_old_identity": "4094d07084192bc512f091e35032ffd33d3ea213206d4e85e87b518b1b5c58d6",
       "ns0_new_identity": "e08dd77f091018755e80a56fa493a430d34c316a32726b9768c22e207e1584bc",
-      "ns0_status": "PENDING_FRESH_REVIEW"
+      "ns0_status": "PENDING_FRESH_REVIEW",
+      "closed_at": "2026-07-31T22:45:00+07:00"
     },
     {
       "finding_id": "F-0049",
@@ -5901,6 +6111,27 @@
       "effective_sha256": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
       "shadow_revision": 53,
       "at": "2026-07-31T20:51:00+07:00"
+    },
+    {
+      "event_id": "E-REC-54",
+      "type": "RECONCILIATION_M9_5",
+      "summary": "Parity V3 chain closure at revision 54: ASN-08 DEVIATION-MAPS plus disjoint R1/R2 repairs, ASN-09 PROOF-MAPS, ASN-10 DOC-CONTRACT and ASN-11 ENGINE-CUTOVER all CLOSED_MATCH under fresh current-boundary reviews REV-P1-PARITY-V3-08-M95-001/-R1-M95-001/-R2-M95-001/-09-M95-001/-10-M95-001/-11-M95-001; amendments unchanged; effective identity stays ddb68fa…; hardening ci:quality x3 green and ci:certify WAITING_EXTERNAL (exit 78).",
+      "actor": "harness-maintainer",
+      "prior_effective_sha256": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+      "new_effective_sha256": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+      "amendment_ids": [],
+      "shadow_revision": 54,
+      "at": "2026-07-31T22:45:00+07:00"
+    },
+    {
+      "event_id": "E-MS-55",
+      "type": "MILESTONE_M9_5",
+      "summary": "M9.5 parity closure plus release hardening: chain ASN-08/09/10/11 CLOSED_MATCH; engine 1142/1142, parity-contracts 85/85, automation ENGINE-CUTOVER-COMPLETE, ci:quality x3 green, ci:certify exit 78 WAITING_EXTERNAL; packet WAITING_EXTERNAL native attestation.",
+      "actor": "harness-maintainer",
+      "head_commit": "8daedb7592b0c3a6f1ed4f6d61430aa748c82ee1",
+      "effective_sha256": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+      "shadow_revision": 54,
+      "at": "2026-07-31T22:45:00+07:00"
     }
   ]
 }

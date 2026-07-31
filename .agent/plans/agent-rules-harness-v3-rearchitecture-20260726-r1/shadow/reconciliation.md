@@ -19,3 +19,5 @@ Status: **NEEDS_REMEDIATION**
 | P1-PARITY-V3-06-VISUAL-MAP-FINAL | CLOSED_MATCH | ASN06 core visual map plus one-file example-integrity and engine-fixture repairs | - |
 | P1-PARITY-V3-07-BEHAVIOR-MAP-FINAL | CLOSED_MATCH | ASN07 behavior map plus one-file canonical engine-fixture repair | - |
 | P1-PARITY-V3-06-VISUAL-MAP-FRESHNESS-R43 | CLOSED_MATCH | ASN06 current visual boundary after shared validator/reducer/index and engine-fi | - |
+| P1-PARITY-V3-08-DEVIATION-MAPS-FINAL | CLOSED_MATCH | ASN08 five-file deviation boundary plus disjoint architecture-example and engine | - |
+| P1-PARITY-V3-M95-PARITY-CHAIN-FINAL | CLOSED_MATCH | ASN-09 PROOF-MAPS, ASN-10 DOC-CONTRACT, ASN-11 ENGINE-CUTOVER parity V3 chain cl | - |
