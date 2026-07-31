@@ -48,6 +48,10 @@
     "./plan-identity": {
       "types": "./dist/plan-identity.d.ts",
       "import": "./dist/plan-identity.js"
+    },
+    "./autopilot": {
+      "types": "./dist/autopilot.d.ts",
+      "import": "./dist/autopilot.js"
     }
   },
   "engines": {

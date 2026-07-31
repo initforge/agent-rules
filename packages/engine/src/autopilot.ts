@@ -1,0 +1,35 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { createHash, randomUUID } from 'node:crypto';
+
+export type AutopilotState = 'CREATED' | 'RUNNING' | 'CI_WAIT' | 'CI_REPAIR' | 'CHECKPOINTED' | 'COMPLETED' | 'BLOCKED';
+export type CiResult = 'PASS' | 'FAIL' | 'PENDING';
+export type SessionStatus = 'idle' | 'running' | 'failed' | 'done';
+export interface AutopilotIdentity { repository: string; revision: string; plan: string; }
+export interface SessionBoundary { status(id: string): Promise<SessionStatus>; continue(id: string, key: string): Promise<void>; }
+export interface AutopilotRecord { seq: number; at: string; type: string; state: AutopilotState; data?: Record<string, unknown>; identity: AutopilotIdentity; prevHash: string; hash: string; eventId: string; }
+export interface AutopilotSnapshot { identity: AutopilotIdentity; state: AutopilotState; sessionId?: string; continuationKey?: string; ci: CiResult; retries: number; checkpoint?: string; lastSeq: number; terminal?: string; }
+const hash = (v: string) => createHash('sha256').update(v).digest('hex');
+const stable = (v: unknown) => JSON.stringify(v);
+const terminal = 'HARNESS_V3_10_OF_10_COMPLETE';
+
+export class AutopilotJournal {
+  readonly lock: string;
+  constructor(readonly file: string, readonly identity: AutopilotIdentity) { this.lock = `${file}.lock`; fs.mkdirSync(path.dirname(file), { recursive: true }); if (this.records()[0] && stable(this.records()[0].identity) !== stable(identity)) throw new Error('autopilot identity/revision mismatch'); }
+  private locked<T>(fn: () => T): T { const end = Date.now() + 5000; while (true) { try { fs.mkdirSync(this.lock); break; } catch (e) { if ((e as NodeJS.ErrnoException).code !== 'EEXIST' || Date.now() > end) throw new Error('autopilot journal busy'); } } try { return fn(); } finally { fs.rmSync(this.lock, { recursive: true, force: true }); } }
+  append(type: string, state: AutopilotState, data?: Record<string, unknown>, eventId = randomUUID()): AutopilotRecord { return this.locked(() => { const records = this.records(); const prior = records.find(r => r.eventId === eventId); if (prior) return prior; const body = { seq: (records.at(-1)?.seq ?? 0) + 1, at: new Date().toISOString(), type, state, data, identity: this.identity, prevHash: records.at(-1)?.hash ?? '0'.repeat(64), eventId: String(eventId) }; const record = { ...body, hash: hash(stable(body)) }; fs.appendFileSync(this.file, JSON.stringify(record) + '\n', { mode: 0o600 }); return record; }); }
+  records(): AutopilotRecord[] { if (!fs.existsSync(this.file)) return []; const out: AutopilotRecord[] = []; for (const line of fs.readFileSync(this.file, 'utf8').split('\n').filter(Boolean)) { const r = JSON.parse(line) as AutopilotRecord; if (r.identity && stable(r.identity) !== stable(this.identity) || r.prevHash !== (out.at(-1)?.hash ?? '0'.repeat(64)) || r.hash !== hash(stable({ seq: r.seq, at: r.at, type: r.type, state: r.state, data: r.data, identity: r.identity, prevHash: r.prevHash, eventId: r.eventId }))) throw new Error('autopilot journal hash-chain mismatch'); out.push(r); } return out; }
+  snapshot(): AutopilotSnapshot { const rs = this.records(); const d = Object.assign({}, ...rs.map(r => r.data ?? {})); return { identity: this.identity, state: rs.at(-1)?.state ?? 'CREATED', sessionId: d.sessionId as string, continuationKey: d.continuationKey as string, ci: (d.ci as CiResult) ?? 'PENDING', retries: (d.retries as number) ?? 0, checkpoint: d.checkpoint as string, lastSeq: rs.at(-1)?.seq ?? 0, terminal: d.terminal as string }; }
+  claim(key: string, sessionId: string): boolean { return this.locked(() => { if (this.records().some(r => r.type === 'CONTINUE_INTENT' && r.data?.continuationKey === key)) return false; this.append('CONTINUE_INTENT', this.snapshot().state, { sessionId, continuationKey: key }, randomUUID()); return true; }); }
+}
+
+export class Autopilot {
+  private chain = Promise.resolve();
+  constructor(readonly journal: AutopilotJournal, readonly session: SessionBoundary) {}
+  start(sessionId: string): AutopilotSnapshot { if (!sessionId) throw new Error('session is required'); const s = this.journal.snapshot(); if (s.state !== 'CREATED') return s; const key = hash(`${s.identity.repository}:${s.identity.revision}:${s.identity.plan}:${sessionId}`); this.journal.append('START', 'RUNNING', { sessionId, continuationKey: key, ci: 'PENDING', retries: 0 }); return this.journal.snapshot(); }
+  continue(): Promise<AutopilotSnapshot> { const run = this.chain.then(async () => { const s = this.journal.snapshot(); if (!s.sessionId || !s.continuationKey) throw new Error('autopilot has no session'); if (s.state === 'COMPLETED' || s.state === 'BLOCKED') return s; if ((await this.session.status(s.sessionId)) === 'running') return s; if (this.journal.claim(s.continuationKey, s.sessionId)) { await this.session.continue(s.sessionId, s.continuationKey); this.journal.append('CONTINUE', 'RUNNING', { sessionId: s.sessionId, continuationKey: s.continuationKey, ci: s.ci, retries: s.retries }); } return this.journal.snapshot(); }); this.chain = run.then(() => undefined, () => undefined); return run; }
+  checkpoint(value: string): AutopilotSnapshot { if (!value) throw new Error('checkpoint is required'); const s = this.journal.snapshot(); if (s.state === 'CREATED' || s.state === 'COMPLETED') throw new Error('checkpoint is unavailable in terminal state'); this.journal.append('CHECKPOINT', 'CHECKPOINTED', { ...s, checkpoint: value }); return this.journal.snapshot(); }
+  ci(result: CiResult): AutopilotSnapshot { const s = this.journal.snapshot(); if (result === 'PASS' && !s.checkpoint) throw new Error('checkpoint is required before PASS'); const state = result === 'PENDING' ? 'CI_WAIT' : result === 'PASS' ? 'RUNNING' : 'CI_REPAIR'; this.journal.append(`CI_${result}`, state, { ...s, ci: result, retries: s.retries + (result === 'FAIL' ? 1 : 0) }); return this.journal.snapshot(); }
+  complete(token: string): AutopilotSnapshot { const s = this.journal.snapshot(); if (token !== terminal || !s.checkpoint || s.ci !== 'PASS' || s.state !== 'RUNNING') throw new Error('M10 terminal token or ordered gates missing'); this.journal.append('COMPLETE', 'COMPLETED', { ...s, terminal }); return this.journal.snapshot(); }
+}
+export function terminalAutopilotGate(s: AutopilotSnapshot) { return { passed: s.state === 'COMPLETED' && s.terminal === terminal, gates: { M8: s.lastSeq > 0, M9_5: Boolean(s.checkpoint), M10: s.state === 'COMPLETED' && s.terminal === terminal } }; }

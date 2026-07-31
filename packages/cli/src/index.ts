@@ -18,6 +18,7 @@ import { verifyCmd } from "./commands/verify.js";
 import { runtimeCmd } from "./commands/runtime.js";
 import { modelsCmd } from "./commands/models.js";
 import { skillsCmd } from "./commands/skills.js";
+import { autopilotCmd } from "./commands/autopilot.js";
 import {
   executeRun,
   getRunStatus,
@@ -26,6 +27,16 @@ import {
 } from "./services/runner.js";
 
 const program = new Command();
+
+program.command("autopilot")
+  .description("Continue native worker autopilot")
+  .argument("[action]", "start, continue, ci, checkpoint, status", "status")
+  .argument("[runId]", "Run identity", "default")
+  .argument("[value]", "Session ID, CI result, checkpoint, or continuation text")
+  .action(async (action: string, runId: string, value?: string) => {
+    try { formatOutput({ exitCode: ExitCode.Success, message: 'autopilot', data: { result: await autopilotCmd([action, runId, value].filter((v): v is string => Boolean(v)), process.cwd()) } }, program.optsWithGlobals() as CliOptions); }
+    catch (err) { console.error(`Error: ${err instanceof Error ? err.message : String(err)}`); process.exit(ExitCode.GeneralError); }
+  });
 
 program
   .name("agent-rules")
