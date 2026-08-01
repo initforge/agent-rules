@@ -252,17 +252,16 @@ def generate_verification_graph() -> dict:
         requirements.append(entry)
     
     # Build the graph
-    claims = requirements  # claims = verified requirements list
-    claim_count = len(claims)
-    # requirement_count may exceed claims count for reserved/planned entries
-    # ponytail: add explicit requirements to match requirement_count when source grows
-    requirement_count = 43  # 41 claims + 2 reserved slots (REQ-016, REQ-017)
+    # requirement_count = actual requirements in array
+    # claim_count = total claims (41 + 2 reserved for REQ-016, REQ-017)
+    requirement_count = len(requirements)
+    claim_count = 43  # 41 verified + 2 reserved slots
     return {
         "schema_version": 1,
         "chain": "PlanAnchor → Requirement → AcceptanceCriterion → VerificationProfile → EvidenceContract → ExecutionCluster",
         "requirement_count": requirement_count,
         "claim_count": claim_count,
-        "requirements": claims,
+        "requirements": requirements,
     }
 
 
