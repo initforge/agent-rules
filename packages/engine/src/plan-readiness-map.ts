@@ -218,13 +218,13 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
   },
   'M11-R29': {
     cluster: 'C8',
-    status: 'PARTIAL',
-    partialReason: 'capability-qualified verdicts land with the M11-R29 worktree — WAITING_EXTERNAL',
-    modules: ['packages/engine/src/native-session-adapter.ts'],
-    tests: ['packages/engine/test/opencode-adapter.test.ts'],
+    status: 'MATCH',
+    modules: ['packages/engine/src/review-receipt.ts', 'packages/engine/src/native-session-adapter.ts'],
+    tests: ['packages/engine/test/review-receipt.test.ts', 'packages/engine/test/opencode-adapter.test.ts'],
     acceptanceCriteria: [
       'verdicts are capability-qualified: no-vision review cannot issue visual PASS, Playwright-only evidence cannot issue raw-CDP PASS',
       'model/capability substitution is never silent',
+      'terminal eligibility per tier requires a valid, fresh ReviewReceipt set (AM-0020 §5–6)',
     ],
   },
   'M11-R30': {
