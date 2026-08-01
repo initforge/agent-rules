@@ -96,6 +96,10 @@
     "./adversarial-compiler": {
       "types": "./dist/adversarial-compiler.d.ts",
       "import": "./dist/adversarial-compiler.js"
+    },
+    "./review-receipt": {
+      "types": "./dist/review-receipt.d.ts",
+      "import": "./dist/review-receipt.js"
     }
   },
   "engines": {
