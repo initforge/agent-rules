@@ -4,6 +4,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { createHash } from 'node:crypto';
 import { verifyTerminalGate, verifyMilestoneGate, assertCertifiable, assertNoResidualBeforeFinal, terminalGateCheck, assertWorkLedger, assertCertificationAttestation, finalizeM11, evaluateM11Terminal, REQUIRED_HOSTS, M10_TERMINAL_TOKEN, M11_TERMINAL_TOKEN, deriveM10ProofHash, type M11Evidence, type M11Checks } from '../src/terminal-gate.js';
+import { loadM11TerminalEvidenceEnvelope } from '../src/m11-terminal-evidence.js';
 import { HOST_ATTESTATION_EVIDENCE_ROLES, hostAttestationEvidenceRef, hostAttestationEvidenceSubjectSha256, type HostAttestation } from '../src/contracts.js';
 import { candidateEpochHash, CANDIDATE_EPOCH_SCHEMA, type CandidateEpoch } from '../src/candidate-epoch.js';
 
@@ -299,6 +300,80 @@ describe('finalizeM11 (engine-owned M11 terminal emission)', () => {
     const raw = JSON.parse(fs.readFileSync(ledgerPath, 'utf-8')) as Record<string, any>;
     expect(raw.candidate_epoch.candidate_commit_or_tree).toBe(epoch.candidate_commit_or_tree);
     expect(raw.audit_events.at(-1).summary).toContain(candidateEpochHash(epoch).slice(0, 12));
+  });
+});
+
+describe('loadM11TerminalEvidenceEnvelope (engine-generated ledger envelope)', () => {
+  function envelopeLedger(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+    const { ledger, evidence, epoch } = eligibleM11Fixture();
+    (ledger as any).m11_terminal_evidence = {
+      ...evidence,
+      candidate_epoch_hash: candidateEpochHash(epoch),
+    };
+    return { ...ledger, ...overrides };
+  }
+
+  it('binds a complete envelope: headCommit/identity/epoch hash all match', () => {
+    const { ledger, epoch } = eligibleM11Fixture();
+    (ledger as any).m11_terminal_evidence = {
+      ...eligibleM11Fixture().evidence,
+      candidate_epoch_hash: candidateEpochHash(epoch),
+    };
+    const result = loadM11TerminalEvidenceEnvelope(ledger);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.evidence.headCommit).toBe(hash);
+      expect(result.evidence.effectivePlanIdentity).toBe('e'.repeat(64));
+      expect(result.evidence.candidate_epoch_hash).toBe(candidateEpochHash(epoch));
+      expect(result.evidence.parity).toBe('COMPLETE');
+    }
+  });
+
+  it('rejects when the ledger has no m11_terminal_evidence envelope', () => {
+    const { ledger } = eligibleM11Fixture();
+    const result = loadM11TerminalEvidenceEnvelope(ledger);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toContain('m11_terminal_evidence');
+  });
+
+  it('rejects an incomplete envelope missing a required field', () => {
+    const ledger = envelopeLedger();
+    delete (ledger as any).m11_terminal_evidence.installedArtifactSha256;
+    const result = loadM11TerminalEvidenceEnvelope(ledger);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toContain('installedArtifactSha256');
+  });
+
+  it('rejects an envelope whose headCommit does not bind the ledger HEAD', () => {
+    const ledger = envelopeLedger();
+    (ledger as any).m11_terminal_evidence.headCommit = badHash;
+    const result = loadM11TerminalEvidenceEnvelope(ledger);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toContain('headCommit');
+  });
+
+  it('rejects an envelope whose effectivePlanIdentity does not bind the ledger identity', () => {
+    const ledger = envelopeLedger();
+    (ledger as any).m11_terminal_evidence.effectivePlanIdentity = 'f'.repeat(64);
+    const result = loadM11TerminalEvidenceEnvelope(ledger);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toContain('effectivePlanIdentity');
+  });
+
+  it('rejects a candidate_epoch_hash that does not match candidateEpochHash(ledger.candidate_epoch)', () => {
+    const ledger = envelopeLedger();
+    (ledger as any).m11_terminal_evidence.candidate_epoch_hash = 'f'.repeat(64);
+    const result = loadM11TerminalEvidenceEnvelope(ledger);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toContain('candidate_epoch_hash');
+  });
+
+  it('rejects when the ledger has no candidate_epoch to bind', () => {
+    const ledger = envelopeLedger();
+    delete (ledger as any).candidate_epoch;
+    const result = loadM11TerminalEvidenceEnvelope(ledger);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toContain('candidate_epoch');
   });
 });
 

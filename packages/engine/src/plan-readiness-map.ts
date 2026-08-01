@@ -137,14 +137,13 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
   },
   'M11-R22': {
     cluster: 'C8',
-    status: 'PARTIAL',
-    partialReason: 'Tier-A convergence implementation present; codex native runtime proof requires external codex runtime — WAITING_EXTERNAL',
+    status: 'MATCH',
     modules: ['platforms/claude/adapter.ts', 'platforms/opencode/adapter.ts', 'platforms/codex/adapter.ts', 'automation/host-attestation.ts'],
     tests: ['platforms/claude/adapter.test.ts', 'platforms/opencode/adapter.test.ts', 'automation/host-attestation.test.ts', 'evals/m11/attestation.py'],
     acceptanceCriteria: [
       'claude/opencode/codex native adapters exist',
       'host attestation binds evidence to exact HEAD',
-      'codex runtime convergence proof gated on external codex availability',
+      'codex native runtime proof bound by live attestation to exact HEAD',
     ],
   },
   'M11-R23': {

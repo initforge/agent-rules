@@ -33,6 +33,10 @@
       "types": "./dist/terminal-gate.d.ts",
       "import": "./dist/terminal-gate.js"
     },
+    "./m11-terminal-evidence": {
+      "types": "./dist/m11-terminal-evidence.d.ts",
+      "import": "./dist/m11-terminal-evidence.js"
+    },
     "./evidence-packet": {
       "types": "./dist/evidence-packet.d.ts",
       "import": "./dist/evidence-packet.js"

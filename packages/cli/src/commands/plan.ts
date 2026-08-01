@@ -11,7 +11,8 @@ import {
   reconcilePlan as engineReconcilePlan,
 } from "@initforge/agent-rules-engine/plan-lifecycle";
 import { compilePlanReadiness } from "@initforge/agent-rules-engine/plan-readiness";
-import { evaluateM11Terminal, finalizeM11, M11_TERMINAL_TOKEN, type M11Evidence } from "@initforge/agent-rules-engine/terminal-gate";
+import { evaluateM11Terminal, finalizeM11, M11_TERMINAL_TOKEN, type M11Checks } from "@initforge/agent-rules-engine/terminal-gate";
+import { loadM11TerminalEvidenceEnvelope } from "@initforge/agent-rules-engine/m11-terminal-evidence";
 import path from "node:path";
 import fs from "node:fs";
 import { createHash } from "node:crypto";
@@ -486,10 +487,14 @@ function runHeadCommit(root: string): string | undefined {
 /**
  * Minimal M11 terminal wiring: `plan m11 <plan-id> [repoRoot]` evaluates
  * HV3_M11_LOCAL_COMPLETE eligibility from the real ledger + the dynamically
- * compiled effective requirement set. Evaluator never writes the terminal token.
- * Add `--finalize` to emit the token: the engine writes execution_state +
- * audit event + regenerated shadows ONLY when all 12 gates pass (fail-closed,
- * zero mutation otherwise).
+ * compiled effective requirement set. Terminal truth comes ONLY from the
+ * engine-generated canonical `m11_terminal_evidence` envelope stored in the
+ * ledger: the CLI reads it, verifies head/identity/epoch basics, and forwards
+ * it to the engine evaluator. No CLI flag or prose can synthesize a PASS; an
+ * absent or incomplete envelope fails closed. The evaluator never writes the
+ * terminal token — only `--finalize` invokes the engine emission path, which
+ * writes execution_state + audit event + regenerated shadows ONLY when all
+ * gates pass (fail-closed, zero mutation otherwise).
  */
 export async function planM11(
   args: string[],
@@ -509,37 +514,35 @@ export async function planM11(
   try {
     const planDir = path.join(root, ".agent", "plans", planId);
     const originalPath = path.join(planDir, "original.md");
-    const ledger = JSON.parse(fs.readFileSync(ledgerPath, "utf8")) as Record<string, unknown> & {
-      headCommit?: string; commitSha?: string; milestones?: { M8?: { scorecard?: { dimensions?: Array<{ id: string; score: number | null; status: string }> } }; M11?: { headCommit?: string; observedAt?: string; evidence?: Array<{ evidenceHash?: string }> } };
-      reviews?: Array<Record<string, unknown>>; attestations?: Array<{ commitSha?: string }>;
-      effective_plan_identity?: { sha256?: string }; reconciliations?: Array<{ headCommit?: string }>;
-    };
+    const ledger = JSON.parse(fs.readFileSync(ledgerPath, "utf8")) as Record<string, unknown>;
+
+    // Fail closed FIRST: only an engine-generated canonical terminal evidence
+    // envelope from the ledger can authorize the evaluator. No CLI flag or
+    // prose can synthesize a PASS. Missing/incomplete/unbound envelope = reject.
+    const envelope = loadM11TerminalEvidenceEnvelope(ledger);
+    if (!envelope.ok) {
+      return {
+        exitCode: ExitCode.GeneralError,
+        message: `${planId} M11 terminal NOT eligible — no mutation: ${envelope.reason}`,
+        data: {
+          planId,
+          terminalToken: M11_TERMINAL_TOKEN,
+          eligible: false,
+          failedGates: ["M11_TERMINAL_EVIDENCE_ENVELOPE"],
+          mutated: false,
+        },
+      };
+    }
+
     const readiness = compilePlanReadiness({
       ledgerPath,
       planDir,
       originalPath: fs.existsSync(originalPath) ? originalPath : undefined,
-      headCommit: runHeadCommit(root) ?? ledger.headCommit,
+      headCommit: runHeadCommit(root) ?? (ledger as { headCommit?: string }).headCommit,
     });
-    const headCommit = ledger.headCommit ?? ledger.commitSha ?? "";
-    const m11 = ledger.milestones?.M11;
-    const lastRec = (ledger.reconciliations ?? []).at(-1);
-    const evidence: M11Evidence = {
-      headCommit,
-      effectivePlanIdentity: ledger.effective_plan_identity?.sha256 ?? "",
-      envelopeSha256: m11?.evidence?.[0]?.evidenceHash ?? "",
-      observedAt: m11?.observedAt ?? new Date().toISOString(),
-      fresh: headCommit.length > 0 && m11?.headCommit === headCommit,
-      ciSha: headCommit,
-      certifiedArtifactSha256: "",
-      installedArtifactSha256: "",
-      installedFrom: "",
-      reconciliationHeadCommit: lastRec?.headCommit ?? "",
-      parity: "SKIPPED",
-      topology: "SKIPPED",
-      reviews: [],
-    };
-    const scorecard = ledger.milestones?.M8?.scorecard?.dimensions ?? [];
-    const checks = {
+    const evidence = envelope.evidence;
+    const scorecard = (ledger as { milestones?: { M8?: { scorecard?: { dimensions?: Array<{ id: string; score: number | null; status: string }> } } } }).milestones?.M8?.scorecard?.dimensions ?? [];
+    const checks: M11Checks = {
       requirements: readiness.requirements.map((r) => ({ requirement_id: r.requirement_id, status: r.status })),
       scorecard,
       waitingGates: [],

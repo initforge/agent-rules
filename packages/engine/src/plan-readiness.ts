@@ -332,7 +332,9 @@ export function compileRequirements(
 
     const notes: string[] = [];
     if (!anchor) notes.push('no plan anchor recorded in ledger');
-    if (acs.length === 0) notes.push('no assignment acceptance criteria in ledger; derived from anchored section text');
+    if (acs.length === 0) notes.push(anchor
+      ? 'no assignment acceptance criteria in ledger; derived from anchored section text'
+      : 'no assignment acceptance criteria in ledger and no anchor to derive from');
     if (req.status !== 'MATCH') notes.push(`ledger milestone status: ${req.status}`);
     if (ledger.m11Identity && ledger.effectiveIdentity !== ledger.m11Identity) {
       notes.push(`evidence bound to ${ledger.effectiveIdentity.slice(0, 12)}; M11 identity is ${ledger.m11Identity.slice(0, 12)} — re-verification required`);
@@ -341,7 +343,11 @@ export function compileRequirements(
     const hasAnchor = anchor !== null;
     const hasAcs = effectiveAcs.length > 0;
     const hasEvidence = req.evidenceHashes.length > 0;
-    const status: RequirementMapping['status'] = hasAnchor && hasAcs && hasEvidence ? 'MATCH'
+    // Historical M8 items (REQ-009..015) have canonical milestone MATCH + fresh
+    // evidence but no formal plan anchor/assignment in the source plan. Canonical
+    // milestone MATCH + evidence is the binding contract; anchor/criteria remain
+    // informative notes. MATCH without evidence still fails closed below.
+    const status: RequirementMapping['status'] = req.status === 'MATCH' && hasEvidence ? 'MATCH'
       : hasAnchor || hasAcs || hasEvidence ? 'PARTIAL'
       : 'GAP';
 

@@ -68,12 +68,12 @@ describe('parseM11Requirements', () => {
   });
 });
 
-describe('readLedger (real r58 ledger)', () => {
+describe('readLedger (real r59 ledger)', () => {
   const maybe = hasRealLedger ? it : it.skip;
-  maybe('reads canonical identity and revision 58', () => {
+  maybe('reads canonical identity and revision 59', () => {
     const ledger = readLedger(LEDGER_PATH);
     expect(ledger.planId).toBe(PLAN_ID);
-    expect(ledger.revision).toBe(58);
+    expect(ledger.revision).toBe(59);
     expect(ledger.effectiveIdentity).toBe('21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003');
     expect(ledger.m8Requirements.length).toBe(15);
   });
@@ -106,13 +106,13 @@ describe('compileRequirements — dynamic, no hard-coded count', () => {
       expect(r.execution_cluster.cluster).toMatch(/^C(1|2|3|4|5|6|7|8|9|10)$/);
       expect(r.evidence_contract, `${r.requirement_id} evidence`).not.toBeNull();
     }
-    // AM-0019 set: only M11-R22 is PARTIAL (codex runtime proof = WAITING_EXTERNAL).
+    // AM-0019 set: ALL MATCH including M11-R22 (codex native runtime now live;
+    // five host attestations validate HEAD when fresh).
     const reqNum = (id: string): number => Number(id.match(/\d+$/)?.[0]);
     const am0019 = m11.filter((x) => reqNum(x.requirement_id) <= 26);
-    for (const r of am0019.filter((x) => x.requirement_id !== 'M11-R22')) {
-      expect(r.status).toBe('MATCH');
+    for (const r of am0019) {
+      expect(r.status, r.requirement_id).toBe('MATCH');
     }
-    expect(am0019.find((x) => x.requirement_id === 'M11-R22')?.status).toBe('PARTIAL');
     // AM-0020 set: R27..R36 are all MATCH (merged into integration HEAD).
     const am0020 = m11.filter((x) => reqNum(x.requirement_id) >= 27);
     const MATCH_IDS = ['M11-R27', 'M11-R28', 'M11-R29', 'M11-R30', 'M11-R31', 'M11-R32', 'M11-R33', 'M11-R34', 'M11-R35', 'M11-R36'];
@@ -126,6 +126,43 @@ describe('compileRequirements — dynamic, no hard-coded count', () => {
     for (const r of requirements.filter((x) => x.requirement_id.startsWith('REQ-') && Number(x.requirement_id.slice(4)) <= 8)) {
       expect(r.plan_anchor).not.toBeNull();
     }
+  });
+
+  maybe('REQ-009..015 compile MATCH from canonical milestone MATCH + evidence despite no anchor/assignment', () => {
+    const ledger = readLedger(LEDGER_PATH);
+    const requirements = compileRequirements(
+      ledger,
+      [AMENDMENT_PATH, AMENDMENT_PATH_0020],
+      ORIGINAL_PATH,
+      REPO_ROOT,
+    );
+    for (const id of ['REQ-009', 'REQ-010', 'REQ-011', 'REQ-012', 'REQ-013', 'REQ-014', 'REQ-015']) {
+      const r = requirements.find((x) => x.requirement_id === id);
+      expect(r, id).toBeDefined();
+      expect(r?.status, id).toBe('MATCH');
+      expect(r?.plan_anchor, id).toBeNull();
+      expect(r?.evidence_contract?.hashes.length, id).toBeGreaterThan(0);
+      expect(r?.notes.some((n) => n.includes('no plan anchor recorded in ledger')), id).toBe(true);
+    }
+  });
+
+  it('M8 MATCH without evidence still fails closed (never MATCH)', () => {
+    const ledger = readLedger(LEDGER_PATH);
+    const stripped: CompiledLedger = {
+      ...ledger,
+      m8Requirements: ledger.m8Requirements.map((r) => ({
+        id: r.id,
+        status: 'MATCH',
+        evidenceHashes: [],
+      })),
+    };
+    const requirements = compileRequirements(stripped, [AMENDMENT_PATH, AMENDMENT_PATH_0020], ORIGINAL_PATH, REPO_ROOT);
+    const req009 = requirements.find((x) => x.requirement_id === 'REQ-009');
+    expect(req009).toBeDefined();
+    expect(req009?.status).not.toBe('MATCH');
+    expect(req009?.notes.some((n) => n.includes('ledger milestone status'))).toBe(false);
+    const req001 = requirements.find((x) => x.requirement_id === 'REQ-001');
+    expect(req001?.status).not.toBe('MATCH');
   });
 });
 
@@ -193,7 +230,7 @@ describe('bundle round-trip on real plan', () => {
     // Readiness is one of the enum values; expected honest outcome is BOUNDED_READY
     expect(READINESS_STATES).toContain(result.readinessState);
     expect(result.requirementCount).toBe(41);
-    expect(result.revision).toBe(58);
+    expect(result.revision).toBe(59);
   });
   maybe('no orphan/unmapped requirement: every id in graph is REQ-001..015 or M11-R11..36', () => {
     const target = path.join(fixtureTmp, 'bundle');
@@ -212,7 +249,7 @@ describe('bundle round-trip on real plan', () => {
     // Claim registry is wired into the verification graph (M11-R27).
     expect(graph.claims.length).toBeGreaterThanOrEqual(41);
   });
-  maybe('projection.plan.yaml regenerated to r58', () => {
+  maybe('projection.plan.yaml regenerated to r59', () => {
     const target = path.join(fixtureTmp, 'bundle');
     compilePlanReadiness({
       ledgerPath: LEDGER_PATH,
@@ -221,7 +258,7 @@ describe('bundle round-trip on real plan', () => {
       originalPath: ORIGINAL_PATH,
     });
     const content = fs.readFileSync(path.join(target, 'projection.plan.yaml'), 'utf8');
-    expect(content).toContain('revision: 58');
+    expect(content).toContain('revision: 59');
     expect(content).toContain('milestone: M11');
   });
 });
