@@ -640,6 +640,51 @@ export function gatesView(): Record<string, unknown> {
   }
 }
 
+export function calibrationView(): Record<string, unknown> {
+  const root = findRoot()
+  const sources: string[] = []
+  const p = path.join(root, '.telemetry', 'calibration.jsonl')
+
+  // M11-R36 (AM-0020 §10): read-only projection of the calibration telemetry
+  // ledger. Honesty rule: an empty/missing ledger reports present:false and
+  // UNAVAILABLE — never fabricated zeros as proof of quality.
+  const records: Array<{ eventId: string; kind: string; model: string; provider: string; domain: string; recordedAt: string }> = []
+  if (fs.existsSync(p)) {
+    sources.push(path.relative(root, p))
+    for (const line of fs.readFileSync(p, 'utf-8').split('\n').filter(Boolean)) {
+      try {
+        const rec = asRecord(JSON.parse(line))
+        const ev = asRecord(rec.event)
+        records.push({
+          eventId: str(rec.eventId, ''),
+          kind: str(ev.kind, 'UNKNOWN'),
+          model: str(ev.model, ''),
+          provider: str(ev.provider, ''),
+          domain: str(ev.domain, ''),
+          recordedAt: str(rec.recordedAt, ''),
+        })
+      } catch { /* unparseable line is a telemetry sink artifact, not a verdict */ }
+    }
+  }
+
+  const byKind: Record<string, number> = {}
+  for (const r of records) byKind[r.kind] = (byKind[r.kind] ?? 0) + 1
+
+  return {
+    ok: true,
+    planId: resolveProjectionDir().planId,
+    present: records.length > 0,
+    metricState: records.length === 0 ? 'UNAVAILABLE' : 'AVAILABLE',
+    eventCount: records.length,
+    byKind,
+    records,
+    note: records.length === 0
+      ? 'No calibration telemetry recorded yet — metrics are UNAVAILABLE, not zero.'
+      : `Calibration telemetry ledger read from recorded events (${records.length} record(s)).`,
+    sources,
+  }
+}
+
 export const m11View = {
   readiness: readinessView,
   dag: dagView,
@@ -651,4 +696,5 @@ export const m11View = {
   parity: parityView,
   waits: waitsView,
   gates: gatesView,
+  calibration: calibrationView,
 }
