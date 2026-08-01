@@ -1,7 +1,7 @@
 {
   "host": "opencode",
   "hostVersion": "1.18.10",
-  "commitSha": "14818e53d21f6b54638c66ff1cbdcf8ad186666d",
+  "commitSha": "951489db90c408c930eea0b49bb70c82bd54bc86",
   "capabilityStatus": "HOST_NATIVE",
   "capabilityIds": [
     "opencode:mcp",
@@ -13,53 +13,53 @@
   "resolvedModel": "deepseek-v4-flash",
   "observedModel": "deepseek-v4-flash",
   "nativeRunnerIdentity": "36:1857263|/home/linhnx/.opencode/bin/opencode|2735f786be499db50c823d961fb8627dfb74f920e2320686b67e6c5c81c66f16",
-  "issuedAt": "2026-08-01T05:50:47.479Z",
-  "expiresAt": "2026-08-01T06:50:47.479Z",
+  "issuedAt": "2026-08-01T06:05:04.894Z",
+  "expiresAt": "2026-08-01T07:05:04.894Z",
   "evidenceRefs": [
     {
       "role": "version",
       "host": "opencode",
-      "commitSha": "14818e53d21f6b54638c66ff1cbdcf8ad186666d",
+      "commitSha": "951489db90c408c930eea0b49bb70c82bd54bc86",
       "evidenceSha256": "c8d473bdc3da32a45fde4175b01ca75575fc6f6737bba4c65124836453990db6",
-      "evidenceRef": "evidence://opencode/14818e53d21f6b54638c66ff1cbdcf8ad186666d/version/c8d473bdc3da32a45fde4175b01ca75575fc6f6737bba4c65124836453990db6",
+      "evidenceRef": "evidence://opencode/951489db90c408c930eea0b49bb70c82bd54bc86/version/c8d473bdc3da32a45fde4175b01ca75575fc6f6737bba4c65124836453990db6",
       "subjectSha256": "ad16138c909f3ed40fac2ebd9bc62d329f458bb546925570a6a5fc03181637f6",
-      "observedAt": "2026-08-01T05:50:47.479Z"
+      "observedAt": "2026-08-01T06:05:04.894Z"
     },
     {
       "role": "capabilities",
       "host": "opencode",
-      "commitSha": "14818e53d21f6b54638c66ff1cbdcf8ad186666d",
+      "commitSha": "951489db90c408c930eea0b49bb70c82bd54bc86",
       "evidenceSha256": "ab6662e143971d33c43cdf318c69149f3a889009c5cbcb51c8986aeb4d6a5d45",
-      "evidenceRef": "evidence://opencode/14818e53d21f6b54638c66ff1cbdcf8ad186666d/capabilities/ab6662e143971d33c43cdf318c69149f3a889009c5cbcb51c8986aeb4d6a5d45",
+      "evidenceRef": "evidence://opencode/951489db90c408c930eea0b49bb70c82bd54bc86/capabilities/ab6662e143971d33c43cdf318c69149f3a889009c5cbcb51c8986aeb4d6a5d45",
       "subjectSha256": "8584b3669bfff70b5e562ffe656e39398fe915f62866a2b85013989766238096",
-      "observedAt": "2026-08-01T05:50:47.479Z"
+      "observedAt": "2026-08-01T06:05:04.894Z"
     },
     {
       "role": "requestedModel",
       "host": "opencode",
-      "commitSha": "14818e53d21f6b54638c66ff1cbdcf8ad186666d",
-      "evidenceSha256": "c676d44c873d13a2724bd0605ad9fd96fafafc5d32fa581d6abe6ef9d117a985",
-      "evidenceRef": "evidence://opencode/14818e53d21f6b54638c66ff1cbdcf8ad186666d/requestedModel/c676d44c873d13a2724bd0605ad9fd96fafafc5d32fa581d6abe6ef9d117a985",
+      "commitSha": "951489db90c408c930eea0b49bb70c82bd54bc86",
+      "evidenceSha256": "a20326b3e6de097d1e8664da651250d8af86886d3e42e3515b03417ea49c3f69",
+      "evidenceRef": "evidence://opencode/951489db90c408c930eea0b49bb70c82bd54bc86/requestedModel/a20326b3e6de097d1e8664da651250d8af86886d3e42e3515b03417ea49c3f69",
       "subjectSha256": "7e7927c7d3104cf2d08ebf08a2bedd89eab5c2a6943626c5e52e4f0f6956a8bd",
-      "observedAt": "2026-08-01T05:50:47.479Z"
+      "observedAt": "2026-08-01T06:05:04.894Z"
     },
     {
       "role": "resolvedModel",
       "host": "opencode",
-      "commitSha": "14818e53d21f6b54638c66ff1cbdcf8ad186666d",
-      "evidenceSha256": "c5a3892a05516ffcb5c88bad0a3748aad41906b3bc9ba21d45860c5105874744",
-      "evidenceRef": "evidence://opencode/14818e53d21f6b54638c66ff1cbdcf8ad186666d/resolvedModel/c5a3892a05516ffcb5c88bad0a3748aad41906b3bc9ba21d45860c5105874744",
+      "commitSha": "951489db90c408c930eea0b49bb70c82bd54bc86",
+      "evidenceSha256": "1eaf0337b569b45a5424bd819c12baa81325daf3a9e7d07ce99ebdc2d01a578a",
+      "evidenceRef": "evidence://opencode/951489db90c408c930eea0b49bb70c82bd54bc86/resolvedModel/1eaf0337b569b45a5424bd819c12baa81325daf3a9e7d07ce99ebdc2d01a578a",
       "subjectSha256": "e98d638851947d32cad623d495009bf6f7e6689668e4d8a0f33e4669c25a4cdc",
-      "observedAt": "2026-08-01T05:50:47.479Z"
+      "observedAt": "2026-08-01T06:05:04.894Z"
     },
     {
       "role": "observedModel",
       "host": "opencode",
-      "commitSha": "14818e53d21f6b54638c66ff1cbdcf8ad186666d",
-      "evidenceSha256": "a840d87434a673a71d0bd76604f7bae4312f475dbe9824c74371e5ab5d73ec74",
-      "evidenceRef": "evidence://opencode/14818e53d21f6b54638c66ff1cbdcf8ad186666d/observedModel/a840d87434a673a71d0bd76604f7bae4312f475dbe9824c74371e5ab5d73ec74",
+      "commitSha": "951489db90c408c930eea0b49bb70c82bd54bc86",
+      "evidenceSha256": "527694c0f068db85e619beb6a806321acd3dddb978175c051bf8d14d3ef64ff7",
+      "evidenceRef": "evidence://opencode/951489db90c408c930eea0b49bb70c82bd54bc86/observedModel/527694c0f068db85e619beb6a806321acd3dddb978175c051bf8d14d3ef64ff7",
       "subjectSha256": "e98d638851947d32cad623d495009bf6f7e6689668e4d8a0f33e4669c25a4cdc",
-      "observedAt": "2026-08-01T05:50:47.479Z"
+      "observedAt": "2026-08-01T06:05:04.894Z"
     }
   ]
 }
