@@ -33,9 +33,15 @@ def test_graph_exists():
 
 
 def test_requirement_count():
-    """Graph must declare exactly 41 requirements."""
+    """Graph must declare exactly 43 requirements (41 claims + 2 reserved)."""
     graph = load_graph()
-    assert graph.get("requirement_count") == 41, f"Expected 41, got {graph.get('requirement_count')}"
+    assert graph.get("requirement_count") == 43, f"Expected 43, got {graph.get('requirement_count')}"
+
+
+def test_claim_count():
+    """Graph must declare exactly 41 claims."""
+    graph = load_graph()
+    assert graph.get("claim_count") == 41, f"Expected 41, got {graph.get('claim_count')}"
 
 
 def test_am0020_count():
@@ -83,7 +89,8 @@ def test_generator_produces_valid_structure():
     assert result.returncode == 0, f"Generator failed: {result.stderr}"
     graph = json.loads(result.stdout)
     assert graph.get("schema_version") == 1
-    assert graph.get("requirement_count") == 41
+    assert graph.get("requirement_count") == 43
+    assert graph.get("claim_count") == 41
     assert len(graph.get("requirements", [])) == 41
 
 
@@ -128,6 +135,7 @@ def run_tests():
     tests = [
         ("graph_exists", test_graph_exists),
         ("requirement_count", test_requirement_count),
+        ("claim_count", test_claim_count),
         ("am0020_count", test_am0020_count),
         ("am0019_count", test_am0019_count),
         ("req_count", test_req_count),
