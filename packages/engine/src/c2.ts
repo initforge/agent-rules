@@ -46,3 +46,28 @@ export {
   assertResumeContext,
   clearResumeMarker,
 } from './resume-hooks.js';
+
+export {
+  POOL_CEILINGS,
+  POOL_KINDS,
+  BLOCKING_DEPENDENCY_TYPES,
+  type PoolKind,
+  type PoolCeilings,
+  type PoolUsage,
+  type DependencyEdge,
+  type ExecutionNode,
+  type ExecutionGraph,
+  type NodeStatus,
+  type TaskWaitInfo,
+  type SchedulerState,
+  type WaitingClosureEntry,
+  type RejectedConflict,
+  type ReadySetInput,
+  type ReadySetResult,
+  type ConflictDomain,
+  leaseKey,
+  leaseSetsOverlap,
+  computeReadySet,
+  buildGraphFromNodes,
+  EMPTY_READY_SET,
+} from './dispatch-ready-set.js';

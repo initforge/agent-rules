@@ -8,6 +8,11 @@ import type {
 } from './contracts.js';
 import type { WorkerAdapter } from './worker-adapter.js';
 import type { VerifierAdapter, VerificationEvidence } from './verifier.js';
+import {
+  buildGraphFromNodes, computeReadySet, EMPTY_READY_SET,
+  type DependencyEdge, type ExecutionGraph, type ExecutionNode,
+  type NodeStatus, type PoolCeilings, type ReadySetResult,
+} from './dispatch-ready-set.js';
 
 export { type Sha256, sha256Bytes };
 
@@ -183,6 +188,9 @@ export class Controller {
   private readonly ledgerDirId: Identity;
   private ledger: WorkLedger | null = null;
   private retryCountMap = new Map<string, number>();
+  private executionGraph: ExecutionGraph | null = null;
+  private browserBurst = false;
+  private poolCeilings: PoolCeilings | undefined;
 
   constructor(ledgerPath: string) {
     this.ledgerPath = path.resolve(ledgerPath);
@@ -247,6 +255,104 @@ export class Controller {
     }
 
     return null;
+  }
+
+  /** Configure the typed execution graph (AM-0019 §4). Nodes may key on taskId or assignmentId. */
+  setExecutionGraph(graph: ExecutionGraph): void {
+    this.executionGraph = graph;
+  }
+
+  setBrowserBurst(enabled: boolean): void {
+    this.browserBurst = enabled;
+  }
+
+  setPoolCeilings(ceilings: PoolCeilings): void {
+    this.poolCeilings = ceilings;
+  }
+
+  /**
+   * C2 max-useful dispatch (AM-0019 §4): compute the maximum conflict-free
+   * ready antichain across the whole graph and mark every member READY.
+   * Cross-stage SOFT/VERIFY_AFTER edges never hold successors back; only
+   * unsatisfied HARD/GLOBAL_GATE edges do.
+   */
+  async dispatchReadySet(): Promise<ReadySetResult> {
+    if (!this.ledger) return { ...EMPTY_READY_SET };
+
+    this.checkpointState = 'DISPATCHING';
+
+    const typedById = new Map<string, ExecutionNode>();
+    for (const node of this.executionGraph?.nodes ?? []) typedById.set(node.id, node);
+
+    const assignmentIds = new Set(this.ledger.assignments.map((a) => a.assignmentId));
+    const nodes: ExecutionNode[] = [];
+    for (const assignment of this.ledger.assignments) {
+      const typed = typedById.get(assignment.assignmentId);
+      const deps: DependencyEdge[] = [];
+      if (typed?.deps) {
+        for (const dep of typed.deps) {
+          const depAssignment = this.getAssignmentByTaskId(dep.to) ?? this.getAssignment(dep.to);
+          if (depAssignment && assignmentIds.has(depAssignment.assignmentId)) {
+            deps.push({ to: depAssignment.assignmentId, type: dep.type });
+          }
+        }
+      }
+      if (deps.length === 0) {
+        for (const taskId of assignment.dependencies) {
+          const depAssignment = this.getAssignmentByTaskId(taskId);
+          if (depAssignment && assignmentIds.has(depAssignment.assignmentId)) {
+            deps.push({ to: depAssignment.assignmentId, type: 'HARD' });
+          }
+        }
+      }
+      nodes.push({
+        id: assignment.assignmentId,
+        kind: typed?.kind,
+        rank: typed?.rank,
+        onCriticalPath: typed?.onCriticalPath,
+        deps,
+        ownedPaths: assignment.ownedPaths,
+        leaseDomains: typed?.leaseDomains,
+        apiSurfaceKeys: typed?.apiSurfaceKeys,
+        migrationKeys: typed?.migrationKeys,
+        lockfileKeys: typed?.lockfileKeys,
+        generatedKeys: typed?.generatedKeys,
+        portKeys: typed?.portKeys,
+        sharedDataKeys: typed?.sharedDataKeys,
+        browserPages: typed?.browserPages,
+      });
+    }
+
+    const status: Record<string, NodeStatus> = {};
+    const running: string[] = [];
+    for (const assignment of this.ledger.assignments) {
+      const st = this.taskStates.get(assignment.assignmentId);
+      if (st === 'CLOSED_MATCH' || st === 'CLOSED_FAILED') {
+        status[assignment.assignmentId] = 'CLOSED';
+      } else if (st === 'IN_PROGRESS' || st === 'UNDER_REVIEW' || st === 'READY') {
+        status[assignment.assignmentId] = 'RUNNING';
+        running.push(assignment.assignmentId);
+      } else {
+        status[assignment.assignmentId] = 'PENDING';
+      }
+    }
+
+    const result = computeReadySet({
+      graph: buildGraphFromNodes(nodes),
+      state: { status },
+      running,
+      browserBurst: this.browserBurst,
+      ceilings: this.poolCeilings,
+    });
+
+    for (const id of result.ready) {
+      if (this.taskStates.get(id) === 'PENDING') {
+        this.taskStates.set(id, 'READY');
+        this.checkpointState = 'IMPLEMENTING';
+        this.revision++;
+      }
+    }
+    return result;
   }
 
   startWork(assignmentId: string): void {
@@ -537,12 +643,14 @@ export class Controller {
     let failed = 0;
 
     while (true) {
-      const assignmentId = await this.dispatchNext();
-      if (!assignmentId) break;
+      const result = await this.dispatchReadySet();
+      if (result.ready.length === 0) break;
 
-      const result = await this.runTask(assignmentId, worker, verifier);
-      if (result.success) completed++;
-      else failed++;
+      for (const assignmentId of result.ready) {
+        const taskResult = await this.runTask(assignmentId, worker, verifier);
+        if (taskResult.success) completed++;
+        else failed++;
+      }
     }
 
     return { completed, failed };

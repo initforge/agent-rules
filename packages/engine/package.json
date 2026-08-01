@@ -13,6 +13,10 @@
       "types": "./dist/parity-contracts.d.ts",
       "import": "./dist/parity-contracts.js"
     },
+    "./parity-runner": {
+      "types": "./dist/parity-runner.d.ts",
+      "import": "./dist/parity-runner.js"
+    },
     "./plan-lifecycle": {
       "types": "./dist/plan-lifecycle.d.ts",
       "import": "./dist/plan-lifecycle.js"
@@ -20,6 +24,10 @@
     "./plan-readiness": {
       "types": "./dist/plan-readiness.d.ts",
       "import": "./dist/plan-readiness.js"
+    },
+    "./dispatch-ready-set": {
+      "types": "./dist/dispatch-ready-set.d.ts",
+      "import": "./dist/dispatch-ready-set.js"
     },
     "./terminal-gate": {
       "types": "./dist/terminal-gate.d.ts",
@@ -64,6 +72,10 @@
     "./native-session-adapter": {
       "types": "./dist/native-session-adapter.d.ts",
       "import": "./dist/native-session-adapter.js"
+    },
+    "./worktree-train": {
+      "types": "./dist/worktree-train.d.ts",
+      "import": "./dist/worktree-train.js"
     }
   },
   "engines": {
