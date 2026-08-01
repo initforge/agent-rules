@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "plan_id": "agent-rules-harness-v3-rearchitecture-20260726-r1",
+  "amendment_id": "AM-0019",
+  "status": "OWNER_APPROVED_PENDING_ACTIVATION",
+  "source_kind": "owner-chat",
+  "captured_at": "2026-08-01T01:05:50Z",
+  "owner_decisions": [
+    "AM-0019 is additive after AM-0018; original.md and all non-conflicting prior requirements remain intact.",
+    "Plan readiness and engine enforcement are both mandatory; plan readiness is the source of intent and authority while engine owns tactics, scheduling, retry and recovery.",
+    "Main agent performs orchestration, artifact comparison, review supervision, reconciliation and terminal decision; it does not author product source or tests.",
+    "Depth-one native subagents are the primary execution mechanism; cross-host nested CLI and unapproved live session bridges are prohibited.",
+    "The scheduler maximizes useful conflict-free native concurrency across stages and uses isolated branch/worktree ownership with one integration owner.",
+    "Recoverable waiting blocks only the affected dependency closure and never ends the whole run.",
+    "Full deployed-topology verification and paired reference-target browser evidence are mandatory final convergence layers.",
+    "Codex, Claude Code and OpenCode are required Tier-A hosts; Grok is required functional; Antigravity is constrained/advisory; Cursor is deferred.",
+    "The engine may fast-forward certified local main, but it must keep all other branches/worktrees until owner review.",
+    "Remote main push and branch/worktree cleanup require a later explicit owner approval.",
+    "pos-ops and mini-toeic.score are evidence sources only and are not mutated by AM-0019.",
+    "All existing fitness criteria remain and M11-R11 through M11-R26 are additive.",
+    "Execution must dogfood accepted AM-0019 behavior immediately and continue to HV3_M11_LOCAL_COMPLETE without routine continuation questions."
+  ],
+  "original": {
+    "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/original.md",
+    "sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31"
+  },
+  "prior_effective_identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+  "prior_shadow_revision": 56,
+  "prior_amendment": {
+    "amendment_id": "AM-0018",
+    "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0018-durable-autopilot.md",
+    "sha256": "d0d2001ca7f9916d68f4bc66bcfc0545445d33220dc97e5b981d64c7ef1dab52"
+  },
+  "amendment": {
+    "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0019-autonomous-native-swarm-whole-system-convergence.md",
+    "sha256": "074eda76c69d91b91bf25ab74888dc7ada13376cbfd29d0e67e4a8c6f8662a21"
+  },
+  "handoff": {
+    "path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/deepseek-am0019-full-execution-prompt.md",
+    "sha256": "26830aa70fef3122a7865149d9765fd247fb0d12e8b5e345babd490e743797ca"
+  },
+  "repository_baselines": {
+    "canonical_main": "dec44d4200fe29921bcc855a708df4b691d714bf",
+    "active_integration": "487fe7ff38f19c40824a422148f4752b26a50a11",
+    "captured_head": "487fe7ff38f19c40824a422148f4752b26a50a11",
+    "captured_tree": "0521815591ca2a75bfa9b0c029d29457a2ecacc7",
+    "local_main": "5a179b9c7b3c7c9c74034991ee4fb8fef890b4f8",
+    "origin_main": "dec44d4200fe29921bcc855a708df4b691d714bf",
+    "active_branch": "integration/m8-convergence"
+  },
+  "known_workspace_fact": "certification-diagnostics.json was untracked at capture time and must be classified before integration; it is not silently deleted or accepted.",
+  "activation_rule": "Verify original and AM-0001..AM-0018 against the canonical ledger, verify AM-0019 raw bytes and captured SHA-256, append AM-0019 after AM-0018 through the canonical atomic activation API, recompute effective identity, stale every prior M10 terminal/score/review/CI/attestation/reconciliation claim for M11, regenerate all projections and shadows atomically, retain NEEDS_REMEDIATION, compile PlanReadiness, then dogfood the accepted native-swarm behavior immediately."
+}
