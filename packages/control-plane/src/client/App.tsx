@@ -9,6 +9,7 @@ import Configuration from './pages/Configuration';
 import Profiles from './pages/Profiles';
 import Audit from './pages/Audit';
 import C4Page from './pages/C4';
+import M11Views from './pages/M11Views';
 import NotFound from './pages/NotFound';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -71,6 +72,8 @@ export default function App() {
         return <Audit segments={segments} navigate={navigate} />;
       case 'c4':
         return <ErrorBoundary><C4Page navigate={navigate} /></ErrorBoundary>;
+      case 'm11':
+        return <ErrorBoundary><M11Views segments={segments} navigate={navigate} /></ErrorBoundary>;
       default:
         return <NotFound path={currentPath} navigate={navigate} />;
     }

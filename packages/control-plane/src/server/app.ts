@@ -11,6 +11,7 @@ import runsRouter from '../routes/runs.js';
 import auditRouter from '../routes/audit.js';
 import plansRouter from '../routes/plans.js';
 import c4Router from '../routes/c4.js';
+import m11Router from '../routes/m11.js';
 import { authMiddleware } from '../middleware/auth.js';
 
 const app = express();
@@ -60,6 +61,7 @@ app.use('/api/runs', runsRouter);
 app.use('/api/audit', auditRouter);
 app.use('/api/plans', plansRouter);
 app.use('/api/c4', c4Router);
+app.use('/api/m11', m11Router);
 
 app.use(express.static(path.join(__dirname, '..', '..', 'client')));
 
