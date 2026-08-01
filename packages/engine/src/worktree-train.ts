@@ -490,7 +490,10 @@ export class WorktreeTrain {
   private async requireActive(taskId: string): Promise<WorktreeLease> {
     const lease = await this.readLease(taskId);
     if (lease.state !== 'ACTIVE') {
-      throw new WorktreeTrainError('LEASE_NOT_ACTIVE', `task ${taskId} is not ACTIVE (state=${lease.state})`);
+      const hint = lease.state === 'RELEASED'
+        ? ' — integrate BEFORE release: `worktree release` flips the lease RELEASED and removes the worktree'
+        : '';
+      throw new WorktreeTrainError('LEASE_NOT_ACTIVE', `task ${taskId} is not ACTIVE (state=${lease.state})${hint}`);
     }
     return lease;
   }

@@ -43,7 +43,7 @@ async function trainIntegrate(rest: string[]): Promise<CommandResult> {
   if (positionals.length === 0) {
     return {
       exitCode: ExitCode.InvalidArgument,
-      message: "Usage: train integrate <task-id...> [--root <repo>] [--worktrees-dir <dir>] [--train <branch>] [--validate-cmd <shell>] [--allow-unreviewed]",
+      message: "Usage: train integrate <task-id...> [--root <repo>] [--worktrees-dir <dir>] [--train <branch>] [--validate-cmd <shell>] [--allow-unreviewed]. Order: integrate BEFORE `worktree release` — release flips the lease RELEASED and removes the worktree.",
     };
   }
   const root = optionString(options, "root") ?? process.cwd();

@@ -105,7 +105,7 @@ async function worktreeRelease(rest: string[]): Promise<CommandResult> {
   const { positionals, options } = parseOptions(rest);
   const taskId = positionals[0];
   if (!taskId) {
-    return { exitCode: ExitCode.InvalidArgument, message: "Usage: worktree release <task-id> [--root <repo>] [--exit-codes 0,0]" };
+    return { exitCode: ExitCode.InvalidArgument, message: "Usage: worktree release <task-id> [--root <repo>] [--exit-codes 0,0]. Order: run `train integrate` BEFORE `worktree release` — release flips the lease RELEASED and removes the worktree, so integrate afterwards fails with LEASE_NOT_ACTIVE/WORKTREE_MISSING." };
   }
   const root = optionString(options, "root") ?? process.cwd();
   const exitCodes = optionList(options, "exit-codes").map((value) => parseInt(value, 10)).filter((n) => Number.isFinite(n));
