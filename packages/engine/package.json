@@ -73,6 +73,10 @@
       "types": "./dist/autopilot-m11.d.ts",
       "import": "./dist/autopilot-m11.js"
     },
+    "./candidate-epoch": {
+      "types": "./dist/candidate-epoch.d.ts",
+      "import": "./dist/candidate-epoch.js"
+    },
     "./native-session-adapter": {
       "types": "./dist/native-session-adapter.d.ts",
       "import": "./dist/native-session-adapter.js"

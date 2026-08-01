@@ -290,11 +290,13 @@ Subcommands:
 // ── verify ──────────────────────────────────────────────────────────
 program
   .command("verify")
-  .description("Run validation and mirror verification")
-  .argument("[path]", "Repository root path")
-  .action(async (pathArg: string | undefined) => {
+  .description("Run validation and mirror verification; `verify epoch [root]` snapshots the immutable candidate epoch (M11-R32)")
+  .argument("[args...]", "Repository root path, or `epoch [root] [--allow-dirty]`")
+  .option("--allow-dirty", "epoch: snapshot a dirty worktree (informational, never terminal-eligible)")
+  .action(async (args: string[], cmdOpts: { allowDirty?: boolean }) => {
     const opts = program.optsWithGlobals() as CliOptions;
-    const result = await verifyCmd(pathArg ? [pathArg] : [], opts);
+    if (cmdOpts.allowDirty) args = [...args, "--allow-dirty"];
+    const result = await verifyCmd(args, opts);
     formatOutput(result, opts);
   });
 

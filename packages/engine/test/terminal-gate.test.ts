@@ -5,6 +5,7 @@ import os from 'node:os';
 import { createHash } from 'node:crypto';
 import { verifyTerminalGate, verifyMilestoneGate, assertCertifiable, assertNoResidualBeforeFinal, terminalGateCheck, assertWorkLedger, assertCertificationAttestation, finalizeM11, evaluateM11Terminal, REQUIRED_HOSTS, M10_TERMINAL_TOKEN, M11_TERMINAL_TOKEN, deriveM10ProofHash, type M11Evidence, type M11Checks } from '../src/terminal-gate.js';
 import { HOST_ATTESTATION_EVIDENCE_ROLES, hostAttestationEvidenceRef, hostAttestationEvidenceSubjectSha256, type HostAttestation } from '../src/contracts.js';
+import { candidateEpochHash, CANDIDATE_EPOCH_SCHEMA, type CandidateEpoch } from '../src/candidate-epoch.js';
 
 const hash = 'a'.repeat(64);
 const badHash = 'b'.repeat(64);
@@ -107,9 +108,29 @@ function writeFile(p: string, content: string): string { fs.writeFileSync(p, con
 
 // ── M11 terminal emission (finalizeM11) fixtures ─────────────────────────────
 
-function eligibleM11Fixture(overrides: Record<string, unknown> = {}): { ledger: Record<string, unknown>; evidence: M11Evidence; checks: M11Checks } {
+function makeEpoch(overrides: Partial<CandidateEpoch> = {}): CandidateEpoch {
+  return {
+    schema: CANDIDATE_EPOCH_SCHEMA,
+    source_tree_sha: 'b'.repeat(40),
+    candidate_commit_or_tree: hash,
+    artifact_digest: hash,
+    container_image_digests: [],
+    dependency_lock_hash: 'c'.repeat(64),
+    migration_set_hash: 'd'.repeat(64),
+    environment_hash: 'e'.repeat(64),
+    fixture_hash: 'f'.repeat(64),
+    topology_hash: 'g'.repeat(64),
+    created_at: new Date().toISOString(),
+    build_critical_manifest: [],
+    notes: {},
+    ...overrides,
+  };
+}
+
+function eligibleM11Fixture(overrides: Record<string, unknown> = {}): { ledger: Record<string, unknown>; evidence: M11Evidence; checks: M11Checks; epoch: CandidateEpoch } {
   const effectivePlanIdentity = 'e'.repeat(64);
-  const ledger = stubLedger({ execution_state: 'EXECUTING', status: 'EXECUTING', ...overrides });
+  const epoch = makeEpoch();
+  const ledger = stubLedger({ execution_state: 'EXECUTING', status: 'EXECUTING', candidate_epoch: epoch, ...overrides });
   const evidence: M11Evidence = {
     headCommit: hash,
     effectivePlanIdentity,
@@ -130,13 +151,14 @@ function eligibleM11Fixture(overrides: Record<string, unknown> = {}): { ledger: 
       { dimension: 'UX', accepted: true, reviewId: 'R4', stale: false },
       { dimension: 'operations', accepted: true, reviewId: 'R5', stale: false },
     ],
+    candidate_epoch_hash: candidateEpochHash(epoch),
   };
   const checks: M11Checks = {
     requirements: [{ requirement_id: 'REQ-001', status: 'MATCH' }],
     scorecard: [{ id: 'arch', score: 9, status: 'VERIFIED' }],
     waitingGates: [],
   };
-  return { ledger, evidence, checks };
+  return { ledger, evidence, checks, epoch };
 }
 
 describe('finalizeM11 (engine-owned M11 terminal emission)', () => {
@@ -198,6 +220,85 @@ describe('finalizeM11 (engine-owned M11 terminal emission)', () => {
     const { evidence, checks } = eligibleM11Fixture();
     const result = finalizeM11({ ledgerPath: '/nonexistent/ledger.json', evidence, checks });
     expect(result.passed).toBe(false);
+  });
+
+  it('requires a bound immutable candidate epoch (fail-closed)', () => {
+    const dir = tmpDir();
+    const { ledger, evidence, checks } = eligibleM11Fixture();
+    delete ledger.candidate_epoch;
+    (evidence as M11Evidence).candidate_epoch_hash = undefined;
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+    const before = fs.readFileSync(ledgerPath, 'utf-8');
+
+    const gate = evaluateM11Terminal(ledger, evidence, checks);
+    expect(gate.passed).toBe(false);
+    expect(gate.failedGates).toContain('M11_CANDIDATE_EPOCH_BOUND');
+
+    const result = finalizeM11({ ledgerPath, evidence, checks });
+    expect(result.passed).toBe(false);
+    expect(result.failedGates).toContain('M11_CANDIDATE_EPOCH_BOUND');
+    expect(fs.readFileSync(ledgerPath, 'utf-8')).toBe(before);
+  });
+
+  it('rejects evidence that does not bind the candidate epoch hash', () => {
+    const dir = tmpDir();
+    const { ledger, evidence, checks } = eligibleM11Fixture();
+    evidence.candidate_epoch_hash = 'f'.repeat(64);
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+
+    const gate = evaluateM11Terminal(ledger, evidence, checks);
+    expect(gate.passed).toBe(false);
+    expect(gate.failedGates).toContain('M11_CANDIDATE_EPOCH_BOUND');
+  });
+
+  it('rejects a candidate epoch that does not bind the exact HEAD', () => {
+    const dir = tmpDir();
+    const { ledger, evidence, checks } = eligibleM11Fixture();
+    ledger.candidate_epoch = makeEpoch({ candidate_commit_or_tree: 'c'.repeat(40) });
+    (evidence as M11Evidence).candidate_epoch_hash = candidateEpochHash(ledger.candidate_epoch as CandidateEpoch);
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+
+    const gate = evaluateM11Terminal(ledger, evidence, checks);
+    expect(gate.passed).toBe(false);
+    expect(gate.failedGates).toContain('M11_CANDIDATE_EPOCH_BOUND');
+  });
+
+  it('rejects a stale candidate epoch', () => {
+    const dir = tmpDir();
+    const { ledger, evidence, checks } = eligibleM11Fixture();
+    ledger.candidate_epoch = makeEpoch({ created_at: '2020-01-01T00:00:00.000Z' });
+    (evidence as M11Evidence).candidate_epoch_hash = candidateEpochHash(ledger.candidate_epoch as CandidateEpoch);
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+
+    const gate = evaluateM11Terminal(ledger, evidence, checks);
+    expect(gate.passed).toBe(false);
+    expect(gate.failedGates).toContain('M11_CANDIDATE_EPOCH_BOUND');
+  });
+
+  it('rejects an incomplete candidate epoch', () => {
+    const dir = tmpDir();
+    const { ledger, evidence, checks } = eligibleM11Fixture();
+    const partial = makeEpoch() as Partial<CandidateEpoch>;
+    delete partial.dependency_lock_hash;
+    ledger.candidate_epoch = partial;
+    (evidence as M11Evidence).candidate_epoch_hash = candidateEpochHash(partial as CandidateEpoch);
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+
+    const gate = evaluateM11Terminal(ledger, evidence, checks);
+    expect(gate.passed).toBe(false);
+    expect(gate.failedGates).toContain('M11_CANDIDATE_EPOCH_BOUND');
+  });
+
+  it('persists the candidate epoch into the ledger on finalize', () => {
+    const dir = tmpDir();
+    const { ledger, evidence, checks, epoch } = eligibleM11Fixture();
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+
+    const result = finalizeM11({ ledgerPath, evidence, checks });
+    expect(result.passed).toBe(true);
+    const raw = JSON.parse(fs.readFileSync(ledgerPath, 'utf-8')) as Record<string, any>;
+    expect(raw.candidate_epoch.candidate_commit_or_tree).toBe(epoch.candidate_commit_or_tree);
+    expect(raw.audit_events.at(-1).summary).toContain(candidateEpochHash(epoch).slice(0, 12));
   });
 });
 

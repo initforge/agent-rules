@@ -9,6 +9,7 @@ import {
   type WaitingEntry,
 } from '../src/autopilot-m11.js';
 import { evaluateM11Terminal, type M11Checks, type M11Evidence } from '../src/terminal-gate.js';
+import { candidateEpochHash, CANDIDATE_EPOCH_SCHEMA, type CandidateEpoch } from '../src/candidate-epoch.js';
 
 const H = 'a'.repeat(64);
 const OTHER = 'b'.repeat(64);
@@ -259,8 +260,23 @@ function fixture(overrides: {
   ledger?: Record<string, unknown>;
   evidence?: Partial<M11Evidence>;
   checks?: Partial<M11Checks>;
-} = {}): { ledger: Record<string, unknown>; evidence: M11Evidence; checks: M11Checks } {
+} = {}): { ledger: Record<string, unknown>; evidence: M11Evidence; checks: M11Checks; epoch: CandidateEpoch } {
   const now = Date.now();
+  const epoch: CandidateEpoch = {
+    schema: CANDIDATE_EPOCH_SCHEMA,
+    source_tree_sha: 'd'.repeat(40),
+    candidate_commit_or_tree: H,
+    artifact_digest: 'c'.repeat(64),
+    container_image_digests: [],
+    dependency_lock_hash: 'f'.repeat(64),
+    migration_set_hash: 'f'.repeat(64),
+    environment_hash: 'f'.repeat(64),
+    fixture_hash: 'f'.repeat(64),
+    topology_hash: 'f'.repeat(64),
+    created_at: new Date(now).toISOString(),
+    build_critical_manifest: [],
+    notes: {},
+  };
   const evidence: M11Evidence = {
     headCommit: H,
     effectivePlanIdentity: IDENTITY,
@@ -277,6 +293,7 @@ function fixture(overrides: {
     reviews: ['architecture', 'security', 'maintainability', 'UX', 'operations'].map((dimension) => ({
       dimension, accepted: true, reviewId: `REV-${dimension}`, stale: false,
     })),
+    candidate_epoch_hash: candidateEpochHash(epoch),
     ...overrides.evidence,
   };
   const ledger: Record<string, unknown> = {
@@ -288,6 +305,7 @@ function fixture(overrides: {
     orphanFindings: [],
     effective_plan_identity: { sha256: IDENTITY },
     attestations: [{ host: 'codex', commitSha: H }, { host: 'grok', commitSha: H }],
+    candidate_epoch: epoch,
     ...overrides.ledger,
   };
   const checks: M11Checks = {
@@ -299,7 +317,7 @@ function fixture(overrides: {
     waitingGates: [],
     ...overrides.checks,
   };
-  return { ledger, evidence, checks };
+  return { ledger, evidence, checks, epoch };
 }
 
 describe('evaluateM11Terminal', () => {
