@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """M11-C10 case 1 — 100% original-plus-amendments semantic coverage.
 
-Compiles the 31 effective requirements (15 REQ from the ledger + 16 M11-R from
-AM-0019 §14) and asserts every one has a mapping in verification-graph.yaml.
+Compiles the 41 effective requirements (15 REQ from the ledger + 26 M11-R from
+AM-0019 §14 and AM-0020 §14) and asserts every one has a mapping in verification-graph.yaml.
 Reports COVERED/PARTIAL/GAP honestly. The 100% claim is met when every
 requirement is COVERED or PARTIAL-with-evidence: a GAP fails the case (exit 2),
 and a PARTIAL must carry tree evidence or an explicit reason (e.g.
@@ -20,7 +20,10 @@ GRAPH = ROOT / ".agent" / "plans" / "agent-rules-harness-v3-rearchitecture-20260
 AMENDMENT = ROOT / ".agent" / "plans" / "agent-rules-harness-v3-rearchitecture-20260726-r1" / "amendments" / "0019-autonomous-native-swarm-whole-system-convergence.md"
 
 # AM-0019 §14 adds exactly M11-R11..M11-R26 (16 additive requirements).
+# AM-0020 §14 adds M11-R27..M11-R36 (10 additional requirements).
 AM0019_M11_R_IDS = [f"M11-R{i}" for i in range(11, 27)]
+AM0020_M11_R_IDS = [f"M11-R{i}" for i in range(27, 37)]
+ALL_M11_R_IDS = AM0019_M11_R_IDS + AM0020_M11_R_IDS
 
 # Implemented but a named condition stays open (WAITING_EXTERNAL).
 PARTIAL_WITH_REASON = {
@@ -66,17 +69,18 @@ def main() -> int:
 
     # Structural checks (errors, exit 1).
     problems: list[str] = []
-    if declared_count != 31:
-        problems.append(f"verification-graph requirement_count={declared_count}, expected 31")
-    if len(entries) != 31:
-        problems.append(f"verification-graph lists {len(entries)} requirements, expected 31")
+    expected_total = 15 + len(ALL_M11_R_IDS)  # 15 REQ + 26 M11-R (11-36)
+    if declared_count != expected_total:
+        problems.append(f"verification-graph requirement_count={declared_count}, expected {expected_total}")
+    if len(entries) != expected_total:
+        problems.append(f"verification-graph lists {len(entries)} requirements, expected {expected_total}")
     if len(req_ids) != 15:
         problems.append(f"expected 15 REQ requirements, found {len(req_ids)}")
-    if len(m11_ids) != 16:
-        problems.append(f"expected 16 M11-R requirements, found {len(m11_ids)}")
-    missing_m11 = [r for r in AM0019_M11_R_IDS if r not in m11_ids]
+    if len(m11_ids) != len(ALL_M11_R_IDS):
+        problems.append(f"expected {len(ALL_M11_R_IDS)} M11-R requirements (11-36), found {len(m11_ids)}")
+    missing_m11 = [r for r in ALL_M11_R_IDS if r not in m11_ids]
     if missing_m11:
-        problems.append(f"AM-0019 §14 requirements missing from graph: {missing_m11}")
+        problems.append(f"M11-R requirements missing from graph: {missing_m11}")
     if problems:
         for p in problems:
             print(f"ERROR: {p}")
@@ -111,8 +115,8 @@ def main() -> int:
 
     # 100% claim: no GAP, and every PARTIAL is backed by evidence or a reason.
     claim_met = gap == 0 and not partial_without_reason
-    print("M11-C10 case 1 — semantic coverage of 31 effective requirements:")
-    print(f"  effective requirements : {len(rows)} (15 REQ + 16 M11-R = {declared_count} declared)")
+    print("M11-C10 case 1 — semantic coverage of 41 effective requirements:")
+    print(f"  effective requirements : {len(rows)} (15 REQ + 26 M11-R = {declared_count} declared)")
     print(f"  COVERED                : {covered}")
     print(f"  PARTIAL                : {partial}")
     print(f"  GAP                    : {gap}")
