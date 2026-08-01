@@ -222,6 +222,7 @@ Subcommands:
   repair <runId>               Reset failed tasks to PENDING
   export <runId> <outputPath>  Export plan bundle
   finalize <runId>             Finalize a completed plan
+  readiness <planId>           Compile plan-readiness & autonomy bundle (9 projections)
     `
   )
   .action(async (args: string[]) => {

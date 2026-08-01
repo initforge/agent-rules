@@ -10,9 +10,11 @@ import {
   finalizePlan as engineFinalizePlan,
   reconcilePlan as engineReconcilePlan,
 } from "@initforge/agent-rules-engine/plan-lifecycle";
+import { compilePlanReadiness } from "@initforge/agent-rules-engine/plan-readiness";
 import path from "node:path";
 import fs from "node:fs";
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 
 function resolveStoreBase(root?: string): string {
   return root ?? process.cwd();
@@ -416,6 +418,74 @@ export async function planFinalize(
   };
 }
 
+export async function planReadiness(
+  args: string[],
+  opts: CliOptions
+): Promise<CommandResult> {
+  const planId = args[0];
+  if (!planId) {
+    return {
+      exitCode: ExitCode.InvalidArgument,
+      message: "Usage: plan readiness <plan-id> [repoRoot]",
+    };
+  }
+  const root = resolveStoreBase(args[1]);
+  const ledgerPath = path.join(root, ".agent", "ledger", `${planId}.json`);
+  if (!fs.existsSync(ledgerPath)) {
+    return {
+      exitCode: ExitCode.GeneralError,
+      message: `Ledger not found: ${ledgerPath}`,
+    };
+  }
+  try {
+    const planDir = path.join(root, ".agent", "plans", planId);
+    const amendmentPath = path.join(
+      planDir,
+      "amendments",
+      "0019-autonomous-native-swarm-whole-system-convergence.md",
+    );
+    const originalPath = path.join(planDir, "original.md");
+    const result = compilePlanReadiness({
+      ledgerPath,
+      planDir,
+      amendmentPath: fs.existsSync(amendmentPath) ? amendmentPath : undefined,
+      originalPath: fs.existsSync(originalPath) ? originalPath : undefined,
+      headCommit: runHeadCommit(root),
+    });
+    return {
+      exitCode: ExitCode.Success,
+      message: `Plan ${result.planId} readiness: ${result.readinessState} (${result.requirementCount} requirements, revision ${result.revision})`,
+      data: {
+        planId: result.planId,
+        readinessState: result.readinessState,
+        revision: result.revision,
+        effectiveIdentity: result.effectiveIdentity,
+        requirementCount: result.requirementCount,
+        reasons: result.reasons,
+        files: result.files,
+      },
+    };
+  } catch (err) {
+    return {
+      exitCode: ExitCode.GeneralError,
+      message: `Plan readiness failed: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
+}
+
+function runHeadCommit(root: string): string | undefined {
+  try {
+    const out = execFileSync(
+      "git",
+      ["rev-parse", "HEAD"],
+      { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
+    );
+    return out.trim();
+  } catch {
+    return undefined;
+  }
+}
+
 export async function planCmd(
   args: string[],
   opts: CliOptions
@@ -442,10 +512,12 @@ export async function planCmd(
       return planExport(rest, opts);
     case "finalize":
       return planFinalize(rest, opts);
+    case "readiness":
+      return planReadiness(rest, opts);
     default:
       return {
         exitCode: ExitCode.InvalidArgument,
-        message: `Unknown plan subcommand: ${subcommand}. Available: inventory, adopt, status, checkpoint, lineage, reconcile, repair, export, finalize`,
+        message: `Unknown plan subcommand: ${subcommand}. Available: inventory, adopt, status, checkpoint, lineage, reconcile, repair, export, finalize, readiness`,
       };
   }
 }
