@@ -273,10 +273,9 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
   },
   'M11-R34': {
     cluster: 'C10',
-    status: 'PARTIAL',
-    partialReason: 'machine-generated terminal reporting lands with the M11-R34 worktree — WAITING_EXTERNAL',
+    status: 'MATCH',
     modules: ['packages/engine/src/terminal-gate.ts'],
-    tests: ['packages/engine/test/terminal-gate.test.ts'],
+    tests: ['packages/engine/test/terminal-report.test.ts', 'packages/engine/test/terminal-gate.test.ts'],
     acceptanceCriteria: [
       'terminal report generated from the canonical ledger with claim coverage, evidence maturity, open findings, terminal formula result',
       'report compiler fails closed on stale evidence, missing capability, blocking finding, or identity mismatch',
