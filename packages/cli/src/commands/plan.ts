@@ -11,6 +11,7 @@ import {
   reconcilePlan as engineReconcilePlan,
 } from "@initforge/agent-rules-engine/plan-lifecycle";
 import { compilePlanReadiness } from "@initforge/agent-rules-engine/plan-readiness";
+import { evaluateM11Terminal, M11_TERMINAL_TOKEN, type M11Evidence } from "@initforge/agent-rules-engine/terminal-gate";
 import path from "node:path";
 import fs from "node:fs";
 import { createHash } from "node:crypto";
@@ -486,6 +487,87 @@ function runHeadCommit(root: string): string | undefined {
   }
 }
 
+/**
+ * Minimal M11 terminal wiring: `plan m11 <plan-id> [repoRoot]` evaluates
+ * HV3_M11_LOCAL_COMPLETE eligibility from the real ledger + the dynamically
+ * compiled effective requirement set. Evaluator never writes the terminal token.
+ */
+export async function planM11(
+  args: string[],
+  opts: CliOptions
+): Promise<CommandResult> {
+  const planId = args[0];
+  if (!planId) {
+    return { exitCode: ExitCode.InvalidArgument, message: "Usage: plan m11 <plan-id> [repoRoot]" };
+  }
+  const root = resolveStoreBase(args[1]);
+  const ledgerPath = path.join(root, ".agent", "ledger", `${planId}.json`);
+  if (!fs.existsSync(ledgerPath)) {
+    return { exitCode: ExitCode.GeneralError, message: `Ledger not found: ${ledgerPath}` };
+  }
+  try {
+    const planDir = path.join(root, ".agent", "plans", planId);
+    const amendmentPath = path.join(planDir, "amendments", "0019-autonomous-native-swarm-whole-system-convergence.md");
+    const originalPath = path.join(planDir, "original.md");
+    const ledger = JSON.parse(fs.readFileSync(ledgerPath, "utf8")) as Record<string, unknown> & {
+      headCommit?: string; commitSha?: string; milestones?: { M8?: { scorecard?: { dimensions?: Array<{ id: string; score: number | null; status: string }> } }; M11?: { headCommit?: string; observedAt?: string; evidence?: Array<{ evidenceHash?: string }> } };
+      reviews?: Array<Record<string, unknown>>; attestations?: Array<{ commitSha?: string }>;
+      effective_plan_identity?: { sha256?: string }; reconciliations?: Array<{ headCommit?: string }>;
+    };
+    const readiness = compilePlanReadiness({
+      ledgerPath,
+      planDir,
+      amendmentPath: fs.existsSync(amendmentPath) ? amendmentPath : undefined,
+      originalPath: fs.existsSync(originalPath) ? originalPath : undefined,
+      headCommit: runHeadCommit(root) ?? ledger.headCommit,
+    });
+    const headCommit = ledger.headCommit ?? ledger.commitSha ?? "";
+    const m11 = ledger.milestones?.M11;
+    const lastRec = (ledger.reconciliations ?? []).at(-1);
+    const evidence: M11Evidence = {
+      headCommit,
+      effectivePlanIdentity: ledger.effective_plan_identity?.sha256 ?? "",
+      envelopeSha256: m11?.evidence?.[0]?.evidenceHash ?? "",
+      observedAt: m11?.observedAt ?? new Date().toISOString(),
+      fresh: headCommit.length > 0 && m11?.headCommit === headCommit,
+      ciSha: headCommit,
+      certifiedArtifactSha256: "",
+      installedArtifactSha256: "",
+      installedFrom: "",
+      reconciliationHeadCommit: lastRec?.headCommit ?? "",
+      parity: "SKIPPED",
+      topology: "SKIPPED",
+      reviews: [],
+    };
+    const scorecard = ledger.milestones?.M8?.scorecard?.dimensions ?? [];
+    const result = evaluateM11Terminal(ledger, evidence, {
+      requirements: readiness.requirements.map((r) => ({ requirement_id: r.requirement_id, status: r.status })),
+      scorecard,
+      waitingGates: [],
+    });
+    const eligible = result.passed;
+    return {
+      exitCode: eligible ? ExitCode.Success : ExitCode.GeneralError,
+      message: eligible
+        ? `${planId} M11 terminal eligible: ${M11_TERMINAL_TOKEN}`
+        : `${planId} M11 terminal NOT eligible: ${result.failedGates.join(', ')}`,
+      data: {
+        planId,
+        terminalToken: M11_TERMINAL_TOKEN,
+        eligible,
+        requirementCount: readiness.requirementCount,
+        failedGates: result.failedGates,
+        gates: result.gates,
+      },
+    };
+  } catch (err) {
+    return {
+      exitCode: ExitCode.GeneralError,
+      message: `M11 terminal evaluation failed: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
+}
+
 export async function planCmd(
   args: string[],
   opts: CliOptions
@@ -514,10 +596,12 @@ export async function planCmd(
       return planFinalize(rest, opts);
     case "readiness":
       return planReadiness(rest, opts);
+    case "m11":
+      return planM11(rest, opts);
     default:
       return {
         exitCode: ExitCode.InvalidArgument,
-        message: `Unknown plan subcommand: ${subcommand}. Available: inventory, adopt, status, checkpoint, lineage, reconcile, repair, export, finalize, readiness`,
+        message: `Unknown plan subcommand: ${subcommand}. Available: inventory, adopt, status, checkpoint, lineage, reconcile, repair, export, finalize, readiness, m11`,
       };
   }
 }
