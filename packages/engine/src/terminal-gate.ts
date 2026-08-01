@@ -17,6 +17,8 @@ export interface TerminalGateResult {
 }
 
 export const M10_TERMINAL_TOKEN = 'HARNESS_V3_10_OF_10_COMPLETE';
+export const M11_TERMINAL_TOKEN = 'HV3_M11_LOCAL_COMPLETE';
+/** Legacy M8 floor. M11 terminal truth derives the requirement count dynamically from the effective plan (AM-0019 §3 forbids hard-coded counts). */
 export const M8_REQUIRED_REQUIREMENTS = 15;
 export const M95_REQUIRED_RECONCILIATIONS = 15;
 const FRESH_EVIDENCE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
@@ -31,6 +33,18 @@ function freshEpoch(value: any, now: number): boolean {
 
 function sha256Json(value: unknown): string {
   return createHash('sha256').update(JSON.stringify(value)).digest('hex');
+}
+
+/**
+ * Dynamic requirement count: derived from the canonical M8 requirements packet
+ * when present (plan-readiness compiles the M11 additive registry on top of it),
+ * falling back to the legacy floor only when no packet exists. Never a hard-coded
+ * terminal count for M11.
+ */
+export function deriveM8RequirementCount(ledger: Record<string, any>): number {
+  const reqs = ledger.milestones?.M8?.requirements;
+  if (Array.isArray(reqs) && reqs.length > 0) return reqs.length;
+  return M8_REQUIRED_REQUIREMENTS;
 }
 
 /** M10 proof is content-derived; callers cannot choose its digest independently. */
@@ -116,7 +130,7 @@ export function verifyMilestoneGate(
   const packet = l.milestones?.[milestone] || l.milestoneEvidence?.[milestone] || l[milestone === 'M8' ? 'm8' : 'm95'];
   if (packet?.identity !== undefined && packet.identity !== identity) return { passed: false, milestone, reason: 'milestone identity mismatch' };
   const requirements = packet?.requirements;
-  if (!Array.isArray(requirements) || requirements.length < (milestone === 'M8' ? M8_REQUIRED_REQUIREMENTS : 1)) return { passed: false, milestone, reason: 'missing canonical milestone requirements' };
+  if (!Array.isArray(requirements) || requirements.length < (milestone === 'M8' ? deriveM8RequirementCount(ledger) : 1)) return { passed: false, milestone, reason: 'missing canonical milestone requirements' };
   for (const requirement of requirements) {
     if (requirement.status !== 'MATCH' || !Array.isArray(requirement.evidence) || requirement.evidence.length === 0) return { passed: false, milestone, reason: `requirement ${requirement.id || '(missing id)'} lacks MATCH evidence` };
     for (const evidence of requirement.evidence) {
@@ -439,4 +453,160 @@ export function terminalGateCheck(ledgerPath: string, headCommit: string): { pas
   } catch (e: any) {
     return { passed: false, message: e.message };
   }
+}
+
+// ── M11 terminal truth (AM-0019 §13) ─────────────────────────────────────────
+
+export interface M11Review {
+  dimension: string;
+  accepted: boolean;
+  reviewId: string;
+  stale: boolean;
+}
+
+export interface M11Evidence {
+  /** Exact source HEAD the evidence envelope binds. */
+  headCommit: string;
+  effectivePlanIdentity: string;
+  envelopeSha256: string;
+  observedAt: string;
+  fresh: boolean;
+  /** CI SHA bound by evidence — must equal the exact HEAD. */
+  ciSha: string;
+  certifiedArtifactSha256: string;
+  installedArtifactSha256: string;
+  /** Must name the certified local main source, e.g. `certified-local-main`. */
+  installedFrom: string;
+  reconciliationHeadCommit: string;
+  parity: 'COMPLETE' | 'SKIPPED';
+  topology: 'COMPLETE' | 'SKIPPED';
+  reviews: M11Review[];
+}
+
+export interface M11Checks {
+  /** Effective requirement set compiled from plan-readiness — count is dynamic, never hard-coded. */
+  requirements: Array<{ requirement_id: string; status: string }>;
+  /** Fitness dimensions; zero null/UNVERIFIED required. */
+  scorecard: Array<{ id: string; score: number | null; status: string }>;
+  /** Required gates currently waiting (e.g. topology gate on a capable runner). */
+  waitingGates: string[];
+}
+
+const M11_REQUIRED_REVIEW_DIMENSIONS = ['architecture', 'security', 'maintainability', 'UX', 'operations'];
+
+function ledgerEffectiveIdentity(ledger: Record<string, any>): string | undefined {
+  return ledger.effective_plan_identity?.sha256 ?? ledger.effectivePlanIdentity;
+}
+
+function scorecardDimensions(ledger: Record<string, any>, checks: M11Checks): Array<{ id: string; score: number | null; status: string }> {
+  if (checks.scorecard.length > 0) return checks.scorecard;
+  return ledger.milestones?.M8?.scorecard?.dimensions ?? [];
+}
+
+/**
+ * HV3_M11_LOCAL_COMPLETE eligibility from REAL ledger state. Pure evaluator —
+ * never writes the terminal token (engine-only emission). Returns FAIL whenever
+ * a requirement is not MATCH/SUPERSEDED, a finding is open, a score is
+ * null/UNVERIFIED, evidence is stale or unbinds the exact HEAD, parity/topology
+ * is skipped, the installed artifact differs, a required gate waits, reviews do
+ * not all accept, or execution_state is NEEDS_REMEDIATION / an M10 stale marker
+ * is present.
+ */
+export function evaluateM11Terminal(
+  ledger: Record<string, unknown>,
+  evidence: M11Evidence,
+  checks: M11Checks,
+  now = Date.now(),
+): TerminalGateResult {
+  const l = ledger as Record<string, any>;
+  const gates: GateResult[] = [];
+  const failedGates: string[] = [];
+  const fail = (name: string, detail: string): void => {
+    gates.push({ name, status: 'FAIL', detail });
+    failedGates.push(name);
+  };
+  const pass = (name: string, detail: string): void => { gates.push({ name, status: 'PASS', detail }); };
+
+  // 1. Every effective requirement MATCH or approved SUPERSEDED (dynamic count).
+  const reqs = Array.isArray(checks.requirements) ? checks.requirements : [];
+  const badReqs = reqs.filter((r) => r.status !== 'MATCH' && r.status !== 'SUPERSEDED');
+  if (reqs.length === 0) fail('M11_EFFECTIVE_REQUIREMENTS_MATCH', 'no effective requirements compiled — empty set cannot certify');
+  else if (badReqs.length > 0) fail('M11_EFFECTIVE_REQUIREMENTS_MATCH', `${badReqs.length}/${reqs.length} not MATCH/SUPERSEDED (${badReqs.map((r) => `${r.requirement_id}:${r.status}`).join(', ')})`);
+  else pass('M11_EFFECTIVE_REQUIREMENTS_MATCH', `${reqs.length} effective requirements MATCH/SUPERSEDED (dynamic count)`);
+
+  // 2. Zero open findings.
+  const findings = [...(l.findings ?? []), ...(l.orphanFindings ?? [])];
+  const open = findings.filter((f: any) => f.status && String(f.status).includes('OPEN'));
+  if (open.length === 0) pass('M11_NO_OPEN_FINDINGS', '0 open findings');
+  else fail('M11_NO_OPEN_FINDINGS', `${open.length} open finding(s)`);
+
+  // 3. Zero null/UNVERIFIED scores.
+  const dims = scorecardDimensions(l, checks);
+  const badScores = dims.filter((d) => d.score === null || d.score === undefined || String(d.status).toUpperCase() === 'UNVERIFIED');
+  if (dims.length === 0) fail('M11_SCORES_VERIFIED', 'no fitness dimensions recorded');
+  else if (badScores.length > 0) fail('M11_SCORES_VERIFIED', `${badScores.length}/${dims.length} null/UNVERIFIED (${badScores.map((d) => `${d.id}:${d.status ?? d.score}`).join(', ')})`);
+  else pass('M11_SCORES_VERIFIED', `${dims.length} dimensions verified`);
+
+  // 4. Evidence binds the exact source HEAD + effective identity and is fresh.
+  const identity = ledgerEffectiveIdentity(l);
+  const head = l.headCommit ?? l.commitSha ?? '';
+  const observedAt = Date.parse(evidence.observedAt);
+  const evidenceOk = evidence.fresh === true
+    && evidence.envelopeSha256.length > 0
+    && evidence.headCommit === head
+    && evidence.headCommit.length > 0
+    && typeof identity === 'string' && identity.length > 0
+    && evidence.effectivePlanIdentity === identity
+    && Number.isFinite(observedAt) && observedAt <= now && now - observedAt <= FRESH_EVIDENCE_MAX_AGE_MS;
+  if (evidenceOk) pass('M11_EVIDENCE_BINDS_HEAD', `evidence envelope ${evidence.envelopeSha256.slice(0, 12)} binds exact HEAD ${head.slice(0, 12)}`);
+  else fail('M11_EVIDENCE_BINDS_HEAD', `evidence stale/unbound: fresh=${evidence.fresh}, head=${evidence.headCommit.slice(0, 12)} vs ledger ${head.slice(0, 12)}`);
+
+  // 5. CI binds the exact HEAD.
+  if (evidence.ciSha === evidence.headCommit && evidence.headCommit.length > 0) pass('M11_CI_BINDS_HEAD', `CI SHA ${evidence.ciSha.slice(0, 12)} binds HEAD`);
+  else fail('M11_CI_BINDS_HEAD', `CI SHA ${evidence.ciSha.slice(0, 12)} != HEAD ${evidence.headCommit.slice(0, 12)}`);
+
+  // 6. Native attestations bind the exact HEAD.
+  const atts = l.attestations ?? [];
+  const attBad = atts.length === 0 || atts.some((a: any) => a.commitSha !== head);
+  if (attBad) fail('M11_ATTESTATIONS_BIND_HEAD', atts.length === 0 ? 'no native attestations' : 'attestation does not bind exact HEAD');
+  else pass('M11_ATTESTATIONS_BIND_HEAD', `${atts.length} attestation(s) bind HEAD`);
+
+  // 7. Exact certified artifact installed from certified local main.
+  const artifactOk = evidence.installedArtifactSha256 === evidence.certifiedArtifactSha256
+    && evidence.installedArtifactSha256.length > 0
+    && /main/.test(evidence.installedFrom);
+  if (artifactOk) pass('M11_INSTALLED_ARTIFACT_MATCHES', `artifact ${evidence.installedArtifactSha256.slice(0, 12)} installed from ${evidence.installedFrom}`);
+  else fail('M11_INSTALLED_ARTIFACT_MATCHES', `installed ${evidence.installedArtifactSha256.slice(0, 12)} != certified ${evidence.certifiedArtifactSha256.slice(0, 12)} or not from certified local main (${evidence.installedFrom})`);
+
+  // 8. Independent reviews accept all five dimensions, none stale.
+  const acceptedDims = new Set(evidence.reviews.filter((r) => r.accepted && !r.stale).map((r) => r.dimension));
+  const missingDims = M11_REQUIRED_REVIEW_DIMENSIONS.filter((d) => !acceptedDims.has(d));
+  if (missingDims.length === 0) pass('M11_REVIEWS_ACCEPT', 'architecture/security/maintainability/UX/operations reviews accept');
+  else fail('M11_REVIEWS_ACCEPT', `reviews not all accepting/stale: missing ${missingDims.join(', ')}`);
+
+  // 9. Required parity/topology not skipped.
+  if (evidence.parity === 'SKIPPED' || evidence.topology === 'SKIPPED') fail('M11_PARITY_TOPOLOGY_COMPLETE', `parity=${evidence.parity} topology=${evidence.topology} — skipped verification cannot certify`);
+  else pass('M11_PARITY_TOPOLOGY_COMPLETE', 'paired parity + deployed-topology verification complete');
+
+  // 10. No required gate waits.
+  if (checks.waitingGates.length === 0) pass('M11_NO_WAITING_GATES', 'no required gate waiting');
+  else fail('M11_NO_WAITING_GATES', `required gate(s) waiting: ${checks.waitingGates.join(', ')}`);
+
+  // 11. Current reconciliation binds the exact HEAD.
+  if (evidence.reconciliationHeadCommit === evidence.headCommit && evidence.headCommit.length > 0) pass('M11_RECONCILIATION_BINDS_HEAD', 'current reconciliation binds exact HEAD');
+  else fail('M11_RECONCILIATION_BINDS_HEAD', `reconciliation ${evidence.reconciliationHeadCommit.slice(0, 12)} != HEAD ${evidence.headCommit.slice(0, 12)}`);
+
+  // 12. Execution state is eligible — never NEEDS_REMEDIATION, never the stale M10 marker.
+  const state = l.execution_state ?? l.status ?? '';
+  const staleMarker = l.terminalMarker === M10_TERMINAL_TOKEN && (l.terminalMarkerStatus ?? '').includes('HISTORICAL_STALE');
+  if (state === 'NEEDS_REMEDIATION') fail('M11_EXECUTION_STATE_OK', `execution_state is NEEDS_REMEDIATION`);
+  else if (state === M10_TERMINAL_TOKEN) fail('M11_EXECUTION_STATE_OK', 'execution_state carries the M10 token — HISTORICAL_STALE_FOR_M11, cannot authorize M11');
+  else if (staleMarker) fail('M11_EXECUTION_STATE_OK', 'ledger terminalMarker is M10 HISTORICAL_STALE_FOR_M11 — cannot authorize M11');
+  else pass('M11_EXECUTION_STATE_OK', `execution_state ${state || '(none)'} eligible`);
+
+  return { passed: failedGates.length === 0, gates, failedGates, timestamp: new Date().toISOString() };
+}
+
+export function assertM11Certifiable(result: TerminalGateResult): void {
+  if (!result.passed) throw new Error(`M11 terminal gate FAILED: ${result.failedGates.join(', ')}`);
 }

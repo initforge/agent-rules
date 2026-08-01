@@ -69,6 +69,10 @@
       "types": "./dist/autopilot.d.ts",
       "import": "./dist/autopilot.js"
     },
+    "./autopilot-m11": {
+      "types": "./dist/autopilot-m11.d.ts",
+      "import": "./dist/autopilot-m11.js"
+    },
     "./native-session-adapter": {
       "types": "./dist/native-session-adapter.d.ts",
       "import": "./dist/native-session-adapter.js"
