@@ -25,10 +25,13 @@ import {
   type Sha256,
 } from './contracts.js';
 import { M11_IMPLEMENTATIONS, clusterForM11 } from './plan-readiness-map.js';
+import { compileClaims, type ClaimDefinition } from './claim-registry.js';
 
 // Re-exported so the plan-readiness public API is unchanged after the M11
 // mapping table moved to its own module.
 export { M11_IMPLEMENTATIONS } from './plan-readiness-map.js';
+export { compileClaims } from './claim-registry.js';
+export type { ClaimDefinition } from './claim-registry.js';
 
 // Re-exported from contracts.ts — shared graph types keep a single source of truth.
 export { DEPENDENCY_TYPES, RECOVERABLE_STATES, type DependencyType, type RecoverableState } from './contracts.js';
@@ -63,8 +66,10 @@ export interface PlanReadinessInput {
   ledgerPath: string;
   /** Absolute path to .agent/plans/<plan-id> (bundle destination). */
   planDir: string;
-  /** Absolute path to the AM-0019 amendment markdown (M11-R registry source). */
+  /** Legacy single amendment markdown path (M11-R registry source). Prefer amendmentPaths. */
   amendmentPath?: string;
+  /** Amendment markdown files (AM-0019 §14, AM-0020 §14, …). Scanned from planDir when omitted. */
+  amendmentPaths?: string[];
   /** Absolute path to original.md (used for anchor section text). */
   originalPath?: string;
   /** Observed host capability; auto-detected when omitted. */
@@ -231,6 +236,16 @@ function layerProfile(id: string, text: string, source: string): RequirementMapp
     if (id === 'M11-R22' || id === 'M11-R23') return { layers: ['component', 'contract'], profile_source: 'AM-0019 §10' };
     if (id === 'M11-R24' || id === 'M11-R25') return { layers: ['contract', 'component'], profile_source: 'AM-0019 §11' };
     if (id === 'M11-R26') return { layers: ['service-integration', 'public-ingress-journey'], profile_source: 'AM-0019 §12' };
+    if (id === 'M11-R27') return { layers: ['unit', 'contract'], profile_source: 'AM-0020 §2' };
+    if (id === 'M11-R28') return { layers: ['unit', 'contract'], profile_source: 'AM-0020 §3–4' };
+    if (id === 'M11-R29') return { layers: ['contract', 'component'], profile_source: 'AM-0020 §4–5' };
+    if (id === 'M11-R30') return { layers: ['component', 'service-integration'], profile_source: 'AM-0020 §7' };
+    if (id === 'M11-R31') return { layers: ['component', 'contract'], profile_source: 'AM-0020 §5' };
+    if (id === 'M11-R32') return { layers: ['contract', 'release-rollback'], profile_source: 'AM-0020 §3' };
+    if (id === 'M11-R33') return { layers: ['contract', 'service-integration'], profile_source: 'AM-0020 §8' };
+    if (id === 'M11-R34') return { layers: ['contract', 'release-rollback'], profile_source: 'AM-0020 §9' };
+    if (id === 'M11-R35') return { layers: ['component', 'service-integration'], profile_source: 'AM-0020 §11' };
+    if (id === 'M11-R36') return { layers: ['component', 'contract'], profile_source: 'AM-0020 §10' };
   }
   return { layers: layersForText(title), profile_source: source };
 }
@@ -249,13 +264,35 @@ function resolveRepoRoot(originalPath?: string, amendmentPath?: string, explicit
 
 // ── Requirement compilation ─────────────────────────────────────────────────
 
+/**
+ * Resolve the amendment files that carry M11-R registries. Dynamic: scans the
+ * plan's amendments directory for all owned-approval markdown files when no
+ * explicit paths are given, so AM-0020 §14 is picked up exactly as AM-0019 §14
+ * was — no hard-coded amendment count.
+ */
+export function resolveAmendmentPaths(input: {
+  planDir: string;
+  amendmentPath?: string;
+  amendmentPaths?: string[];
+}): string[] {
+  const explicit = input.amendmentPaths ?? (input.amendmentPath ? [input.amendmentPath] : []);
+  if (explicit.length > 0) return explicit.filter((p) => fs.existsSync(p));
+  const dir = path.join(input.planDir, 'amendments');
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir)
+    .filter((f) => f.endsWith('.md'))
+    .sort()
+    .map((f) => path.join(dir, f));
+}
+
 export function compileRequirements(
   ledger: CompiledLedger,
-  amendmentPath?: string,
+  amendmentPaths: string | string[] = [],
   originalPath?: string,
   repoRoot?: string,
 ): RequirementMapping[] {
-  const amText = amendmentPath && fs.existsSync(amendmentPath) ? fs.readFileSync(amendmentPath, 'utf8') : '';
+  const paths = Array.isArray(amendmentPaths) ? amendmentPaths : [amendmentPaths];
+  const amText = paths.map((p) => (p && fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : '')).join('\n');
   const m11Reqs = amText ? parseM11Requirements(amText) : [];
   const originalText = originalPath && fs.existsSync(originalPath) ? fs.readFileSync(originalPath, 'utf8') : '';
   const lines = originalText.split('\n');
@@ -333,18 +370,18 @@ export function compileRequirements(
     if (!impl) {
       out.push({
         requirement_id: mr.id,
-        source: `AM-0019 §14 — ${mr.title}`,
+        source: `${amendmentSourceFor(mr.id, paths)} — ${mr.title}`,
         status: 'GAP',
         plan_anchor: null,
         acceptance_criteria: [],
-        verification_profile: layerProfile(mr.id, mr.title, `AM-0019 §14 ${mr.id}`),
+        verification_profile: layerProfile(mr.id, mr.title, amendmentSourceFor(mr.id, paths)),
         evidence_contract: null,
         execution_cluster: { cluster: clusterForM11(mr.id), state: 'GAP' },
         notes: ['no implementation mapping registered for this requirement'],
       });
       continue;
     }
-    const root = resolveRepoRoot(originalPath, amendmentPath, repoRoot);
+    const root = resolveRepoRoot(originalPath, paths[0], repoRoot);
     const missingModules = impl.modules.filter((m) => !fs.existsSync(path.resolve(root, m)));
     const missingTests = impl.tests.filter((t) => !fs.existsSync(path.resolve(root, t)));
     const presentModules = impl.modules.filter((m) => fs.existsSync(path.resolve(root, m)));
@@ -374,11 +411,11 @@ export function compileRequirements(
 
     out.push({
       requirement_id: mr.id,
-      source: `AM-0019 §14 — ${mr.title}`,
+      source: `${amendmentSourceFor(mr.id, paths)} — ${mr.title}`,
       status,
       plan_anchor: null,
       acceptance_criteria: impl.acceptanceCriteria,
-      verification_profile: layerProfile(mr.id, mr.title, `AM-0019 §14 ${mr.id}`),
+      verification_profile: layerProfile(mr.id, mr.title, amendmentSourceFor(mr.id, paths)),
       evidence_contract: moduleEvidence.length > 0
         ? { hashes: moduleEvidence, bound_to: ledger.effectiveIdentity }
         : null,
@@ -388,6 +425,18 @@ export function compileRequirements(
   }
 
   return out;
+}
+
+/** Source label for an M11-R requirement: which amendment file carried its §14 registry line. */
+function amendmentSourceFor(requirementId: string, paths: string[]): string {
+  for (const p of paths) {
+    const text = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : '';
+    if (parseM11Requirements(text).some((r) => r.id === requirementId)) {
+      const m = p.match(/(\d{4})-[^/]+\.md$/);
+      return m ? `AM-${m[1]} §14` : 'amendment §14';
+    }
+  }
+  return 'amendment §14';
 }
 
 // ── Host probe ───────────────────────────────────────────────────────────────
@@ -673,11 +722,12 @@ function buildConflictGraphYaml(ledger: CompiledLedger): Record<string, unknown>
   };
 }
 
-function buildVerificationGraphYaml(requirements: RequirementMapping[]): Record<string, unknown> {
+function buildVerificationGraphYaml(requirements: RequirementMapping[], claims?: ClaimDefinition[]): Record<string, unknown> {
   return {
     schema_version: 1,
     chain: 'PlanAnchor → Requirement → AcceptanceCriterion → VerificationProfile → EvidenceContract → ExecutionCluster',
     requirement_count: requirements.length,
+    claim_count: claims?.length ?? requirements.length,
     requirements: requirements.map((r) => ({
       requirement_id: r.requirement_id,
       source: r.source,
@@ -689,6 +739,14 @@ function buildVerificationGraphYaml(requirements: RequirementMapping[]): Record<
       execution_cluster: r.execution_cluster,
       notes: r.notes,
     })),
+    claims: claims?.map((c) => ({
+      claim_id: c.claim_id,
+      requirement_id: c.requirement_id,
+      risk_tier: c.risk_tier,
+      required_capabilities: c.required_capabilities,
+      terminal_weight: c.terminal_weight,
+      meaning: c.meaning,
+    })) ?? [],
   };
 }
 
@@ -794,8 +852,12 @@ export function compilePlanReadiness(input: PlanReadinessInput): PlanReadinessRe
   const ledger = readLedger(input.ledgerPath);
   const host = input.hostProbe ?? detectHostProbe(ledger.ciChecks);
   const repoRoot = path.resolve(input.planDir, '../../..');
-  const requirements = compileRequirements(ledger, input.amendmentPath, input.originalPath, repoRoot);
+  const amendmentPaths = resolveAmendmentPaths(input);
+  const requirements = compileRequirements(ledger, amendmentPaths, input.originalPath, repoRoot);
   const readiness = deriveReadiness(requirements, host, ledger, input.headCommit);
+
+  const amendmentTexts = amendmentPaths.map((p) => (fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : ''));
+  const claims = compileClaims({ requirements, amendmentTexts });
 
   const documents: Record<string, unknown> = {
     'projection.plan.yaml': buildProjectionPlanYaml(ledger, input.headCommit),
@@ -804,7 +866,7 @@ export function compilePlanReadiness(input: PlanReadinessInput): PlanReadinessRe
     'system-topology.yaml': buildSystemTopologyYaml(),
     'execution-graph.yaml': buildExecutionGraphYaml(repoRoot),
     'conflict-graph.yaml': buildConflictGraphYaml(ledger),
-    'verification-graph.yaml': buildVerificationGraphYaml(requirements),
+    'verification-graph.yaml': buildVerificationGraphYaml(requirements, claims),
     'integration-train.yaml': buildIntegrationTrainYaml(ledger, input.headCommit),
     'resource-budget.yaml': buildResourceBudgetYaml(host),
   };

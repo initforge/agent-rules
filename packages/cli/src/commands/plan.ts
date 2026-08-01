@@ -440,16 +440,12 @@ export async function planReadiness(
   }
   try {
     const planDir = path.join(root, ".agent", "plans", planId);
-    const amendmentPath = path.join(
-      planDir,
-      "amendments",
-      "0019-autonomous-native-swarm-whole-system-convergence.md",
-    );
     const originalPath = path.join(planDir, "original.md");
+    // The engine auto-scans <planDir>/amendments for the M11-R registries
+    // (AM-0019 §14 + AM-0020 §14); no explicit amendment list is needed.
     const result = compilePlanReadiness({
       ledgerPath,
       planDir,
-      amendmentPath: fs.existsSync(amendmentPath) ? amendmentPath : undefined,
       originalPath: fs.existsSync(originalPath) ? originalPath : undefined,
       headCommit: runHeadCommit(root),
     });
@@ -512,7 +508,6 @@ export async function planM11(
   }
   try {
     const planDir = path.join(root, ".agent", "plans", planId);
-    const amendmentPath = path.join(planDir, "amendments", "0019-autonomous-native-swarm-whole-system-convergence.md");
     const originalPath = path.join(planDir, "original.md");
     const ledger = JSON.parse(fs.readFileSync(ledgerPath, "utf8")) as Record<string, unknown> & {
       headCommit?: string; commitSha?: string; milestones?: { M8?: { scorecard?: { dimensions?: Array<{ id: string; score: number | null; status: string }> } }; M11?: { headCommit?: string; observedAt?: string; evidence?: Array<{ evidenceHash?: string }> } };
@@ -522,7 +517,6 @@ export async function planM11(
     const readiness = compilePlanReadiness({
       ledgerPath,
       planDir,
-      amendmentPath: fs.existsSync(amendmentPath) ? amendmentPath : undefined,
       originalPath: fs.existsSync(originalPath) ? originalPath : undefined,
       headCommit: runHeadCommit(root) ?? ledger.headCommit,
     });

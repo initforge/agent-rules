@@ -27,6 +27,11 @@ const AMENDMENT_PATH = path.join(
   'amendments',
   '0019-autonomous-native-swarm-whole-system-convergence.md',
 );
+const AMENDMENT_PATH_0020 = path.join(
+  PLAN_DIR,
+  'amendments',
+  '0020-epistemic-integrity-adversarial-review-and-truthful-reporting.md',
+);
 const ORIGINAL_PATH = path.join(PLAN_DIR, 'original.md');
 
 const fixtureTmp = path.join(os.tmpdir(), `plan-readiness-test-${process.pid}-${Date.now()}`);
@@ -63,44 +68,59 @@ describe('parseM11Requirements', () => {
   });
 });
 
-describe('readLedger (real r57 ledger)', () => {
+describe('readLedger (real r58 ledger)', () => {
   const maybe = hasRealLedger ? it : it.skip;
-  maybe('reads canonical identity and revision 57', () => {
+  maybe('reads canonical identity and revision 58', () => {
     const ledger = readLedger(LEDGER_PATH);
     expect(ledger.planId).toBe(PLAN_ID);
-    expect(ledger.revision).toBe(57);
-    expect(ledger.effectiveIdentity).toBe('1d524a2706c1bb9c2aa19945de1197015bbbbc4ce7ef54cb0a37ef54f5ca4c27');
+    expect(ledger.revision).toBe(58);
+    expect(ledger.effectiveIdentity).toBe('21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003');
     expect(ledger.m8Requirements.length).toBe(15);
   });
 });
 
 describe('compileRequirements — dynamic, no hard-coded count', () => {
   const maybe = hasRealLedger ? it : it.skip;
-  maybe('compiles 31 requirements (15 REQ + 16 M11-R) without a hard-coded constant', () => {
+  maybe('compiles 41 requirements (15 REQ + 26 M11-R) without a hard-coded constant', () => {
     const ledger = readLedger(LEDGER_PATH);
-    const requirements = compileRequirements(ledger, AMENDMENT_PATH, ORIGINAL_PATH, REPO_ROOT);
+    const requirements = compileRequirements(
+      ledger,
+      [AMENDMENT_PATH, AMENDMENT_PATH_0020],
+      ORIGINAL_PATH,
+      REPO_ROOT,
+    );
     const ids = requirements.map((r) => r.requirement_id);
-    expect(ids).toHaveLength(31);
+    expect(ids).toHaveLength(41);
     for (let i = 1; i <= 15; i++) {
       expect(ids).toContain(`REQ-${String(i).padStart(3, '0')}`);
     }
-    for (let i = 11; i <= 26; i++) {
+    for (let i = 11; i <= 36; i++) {
       expect(ids).toContain(`M11-R${i}`);
     }
     // M11 additive requirements map to real merged modules with tree evidence.
     const m11 = requirements.filter((x) => x.requirement_id.startsWith('M11-R'));
-    expect(m11).toHaveLength(16);
+    expect(m11).toHaveLength(26);
     for (const r of m11) {
       expect(r.status, r.requirement_id).not.toBe('GAP');
       expect(r.acceptance_criteria.length).toBeGreaterThan(0);
       expect(r.execution_cluster.cluster).toMatch(/^C(1|2|3|4|5|6|7|8|9|10)$/);
       expect(r.evidence_contract, `${r.requirement_id} evidence`).not.toBeNull();
     }
-    // Only M11-R22 is PARTIAL (codex runtime proof = WAITING_EXTERNAL).
-    for (const r of m11.filter((x) => x.requirement_id !== 'M11-R22')) {
+    // AM-0019 set: only M11-R22 is PARTIAL (codex runtime proof = WAITING_EXTERNAL).
+    const reqNum = (id: string): number => Number(id.match(/\d+$/)?.[0]);
+    const am0019 = m11.filter((x) => reqNum(x.requirement_id) <= 26);
+    for (const r of am0019.filter((x) => x.requirement_id !== 'M11-R22')) {
       expect(r.status).toBe('MATCH');
     }
-    expect(m11.find((x) => x.requirement_id === 'M11-R22')?.status).toBe('PARTIAL');
+    expect(am0019.find((x) => x.requirement_id === 'M11-R22')?.status).toBe('PARTIAL');
+    // AM-0020 set: M11-R27 is MATCH (claim registry implemented); R28..36 stay
+    // PARTIAL with an explicit WAITING_EXTERNAL reason until their worktrees land.
+    const am0020 = m11.filter((x) => reqNum(x.requirement_id) >= 27);
+    expect(am0020.find((x) => x.requirement_id === 'M11-R27')?.status).toBe('MATCH');
+    for (const r of am0020.filter((x) => x.requirement_id !== 'M11-R27')) {
+      expect(r.status).toBe('PARTIAL');
+      expect(r.notes.join(' ')).toContain('WAITING_EXTERNAL');
+    }
     // Mapped implementation modules must actually exist in the tree.
     const implemented = m11.flatMap((r) => r.notes.filter((n) => n.startsWith('implemented:')));
     expect(implemented.length).toBeGreaterThanOrEqual(15);
@@ -158,7 +178,7 @@ describe('bundle round-trip on real plan', () => {
     const result = compilePlanReadiness({
       ledgerPath: LEDGER_PATH,
       planDir: target,
-      amendmentPath: AMENDMENT_PATH,
+      amendmentPaths: [AMENDMENT_PATH, AMENDMENT_PATH_0020],
       originalPath: ORIGINAL_PATH,
       headCommit: '5c24650f25e36d9a362830145e457a21967527bb',
     });
@@ -168,40 +188,42 @@ describe('bundle round-trip on real plan', () => {
       expect(fs.existsSync(p), `missing ${file}`).toBe(true);
       expect(fs.readFileSync(p, 'utf8').length).toBeGreaterThan(0);
     }
-    // Round-trip validation passes with exactly 31 requirements
+    // Round-trip validation passes with exactly 41 requirements
     const validation = validatePlanReadinessBundle(target);
     expect(validation.valid, validation.errors.join('; ')).toBe(true);
-    expect(validation.requirementCount).toBe(31);
+    expect(validation.requirementCount).toBe(41);
     // Readiness is one of the enum values; expected honest outcome is BOUNDED_READY
     expect(READINESS_STATES).toContain(result.readinessState);
-    expect(result.requirementCount).toBe(31);
-    expect(result.revision).toBe(57);
+    expect(result.requirementCount).toBe(41);
+    expect(result.revision).toBe(58);
   });
-  maybe('no orphan/unmapped requirement: every id in graph is REQ-001..015 or M11-R11..26', () => {
+  maybe('no orphan/unmapped requirement: every id in graph is REQ-001..015 or M11-R11..36', () => {
     const target = path.join(fixtureTmp, 'bundle');
     compilePlanReadiness({
       ledgerPath: LEDGER_PATH,
       planDir: target,
-      amendmentPath: AMENDMENT_PATH,
+      amendmentPaths: [AMENDMENT_PATH, AMENDMENT_PATH_0020],
       originalPath: ORIGINAL_PATH,
     });
     const graph = parseYaml(
       fs.readFileSync(path.join(target, 'verification-graph.yaml'), 'utf8'),
-    ) as { requirements: Array<{ requirement_id: string }>; requirement_count: number };
+    ) as { requirements: Array<{ requirement_id: string }>; requirement_count: number; claims: Array<{ claim_id: string }> };
     const graphIds = graph.requirements.map((r: { requirement_id: string }) => r.requirement_id);
-    expect(new Set(graphIds).size).toBe(31);
-    expect(graph.requirement_count).toBe(31);
+    expect(new Set(graphIds).size).toBe(41);
+    expect(graph.requirement_count).toBe(41);
+    // Claim registry is wired into the verification graph (M11-R27).
+    expect(graph.claims.length).toBeGreaterThanOrEqual(41);
   });
-  maybe('projection.plan.yaml regenerated to r57', () => {
+  maybe('projection.plan.yaml regenerated to r58', () => {
     const target = path.join(fixtureTmp, 'bundle');
     compilePlanReadiness({
       ledgerPath: LEDGER_PATH,
       planDir: target,
-      amendmentPath: AMENDMENT_PATH,
+      amendmentPaths: [AMENDMENT_PATH, AMENDMENT_PATH_0020],
       originalPath: ORIGINAL_PATH,
     });
     const content = fs.readFileSync(path.join(target, 'projection.plan.yaml'), 'utf8');
-    expect(content).toContain('revision: 57');
+    expect(content).toContain('revision: 58');
     expect(content).toContain('milestone: M11');
   });
 });
