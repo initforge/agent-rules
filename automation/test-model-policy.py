@@ -44,7 +44,7 @@ def main() -> int:
     assert cms["research_review"]["display"] == "Grok 4.5 base"
     assert cms["implementation"]["selector"] == "composer-2.5[fast=false]"
     assert "Fast" in cursor["denied_modes"]
-    assert cursor["denial_behavior"] == "fail_closed_partial"
+    assert cursor["denial_behavior"] == "fail_closed"
     assert cursor["subagent_model_override"] == "supported"
 
     ag = platforms["antigravity"]
@@ -76,7 +76,7 @@ def main() -> int:
     assert "observed" in opencode["recorded_evidence"]
 
     assert all(
-        item.get("denial_behavior") == "fail_closed_partial"
+        item.get("denial_behavior") == "fail_closed"
         for item in platforms.values()
         if "denial_behavior" in item
     )

@@ -74,7 +74,7 @@
         "expert": { "effort": "medium" }
       },
       "denied_modes": [],
-      "denial_behavior": "fail_closed_partial",
+      "denial_behavior": "fail_closed",
       "subagent_model_override": "supported",
       "model_attestation": "native"
     },
@@ -91,7 +91,7 @@
         "expert_review": { "effort": "medium" }
       },
       "denied_modes": ["Fast", "Auto"],
-      "denial_behavior": "fail_closed_partial",
+      "denial_behavior": "fail_closed",
       "subagent_model_override": "supported",
       "model_attestation": "native"
     },
@@ -109,7 +109,7 @@
         "expert": { "effort": "high" }
       },
       "subagent_model_override": "unconfirmed",
-      "denial_behavior": "fail_closed_partial",
+      "denial_behavior": "fail_closed",
       "model_attestation": "unconfirmed"
     },
     "opencode": {
@@ -123,7 +123,7 @@
         "resolve_chain": "opencode.json model -> agent.<name>.model -> session default"
       },
       "recorded_evidence": ["requested", "resolved", "observed"],
-      "denial_behavior": "fail_closed_partial"
+      "denial_behavior": "fail_closed"
     },
     "grok": {
       "adapter_defaults": {
@@ -139,7 +139,7 @@
         "standard": { "effort": "medium", "minimum_effort": "medium" }
       },
       "denied_modes": ["Fast"],
-      "denial_behavior": "fail_closed_partial",
+      "denial_behavior": "fail_closed",
       "subagent_model_override": "supported",
       "model_attestation": "native"
     }
