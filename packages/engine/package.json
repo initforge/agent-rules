@@ -76,6 +76,10 @@
     "./worktree-train": {
       "types": "./dist/worktree-train.d.ts",
       "import": "./dist/worktree-train.js"
+    },
+    "./resource-broker": {
+      "types": "./dist/resource-broker.d.ts",
+      "import": "./dist/resource-broker.js"
     }
   },
   "engines": {
