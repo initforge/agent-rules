@@ -92,9 +92,13 @@ const hostVersionOutput: Record<string, string> = {
 
 const hostHelpOutput: Record<string, string> = {
   codex: 'Commands:\n  exec  Run non-interactively\n  review  Review code\nOptions:\n  -m, --model <MODEL>\n',
-  claude: 'Options:\n  --model <MODEL>\n  --agent <AGENT>\n  -p, --print [PROMPT]\n',
+  // claude 2.1.220 real format: `--print` appears twice (prose + flag). The
+  // capability matcher is presence-based (>=1) so this attests claude:print.
+  claude: 'Options:\n  --model <MODEL>\n  --agent <AGENT>\n  -p, --print [PROMPT]\n  --print for non-interactive output\n',
   grok: 'Options:\n  --model <MODEL>\n  --agent <NAME>\n  -p, --single <PROMPT>\n',
-  opencode: 'Commands:\n  opencode run  run a prompt\n  opencode mcp  manage MCP\nOptions:\n  -m, --model  model to use\n',
+  // opencode 1.18.10 real format: `opencode run [message..]` (single space
+  // before positional args) is accepted by the command matcher.
+  opencode: 'Commands:\n  opencode run [message..]  run a prompt\n  opencode mcp  manage MCP\nOptions:\n  -m, --model  model to use\n',
   antigravity: 'Usage of agy:\n  --model  Model\n  --agent  Agent\n  -p, --print  Print\n',
 };
 

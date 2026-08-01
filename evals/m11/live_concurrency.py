@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """M11-C10 case 4 — a Tier-A host run demonstrates >=8 concurrent native children.
 
-This box: claude 2.1.220 installed, opencode installed and live, codex NOT on PATH,
-grok installed but TUI-only (headless child dispatch impossible). The claim (8
-concurrent native children) is proved ONLY by actually dispatching children. We
-dispatch a bounded burst of N real native child invocations across the hosts that
-mechanically support it (opencode run, claude --print), each performing a trivial
-real model query whose exact output token we verify, sample the number alive at
-~10 Hz to measure the true peak concurrency, and sample the thermal/RAM governor
-signals during the run. WAITING_EXTERNAL is reported with the exact missing
-capability when the Tier-A set is incomplete — never a faked count.
+This box: claude 2.1.220 installed, opencode installed and live, codex 0.146.0
+installed as an npm bundle under ~/.codex-cli-npm (NOT on PATH — discovered via
+the same npm-bundle layout as automation/host-attestation.ts
+bundledCodexCandidates), grok installed but TUI-only (headless child dispatch
+impossible). The claim (8 concurrent native children) is proved ONLY by actually
+dispatching children. We dispatch a bounded burst of N real native child
+invocations across the hosts that mechanically support it (codex exec,
+opencode run, claude --print), each performing a trivial real model query whose
+exact output token we verify, sample the number alive at ~10 Hz to measure the
+true peak concurrency, and sample the thermal/RAM governor signals during the
+run. WAITING_EXTERNAL is reported with the exact missing capability when the
+Tier-A set is incomplete — never a faked count.
 
 Governor thresholds are read from AM-0019 §6 as compiled in
 packages/engine/src/resource-broker.ts (AM0019 const) and the thermal sampling
@@ -21,6 +24,7 @@ Usage: python3 evals/m11/live_concurrency.py [--offline]
 """
 from __future__ import annotations
 
+import glob
 import json
 import os
 import shutil
@@ -35,8 +39,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from runner import emit  # noqa: E402
 
 # Tier-A native hosts per AM-0019 §10: codex, claude, opencode.
+# codex is NOT on PATH: it ships as an npm bundle under ~/.codex-cli-npm and is
+# discovered by mirroring automation/host-attestation.ts bundledCodexCandidates.
 TIER_A = [
-    ("codex", ["codex"], ["--version"]),
+    ("codex", None, ["--version"]),
     ("claude", ["claude"], ["--version"]),
     ("opencode", ["opencode"], ["--version"]),
 ]
@@ -45,6 +51,26 @@ OTHER_HOSTS = [
     ("grok", ["grok"], ["--version"]),
     ("antigravity", ["agy"], ["--version"]),
 ]
+
+# npm-bundle layout mirror of host-attestation.ts bundledCodexCandidates()
+CODEX_NPM_PACKAGE = os.path.expanduser(
+    "~/.codex-cli-npm/lib/node_modules/@openai/codex/node_modules/@openai"
+)
+
+
+def find_codex() -> str | None:
+    for platform_prefix in ("codex-linux-", "codex-darwin-", "codex-win32-"):
+        for package_dir in glob.glob(os.path.join(CODEX_NPM_PACKAGE, platform_prefix + "*")):
+            for vendor in glob.glob(os.path.join(package_dir, "vendor", "*")):
+                candidate = os.path.join(
+                    vendor, "bin", "codex.exe" if platform_prefix == "codex-win32-" else "codex"
+                )
+                try:
+                    if os.path.isfile(candidate) and not os.path.islink(candidate) and os.access(candidate, os.X_OK):
+                        return candidate
+                except OSError:
+                    continue
+    return shutil.which("codex")  # PATH fallback (mirrors TS resolver order)
 
 # ── AM-0019 §6 governor thresholds (packages/engine/src/resource-broker.ts) ──
 GOV = {
@@ -62,6 +88,7 @@ GOV = {
 
 # One real native-child command per host. Each child must print an exact unique
 # token to be counted as a live, real response (never a fake/inert process).
+# codex's binary path is resolved at runtime (npm bundle, not on PATH) in main().
 CHILD_SPECS = {
     "opencode": {
         "build": lambda tok: [
@@ -74,6 +101,10 @@ CHILD_SPECS = {
         "build": lambda tok: [
             "claude", "--print", "--model", "sonnet", f"Reply with exactly: {tok}",
         ],
+        "timeout_s": 60,
+    },
+    "codex": {
+        "build": lambda tok: ["codex", "exec", f"Reply with exactly: {tok}"],
         "timeout_s": 60,
     },
     # grok is TUI-only: headless dispatch fails with ENXIO (no controlling
@@ -173,8 +204,8 @@ def governor_snapshot() -> dict:
 
 # ── Host probing ─────────────────────────────────────────────────────────────
 
-def probe(host: str, cmd: list[str], ver: list[str]) -> dict:
-    exe = shutil.which(cmd[0])
+def probe(host: str, cmd: list[str] | None, ver: list[str]) -> dict:
+    exe = find_codex() if host == "codex" else (shutil.which(cmd[0]) if cmd else None)
     if not exe:
         return {"host": host, "available": False, "version": None, "exe": None}
     version = None
@@ -319,32 +350,27 @@ def live_burst(plan: list[dict], pre: dict) -> dict:
 
 
 def build_plan(available_hosts: list[str], target: int) -> list[dict]:
-    """Fill `target` child slots from live-capable hosts; prefer opencode first.
+    """Fill `target` child slots from live-capable hosts.
 
     Multiple children per host binary are legitimate concurrent native children
-    (the old script wrongly capped at one child per distinct host). Weighting:
-    opencode (fast, live) takes most slots; claude (works via --model sonnet)
-    takes the rest. grok is never auto-added (TUI-only) — its availability is
-    reported but it cannot contribute a native headless child.
+    (the old script wrongly capped at one child per distinct host). Every live
+    Tier-A host (codex+claude+opencode) is guaranteed >=1 child so the Tier-A
+    set is complete; opencode (fast, live) takes the bulk of the remainder.
+    grok is never auto-added (TUI-only) — its availability is reported but it
+    cannot contribute a native headless child.
     """
     live_hosts = [h for h in available_hosts if h in CHILD_SPECS]
     if not live_hosts:
         return []
-    # opencode 75%, claude 25% when both live; 100% single host otherwise.
-    weights = {h: (1.0 if h == "opencode" else 0.0) for h in live_hosts}
-    if "opencode" in live_hosts and "claude" in live_hosts:
-        weights = {"opencode": 0.75, "claude": 0.25}
-    # integer allocation that sums to exactly `target`
-    alloc = {}
-    remaining = target
-    for h in live_hosts:
-        share = int(target * weights[h])
-        if h == "claude" and share == 0 and remaining > 0:
-            share = 1
-        alloc[h] = min(share, remaining)
-        remaining -= alloc[h]
-    if remaining:
-        alloc[live_hosts[0]] += remaining
+    base = target // len(live_hosts)
+    alloc = {h: base for h in live_hosts}
+    remaining = target - sum(alloc.values())
+    # opencode first for the remainder (fast, live), then the others in order.
+    for h in sorted(live_hosts, key=lambda name: name != "opencode"):
+        if remaining == 0:
+            break
+        alloc[h] += 1
+        remaining -= 1
 
     plan = []
     for host, count in alloc.items():
@@ -381,6 +407,13 @@ def main() -> int:
         live = {"mode": "offline", "max_observed_concurrent_children": 0, "governor_pre": pre}
         print("  live dispatch: SKIPPED (offline mode)")
     else:
+        # Wire the resolved codex bundle path into its child spec (not on PATH).
+        codex_exe = next((p["exe"] for p in tier_probes if p["host"] == "codex"), None)
+        if codex_exe:
+            CHILD_SPECS["codex"] = {
+                "build": (lambda exe: lambda tok: [exe, "exec", f"Reply with exactly: {tok}"])(codex_exe),
+                "timeout_s": 60,
+            }
         plan = build_plan(available, target)
         print(f"  live burst: dispatching {len(plan)} real native children concurrently "
               f"({', '.join(p['host'] for p in plan)}), ~{SAMPLE_HZ} Hz sampling, governor trace ON...")
@@ -398,7 +431,7 @@ def main() -> int:
     reached = observed >= 8
     missing_caps = []
     if "codex" in missing:
-        missing_caps.append("codex native CLI not on PATH (codex exec child impossible)")
+        missing_caps.append(f"codex native CLI not found (checked npm bundle {CODEX_NPM_PACKAGE}/codex-*/vendor/*/bin and PATH)")
     if reached and not missing:
         status = "PASS"
     else:
@@ -414,8 +447,9 @@ def main() -> int:
                 f"probe burst target was {target} (governor band={pre['band']})"
             )
         missing_caps.append(
-            "satisfy by: install codex on PATH, then re-run this probe; the concurrency "
-            "machinery itself is proven by the observed burst"
+            "satisfy by: re-run the probe on a cooler/quieter window so the governor "
+            "permits 8 concurrent native children; the concurrency machinery itself is "
+            "proven by the observed burst"
         )
 
     print(f"  target 8 concurrent native children: {'REACHED' if reached else f'NOT REACHED (observed={observed})'}")

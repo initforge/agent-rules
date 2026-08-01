@@ -788,6 +788,8 @@ const HOST_PROBE_SPECS: Readonly<Record<string, HostProbeSpec>> = {
   },
   claude: {
     version: /^(\d+\.\d+\.\d+(?:[-+][\w.-]+)?)(?:\s+\(Claude Code\))?$/,
+    // claude 2.1.220 --help lists `--print` twice (prose mention + flag); the
+    // matcher is presence-based so this still attests the --print capability.
     capabilities: [
       { id: 'claude:model', kind: 'option', token: '--model' },
       { id: 'claude:agent', kind: 'option', token: '--agent' },
@@ -804,6 +806,8 @@ const HOST_PROBE_SPECS: Readonly<Record<string, HostProbeSpec>> = {
   },
   opencode: {
     version: /^(\d+\.\d+\.\d+(?:[-+][\w.-]+)?)$/,
+    // opencode 1.18.10 --help formats `opencode run [message..]` (single space
+    // before positional args); the command matcher accepts that format.
     capabilities: [
       { id: 'opencode:run', kind: 'command', token: 'opencode run' },
       { id: 'opencode:mcp', kind: 'command', token: 'opencode mcp' },
@@ -824,12 +828,22 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function tokenOccursOnce(help: string, capability: HelpCapability): boolean {
+/**
+ * Anchored presence check (>= 1 line-start match), never exact-once.
+ *
+ * Exact-once drifted against real help output: claude 2.1.220 documents
+ * `--print` twice (prose mention + `-p, --print` flag) and opencode 1.18.10
+ * formats `opencode run [message..]` with a single space before its positional
+ * args. Presence at the command/option position is the meaningful capability
+ * signal; the line-start anchor still rejects a host whose help never lists
+ * the token, so a capability-lacking host cannot be attested.
+ */
+function tokenPresent(help: string, capability: HelpCapability): boolean {
   const token = escapeRegExp(capability.token);
   const pattern = capability.kind === 'command'
-    ? new RegExp(`^\\s*${token}(?:\\s{2,}|\\t+|\\s*$)`, 'gm')
+    ? new RegExp(`^\\s*${token}(?:\\s|$)`, 'gm')
     : new RegExp(`^\\s*(?:-[A-Za-z],\\s*)?${token}(?:\\s|<|\\[|$)`, 'gm');
-  return [...help.matchAll(pattern)].length === 1;
+  return help.match(pattern) !== null;
 }
 
 function hostSpec(host: NativeHost): HostProbeSpec {
@@ -847,7 +861,7 @@ function versionFrom(host: NativeHost, output: string): string {
 
 function capabilityIdsFrom(host: NativeHost, output: string): string[] {
   const spec = hostSpec(host);
-  const missing = spec.capabilities.filter((capability) => !tokenOccursOnce(output, capability));
+  const missing = spec.capabilities.filter((capability) => !tokenPresent(output, capability));
   if (missing.length > 0) {
     throw new Error(`${host}: help output drifted or lacks required stable tokens: ${missing.map((capability) => capability.token).join(', ')}`);
   }
