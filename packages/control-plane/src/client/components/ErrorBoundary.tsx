@@ -23,7 +23,7 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
   render() {
     if (this.state.hasError) {
       return this.props.fallback || (
-        <div className="page">
+        <div className="page" role="alert" aria-live="assertive">
           <div className="page-header">
             <h1 className="typography-title">Error</h1>
             <p className="typography-caption">Something went wrong rendering this page</p>

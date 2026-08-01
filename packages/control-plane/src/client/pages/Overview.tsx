@@ -140,19 +140,19 @@ export default function Overview({ navigate }: OverviewProps) {
 
   if (loadState === 'loading') {
     return (
-      <div className="page">
+      <div className="page" aria-busy="true" aria-live="polite">
         <div className="page-header">
           <h1 className="typography-title">Repository Overview</h1>
           <p className="typography-caption">System health, CI status, and configuration drift</p>
         </div>
-        <div className="state-loading"><div className="spinner" /> Loading...</div>
+        <div className="state-loading" role="status"><div className="spinner" /> Loading...</div>
       </div>
     );
   }
 
   if (loadState === 'error') {
     return (
-      <div className="page">
+      <div className="page" role="alert" aria-live="assertive">
         <div className="page-header">
           <h1 className="typography-title">Repository Overview</h1>
           <p className="typography-caption">System health, CI status, and configuration drift</p>

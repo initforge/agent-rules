@@ -701,19 +701,19 @@ export default function PlanWorkspace({ navigate }: PlanWorkspaceProps) {
 
   if (loadState === 'loading') {
     return (
-      <div className="page">
+      <div className="page" aria-busy="true" aria-live="polite">
         <div className="page-header">
           <h1 className="typography-title">Plan Workspace</h1>
           <p className="typography-caption">Requirement evidence tracking and reconciliation</p>
         </div>
-        <div className="state-loading"><div className="spinner" /> Loading plan data...</div>
+        <div className="state-loading" role="status"><div className="spinner" /> Loading plan data...</div>
       </div>
     );
   }
 
   if (loadState === 'error') {
     return (
-      <div className="page">
+      <div className="page" role="alert" aria-live="assertive">
         <div className="page-header">
           <h1 className="typography-title">Plan Workspace</h1>
           <p className="typography-caption">Requirement evidence tracking and reconciliation</p>
@@ -770,12 +770,12 @@ export default function PlanWorkspace({ navigate }: PlanWorkspaceProps) {
 
   if (!planData) {
     return (
-      <div className="page">
+      <div className="page" aria-busy="true" aria-live="polite">
         <div className="page-header">
           <h1 className="typography-title">Plan Workspace</h1>
           <p className="typography-caption">Requirement evidence tracking and reconciliation</p>
         </div>
-        <div className="state-loading"><div className="spinner" /> Loading plan detail...</div>
+        <div className="state-loading" role="status"><div className="spinner" /> Loading plan detail...</div>
       </div>
     );
   }

@@ -10,6 +10,22 @@
   }
 }
 
+/* ponytail: skip link minimal — expand with focus-visible outline when upgrading */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: var(--color-accent, #0969da);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+}
+.skip-link:focus {
+  left: 8px;
+  top: 8px;
+}
+
 .layout-root {
   display: flex;
   height: 100vh;
