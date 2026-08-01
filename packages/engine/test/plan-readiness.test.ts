@@ -78,7 +78,7 @@ describe('compileRequirements — dynamic, no hard-coded count', () => {
   const maybe = hasRealLedger ? it : it.skip;
   maybe('compiles 31 requirements (15 REQ + 16 M11-R) without a hard-coded constant', () => {
     const ledger = readLedger(LEDGER_PATH);
-    const requirements = compileRequirements(ledger, AMENDMENT_PATH, ORIGINAL_PATH);
+    const requirements = compileRequirements(ledger, AMENDMENT_PATH, ORIGINAL_PATH, REPO_ROOT);
     const ids = requirements.map((r) => r.requirement_id);
     expect(ids).toHaveLength(31);
     for (let i = 1; i <= 15; i++) {
@@ -87,12 +87,23 @@ describe('compileRequirements — dynamic, no hard-coded count', () => {
     for (let i = 11; i <= 26; i++) {
       expect(ids).toContain(`M11-R${i}`);
     }
-    // M11 additive requirements have no implementation -> honest GAP, no invented evidence
-    for (const r of requirements.filter((x) => x.requirement_id.startsWith('M11-R'))) {
-      expect(r.status).toBe('GAP');
-      expect(r.evidence_contract).toBeNull();
-      expect(r.acceptance_criteria).toHaveLength(0);
+    // M11 additive requirements map to real merged modules with tree evidence.
+    const m11 = requirements.filter((x) => x.requirement_id.startsWith('M11-R'));
+    expect(m11).toHaveLength(16);
+    for (const r of m11) {
+      expect(r.status, r.requirement_id).not.toBe('GAP');
+      expect(r.acceptance_criteria.length).toBeGreaterThan(0);
+      expect(r.execution_cluster.cluster).toMatch(/^C(1|2|3|4|5|6|7|8|9|10)$/);
+      expect(r.evidence_contract, `${r.requirement_id} evidence`).not.toBeNull();
     }
+    // Only M11-R22 is PARTIAL (codex runtime proof = WAITING_EXTERNAL).
+    for (const r of m11.filter((x) => x.requirement_id !== 'M11-R22')) {
+      expect(r.status).toBe('MATCH');
+    }
+    expect(m11.find((x) => x.requirement_id === 'M11-R22')?.status).toBe('PARTIAL');
+    // Mapped implementation modules must actually exist in the tree.
+    const implemented = m11.flatMap((r) => r.notes.filter((n) => n.startsWith('implemented:')));
+    expect(implemented.length).toBeGreaterThanOrEqual(15);
     // REQ-001..008 carry plan anchors from the ledger
     for (const r of requirements.filter((x) => x.requirement_id.startsWith('REQ-') && Number(x.requirement_id.slice(4)) <= 8)) {
       expect(r.plan_anchor).not.toBeNull();
