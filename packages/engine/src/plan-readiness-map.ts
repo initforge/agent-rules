@@ -279,10 +279,9 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
   },
   'M11-R35': {
     cluster: 'C10',
-    status: 'PARTIAL',
-    partialReason: 'seeded false-green/false-reject evaluation lands with the M11-R35 worktree — WAITING_EXTERNAL',
-    modules: ['evals/m11', 'evals/m11/coverage.py'],
-    tests: ['evals/m11/coverage.py'],
+    status: 'MATCH',
+    modules: ['evals/m11/false_green.py'],
+    tests: ['evals/m11/false_green.py', 'packages/engine/test/false-green-reject.test.ts'],
     acceptanceCriteria: [
       '100% seeded false-green fixtures blocked; 100% known-good fixtures reach correct status',
       'zero self-review terminal path, zero capability-invalid PASS, zero terminal report unbound to final candidate',
