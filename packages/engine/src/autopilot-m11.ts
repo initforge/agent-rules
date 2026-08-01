@@ -203,7 +203,10 @@ export class M11Autopilot {
     if (!cur || cur.revoked || Date.now() > cur.expiresAt) return cur;
     const now = Date.now();
     const renewed: LeaseEntry = { ...cur, expiresAt: now + ttlMs, renewedAt: now };
-    this.journal.append('M11_LEASE', 'RUNNING', { entry: renewed }, this.opEventId(opKey ?? `lease:heartbeat:${leaseId}`));
+    // Default opKey is time-varying so a second heartbeat is not replayed as a
+    // deduped no-op (deterministic replay guard keys on opKey); explicit opKey
+    // overrides keep caller-controlled dedup.
+    this.journal.append('M11_LEASE', 'RUNNING', { entry: renewed }, this.opEventId(opKey ?? `lease:heartbeat:${leaseId}:${now}`));
     return renewed;
   }
 

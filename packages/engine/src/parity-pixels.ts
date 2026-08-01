@@ -1,4 +1,5 @@
-// Pixel/SSIM diff for paired browser parity (AM-0019 §9 non-vision compiler).
+// Per-pixel RGB equality diff with 32px-grid aggregation for paired browser
+// parity (AM-0019 §9 non-vision compiler).
 // Real 8-bit PNG decoding (zlib + unfiltering) so machine-readable heatmap
 // cells map to viewport pixel coordinates — no external image deps.
 

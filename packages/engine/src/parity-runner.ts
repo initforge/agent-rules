@@ -6,7 +6,8 @@
 // order/focus order/console/network/HAR/storage/performance are captured per
 // side (Playwright talks to Chromium over CDP). The non-vision compiler emits
 // semantic / geometry / style / accessibility / overflow / runtime diffs plus
-// a pixel (SSIM-style) diff with machine-readable coordinates and a heatmap.
+// a per-pixel RGB equality diff (grid-aggregated) with machine-readable
+// coordinates and a heatmap.
 // Deterministic evidence stays mandatory; vision opinion can only gate a case
 // into WAITING_EXTERNAL, never manufacture a PASS.
 
