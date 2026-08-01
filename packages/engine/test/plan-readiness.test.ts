@@ -113,17 +113,11 @@ describe('compileRequirements — dynamic, no hard-coded count', () => {
       expect(r.status).toBe('MATCH');
     }
     expect(am0019.find((x) => x.requirement_id === 'M11-R22')?.status).toBe('PARTIAL');
-    // AM-0020 set: R27..R33 and R36 are MATCH (merged into integration HEAD);
-    // R34..R35 stay PARTIAL with an explicit WAITING_EXTERNAL reason until their
-    // worktrees land.
+    // AM-0020 set: R27..R36 are all MATCH (merged into integration HEAD).
     const am0020 = m11.filter((x) => reqNum(x.requirement_id) >= 27);
-    const MATCH_IDS = ['M11-R27', 'M11-R28', 'M11-R29', 'M11-R30', 'M11-R31', 'M11-R32', 'M11-R33', 'M11-R36'];
+    const MATCH_IDS = ['M11-R27', 'M11-R28', 'M11-R29', 'M11-R30', 'M11-R31', 'M11-R32', 'M11-R33', 'M11-R34', 'M11-R35', 'M11-R36'];
     for (const id of MATCH_IDS) {
       expect(am0020.find((x) => x.requirement_id === id)?.status, id).toBe('MATCH');
-    }
-    for (const r of am0020.filter((x) => !MATCH_IDS.includes(x.requirement_id))) {
-      expect(r.status).toBe('PARTIAL');
-      expect(r.notes.join(' ')).toContain('WAITING_EXTERNAL');
     }
     // Mapped implementation modules must actually exist in the tree.
     const implemented = m11.flatMap((r) => r.notes.filter((n) => n.startsWith('implemented:')));
