@@ -57,8 +57,15 @@ e2e gates from the controlled two-variant harness in `throughput.ts`:
 - C2/C3/C5/C6/C7/C9 aggregate proofs: PASS.
 - Coverage: PARTIAL — REQ-001..008 COVERED, REQ-009..015 PARTIAL, M11-R11..R26 GAP;
   100 % claim not yet met.
-- Case 4: WAITING_EXTERNAL — codex not on PATH; only claude (auth failing) and
-  opencode (live) are Tier-A on this box; >=8 concurrent children need >=8 hosts.
+- Case 4: WAITING_EXTERNAL — codex not on PATH (Tier-A set incomplete per AM-0019
+  §12 requires codex+claude+opencode all present). The concurrency machinery IS
+  proven live: a real burst of 8 native children (6 opencode + 2 claude
+  `--model sonnet`) ran simultaneously with every child returning its exact
+  expected token (exit 0 + verified output). Governor (AM-0019 §6 thresholds)
+  observed PAUSE (100°C ≥ 92°C) and REDUCE (RAM 17.9% < 20%) trips during the
+  burst, so sustained 8 is not thermally safe on this box — reduced to 4-6 for
+  steady state. When pre-dispatch temp is already ≥92°C the probe reduces the
+  burst target itself and records the governor decision.
 - Case 9: WAITING_EXTERNAL — codex missing; model evidence for all five hosts
   requires real sessions.
 - Case 10: WAITING_EXTERNAL — no antigravity adapter-level out-of-ownership
