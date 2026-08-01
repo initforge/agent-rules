@@ -1,0 +1,9 @@
+{
+  "name": "playwright-mcp",
+  "capability": "browser-interaction",
+  "upstream": "https://github.com/microsoft/playwright-mcp",
+  "package": "@playwright/mcp",
+  "versionPolicy": "latest",
+  "installType": "npm-npx",
+  "healthCheck": "npx -y @playwright/mcp --help"
+}
