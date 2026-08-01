@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { assertWorkLedger as canonicalAssertWorkLedger, assertCertificationAttestation as canonicalAssertCertificationAttestation, CERTIFICATION_REQUIRED_HOSTS } from './contracts.js';
 import { candidateEpochHash, type CandidateEpoch } from './candidate-epoch.js';
+import { MATURITY_RANK, type EvidenceMaturity } from './claim-registry.js';
 
 export interface GateResult {
   name: string;
@@ -730,4 +731,259 @@ export function finalizeM11(options: M11FinalizeOptions): M11FinalizeResult {
 
   fs.writeFileSync(resolved, `${JSON.stringify(ledger, null, 2)}\n`, 'utf-8');
   return { passed: true, token: M11_TERMINAL_TOKEN };
+}
+
+// ── M11-R34 machine-generated terminal report (AM-0020 §9) ───────────────────
+
+export interface TerminalReportSection {
+  id: string;
+  title: string;
+  content: string;
+  source_ledger_field?: string;
+}
+
+export interface TerminalReportOptions {
+  /** Evidence freshness window; defaults to 24h. */
+  requireFreshEvidenceMs?: number;
+  /** Capabilities the reviewer set must cover; defaults to ['specialist'] (AM-0020 §6). */
+  requireCapabilities?: string[];
+  /** Open findings with these severities block terminal; defaults to ['critical', 'high']. */
+  blockingSeverities?: string[];
+  /** Raw-artifact claim totals; the compiled report totals must equal these, else fail-closed. */
+  rawTotals?: { total: number; fresh: number; terminal_eligible: number };
+  /** Overridable clock; defaults to Date.now(). */
+  now?: number;
+}
+
+export interface TerminalReport {
+  report_id: string;
+  candidate_identity: string;
+  claim_coverage: { total: number; fresh: number; terminal_eligible: number; blocked: number };
+  evidence_summary: { maturity: Record<string, number>; oldest_fresh_age_ms: number | null };
+  review_summary: { reviewers: number; capabilities: string[]; independent: number; blind_challenge: boolean };
+  open_findings: Array<{ id: string; severity: string; disposition: string }>;
+  bindings: { ci: string | null; install: string | null; topology: string | null; parity: string | null; attestation: string | null };
+  residuals: string[];
+  terminal_formula: 'HV3_M11_LOCAL_COMPLETE' | 'NOT_ELIGIBLE';
+  compiler_errors: string[];
+  /** The nine AM-0020 §9 report sections, compiled from the canonical ledger. */
+  sections: TerminalReportSection[];
+}
+
+interface LedgerClaimRow {
+  claim_id?: string;
+  maturity?: string;
+  blocked?: boolean;
+  observed_at?: string;
+  observedAt?: string;
+}
+
+function ledgerClaimRows(ledger: Record<string, any>): LedgerClaimRow[] {
+  const raw = ledger.claims ?? ledger.claim_evaluations;
+  if (Array.isArray(raw)) return raw as LedgerClaimRow[];
+  const byClaim = ledger.claim_summary?.byClaim;
+  if (byClaim && typeof byClaim === 'object') return Object.values(byClaim) as LedgerClaimRow[];
+  return [];
+}
+
+/**
+ * Compile the AM-0020 §9 machine-generated terminal report from the canonical
+ * ledger. Pure compiler — it never writes state and never honors a marker.
+ *
+ * Terminal marker written by an LLM/Markdown outside an engine event is invalid
+ * (AM-0020 §9): the ledger execution_state/status is NOT consulted here, so a
+ * marker scribbled outside an engine event cannot set the formula. The report
+ * fails closed when required evidence is stale, a capability is missing, a
+ * blocking finding is open, report totals conflict with raw artifacts, or
+ * candidate/CI/install identities differ. There is no pass switch: the formula
+ * is HV3_M11_LOCAL_COMPLETE only when every compiler gate above passes, and no
+ * option can force it otherwise.
+ *
+ * Ledger claim data is read dynamically from `ledger.claims` /
+ * `ledger.claim_evaluations` (array of `{ claim_id, maturity, blocked,
+ * observed_at }`) or `ledger.claim_summary.byClaim` (a claim-registry
+ * `ClaimFormulaSummary`) — the count is never a constant. CI/install bindings
+ * are `ledger.ci_binding` / `ledger.install_binding` objects whose `sha256`
+ * must equal the candidate epoch hash (identity mismatch = fail-closed).
+ */
+export function compileTerminalReport(
+  ledger: Record<string, unknown>,
+  candidate: { headCommit: string; epoch: number; epochHash: string },
+  opts: TerminalReportOptions = {},
+): TerminalReport {
+  const l = ledger as Record<string, any>;
+  const now = opts.now ?? Date.now();
+  const errors: string[] = [];
+  const freshWindow = opts.requireFreshEvidenceMs ?? FRESH_EVIDENCE_MAX_AGE_MS;
+  const requiredCaps = opts.requireCapabilities ?? ['specialist'];
+  const blockingSeverities = (opts.blockingSeverities ?? ['critical', 'high']).map((s) => s.toLowerCase());
+
+  // a. Candidate identity: derived from the epoch hash; the ledger's effective
+  //    plan identity must match it.
+  const identity = effectiveIdentity(l);
+  if (typeof identity !== 'string' || identity.length === 0) {
+    errors.push('candidate identity mismatch: ledger has no effective_plan_identity');
+  } else if (identity !== candidate.epochHash) {
+    errors.push(`candidate identity mismatch: ledger effective_plan_identity ${identity.slice(0, 12)} != candidate epochHash ${candidate.epochHash.slice(0, 12)}`);
+  }
+
+  // Claim coverage — dynamic count from the ledger, never hard-coded.
+  const claims = ledgerClaimRows(l);
+  const coverage = { total: claims.length, fresh: 0, terminal_eligible: 0, blocked: 0 };
+  const maturity: Record<string, number> = {};
+  let oldestFreshAge: number | null = null;
+  if (claims.length === 0) errors.push('claim coverage empty: no claim evidence in ledger');
+  for (const claim of claims) {
+    const m = (claim.maturity ?? 'UNOBSERVED') as EvidenceMaturity;
+    maturity[m] = (maturity[m] ?? 0) + 1;
+    const rank = MATURITY_RANK[m] ?? 0;
+    const blocked = claim.blocked === true || rank < 0;
+    if (blocked) {
+      coverage.blocked += 1;
+      errors.push(`blocked claim ${claim.claim_id ?? '(no id)'}: maturity ${m}`);
+    } else if (m === 'TERMINAL_ELIGIBLE' || m === 'SUPERSEDED') {
+      coverage.terminal_eligible += 1;
+    }
+    if (rank >= MATURITY_RANK.FRESH) {
+      coverage.fresh += 1;
+      const at = Date.parse(claim.observed_at ?? claim.observedAt ?? '');
+      if (Number.isNaN(at)) {
+        errors.push(`fresh claim ${claim.claim_id ?? '(no id)'} lacks observed_at — freshness unproven`);
+      } else if (at > now) {
+        errors.push(`claim ${claim.claim_id ?? '(no id)'} evidence is future-dated`);
+      } else {
+        const age = now - at;
+        if (oldestFreshAge === null || age > oldestFreshAge) oldestFreshAge = age;
+      }
+    }
+  }
+
+  // b. Evidence freshness (fail-closed).
+  if (coverage.total > 0 && coverage.fresh === 0) errors.push('evidence stale: no fresh claim evidence');
+  if (oldestFreshAge !== null && oldestFreshAge > freshWindow) {
+    errors.push(`evidence stale: oldest fresh evidence age ${oldestFreshAge}ms exceeds window ${freshWindow}ms`);
+  }
+
+  // c. Review coverage + capability gate.
+  const reviewRecords = [
+    ...(Array.isArray(l.reviews) ? l.reviews : []),
+    ...(l.latestReview && typeof l.latestReview === 'object' ? [l.latestReview] : []),
+  ];
+  const reviewerIds = new Set<string>();
+  const capabilities = new Set<string>();
+  let independent = 0;
+  let blindChallenge = false;
+  for (const r of reviewRecords) {
+    const rid = r.reviewer_id ?? r.reviewerId ?? r.reviewerIdentity;
+    if (typeof rid === 'string' && rid.length > 0) reviewerIds.add(rid);
+    for (const c of r.capabilities ?? []) if (typeof c === 'string') capabilities.add(c);
+    if (r.independent === true) independent += 1;
+    if (r.blind_challenge === true) blindChallenge = true;
+  }
+  const missingCaps = requiredCaps.filter((c) => !capabilities.has(c));
+  if (missingCaps.length > 0) {
+    errors.push(`capability missing: ${missingCaps.join(', ')} (reviewer capabilities: ${[...capabilities].join(', ') || 'none'})`);
+  }
+
+  // d. Blocking findings open.
+  const findings = [
+    ...(Array.isArray(l.findings) ? l.findings : []),
+    ...(Array.isArray(l.orphanFindings) ? l.orphanFindings : []),
+  ];
+  const openFindings: TerminalReport['open_findings'] = [];
+  for (const f of findings) {
+    const status = String(f.status ?? '');
+    if (!status.toUpperCase().includes('OPEN')) continue;
+    const severity = String(f.severity ?? f.priority ?? 'unknown');
+    openFindings.push({
+      id: String(f.finding_id ?? f.id ?? 'unknown'),
+      severity,
+      disposition: status,
+    });
+    if (blockingSeverities.includes(severity.toLowerCase())) {
+      errors.push(`blocking finding open: ${f.finding_id ?? f.id} (${severity})`);
+    }
+  }
+
+  // e. Report totals vs raw artifacts (fail-closed when supplied).
+  if (opts.rawTotals) {
+    if (opts.rawTotals.total !== coverage.total) {
+      errors.push(`report totals conflict with raw artifacts: total ${coverage.total} != raw ${opts.rawTotals.total}`);
+    }
+    if (opts.rawTotals.fresh !== coverage.fresh) {
+      errors.push(`report totals conflict with raw artifacts: fresh ${coverage.fresh} != raw ${opts.rawTotals.fresh}`);
+    }
+    if (opts.rawTotals.terminal_eligible !== coverage.terminal_eligible) {
+      errors.push(`report totals conflict with raw artifacts: terminal_eligible ${coverage.terminal_eligible} != raw ${opts.rawTotals.terminal_eligible}`);
+    }
+  }
+
+  // f. Candidate/CI/install identities must agree (fail-closed).
+  const ciBinding = l.ci_binding;
+  const installBinding = l.install_binding;
+  if (ciBinding?.sha256 && ciBinding.sha256 !== candidate.epochHash) {
+    errors.push(`CI identity mismatch: ci_binding ${String(ciBinding.sha256).slice(0, 12)} != candidate ${candidate.epochHash.slice(0, 12)}`);
+  }
+  if (installBinding?.sha256 && installBinding.sha256 !== candidate.epochHash) {
+    errors.push(`install identity mismatch: install_binding ${String(installBinding.sha256).slice(0, 12)} != candidate ${candidate.epochHash.slice(0, 12)}`);
+  }
+
+  // Cross-check the claim formula verdict when the ledger carries one
+  // (claim-registry evaluateClaimFormulas output): a not-satisfied terminal
+  // formula can never be overridden by report prose.
+  const formulaState = l.claim_formula_state ?? l.claimFormulas?.formulaState;
+  if (formulaState && formulaState.HV3_M11_LOCAL_COMPLETE === false) {
+    errors.push('claim formula HV3_M11_LOCAL_COMPLETE not satisfied by claim evidence');
+  }
+
+  const residuals = Array.isArray(l.residuals)
+    ? l.residuals.filter((r: unknown): r is string => typeof r === 'string')
+    : [];
+
+  const bindings: TerminalReport['bindings'] = {
+    ci: typeof ciBinding?.runUrl === 'string'
+      ? ciBinding.runUrl
+      : (Array.isArray(l.ci_checks) && l.ci_checks.length > 0 ? l.ci_checks[0]?.runUrl ?? null : null),
+    install: typeof installBinding?.from === 'string'
+      ? installBinding.from
+      : (typeof installBinding?.sha256 === 'string' ? installBinding.sha256 : null),
+    topology: typeof l.topology_binding === 'string' ? l.topology_binding : (l.candidate_epoch?.topology_hash ?? null),
+    parity: typeof l.parity_binding === 'string' ? l.parity_binding : null,
+    attestation: typeof l.attestation_binding === 'string' ? l.attestation_binding : null,
+  };
+
+  const reviewSummary: TerminalReport['review_summary'] = {
+    reviewers: reviewerIds.size,
+    capabilities: [...capabilities].sort(),
+    independent,
+    blind_challenge: blindChallenge,
+  };
+
+  // Formula: NO pass switch. Only zero compiler errors can yield the terminal token.
+  const terminalFormula: TerminalReport['terminal_formula'] = errors.length === 0 ? M11_TERMINAL_TOKEN : 'NOT_ELIGIBLE';
+
+  const report: TerminalReport = {
+    report_id: `TERMINAL-REPORT-${sha256Json({ candidate_identity: candidate.epochHash, claim_coverage: coverage, terminal_formula: terminalFormula }).slice(0, 24).toUpperCase()}`,
+    candidate_identity: candidate.epochHash,
+    claim_coverage: coverage,
+    evidence_summary: { maturity, oldest_fresh_age_ms: oldestFreshAge },
+    review_summary: reviewSummary,
+    open_findings: openFindings,
+    bindings,
+    residuals,
+    terminal_formula: terminalFormula,
+    compiler_errors: [...errors],
+    sections: [
+      { id: 'candidate-identity', title: 'Candidate identity', content: candidate.epochHash, source_ledger_field: 'effective_plan_identity' },
+      { id: 'claim-coverage', title: 'Claim coverage', content: JSON.stringify(coverage), source_ledger_field: 'claims' },
+      { id: 'evidence-maturity-freshness', title: 'Evidence maturity and freshness', content: JSON.stringify({ maturity, oldest_fresh_age_ms: oldestFreshAge }), source_ledger_field: 'claims[].maturity/observed_at' },
+      { id: 'review-coverage-capabilities', title: 'Review coverage and capabilities', content: JSON.stringify(reviewSummary), source_ledger_field: 'reviews' },
+      { id: 'open-findings', title: 'Open findings', content: openFindings.length > 0 ? JSON.stringify(openFindings) : 'none', source_ledger_field: 'findings' },
+      { id: 'bindings', title: 'CI/install/topology/parity/attestation bindings', content: JSON.stringify(bindings), source_ledger_field: 'ci_binding/install_binding/topology_binding/parity_binding/attestation_binding' },
+      { id: 'residuals', title: 'Residuals', content: residuals.length > 0 ? residuals.join('\n') : 'none', source_ledger_field: 'residuals' },
+      { id: 'terminal-formula', title: 'Terminal formula result', content: terminalFormula },
+      { id: 'compiler-status', title: 'Compiler status', content: errors.length > 0 ? errors.join('; ') : 'OK' },
+    ],
+  };
+  return report;
 }
