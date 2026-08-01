@@ -84,6 +84,10 @@
     "./resource-broker": {
       "types": "./dist/resource-broker.d.ts",
       "import": "./dist/resource-broker.js"
+    },
+    "./topology-compiler": {
+      "types": "./dist/topology-compiler.d.ts",
+      "import": "./dist/topology-compiler.js"
     }
   },
   "engines": {
