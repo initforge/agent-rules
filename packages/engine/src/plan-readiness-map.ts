@@ -194,6 +194,116 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
       'adversarial closure tests reject out-of-ownership mutation and deterministic defects',
     ],
   },
+  // ── AM-0020 §14 additive registry (M11-R27..R36) ───────────────────────────
+  'M11-R27': {
+    cluster: 'C1',
+    status: 'MATCH',
+    modules: ['packages/engine/src/claim-registry.ts'],
+    tests: ['packages/engine/test/claim-registry.test.ts'],
+    acceptanceCriteria: [
+      'each effective requirement (41) compiles into ≥1 ClaimDefinition with all AM-0020 §2 fields',
+      'evaluateClaimFormulas fail-closes: one PARTIAL/CONTRADICTED/stale/capability-invalid subclaim blocks the aggregate',
+    ],
+  },
+  'M11-R28': {
+    cluster: 'C9',
+    status: 'PARTIAL',
+    partialReason: 'evidence provenance + freshness DAG lands with the M11-R28 worktree — WAITING_EXTERNAL',
+    modules: ['packages/engine/src/evidence-packet.ts'],
+    tests: ['packages/engine/test/evidence-packet.test.ts'],
+    acceptanceCriteria: [
+      'evidence envelope records claim_ids/candidate_epoch/producer/command/exit_code/hashes/freshness',
+      'evidence promotion path PRESENT→PARSEABLE→SEMANTICALLY_VALID→BINDS_FINAL_CANDIDATE→CAPABILITY_VALID→INDEPENDENTLY_REPRODUCED→TERMINAL_ELIGIBLE',
+    ],
+  },
+  'M11-R29': {
+    cluster: 'C8',
+    status: 'PARTIAL',
+    partialReason: 'capability-qualified verdicts land with the M11-R29 worktree — WAITING_EXTERNAL',
+    modules: ['packages/engine/src/native-session-adapter.ts'],
+    tests: ['packages/engine/test/opencode-adapter.test.ts'],
+    acceptanceCriteria: [
+      'verdicts are capability-qualified: no-vision review cannot issue visual PASS, Playwright-only evidence cannot issue raw-CDP PASS',
+      'model/capability substitution is never silent',
+    ],
+  },
+  'M11-R30': {
+    cluster: 'C2',
+    status: 'PARTIAL',
+    partialReason: 'adversarial counterexample compiler lands with the M11-R30 worktree — WAITING_EXTERNAL',
+    modules: ['packages/engine/src/verifier.ts'],
+    tests: ['packages/engine/test/worker-verifier.test.ts'],
+    acceptanceCriteria: [
+      'negative probes generated from plan invariants/topology/domain (finance/concurrency/security/browser/release)',
+      'T2/T3 claims require a negative probe unless deterministic proof makes it formally unnecessary',
+    ],
+  },
+  'M11-R31': {
+    cluster: 'C9',
+    status: 'PARTIAL',
+    partialReason: 'reviewer independence + diversity lands with the M11-R31 worktree — WAITING_EXTERNAL',
+    modules: ['packages/engine/src/supervisor.ts'],
+    tests: ['packages/engine/test/supervisor.test.ts'],
+    acceptanceCriteria: [
+      'reviewer accepts only its exact claim scope and can never declare the project complete',
+      'blind adversarial review precedes reading the worker verdict; conflicts adjudicated, not majority-voted',
+    ],
+  },
+  'M11-R32': {
+    cluster: 'C4',
+    status: 'PARTIAL',
+    partialReason: 'immutable candidate verification lands with the M11-R32 worktree — WAITING_EXTERNAL',
+    modules: ['packages/engine/src/plan-identity.ts'],
+    tests: ['packages/engine/test/plan-identity.test.ts'],
+    acceptanceCriteria: [
+      'final verification binds an immutable CandidateEpoch; dirty worktree cannot be the terminal candidate',
+      'source/config/lockfile/migration change creates a new epoch and invalidates only dependent proof',
+    ],
+  },
+  'M11-R33': {
+    cluster: 'C6',
+    status: 'PARTIAL',
+    partialReason: 'cross-artifact consistency validator lands with the M11-R33 worktree — WAITING_EXTERNAL',
+    modules: ['packages/engine/src/verifier.ts'],
+    tests: ['packages/engine/test/worker-verifier.test.ts'],
+    acceptanceCriteria: [
+      'engine validates test totals vs summaries vs report, ledger status vs report status, evidence time vs candidate epoch',
+      'PARTIAL/HIGH_DIFF/SKIPPED/UNVERIFIED records cannot be hidden by an aggregate PASS',
+    ],
+  },
+  'M11-R34': {
+    cluster: 'C10',
+    status: 'PARTIAL',
+    partialReason: 'machine-generated terminal reporting lands with the M11-R34 worktree — WAITING_EXTERNAL',
+    modules: ['packages/engine/src/terminal-gate.ts'],
+    tests: ['packages/engine/test/terminal-gate.test.ts'],
+    acceptanceCriteria: [
+      'terminal report generated from the canonical ledger with claim coverage, evidence maturity, open findings, terminal formula result',
+      'report compiler fails closed on stale evidence, missing capability, blocking finding, or identity mismatch',
+    ],
+  },
+  'M11-R35': {
+    cluster: 'C10',
+    status: 'PARTIAL',
+    partialReason: 'seeded false-green/false-reject evaluation lands with the M11-R35 worktree — WAITING_EXTERNAL',
+    modules: ['evals/m11', 'evals/m11/coverage.py'],
+    tests: ['evals/m11/coverage.py'],
+    acceptanceCriteria: [
+      '100% seeded false-green fixtures blocked; 100% known-good fixtures reach correct status',
+      'zero self-review terminal path, zero capability-invalid PASS, zero terminal report unbound to final candidate',
+    ],
+  },
+  'M11-R36': {
+    cluster: 'C9',
+    status: 'PARTIAL',
+    partialReason: 'claim calibration telemetry lands with the M11-R36 worktree — WAITING_EXTERNAL',
+    modules: ['packages/engine/src/telemetry.ts'],
+    tests: ['packages/engine/test/telemetry.test.ts'],
+    acceptanceCriteria: [
+      'records worker self-PASS later rejected, reviewer ACCEPT later rejected, false rejection overturned, defect escape by model/provider/domain',
+      'model reputation alone never authorizes a verdict; calibration, capability and exact evidence do',
+    ],
+  },
 };
 
 export function clusterForM11(id: string): string {
