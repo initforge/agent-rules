@@ -2713,9 +2713,9 @@
   "shadow_revision": 57,
   "shadow_hashes": {
     "tasks.md": "a15a457097ddba3a3961c0932f1b1aec644ca584d45b1938de9e8e390f87422b",
-    "progress.md": "58f0dbd942b388e06ec384e8a5b8a51e8800ea10723499dd8f3a8dddb2371bcf",
+    "progress.md": "297968af904a1350133db05048f3cb80c414fd272113f1cf3fd8216de4965bc7",
     "amendments.md": "b0f23586e99ca3de7ef05a065fe9d41f4fc6b5f88501f8793b4164673a48ae3a",
-    "reconciliation.md": "bd03829c90c1dd60bfdee7451d073c2f32be9b1ace49ded575764ce771649aff",
+    "reconciliation.md": "7ddd73a5137dc339cf3448808834d552ce69f41303e1841d5e430ac7cbdf2583",
     "batches/bootstrap/tasks.md": "a75096b2109eb9869034c1c6cf4f7d25136fe0af0a79b37b38180210adc34ac9",
     "batches/bootstrap/progress.md": "10921867c253ef096709f77927852298429a3e7a7ce6cd41bf1368fe57a151ae",
     "batches/bootstrap/reconciliation.md": "93ec8645dba93e1e4adab26438756b2cea1c6a313d58db0b54190802e1d91c09"
@@ -6504,6 +6504,18 @@
         "AM-0019"
       ],
       "shadow_revision": 57
+    },
+    {
+      "event_id": "E-REC-58",
+      "type": "RECONCILIATION_M11_R57",
+      "summary": "Reconciled ledger to canonical M11 state at revision 57: identity 1d524a27, headCommit e5ff92c, M10 terminal marker and proof marked HISTORICAL_STALE_FOR_M11, latestReview marked stale.",
+      "actor": "engine",
+      "prior_effective_sha256": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+      "new_effective_sha256": "1d524a2706c1bb9c2aa19945de1197015bbbbc4ce7ef54cb0a37ef54f5ca4c27",
+      "amendment_ids": [],
+      "head_commit": "e5ff92c285e410558eb40cc086a26617af1cad69",
+      "shadow_revision": 57,
+      "at": "2026-08-01T15:33:23+07:00"
     }
   ],
   "ci_checks": [
@@ -6521,8 +6533,8 @@
       "rerunRequired": "WAITING_EXTERNAL"
     }
   ],
-  "headCommit": "56284ad436a63fde0a87b8746aad9bfc27aa3e39",
-  "commitSha": "56284ad436a63fde0a87b8746aad9bfc27aa3e39",
+  "headCommit": "e5ff92c285e410558eb40cc086a26617af1cad69",
+  "commitSha": "e5ff92c285e410558eb40cc086a26617af1cad69",
   "plan": {
     "original": {
       "artifactId": "agent-rules-harness-v3-rearchitecture-20260726-r1",
@@ -7031,11 +7043,35 @@
           "evidenceHash": "36b75e40ad2fc3e45a91bc2b55734690a4d951503988b1adf004c8eea60d83b5"
         }
       ]
+    },
+    "M11": {
+      "identity": "1d524a2706c1bb9c2aa19945de1197015bbbbc4ce7ef54cb0a37ef54f5ca4c27",
+      "reviewerIdentity": "independent-high-risk-review",
+      "epoch": 1785573203000,
+      "observedAt": "2026-08-01T08:33:23.000Z",
+      "timestamp": "2026-08-01T08:33:23.000Z",
+      "headCommit": "e5ff92c285e410558eb40cc086a26617af1cad69",
+      "evidence": [
+        {
+          "identity": "1d524a2706c1bb9c2aa19945de1197015bbbbc4ce7ef54cb0a37ef54f5ca4c27",
+          "fresh": true,
+          "stale": false,
+          "observedAt": "2026-08-01T08:33:23.000Z",
+          "evidenceHash": "1d524a2706c1bb9c2aa19945de1197015bbbbc4ce7ef54cb0a37ef54f5ca4c27"
+        },
+        {
+          "identity": "1d524a2706c1bb9c2aa19945de1197015bbbbc4ce7ef54cb0a37ef54f5ca4c27",
+          "fresh": true,
+          "stale": false,
+          "observedAt": "2026-08-01T08:33:23.000Z",
+          "evidenceHash": "bf540fd209522b33f70dc73ddf561e053096c0e35bb10171ce1130cb51f060e3"
+        }
+      ]
     }
   },
   "latestReview": {
     "reviewId": "REV-P1-PARITY-V3-11-M95-001",
-    "stale": false,
+    "stale": true,
     "originalSha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
     "amendmentsSha256": "d0d2001ca7f9916d68f4bc66bcfc0545445d33220dc97e5b981d64c7ef1dab52",
     "diffFingerprint": "feb3ed644d62f6123ef33f7013aa7e33818fa3aa45ba5d3f7098b39d17f2fe15",
@@ -7046,7 +7082,8 @@
     ],
     "shadowRevision": 56,
     "reviewerIdentity": "independent-high-risk-review",
-    "at": "2026-07-31T17:35:47.569000Z"
+    "at": "2026-07-31T17:35:47.569000Z",
+    "staleReason": "M10-era review bound to AM-0018 identity ddb68fa at revision 56; no longer binds M11 effective plan 1d524a27 at revision 57"
   },
   "m10Proof": {
     "headCommit": "56284ad436a63fde0a87b8746aad9bfc27aa3e39",
@@ -7087,9 +7124,12 @@
       "ac44662e0e93d5f518a992085a96c798b413a10cae10b84016f9a9898caa6ce6",
       "36b75e40ad2fc3e45a91bc2b55734690a4d951503988b1adf004c8eea60d83b5"
     ],
-    "proofHash": "da02fc4b8dd7870a729c5b64a13055e931dfe5805101a4bfa587c96c7ec0bbc5"
+    "proofHash": "da02fc4b8dd7870a729c5b64a13055e931dfe5805101a4bfa587c96c7ec0bbc5",
+    "stale": true,
+    "staleReason": "M10 terminal proof bound to superseded identity ddb68fa and HEAD 56284ad; HISTORICAL_STALE_FOR_M11 at revision 57"
   },
-  "shadowRevision": 56,
-  "latestShadowRevision": 56,
-  "terminalMarker": "HARNESS_V3_10_OF_10_COMPLETE"
+  "shadowRevision": 57,
+  "latestShadowRevision": 57,
+  "terminalMarker": "HARNESS_V3_10_OF_10_COMPLETE",
+  "terminalMarkerStatus": "HISTORICAL_STALE_FOR_M11"
 }

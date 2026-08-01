@@ -8,3 +8,4 @@
 | MILESTONE_M10 | M10 terminal evidence note: ledger r56 binds HEAD 56284ad436a6; local gates green (build/check/test/package-smoke). HARN | - | 56 |
 | BOUNDED_REPAIR | Bounded repair AM-0019 identity ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427→1d524a2706c1bb9c2aa1994 | - | 57 |
 | AMENDMENT_CHAIN_ACTIVATION | Activated AM-0012 identity ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427→1d524a2706c1bb9c2aa19945de1197015bbbbc4ce7ef54cb0a37ef54f5ca4c27 | AM-0012 | R57 |
+| RECONCILIATION_M11_R57 | Reconciled ledger to canonical M11 state at revision 57: identity 1d524a27, headCommit e5ff92c285e4, M10 terminal marker + m10Proof marked HISTORICAL_STALE_FOR_M11, latestReview marked stale | - | 57 |
