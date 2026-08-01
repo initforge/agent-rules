@@ -10,7 +10,7 @@
  * the governor's DEFAULT_MAX_PROCESS_CEILING so the process ceiling is never
  * reimplemented.
  */
-import { DEPENDENCY_TYPES, type DependencyType, type RecoverableState } from './plan-readiness.js';
+import { DEPENDENCY_TYPES, type DependencyType, type RecoverableState } from './contracts.js';
 import { DEFAULT_MAX_PROCESS_CEILING } from './resource-governor.js';
 
 // ── Pool ceilings (AM-0019 §5 table) ────────────────────────────────────────

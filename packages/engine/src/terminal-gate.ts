@@ -610,3 +610,88 @@ export function evaluateM11Terminal(
 export function assertM11Certifiable(result: TerminalGateResult): void {
   if (!result.passed) throw new Error(`M11 terminal gate FAILED: ${result.failedGates.join(', ')}`);
 }
+
+// ── M11 terminal emission (engine-only, fail-closed) ─────────────────────────
+
+export interface M11FinalizeOptions {
+  /** Absolute path to the canonical ledger JSON. */
+  ledgerPath: string;
+  evidence: M11Evidence;
+  checks: M11Checks;
+  /** Shadow projection dir (.agent/plans/<plan-id>/shadow). Defaults from the ledger plan_id. */
+  shadowDir?: string;
+  now?: number;
+}
+
+export interface M11FinalizeResult {
+  passed: boolean;
+  token?: string;
+  reason?: string;
+  failedGates?: string[];
+}
+
+/**
+ * Engine-owned terminal emission (AM-0019 §13). Runs the full 12-gate
+ * evaluateM11Terminal; ONLY when every gate passes does it write the
+ * HV3_M11_LOCAL_COMPLETE token into the ledger execution_state, append an
+ * audit event, and regenerate the shadow projection hashes. Any failing gate
+ * returns not-eligible with the reason and mutates NOTHING (fail-closed).
+ */
+export function finalizeM11(options: M11FinalizeOptions): M11FinalizeResult {
+  const resolved = path.resolve(options.ledgerPath);
+  if (!fs.existsSync(resolved)) {
+    return { passed: false, reason: `ledger not found: ${resolved}` };
+  }
+  const raw: unknown = JSON.parse(fs.readFileSync(resolved, 'utf-8'));
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return { passed: false, reason: 'ledger is not a JSON object' };
+  }
+  const ledger = raw as Record<string, any>;
+
+  const gate = evaluateM11Terminal(ledger, options.evidence, options.checks, options.now);
+  if (!gate.passed) {
+    return { passed: false, reason: `M11 terminal gate false: ${gate.failedGates.join(', ')}`, failedGates: gate.failedGates };
+  }
+
+  // ── all gates pass: emit token + audit event + regenerate shadows ─────────
+  const at = new Date(options.now ?? Date.now()).toISOString();
+  const auditEvents = Array.isArray(ledger.audit_events) ? ledger.audit_events : [];
+  ledger.audit_events = [
+    ...auditEvents,
+    {
+      event_id: `E-M11-${auditEvents.length + 1}`,
+      type: 'M11_TERMINAL_FINALIZE',
+      summary: `M11 terminal emitted ${M11_TERMINAL_TOKEN}: all ${gate.gates.length} gates pass; headCommit ${options.evidence.headCommit.slice(0, 12)}; effective identity ${options.evidence.effectivePlanIdentity.slice(0, 12)}`,
+      actor: 'engine',
+      at,
+    },
+  ];
+  ledger.execution_state = M11_TERMINAL_TOKEN;
+  if (typeof ledger.status === 'string' && ledger.status !== M11_TERMINAL_TOKEN) {
+    ledger.status = M11_TERMINAL_TOKEN;
+  }
+
+  // Regenerate shadow projection hashes at the new revision (fail-closed: keep
+  // the prior hash only when the shadow file is unreadable, never guess).
+  const previousHashes: Record<string, string> = ledger.shadow_hashes ?? ledger.shadowHashes ?? {};
+  const shadowDir = options.shadowDir
+    ?? path.resolve(path.dirname(resolved), '..', 'plans', String(ledger.plan_id ?? ''), 'shadow');
+  const hashes: Record<string, string> = {};
+  if (fs.existsSync(shadowDir)) {
+    for (const key of Object.keys(previousHashes)) {
+      try {
+        hashes[key] = createHash('sha256').update(fs.readFileSync(path.join(shadowDir, key))).digest('hex');
+      } catch {
+        hashes[key] = previousHashes[key];
+      }
+    }
+  }
+  const nextRevision = (typeof ledger.shadowRevision === 'number' ? ledger.shadowRevision : (ledger.shadow_revision ?? 0)) + 1;
+  ledger.shadowRevision = nextRevision;
+  ledger.shadow_revision = nextRevision;
+  ledger.shadow_hashes = hashes;
+  ledger.shadowHashes = hashes;
+
+  fs.writeFileSync(resolved, `${JSON.stringify(ledger, null, 2)}\n`, 'utf-8');
+  return { passed: true, token: M11_TERMINAL_TOKEN };
+}

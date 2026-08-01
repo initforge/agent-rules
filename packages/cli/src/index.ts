@@ -213,6 +213,7 @@ program
   .command("plan")
   .description("Manage execution plans")
   .argument("[args...]", "Subcommand and its arguments")
+  .option("--finalize", "M11: emit the terminal token only when every gate passes")
   .addHelpText(
     "after",
     `
@@ -227,10 +228,13 @@ Subcommands:
   export <runId> <outputPath>  Export plan bundle
   finalize <runId>             Finalize a completed plan
   readiness <planId>           Compile plan-readiness & autonomy bundle (9 projections)
+  m11 <planId>                 Evaluate HV3_M11_LOCAL_COMPLETE eligibility (read-only)
+                               add --finalize to emit the token only when all gates pass
     `
   )
-  .action(async (args: string[]) => {
+  .action(async (args: string[], cmdOpts: { finalize?: boolean }) => {
     const opts = program.optsWithGlobals() as CliOptions;
+    if (cmdOpts.finalize) args = [...args, "--finalize"];
     const result = await planCmd(args, opts);
     formatOutput(result, opts);
   });

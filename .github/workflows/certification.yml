@@ -116,8 +116,17 @@ jobs:
         env:
           CERTIFY_RESULT: ${{ needs.certify.result }}
         run: |
-          if test "$CERTIFY_RESULT" != success; then
-            echo "WAITING_EXTERNAL: native worker evidence unavailable; implementation remains valid."
-            exit 78
-          fi
-          test "$CERTIFY_RESULT" = success
+          case "$CERTIFY_RESULT" in
+            success)
+              echo "native attestation matrix succeeded"
+              test "$CERTIFY_RESULT" = success
+              ;;
+            skipped)
+              echo "RUNNERS_UNAVAILABLE: no self-hosted native runners matched; implementation remains valid."
+              exit 78
+              ;;
+            *)
+              echo "NATIVE_HOST_FAILED: at least one native host genuinely failed certification."
+              exit 79
+              ;;
+          esac

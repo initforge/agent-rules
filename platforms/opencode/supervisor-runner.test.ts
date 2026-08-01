@@ -1069,4 +1069,43 @@ describe('SupervisorRunner', () => {
       server.close();
     }
   });
+
+  // F10 (R10): journal write failures surface (no silent best-effort) and abort
+  // fails closed before any mutation, keeping abort idempotent.
+  it('23. abort fails closed when the reconcile journal cannot be written', async () => {
+    const { server, port } = await startTestServer();
+    try {
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'runner-journal-'));
+      const statePath = path.join(tmpDir, 'state.json');
+      // Occupy the journal path with a directory so append fails with EISDIR.
+      fs.mkdirSync(`${statePath}.reconcile`);
+      const runner = new SupervisorRunner({
+        adapter: { baseUrl: `http://localhost:${port}`, fetchFn: fetch },
+        supervisor: { statePath },
+      });
+      await runner.initialize();
+      const result = await runner.runAssignment({
+        assignmentId: 'journal-abort', kind: 'writer', ownedPaths: ['src/'], forbiddenPaths: [], contextKey: stubContextKey,
+      });
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+
+      const statusBefore = runner.supervisor.children.find(c => c.assignmentId === 'journal-abort')?.status;
+      const abortResult = await runner.abort('journal-abort');
+      expect(abortResult.ok).toBe(false);
+      if (!abortResult.ok) {
+        expect(abortResult.reason).toContain('journal write failed');
+      }
+      // fail-closed: no mutation
+      const after = runner.supervisor.children.find(c => c.assignmentId === 'journal-abort');
+      expect(after?.status).toBe(statusBefore);
+      // idempotent: retry yields the same fail-closed result, no state change
+      const second = await runner.abort('journal-abort');
+      expect(second.ok).toBe(false);
+      if (!second.ok) expect(second.reason).toContain('journal write failed');
+      expect(runner.supervisor.children.find(c => c.assignmentId === 'journal-abort')?.status).toBe(statusBefore);
+    } finally {
+      server.close();
+    }
+  });
 });

@@ -6,6 +6,19 @@ export type PlanArtifactStatus = 'DRAFT' | 'APPROVED' | 'ADOPTED' | 'ACTIVE' | '
 export type LineageResolution = 'CARRIED' | 'SUPERSEDED' | 'REJECTED_OBSOLETE';
 export type VerificationOutcome = 'PASS' | 'FAIL' | 'BLOCKED' | 'UNVERIFIED';
 export type ReconciliationStatus = 'MATCH' | 'PARTIAL' | 'MISSING' | 'DEVIATED' | 'EXTRA' | 'SUPERSEDED';
+
+/** Shared graph edge types (C2 dispatch-ready-set, plan-readiness). Single source of truth. */
+export const DEPENDENCY_TYPES = [
+  'HARD', 'SOFT', 'VERIFY_AFTER', 'SEMANTIC_CONFLICT', 'INTEGRATION', 'GLOBAL_GATE', 'EXTERNAL',
+] as const;
+export type DependencyType = (typeof DEPENDENCY_TYPES)[number];
+
+/** Recoverable (nonterminal) scheduler states shared by readiness + dispatch. */
+export const RECOVERABLE_STATES = [
+  'WAITING_EXTERNAL', 'WAITING_AUTHORITY', 'WAITING_RESOURCE', 'RETRY_SCHEDULED', 'NEEDS_REMEDIATION',
+] as const;
+export type RecoverableState = (typeof RECOVERABLE_STATES)[number];
+
 export type WorkLedgerStatus =
   | 'ADOPTED' | 'DISCOVERING' | 'PLANNED' | 'VALIDATED' | 'DISPATCHING' | 'EXECUTING' | 'VERIFYING' | 'REVIEWING'
   | 'needs-remediation' | 'needs-replan' | 'COMPLETED' | 'PARTIAL' | 'BLOCKED' | 'FAILED' | 'CANCELLED';

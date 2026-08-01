@@ -11,7 +11,7 @@ import {
   reconcilePlan as engineReconcilePlan,
 } from "@initforge/agent-rules-engine/plan-lifecycle";
 import { compilePlanReadiness } from "@initforge/agent-rules-engine/plan-readiness";
-import { evaluateM11Terminal, M11_TERMINAL_TOKEN, type M11Evidence } from "@initforge/agent-rules-engine/terminal-gate";
+import { evaluateM11Terminal, finalizeM11, M11_TERMINAL_TOKEN, type M11Evidence } from "@initforge/agent-rules-engine/terminal-gate";
 import path from "node:path";
 import fs from "node:fs";
 import { createHash } from "node:crypto";
@@ -491,16 +491,21 @@ function runHeadCommit(root: string): string | undefined {
  * Minimal M11 terminal wiring: `plan m11 <plan-id> [repoRoot]` evaluates
  * HV3_M11_LOCAL_COMPLETE eligibility from the real ledger + the dynamically
  * compiled effective requirement set. Evaluator never writes the terminal token.
+ * Add `--finalize` to emit the token: the engine writes execution_state +
+ * audit event + regenerated shadows ONLY when all 12 gates pass (fail-closed,
+ * zero mutation otherwise).
  */
 export async function planM11(
   args: string[],
   opts: CliOptions
 ): Promise<CommandResult> {
-  const planId = args[0];
+  const finalize = args.includes("--finalize");
+  const positional = args.filter((a) => a !== "--finalize");
+  const planId = positional[0];
   if (!planId) {
-    return { exitCode: ExitCode.InvalidArgument, message: "Usage: plan m11 <plan-id> [repoRoot]" };
+    return { exitCode: ExitCode.InvalidArgument, message: "Usage: plan m11 <plan-id> [repoRoot] [--finalize]" };
   }
-  const root = resolveStoreBase(args[1]);
+  const root = resolveStoreBase(positional[1]);
   const ledgerPath = path.join(root, ".agent", "ledger", `${planId}.json`);
   if (!fs.existsSync(ledgerPath)) {
     return { exitCode: ExitCode.GeneralError, message: `Ledger not found: ${ledgerPath}` };
@@ -540,11 +545,46 @@ export async function planM11(
       reviews: [],
     };
     const scorecard = ledger.milestones?.M8?.scorecard?.dimensions ?? [];
-    const result = evaluateM11Terminal(ledger, evidence, {
+    const checks = {
       requirements: readiness.requirements.map((r) => ({ requirement_id: r.requirement_id, status: r.status })),
       scorecard,
       waitingGates: [],
-    });
+    };
+
+    if (finalize) {
+      const shadowDir = path.join(planDir, "shadow");
+      const finalized = finalizeM11({
+        ledgerPath,
+        evidence,
+        checks,
+        shadowDir: fs.existsSync(shadowDir) ? shadowDir : undefined,
+      });
+      if (!finalized.passed) {
+        return {
+          exitCode: ExitCode.GeneralError,
+          message: `${planId} M11 terminal NOT eligible — no mutation: ${finalized.reason}`,
+          data: {
+            planId,
+            terminalToken: M11_TERMINAL_TOKEN,
+            eligible: false,
+            failedGates: finalized.failedGates ?? [],
+            mutated: false,
+          },
+        };
+      }
+      return {
+        exitCode: ExitCode.Success,
+        message: `${planId} M11 terminal emitted: ${M11_TERMINAL_TOKEN}`,
+        data: {
+          planId,
+          terminalToken: M11_TERMINAL_TOKEN,
+          eligible: true,
+          mutated: true,
+        },
+      };
+    }
+
+    const result = evaluateM11Terminal(ledger, evidence, checks);
     const eligible = result.passed;
     return {
       exitCode: eligible ? ExitCode.Success : ExitCode.GeneralError,

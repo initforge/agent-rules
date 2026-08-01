@@ -17,27 +17,26 @@ import os from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
-import type { Sha256 } from './contracts.js';
+import {
+  DEPENDENCY_TYPES,
+  RECOVERABLE_STATES,
+  type DependencyType,
+  type RecoverableState,
+  type Sha256,
+} from './contracts.js';
 import { M11_IMPLEMENTATIONS, clusterForM11 } from './plan-readiness-map.js';
 
 // Re-exported so the plan-readiness public API is unchanged after the M11
 // mapping table moved to its own module.
 export { M11_IMPLEMENTATIONS } from './plan-readiness-map.js';
 
+// Re-exported from contracts.ts — shared graph types keep a single source of truth.
+export { DEPENDENCY_TYPES, RECOVERABLE_STATES, type DependencyType, type RecoverableState } from './contracts.js';
+
 // ── Public enums ─────────────────────────────────────────────────────────────
 
 export const READINESS_STATES = ['AUTONOMOUS_READY', 'BOUNDED_READY', 'OWNER_DECISION_REQUIRED'] as const;
 export type ReadinessState = (typeof READINESS_STATES)[number];
-
-export const DEPENDENCY_TYPES = [
-  'HARD', 'SOFT', 'VERIFY_AFTER', 'SEMANTIC_CONFLICT', 'INTEGRATION', 'GLOBAL_GATE', 'EXTERNAL',
-] as const;
-export type DependencyType = (typeof DEPENDENCY_TYPES)[number];
-
-export const RECOVERABLE_STATES = [
-  'WAITING_EXTERNAL', 'WAITING_AUTHORITY', 'WAITING_RESOURCE', 'RETRY_SCHEDULED', 'NEEDS_REMEDIATION',
-] as const;
-export type RecoverableState = (typeof RECOVERABLE_STATES)[number];
 
 export const CONFLICT_DOMAINS = [
   'path/glob', 'public-api-schema', 'migration', 'lockfile', 'generated-manifest',

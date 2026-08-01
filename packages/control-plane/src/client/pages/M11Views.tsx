@@ -713,6 +713,33 @@ export default function M11Views({ segments, navigate }: M11ViewsProps) {
     navigate(`/m11/${v}`);
   }, [navigate]);
 
+  // WAI-ARIA roving tabindex: Arrow keys / Home / End move focus and selection.
+  const onTabKeyDown = useCallback((e: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    let next: number | null = null;
+    switch (e.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        next = (index + 1) % VIEWS.length;
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        next = (index - 1 + VIEWS.length) % VIEWS.length;
+        break;
+      case 'Home':
+        next = 0;
+        break;
+      case 'End':
+        next = VIEWS.length - 1;
+        break;
+      default:
+        return;
+    }
+    e.preventDefault();
+    const v = VIEWS[next].id;
+    selectView(v);
+    document.getElementById(`m11-tab-${v}`)?.focus();
+  }, [selectView]);
+
   return (
     <div className="page m11-page">
       <div className="page-header">
@@ -726,14 +753,16 @@ export default function M11Views({ segments, navigate }: M11ViewsProps) {
       </div>
 
       <div className="m11-tabs" role="tablist" aria-label="M11 views">
-        {VIEWS.map(v => (
+        {VIEWS.map((v, i) => (
           <button
             key={v.id}
             role="tab"
             id={`m11-tab-${v.id}`}
+            tabIndex={view === v.id ? 0 : -1}
             aria-selected={view === v.id}
-            aria-controls="m11-panel"
+            aria-controls={`m11-panel-${v.id}`}
             onClick={() => selectView(v.id)}
+            onKeyDown={(e) => onTabKeyDown(e, i)}
             className={`m11-tab ${view === v.id ? 'm11-tab--active' : ''}`}
           >
             {v.label}
@@ -741,7 +770,7 @@ export default function M11Views({ segments, navigate }: M11ViewsProps) {
         ))}
       </div>
 
-      <div className="m11-panel" id="m11-panel" role="tabpanel" aria-labelledby={`m11-tab-${view}`}>
+      <div className="m11-panel" id={`m11-panel-${view}`} role="tabpanel" aria-labelledby={`m11-tab-${view}`}>
         {state === 'loading' && <Loading />}
         {state === 'error' && <ErrorState message={error} />}
         {state === 'loaded' && data && <ViewBody view={view} data={data} />}

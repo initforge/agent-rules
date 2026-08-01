@@ -45,10 +45,6 @@ app.use(cors({
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'X-API-Key'],
 }));
-app.use((_req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  next();
-});
 app.use(express.json({ limit: '500kb' }));
 app.use(rateLimit);
 

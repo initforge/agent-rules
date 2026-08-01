@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { createHash } from 'node:crypto';
-import { verifyTerminalGate, verifyMilestoneGate, assertCertifiable, assertNoResidualBeforeFinal, terminalGateCheck, assertWorkLedger, assertCertificationAttestation, REQUIRED_HOSTS, M10_TERMINAL_TOKEN, deriveM10ProofHash } from '../src/terminal-gate.js';
+import { verifyTerminalGate, verifyMilestoneGate, assertCertifiable, assertNoResidualBeforeFinal, terminalGateCheck, assertWorkLedger, assertCertificationAttestation, finalizeM11, evaluateM11Terminal, REQUIRED_HOSTS, M10_TERMINAL_TOKEN, M11_TERMINAL_TOKEN, deriveM10ProofHash, type M11Evidence, type M11Checks } from '../src/terminal-gate.js';
 import { HOST_ATTESTATION_EVIDENCE_ROLES, hostAttestationEvidenceRef, hostAttestationEvidenceSubjectSha256, type HostAttestation } from '../src/contracts.js';
 
 const hash = 'a'.repeat(64);
@@ -104,6 +104,102 @@ function stubLedger(overrides: Record<string, unknown> = {}): Record<string, unk
 
 function tmpDir(): string { return fs.mkdtempSync(path.join(os.tmpdir(), 'tg-')); }
 function writeFile(p: string, content: string): string { fs.writeFileSync(p, content, 'utf-8'); return p; }
+
+// ── M11 terminal emission (finalizeM11) fixtures ─────────────────────────────
+
+function eligibleM11Fixture(overrides: Record<string, unknown> = {}): { ledger: Record<string, unknown>; evidence: M11Evidence; checks: M11Checks } {
+  const effectivePlanIdentity = 'e'.repeat(64);
+  const ledger = stubLedger({ execution_state: 'EXECUTING', status: 'EXECUTING', ...overrides });
+  const evidence: M11Evidence = {
+    headCommit: hash,
+    effectivePlanIdentity,
+    envelopeSha256: hash,
+    observedAt: new Date().toISOString(),
+    fresh: true,
+    ciSha: hash,
+    certifiedArtifactSha256: hash,
+    installedArtifactSha256: hash,
+    installedFrom: 'certified-local-main',
+    reconciliationHeadCommit: hash,
+    parity: 'COMPLETE',
+    topology: 'COMPLETE',
+    reviews: [
+      { dimension: 'architecture', accepted: true, reviewId: 'R1', stale: false },
+      { dimension: 'security', accepted: true, reviewId: 'R2', stale: false },
+      { dimension: 'maintainability', accepted: true, reviewId: 'R3', stale: false },
+      { dimension: 'UX', accepted: true, reviewId: 'R4', stale: false },
+      { dimension: 'operations', accepted: true, reviewId: 'R5', stale: false },
+    ],
+  };
+  const checks: M11Checks = {
+    requirements: [{ requirement_id: 'REQ-001', status: 'MATCH' }],
+    scorecard: [{ id: 'arch', score: 9, status: 'VERIFIED' }],
+    waitingGates: [],
+  };
+  return { ledger, evidence, checks };
+}
+
+describe('finalizeM11 (engine-owned M11 terminal emission)', () => {
+  it('writes the token, audit event, and regenerated shadows only when all 12 gates pass', () => {
+    const dir = tmpDir();
+    const { ledger, evidence, checks } = eligibleM11Fixture();
+    const shadowDir = path.join(dir, 'shadow');
+    fs.mkdirSync(shadowDir);
+    fs.writeFileSync(path.join(shadowDir, 'tasks.md'), 'shadow tasks');
+    ledger.shadow_hashes = { 'tasks.md': 'x'.repeat(64) };
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+
+    expect(evaluateM11Terminal(ledger, evidence, checks).passed).toBe(true);
+
+    const result = finalizeM11({ ledgerPath, evidence, checks, shadowDir });
+    expect(result.passed).toBe(true);
+    expect(result.token).toBe(M11_TERMINAL_TOKEN);
+
+    const raw = JSON.parse(fs.readFileSync(ledgerPath, 'utf-8')) as Record<string, any>;
+    expect(raw.execution_state).toBe(M11_TERMINAL_TOKEN);
+    expect(raw.audit_events.at(-1).type).toBe('M11_TERMINAL_FINALIZE');
+    expect(raw.shadowRevision).toBe((ledger.shadowRevision as number) + 1);
+    // shadows regenerated from disk, not carried over
+    const expected = createHash('sha256').update('shadow tasks').digest('hex');
+    expect(raw.shadow_hashes['tasks.md']).toBe(expected);
+  });
+
+  it('refuses and mutates nothing when a gate fails', () => {
+    const dir = tmpDir();
+    const { ledger, evidence, checks } = eligibleM11Fixture({ findings: [{ finding_id: 'F-1', status: 'OPEN' }] });
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+    const before = fs.readFileSync(ledgerPath, 'utf-8');
+
+    const result = finalizeM11({ ledgerPath, evidence, checks });
+
+    expect(result.passed).toBe(false);
+    expect(result.failedGates).toContain('M11_NO_OPEN_FINDINGS');
+    expect(fs.readFileSync(ledgerPath, 'utf-8')).toBe(before);
+  });
+
+  it('refuses when the M10 marker is still present (HISTORICAL_STALE_FOR_M11)', () => {
+    const dir = tmpDir();
+    const { ledger, evidence, checks } = eligibleM11Fixture({
+      execution_state: M10_TERMINAL_TOKEN,
+      terminalMarker: M10_TERMINAL_TOKEN,
+      terminalMarkerStatus: 'HISTORICAL_STALE_FOR_M11',
+    });
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+    const before = fs.readFileSync(ledgerPath, 'utf-8');
+
+    const result = finalizeM11({ ledgerPath, evidence, checks });
+
+    expect(result.passed).toBe(false);
+    expect(result.failedGates).toContain('M11_EXECUTION_STATE_OK');
+    expect(fs.readFileSync(ledgerPath, 'utf-8')).toBe(before);
+  });
+
+  it('missing ledger returns not-eligible without throwing', () => {
+    const { evidence, checks } = eligibleM11Fixture();
+    const result = finalizeM11({ ledgerPath: '/nonexistent/ledger.json', evidence, checks });
+    expect(result.passed).toBe(false);
+  });
+});
 
 describe('verifyTerminalGate', () => {
   it('rejects tampered original → FAIL', () => {
