@@ -2,6 +2,8 @@ import { describe, it, expect, afterAll } from "vitest";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
+import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { planM11 } from "../src/commands/plan.js";
 import { ExitCode } from "../src/types.js";
 import {
@@ -11,11 +13,22 @@ import {
 } from "@initforge/agent-rules-engine/candidate-epoch";
 
 const PLAN_ID = "test-m11-plan";
-const HEAD = "a".repeat(64);
 const IDENTITY = "e".repeat(64);
 const ARTIFACT = "c".repeat(64);
 
+// Git fixture: the terminal gate now requires a real repository HEAD.
+// Init a bare git repo so `runHeadCommit(root)` succeeds in planM11.
 const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "plan-m11-test-"));
+execFileSync("git", ["init", "-q"], { cwd: tmpRoot });
+execFileSync("git", ["config", "user.email", "test@local"], { cwd: tmpRoot });
+execFileSync("git", ["config", "user.name", "test"], { cwd: tmpRoot });
+fs.writeFileSync(path.join(tmpRoot, ".gitkeep"), "");
+execFileSync("git", ["add", "-A"], { cwd: tmpRoot });
+execFileSync("git", ["commit", "-q", "-m", "init"], { cwd: tmpRoot });
+// ponytail: real HEAD from git rev-parse. Skipped: multi-commit HEAD history
+// (single-commit HEAD is sufficient for terminal-gate binding). Add when plan
+// evolution over multiple commits needs testing.
+const HEAD = execFileSync("git", ["rev-parse", "HEAD"], { cwd: tmpRoot }).toString().trim();
 
 afterAll(() => {
   fs.rmSync(tmpRoot, { recursive: true, force: true });
@@ -25,7 +38,7 @@ function makeEpoch(): CandidateEpoch {
   return {
     schema: CANDIDATE_EPOCH_SCHEMA,
     source_tree_sha: "b".repeat(40),
-    candidate_commit_or_tree: HEAD,
+    candidate_commit_or_tree: HEAD, // must bind actual repository HEAD
     artifact_digest: ARTIFACT,
     container_image_digests: [],
     dependency_lock_hash: "d".repeat(64),
@@ -56,15 +69,15 @@ function baseLedger(overrides: Record<string, unknown> = {}): Record<string, unk
     original_plan: { sha256: "d".repeat(64) },
     effective_plan_identity: { sha256: IDENTITY },
     shadow_revision: 1,
-    headCommit: HEAD,
-    commitSha: HEAD,
+    headCommit: HEAD, // must bind actual repository HEAD
+    commitSha: HEAD,  // must bind actual repository HEAD
     execution_state: "EXECUTING",
     status: "EXECUTING",
     findings: [],
     orphanFindings: [],
     attestations: ["codex", "claude", "grok", "opencode", "antigravity"].map((host) => ({
       host,
-      commitSha: HEAD,
+      commitSha: HEAD, // must bind actual repository HEAD
     })),
     candidate_epoch: epoch,
     milestones: { M8: { requirements, scorecard: { dimensions: scorecard } } },
@@ -73,30 +86,44 @@ function baseLedger(overrides: Record<string, unknown> = {}): Record<string, unk
   return ledger;
 }
 
+// ponytail: real envelopeSha256 via computeEnvelopeSha256. Skipped: envelope
+// tampering detection (covered by engine loadM11TerminalEvidenceEnvelope negative
+// cases). Add when loading from a write-producer path.
+function computeEnvelopeSha256(env: Record<string, unknown>): string {
+  const { envelopeSha256: _drop, ...rest } = env;
+  return createHash("sha256").update(JSON.stringify(rest, null, 2)).digest("hex");
+}
+
 function envelopeLedger(): Record<string, unknown> {
+  const epoch = makeEpoch();
+  // Build the envelope content (all fields except envelopeSha256) to compute
+  // the real SHA-256 content hash.  The loader recomputes and rejects mismatches
+  // (AM-0020 §4 — envelopeSha256 is no longer decorative).
+  const envelopeContent: Record<string, unknown> = {
+    headCommit: HEAD,       // must bind actual repository HEAD
+    effectivePlanIdentity: IDENTITY,
+    observedAt: new Date().toISOString(),
+    fresh: true,
+    ciSha: HEAD,            // must bind actual repository HEAD
+    certifiedArtifactSha256: ARTIFACT,
+    installedArtifactSha256: ARTIFACT,
+    installedFrom: "certified-local-main",
+    reconciliationHeadCommit: HEAD, // must bind actual repository HEAD
+    parity: "COMPLETE",
+    topology: "COMPLETE",
+    reviews: [
+      { dimension: "architecture", accepted: true, reviewId: "R1", stale: false },
+      { dimension: "security", accepted: true, reviewId: "R2", stale: false },
+      { dimension: "maintainability", accepted: true, reviewId: "R3", stale: false },
+      { dimension: "UX", accepted: true, reviewId: "R4", stale: false },
+      { dimension: "operations", accepted: true, reviewId: "R5", stale: false },
+    ],
+    candidate_epoch_hash: candidateEpochHash(epoch), // must bind candidateEpochHash(ledger.candidate_epoch)
+  };
+  const envelopeSha256 = computeEnvelopeSha256(envelopeContent);
   return baseLedger({
-    m11_terminal_evidence: {
-      headCommit: HEAD,
-      effectivePlanIdentity: IDENTITY,
-      envelopeSha256: "b".repeat(64),
-      observedAt: new Date().toISOString(),
-      fresh: true,
-      ciSha: HEAD,
-      certifiedArtifactSha256: ARTIFACT,
-      installedArtifactSha256: ARTIFACT,
-      installedFrom: "certified-local-main",
-      reconciliationHeadCommit: HEAD,
-      parity: "COMPLETE",
-      topology: "COMPLETE",
-      reviews: [
-        { dimension: "architecture", accepted: true, reviewId: "R1", stale: false },
-        { dimension: "security", accepted: true, reviewId: "R2", stale: false },
-        { dimension: "maintainability", accepted: true, reviewId: "R3", stale: false },
-        { dimension: "UX", accepted: true, reviewId: "R4", stale: false },
-        { dimension: "operations", accepted: true, reviewId: "R5", stale: false },
-      ],
-      candidate_epoch_hash: candidateEpochHash(baseLedger().candidate_epoch as CandidateEpoch),
-    },
+    candidate_epoch: epoch,
+    m11_terminal_evidence: { ...envelopeContent, envelopeSha256 },
   });
 }
 
