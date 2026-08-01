@@ -76,6 +76,8 @@ def run_case(script: str, extra_args: list[str], timeout_s: int) -> tuple[int, l
             reports.append(json.loads(m.group(1)))
         except json.JSONDecodeError:
             pass
+    if proc.stdout.strip():
+        print(proc.stdout.rstrip())
     if proc.returncode not in (0, 2):
         tail = (proc.stdout + proc.stderr)[-400:]
         print(f"  (eval {script} exit={proc.returncode}) tail: {tail}")
