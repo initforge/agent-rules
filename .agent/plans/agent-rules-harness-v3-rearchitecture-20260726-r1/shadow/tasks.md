@@ -1,6 +1,6 @@
 # Tasks
 
-Derived from WorkLedger revision 57.
+Derived from WorkLedger revision 58.
 
 | Task | Assignment | State | Scope | Anchor |
 |---|---|---|---|---|

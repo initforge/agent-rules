@@ -36,4 +36,3 @@ Status: **NEEDS_REMEDIATION**
 | M10-FINAL-RECONCILIATION | MATCH | M10-FINAL requirement REQ-013 reconciled MATCH at 56284ad436a6 | - |
 | M10-FINAL-RECONCILIATION | MATCH | M10-FINAL requirement REQ-014 reconciled MATCH at 56284ad436a6 | - |
 | M10-FINAL-RECONCILIATION | MATCH | M10-FINAL requirement REQ-015 reconciled MATCH at 56284ad436a6 | - |
-| M11-CANONICAL-STATE | RECONCILED_R57 | canonical M11 state at revision 57: identity 1d524a27, headCommit e5ff92c285e4, M10 terminal marker + m10Proof HISTORICAL_STALE_FOR_M11, latestReview stale | E-REC-58 |
