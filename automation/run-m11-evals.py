@@ -40,6 +40,7 @@ CASES = [
     ("antigravity.py",     "M11-C10-C10",  "Antigravity out-of-ownership mutation rejected"),
     ("control_plane.py",   "M11-C10-C11",  "Control Plane browser/visual/a11y/console/network QA"),
     ("adversarial.py",     "M11-C10-C12",  "adversarial counterexample compiler (M11-R30)"),
+    ("false_green.py",     "M11-C10-R35",  "seeded false-green/false-reject fixtures blocked/correct (AM-0020 §11)"),
 ]
 
 # One script per eval file; resilience.py emits reports for C2/C6/C7 in one run.
@@ -55,6 +56,7 @@ SCRIPTS = {
     "antigravity.py": ("antigravity.py", ["M11-C10-C10"]),
     "control_plane.py": ("control_plane.py", ["M11-C10-C11"]),
     "adversarial.py": ("adversarial.py", ["M11-C10-C12"]),
+    "false_green.py": ("false_green.py", ["M11-C10-R35"]),
 }
 
 # Reports are single-line JSON; do not let dot match newlines (multi-report evals
