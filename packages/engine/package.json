@@ -88,6 +88,10 @@
     "./topology-compiler": {
       "types": "./dist/topology-compiler.d.ts",
       "import": "./dist/topology-compiler.js"
+    },
+    "./adversarial-compiler": {
+      "types": "./dist/adversarial-compiler.d.ts",
+      "import": "./dist/adversarial-compiler.js"
     }
   },
   "engines": {

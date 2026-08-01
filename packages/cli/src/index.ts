@@ -23,6 +23,7 @@ import { modelsCmd } from "./commands/models.js";
 import { skillsCmd } from "./commands/skills.js";
 import { autopilotCmd } from "./commands/autopilot.js";
 import { topologyCmd } from "./commands/topology.js";
+import { adversarialCmd } from "./commands/adversarial.js";
 import { createOpencodeClient } from "@opencode-ai/sdk/v2/client";
 import { OpenCodeNativeSessionAdapter } from "@initforge/agent-rules-engine/native-session-adapter";
 import {
@@ -315,6 +316,31 @@ Subcommands:
   .action(async (args: string[]) => {
     const opts = program.optsWithGlobals() as CliOptions;
     const result = await topologyCmd(args, opts);
+    formatOutput(result, opts);
+  });
+
+// ── adversarial ─────────────────────────────────────────────────────────────
+program
+  .command("adversarial")
+  .description("Adversarial counterexample compiler (AM-0020 §7, M11-R30)")
+  .argument("[args...]", "Subcommand and its arguments")
+  .allowUnknownOption(true)
+  .addHelpText(
+    "after",
+    `
+Subcommands:
+  compile <plan.json> [--claims c.json] [--topology t.yaml]
+                       Compile negative probes from plan invariants + topology +
+                       claim scope; fails on empty plan-required domain generator
+  run <plan.json> [--claims c.json] [--subject s.json]
+                       Compile + gate T2/T3 claims (negative probe or recorded
+                       deterministic proof) + optionally execute probes against a
+                       subject; any FAIL/rejected claim fails the run
+    `
+  )
+  .action(async (args: string[]) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const result = await adversarialCmd(args, opts);
     formatOutput(result, opts);
   });
 
