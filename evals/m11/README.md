@@ -31,6 +31,7 @@ HONEST_UNAVAILABLE present).
 | 9. Tier-A native + Grok functional attestation bind exact HEAD | `attestation.py` | `host-attestation.test.ts`, `write-host-attestations.test.ts`, live host probe |
 | 10. Antigravity out-of-ownership mutation rejected | `antigravity.py` | scan of `platforms/antigravity` + host-policy matrix |
 | 11. Control Plane browser/visual/accessibility/console/network QA | `control_plane.py` | scan of `packages/control-plane/tests` + C9 views API suite |
+| 12. Claim calibration aggregation (M11-R36) | `calibration.test.ts` | `calibrationSummary`/`routeReviewStrength` on engine source: honest UNAVAILABLE, defect-escape by domain, calibration-driven routing |
 | Performance gates | `performance.py` → `performance.ts` + `throughput.ts` | `computeReadySet` on 20-node graph (latency/utilization/idle) + controlled 48-task two-variant harness (throughput/e2e) against the compiled engine artifact |
 
 ## Performance gates (AM-0019 §12)

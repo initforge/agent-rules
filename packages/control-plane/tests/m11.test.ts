@@ -536,12 +536,24 @@ describe('M11 views API', () => {
     })
   })
 
-  it('views listing returns all ten view names', async () => {
+  it('views listing returns all eleven view names', async () => {
     const { root } = createHarness()
     await withHarness(root, async () => {
       const res = await request(app).get('/api/m11/views')
       expect(res.status).toBe(200)
-      expect(res.body.data).toEqual(['readiness', 'dag', 'conflicts', 'worktrees', 'agents', 'resources', 'topology', 'parity', 'waits', 'gates'])
+      expect(res.body.data).toEqual(['readiness', 'dag', 'conflicts', 'worktrees', 'agents', 'resources', 'topology', 'parity', 'waits', 'gates', 'calibration'])
+    })
+  })
+
+  it('calibration view reports honest UNAVAILABLE when the ledger is empty', async () => {
+    const { root } = createHarness()
+    await withHarness(root, async () => {
+      const res = await request(app).get('/api/m11/calibration')
+      expect(res.status).toBe(200)
+      expect(res.body.present).toBe(false)
+      expect(res.body.metricState).toBe('UNAVAILABLE')
+      expect(res.body.eventCount).toBe(0)
+      expect(res.body.note).toContain('UNAVAILABLE')
     })
   })
 })
