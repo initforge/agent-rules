@@ -64,6 +64,10 @@
     "./native-session-adapter": {
       "types": "./dist/native-session-adapter.d.ts",
       "import": "./dist/native-session-adapter.js"
+    },
+    "./worktree-train": {
+      "types": "./dist/worktree-train.d.ts",
+      "import": "./dist/worktree-train.js"
     }
   },
   "engines": {

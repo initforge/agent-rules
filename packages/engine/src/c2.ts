@@ -46,3 +46,16 @@ export {
   assertResumeContext,
   clearResumeMarker,
 } from './resume-hooks.js';
+
+export {
+  type WorktreeLeaseInput,
+  type WorktreeLease,
+  type ReleaseReceipt,
+  type ReviewMarker,
+  type IntegrationReceipt,
+  type TrainState,
+  type WorktreeTrainOptions,
+  WorktreeTrain,
+  WorktreeTrainError,
+  dependencyRankFromGraph,
+} from './worktree-train.js';
