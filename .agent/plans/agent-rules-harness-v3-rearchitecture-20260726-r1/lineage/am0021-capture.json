@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "plan_id": "agent-rules-harness-v3-rearchitecture-20260726-r1",
+  "amendment_id": "AM-0021",
+  "status": "OWNER_APPROVED_PENDING_ACTIVATION",
+  "source_kind": "owner-chat-approved-plan",
+  "captured_at": "2026-08-01T15:24:46Z",
+  "owner_decisions": [
+    "AM-0021 is additive after AM-0020 and preserves every non-conflicting prior requirement.",
+    "Premium main is an event-driven semantic owner; deterministic engine owns routine orchestration.",
+    "Main context and token economy are priorities and SLOs, not completion blockers.",
+    "Correctness and execution continuity override token targets without requiring owner approval.",
+    "Main does not ingest raw child JSONL, full logs, full ledger or repeated full-plan text by default.",
+    "Main receives signed capsules and ordered deltas, with exact drill-down to plan, diff and evidence.",
+    "No automatic main-model downgrade is authorized merely to save tokens.",
+    "Codex, Claude Code and OpenCode are the primary context/wake adapter targets.",
+    "The latest concepts may be dogfooded before full installation only with honest preview-enforcement labels.",
+    "Machine-wide native-child target is 8 normal and 10 burst when conflict-free work and resources permit.",
+    "Before global broker certification the 8–10 ceiling is shared across agent-rules, pos-ops and mini-toeic.score.",
+    "Dirty external project candidates must be content-addressedly frozen before branch/worktree fan-out."
+  ],
+  "original": {
+    "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/original.md",
+    "sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31"
+  },
+  "prior_effective_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
+  "prior_shadow_revision": 59,
+  "prior_execution_state": "NEEDS_REMEDIATION",
+  "prior_amendment": {
+    "amendment_id": "AM-0020",
+    "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0020-epistemic-integrity-adversarial-review-and-truthful-reporting.md",
+    "sha256": "f99e603c2e9c60194518938f78de4ab90645eb02d893f2ef811b436c444ee0cc",
+    "ledger_status_at_capture": "OWNER_APPROVED_EFFECTIVE"
+  },
+  "amendment": {
+    "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0021-premium-main-context-economy-and-event-driven-orchestration.md",
+    "sha256": "0dfb45500fe8a7d80f177e57ef8a6c231b44e28f8e4f973b31f85bf7d527cf1c"
+  },
+  "handoffs": [
+    {
+      "kind": "agent-rules-live-execution",
+      "path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/deepseek-am0021-max-throughput-live-execution-prompt.md",
+      "sha256": "bd31c83c1ed9fa4f1df467c7de8b26e98c6f4137fd8179d4ae16a8aa8bd6a358"
+    },
+    {
+      "kind": "external-project-live-dogfood",
+      "path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/external-project-latest-concepts-dogfood-live-steer-prompt.md",
+      "sha256": "70690a728dfad572224ae7f22138e1cce6d7ef64adc6fcf22e55efeec6a565b6"
+    }
+  ],
+  "handoff": {
+    "path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/deepseek-am0021-max-throughput-live-execution-prompt.md",
+    "sha256": "bd31c83c1ed9fa4f1df467c7de8b26e98c6f4137fd8179d4ae16a8aa8bd6a358"
+  },
+  "dogfood": {
+    "manifest_path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/latest-concepts-dogfood-manifest.json",
+    "manifest_sha256": "cc5b473766504d295ebfe702731f30593d7232ab53c0caa925c8fe4601fd46b5",
+    "cross_project_bundle_path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/cross-project-dogfood/v1/manifest.json",
+    "cross_project_bundle_manifest_sha256": "80d4a5acccb51eecd62103bdafeebc2b06175016d9ae9f809aa6e3fed986e614",
+    "bundle_content_sha256": "d688a0c2622073ade764e63821fdabfd0e8bd110d705419aabae82f6681cdc0c",
+    "enforcement": "PROMPT_ENFORCED_PREVIEW / PARTIALLY_ENGINE_ENFORCED"
+  },
+  "installed_runtime_at_capture": {
+    "receipt_path": "/home/linhnx/.codex/agent-rules-runtime/agent-rules-runtime-receipt.json",
+    "receipt_sha256": "4220bbd26cbf9c4fd6f59d19eb89f92244a9f159b957390cc139c339ef2607df",
+    "source_git_head": "dec44d4200fe29921bcc855a708df4b691d714bf",
+    "status": "USABLE_STABLE_CORE_NOT_LATEST_SUCCESSOR"
+  },
+  "repository_baselines": {
+    "canonical_main": "5a179b9c7b3c7c9c74034991ee4fb8fef890b4f8",
+    "active_integration": "d72b50ab103d09ed784b484bd8befc7ebc8ee078",
+    "captured_head": "d72b50ab103d09ed784b484bd8befc7ebc8ee078",
+    "captured_tree": "36d5d35ec2c3c11ffe933147f8fb8d699f94252f",
+    "active_branch": "integration/m8-convergence",
+    "dirty_tracked_paths": [
+      "packages/cli/src/commands/plan.ts",
+      "packages/engine/src/m11-terminal-evidence.ts",
+      "packages/engine/src/terminal-gate.ts"
+    ]
+  },
+  "implementation_truth_at_capture": {
+    "am0021_specification": "COMPLETE",
+    "am0021_activation": "NOT_STARTED",
+    "am0021_product_implementation": "NOT_STARTED",
+    "focused_existing_tests": "89 PASS / 4 FAIL",
+    "current_dirty_tree_install": "NOT_SAFE",
+    "known_gaps": [
+      "controller ready-set execution remains sequential",
+      "supervisor defaults remain two writers and one reviewer",
+      "resource broker is not global across host processes",
+      "branch integration does not fully enforce owned-path and semantic leases",
+      "native throughput evidence is partly synthetic",
+      "latest ledger, CI and host attestations do not bind captured HEAD"
+    ]
+  },
+  "activation_rule": "At the next safe checkpoint, preserve all in-flight candidate work, verify immutable hashes, activate AM-0021 after ledger-effective AM-0020 through the canonical atomic lifecycle API, recompute effective identity, stale affected review/terminal eligibility, regenerate shadows, retain NEEDS_REMEDIATION, then implement and dogfood M11-R37 through M11-R50 without stopping independent READY work."
+}
