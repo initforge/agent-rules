@@ -133,12 +133,34 @@ describe('C4 resource broker — AM-0019 decision table boundaries', () => {
     expect(evaluateBrokerDecision(input({ cpuTempC: 77 }), fresh(), 0).decision.action).toBe('burst');
   });
 
-  it('burst is blocked by non-negligible swap-in', () => {
+  it('burst is blocked by non-negligible swap-in (at threshold it now triggers reduce)', () => {
     const d = evaluateBrokerDecision(
       input({ swapInDeltaPerSec: AM0019.SWAP_IN_NEGLIGIBLE_BYTES_PER_SEC }),
       fresh(), 0,
     ).decision;
-    expect(d.action).toBe('normal');
+    expect(d.action).toBe('reduce');
+  });
+
+  it('swap-in reduce boundary: below threshold stays normal, at/above triggers reduce', () => {
+    // Non-burst RAM keeps below-threshold swap-in inside the normal envelope.
+    const below = evaluateBrokerDecision(
+      input({ ramFraction: 0.26, swapInDeltaPerSec: AM0019.REDUCE_SWAP_IN_BYTES_PER_SEC - 1 }),
+      fresh(), 0,
+    ).decision;
+    expect(below.action).toBe('normal');
+
+    const at = evaluateBrokerDecision(
+      input({ ramFraction: 0.26, swapInDeltaPerSec: AM0019.REDUCE_SWAP_IN_BYTES_PER_SEC }),
+      fresh(), 0,
+    ).decision;
+    expect(at.action).toBe('reduce');
+    expect(at.reasons.some((r) => r.includes('swap-in'))).toBe(true);
+
+    const above = evaluateBrokerDecision(
+      input({ swapInDeltaPerSec: AM0019.REDUCE_SWAP_IN_BYTES_PER_SEC + 4096 }),
+      fresh(), 0,
+    ).decision;
+    expect(above.action).toBe('reduce');
   });
 
   it('burst requires PSI low when PSI is available', () => {

@@ -181,6 +181,22 @@ describe('C5 leases and heartbeat', () => {
     // work not lost: the waiting entry for task-A survives revocation
     assert.ok(m.waitingEntries().some((w) => w.taskId === 'task-A'));
   });
+
+  it('two consecutive heartbeats without an explicit opKey both extend the lease', async () => {
+    const { journal } = mkJournal('hb-default');
+    const m = new M11Autopilot(journal);
+    m.acquireLease('L-HB', 'worker-1', 'task-A', 500);
+    const first = m.heartbeat('L-HB', 500);
+    assert.ok(first);
+    await new Promise((resolve) => setTimeout(resolve, 5)); // distinct default-opKey timestamp
+    const second = m.heartbeat('L-HB', 500);
+    assert.ok(second);
+    // a replayed/deduped heartbeat would keep the old expiry — this must strictly extend
+    assert.ok(second.expiresAt > first.expiresAt, 'second heartbeat must extend the lease, not dedupe as replay');
+    const hbRecords = journal.records()
+      .filter((r) => r.type === 'M11_LEASE' && r.data?.entry?.leaseId === 'L-HB');
+    assert.strictEqual(hbRecords.length, 3); // acquire + 2 heartbeats, no dedup
+  });
 });
 
 describe('C5 root-cause escalation', () => {
@@ -313,6 +329,10 @@ describe('evaluateM11Terminal', () => {
     ['execution_state NEEDS_REMEDIATION', (f) => { f.ledger.execution_state = 'NEEDS_REMEDIATION'; }, 'M11_EXECUTION_STATE_OK'],
     ['M10 marker HISTORICAL_STALE_FOR_M11', (f) => { f.ledger.terminalMarker = 'HARNESS_V3_10_OF_10_COMPLETE'; f.ledger.terminalMarkerStatus = 'HISTORICAL_STALE_FOR_M11'; }, 'M11_EXECUTION_STATE_OK'],
     ['empty requirement set', (f) => { f.checks.requirements = []; }, 'M11_EFFECTIVE_REQUIREMENTS_MATCH'],
+    ['CI SHA does not bind HEAD', (f) => { f.evidence.ciSha = OTHER; }, 'M11_CI_BINDS_HEAD'],
+    ['no native attestations', (f) => { f.ledger.attestations = []; }, 'M11_ATTESTATIONS_BIND_HEAD'],
+    ['attestation does not bind exact HEAD', (f) => { (f.ledger.attestations as Array<{ commitSha: string }>)[0].commitSha = OTHER; }, 'M11_ATTESTATIONS_BIND_HEAD'],
+    ['reconciliation does not bind HEAD', (f) => { f.evidence.reconciliationHeadCommit = OTHER; }, 'M11_RECONCILIATION_BINDS_HEAD'],
   ] as const;
 
   it.each(negatives)('negative: %s → NOT eligible', (_name, mutate, gateName) => {

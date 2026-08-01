@@ -426,7 +426,6 @@ describe('M11 views API', () => {
     const { root } = createHarness()
     await withHarness(root, async () => {
       const res = await request(app).get('/api/m11/worktrees')
-      console.log("WT_ERR", JSON.stringify(res.body).slice(0,600))
       expect(res.status).toBe(200)
       expect(res.body.worktrees.length).toBeGreaterThanOrEqual(1)
       expect(res.body.worktrees[0].path).toBe(root)

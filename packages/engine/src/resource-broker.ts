@@ -53,6 +53,8 @@ export const AM0019 = {
   PSI_LOW_AVG10: 1.0,
   /** Burst: swap-in below this rate counts as "negligible". */
   SWAP_IN_NEGLIGIBLE_BYTES_PER_SEC: 256 * 1024,
+  /** Reduce: swap-in at/above this rate (symmetric with the burst negligible gate). */
+  REDUCE_SWAP_IN_BYTES_PER_SEC: 256 * 1024,
   /** Burst concurrency band (light agents). */
   BURST_MIN_AGENTS: 10,
   BURST_MAX_AGENTS: 14,
@@ -347,12 +349,14 @@ export function evaluateBrokerDecision(
     ramFraction < AM0019.REDUCE_MAX_RAM_FRACTION
     || (psi.available && !psiIsLow(psi))
     || (cpuTempC !== null && cpuTempC >= AM0019.REDUCE_MIN_CPU_C)
-    || loadRatio > AM0019.REDUCE_LOAD_RATIO;
+    || loadRatio > AM0019.REDUCE_LOAD_RATIO
+    || swapInDeltaPerSec >= AM0019.REDUCE_SWAP_IN_BYTES_PER_SEC;
   if (reduceTriggered) {
     if (ramFraction < AM0019.REDUCE_MAX_RAM_FRACTION) reasons.push('RAM below 20%');
     if (psi.available && !psiIsLow(psi)) reasons.push('memory PSI up');
     if (cpuTempC !== null && cpuTempC >= AM0019.REDUCE_MIN_CPU_C) reasons.push(`CPU >= ${AM0019.REDUCE_MIN_CPU_C}C`);
     if (loadRatio > AM0019.REDUCE_LOAD_RATIO) reasons.push(`sustained load ${loadRatio.toFixed(2)} > ${AM0019.REDUCE_LOAD_RATIO} x CPU`);
+    if (swapInDeltaPerSec >= AM0019.REDUCE_SWAP_IN_BYTES_PER_SEC) reasons.push(`swap-in ${Math.round(swapInDeltaPerSec / 1024)} KiB/s >= 256 KiB/s`);
     return {
       decision: { action: 'reduce', mode: 'reduced', reasons, input },
       next: { mode: 'reduced', lastActionAt: now },
