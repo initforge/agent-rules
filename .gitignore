@@ -64,6 +64,7 @@ downloads/
 *.qa.webp
 *.qa.mp4
 *.trace.zip
+certification-diagnostics.json
 
 # One-off scratch scripts should live outside tracked runtime scripts.
 scratch/
