@@ -1,7 +1,7 @@
 {
   "host": "claude",
   "hostVersion": "2.1.220",
-  "commitSha": "477837a18c9125a1639e0e18e633aefc09a10b34",
+  "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
   "capabilityStatus": "HOST_NATIVE",
   "capabilityIds": [
     "claude:agent",
@@ -13,53 +13,53 @@
   "resolvedModel": "glm-5.2",
   "observedModel": "glm-5.2",
   "nativeRunnerIdentity": "36:146938|/home/linhnx/.local/share/claude/versions/2.1.220|674f61f20ff306f3100cf9200e4c36c4b70278b5bef2884549819b942a89c863",
-  "issuedAt": "2026-08-01T06:54:11.255Z",
-  "expiresAt": "2026-08-01T07:54:11.255Z",
+  "issuedAt": "2026-08-01T09:21:58.520Z",
+  "expiresAt": "2026-08-01T10:21:58.520Z",
   "evidenceRefs": [
     {
       "role": "version",
       "host": "claude",
-      "commitSha": "477837a18c9125a1639e0e18e633aefc09a10b34",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
       "evidenceSha256": "9c646052881a67dd9f56b04a4312b981356ea7d97650be1b979556a6862424a1",
-      "evidenceRef": "evidence://claude/477837a18c9125a1639e0e18e633aefc09a10b34/version/9c646052881a67dd9f56b04a4312b981356ea7d97650be1b979556a6862424a1",
+      "evidenceRef": "evidence://claude/f1020e0799d4a768655af72b0625873ade880552/version/9c646052881a67dd9f56b04a4312b981356ea7d97650be1b979556a6862424a1",
       "subjectSha256": "14fe9581877646251542c1fccd19fc3f2a6c679f1a52584f919f9f1c0534eb2b",
-      "observedAt": "2026-08-01T06:54:11.255Z"
+      "observedAt": "2026-08-01T09:21:58.520Z"
     },
     {
       "role": "capabilities",
       "host": "claude",
-      "commitSha": "477837a18c9125a1639e0e18e633aefc09a10b34",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
       "evidenceSha256": "2f8f80afff2b4816e8158db7170c423ed7ded16f2c3a4c11c72625c76db069a2",
-      "evidenceRef": "evidence://claude/477837a18c9125a1639e0e18e633aefc09a10b34/capabilities/2f8f80afff2b4816e8158db7170c423ed7ded16f2c3a4c11c72625c76db069a2",
+      "evidenceRef": "evidence://claude/f1020e0799d4a768655af72b0625873ade880552/capabilities/2f8f80afff2b4816e8158db7170c423ed7ded16f2c3a4c11c72625c76db069a2",
       "subjectSha256": "3b61b8fe55e1871374caa5e5cc75066b85952fc5862762890ac126fc5e88d980",
-      "observedAt": "2026-08-01T06:54:11.255Z"
+      "observedAt": "2026-08-01T09:21:58.520Z"
     },
     {
       "role": "requestedModel",
       "host": "claude",
-      "commitSha": "477837a18c9125a1639e0e18e633aefc09a10b34",
-      "evidenceSha256": "7fe5b4605bae70f6ebf4f4e4a23023d90f2e5e82780af66b1445a5952d234d4e",
-      "evidenceRef": "evidence://claude/477837a18c9125a1639e0e18e633aefc09a10b34/requestedModel/7fe5b4605bae70f6ebf4f4e4a23023d90f2e5e82780af66b1445a5952d234d4e",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+      "evidenceSha256": "915525212bb6888a9b4493ebf498a73d9af1d15ab2e45896feda71e30c78fb12",
+      "evidenceRef": "evidence://claude/f1020e0799d4a768655af72b0625873ade880552/requestedModel/915525212bb6888a9b4493ebf498a73d9af1d15ab2e45896feda71e30c78fb12",
       "subjectSha256": "7e7927c7d3104cf2d08ebf08a2bedd89eab5c2a6943626c5e52e4f0f6956a8bd",
-      "observedAt": "2026-08-01T06:54:11.255Z"
+      "observedAt": "2026-08-01T09:21:58.520Z"
     },
     {
       "role": "resolvedModel",
       "host": "claude",
-      "commitSha": "477837a18c9125a1639e0e18e633aefc09a10b34",
-      "evidenceSha256": "562274163334f7b04b62a59af783aad593be388aa40632a1bb9e3853fe06194f",
-      "evidenceRef": "evidence://claude/477837a18c9125a1639e0e18e633aefc09a10b34/resolvedModel/562274163334f7b04b62a59af783aad593be388aa40632a1bb9e3853fe06194f",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+      "evidenceSha256": "1963d3ae16a5a301bbc88f427cf30568ceb1e692334c2f3de73099da69081514",
+      "evidenceRef": "evidence://claude/f1020e0799d4a768655af72b0625873ade880552/resolvedModel/1963d3ae16a5a301bbc88f427cf30568ceb1e692334c2f3de73099da69081514",
       "subjectSha256": "d2c469b85afba772228c4900e4d29308b2252965f5efe79ef38a2edd4316f8bf",
-      "observedAt": "2026-08-01T06:54:11.255Z"
+      "observedAt": "2026-08-01T09:21:58.520Z"
     },
     {
       "role": "observedModel",
       "host": "claude",
-      "commitSha": "477837a18c9125a1639e0e18e633aefc09a10b34",
-      "evidenceSha256": "a2602de6e4a6eac9707bc954a137ea84140196b2239a8bbf73a7f8c4a4d848c5",
-      "evidenceRef": "evidence://claude/477837a18c9125a1639e0e18e633aefc09a10b34/observedModel/a2602de6e4a6eac9707bc954a137ea84140196b2239a8bbf73a7f8c4a4d848c5",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+      "evidenceSha256": "b1d3d2f2065403c3af9883632dd2b5376e0c4a6d0d7a498f4b9dd0d7464147fe",
+      "evidenceRef": "evidence://claude/f1020e0799d4a768655af72b0625873ade880552/observedModel/b1d3d2f2065403c3af9883632dd2b5376e0c4a6d0d7a498f4b9dd0d7464147fe",
       "subjectSha256": "d2c469b85afba772228c4900e4d29308b2252965f5efe79ef38a2edd4316f8bf",
-      "observedAt": "2026-08-01T06:54:11.255Z"
+      "observedAt": "2026-08-01T09:21:58.520Z"
     }
   ]
 }

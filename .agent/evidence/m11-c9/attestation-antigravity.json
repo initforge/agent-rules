@@ -1,7 +1,7 @@
 {
   "host": "antigravity",
   "hostVersion": "1.1.9",
-  "commitSha": "477837a18c9125a1639e0e18e633aefc09a10b34",
+  "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
   "capabilityStatus": "HOST_NATIVE",
   "capabilityIds": [
     "antigravity:agent",
@@ -13,53 +13,53 @@
   "resolvedModel": "HOST_UNOBSERVABLE",
   "observedModel": "HOST_UNOBSERVABLE",
   "nativeRunnerIdentity": "36:2488883|/home/linhnx/.local/bin/agy|2e44783f64b231bc1437e84bb1b93c99c48163cb818210f0d2d48295ec78d3ce",
-  "issuedAt": "2026-08-01T06:54:11.255Z",
-  "expiresAt": "2026-08-01T07:54:11.255Z",
+  "issuedAt": "2026-08-01T09:21:58.520Z",
+  "expiresAt": "2026-08-01T10:21:58.520Z",
   "evidenceRefs": [
     {
       "role": "version",
       "host": "antigravity",
-      "commitSha": "477837a18c9125a1639e0e18e633aefc09a10b34",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
       "evidenceSha256": "51254c877e8aabc6192f72378bdaf157dba83c3523bd3372c3d4a37a407a0b29",
-      "evidenceRef": "evidence://antigravity/477837a18c9125a1639e0e18e633aefc09a10b34/version/51254c877e8aabc6192f72378bdaf157dba83c3523bd3372c3d4a37a407a0b29",
+      "evidenceRef": "evidence://antigravity/f1020e0799d4a768655af72b0625873ade880552/version/51254c877e8aabc6192f72378bdaf157dba83c3523bd3372c3d4a37a407a0b29",
       "subjectSha256": "f77bd1b1fa0fc9eb3c961351c33d46a495f76711581e08f1aaa27e736f96e6a7",
-      "observedAt": "2026-08-01T06:54:11.255Z"
+      "observedAt": "2026-08-01T09:21:58.520Z"
     },
     {
       "role": "capabilities",
       "host": "antigravity",
-      "commitSha": "477837a18c9125a1639e0e18e633aefc09a10b34",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
       "evidenceSha256": "eeb99ab93be4ef7225289362499acb8855f0862ed5065540f0531ca7018371d9",
-      "evidenceRef": "evidence://antigravity/477837a18c9125a1639e0e18e633aefc09a10b34/capabilities/eeb99ab93be4ef7225289362499acb8855f0862ed5065540f0531ca7018371d9",
+      "evidenceRef": "evidence://antigravity/f1020e0799d4a768655af72b0625873ade880552/capabilities/eeb99ab93be4ef7225289362499acb8855f0862ed5065540f0531ca7018371d9",
       "subjectSha256": "99ed3fde425ce54e47c204417ac82e6bdbe3d553edd1c3fecada10b2d1a6113b",
-      "observedAt": "2026-08-01T06:54:11.255Z"
+      "observedAt": "2026-08-01T09:21:58.520Z"
     },
     {
       "role": "requestedModel",
       "host": "antigravity",
-      "commitSha": "477837a18c9125a1639e0e18e633aefc09a10b34",
-      "evidenceSha256": "e8b04fc92d6b8454b30d56dde08f0a71e55e48fce87131ef5d2883cf5c0634bb",
-      "evidenceRef": "evidence://antigravity/477837a18c9125a1639e0e18e633aefc09a10b34/requestedModel/e8b04fc92d6b8454b30d56dde08f0a71e55e48fce87131ef5d2883cf5c0634bb",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+      "evidenceSha256": "74f27ffc24263461dfa3866916bb473febd5d7b2da2fcc50a9f86a50dc9a18d5",
+      "evidenceRef": "evidence://antigravity/f1020e0799d4a768655af72b0625873ade880552/requestedModel/74f27ffc24263461dfa3866916bb473febd5d7b2da2fcc50a9f86a50dc9a18d5",
       "subjectSha256": "7e7927c7d3104cf2d08ebf08a2bedd89eab5c2a6943626c5e52e4f0f6956a8bd",
-      "observedAt": "2026-08-01T06:54:11.255Z"
+      "observedAt": "2026-08-01T09:21:58.520Z"
     },
     {
       "role": "resolvedModel",
       "host": "antigravity",
-      "commitSha": "477837a18c9125a1639e0e18e633aefc09a10b34",
-      "evidenceSha256": "2aba36bd3d913215d5f8256d465f49fbd3deaf75992154c37c9f25b0e46e9ee7",
-      "evidenceRef": "evidence://antigravity/477837a18c9125a1639e0e18e633aefc09a10b34/resolvedModel/2aba36bd3d913215d5f8256d465f49fbd3deaf75992154c37c9f25b0e46e9ee7",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+      "evidenceSha256": "47c3d97a47eb17e2678d9f2a3c4280176c43818ffbdc0bfbcbb8ab0d13362f85",
+      "evidenceRef": "evidence://antigravity/f1020e0799d4a768655af72b0625873ade880552/resolvedModel/47c3d97a47eb17e2678d9f2a3c4280176c43818ffbdc0bfbcbb8ab0d13362f85",
       "subjectSha256": "7e7927c7d3104cf2d08ebf08a2bedd89eab5c2a6943626c5e52e4f0f6956a8bd",
-      "observedAt": "2026-08-01T06:54:11.255Z"
+      "observedAt": "2026-08-01T09:21:58.520Z"
     },
     {
       "role": "observedModel",
       "host": "antigravity",
-      "commitSha": "477837a18c9125a1639e0e18e633aefc09a10b34",
-      "evidenceSha256": "5f79a01a16aa4bc004b1d6a0d5a8965411e4d568dd9e6585094b6ae035ccb828",
-      "evidenceRef": "evidence://antigravity/477837a18c9125a1639e0e18e633aefc09a10b34/observedModel/5f79a01a16aa4bc004b1d6a0d5a8965411e4d568dd9e6585094b6ae035ccb828",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+      "evidenceSha256": "499213adfb8b9cfe0866565dd44c1eea6d5a426dd49fed81f1f396f62b02a79e",
+      "evidenceRef": "evidence://antigravity/f1020e0799d4a768655af72b0625873ade880552/observedModel/499213adfb8b9cfe0866565dd44c1eea6d5a426dd49fed81f1f396f62b02a79e",
       "subjectSha256": "7e7927c7d3104cf2d08ebf08a2bedd89eab5c2a6943626c5e52e4f0f6956a8bd",
-      "observedAt": "2026-08-01T06:54:11.255Z"
+      "observedAt": "2026-08-01T09:21:58.520Z"
     }
   ]
 }

@@ -6596,7 +6596,333 @@
       "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/original.md"
     }
   },
-  "attestations": [],
+  "attestations": [
+    {
+      "host": "codex",
+      "hostVersion": "0.146.0",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+      "capabilityStatus": "HOST_NATIVE",
+      "capabilityIds": [
+        "codex:exec",
+        "codex:model",
+        "codex:review"
+      ],
+      "contractSetSha256": "dd7dbd7efa5e1869380ccca70a2e052f7c8cdb646d47b0524c1688e084c0a6b6",
+      "requestedModel": "HOST_UNOBSERVABLE",
+      "resolvedModel": "gpt-5.6-sol",
+      "observedModel": "gpt-5.6-sol",
+      "nativeRunnerIdentity": "36:1174009|/home/linhnx/.codex-cli-npm/lib/node_modules/@openai/codex/node_modules/@openai/codex-linux-x64/vendor/x86_64-unknown-linux-musl/bin/codex|2e863156ed35ecc5253b1e2f907a9143077b9f7cb51942070c61996471ff6e04",
+      "issuedAt": "2026-08-01T09:21:58.520Z",
+      "expiresAt": "2026-08-01T10:21:58.520Z",
+      "evidenceRefs": [
+        {
+          "role": "version",
+          "host": "codex",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "608d97d7e17875a096668b49601eefff388366bba3665f80429b060246b5a43b",
+          "evidenceRef": "evidence://codex/f1020e0799d4a768655af72b0625873ade880552/version/608d97d7e17875a096668b49601eefff388366bba3665f80429b060246b5a43b",
+          "subjectSha256": "c112f7422dae808c83978c13d68f80acff9967bae9322df3102726ab8404b167",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "capabilities",
+          "host": "codex",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "8067f23fb1e123b1bbf909f03ccd03efb31d1b51141785a84ac8c9e927d01c5f",
+          "evidenceRef": "evidence://codex/f1020e0799d4a768655af72b0625873ade880552/capabilities/8067f23fb1e123b1bbf909f03ccd03efb31d1b51141785a84ac8c9e927d01c5f",
+          "subjectSha256": "66a59f0e9aa5e4ff18fe0944265a0008931d3578ed04d31ce9d0424471fcb164",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "requestedModel",
+          "host": "codex",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "96ebd28e1356dd54dc0ac92061d88a3674146036c77174c4db68e8fb99228ad4",
+          "evidenceRef": "evidence://codex/f1020e0799d4a768655af72b0625873ade880552/requestedModel/96ebd28e1356dd54dc0ac92061d88a3674146036c77174c4db68e8fb99228ad4",
+          "subjectSha256": "7e7927c7d3104cf2d08ebf08a2bedd89eab5c2a6943626c5e52e4f0f6956a8bd",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "resolvedModel",
+          "host": "codex",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "0f5b8443260c3550382aa2aa2d7d0ce79e04cfdc440778425bf7e07c889e769b",
+          "evidenceRef": "evidence://codex/f1020e0799d4a768655af72b0625873ade880552/resolvedModel/0f5b8443260c3550382aa2aa2d7d0ce79e04cfdc440778425bf7e07c889e769b",
+          "subjectSha256": "cfaff7a01583ab1171b19140263fddfe86a812686ce572fcebd6cd934d3fb871",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "observedModel",
+          "host": "codex",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "5e69be245901b4483ba603684ec1e4b06912d7531492c432bbb819173fd7fd09",
+          "evidenceRef": "evidence://codex/f1020e0799d4a768655af72b0625873ade880552/observedModel/5e69be245901b4483ba603684ec1e4b06912d7531492c432bbb819173fd7fd09",
+          "subjectSha256": "cfaff7a01583ab1171b19140263fddfe86a812686ce572fcebd6cd934d3fb871",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        }
+      ]
+    },
+    {
+      "host": "claude",
+      "hostVersion": "2.1.220",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+      "capabilityStatus": "HOST_NATIVE",
+      "capabilityIds": [
+        "claude:agent",
+        "claude:model",
+        "claude:print"
+      ],
+      "contractSetSha256": "dd7dbd7efa5e1869380ccca70a2e052f7c8cdb646d47b0524c1688e084c0a6b6",
+      "requestedModel": "HOST_UNOBSERVABLE",
+      "resolvedModel": "glm-5.2",
+      "observedModel": "glm-5.2",
+      "nativeRunnerIdentity": "36:146938|/home/linhnx/.local/share/claude/versions/2.1.220|674f61f20ff306f3100cf9200e4c36c4b70278b5bef2884549819b942a89c863",
+      "issuedAt": "2026-08-01T09:21:58.520Z",
+      "expiresAt": "2026-08-01T10:21:58.520Z",
+      "evidenceRefs": [
+        {
+          "role": "version",
+          "host": "claude",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "9c646052881a67dd9f56b04a4312b981356ea7d97650be1b979556a6862424a1",
+          "evidenceRef": "evidence://claude/f1020e0799d4a768655af72b0625873ade880552/version/9c646052881a67dd9f56b04a4312b981356ea7d97650be1b979556a6862424a1",
+          "subjectSha256": "14fe9581877646251542c1fccd19fc3f2a6c679f1a52584f919f9f1c0534eb2b",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "capabilities",
+          "host": "claude",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "2f8f80afff2b4816e8158db7170c423ed7ded16f2c3a4c11c72625c76db069a2",
+          "evidenceRef": "evidence://claude/f1020e0799d4a768655af72b0625873ade880552/capabilities/2f8f80afff2b4816e8158db7170c423ed7ded16f2c3a4c11c72625c76db069a2",
+          "subjectSha256": "3b61b8fe55e1871374caa5e5cc75066b85952fc5862762890ac126fc5e88d980",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "requestedModel",
+          "host": "claude",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "915525212bb6888a9b4493ebf498a73d9af1d15ab2e45896feda71e30c78fb12",
+          "evidenceRef": "evidence://claude/f1020e0799d4a768655af72b0625873ade880552/requestedModel/915525212bb6888a9b4493ebf498a73d9af1d15ab2e45896feda71e30c78fb12",
+          "subjectSha256": "7e7927c7d3104cf2d08ebf08a2bedd89eab5c2a6943626c5e52e4f0f6956a8bd",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "resolvedModel",
+          "host": "claude",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "1963d3ae16a5a301bbc88f427cf30568ceb1e692334c2f3de73099da69081514",
+          "evidenceRef": "evidence://claude/f1020e0799d4a768655af72b0625873ade880552/resolvedModel/1963d3ae16a5a301bbc88f427cf30568ceb1e692334c2f3de73099da69081514",
+          "subjectSha256": "d2c469b85afba772228c4900e4d29308b2252965f5efe79ef38a2edd4316f8bf",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "observedModel",
+          "host": "claude",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "b1d3d2f2065403c3af9883632dd2b5376e0c4a6d0d7a498f4b9dd0d7464147fe",
+          "evidenceRef": "evidence://claude/f1020e0799d4a768655af72b0625873ade880552/observedModel/b1d3d2f2065403c3af9883632dd2b5376e0c4a6d0d7a498f4b9dd0d7464147fe",
+          "subjectSha256": "d2c469b85afba772228c4900e4d29308b2252965f5efe79ef38a2edd4316f8bf",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        }
+      ]
+    },
+    {
+      "host": "grok",
+      "hostVersion": "0.2.118",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+      "capabilityStatus": "HOST_NATIVE",
+      "capabilityIds": [
+        "grok:agent",
+        "grok:model",
+        "grok:single-prompt"
+      ],
+      "contractSetSha256": "dd7dbd7efa5e1869380ccca70a2e052f7c8cdb646d47b0524c1688e084c0a6b6",
+      "requestedModel": "HOST_UNOBSERVABLE",
+      "resolvedModel": "grok-4.5",
+      "observedModel": "HOST_UNOBSERVABLE",
+      "nativeRunnerIdentity": "36:2486827|/home/linhnx/.grok/downloads/grok-0.2.118-linux-x86_64|c192282e62abd24a9be64750363ff827d806ba613918399a8c69c815b1da08f6",
+      "issuedAt": "2026-08-01T09:21:58.520Z",
+      "expiresAt": "2026-08-01T10:21:58.520Z",
+      "evidenceRefs": [
+        {
+          "role": "version",
+          "host": "grok",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "6d405072f3af589bec408fcbdfd748ecf9cd9846ef9a8765f219ffe0c979e839",
+          "evidenceRef": "evidence://grok/f1020e0799d4a768655af72b0625873ade880552/version/6d405072f3af589bec408fcbdfd748ecf9cd9846ef9a8765f219ffe0c979e839",
+          "subjectSha256": "967b8ea76d91734d9f7218e3c2369ebf0cf3784e13fba8b2ed6cf81a9d1aff43",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "capabilities",
+          "host": "grok",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "1e429440a568b013e6d617fcaeaaf653578968c07eaefb6bae026ca21d52f52e",
+          "evidenceRef": "evidence://grok/f1020e0799d4a768655af72b0625873ade880552/capabilities/1e429440a568b013e6d617fcaeaaf653578968c07eaefb6bae026ca21d52f52e",
+          "subjectSha256": "3bc086d4752d7162a99709272a85844a1912f110470eb0aa06025adf5e33b530",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "requestedModel",
+          "host": "grok",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "134bf60a6460eb3728f141d36e83ff0a157c12ae8a3fd9de444d02bee8a076fd",
+          "evidenceRef": "evidence://grok/f1020e0799d4a768655af72b0625873ade880552/requestedModel/134bf60a6460eb3728f141d36e83ff0a157c12ae8a3fd9de444d02bee8a076fd",
+          "subjectSha256": "7e7927c7d3104cf2d08ebf08a2bedd89eab5c2a6943626c5e52e4f0f6956a8bd",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "resolvedModel",
+          "host": "grok",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "9aa55ec4e5e216eed43ee4b3025069e36ff24326836ae4dadfd385a2da0bca6e",
+          "evidenceRef": "evidence://grok/f1020e0799d4a768655af72b0625873ade880552/resolvedModel/9aa55ec4e5e216eed43ee4b3025069e36ff24326836ae4dadfd385a2da0bca6e",
+          "subjectSha256": "9399c36a16495f20fd8ff811bcb851797a2abc25b53e345d633a59639f250f71",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "observedModel",
+          "host": "grok",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "12e2f3fefa335ce526dfa80bd6e502bb1f12418752d5876ca039fb45029c4b22",
+          "evidenceRef": "evidence://grok/f1020e0799d4a768655af72b0625873ade880552/observedModel/12e2f3fefa335ce526dfa80bd6e502bb1f12418752d5876ca039fb45029c4b22",
+          "subjectSha256": "7e7927c7d3104cf2d08ebf08a2bedd89eab5c2a6943626c5e52e4f0f6956a8bd",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        }
+      ]
+    },
+    {
+      "host": "opencode",
+      "hostVersion": "1.18.10",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+      "capabilityStatus": "HOST_NATIVE",
+      "capabilityIds": [
+        "opencode:mcp",
+        "opencode:model",
+        "opencode:run"
+      ],
+      "contractSetSha256": "dd7dbd7efa5e1869380ccca70a2e052f7c8cdb646d47b0524c1688e084c0a6b6",
+      "requestedModel": "HOST_UNOBSERVABLE",
+      "resolvedModel": "deepseek-v4-flash",
+      "observedModel": "deepseek-v4-flash",
+      "nativeRunnerIdentity": "36:1857263|/home/linhnx/.opencode/bin/opencode|2735f786be499db50c823d961fb8627dfb74f920e2320686b67e6c5c81c66f16",
+      "issuedAt": "2026-08-01T09:21:58.520Z",
+      "expiresAt": "2026-08-01T10:21:58.520Z",
+      "evidenceRefs": [
+        {
+          "role": "version",
+          "host": "opencode",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "c8d473bdc3da32a45fde4175b01ca75575fc6f6737bba4c65124836453990db6",
+          "evidenceRef": "evidence://opencode/f1020e0799d4a768655af72b0625873ade880552/version/c8d473bdc3da32a45fde4175b01ca75575fc6f6737bba4c65124836453990db6",
+          "subjectSha256": "ad16138c909f3ed40fac2ebd9bc62d329f458bb546925570a6a5fc03181637f6",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "capabilities",
+          "host": "opencode",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "ab6662e143971d33c43cdf318c69149f3a889009c5cbcb51c8986aeb4d6a5d45",
+          "evidenceRef": "evidence://opencode/f1020e0799d4a768655af72b0625873ade880552/capabilities/ab6662e143971d33c43cdf318c69149f3a889009c5cbcb51c8986aeb4d6a5d45",
+          "subjectSha256": "8584b3669bfff70b5e562ffe656e39398fe915f62866a2b85013989766238096",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "requestedModel",
+          "host": "opencode",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "8bbf6d465f118d3a7bd7ee851f8ec9526ea7f72356744fe968e83cec2178332a",
+          "evidenceRef": "evidence://opencode/f1020e0799d4a768655af72b0625873ade880552/requestedModel/8bbf6d465f118d3a7bd7ee851f8ec9526ea7f72356744fe968e83cec2178332a",
+          "subjectSha256": "7e7927c7d3104cf2d08ebf08a2bedd89eab5c2a6943626c5e52e4f0f6956a8bd",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "resolvedModel",
+          "host": "opencode",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "67a3c6f75f6bfdb1d9c6e9a40c7e07e0ae499a28b371dfc61460e220c664fc7a",
+          "evidenceRef": "evidence://opencode/f1020e0799d4a768655af72b0625873ade880552/resolvedModel/67a3c6f75f6bfdb1d9c6e9a40c7e07e0ae499a28b371dfc61460e220c664fc7a",
+          "subjectSha256": "e98d638851947d32cad623d495009bf6f7e6689668e4d8a0f33e4669c25a4cdc",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "observedModel",
+          "host": "opencode",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "a53af25cf90bce5abaa4d74a0b38620d42b16c8429c6e1311fb83eaafff908c3",
+          "evidenceRef": "evidence://opencode/f1020e0799d4a768655af72b0625873ade880552/observedModel/a53af25cf90bce5abaa4d74a0b38620d42b16c8429c6e1311fb83eaafff908c3",
+          "subjectSha256": "e98d638851947d32cad623d495009bf6f7e6689668e4d8a0f33e4669c25a4cdc",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        }
+      ]
+    },
+    {
+      "host": "antigravity",
+      "hostVersion": "1.1.9",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+      "capabilityStatus": "HOST_NATIVE",
+      "capabilityIds": [
+        "antigravity:agent",
+        "antigravity:model",
+        "antigravity:print"
+      ],
+      "contractSetSha256": "dd7dbd7efa5e1869380ccca70a2e052f7c8cdb646d47b0524c1688e084c0a6b6",
+      "requestedModel": "HOST_UNOBSERVABLE",
+      "resolvedModel": "HOST_UNOBSERVABLE",
+      "observedModel": "HOST_UNOBSERVABLE",
+      "nativeRunnerIdentity": "36:2488883|/home/linhnx/.local/bin/agy|2e44783f64b231bc1437e84bb1b93c99c48163cb818210f0d2d48295ec78d3ce",
+      "issuedAt": "2026-08-01T09:21:58.520Z",
+      "expiresAt": "2026-08-01T10:21:58.520Z",
+      "evidenceRefs": [
+        {
+          "role": "version",
+          "host": "antigravity",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "51254c877e8aabc6192f72378bdaf157dba83c3523bd3372c3d4a37a407a0b29",
+          "evidenceRef": "evidence://antigravity/f1020e0799d4a768655af72b0625873ade880552/version/51254c877e8aabc6192f72378bdaf157dba83c3523bd3372c3d4a37a407a0b29",
+          "subjectSha256": "f77bd1b1fa0fc9eb3c961351c33d46a495f76711581e08f1aaa27e736f96e6a7",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "capabilities",
+          "host": "antigravity",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "eeb99ab93be4ef7225289362499acb8855f0862ed5065540f0531ca7018371d9",
+          "evidenceRef": "evidence://antigravity/f1020e0799d4a768655af72b0625873ade880552/capabilities/eeb99ab93be4ef7225289362499acb8855f0862ed5065540f0531ca7018371d9",
+          "subjectSha256": "99ed3fde425ce54e47c204417ac82e6bdbe3d553edd1c3fecada10b2d1a6113b",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "requestedModel",
+          "host": "antigravity",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "74f27ffc24263461dfa3866916bb473febd5d7b2da2fcc50a9f86a50dc9a18d5",
+          "evidenceRef": "evidence://antigravity/f1020e0799d4a768655af72b0625873ade880552/requestedModel/74f27ffc24263461dfa3866916bb473febd5d7b2da2fcc50a9f86a50dc9a18d5",
+          "subjectSha256": "7e7927c7d3104cf2d08ebf08a2bedd89eab5c2a6943626c5e52e4f0f6956a8bd",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "resolvedModel",
+          "host": "antigravity",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "47c3d97a47eb17e2678d9f2a3c4280176c43818ffbdc0bfbcbb8ab0d13362f85",
+          "evidenceRef": "evidence://antigravity/f1020e0799d4a768655af72b0625873ade880552/resolvedModel/47c3d97a47eb17e2678d9f2a3c4280176c43818ffbdc0bfbcbb8ab0d13362f85",
+          "subjectSha256": "7e7927c7d3104cf2d08ebf08a2bedd89eab5c2a6943626c5e52e4f0f6956a8bd",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        },
+        {
+          "role": "observedModel",
+          "host": "antigravity",
+          "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+          "evidenceSha256": "499213adfb8b9cfe0866565dd44c1eea6d5a426dd49fed81f1f396f62b02a79e",
+          "evidenceRef": "evidence://antigravity/f1020e0799d4a768655af72b0625873ade880552/observedModel/499213adfb8b9cfe0866565dd44c1eea6d5a426dd49fed81f1f396f62b02a79e",
+          "subjectSha256": "7e7927c7d3104cf2d08ebf08a2bedd89eab5c2a6943626c5e52e4f0f6956a8bd",
+          "observedAt": "2026-08-01T09:21:58.520Z"
+        }
+      ]
+    }
+  ],
   "milestones": {
     "M8": {
       "identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
