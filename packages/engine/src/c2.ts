@@ -71,3 +71,16 @@ export {
   buildGraphFromNodes,
   EMPTY_READY_SET,
 } from './dispatch-ready-set.js';
+
+export {
+  type WorktreeLeaseInput,
+  type WorktreeLease,
+  type ReleaseReceipt,
+  type ReviewMarker,
+  type IntegrationReceipt,
+  type TrainState,
+  type WorktreeTrainOptions,
+  WorktreeTrain,
+  WorktreeTrainError,
+  dependencyRankFromGraph,
+} from './worktree-train.js';

@@ -14,6 +14,8 @@ import { evalCmd } from "./commands/eval.js";
 import { dashboard } from "./commands/dashboard.js";
 import { contextGraphCmd } from "./commands/context-graph.js";
 import { planCmd } from "./commands/plan.js";
+import { worktreeCmd } from "./commands/worktree.js";
+import { trainCmd } from "./commands/train.js";
 import { verifyCmd } from "./commands/verify.js";
 import { runtimeCmd } from "./commands/runtime.js";
 import { modelsCmd } from "./commands/models.js";
@@ -228,6 +230,54 @@ Subcommands:
   .action(async (args: string[]) => {
     const opts = program.optsWithGlobals() as CliOptions;
     const result = await planCmd(args, opts);
+    formatOutput(result, opts);
+  });
+
+// ── worktree ─────────────────────────────────────────────────────────
+program
+  .command("worktree")
+  .description("Manage isolated worker worktrees (C3, AM-0019 §5)")
+  .argument("[args...]", "Subcommand and its arguments")
+  .allowUnknownOption(true)
+  .addHelpText(
+    "after",
+    `
+Subcommands:
+  create <task-id> --base <epoch-sha>   Create branch + isolated worktree + lease
+                                        (flags: --owned a,b --semantic r1,r2 --cluster C4
+                                         --rank N --provider P --model M --effort E
+                                         --resource-class RC --budget B --expected-duration D
+                                         --deadline ISO --root <repo> --worktrees-dir <dir>)
+  release <task-id>                     Verify clean, record release receipt, unregister
+                                        (flags: --exit-codes 0,0 --root <repo>)
+  status [task-id]                      Show active leases or one task's lease + review state
+    `
+  )
+  .action(async (args: string[]) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const result = await worktreeCmd(args, opts);
+    formatOutput(result, opts);
+  });
+
+// ── train ─────────────────────────────────────────────────────────────
+program
+  .command("train")
+  .description("Manage the rolling integration train (C3, AM-0019 §5)")
+  .argument("[args...]", "Subcommand and its arguments")
+  .allowUnknownOption(true)
+  .addHelpText(
+    "after",
+    `
+Subcommands:
+  integrate <task-id...>  Deterministically merge accepted work into the train now
+                          (flags: --root <repo> --worktrees-dir <dir> --train <branch>
+                           --validate-cmd <shell> --allow-unreviewed)
+  status                  Show train head + receipt count
+    `
+  )
+  .action(async (args: string[]) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const result = await trainCmd(args, opts);
     formatOutput(result, opts);
   });
 
