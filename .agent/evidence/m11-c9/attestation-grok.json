@@ -1,0 +1,65 @@
+{
+  "host": "grok",
+  "hostVersion": "0.2.118",
+  "commitSha": "ef6d2621f658d85fd9d41d57455c751cb50d1076",
+  "capabilityStatus": "HOST_NATIVE",
+  "capabilityIds": [
+    "grok:agent",
+    "grok:model",
+    "grok:single-prompt"
+  ],
+  "contractSetSha256": "dd7dbd7efa5e1869380ccca70a2e052f7c8cdb646d47b0524c1688e084c0a6b6",
+  "requestedModel": "HOST_UNOBSERVABLE",
+  "resolvedModel": "grok-4.5",
+  "observedModel": "HOST_UNOBSERVABLE",
+  "nativeRunnerIdentity": "36:2486827|/home/linhnx/.grok/downloads/grok-0.2.118-linux-x86_64|c192282e62abd24a9be64750363ff827d806ba613918399a8c69c815b1da08f6",
+  "issuedAt": "2026-08-01T05:30:52.171Z",
+  "expiresAt": "2026-08-02T05:30:52.171Z",
+  "evidenceRefs": [
+    {
+      "role": "version",
+      "host": "grok",
+      "commitSha": "ef6d2621f658d85fd9d41d57455c751cb50d1076",
+      "evidenceSha256": "6d405072f3af589bec408fcbdfd748ecf9cd9846ef9a8765f219ffe0c979e839",
+      "evidenceRef": "evidence://grok/ef6d2621f658d85fd9d41d57455c751cb50d1076/version/6d405072f3af589bec408fcbdfd748ecf9cd9846ef9a8765f219ffe0c979e839",
+      "subjectSha256": "967b8ea76d91734d9f7218e3c2369ebf0cf3784e13fba8b2ed6cf81a9d1aff43",
+      "observedAt": "2026-08-01T05:30:52.171Z"
+    },
+    {
+      "role": "capabilities",
+      "host": "grok",
+      "commitSha": "ef6d2621f658d85fd9d41d57455c751cb50d1076",
+      "evidenceSha256": "1e429440a568b013e6d617fcaeaaf653578968c07eaefb6bae026ca21d52f52e",
+      "evidenceRef": "evidence://grok/ef6d2621f658d85fd9d41d57455c751cb50d1076/capabilities/1e429440a568b013e6d617fcaeaaf653578968c07eaefb6bae026ca21d52f52e",
+      "subjectSha256": "3bc086d4752d7162a99709272a85844a1912f110470eb0aa06025adf5e33b530",
+      "observedAt": "2026-08-01T05:30:52.171Z"
+    },
+    {
+      "role": "requestedModel",
+      "host": "grok",
+      "commitSha": "ef6d2621f658d85fd9d41d57455c751cb50d1076",
+      "evidenceSha256": "957d40a1305da2981c1e6a094e994e64dada2a1c40c9938d728e8e2e4e62562a",
+      "evidenceRef": "evidence://grok/ef6d2621f658d85fd9d41d57455c751cb50d1076/requestedModel/957d40a1305da2981c1e6a094e994e64dada2a1c40c9938d728e8e2e4e62562a",
+      "subjectSha256": "7e7927c7d3104cf2d08ebf08a2bedd89eab5c2a6943626c5e52e4f0f6956a8bd",
+      "observedAt": "2026-08-01T05:30:52.171Z"
+    },
+    {
+      "role": "resolvedModel",
+      "host": "grok",
+      "commitSha": "ef6d2621f658d85fd9d41d57455c751cb50d1076",
+      "evidenceSha256": "e66853e70a0db90232c57a712fdc8b6e23b0cb39714d28e6796bdd142c88cb60",
+      "evidenceRef": "evidence://grok/ef6d2621f658d85fd9d41d57455c751cb50d1076/resolvedModel/e66853e70a0db90232c57a712fdc8b6e23b0cb39714d28e6796bdd142c88cb60",
+      "subjectSha256": "9399c36a16495f20fd8ff811bcb851797a2abc25b53e345d633a59639f250f71",
+      "observedAt": "2026-08-01T05:30:52.171Z"
+    },
+    {
+      "role": "observedModel",
+      "host": "grok",
+      "commitSha": "ef6d2621f658d85fd9d41d57455c751cb50d1076",
+      "evidenceSha256": "563a5584d0ab364de0cf7687a9e338668ca7c45c47dd1443cef6adf3ab5333ee",
+      "evidenceRef": "evidence://grok/ef6d2621f658d85fd9d41d57455c751cb50d1076/observedModel/563a5584d0ab364de0cf7687a9e338668ca7c45c47dd1443cef6adf3ab5333ee",
+      "subjectSha256": "7e7927c7d3104cf2d08ebf08a2bedd89eab5c2a6943626c5e52e4f0f6956a8bd",
+      "observedAt": "2026-08-01T05:30:52.171Z"
+    }
+  ]
+}
