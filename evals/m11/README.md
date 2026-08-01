@@ -52,22 +52,30 @@ e2e gates from the controlled two-variant harness in `throughput.ts`:
   plus a deterministic receipt+integration phase; acceptance, review-rejection
   and evidence (receipt hashes) must be identical across both variants.
 
-## Current honest state (feature/hv3-m11-c10-evals)
+## Current honest state (feature/hv3-m11-c9-fix)
 
 - C2/C3/C5/C6/C7/C9 aggregate proofs: PASS.
 - Coverage: PARTIAL — REQ-001..008 COVERED, REQ-009..015 PARTIAL, M11-R11..R26 GAP;
   100 % claim not yet met.
-- Case 4: WAITING_EXTERNAL — codex not on PATH (Tier-A set incomplete per AM-0019
-  §12 requires codex+claude+opencode all present). The concurrency machinery IS
-  proven live: a real burst of 8 native children (6 opencode + 2 claude
-  `--model sonnet`) ran simultaneously with every child returning its exact
-  expected token (exit 0 + verified output). Governor (AM-0019 §6 thresholds)
-  observed PAUSE (100°C ≥ 92°C) and REDUCE (RAM 17.9% < 20%) trips during the
-  burst, so sustained 8 is not thermally safe on this box — reduced to 4-6 for
-  steady state. When pre-dispatch temp is already ≥92°C the probe reduces the
-  burst target itself and records the governor decision.
-- Case 9: WAITING_EXTERNAL — codex missing; model evidence for all five hosts
-  requires real sessions.
+- Case 4: codex 0.146.0 is discovered via its npm bundle
+  (`~/.codex-cli-npm/.../codex-<platform>/vendor/*/bin/codex`, mirroring
+  `host-attestation.ts` `bundledCodexCandidates`) — not via PATH. The live burst
+  allocates children across the full Tier-A set (codex `exec` + claude
+  `--print --model sonnet` + opencode `run`), every child verified by its exact
+  output token, peak alive sampled at 10 Hz with governor thermal/RAM trace
+  (AM-0019 §6 thresholds from resource-broker.ts). The gate passes only when
+  >=8 concurrent native children are actually observed across the Tier-A set;
+  on a hot window (pre-dispatch PAUSE) the probe self-reduces the burst and
+  records the governor decision honestly.
+- Case 9: `HOST_PROBE_SPECS` capability checks are presence-based (>=1 anchored
+  line-start match) instead of exact-once, and command tokens accept a single
+  space before positional args — aligned with the real claude 2.1.220 help
+  (`--print` listed twice) and opencode 1.18.10 help (`opencode run [message..]`).
+  Attestations for every installed host (codex, claude, grok, opencode,
+  antigravity) are re-validated against the exact repository HEAD via
+  `automation/control-plane-ci.mjs certification-validate`
+  (`assertCertificationAttestation`). grok's functional dispatch stays
+  WAITING_EXTERNAL until device-OAuth login (doctor/models observed).
 - Case 10: WAITING_EXTERNAL — no antigravity adapter-level out-of-ownership
   mutation rejection (engine-level C2 path conflicts exist).
 - Case 11: WAITING_EXTERNAL — no Control Plane browser QA harness (views API PASS).
