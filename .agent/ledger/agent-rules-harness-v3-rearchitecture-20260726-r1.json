@@ -2710,7 +2710,7 @@
       "status": "MIGRATED_SOURCE_REVIEW_MATCH"
     }
   ],
-  "shadow_revision": 58,
+  "shadow_revision": 59,
   "shadow_hashes": {
     "tasks.md": "6e7932f56d58838cd903357e87f1a770709e6fc023d944771e2a541b2faafbd2",
     "progress.md": "298702826105f1d892d64796914e2b1f78058be4af16d99e84bc0352b4f75b76",
@@ -6568,6 +6568,20 @@
       "effective_sha256": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
       "shadow_revision": 58,
       "at": "2026-08-01T14:40:52+07:00"
+    },
+    {
+      "event_id": "E-REC-60",
+      "type": "RECONCILIATION_M11_R59",
+      "summary": "Engine reconciliation at revision 59: ledger re-bound to HEAD c417bc8 with candidate epoch 662ad3a807f8 (terminal candidate prepared under AM-0020; execution_state left NEEDS_REMEDIATION).",
+      "actor": "engine",
+      "prior_effective_sha256": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
+      "new_effective_sha256": "662ad3a807f8f7bc37c59f3b33494fc9a7ed31e3fb018a1925c3fdd6aa330224",
+      "amendment_ids": [
+        "AM-0020"
+      ],
+      "head_commit": "c417bc89398bb1f6391de7af4fd735915aef5010",
+      "shadow_revision": 59,
+      "at": "2026-08-01T11:19:34.292Z"
     }
   ],
   "ci_checks": [
@@ -6585,8 +6599,8 @@
       "rerunRequired": "WAITING_EXTERNAL"
     }
   ],
-  "headCommit": "964d24667506fcbd45c267abc32cc5a23f8f2803",
-  "commitSha": "964d24667506fcbd45c267abc32cc5a23f8f2803",
+  "headCommit": "c417bc89398bb1f6391de7af4fd735915aef5010",
+  "commitSha": "c417bc89398bb1f6391de7af4fd735915aef5010",
   "plan": {
     "original": {
       "artifactId": "agent-rules-harness-v3-rearchitecture-20260726-r1",
@@ -7426,9 +7440,9 @@
       "identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
       "reviewerIdentity": "independent-high-risk-review",
       "epoch": 1785570218380,
-      "observedAt": "2026-08-01T07:43:38.382Z",
-      "timestamp": "2026-08-01T07:43:38.382Z",
-      "headCommit": "964d24667506fcbd45c267abc32cc5a23f8f2803",
+      "observedAt": "2026-08-01T11:19:34.292Z",
+      "timestamp": "2026-08-01T11:19:34.292Z",
+      "headCommit": "c417bc89398bb1f6391de7af4fd735915aef5010",
       "evidence": [
         {
           "identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
@@ -7436,6 +7450,13 @@
           "stale": false,
           "observedAt": "2026-08-01T07:43:38.382Z",
           "evidenceHash": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003"
+        },
+        {
+          "identity": "662ad3a807f8f7bc37c59f3b33494fc9a7ed31e3fb018a1925c3fdd6aa330224",
+          "fresh": true,
+          "stale": false,
+          "observedAt": "2026-08-01T11:19:34.292Z",
+          "evidenceHash": "662ad3a807f8f7bc37c59f3b33494fc9a7ed31e3fb018a1925c3fdd6aa330224"
         }
       ],
       "note": "M11 milestone rebound to AM-0020 canonical state at revision 58: identity 21d0a8bb, headCommit 964d246. Prior binding 1d524a27/e5ff92c retained as historical (E-REC-58)."
@@ -7500,8 +7521,8 @@
     "stale": true,
     "staleReason": "M10 terminal proof bound to superseded identity ddb68fa and HEAD 56284ad; HISTORICAL_STALE_FOR_M11 at revision 57"
   },
-  "shadowRevision": 58,
-  "latestShadowRevision": 58,
+  "shadowRevision": 59,
+  "latestShadowRevision": 59,
   "terminalMarker": "HARNESS_V3_10_OF_10_COMPLETE",
   "terminalMarkerStatus": "HISTORICAL_STALE_FOR_M11",
   "terminalMarkerAm0020": "PENDING_AM0020_REVALIDATION",
@@ -7518,5 +7539,39 @@
       "REV-P1-PARITY-V3-11-M95-001"
     ],
     "note": "Prior-contract ACCEPT reviews retained intact as historical evidence; not terminal-eligible under AM-0020 until revalidated."
+  },
+  "candidate_epoch": {
+    "schema": "artifact/candidate-epoch/v1",
+    "source_tree_sha": "ea948a064c2dd6e76dac165edd044db39882cb96",
+    "candidate_commit_or_tree": "c417bc89398bb1f6391de7af4fd735915aef5010",
+    "artifact_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "container_image_digests": [],
+    "dependency_lock_hash": "af4fb296219afb2a393830f0b2da8d4a4cbd6a6698520c06354aab0f07291823",
+    "migration_set_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "environment_hash": "850a2be2b695466aab156b550589b10b86e666cab793616cd210016fec93b24c",
+    "fixture_hash": "f09ee3f7d7ad01df068b69e6b32e1fae0602e5347fae278faa2048f2b02d6d3e",
+    "topology_hash": "b465d1eb687911f6329a4f24a98cc445a9f0065424769fb6ce907c0918f3a99a",
+    "created_at": "2026-08-01T11:16:59.739Z",
+    "build_critical_manifest": [
+      "**/*.sql",
+      "**/fixtures/**",
+      "**/migrations/**",
+      "**/src/**",
+      "npm-shrinkwrap.json",
+      "package-lock.json",
+      "package.json",
+      "pnpm-lock.yaml",
+      "system-topology.yaml",
+      "tsconfig*.json",
+      "yarn.lock"
+    ],
+    "notes": {
+      "dependency_lock": "3 package-lock.json(s)",
+      "migrations": "no migrations declared",
+      "fixtures": "packages/engine/test/fixtures",
+      "topology": "no system-topology.yaml — compiled all-GAP empty topology",
+      "artifacts": "no built dist found",
+      "containers": "no container images declared in harness"
+    }
   }
 }
