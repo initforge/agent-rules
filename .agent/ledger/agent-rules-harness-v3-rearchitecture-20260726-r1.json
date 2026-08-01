@@ -2713,9 +2713,9 @@
   "shadow_revision": 58,
   "shadow_hashes": {
     "tasks.md": "6e7932f56d58838cd903357e87f1a770709e6fc023d944771e2a541b2faafbd2",
-    "progress.md": "036a6a45d79bbaa92f2483118491235fbd0aeb34a8f5478ef2f12ae5ae043f43",
+    "progress.md": "298702826105f1d892d64796914e2b1f78058be4af16d99e84bc0352b4f75b76",
     "amendments.md": "7feb185a73bb909a6017d93880f145fa75237ce75094d204c015c421415591ae",
-    "reconciliation.md": "bd03829c90c1dd60bfdee7451d073c2f32be9b1ace49ded575764ce771649aff",
+    "reconciliation.md": "4db8dd827d6db23057dc8f85b3c4037937be351351cfa1efd96f4136da213f9c",
     "batches/bootstrap/tasks.md": "a75096b2109eb9869034c1c6cf4f7d25136fe0af0a79b37b38180210adc34ac9",
     "batches/bootstrap/progress.md": "10921867c253ef096709f77927852298429a3e7a7ce6cd41bf1368fe57a151ae",
     "batches/bootstrap/reconciliation.md": "93ec8645dba93e1e4adab26438756b2cea1c6a313d58db0b54190802e1d91c09"
@@ -6544,6 +6544,30 @@
         "AM-0020"
       ],
       "shadow_revision": 58
+    },
+    {
+      "event_id": "E-REC-59",
+      "type": "RECONCILIATION_M11_R58",
+      "summary": "Reconciled ledger to AM-0020 canonical state at revision 58: identity 21d0a8bb, headCommit 964d246, prior-contract reviews PENDING_AM0020_REVALIDATION, M10/M11 markers historical-stale.",
+      "actor": "engine",
+      "prior_effective_sha256": "1d524a2706c1bb9c2aa19945de1197015bbbbc4ce7ef54cb0a37ef54f5ca4c27",
+      "new_effective_sha256": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
+      "amendment_ids": [
+        "AM-0020"
+      ],
+      "head_commit": "964d24667506fcbd45c267abc32cc5a23f8f2803",
+      "shadow_revision": 58,
+      "at": "2026-08-01T14:40:52+07:00"
+    },
+    {
+      "event_id": "E-MS-60",
+      "type": "MILESTONE_M11_AM0020",
+      "summary": "AM-0020 active at revision 58 (identity 21d0a8bb): M11-R27..R36 additive requirements open; execution continues under the new epistemic-integrity contract; M11 milestone rebound to headCommit 964d246; prior-contract reviews pending revalidation.",
+      "actor": "engine",
+      "head_commit": "964d24667506fcbd45c267abc32cc5a23f8f2803",
+      "effective_sha256": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
+      "shadow_revision": 58,
+      "at": "2026-08-01T14:40:52+07:00"
     }
   ],
   "ci_checks": [
@@ -6561,8 +6585,8 @@
       "rerunRequired": "WAITING_EXTERNAL"
     }
   ],
-  "headCommit": "e5ff92c285e410558eb40cc086a26617af1cad69",
-  "commitSha": "e5ff92c285e410558eb40cc086a26617af1cad69",
+  "headCommit": "964d24667506fcbd45c267abc32cc5a23f8f2803",
+  "commitSha": "964d24667506fcbd45c267abc32cc5a23f8f2803",
   "plan": {
     "original": {
       "artifactId": "agent-rules-harness-v3-rearchitecture-20260726-r1",
@@ -7073,28 +7097,22 @@
       ]
     },
     "M11": {
-      "identity": "1d524a2706c1bb9c2aa19945de1197015bbbbc4ce7ef54cb0a37ef54f5ca4c27",
+      "identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
       "reviewerIdentity": "independent-high-risk-review",
-      "epoch": 1785573203000,
-      "observedAt": "2026-08-01T08:33:23.000Z",
-      "timestamp": "2026-08-01T08:33:23.000Z",
-      "headCommit": "e5ff92c285e410558eb40cc086a26617af1cad69",
+      "epoch": 1785570218380,
+      "observedAt": "2026-08-01T07:43:38.382Z",
+      "timestamp": "2026-08-01T07:43:38.382Z",
+      "headCommit": "964d24667506fcbd45c267abc32cc5a23f8f2803",
       "evidence": [
         {
-          "identity": "1d524a2706c1bb9c2aa19945de1197015bbbbc4ce7ef54cb0a37ef54f5ca4c27",
+          "identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
           "fresh": true,
           "stale": false,
-          "observedAt": "2026-08-01T08:33:23.000Z",
-          "evidenceHash": "1d524a2706c1bb9c2aa19945de1197015bbbbc4ce7ef54cb0a37ef54f5ca4c27"
-        },
-        {
-          "identity": "1d524a2706c1bb9c2aa19945de1197015bbbbc4ce7ef54cb0a37ef54f5ca4c27",
-          "fresh": true,
-          "stale": false,
-          "observedAt": "2026-08-01T08:33:23.000Z",
-          "evidenceHash": "bf540fd209522b33f70dc73ddf561e053096c0e35bb10171ce1130cb51f060e3"
+          "observedAt": "2026-08-01T07:43:38.382Z",
+          "evidenceHash": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003"
         }
-      ]
+      ],
+      "note": "M11 milestone rebound to AM-0020 canonical state at revision 58: identity 21d0a8bb, headCommit 964d246. Prior binding 1d524a27/e5ff92c retained as historical (E-REC-58)."
     }
   },
   "latestReview": {
@@ -7111,7 +7129,7 @@
     "shadowRevision": 56,
     "reviewerIdentity": "independent-high-risk-review",
     "at": "2026-07-31T17:35:47.569000Z",
-    "staleReason": "M10-era review bound to AM-0018 identity ddb68fa at revision 56; no longer binds M11 effective plan 1d524a27 at revision 57"
+    "staleReason": "AM-0019-era review bound to M11 plan 1d524a27 at revision 57; under AM-0020 §15.6 reviews from the previous contract are candidate evidence only — PENDING_AM0020_REVALIDATION until capability/independence/freshness/claim-scope validation"
   },
   "m10Proof": {
     "headCommit": "56284ad436a63fde0a87b8746aad9bfc27aa3e39",
@@ -7156,8 +7174,23 @@
     "stale": true,
     "staleReason": "M10 terminal proof bound to superseded identity ddb68fa and HEAD 56284ad; HISTORICAL_STALE_FOR_M11 at revision 57"
   },
-  "shadowRevision": 57,
-  "latestShadowRevision": 57,
+  "shadowRevision": 58,
+  "latestShadowRevision": 58,
   "terminalMarker": "HARNESS_V3_10_OF_10_COMPLETE",
-  "terminalMarkerStatus": "HISTORICAL_STALE_FOR_M11"
+  "terminalMarkerStatus": "HISTORICAL_STALE_FOR_M11",
+  "terminalMarkerAm0020": "PENDING_AM0020_REVALIDATION",
+  "pending_am0020_revalidation": {
+    "status": "PENDING_AM0020_REVALIDATION",
+    "amendment": "AM-0020",
+    "contract": "pre-AM-0020",
+    "rule": "AM-0020 §15.6 — candidate evidence only until capability/independence/freshness/claim-scope validation succeeds",
+    "review_ids": [
+      "REV-P1-PARITY-V3-08-R1-M95-001",
+      "REV-P1-PARITY-V3-08-R2-M95-001",
+      "REV-P1-PARITY-V3-09-M95-001",
+      "REV-P1-PARITY-V3-10-M95-001",
+      "REV-P1-PARITY-V3-11-M95-001"
+    ],
+    "note": "Prior-contract ACCEPT reviews retained intact as historical evidence; not terminal-eligible under AM-0020 until revalidated."
+  }
 }
