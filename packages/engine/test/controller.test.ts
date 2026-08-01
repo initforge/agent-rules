@@ -4,6 +4,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { createHash } from 'node:crypto';
 import { Controller } from '../src/controller.js';
+import type { BrokerDecision } from '../src/resource-broker.js';
 import type { WorkLedger, TaskAssignment, WorkerReceipt } from '../src/contracts.js';
 
 const hash = 'a'.repeat(64);
@@ -428,6 +429,77 @@ describe('Controller', () => {
 
       await controller.retry(assignmentId!);
       expect(controller.getTaskState(assignmentId!)).toBe('PENDING');
+    });
+  });
+
+  describe('dispatchReadySet with the C4 resource broker (AM-0019 §6)', () => {
+    function independentLedger(count: number): WorkLedger {
+      const base = stubLedger().assignments[0]! as TaskAssignment;
+      const assignments: TaskAssignment[] = Array.from({ length: count }, (_, i) => ({
+        ...base,
+        assignmentId: `A-I${i}`,
+        taskId: `TASK-I${i}`,
+        dependencies: [],
+        // distinct owned paths so the ready antichain is not conflict-blocked
+        ownedPaths: [`packages/engine/area-${i}`],
+      }));
+      return stubLedger({
+        assignments,
+        batches: [{ batchId: 'B1', status: 'PASSED', taskIds: assignments.map((a) => a.taskId) }],
+      });
+    }
+
+    const decision = (action: 'burst' | 'reduce' | 'pause'): BrokerDecision => ({
+      action,
+      mode: action === 'pause' ? 'paused' : action === 'reduce' ? 'reduced' : 'burst',
+      reasons: ['test'],
+      input: {
+        ramFraction: action === 'pause' ? 0.05 : 0.1,
+        psi: { available: false, some: null, full: null, source: 'unavailable' },
+        cpuTempC: action === 'pause' ? 96 : 88,
+        loadRatio: 0.5,
+        swapInDeltaPerSec: 0,
+      },
+    });
+
+    it('a burst broker decision dispatches the full independent set', async () => {
+      const dir = tmpDir();
+      const controller = new Controller(writeLedger(dir, independentLedger(6)));
+      controller.setResourceBroker(async () => decision('burst'));
+      const result = await controller.dispatchReadySet();
+      expect(result.ready.length).toBe(6);
+    });
+
+    it('a REDUCE broker decision throttles dispatch concurrency', async () => {
+      const dir = tmpDir();
+      const controller = new Controller(writeLedger(dir, independentLedger(6)));
+      controller.setResourceBroker(async () => decision('reduce'));
+      const result = await controller.dispatchReadySet();
+      // poolCeilingsForAction('reduce') -> total 4, writers 3
+      expect(result.ready.length).toBe(3);
+      expect(result.deferredByPool.length).toBeGreaterThan(0);
+    });
+
+    it('a PAUSE broker decision halts heavy dispatch (writers ceiling 0)', async () => {
+      const dir = tmpDir();
+      const controller = new Controller(writeLedger(dir, independentLedger(6)));
+      controller.setResourceBroker(async () => decision('pause'));
+      const result = await controller.dispatchReadySet();
+      // poolCeilingsForAction('pause') -> writers 0, build 0: no writer dispatches.
+      expect(result.ready.length).toBe(0);
+      expect(result.deferredByPool.length).toBe(6);
+    });
+
+    it('the broker decision feeds the effective ceilings (setPoolCeilings)', async () => {
+      const dir = tmpDir();
+      const controller = new Controller(writeLedger(dir, independentLedger(6)));
+      let consulted = false;
+      controller.setResourceBroker(async () => {
+        consulted = true;
+        return decision('pause');
+      });
+      await controller.dispatchReadySet();
+      expect(consulted).toBe(true);
     });
   });
 });

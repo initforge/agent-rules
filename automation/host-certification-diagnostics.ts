@@ -14,6 +14,12 @@ export const MISSING_CAPABILITIES = [
 export type MissingCapability = typeof MISSING_CAPABILITIES[number];
 export type DiagnosticState = 'OBSERVED' | 'MISSING' | 'UNVERIFIED';
 export type CertificationAvailability = 'READY' | 'WAITING_EXTERNAL';
+/**
+ * Distinguishes the two exit-78 situations so operators can tell "no native
+ * runner is observable on this host" from "an installed native host genuinely
+ * failed its probes".
+ */
+export type CertificationReason = 'READY' | 'RUNNERS_UNAVAILABLE' | 'NATIVE_HOST_FAILED';
 
 export interface DiagnosticValue {
   readonly state: DiagnosticState;
@@ -53,6 +59,8 @@ export interface LocalCertificationDiagnostics {
   readonly schema: 'local-host-certification-diagnostics/v1';
   readonly requestedModel: string;
   readonly status: CertificationAvailability;
+  /** READY | RUNNERS_UNAVAILABLE (no native host observable) | NATIVE_HOST_FAILED (installed host genuinely failed). */
+  readonly reason: CertificationReason;
   readonly hosts: readonly HostCertificationDiagnostic[];
 }
 
@@ -123,11 +131,25 @@ export async function collectHostCertificationDiagnostics(options: HostDiagnosti
   }));
 }
 
+/**
+ * Derive the WAITING_EXTERNAL reason from the host diagnostics: any observable
+ * host that is not fully observed means an installed native host genuinely
+ * failed; zero observable hosts means the runners are unavailable here.
+ */
+export function certificationReason(hosts: readonly HostCertificationDiagnostic[]): CertificationReason {
+  const ready = hosts.every(host => Object.values(host).every(value => typeof value !== 'object' || value.state === 'OBSERVED'));
+  if (ready) return 'READY';
+  const anyHostObservable = hosts.some(host => host.installed.state === 'OBSERVED' || host.sessionModel.state === 'OBSERVED');
+  return anyHostObservable ? 'NATIVE_HOST_FAILED' : 'RUNNERS_UNAVAILABLE';
+}
+
 export async function collectLocalCertificationDiagnostics(requestedModel: string, repositoryRoot: string): Promise<LocalCertificationDiagnostics> {
   const hosts = await collectHostCertificationDiagnostics({ requestedModel, repositoryRoot });
+  const reason = certificationReason(hosts);
   return {
     schema: 'local-host-certification-diagnostics/v1', requestedModel,
-    status: hosts.every(host => Object.values(host).every(value => typeof value !== 'object' || value.state === 'OBSERVED')) ? 'READY' : 'WAITING_EXTERNAL',
+    status: reason === 'READY' ? 'READY' : 'WAITING_EXTERNAL',
+    reason,
     hosts,
   };
 }

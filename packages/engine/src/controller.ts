@@ -13,6 +13,7 @@ import {
   type DependencyEdge, type ExecutionGraph, type ExecutionNode,
   type NodeStatus, type PoolCeilings, type ReadySetResult,
 } from './dispatch-ready-set.js';
+import { getResourceBroker, poolCeilingsForAction, type BrokerDecision } from './resource-broker.js';
 
 export { type Sha256, sha256Bytes };
 
@@ -191,6 +192,7 @@ export class Controller {
   private executionGraph: ExecutionGraph | null = null;
   private browserBurst = false;
   private poolCeilings: PoolCeilings | undefined;
+  private brokerDecide: (() => BrokerDecision | Promise<BrokerDecision>) | null = null;
 
   constructor(ledgerPath: string) {
     this.ledgerPath = path.resolve(ledgerPath);
@@ -271,6 +273,26 @@ export class Controller {
   }
 
   /**
+   * Wire the C4 resource broker (AM-0019 §6): the provider is consulted before
+   * every dispatchReadySet and its action is mapped onto the C2 pool ceilings.
+   * A PAUSE decision degrades dispatch honestly (fewer total slots, no heavy
+   * build/browser burst). Pass the decision or a promise; a rejected decision
+   * surfaces so dispatch cannot silently ignore a hot machine.
+   */
+  setResourceBroker(decide: () => BrokerDecision | Promise<BrokerDecision>): void {
+    this.brokerDecide = decide;
+  }
+
+  /**
+   * Production wiring: consult the per-machine broker singleton before dispatch.
+   * Any session that activates a Controller on this host shares one arbiter.
+   */
+  wireResourceBroker(): void {
+    const broker = getResourceBroker();
+    this.setResourceBroker(() => broker.decide());
+  }
+
+  /**
    * C2 max-useful dispatch (AM-0019 §4): compute the maximum conflict-free
    * ready antichain across the whole graph and mark every member READY.
    * Cross-stage SOFT/VERIFY_AFTER edges never hold successors back; only
@@ -280,6 +302,11 @@ export class Controller {
     if (!this.ledger) return { ...EMPTY_READY_SET };
 
     this.checkpointState = 'DISPATCHING';
+
+    if (this.brokerDecide) {
+      const decision = await this.brokerDecide();
+      this.poolCeilings = poolCeilingsForAction(decision.action);
+    }
 
     const typedById = new Map<string, ExecutionNode>();
     for (const node of this.executionGraph?.nodes ?? []) typedById.set(node.id, node);

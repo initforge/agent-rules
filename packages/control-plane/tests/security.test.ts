@@ -59,6 +59,31 @@ describe('security: path traversal', () => {
   })
 })
 
+describe('security: CORS origin restriction', () => {
+  const configuredOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173'
+
+  it('never emits a wildcard ACAO for a disallowed origin', async () => {
+    const res = await request(app)
+      .get('/api/health')
+      .set('Origin', 'http://evil.example')
+    // cors() restricts ACAO to the configured origin — never `*`.
+    expect(res.headers['access-control-allow-origin'] ?? '*').not.toBe('*')
+    expect(res.headers['access-control-allow-origin']).toBe(configuredOrigin)
+  })
+
+  it('does not send ACAO:* on responses when no origin is supplied', async () => {
+    const res = await request(app).get('/api/health')
+    expect(res.headers['access-control-allow-origin'] ?? '*').not.toBe('*')
+  })
+
+  it('grants the configured loopback origin', async () => {
+    const res = await request(app)
+      .get('/api/health')
+      .set('Origin', configuredOrigin)
+    expect(res.headers['access-control-allow-origin']).toBe(configuredOrigin)
+  })
+})
+
 describe('security: rate limiting', () => {
   it('sets rate limit headers', async () => {
     const res = await request(app).get('/api/health')

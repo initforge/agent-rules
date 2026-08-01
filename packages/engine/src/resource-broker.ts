@@ -25,6 +25,7 @@ import {
   type ResourceGovernorAdapter,
   type ResourceSnapshot,
 } from './resource-governor.js';
+import { POOL_CEILINGS } from './dispatch-ready-set.js';
 
 /**
  * Placeholder governor identity — NOT a credential. A fixed hex hash used only
@@ -410,21 +411,25 @@ export function recommendedConcurrency(action: BrokerAction, opts?: { burstMax?:
   }
 }
 
-/** Align with C2 dispatch-ready-set POOL_CEILINGS per broker action. */
+/**
+ * Align with C2 dispatch-ready-set POOL_CEILINGS per broker action. Single
+ * source of truth: packages/engine/src/dispatch-ready-set.ts POOL_CEILINGS
+ * (AM-0019 §5). Broker actions only scale the shared ceilings down under load.
+ */
 export function poolCeilingsForAction(action: BrokerAction): {
   total: number; writers: number; reviewers: number; integration: number;
   browser: number; build: number; compose: number;
 } {
   const c = recommendedConcurrency(action);
-  const writers = Math.min(c.heavy, 8);
+  const writers = Math.min(c.heavy, POOL_CEILINGS.writers);
   return {
     total: c.agents,
     writers,
-    reviewers: Math.min(5, Math.max(1, Math.ceil(writers / 2))),
-    integration: 1,
-    browser: action === 'burst' ? 4 : action === 'pause' ? 1 : 2,
-    build: action === 'pause' ? 0 : action === 'reduce' ? 1 : 2,
-    compose: 1,
+    reviewers: Math.min(POOL_CEILINGS.reviewers, Math.max(1, Math.ceil(writers / 2))),
+    integration: POOL_CEILINGS.integration,
+    browser: action === 'burst' ? POOL_CEILINGS.browserBurst : action === 'pause' ? 1 : POOL_CEILINGS.browserDefault,
+    build: action === 'pause' ? 0 : action === 'reduce' ? 1 : POOL_CEILINGS.build,
+    compose: POOL_CEILINGS.compose,
   };
 }
 

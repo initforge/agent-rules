@@ -291,20 +291,35 @@ export class SupervisorRunner {
       return { ok: false, reason: `Assignment ${assignmentId} is already ${localAssignment.status}` };
     }
 
-    // F10 (R10): single-layer journal — PRE before remote, OK/FAIL after
+    // F10 (R10): single-layer journal — PRE before remote, OK/FAIL after.
+    // Journal failures surface instead of being swallowed; PRE failure fails
+    // closed with zero mutation, which keeps abort idempotent on retry.
     const jPath = this.supervisorConfig.statePath ? journalPath(this.supervisorConfig.statePath) : null;
-    if (jPath) writeJournalEntry(jPath, `PRE:${assignmentId}:${Date.now()}`);
+    const journal = (entry: string): { ok: true } | { ok: false; reason: string } => {
+      if (!jPath) return { ok: true };
+      try {
+        writeJournalEntry(jPath, entry);
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, reason: `journal write failed (${jPath}): ${err instanceof Error ? err.message : String(err)}` };
+      }
+    };
+
+    const pre = journal(`PRE:${assignmentId}:${Date.now()}`);
+    if (!pre.ok) return pre;
 
     // Remote abort
     if (localAssignment.childSessionId) {
       try {
         const remoteOk = await this.adapter.abort({ sessionId: localAssignment.childSessionId });
         if (!remoteOk) {
-          if (jPath) writeJournalEntry(jPath, `FAIL:${assignmentId}:${Date.now()}:remote_abort_failed`);
+          const fail = journal(`FAIL:${assignmentId}:${Date.now()}:remote_abort_failed`);
+          if (!fail.ok) return fail;
           return { ok: false, reason: `Remote abort returned false for session ${localAssignment.childSessionId}` };
         }
       } catch (err) {
-        if (jPath) writeJournalEntry(jPath, `FAIL:${assignmentId}:${Date.now()}:remote_abort_exception`);
+        const fail = journal(`FAIL:${assignmentId}:${Date.now()}:remote_abort_exception`);
+        if (!fail.ok) return fail;
         return { ok: false, reason: `Remote abort failed: ${err instanceof Error ? err.message : String(err)}` };
       }
     }
@@ -312,12 +327,17 @@ export class SupervisorRunner {
     // Local abort
     const abortResult = this._supervisor.abortAssignment(assignmentId);
     if (!abortResult.ok) {
-      if (jPath) writeJournalEntry(jPath, `FAIL:${assignmentId}:${Date.now()}:local_abort_${abortResult.reason}`);
+      const fail = journal(`FAIL:${assignmentId}:${Date.now()}:local_abort_${abortResult.reason}`);
+      if (!fail.ok) return fail;
       this.terminalEvidence.delete(assignmentId);
       return abortResult;
     }
 
-    if (jPath) writeJournalEntry(jPath, `OK:${assignmentId}:${Date.now()}`);
+    const ok = journal(`OK:${assignmentId}:${Date.now()}`);
+    if (!ok.ok) {
+      this.terminalEvidence.delete(assignmentId);
+      return { ok: false, reason: `${ok.reason}; assignment locally ABORTED, journal OK missing` };
+    }
     this.terminalEvidence.delete(assignmentId);
     return { ok: true };
   }
@@ -341,19 +361,25 @@ function fsyncJournalDirectory(dir: string): void {
   }
 }
 
-// F10 (R10): single journal layer — secure O_NOFOLLOW|O_APPEND|O_CREAT, mode 0o600, dedup PRE
+// F10 (R10): single journal layer — secure O_NOFOLLOW|O_APPEND|O_CREAT, mode 0o600, dedup PRE.
+// Write failures are NOT silent: a journaling failure throws so abort() can
+// surface it and fail closed before any mutation (keeps abort idempotent).
 
 function writeJournalEntry(jPath: string, entry: string): void {
+  let fd: number | undefined;
   try {
-    // F10 (R10): O_NOFOLLOW to prevent symlink attacks, O_APPEND|O_CREAT for append-only
     const flags = fs.constants.O_WRONLY | fs.constants.O_APPEND | fs.constants.O_CREAT | fs.constants.O_NOFOLLOW;
-    const fd = fs.openSync(jPath, flags, 0o600);
-    try {
-      fs.writeSync(fd, entry + '\n');
-      fs.fsyncSync(fd);
-    } finally {
-      fs.closeSync(fd);
+    fd = fs.openSync(jPath, flags, 0o600);
+    fs.writeSync(fd, entry + '\n');
+    fs.fsyncSync(fd);
+  } finally {
+    if (fd !== undefined) {
+      try { fs.closeSync(fd); } catch { /* open/write/fsync error already propagating */ }
     }
+  }
+  try {
     fsyncJournalDirectory(path.dirname(jPath));
-  } catch { /* best-effort */ }
+  } catch (error) {
+    throw new Error(`journal write failed: ${jPath}: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }

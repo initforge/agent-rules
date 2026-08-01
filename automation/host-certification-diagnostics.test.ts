@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { collectHostCertificationDiagnostics, REQUIRED_DIAGNOSTIC_HOSTS } from './host-certification-diagnostics.js';
+import { collectHostCertificationDiagnostics, certificationReason, REQUIRED_DIAGNOSTIC_HOSTS, type HostCertificationDiagnostic } from './host-certification-diagnostics.js';
 
 const model = 'qwencoder/qwen3.7-max';
 const hosts = Object.fromEntries(REQUIRED_DIAGNOSTIC_HOSTS.map((host) => [host, `/native/${host}`]));
@@ -40,5 +40,31 @@ describe('host certification diagnostics', () => {
     expect(opencode.commit.missingCapability).toBe('MISSING_COMMIT');
     expect(opencode.artifact.missingCapability).toBe('MISSING_ARTIFACT');
     expect(result.find((item) => item.host === 'codex')!.installed.missingCapability).toBe('MISSING_HOST');
+  });
+
+  it('labels a fully absent host set RUNNERS_UNAVAILABLE (exit-78 branch)', () => {
+    const missing = (host: string): HostCertificationDiagnostic => ({
+      host: host as HostCertificationDiagnostic['host'], requestedModel: model,
+      installed: { state: 'MISSING', missingCapability: 'MISSING_HOST', reason: 'not on PATH' },
+      version: { state: 'MISSING', missingCapability: 'MISSING_VERSION', reason: 'host is not installed' },
+      nativeExecution: { state: 'MISSING', missingCapability: 'MISSING_NATIVE_EXECUTION', reason: 'host executable unavailable' },
+      sessionModel: { state: 'MISSING', missingCapability: 'MISSING_SESSION_MODEL', reason: 'no session observation supplied' },
+      commit: { state: 'MISSING', missingCapability: 'MISSING_COMMIT', reason: 'repository HEAD unavailable' },
+      artifact: { state: 'MISSING', missingCapability: 'MISSING_ARTIFACT', reason: 'artifact path was not supplied' },
+    });
+    expect(certificationReason(REQUIRED_DIAGNOSTIC_HOSTS.map(missing))).toBe('RUNNERS_UNAVAILABLE');
+  });
+
+  it('labels an installed-but-failed host set NATIVE_HOST_FAILED (distinct exit-79 branch)', async () => {
+    const hosts = await collectHostCertificationDiagnostics({
+      requestedModel: 'qwencoder/qwen3.7-max',
+      repositoryRoot: process.cwd(),
+      resolveExecutable: async (host) => `/native/${host}`,
+      run: async () => ({ exitCode: 1, stdout: '', stderr: 'blocked' }),
+    });
+    // hosts are installed but every capability probe genuinely failed
+    expect(hosts.every((h) => h.installed.state === 'OBSERVED')).toBe(true);
+    expect(hosts.some((h) => h.version.state !== 'OBSERVED')).toBe(true);
+    expect(certificationReason(hosts)).toBe('NATIVE_HOST_FAILED');
   });
 });
