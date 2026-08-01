@@ -229,10 +229,9 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
   },
   'M11-R30': {
     cluster: 'C2',
-    status: 'PARTIAL',
-    partialReason: 'adversarial counterexample compiler lands with the M11-R30 worktree — WAITING_EXTERNAL',
-    modules: ['packages/engine/src/verifier.ts'],
-    tests: ['packages/engine/test/worker-verifier.test.ts'],
+    status: 'MATCH',
+    modules: ['packages/engine/src/adversarial-compiler.ts'],
+    tests: ['packages/engine/test/adversarial-compiler.test.ts'],
     acceptanceCriteria: [
       'negative probes generated from plan invariants/topology/domain (finance/concurrency/security/browser/release)',
       'T2/T3 claims require a negative probe unless deterministic proof makes it formally unnecessary',
@@ -240,10 +239,9 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
   },
   'M11-R31': {
     cluster: 'C9',
-    status: 'PARTIAL',
-    partialReason: 'reviewer independence + diversity lands with the M11-R31 worktree — WAITING_EXTERNAL',
-    modules: ['packages/engine/src/supervisor.ts'],
-    tests: ['packages/engine/test/supervisor.test.ts'],
+    status: 'MATCH',
+    modules: ['packages/engine/src/review-independence.ts'],
+    tests: ['packages/engine/test/review-independence.test.ts'],
     acceptanceCriteria: [
       'reviewer accepts only its exact claim scope and can never declare the project complete',
       'blind adversarial review precedes reading the worker verdict; conflicts adjudicated, not majority-voted',
@@ -251,10 +249,9 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
   },
   'M11-R32': {
     cluster: 'C4',
-    status: 'PARTIAL',
-    partialReason: 'immutable candidate verification lands with the M11-R32 worktree — WAITING_EXTERNAL',
-    modules: ['packages/engine/src/plan-identity.ts'],
-    tests: ['packages/engine/test/plan-identity.test.ts'],
+    status: 'MATCH',
+    modules: ['packages/engine/src/candidate-epoch.ts'],
+    tests: ['packages/engine/test/candidate-epoch.test.ts'],
     acceptanceCriteria: [
       'final verification binds an immutable CandidateEpoch; dirty worktree cannot be the terminal candidate',
       'source/config/lockfile/migration change creates a new epoch and invalidates only dependent proof',
@@ -262,10 +259,9 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
   },
   'M11-R33': {
     cluster: 'C6',
-    status: 'PARTIAL',
-    partialReason: 'cross-artifact consistency validator lands with the M11-R33 worktree — WAITING_EXTERNAL',
-    modules: ['packages/engine/src/verifier.ts'],
-    tests: ['packages/engine/test/worker-verifier.test.ts'],
+    status: 'MATCH',
+    modules: ['packages/engine/src/artifact-consistency.ts'],
+    tests: ['packages/engine/test/artifact-consistency.test.ts'],
     acceptanceCriteria: [
       'engine validates test totals vs summaries vs report, ledger status vs report status, evidence time vs candidate epoch',
       'PARTIAL/HIGH_DIFF/SKIPPED/UNVERIFIED records cannot be hidden by an aggregate PASS',
@@ -295,10 +291,9 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
   },
   'M11-R36': {
     cluster: 'C9',
-    status: 'PARTIAL',
-    partialReason: 'claim calibration telemetry lands with the M11-R36 worktree — WAITING_EXTERNAL',
-    modules: ['packages/engine/src/telemetry.ts'],
-    tests: ['packages/engine/test/telemetry.test.ts'],
+    status: 'MATCH',
+    modules: ['packages/engine/src/calibration.ts'],
+    tests: ['packages/engine/test/calibration.test.ts'],
     acceptanceCriteria: [
       'records worker self-PASS later rejected, reviewer ACCEPT later rejected, false rejection overturned, defect escape by model/provider/domain',
       'model reputation alone never authorizes a verdict; calibration, capability and exact evidence do',
