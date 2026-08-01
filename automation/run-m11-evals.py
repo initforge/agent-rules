@@ -34,7 +34,7 @@ CASES = [
     ("resilience.py",      "M11-C10-C6",   "crash/restart no duplicate or lost work"),
     ("resilience.py",      "M11-C10-C7",   "controlled multi-service fixture"),
     ("parity.py",          "M11-C10-C8",   "8 seeded browser defects caught"),
-    ("performance.py",     "M11-C10-PERF", "performance gates (latency/utilization/idle)"),
+    ("performance.py",     "M11-C10-PERF", "performance gates (latency/utilization/idle/throughput/e2e)"),
     ("live_concurrency.py","M11-C10-C4",   "Tier-A >=8 concurrent native children"),
     ("attestation.py",     "M11-C10-C9",   "Tier-A + Grok attestation binds exact HEAD"),
     ("antigravity.py",     "M11-C10-C10",  "Antigravity out-of-ownership mutation rejected"),

@@ -9,10 +9,11 @@
  *  - critical-path idle: fraction of scheduler samples where a runnable
  *    critical-path node was deferred while capacity existed (target < 5%).
  *
- * Honest boundaries:
- *  - Throughput gates (>=3x sequential / >=2x end-to-end) require a controlled
- *    two-variant workload harness against the full engine pipeline; that harness
- *    does not exist yet -> HONEST UNAVAILABLE with method.
+ * Throughput + e2e gates are measured by the controlled two-variant workload
+ * harness in throughput.ts (identical 48-task graph driven sequential vs swarm);
+ * see the `method` field on those gates for the work model.
+ *
+ * Honest boundary:
  *  - True wall-clock scheduler idle between dispatch turns is not instrumented;
  *    critical-path idle is reported at scheduler-sample granularity.
  *
@@ -20,6 +21,7 @@
  */
 import { createHash } from 'node:crypto';
 import { computeReadySet, type ExecutionGraph, type ExecutionNode } from '../../packages/engine/dist/dispatch-ready-set.js';
+import { runThroughputHarness } from './throughput.ts';
 
 function buildGraph(): ExecutionGraph {
   const nodes: ExecutionNode[] = [];
@@ -55,7 +57,7 @@ function percentile(sorted: number[], p: number): number {
   return sorted[Math.max(0, idx)];
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const graph = buildGraph();
   const status: Record<string, 'PENDING'> = {};
   for (const n of graph.nodes) status[n.id] = 'PENDING';
@@ -90,9 +92,12 @@ function main(): void {
   const utilization = utilizationSum / runs;
   const criticalIdle = runnableCriticalSamples > 0 ? criticalIdleSamples / runnableCriticalSamples : 0;
 
+  const t = await runThroughputHarness();
+
   const report = {
     case_id: 'M11-C10-PERF',
-    status: p95 < 2000 && utilization >= 0.75 && criticalIdle < 0.05 ? 'PASS' : 'FAIL',
+    status: p95 < 2000 && utilization >= 0.75 && criticalIdle < 0.05 && t.throughput_pass && t.e2e_pass
+      && t.defect_escape_equal && t.review_rejection_equal && t.evidence_equal ? 'PASS' : 'FAIL',
     gates: {
       dispatch_latency_p95_ms: { value: Number(p95.toFixed(3)), target: '< 2000', pass: p95 < 2000 },
       dispatch_latency_mean_ms: Number(meanLatency.toFixed(3)),
@@ -105,18 +110,32 @@ function main(): void {
         method: 'scheduler-sample granularity: fraction of computeReadySet calls where a runnable critical-path node was deferred while capacity existed; wall-clock idle between dispatch turns is not instrumented by the engine',
       },
       implementation_throughput_3x: {
-        value: null,
-        status: 'HONEST_UNAVAILABLE',
-        method: 'requires a controlled two-variant (swarm vs sequential) workload harness driving the full engine pipeline (dispatch+journal+receipt+merge) on identical tasks; harness not present',
+        value: t.throughput_ratio,
+        target: '>= 3.0',
+        pass: t.throughput_pass,
+        sequential_ms: t.sequential_dispatch_ms,
+        swarm_ms: t.swarm_dispatch_ms,
+        sequential_rounds: t.sequential_rounds,
+        swarm_rounds: t.swarm_rounds,
+        method: t.method,
       },
       e2e_workload_2x: {
-        value: null,
-        status: 'HONEST_UNAVAILABLE',
-        method: 'requires the same controlled harness plus defect-escape/review-rejection scoring; harness not present',
+        value: t.e2e_ratio,
+        target: '>= 2.0',
+        pass: t.e2e_pass,
+        sequential_ms: t.sequential_e2e_ms,
+        swarm_ms: t.swarm_e2e_ms,
+        defect_escape_equal: t.defect_escape_equal,
+        review_rejection_equal: t.review_rejection_equal,
+        evidence_equal: t.evidence_equal,
+        accepted: t.accepted,
+        rejected: t.rejected,
+        method: t.method,
       },
     },
     samples: runs,
     graph: { nodes: graph.nodes.length, critical_chain: 8, reviewers: 5, browser: 1, independent_writers: 20 },
+    throughput_workload: t.workload,
     engine_artifact: 'packages/engine/dist/dispatch-ready-set.js',
     measured_at: new Date().toISOString(),
   };
@@ -130,12 +149,15 @@ function main(): void {
   console.log(`  dispatch latency mean     : ${report.gates.dispatch_latency_mean_ms.toFixed(3)} ms`);
   console.log(`  safe-capacity utilization : ${(report.gates.safe_capacity_utilization.value * 100).toFixed(2)}% (target >= 75%)`);
   console.log(`  critical-path idle        : ${(report.gates.critical_path_idle.value * 100).toFixed(3)}% (target < 5%)`);
-  console.log(`  throughput 3x sequential  : HONEST_UNAVAILABLE (no two-variant workload harness)`);
-  console.log(`  e2e 2x baseline           : HONEST_UNAVAILABLE (no two-variant workload harness)`);
+  console.log(`  throughput 3x sequential  : ${report.gates.implementation_throughput_3x.value.toFixed(2)}x (target >= 3x) ${report.gates.implementation_throughput_3x.pass ? 'PASS' : 'FAIL'}`);
+  console.log(`  e2e 2x baseline           : ${report.gates.e2e_workload_2x.value.toFixed(2)}x (target >= 2x) ${report.gates.e2e_workload_2x.pass ? 'PASS' : 'FAIL'}`);
   console.log(`M11REPORT:${JSON.stringify(report)}`);
 
   // Gate exit code: structural failure only if a measured gate missed its target.
   process.exitCode = report.status === 'PASS' ? 0 : 2;
 }
 
-main();
+main().catch((e) => {
+  console.error('performance eval error:', e);
+  process.exitCode = 2;
+});

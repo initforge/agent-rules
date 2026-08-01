@@ -31,20 +31,26 @@ HONEST_UNAVAILABLE present).
 | 9. Tier-A native + Grok functional attestation bind exact HEAD | `attestation.py` | `host-attestation.test.ts`, `write-host-attestations.test.ts`, live host probe |
 | 10. Antigravity out-of-ownership mutation rejected | `antigravity.py` | scan of `platforms/antigravity` + host-policy matrix |
 | 11. Control Plane browser/visual/accessibility/console/network QA | `control_plane.py` | scan of `packages/control-plane/tests` + C9 views API suite |
-| Performance gates | `performance.ts` (run via `performance.py`) | `computeReadySet` on 20-node graph against the compiled engine artifact |
+| Performance gates | `performance.py` → `performance.ts` + `throughput.ts` | `computeReadySet` on 20-node graph (latency/utilization/idle) + controlled 48-task two-variant harness (throughput/e2e) against the compiled engine artifact |
 
 ## Performance gates (AM-0019 §12)
 
-Measured in `performance.ts` against `packages/engine/dist`:
+Measured in `performance.ts` against `packages/engine/dist`, with throughput and
+e2e gates from the controlled two-variant harness in `throughput.ts`:
 
 - READY-to-dispatch p95 < 2 s (50 samples on a 20-node graph)
 - safe-capacity utilization >= 75 % (ready-set slots vs total pool ceiling)
 - critical-path idle < 5 % (scheduler-sample granularity; wall-clock idle between
   dispatch turns is not instrumented by the engine — method recorded)
-- implementation throughput >= 3× sequential baseline — `HONEST_UNAVAILABLE`
-  (requires a two-variant workload harness driving the full engine pipeline)
-- end-to-end workload >= 2× baseline without worse defect escape — `HONEST_UNAVAILABLE`
-  (same harness + defect/review scoring)
+- implementation throughput >= 3× sequential baseline — measured by
+  `throughput.ts`: the identical 48-task graph (4 ranks × 12, mixed pools, HARD
+  deps across ranks only) driven sequential (1 worker, dispatchNext semantics) vs
+  swarm (`computeReadySet` antichain, pool up to total ceiling 14); task
+  completion is a bounded seeded sha256 hash-chain in worker_threads, so wall
+  clock reflects real concurrency. Deterministic seed + warm-up pass.
+- end-to-end workload >= 2× baseline without worse defect escape — same harness
+  plus a deterministic receipt+integration phase; acceptance, review-rejection
+  and evidence (receipt hashes) must be identical across both variants.
 
 ## Current honest state (feature/hv3-m11-c10-evals)
 
