@@ -22,6 +22,7 @@ import { runtimeCmd } from "./commands/runtime.js";
 import { modelsCmd } from "./commands/models.js";
 import { skillsCmd } from "./commands/skills.js";
 import { autopilotCmd } from "./commands/autopilot.js";
+import { topologyCmd } from "./commands/topology.js";
 import { createOpencodeClient } from "@opencode-ai/sdk/v2/client";
 import { OpenCodeNativeSessionAdapter } from "@initforge/agent-rules-engine/native-session-adapter";
 import {
@@ -290,6 +291,26 @@ program
   .action(async (pathArg: string | undefined) => {
     const opts = program.optsWithGlobals() as CliOptions;
     const result = await verifyCmd(pathArg ? [pathArg] : [], opts);
+    formatOutput(result, opts);
+  });
+
+// ── topology ─────────────────────────────────────────────────────────
+program
+  .command("topology")
+  .description("Whole-system topology compiler + layered verification (AM-0019 §8)")
+  .argument("[args...]", "Subcommand and its arguments")
+  .allowUnknownOption(true)
+  .addHelpText(
+    "after",
+    `
+Subcommands:
+  compile [path]                 Parse + validate system-topology.yaml, print topology hash
+  verify [path] [--evidence e]   Run layered verification; required gates never PASS via SKIPPED
+    `
+  )
+  .action(async (args: string[]) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const result = await topologyCmd(args, opts);
     formatOutput(result, opts);
   });
 

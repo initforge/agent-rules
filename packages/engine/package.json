@@ -76,6 +76,10 @@
     "./worktree-train": {
       "types": "./dist/worktree-train.d.ts",
       "import": "./dist/worktree-train.js"
+    },
+    "./topology-compiler": {
+      "types": "./dist/topology-compiler.d.ts",
+      "import": "./dist/topology-compiler.js"
     }
   },
   "engines": {
