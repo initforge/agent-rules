@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { assertWorkLedger as canonicalAssertWorkLedger, assertCertificationAttestation as canonicalAssertCertificationAttestation, CERTIFICATION_REQUIRED_HOSTS } from './contracts.js';
+import { candidateEpochHash, type CandidateEpoch } from './candidate-epoch.js';
 
 export interface GateResult {
   name: string;
@@ -481,6 +482,8 @@ export interface M11Evidence {
   parity: 'COMPLETE' | 'SKIPPED';
   topology: 'COMPLETE' | 'SKIPPED';
   reviews: M11Review[];
+  /** Content hash of the candidate epoch this evidence envelope binds. */
+  candidate_epoch_hash?: string;
 }
 
 export interface M11Checks {
@@ -517,6 +520,7 @@ export function evaluateM11Terminal(
   evidence: M11Evidence,
   checks: M11Checks,
   now = Date.now(),
+  epoch?: CandidateEpoch,
 ): TerminalGateResult {
   const l = ledger as Record<string, any>;
   const gates: GateResult[] = [];
@@ -604,6 +608,33 @@ export function evaluateM11Terminal(
   else if (staleMarker) fail('M11_EXECUTION_STATE_OK', 'ledger terminalMarker is M10 HISTORICAL_STALE_FOR_M11 — cannot authorize M11');
   else pass('M11_EXECUTION_STATE_OK', `execution_state ${state || '(none)'} eligible`);
 
+  // 13. Candidate epoch binding (AM-0020 §3, M11-R32): terminal evidence must
+  //     bind an immutable candidate epoch. Fail-closed — no epoch, incomplete
+  //     epoch, stale epoch, or epoch/HEAD mismatch blocks terminal.
+  const boundEpoch = epoch ?? (l.candidate_epoch as CandidateEpoch | undefined);
+  if (!boundEpoch || typeof boundEpoch !== 'object') {
+    fail('M11_CANDIDATE_EPOCH_BOUND', 'no candidate epoch bound — terminal evidence requires an immutable candidate epoch');
+  } else {
+    const required: Array<keyof CandidateEpoch> = [
+      'schema', 'source_tree_sha', 'candidate_commit_or_tree', 'artifact_digest',
+      'container_image_digests', 'dependency_lock_hash', 'migration_set_hash',
+      'environment_hash', 'fixture_hash', 'topology_hash', 'created_at',
+    ];
+    const missing = required.filter((k) => boundEpoch[k] === undefined || boundEpoch[k] === null || boundEpoch[k] === '');
+    if (missing.length > 0) {
+      fail('M11_CANDIDATE_EPOCH_BOUND', `candidate epoch incomplete: ${missing.join(', ')}`);
+    } else {
+      const createdAt = Date.parse(boundEpoch.created_at);
+      const fresh = Number.isFinite(createdAt) && createdAt <= now && now - createdAt <= FRESH_EVIDENCE_MAX_AGE_MS;
+      const bindsHead = boundEpoch.candidate_commit_or_tree === evidence.headCommit;
+      const bindsEpoch = evidence.candidate_epoch_hash === candidateEpochHash(boundEpoch);
+      if (!fresh) fail('M11_CANDIDATE_EPOCH_BOUND', `candidate epoch stale or future-dated (${boundEpoch.created_at})`);
+      else if (!bindsHead) fail('M11_CANDIDATE_EPOCH_BOUND', `candidate epoch candidate_commit_or_tree ${boundEpoch.candidate_commit_or_tree.slice(0, 12)} != evidence HEAD ${evidence.headCommit.slice(0, 12)}`);
+      else if (!bindsEpoch) fail('M11_CANDIDATE_EPOCH_BOUND', 'evidence does not bind this candidate epoch (candidate_epoch_hash mismatch)');
+      else pass('M11_CANDIDATE_EPOCH_BOUND', `candidate epoch ${candidateEpochHash(boundEpoch).slice(0, 12)} binds exact HEAD`);
+    }
+  }
+
   return { passed: failedGates.length === 0, gates, failedGates, timestamp: new Date().toISOString() };
 }
 
@@ -620,6 +651,8 @@ export interface M11FinalizeOptions {
   checks: M11Checks;
   /** Shadow projection dir (.agent/plans/<plan-id>/shadow). Defaults from the ledger plan_id. */
   shadowDir?: string;
+  /** Immutable candidate epoch (M11-R32). Defaults to the ledger's bound epoch. */
+  epoch?: CandidateEpoch;
   now?: number;
 }
 
@@ -647,8 +680,9 @@ export function finalizeM11(options: M11FinalizeOptions): M11FinalizeResult {
     return { passed: false, reason: 'ledger is not a JSON object' };
   }
   const ledger = raw as Record<string, any>;
+  const epoch = options.epoch ?? (ledger.candidate_epoch as CandidateEpoch | undefined);
 
-  const gate = evaluateM11Terminal(ledger, options.evidence, options.checks, options.now);
+  const gate = evaluateM11Terminal(ledger, options.evidence, options.checks, options.now, epoch);
   if (!gate.passed) {
     return { passed: false, reason: `M11 terminal gate false: ${gate.failedGates.join(', ')}`, failedGates: gate.failedGates };
   }
@@ -661,7 +695,7 @@ export function finalizeM11(options: M11FinalizeOptions): M11FinalizeResult {
     {
       event_id: `E-M11-${auditEvents.length + 1}`,
       type: 'M11_TERMINAL_FINALIZE',
-      summary: `M11 terminal emitted ${M11_TERMINAL_TOKEN}: all ${gate.gates.length} gates pass; headCommit ${options.evidence.headCommit.slice(0, 12)}; effective identity ${options.evidence.effectivePlanIdentity.slice(0, 12)}`,
+      summary: `M11 terminal emitted ${M11_TERMINAL_TOKEN}: all ${gate.gates.length} gates pass; headCommit ${options.evidence.headCommit.slice(0, 12)}; effective identity ${options.evidence.effectivePlanIdentity.slice(0, 12)}; candidate epoch ${epoch ? candidateEpochHash(epoch).slice(0, 12) : 'none'}`,
       actor: 'engine',
       at,
     },
@@ -670,6 +704,8 @@ export function finalizeM11(options: M11FinalizeOptions): M11FinalizeResult {
   if (typeof ledger.status === 'string' && ledger.status !== M11_TERMINAL_TOKEN) {
     ledger.status = M11_TERMINAL_TOKEN;
   }
+  // Persist the immutable candidate epoch so terminal state binds the candidate.
+  ledger.candidate_epoch = epoch;
 
   // Regenerate shadow projection hashes at the new revision (fail-closed: keep
   // the prior hash only when the shadow file is unreadable, never guess).
