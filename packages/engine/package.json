@@ -13,6 +13,10 @@
       "types": "./dist/parity-contracts.d.ts",
       "import": "./dist/parity-contracts.js"
     },
+    "./parity-runner": {
+      "types": "./dist/parity-runner.d.ts",
+      "import": "./dist/parity-runner.js"
+    },
     "./plan-lifecycle": {
       "types": "./dist/plan-lifecycle.d.ts",
       "import": "./dist/plan-lifecycle.js"

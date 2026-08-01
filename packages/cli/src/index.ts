@@ -15,6 +15,7 @@ import { dashboard } from "./commands/dashboard.js";
 import { contextGraphCmd } from "./commands/context-graph.js";
 import { planCmd } from "./commands/plan.js";
 import { verifyCmd } from "./commands/verify.js";
+import { parityCmd } from "./commands/parity.js";
 import { runtimeCmd } from "./commands/runtime.js";
 import { modelsCmd } from "./commands/models.js";
 import { skillsCmd } from "./commands/skills.js";
@@ -239,6 +240,26 @@ program
   .action(async (pathArg: string | undefined) => {
     const opts = program.optsWithGlobals() as CliOptions;
     const result = await verifyCmd(pathArg ? [pathArg] : [], opts);
+    formatOutput(result, opts);
+  });
+
+// ── parity ──────────────────────────────────────────────────────────────────
+program
+  .command("parity")
+  .description("Paired reference/target browser parity (AM-0019 §9)")
+  .argument("[args...]", "run <manifest>")
+  .option("--reference-url <url>", "Override reference URL for all pairs")
+  .option("--target-url <url>", "Override target ingress URL for all pairs")
+  .option("--candidate-hash <hash>", "Override candidate hash binding")
+  .option("--headless", "Run headless chromium (default)")
+  .action(async (args: string[], cmdOpts: { referenceUrl?: string; targetUrl?: string; candidateHash?: string; headless?: boolean }) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const extraArgs = [...args];
+    if (cmdOpts.referenceUrl) extraArgs.push("--reference-url", cmdOpts.referenceUrl);
+    if (cmdOpts.targetUrl) extraArgs.push("--target-url", cmdOpts.targetUrl);
+    if (cmdOpts.candidateHash) extraArgs.push("--candidate-hash", cmdOpts.candidateHash);
+    if (cmdOpts.headless) extraArgs.push("--headless");
+    const result = await parityCmd(extraArgs, opts);
     formatOutput(result, opts);
   });
 
