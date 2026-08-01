@@ -207,13 +207,13 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
   },
   'M11-R28': {
     cluster: 'C9',
-    status: 'PARTIAL',
-    partialReason: 'evidence provenance + freshness DAG lands with the M11-R28 worktree — WAITING_EXTERNAL',
-    modules: ['packages/engine/src/evidence-packet.ts'],
-    tests: ['packages/engine/test/evidence-packet.test.ts'],
+    status: 'MATCH',
+    modules: ['packages/engine/src/evidence-dag.ts', 'packages/engine/src/evidence-packet.ts'],
+    tests: ['packages/engine/test/evidence-dag.test.ts', 'packages/engine/test/evidence-packet.test.ts', 'evals/m11/evidence-aggregation.test.ts'],
     acceptanceCriteria: [
       'evidence envelope records claim_ids/candidate_epoch/producer/command/exit_code/hashes/freshness',
       'evidence promotion path PRESENT→PARSEABLE→SEMANTICALLY_VALID→BINDS_FINAL_CANDIDATE→CAPABILITY_VALID→INDEPENDENTLY_REPRODUCED→TERMINAL_ELIGIBLE',
+      'freshness DAG invalidation stales only dependents; claim maturity derives from the DAG via promotion',
     ],
   },
   'M11-R29': {
