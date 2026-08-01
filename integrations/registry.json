@@ -169,6 +169,48 @@
       "nativeHosts": [],
       "fallback": "use canonical skills and normal task reasoning",
       "deprecatedAliases": []
+    },
+    {
+      "id": "context7",
+      "displayName": "Context7",
+      "kind": "mcp",
+      "policy": "recommended",
+      "profiles": ["research"],
+      "source": {
+        "type": "npm",
+        "url": "https://github.com/upstash/context7-mcp",
+        "package": "@upstash/context7-mcp",
+        "version": "latest",
+        "versionPolicy": "latest",
+        "commandName": "context7",
+        "mcpServerKey": "context7"
+      },
+      "integrity": {
+        "pinned": false
+      },
+      "trust": "adapter-verified",
+      "capabilities": ["research-context"],
+      "triggers": ["research", "context7", "library-docs"],
+      "sideEffects": "read-only",
+      "tokenClass": "low",
+      "permissions": ["read-only"],
+      "environment": [],
+      "install": {
+        "type": "npm-npx",
+        "script": "integrations/recommended/context7/install.ps1",
+        "verify": "integrations/recommended/context7/verify.ps1",
+        "uninstall": "integrations/recommended/context7/uninstall.ps1"
+      },
+      "health": {
+        "command": "npx -y @upstash/context7-mcp --help",
+        "expectedExitCodes": [0]
+      },
+      "schema": {
+        "source": "integrations/recommended/context7/"
+      },
+      "nativeHosts": ["codex", "grok", "antigravity", "cursor", "opencode"],
+      "fallback": "upstream docs retrieval via curl or manual lookup",
+      "deprecatedAliases": []
     }
   ],
   "profiles": {
