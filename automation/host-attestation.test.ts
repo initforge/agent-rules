@@ -21,6 +21,7 @@ import {
   parseEvidenceModelValueForRole,
   parseWindowsAclReceipt,
   resolveNativeExecutable,
+  securePathProbe,
   type ProbeRunner,
   type CollectedModelEvidence,
   type ModelEvidenceProvenance,
@@ -902,6 +903,84 @@ describe('createExecutableSnapshot', () => {
     const tmpDir = await import('node:fs/promises').then(m => m.mkdtemp(path.join(os.tmpdir(), 'attest-dir-test-')));
     await expect(createExecutableSnapshot(tmpDir)).rejects.toThrow(/not a regular file|directory/);
     await import('node:fs/promises').then(m => m.rm(tmpDir, { recursive: true, force: true }));
+  });
+});
+
+// C7: secure path probe for npm bundle discovery validation
+describe('securePathProbe', () => {
+  it('accepts codex npm bundle path under .codex-cli-npm', () => {
+    const result = securePathProbe('/home/user/.codex-cli-npm/lib/node_modules/@openai/codex/node_modules/@openai/codex-linux-x64/vendor/x86_64-unknown-linux-musl/bin/codex');
+    expect(result.safe).toBe(true);
+    expect(result.reason).toBeUndefined();
+  });
+
+  it('accepts opencode path under .opencode/bin', () => {
+    const result = securePathProbe('/home/user/.opencode/bin/opencode');
+    expect(result.safe).toBe(true);
+  });
+
+  it('accepts claude path under .local/bin', () => {
+    const result = securePathProbe('/home/user/.local/bin/claude');
+    expect(result.safe).toBe(true);
+  });
+
+  it('accepts grok path under .grok/downloads', () => {
+    const result = securePathProbe('/home/user/.grok/downloads/grok-v1.0.0');
+    expect(result.safe).toBe(true);
+  });
+
+  it('accepts antigravity path under .local/bin', () => {
+    const result = securePathProbe('/home/user/.local/bin/agy');
+    expect(result.safe).toBe(true);
+  });
+
+  it('rejects relative path', () => {
+    const result = securePathProbe('./local/bin/codex');
+    expect(result.safe).toBe(false);
+    expect(result.reason).toBe('non-absolute path');
+  });
+
+  it('rejects path with parent traversal', () => {
+    const result = securePathProbe('/home/user/../etc/malicious');
+    expect(result.safe).toBe(false);
+    expect(result.reason).toContain('..');
+  });
+
+  it('rejects path not under allowed roots', () => {
+    const result = securePathProbe('/tmp/evil/codex');
+    expect(result.safe).toBe(false);
+    expect(result.reason).toContain('not under allowed roots');
+  });
+
+  it('rejects /usr/bin path not in allowed roots', () => {
+    const result = securePathProbe('/usr/bin/codex');
+    expect(result.safe).toBe(false);
+  });
+
+  it('accepts path with custom allowed roots', () => {
+    const result = securePathProbe('/opt/custom/codex', { allowedRoots: ['opt/custom'] });
+    expect(result.safe).toBe(true);
+  });
+
+  it('handles Windows-style paths on non-Windows', () => {
+    const result = securePathProbe('C:\\Users\\user\\.codex-cli-npm\\bin\\codex.exe');
+    expect(result.safe).toBe(false); // forward slashes not split correctly on unix
+  });
+
+  it('verifies codex bundledCodexCandidates discovery result', async () => {
+    const fs = await import('node:fs/promises');
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'attest-secure-probe-'));
+    const cli = path.join(homeDir, '.codex-cli-npm', 'lib', 'node_modules', '@openai', 'codex', 'node_modules', '@openai', 'codex-linux-x64', 'vendor', 'x86_64-unknown-linux-musl', 'bin', 'codex');
+    await fs.mkdir(path.dirname(cli), { recursive: true });
+    await fs.writeFile(cli, '#!/bin/sh\necho codex');
+    await fs.chmod(cli, 0o755);
+
+    // Resolve using bundledCodexCandidates path
+    const resolved = await resolveNativeExecutable('codex', { homeDir, platform: 'linux', env: { PATH: '' } });
+    const probe = securePathProbe(resolved);
+    expect(probe.safe).toBe(true);
+
+    await fs.rm(homeDir, { recursive: true, force: true });
   });
 });
 
