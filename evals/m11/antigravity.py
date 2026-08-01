@@ -18,6 +18,7 @@ from runner import emit, run_vitest, vitest_passed  # noqa: E402
 
 ANTIGRAVITY = Path(__file__).resolve().parents[2] / "platforms" / "antigravity"
 HOST_POLICY = "packages/engine/test/workflow-validation.test.ts"
+GUARD_TEST = "platforms/antigravity/lease-guard.test.ts"
 
 # Enforcement markers that would satisfy the case if present in the adapter layer.
 LEASES_MARKERS = ["lease", "ownedPath", "owned", "worktree", "OUT_OF_SCOPE", "diff-boundary", "boundary"]
@@ -61,27 +62,43 @@ def main() -> int:
     adapter_text = adapter_file.read_text(encoding="utf-8") if adapter_file.is_file() else ""
     has_enforcement = ("lease" in adapter_text) or ("owned" in adapter_text) or ("boundary" in adapter_text)
 
-    if has_enforcement:
+    # Proof, not just markers: the lease-guard test must actually pass.
+    guard = run_vitest(GUARD_TEST)
+    ok_guard, why_guard = vitest_passed(guard)
+    print(f"  lease-guard vitest ({GUARD_TEST}): {'PASS' if ok_guard else 'FAIL'}")
+    if not ok_guard:
+        print(f"    {why_guard}")
+
+    if has_enforcement and ok_guard:
         status = "PASS"
         missing_caps: list[str] = []
     else:
         status = "WAITING_EXTERNAL"
-        missing_caps = [
-            "platforms/antigravity/adapter.ts implements detect/render/stage/activate/probe/update/uninstall/rollback "
-            "but NO out-of-ownership mutation rejection (no worktree/path-lease check, no diff-boundary validator, "
-            "no canonical-.agent guard); engine-level C2 path-conflict rejection exists but is not antigravity-specific",
+        missing_caps = []
+        if not has_enforcement:
+            missing_caps.append(
+                "platforms/antigravity/adapter.ts implements detect/render/stage/activate/probe/update/uninstall/rollback "
+                "but NO out-of-ownership mutation rejection (no worktree/path-lease check, no diff-boundary validator, "
+                "no canonical-.agent guard); engine-level C2 path-conflict rejection exists but is not antigravity-specific"
+            )
+        if not ok_guard:
+            missing_caps.append(
+                f"lease-guard test ({GUARD_TEST}) does not pass: {why_guard}"
+            )
+        missing_caps.append(
             "satisfy by: implement the constrained adapter contract (strict worktree/path lease + out-of-ownership "
-            "mutation rejection + a test proving a mutation outside the lease is rejected), then re-run this eval",
-        ]
+            "mutation rejection + a test proving a mutation outside the lease is rejected), then re-run this eval"
+        )
     print(f"  adapter-level out-of-ownership rejection: {'FOUND' if has_enforcement else 'NOT FOUND'}")
     print(f"  status: {status}")
 
     emit("M11-C10-C10", status, "antigravity-out-of-ownership-rejected", {
         "adapter_out_of_ownership_enforcement": has_enforcement,
+        "lease_guard_test_passed": ok_guard,
         "marker_hits": markers,
         "engine_host_policy_matrix": "PASS" if ok_policy else "FAIL",
         "missing_capability": missing_caps,
-        "evidence": [str(ANTIGRAVITY), HOST_POLICY],
+        "evidence": [str(ANTIGRAVITY), HOST_POLICY, GUARD_TEST],
     })
     return 0 if status == "PASS" else 2
 
