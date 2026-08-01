@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "__PYTHON__ \"__CLAUDE_HOME__/scripts/context-hook.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
