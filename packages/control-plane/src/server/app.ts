@@ -40,6 +40,14 @@ function rateLimit(req: Request, res: Response, next: NextFunction): void {
 
 app.set('x-powered-by', false);
 app.set('trust proxy', false); // loopback-only trust; avoid spoofing via X-Forwarded-For
+
+function securityHeaders(req: Request, res: Response, next: NextFunction): void {
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' ws: http:; frame-src 'none'; object-src 'none'")
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  next()
+}
+
+app.use(securityHeaders);
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
   methods: ['GET', 'POST'],

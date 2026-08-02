@@ -92,6 +92,29 @@ describe('security: rate limiting', () => {
   })
 })
 
+describe('security: CSP and nosniff', () => {
+  it('sets Content-Security-Policy header', async () => {
+    const res = await request(app).get('/api/health')
+    expect(res.headers['content-security-policy']).toBeDefined()
+    expect(res.headers['content-security-policy']).toContain("default-src 'self'")
+  })
+
+  it('sets X-Content-Type-Options to nosniff', async () => {
+    const res = await request(app).get('/api/health')
+    expect(res.headers['x-content-type-options']).toBe('nosniff')
+  })
+
+  it('CSP blocks frame embedding', async () => {
+    const res = await request(app).get('/api/health')
+    expect(res.headers['content-security-policy']).toContain("frame-src 'none'")
+  })
+
+  it('CSP restricts object embedding', async () => {
+    const res = await request(app).get('/api/health')
+    expect(res.headers['content-security-policy']).toContain("object-src 'none'")
+  })
+})
+
 describe('security: api key auth', () => {
   const { CONTROL_PLANE_API_KEY } = process.env
 
