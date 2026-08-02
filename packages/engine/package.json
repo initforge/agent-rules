@@ -77,6 +77,10 @@
       "types": "./dist/autopilot-m11.d.ts",
       "import": "./dist/autopilot-m11.js"
     },
+    "./m11-integration": {
+      "types": "./dist/m11-integration.d.ts",
+      "import": "./dist/m11-integration.js"
+    },
     "./candidate-epoch": {
       "types": "./dist/candidate-epoch.d.ts",
       "import": "./dist/candidate-epoch.js"
@@ -108,6 +112,18 @@
     "./operating-model-compiler": {
       "types": "./dist/operating-model-compiler.d.ts",
       "import": "./dist/operating-model-compiler.js"
+    },
+    "./event-delta": {
+      "types": "./dist/event-delta.d.ts",
+      "import": "./dist/event-delta.js"
+    },
+    "./artifact-pointer": {
+      "types": "./dist/artifact-pointer.d.ts",
+      "import": "./dist/artifact-pointer.js"
+    },
+    "./tool-output-broker": {
+      "types": "./dist/tool-output-broker.d.ts",
+      "import": "./dist/tool-output-broker.js"
     }
   },
   "engines": {

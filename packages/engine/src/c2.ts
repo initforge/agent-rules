@@ -84,3 +84,44 @@ export {
   WorktreeTrainError,
   dependencyRankFromGraph,
 } from './worktree-train.js';
+
+export {
+  createEventDelta,
+  verifyEventDeltaIntegrity,
+  eventDeltaReceipt,
+  reduceEventDeltas,
+  idempotentInsert,
+  type EventDelta,
+  type EventDeltaInput,
+  type EventDeltaReceipt,
+  type EventDeltaBatch,
+  type EventType,
+  type Severity,
+} from './event-delta.js';
+
+export {
+  createArtifactPointer,
+  writeArtifact,
+  readArtifact,
+  queryArtifacts,
+  boundedExcerpt,
+  redactArtifact,
+  type ArtifactPointer,
+  type ArtifactQuery,
+  type DrilldownReceipt,
+  type ArtifactChunk,
+  type ArtifactQueryResult,
+  type TrustClass,
+  type RedactionState,
+} from './artifact-pointer.js';
+
+export {
+  brokerToolOutput,
+  brokerExitCode,
+  brokerAnomalySummary,
+  brokerSummary,
+  type ToolOutputReceipt,
+  type ToolOutputResult,
+  type ToolOutputOptions,
+  type ToolKind,
+} from './tool-output-broker.js';
