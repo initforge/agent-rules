@@ -104,6 +104,10 @@
     "./review-receipt": {
       "types": "./dist/review-receipt.d.ts",
       "import": "./dist/review-receipt.js"
+    },
+    "./operating-model-compiler": {
+      "types": "./dist/operating-model-compiler.d.ts",
+      "import": "./dist/operating-model-compiler.js"
     }
   },
   "engines": {
