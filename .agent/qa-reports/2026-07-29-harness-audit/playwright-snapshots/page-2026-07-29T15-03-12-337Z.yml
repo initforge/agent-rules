@@ -1,0 +1,49 @@
+- generic [ref=e3]:
+  - navigation "Main navigation" [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]: ⊡
+        - generic [ref=e8]: Control Plane
+      - generic [ref=e9]: "?"
+    - generic [ref=e12]:
+      - link "⊞ Overview" [ref=e13] [cursor=pointer]:
+        - /url: /overview
+        - generic [ref=e14]: ⊞
+        - generic [ref=e15]: Overview
+      - link "⊟ Plan Workspace" [ref=e16] [cursor=pointer]:
+        - /url: /plan
+        - generic [ref=e17]: ⊟
+        - generic [ref=e18]: Plan Workspace
+      - link "⊡ Runs" [ref=e19] [cursor=pointer]:
+        - /url: /runs
+        - generic [ref=e20]: ⊡
+        - generic [ref=e21]: Runs
+      - link "⊠ Evaluations" [ref=e22] [cursor=pointer]:
+        - /url: /evaluations
+        - generic [ref=e23]: ⊠
+        - generic [ref=e24]: Evaluations
+      - link "⊡ Architecture" [ref=e25] [cursor=pointer]:
+        - /url: /architecture/dag
+        - generic [ref=e26]: ⊡
+        - generic [ref=e27]: Architecture
+      - link "⊞ Configuration" [ref=e28] [cursor=pointer]:
+        - /url: /configuration/general
+        - generic [ref=e29]: ⊞
+        - generic [ref=e30]: Configuration
+      - link "⊡ Profiles" [ref=e31] [cursor=pointer]:
+        - /url: /profiles
+        - generic [ref=e32]: ⊡
+        - generic [ref=e33]: Profiles
+      - link "⊡ Audit Log" [ref=e34] [cursor=pointer]:
+        - /url: /audit
+        - generic [ref=e35]: ⊡
+        - generic [ref=e36]: Audit Log
+    - generic [ref=e37]:
+      - generic [ref=e38]: v0.1.0
+      - generic "Switch to dark mode" [ref=e39] [cursor=pointer]: 🌙
+  - main [ref=e40]:
+    - generic [ref=e41]:
+      - generic [ref=e42]:
+        - heading "Repository Overview" [level=1] [ref=e43]
+        - paragraph [ref=e44]: System health, CI status, and configuration drift
+      - generic [ref=e45]: Loading...

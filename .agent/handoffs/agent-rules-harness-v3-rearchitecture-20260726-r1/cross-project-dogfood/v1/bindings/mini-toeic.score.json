@@ -1,0 +1,26 @@
+{
+  "schema": "agent-rules/dogfood-project-binding",
+  "version": 1,
+  "project_id": "mini-toeic.score",
+  "project_root": "/home/linhnx/Projects/mini-toeic.score",
+  "captured_at": "2026-08-01T15:24:46Z",
+  "git": {
+    "branch": "master",
+    "head": "620c111686534899fb980dfb481c9927cb2596bd",
+    "tree": "519bcf7401ec3a3d5ceb7c7a15e81891a38aebf1",
+    "tracked_diff_sha256": "04763f74d33190746815d03318fd0ca202e251d3f501b4e77073ef88bffb9bcb",
+    "index_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "untracked_manifest_sha256": "cef2706d3d1b6867b01606254f8997acde76d6f0f1f776574570f37a1c14c5a8",
+    "modified_tracked_count": 113,
+    "untracked_count": 112
+  },
+  "original_plan": {
+    "path": ".agent/plans/anish-thi-thu-xoamutoeic-20260730/plan.md",
+    "sha256": "f4a2e7be17596fddb41ee19455fec86a770d37c2290baee20f136a89620e18c6"
+  },
+  "legacy_ledger": {
+    "path": ".agent/work/anish-thi-thu-xoamutoeic-20260730/ledger.json",
+    "sha256": "8251d3537db1fd86be81615b49a8d56379f01ebbed815426474068ac4a01bc47",
+    "adoption_status": "LEGACY_CANDIDATE_REQUIRES_REVALIDATION"
+  }
+}

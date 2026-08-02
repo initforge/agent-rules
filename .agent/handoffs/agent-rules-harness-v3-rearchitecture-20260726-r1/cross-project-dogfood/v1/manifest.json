@@ -1,0 +1,40 @@
+{
+  "schema": "agent-rules/cross-project-dogfood-bundle",
+  "version": 1,
+  "bundle_id": "hv3-am0019-am0021-preview-v1",
+  "bundle_sha256": "d688a0c2622073ade764e63821fdabfd0e8bd110d705419aabae82f6681cdc0c",
+  "created_at": "2026-08-01T15:24:46Z",
+  "enforcement": [
+    "PROMPT_ENFORCED_PREVIEW",
+    "PARTIALLY_ENGINE_ENFORCED"
+  ],
+  "stable_runtime_receipt_sha256": "4220bbd26cbf9c4fd6f59d19eb89f92244a9f159b957390cc139c339ef2607df",
+  "source_amendments": {
+    "AM-0019": "074eda76c69d91b91bf25ab74888dc7ada13376cbfd29d0e67e4a8c6f8662a21",
+    "AM-0020": "f99e603c2e9c60194518938f78de4ab90645eb02d893f2ef811b436c444ee0cc",
+    "AM-0021": "0dfb45500fe8a7d80f177e57ef8a6c231b44e28f8e4f973b31f85bf7d527cf1c"
+  },
+  "files": [
+    {
+      "path": "adoption-protocol.md",
+      "sha256": "b9895232c886526b552f59a7890b39807a2068b1b1395338e311c52625e1246a"
+    },
+    {
+      "path": "bindings/pos-ops.json",
+      "sha256": "cf83c5d5de5165e6e5a275ac9c457f3cd5898e4cfea124d0cd9adb28969d2b05"
+    },
+    {
+      "path": "bindings/mini-toeic.score.json",
+      "sha256": "37b0304665a60a2a15468511eb65af74ff1dc09dede953a7de69e2495b0b5384"
+    },
+    {
+      "path": "../external-project-latest-concepts-dogfood-live-steer-prompt.md",
+      "sha256": "70690a728dfad572224ae7f22138e1cce6d7ef64adc6fcf22e55efeec6a565b6"
+    }
+  ],
+  "bundle_hash_algorithm": "SHA-256 of LF-joined '<file_sha256> <path>' records in listed order with a terminal LF",
+  "allowed_projects": [
+    "pos-ops",
+    "mini-toeic.score"
+  ]
+}

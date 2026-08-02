@@ -1,0 +1,26 @@
+{
+  "schema": "agent-rules/dogfood-project-binding",
+  "version": 1,
+  "project_id": "pos-ops",
+  "project_root": "/home/linhnx/Projects/pos-ops",
+  "captured_at": "2026-08-01T15:24:46Z",
+  "git": {
+    "branch": "release/pos-ops-full-implementation-20260730",
+    "head": "1338533661ecd260abaf09aeac3817b468dc3075",
+    "tree": "80809abe17491d15aa47b321563261bcf833fdb8",
+    "tracked_diff_sha256": "76067cd837548b373f3894c7d65ecc87d7b30cde7534ec3fd1e27d7c17f4409b",
+    "index_diff_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "untracked_manifest_sha256": "ed5025b354a38436ebda8486c8f95e002d6b1dec573abcb9541be5ee50d542a2",
+    "modified_tracked_count": 123,
+    "untracked_count": 36
+  },
+  "original_plan": {
+    "path": ".agent/plans/pos-ops-full-implementation-20260730/plan.md",
+    "sha256": "0b6cefccafc4fb3a9e3fe07cde97a3335ab6d9c083f979692268e1251cc477c6"
+  },
+  "legacy_ledger": {
+    "path": ".agent/work/pos-ops-full-implementation-20260730/ledger.json",
+    "sha256": "5ba35d3dd7b3b5f8de9f950c1b1095863942d0a0a019ed610b67a6eb39091573",
+    "adoption_status": "LEGACY_CANDIDATE_REQUIRES_REVALIDATION"
+  }
+}

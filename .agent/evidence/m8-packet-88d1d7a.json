@@ -1,0 +1,195 @@
+{
+  "schema": "worker-secondary/m8-evidence-packet/v1",
+  "status": "WAITING_EXTERNAL",
+  "headCommit": "88d1d7af0d1919a04af8f2bf748cb5cf71eec4ee",
+  "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+  "r53": 53,
+  "identityEpoch": {
+    "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+    "shadowRevision": 53,
+    "verified": true
+  },
+  "evidenceEpoch": {
+    "headCommit": "88d1d7af0d1919a04af8f2bf748cb5cf71eec4ee",
+    "collectedAt": 1785504866348
+  },
+  "modelRoute": {
+    "reviewer": {
+      "requested": "gpt-5.6-sol",
+      "resolved": null,
+      "observed": null
+    },
+    "primary": {
+      "requested": "qwencoder/qwen3.7-max",
+      "resolved": null,
+      "observed": null
+    },
+    "secondary": {
+      "requested": "qwencoder/glm-5.2",
+      "resolved": null,
+      "observed": null
+    }
+  },
+  "requestedModel": "qwencoder/glm-5.2",
+  "resolvedModel": null,
+  "observedModel": null,
+  "identityVerified": true,
+  "nativeAttestation": "UNVERIFIED: no native attestation supplied",
+  "canonicalPlanFixture": {
+    "path": "packages/engine/test/fixtures/plan-identity/original.md",
+    "sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
+    "verified": true
+  },
+  "dimensions": [
+    {
+      "id": "d01",
+      "score": null,
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "d02",
+      "score": null,
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "d03",
+      "score": null,
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "d04",
+      "score": null,
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "d05",
+      "score": null,
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "d06",
+      "score": null,
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "d07",
+      "score": null,
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "d08",
+      "score": null,
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "d09",
+      "score": null,
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "d10",
+      "score": null,
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "d11",
+      "score": null,
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "d12",
+      "score": null,
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "d13",
+      "score": null,
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "d14",
+      "score": null,
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "d15",
+      "score": null,
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "d16",
+      "score": null,
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "d17",
+      "score": null,
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "d18",
+      "score": null,
+      "status": "UNVERIFIED"
+    }
+  ],
+  "receipts": {
+    "test": {
+      "command": [
+        "npm",
+        "run",
+        "test",
+        "--workspace",
+        "packages/engine",
+        "--",
+        "--run",
+        "test/evidence-packet.test.ts"
+      ],
+      "status": "PASS",
+      "exit_code": 0,
+      "output": "\n RUN  v3.2.7 /home/linhnx/Projects/agent-rules/packages/engine\n\n \u2713 test/evidence-packet.test.ts (6 tests) 21ms\n\n Test Files  1 passed (1)\n      Tests  6 passed (6)\n   Start at  20:34:09\n   Duration  910ms (transform 103ms, setup 0ms, collect 91ms, tests 21ms, environment 0ms, prepare 258ms)\n\nnpm notice run @initforge/agent-rules-engine@0.1.0 test\nnpm notice run vitest run --run test/evidence-packet.test.ts\n"
+    },
+    "browser": {
+      "command": [
+        "npm",
+        "run",
+        "test",
+        "--workspace",
+        "packages/control-plane",
+        "--",
+        "--run",
+        "tests/c4.test.ts"
+      ],
+      "status": "PASS",
+      "exit_code": 0,
+      "output": "\n RUN  v3.2.7 /home/linhnx/Projects/agent-rules/packages/control-plane\n\n \u2713 tests/c4.test.ts (30 tests) 1713ms\n   \u2713 C4 API > context endpoint returns expected shape  654ms\n\n Test Files  1 passed (1)\n      Tests  30 passed (30)\n   Start at  20:34:11\n   Duration  2.98s (transform 551ms, setup 0ms, collect 267ms, tests 1.71s, environment 1ms, prepare 191ms)\n\nnpm notice run agent-rules-control-plane@0.1.0 test\nnpm notice run vitest run --run tests/c4.test.ts\nhint: Using 'master' as the name for the initial branch. This default branch name\nhint: will change to \"main\" in Git 3.0. To configure the initial branch name\nhint: to use in all of your new repositories, which will suppress this warning,\nhint: call:\nhint:\nhint: \tgit config --global init.defaultBranch <name>\nhint:\nhint: Names commonly chosen instead of 'master' are 'main', 'trunk' and\nhint: 'development'. The just-created branch can be renamed via this command:\nhint:\nhint: \tgit branch -m <name>\nhint:\nhint: Disable this message with \"git config set advice.defaultBranchName false\"\nhint: Using 'master' as the name for the initial branch. This default branch name\nhint: will change to \"main\" in Git 3.0. To configure the initial branch name\nhint: to use in all of your new repositories, which will suppress this warning,\nhint: call:\nhint:\nhint: \tgit config --global init.defaultBranch <name>\nhint:\nhint: Names commonly chosen instead of 'master' are 'main', 'trunk' and\nhint: 'development'. The just-created branch can be renamed via this command:\nhint:\nhint: \tgit branch -m <name>\nhint:\nhint: Disable this message with \"git config set advice.defaultBranchName false\"\nhint: Using 'master' as the name for the initial branch. This default branch name\nhint: will change to \"main\" in Git 3.0. To configure the initial branch name\nhint: to use in all of your new repositories, which will suppress this warning,\nhint: call:\nhint:\nhint: \tgit config --global init.defaultBranch <name>\nhint:\nhint: Names commonly chosen instead of 'master' are 'main', 'trunk' and\nhint: 'development'. The just-created branch can be renamed via this command:\nhint:\nhint: \tgit branch -m <name>\nhint:\nhint: Disable this message with \"git config set advice.defaultBranchName false\"\nhint: Using 'master' as the name for the initial branch. This default branch name\nhint: will change to \"main\" in Git 3.0. To configure the initial branch name\nhint: to use in all of your new repositories, which will suppress this warning,\nhint: call:\nhint:\nhint: \tgit config --global init.defaultBranch <name>\nhint:\nhint: Names commonly chosen instead of 'master' are 'main', 'trunk' and\nhint: 'development'. The just-created branch can be renamed via this command:\nhint:\nhint: \tgit branch -m <name>\nhint:\nhint: Disable this message with \"git config set advice.defaultBranchName false\"\nhint: Using 'master' as the name for the initial branch. This default branch name\nhint: will change to \"main\" in Git 3.0. To configure the initial branch name\nhint: to use in all of your new repositories, which will suppress this warning,\nhint: call:\nhint:\nhint: \tgit config --global init.defaultBranch <name>\nhint:\nhint: Names commonly chosen instead of 'master' are 'main', 'trunk' and\nhint: 'development'. The just-created branch can be renamed via this command:\nhint:\nhint: \tgit branch -m <name>\nhint:\nhint: Disable this message with \"git config set advice.defaultBranchName false\"\n"
+    },
+    "security": {
+      "command": [
+        "npm",
+        "run",
+        "typecheck",
+        "--workspace",
+        "packages/engine"
+      ],
+      "status": "PASS",
+      "exit_code": 0,
+      "output": "npm notice run @initforge/agent-rules-engine@0.1.0 typecheck\nnpm notice run tsc --noEmit\n"
+    },
+    "install": {
+      "command": [
+        "npm",
+        "run",
+        "build",
+        "--workspace",
+        "packages/cli"
+      ],
+      "status": "PASS",
+      "exit_code": 0,
+      "output": "npm notice run @initforge/agent-rules@0.1.0 build\nnpm notice run tsc && node test/opencode-artifact-smoke.mjs\nOpenCode artifact smoke: PASS (requested/resolved=__user_mapped__, identity=ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427, files=7)\n"
+    }
+  },
+  "findings": [
+    "WAITING_EXTERNAL: provider resolution/observation, native attestation, authenticated packet receipt, and 18 scores >=8 are missing"
+  ],
+  "collectedAt": 1785504866348
+}

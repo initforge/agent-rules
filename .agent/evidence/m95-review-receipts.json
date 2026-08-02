@@ -1,0 +1,92 @@
+{
+  "schema": "worker-primary/m95-review-receipts/v1",
+  "candidate": {
+    "branch": "integration/m8-convergence",
+    "head": "8daedb7592b0c3a6f1ed4f6d61430aa748c82ee1",
+    "effective_plan_identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+    "shadow_revision": 54
+  },
+  "reviews": [
+    {
+      "review_receipt_id": "REV-P1-PARITY-V3-08-M95-001",
+      "reviewer": "independent-high-risk-review",
+      "role": "ASN08 five-file deviation boundary fresh current-boundary review",
+      "status": "MATCH",
+      "scope": "ASN-PARITY-V3-08-DEVIATION-MAPS after both disjoint R1/R2 repairs",
+      "evidence": [
+        "five owned hashes MATCH (corrected two stale Python hashes to d6e7e68f…442b and 8563ea36…0cd9)",
+        "architecture-adaptation accepted_deviations object-keyed DEV-001/002/003 with exact six-field equality",
+        "automation ENGINE-CUTOVER-COMPLETE exit 0; aggregate fingerprint 42ad94a…a589e96; lexical 9/62, structural 2/13, visual 2/26, behavior 2/31",
+        "engine 1142/1142, parity-contracts 85/85, root build/typecheck PASS"
+      ],
+      "verdict": "ACCEPT"
+    },
+    {
+      "review_receipt_id": "REV-P1-PARITY-V3-08-R1-M95-001",
+      "reviewer": "independent-high-risk-review",
+      "role": "ASN08 R1 architecture-example repair",
+      "status": "MATCH",
+      "scope": "architecture-adaptation.yaml accepted_deviations object replacement",
+      "evidence": [
+        "object keyed DEV-001, DEV-002, DEV-003 in canonical order",
+        "exact six-field payload equality with deviations.yaml for all three deviations",
+        "direct engine schema validation PASS; other sections untouched"
+      ],
+      "verdict": "ACCEPT"
+    },
+    {
+      "review_receipt_id": "REV-P1-PARITY-V3-08-R2-M95-001",
+      "reviewer": "independent-high-risk-review",
+      "role": "ASN08 R2 engine-fixture repair (successor of stale REV-P1-PARITY-V3-07-R1-001)",
+      "status": "MATCH",
+      "scope": "parity-contracts.test.ts canonical architecture fixture",
+      "evidence": [
+        "canonical accepted_deviations object {'DEV-001': deviation}",
+        "explicit legacy array rejection TYPE_MISMATCH at /architecture-adaptation.yaml/accepted_deviations",
+        "engine 1142/1142 including parity-contracts 85/85; no production/schema widening"
+      ],
+      "verdict": "ACCEPT"
+    },
+    {
+      "review_receipt_id": "REV-P1-PARITY-V3-09-M95-001",
+      "reviewer": "independent-high-risk-review",
+      "role": "ASN09 proof-maps boundary",
+      "status": "MATCH",
+      "scope": "proof.schema.yaml + proof.yaml + consumers",
+      "evidence": [
+        "approved_deviations and target_surface_and_reference_paths object-keyed",
+        "verification_evidence minItems 15 maxItems 15 with canonical 15-type enum and result const pass",
+        "exact 15-evidence set satisfied by canonical engine fixture and automation valid packet",
+        "engine 1142/1142; build/typecheck PASS"
+      ],
+      "verdict": "ACCEPT"
+    },
+    {
+      "review_receipt_id": "REV-P1-PARITY-V3-10-M95-001",
+      "reviewer": "independent-high-risk-review",
+      "role": "ASN10 doc-contract boundary",
+      "status": "MATCH",
+      "scope": "SKILL.md, index.md, workflow, no-vision contract, question strategy",
+      "evidence": [
+        "V3-only object-keyed documentation; grep for legacy-array instructions clean",
+        "no dual-validator claim; engine/Ajv sole authority, Python validator DEPRECATED",
+        "build/typecheck PASS"
+      ],
+      "verdict": "ACCEPT"
+    },
+    {
+      "review_receipt_id": "REV-P1-PARITY-V3-11-M95-001",
+      "reviewer": "independent-high-risk-review",
+      "role": "ASN11 engine-cutover boundary",
+      "status": "MATCH",
+      "scope": "parity-contracts.ts, validate.ts, python validator/automation",
+      "evidence": [
+        "engine/Ajv authoritative for V3 shape and cross-document semantics",
+        "validate-parity-packet.py DEPRECATED/historical provenance; automation runs engine dist",
+        "V2 unsupported; no second schema implementation; engine 1142/1142, parity 85/85"
+      ],
+      "verdict": "ACCEPT"
+    }
+  ],
+  "declared_at": "2026-07-31T22:45:00+07:00"
+}

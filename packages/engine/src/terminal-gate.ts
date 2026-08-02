@@ -522,8 +522,13 @@ export function evaluateM11Terminal(
   checks: M11Checks,
   now = Date.now(),
   epoch?: CandidateEpoch,
+  headCommit?: string,
 ): TerminalGateResult {
   const l = ledger as Record<string, any>;
+  // Use the actual repository HEAD (passed from CLI/engine) for evidence
+  // binding, not the ledger headCommit. This is the root-cause fix for
+  // M11 terminal gate trusting the ledger head instead of the real Git HEAD.
+  const actualHead = headCommit ?? l.headCommit ?? l.commitSha ?? '';
   const gates: GateResult[] = [];
   const failedGates: string[] = [];
   const fail = (name: string, detail: string): void => {
@@ -554,17 +559,16 @@ export function evaluateM11Terminal(
 
   // 4. Evidence binds the exact source HEAD + effective identity and is fresh.
   const identity = ledgerEffectiveIdentity(l);
-  const head = l.headCommit ?? l.commitSha ?? '';
   const observedAt = Date.parse(evidence.observedAt);
   const evidenceOk = evidence.fresh === true
     && evidence.envelopeSha256.length > 0
-    && evidence.headCommit === head
+    && evidence.headCommit === actualHead
     && evidence.headCommit.length > 0
     && typeof identity === 'string' && identity.length > 0
     && evidence.effectivePlanIdentity === identity
     && Number.isFinite(observedAt) && observedAt <= now && now - observedAt <= FRESH_EVIDENCE_MAX_AGE_MS;
-  if (evidenceOk) pass('M11_EVIDENCE_BINDS_HEAD', `evidence envelope ${evidence.envelopeSha256.slice(0, 12)} binds exact HEAD ${head.slice(0, 12)}`);
-  else fail('M11_EVIDENCE_BINDS_HEAD', `evidence stale/unbound: fresh=${evidence.fresh}, head=${evidence.headCommit.slice(0, 12)} vs ledger ${head.slice(0, 12)}`);
+  if (evidenceOk) pass('M11_EVIDENCE_BINDS_HEAD', `evidence envelope ${evidence.envelopeSha256.slice(0, 12)} binds actual HEAD ${actualHead.slice(0, 12)}`);
+  else fail('M11_EVIDENCE_BINDS_HEAD', `evidence stale/unbound: fresh=${evidence.fresh}, head=${evidence.headCommit.slice(0, 12)} vs actual HEAD ${actualHead.slice(0, 12)}`);
 
   // 5. CI binds the exact HEAD.
   if (evidence.ciSha === evidence.headCommit && evidence.headCommit.length > 0) pass('M11_CI_BINDS_HEAD', `CI SHA ${evidence.ciSha.slice(0, 12)} binds HEAD`);
@@ -572,9 +576,9 @@ export function evaluateM11Terminal(
 
   // 6. Native attestations bind the exact HEAD.
   const atts = l.attestations ?? [];
-  const attBad = atts.length === 0 || atts.some((a: any) => a.commitSha !== head);
-  if (attBad) fail('M11_ATTESTATIONS_BIND_HEAD', atts.length === 0 ? 'no native attestations' : 'attestation does not bind exact HEAD');
-  else pass('M11_ATTESTATIONS_BIND_HEAD', `${atts.length} attestation(s) bind HEAD`);
+  const attBad = atts.length === 0 || atts.some((a: any) => a.commitSha !== actualHead);
+  if (attBad) fail('M11_ATTESTATIONS_BIND_HEAD', atts.length === 0 ? 'no native attestations' : 'attestation does not bind actual HEAD');
+  else pass('M11_ATTESTATIONS_BIND_HEAD', `${atts.length} attestation(s) bind actual HEAD`);
 
   // 7. Exact certified artifact installed from certified local main.
   const artifactOk = evidence.installedArtifactSha256 === evidence.certifiedArtifactSha256
@@ -597,9 +601,9 @@ export function evaluateM11Terminal(
   if (checks.waitingGates.length === 0) pass('M11_NO_WAITING_GATES', 'no required gate waiting');
   else fail('M11_NO_WAITING_GATES', `required gate(s) waiting: ${checks.waitingGates.join(', ')}`);
 
-  // 11. Current reconciliation binds the exact HEAD.
-  if (evidence.reconciliationHeadCommit === evidence.headCommit && evidence.headCommit.length > 0) pass('M11_RECONCILIATION_BINDS_HEAD', 'current reconciliation binds exact HEAD');
-  else fail('M11_RECONCILIATION_BINDS_HEAD', `reconciliation ${evidence.reconciliationHeadCommit.slice(0, 12)} != HEAD ${evidence.headCommit.slice(0, 12)}`);
+  // 11. Current reconciliation binds the actual HEAD.
+  if (evidence.reconciliationHeadCommit === actualHead && actualHead.length > 0) pass('M11_RECONCILIATION_BINDS_HEAD', 'current reconciliation binds actual HEAD');
+  else fail('M11_RECONCILIATION_BINDS_HEAD', `reconciliation ${evidence.reconciliationHeadCommit.slice(0, 12)} != actual HEAD ${actualHead.slice(0, 12)}`);
 
   // 12. Execution state is eligible — never NEEDS_REMEDIATION, never the stale M10 marker.
   const state = l.execution_state ?? l.status ?? '';
@@ -654,6 +658,8 @@ export interface M11FinalizeOptions {
   shadowDir?: string;
   /** Immutable candidate epoch (M11-R32). Defaults to the ledger's bound epoch. */
   epoch?: CandidateEpoch;
+  /** Actual repository HEAD commit (from `git rev-parse HEAD`). Binds evidence and attestations. */
+  headCommit?: string;
   now?: number;
 }
 
@@ -683,7 +689,7 @@ export function finalizeM11(options: M11FinalizeOptions): M11FinalizeResult {
   const ledger = raw as Record<string, any>;
   const epoch = options.epoch ?? (ledger.candidate_epoch as CandidateEpoch | undefined);
 
-  const gate = evaluateM11Terminal(ledger, options.evidence, options.checks, options.now, epoch);
+  const gate = evaluateM11Terminal(ledger, options.evidence, options.checks, options.now, epoch, options.headCommit);
   if (!gate.passed) {
     return { passed: false, reason: `M11 terminal gate false: ${gate.failedGates.join(', ')}`, failedGates: gate.failedGates };
   }

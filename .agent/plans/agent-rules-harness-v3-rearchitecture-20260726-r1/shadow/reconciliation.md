@@ -36,4 +36,3 @@ Status: **NEEDS_REMEDIATION**
 | M10-FINAL-RECONCILIATION | MATCH | M10-FINAL requirement REQ-013 reconciled MATCH at 56284ad436a6 | - |
 | M10-FINAL-RECONCILIATION | MATCH | M10-FINAL requirement REQ-014 reconciled MATCH at 56284ad436a6 | - |
 | M10-FINAL-RECONCILIATION | MATCH | M10-FINAL requirement REQ-015 reconciled MATCH at 56284ad436a6 | - |
-| M11-CANONICAL-STATE | RECONCILED_R58 | AM-0020 canonical state at revision 58: identity 21d0a8bb, headCommit 964d246, prior-contract reviews PENDING_AM0020_REVALIDATION, M10/M11 markers historical-stale | E-REC-59 |

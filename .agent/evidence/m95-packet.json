@@ -1,0 +1,113 @@
+{
+  "schema": "worker-primary/m95-evidence-packet/v1",
+  "status": "WAITING_EXTERNAL",
+  "headCommit": "8daedb7592b0c3a6f1ed4f6d61430aa748c82ee1",
+  "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+  "r53": 54,
+  "identityEpoch": {
+    "effectivePlanIdentity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+    "shadowRevision": 54,
+    "verified": true
+  },
+  "evidenceEpoch": {
+    "headCommit": "8daedb7592b0c3a6f1ed4f6d61430aa748c82ee1",
+    "collectedAt": 1785513884000
+  },
+  "modelRoute": {
+    "worker-primary": {
+      "requested": "qwencoder/gpt-5.6-sol",
+      "resolved": "deepseek-v4-flash",
+      "provider": "opencode"
+    }
+  },
+  "requestedModel": "qwencoder/gpt-5.6-sol",
+  "resolvedModel": "deepseek-v4-flash",
+  "provider": "opencode",
+  "identityVerified": true,
+  "nativeAttestation": "UNVERIFIED: no native attestation supplied",
+  "canonicalPlanFixture": {
+    "path": "packages/engine/test/fixtures/plan-identity/original.md",
+    "sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
+    "verified": true
+  },
+  "dimensions": [
+    {"id": "d01", "score": null, "status": "UNVERIFIED"},
+    {"id": "d02", "score": null, "status": "UNVERIFIED"},
+    {"id": "d03", "score": null, "status": "UNVERIFIED"},
+    {"id": "d04", "score": null, "status": "UNVERIFIED"},
+    {"id": "d05", "score": null, "status": "UNVERIFIED"},
+    {"id": "d06", "score": null, "status": "UNVERIFIED"},
+    {"id": "d07", "score": null, "status": "UNVERIFIED"},
+    {"id": "d08", "score": null, "status": "UNVERIFIED"},
+    {"id": "d09", "score": null, "status": "UNVERIFIED"},
+    {"id": "d10", "score": null, "status": "UNVERIFIED"},
+    {"id": "d11", "score": null, "status": "UNVERIFIED"},
+    {"id": "d12", "score": null, "status": "UNVERIFIED"},
+    {"id": "d13", "score": null, "status": "UNVERIFIED"},
+    {"id": "d14", "score": null, "status": "UNVERIFIED"},
+    {"id": "d15", "score": null, "status": "UNVERIFIED"},
+    {"id": "d16", "score": null, "status": "UNVERIFIED"},
+    {"id": "d17", "score": null, "status": "UNVERIFIED"},
+    {"id": "d18", "score": null, "status": "UNVERIFIED"}
+  ],
+  "receipts": {
+    "parity_automation": {
+      "command": ["python3", "automation/test-5fedu-parity-packet.py"],
+      "status": "PASS",
+      "exit_code": 0,
+      "output": "5fedu parity packet adversarial conformance: ENGINE-CUTOVER-COMPLETE (shared lexical engine cases: 9 valid, 62 invalid; aggregate/deviations engine cases: 3 valid, 22 invalid; aggregate schema fingerprint: 42ad94a19117fda14e8bd3c6d8c247e1006051dd800ec47fe67038fa8a589e96; structural 2/13 fingerprint 2dc3e98588c3e337044a2dea8bc5a5a6237ace2e85a4aadbc7bd86930edd03fa; visual 2/26 fingerprint 9bd7e6d0bcf8aa8a654498d1a4329ea9e6ffe06eb268c6e1fc94bf06ff6c826b; behavior 2/31 fingerprint f706b343a7a33a2c375ec89ef272d2b308c2941862d9fd1f03697b698de026ba)"
+    },
+    "engine": {
+      "command": ["npm", "run", "test", "--workspace", "packages/engine"],
+      "status": "PASS",
+      "exit_code": 0,
+      "output": "Test Files 35 passed (35); Tests 1142 passed (1142); Duration 63.05s"
+    },
+    "parity_contracts": {
+      "command": ["npx", "vitest", "run", "test/parity-contracts.test.ts"],
+      "status": "PASS",
+      "exit_code": 0,
+      "output": "Test Files 1 passed (1); Tests 85 passed (85); Duration 5.89s"
+    },
+    "build_check": {
+      "command": ["npm", "run", "build", "&&", "npm", "run", "check"],
+      "status": "PASS",
+      "exit_code": 0,
+      "output": "build exit 0 (engine+cli+control-plane+runtime-build); typecheck all workspaces exit 0"
+    },
+    "ci_quality_x3": {
+      "command": ["npm", "run", "ci:quality"],
+      "status": "PASS",
+      "exit_code": 0,
+      "runs": [
+        "run1 GREEN: root 299+1, cli 262, control-plane 217, engine 1142; 0 npm errors",
+        "run2 GREEN: root 299+1, cli 262, control-plane 217, engine 1142; 0 npm errors",
+        "run3 GREEN: root 299+1, cli 262, control-plane 217, engine 1142; 0 npm errors"
+      ]
+    },
+    "ci_certify": {
+      "command": ["npm", "run", "ci:certify"],
+      "status": "WAITING_EXTERNAL",
+      "exit_code": 78,
+      "output": "local-host-certification-diagnostics: status WAITING_EXTERNAL; codex MISSING (not on PATH); claude/grok/opencode/antigravity OBSERVED but native execution UNVERIFIED; no native attestation supplied"
+    },
+    "adversarial": {
+      "command": ["engine", "test/adversarial-closure.test.ts", "+", "test/terminal-gate.test.ts", "+", "test/security-isolation.test.ts", "+", "test/ledger-activation.test.ts"],
+      "status": "PASS",
+      "exit_code": 0,
+      "output": "adversarial-closure 5/5, terminal-gate 62/62, security-isolation 7/7 (npm audit clean), ledger-activation 77/77 (crash/cancel/tamper/rollback at every commit index) PASS within engine 1142/1142"
+    },
+    "scorecard": {
+      "command": ["python3", "automation/gather-scorecard-evidence.py"],
+      "status": "PASS",
+      "exit_code": 0,
+      "output": "WROTE raw AM0015 evidence; 18 dimensions; milestone score UNVERIFIED (permanent policy: evidence-gathering only, never certifies); adversarial scorecard suite 19/19 PASS"
+    }
+  },
+  "findings": [
+    "WAITING_EXTERNAL: native host attestation and provider observation are unavailable on this box; ci:certify exit 78 is the honest contract, not a failure",
+    "18 scorecard dimensions remain UNVERIFIED by permanent policy (am0015/scorecard-evidence/v2 never certifies); no dimension scored below 9.5 because none are scored",
+    "historical incomplete nhap-hang example is intentionally non-certifying (test_historical_example_is_not_falsified); canonical 15-evidence proof set satisfied by engine fixture and automation valid packet"
+  ],
+  "collectedAt": 1785522000000
+}

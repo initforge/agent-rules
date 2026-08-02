@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "plan_id": "agent-rules-harness-v3-rearchitecture-20260726-r1",
+  "amendment_id": "AM-0015",
+  "status": "OWNER_APPROVED_PENDING_ACTIVATION",
+  "source_kind": "owner-chat",
+  "captured_at": "2026-07-29T00:00:00.000Z",
+  "original": {
+    "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/original.md",
+    "sha256": "1e1b06e7388c49b076111fc8edf4878407991f269d656b0dc1c7c5dbaeace26b"
+  },
+  "amendment": {
+    "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0015-progressive-quality-release-and-main-history-consolidation.md",
+    "sha256": "b31c4a3bce9064203920ce2813e2e0eed4dff5c63856f9804fea8020a177d959"
+  },
+  "owner_decisions": [
+    "Minimal fixture decision."
+  ],
+  "prior_amendments": [
+    {
+      "amendment_id": "AM-0012",
+      "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0012-native-swarm-artifact-handoff-and-fitness-closure.md",
+      "sha256": "e21bb21b6898cb2f6f37a58c47db0c07ade9701e18081c3e2023b5a0e5698daf"
+    },
+    {
+      "amendment_id": "AM-0013",
+      "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0013-rolling-wavefront-critical-path-pipeline.md",
+      "sha256": "707a39e3760b6445ee51d40926865c9bf0dd3544f044929597994513cebd64e6"
+    },
+    {
+      "amendment_id": "AM-0014",
+      "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0014-clustered-native-swarm-and-resource-safety.md",
+      "sha256": "14ef202ff45ee443d4d9301d71bd223ddda06df59f4d56fb0429f6daac3c60ab"
+    }
+  ],
+  "audit": {
+    "path": ".agent/audits/agent-rules-harness-v3-rearchitecture-20260726-r1/2026-07-29-progressive-quality-baseline.md",
+    "sha256": "7dd7af2bc0ece4b195939f3e16fb5af048a1bb9ffc10c7d4fb9e5c6c0b4ea7eb"
+  },
+  "handoff": {
+    "path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/continue-from-am0015-progressive-release.md",
+    "sha256": "d998d0ec9d8361058eab7cb42a29ef993b93e237f44400edb63e4dd1098ffc86"
+  },
+  "delta_rescaffold_prompt": {
+    "path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/opencode-am0015-delta-rescaffold-prompt.md",
+    "sha256": "889e45c368aab71e042094668e08588a7a01d993377e0043e395f2dcbc0ace56"
+  },
+  "implementation_prompt": {
+    "path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/opencode-am0015-implementation-prompt.md",
+    "sha256": "dcdb8b0b3ec4a491a5d86732f2bfcb6969f03fbd96cdc8b2418dac44d26dd787"
+  },
+  "repository_baselines": {
+    "canonical_main": "0000000000000000000000000000000000000000",
+    "active_integration": "0000000000000000000000000000000000000000"
+  },
+  "activation_rule": "Minimal fixture rule."
+}

@@ -1,0 +1,94 @@
+{
+  "schema": "agent-rules/latest-concepts-dogfood-manifest",
+  "version": 1,
+  "created_at": "2026-08-01T15:24:46Z",
+  "source_repository": "/home/linhnx/Projects/agent-rules",
+  "plan_id": "agent-rules-harness-v3-rearchitecture-20260726-r1",
+  "mode": "STABLE_RUNTIME_PLUS_IMMUTABLE_ARTIFACT_HANDOFF",
+  "truth": {
+    "installed_runtime_is_usable_core": true,
+    "installed_runtime_is_latest_full_harness": false,
+    "am0019_am0020_product_enforcement_is_fully_installed": false,
+    "am0021_product_enforcement_is_fully_installed": false,
+    "behavioral_dogfood_before_full_install_is_allowed": true
+  },
+  "installed_runtime": {
+    "root": "/home/linhnx/.codex/agent-rules-runtime",
+    "receipt": "/home/linhnx/.codex/agent-rules-runtime/agent-rules-runtime-receipt.json",
+    "receipt_sha256": "4220bbd26cbf9c4fd6f59d19eb89f92244a9f159b957390cc139c339ef2607df",
+    "installed_at": "2026-07-30T17:36:14.807Z",
+    "source_git_head": "dec44d4200fe29921bcc855a708df4b691d714bf",
+    "manifest_sha256": "cb92d55c73004ecffe531a6e88672c8305f6b5dbf088e0bc1bce702ae1af5ba1",
+    "artifact_sha256": "f614dcdf3460ccdf8ad1d091491f4cef12eee8ac00c3387f9aff4bf7b6418d95"
+  },
+  "immutable_sources": [
+    {
+      "id": "original",
+      "path": "/home/linhnx/Projects/agent-rules/.agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/original.md",
+      "sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
+      "status": "EFFECTIVE"
+    },
+    {
+      "id": "AM-0019",
+      "path": "/home/linhnx/Projects/agent-rules/.agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0019-autonomous-native-swarm-whole-system-convergence.md",
+      "sha256": "074eda76c69d91b91bf25ab74888dc7ada13376cbfd29d0e67e4a8c6f8662a21",
+      "status": "EFFECTIVE"
+    },
+    {
+      "id": "AM-0020",
+      "path": "/home/linhnx/Projects/agent-rules/.agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0020-epistemic-integrity-adversarial-review-and-truthful-reporting.md",
+      "sha256": "f99e603c2e9c60194518938f78de4ab90645eb02d893f2ef811b436c444ee0cc",
+      "status": "EFFECTIVE"
+    },
+    {
+      "id": "AM-0021",
+      "path": "/home/linhnx/Projects/agent-rules/.agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0021-premium-main-context-economy-and-event-driven-orchestration.md",
+      "sha256": "0dfb45500fe8a7d80f177e57ef8a6c231b44e28f8e4f973b31f85bf7d527cf1c",
+      "status": "OWNER_APPROVED_PENDING_ACTIVATION"
+    }
+  ],
+  "dogfood_scope": {
+    "may_apply_now": [
+      "immutable original-plan capture and additive amendment chain",
+      "PlanAnchor to requirement to acceptance-criterion mapping",
+      "cross-stage conflict-free native-agent dispatch",
+      "isolated branch/worktree ownership",
+      "independent verification and risk-tiered review",
+      "candidate/evidence freshness and truthful reporting",
+      "bounded raw-output handling and premium-main context economy",
+      "repair, reverify and reconciliation loops"
+    ],
+    "must_not_claim_before_product_install": [
+      "engine-enforced global resource broker",
+      "engine-enforced ToolOutputBroker",
+      "engine-enforced MainRunCapsule or EventDelta",
+      "durable autopilot surviving process or host restart",
+      "full AM-0019 through AM-0021 host certification",
+      "latest-harness exact-artifact installation"
+    ]
+  },
+  "temporary_global_capacity": {
+    "scope": "machine-wide across agent-rules, pos-ops and mini-toeic.score",
+    "target_active_native_children": "8-10 when conflict-free READY work exists",
+    "writer_target": "4-6",
+    "verifier_target": "1-2",
+    "reviewer_auditor_target": "2-3",
+    "integration_owner": 1,
+    "full_test_slots": 2,
+    "browser_heavy_slots": 2,
+    "full_compose_slots": 1,
+    "warning": "Until the global broker is installed, 8-10 is a shared machine ceiling, not 8-10 per project. Each session must inspect existing children and fill only the remaining safe capacity."
+  },
+  "external_projects": [
+    {
+      "id": "pos-ops",
+      "root": "/home/linhnx/Projects/pos-ops",
+      "mutation_authority": "project-local only after local plan adoption"
+    },
+    {
+      "id": "mini-toeic.score",
+      "root": "/home/linhnx/Projects/mini-toeic.score",
+      "mutation_authority": "project-local only after local plan adoption"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "plan_id": "agent-rules-harness-v3-rearchitecture-20260726-r1",
+  "amendment_id": "AM-0015",
+  "status": "OWNER_APPROVED_PENDING_ACTIVATION",
+  "source_kind": "owner-chat",
+  "captured_at": "2026-07-29T22:48:43+07:00",
+  "owner_decisions": [
+    "Final quality target remains 10/10 across every fitness dimension.",
+    "M8 is the first installable internal milestone; after M8 install and dogfood, continue automatically to M9.5 and then M10 without asking whether to continue.",
+    "Squash the complete main history into a small semantic series after the candidate is pushed and verified; do not squash worker branches.",
+    "Preserve pre-rewrite history with an annotated tag and hashed restorable Git bundle; regenerate all evidence after rewrite."
+  ],
+  "original": {
+    "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/original.md",
+    "sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31"
+  },
+  "prior_amendments": [
+    {
+      "amendment_id": "AM-0012",
+      "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0012-native-swarm-artifact-handoff-and-fitness-closure.md",
+      "sha256": "2147aa9631fab0aab10a1e81b7339ba1b1b420d57080d2ef99bf2a88674b41a2"
+    },
+    {
+      "amendment_id": "AM-0013",
+      "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0013-rolling-wavefront-critical-path-pipeline.md",
+      "sha256": "a8989935c5e0b188b42279b19b167ffad6458d39a17ecad5397ef29301433f0b"
+    },
+    {
+      "amendment_id": "AM-0014",
+      "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0014-clustered-native-swarm-and-resource-safety.md",
+      "sha256": "951fe2028c3ed6db85530979ec910ed8fc14a7a5dfb041bb829da2f5e41fa209"
+    }
+  ],
+  "amendment": {
+    "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0015-progressive-quality-release-and-main-history-consolidation.md",
+    "sha256": "e6482360189a653ef2a3c5074162f75e5376f2e266062f38615fdfa34b32fbc3"
+  },
+  "audit": {
+    "path": ".agent/audits/agent-rules-harness-v3-rearchitecture-20260726-r1/2026-07-29-progressive-quality-baseline.md",
+    "sha256": "ca50f576e618a33ff4ab17e47f4b29d2580529b464b3dc17906a8784ee557b7a"
+  },
+  "handoff": {
+    "path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/continue-from-am0015-progressive-release.md",
+    "sha256": "5cfbeb90baddccd395dd2013967dee3705f2797875589d66a66bd5002cb4f4db"
+  },
+  "delta_rescaffold_prompt": {
+    "path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/opencode-am0015-delta-rescaffold-prompt.md",
+    "sha256": "aae47c9ae5442dc3baad6ee9d21d79fc939ec122c9d44b231bbec0963d64c7fa"
+  },
+  "implementation_prompt": {
+    "path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/opencode-am0015-implementation-prompt.md",
+    "sha256": "a0e4a0f6896f852ba9933be4b549ef349ccca8522a7b8f35edfac97ba4720009"
+  },
+  "repository_baselines": {
+    "canonical_main": "67e7b8bb0e6c1a400bb2b43bca2fa8d15c9447d6",
+    "active_integration": "8631ff31bac48ac357a569e2a72c234c6f9ec232",
+    "remote_successor": "fa85b8af8fcbf30400cbfd056d8faee3686111a0"
+  },
+  "activation_rule": "The engine must verify original and AM-0012 through AM-0015 hashes, append AM-0012, AM-0013, AM-0014, and AM-0015 in order, recompute the effective identity, invalidate stale evidence, regenerate shadows atomically, and enter NEEDS_REMEDIATION before source work bound to this amendment."
+}

@@ -337,7 +337,7 @@ export function parseAm0012Ns0To9(
       const requirementId = anchorMatch[4];
       currentAnchors.push({
         planSha256, sectionHeading, lineStart, lineEnd,
-        anchorTextSha256: '' as Sha256, requirementId,
+        anchorTextSha256: '' as Sha256, requirementId, chunkIndex: 0,
       });
       nsHasAnchor = true;
       continue;
@@ -422,7 +422,7 @@ export function validateAcMapping(sections: readonly NsAnchor[]): void {
 // ── Full anchor key ───────────────────────────────────────────────────────────
 
 export function fullAnchorKey(a: PlanAnchor): string {
-  return `${a.planSha256}:${a.sectionHeading}:${a.lineStart}:${a.lineEnd}:${a.anchorTextSha256}:${a.requirementId}`;
+  return `${a.planSha256}:${a.sectionHeading}:${a.lineStart}:${a.lineEnd}:${a.anchorTextSha256}:${a.requirementId}:${a.chunkIndex}`;
 }
 
 // ── Canonical flat-ledger shape ───────────────────────────────────────────────

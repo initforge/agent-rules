@@ -28,7 +28,7 @@ function ns7Anchor(): PlanAnchor {
   return {
     planSha256: PLAN_SHA, sectionHeading: 'NS7 Task', lineStart: 24, lineEnd: 25,
     anchorTextSha256: '705e2915cf27b323569051edaac6e2cc8bf69ff9d085e010f7c2f61981e4076c' as Sha256,
-    requirementId: 'REQ-TASK',
+    requirementId: 'REQ-TASK', chunkIndex: 0,
   };
 }
 
@@ -177,7 +177,7 @@ describe('projectNsStructures', () => {
     expect(r.payload.assignmentNsMap['A1']).toBe('NS7');
   });
   it('rejects unmapped assignment (0 matches)', () => {
-    const l = ledger({ assignments: [{ assignmentId: 'A1', taskId: 'T1', anchors: [{ planSha256: hash, sectionHeading: 'Ghost', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'R-GHOST' }] } as TaskAssignment] });
+    const l = ledger({ assignments: [{ assignmentId: 'A1', taskId: 'T1', anchors: [{ planSha256: hash, sectionHeading: 'Ghost', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'R-GHOST', chunkIndex: 0 }] } as TaskAssignment] });
     expect(() => projectNsStructures(l, nsMapping())).toThrow('no matching');
   });
   it('rejects ambiguous assignment (>1 NS matches)', () => {
@@ -185,7 +185,7 @@ describe('projectNsStructures', () => {
     const dualAnchor: PlanAnchor = {
       planSha256: PLAN_SHA, sectionHeading: 'Ambiguous', lineStart: 24, lineEnd: 25,
       anchorTextSha256: '705e2915cf27b323569051edaac6e2cc8bf69ff9d085e010f7c2f61981e4076c' as Sha256,
-      requirementId: 'REQ-TASK',
+      requirementId: 'REQ-TASK', chunkIndex: 0,
     };
     const mapping = nsMapping();
     // Add same anchor to NS7 and NS8

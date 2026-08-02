@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "plan_id": "agent-rules-harness-v3-rearchitecture-20260726-r1",
+  "amendment_id": "AM-0016",
+  "status": "OWNER_APPROVED_PENDING_ACTIVATION",
+  "source_kind": "owner-chat",
+  "captured_at": "2026-07-30T00:00:00+07:00",
+  "owner_decisions": [
+    "Required-now certification hosts are Codex Desktop/native CLI, Claude, Grok, OpenCode, and Antigravity (agy).",
+    "Cursor is deferred from the current certification gate.",
+    "Host installation/version proof is distinct from requested, resolved, and observed per-session model evidence.",
+    "No native attestation may be fabricated."
+  ],
+  "original": {
+    "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/original.md",
+    "sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31"
+  },
+  "prior_effective_identity": "a0804467fdd91ccafe6b7e10b7febf345ebb99dcad5c5441a11a4d54c3a18cf5",
+  "prior_amendment": {
+    "amendment_id": "AM-0015",
+    "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0015-progressive-quality-release-and-main-history-consolidation.md",
+    "sha256": "e6482360189a653ef2a3c5074162f75e5376f2e266062f38615fdfa34b32fbc3"
+  },
+  "amendment": {
+    "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0016-required-host-certification-owner-decision.md",
+    "sha256": "90eb7a6d70652205cbe4e2a1adc5b4981e73a060bf69fe6b8d459c83e3543d15"
+  },
+  "repository_baselines": {
+    "canonical_main": "67e7b8bb0e6c1a400bb2b43bca2fa8d15c9447d6",
+    "active_integration": "8631ff31bac48ac357a569e2a72c234c6f9ec232"
+  },
+  "activation_rule": "The engine must verify the original and approved amendment hashes, append AM-0016 after AM-0015, recompute the effective identity, mark prior review and evidence stale, regenerate shadows atomically, and retain NEEDS_REMEDIATION until fresh truthful evidence is collected."
+}

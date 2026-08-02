@@ -141,6 +141,40 @@ export function validatePlanId(planId: string): void {
   if (planId.length > 128) throw new PlanValidationError(`planId too long: ${planId}`);
 }
 
+export interface PlanAnchorChunkIndex {
+  readonly chunkIndex: number;
+  readonly chunkCount: number;
+  readonly chunkSha256: Sha256;
+}
+
+/**
+ * Compute a canonical chunk index for a PlanAnchor within its plan.
+ * Chunks are ordered by (lineStart, lineEnd, requirementId, sectionHeading) and
+ * content-addressed so the index is stable across re-ordering of the anchor array.
+ */
+export function computePlanAnchorChunkIndex(
+  anchor: { readonly planSha256: Sha256; readonly sectionHeading: string; readonly lineStart: number; readonly lineEnd: number; readonly anchorTextSha256: Sha256; readonly requirementId: string },
+  allAnchors: readonly { readonly planSha256: Sha256; readonly sectionHeading: string; readonly lineStart: number; readonly lineEnd: number; readonly anchorTextSha256: Sha256; readonly requirementId: string }[],
+): PlanAnchorChunkIndex {
+  const sorted = [...allAnchors].sort((left, right) => {
+    if (left.lineStart !== right.lineStart) return left.lineStart - right.lineStart;
+    if (left.lineEnd !== right.lineEnd) return left.lineEnd - right.lineEnd;
+    if (left.requirementId !== right.requirementId) return left.requirementId < right.requirementId ? -1 : 1;
+    return left.sectionHeading < right.sectionHeading ? -1 : 1;
+  });
+  const index = sorted.findIndex(candidate =>
+    candidate.planSha256 === anchor.planSha256 &&
+    candidate.sectionHeading === anchor.sectionHeading &&
+    candidate.lineStart === anchor.lineStart &&
+    candidate.lineEnd === anchor.lineEnd &&
+    candidate.anchorTextSha256 === anchor.anchorTextSha256 &&
+    candidate.requirementId === anchor.requirementId,
+  );
+  if (index < 0) throw new PlanValidationError('PlanAnchor not found in chunk index set');
+  const chunkBytes = new TextEncoder().encode(JSON.stringify({ planSha256: anchor.planSha256, sectionHeading: anchor.sectionHeading, lineStart: anchor.lineStart, lineEnd: anchor.lineEnd, anchorTextSha256: anchor.anchorTextSha256, requirementId: anchor.requirementId, chunkIndex: index, chunkCount: sorted.length }));
+  return { chunkIndex: index, chunkCount: sorted.length, chunkSha256: sha256Bytes(chunkBytes) };
+}
+
 export function buildManifestJson(
   planId: string,
   originalSha256: string,

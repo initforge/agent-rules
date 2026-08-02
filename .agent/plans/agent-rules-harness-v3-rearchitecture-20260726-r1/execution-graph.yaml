@@ -1,0 +1,126 @@
+schema_version: 1
+stages:
+  - id: C0
+    name: activation
+    state: COMPLETE
+    note: ledger r57 activated, effective identity bound
+  - id: C1
+    name: plan-readiness
+    state: COMPLETE
+    note: "implemented and merged: packages/engine/src/plan-readiness.ts, packages/cli/src/commands/plan.ts, packages/engine/src/plan-readiness.ts, packages/engine/src/claim-registry.ts"
+  - id: C2
+    name: typed-execution-graph
+    state: COMPLETE
+    note: "implemented and merged: packages/engine/src/plan-readiness.ts, packages/engine/src/dispatch-ready-set.ts, packages/engine/src/dispatch-ready-set.ts, packages/engine/src/controller.ts, packages/engine/src/adversarial-compiler.ts"
+  - id: C3
+    name: native-swarm-scheduling
+    state: COMPLETE
+    note: "implemented and merged: packages/engine/src/worktree-train.ts, packages/cli/src/commands/train.ts, packages/cli/src/commands/worktree.ts"
+  - id: C4
+    name: worktree-isolation-integration-train
+    state: COMPLETE
+    note: "implemented and merged: packages/engine/src/resource-broker.ts, packages/engine/src/resource-governor.ts, packages/engine/src/candidate-epoch.ts"
+  - id: C5
+    name: global-resource-tool-broker
+    state: COMPLETE
+    note: "implemented and merged: packages/engine/src/autopilot-m11.ts, packages/engine/src/supervisor.ts, packages/engine/src/terminal-gate.ts"
+  - id: C6
+    name: durable-autopilot
+    state: COMPLETE
+    note: "implemented and merged: packages/engine/src/topology-compiler.ts, packages/engine/src/topology-compiler.ts, packages/engine/src/terminal-gate.ts, packages/engine/src/artifact-consistency.ts"
+  - id: C7
+    name: system-topology-verification
+    state: COMPLETE
+    note: "implemented and merged: packages/engine/src/parity-runner.ts, packages/engine/src/visual-contracts.ts, packages/engine/src/parity-runner.ts, packages/engine/src/parity-pixels.ts, packages/engine/src/visual-reducer.ts"
+  - id: C8
+    name: browser-parity-visual
+    state: COMPLETE
+    note: "implemented and merged: platforms/claude/adapter.ts, platforms/opencode/adapter.ts, platforms/codex/adapter.ts, automation/host-attestation.ts, platforms/grok/adapter.ts, platforms/antigravity/adapter.ts, platforms/cursor/adapter.ts, packages/engine/src/contracts.ts, packages/engine/src/review-receipt.ts, packages/engine/src/native-session-adapter.ts"
+  - id: C9
+    name: host-convergence-certification
+    state: COMPLETE
+    note: "implemented and merged: packages/engine/src/terminal-gate.ts, packages/engine/src/ledger-activation.ts, packages/engine/src/supervisor.ts, packages/engine/src/worker-adapter.ts, evals/m11, packages/engine/src/evidence-dag.ts, packages/engine/src/evidence-packet.ts, packages/engine/src/review-independence.ts, packages/engine/src/calibration.ts"
+  - id: C10
+    name: terminal-release
+    state: COMPLETE
+    note: "implemented and merged: evals/m11, evals/m11/runner.py, packages/engine/src/terminal-gate.ts, evals/m11/false_green.py"
+dependency_types:
+  - HARD
+  - SOFT
+  - VERIFY_AFTER
+  - SEMANTIC_CONFLICT
+  - INTEGRATION
+  - GLOBAL_GATE
+  - EXTERNAL
+edges:
+  - from: C0
+    to: C1
+    type: HARD
+  - from: C1
+    to: C2
+    type: HARD
+  - from: C1
+    to: C3
+    type: SOFT
+  - from: C2
+    to: C3
+    type: HARD
+  - from: C3
+    to: C4
+    type: HARD
+  - from: C4
+    to: C5
+    type: INTEGRATION
+  - from: C5
+    to: C6
+    type: VERIFY_AFTER
+  - from: C6
+    to: C7
+    type: VERIFY_AFTER
+  - from: C4
+    to: C7
+    type: SEMANTIC_CONFLICT
+  - from: C6
+    to: C8
+    type: HARD
+  - from: C8
+    to: C9
+    type: GLOBAL_GATE
+  - from: C9
+    to: C10
+    type: GLOBAL_GATE
+  - from: C8
+    to: C10
+    type: EXTERNAL
+recoverable_states:
+  - state: WAITING_EXTERNAL
+    wake: external dependency / CI watcher
+    deadline: nonterminal
+    fallback: continue independent work
+  - state: WAITING_AUTHORITY
+    wake: owner decision batch
+    deadline: nonterminal
+    fallback: proceed on independent closure
+  - state: WAITING_RESOURCE
+    wake: governor hysteresis
+    deadline: nonterminal
+    fallback: defer heavy work
+  - state: RETRY_SCHEDULED
+    wake: retry/backoff policy
+    deadline: bounded
+    fallback: escalate after two same-root repairs
+  - state: NEEDS_REMEDIATION
+    wake: repair pack acceptance
+    deadline: nonterminal
+    fallback: bounded repair slice
+blocked_reserved_for: unrecoverable plan invalidation
+critical_path:
+  - C0
+  - C1
+  - C2
+  - C3
+  - C4
+  - C8
+  - C9
+  - C10
+scheduling: maximum conflict-free ready antichain; critical-path priority without starving independent tasks

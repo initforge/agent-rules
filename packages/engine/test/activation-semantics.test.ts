@@ -74,7 +74,7 @@ function section(nsId: string, acIds: string[], anchors: PlanAnchor[]): NsAnchor
 function planAnchor(overrides: Partial<PlanAnchor> = {}): PlanAnchor {
   return {
     planSha256: PLAN_SHA, sectionHeading: 'NS0 Overview', lineStart: 3, lineEnd: 4,
-    anchorTextSha256: NS7_ANCHOR_SHA, requirementId: 'REQ-OVERVIEW', ...overrides,
+    anchorTextSha256: NS7_ANCHOR_SHA, requirementId: 'REQ-OVERVIEW', chunkIndex: 0, ...overrides,
   };
 }
 
@@ -371,7 +371,7 @@ describe('setAnchorTextHashes', () => {
   it('computes NS7 anchor text hash', () => {
     const ns7: NsAnchor[] = [section('NS7', ['AC15', 'AC16'], [{
       planSha256: PLAN_SHA, sectionHeading: 'NS7 Task', lineStart: 24, lineEnd: 25,
-      anchorTextSha256: '' as Sha256, requirementId: 'REQ-TASK',
+      anchorTextSha256: '' as Sha256, requirementId: 'REQ-TASK', chunkIndex: 0,
     }])];
     const result = setAnchorTextHashes(ns7, PLAN_BYTES, PLAN_SHA);
     expect(result[0].anchors[0].anchorTextSha256).toBe(NS7_ANCHOR_SHA);
@@ -379,7 +379,7 @@ describe('setAnchorTextHashes', () => {
   it('anchor identity has full fields', () => {
     const inp: NsAnchor[] = [section('NS7', ['AC15'], [{
       planSha256: PLAN_SHA, sectionHeading: 'NS7 Task', lineStart: 24, lineEnd: 25,
-      anchorTextSha256: '' as Sha256, requirementId: 'REQ-TASK',
+      anchorTextSha256: '' as Sha256, requirementId: 'REQ-TASK', chunkIndex: 0,
     }])];
     const result = setAnchorTextHashes(inp, PLAN_BYTES, PLAN_SHA);
     const a = result[0].anchors[0];
@@ -391,7 +391,7 @@ describe('setAnchorTextHashes', () => {
     expect(a.anchorTextSha256).toBe(NS7_ANCHOR_SHA);
   });
   it('fullAnchorKey includes all fields', () => {
-    const a: PlanAnchor = { planSha256: PLAN_SHA, sectionHeading: 'NS7 Task', lineStart: 24, lineEnd: 25, anchorTextSha256: NS7_ANCHOR_SHA, requirementId: 'REQ-TASK' };
+    const a: PlanAnchor = { planSha256: PLAN_SHA, sectionHeading: 'NS7 Task', lineStart: 24, lineEnd: 25, anchorTextSha256: NS7_ANCHOR_SHA, requirementId: 'REQ-TASK', chunkIndex: 0 };
     const key = fullAnchorKey(a);
     expect(key).toContain(PLAN_SHA);
     expect(key).toContain('NS7 Task');
@@ -446,7 +446,7 @@ describe('validateAssignmentsBatches', () => {
   it('rejects batch with missing assignment', () => { expect(() => validateAssignmentsBatches([asgn('T1')], [{ batchId: 'B1', status: 'PENDING' as const, taskIds: ['T-missing'] }], ns)).toThrow('no assignment'); });
   it('rejects empty batch', () => { expect(() => validateAssignmentsBatches([asgn('T1')], [{ batchId: 'B1', status: 'PENDING' as const, taskIds: [] }], ns)).toThrow('empty'); });
   it('rejects anchor not in any NS', () => {
-    const fake: PlanAnchor = { planSha256: hash, sectionHeading: 'Fake', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'R-FAKE' };
+    const fake: PlanAnchor = { planSha256: hash, sectionHeading: 'Fake', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'R-FAKE', chunkIndex: 0 };
     expect(() => validateAssignmentsBatches([asgn('T1', [fake])], [{ batchId: 'B1', status: 'PENDING' as const, taskIds: ['T1'] }], ns)).toThrow('not in any NS');
   });
   it('rejects orphan assignment', () => { expect(() => validateAssignmentsBatches([asgn('T1')], [], ns)).toThrow('not in any batch'); });

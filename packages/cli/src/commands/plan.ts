@@ -516,10 +516,17 @@ export async function planM11(
     const originalPath = path.join(planDir, "original.md");
     const ledger = JSON.parse(fs.readFileSync(ledgerPath, "utf8")) as Record<string, unknown>;
 
+    const actualHead = runHeadCommit(root);
+    if (!actualHead) {
+      return { exitCode: ExitCode.GeneralError, message: 'Cannot determine actual repository HEAD; terminal gate requires real HEAD' };
+    }
+
     // Fail closed FIRST: only an engine-generated canonical terminal evidence
     // envelope from the ledger can authorize the evaluator. No CLI flag or
     // prose can synthesize a PASS. Missing/incomplete/unbound envelope = reject.
-    const envelope = loadM11TerminalEvidenceEnvelope(ledger);
+    // The loader verifies that the envelope headCommit, ledger headCommit,
+    // and candidate epoch head all equal the ACTUAL repository HEAD.
+    const envelope = loadM11TerminalEvidenceEnvelope(ledger, actualHead);
     if (!envelope.ok) {
       return {
         exitCode: ExitCode.GeneralError,
@@ -538,7 +545,7 @@ export async function planM11(
       ledgerPath,
       planDir,
       originalPath: fs.existsSync(originalPath) ? originalPath : undefined,
-      headCommit: runHeadCommit(root) ?? (ledger as { headCommit?: string }).headCommit,
+      headCommit: actualHead,
     });
     const evidence = envelope.evidence;
     const scorecard = (ledger as { milestones?: { M8?: { scorecard?: { dimensions?: Array<{ id: string; score: number | null; status: string }> } } } }).milestones?.M8?.scorecard?.dimensions ?? [];
@@ -555,6 +562,7 @@ export async function planM11(
         evidence,
         checks,
         shadowDir: fs.existsSync(shadowDir) ? shadowDir : undefined,
+        headCommit: actualHead,
       });
       if (!finalized.passed) {
         return {
@@ -581,7 +589,7 @@ export async function planM11(
       };
     }
 
-    const result = evaluateM11Terminal(ledger, evidence, checks);
+    const result = evaluateM11Terminal(ledger, evidence, checks, Date.now(), undefined, actualHead);
     const eligible = result.passed;
     return {
       exitCode: eligible ? ExitCode.Success : ExitCode.GeneralError,

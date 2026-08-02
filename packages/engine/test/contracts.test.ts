@@ -14,7 +14,7 @@ const anchorBytes = new TextEncoder().encode('## Requirement\nDo the work.\n');
 const hash = 'a'.repeat(64);
 const tasksShadowBytes = new TextEncoder().encode('# Tasks\n\n- T1\n');
 const tasksShadowHash = sha256Bytes(tasksShadowBytes);
-const anchor: PlanAnchor = { planSha256: planHash, sectionHeading: 'Requirement', lineStart: 3, lineEnd: 4, anchorTextSha256: sha256Bytes(anchorBytes), requirementId: 'REQ-001' };
+const anchor: PlanAnchor = { planSha256: planHash, sectionHeading: 'Requirement', lineStart: 3, lineEnd: 4, anchorTextSha256: sha256Bytes(anchorBytes), requirementId: 'REQ-001', chunkIndex: 0 };
 
 function aggregateRows(rows: readonly string[]): string {
   return sha256Bytes(new TextEncoder().encode(JSON.stringify([...rows].sort())));

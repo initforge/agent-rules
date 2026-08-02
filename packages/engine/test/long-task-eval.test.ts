@@ -40,7 +40,7 @@ function stubLedger(fixtureDir: string): WorkLedger {
     requirementIds: ['REQ-001'],
     anchors: [{
       planSha256: hash, sectionHeading: 'Fix',
-      lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001',
+      lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001', chunkIndex: 0,
     }],
     dependencies: [],
     sourceOfTruthPaths: [],
@@ -49,7 +49,7 @@ function stubLedger(fixtureDir: string): WorkLedger {
     allowedTools: [],
     acceptanceCriteria: [{
       criterionId: 'CR-001', claim: 'Add works', evidenceProfile: 'focused',
-      binding: { kind: 'plan-anchor', anchor: { planSha256: hash, sectionHeading: 'Fix', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001' } },
+      binding: { kind: 'plan-anchor', anchor: { planSha256: hash, sectionHeading: 'Fix', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001', chunkIndex: 0 } },
     }],
     modelTier: 'standard' as const,
     riskTier: 'high' as const,
@@ -98,12 +98,12 @@ function stubLedger(fixtureDir: string): WorkLedger {
         requirementId: 'REQ-001', statement: 'Fix the add function',
         acceptanceCriteria: [{
           criterionId: 'CR-001', claim: 'Add works', evidenceProfile: 'focused',
-          binding: { kind: 'plan-anchor' as const, anchor: { planSha256: hash, sectionHeading: 'Fix', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001' } },
+          binding: { kind: 'plan-anchor' as const, anchor: { planSha256: hash, sectionHeading: 'Fix', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001', chunkIndex: 0 } },
         }],
       }],
-      anchors: [{ planSha256: hash, sectionHeading: 'Fix', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001' }],
+      anchors: [{ planSha256: hash, sectionHeading: 'Fix', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001', chunkIndex: 0 }],
     },
-    planAnchors: [{ planSha256: hash, sectionHeading: 'Fix', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001' }],
+    planAnchors: [{ planSha256: hash, sectionHeading: 'Fix', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001', chunkIndex: 0 }],
     batches: [{ batchId: 'B1', status: 'PASSED', taskIds: ['TASK-FIXTURE'] }],
     amendments: [],
     assignments: [assign],
@@ -128,11 +128,11 @@ function multiTaskLedger(fixtureADir: string, fixtureBDir: string): WorkLedger {
   const assignA: TaskAssignment = {
     assignmentId: 'A-TASK-A', taskId: 'TASK-A',
     requirementIds: ['REQ-001'], dependencies: [],
-    anchors: [{ planSha256: hash, sectionHeading: 'A', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001' }],
+    anchors: [{ planSha256: hash, sectionHeading: 'A', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001', chunkIndex: 0 }],
     sourceOfTruthPaths: [], ownedPaths: [fixtureADir], forbiddenPaths: [], allowedTools: [],
     acceptanceCriteria: [{
       criterionId: 'CR-001', claim: 'Do A', evidenceProfile: 'focused',
-      binding: { kind: 'plan-anchor', anchor: { planSha256: hash, sectionHeading: 'A', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001' } },
+      binding: { kind: 'plan-anchor', anchor: { planSha256: hash, sectionHeading: 'A', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001', chunkIndex: 0 } },
     }],
     modelTier: 'standard' as const, riskTier: 'high' as const,
     tokenBudget: 100000, timeBudgetMs: 600000, costBudgetUsd: 0.5,
@@ -148,11 +148,11 @@ function multiTaskLedger(fixtureADir: string, fixtureBDir: string): WorkLedger {
   const assignB: TaskAssignment = {
     assignmentId: 'A-TASK-B', taskId: 'TASK-B',
     requirementIds: ['REQ-001'], dependencies: ['TASK-A'],
-    anchors: [{ planSha256: hash, sectionHeading: 'B', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001' }],
+    anchors: [{ planSha256: hash, sectionHeading: 'B', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001', chunkIndex: 0 }],
     sourceOfTruthPaths: [], ownedPaths: [fixtureBDir], forbiddenPaths: [], allowedTools: [],
     acceptanceCriteria: [{
       criterionId: 'CR-002', claim: 'Do B', evidenceProfile: 'focused',
-      binding: { kind: 'plan-anchor', anchor: { planSha256: hash, sectionHeading: 'B', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001' } },
+      binding: { kind: 'plan-anchor', anchor: { planSha256: hash, sectionHeading: 'B', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001', chunkIndex: 0 } },
     }],
     modelTier: 'standard' as const, riskTier: 'high' as const,
     tokenBudget: 100000, timeBudgetMs: 600000, costBudgetUsd: 0.5,
@@ -193,16 +193,16 @@ function multiTaskLedger(fixtureADir: string, fixtureBDir: string): WorkLedger {
         reconciliationResult: 'PASS' as const, reconciliationSha256: hash,
       },
       requirements: [
-        { requirementId: 'REQ-001', statement: 'Do task', acceptanceCriteria: [{ criterionId: 'CR-001', claim: 'Do A', evidenceProfile: 'focused', binding: { kind: 'plan-anchor' as const, anchor: { planSha256: hash, sectionHeading: 'A', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001' } } }, { criterionId: 'CR-002', claim: 'Do B', evidenceProfile: 'focused', binding: { kind: 'plan-anchor' as const, anchor: { planSha256: hash, sectionHeading: 'B', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001' } } }] },
+        { requirementId: 'REQ-001', chunkIndex: 0, statement: 'Do task', acceptanceCriteria: [{ criterionId: 'CR-001', claim: 'Do A', evidenceProfile: 'focused', binding: { kind: 'plan-anchor' as const, anchor: { planSha256: hash, sectionHeading: 'A', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001', chunkIndex: 0 } } }, { criterionId: 'CR-002', claim: 'Do B', evidenceProfile: 'focused', binding: { kind: 'plan-anchor' as const, anchor: { planSha256: hash, sectionHeading: 'B', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001', chunkIndex: 0 } } }] },
       ],
       anchors: [
-        { planSha256: hash, sectionHeading: 'A', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001' },
-        { planSha256: hash, sectionHeading: 'B', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001' },
+        { planSha256: hash, sectionHeading: 'A', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001', chunkIndex: 0 },
+        { planSha256: hash, sectionHeading: 'B', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001', chunkIndex: 0 },
       ],
     },
     planAnchors: [
-      { planSha256: hash, sectionHeading: 'A', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001' },
-      { planSha256: hash, sectionHeading: 'B', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001' },
+      { planSha256: hash, sectionHeading: 'A', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001', chunkIndex: 0 },
+      { planSha256: hash, sectionHeading: 'B', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001', chunkIndex: 0 },
     ],
     batches: [{ batchId: 'B1', status: 'PASSED', taskIds: ['TASK-A', 'TASK-B'] }],
     amendments: [],
@@ -246,11 +246,11 @@ describe('Long-task eval', () => {
       const assign: TaskAssignment = {
         assignmentId: 'A-TEST', taskId: 'TASK-TEST',
         requirementIds: ['REQ-001'], dependencies: [],
-        anchors: [{ planSha256: hash, sectionHeading: 'Test', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001' }],
+        anchors: [{ planSha256: hash, sectionHeading: 'Test', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001', chunkIndex: 0 }],
         sourceOfTruthPaths: [], ownedPaths: [fixtureDir], forbiddenPaths: [], allowedTools: [],
         acceptanceCriteria: [{
           criterionId: 'CR-001', claim: 'test', evidenceProfile: 'focused',
-          binding: { kind: 'plan-anchor', anchor: { planSha256: hash, sectionHeading: 'Test', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001' } },
+          binding: { kind: 'plan-anchor', anchor: { planSha256: hash, sectionHeading: 'Test', lineStart: 1, lineEnd: 2, anchorTextSha256: hash, requirementId: 'REQ-001', chunkIndex: 0 } },
         }],
         modelTier: 'standard' as const, riskTier: 'high' as const,
         tokenBudget: 100000, timeBudgetMs: 600000, costBudgetUsd: 0.5,

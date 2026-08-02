@@ -74,6 +74,7 @@ export interface PlanAnchor {
   readonly lineEnd: number;
   readonly anchorTextSha256: Sha256;
   readonly requirementId: string;
+  readonly chunkIndex: number;
 }
 
 export interface PlanRequirement { readonly requirementId: string; readonly statement: string; readonly acceptanceCriteria: readonly AcceptanceCriterion[]; }
@@ -403,6 +404,7 @@ export function assertPlanAnchor(anchor: PlanAnchor, expectedPlanSha256: Sha256,
   requireSha(anchor.planSha256, 'PlanAnchor.planSha256');
   requireSha(anchor.anchorTextSha256, 'PlanAnchor.anchorTextSha256');
   requireValue(Boolean(anchor.sectionHeading && anchor.requirementId) && Number.isInteger(anchor.lineStart) && Number.isInteger(anchor.lineEnd) && anchor.lineStart >= 1 && anchor.lineEnd >= anchor.lineStart, 'PlanAnchor has invalid location or requirement');
+  requireValue(Number.isInteger(anchor.chunkIndex) && anchor.chunkIndex >= 0, 'PlanAnchor chunkIndex must be a non-negative integer');
   requireValue(anchor.planSha256 === expectedPlanSha256, 'PlanAnchor plan SHA mismatch');
   requireValue(sha256Bytes(originalBytes) === anchor.planSha256, 'Original physical bytes do not match plan SHA');
   requireValue(sha256Bytes(physicalLines(originalBytes, anchor.lineStart, anchor.lineEnd)) === anchor.anchorTextSha256, 'PlanAnchor physical bytes mismatch');
@@ -541,7 +543,7 @@ export function assertProvenanceTimestamp(provenanceTimestamp: string, issuedAt:
 }
 
 function planAnchorKey(anchor: PlanAnchor): string {
-  return [anchor.planSha256, anchor.sectionHeading, anchor.lineStart, anchor.lineEnd, anchor.anchorTextSha256, anchor.requirementId].join(':');
+  return [anchor.planSha256, anchor.sectionHeading, anchor.lineStart, anchor.lineEnd, anchor.anchorTextSha256, anchor.requirementId, anchor.chunkIndex].join(':');
 }
 
 export function planAnchorId(anchor: PlanAnchor): Sha256 {

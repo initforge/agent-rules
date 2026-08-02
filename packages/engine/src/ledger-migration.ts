@@ -153,6 +153,7 @@ function makeAnchor(value: unknown, index: number, expectedSha: string, original
     lineEnd,
     anchorTextSha256,
     requirementId,
+    chunkIndex: 0,
   };
 }
 

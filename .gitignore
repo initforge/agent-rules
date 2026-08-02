@@ -39,7 +39,6 @@ Thumbs.db
 # Project adapters are local/generated in this harness repo.
 /.agents/
 /.codex/
-/.agent/
 
 # Grok live mirror â€” use ~/.grok/ global only (install-grok-global.sh)
 .grok/
@@ -52,7 +51,6 @@ dist/
 05-generated/
 generated/
 profiles/5fedu/projects/.template-managed.json
-.agent/profiles/
 coverage/
 test-results/
 playwright-report/
@@ -72,7 +70,5 @@ tmp/
 skills-lock.json
 
 # Source-lock cache (isolated per-project)
-.agent/source-lock-cache/
-
 # Source distribution archive
 agent-rules-source.zip

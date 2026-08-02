@@ -1,0 +1,41 @@
+{
+  "schema": "evidence-staleness-invalidation/v1",
+  "kind": "STALE_EVIDENCE_INVALIDATION",
+  "declaration": "SUPERSEDED",
+  "current_head": "00b88fbbed1e121fe99f1c90b484b39b06d832d2",
+  "current_effective_identity": "ddb68fa53706436f75f46e8b31906137df745fd40d60f1df54c038cd55f7a427",
+  "current_shadow_revision": 53,
+  "policy": "Do not delete or rewrite any listed file. History preserved byte-for-byte. Supersession is declared only in this invalidation file.",
+  "stale_files": [
+    {
+      "path": ".agent/evidence/m8-current-head-glm-5.2.json",
+      "bound_head": "b7265dde24557afff9578153f624e2d5f7ba4277",
+      "reason": "HEAD binding pre-00b88fb; superseded by .agent/evidence/m8-packet-00b88fb.json"
+    },
+    {
+      "path": ".agent/evidence/native-read-only-review-402f16a-149dd3b-bdea417.json",
+      "bound_head": "b7265dde24557afff9578153f624e2d5f7ba4277",
+      "reason": "Review binds pre-00b88fb HEAD; superseded by fresh M8 review receipts and packet"
+    },
+    {
+      "path": ".agent/evidence/m8-m95-m10-review-dag.json",
+      "bound_head": "ef80810",
+      "reason": "Review DAG binds pre-00b88fb candidate HEAD; HOLD_M8_REMEDIATION preconditions now satisfied at 00b88fb"
+    },
+    {
+      "path": ".agent/evidence/1de87061126ac6d0fb1a7129b8e82961c668fec94c9aaa5b8af6709aeb2a0f4d.json",
+      "bound_head": "289e4ad64025552a0a7ae60ba3fb31170ca8b0fc",
+      "reason": "Temp-copy replay evidence binds pre-00b88fb root HEAD; actual r53 reconciliation now applied to tracked ledger and shadows"
+    },
+    {
+      "path": ".agent/evidence/r53-router-adoption-receipt.json",
+      "bound_head": null,
+      "reason": "Content superseded: recorded 'tracked ledger/shadow state untouched' and 'AM0018 not reactivated'; actual r53 reconciliation with AM-0018 EFFECTIVE is now applied"
+    }
+  ],
+  "notes": [
+    "m8-ledger-rescue/ records a rescue observation at HEAD 8e74049d in a separate worktree (agent-rules-supervisor-wave); historical, no current claim.",
+    "legacy-ledger-artifacts/ is archival (.bak + md notes); no current claim."
+  ],
+  "declared_at": "2026-07-31T20:30:00+07:00"
+}

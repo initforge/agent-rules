@@ -1,0 +1,73 @@
+schema_version: 2
+plan_id: agent-rules-harness-v3-rearchitecture-20260726-r1
+revision: 59
+milestone: M11
+original:
+  path: original.md
+  sha256: c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31
+effective_plan_identity:
+  sha256: 21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003
+  algorithm: SHA-256 over canonical ordered approved amendments
+head_commit: c417bc89398bb1f6391de7af4fd735915aef5010
+amendments:
+  - amendment_id: AM-0001
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: 90b5f0e478e6a6762aba7976d73b0078152795b590ee147b1278da01d76a9528
+  - amendment_id: AM-0002
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: c68c3cbac57d44ef3aae543dc221de0a05319e034eec87226bfffbbd6e962fa4
+  - amendment_id: AM-0003
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: 9637aa2f50177aa981ee3a2a00d7d5cb51c48bb81e7a5ace9f3a8c158152d9c4
+  - amendment_id: AM-0005
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: 5a23ce82685729dd0f2be31f559edea54bbe86876f8806666ab4eab5744613a9
+  - amendment_id: AM-0006
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: 65f550d58d1e5a02f1b76ccb86cd6c9a7ebc1d40db3aecfb47b9ce8be1583ade
+  - amendment_id: AM-0007
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: 66905c862e5bba558e460219b67ddae4b5e3f9dbcda4f0849ea1d6782afbf73c
+  - amendment_id: AM-0008
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: 13d458df692bd46100415f55fa980fc09b57faa66062ee89086fb2631eb08334
+  - amendment_id: AM-0009
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: 7a4569e099ac93391a837e08e50c4eadc9d34f59008d12c273665b35f9283113
+  - amendment_id: AM-0010
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: c9bce7721a18305c7c7ab6ba78ff165cc8fc41feb4b0312443b85cd8dd196aee
+  - amendment_id: AM-0011
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: d295ba000b728d5029b473466d6738a71d07352d59336cc104786d2be008bf91
+  - amendment_id: AM-0012
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: 2147aa9631fab0aab10a1e81b7339ba1b1b420d57080d2ef99bf2a88674b41a2
+  - amendment_id: AM-0013
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: a8989935c5e0b188b42279b19b167ffad6458d39a17ecad5397ef29301433f0b
+  - amendment_id: AM-0014
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: 951fe2028c3ed6db85530979ec910ed8fc14a7a5dfb041bb829da2f5e41fa209
+  - amendment_id: AM-0015
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: e6482360189a653ef2a3c5074162f75e5376f2e266062f38615fdfa34b32fbc3
+  - amendment_id: AM-0016
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: 90eb7a6d70652205cbe4e2a1adc5b4981e73a060bf69fe6b8d459c83e3543d15
+  - amendment_id: AM-0017
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: 9477e2a8b23d0d973eafb138870071f6fa9eed831965f7ed14063d205d408730
+  - amendment_id: AM-0018
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: d0d2001ca7f9916d68f4bc66bcfc0545445d33220dc97e5b981d64c7ef1dab52
+  - amendment_id: AM-0019
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: 074eda76c69d91b91bf25ab74888dc7ada13376cbfd29d0e67e4a8c6f8662a21
+  - amendment_id: AM-0020
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: f99e603c2e9c60194518938f78de4ab90645eb02d893f2ef811b436c444ee0cc
+lifecycle:
+  status: ADOPTED
+  execution_state: NEEDS_REMEDIATION
+requirements_compiled: dynamic from ledger milestones.M8.requirements + AM-0019 §14; see verification-graph.yaml

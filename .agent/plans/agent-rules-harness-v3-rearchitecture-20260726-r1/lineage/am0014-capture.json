@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "plan_id": "agent-rules-harness-v3-rearchitecture-20260726-r1",
+  "amendment_id": "AM-0014",
+  "status": "OWNER_APPROVED_PENDING_ACTIVATION",
+  "source_kind": "owner-chat",
+  "captured_at": "2026-07-29T17:12:07+07:00",
+  "original": {
+    "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/original.md",
+    "sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31"
+  },
+  "prior_amendments": [
+    {
+      "amendment_id": "AM-0012",
+      "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0012-native-swarm-artifact-handoff-and-fitness-closure.md",
+      "sha256": "2147aa9631fab0aab10a1e81b7339ba1b1b420d57080d2ef99bf2a88674b41a2"
+    },
+    {
+      "amendment_id": "AM-0013",
+      "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0013-rolling-wavefront-critical-path-pipeline.md",
+      "sha256": "a8989935c5e0b188b42279b19b167ffad6458d39a17ecad5397ef29301433f0b"
+    }
+  ],
+  "amendment": {
+    "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0014-clustered-native-swarm-and-resource-safety.md",
+    "sha256": "951fe2028c3ed6db85530979ec910ed8fc14a7a5dfb041bb829da2f5e41fa209"
+  },
+  "audit": {
+    "path": ".agent/audits/agent-rules-harness-v3-rearchitecture-20260726-r1/2026-07-29-cluster-and-resource-ground-truth.md",
+    "sha256": "a0eff26a3d485f79b0bafec4b95f206b5a0da40318aabd8a925b7518914eb551"
+  },
+  "handoff": {
+    "path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/continue-from-am0014-clustered-native-swarm.md",
+    "sha256": "2211bc13164148d6bdb527f3d9532ff6007b70e096d800233357af9d287e97ad"
+  },
+  "claude_scaffold_prompt": {
+    "path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/claude-code-context-scaffold-prompt.md",
+    "sha256": "ddc2de18a28398f573709831458b280f25d26faf70f57299d84e805562d39097"
+  },
+  "claude_implementation_prompt": {
+    "path": ".agent/handoffs/agent-rules-harness-v3-rearchitecture-20260726-r1/claude-code-implementation-prompt.md",
+    "sha256": "18b5d3ac6fb036be19c4ad0faed620bab586d8457251c98bc711988d386a4a0a"
+  },
+  "repository_baselines": {
+    "canonical_main": "67e7b8bb0e6c1a400bb2b43bca2fa8d15c9447d6",
+    "active_integration": "8631ff31bac48ac357a569e2a72c234c6f9ec232"
+  },
+  "observed_topology": {
+    "worktrees": 13,
+    "local_branches": 14,
+    "remote_branches": [
+      "main",
+      "deepseek-implement"
+    ],
+    "canonical_ledger_revision": 46,
+    "canonical_ledger_execution_state": "NEEDS_REMEDIATION",
+    "canonical_ledger_chain_tip": "AM-0011"
+  },
+  "activation_rule": "The engine must finish the reviewed C0 activation path, verify original and AM-0012 through AM-0014 hashes, append them in order, recompute the effective identity, invalidate stale evidence, regenerate shadows atomically, and enter NEEDS_REMEDIATION before later source clusters."
+}
