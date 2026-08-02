@@ -6,6 +6,76 @@ import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 
+/**
+ * C5 M11R47 — Codex platform adapter (Codex baseline).
+ *
+ * Deterministic model evidence triple: requested/resolved/observed.
+ * HOST_UNOBSERVABLE when Codex host exposes no model metadata.
+ * Bounded receipt/capsule schema validation — fail closed on malformed input.
+ */
+
+// Sentinel for model slots Codex host does not expose.
+export const HOST_UNOBSERVABLE = 'HOST_UNOBSERVABLE';
+
+/** Deterministic model evidence triple. */
+export interface CodexModelEvidence {
+  readonly requested: string;
+  readonly resolved: string;
+  readonly observed: string;
+}
+
+/** Bounded receipt/capsule schema — fail-closed on unknown fields. */
+export interface CodexCapsule {
+  readonly task?: string;
+  readonly context?: unknown;
+  readonly rules?: string[];
+  readonly model?: string;
+}
+
+/** Schema validation result. */
+export interface CapsuleValidation {
+  readonly valid: boolean;
+  readonly error?: string;
+}
+
+/** Parse model evidence from Codex stream output. Codex does not expose model metadata — always HOST_UNOBSERVABLE. */
+export function parseModelEvidence(_stdout: string, requestedModel?: string): CodexModelEvidence {
+  return {
+    requested: requestedModel ?? HOST_UNOBSERVABLE,
+    resolved: HOST_UNOBSERVABLE,
+    observed: HOST_UNOBSERVABLE,
+  };
+}
+
+/** Bounded schema validation — fail closed on malformed staging input. */
+export function validateCapsule(input: unknown): CapsuleValidation {
+  if (input === null || input === undefined) {
+    return { valid: false, error: 'capsule must not be null or undefined' };
+  }
+  if (typeof input !== 'object') {
+    return { valid: false, error: 'capsule must be an object' };
+  }
+  const obj = input as Record<string, unknown>;
+  // Disallow unknown top-level keys — bounded schema
+  const allowed = new Set(['task', 'context', 'rules', 'model']);
+  for (const key of Object.keys(obj)) {
+    if (!allowed.has(key)) {
+      return { valid: false, error: `capsule contains unknown field: "${key}"` };
+    }
+  }
+  // Type check known fields
+  if (obj.task !== undefined && typeof obj.task !== 'string') {
+    return { valid: false, error: 'capsule.task must be a string' };
+  }
+  if (obj.rules !== undefined && !Array.isArray(obj.rules)) {
+    return { valid: false, error: 'capsule.rules must be an array' };
+  }
+  if (obj.model !== undefined && typeof obj.model !== 'string') {
+    return { valid: false, error: 'capsule.model must be a string' };
+  }
+  return { valid: true };
+}
+
 export interface PlatformAdapter {
   detect(): Promise<{ installed: boolean; version?: string; path?: string }>;
   render(context: unknown): Promise<string>;
@@ -17,13 +87,16 @@ export interface PlatformAdapter {
   rollback(version: string): Promise<{ ok: boolean }>;
 }
 
-const CODEX_HOME = path.join(os.homedir(), '.codex');
-const RULES_DIR = path.join(CODEX_HOME, 'rules');
+function codexHome(): string {
+  return process.env.CODEX_HOME || path.join(os.homedir(), '.codex');
+}
+const RULES_DIR = (): string => path.join(codexHome(), 'rules');
 const CODEX_BINARY = 'codex';
 
 export const codexAdapter: PlatformAdapter = {
   async detect() {
-    const homeExists = fs.existsSync(CODEX_HOME);
+    const home = codexHome();
+    const homeExists = fs.existsSync(home);
     if (!homeExists) return { installed: false };
 
     try {
@@ -36,21 +109,28 @@ export const codexAdapter: PlatformAdapter = {
       // binary not on PATH — desktop install is still valid
     }
 
-    return { installed: true, version: 'desktop', path: CODEX_HOME };
+    return { installed: true, version: 'desktop', path: home };
   },
 
   async render(context: unknown) {
-    if (!fs.existsSync(RULES_DIR)) {
-      fs.mkdirSync(RULES_DIR, { recursive: true });
+    const rulesDir = RULES_DIR();
+    if (!fs.existsSync(rulesDir)) {
+      fs.mkdirSync(rulesDir, { recursive: true });
     }
-    const ruleFile = path.join(RULES_DIR, 'agent-rules-context.md');
+    const ruleFile = path.join(rulesDir, 'agent-rules-context.md');
     const content = typeof context === 'string' ? context : JSON.stringify(context, null, 2);
     fs.writeFileSync(ruleFile, content, 'utf-8');
     return ruleFile;
   },
 
   async stage(context: unknown) {
-    const stagingDir = path.join(CODEX_HOME, 'staging');
+    // Fail closed: reject malformed staging input before any write.
+    const validation = validateCapsule(context);
+    if (!validation.valid) {
+      throw new Error(`stage rejected: ${validation.error}`);
+    }
+    const home = codexHome();
+    const stagingDir = path.join(home, 'staging');
     if (!fs.existsSync(stagingDir)) {
       fs.mkdirSync(stagingDir, { recursive: true });
     }
@@ -60,22 +140,36 @@ export const codexAdapter: PlatformAdapter = {
   },
 
   async activate() {
-    const stagingDir = path.join(CODEX_HOME, 'staging');
+    const home = codexHome();
+    const stagingDir = path.join(home, 'staging');
     const capsuleFile = path.join(stagingDir, 'activation-capsule.json');
-    if (fs.existsSync(capsuleFile)) {
-      const dest = path.join(CODEX_HOME, 'active-capsule.json');
-      fs.copyFileSync(capsuleFile, dest);
-      fs.rmSync(capsuleFile);
+    if (!fs.existsSync(capsuleFile)) {
+      return { ok: false, detail: 'no staged capsule found' };
     }
+    // Fail closed: never activate a malformed capsule.
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(fs.readFileSync(capsuleFile, 'utf-8'));
+    } catch {
+      return { ok: false, detail: 'activate rejected: capsule is not valid JSON' };
+    }
+    const validation = validateCapsule(parsed);
+    if (!validation.valid) {
+      return { ok: false, detail: `activate rejected: ${validation.error}` };
+    }
+    const dest = path.join(home, 'active-capsule.json');
+    fs.copyFileSync(capsuleFile, dest);
+    fs.rmSync(capsuleFile);
     return { ok: true };
   },
 
   async probe() {
-    const homeExists = fs.existsSync(CODEX_HOME);
+    const home = codexHome();
+    const homeExists = fs.existsSync(home);
     if (!homeExists) {
       return { ok: false, detail: 'Codex home directory not found' };
     }
-    const configOk = fs.existsSync(path.join(CODEX_HOME, 'config.toml'));
+    const configOk = fs.existsSync(path.join(home, 'config.toml'));
     return {
       ok: configOk,
       detail: configOk
