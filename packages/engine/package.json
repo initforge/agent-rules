@@ -124,6 +124,30 @@
     "./tool-output-broker": {
       "types": "./dist/tool-output-broker.d.ts",
       "import": "./dist/tool-output-broker.js"
+    },
+    "./plan-anchor-index": {
+      "types": "./dist/plan-anchor-index.d.ts",
+      "import": "./dist/plan-anchor-index.js"
+    },
+    "./main-run-capsule": {
+      "types": "./dist/main-run-capsule.d.ts",
+      "import": "./dist/main-run-capsule.js"
+    },
+    "./semantic-wake-policy": {
+      "types": "./dist/semantic-wake-policy.d.ts",
+      "import": "./dist/semantic-wake-policy.js"
+    },
+    "./token-attribution": {
+      "types": "./dist/token-attribution.d.ts",
+      "import": "./dist/token-attribution.js"
+    },
+    "./content-cache-dedupe": {
+      "types": "./dist/content-cache-dedupe.d.ts",
+      "import": "./dist/content-cache-dedupe.js"
+    },
+    "./checkpoint-resume": {
+      "types": "./dist/checkpoint-resume.d.ts",
+      "import": "./dist/checkpoint-resume.js"
     }
   },
   "engines": {
