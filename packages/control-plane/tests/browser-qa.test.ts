@@ -271,7 +271,7 @@ describe('Control Plane browser QA (M11-C10-C11)', () => {
       const tablist = page.locator('[role="tablist"]');
       expect(await tablist.isVisible()).toBe(true);
       const tabs = page.locator('[role="tab"]');
-      expect(await tabs.count()).toBe(10);
+      expect(await tabs.count()).toBe(11);
       const panel = page.locator('[role="tabpanel"]');
       expect(await panel.isVisible()).toBe(true);
       const labelledBy = await panel.getAttribute('aria-labelledby');
@@ -383,7 +383,7 @@ describe('Control Plane browser QA (M11-C10-C11)', () => {
     }, 30_000);
 
     it('m11 view data fetches succeed (api/m11/<view> returns 200)', async () => {
-      const views = ['readiness', 'dag', 'conflicts', 'worktrees', 'agents', 'resources', 'topology', 'parity', 'waits', 'gates'];
+      const views = ['readiness', 'dag', 'conflicts', 'worktrees', 'agents', 'resources', 'topology', 'parity', 'waits', 'gates', 'calibration'];
       for (const v of views) {
         const res = await fetch(`${BASE_URL}/api/m11/${v}`);
         expect(res.status, `/api/m11/${v}`).toBe(200);

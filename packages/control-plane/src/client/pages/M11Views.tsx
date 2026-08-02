@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 
-type ViewId = 'readiness' | 'dag' | 'conflicts' | 'worktrees' | 'agents' | 'resources' | 'topology' | 'parity' | 'waits' | 'gates';
+type ViewId = 'readiness' | 'dag' | 'conflicts' | 'worktrees' | 'agents' | 'resources' | 'topology' | 'parity' | 'waits' | 'gates' | 'calibration';
 
 const VIEWS: Array<{ id: ViewId; label: string }> = [
   { id: 'readiness', label: 'Readiness' },
@@ -13,6 +13,7 @@ const VIEWS: Array<{ id: ViewId; label: string }> = [
   { id: 'parity', label: 'Parity' },
   { id: 'waits', label: 'Waits / Retries' },
   { id: 'gates', label: 'Terminal Gates' },
+  { id: 'calibration', label: 'Calibration' },
 ];
 
 function isViewId(v: string): v is ViewId {
@@ -680,6 +681,53 @@ function GatesView({ data }: { data: Record<string, unknown> }) {
   );
 }
 
+/* --------------------------------- calibration ------------------------------ */
+
+function CalibrationView({ data }: { data: Record<string, unknown> }) {
+  const records = (data.records || []) as Array<Record<string, unknown>>;
+  const byKind = (data.byKind || {}) as Record<string, number>;
+  const unavailable = data.metricState === 'UNAVAILABLE';
+
+  return (
+    <ViewShell title="Calibration" subtitle="M11-R36: read-only projection of the calibration telemetry ledger. No fabrication — UNAVAILABLE is reported honestly.">
+      {unavailable ? (
+        <div className="surface m11-section m11-empty" role="status">
+          <h3 className="typography-title3">Calibration metrics unavailable</h3>
+          <p className="typography-body">{String(data.note || 'No calibration telemetry recorded yet.')}</p>
+          <p className="typography-caption">UNAVAILABLE is not zero. Metrics surface only when the telemetry ledger records them.</p>
+        </div>
+      ) : (
+        <>
+          <div className="surface m11-section">
+            <h3 className="typography-title3">Calibration events ({records.length})</h3>
+            <div className="cluster cluster--xs" aria-label="Calibration event counts">
+              {Object.entries(byKind).map(([k, n]) => <span key={k} className="cpw-tag">{k} {n}</span>)}
+            </div>
+            <DataTable
+              caption="Calibration events"
+              headers={['Event ID', 'Kind', 'Model', 'Provider', 'Domain', 'Recorded']}
+              rows={records.slice(0, 100).map(r => [
+                <span className="typography-mono" key="i">{String(r.eventId || '\u2014')}</span>,
+                <Badge status={String(r.kind)} key="k">{String(r.kind)}</Badge>,
+                <span className="typography-mono" key="m">{String(r.model || '\u2014')}</span>,
+                <span className="typography-caption" key="p">{String(r.provider || '\u2014')}</span>,
+                <span className="typography-caption" key="d">{String(r.domain || '\u2014')}</span>,
+                <span className="typography-caption" key="t">{String(r.recordedAt || '\u2014')}</span>,
+              ])}
+            />
+          </div>
+          <div className="surface m11-section">
+            <h3 className="typography-title3">Telemetry sources</h3>
+            <ul className="m11-list">
+              {(data.sources as string[] ?? []).map((s, i) => <li key={i} className="typography-caption typography-mono">{s}</li>)}
+            </ul>
+          </div>
+        </>
+      )}
+    </ViewShell>
+  );
+}
+
 /* ----------------------------------- page ------------------------------------ */
 
 function ViewBody({ view, data }: { view: ViewId; data: Record<string, unknown> }) {
@@ -694,6 +742,7 @@ function ViewBody({ view, data }: { view: ViewId; data: Record<string, unknown> 
     case 'parity': return <ParityView data={data} />;
     case 'waits': return <WaitsView data={data} />;
     case 'gates': return <GatesView data={data} />;
+    case 'calibration': return <CalibrationView data={data} />;
     default: return <ErrorState message="Unknown view" />;
   }
 }
