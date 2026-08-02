@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "build": "npm run build -w packages/engine && npm run build -w packages/cli && npm run build -w packages/control-plane && node packages/cli/dist/index.js build",
-    "test": "npx vitest run automation/host-attestation.test.ts automation/host-certification-diagnostics.test.ts packages/engine/test/contracts.test.ts packages/engine/test/terminal-gate.test.ts platforms/opencode/adapter.test.ts platforms/opencode/native-session-adapter.test.ts platforms/opencode/supervisor-runner.test.ts platforms/claude/adapter.test.ts platforms/antigravity/lease-guard.test.ts evals/mcp-integration.test.ts && npm run test --workspaces --if-present",
+    "test": "npx vitest run automation/host-attestation.test.ts automation/host-certification-diagnostics.test.ts packages/engine/test/contracts.test.ts packages/engine/test/terminal-gate.test.ts platforms/opencode/adapter.test.ts platforms/opencode/native-session-adapter.test.ts platforms/opencode/supervisor-runner.test.ts platforms/claude/adapter.test.ts platforms/antigravity/lease-guard.test.ts platforms/codex/adapter.test.ts evals/mcp-integration.test.ts && npm run test --workspaces --if-present",
     "check": "npm run typecheck --workspaces --if-present",
     "ci:quality": "npm run build && npm run check && npm run test",
     "ci:certify": "bash automation/ci-certify.sh"
