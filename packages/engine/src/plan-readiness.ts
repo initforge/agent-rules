@@ -192,12 +192,22 @@ export function readLedger(ledgerPath: string): CompiledLedger {
   };
 }
 
-/** Parse M11 additive registry from AM-0019 §14 — dynamic, never hard-coded. */
+/**
+ * Parse M11 additive registry from §14 (list format) or §11 (table format).
+ * AM-0019 and AM-0020 use §14 list format:  - M11-R11 Description.
+ * AM-0021 uses §11 table format:           | ID | Requirement |
+ *                                              | M11-R37 | Description |
+ * Dynamic: never hard-coded to a specific amendment count.
+ */
 export function parseM11Requirements(amendmentText: string): Array<{ id: string; title: string }> {
   const out: Array<{ id: string; title: string }> = [];
   for (const line of amendmentText.split('\n')) {
-    const m = line.match(/^\s*-\s+(M11-R\d+)\s+(.+?)\s*$/);
-    if (m) out.push({ id: m[1], title: m[2].replace(/\.+$/, '') });
+    // §14 list format:  - M11-R11 Plan readiness and semantic coverage.
+    const listM = line.match(/^\s*-\s+(M11-R\d+)\s+(.+?)\s*$/);
+    if (listM) { out.push({ id: listM[1], title: listM[2].replace(/\.+$/, '') }); continue; }
+    // §11 table format: | M11-R37 | Attribute main context, token usage and occupancy separately |
+    const tableM = line.match(/^\s*\|\s*M11-R(\d+)\s*\|\s*(.+?)\s*\|\s*$/);
+    if (tableM) { out.push({ id: `M11-R${tableM[1]}`, title: tableM[2].replace(/\.+$/, '') }); }
   }
   return out;
 }
@@ -246,6 +256,21 @@ function layerProfile(id: string, text: string, source: string): RequirementMapp
     if (id === 'M11-R34') return { layers: ['contract', 'release-rollback'], profile_source: 'AM-0020 §9' };
     if (id === 'M11-R35') return { layers: ['component', 'service-integration'], profile_source: 'AM-0020 §11' };
     if (id === 'M11-R36') return { layers: ['component', 'contract'], profile_source: 'AM-0020 §10' };
+    // AM-0021 §11 layer profiles
+    if (id === 'M11-R37') return { layers: ['unit', 'contract'], profile_source: 'AM-0021 §11' };
+    if (id === 'M11-R38') return { layers: ['contract', 'component'], profile_source: 'AM-0021 §3' };
+    if (id === 'M11-R39') return { layers: ['contract', 'unit'], profile_source: 'AM-0021 §4' };
+    if (id === 'M11-R40') return { layers: ['contract', 'component'], profile_source: 'AM-0021 §5' };
+    if (id === 'M11-R41') return { layers: ['contract', 'component'], profile_source: 'AM-0021 §2' };
+    if (id === 'M11-R42') return { layers: ['contract', 'unit'], profile_source: 'AM-0021 §6' };
+    if (id === 'M11-R43') return { layers: ['unit', 'contract'], profile_source: 'AM-0021 §11' };
+    if (id === 'M11-R44') return { layers: ['contract', 'component'], profile_source: 'AM-0021 §11' };
+    if (id === 'M11-R45') return { layers: ['contract', 'component'], profile_source: 'AM-0021 §5' };
+    if (id === 'M11-R46') return { layers: ['contract', 'component'], profile_source: 'AM-0021 §7' };
+    if (id === 'M11-R47') return { layers: ['contract', 'service-integration'], profile_source: 'AM-0021 §9' };
+    if (id === 'M11-R48') return { layers: ['public-ingress-journey'], profile_source: 'AM-0021 §10' };
+    if (id === 'M11-R49') return { layers: ['contract', 'release-rollback'], profile_source: 'AM-0021 §11' };
+    if (id === 'M11-R50') return { layers: ['contract', 'release-rollback'], profile_source: 'AM-0021 §11' };
   }
   return { layers: layersForText(title), profile_source: source };
 }
@@ -433,14 +458,18 @@ export function compileRequirements(
   return out;
 }
 
-/** Source label for an M11-R requirement: which amendment file carried its §14 registry line. */
+/** Source label for an M11-R requirement: which amendment and section carried its registry line. */
 function amendmentSourceFor(requirementId: string, paths: string[]): string {
   for (const p of paths) {
     const text = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : '';
-    if (parseM11Requirements(text).some((r) => r.id === requirementId)) {
-      const m = p.match(/(\d{4})-[^/]+\.md$/);
-      return m ? `AM-${m[1]} §14` : 'amendment §14';
-    }
+    if (!parseM11Requirements(text).some((r) => r.id === requirementId)) continue;
+    const m = p.match(/(\d{4})-[^/]+\.md$/);
+    const am = m ? `AM-${m[1]}` : 'amendment';
+    // Detect §11 table format (| M11-R## | ...) vs §14 list format (- M11-R## ...)
+    const section11 = text.match(/##\s*11\.[\s\S]*?(?=##\s*\d|\n##|$)/);
+    const tableRe = new RegExp(`^\\s*\\|\\s*${requirementId}\\s*\\|`, 'm');
+    const section = section11 && tableRe.test(section11[0]) ? '§11' : '§14';
+    return `${am} ${section}`;
   }
   return 'amendment §14';
 }

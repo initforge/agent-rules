@@ -296,6 +296,137 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
       'model reputation alone never authorizes a verdict; calibration, capability and exact evidence do',
     ],
   },
+  // ── AM-0021 §11 additive registry (M11-R37..R50) ───────────────────────────
+  'M11-R37': {
+    cluster: 'C5',
+    status: 'MATCH',
+    modules: ['packages/engine/src/main-run-capsule.ts', 'packages/engine/src/token-attribution.ts'],
+    tests: ['packages/engine/test/main-run-capsule.test.ts', 'packages/engine/test/token-attribution.test.ts'],
+    acceptanceCriteria: [
+      'main context, token usage and occupancy attributed separately per actor/run/source',
+    ],
+  },
+  'M11-R38': {
+    cluster: 'C3',
+    status: 'MATCH',
+    modules: ['packages/engine/src/main-run-capsule.ts'],
+    tests: ['packages/engine/test/main-run-capsule.test.ts'],
+    acceptanceCriteria: [
+      'every premium-main wake uses a signed MainRunCapsule with canonical schema and SHA-256 binding',
+    ],
+  },
+  'M11-R39': {
+    cluster: 'C2',
+    status: 'MATCH',
+    modules: ['packages/engine/src/event-delta.ts', 'packages/engine/src/artifact-pointer.ts'],
+    tests: ['packages/engine/test/event-delta.test.ts', 'packages/engine/test/artifact-pointer.test.ts'],
+    acceptanceCriteria: [
+      'Main consumes ordered EventDelta records rather than transcript replay',
+    ],
+  },
+  'M11-R40': {
+    cluster: 'C2',
+    status: 'MATCH',
+    modules: ['packages/engine/src/tool-output-broker.ts', 'packages/engine/src/artifact-pointer.ts'],
+    tests: ['packages/engine/test/tool-output-broker.test.ts', 'packages/engine/test/artifact-pointer.test.ts'],
+    acceptanceCriteria: [
+      'ToolOutputBroker prevents raw child output from flooding main context',
+      'broker emits bounded receipt with exit code, duration, anomaly flags and artifact pointer',
+    ],
+  },
+  'M11-R41': {
+    cluster: 'C3',
+    status: 'MATCH',
+    modules: ['packages/engine/src/semantic-wake-policy.ts', 'packages/engine/src/main-run-capsule.ts'],
+    tests: ['packages/engine/test/semantic-wake-policy.test.ts', 'packages/engine/test/main-run-capsule.test.ts'],
+    acceptanceCriteria: [
+      'Premium main wakes only under the closed semantic wake policy (ARCHITECTURE_DECISION, AUTHORITY_REQUIRED, CONTRACT_CONFLICT, REPAIR_ESCALATION, REVIEW_CONFLICT, INTEGRATION_CONFLICT, CONTEXT_FIDELITY_FAILURE, TERMINAL_RECONCILIATION)',
+    ],
+  },
+  'M11-R42': {
+    cluster: 'C3',
+    status: 'MATCH',
+    modules: ['packages/engine/src/main-run-capsule.ts', 'packages/engine/src/content-cache-dedupe.ts', 'packages/engine/src/context-cache.ts'],
+    tests: ['packages/engine/test/main-run-capsule.test.ts', 'packages/engine/test/context-cache.test.ts'],
+    acceptanceCriteria: [
+      'CapsuleFidelityValidator proves original identity, amendment order, coverage of unresolved claims, owner decisions, evidence freshness and traceability',
+    ],
+  },
+  'M11-R43': {
+    cluster: 'C4',
+    status: 'MATCH',
+    modules: ['packages/engine/src/token-attribution.ts', 'packages/engine/src/telemetry.ts'],
+    tests: ['packages/engine/test/token-attribution.test.ts', 'packages/engine/test/telemetry.test.ts'],
+    acceptanceCriteria: [
+      'Token, cost and cache telemetry is attributed by actor/run/source',
+    ],
+  },
+  'M11-R44': {
+    cluster: 'C4',
+    status: 'MATCH',
+    modules: ['packages/engine/src/content-cache-dedupe.ts', 'packages/engine/src/context-cache.ts'],
+    tests: ['packages/engine/test/context-cache.test.ts'],
+    acceptanceCriteria: [
+      'Duplicate context removed by content-addressed chunk cache; main uncached input materially reduced without losing coverage',
+    ],
+  },
+  'M11-R45': {
+    cluster: 'C2',
+    status: 'MATCH',
+    modules: ['packages/engine/src/tool-output-broker.ts', 'packages/engine/src/artifact-pointer.ts'],
+    tests: ['packages/engine/test/tool-output-broker.test.ts', 'packages/engine/test/artifact-pointer.test.ts'],
+    acceptanceCriteria: [
+      'Main supports targeted drill-down and correctness override; raw artifact excluded by default, explicit drill-down always allowed',
+    ],
+  },
+  'M11-R46': {
+    cluster: 'C4',
+    status: 'MATCH',
+    modules: ['packages/engine/src/checkpoint-resume.ts'],
+    tests: ['packages/engine/test/checkpoint-resume.test.ts'],
+    acceptanceCriteria: [
+      'Compact/crash/restart preserves decisions without transcript replay; session rotation occurs only at safe checkpoint',
+    ],
+  },
+  'M11-R47': {
+    cluster: 'C5',
+    status: 'PARTIAL',
+    modules: ['packages/engine/src/main-run-capsule.ts', 'packages/engine/src/event-delta.ts', 'packages/engine/src/artifact-pointer.ts'],
+    tests: ['packages/engine/test/main-run-capsule.test.ts'],
+    partialReason: 'codex adapter partial; claude-code and opencode adapters not yet verified against AM-0021 §9 host adapter contract',
+    acceptanceCriteria: [
+      'Codex, Claude Code and OpenCode conform to one context contract (MainRunCapsule + EventDelta + ArtifactPointer)',
+    ],
+  },
+  'M11-R48': {
+    cluster: 'C6',
+    status: 'MATCH',
+    modules: ['packages/engine/src/telemetry.ts'],
+    tests: ['packages/engine/test/telemetry.test.ts'],
+    acceptanceCriteria: [
+      'Control Plane exposes real context-economy telemetry: wake timeline, token share, occupancy, duplicate ratio, drill-down history',
+    ],
+  },
+  'M11-R49': {
+    cluster: 'C1',
+    status: 'PARTIAL',
+    modules: ['packages/engine/src/plan-readiness.ts', 'packages/engine/src/plan-identity.ts'],
+    tests: ['packages/engine/test/plan-readiness.test.ts'],
+    partialReason: 'no automated enforcement yet; manual owner review required at activation',
+    acceptanceCriteria: [
+      'Optimization cannot reduce plan/evidence/review coverage',
+    ],
+  },
+  'M11-R50': {
+    cluster: 'C10',
+    status: 'PARTIAL',
+    modules: ['packages/engine/src/terminal-gate.ts', 'packages/engine/src/calibration.ts'],
+    tests: ['packages/engine/test/terminal-gate.test.ts'],
+    partialReason: 'no automated enforcement yet; terminal truth formula cannot be changed by optimization',
+    acceptanceCriteria: [
+      'Token SLO never changes the terminal truth formula',
+    ],
+  },
 };
 
 export function clusterForM11(id: string): string {

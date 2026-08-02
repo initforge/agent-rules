@@ -1,11 +1,12 @@
-"""M11-C10 coverage test — verifies canonical graph generation and AM0020 count.
+"""M11-C10 coverage test — verifies canonical graph generation and AM0021 §11 count.
 
 Tests:
-1. Graph has 41 requirements (15 REQ + 26 M11-R)
+1. Graph has 55 requirements (15 REQ + 40 M11-R)
 2. AM-0019 §14 adds M11-R11..R26 (16 requirements)
 3. AM-0020 §14 adds M11-R27..R36 (10 requirements)
-4. M11-R22 has PARTIAL status with WAITING_EXTERNAL reason
-5. Graph can be regenerated deterministically
+4. AM-0021 §11 adds M11-R37..R50 (14 requirements) via table-row format
+5. M11-R22 has PARTIAL status with WAITING_EXTERNAL reason
+6. Graph can be regenerated deterministically
 """
 import json
 import subprocess
@@ -33,26 +34,42 @@ def test_graph_exists():
 
 
 def test_requirement_count():
-    """Graph must declare exactly 41 requirements (matches requirements array length)."""
+    """Graph must declare exactly 55 requirements (matches requirements array length)."""
     graph = load_graph()
-    assert graph.get("requirement_count") == 41, f"Expected 41, got {graph.get('requirement_count')}"
+    assert graph.get("requirement_count") == 55, f"Expected 55, got {graph.get('requirement_count')}"
 
 
 def test_claim_count():
-    """Graph must declare exactly 43 claims (41 verified + 2 reserved)."""
+    """Graph must declare exactly 57 claims (55 verified + 2 split T-Visual claims)."""
     graph = load_graph()
-    assert graph.get("claim_count") == 43, f"Expected 43, got {graph.get('claim_count')}"
+    assert graph.get("claim_count") == 57, f"Expected 57, got {graph.get('claim_count')}"
 
 
 def test_am0020_count():
     """AM-0020 §14 adds exactly 10 M11-R requirements: R27..R36."""
     graph = load_graph()
     m11_ids = [e["requirement_id"] for e in graph.get("requirements", []) if e.get("requirement_id", "").startswith("M11-R")]
-    am0020_ids = [i for i in m11_ids if int(i.split("-R")[1]) >= 27]
+    am0020_ids = [i for i in m11_ids if 27 <= int(i.split("-R")[1]) <= 36]
     assert len(am0020_ids) == 10, f"Expected 10 AM0020 requirements, got {len(am0020_ids)}: {am0020_ids}"
     expected = [f"M11-R{i}" for i in range(27, 37)]
     for req_id in expected:
         assert req_id in m11_ids, f"Missing {req_id}"
+
+
+def test_am0021_count():
+    """AM-0021 §11 table rows add exactly 14 M11-R requirements: R37..R50."""
+    graph = load_graph()
+    m11_ids = [e["requirement_id"] for e in graph.get("requirements", []) if e.get("requirement_id", "").startswith("M11-R")]
+    am0021_ids = [i for i in m11_ids if int(i.split("-R")[1]) >= 37]
+    assert len(am0021_ids) == 14, f"Expected 14 AM0021 requirements, got {len(am0021_ids)}: {am0021_ids}"
+    expected = [f"M11-R{i}" for i in range(37, 51)]
+    for req_id in expected:
+        assert req_id in m11_ids, f"Missing {req_id}"
+    # Every AM-0021 row must carry the §11 table source label
+    for req_id in expected:
+        entry = next((e for e in graph.get("requirements", []) if e.get("requirement_id") == req_id), None)
+        assert entry is not None, f"{req_id} not in graph"
+        assert "AM-0021 §11" in entry.get("source", ""), f"{req_id} source missing §11 label: {entry.get('source')}"
 
 
 def test_am0019_count():
@@ -89,9 +106,9 @@ def test_generator_produces_valid_structure():
     assert result.returncode == 0, f"Generator failed: {result.stderr}"
     graph = json.loads(result.stdout)
     assert graph.get("schema_version") == 1
-    assert graph.get("requirement_count") == 41
-    assert graph.get("claim_count") == 43
-    assert len(graph.get("requirements", [])) == 41
+    assert graph.get("requirement_count") == 55
+    assert graph.get("claim_count") == 57
+    assert len(graph.get("requirements", [])) == 55
 
 
 def test_generator_am0020_requirements():
@@ -105,6 +122,21 @@ def test_generator_am0020_requirements():
     for i in range(27, 37):
         req_id = f"M11-R{i}"
         assert req_id in m11_ids, f"Generator missing {req_id}"
+
+
+def test_generator_am0021_requirements():
+    """Generator must produce all AM0021 §11 requirements (R37..R50) via table format."""
+    result = subprocess.run(
+        [sys.executable, str(GENERATOR), "--dry-run"],
+        capture_output=True, text=True, cwd=ROOT,
+    )
+    graph = json.loads(result.stdout)
+    m11_ids = [e["requirement_id"] for e in graph.get("requirements", []) if e.get("requirement_id", "").startswith("M11-R")]
+    for i in range(37, 51):
+        req_id = f"M11-R{i}"
+        assert req_id in m11_ids, f"Generator missing {req_id}"
+        entry = next((e for e in graph.get("requirements", []) if e.get("requirement_id") == req_id), None)
+        assert entry is not None and "AM-0021 §11" in entry.get("source", ""), f"{req_id} missing §11 source label"
 
 
 def test_generator_validates_hashes():
@@ -136,11 +168,13 @@ def run_tests():
         ("graph_exists", test_graph_exists),
         ("requirement_count", test_requirement_count),
         ("claim_count", test_claim_count),
+        ("am0021_count", test_am0021_count),
         ("am0020_count", test_am0020_count),
         ("am0019_count", test_am0019_count),
         ("req_count", test_req_count),
         ("m11_r22_partial_waiting_external", test_m11_r22_partial_waiting_external),
         ("generator_valid_structure", test_generator_produces_valid_structure),
+        ("generator_am0021", test_generator_am0021_requirements),
         ("generator_am0020", test_generator_am0020_requirements),
         ("generator_hash_validation", test_generator_validates_hashes),
         ("no_gaps_with_evidence", test_no_gaps_when_evidence_exists),

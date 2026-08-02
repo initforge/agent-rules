@@ -5,6 +5,10 @@ Generates verification-graph.yaml deterministically from:
 - original.md (REQ-001..REQ-015)
 - amendments/0019-autonomous-native-swarm-whole-system-convergence.md (M11-R11..R26)
 - amendments/0020-epistemic-integrity-adversarial-review-and-truthful-reporting.md (M11-R27..R36)
+- amendments/0021-premium-main-context-economy-and-event-driven-orchestration.md (M11-R37..R50)
+
+AM-0021 §11 uses markdown table format (| ID | Requirement |) unlike §14 list
+format (- M11-RXX ...) used by AM-0019 and AM-0020. Both formats are parsed.
 
 Canonical status derivation from source files:
 - MATCH if evidence files exist with valid hashes
@@ -28,6 +32,7 @@ PLAN_DIR = ROOT / ".agent" / "plans" / "agent-rules-harness-v3-rearchitecture-20
 ORIGINAL_MD = PLAN_DIR / "original.md"
 AMENDMENT_0019 = PLAN_DIR / "amendments" / "0019-autonomous-native-swarm-whole-system-convergence.md"
 AMENDMENT_0020 = PLAN_DIR / "amendments" / "0020-epistemic-integrity-adversarial-review-and-truthful-reporting.md"
+AMENDMENT_0021 = PLAN_DIR / "amendments" / "0021-premium-main-context-economy-and-event-driven-orchestration.md"
 GRAPH_OUT = PLAN_DIR / "verification-graph.yaml"
 EVIDENCE_DIR = ROOT / ".agent" / "evidence"
 
@@ -35,7 +40,9 @@ EVIDENCE_DIR = ROOT / ".agent" / "evidence"
 AM0019_M11_R = {f"M11-R{i}" for i in range(11, 27)}
 # AM-0020 §14: M11-R27..R36 (10 requirements)
 AM0020_M11_R = {f"M11-R{i}" for i in range(27, 37)}
-ALL_M11_R = AM0019_M11_R | AM0020_M11_R
+# AM-0021 §11: M11-R37..R50 (14 requirements)
+AM0021_M11_R = {f"M11-R{i}" for i in range(37, 51)}
+ALL_M11_R = AM0019_M11_R | AM0020_M11_R | AM0021_M11_R
 
 # Explicit PARTIAL conditions (WAITING_EXTERNAL or other legitimate reasons)
 PARTIAL_REASONS: dict[str, str] = {
@@ -58,6 +65,12 @@ CLUSTER_MAP: dict[str, str] = {
     "M11-R28": "C9", "M11-R29": "C8", "M11-R30": "C2",
     "M11-R31": "C9", "M11-R32": "C4", "M11-R33": "C6",
     "M11-R34": "C10", "M11-R35": "C10", "M11-R36": "C9",
+    # AM-0021 §11 clusters
+    "M11-R37": "C5", "M11-R38": "C3", "M11-R39": "C2",
+    "M11-R40": "C2", "M11-R41": "C3", "M11-R42": "C3",
+    "M11-R43": "C4", "M11-R44": "C4", "M11-R45": "C2",
+    "M11-R46": "C4", "M11-R47": "C5", "M11-R48": "C6",
+    "M11-R49": "C1", "M11-R50": "C10",
 }
 
 
@@ -71,18 +84,30 @@ def sha256_str(data: str) -> str:
     return hashlib.sha256(data.encode()).hexdigest()
 
 
-def parse_requirements_from_section14(amendment_path: Path) -> dict[str, str]:
-    """Extract M11-R IDs and descriptions from §14 of an amendment."""
+def parse_m11_requirements(amendment_path: Path) -> dict[str, str]:
+    """Extract M11-R IDs and descriptions from §14 (list) or §11 (table) of an amendment.
+    
+    §14 list format:  - M11-R11 Description.
+    §11 table format: | M11-R37 | Description |
+    """
     content = amendment_path.read_text(encoding="utf-8")
-    # Find section 14
-    section14 = re.search(r"## 14\..*?(?=##|$)", content, re.DOTALL)
-    if not section14:
-        return {}
-    section_text = section14.group(0)
-    # Extract M11-R entries: "- M11-RXX Description."
+    # Try §14 first
+    section = re.search(r"## 14\..*?(?=##|$)", content, re.DOTALL)
+    section_text = section.group(0) if section else content
     requirements: dict[str, str] = {}
+    # §14 list: "- M11-RXX Description."
     for match in re.finditer(r"- (M11-R\d+)\s+(.+?)(?:\n|$)", section_text):
         req_id = match.group(1)
+        desc = match.group(2).strip().rstrip(".")
+        requirements[req_id] = desc
+    if requirements:
+        return requirements
+    # §11 table: | M11-R37 | Description |
+    section11 = re.search(r"## 11\..*?(?=##|$)", content, re.DOTALL)
+    if not section11:
+        return requirements
+    for match in re.finditer(r"\|\s*M11-R(\d+)\s*\|\s*(.+?)\s*\|", section11.group(0)):
+        req_id = f"M11-R{match.group(1)}"
         desc = match.group(2).strip().rstrip(".")
         requirements[req_id] = desc
     return requirements
@@ -220,7 +245,7 @@ def generate_verification_graph() -> dict:
         requirements.append(entry)
     
     # 2. Extract M11-R11..R26 from AM-0019 §14
-    am0019_reqs = parse_requirements_from_section14(AMENDMENT_0019)
+    am0019_reqs = parse_m11_requirements(AMENDMENT_0019)
     for req_id, desc in sorted(am0019_reqs.items(), key=lambda x: int(x[0].split("-R")[1])):
         evidence_hashes = find_evidence_for_requirement(req_id)
         status, notes = compute_canonical_status(req_id, evidence_hashes)
@@ -236,7 +261,7 @@ def generate_verification_graph() -> dict:
         requirements.append(entry)
     
     # 3. Extract M11-R27..R36 from AM-0020 §14
-    am0020_reqs = parse_requirements_from_section14(AMENDMENT_0020)
+    am0020_reqs = parse_m11_requirements(AMENDMENT_0020)
     for req_id, desc in sorted(am0020_reqs.items(), key=lambda x: int(x[0].split("-R")[1])):
         evidence_hashes = find_evidence_for_requirement(req_id)
         status, notes = compute_canonical_status(req_id, evidence_hashes)
@@ -251,11 +276,27 @@ def generate_verification_graph() -> dict:
         )
         requirements.append(entry)
     
+    # 4. Extract M11-R37..R50 from AM-0021 §11 (table format)
+    am0021_reqs = parse_m11_requirements(AMENDMENT_0021)
+    for req_id, desc in sorted(am0021_reqs.items(), key=lambda x: int(x[0].split("-R")[1])):
+        evidence_hashes = find_evidence_for_requirement(req_id)
+        status, notes = compute_canonical_status(req_id, evidence_hashes)
+        cluster = CLUSTER_MAP.get(req_id, "C10")
+        entry = build_req_entry(
+            req_id=req_id,
+            source=f"AM-0021 §11 — {desc}",
+            status=status,
+            cluster=cluster,
+            evidence_hashes=evidence_hashes,
+            notes=notes,
+        )
+        requirements.append(entry)
+    
     # Build the graph
     # requirement_count = actual requirements in array
-    # claim_count = total claims (41 + 2 reserved for REQ-016, REQ-017)
+    # claim_count = total claims (15 REQ + 40 M11-R = 55; T-Visual claims generate 2 claims)
     requirement_count = len(requirements)
-    claim_count = 43  # 41 verified + 2 reserved slots
+    claim_count = 57  # 55 requirements + 2 extra for M11-R20/M11-R21 T-Visual split claims
     return {
         "schema_version": 1,
         "chain": "PlanAnchor → Requirement → AcceptanceCriterion → VerificationProfile → EvidenceContract → ExecutionCluster",
