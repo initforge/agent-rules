@@ -1,7 +1,5 @@
-import { createHash } from 'node:crypto';
-import fs from 'node:fs';
-import path from 'node:path';
-import { createArtifactPointer, type ArtifactPointer, type TrustClass, type RedactionState } from './artifact-pointer.js';
+import { randomUUID } from 'node:crypto';
+import { createArtifactPointer, writeArtifact, utf8BoundedTruncate, type ArtifactPointer, type TrustClass, type RedactionState } from './artifact-pointer.js';
 import type { Sha256 } from './contracts.js';
 import { sha256Bytes } from './contracts.js';
 
@@ -55,9 +53,7 @@ function computeSha256(content: string): Sha256 {
 }
 
 function safeId(prefix: string): string {
-  const ts = Date.now().toString(36);
-  const rand = Math.random().toString(36).slice(2, 8);
-  return `${prefix}-${ts}-${rand}`;
+  return `${prefix}-${randomUUID()}`;
 }
 
 function detectAnomalies(content: string): string[] {
@@ -75,18 +71,13 @@ function detectAnomalies(content: string): string[] {
 }
 
 function extractExcerpt(content: string, maxBytes: number): string {
-  if (Buffer.byteLength(content, 'utf-8') <= maxBytes) {
-    return content;
-  }
-  return content.slice(0, maxBytes);
+  return utf8BoundedTruncate(content, maxBytes);
 }
 
 // ── ToolOutputBroker ──────────────────────────────────────
 
 export interface ToolOutputResult {
   readonly receipt: ToolOutputReceipt;
-  readonly stdoutContent: string;
-  readonly stderrContent: string;
 }
 
 export function brokerToolOutput(
@@ -121,7 +112,7 @@ export function brokerToolOutput(
       artifactId: `${toolOutputId}-stdout`,
     },
   );
-  writeArtifactToDisk(stdoutPointer, stdoutContent, baseDir);
+  writeArtifact(stdoutPointer, stdoutContent, baseDir);
 
   // Write stderr to content-addressed artifact
   const stderrPointer = createArtifactPointer(
@@ -137,7 +128,7 @@ export function brokerToolOutput(
       artifactId: `${toolOutputId}-stderr`,
     },
   );
-  writeArtifactToDisk(stderrPointer, stderrContent, baseDir);
+  writeArtifact(stderrPointer, stderrContent, baseDir);
 
   // Compute bounded excerpts (never expose full raw content to main)
   const stdoutExcerpt = extractExcerpt(stdoutContent, maxExcerptBytes);
@@ -169,15 +160,7 @@ export function brokerToolOutput(
     retrievedAt,
   });
 
-  return { receipt, stdoutContent, stderrContent };
-}
-
-function writeArtifactToDisk(pointer: ArtifactPointer, content: string, baseDir: string): void {
-  const artifactBase = path.resolve(baseDir, '.agent/artifacts');
-  const artifactDir = path.resolve(artifactBase, pointer.artifactId.slice(0, 2));
-  fs.mkdirSync(artifactDir, { recursive: true });
-  const filePath = path.join(artifactDir, `${pointer.artifactId}.content`);
-  fs.writeFileSync(filePath, content, 'utf-8');
+  return { receipt };
 }
 
 export function brokerExitCode(receipt: ToolOutputReceipt): { exitCode: number; success: boolean } {

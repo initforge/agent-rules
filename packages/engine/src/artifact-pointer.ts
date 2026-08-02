@@ -175,6 +175,19 @@ export function queryArtifacts(
   }));
 }
 
+export function utf8BoundedTruncate(content: string, maxBytes: number): string {
+  if (Buffer.byteLength(content, 'utf-8') <= maxBytes) {
+    return content;
+  }
+  const buf = Buffer.from(content, 'utf-8').subarray(0, maxBytes);
+  // Walk back over trailing UTF-8 continuation bytes to a sequence start
+  let end = buf.length;
+  while (end > 0 && (buf[end - 1] & 0xc0) === 0x80) end--;
+  // If the byte at end-1 is a multi-byte lead, its continuation bytes were cut off
+  if (end > 0 && (buf[end - 1] & 0xc0) === 0xc0) end--;
+  return buf.subarray(0, end).toString('utf-8');
+}
+
 export function boundedExcerpt(
   content: string,
   maxBytes: number,
@@ -183,7 +196,7 @@ export function boundedExcerpt(
   if (Buffer.byteLength(content, 'utf-8') <= maxBytes) {
     return { ...pointer, redactionState: 'BOUNDED_EXCERPT' as RedactionState };
   }
-  const truncated = content.slice(0, maxBytes);
+  const truncated = utf8BoundedTruncate(content, maxBytes);
   const sha256 = computeSha256(truncated);
   return {
     ...pointer,

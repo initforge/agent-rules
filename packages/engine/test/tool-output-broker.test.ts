@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import { randomUUID } from 'node:crypto';
 import {
   brokerToolOutput,
   brokerExitCode,
@@ -9,6 +10,7 @@ import {
   brokerSummary,
   type ToolOutputReceipt,
 } from '../src/tool-output-broker.js';
+import { readArtifact } from '../src/artifact-pointer.js';
 
 const tmpDirs: string[] = [];
 
@@ -30,7 +32,7 @@ function makeResult(opts: {
   stdout?: string;
   stderr?: string;
   baseDir?: string;
-} = {}): { receipt: ToolOutputReceipt; stdoutContent: string; stderrContent: string } {
+} = {}): { receipt: ToolOutputReceipt } {
   const baseDir = opts.baseDir ?? tmpDir();
   return brokerToolOutput(
     'npm',
@@ -46,7 +48,7 @@ function makeResult(opts: {
 describe('brokerToolOutput', () => {
   it('produces a receipt with artifact pointers', () => {
     const { receipt } = makeResult();
-    expect(receipt.toolOutputId).toMatch(/^toolout-/);
+    expect(receipt.toolOutputId).toMatch(/^toolout-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
     expect(receipt.exitCode).toBe(0);
     expect(receipt.durationMs).toBe(1200);
     expect(receipt.stdoutArtifact.sha256).toMatch(/^[a-f0-9]{64}$/);
@@ -79,6 +81,61 @@ describe('brokerToolOutput', () => {
     expect(Object.isFrozen(receipt)).toBe(true);
     expect(Object.isFrozen(receipt.args)).toBe(true);
     expect(Object.isFrozen(receipt.anomalyFlags)).toBe(true);
+  });
+
+  // ── Regression: broker public result never exposes raw stdout/stderr ──
+  it('result has no stdoutContent or stderrContent properties', () => {
+    const result = makeResult({ stdout: 'secret data', stderr: 'error output' });
+    expect('stdoutContent' in result).toBe(false);
+    expect('stderrContent' in result).toBe(false);
+  });
+
+  // ── Regression: UUID format via crypto.randomUUID ──
+  it('toolOutputId matches crypto.randomUUID format', () => {
+    const { receipt } = makeResult();
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+    const id = receipt.toolOutputId.replace(/^toolout-/, '');
+    expect(id).toMatch(uuidRegex);
+  });
+
+  // ── Regression: UTF-8 byte-bounded excerpt safe ──
+  it('excerpt does not split multi-byte UTF-8 characters', () => {
+    // "é" = 2 bytes; "日本語" = 9 bytes each; "𠜎" = 4 bytes (supplementary plane)
+    const multibyte = 'aé日本語a'.repeat(50); // well over 512 bytes, contains 2-byte and 3-byte chars
+    const { receipt } = makeResult({ stdout: multibyte, baseDir: tmpDir() });
+    // Excerpt must be valid UTF-8 — decoding it must not throw
+    expect(() => new TextDecoder('utf-8').decode(new TextEncoder().encode(receipt.stdoutExcerpt))).not.toThrow();
+    // Excerpt bytes must be ≤ maxExcerptBytes
+    expect(Buffer.byteLength(receipt.stdoutExcerpt, 'utf-8')).toBeLessThanOrEqual(512);
+  });
+
+  it('excerpt bytes are strictly bounded even with 4-byte chars', () => {
+    const fourByte = '𠜎'.repeat(200); // each char = 4 bytes (U+2070E supplementary plane)
+    const { receipt } = makeResult({ stdout: fourByte, baseDir: tmpDir() });
+    expect(Buffer.byteLength(receipt.stdoutExcerpt, 'utf-8')).toBeLessThanOrEqual(512);
+  });
+
+  // ── Regression: disk write via writeArtifact (secure validators) ──
+  it('writes artifact to disk with correct SHA-256', () => {
+    const baseDir = tmpDir();
+    const { receipt } = makeResult({ stdout: 'hello world', baseDir });
+    const content = readArtifact(receipt.stdoutPointer, baseDir);
+    expect(content).toBe('hello world');
+  });
+
+  it('prevents path traversal: artifactId must be safe', () => {
+    const { receipt } = makeResult({ stdout: 'data', baseDir: tmpDir() });
+    // artifactId is set to toolout-<uuid>-stdout, must not contain ../ or absolute paths
+    expect(receipt.stdoutPointer.artifactId).not.toContain('..');
+    expect(receipt.stdoutPointer.artifactId).not.toMatch(/^\//);
+    expect(receipt.stdoutPointer.artifactId).toMatch(/^toolout-[0-9a-f-]+-stdout$/);
+  });
+
+  it('stderr artifact written and retrievable', () => {
+    const baseDir = tmpDir();
+    const { receipt } = makeResult({ stderr: 'stderr content', baseDir });
+    const content = readArtifact(receipt.stderrPointer, baseDir);
+    expect(content).toBe('stderr content');
   });
 });
 

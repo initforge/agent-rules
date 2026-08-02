@@ -9,6 +9,7 @@ import {
   queryArtifacts,
   boundedExcerpt,
   redactArtifact,
+  utf8BoundedTruncate,
   type ArtifactPointer,
   type ArtifactQuery,
 } from '../src/artifact-pointer.js';
@@ -153,6 +154,78 @@ describe('boundedExcerpt', () => {
     const result = boundedExcerpt('short', 100, ptr);
     expect(result.redactionState).toBe('BOUNDED_EXCERPT');
     expect(result.byteSize).toBe(5);
+  });
+});
+
+describe('utf8BoundedTruncate', () => {
+  // ASCII chars are 1 byte each — character count == byte count
+  it('returns full ASCII when under maxBytes', () => {
+    const result = utf8BoundedTruncate('hello', 10);
+    expect(result).toBe('hello');
+    expect(Buffer.byteLength(result, 'utf-8')).toBe(5);
+  });
+
+  it('truncates ASCII correctly', () => {
+    const result = utf8BoundedTruncate('hello world', 5);
+    expect(result).toBe('hello');
+    expect(Buffer.byteLength(result, 'utf-8')).toBe(5);
+  });
+
+  // ── Regression: do not split multi-byte UTF-8 sequences ──
+  it('does not split 2-byte char (Latin-1 extended)', () => {
+    // "é" = C3 A9 in UTF-8
+    const result = utf8BoundedTruncate('café', 4); // 'c'(1)+'a'(1)+'é'(2) = 4 bytes total
+    expect(Buffer.byteLength(result, 'utf-8')).toBeLessThanOrEqual(4);
+    // Must not end with a broken byte: decode-encode roundtrip must be clean
+    expect(() => new TextEncoder().encode(result)).not.toThrow();
+  });
+
+  it('does not split 3-byte char (CJK)', () => {
+    // Each CJK char = 3 bytes
+    const result = utf8BoundedTruncate('日本語テスト', 5); // '日'=3, '本'=3, '語'=3 → 9 bytes
+    // 5 bytes could split a 3-byte char — must not
+    expect(Buffer.byteLength(result, 'utf-8')).toBeLessThanOrEqual(5);
+    expect(() => new TextEncoder().encode(result)).not.toThrow();
+  });
+
+  it('does not split 4-byte char (supplementary plane)', () => {
+    // U+2070E "𠜎" = F0 A0 9C 8E (4 bytes)
+    const result = utf8BoundedTruncate('a𠜎b', 5); // 1+4+1 = 6 bytes; 5-byte cut risks splitting the 4-byte char
+    expect(Buffer.byteLength(result, 'utf-8')).toBeLessThanOrEqual(5);
+    expect(() => new TextEncoder().encode(result)).not.toThrow();
+  });
+
+  it('handles cut at byte boundary between multi-byte chars', () => {
+    const content = '日本語日本語日本語日本語日本語'; // 15 chars × 3 bytes = 45 bytes
+    const result = utf8BoundedTruncate(content, 7); // cut between chars
+    expect(Buffer.byteLength(result, 'utf-8')).toBeLessThanOrEqual(7);
+    expect(() => new TextEncoder().encode(result)).not.toThrow();
+    // Should end at a character boundary
+    const decoded = new TextDecoder('utf-8');
+    const reencoded = new TextEncoder().encode(result);
+    expect(decoded.decode(reencoded)).toBe(result);
+  });
+
+  it('returns empty string when maxBytes < 1', () => {
+    const result = utf8BoundedTruncate('hello', 0);
+    expect(result).toBe('');
+  });
+
+  it('returns full content when byteLength === maxBytes', () => {
+    const result = utf8BoundedTruncate('abc', 3);
+    expect(result).toBe('abc');
+    expect(Buffer.byteLength(result, 'utf-8')).toBe(3);
+  });
+
+  it('boundedExcerpt uses utf8BoundedTruncate internally', () => {
+    const ptr = createArtifactPointer('file:///tmp/test.txt', '日本語テスト日本語', 1_700_000_000_000);
+    const result = boundedExcerpt('日本語テスト日本語', 10, ptr);
+    expect(Buffer.byteLength(result.sha256, 'utf-8')).toBe(64); // SHA-256 hex is always 64 chars
+    // byteSize of excerpt content must be ≤ 10
+    const content = '日本語テスト日本語';
+    const excerpted = utf8BoundedTruncate(content, 10);
+    expect(result.byteSize).toBe(Buffer.byteLength(excerpted, 'utf-8'));
+    expect(result.byteSize).toBeLessThanOrEqual(10);
   });
 });
 

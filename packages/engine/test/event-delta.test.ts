@@ -8,6 +8,7 @@ import {
   type EventDelta,
   type EventDeltaInput,
 } from '../src/event-delta.js';
+import { createArtifactPointer, type ArtifactPointer } from '../src/artifact-pointer.js';
 
 function makeInput(overrides: Partial<EventDeltaInput> = {}): EventDeltaInput {
   return {
@@ -27,6 +28,20 @@ function makeInput(overrides: Partial<EventDeltaInput> = {}): EventDeltaInput {
 }
 
 describe('createEventDelta', () => {
+  it('accepts ArtifactPointer refs in artifactRefs', () => {
+    const pointer: ArtifactPointer = createArtifactPointer(
+      'tool://npm',
+      'output',
+      1_700_000_000_000,
+      ['R-039'],
+    );
+    const delta = createEventDelta(makeInput({ artifactRefs: [pointer] }));
+    expect(delta.artifactRefs).toHaveLength(1);
+    expect(delta.artifactRefs[0].artifactId).toBe(pointer.artifactId);
+    expect(delta.artifactRefs[0].sha256).toBe(pointer.sha256);
+    expect(Object.isFrozen(delta.artifactRefs)).toBe(true);
+  });
+
   it('produces a frozen delta with SHA-256 event hash', () => {
     const delta = createEventDelta(makeInput());
     expect(delta.eventSha256).toMatch(/^[a-f0-9]{64}$/);

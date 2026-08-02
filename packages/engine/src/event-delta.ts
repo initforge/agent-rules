@@ -1,6 +1,6 @@
-import { createHash } from 'node:crypto';
+import type { ArtifactPointer } from './artifact-pointer.js';
 import type { Sha256 } from './contracts.js';
-import { sha256Bytes, isSha256 } from './contracts.js';
+import { sha256Bytes } from './contracts.js';
 
 // ── Deterministic EventDelta (AM-0021 §4, M11-R39) ─────────────────────
 
