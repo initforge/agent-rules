@@ -62,8 +62,8 @@ function Get-IntegrationPath {
   if ($null -ne $Integration.PSObject.Properties["install"]) {
     return $Integration.install.script -replace "/install\.ps1$", ""
   }
-  if ($null -ne $Integration.PSObject.Properties["install"]) {
-    return Split-Path $Integration.install.script -Parent
+  if ($null -ne $Integration.PSObject.Properties["path"]) {
+    return $Integration.path
   }
   return $null
 }

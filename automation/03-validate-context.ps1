@@ -175,7 +175,7 @@ $RegistryPath = Join-Path $Root "integrations\registry.json"
 if (Test-Path $RegistryPath) {
   $Registry = Get-Content -Raw $RegistryPath | ConvertFrom-Json
   foreach ($Integration in $Registry.integrations) {
-    $IntegPath = if ($Integration.PSObject.Properties["install"]) { $Integration.install.script -replace "/install\.ps1$", "" } else { $null }
+    $IntegPath = if ($Integration.PSObject.Properties["install"]) { $Integration.install.script -replace "/install\.ps1$", "" } elseif ($Integration.PSObject.Properties["path"]) { $Integration.path } else { $null }
     if ($IntegPath -and -not (Test-Path (Join-Path $Root $IntegPath))) {
       $Problems.Add("Integration install path missing: $IntegPath")
     }

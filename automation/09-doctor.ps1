@@ -1,8 +1,7 @@
 param(
   [string]$Root = (Split-Path -Parent $PSScriptRoot),
   [ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platform = "all",
-  [switch]$SkipIntegrationVerify,
-  [switch]$IncludeOpenCode
+  [switch]$SkipIntegrationVerify
 )
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "path-compat.ps1")
@@ -418,7 +417,7 @@ if (Test-Path $GrokInject) {
 }
 
 # --- OpenCode-specific doctor (independent adapter, not in main install pipeline) ---
-if ($IncludeOpenCode) {
+if ($Selected -contains "opencode") {
   $OpenCodeHome = $PlatformHomes["opencode"]
   $OpenCodeOwned = Join-Path $OpenCodeHome "agent-rules-owned.json"
   $OpenCodeAgents = Join-Path $OpenCodeHome "agents"
