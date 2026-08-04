@@ -40,7 +40,7 @@ Thumbs.db
 /.agents/
 /.codex/
 
-# Grok live mirror â€” use ~/.grok/ global only (install-grok-global.sh)
+# Grok live mirror — use ~/.grok/ global only (install-grok-global.sh)
 .grok/
 
 # Node packages
@@ -48,7 +48,6 @@ node_modules/
 
 # Runtime/test artifacts
 dist/
-05-generated/
 generated/
 profiles/5fedu/projects/.template-managed.json
 coverage/
@@ -63,12 +62,23 @@ downloads/
 *.qa.mp4
 *.trace.zip
 certification-diagnostics.json
+vitest-verify-*.json
+.backup-harness/
+.artifacts/
+.playwright-mcp/
+worktrees/
+
+# .agent is version-controlled to preserve progress, EXCEPT regenerable
+# caches and per-run evidence. See .agent/README.md for the protocol.
+.agent/source-lock-cache/
+.agent/runs/
+.agent/artifacts/
+.agent/tmp/
 
 # One-off scratch scripts should live outside tracked runtime scripts.
 scratch/
 tmp/
 skills-lock.json
 
-# Source-lock cache (isolated per-project)
 # Source distribution archive
 agent-rules-source.zip

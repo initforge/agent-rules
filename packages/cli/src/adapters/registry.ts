@@ -74,7 +74,9 @@ globalRegistry.register('local-worker', {
       // avoiding circular dependency at module load time while staying ESM-correct.
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { LocalWorkerAdapter } = _require('./local-worker.js');
-      _localWorkerInstance = new LocalWorkerAdapter();
+      const created: WorkerAdapter = new LocalWorkerAdapter();
+      _localWorkerInstance = created;
+      return created;
     }
     return _localWorkerInstance;
   },

@@ -21,17 +21,21 @@ export interface PowershellResult {
 }
 
 export async function findPowershell(): Promise<string> {
-  const candidates = ["pwsh", "powershell"];
+  // Probe by execution, not by `access()`: `access("pwsh")` resolves relative to
+  // cwd and therefore never finds a binary on PATH.
+  // pwsh (PowerShell 7+) is cross-platform and preferred; `powershell` (5.1) is a
+  // Windows-only fallback and must never be attempted on Linux/macOS.
+  const candidates = process.platform === "win32" ? ["pwsh", "powershell"] : ["pwsh"];
   for (const cmd of candidates) {
-    try {
-      await access(cmd);
-      return cmd;
-    } catch {
-      continue;
-    }
+    const found = await new Promise<boolean>((resolve) => {
+      execFile(cmd, ["-NoProfile", "-Command", "exit 0"], { timeout: 15_000 }, (error) => {
+        resolve(!error);
+      });
+    });
+    if (found) return cmd;
   }
   throw new Error(
-    "PowerShell Core (pwsh) or Windows PowerShell is required. Install from https://github.com/PowerShell/PowerShell"
+    "PowerShell Core (pwsh) is required. Install from https://github.com/PowerShell/PowerShell#get-powershell"
   );
 }
 
@@ -58,8 +62,18 @@ export async function runScript(
     return { stdout: dryMsg, stderr: "", exitCode: 0 };
   }
 
+  let shell: string;
+  try {
+    shell = await findPowershell();
+  } catch (error) {
+    return {
+      stdout: "",
+      stderr: error instanceof Error ? error.message : String(error),
+      exitCode: 127,
+    };
+  }
+
   return new Promise<PowershellResult>((resolve) => {
-    const shell = process.platform === "win32" ? "powershell" : "pwsh";
     const child = execFile(
       shell,
       [

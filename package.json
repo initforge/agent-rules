@@ -18,7 +18,7 @@
     "check": "npm run typecheck --workspaces --if-present",
     "ci:quality": "npm run build && npm run check && npm run test",
     "ci:certify": "bash automation/ci-certify.sh",
-    "verify:all": "powershell -NoProfile -ExecutionPolicy Bypass -File automation/verify-all.ps1"
+    "verify:all": "node automation/run-pwsh.mjs automation/verify-all.ps1"
   },
   "devDependencies": {
     "@opencode-ai/sdk": "^1.18.10"
