@@ -95,14 +95,11 @@ Assert-True ($Lifecycle -match "Implementer") "25-task-lifecycle.md: defines Imp
 Assert-True ($Lifecycle -match "Reviewer") "25-task-lifecycle.md: defines Reviewer role"
 Assert-True ($Lifecycle -match "Verifier") "25-task-lifecycle.md: defines Verifier role"
 
-# 14) Required delegation receipts documented in lifecycle
-Assert-True ($Lifecycle -match "subagent_requested") "25-task-lifecycle.md: subagent_requested receipt"
-Assert-True ($Lifecycle -match "subagent_resolved") "25-task-lifecycle.md: subagent_resolved receipt"
-Assert-True ($Lifecycle -match "subagent_started") "25-task-lifecycle.md: subagent_started receipt"
-Assert-True ($Lifecycle -match "subagent_completed") "25-task-lifecycle.md: subagent_completed receipt"
-Assert-True ($Lifecycle -match "result_consumed") "25-task-lifecycle.md: result_consumed receipt"
-Assert-True ($Lifecycle -match "result_rejected") "25-task-lifecycle.md: result_rejected receipt"
-Assert-True ($Lifecycle -match "delegation_skipped") "25-task-lifecycle.md: delegation_skipped receipt"
+# 14) Delegation must still be recorded, but as two facts rather than a
+# seven-event chain: for a single operator the chain cost more to emit than it
+# returned, and a missing event counted as a finding.
+Assert-True ($Lifecycle -match "delegated") "25-task-lifecycle.md: records what was delegated"
+Assert-True ($Lifecycle -match "outcome") "25-task-lifecycle.md: records the delegation outcome"
 
 if ($Failed -gt 0) {
   Write-Error "Regression guards failed: $Failed"

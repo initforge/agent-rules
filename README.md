@@ -39,9 +39,11 @@ Canonical registry: `integrations/registry.json` (v2, 4 entries):
 | codebase-memory-mcp | required | codebase-intelligence | adapter-verified |
 | playwright-mcp | required | browser-interaction | adapter-verified |
 | chrome-devtools-mcp | required | browser-diagnostics | adapter-verified |
-| caveman | optional | workflow-utility | advisory-only |
+| context7 | required | research-context | adapter-verified |
 
-Profiles: `core` (codebase-memory-mcp), `qa` (playwright-mcp + chrome-devtools-mcp), `frontend` (playwright-mcp + chrome-devtools-mcp).
+Profiles: `core` (codebase-memory-mcp + context7), `qa` and `frontend` (playwright-mcp + chrome-devtools-mcp), `research` (context7).
+
+All four install through `npx`/a pinned binary and are verified by `automation/validate-tool-registry.ps1`.
 
 ## Quick start
 

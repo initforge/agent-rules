@@ -520,10 +520,6 @@ $Researcher = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "skills\researche
 if ($Researcher -match "when Codex needs") {
   $Problems.Add("skills/researcher/SKILL.md must be platform-neutral (not 'when Codex needs')")
 }
-$CleanCode = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "skills\clean-code\SKILL.md")
-if ($CleanCode -match '"review code"' -or $CleanCode -match 'Trigger on.*"review code"') {
-  $Problems.Add("skills/clean-code must not claim generic 'review code' (belongs to code-review)")
-}
 $KnowledgeSystem = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "docs\guides\02-knowledge-system.md")
 if (
   $KnowledgeSystem -notlike "*routing*" -or

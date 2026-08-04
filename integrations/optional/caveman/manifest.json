@@ -1,7 +1,0 @@
-{
-  "name": "caveman",
-  "upstream": "https://github.com/JuliusBrussee/caveman",
-  "ref": "main",
-  "vendoredPayload": false,
-  "description": "Advisory-only: unpinned branch ref, local-write side effects, not production-safe. See registry.json policy=optional, trust=advisory-only."
-}

@@ -39,9 +39,11 @@ Canonical registry: `integrations/registry.json` (v2, 4 mục):
 | codebase-memory-mcp | bắt buộc | codebase-intelligence | adapter-verified |
 | playwright-mcp | bắt buộc | browser-interaction | adapter-verified |
 | chrome-devtools-mcp | bắt buộc | browser-diagnostics | adapter-verified |
-| caveman | tùy chọn | workflow-utility | advisory-only |
+| context7 | bắt buộc | research-context | adapter-verified |
 
-Hồ sơ: `core` (codebase-memory-mcp), `qa` (playwright-mcp + chrome-devtools-mcp), `frontend` (playwright-mcp + chrome-devtools-mcp).
+Hồ sơ: `core` (codebase-memory-mcp + context7), `qa` và `frontend` (playwright-mcp + chrome-devtools-mcp), `research` (context7).
+
+Cả bốn đều cài qua `npx` hoặc binary đã pin, và được `automation/validate-tool-registry.ps1` kiểm tra.
 
 ## Chạy nhanh
 

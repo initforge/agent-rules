@@ -7,7 +7,9 @@
       "displayName": "Codebase Memory MCP",
       "kind": "mcp",
       "policy": "required",
-      "profiles": ["core"],
+      "profiles": [
+        "core"
+      ],
       "source": {
         "type": "github",
         "url": "https://github.com/DeusData/codebase-memory-mcp",
@@ -25,12 +27,22 @@
         }
       },
       "trust": "adapter-verified",
-      "capabilities": ["codebase-intelligence"],
-      "triggers": ["code-exploration", "impact-analysis", "cross-file-trace"],
+      "capabilities": [
+        "codebase-intelligence"
+      ],
+      "triggers": [
+        "code-exploration",
+        "impact-analysis",
+        "cross-file-trace"
+      ],
       "sideEffects": "read-only",
       "tokenClass": "low",
-      "permissions": ["read-only"],
-      "environment": ["CODEBASE_MEMORY_MCP_BIN"],
+      "permissions": [
+        "read-only"
+      ],
+      "environment": [
+        "CODEBASE_MEMORY_MCP_BIN"
+      ],
       "install": {
         "type": "binary",
         "script": "integrations/required/codebase-memory-mcp/install.ps1",
@@ -39,7 +51,9 @@
       },
       "health": {
         "command": "{{bin}} --version",
-        "expectedExitCodes": [0]
+        "expectedExitCodes": [
+          0
+        ]
       },
       "schema": {
         "source": "integrations/required/codebase-memory-mcp/tools/",
@@ -50,16 +64,28 @@
         "linux": "$HOME/.local/share/codebase-memory-mcp",
         "darwin": "$HOME/Library/Application Support/codebase-memory-mcp"
       },
-      "nativeHosts": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
+      "nativeHosts": [
+        "codex",
+        "claude",
+        "grok",
+        "antigravity",
+        "cursor",
+        "opencode"
+      ],
       "fallback": "rg plus targeted reads and native symbol navigation",
-      "deprecatedAliases": ["codebase_memory"]
+      "deprecatedAliases": [
+        "codebase_memory"
+      ]
     },
     {
       "id": "playwright-mcp",
       "displayName": "Playwright MCP",
       "kind": "mcp",
       "policy": "required",
-      "profiles": ["qa", "frontend"],
+      "profiles": [
+        "qa",
+        "frontend"
+      ],
       "source": {
         "type": "npm",
         "url": "https://github.com/microsoft/playwright-mcp",
@@ -73,11 +99,21 @@
         "pinned": false
       },
       "trust": "adapter-verified",
-      "capabilities": ["browser-interaction"],
-      "triggers": ["browser-qa", "ui-e2e", "click-through", "playwright", "agentic-browser"],
+      "capabilities": [
+        "browser-interaction"
+      ],
+      "triggers": [
+        "browser-qa",
+        "ui-e2e",
+        "click-through",
+        "playwright",
+        "agentic-browser"
+      ],
       "sideEffects": "interactive-browser",
       "tokenClass": "high",
-      "permissions": ["interactive-browser"],
+      "permissions": [
+        "interactive-browser"
+      ],
       "environment": [],
       "install": {
         "type": "npm-npx",
@@ -87,12 +123,21 @@
       },
       "health": {
         "command": "npx -y @playwright/mcp --help",
-        "expectedExitCodes": [0]
+        "expectedExitCodes": [
+          0
+        ]
       },
       "schema": {
         "source": "integrations/required/playwright-mcp/"
       },
-      "nativeHosts": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
+      "nativeHosts": [
+        "codex",
+        "claude",
+        "grok",
+        "antigravity",
+        "cursor",
+        "opencode"
+      ],
       "fallback": "report the live-interaction proof gap; do not infer it from build output",
       "deprecatedAliases": []
     },
@@ -101,7 +146,10 @@
       "displayName": "Chrome DevTools MCP",
       "kind": "mcp",
       "policy": "required",
-      "profiles": ["qa", "frontend"],
+      "profiles": [
+        "qa",
+        "frontend"
+      ],
       "source": {
         "type": "npm",
         "url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
@@ -115,11 +163,21 @@
         "pinned": false
       },
       "trust": "adapter-verified",
-      "capabilities": ["browser-diagnostics"],
-      "triggers": ["browser-qa", "console-debug", "network-debug", "cdp", "chrome-devtools"],
+      "capabilities": [
+        "browser-diagnostics"
+      ],
+      "triggers": [
+        "browser-qa",
+        "console-debug",
+        "network-debug",
+        "cdp",
+        "chrome-devtools"
+      ],
       "sideEffects": "browser-read",
       "tokenClass": "high",
-      "permissions": ["browser-read"],
+      "permissions": [
+        "browser-read"
+      ],
       "environment": [],
       "install": {
         "type": "npm-npx",
@@ -129,53 +187,33 @@
       },
       "health": {
         "command": "npx -y chrome-devtools-mcp --help",
-        "expectedExitCodes": [0]
+        "expectedExitCodes": [
+          0
+        ]
       },
       "schema": {
         "source": "integrations/required/chrome-devtools-mcp/"
       },
-      "nativeHosts": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
+      "nativeHosts": [
+        "codex",
+        "claude",
+        "grok",
+        "antigravity",
+        "cursor",
+        "opencode"
+      ],
       "fallback": "browser console/network evidence when a host-native DevTools session is available",
-      "deprecatedAliases": []
-    },
-    {
-      "id": "caveman",
-      "displayName": "Caveman",
-      "kind": "tool",
-      "policy": "optional",
-      "profiles": [],
-      "source": {
-        "type": "github",
-        "url": "https://github.com/JuliusBrussee/caveman",
-        "version": "main",
-        "versionPolicy": "branch",
-        "ref": "main"
-      },
-      "integrity": {
-        "pinned": false
-      },
-      "trust": "advisory-only",
-      "capabilities": ["workflow-utility"],
-      "triggers": ["compression-workflow"],
-      "sideEffects": "local-write",
-      "tokenClass": "medium",
-      "permissions": ["local-write"],
-      "environment": [],
-      "install": {
-        "type": "npx-github",
-        "script": "integrations/optional/caveman/install.ps1",
-        "uninstall": "integrations/optional/caveman/uninstall.ps1"
-      },
-      "nativeHosts": [],
-      "fallback": "use canonical skills and normal task reasoning",
       "deprecatedAliases": []
     },
     {
       "id": "context7",
       "displayName": "Context7",
       "kind": "mcp",
-      "policy": "recommended",
-      "profiles": ["research"],
+      "policy": "required",
+      "profiles": [
+        "core",
+        "research"
+      ],
       "source": {
         "type": "npm",
         "url": "https://github.com/upstash/context7-mcp",
@@ -189,26 +227,43 @@
         "pinned": false
       },
       "trust": "adapter-verified",
-      "capabilities": ["research-context"],
-      "triggers": ["research", "context7", "library-docs"],
+      "capabilities": [
+        "research-context"
+      ],
+      "triggers": [
+        "research",
+        "context7",
+        "library-docs"
+      ],
       "sideEffects": "read-only",
       "tokenClass": "low",
-      "permissions": ["read-only"],
+      "permissions": [
+        "read-only"
+      ],
       "environment": [],
       "install": {
         "type": "npm-npx",
-        "script": "integrations/recommended/context7/install.ps1",
-        "verify": "integrations/recommended/context7/verify.ps1",
-        "uninstall": "integrations/recommended/context7/uninstall.ps1"
+        "script": "integrations/required/context7/install.ps1",
+        "verify": "integrations/required/context7/verify.ps1",
+        "uninstall": "integrations/required/context7/uninstall.ps1"
       },
       "health": {
         "command": "npx -y @upstash/context7-mcp --help",
-        "expectedExitCodes": [0]
+        "expectedExitCodes": [
+          0
+        ]
       },
       "schema": {
-        "source": "integrations/recommended/context7/"
+        "source": "integrations/required/context7/"
       },
-      "nativeHosts": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
+      "nativeHosts": [
+        "codex",
+        "claude",
+        "grok",
+        "antigravity",
+        "cursor",
+        "opencode"
+      ],
       "fallback": "upstream docs retrieval via curl or manual lookup",
       "deprecatedAliases": []
     }
@@ -216,15 +271,30 @@
   "profiles": {
     "core": {
       "description": "Essential dependencies for all agent operations",
-      "required": ["codebase-memory-mcp"]
+      "required": [
+        "codebase-memory-mcp",
+        "context7"
+      ]
     },
     "qa": {
       "description": "Browser-based UI quality assurance",
-      "required": ["playwright-mcp", "chrome-devtools-mcp"]
+      "required": [
+        "playwright-mcp",
+        "chrome-devtools-mcp"
+      ]
     },
     "frontend": {
       "description": "Frontend development support",
-      "required": ["playwright-mcp", "chrome-devtools-mcp"]
+      "required": [
+        "playwright-mcp",
+        "chrome-devtools-mcp"
+      ]
+    },
+    "research": {
+      "description": "Library and API documentation retrieval",
+      "required": [
+        "context7"
+      ]
     }
   }
 }

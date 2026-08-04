@@ -91,7 +91,7 @@
   },
   {
     "phrase": "review code thay đổi",
-    "skill": "code-review",
+    "skill": "quality",
     "keywords": [
       "review",
       "code"
@@ -251,7 +251,7 @@
     ]
   },
   {
-    "skill": "clean-code",
+    "skill": "quality",
     "keywords": [
       "clean-code",
       "smell",

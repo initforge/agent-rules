@@ -37,8 +37,49 @@ real `claude` CLI, not a mock:
 | S4 | DONE | `maxRepairDepth` (default 2) enforced in code; verification is commands-only |
 | S5 | PARTIAL | 10 of 23 superseded modules deleted (−10,349 lines). The other 13 have real consumers — see below |
 | S6 | DONE | PowerShell runs fine on Linux via pwsh — the port was unnecessary. Fixed the 4 real bugs it was hiding instead |
-| S7 | TODO | Registry (context7 required, serena optional, drop caveman) + skills |
+| S7 | DONE | Registry: context7 → required, caveman dropped, Serena skipped (unverifiable here). Skills 16 → 14 |
 | S8 | TODO | Correct README P8 status and system-map `.agent` claim |
+
+## S7 notes
+
+**Registry** — all four required integrations were verified to actually resolve
+(`npx -y @playwright/mcp`, `chrome-devtools-mcp`, `@upstash/context7-mcp` each exit 0;
+codebase-memory-mcp stays a pinned binary). context7 moved from `recommended` to
+`required` and from `integrations/recommended/` to `integrations/required/` so the
+directory matches its policy. `caveman` removed: `advisory-only` trust, capability
+"workflow-utility", and a fallback that read "use canonical skills and normal task
+reasoning" — i.e. it added nothing.
+
+**Serena was NOT added.** The review proposed it as an optional semantic-edit MCP. It
+needs `uvx` (absent on this host) and npm refuses git-source fetches here
+(`EALLOWGIT`), so I could not verify it runs. Adding a registry entry I cannot
+demonstrate is exactly the failure this whole refactor is correcting, so it is left out
+rather than declared.
+
+**Skills 16 → 14.** `code-review` and `clean-code` were both already marked DEPRECATED
+while still carrying full routing metadata (`priority: 60`, `max_route_tokens: 4000`),
+so they kept consuming routing budget for content that had moved to `quality`. Deleted,
+with `clean-code-checklist.md` moved into `skills/quality/references/` first — that file
+is load-bearing, `quality` references it three times.
+
+**docs-style screenshots are now mandatory.** The old wording ("only when requested or
+necessary", "only when the user asks") had produced an empty `docs/assets/` and a README
+with no images. Now: drive the app and capture → capture production → **ask the user**.
+No skip branch, and `TODO: xác minh` is explicitly not an escape hatch. Added a
+per-project-type capture table and two new quality gates.
+
+**Delegation receipts 7 → 2.** `rules/25-task-lifecycle.md` required
+`subagent_requested/_resolved/_started/_completed`, `result_consumed/_rejected`,
+`delegation_skipped`, and stated "missing receipts are detectable" — so the ceremony
+itself generated findings. Now two facts: what was delegated, and the outcome.
+
+Six dependent places had to be updated in step, which is a useful measure of how much
+coupling a "simple" skill deletion carries: `automation/12-regression-harness-guards.ps1`,
+`automation/audit-plan-artifact.ps1`, `automation/trigger-audit.json`,
+`automation/repository-inventory.json`, `automation/03-validate-context.ps1` (a check
+policing a trigger boundary between two now-merged skills), `rules/50-context-budget.md`,
+and the `supports:` edges in three other skills — a dangling edge broke context-graph
+loading outright.
 
 ## S6 finding: the port was the wrong fix
 

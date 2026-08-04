@@ -50,7 +50,6 @@ Each integration declares a `health` block with a probe command and expected exi
 | ID | Policy | Kind | Install Type |
 |----|--------|------|-------------|
 | codebase-memory-mcp | required | mcp | binary |
-| context7 | recommended | mcp | npm-global |
-| playwright-mcp | recommended | mcp | npm-npx |
-| chrome-devtools-mcp | recommended | mcp | npm-npx |
-| caveman | optional | tool | npx-github |
+| playwright-mcp | required | mcp | npm-npx |
+| chrome-devtools-mcp | required | mcp | npm-npx |
+| context7 | required | mcp | npm-npx |

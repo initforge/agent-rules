@@ -37,7 +37,7 @@ Các pack sau **được phép** vượt soft line/token guide vì cohesion / de
 | `docs-style` (+ refs) | Self-contained docs workflow end-to-end |
 | `plan-and-handoff` (+ refs) | PAF + tier + goal autopilot liền mạch |
 | `finish-to-completion` (+ refs) | Slice completion / ledger depth |
-| `code-review` | User-invoked strict maintainability; depth > soft 3500 |
+| `quality` (+ refs) | Clean-code gate plus strict maintainability; depth > soft 3500 |
 | `profiles/*/projects/**` domain packs | Progressive domain depth khi lazy-load |
 
 Always-on `rules/` vẫn cứng theo `manifest.yaml` `core_total_tokens`.
