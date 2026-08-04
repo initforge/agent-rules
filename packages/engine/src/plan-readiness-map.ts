@@ -12,8 +12,12 @@
 
 interface M11Implementation {
   cluster: string;
-  /** MATCH = implemented; PARTIAL = implemented but a named condition stays open. */
-  status: 'MATCH' | 'PARTIAL';
+  /**
+   * MATCH = implemented; PARTIAL = implemented but a named condition stays open;
+   * SUPERSEDED = the owner removed this scope, so absent modules are expected rather
+   * than a gap. Use `partialReason` to say what replaced it.
+   */
+  status: 'MATCH' | 'PARTIAL' | 'SUPERSEDED';
   /** Paths relative to repo root; existence is probed at compile time. */
   modules: string[];
   /** Test/evidence paths relative to repo root; existence is probed too. */
@@ -46,9 +50,11 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
   },
   'M11-R13': {
     cluster: 'C2',
-    status: 'MATCH',
+    status: 'SUPERSEDED',
+    partialReason:
+      'superseded: typed ready-set dispatch replaced by the sequential runner queue (see .agent/plans/harness-v3-rearchitecture/requirements.yaml R-014)',
     modules: ['packages/engine/src/plan-readiness.ts', 'packages/engine/src/dispatch-ready-set.ts'],
-    tests: ['packages/engine/test/dispatch-ready-set.test.ts', 'packages/engine/test/plan-readiness.test.ts'],
+    tests: [ 'packages/engine/test/plan-readiness.test.ts'],
     acceptanceCriteria: [
       'execution-graph.yaml emits typed cross-stage dependency edges (HARD/SOFT/VERIFY_AFTER/…/EXTERNAL)',
       'dispatch-ready-set computes ready sets over a typed dependency graph with blocking/non-blocking classes',
@@ -56,9 +62,11 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
   },
   'M11-R14': {
     cluster: 'C2',
-    status: 'MATCH',
+    status: 'SUPERSEDED',
+    partialReason:
+      'superseded: controller/dispatch scheduling replaced by runner/loop.ts (R-014)',
     modules: ['packages/engine/src/dispatch-ready-set.ts', 'packages/engine/src/controller.ts'],
-    tests: ['packages/engine/test/dispatch-ready-set.test.ts', 'packages/engine/test/controller.test.ts'],
+    tests: [ 'packages/engine/test/controller.test.ts'],
     acceptanceCriteria: [
       'max-useful conflict-free ready antichain scheduling without starving independent work',
       'controller.dispatchReadySet executes the readiness dispatch path',
@@ -66,9 +74,11 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
   },
   'M11-R15': {
     cluster: 'C3',
-    status: 'MATCH',
+    status: 'SUPERSEDED',
+    partialReason:
+      'superseded: worktree isolation and the integration train are unnecessary for a sequential runner (R-016)',
     modules: ['packages/engine/src/worktree-train.ts', 'packages/cli/src/commands/train.ts', 'packages/cli/src/commands/worktree.ts'],
-    tests: ['packages/engine/test/worktree-train.test.ts', 'packages/engine/test/worktree-inventory.test.ts'],
+    tests: [ 'packages/engine/test/worktree-inventory.test.ts'],
     acceptanceCriteria: [
       'per-assignment worktree isolation with leased lifecycle (create/integrate/release)',
       'rolling integration train merges accepted branches in receipt order',
@@ -76,9 +86,11 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
   },
   'M11-R16': {
     cluster: 'C4',
-    status: 'MATCH',
+    status: 'SUPERSEDED',
+    partialReason:
+      'superseded: resource broker/governor arbitrated a worker pool that never existed (R-018)',
     modules: ['packages/engine/src/resource-broker.ts', 'packages/engine/src/resource-governor.ts'],
-    tests: ['packages/engine/test/resource-broker.test.ts', 'packages/engine/test/resource-governor.test.ts'],
+    tests: [ 'packages/engine/test/resource-governor.test.ts'],
     acceptanceCriteria: [
       'global broker multiplexes resource/tool/browser pools under leases',
       'governor enforces pool ceilings and hysteresis from memory/PSI/swap signals',
@@ -86,9 +98,11 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
   },
   'M11-R17': {
     cluster: 'C5',
-    status: 'MATCH',
+    status: 'SUPERSEDED',
+    partialReason:
+      'superseded: dual autopilot replaced by runner/loop.ts with bounded repair (R-015)',
     modules: ['packages/engine/src/autopilot-m11.ts', 'packages/engine/src/supervisor.ts', 'packages/engine/src/terminal-gate.ts'],
-    tests: ['packages/engine/test/autopilot-m11.test.ts', 'packages/engine/test/supervisor.test.ts', 'packages/engine/test/terminal-gate.test.ts'],
+    tests: [ 'packages/engine/test/terminal-gate.test.ts'],
     acceptanceCriteria: [
       'nonterminal continuation across WAITING_EXTERNAL/WAITING_AUTHORITY/WAITING_RESOURCE/RETRY_SCHEDULED',
       'durable autopilot resumes after crash without duplicate or lost work',
@@ -158,9 +172,11 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
   },
   'M11-R24': {
     cluster: 'C9',
-    status: 'MATCH',
+    status: 'SUPERSEDED',
+    partialReason:
+      'superseded: ledger-activation and its global contract hash were the source of HASH-001; replaced by the flat requirements ledger (R-017)',
     modules: ['packages/engine/src/terminal-gate.ts', 'packages/engine/src/ledger-activation.ts'],
-    tests: ['packages/engine/test/terminal-gate.test.ts', 'packages/engine/test/ledger-activation.test.ts'],
+    tests: ['packages/engine/test/terminal-gate.test.ts'],
     acceptanceCriteria: [
       'evaluateM11Terminal derives terminal truth from ledger gates, not external tokens',
       'ledger-activation enforces canonical atomic activation and migration',
@@ -168,9 +184,11 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
   },
   'M11-R25': {
     cluster: 'C9',
-    status: 'MATCH',
+    status: 'SUPERSEDED',
+    partialReason:
+      'superseded: supervisor pool replaced by one headless process per task (R-014)',
     modules: ['packages/engine/src/supervisor.ts', 'packages/engine/src/worker-adapter.ts', 'evals/m11'],
-    tests: ['packages/engine/test/supervisor.test.ts', 'packages/engine/test/worker-verifier.test.ts', 'evals/m11/aggregation.test.ts'],
+    tests: [ 'packages/engine/test/worker-verifier.test.ts', 'evals/m11/aggregation.test.ts'],
     acceptanceCriteria: [
       'subagent-first audit/review with independent verifier/reviewer paths',
       'main-context protection: workers own source edits, main orchestrates/reviews only',
@@ -181,8 +199,6 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
     status: 'MATCH',
     modules: ['evals/m11', 'evals/m11/runner.py'],
     tests: [
-      'packages/engine/test/dispatch-ready-set.test.ts',
-      'packages/engine/test/autopilot-m11.test.ts',
       'packages/engine/test/topology-compiler.test.ts',
       'packages/engine/test/parity-runner.test.ts',
       'packages/engine/test/adversarial-closure.test.ts',
@@ -219,7 +235,7 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
     cluster: 'C8',
     status: 'MATCH',
     modules: ['packages/engine/src/review-receipt.ts', 'packages/engine/src/native-session-adapter.ts'],
-    tests: ['packages/engine/test/review-receipt.test.ts', 'packages/engine/test/opencode-adapter.test.ts'],
+    tests: ['packages/engine/test/review-receipt.test.ts'],
     acceptanceCriteria: [
       'verdicts are capability-qualified: no-vision review cannot issue visual PASS, Playwright-only evidence cannot issue raw-CDP PASS',
       'model/capability substitution is never silent',
@@ -336,9 +352,11 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
   },
   'M11-R41': {
     cluster: 'C3',
-    status: 'MATCH',
+    status: 'SUPERSEDED',
+    partialReason:
+      'superseded: semantic wake states were never driven by a real executor; replaced by the single NEEDS_USER terminal (R-021)',
     modules: ['packages/engine/src/semantic-wake-policy.ts', 'packages/engine/src/main-run-capsule.ts'],
-    tests: ['packages/engine/test/semantic-wake-policy.test.ts', 'packages/engine/test/main-run-capsule.test.ts'],
+    tests: [ 'packages/engine/test/main-run-capsule.test.ts'],
     acceptanceCriteria: [
       'Premium main wakes only under the closed semantic wake policy (ARCHITECTURE_DECISION, AUTHORITY_REQUIRED, CONTRACT_CONFLICT, REPAIR_ESCALATION, REVIEW_CONFLICT, INTEGRATION_CONFLICT, CONTEXT_FIDELITY_FAILURE, TERMINAL_RECONCILIATION)',
     ],

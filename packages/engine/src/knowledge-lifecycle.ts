@@ -210,7 +210,11 @@ export function supersedeKnowledge(
     );
   }
 
-  // Cyclic supersession check: follow the chain
+  // Cyclic supersession check: walk the chain the current entry already supersedes.
+  // If the proposed superseding entry is anywhere in that chain, pointing at it would
+  // close a loop (b supersedes a, then a supersedes b), and queryActiveKnowledge would
+  // follow it forever. The walk previously collected the chain but never compared it
+  // against supersedingId, so it could only catch a self-loop.
   let followId: string | undefined = currentId;
   const visited = new Set<string>();
   while (followId !== undefined) {
@@ -220,6 +224,11 @@ export function supersedeKnowledge(
     visited.add(followId);
     const node = registry.entries.find((e) => e.id === followId);
     followId = node?.supersedesId;
+  }
+  if (visited.has(supersedingId)) {
+    throw new Error(
+      `Cyclic supersession: '${supersedingId}' is already in the chain superseded by '${currentId}'`,
+    );
   }
 
   const now = new Date().toISOString();

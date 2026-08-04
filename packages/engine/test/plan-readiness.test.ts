@@ -19,8 +19,14 @@ import type { CompiledLedger } from '../src/plan-readiness.js';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '..', '..', '..');
 const PLAN_ID = 'agent-rules-harness-v3-rearchitecture-20260726-r1';
-const LEDGER_PATH = path.join(REPO_ROOT, '.agent', 'ledger', `${PLAN_ID}.json`);
-const PLAN_DIR = path.join(REPO_ROOT, '.agent', 'plans', PLAN_ID);
+
+// This suite reads a real historical ledger to exercise fail-closed compilation.
+// It used to read the live `.agent/ledger/` and `.agent/plans/`, so migrating the plan
+// broke it — a test asserting engine behaviour should not depend on which plan happens
+// to be active. Both now point at the archived copy, which is immutable by definition.
+const ARCHIVE = path.join(REPO_ROOT, '.agent', 'archive');
+const LEDGER_PATH = path.join(ARCHIVE, 'ledger', `${PLAN_ID}.json`);
+const PLAN_DIR = path.join(ARCHIVE, 'harness-v3-legacy-ledger');
 
 const AMENDMENT_PATH = path.join(
   PLAN_DIR,
@@ -37,7 +43,7 @@ const AMENDMENT_PATH_0021 = path.join(
   'amendments',
   '0021-premium-main-context-economy-and-event-driven-orchestration.md',
 );
-const ORIGINAL_PATH = path.join(PLAN_DIR, 'original.md');
+const ORIGINAL_PATH = path.join(REPO_ROOT, '.agent', 'plans', 'harness-v3-rearchitecture', 'plan.md');
 
 const fixtureTmp = path.join(os.tmpdir(), `plan-readiness-test-${process.pid}-${Date.now()}`);
 fs.mkdirSync(fixtureTmp, { recursive: true });
@@ -129,17 +135,31 @@ describe('compileRequirements — dynamic, no hard-coded count', () => {
     const m11 = requirements.filter((x) => x.requirement_id.startsWith('M11-R'));
     expect(m11).toHaveLength(40);
     for (const r of m11) {
+      // GAP means never implemented. SUPERSEDED means the owner removed the scope, so
+      // the modules are absent by decision — reporting that as a gap forever would be
+      // exactly the "work never closes" behaviour this refactor removed.
       expect(r.status, r.requirement_id).not.toBe('GAP');
       expect(r.acceptance_criteria.length).toBeGreaterThan(0);
       expect(r.execution_cluster.cluster).toMatch(/^C(1|2|3|4|5|6|7|8|9|10)$/);
       expect(r.evidence_contract, `${r.requirement_id} evidence`).not.toBeNull();
     }
-    // AM-0019 set: ALL MATCH including M11-R22 (codex native runtime now live;
-    // five host attestations validate HEAD when fresh).
+    // AM-0019 set: MATCH, except the scheduling requirements the durable runner
+    // replaced. Those report SUPERSEDED with the owner's reason recorded — see
+    // .agent/plans/harness-v3-rearchitecture/requirements.yaml R-014..R-018.
     const reqNum = (id: string): number => Number(id.match(/\d+$/)?.[0]);
+    const SUPERSEDED_IDS = ['M11-R13', 'M11-R14', 'M11-R15', 'M11-R16', 'M11-R17', 'M11-R24', 'M11-R25'];
     const am0019 = m11.filter((x) => reqNum(x.requirement_id) <= 26);
     for (const r of am0019) {
-      expect(r.status, r.requirement_id).toBe('MATCH');
+      expect(r.status, r.requirement_id).toBe(
+        SUPERSEDED_IDS.includes(r.requirement_id) ? 'SUPERSEDED' : 'MATCH'
+      );
+    }
+    // Every superseded requirement must say why, and carry hashed evidence of the
+    // decision — an unexplained disappearance is what made the old ledger untrustworthy.
+    for (const id of SUPERSEDED_IDS) {
+      const entry = m11.find((x) => x.requirement_id === id);
+      expect(entry?.notes.some((n) => n.startsWith('superseded:')), id).toBe(true);
+      expect(entry?.evidence_contract?.hashes.length, id).toBeGreaterThan(0);
     }
     // AM-0020 set: R27..R36 are all MATCH (merged into integration HEAD).
     const am0020plus = m11.filter((x) => reqNum(x.requirement_id) >= 27);

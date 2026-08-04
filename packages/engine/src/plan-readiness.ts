@@ -89,7 +89,12 @@ export interface HostProbe {
 export interface RequirementMapping {
   requirement_id: string;
   source: string;
-  status: 'MATCH' | 'PARTIAL' | 'GAP';
+  /**
+   * SUPERSEDED means the owner removed this requirement's scope, so its modules are
+   * absent by decision. GAP means the work was never done. Collapsing the two would
+   * report deliberate deletions as unfinished work forever.
+   */
+  status: 'MATCH' | 'PARTIAL' | 'GAP' | 'SUPERSEDED';
   plan_anchor: {
     section_heading?: string;
     line_start?: number;
@@ -420,12 +425,15 @@ export function compileRequirements(
     const hasAllTests = missingTests.length === 0;
 
     let status: RequirementMapping['status'];
-    if (!hasAllModules && !hasAllTests) status = 'GAP';
+    if (impl.status === 'SUPERSEDED') status = 'SUPERSEDED';
+    else if (!hasAllModules && !hasAllTests) status = 'GAP';
     else if (hasAllModules && hasAllTests && impl.status === 'MATCH') status = 'MATCH';
     else status = 'PARTIAL';
 
     const notes: string[] = [];
-    if (!hasAllModules) notes.push(`missing module(s): ${missingModules.join(', ')}`);
+    if (status === 'SUPERSEDED') {
+      notes.push(impl.partialReason ?? 'scope removed by the owner; modules absent by decision');
+    } else if (!hasAllModules) notes.push(`missing module(s): ${missingModules.join(', ')}`);
     if (!hasAllTests) notes.push(`missing test/evidence: ${missingTests.join(', ')}`);
     if (impl.partialReason) notes.push(impl.partialReason);
     if (status === 'MATCH') {
@@ -440,6 +448,13 @@ export function compileRequirements(
       .sort()
       .map((m) => sha256(fs.readFileSync(path.resolve(root, m), 'utf8')));
 
+    // A superseded requirement can have no module evidence — that is the point. Its
+    // evidence is the recorded decision, hashed, so the removal is auditable rather
+    // than an unexplained null.
+    if (status === 'SUPERSEDED' && moduleEvidence.length === 0) {
+      moduleEvidence.push(sha256(`SUPERSEDED:${mr.id}:${impl.partialReason ?? ''}`));
+    }
+
     out.push({
       requirement_id: mr.id,
       source: `${amendmentSourceFor(mr.id, paths)} — ${mr.title}`,
@@ -450,7 +465,11 @@ export function compileRequirements(
       evidence_contract: moduleEvidence.length > 0
         ? { hashes: moduleEvidence, bound_to: ledger.effectiveIdentity }
         : null,
-      execution_cluster: { cluster: impl.cluster, owner: 'harness-maintainer', state: status === 'MATCH' ? 'MATCH' : 'PARTIAL' },
+      execution_cluster: {
+        cluster: impl.cluster,
+        owner: 'harness-maintainer',
+        state: status === 'MATCH' ? 'MATCH' : 'PARTIAL',
+      },
       notes,
     });
   }

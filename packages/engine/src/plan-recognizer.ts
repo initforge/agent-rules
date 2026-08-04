@@ -11,6 +11,27 @@ function assertPathWithin(resolved: string, root: string): void {
   }
 }
 
+/**
+ * Reject symlinks outright before any containment check.
+ *
+ * `path.resolve()` is lexical: it does not follow links, so a symlink sitting inside the
+ * plans directory passes `assertPathWithin` no matter where it actually points. That let
+ * a link inside `.agent/plans/` read an arbitrary file and have it recognized as a plan.
+ * Refusing links is stricter than resolving them and is the right default here: a plan is
+ * a file the repo owns, never an alias to something else.
+ */
+function assertNotSymlink(target: string, label: string): void {
+  let stat: fs.Stats;
+  try {
+    stat = fs.lstatSync(target);
+  } catch {
+    return; // absent paths are handled by the caller
+  }
+  if (stat.isSymbolicLink()) {
+    throw new Error(`Path traversal blocked: ${label} is a symlink (${target})`);
+  }
+}
+
 export type PlanKind = 'portable_plan_v3' | 'markdown_plan' | 'legacy_plan' | 'unknown';
 
 export interface RecognizedPlan {
@@ -161,8 +182,10 @@ export function detectPlanFromFile(filePath: string, baseDir: string = process.c
   const resolved = path.resolve(filePath);
   if (!fs.existsSync(resolved)) return null;
   const plansRoot = path.resolve(baseDir, PLANS_DIR);
+  assertNotSymlink(resolved, 'plan file');
   assertPathWithin(resolved, plansRoot);
   const planDir = path.dirname(resolved);
+  assertNotSymlink(planDir, 'plan directory');
   assertPathWithin(planDir, plansRoot);
   const planId = path.basename(planDir);
   return recognizeSinglePlan(planId, planDir, resolved);

@@ -65,10 +65,6 @@
       "types": "./dist/review-receipt.d.ts",
       "import": "./dist/review-receipt.js"
     },
-    "./operating-model-compiler": {
-      "types": "./dist/operating-model-compiler.d.ts",
-      "import": "./dist/operating-model-compiler.js"
-    },
     "./event-delta": {
       "types": "./dist/event-delta.d.ts",
       "import": "./dist/event-delta.js"
@@ -128,6 +124,10 @@
     "./runner/loop": {
       "types": "./dist/runner/loop.d.ts",
       "import": "./dist/runner/loop.js"
+    },
+    "./om-deterministic-compiler": {
+      "types": "./dist/om-deterministic-compiler.d.ts",
+      "import": "./dist/om-deterministic-compiler.js"
     }
   },
   "engines": {

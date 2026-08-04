@@ -196,8 +196,17 @@ describe('SafeArgvRunner', () => {
     });
 
     it('accepts absolute path with cwd', () => {
-      const result = SafeArgvRunner.validateCommand({ executable: 'npm', args: ['test'], cwd: 'P:/agent-rules' });
+      // Must be absolute on the host running the test: "P:/agent-rules" is only
+      // absolute on Windows, so hardcoding it made this pass on one machine and fail
+      // everywhere else.
+      const result = SafeArgvRunner.validateCommand({ executable: 'npm', args: ['test'], cwd: process.cwd() });
       expect(result.valid).toBe(true);
+    });
+
+    it('rejects a relative cwd', () => {
+      const result = SafeArgvRunner.validateCommand({ executable: 'npm', args: ['test'], cwd: 'relative/path' });
+      expect(result.valid).toBe(false);
+      expect(result.reason).toContain('absolute');
     });
 
     it('rejects shell metacharacters in executable', () => {

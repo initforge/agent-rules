@@ -201,15 +201,43 @@ describe('ContextCache', () => {
       expect(tmpFiles.length).toBe(0);
     });
 
-    it('evicts disk entries when maxEntries is low', () => {
+    it('evicts disk entries when the disk budget is low', () => {
       const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctx-evict-'));
       tmpDirs.push(dir);
-      const small = new ContextCache({ cacheDir: dir, maxEntries: 3 });
+      // maxDiskEntries is separate from maxEntries on purpose: memory eviction spills
+      // to disk, so a disk budget equal to the memory budget would delete an entry the
+      // instant it spilled and break reload. Here the disk ceiling is stated directly.
+      const small = new ContextCache({ cacheDir: dir, maxEntries: 3, maxDiskEntries: 3 });
       for (let i = 0; i < 10; i++) {
         small.set(makeKey({ assignmentId: `e${i}` }), makeCapsule(makeKey({ assignmentId: `e${i}` })));
       }
       expect(small.size()).toBeLessThanOrEqual(3);
       expect(countFiles(dir)).toBeLessThanOrEqual(3);
+    });
+
+    it('keeps a memory-evicted entry on disk when the disk budget allows', () => {
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctx-spill-'));
+      tmpDirs.push(dir);
+      const cache = new ContextCache({ cacheDir: dir, maxEntries: 2 });
+      for (let i = 0; i < 6; i++) {
+        cache.set(makeKey({ assignmentId: `s${i}` }), makeCapsule(makeKey({ assignmentId: `s${i}` })));
+      }
+      expect(cache.size()).toBeLessThanOrEqual(2);
+      // Everything written is still reachable: spill, not deletion.
+      expect(cache.get(makeKey({ assignmentId: 's0' }))).toBeDefined();
+    });
+
+    it('enforces the default disk ceiling rather than growing without bound', () => {
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctx-bound-'));
+      tmpDirs.push(dir);
+      const cache = new ContextCache({ cacheDir: dir, maxEntries: 2 });
+      for (let i = 0; i < 40; i++) {
+        cache.set(makeKey({ assignmentId: `b${i}` }), makeCapsule(makeKey({ assignmentId: `b${i}` })));
+      }
+      // Default disk ceiling is maxEntries * 10; before this fix the write path could
+      // not evict at all (it deadlocked on the lock it already held) and every capsule
+      // ever written stayed on disk.
+      expect(countFiles(dir)).toBeLessThanOrEqual(20);
     });
 
     it('rebuilds metadata after corruption', () => {
