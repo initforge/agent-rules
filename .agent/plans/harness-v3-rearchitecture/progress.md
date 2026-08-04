@@ -36,9 +36,48 @@ real `claude` CLI, not a mock:
 | S3 | DONE | Durable runner: `queue`, `headless-executor`, `diff`, `loop`, `journal`; `agent-rules runner` CLI; 64 tests |
 | S4 | DONE | `maxRepairDepth` (default 2) enforced in code; verification is commands-only |
 | S5 | PARTIAL | 10 of 23 superseded modules deleted (−10,349 lines). The other 13 have real consumers — see below |
-| S6 | TODO | Port 4 PowerShell critical-path scripts to `.mjs` |
+| S6 | DONE | PowerShell runs fine on Linux via pwsh — the port was unnecessary. Fixed the 4 real bugs it was hiding instead |
 | S7 | TODO | Registry (context7 required, serena optional, drop caveman) + skills |
 | S8 | TODO | Correct README P8 status and system-map `.agent` claim |
+
+## S6 finding: the port was the wrong fix
+
+The plan called for porting 4 PowerShell scripts (1,809 lines) to `.mjs`. Two things
+turned out to be false:
+
+1. **`build`, `validate`, `doctor`, and `verify` are already native TypeScript.** Only
+   `02-install-runtime.ps1` is still invoked from the CLI (by `install` and `sync`).
+2. **PowerShell runs on Linux.** Executing `03-validate-context.ps1` through `pwsh`
+   worked; it failed on *content*, not platform. `verify:all` had been broken solely
+   because `package.json` invoked `powershell`, a Windows-only binary name.
+
+So the port would have rewritten 1,809 working lines and changed nothing. What the
+restored `verify:all` actually revealed was four real bugs it had been hiding:
+
+| Bug | Fix |
+|---|---|
+| `validate-tool-registry.ps1` hardcoded 5 hosts, omitting `claude`, so a correct registry always failed | read the host list from `platforms/platform-contracts.json` |
+| `sync-opencode-parity.ps1` hardcoded selector `gpt-5.6-sol`, violating "selectors live only in model-policy.json"; its own comment admitted it | added `platforms.claude.adapter_defaults.model_selectors.session_bridge` to the policy and read from it |
+| `test-model-policy.py` asserted an exact 5-platform set, so adding a platform broke a correct policy — the pressure that caused the hardcode above | assert every contracted platform has a policy entry |
+| `update-source-integrity.py` hardcoded `P:/agent-rules`, so it only ran on one Windows machine | resolve from `__file__`; added `--check` for CI |
+
+Also fixed two protocol violations the new `.agent` validator caught, both of which
+were tools writing where they should not:
+- `03-validate-context.ps1` wrote `validate-ui-routing.log` to `.agent/` root → now
+  `.agent/artifacts/`.
+- `plan-lifecycle.test.ts` adopted a fixture into the real `.agent/plans/`, leaving
+  `test-plan-adopt-1` among real plans → `adoptPlan()` now takes an injectable
+  `plansDir`.
+- Removed a stale empty `skills/5fedu-module-parity/` (only a `__pycache__`); the real
+  skill already lives in `profiles/5fedu/skills/`.
+
+`verify:all` on Linux now: BUILD OK, typecheck OK, `.agent` protocol OK, md-links OK,
+model-policy OK, installer-trust-boundary OK, 5fedu-leakage OK, tool-registry OK,
+`validate-context` PASS.
+
+Remaining: `test-artifact-schemas.py` needs the `jsonschema` package, and this host has
+no `pip`. That is an environment gap, not a code defect — recorded rather than papered
+over.
 
 ## S5 finding: the deletion set is smaller than the review assumed
 

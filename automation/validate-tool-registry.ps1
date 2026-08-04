@@ -33,7 +33,12 @@ $TokenClasses = @("low", "medium", "high")
 $TrustStatuses = @("advisory-only", "declared", "adapter-verified", "native-live")
 $SourceTypes = @("github", "npm", "git", "local")
 $InstallTypes = @("binary", "npm-global", "npm-npx", "npx-github", "git", "local")
-$Hosts = @("codex", "grok", "antigravity", "cursor", "opencode")
+# Derived from platform-contracts.json rather than hardcoded: a hardcoded list silently
+# omitted "claude" while both the contracts file and registry.json declared it, so every
+# registry validation failed on a correct registry.
+$ContractsPath = Join-Path $Root "platforms/platform-contracts.json"
+if (-not (Test-Path -LiteralPath $ContractsPath)) { Fail "platform contracts not found: $ContractsPath" }
+$Hosts = @((Get-Content -Raw -LiteralPath $ContractsPath | ConvertFrom-Json).platforms.PSObject.Properties.Name)
 
 $Ids = @{}
 $AllAliases = @{}

@@ -222,16 +222,18 @@ if (Test-Path $TriggerAuditPath) {
 
 $UiRoutingAudit = Join-Path $Root "automation\audit-ui-routing.ps1"
 if (Test-Path $UiRoutingAudit) {
-  $UiLogPath = Join-Path $Root ".agent\validate-ui-routing.log"
+  # Per-run output goes under .agent/artifacts/, not .agent/ root: the root holds only
+  # protocol-defined entries (see .agent/README.md, enforced by validate-agent-dir.mjs).
+  $UiLogPath = Join-Path $Root ".agent\artifacts\validate-ui-routing.log"
   $UiLogDir = Split-Path $UiLogPath -Parent
   if (-not (Test-Path $UiLogDir)) { New-Item -ItemType Directory -Force -Path $UiLogDir | Out-Null }
   try {
     & $UiRoutingAudit -Root $Root -RunId validate-context -LogPath $UiLogPath | Out-Null
     if ($LASTEXITCODE -ne 0) {
-      $Problems.Add("UI routing audit failed - see .agent/validate-ui-routing.log and automation/audit-ui-routing.ps1")
+      $Problems.Add("UI routing audit failed - see .agent/artifacts/validate-ui-routing.log and automation/audit-ui-routing.ps1")
     }
   } catch {
-    $Problems.Add("UI routing audit crashed - error: $_ - see .agent/validate-ui-routing.log")
+    $Problems.Add("UI routing audit crashed - error: $_ - see .agent/artifacts/validate-ui-routing.log")
   }
 } else {
   $Problems.Add("Missing UI routing audit: automation/audit-ui-routing.ps1")

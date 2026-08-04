@@ -42,7 +42,7 @@ function ensureDir(dir: string): void {
   fs.mkdirSync(dir, { recursive: true });
 }
 
-export function adoptPlan(sourcePath: string, planId: string): PlanIdentity {
+export function adoptPlan(sourcePath: string, planId: string, plansDir: string = AGENT_PLANS_DIR): PlanIdentity {
   requireValue(typeof sourcePath === 'string' && sourcePath.length > 0, 'sourcePath must be non-empty');
   requireValue(typeof planId === 'string' && planId.length > 0, 'planId must be non-empty');
 
@@ -52,7 +52,10 @@ export function adoptPlan(sourcePath: string, planId: string): PlanIdentity {
   const rawBytes = fs.readFileSync(resolved);
   const originalSha256 = sha256Bytes(rawBytes);
 
-  const targetDir = path.join(AGENT_PLANS_DIR, planId);
+  // `plansDir` is injectable so tests do not write fixtures into the real ledger.
+  // They used to, which left directories like `test-plan-adopt-1` sitting among real
+  // plans until the .agent validator started rejecting them.
+  const targetDir = path.join(plansDir, planId);
   const targetPath = path.join(targetDir, 'original.md');
   ensureDir(targetDir);
   fs.copyFileSync(resolved, targetPath);

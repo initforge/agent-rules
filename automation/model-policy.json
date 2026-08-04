@@ -54,8 +54,28 @@
     "fail_honest": "Requested and resolved values are not observed evidence. Missing attestation is unknown and cannot support PASS. No model is verified merely because its config file contains the intended ID."
   },
   "telemetry_contract": {
-    "event_fields": ["session_id", "actor", "assignment_id", "logical_class", "requested_class", "resolved_provider", "resolved_model", "observed_model", "attestation_status", "escalation_reason", "fallback_reason", "tool", "tool_class", "timestamp", "outcome"],
-    "actors": ["main", "worker", "unknown"],
+    "event_fields": [
+      "session_id",
+      "actor",
+      "assignment_id",
+      "logical_class",
+      "requested_class",
+      "resolved_provider",
+      "resolved_model",
+      "observed_model",
+      "attestation_status",
+      "escalation_reason",
+      "fallback_reason",
+      "tool",
+      "tool_class",
+      "timestamp",
+      "outcome"
+    ],
+    "actors": [
+      "main",
+      "worker",
+      "unknown"
+    ],
     "unknown_actor_outcome": "UNVERIFIED",
     "hook_error_behavior": "fail_open"
   },
@@ -63,15 +83,29 @@
     "codex": {
       "adapter_defaults": {
         "model_selectors": {
-          "standard": { "family": "Terra", "selector": "gpt-5.6-terra", "effort": "medium" },
-          "expert": { "family": "Sol", "selector": "gpt-5.6-sol", "effort": "medium" }
+          "standard": {
+            "family": "Terra",
+            "selector": "gpt-5.6-terra",
+            "effort": "medium"
+          },
+          "expert": {
+            "family": "Sol",
+            "selector": "gpt-5.6-sol",
+            "effort": "medium"
+          }
         },
         "expert_escalation": "Use high effort only when material risk requires it."
       },
       "capabilities": {
-        "economy": { "effort": "low" },
-        "standard": { "effort": "medium" },
-        "expert": { "effort": "medium" }
+        "economy": {
+          "effort": "low"
+        },
+        "standard": {
+          "effort": "medium"
+        },
+        "expert": {
+          "effort": "medium"
+        }
       },
       "denied_modes": [],
       "denial_behavior": "fail_closed",
@@ -81,16 +115,35 @@
     "cursor": {
       "adapter_defaults": {
         "model_selectors": {
-          "implementation": { "family": "Composer", "channel": "Standard", "selector": "composer-2.5[fast=false]", "display": "Composer 2.5 Standard" },
-          "research_review": { "family": "Grok", "channel": "base", "selector": "grok-4.5", "display": "Grok 4.5 base" }
+          "implementation": {
+            "family": "Composer",
+            "channel": "Standard",
+            "selector": "composer-2.5[fast=false]",
+            "display": "Composer 2.5 Standard"
+          },
+          "research_review": {
+            "family": "Grok",
+            "channel": "base",
+            "selector": "grok-4.5",
+            "display": "Grok 4.5 base"
+          }
         }
       },
       "capabilities": {
-        "utility": { "effort": "low" },
-        "standard": { "effort": "medium" },
-        "expert_review": { "effort": "medium" }
+        "utility": {
+          "effort": "low"
+        },
+        "standard": {
+          "effort": "medium"
+        },
+        "expert_review": {
+          "effort": "medium"
+        }
       },
-      "denied_modes": ["Fast", "Auto"],
+      "denied_modes": [
+        "Fast",
+        "Auto"
+      ],
       "denial_behavior": "fail_closed",
       "subagent_model_override": "supported",
       "model_attestation": "native"
@@ -98,50 +151,119 @@
     "antigravity": {
       "adapter_defaults": {
         "model_selectors": {
-          "standard": { "family": "Gemini", "channel": "Flash-to-Pro", "minimum_effort": "medium" }
+          "standard": {
+            "family": "Gemini",
+            "channel": "Flash-to-Pro",
+            "minimum_effort": "medium"
+          }
         },
-        "denied_models": [{ "family": "Gemini", "version": "3.6", "channel": "Flash" }],
-        "exceptional_expert": { "family": "Claude", "effort": "high", "only_when": "material expert-risk work" }
+        "denied_models": [
+          {
+            "family": "Gemini",
+            "version": "3.6",
+            "channel": "Flash"
+          }
+        ],
+        "exceptional_expert": {
+          "family": "Claude",
+          "effort": "high",
+          "only_when": "material expert-risk work"
+        }
       },
       "capabilities": {
-        "economy": { "effort": "low" },
-        "standard": { "effort": "medium", "minimum_effort": "medium" },
-        "expert": { "effort": "high" }
+        "economy": {
+          "effort": "low"
+        },
+        "standard": {
+          "effort": "medium",
+          "minimum_effort": "medium"
+        },
+        "expert": {
+          "effort": "high"
+        }
       },
       "subagent_model_override": "unconfirmed",
       "denial_behavior": "fail_closed",
       "model_attestation": "unconfirmed"
     },
     "opencode": {
-      "economy": { "family": "user-configured", "selector": "__user_mapped__", "note": "user sets opencode.json model field; adapter does not hardcode" },
-      "standard": { "family": "user-configured", "selector": "__user_mapped__", "note": "user sets opencode.json model field; adapter does not hardcode" },
-      "expert": { "family": "user-configured", "selector": "__user_mapped__", "note": "user sets opencode.json model field; adapter does not hardcode" },
+      "economy": {
+        "family": "user-configured",
+        "selector": "__user_mapped__",
+        "note": "user sets opencode.json model field; adapter does not hardcode"
+      },
+      "standard": {
+        "family": "user-configured",
+        "selector": "__user_mapped__",
+        "note": "user sets opencode.json model field; adapter does not hardcode"
+      },
+      "expert": {
+        "family": "user-configured",
+        "selector": "__user_mapped__",
+        "note": "user sets opencode.json model field; adapter does not hardcode"
+      },
       "mapping_contract": {
-        "classes": ["economy", "standard", "expert"],
+        "classes": [
+          "economy",
+          "standard",
+          "expert"
+        ],
         "user_config_location": "opencode.json model / agent.<name>.model",
         "missing_mapping_behavior": "visible: agent frontmatter model field reads 'unset' or '__OPENCODE_MODEL_CLASS__'",
         "resolve_chain": "opencode.json model -> agent.<name>.model -> session default"
       },
-      "recorded_evidence": ["requested", "resolved", "observed"],
+      "recorded_evidence": [
+        "requested",
+        "resolved",
+        "observed"
+      ],
       "denial_behavior": "fail_closed"
     },
     "grok": {
       "adapter_defaults": {
         "model_selectors": {
-          "base": { "selector": "grok-4.5", "channel": "base" }
+          "base": {
+            "selector": "grok-4.5",
+            "channel": "base"
+          }
         },
         "minimum_effort": "medium",
         "subagent_effort_override": "supported/per_role_and_spawn",
         "effort_evidence": "Per-role and spawn-time effort overrides are supported. Record requested, resolved, and observed effort separately; missing attestation leaves only observed effort unknown."
       },
       "capabilities": {
-        "utility": { "effort": "low", "minimum_effort": "low" },
-        "standard": { "effort": "medium", "minimum_effort": "medium" }
+        "utility": {
+          "effort": "low",
+          "minimum_effort": "low"
+        },
+        "standard": {
+          "effort": "medium",
+          "minimum_effort": "medium"
+        }
       },
-      "denied_modes": ["Fast"],
+      "denied_modes": [
+        "Fast"
+      ],
       "denial_behavior": "fail_closed",
       "subagent_model_override": "supported",
       "model_attestation": "native"
+    },
+    "claude": {
+      "adapter_defaults": {
+        "model_selectors": {
+          "session_bridge": {
+            "family": "gpt",
+            "selector": "gpt-5.6-sol",
+            "note": "supervisor-main model for the Claude<->OpenCode parity bridge. Lives here, not in platforms/claude/scripts/sync-opencode-parity.ps1: selectors must appear only in this file (enforced by automation/test-native-agent-policy.py). Must exist in the OpenCode provider catalog."
+          }
+        }
+      },
+      "recorded_evidence": [
+        "requested",
+        "resolved",
+        "observed"
+      ],
+      "denial_behavior": "fail_closed"
     }
   }
 }

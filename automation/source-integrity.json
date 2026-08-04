@@ -1,12 +1,12 @@
 {
   "version": 1,
   "description": "Canonical SHA256 hashes for all scripts the installer may execute. Scripts are verified against this manifest before execution.",
-  "generated_at": "2026-08-02T00:00:00+00:00",
+  "generated_at": "2026-08-04T08:24:25+00:00",
   "files": {
     "automation/02-install-runtime.ps1": "435b059f493ef59aebd0ff94abfbcc78506de1bdaaf0bcabe64ee32cb4885f18",
     "automation/11-install-runtime-hooks.sh": "0b7ec19e30100165dee8eca04582146df2333aa0f4701176fb7cb9f9b8a59be2",
     "automation/13-cutover-context-routing.ps1": "b09531411dbc50a45f608756afafca0ac40dfa72f70da9b088e88a64193494a6",
-    "automation/09-doctor.ps1": "24df51227dfe3e0fd0806d7740aa171465d44a84dff8112068bf7adbbe7633dd",
+    "automation/09-doctor.ps1": "9e93b89edc801be4e8db5766d053d2a73fb6772b48d7a5a9f8f6c99215c3e10b",
     "automation/path-compat.ps1": "681621fc0603537829f5b7b944411658b90b8e72acfe4e5195242101070d3e85",
     "automation/01-build-runtime.ps1": "13716d5269a79d378c8d9818a5960a697641d9c2fb56a874c38c6c1039d08b1b",
     "integrations/required/codebase-memory-mcp/install.ps1": "6ccfb1ab4dde49d0935aea85e1e4c34265937ea24c17387a8a1536bcfa722188",
@@ -14,7 +14,7 @@
     "integrations/required/codebase-memory-mcp/uninstall.ps1": "f5d3235fdd333ad367079f5a5261861fac30cbe9bfbb6bdd42186f18c3eee2fc",
     "integrations/optional/caveman/install.ps1": "50b8401a94c9dba4a3051c16203c4aae74132244c3935610a65a3b8ac44fdd5c",
     "integrations/optional/caveman/uninstall.ps1": "b6f3fc402fda87abb88d5a9ca87bdb562e92e5ba632e36a1174110edee085abb",
-    "automation/03-validate-context.ps1": "f22f201e348b21f99deb2f189bf254cfdfd0f36eb4905fdf120583d62dfff492",
+    "automation/03-validate-context.ps1": "bfcee73c98898f95dd820061275e248d158d3b960cc2f3761b822d8a5e9255f1",
     "automation/Merge-Mcp-Adapters.ps1": "f0876b95f2cdb31cfe822939ca7b1d5e66d4cb7cbe32efa13e5b7c0d3ed7af08",
     "integrations/required/playwright-mcp/install.ps1": "357089c6c56acd83b73c250485b0eef239d61a17962c65f7eb8c3534b4ae844e",
     "integrations/required/playwright-mcp/verify.ps1": "c2da8de2e17ad55950c4966c79bedc9effa9e7c9cce0805a4c43dbf267d01ee5",
@@ -30,7 +30,7 @@
     "automation/test-skill-gate-stack.py": "3fb0190513559d969f4455e2c1d35405020dd452444b6dab5fcf3c21855fd80f",
     "automation/test-external-receipt.py": "a06043c654f7fa7c46e5dd5db49c00abfff0dc82de30462d067c9ee4ca89e294",
     "automation/audit-workflow-clarity.ps1": "34d1888594b71e4acc7dc02512d6629fd06fe14876c594ba5ff629c4aa66c395",
-    "automation/validate-tool-registry.ps1": "0141493ca76f9a0b134ca822c8f5c2c70a3712610ba442e0218fa8b177b3aae4",
+    "automation/validate-tool-registry.ps1": "7e78e92cba498d61604caef93f55368be077b28a2b006cfa39a73fc4cdf24895",
     "automation/build-context-graph.ps1": "ac3c05533c10ca18e17d3570cd95571b9698a8f0e7ad126287e47c6ce009fb07",
     "automation/test-context-router.py": "ebe29bb701c46b3492e2520f3c54f1f98e232702811cc7d1da39f4ebfc2d1922",
     "automation/test-agent-quality-benchmark.py": "4f97ae119910d56c0d5287e1471ea91e40471e1df116f75ae1f0d67bc0271fb2",
@@ -40,6 +40,6 @@
     "automation/validate-doc-drift.py": "238a8c8e794149a75267c52434e1404ab8f595183a51348eee8b78648a5b8e9b",
     "automation/workctl.py": "6516d4beb4ffeb0bda38f16f7ef8a7e47022f3ea36b4e5da0d1068d30c4ebb5d",
     "automation/test-cross-language-manifests.py": "0c5e812f6504a493a980e34ed2a5cd8979beb83ea4324cea05e834cde1e1991c",
-    "automation/test-platform-lifecycle.py": "c3129b903925ed41f39345960212c9a56bd10f4547d3590bf7c8c20de805343a"
+    "automation/test-platform-lifecycle.py": "3db5124026c402ed38f0bac5965bdaf77d9fd59ece8ea8572ca524ae00530754"
   }
 }

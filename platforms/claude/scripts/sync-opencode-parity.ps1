@@ -71,8 +71,14 @@ $SmallModel = ([string]$OpenCode.small_model -split '/', 2)[-1]
 if (-not $BaseUrl -or -not $ApiKey -or -not $MainModel -or -not $SmallModel) { throw "OpenCode provider parity data is incomplete" }
 $AvailableModels = @($Provider.models.PSObject.Properties.Name)
 if ($AvailableModels.Count -eq 0) { throw "OpenCode provider has no model catalog: $ProviderName" }
-# ponytail: hardcoded for sync-bridge parity only; read from model-policy.json at build time
-$SessionModel = "gpt-5.6-sol"
+# Read the session model from model-policy.json, the single place selectors may live
+# (enforced by automation/test-native-agent-policy.py). It used to be hardcoded here,
+# which duplicated a selector outside the policy and failed validate-context.
+$PolicyPath = Join-Path $Root "automation/model-policy.json"
+if (-not (Test-Path -LiteralPath $PolicyPath)) { throw "Model policy not found: $PolicyPath" }
+$Policy = Get-Content -Raw -LiteralPath $PolicyPath | ConvertFrom-Json
+$SessionModel = [string]$Policy.platforms.claude.adapter_defaults.model_selectors.session_bridge.selector
+if (-not $SessionModel) { throw "model-policy.json has no platforms.claude session_bridge selector" }
 if ($AvailableModels -notcontains $SessionModel) { throw "Required Claude session model is missing from provider catalog: $SessionModel" }
 if ($UseLocalBridge) {
   $BaseUrl = $BridgeUrl.TrimEnd('/')
