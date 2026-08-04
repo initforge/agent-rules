@@ -28,7 +28,7 @@
 | `platforms/` | Per-runtime overlays (Codex, Grok, Antigravity, Cursor) | stable |
 | `automation/` | Build, install, validate, sync, doctor | stable |
 | `generated/` | Build output — do not edit | generated (machine-only) |
-| `.agent/` | Advisory trace log, research notes, tombstones (gitignored) | ephemeral |
+| `.agent/` | Durable plan ledger, progress, journal, research (version-controlled; see [`.agent/README.md`](.agent/README.md)) | protocol-governed |
 
 ## Integrations
 

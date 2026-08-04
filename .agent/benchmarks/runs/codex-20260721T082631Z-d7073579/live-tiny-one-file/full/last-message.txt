@@ -1,1 +1,0 @@
-BLOCKED — môi trường chỉ đọc nên không thể sửa `message.txt` (`qualty` → `quality`) hoặc chạy test. Test hiện có đã xác nhận nội dung mong đợi: `Agent quality matters.`

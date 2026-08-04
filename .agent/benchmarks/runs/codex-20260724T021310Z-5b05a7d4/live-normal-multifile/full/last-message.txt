@@ -1,9 +1,0 @@
-PARTIAL — đã hoàn tất thay đổi đúng phạm vi:
-
-- Ghi `consumer-trace.json` chính xác, trước khi sửa source.
-- `api.build_label` yêu cầu `kind` keyword-only và trả về nhãn đã trim.
-- Cập nhật hai consumer với `invoice` và `audit`.
-- Không sửa tests hay `unrelated.py`.
-- `git diff --check` và kiểm tra byte chính xác của trace: PASS.
-
-Verifier bắt buộc `.benchmark-verify.cmd` đã chạy nhưng bị `Access is denied`: Python tại đường dẫn cố định trong script không khả dụng trong môi trường này, nên không thể xác nhận test runtime.

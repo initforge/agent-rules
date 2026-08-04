@@ -1,3 +1,0 @@
-{"timestamp":"2026-07-30T01:10:51.436Z","phase":"seed","planId":"agent-rules-harness-v3-rearchitecture-20260726-r1","filesSeeded":true,"originalSha":"1e1b06e7388c49b076111fc8edf4878407991f269d656b0dc1c7c5dbaeace26b","amendmentSha":"e21bb21b6898cb2f6f37a58c47db0c07ade9701e18081c3e2023b5a0e5698daf"}
-{"timestamp":"2026-07-30T01:10:51.453Z","phase":"activate-complete","success":true,"effectiveIdentity":"bdf30d1b27f6cf2e7cda25ba3c4e5aec1a54fdb558bc0e268384e8568fb88f8f","shadowRevision":47,"mutated":false}
-{"timestamp":"2026-07-30T01:10:51.656Z","phase":"bounded-repair-complete","success":true,"effectiveIdentity":"c847d8edb4986d0ed84a00e91964a3e81a2c26b666570bf5ba6563b5776e3c2d","shadowRevision":48,"mutated":true,"amendments":["AM-0013","AM-0014","AM-0015"]}

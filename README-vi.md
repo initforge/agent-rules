@@ -28,7 +28,7 @@
 | `platforms/` | Per-runtime overlays (Codex, Grok, Antigravity, Cursor) | stable |
 | `automation/` | Build, install, validate, sync, doctor | stable |
 | `generated/` | Build output — không sửa tay | generated (machine-only) |
-| `.agent/` | Advisory trace log, research notes, tombstones (gitignored) | ephemeral |
+| `.agent/` | Plan ledger, progress, journal, research bền vững (có trong git; xem [`.agent/README.md`](.agent/README.md)) | protocol-governed |
 
 ## Tích hợp
 

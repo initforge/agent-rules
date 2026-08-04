@@ -102,6 +102,11 @@ Run-Step "CHECK: typecheck workspaces" {
   npm run check 2>&1
 }
 
+# -- .agent protocol ----------------------------------------------------------------
+Run-Step "CHECK: .agent protocol" {
+  node automation/validate-agent-dir.mjs 2>&1
+}
+
 # -- Python static checks -----------------------------------------------------------
 if (-not $SkipPython) {
   $pyScripts = @(

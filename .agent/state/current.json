@@ -1,0 +1,9 @@
+{
+  "schema": "agent/current-pointer",
+  "version": 2,
+  "plan_id": "harness-v3-rearchitecture",
+  "plan_root": ".agent/plans/harness-v3-rearchitecture",
+  "requirements": ".agent/plans/harness-v3-rearchitecture/requirements.yaml",
+  "journal": ".agent/plans/harness-v3-rearchitecture/journal.jsonl",
+  "updated_at": "2026-08-04T00:00:00+07:00"
+}
