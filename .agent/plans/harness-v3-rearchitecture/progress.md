@@ -35,10 +35,34 @@ real `claude` CLI, not a mock:
 | S2 | DONE | `.agent` protocol + flat ledger; 44 MB → 2.5 MB with progress intact; enforced by `validate-agent-dir.mjs` |
 | S3 | DONE | Durable runner: `queue`, `headless-executor`, `diff`, `loop`, `journal`; `agent-rules runner` CLI; 64 tests |
 | S4 | DONE | `maxRepairDepth` (default 2) enforced in code; verification is commands-only |
-| S5 | TODO | Delete superseded orchestration (22 modules) — the runner has now proven out |
+| S5 | PARTIAL | 10 of 23 superseded modules deleted (−10,349 lines). The other 13 have real consumers — see below |
 | S6 | TODO | Port 4 PowerShell critical-path scripts to `.mjs` |
 | S7 | TODO | Registry (context7 required, serena optional, drop caveman) + skills |
 | S8 | TODO | Correct README P8 status and system-map `.agent` claim |
+
+## S5 finding: the deletion set is smaller than the review assumed
+
+Dependency analysis (not assumption) showed only 10 of the 23 modules are leaves.
+Deleted: `activation-projections`, `activation-semantics`, `activation-transaction`,
+`autopilot-m11`, `c2`, `ledger-activation`, `ledger-migration`, `resume-hooks`,
+`supervisor`, `worktree-train-bindings` — 4,726 source + 5,600 test lines.
+
+Test failures went from 12 files / 20 tests to 9 files / 14 tests, with **no new or
+worsened failure**. The remaining 14 are pre-existing and unrelated (symlink and cyclic
+-supersession assertions, `host-kit/oc-stuck`, `context-cache`).
+
+**Blocked, and why** — each needs a decision, not just a delete:
+
+| Module | Blocker |
+|---|---|
+| `terminal-gate`, `m11-terminal-evidence` | imported by `packages/cli/src/commands/plan.ts` and `control-plane/src/routes/c4.ts` |
+| `autopilot`, `execution-facade`, `worktree-train`, `candidate-epoch` | exported and consumed outside the engine |
+| `controller`, `execution-runtime`, `watchdog`, `dispatch-ready-set`, `resource-broker`, `resource-governor` | anchored by `src/host-kit/runtime/*`, which the platform adapters use |
+| `claim-registry` | used by `calibration`, `evidence-dag`, `review-receipt`, `review-independence`, `plan-readiness`, `om-deterministic-compiler` |
+| `semantic-wake-policy` | used by `execution-facade` |
+
+Cutting these means refactoring `host-kit/runtime` and two CLI/control-plane call
+sites. That is a separate, owner-approved slice — not a mechanical delete.
 
 ## Bugs the end-to-end run found (both fixed)
 

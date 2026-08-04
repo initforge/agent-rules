@@ -41,29 +41,9 @@
       "types": "./dist/evidence-packet.d.ts",
       "import": "./dist/evidence-packet.js"
     },
-    "./activation-transaction": {
-      "types": "./dist/activation-transaction.d.ts",
-      "import": "./dist/activation-transaction.js"
-    },
     "./secure-fs": {
       "types": "./dist/secure-fs.d.ts",
       "import": "./dist/secure-fs.js"
-    },
-    "./activation-semantics": {
-      "types": "./dist/activation-semantics.d.ts",
-      "import": "./dist/activation-semantics.js"
-    },
-    "./activation-projections": {
-      "types": "./dist/activation-projections.d.ts",
-      "import": "./dist/activation-projections.js"
-    },
-    "./ledger-activation": {
-      "types": "./dist/ledger-activation.d.ts",
-      "import": "./dist/ledger-activation.js"
-    },
-    "./ledger-migration": {
-      "types": "./dist/ledger-migration.d.ts",
-      "import": "./dist/ledger-migration.js"
     },
     "./plan-identity": {
       "types": "./dist/plan-identity.d.ts",
@@ -72,10 +52,6 @@
     "./autopilot": {
       "types": "./dist/autopilot.d.ts",
       "import": "./dist/autopilot.js"
-    },
-    "./autopilot-m11": {
-      "types": "./dist/autopilot-m11.d.ts",
-      "import": "./dist/autopilot-m11.js"
     },
     "./m11-integration": {
       "types": "./dist/m11-integration.d.ts",
