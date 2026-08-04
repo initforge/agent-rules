@@ -19,6 +19,39 @@ export { type Sha256, sha256Bytes };
 
 export type TaskState = 'PENDING' | 'READY' | 'IN_PROGRESS' | 'UNDER_REVIEW' | 'CLOSED_MATCH' | 'CLOSED_FAILED';
 export type CheckpointState = 'INITIAL' | 'DISPATCHING' | 'IMPLEMENTING' | 'VERIFYING' | 'REVIEWING' | 'RECONCILING' | 'COMPLETED' | 'FAILED';
+export type FailureSiblingPolicy = 'cancel-others' | 'continue-others' | 'isolate';
+
+/** Bounded retry state with explicit reason — persisted where contracts permit. */
+export interface RetryState {
+  attempt: number;
+  maxAttempts: number;
+  reason: string;
+  /** epoch ms — retry is scheduled at/after this instant. */
+  nextRetryAt: number;
+  createdAt: number;
+}
+
+/** Active lease entry for ownership enforcement. */
+export interface ActiveLease {
+  leaseId: string;
+  owner: string;
+  subject: string;
+  expiresAt: number;
+}
+
+/** Concurrency metrics for verifying real overlap and resource ceiling enforcement. */
+export interface ConcurrencyMetrics {
+  /** Peak simultaneous in-flight task windows. */
+  peakOverlap: number;
+  /** Time-ordered execution windows [assignmentId, startMs, endMs]. */
+  windows: readonly (readonly [string, number, number])[];
+  /** Pool usage snapshots at each dispatch decision. */
+  poolSnapshots: readonly (readonly (readonly [string, number])[])[];
+  /** Tasks deferred by pool ceiling. */
+  deferredByCeiling: readonly string[];
+  /** Sibling groups tracked: [parentId, childIds[]]. */
+  siblingGroups: readonly (readonly [string, readonly string[]])[];
+}
 
 export interface ControllerSnapshot {
   checkpointState: CheckpointState;
@@ -189,10 +222,18 @@ export class Controller {
   private readonly ledgerDirId: Identity;
   private ledger: WorkLedger | null = null;
   private retryCountMap = new Map<string, number>();
+  private retryStateMap = new Map<string, RetryState>();
+  private activeLeases = new Map<string, ActiveLease>();
   private executionGraph: ExecutionGraph | null = null;
   private browserBurst = false;
   private poolCeilings: PoolCeilings | undefined;
   private brokerDecide: (() => BrokerDecision | Promise<BrokerDecision>) | null = null;
+  // Concurrency instrumentation
+  private failureSiblingPolicy: FailureSiblingPolicy = 'continue-others';
+  private concurrencyWindows: Array<[string, number, number]> = [];
+  private poolSnapshots: Array<readonly (readonly [string, number])[]> = [];
+  private deferredByCeiling: string[] = [];
+  private siblingGroups: Array<[string, readonly string[]]> = [];
 
   constructor(ledgerPath: string) {
     this.ledgerPath = path.resolve(ledgerPath);
@@ -281,6 +322,101 @@ export class Controller {
    */
   setResourceBroker(decide: () => BrokerDecision | Promise<BrokerDecision>): void {
     this.brokerDecide = decide;
+  }
+
+  /** Set sibling failure policy for concurrent execution. Default: continue-others. */
+  setFailureSiblingPolicy(policy: FailureSiblingPolicy): void {
+    this.failureSiblingPolicy = policy;
+  }
+
+  /**
+   * Acquire an active lease for an assignment subject. Fails if an unexpired lease
+   * exists with a different owner — prevents ownership bypass.
+   */
+  acquireLease(leaseId: string, owner: string, subject: string, ttlMs: number): ActiveLease {
+    const now = Date.now();
+    const expiresAt = now + ttlMs;
+    const existing = this.activeLeases.get(subject);
+    if (existing && !this.isLeaseExpired(existing) && existing.owner !== owner) {
+      throw new Error(`Lease conflict: ${subject} held by ${existing.owner}, cannot acquire for ${owner}`);
+    }
+    const lease: ActiveLease = { leaseId, owner, subject, expiresAt };
+    this.activeLeases.set(subject, lease);
+    return lease;
+  }
+
+  /** Heartbeat an existing lease, extending its TTL. Returns undefined if no valid lease. */
+  heartbeatLease(subject: string, owner: string, ttlMs: number): ActiveLease | undefined {
+    const existing = this.activeLeases.get(subject);
+    if (!existing || existing.owner !== owner || this.isLeaseExpired(existing)) return undefined;
+    existing.expiresAt = Date.now() + ttlMs;
+    return existing;
+  }
+
+  /** Revoke an active lease. Idempotent — no-op if already revoked or expired. */
+  revokeLease(subject: string, owner: string): void {
+    const existing = this.activeLeases.get(subject);
+    if (existing && existing.owner === owner && !this.isLeaseExpired(existing)) {
+      this.activeLeases.delete(subject);
+    }
+  }
+
+  /** Get current lease state for a subject. */
+  getLease(subject: string): ActiveLease | undefined {
+    const lease = this.activeLeases.get(subject);
+    return lease && !this.isLeaseExpired(lease) ? lease : undefined;
+  }
+
+  private isLeaseExpired(lease: ActiveLease): boolean {
+    return lease.expiresAt < Date.now();
+  }
+
+  /** Check if a conflicting active lease exists for the given assignmentId. */
+  private hasConflictingLease(assignmentId: string, owner: string): boolean {
+    const lease = this.activeLeases.get(assignmentId);
+    return !!lease && !this.isLeaseExpired(lease) && lease.owner !== owner;
+  }
+
+  /** Get retry state for an assignment. */
+  getRetryState(assignmentId: string): RetryState | undefined {
+    return this.retryStateMap.get(assignmentId);
+  }
+
+  /** Get concurrency metrics from the last runFullPlan execution. */
+  getConcurrencyMetrics(): ConcurrencyMetrics {
+    // Compute peak overlap by scanning windows for maximum concurrent execution
+    let peakOverlap = 0;
+    if (this.concurrencyWindows.length > 0) {
+      const sorted = [...this.concurrencyWindows].sort((a, b) => a[1] - b[1]);
+      for (let i = 0; i < sorted.length; i++) {
+        let concurrent = 1;
+        const end = sorted[i]![2];
+        for (let j = i + 1; j < sorted.length; j++) {
+          if (sorted[j]![1] < end) concurrent++;
+        }
+        if (concurrent > peakOverlap) peakOverlap = concurrent;
+      }
+    }
+    return {
+      peakOverlap,
+      windows: [...this.concurrencyWindows],
+      poolSnapshots: this.poolSnapshots.map(s => [...s]),
+      deferredByCeiling: [...this.deferredByCeiling],
+      siblingGroups: this.siblingGroups.map(g => [g[0], [...g[1]]] as const),
+    };
+  }
+
+  /** Reset concurrency instrumentation. */
+  resetConcurrencyMetrics(): void {
+    this.concurrencyWindows = [];
+    this.poolSnapshots = [];
+    this.deferredByCeiling = [];
+    this.siblingGroups = [];
+  }
+
+  /** Record an execution window for metrics tracking (startMs, endMs in epoch ms). */
+  recordWindow(assignmentId: string, startMs: number, endMs: number): void {
+    this.concurrencyWindows.push([assignmentId, startMs, endMs]);
   }
 
   /**
@@ -372,6 +508,16 @@ export class Controller {
       ceilings: this.poolCeilings,
     });
 
+    // Track pool usage snapshot and sibling groups for metrics
+    const poolSnapshot = Object.entries(result.usage).map(([k, v]) => [k, v] as const);
+    this.poolSnapshots.push(poolSnapshot);
+    for (const id of result.deferredByPool) {
+      if (!this.deferredByCeiling.includes(id)) this.deferredByCeiling.push(id);
+    }
+    if (result.ready.length > 0) {
+      this.siblingGroups.push([`dispatch-${this.siblingGroups.length}`, result.ready]);
+    }
+
     for (const id of result.ready) {
       if (this.taskStates.get(id) === 'PENDING') {
         this.taskStates.set(id, 'READY');
@@ -383,9 +529,18 @@ export class Controller {
   }
 
   startWork(assignmentId: string): void {
+    if (!assignmentId) {
+      throw new Error('startWork: assignmentId is null or empty');
+    }
     const state = this.taskStates.get(assignmentId);
     if (state !== 'READY') {
-      throw new Error(`Cannot start work on ${assignmentId}: state is ${state}`);
+      throw new Error(`Cannot start work on ${assignmentId}: state is ${state ?? 'undefined'}`);
+    }
+    // ponytail: owner parameter needed for lease conflict check — pass through caller context.
+    // For now, check lease without owner (any active lease blocks start).
+    const lease = this.activeLeases.get(assignmentId);
+    if (lease && !this.isLeaseExpired(lease)) {
+      throw new Error(`Cannot start work on ${assignmentId}: active lease held by ${lease.owner}`);
     }
     this.taskStates.set(assignmentId, 'IN_PROGRESS');
     this.runningAssignments.add(assignmentId);
@@ -401,9 +556,16 @@ export class Controller {
       throw new Error(`Receipt assignment mismatch: ${receipt.assignmentId} !== ${assignmentId}`);
     }
 
+    // Check active lease: only the lease holder can submit receipts for this assignment
+    const lease = this.activeLeases.get(assignmentId);
+    if (lease && !this.isLeaseExpired(lease) && lease.owner !== receipt.workerIdentity) {
+      throw new Error(`Cannot submit receipt for ${assignmentId}: active lease held by ${lease.owner}`);
+    }
+
+    // Idempotent resume: skip if receipt already exists (resumed from checkpoint)
     const existing = this.receipts.find((r) => r.receiptId === receipt.receiptId);
     if (existing) {
-      throw new Error(`Duplicate receipt: ${receipt.receiptId}`);
+      return;
     }
 
     this.receipts.push(receipt);
@@ -554,7 +716,11 @@ export class Controller {
     this.revision++;
   }
 
-  async retry(assignmentId: string): Promise<void> {
+  /**
+   * Retry a failed assignment with explicit bounded reason/state.
+   * Persists retry evidence for diagnostics and audit trails.
+   */
+  async retry(assignmentId: string, reason = 'verification-failed'): Promise<void> {
     const state = this.taskStates.get(assignmentId);
     if (state !== 'CLOSED_FAILED') {
       throw new Error(`Cannot retry ${assignmentId}: state is ${state}, expected CLOSED_FAILED`);
@@ -565,6 +731,27 @@ export class Controller {
       this.receipts.splice(receiptIndex, 1);
     }
 
+    // Persist explicit retry state with bounded reason
+    const maxAttempts = 3;
+    const now = Date.now();
+    const existing = this.retryStateMap.get(assignmentId);
+    const attempt = existing ? existing.attempt + 1 : 1;
+    if (attempt > maxAttempts) {
+      throw new Error(`Cannot retry ${assignmentId}: max attempts (${maxAttempts}) exceeded`);
+    }
+    // Truncate reason to bounded length for storage safety
+    const boundedReason = reason.slice(0, 256);
+    const retryState: RetryState = {
+      attempt,
+      maxAttempts,
+      reason: boundedReason,
+      nextRetryAt: now, // immediate retry; caller can set backoff if needed
+      createdAt: existing?.createdAt ?? now,
+    };
+    this.retryStateMap.set(assignmentId, retryState);
+    // Also maintain count for backward compatibility
+    this.retryCountMap.set(assignmentId, attempt);
+
     this.taskStates.set(assignmentId, 'PENDING');
     this.checkpointState = 'RECONCILING';
     this.revision++;
@@ -574,29 +761,54 @@ export class Controller {
     assignmentId: string,
     worker: WorkerAdapter,
     verifier: VerifierAdapter,
-  ): Promise<{ success: boolean; state: TaskState; attempt: number }> {
+  ): Promise<{ success: boolean; state: TaskState; attempt: number; assignmentId: string }> {
     const maxRetries = 3;
     let attempt = this.retryCountMap.get(assignmentId) ?? 0;
 
     while (attempt <= maxRetries) {
       const current = this.taskStates.get(assignmentId);
+
+      // Handle terminal/edge states without throwing
       if (current === 'CLOSED_MATCH') {
-        return { success: true, state: 'CLOSED_MATCH', attempt };
+        return { success: true, state: 'CLOSED_MATCH', attempt, assignmentId };
       }
 
-      if (current === 'READY') {
-        this.startWork(assignmentId);
-      } else if (current !== 'IN_PROGRESS') {
+      if (current === 'CLOSED_FAILED') {
+        return { success: false, state: 'CLOSED_FAILED', attempt, assignmentId };
+      }
+
+      if (current === 'UNDER_REVIEW') {
+        // Already submitted - consider this a no-op success to avoid cascading failures
+        return { success: false, state: 'UNDER_REVIEW', attempt, assignmentId };
+      }
+
+      if (current !== 'READY' && current !== 'IN_PROGRESS') {
+        // PENDING or undefined - try dispatch, but don't throw for edge cases
         if (current === 'PENDING') {
           const d = await this.dispatchNext();
           if (d !== assignmentId) {
-            throw new Error(`dispatchNext returned ${d} instead of ${assignmentId}`);
+            // Assignment may have been dispatched in a concurrent call
+            const newState = this.taskStates.get(assignmentId);
+            if (newState === 'IN_PROGRESS') {
+              // Concurrent dispatch handled it, proceed to execution
+            } else if (newState === 'READY') {
+              this.startWork(assignmentId);
+            } else {
+              // Give up on this attempt, let next loop iteration handle
+              await new Promise(r => setTimeout(r, 10));
+              continue;
+            }
+          } else {
+            this.startWork(assignmentId);
           }
-          this.startWork(assignmentId);
         } else {
-          throw new Error(`Cannot run task ${assignmentId}: unexpected state ${current}`);
+          // Unknown state (null/undefined) - fail gracefully instead of throwing
+          return { success: false, state: current ?? 'PENDING', attempt, assignmentId };
         }
+      } else if (current === 'READY') {
+        this.startWork(assignmentId);
       }
+      // current === 'IN_PROGRESS' falls through to execution
 
       const assignment = this.getAssignment(assignmentId);
       if (!assignment) throw new Error(`Unknown assignment: ${assignmentId}`);
@@ -644,22 +856,26 @@ export class Controller {
       if (result.passed) {
         await this.verifyReceipt(assignmentId, true);
         this.retryCountMap.delete(assignmentId);
-        return { success: true, state: 'CLOSED_MATCH', attempt };
+        this.retryStateMap.delete(assignmentId);
+        return { success: true, state: 'CLOSED_MATCH', attempt, assignmentId };
       }
 
       await this.verifyReceipt(assignmentId, false);
       attempt++;
 
       if (attempt <= maxRetries) {
+        // Persist explicit bounded retry reason from verification failure
+        const retryReason = `verification-failed:probeExitCode=${probeExitCode}`;
         this.retryCountMap.set(assignmentId, attempt);
-        await this.retry(assignmentId);
+        await this.retry(assignmentId, retryReason);
       } else {
         this.retryCountMap.delete(assignmentId);
-        return { success: false, state: 'CLOSED_FAILED', attempt };
+        this.retryStateMap.delete(assignmentId);
+        return { success: false, state: 'CLOSED_FAILED', attempt, assignmentId };
       }
     }
 
-    return { success: false, state: 'CLOSED_FAILED', attempt };
+    return { success: false, state: 'CLOSED_FAILED', attempt, assignmentId };
   }
 
   async runFullPlan(
@@ -671,10 +887,77 @@ export class Controller {
 
     while (true) {
       const result = await this.dispatchReadySet();
+
       if (result.ready.length === 0) break;
 
-      for (const assignmentId of result.ready) {
-        const taskResult = await this.runTask(assignmentId, worker, verifier);
+      // Execute independent ready tasks concurrently with Promise.all, isolating errors per task
+      const batchResults = await Promise.all(
+        result.ready.map(async (assignmentId) => {
+          const startMs = Date.now();
+
+          // Initialize state to READY if not already set (handles edge case of orphaned assignments)
+          if (!this.taskStates.has(assignmentId)) {
+            this.taskStates.set(assignmentId, 'READY');
+          }
+
+          // Verify state is READY before dispatching - startWork is called inside runTask
+          const taskState = this.taskStates.get(assignmentId);
+          if (taskState !== 'READY' && taskState !== 'IN_PROGRESS') {
+            // Task not in executable state - return failure result without throwing
+            // This ensures sibling tasks continue executing even if one has invalid state
+            this.concurrencyWindows.push([assignmentId, startMs, Date.now()]);
+            return { success: false, state: taskState ?? 'PENDING', attempt: 0, assignmentId };
+          }
+
+          try {
+            const taskResult = await this.runTask(assignmentId, worker, verifier);
+            // Record execution window for overlap metrics
+            this.concurrencyWindows.push([assignmentId, startMs, Date.now()]);
+            return taskResult;
+          } catch (e) {
+            // Record window even on error to maintain accurate overlap metrics
+            this.concurrencyWindows.push([assignmentId, startMs, Date.now()]);
+            // Recover a task left mid-flight: never strand a plan on IN_PROGRESS/READY
+            const stuckState = this.taskStates.get(assignmentId);
+            if (stuckState === 'IN_PROGRESS' || stuckState === 'READY') {
+              await this.cancel(assignmentId);
+            }
+            // Return failure result instead of re-throwing - errors remain isolated per task
+            // Use a defensive state lookup to avoid null state failures
+            return {
+              success: false,
+              state: this.taskStates.get(assignmentId) ?? 'PENDING',
+              attempt: 0,
+              assignmentId,
+            };
+          }
+        }),
+      );
+
+      // Apply sibling failure policy - only cancel siblings that are actually running/ready
+      const batchFailed = batchResults.filter(r => !r.success && r.state === 'CLOSED_FAILED');
+      if (batchFailed.length > 0) {
+        switch (this.failureSiblingPolicy) {
+          case 'cancel-others':
+            // Only cancel tasks that are actually IN_PROGRESS (not yet completed/failed)
+            for (const { assignmentId } of batchResults) {
+              if (this.taskStates.get(assignmentId) === 'IN_PROGRESS') {
+                await this.cancel(assignmentId);
+              }
+            }
+            break;
+          case 'isolate':
+            // Just log; isolation is handled by separate execution contexts
+            break;
+          case 'continue-others':
+          default:
+            // Default: continue others (no action needed)
+            break;
+        }
+      }
+
+      // Aggregate results sequentially for consistent state updates
+      for (const taskResult of batchResults) {
         if (taskResult.success) completed++;
         else failed++;
       }

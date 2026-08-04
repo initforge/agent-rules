@@ -1,0 +1,15 @@
+{
+  "name": "index_status",
+  "description": "Get the indexing status of a project",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "project"
+    ]
+  }
+}

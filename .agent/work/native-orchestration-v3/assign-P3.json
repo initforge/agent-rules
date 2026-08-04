@@ -1,0 +1,36 @@
+{
+  "id": "A-P3",
+  "slice_id": "P3",
+  "agent": "platform_adapters",
+  "role": "executor",
+  "model_class": "standard",
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "source_ids": [
+    "REQ-001",
+    "DEC-001",
+    "DEC-002",
+    "INJ-001"
+  ],
+  "write_paths": [
+    "platforms/**"
+  ],
+  "context_paths": [
+    "automation/model-policy.json",
+    "automation/01-build-runtime.ps1",
+    "automation/02-install-runtime.ps1",
+    "automation/09-doctor.ps1",
+    "skills/plan-and-handoff/references/adaptive-work-protocol.md"
+  ],
+  "forbidden_paths": [
+    "rules/**",
+    "skills/**",
+    "automation/**",
+    "integrations/**",
+    "05-generated/**"
+  ],
+  "acceptance_ids": [
+    "AC5",
+    "AC6"
+  ]
+}

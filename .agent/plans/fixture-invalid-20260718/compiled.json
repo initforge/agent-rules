@@ -1,0 +1,178 @@
+﻿{
+    "schema_version":  2,
+    "paf_schema_version":  1,
+    "compiled_at":  "2026-07-23T17:26:34.6897060Z",
+    "source_plan":  "P:\\agent-rules\\automation\\fixtures\\plan-invalid.md",
+    "plan_hash":  "110cd0bb1830093456a4bedb7bffd4eda1f49a081d8538498fb98acf887681fc",
+    "plan_contract_hash":  "73e9ef35ac4c9a3a6b44b141fa2e326f01c5651f738caea06f1d305925a15441",
+    "plan_id":  "fixture-invalid-20260718",
+    "meta":  {
+                 "plan_id":  "fixture-invalid-20260718",
+                 "repo":  "agent-rules"
+             },
+    "admission_id":  "",
+    "admission_session_id":  "",
+    "admission_hash":  "",
+    "execution_mode":  "phase",
+    "verification_strategy":  "incremental",
+    "reference_contract":  "",
+    "release_contract":  "",
+    "source_coverage":  [
+
+                        ],
+    "deliverables":  [
+
+                     ],
+    "phases":  [
+                   {
+                       "id":  "P1",
+                       "title":  "— Invalid phase",
+                       "goal":  "Missing semantic proof.",
+                       "scope_lock":  "[D1]",
+                       "depends_on":  [
+                                          "P2"
+                                      ],
+                       "files_touched":  [
+                                             "automation/planctl.ps1 (modify)"
+                                         ],
+                       "context_files":  [
+                                             "missing-context.md"
+                                         ],
+                       "contracts_refs":  [
+                                              "automation/planctl.ps1"
+                                          ],
+                       "edge_cases":  [
+                                          "Missing verify."
+                                      ],
+                       "regression_map":  [
+                                              "Must not regress."
+                                          ],
+                       "forbidden":  "[scope creep]",
+                       "template_reference":  "",
+                       "skills_active":  [
+
+                                         ],
+                       "acceptance_criteria":  [
+                                                   "AC1 vague improvement"
+                                               ],
+                       "proof_profiles":  [
+
+                                          ],
+                       "proof_map":  [
+
+                                     ],
+                       "verify_gate":  "assumptions_check: \u003ccommand\u003e",
+                       "warnings":  [
+
+                                    ],
+                       "contract_hash":  "8155a747c57f888a0042839e77520cc1dfaeae54b82b35159ffba32a10597fd3"
+                   }
+               ],
+    "diagnostics":  [
+                        {
+                            "severity":  "error",
+                            "code":  "missing-meta",
+                            "phase":  "",
+                            "message":  "Plan metadata is missing \u0027revision\u0027"
+                        },
+                        {
+                            "severity":  "error",
+                            "code":  "missing-meta",
+                            "phase":  "",
+                            "message":  "Plan metadata is missing \u0027workflow_mode\u0027"
+                        },
+                        {
+                            "severity":  "error",
+                            "code":  "missing-meta",
+                            "phase":  "",
+                            "message":  "Plan metadata is missing \u0027status\u0027"
+                        },
+                        {
+                            "severity":  "error",
+                            "code":  "missing-meta",
+                            "phase":  "",
+                            "message":  "Plan metadata is missing \u0027lane\u0027"
+                        },
+                        {
+                            "severity":  "error",
+                            "code":  "missing-meta",
+                            "phase":  "",
+                            "message":  "Plan metadata is missing \u0027primary_skills\u0027"
+                        },
+                        {
+                            "severity":  "error",
+                            "code":  "missing-meta",
+                            "phase":  "",
+                            "message":  "Plan metadata is missing \u0027preferred_tier\u0027"
+                        },
+                        {
+                            "severity":  "error",
+                            "code":  "missing-meta",
+                            "phase":  "",
+                            "message":  "Plan metadata is missing \u0027plan_author_min_tier\u0027"
+                        },
+                        {
+                            "severity":  "error",
+                            "code":  "missing-phase-field",
+                            "phase":  "P1",
+                            "message":  "Phase P1 is missing field \u0027preferred_tier\u0027"
+                        },
+                        {
+                            "severity":  "error",
+                            "code":  "missing-phase-field",
+                            "phase":  "P1",
+                            "message":  "Phase P1 is missing field \u0027min_tier\u0027"
+                        },
+                        {
+                            "severity":  "error",
+                            "code":  "missing-phase-field",
+                            "phase":  "P1",
+                            "message":  "Phase P1 is missing field \u0027allowed_tiers\u0027"
+                        },
+                        {
+                            "severity":  "error",
+                            "code":  "missing-ac-verify",
+                            "phase":  "P1",
+                            "message":  "Acceptance criterion P1/AC1 must declare an executable \u0027| verify:\u0027 command"
+                        },
+                        {
+                            "severity":  "error",
+                            "code":  "unknown-deliverable",
+                            "phase":  "P1",
+                            "message":  "Phase P1 maps unknown deliverable D1"
+                        },
+                        {
+                            "severity":  "error",
+                            "code":  "missing-context-file",
+                            "phase":  "P1",
+                            "message":  "Phase P1 routes to missing context file: missing-context.md"
+                        },
+                        {
+                            "severity":  "error",
+                            "code":  "ac-without-verify",
+                            "phase":  "P1",
+                            "message":  "AC in P1 has no verify: command"
+                        },
+                        {
+                            "severity":  "error",
+                            "code":  "ac-without-expected",
+                            "phase":  "P1",
+                            "message":  "AC in P1 has no expected: result"
+                        },
+                        {
+                            "severity":  "error",
+                            "code":  "invalid-verify-gate",
+                            "phase":  "P1",
+                            "message":  "Phase P1 needs a concrete verify_gate command"
+                        },
+                        {
+                            "severity":  "error",
+                            "code":  "unknown-dependency",
+                            "phase":  "P1",
+                            "message":  "Phase P1 depends on unknown phase P2"
+                        }
+                    ],
+    "errors":  17,
+    "warnings":  0,
+    "valid":  false
+}

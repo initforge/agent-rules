@@ -1,9 +1,13 @@
 {
   "name": "chrome-devtools-mcp",
-  "capability": "browser-diagnostics",
+  "policy": "recommended",
   "upstream": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
-  "package": "chrome-devtools-mcp",
-  "versionPolicy": "latest",
-  "installType": "npm-npx",
-  "healthCheck": "npx -y chrome-devtools-mcp --help"
+  "npmPackage": "chrome-devtools-mcp",
+  "commandName": "chrome-devtools-mcp",
+  "mcpServerKey": "chrome-devtools",
+  "installDirs": {
+    "windows": "%LOCALAPPDATA%\\npm",
+    "linux": "$HOME/.npm-global",
+    "darwin": "$HOME/.npm-global"
+  }
 }

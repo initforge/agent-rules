@@ -8,6 +8,20 @@ interface EvidenceProfile {
   }>;
 }
 
+interface IntegrityFinding {
+  kind: string;
+  detail: string;
+}
+
+interface IntegrityFailure {
+  ok: false;
+  code: 'INTEGRITY_FAILURE';
+  error: string;
+  details: {
+    findings: IntegrityFinding[];
+  };
+}
+
 interface PlanData {
   planId: string;
   originalSha256: string | null;
@@ -19,6 +33,7 @@ interface PlanData {
   findings: Array<Record<string, unknown>>;
   auditEvents: Array<Record<string, unknown>>;
   shadowRevision: string | null;
+  integrityFailure?: IntegrityFailure;
 }
 
 function normalizePlan(raw: Record<string, unknown>): PlanData {
@@ -37,6 +52,7 @@ function normalizePlan(raw: Record<string, unknown>): PlanData {
     findings: Array.isArray(raw.orphanFindings) ? raw.orphanFindings as Array<Record<string, unknown>> : [],
     auditEvents: Array.isArray(raw.auditEvents) ? raw.auditEvents as Array<Record<string, unknown>> : [],
     shadowRevision: identity.shadowRevision == null ? null : String(identity.shadowRevision),
+    integrityFailure: raw.integrityFailure as IntegrityFailure | undefined,
   };
 }
 
@@ -523,6 +539,41 @@ const RepairHistory: React.FC<{ planData: PlanData | null }> = ({ planData }) =>
   );
 };
 
+const IntegrityBanner: React.FC<{ failure: IntegrityFailure | null; planData: PlanData | null }> = ({ failure, planData }) => {
+  if (!failure) return null;
+
+  const findings = failure.details?.findings || [];
+  const integrityFindings = planData?.integrityFailure?.details?.findings || findings;
+
+  return (
+    <div className="surface cpw-integrity-banner" role="alert" aria-live="assertive">
+      <div className="cpw-integrity-banner-header">
+        <span className="cpw-badge cpw-badge--danger cpw-badge--sm">Integrity Failure</span>
+        <span className="typography-caption">Workspace integrity check failed — evidence may not be reliable</span>
+      </div>
+      <div className="cpw-integrity-banner-findings">
+        {integrityFindings.length > 0 ? (
+          <ul className="cpw-integrity-findings-list">
+            {integrityFindings.slice(0, 10).map((f, i) => (
+              <li key={i} className="cpw-integrity-finding-item">
+                <span className="cpw-badge cpw-badge--danger cpw-badge--xs">{f.kind}</span>
+                <span className="typography-caption">{f.detail}</span>
+              </li>
+            ))}
+            {integrityFindings.length > 10 && (
+              <li className="typography-caption cpw-integrity-more">
+                +{integrityFindings.length - 10} more findings
+              </li>
+            )}
+          </ul>
+        ) : (
+          <span className="typography-caption">{failure.error}</span>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const EvidenceInspector: React.FC<{
   selectedProfile: string | null;
   evidenceProfiles: EvidenceProfile | null;
@@ -621,6 +672,7 @@ export default function PlanWorkspace({ navigate }: PlanWorkspaceProps) {
   const [plans, setPlans] = useState<Array<{ planId: string }>>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [error, setError] = useState('');
+  const [integrityFailure, setIntegrityFailure] = useState<IntegrityFailure | null>(null);
   const [coverageFilter, setCoverageFilter] = useState<CoverageFilter>('ALL');
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
   const [activePane, setActivePane] = useState<PaneId>('canvas');
@@ -653,11 +705,30 @@ export default function PlanWorkspace({ navigate }: PlanWorkspaceProps) {
           setPlans(listed);
           const firstPlanId = listed[listed.length - 1].planId;
           return fetch(`/api/plans/${firstPlanId}`)
-            .then((r) => { if (!r.ok) throw new Error(`Failed to fetch plan (${r.status})`); return r.json(); })
+            .then(async (r) => {
+              const data = await r.json();
+              if (!r.ok) {
+                if (r.status === 409 && data.code === 'INTEGRITY_FAILURE') {
+                  const failure: IntegrityFailure = data;
+                  if (mountedRef.current) setIntegrityFailure(failure);
+                  // Still show the plan data with integrity failure flag
+                  const planWithFailure = normalizePlan(data);
+                  planWithFailure.integrityFailure = failure;
+                  if (mountedRef.current) {
+                    setPlanData(planWithFailure);
+                    setLoadState('loaded');
+                  }
+                  return;
+                }
+                throw new Error(`Failed to fetch plan (${r.status}): ${data.error || 'Unknown error'}`);
+              }
+              return data;
+            })
             .then((pd) => {
-              if (mountedRef.current) {
-                setPlanData(normalizePlan(pd));
+              if (pd && mountedRef.current) {
+                const planWithFailure = normalizePlan(pd);
                 if (pd.status === 'RECONCILING') setReconciling(true);
+                setPlanData(planWithFailure);
               }
             });
         }
@@ -716,9 +787,12 @@ export default function PlanWorkspace({ navigate }: PlanWorkspaceProps) {
       <div className="page" role="alert" aria-live="assertive">
         <div className="page-header">
           <h1 className="typography-title">Plan Workspace</h1>
-          <p className="typography-caption">Requirement evidence tracking and reconciliation</p>
+          <p className="typography-caption"> Requirement evidence tracking and reconciliation</p>
         </div>
         <div className="state-error">{error}</div>
+        {integrityFailure && (
+          <IntegrityBanner failure={integrityFailure} planData={null} />
+        )}
       </div>
     );
   }
@@ -773,15 +847,19 @@ export default function PlanWorkspace({ navigate }: PlanWorkspaceProps) {
       <div className="page" aria-busy="true" aria-live="polite">
         <div className="page-header">
           <h1 className="typography-title">Plan Workspace</h1>
-          <p className="typography-caption">Requirement evidence tracking and reconciliation</p>
+          <p className="typography-caption"> Requirement evidence tracking and reconciliation</p>
         </div>
         <div className="state-loading" role="status"><div className="spinner" /> Loading plan detail...</div>
+        {integrityFailure && (
+          <IntegrityBanner failure={integrityFailure} planData={null} />
+        )}
       </div>
     );
   }
 
   return (
     <div className="page cpw-page">
+      <IntegrityBanner failure={integrityFailure} planData={planData} />
       <PlanIdentityHeader planData={planData} reconciling={reconciling} />
 
       <_WorkspaceBody

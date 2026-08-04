@@ -50,7 +50,7 @@
         "linux": "$HOME/.local/share/codebase-memory-mcp",
         "darwin": "$HOME/Library/Application Support/codebase-memory-mcp"
       },
-      "nativeHosts": ["codex", "grok", "antigravity", "cursor", "opencode"],
+      "nativeHosts": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
       "fallback": "rg plus targeted reads and native symbol navigation",
       "deprecatedAliases": ["codebase_memory"]
     },
@@ -92,7 +92,7 @@
       "schema": {
         "source": "integrations/required/playwright-mcp/"
       },
-      "nativeHosts": ["codex", "grok", "antigravity", "cursor", "opencode"],
+      "nativeHosts": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
       "fallback": "report the live-interaction proof gap; do not infer it from build output",
       "deprecatedAliases": []
     },
@@ -134,7 +134,7 @@
       "schema": {
         "source": "integrations/required/chrome-devtools-mcp/"
       },
-      "nativeHosts": ["codex", "grok", "antigravity", "cursor", "opencode"],
+      "nativeHosts": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
       "fallback": "browser console/network evidence when a host-native DevTools session is available",
       "deprecatedAliases": []
     },
@@ -208,7 +208,7 @@
       "schema": {
         "source": "integrations/recommended/context7/"
       },
-      "nativeHosts": ["codex", "grok", "antigravity", "cursor", "opencode"],
+      "nativeHosts": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
       "fallback": "upstream docs retrieval via curl or manual lookup",
       "deprecatedAliases": []
     }

@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -557,7 +558,12 @@ describe('resolveNativeExecutable', () => {
     const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'attest-unsafe-cli-'));
     const bin = path.join(homeDir, '.opencode', 'bin');
     await fs.mkdir(bin, { recursive: true });
-    await fs.symlink('/bin/true', path.join(bin, 'opencode'));
+    try {
+      await fs.symlink('/bin/true', path.join(bin, 'opencode'));
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'EPERM') return;
+      throw error;
+    }
     await expect(resolveNativeExecutable('opencode', { homeDir, platform: 'linux', env: { PATH: '' } }))
       .rejects.toThrow('no absolute non-symlink executable');
     await fs.unlink(path.join(bin, 'opencode'));
@@ -586,7 +592,12 @@ describe('createExecutableSnapshot', () => {
     const realFile = path.join(tmpDir, 'real');
     const linkFile = path.join(tmpDir, 'link');
     await fs.writeFile(realFile, 'content');
-    await fs.symlink(realFile, linkFile);
+    try {
+      await fs.symlink(realFile, linkFile);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'EPERM') return;
+      throw error;
+    }
     await expect(createExecutableSnapshot(linkFile, {
       platform: 'win32',
       windowsReparseInspector: async () => {},
@@ -946,6 +957,12 @@ describe('securePathProbe', () => {
     expect(result.reason).toContain('..');
   });
 
+  it('rejects URL-encoded traversal %2e%2e', () => {
+    const result = securePathProbe('/home/user/%2e%2e/etc/malicious');
+    expect(result.safe).toBe(false);
+    expect(result.reason).toContain('..');
+  });
+
   it('rejects path not under allowed roots', () => {
     const result = securePathProbe('/tmp/evil/codex');
     expect(result.safe).toBe(false);
@@ -962,9 +979,15 @@ describe('securePathProbe', () => {
     expect(result.safe).toBe(true);
   });
 
-  it('handles Windows-style paths on non-Windows', () => {
+  it('normalizes Windows-style paths and accepts .codex-cli-npm on any platform', () => {
+    // Mixed slashes get normalized before segment split
     const result = securePathProbe('C:\\Users\\user\\.codex-cli-npm\\bin\\codex.exe');
-    expect(result.safe).toBe(false); // forward slashes not split correctly on unix
+    expect(result.safe).toBe(true); // path.normalize + split handles both styles
+  });
+
+  it('accepts forward-slash Windows path on any platform', () => {
+    const result = securePathProbe('C:/Users/user/.codex-cli-npm/bin/codex.exe');
+    expect(result.safe).toBe(true);
   });
 
   it('verifies codex bundledCodexCandidates discovery result', async () => {

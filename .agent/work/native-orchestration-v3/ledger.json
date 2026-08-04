@@ -1,0 +1,2592 @@
+{
+  "schema_version": 3,
+  "work_id": "native-orchestration-v3",
+  "status": "passed",
+  "created_at": "2026-07-23T18:59:51.548437+00:00",
+  "updated_at": "2026-07-24T02:39:05.708599+00:00",
+  "active_slices": [],
+  "classification": {
+    "shape": "resumable",
+    "ledger": "required",
+    "strategy": "parallel",
+    "review_required": true,
+    "reasons": [
+      "resume/external wait/long runtime",
+      "risk-triggered independent review"
+    ]
+  },
+  "execution_contract": {
+    "mode": "automatic",
+    "max_active_agents_including_main": 4,
+    "max_delegation_depth": 1,
+    "effort_cap": "high",
+    "authorized_final_actions": [
+      "edit",
+      "commit",
+      "push"
+    ],
+    "execute_authorization": {
+      "authorized": true,
+      "recorded_at": "2026-07-23T18:59:51.548437+00:00",
+      "source": "v2-migration",
+      "actions": [
+        "edit",
+        "commit",
+        "push"
+      ]
+    }
+  },
+  "repository": {
+    "path": "P:/agent-rules",
+    "branch": "main",
+    "baseline_commit": "75d13d6"
+  },
+  "source_history": [
+    {
+      "id": "REQ-001",
+      "kind": "original",
+      "summary": "Implement the approved portable native orchestration plan across Codex, Cursor, Antigravity, and Grok Build.",
+      "captured_at": "2026-07-24T00:00:00+07:00",
+      "redacted": false,
+      "slice_ids": [
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ]
+    },
+    {
+      "id": "DEC-001",
+      "kind": "decision",
+      "summary": "Cursor pins latest verified Composer Standard for implementation and latest verified Grok base for research/review; no Fast or Auto.",
+      "captured_at": "2026-07-24T00:01:00+07:00",
+      "redacted": false,
+      "slice_ids": [
+        "P1",
+        "P3",
+        "P4"
+      ]
+    },
+    {
+      "id": "DEC-002",
+      "kind": "decision",
+      "summary": "Antigravity uses Gemini Flash through Pro at medium or higher, bans Gemini 3.6 Flash, and uses Claude high only for exceptional expert review.",
+      "captured_at": "2026-07-24T00:02:00+07:00",
+      "redacted": false,
+      "slice_ids": [
+        "P1",
+        "P3",
+        "P4"
+      ]
+    },
+    {
+      "id": "INJ-001",
+      "kind": "injection",
+      "summary": "Apply the new orchestration concepts during this implementation, reinstall all four platform runtimes, then commit and push main.",
+      "captured_at": "2026-07-24T00:03:00+07:00",
+      "redacted": false,
+      "slice_ids": [
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ]
+    },
+    {
+      "id": "DISC-001",
+      "kind": "discovery",
+      "summary": "Current official/native sources confirm Codex standalone TOML agents under ~/.codex/agents, Antigravity custom agents under ~/.gemini/config/agents/<name>/agent.md, Cursor Composer 2.5 Standard must be distinguished from Fast, and unavailable host activation remains unverified.",
+      "captured_at": "2026-07-24T03:30:00+07:00",
+      "redacted": false,
+      "slice_ids": [
+        "P3",
+        "P4"
+      ]
+    }
+  ],
+  "slices": [
+    {
+      "id": "P1",
+      "name": "Shared behavior and model policy",
+      "status": "passed",
+      "depends_on": [],
+      "required": true,
+      "review_required": true,
+      "acceptance": [
+        {
+          "id": "AC1",
+          "claim": "Shared rules use portable capability classes, meaningful-question gates, main-direct limits, bounded context capsules, and risk-triggered expert review.",
+          "status": "passed",
+          "proof_required": true,
+          "proof_profile": "harness-contract",
+          "required_proof_kinds": [
+            "static",
+            "integration"
+          ],
+          "required_dimensions": [
+            "behavior",
+            "context-budget",
+            "no-duplication"
+          ],
+          "receipt_ids": [
+            "PF-AC1",
+            "PF-AC1-FINAL"
+          ]
+        },
+        {
+          "id": "AC2",
+          "claim": "A single validated per-platform model policy encodes current allowed families, effort floors, hard-denied variants, and honest fallback evidence.",
+          "status": "passed",
+          "proof_required": true,
+          "proof_profile": "model-policy",
+          "required_proof_kinds": [
+            "static",
+            "integration"
+          ],
+          "required_dimensions": [
+            "model-routing",
+            "forbidden-models",
+            "fallback"
+          ],
+          "receipt_ids": [
+            "PF-AC2",
+            "PF-AC2-FINAL"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P2",
+      "name": "Portable ledger and workctl lifecycle",
+      "status": "passed",
+      "depends_on": [],
+      "required": true,
+      "review_required": true,
+      "acceptance": [
+        {
+          "id": "AC3",
+          "claim": "Ledger v3 records plan identity, execution authorization, host references, requested/resolved/observed model evidence, and main-direct exceptions with v2 migration.",
+          "status": "passed",
+          "proof_required": true,
+          "proof_profile": "ledger",
+          "required_proof_kinds": [
+            "unit",
+            "integration"
+          ],
+          "required_dimensions": [
+            "migration",
+            "resume",
+            "provenance",
+            "atomicity"
+          ],
+          "receipt_ids": [
+            "PF-AC3",
+            "PF-AC3-FINAL",
+            "PF-AC3-FINAL2"
+          ]
+        },
+        {
+          "id": "AC4",
+          "claim": "workctl is callable from arbitrary projects after runtime installation and preserves existing lifecycle commands.",
+          "status": "passed",
+          "proof_required": true,
+          "proof_profile": "runtime-tool",
+          "required_proof_kinds": [
+            "integration",
+            "artifact"
+          ],
+          "required_dimensions": [
+            "portability",
+            "backward-compatibility"
+          ],
+          "receipt_ids": [
+            "PF-AC4",
+            "PF-AC4-FINAL",
+            "PF-AC4-FINAL2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P3",
+      "name": "Native platform agent adapters",
+      "status": "passed",
+      "depends_on": [],
+      "required": true,
+      "review_required": true,
+      "acceptance": [
+        {
+          "id": "AC5",
+          "claim": "All four platforms receive native agent profiles that map portable roles to approved models without forbidden variants.",
+          "status": "passed",
+          "proof_required": true,
+          "proof_profile": "native-adapter",
+          "required_proof_kinds": [
+            "static",
+            "integration"
+          ],
+          "required_dimensions": [
+            "codex",
+            "cursor",
+            "antigravity",
+            "grok"
+          ],
+          "receipt_ids": [
+            "PF-AC5",
+            "PF-AC5-R2",
+            "PF-AC5-FINAL",
+            "PF-AC5-FINAL2"
+          ]
+        },
+        {
+          "id": "AC6",
+          "claim": "Unavailable or unobservable native capability degrades honestly to PARTIAL or approved fallback without a false model PASS.",
+          "status": "passed",
+          "proof_required": true,
+          "proof_profile": "native-adapter",
+          "required_proof_kinds": [
+            "integration"
+          ],
+          "required_dimensions": [
+            "capability-probe",
+            "honest-status",
+            "single-agent-fallback"
+          ],
+          "receipt_ids": [
+            "PF-AC6",
+            "PF-AC6-R2",
+            "PF-AC6-FINAL",
+            "PF-AC6-FINAL2"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P4",
+      "name": "Build install doctor benchmark and release",
+      "status": "passed",
+      "depends_on": [
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "required": true,
+      "review_required": true,
+      "acceptance": [
+        {
+          "id": "AC7",
+          "claim": "Build, installer, validators, doctor, and benchmark prove distinct install, native, orchestration, model-policy, and cross-platform states.",
+          "status": "passed",
+          "proof_required": true,
+          "proof_profile": "release",
+          "required_proof_kinds": [
+            "integration",
+            "artifact"
+          ],
+          "required_dimensions": [
+            "build",
+            "install",
+            "doctor",
+            "benchmark",
+            "false-pass"
+          ],
+          "receipt_ids": [
+            "P4-AC7-final",
+            "P4-AC7-recovered"
+          ]
+        },
+        {
+          "id": "AC8",
+          "claim": "Canonical changes are installed to all four runtimes, independently reviewed, committed, and pushed to origin/main.",
+          "status": "passed",
+          "proof_required": true,
+          "proof_profile": "release",
+          "required_proof_kinds": [
+            "integration",
+            "artifact"
+          ],
+          "required_dimensions": [
+            "mirrors",
+            "runtime-state",
+            "git"
+          ],
+          "receipt_ids": [
+            "P4-AC8-final"
+          ]
+        }
+      ]
+    }
+  ],
+  "assignments": [
+    {
+      "id": "A-P1",
+      "slice_id": "P1",
+      "agent": "shared_contract",
+      "role": "executor",
+      "model_class": "standard",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "source_ids": [
+        "REQ-001",
+        "DEC-001",
+        "DEC-002",
+        "INJ-001"
+      ],
+      "write_paths": [
+        "rules/**",
+        "skills/plan-and-handoff/**",
+        "skills/finish-to-completion/**",
+        "automation/model-policy.json",
+        "automation/test-model-policy.py"
+      ],
+      "context_paths": [
+        "rules/manifest.yaml",
+        "guides/00-system-map.md",
+        "platforms/*/*-overlay.md",
+        "automation/work-ledger.schema.json"
+      ],
+      "forbidden_paths": [
+        "automation/workctl.py",
+        "automation/work-ledger.schema.json",
+        "automation/test-workctl.py",
+        "automation/01-build-runtime.ps1",
+        "automation/02-install-runtime.ps1",
+        "automation/03-validate-context.ps1",
+        "automation/09-doctor.ps1",
+        "platforms/**",
+        "05-generated/**"
+      ],
+      "acceptance_ids": [
+        "AC1",
+        "AC2"
+      ],
+      "status": "done",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "completed_at": "2026-07-23T19:55:56.178960+00:00",
+      "host_attestation_ref": "codex-collaboration://shared_contract/gpt-5.6-terra/medium"
+    },
+    {
+      "id": "A-P2",
+      "slice_id": "P2",
+      "agent": "ledger_tooling",
+      "role": "executor",
+      "model_class": "standard",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "source_ids": [
+        "REQ-001",
+        "INJ-001"
+      ],
+      "write_paths": [
+        "automation/workctl.py",
+        "automation/workctl.ps1",
+        "automation/workctl.sh",
+        "automation/work-ledger.schema.json",
+        "automation/test-workctl.py"
+      ],
+      "context_paths": [
+        "skills/finish-to-completion/references/completion-ledger.md",
+        "skills/plan-and-handoff/references/plan-artifact-template.md",
+        "automation/02-install-runtime.ps1",
+        "automation/09-doctor.ps1"
+      ],
+      "forbidden_paths": [
+        "rules/**",
+        "skills/**",
+        "platforms/**",
+        "automation/01-build-runtime.ps1",
+        "automation/02-install-runtime.ps1",
+        "automation/03-validate-context.ps1",
+        "automation/09-doctor.ps1",
+        "05-generated/**"
+      ],
+      "acceptance_ids": [
+        "AC3",
+        "AC4"
+      ],
+      "status": "done",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "completed_at": "2026-07-23T19:55:58.346509+00:00",
+      "host_attestation_ref": "codex-collaboration://ledger_tooling/gpt-5.6-terra/medium"
+    },
+    {
+      "id": "A-P3",
+      "slice_id": "P3",
+      "agent": "platform_adapters",
+      "role": "executor",
+      "model_class": "standard",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "source_ids": [
+        "REQ-001",
+        "DEC-001",
+        "DEC-002",
+        "INJ-001"
+      ],
+      "write_paths": [
+        "platforms/**"
+      ],
+      "context_paths": [
+        "automation/model-policy.json",
+        "automation/01-build-runtime.ps1",
+        "automation/02-install-runtime.ps1",
+        "automation/09-doctor.ps1",
+        "skills/plan-and-handoff/references/adaptive-work-protocol.md"
+      ],
+      "forbidden_paths": [
+        "rules/**",
+        "skills/**",
+        "automation/**",
+        "integrations/**",
+        "05-generated/**"
+      ],
+      "acceptance_ids": [
+        "AC5",
+        "AC6"
+      ],
+      "status": "done",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "completed_at": "2026-07-23T19:56:00.434379+00:00",
+      "host_attestation_ref": "codex-collaboration://platform_adapters/gpt-5.6-terra/medium"
+    },
+    {
+      "id": "R-P1",
+      "slice_id": "P1",
+      "agent": "foundation_reviewer",
+      "role": "reviewer",
+      "model_class": "standard",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "source_ids": [
+        "REQ-001",
+        "DEC-001",
+        "DEC-002",
+        "INJ-001"
+      ],
+      "write_paths": [],
+      "context_paths": [
+        "rules/**",
+        "skills/plan-and-handoff/**",
+        "skills/finish-to-completion/**",
+        "automation/model-policy.json",
+        "automation/test-model-policy.py"
+      ],
+      "forbidden_paths": [
+        "**"
+      ],
+      "acceptance_ids": [
+        "AC1",
+        "AC2"
+      ],
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": null,
+        "observed_effort": null,
+        "status": "unobserved",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "R-P2",
+      "slice_id": "P2",
+      "agent": "foundation_reviewer",
+      "role": "reviewer",
+      "model_class": "standard",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "source_ids": [
+        "REQ-001",
+        "INJ-001"
+      ],
+      "write_paths": [],
+      "context_paths": [
+        "automation/workctl.py",
+        "automation/work-ledger.schema.json",
+        "automation/test-workctl.py",
+        "automation/workctl.ps1",
+        "automation/workctl.sh"
+      ],
+      "forbidden_paths": [
+        "**"
+      ],
+      "acceptance_ids": [
+        "AC3",
+        "AC4"
+      ],
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": null,
+        "observed_effort": null,
+        "status": "unobserved",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "R-P3",
+      "slice_id": "P3",
+      "agent": "foundation_reviewer",
+      "role": "reviewer",
+      "model_class": "standard",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "source_ids": [
+        "REQ-001",
+        "DEC-001",
+        "DEC-002",
+        "INJ-001"
+      ],
+      "write_paths": [],
+      "context_paths": [
+        "platforms/**",
+        "automation/model-policy.json"
+      ],
+      "forbidden_paths": [
+        "**"
+      ],
+      "acceptance_ids": [
+        "AC5",
+        "AC6"
+      ],
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": null,
+        "observed_effort": null,
+        "status": "unobserved",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "A-P3-RUNTIME",
+      "slice_id": "P3",
+      "agent": "runtime_delivery",
+      "role": "executor",
+      "model_class": "standard",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "source_ids": [
+        "REQ-001",
+        "DEC-001",
+        "DEC-002",
+        "INJ-001"
+      ],
+      "write_paths": [
+        "automation/01-build-runtime.ps1",
+        "automation/02-install-runtime.ps1",
+        "automation/03-validate-context.ps1",
+        "automation/04-verify-mirrors.ps1",
+        "automation/05-verify-runtime-state.ps1",
+        "automation/09-doctor.ps1",
+        "automation/10-audit-harness-health.ps1",
+        "automation/test-native-agent-policy.py",
+        "automation/README.md"
+      ],
+      "context_paths": [
+        "automation/model-policy.json",
+        "automation/workctl.py",
+        "platforms/**",
+        "05-generated/runtime-build/**"
+      ],
+      "forbidden_paths": [
+        "rules/**",
+        "skills/**",
+        "automation/workctl.py",
+        "automation/work-ledger.schema.json",
+        "automation/test-workctl.py",
+        "integrations/**"
+      ],
+      "acceptance_ids": [
+        "AC5",
+        "AC6"
+      ],
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "status": "done",
+      "completed_at": "2026-07-23T19:56:02.507101+00:00",
+      "host_attestation_ref": "codex-collaboration://runtime_delivery/gpt-5.6-terra/medium"
+    },
+    {
+      "id": "R2-P1",
+      "slice_id": "P1",
+      "agent": "foundation_rereviewer",
+      "role": "reviewer",
+      "model_class": "standard",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "source_ids": [
+        "REQ-001",
+        "DEC-001",
+        "DEC-002",
+        "INJ-001"
+      ],
+      "write_paths": [],
+      "context_paths": [
+        "rules/**",
+        "skills/plan-and-handoff/**",
+        "skills/finish-to-completion/**",
+        "automation/model-policy.json",
+        "automation/test-model-policy.py"
+      ],
+      "forbidden_paths": [
+        "**"
+      ],
+      "acceptance_ids": [
+        "AC1",
+        "AC2"
+      ],
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "R2-P2",
+      "slice_id": "P2",
+      "agent": "foundation_rereviewer",
+      "role": "reviewer",
+      "model_class": "standard",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "source_ids": [
+        "REQ-001",
+        "INJ-001"
+      ],
+      "write_paths": [],
+      "context_paths": [
+        "automation/workctl.py",
+        "automation/work-ledger.schema.json",
+        "automation/test-workctl.py"
+      ],
+      "forbidden_paths": [
+        "**"
+      ],
+      "acceptance_ids": [
+        "AC3",
+        "AC4"
+      ],
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "R2-P3",
+      "slice_id": "P3",
+      "agent": "foundation_rereviewer",
+      "role": "reviewer",
+      "model_class": "standard",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "source_ids": [
+        "REQ-001",
+        "DEC-001",
+        "DEC-002",
+        "INJ-001"
+      ],
+      "write_paths": [],
+      "context_paths": [
+        "platforms/**",
+        "automation/01-build-runtime.ps1",
+        "automation/02-install-runtime.ps1",
+        "automation/03-validate-context.ps1",
+        "automation/04-verify-mirrors.ps1",
+        "automation/05-verify-runtime-state.ps1",
+        "automation/09-doctor.ps1",
+        "automation/test-native-agent-policy.py"
+      ],
+      "forbidden_paths": [
+        "**"
+      ],
+      "acceptance_ids": [
+        "AC5",
+        "AC6"
+      ],
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "R3-P3",
+      "slice_id": "P3",
+      "agent": "foundation_rereviewer",
+      "role": "reviewer",
+      "model_class": "standard",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "source_ids": [
+        "DISC-001"
+      ],
+      "write_paths": [],
+      "context_paths": [
+        "platforms/**",
+        "automation/02-install-runtime.ps1",
+        "automation/09-doctor.ps1",
+        "automation/test-native-agent-policy.py"
+      ],
+      "forbidden_paths": [
+        "**"
+      ],
+      "acceptance_ids": [
+        "AC5",
+        "AC6"
+      ],
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "status": "ready"
+    },
+    {
+      "id": "A-P4",
+      "slice_id": "P4",
+      "agent": "release_executor",
+      "role": "executor",
+      "model_class": "standard",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "source_ids": [
+        "REQ-001",
+        "DEC-001",
+        "DEC-002",
+        "INJ-001",
+        "DISC-001"
+      ],
+      "write_paths": [
+        ".agent/benchmarks/**",
+        "05-generated/**",
+        "C:/Users/ADMIN/.codex/**",
+        "C:/Users/ADMIN/.cursor/**",
+        "C:/Users/ADMIN/.grok/**",
+        "C:/Users/ADMIN/.gemini/config/**"
+      ],
+      "context_paths": [
+        "automation/01-build-runtime.ps1",
+        "automation/02-install-runtime.ps1",
+        "automation/04-verify-mirrors.ps1",
+        "automation/05-verify-runtime-state.ps1",
+        "automation/09-doctor.ps1",
+        "automation/benchmarks/**",
+        "automation/run-live-benchmark.py"
+      ],
+      "forbidden_paths": [
+        "rules/**",
+        "skills/**",
+        "platforms/**",
+        "automation/**",
+        "integrations/**"
+      ],
+      "acceptance_ids": [
+        "AC7",
+        "AC8"
+      ],
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "status": "done",
+      "completed_at": "2026-07-24T02:24:55.156280+00:00",
+      "host_attestation_ref": "codex-collaboration://release_executor/initial-release-delivery"
+    },
+    {
+      "id": "A-P4-BENCH",
+      "slice_id": "P4",
+      "agent": "benchmark_fixture",
+      "role": "executor",
+      "model_class": "standard",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "source_ids": [
+        "REQ-001",
+        "INJ-001",
+        "DISC-001"
+      ],
+      "write_paths": [
+        "automation/benchmarks/live-fixtures.json",
+        "automation/live_workspace_verifier.py",
+        "automation/test-live-agent-adapter.py",
+        "automation/test-agent-quality-benchmark.py"
+      ],
+      "context_paths": [
+        "automation/benchmarks/agent-quality-benchmark.json",
+        "automation/benchmarks/live-fixtures.schema.json",
+        "automation/live_benchmark_runner.py",
+        "automation/benchmarks/README.md"
+      ],
+      "forbidden_paths": [
+        "rules/**",
+        "skills/**",
+        "platforms/**",
+        "automation/workctl.py",
+        "automation/work-ledger.schema.json",
+        "automation/01-build-runtime.ps1",
+        "automation/02-install-runtime.ps1",
+        "automation/09-doctor.ps1",
+        "05-generated/**"
+      ],
+      "acceptance_ids": [
+        "AC7"
+      ],
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "status": "done",
+      "completed_at": "2026-07-24T02:24:55.410867+00:00",
+      "host_attestation_ref": "codex-collaboration://benchmark_fixture/executable-oracle"
+    },
+    {
+      "id": "R-P4",
+      "slice_id": "P4",
+      "agent": "foundation_rereviewer",
+      "role": "reviewer",
+      "model_class": "standard",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "source_ids": [
+        "REQ-001",
+        "DEC-001",
+        "DEC-002",
+        "INJ-001",
+        "DISC-001"
+      ],
+      "write_paths": [],
+      "context_paths": [
+        "automation/benchmarks/**",
+        "automation/live_benchmark_runner.py",
+        "automation/live_workspace_verifier.py",
+        "automation/workctl.py",
+        "platforms/**"
+      ],
+      "forbidden_paths": [
+        "**"
+      ],
+      "acceptance_ids": [
+        "AC7",
+        "AC8"
+      ],
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": null,
+        "observed_effort": null,
+        "status": "unobserved",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "status": "ready"
+    }
+  ],
+  "receipts": [
+    {
+      "id": "PF-AC5",
+      "slice_id": "P3",
+      "acceptance_id": "AC5",
+      "claim": "All four platforms receive native agent profiles that map portable roles to approved models without forbidden variants.",
+      "claim_hash": "9e016b80d9262d8e9063f861d970c14bf45bcb79be771ef1c4bc9bfd91deccca",
+      "contract_hash": "5bddbb62b7dc4e49812fc6b8455d6eea148c5287e0eb4b9202b26a051c74c1e2",
+      "status": "FAIL",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "codex",
+        "cursor",
+        "antigravity",
+        "grok"
+      ],
+      "command": "python .agent/work/native-orchestration-v3/verify-platform-profiles.py",
+      "command_hash": "919bfcc0c8c1b68f50bcbf0c09385eaaf16bd09b92d209eb552c2d52d1fbbaf9",
+      "expected": "exit=0",
+      "observed": "exit=1; output_sha256=8c61c9d92ba9a7c0c1930c701f0377db1bf1c9a8fafb9f0ab2ef1fc0eb772844",
+      "output_hash": "8c61c9d92ba9a7c0c1930c701f0377db1bf1c9a8fafb9f0ab2ef1fc0eb772844",
+      "exit_code": 1,
+      "expected_exit_code": 0,
+      "environment": "Python 3 static native-profile verifier; P:/agent-rules",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\platforms\\codex\\profiles\\researcher.config.toml",
+          "sha256": "b83180f14706887a8c759e5e75d4d79476355d4b06d7ca73f802640a0d3ead07",
+          "size_bytes": 144,
+          "modified_at": "2026-07-23T19:05:27.087440+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\platforms\\cursor\\agents\\implementer.md",
+          "sha256": "3e0b907f90e5d295864de2d5f54a7675404a86512a7ec833b5e727918bfa6967",
+          "size_bytes": 410,
+          "modified_at": "2026-07-23T19:05:27.095125+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\platforms\\antigravity\\profiles\\role-guidance.md",
+          "sha256": "6312737269016e77b3812df8393791968423d010fd5a022771de297106af000e",
+          "size_bytes": 891,
+          "modified_at": "2026-07-23T19:05:27.116683+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\platforms\\grok\\README-agents.md",
+          "sha256": "15a56375526964e5d2671735eefba3edc0c2186c909513e637fc07abf7eba245",
+          "size_bytes": 590,
+          "modified_at": "2026-07-23T19:06:04.558656+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "platform_adapters",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": null,
+        "observed_effort": null,
+        "status": "unobserved",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-23T19:14:17.008825+00:00"
+    },
+    {
+      "id": "PF-AC2",
+      "slice_id": "P1",
+      "acceptance_id": "AC2",
+      "claim": "A single validated per-platform model policy encodes current allowed families, effort floors, hard-denied variants, and honest fallback evidence.",
+      "claim_hash": "7dac8f3d37a156c06d80f993a542a6cc13c972b2bf776ed3f401fe5be36e9d24",
+      "contract_hash": "ee5a855820bf8ef9e15201c89ab2d9b9bc8688293bd583317b6475ad2290b690",
+      "status": "PASS",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "model-routing",
+        "forbidden-models",
+        "fallback"
+      ],
+      "command": "python automation/test-model-policy.py",
+      "command_hash": "3d8a910dc3cbb76e610121090218b46e0735f1195b2335ad919bcbb509ed06f6",
+      "expected": "exit=0",
+      "observed": "exit=0; output_sha256=35cd9525aacc6cb3b687b7f046f0beb1ad9cfaff41b6c5e356333a3f294227a2",
+      "output_hash": "35cd9525aacc6cb3b687b7f046f0beb1ad9cfaff41b6c5e356333a3f294227a2",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "environment": "Python 3; P:/agent-rules",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\automation\\model-policy.json",
+          "sha256": "41b5acfe868f48de935afb1982b273f33a29c2b1c052a2954867a329ca154e89",
+          "size_bytes": 2257,
+          "modified_at": "2026-07-23T19:05:29.440393+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\automation\\test-model-policy.py",
+          "sha256": "1554211be468673152c85f6f45dc04c58e254d5d79d5481414570baf3470be55",
+          "size_bytes": 2401,
+          "modified_at": "2026-07-23T19:05:29.443405+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "shared_contract",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": null,
+        "observed_effort": null,
+        "status": "unobserved",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-23T19:14:17.216902+00:00"
+    },
+    {
+      "id": "PF-AC6",
+      "slice_id": "P3",
+      "acceptance_id": "AC6",
+      "claim": "Unavailable or unobservable native capability degrades honestly to PARTIAL or approved fallback without a false model PASS.",
+      "claim_hash": "693810bc847954a61ebcfc3357e63075fc6dc1485744da9942033c06c76e48d3",
+      "contract_hash": "39bfc2b8afbdca5a10b9474ece1e8aa93e8fddd80e301742fbfa087e36bc126a",
+      "status": "FAIL",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "capability-probe",
+        "honest-status",
+        "single-agent-fallback"
+      ],
+      "command": "python .agent/work/native-orchestration-v3/verify-platform-profiles.py",
+      "command_hash": "919bfcc0c8c1b68f50bcbf0c09385eaaf16bd09b92d209eb552c2d52d1fbbaf9",
+      "expected": "exit=0",
+      "observed": "exit=1; output_sha256=8c61c9d92ba9a7c0c1930c701f0377db1bf1c9a8fafb9f0ab2ef1fc0eb772844",
+      "output_hash": "8c61c9d92ba9a7c0c1930c701f0377db1bf1c9a8fafb9f0ab2ef1fc0eb772844",
+      "exit_code": 1,
+      "expected_exit_code": 0,
+      "environment": "Python 3 static native-profile verifier; Grok/Antigravity CLI unavailable locally",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\automation\\model-policy.json",
+          "sha256": "41b5acfe868f48de935afb1982b273f33a29c2b1c052a2954867a329ca154e89",
+          "size_bytes": 2257,
+          "modified_at": "2026-07-23T19:05:29.440393+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\platforms\\antigravity\\profiles\\role-guidance.md",
+          "sha256": "6312737269016e77b3812df8393791968423d010fd5a022771de297106af000e",
+          "size_bytes": 891,
+          "modified_at": "2026-07-23T19:05:27.116683+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\platforms\\grok\\README-agents.md",
+          "sha256": "15a56375526964e5d2671735eefba3edc0c2186c909513e637fc07abf7eba245",
+          "size_bytes": 590,
+          "modified_at": "2026-07-23T19:06:04.558656+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\platforms\\cursor\\agents\\README.md",
+          "sha256": "0676d4d6d2026d03f0373aad4009c8143d5876707aa57248a762fb1dbf961612",
+          "size_bytes": 453,
+          "modified_at": "2026-07-23T19:05:27.100150+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "platform_adapters",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": null,
+        "observed_effort": null,
+        "status": "unobserved",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-23T19:14:17.493711+00:00"
+    },
+    {
+      "id": "PF-AC4",
+      "slice_id": "P2",
+      "acceptance_id": "AC4",
+      "claim": "workctl is callable from arbitrary projects after runtime installation and preserves existing lifecycle commands.",
+      "claim_hash": "6ba74ab7c51dee5af04b70ebdd05f6beae19ebfac5dfedd24456221eeb416377",
+      "contract_hash": "f9ac567dd2225c63e20ea1211f3a494fe4ba68b6230c9f683fcd2816a4b667f9",
+      "status": "PASS",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "portability",
+        "backward-compatibility"
+      ],
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"& './automation/workctl.ps1' classify --payload-json '{}'\"",
+      "command_hash": "1181279a4cdea956cd9f3cdcb8ccb53c1a0394f6fa1bf4f54eddabd4e47527f3",
+      "expected": "exit=0",
+      "observed": "exit=0; output_sha256=4b18b37ec3b55a5c0872fd5597086eec17b4f2d5a41f70f2835ba907e09e2448",
+      "output_hash": "4b18b37ec3b55a5c0872fd5597086eec17b4f2d5a41f70f2835ba907e09e2448",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "environment": "Windows PowerShell wrapper; P:/agent-rules",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\automation\\workctl.py",
+          "sha256": "88f9255bafb93f3e6e66cf0731faabc9dd5ae866283e04b173e37bac018829cb",
+          "size_bytes": 60065,
+          "modified_at": "2026-07-23T19:09:14.660076+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\automation\\workctl.ps1",
+          "sha256": "8590444cbc096fe97abeea9f08c8c94bfcd91eddeba1935f4bf85e27ca56c26b",
+          "size_bytes": 514,
+          "modified_at": "2026-07-23T17:25:16.943389+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\automation\\workctl.sh",
+          "sha256": "772e4b73df6803372927d6facc6f5e0a69ca283cbd9fd01c94cb15aa83e5d5ca",
+          "size_bytes": 286,
+          "modified_at": "2026-07-23T17:25:16.943921+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "ledger_tooling",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": null,
+        "observed_effort": null,
+        "status": "unobserved",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-23T19:14:20.941971+00:00"
+    },
+    {
+      "id": "PF-AC3",
+      "slice_id": "P2",
+      "acceptance_id": "AC3",
+      "claim": "Ledger v3 records plan identity, execution authorization, host references, requested/resolved/observed model evidence, and main-direct exceptions with v2 migration.",
+      "claim_hash": "d228f9bf30e6c6c2cfdeab5215d03ee3459bdf39225aeb8887ee1da3a0f64635",
+      "contract_hash": "1bb9722da6760029f65114b4ab817a5fbdcd3fe85cd88a04a7f6b152f07d66eb",
+      "status": "PASS",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "migration",
+        "resume",
+        "provenance",
+        "atomicity"
+      ],
+      "command": "python automation/test-workctl.py",
+      "command_hash": "1ecf073ed8890e342cb9e4d6987c55f71368c54c228b1a5c4b8d606119e19f7a",
+      "expected": "exit=0",
+      "observed": "exit=0; output_sha256=19c93fc8b5da8d969c183e1f41bf0a8283dcc616e9b63884a708d2c829130482",
+      "output_hash": "19c93fc8b5da8d969c183e1f41bf0a8283dcc616e9b63884a708d2c829130482",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "environment": "Python 3; P:/agent-rules",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\automation\\workctl.py",
+          "sha256": "88f9255bafb93f3e6e66cf0731faabc9dd5ae866283e04b173e37bac018829cb",
+          "size_bytes": 60065,
+          "modified_at": "2026-07-23T19:09:14.660076+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\automation\\work-ledger.schema.json",
+          "sha256": "31fbd838cc1f678f76d47033dc6023be4d292cc34681ad2f7bd883ff0ed413a2",
+          "size_bytes": 17262,
+          "modified_at": "2026-07-23T19:04:26.806573+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\automation\\test-workctl.py",
+          "sha256": "7c8a6615e5577e03b2f7b47aac3018cd8a14d2b1321a2e502e682beeeb1d5798",
+          "size_bytes": 23067,
+          "modified_at": "2026-07-23T19:08:22.045518+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "ledger_tooling",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": null,
+        "observed_effort": null,
+        "status": "unobserved",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-23T19:14:50.113289+00:00"
+    },
+    {
+      "id": "PF-AC1",
+      "slice_id": "P1",
+      "acceptance_id": "AC1",
+      "claim": "Shared rules use portable capability classes, meaningful-question gates, main-direct limits, bounded context capsules, and risk-triggered expert review.",
+      "claim_hash": "1885db45835c5eeafc13ce1cc8e011a34e1def47873aaf310b683eb23be32f1a",
+      "contract_hash": "062eaf557b66ce29f90886efb22c82cb19e08ba70983030c3644f32f02b577f0",
+      "status": "PASS",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "behavior",
+        "context-budget",
+        "no-duplication"
+      ],
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File automation/03-validate-context.ps1",
+      "command_hash": "cd24e516b254d395c380da0572771f63a1f0bdd57dcf6e019d57293113d3b001",
+      "expected": "exit=0",
+      "observed": "exit=0; output_sha256=bc616341fe5788014afce55d12ea3e35dddc3679e869368d8ce06ca9c46b4abc",
+      "output_hash": "bc616341fe5788014afce55d12ea3e35dddc3679e869368d8ce06ca9c46b4abc",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "environment": "Windows PowerShell; P:/agent-rules",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\rules\\10-execution.md",
+          "sha256": "ae44b994911ed5ee3e6a492c2ec82f4b94b2df82a6cd38d7271183827dff1183",
+          "size_bytes": 2247,
+          "modified_at": "2026-07-23T19:03:43.146353+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\rules\\25-task-lifecycle.md",
+          "sha256": "3aefa09b15eb3c1b8f0419571a05c0b148735917f9ac0b5eb8953ac21e6f3b84",
+          "size_bytes": 2118,
+          "modified_at": "2026-07-23T19:03:43.146353+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\skills\\plan-and-handoff\\references\\adaptive-work-protocol.md",
+          "sha256": "37316c89b42b559b37ade14ce26fdd48246b36a74fbbae9b838fbca23446c240",
+          "size_bytes": 4389,
+          "modified_at": "2026-07-23T19:06:11.280941+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "shared_contract",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": null,
+        "observed_effort": null,
+        "status": "unobserved",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-23T19:14:58.813210+00:00"
+    },
+    {
+      "id": "PF-AC5-R2",
+      "slice_id": "P3",
+      "acceptance_id": "AC5",
+      "claim": "All four platforms receive native agent profiles that map portable roles to approved models without forbidden variants.",
+      "claim_hash": "9e016b80d9262d8e9063f861d970c14bf45bcb79be771ef1c4bc9bfd91deccca",
+      "contract_hash": "5bddbb62b7dc4e49812fc6b8455d6eea148c5287e0eb4b9202b26a051c74c1e2",
+      "status": "PASS",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "codex",
+        "cursor",
+        "antigravity",
+        "grok"
+      ],
+      "command": "python .agent/work/native-orchestration-v3/verify-platform-profiles.py",
+      "command_hash": "919bfcc0c8c1b68f50bcbf0c09385eaaf16bd09b92d209eb552c2d52d1fbbaf9",
+      "expected": "exit=0",
+      "observed": "exit=0; output_sha256=cc2f6c2f8d1d862a22862da685488c7586b41bcf8f9a91a113f0758731e83c3e",
+      "output_hash": "cc2f6c2f8d1d862a22862da685488c7586b41bcf8f9a91a113f0758731e83c3e",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "environment": "Python 3 static native-profile verifier; P:/agent-rules",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\platforms\\codex\\profiles\\researcher.config.toml",
+          "sha256": "b83180f14706887a8c759e5e75d4d79476355d4b06d7ca73f802640a0d3ead07",
+          "size_bytes": 144,
+          "modified_at": "2026-07-23T19:05:27.087440+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\platforms\\cursor\\agents\\implementer.md",
+          "sha256": "3e0b907f90e5d295864de2d5f54a7675404a86512a7ec833b5e727918bfa6967",
+          "size_bytes": 410,
+          "modified_at": "2026-07-23T19:05:27.095125+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\platforms\\antigravity\\profiles\\role-guidance.md",
+          "sha256": "6312737269016e77b3812df8393791968423d010fd5a022771de297106af000e",
+          "size_bytes": 891,
+          "modified_at": "2026-07-23T19:05:27.116683+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\platforms\\grok\\README-agents.md",
+          "sha256": "15a56375526964e5d2671735eefba3edc0c2186c909513e637fc07abf7eba245",
+          "size_bytes": 590,
+          "modified_at": "2026-07-23T19:06:04.558656+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "platform_adapters",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": null,
+        "observed_effort": null,
+        "status": "unobserved",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-23T19:15:32.689237+00:00"
+    },
+    {
+      "id": "PF-AC6-R2",
+      "slice_id": "P3",
+      "acceptance_id": "AC6",
+      "claim": "Unavailable or unobservable native capability degrades honestly to PARTIAL or approved fallback without a false model PASS.",
+      "claim_hash": "693810bc847954a61ebcfc3357e63075fc6dc1485744da9942033c06c76e48d3",
+      "contract_hash": "39bfc2b8afbdca5a10b9474ece1e8aa93e8fddd80e301742fbfa087e36bc126a",
+      "status": "PASS",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "capability-probe",
+        "honest-status",
+        "single-agent-fallback"
+      ],
+      "command": "python .agent/work/native-orchestration-v3/verify-platform-profiles.py",
+      "command_hash": "919bfcc0c8c1b68f50bcbf0c09385eaaf16bd09b92d209eb552c2d52d1fbbaf9",
+      "expected": "exit=0",
+      "observed": "exit=0; output_sha256=cc2f6c2f8d1d862a22862da685488c7586b41bcf8f9a91a113f0758731e83c3e",
+      "output_hash": "cc2f6c2f8d1d862a22862da685488c7586b41bcf8f9a91a113f0758731e83c3e",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "environment": "Python 3 static native-profile verifier; Grok/Antigravity CLI unavailable locally",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\automation\\model-policy.json",
+          "sha256": "41b5acfe868f48de935afb1982b273f33a29c2b1c052a2954867a329ca154e89",
+          "size_bytes": 2257,
+          "modified_at": "2026-07-23T19:05:29.440393+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\platforms\\antigravity\\profiles\\role-guidance.md",
+          "sha256": "6312737269016e77b3812df8393791968423d010fd5a022771de297106af000e",
+          "size_bytes": 891,
+          "modified_at": "2026-07-23T19:05:27.116683+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\platforms\\grok\\README-agents.md",
+          "sha256": "15a56375526964e5d2671735eefba3edc0c2186c909513e637fc07abf7eba245",
+          "size_bytes": 590,
+          "modified_at": "2026-07-23T19:06:04.558656+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\platforms\\cursor\\agents\\README.md",
+          "sha256": "0676d4d6d2026d03f0373aad4009c8143d5876707aa57248a762fb1dbf961612",
+          "size_bytes": 453,
+          "modified_at": "2026-07-23T19:05:27.100150+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "platform_adapters",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": null,
+        "observed_effort": null,
+        "status": "unobserved",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-23T19:15:32.723042+00:00"
+    },
+    {
+      "id": "PF-AC1-FINAL",
+      "slice_id": "P1",
+      "acceptance_id": "AC1",
+      "claim": "Shared rules use portable capability classes, meaningful-question gates, main-direct limits, bounded context capsules, and risk-triggered expert review.",
+      "claim_hash": "1885db45835c5eeafc13ce1cc8e011a34e1def47873aaf310b683eb23be32f1a",
+      "contract_hash": "062eaf557b66ce29f90886efb22c82cb19e08ba70983030c3644f32f02b577f0",
+      "status": "PASS",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "behavior",
+        "context-budget",
+        "no-duplication"
+      ],
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File automation/03-validate-context.ps1",
+      "command_hash": "cd24e516b254d395c380da0572771f63a1f0bdd57dcf6e019d57293113d3b001",
+      "expected": "exit=0",
+      "observed": "exit=0; output_sha256=59deb980c1e71f907b51b4f28daa6c7b2feb701bdea9c5c732fec460e08ad306",
+      "output_hash": "59deb980c1e71f907b51b4f28daa6c7b2feb701bdea9c5c732fec460e08ad306",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "environment": "Windows PowerShell; P:/agent-rules",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\rules\\10-execution.md",
+          "sha256": "ae44b994911ed5ee3e6a492c2ec82f4b94b2df82a6cd38d7271183827dff1183",
+          "size_bytes": 2247,
+          "modified_at": "2026-07-23T19:03:43.146353+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\rules\\25-task-lifecycle.md",
+          "sha256": "4e69fd7fb12cc333f109e9f177adf0b7253015f5823f10c4ea879d7d2ce704b9",
+          "size_bytes": 2363,
+          "modified_at": "2026-07-23T19:45:13.646051+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\skills\\plan-and-handoff\\references\\adaptive-work-protocol.md",
+          "sha256": "dd0d42d031fe71b3ee345cd0a3fbcb7353196c5f953bc11f4a3442b47de4b558",
+          "size_bytes": 5013,
+          "modified_at": "2026-07-23T19:45:13.647116+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "shared_contract",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-23T20:01:49.723269+00:00"
+    },
+    {
+      "id": "PF-AC2-FINAL",
+      "slice_id": "P1",
+      "acceptance_id": "AC2",
+      "claim": "A single validated per-platform model policy encodes current allowed families, effort floors, hard-denied variants, and honest fallback evidence.",
+      "claim_hash": "7dac8f3d37a156c06d80f993a542a6cc13c972b2bf776ed3f401fe5be36e9d24",
+      "contract_hash": "ee5a855820bf8ef9e15201c89ab2d9b9bc8688293bd583317b6475ad2290b690",
+      "status": "PASS",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "model-routing",
+        "forbidden-models",
+        "fallback"
+      ],
+      "command": "python automation/test-model-policy.py",
+      "command_hash": "3d8a910dc3cbb76e610121090218b46e0735f1195b2335ad919bcbb509ed06f6",
+      "expected": "exit=0",
+      "observed": "exit=0; output_sha256=35cd9525aacc6cb3b687b7f046f0beb1ad9cfaff41b6c5e356333a3f294227a2",
+      "output_hash": "35cd9525aacc6cb3b687b7f046f0beb1ad9cfaff41b6c5e356333a3f294227a2",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "environment": "Python 3; P:/agent-rules",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\automation\\model-policy.json",
+          "sha256": "0d24bc5bed96d0f67b575fed4238d1288b39cbce862ea1dfe9f2854694614ef4",
+          "size_bytes": 2306,
+          "modified_at": "2026-07-23T19:23:07.678137+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\automation\\test-model-policy.py",
+          "sha256": "f4011caa63716011a35e91ecb3cc5194b54da89f465ca96a0ceb6e88ea150d7a",
+          "size_bytes": 2592,
+          "modified_at": "2026-07-23T19:23:07.681658+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "shared_contract",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-23T20:01:53.490223+00:00"
+    },
+    {
+      "id": "PF-AC3-FINAL",
+      "slice_id": "P2",
+      "acceptance_id": "AC3",
+      "claim": "Ledger v3 records plan identity, execution authorization, host references, requested/resolved/observed model evidence, and main-direct exceptions with v2 migration.",
+      "claim_hash": "d228f9bf30e6c6c2cfdeab5215d03ee3459bdf39225aeb8887ee1da3a0f64635",
+      "contract_hash": "1bb9722da6760029f65114b4ab817a5fbdcd3fe85cd88a04a7f6b152f07d66eb",
+      "status": "PASS",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "migration",
+        "resume",
+        "provenance",
+        "atomicity"
+      ],
+      "command": "python automation/test-workctl.py",
+      "command_hash": "1ecf073ed8890e342cb9e4d6987c55f71368c54c228b1a5c4b8d606119e19f7a",
+      "expected": "exit=0",
+      "observed": "exit=0; output_sha256=b71c587c88f7103cab004f3496dc34e2719fa7b1a4d82ed3cd6efe3663417692",
+      "output_hash": "b71c587c88f7103cab004f3496dc34e2719fa7b1a4d82ed3cd6efe3663417692",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "environment": "Python 3; P:/agent-rules",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\automation\\workctl.py",
+          "sha256": "ed3b23c355a118ff0d65f4870d1b7c93221d2d9b75855aa3a9a1598928e74046",
+          "size_bytes": 68940,
+          "modified_at": "2026-07-23T19:58:16.275206+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\automation\\work-ledger.schema.json",
+          "sha256": "b71866dad908f11f2e185d9a7fe74994f711988e24f240be033d63014725bd23",
+          "size_bytes": 17536,
+          "modified_at": "2026-07-23T19:47:27.370669+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\automation\\test-workctl.py",
+          "sha256": "df6c496164416f8a1cbf18d696cbe4a13aae1e7718ee1561d50bd9d3045e9ac3",
+          "size_bytes": 37026,
+          "modified_at": "2026-07-23T20:00:10.984477+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "ledger_tooling",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-23T20:02:16.830504+00:00"
+    },
+    {
+      "id": "PF-AC4-FINAL",
+      "slice_id": "P2",
+      "acceptance_id": "AC4",
+      "claim": "workctl is callable from arbitrary projects after runtime installation and preserves existing lifecycle commands.",
+      "claim_hash": "6ba74ab7c51dee5af04b70ebdd05f6beae19ebfac5dfedd24456221eeb416377",
+      "contract_hash": "f9ac567dd2225c63e20ea1211f3a494fe4ba68b6230c9f683fcd2816a4b667f9",
+      "status": "PASS",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "portability",
+        "backward-compatibility"
+      ],
+      "command": "python automation/test-workctl.py",
+      "command_hash": "1ecf073ed8890e342cb9e4d6987c55f71368c54c228b1a5c4b8d606119e19f7a",
+      "expected": "exit=0",
+      "observed": "exit=0; output_sha256=b71c587c88f7103cab004f3496dc34e2719fa7b1a4d82ed3cd6efe3663417692",
+      "output_hash": "b71c587c88f7103cab004f3496dc34e2719fa7b1a4d82ed3cd6efe3663417692",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "environment": "Python 3 copied-bundle lifecycle test; P:/agent-rules",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\automation\\workctl.py",
+          "sha256": "ed3b23c355a118ff0d65f4870d1b7c93221d2d9b75855aa3a9a1598928e74046",
+          "size_bytes": 68940,
+          "modified_at": "2026-07-23T19:58:16.275206+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\automation\\workctl.ps1",
+          "sha256": "8590444cbc096fe97abeea9f08c8c94bfcd91eddeba1935f4bf85e27ca56c26b",
+          "size_bytes": 514,
+          "modified_at": "2026-07-23T17:25:16.943389+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\automation\\workctl.sh",
+          "sha256": "772e4b73df6803372927d6facc6f5e0a69ca283cbd9fd01c94cb15aa83e5d5ca",
+          "size_bytes": 286,
+          "modified_at": "2026-07-23T17:25:16.943921+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\automation\\work-ledger.schema.json",
+          "sha256": "b71866dad908f11f2e185d9a7fe74994f711988e24f240be033d63014725bd23",
+          "size_bytes": 17536,
+          "modified_at": "2026-07-23T19:47:27.370669+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "ledger_tooling",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-23T20:02:38.297815+00:00"
+    },
+    {
+      "id": "PF-AC5-FINAL",
+      "slice_id": "P3",
+      "acceptance_id": "AC5",
+      "claim": "All four platforms receive native agent profiles that map portable roles to approved models without forbidden variants.",
+      "claim_hash": "9e016b80d9262d8e9063f861d970c14bf45bcb79be771ef1c4bc9bfd91deccca",
+      "contract_hash": "5bddbb62b7dc4e49812fc6b8455d6eea148c5287e0eb4b9202b26a051c74c1e2",
+      "status": "PASS",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "codex",
+        "cursor",
+        "antigravity",
+        "grok"
+      ],
+      "command": "python automation/test-native-agent-policy.py --build",
+      "command_hash": "1b4c990e07862437d57d03370faad038db91f9184ba67f1a374ad6844b25d63a",
+      "expected": "exit=0",
+      "observed": "exit=0; output_sha256=0d28d81e10ff36d9b84c0320f628493c9b0bbecf51d9fd5a4d9dc7c139fe1dc5",
+      "output_hash": "0d28d81e10ff36d9b84c0320f628493c9b0bbecf51d9fd5a4d9dc7c139fe1dc5",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "environment": "Python 3 static/build native-profile verifier; P:/agent-rules",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\platforms\\codex\\agents\\agent_rules_implementer.toml",
+          "sha256": "79e43b1c334d162f48c15a5140a0c5ad3094bc135d83408c96fa89d78f6fec90",
+          "size_bytes": 396,
+          "modified_at": "2026-07-23T19:43:18.035497+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\platforms\\cursor\\agents\\agent-rules-implementer.md",
+          "sha256": "0f86030cd7bf502ea0b5e423d6d4314f42264d4882303ec5cb0821c9af0abeff",
+          "size_bytes": 515,
+          "modified_at": "2026-07-23T19:43:18.043010+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\platforms\\antigravity\\agents\\agent-rules-implementer\\agent.md",
+          "sha256": "a2a6cb3eebacc8921520642da6bc8cd85a0a611d8b23c4fabaa7f33e6397bcb6",
+          "size_bytes": 669,
+          "modified_at": "2026-07-23T19:43:39.557427+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\platforms\\grok\\agents\\agent-rules-implementer.toml",
+          "sha256": "d6e61beba5f999d11c9891410ddbdf5e5c9b7f06101b6b08929418560460c17c",
+          "size_bytes": 247,
+          "modified_at": "2026-07-23T19:43:39.545915+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "platform_adapters",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-23T20:02:44.994393+00:00"
+    },
+    {
+      "id": "PF-AC6-FINAL",
+      "slice_id": "P3",
+      "acceptance_id": "AC6",
+      "claim": "Unavailable or unobservable native capability degrades honestly to PARTIAL or approved fallback without a false model PASS.",
+      "claim_hash": "693810bc847954a61ebcfc3357e63075fc6dc1485744da9942033c06c76e48d3",
+      "contract_hash": "39bfc2b8afbdca5a10b9474ece1e8aa93e8fddd80e301742fbfa087e36bc126a",
+      "status": "PASS",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "capability-probe",
+        "honest-status",
+        "single-agent-fallback"
+      ],
+      "command": "python automation/test-native-agent-policy.py --build",
+      "command_hash": "1b4c990e07862437d57d03370faad038db91f9184ba67f1a374ad6844b25d63a",
+      "expected": "exit=0",
+      "observed": "exit=0; output_sha256=0d28d81e10ff36d9b84c0320f628493c9b0bbecf51d9fd5a4d9dc7c139fe1dc5",
+      "output_hash": "0d28d81e10ff36d9b84c0320f628493c9b0bbecf51d9fd5a4d9dc7c139fe1dc5",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "environment": "Python 3 plus platform CLI availability probe; Grok/Antigravity unavailable locally",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\automation\\test-native-agent-policy.py",
+          "sha256": "e9ea359ae7f7b5bb376952dec6731e39296e4380100ab70c75e63778a2f6bb3e",
+          "size_bytes": 15041,
+          "modified_at": "2026-07-23T19:53:22.902698+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\automation\\09-doctor.ps1",
+          "sha256": "4c71a82555d3dcfd986d0a5057f337f319ac8a03e96fe3a9a0f04fb9aa552936",
+          "size_bytes": 23720,
+          "modified_at": "2026-07-23T19:50:49.456238+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\rules\\25-task-lifecycle.md",
+          "sha256": "4e69fd7fb12cc333f109e9f177adf0b7253015f5823f10c4ea879d7d2ce704b9",
+          "size_bytes": 2363,
+          "modified_at": "2026-07-23T19:45:13.646051+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\skills\\plan-and-handoff\\references\\adaptive-work-protocol.md",
+          "sha256": "dd0d42d031fe71b3ee345cd0a3fbcb7353196c5f953bc11f4a3442b47de4b558",
+          "size_bytes": 5013,
+          "modified_at": "2026-07-23T19:45:13.647116+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "runtime_delivery",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-23T20:02:51.137218+00:00"
+    },
+    {
+      "id": "PF-AC3-FINAL2",
+      "slice_id": "P2",
+      "acceptance_id": "AC3",
+      "claim": "Ledger v3 records plan identity, execution authorization, host references, requested/resolved/observed model evidence, and main-direct exceptions with v2 migration.",
+      "claim_hash": "d228f9bf30e6c6c2cfdeab5215d03ee3459bdf39225aeb8887ee1da3a0f64635",
+      "contract_hash": "1bb9722da6760029f65114b4ab817a5fbdcd3fe85cd88a04a7f6b152f07d66eb",
+      "status": "PASS",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "migration",
+        "resume",
+        "provenance",
+        "atomicity"
+      ],
+      "command": "python automation/test-workctl.py",
+      "command_hash": "1ecf073ed8890e342cb9e4d6987c55f71368c54c228b1a5c4b8d606119e19f7a",
+      "expected": "exit=0",
+      "observed": "exit=0; output_sha256=b71c587c88f7103cab004f3496dc34e2719fa7b1a4d82ed3cd6efe3663417692",
+      "output_hash": "b71c587c88f7103cab004f3496dc34e2719fa7b1a4d82ed3cd6efe3663417692",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "environment": "Python 3; P:/agent-rules",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\automation\\workctl.py",
+          "sha256": "ed3b23c355a118ff0d65f4870d1b7c93221d2d9b75855aa3a9a1598928e74046",
+          "size_bytes": 68940,
+          "modified_at": "2026-07-23T19:58:16.275206+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\automation\\work-ledger.schema.json",
+          "sha256": "b71866dad908f11f2e185d9a7fe74994f711988e24f240be033d63014725bd23",
+          "size_bytes": 17536,
+          "modified_at": "2026-07-23T19:47:27.370669+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\automation\\test-workctl.py",
+          "sha256": "df6c496164416f8a1cbf18d696cbe4a13aae1e7718ee1561d50bd9d3045e9ac3",
+          "size_bytes": 37026,
+          "modified_at": "2026-07-23T20:00:10.984477+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "ledger_tooling",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-23T20:13:41.229252+00:00"
+    },
+    {
+      "id": "PF-AC4-FINAL2",
+      "slice_id": "P2",
+      "acceptance_id": "AC4",
+      "claim": "workctl is callable from arbitrary projects after runtime installation and preserves existing lifecycle commands.",
+      "claim_hash": "6ba74ab7c51dee5af04b70ebdd05f6beae19ebfac5dfedd24456221eeb416377",
+      "contract_hash": "f9ac567dd2225c63e20ea1211f3a494fe4ba68b6230c9f683fcd2816a4b667f9",
+      "status": "PASS",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "portability",
+        "backward-compatibility"
+      ],
+      "command": "python automation/test-workctl.py",
+      "command_hash": "1ecf073ed8890e342cb9e4d6987c55f71368c54c228b1a5c4b8d606119e19f7a",
+      "expected": "exit=0",
+      "observed": "exit=0; output_sha256=b71c587c88f7103cab004f3496dc34e2719fa7b1a4d82ed3cd6efe3663417692",
+      "output_hash": "b71c587c88f7103cab004f3496dc34e2719fa7b1a4d82ed3cd6efe3663417692",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "environment": "Python 3 copied-bundle lifecycle test; P:/agent-rules",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\automation\\workctl.py",
+          "sha256": "ed3b23c355a118ff0d65f4870d1b7c93221d2d9b75855aa3a9a1598928e74046",
+          "size_bytes": 68940,
+          "modified_at": "2026-07-23T19:58:16.275206+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\automation\\workctl.ps1",
+          "sha256": "8590444cbc096fe97abeea9f08c8c94bfcd91eddeba1935f4bf85e27ca56c26b",
+          "size_bytes": 514,
+          "modified_at": "2026-07-23T17:25:16.943389+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\automation\\workctl.sh",
+          "sha256": "772e4b73df6803372927d6facc6f5e0a69ca283cbd9fd01c94cb15aa83e5d5ca",
+          "size_bytes": 286,
+          "modified_at": "2026-07-23T17:25:16.943921+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\automation\\work-ledger.schema.json",
+          "sha256": "b71866dad908f11f2e185d9a7fe74994f711988e24f240be033d63014725bd23",
+          "size_bytes": 17536,
+          "modified_at": "2026-07-23T19:47:27.370669+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "ledger_tooling",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-23T20:14:01.943921+00:00"
+    },
+    {
+      "id": "PF-AC5-FINAL2",
+      "slice_id": "P3",
+      "acceptance_id": "AC5",
+      "claim": "All four platforms receive native agent profiles that map portable roles to approved models without forbidden variants.",
+      "claim_hash": "9e016b80d9262d8e9063f861d970c14bf45bcb79be771ef1c4bc9bfd91deccca",
+      "contract_hash": "5bddbb62b7dc4e49812fc6b8455d6eea148c5287e0eb4b9202b26a051c74c1e2",
+      "status": "PASS",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "codex",
+        "cursor",
+        "antigravity",
+        "grok"
+      ],
+      "command": "python automation/test-native-agent-policy.py --build",
+      "command_hash": "1b4c990e07862437d57d03370faad038db91f9184ba67f1a374ad6844b25d63a",
+      "expected": "exit=0",
+      "observed": "exit=0; output_sha256=0d28d81e10ff36d9b84c0320f628493c9b0bbecf51d9fd5a4d9dc7c139fe1dc5",
+      "output_hash": "0d28d81e10ff36d9b84c0320f628493c9b0bbecf51d9fd5a4d9dc7c139fe1dc5",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "environment": "Python 3 static/build native-profile verifier; P:/agent-rules",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\platforms\\codex\\agents\\agent_rules_implementer.toml",
+          "sha256": "79e43b1c334d162f48c15a5140a0c5ad3094bc135d83408c96fa89d78f6fec90",
+          "size_bytes": 396,
+          "modified_at": "2026-07-23T19:43:18.035497+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\platforms\\cursor\\agents\\agent-rules-implementer.md",
+          "sha256": "0f86030cd7bf502ea0b5e423d6d4314f42264d4882303ec5cb0821c9af0abeff",
+          "size_bytes": 515,
+          "modified_at": "2026-07-23T19:43:18.043010+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\platforms\\antigravity\\agents\\agent-rules-implementer\\agent.md",
+          "sha256": "a2a6cb3eebacc8921520642da6bc8cd85a0a611d8b23c4fabaa7f33e6397bcb6",
+          "size_bytes": 669,
+          "modified_at": "2026-07-23T19:43:39.557427+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\platforms\\grok\\agents\\agent-rules-implementer.toml",
+          "sha256": "d6e61beba5f999d11c9891410ddbdf5e5c9b7f06101b6b08929418560460c17c",
+          "size_bytes": 247,
+          "modified_at": "2026-07-23T19:43:39.545915+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "platform_adapters",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-23T20:14:13.319554+00:00"
+    },
+    {
+      "id": "PF-AC6-FINAL2",
+      "slice_id": "P3",
+      "acceptance_id": "AC6",
+      "claim": "Unavailable or unobservable native capability degrades honestly to PARTIAL or approved fallback without a false model PASS.",
+      "claim_hash": "693810bc847954a61ebcfc3357e63075fc6dc1485744da9942033c06c76e48d3",
+      "contract_hash": "39bfc2b8afbdca5a10b9474ece1e8aa93e8fddd80e301742fbfa087e36bc126a",
+      "status": "PASS",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "capability-probe",
+        "honest-status",
+        "single-agent-fallback"
+      ],
+      "command": "python automation/test-native-agent-policy.py --build --isolated-install",
+      "command_hash": "054ab380a381fc14f895efe11da140e1d83fe40f3dab6ed4dc9ff3c66695c4d2",
+      "expected": "exit=0",
+      "observed": "exit=0; output_sha256=a98a20879f9872f9b5dd48abc6cdf565bb9bb9630407a688b853d7cce20303e5",
+      "output_hash": "a98a20879f9872f9b5dd48abc6cdf565bb9bb9630407a688b853d7cce20303e5",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "environment": "Python 3 plus isolated Windows PowerShell 5 all-platform install/doctor; real user runtimes untouched",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\automation\\test-native-agent-policy.py",
+          "sha256": "e75e0e8ad4b7eca9e1941c9acefe04a0e5ec1ebaf7a899ba9d275fb94f0a12be",
+          "size_bytes": 18794,
+          "modified_at": "2026-07-23T20:10:26.304707+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\automation\\09-doctor.ps1",
+          "sha256": "d6812c30a066c3cd4d80d402543da1d126bc1c700e36078226aa0612547f1014",
+          "size_bytes": 24450,
+          "modified_at": "2026-07-23T20:10:05.121292+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\rules\\25-task-lifecycle.md",
+          "sha256": "4e69fd7fb12cc333f109e9f177adf0b7253015f5823f10c4ea879d7d2ce704b9",
+          "size_bytes": 2363,
+          "modified_at": "2026-07-23T19:45:13.646051+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\skills\\plan-and-handoff\\references\\adaptive-work-protocol.md",
+          "sha256": "dd0d42d031fe71b3ee345cd0a3fbcb7353196c5f953bc11f4a3442b47de4b558",
+          "size_bytes": 5013,
+          "modified_at": "2026-07-23T19:45:13.647116+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "runtime_delivery",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-23T20:15:10.066494+00:00"
+    },
+    {
+      "id": "P4-AC7-final",
+      "slice_id": "P4",
+      "acceptance_id": "AC7",
+      "claim": "Build, installer, validators, doctor, and benchmark prove distinct install, native, orchestration, model-policy, and cross-platform states.",
+      "claim_hash": "c42bf5cba0649d63235026e6e6533a3dc62423776a9de166bd086ae9cd0b9bf7",
+      "contract_hash": "3517fae305bb423004826770e2be30cb745712918194eb02c11e9f64064e6c15",
+      "status": "FAIL",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "build",
+        "install",
+        "doctor",
+        "benchmark",
+        "false-pass"
+      ],
+      "command": "python automation/test-native-agent-policy.py --build --isolated-install && python automation/test-live-agent-adapter.py && python automation/collect-live-results.py .agent/benchmarks/results/native-orchestration-release-rescored.jsonl --output .agent/benchmarks/results/native-orchestration-release-final.jsonl",
+      "command_hash": "842f9b4f1527337633e1c5e357a1ead79cf4f499c9565deb96505260bbe19754",
+      "expected": "exit=0",
+      "observed": "exit=1; output_sha256=500fcc57b3ce6832c7ee37e5826b3ee9929aae5ad47e311a82302e80cb2df97e",
+      "output_hash": "500fcc57b3ce6832c7ee37e5826b3ee9929aae5ad47e311a82302e80cb2df97e",
+      "exit_code": 1,
+      "expected_exit_code": 0,
+      "environment": "isolated all-platform install plus preserved Codex native empirical artifact",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\.agent\\benchmarks\\results\\native-orchestration-release-final.jsonl",
+          "sha256": "2f8b84607cdb02fd0f780f433557fe856fbf63876553b5c153e8e6f7a9367f2a",
+          "size_bytes": 2656,
+          "modified_at": "2026-07-24T02:28:41.642795+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\.agent\\benchmarks\\results\\native-release-report-final\\report.json",
+          "sha256": "c663406330894ad82b5ad6ec408486959d1fee3ec351f2e7402e939a9bffa782",
+          "size_bytes": 3158,
+          "modified_at": "2026-07-24T02:28:41.833199+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "release_executor",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-24T02:30:08.867209+00:00"
+    },
+    {
+      "id": "P4-AC7-recovered",
+      "slice_id": "P4",
+      "acceptance_id": "AC7",
+      "claim": "Build, installer, validators, doctor, and benchmark prove distinct install, native, orchestration, model-policy, and cross-platform states.",
+      "claim_hash": "c42bf5cba0649d63235026e6e6533a3dc62423776a9de166bd086ae9cd0b9bf7",
+      "contract_hash": "3517fae305bb423004826770e2be30cb745712918194eb02c11e9f64064e6c15",
+      "status": "PASS",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "build",
+        "install",
+        "doctor",
+        "benchmark",
+        "false-pass"
+      ],
+      "command": "python automation/test-native-agent-policy.py --build --isolated-install && python automation/test-live-agent-adapter.py && python automation/collect-live-results.py .agent/benchmarks/results/native-orchestration-release-rescored.jsonl --output .agent/benchmarks/results/native-orchestration-release-final.jsonl",
+      "command_hash": "842f9b4f1527337633e1c5e357a1ead79cf4f499c9565deb96505260bbe19754",
+      "expected": "exit=0",
+      "observed": "exit=0; output_sha256=34bc1bd06322e912b6d9bee2be2819204b8138c9ec5039a6f30fa96305ea3934",
+      "output_hash": "34bc1bd06322e912b6d9bee2be2819204b8138c9ec5039a6f30fa96305ea3934",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "environment": "isolated all-platform install plus preserved Codex native empirical artifact",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\.agent\\benchmarks\\results\\native-orchestration-release-final.jsonl",
+          "sha256": "2f8b84607cdb02fd0f780f433557fe856fbf63876553b5c153e8e6f7a9367f2a",
+          "size_bytes": 2656,
+          "modified_at": "2026-07-24T02:32:00.253684+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\.agent\\benchmarks\\results\\native-release-report-final\\report.json",
+          "sha256": "c663406330894ad82b5ad6ec408486959d1fee3ec351f2e7402e939a9bffa782",
+          "size_bytes": 3158,
+          "modified_at": "2026-07-24T02:28:41.833199+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "release_executor",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-24T02:32:00.275125+00:00"
+    },
+    {
+      "id": "P4-AC8-final",
+      "slice_id": "P4",
+      "acceptance_id": "AC8",
+      "claim": "Canonical changes are installed to all four runtimes, independently reviewed, committed, and pushed to origin/main.",
+      "claim_hash": "f2b56b32c15f880dde588faf9d7141e5514b4bad0877c5b6f2de2939305e9446",
+      "contract_hash": "7aa2fad0f6cbbb7ac5325ef596560859d8fd265cf8b4c4aab2d3924e027ebac1",
+      "status": "PASS",
+      "provenance": "runner",
+      "proof_kind": "integration",
+      "dimensions": [
+        "mirrors",
+        "runtime-state",
+        "git"
+      ],
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File automation/04-verify-mirrors.ps1 -Platform all && powershell -NoProfile -ExecutionPolicy Bypass -File automation/05-verify-runtime-state.ps1 -Platform all && git fetch origin main && git merge-base --is-ancestor HEAD origin/main && git merge-base --is-ancestor origin/main HEAD",
+      "command_hash": "f5fd27562b1eb45b6d1291cd310c641d7413fd39f4607d49a53a505edd4a0f9f",
+      "expected": "exit=0",
+      "observed": "exit=0; output_sha256=546fa75424cb4c31a5166fba4657771e375e798ba11d07588f0d7d6c2d49631b",
+      "output_hash": "546fa75424cb4c31a5166fba4657771e375e798ba11d07588f0d7d6c2d49631b",
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "environment": "installed user runtimes plus origin/main",
+      "artifact_evidence": [
+        {
+          "path": "P:\\agent-rules\\.agent\\release-verification\\02-install-runtime-all-final.log",
+          "sha256": "9786dab56de0c708f1139f93356eb9a6bea08950abc14bc126790dd9cff7fe4e",
+          "size_bytes": 33992,
+          "modified_at": "2026-07-24T02:34:45.759543+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\.agent\\release-verification\\04-verify-mirrors-final.log",
+          "sha256": "4c781c8aa6a235156e7d5ad3e8ccf29e947fc303ce04f30393147367e3131291",
+          "size_bytes": 341,
+          "modified_at": "2026-07-24T02:35:15.809454+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\.agent\\release-verification\\05-verify-runtime-state-final.log",
+          "sha256": "8ffd1156f10e6ce0cdef5a6b0c4b62b4e87daf8023357868e5b0d9046ad7af41",
+          "size_bytes": 117,
+          "modified_at": "2026-07-24T02:35:16.661616+00:00"
+        },
+        {
+          "path": "P:\\agent-rules\\.agent\\release-verification\\09-doctor-all-final.log",
+          "sha256": "7ec767897c5b23d16ca9428fbdf8a8301210802a70f9faed16100aedeed3c518",
+          "size_bytes": 10083,
+          "modified_at": "2026-07-24T02:35:46.364777+00:00"
+        }
+      ],
+      "verifier": "workctl-runner",
+      "agent": "release_executor",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "captured_at": "2026-07-24T02:37:22.158179+00:00"
+    }
+  ],
+  "reviews": [
+    {
+      "id": "REV-P1-FINAL",
+      "reviewer": "foundation_rereviewer",
+      "status": "PASS",
+      "scope": "Shared orchestration behavior, model policy, fallback, and token-budget review",
+      "observed": "Fresh stable review found no remaining finding; shared contract and current proof set match AC1 and AC2.",
+      "receipt_ids": [
+        "PF-AC1-FINAL",
+        "PF-AC2-FINAL"
+      ],
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "slice_id": "P1",
+      "receipt_hashes": {
+        "PF-AC1-FINAL": "a97da466c5a515bc30601f44c895af8fd0152a3c39cd922d202a74898ebb35d6",
+        "PF-AC2-FINAL": "1eac372dc8407c044e288857cf250bd6301eb608e627c8a6e7b418f5b26de018"
+      },
+      "created_at": "2026-07-23T20:17:40.297353+00:00"
+    },
+    {
+      "id": "REV-P2-FINAL",
+      "reviewer": "foundation_rereviewer",
+      "status": "PASS",
+      "scope": "Portable installed workctl, lifecycle, proof binding, migration, resume, and terminal honesty review",
+      "observed": "Fresh stable workctl suite and copied-bundle lifecycle passed; latest proof and review semantics prevent historical evidence laundering.",
+      "receipt_ids": [
+        "PF-AC3-FINAL2",
+        "PF-AC4-FINAL2"
+      ],
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "slice_id": "P2",
+      "receipt_hashes": {
+        "PF-AC3-FINAL2": "a1e372b17b7a6ddec29a534ad5efca00afc12b33e3323a84190e5bc935dcbdc2",
+        "PF-AC4-FINAL2": "f54caae0f83c9e75f0762afda43891616c2ec5c9157d6089d2692acf22d8afbc"
+      },
+      "created_at": "2026-07-23T20:17:42.278326+00:00"
+    },
+    {
+      "id": "REV-P3-FINAL",
+      "reviewer": "foundation_rereviewer",
+      "status": "PASS",
+      "scope": "Four-platform native sources, ownership-safe install, doctor layers, policy consistency, and isolated end-to-end review",
+      "observed": "Fresh isolated Windows PowerShell 5 all-platform installer and doctor passed with exact native paths and structural statuses; activation remains honestly unverified where not observed.",
+      "receipt_ids": [
+        "PF-AC5-FINAL2",
+        "PF-AC6-FINAL2"
+      ],
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "slice_id": "P3",
+      "receipt_hashes": {
+        "PF-AC5-FINAL2": "9df5f2cc7384e9dbfdd3f08a8afc9fab98da544e58e5edc966ec2c7f75479038",
+        "PF-AC6-FINAL2": "389c46d6805a6fe03850239abc027fa60ae1f23c7e0c55dce4afc6fbb3a9d22b"
+      },
+      "created_at": "2026-07-23T20:17:44.323052+00:00"
+    },
+    {
+      "id": "REV-P4-final",
+      "reviewer": "foundation_rereviewer",
+      "status": "PASS",
+      "scope": "Benchmark oracle, all-platform release evidence, clean commit, and honest native activation boundaries",
+      "observed": "Both oracle findings are resolved. P4-AC7-recovered and P4-AC8-final pass with matching artifact hashes; HEAD equals origin/main at e934053; mirrors and runtime state pass on all four; native activation remains explicitly UNVERIFIED.",
+      "receipt_ids": [
+        "P4-AC7-recovered",
+        "P4-AC8-final"
+      ],
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": "gpt-5.6-terra",
+        "observed_effort": "medium",
+        "status": "observed",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "slice_id": "P4",
+      "receipt_hashes": {
+        "P4-AC7-recovered": "9e394068057b9f8126b06e760981479f473826ff6e68000f55b6b2323b87d927",
+        "P4-AC8-final": "015a78b4002ae38a7ec7106b967e5b2646354e7aa88a4901b5270735d838e570"
+      },
+      "created_at": "2026-07-24T02:39:05.185554+00:00"
+    }
+  ],
+  "findings": [
+    {
+      "id": "F-P2-MODEL-PASS",
+      "severity": "high",
+      "summary": "Finalization can return WORK_PASS while current proof/review model evidence remains unobserved, contradicting the fail-honest model policy.",
+      "reviewer": "foundation_reviewer",
+      "slice_id": "P2",
+      "status": "resolved",
+      "created_at": "2026-07-23T19:17:18.334310+00:00",
+      "resolution": "Fresh independent stable-snapshot review plus focused regression and isolated all-platform installer/doctor evidence confirms the defect is fixed with no remaining finding.",
+      "resolved_at": "2026-07-23T20:17:14.256503+00:00"
+    },
+    {
+      "id": "F-P3-RUNTIME-DELIVERY",
+      "severity": "high",
+      "summary": "Native profiles and model-policy.json are not copied into generated builds or installed runtime homes, so source-only profiles cannot affect hosts.",
+      "reviewer": "foundation_reviewer",
+      "slice_id": "P3",
+      "status": "resolved",
+      "created_at": "2026-07-23T19:17:18.780689+00:00",
+      "resolution": "Fresh independent stable-snapshot review plus focused regression and isolated all-platform installer/doctor evidence confirms the defect is fixed with no remaining finding.",
+      "resolved_at": "2026-07-23T20:17:16.311852+00:00"
+    },
+    {
+      "id": "F-P3-NATIVE-SCHEMA",
+      "severity": "high",
+      "summary": "Codex sources are CLI profiles rather than ~/.codex/agents custom subagents, and Grok role TOML uses ignored system_prompt fields instead of current native SubagentRole fields.",
+      "reviewer": "main-source-review",
+      "slice_id": "P3",
+      "status": "resolved",
+      "created_at": "2026-07-23T19:21:58.696915+00:00",
+      "resolution": "Fresh independent stable-snapshot review plus focused regression and isolated all-platform installer/doctor evidence confirms the defect is fixed with no remaining finding.",
+      "resolved_at": "2026-07-23T20:17:18.249630+00:00"
+    },
+    {
+      "id": "F-P2-INSTALLED-SCHEMA",
+      "severity": "high",
+      "summary": "Installed agent-rules-tools/workctl.py resolves the ledger schema through ROOT/automation, but the installed bundle places the schema beside workctl, so normal project init/status/resume/finalize cannot load it.",
+      "reviewer": "foundation_rereviewer",
+      "slice_id": "P2",
+      "status": "resolved",
+      "created_at": "2026-07-23T19:37:39.504893+00:00",
+      "resolution": "Fresh independent stable-snapshot review plus focused regression and isolated all-platform installer/doctor evidence confirms the defect is fixed with no remaining finding.",
+      "resolved_at": "2026-07-23T20:17:20.250223+00:00"
+    },
+    {
+      "id": "F-P3-OWNERSHIP-SAFETY",
+      "severity": "high",
+      "summary": "First install overwrites generic pre-existing user agent filenames before ownership exists, and corrupt ownership manifest entries can traverse outside the destination during stale cleanup.",
+      "reviewer": "foundation_rereviewer",
+      "slice_id": "P3",
+      "status": "resolved",
+      "created_at": "2026-07-23T19:37:41.704799+00:00",
+      "resolution": "Fresh independent stable-snapshot review plus focused regression and isolated all-platform installer/doctor evidence confirms the defect is fixed with no remaining finding.",
+      "resolved_at": "2026-07-23T20:17:22.206448+00:00"
+    },
+    {
+      "id": "F-P3-ANTIGRAVITY-NATIVE",
+      "severity": "high",
+      "summary": "Antigravity role guidance is installed to an inert advisory directory but is labeled and verified as a native agent definition instead of using the documented agents/<name>/agent.md discovery layout.",
+      "reviewer": "foundation_rereviewer",
+      "slice_id": "P3",
+      "status": "resolved",
+      "created_at": "2026-07-23T19:37:43.768842+00:00",
+      "resolution": "Fresh independent stable-snapshot review plus focused regression and isolated all-platform installer/doctor evidence confirms the defect is fixed with no remaining finding.",
+      "resolved_at": "2026-07-23T20:17:24.142909+00:00"
+    },
+    {
+      "id": "F-P3-NATIVE-STRUCTURE",
+      "severity": "medium",
+      "summary": "Doctor excludes native artifacts from live hash checks and can finish without a blocking structural capability result when required native files are missing or corrupt.",
+      "reviewer": "foundation_rereviewer",
+      "slice_id": "P3",
+      "status": "resolved",
+      "created_at": "2026-07-23T19:37:45.730284+00:00",
+      "resolution": "Fresh independent stable-snapshot review plus focused regression and isolated all-platform installer/doctor evidence confirms the defect is fixed with no remaining finding.",
+      "resolved_at": "2026-07-23T20:17:26.293909+00:00"
+    },
+    {
+      "id": "F-P3-SCHEMA-EVIDENCE",
+      "severity": "medium",
+      "summary": "Native schema tests are repository allowlists and do not prove platform discovery layouts; they missed the Antigravity mapping and lack host validation evidence where CLIs are unavailable.",
+      "reviewer": "foundation_rereviewer",
+      "slice_id": "P3",
+      "status": "resolved",
+      "created_at": "2026-07-23T19:37:47.744533+00:00",
+      "resolution": "Fresh independent stable-snapshot review plus focused regression and isolated all-platform installer/doctor evidence confirms the defect is fixed with no remaining finding.",
+      "resolved_at": "2026-07-23T20:17:28.415740+00:00"
+    },
+    {
+      "id": "F-P3-POLICY-PROFILE-DRIFT",
+      "severity": "medium",
+      "summary": "No deterministic test proves that native role model and effort selections stay consistent with the single model-policy source.",
+      "reviewer": "foundation_rereviewer",
+      "slice_id": "P3",
+      "status": "resolved",
+      "created_at": "2026-07-23T19:37:49.756035+00:00",
+      "resolution": "Fresh independent stable-snapshot review plus focused regression and isolated all-platform installer/doctor evidence confirms the defect is fixed with no remaining finding.",
+      "resolved_at": "2026-07-23T20:17:30.354378+00:00"
+    },
+    {
+      "id": "F-P1-SINGLE-AGENT-FALLBACK",
+      "severity": "high",
+      "summary": "Shared rules restrict medium/large implementation to delegation but do not define the AC6 single-agent fallback when a host lacks callable subagents, which can reduce task strength or deadlock execution instead of preserving the plan sequentially.",
+      "reviewer": "main-integration-review",
+      "slice_id": "P1",
+      "status": "resolved",
+      "created_at": "2026-07-23T19:44:04.429184+00:00",
+      "resolution": "Fresh independent stable-snapshot review plus focused regression and isolated all-platform installer/doctor evidence confirms the defect is fixed with no remaining finding.",
+      "resolved_at": "2026-07-23T20:17:32.287077+00:00"
+    },
+    {
+      "id": "F-P3-DOCTOR-FILEINFO",
+      "severity": "high",
+      "summary": "Fresh isolated end-to-end installer reaches doctor, but Test-NativeStructure passes a FileInfo object through a string-typed collection so Get-FileHash receives only the bare filename and crashes instead of verifying the installed native artifact.",
+      "reviewer": "foundation_rereviewer",
+      "slice_id": "P3",
+      "status": "resolved",
+      "created_at": "2026-07-23T20:05:55.561589+00:00",
+      "resolution": "Fresh independent stable-snapshot review plus focused regression and isolated all-platform installer/doctor evidence confirms the defect is fixed with no remaining finding.",
+      "resolved_at": "2026-07-23T20:17:34.234348+00:00"
+    },
+    {
+      "id": "F-P3-CURSOR-DOCS-PARITY",
+      "severity": "high",
+      "summary": "Cursor installer maps generated docs/ to .cursor/agent-rules-docs/, but doctor checks manifest docs/* under .cursor/docs/*, so every Cursor installation is reported missing and the full installer remains PARTIAL.",
+      "reviewer": "foundation_rereviewer",
+      "slice_id": "P3",
+      "status": "resolved",
+      "created_at": "2026-07-23T20:08:54.914765+00:00",
+      "resolution": "Fresh independent stable-snapshot review plus focused regression and isolated all-platform installer/doctor evidence confirms the defect is fixed with no remaining finding.",
+      "resolved_at": "2026-07-23T20:17:36.250543+00:00"
+    },
+    {
+      "id": "F-P3-PS5-OWNERSHIP",
+      "severity": "high",
+      "summary": "The machine's available Windows PowerShell 5 enumerates single-item ConvertFrom-Json ownership arrays differently, producing false ownership mapping drift; full native install must work on the current supported machine rather than only pwsh.",
+      "reviewer": "main-integration-review",
+      "slice_id": "P3",
+      "status": "resolved",
+      "created_at": "2026-07-23T20:08:57.668845+00:00",
+      "resolution": "Fresh independent stable-snapshot review plus focused regression and isolated all-platform installer/doctor evidence confirms the defect is fixed with no remaining finding.",
+      "resolved_at": "2026-07-23T20:17:38.276023+00:00"
+    },
+    {
+      "id": "F-P4-MISSING-MULTIFILE-FIXTURE",
+      "severity": "high",
+      "summary": "The release benchmark case live-normal-multifile exists in the corpus but has no executable fixture oracle, so native empirical validation aborts before launching Codex and cannot measure implementation behavior or token cost.",
+      "reviewer": "release_executor",
+      "slice_id": "P4",
+      "status": "resolved",
+      "created_at": "2026-07-23T20:24:35.723448+00:00",
+      "resolution": "Added an executable normal-multifile fixture oracle; corrected a style-sensitive false negative; the preserved native run passes behavioral rescoring with exact scope, exact consumer trace, four passing tests, and response evidence.",
+      "resolved_at": "2026-07-24T02:24:55.665603+00:00"
+    }
+  ],
+  "checkpoints": [],
+  "usage": {
+    "input_tokens": 0,
+    "cached_input_tokens": 0,
+    "output_tokens": 0,
+    "reasoning_tokens": 0,
+    "agent_runs": 14,
+    "tool_calls": 0,
+    "records": []
+  },
+  "next_action": "",
+  "plan": {
+    "ref": "conversation://portable-native-harness-20260724",
+    "sha256": "8731d0378b43986cd1661c8870e7c1d6fff199cb83909adf762dc68b9848adbb",
+    "identity": "legacy-v2-plan-ref"
+  },
+  "host_refs": {
+    "host": "unknown",
+    "task_ref": "",
+    "session_ref": ""
+  },
+  "model_policy_reasons": []
+}

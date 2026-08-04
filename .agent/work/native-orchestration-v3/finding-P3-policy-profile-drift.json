@@ -1,0 +1,6 @@
+{
+  "id": "F-P3-POLICY-PROFILE-DRIFT",
+  "severity": "medium",
+  "summary": "No deterministic test proves that native role model and effort selections stay consistent with the single model-policy source.",
+  "reviewer": "foundation_rereviewer"
+}

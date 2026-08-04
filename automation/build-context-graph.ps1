@@ -14,7 +14,7 @@ Write-Host "node $nodeVersion"
 
 $Cli = Join-Path $Root "packages\cli\dist\index.js"
 if (-not (Test-Path -LiteralPath $Cli)) {
-  Write-Error "PREFLIGHT FAIL: Canonical CLI is not built: $Cli — run 'npm run build' first"
+  Write-Error "PREFLIGHT FAIL: Canonical CLI is not built: $Cli - run 'npm run build' first"
   exit 1
 }
 

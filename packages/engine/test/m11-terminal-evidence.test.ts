@@ -7,6 +7,7 @@ import {
   produceM11TerminalEvidence,
   writeM11TerminalEvidence,
   loadM11TerminalEvidenceEnvelope,
+  atomicLedgerWrite,
   type M11EvidenceProducerInput,
   type M11TerminalEvidenceEnvelope,
 } from '../src/m11-terminal-evidence.js';
@@ -423,5 +424,89 @@ describe('loadM11TerminalEvidenceEnvelope', () => {
     expect(result.ok).toBe(false);
     // candidate_epoch_hash mismatch fires before candidate_commit_or_tree binding check
     expect(result.reason).toContain('candidate_epoch_hash');
+  });
+});
+
+// ─── Crash/Atomicity Tests ────────────────────────────────────────────────────
+
+describe('atomicLedgerWrite', () => {
+  it('creates file atomically via temp+rename', () => {
+    const p = path.join(tmpDir, 'atomic.json');
+    atomicLedgerWrite(p, JSON.stringify({ foo: 'bar' }));
+    expect(fs.existsSync(p)).toBe(true);
+    expect(JSON.parse(fs.readFileSync(p, 'utf-8'))).toEqual({ foo: 'bar' });
+  });
+
+  it('no partial file at target during write', () => {
+    const p = path.join(tmpDir, 'partial-check.json');
+    // Write a large file to make partial-read window more likely
+    const large = { data: 'x'.repeat(1024 * 100) };
+    atomicLedgerWrite(p, JSON.stringify(large));
+    // Target must be readable and valid JSON immediately
+    expect(JSON.parse(fs.readFileSync(p, 'utf-8'))).toEqual(large);
+  });
+
+  it('overwrites existing file atomically', () => {
+    const p = path.join(tmpDir, 'overwrite.json');
+    fs.writeFileSync(p, JSON.stringify({ v: 1 }));
+    atomicLedgerWrite(p, JSON.stringify({ v: 2 }));
+    expect(JSON.parse(fs.readFileSync(p, 'utf-8'))).toEqual({ v: 2 });
+  });
+
+  it('rejects symlink target', () => {
+    const p = path.join(tmpDir, 'link-target.json');
+    fs.writeFileSync(p, 'original');
+    const link = path.join(tmpDir, 'link.json');
+    fs.symlinkSync(p, link);
+    expect(() => atomicLedgerWrite(link, JSON.stringify({ x: 1 }))).toThrow(/symlink/);
+    // Original must be untouched
+    expect(fs.readFileSync(p, 'utf-8')).toBe('original');
+  });
+
+  it('rejects hardlink target', () => {
+    const p = path.join(tmpDir, 'hardlink-origin.json');
+    fs.writeFileSync(p, 'content');
+    const link = path.join(tmpDir, 'hardlink.json');
+    fs.linkSync(p, link);
+    expect(() => atomicLedgerWrite(link, JSON.stringify({ x: 1 }))).toThrow(/hardlink/);
+    // Original must be untouched
+    expect(fs.readFileSync(p, 'utf-8')).toBe('content');
+  });
+
+  it('leaves target intact on write failure', () => {
+    const p = path.join(tmpDir, 'noexist-dir', 'ledger.json');
+    expect(() => atomicLedgerWrite(p, JSON.stringify({}))).toThrow();
+    expect(fs.existsSync(p)).toBe(false);
+  });
+});
+
+describe('writeM11TerminalEvidence — atomicity', () => {
+  function makeLedger(): string {
+    const p = path.join(tmpDir, 'ledger.json');
+    fs.writeFileSync(p, JSON.stringify({ plan_id: 'test', headCommit: 'a'.repeat(40), effective_plan_identity: { sha256: 'b'.repeat(64) }, candidate_epoch: mkEpoch({ candidate_commit_or_tree: 'a'.repeat(40) }) }, null, 2) + '\n');
+    return p;
+  }
+
+  it('uses atomic write — ledger readable after write', () => {
+    const ledgerPath = makeLedger();
+    const input = validInput();
+    const result = writeM11TerminalEvidence(ledgerPath, input);
+    expect(result.ok).toBe(true);
+    // Must be readable immediately with no corruption
+    const ledger = JSON.parse(fs.readFileSync(ledgerPath, 'utf-8'));
+    expect(ledger.m11_terminal_evidence).toBeDefined();
+    expect(ledger.m11_terminal_evidence.envelopeSha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(ledger.plan_id).toBe('test');
+  });
+
+  it('atomically updates existing fields during evidence write', () => {
+    const ledgerPath = makeLedger();
+    const input1 = validInput({ headCommit: 'a'.repeat(40), ciSha: 'c1'.repeat(32) });
+    writeM11TerminalEvidence(ledgerPath, input1);
+    const input2 = validInput({ headCommit: 'a'.repeat(40), ciSha: 'c2'.repeat(32) });
+    writeM11TerminalEvidence(ledgerPath, input2);
+    const ledger = JSON.parse(fs.readFileSync(ledgerPath, 'utf-8'));
+    expect(ledger.m11_terminal_evidence.ciSha).toBe('c2'.repeat(32));
+    expect(ledger.plan_id).toBe('test');
   });
 });

@@ -1,0 +1,6 @@
+{
+  "id": "F-P3-OWNERSHIP-SAFETY",
+  "severity": "high",
+  "summary": "First install overwrites generic pre-existing user agent filenames before ownership exists, and corrupt ownership manifest entries can traverse outside the destination during stale cleanup.",
+  "reviewer": "foundation_rereviewer"
+}

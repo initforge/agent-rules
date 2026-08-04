@@ -769,6 +769,72 @@ describe('Plan workspace API', () => {
   })
 })
 
+describe('Overview plan-integrity regression', () => {
+  // These tests verify that plan integrity errors on the overview/plan read path
+  // produce a well-formed 409 response so the UI can render an honest error state.
+  beforeAll(() => { process.env.HARNESS_ROOT = tmp })
+  afterAll(() => { delete process.env.HARNESS_ROOT })
+
+  function cleanupRegFixtures(planIds: string[]) {
+    const fs = require('node:fs'); const path = require('node:path')
+    for (const id of planIds) {
+      try { fs.rmSync(path.join(tmp, '.agent', 'ledger', `${id}.json`), { force: true }) } catch {}
+      try { fs.rmSync(path.join(tmp, '.agent', 'plans', id), { recursive: true, force: true }) } catch {}
+    }
+  }
+
+  afterEach(() => { cleanupRegFixtures(['reg-tampered', 'reg-multi', 'reg-malformed', 'reg-valid-x', 'reg-legacy', 'reg-corrupt-file']) })
+
+  it('tampered plan returns 409 on individual fetch', async () => {
+    // Individual plan fetch is the primary path for overview/plan UI
+    createFixture(tmp, 'reg-tampered', { tamperOriginal: true })
+    const badRes = await request(app).get('/api/plans/reg-tampered')
+    expect(badRes.status).toBe(409)
+    expect(badRes.body.code).toBe('INTEGRITY_FAILURE')
+    expect(badRes.body.details.findings.some((f: { kind: string }) => f.kind === 'ORIGINAL_TAMPER')).toBe(true)
+    expect(badRes.body.error).toBeTruthy()
+  })
+
+  it('list endpoint returns 409 on ledger corruption (not 500)', async () => {
+    // Verifies fail-closed: any ledger corruption causes 409, not crash
+    const fs = require('node:fs'); const path = require('node:path')
+    fs.writeFileSync(path.join(tmp, '.agent', 'ledger', 'reg-corrupt-file.json'), 'not-json{')
+    const res = await request(app).get('/api/plans')
+    expect(res.status).toBe(409)
+    expect(res.body.code).toBe('INTEGRITY_FAILURE')
+    expect(res.body.details.findings.length).toBeGreaterThan(0)
+    fs.unlinkSync(path.join(tmp, '.agent', 'ledger', 'reg-corrupt-file.json'))
+  })
+
+  it('individual plan fetch returns 409 with full findings on multiple failures', async () => {
+    // Verifies the 409 response includes all findings, not just the first
+    createFixture(tmp, 'reg-multi', { tamperOriginal: true, tamperShadow: true })
+    const res = await request(app).get('/api/plans/reg-multi')
+    expect(res.status).toBe(409)
+    expect(res.body.code).toBe('INTEGRITY_FAILURE')
+    const kinds = res.body.details.findings.map((f: { kind: string }) => f.kind)
+    expect(kinds).toContain('ORIGINAL_TAMPER')
+    expect(kinds).toContain('SHADOW_DRIFT')
+  })
+
+  // Note: list endpoint is fail-closed — any legacy or corrupt plan in ledger causes 409,
+  // not partial results. The primary path for "get a specific plan" is GET /api/plans/:planId.
+
+  it('409 response body is valid JSON with required fields', async () => {
+    createFixture(tmp, 'reg-malformed', { malformedManifest: true })
+    const res = await request(app).get('/api/plans/reg-malformed')
+    expect(res.status).toBe(409)
+    expect(res.body).toHaveProperty('ok', false)
+    expect(res.body).toHaveProperty('code', 'INTEGRITY_FAILURE')
+    expect(res.body).toHaveProperty('error')
+    expect(res.body).toHaveProperty('details')
+    expect(res.body.details).toHaveProperty('findings')
+    expect(Array.isArray(res.body.details.findings)).toBe(true)
+    expect(res.body.details.findings[0]).toHaveProperty('kind')
+    expect(res.body.details.findings[0]).toHaveProperty('detail')
+  })
+})
+
 describe('Adversarial integrity', () => {
   beforeAll(() => { process.env.HARNESS_ROOT = tmp })
   afterAll(() => { delete process.env.HARNESS_ROOT })

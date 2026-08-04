@@ -1,0 +1,21 @@
+{
+  "id": "REV-P3-FINAL",
+  "reviewer": "foundation_rereviewer",
+  "status": "PASS",
+  "scope": "Four-platform native sources, ownership-safe install, doctor layers, policy consistency, and isolated end-to-end review",
+  "observed": "Fresh isolated Windows PowerShell 5 all-platform installer and doctor passed with exact native paths and structural statuses; activation remains honestly unverified where not observed.",
+  "receipt_ids": ["PF-AC5-FINAL2", "PF-AC6-FINAL2"],
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "model_evidence": {
+    "requested_model": "gpt-5.6-terra",
+    "requested_effort": "medium",
+    "resolved_model": "gpt-5.6-terra",
+    "resolved_effort": "medium",
+    "observed_model": "gpt-5.6-terra",
+    "observed_effort": "medium",
+    "status": "observed",
+    "fallback_reason": "",
+    "main_direct_exception_reason": ""
+  }
+}

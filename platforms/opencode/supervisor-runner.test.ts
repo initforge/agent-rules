@@ -1108,4 +1108,109 @@ describe('SupervisorRunner', () => {
       server.close();
     }
   });
+
+  // G-02/G-08/G-09: Authorization overlap check — ownedPaths/forbiddenPaths intersection rejected before assignChild
+  describe('authorization overlap checks', () => {
+    it('rejects exact owned/forbidden path overlap', async () => {
+      const { server, port } = await startTestServer();
+      try {
+        const runner = new SupervisorRunner({
+          adapter: { baseUrl: `http://localhost:${port}`, fetchFn: fetch },
+        });
+        await runner.initialize();
+        const result = await runner.runAssignment({
+          assignmentId: 'auth-exact-overlap', kind: 'writer',
+          ownedPaths: ['packages/cli/src'], forbiddenPaths: ['packages/cli/src'],
+          contextKey: { ...stubContextKey, ownedPaths: ['packages/cli/src'], forbiddenPaths: ['packages/cli/src'] },
+        });
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.reason).toContain('Authorization overlap');
+        }
+      } finally {
+        server.close();
+      }
+    });
+
+    it('rejects owned path contained in forbidden path', async () => {
+      const { server, port } = await startTestServer();
+      try {
+        const runner = new SupervisorRunner({
+          adapter: { baseUrl: `http://localhost:${port}`, fetchFn: fetch },
+        });
+        await runner.initialize();
+        const result = await runner.runAssignment({
+          assignmentId: 'auth-contained-overlap', kind: 'writer',
+          ownedPaths: ['packages/cli/src'], forbiddenPaths: ['packages/cli'],
+          contextKey: { ...stubContextKey, ownedPaths: ['packages/cli/src'], forbiddenPaths: ['packages/cli'] },
+        });
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.reason).toContain('Authorization overlap');
+        }
+      } finally {
+        server.close();
+      }
+    });
+
+    it('rejects forbidden path contained in owned path', async () => {
+      const { server, port } = await startTestServer();
+      try {
+        const runner = new SupervisorRunner({
+          adapter: { baseUrl: `http://localhost:${port}`, fetchFn: fetch },
+        });
+        await runner.initialize();
+        const result = await runner.runAssignment({
+          assignmentId: 'auth-forbidden-contained', kind: 'writer',
+          ownedPaths: ['packages/cli'], forbiddenPaths: ['packages/cli/src'],
+          contextKey: { ...stubContextKey, ownedPaths: ['packages/cli'], forbiddenPaths: ['packages/cli/src'] },
+        });
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.reason).toContain('Authorization overlap');
+        }
+      } finally {
+        server.close();
+      }
+    });
+
+    it('accepts disjoint owned/forbidden paths', async () => {
+      const { server, port } = await startTestServer();
+      try {
+        const runner = new SupervisorRunner({
+          adapter: { baseUrl: `http://localhost:${port}`, fetchFn: fetch },
+        });
+        await runner.initialize();
+        const result = await runner.runAssignment({
+          assignmentId: 'auth-disjoint', kind: 'writer',
+          ownedPaths: ['packages/cli/src'], forbiddenPaths: ['packages/engine/src'],
+          contextKey: { ...stubContextKey, ownedPaths: ['packages/cli/src'], forbiddenPaths: ['packages/engine/src'] },
+        });
+        expect(result.ok).toBe(true);
+      } finally {
+        server.close();
+      }
+    });
+
+    it('authorization overlap fails BEFORE dispatch (no dispatch audit event)', async () => {
+      const { server, port } = await startTestServer();
+      try {
+        const runner = new SupervisorRunner({
+          adapter: { baseUrl: `http://localhost:${port}`, fetchFn: fetch },
+        });
+        await runner.initialize();
+        const result = await runner.runAssignment({
+          assignmentId: 'auth-before-dispatch', kind: 'writer',
+          ownedPaths: ['src/overlap'], forbiddenPaths: ['src/overlap'],
+          contextKey: { ...stubContextKey, ownedPaths: ['src/overlap'], forbiddenPaths: ['src/overlap'] },
+        });
+        expect(result.ok).toBe(false);
+        // Verify no dispatch event in audit log
+        const dispatchEvents = runner.supervisor.getAuditEvents().filter(e => e.type === 'DISPATCHED');
+        expect(dispatchEvents).toHaveLength(0);
+      } finally {
+        server.close();
+      }
+    });
+  });
 });

@@ -15,6 +15,11 @@ import sys
 
 
 def main() -> int:
+    # Claude expects UTF-8 JSON; Windows Python may otherwise use cp1252.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except AttributeError:
+        pass
     try:
         json.load(sys.stdin)
     except (ValueError, OSError):

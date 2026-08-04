@@ -1,0 +1,28 @@
+{
+  "id": "R-P2",
+  "slice_id": "P2",
+  "agent": "foundation_reviewer",
+  "role": "reviewer",
+  "model_class": "standard",
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "source_ids": [
+    "REQ-001",
+    "INJ-001"
+  ],
+  "write_paths": [],
+  "context_paths": [
+    "automation/workctl.py",
+    "automation/work-ledger.schema.json",
+    "automation/test-workctl.py",
+    "automation/workctl.ps1",
+    "automation/workctl.sh"
+  ],
+  "forbidden_paths": [
+    "**"
+  ],
+  "acceptance_ids": [
+    "AC3",
+    "AC4"
+  ]
+}

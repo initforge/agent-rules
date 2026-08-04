@@ -1,0 +1,235 @@
+{
+  "schema_version": 1,
+  "work_id": "agent-rules-harness-vnext-20260724",
+  "status": "passed",
+  "plan_ref": "chat://harness-vnext-approved-plan",
+  "source_ref": ".agent/work/agent-rules-harness-vnext-20260724/source.md",
+  "repository": {
+    "path": "P:/agent-rules",
+    "branch": "main",
+    "baseline_commit": "395e182",
+    "remote": "origin/main",
+    "baseline_clean": true
+  },
+  "execution_contract": {
+    "mode": "automatic",
+    "shape": "large",
+    "resume_required": true,
+    "ledger": "required",
+    "strategy": "parallel-read-and-disjoint-write",
+    "max_active_agents_including_main": 4,
+    "max_delegation_depth": 2,
+    "effort_cap": "high",
+    "authorized_final_actions": [
+      "edit canonical repository",
+      "build runtime",
+      "install runtime",
+      "commit",
+      "push origin/main"
+    ]
+  },
+  "model_policy": {
+    "economy": "gpt-5.6-luna when callable; otherwise cheapest available capable model",
+    "standard": "gpt-5.6-terra medium",
+    "expert": "gpt-5.6-sol medium; high only for triggered expert review",
+    "current_constraint": "The collaboration surface exposes existing Terra agents and Sol/Terra spawn options, not Luna. Reuse existing Terra-medium agents instead of adding redundant calls."
+  },
+  "context_policy": {
+    "main_holds": [
+      "R01-R13",
+      "D01-D10",
+      "I01-I05",
+      "cross-slice decisions",
+      "final integration proof"
+    ],
+    "agent_packet_fields": [
+      "source IDs",
+      "goal",
+      "owned paths",
+      "read-only context paths",
+      "forbidden paths/actions",
+      "acceptance criteria",
+      "proof commands",
+      "return receipt"
+    ],
+    "forbidden": [
+      "full conversation dump to every agent",
+      "two writers on one path",
+      "agent self-expanding owner scope",
+      "PASS from self-report"
+    ]
+  },
+  "slices": [
+    {
+      "id": "P0",
+      "name": "Baseline, source contract and allocation",
+      "owner": "main",
+      "status": "passed",
+      "source_ids": ["R01", "R09", "R10", "I03", "I04", "I05"],
+      "owned_paths": [".agent/work/agent-rules-harness-vnext-20260724/**"],
+      "acceptance": [
+        "Clean baseline recorded",
+        "Original requirements and injections mapped",
+        "Every writer has disjoint ownership"
+      ]
+    },
+    {
+      "id": "P1",
+      "name": "Lean core behavior and philosophy",
+      "owner": "harness_audit/Helmholtz",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "status": "passed",
+      "depends_on": ["P0"],
+      "source_ids": ["R01", "R04", "R09", "R10", "R13", "D01", "D04", "D10", "I02", "I04"],
+      "owned_paths": ["rules/**", "rules/manifest.yaml"],
+      "forbidden_paths": ["skills/**", "automation/**", "platforms/**"],
+      "acceptance": [
+        "Always-loaded core is behavior-first and non-duplicative",
+        "Meaningful-question and automatic-execution behavior is explicit",
+        "Rules remain concise without deleting verification strength"
+      ]
+    },
+    {
+      "id": "P2",
+      "name": "Adaptive plan, orchestration and detailed ledger protocol",
+      "owner": "github_research/Kant",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "status": "passed",
+      "depends_on": ["P0"],
+      "source_ids": ["R02", "R04", "R09", "R10", "D01", "D02", "D03", "D04", "D05", "D10", "I01", "I02", "I03", "I04", "I05"],
+      "owned_paths": ["skills/plan-and-handoff/**", "skills/finish-to-completion/**"],
+      "forbidden_paths": ["rules/**", "automation/**", "platforms/**"],
+      "acceptance": [
+        "One shared work protocol owns classification, task packets and terminal behavior",
+        "Plan contract scales without losing executability",
+        "Ledger rules preserve source/injection mapping and are required only when useful",
+        "Model routing uses economy/standard/expert with effort cap high"
+      ]
+    },
+    {
+      "id": "P3",
+      "name": "Claim-driven proof and ground-truth benchmark",
+      "owner": "quality_workflow/Singer",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "status": "passed",
+      "depends_on": ["P0"],
+      "source_ids": ["R03", "R07", "D05", "D06", "D09"],
+      "owned_paths": [
+        "automation/evidence-profiles.json",
+        "automation/benchmarks/**",
+        "automation/test-agent-quality-benchmark.py",
+        "automation/agent_quality.py"
+      ],
+      "forbidden_paths": ["rules/**", "skills/**", "platforms/**", "automation/planctl*.ps1"],
+      "acceptance": [
+        "Profiles cover business, distributed consistency, query/index, cache and resource lifetime",
+        "Negative fixtures measure false PASS",
+        "Benchmark counts main plus sub-agent cost and separates build proof from behavior proof"
+      ]
+    },
+    {
+      "id": "P4",
+      "name": "Automatic work state and orchestration automation",
+      "owner": "main",
+      "status": "passed",
+      "depends_on": ["P0"],
+      "source_ids": ["R02", "R04", "R09", "R10", "D02", "D03", "D04", "D10", "I01", "I02", "I03", "I04", "I05"],
+      "owned_paths": ["automation/workctl.py", "automation/workctl.ps1", "automation/test-workctl.py", "automation/work-ledger.schema.json"],
+      "acceptance": [
+        "Automatic small/medium/large/resumable classification",
+        "Detailed resumable ledger with source allocation and agent receipts",
+        "Atomic state updates and safe concurrent assignment",
+        "No user CLI ceremony"
+      ]
+    },
+    {
+      "id": "P5",
+      "name": "Native adapters, router cutover, tool registry and legacy cleanup",
+      "owner": "main",
+      "status": "passed",
+      "depends_on": ["P1", "P2", "P4"],
+      "source_ids": ["R05", "R06", "R10", "R11", "R12", "D07", "D08"],
+      "owned_paths": ["platforms/**", "integrations/registry.json", "automation/planctl*.ps1", "automation/09-doctor.ps1", "automation/11-install-runtime-hooks.sh", "automation/13-cutover-context-routing.ps1"],
+      "acceptance": [
+        "Native capability states are truthful on all four platforms",
+        "Cursor uses current native hooks",
+        "Graph router cuts over after one measured shadow cycle",
+        "Default Stop coercion and production legacy indirection are removed"
+      ]
+    },
+    {
+      "id": "P6",
+      "name": "Cross-review, validation, runtime install, commit and push",
+      "owner": "main",
+      "status": "passed",
+      "depends_on": ["P1", "P2", "P3", "P4", "P5"],
+      "source_ids": ["R01-R13", "D01-D10", "I01-I05"],
+      "acceptance": [
+        "Each slice receives independent risk-based review",
+        "Full validator, health audit, router, workctl and benchmark suites pass",
+        "Runtime mirrors and native receipts are reported truthfully",
+        "Integrated diff is committed and pushed to origin/main"
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "decision": "Reuse the three completed Terra-medium agents for substantial disjoint slices.",
+      "reason": "Luna is not callable in this collaboration surface; spawning extra agents would waste calls and context."
+    },
+    {
+      "id": "DEC-002",
+      "decision": "Main owns automation/native integration and final review.",
+      "reason": "These changes cross every slice and must remain accountable to the complete owner intent."
+    },
+    {
+      "id": "DEC-003",
+      "decision": "Store structured requirements plus a separate source contract under the same work root.",
+      "reason": "Resume remains faithful without duplicating the full conversation into every agent packet."
+    }
+  ],
+  "receipts": [
+    {
+      "id": "REC-001",
+      "slices": ["P1", "P2", "P4"],
+      "status": "PASS",
+      "evidence": "Helmholtz independent core/workctl review; workctl adversarial suite PASS; core 2611/3000 tokens."
+    },
+    {
+      "id": "REC-002",
+      "slices": ["P3"],
+      "status": "PASS",
+      "evidence": "Singer reproduced and then re-tested the false-PASS gap; all 30 live cases reject build-only proof; 50-case benchmark PASS."
+    },
+    {
+      "id": "REC-003",
+      "slices": ["P5"],
+      "status": "PASS",
+      "evidence": "Kant confirmed all four former P1 native findings closed; strict graph routing and canonical 5-tool registry PASS."
+    },
+    {
+      "id": "REC-004",
+      "slices": ["P5", "P6"],
+      "status": "PASS",
+      "evidence": "Full native installation and Doctor PASS on Codex, Grok, Antigravity and Cursor; receipts remain truthfully NATIVE_UNOBSERVED until host-delivered observation."
+    },
+    {
+      "id": "REC-005",
+      "slices": ["P3", "P6"],
+      "status": "PASS",
+      "evidence": "Native Codex empirical smoke PASS without CODEX_API_KEY using installed login state."
+    },
+    {
+      "id": "REC-006",
+      "slices": ["P6"],
+      "status": "PASS",
+      "evidence": "Commit 75d13d6 pushed to origin/main; remote head verified."
+    }
+  ],
+  "open_findings": [],
+  "next_action": "None. Work is complete."
+}

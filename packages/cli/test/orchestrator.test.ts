@@ -6,6 +6,7 @@ import {
   completeTask,
   cancelRun,
   getBlockers,
+  validateWorkerReceipt,
   type OrchestrationRun,
   type DelegationReceipt,
 } from '../src/services/orchestrator.js';
@@ -128,9 +129,11 @@ describe('getNextReadyTasks', () => {
     const receipt: DelegationReceipt = {
       taskId: 'T-001',
       filesChanged: ['src/foo.ts'],
-      commandsRun: [],
-      testsRun: [],
-      evidencePaths: [],
+      commandsRun: ['git status'],
+      exitCodes: [0],
+      testsRun: ['npm test'],
+      evidencePaths: ['src/foo.ts'],
+      diffHashes: { 'src/foo.ts': 'abc123' },
       status: 'PASS',
       retries: 0,
       assumptions: [],
@@ -200,8 +203,10 @@ describe('completeTask', () => {
       taskId: 'T-001',
       filesChanged: ['src/foo.ts'],
       commandsRun: ['npm run build'],
+      exitCodes: [0],
       testsRun: ['npm test'],
       evidencePaths: ['test-results.json'],
+      diffHashes: { 'src/foo.ts': 'abc123' },
       status: 'PASS',
       retries: 0,
       assumptions: [],
@@ -225,8 +230,10 @@ describe('completeTask', () => {
       taskId: 'T-001',
       filesChanged: [],
       commandsRun: [],
+      exitCodes: [],
       testsRun: [],
       evidencePaths: [],
+      diffHashes: {},
       status: 'FAIL',
       retries: 2,
       assumptions: [],
@@ -270,8 +277,10 @@ describe('cancelRun', () => {
       taskId: 'T-001',
       filesChanged: [],
       commandsRun: [],
+      exitCodes: [],
       testsRun: [],
       evidencePaths: [],
+      diffHashes: {},
       status: 'PASS',
       retries: 0,
       assumptions: [],
@@ -304,8 +313,10 @@ describe('getBlockers', () => {
       taskId: 'T-001',
       filesChanged: [],
       commandsRun: [],
+      exitCodes: [],
       testsRun: [],
       evidencePaths: [],
+      diffHashes: {},
       status: 'FAIL',
       retries: 3,
       assumptions: [],
@@ -319,5 +330,234 @@ describe('getBlockers', () => {
     expect(blockers.length).toBeGreaterThanOrEqual(1);
     expect(blockers[0]).toContain('T-002');
     expect(blockers[0]).toContain('T-001');
+  });
+});
+
+describe('completeTask — adversarial receipt status', () => {
+  it('marks task as FAILED on PARTIAL receipt (BUG-3: cannot reach COMPLETED)', () => {
+    const plan = validPlan();
+    const run = createRun(plan);
+    assignTask(run, 'T-001', 'worker-alpha');
+
+    const receipt: DelegationReceipt = {
+      taskId: 'T-001',
+      filesChanged: ['src/foo.ts'],
+      commandsRun: [],
+      exitCodes: [],
+      testsRun: [],
+      evidencePaths: ['src/foo.ts'],
+      diffHashes: { 'src/foo.ts': 'abc123' },
+      status: 'PARTIAL',
+      retries: 1,
+      assumptions: [],
+      unresolvedFindings: ['Some requirements unmet'],
+    };
+
+    completeTask(run, 'T-001', receipt);
+
+    const task = run.tasks.find(t => t.taskId === 'T-001');
+    expect(task?.state).toBe('FAILED');
+    expect(task?.error).toContain('Some requirements unmet');
+    expect(task?.retryCount).toBe(1);
+    // BUG-3: PARTIAL receipt must never produce COMPLETED
+    expect(task?.state).not.toBe('COMPLETED');
+  });
+
+  it('marks task as BLOCKED on BLOCKED receipt', () => {
+    const plan = validPlan();
+    const run = createRun(plan);
+    assignTask(run, 'T-001', 'worker-alpha');
+
+    const receipt: DelegationReceipt = {
+      taskId: 'T-001',
+      filesChanged: [],
+      commandsRun: [],
+      exitCodes: [],
+      testsRun: [],
+      evidencePaths: [],
+      diffHashes: {},
+      status: 'BLOCKED',
+      retries: 0,
+      assumptions: ['Dependency unavailable'],
+      unresolvedFindings: ['Upstream dependency failed'],
+    };
+
+    completeTask(run, 'T-001', receipt);
+
+    const task = run.tasks.find(t => t.taskId === 'T-001');
+    expect(task?.state).toBe('BLOCKED');
+    expect(task?.error).toContain('Upstream dependency failed');
+  });
+
+  it('throws on unknown receipt status (BUG-3: validate receipt status)', () => {
+    const plan = validPlan();
+    const run = createRun(plan);
+    assignTask(run, 'T-001', 'worker-alpha');
+
+    // @ts-expect-error — deliberately inject an unknown status for adversarial test
+    const badReceipt: DelegationReceipt = {
+      taskId: 'T-001',
+      filesChanged: [],
+      commandsRun: [],
+      exitCodes: [],
+      testsRun: [],
+      evidencePaths: [],
+      diffHashes: {},
+      status: 'SUCCESS' as 'PASS' | 'PARTIAL' | 'FAIL' | 'BLOCKED',
+      retries: 0,
+      assumptions: [],
+      unresolvedFindings: [],
+    };
+
+    expect(() => completeTask(run, 'T-001', badReceipt as DelegationReceipt))
+      .toThrow('Unknown receipt status: SUCCESS');
+  });
+});
+
+describe('validateWorkerReceipt', () => {
+  const validAssignment = {
+    taskId: 'T-001',
+    reqIds: ['REQ-001'],
+    objective: 'Test task',
+    ownedPaths: ['src/foo.ts', 'src/bar.ts'],
+    forbiddenPaths: [],
+    acceptanceCriteria: [],
+    verificationCommands: ['npm test'],
+    model: 'gpt-4o',
+    effort: 'small',
+  };
+
+  it('passes valid receipt with full proof', () => {
+    const receipt = {
+      taskId: 'T-001',
+      filesChanged: ['src/foo.ts'],
+      commandsRun: ['npm test'],
+      exitCodes: [0],
+      testsRun: ['npm test'],
+      evidencePaths: ['src/foo.ts'],
+      diffHashes: { 'src/foo.ts': 'abc123' },
+      status: 'PASS' as const,
+      retries: 0,
+      assumptions: [],
+      unresolvedFindings: [],
+    };
+    const result = validateWorkerReceipt(receipt, validAssignment);
+    expect(result.valid).toBe(true);
+    expect(result.fakePassDetected).toBe(false);
+  });
+
+  it('rejects fabricated PASS with no evidence', () => {
+    const receipt = {
+      taskId: 'T-001',
+      filesChanged: [],
+      commandsRun: [],
+      exitCodes: [],
+      testsRun: [],
+      evidencePaths: [],
+      diffHashes: {},
+      status: 'PASS' as const,
+      retries: 0,
+      assumptions: [],
+      unresolvedFindings: [],
+    };
+    const result = validateWorkerReceipt(receipt, validAssignment);
+    expect(result.valid).toBe(false);
+    expect(result.fakePassDetected).toBe(true);
+    expect(result.errors.some(e => e.includes('FABRICATED PASS'))).toBe(true);
+  });
+
+  it('rejects receipt with non-zero exit code', () => {
+    const receipt = {
+      taskId: 'T-001',
+      filesChanged: ['src/foo.ts'],
+      commandsRun: ['npm test'],
+      exitCodes: [1],
+      testsRun: ['npm test'],
+      evidencePaths: ['src/foo.ts'],
+      diffHashes: { 'src/foo.ts': 'abc123' },
+      status: 'PASS' as const,
+      retries: 0,
+      assumptions: [],
+      unresolvedFindings: [],
+    };
+    const result = validateWorkerReceipt(receipt, validAssignment);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.includes('Non-zero exit codes'))).toBe(true);
+  });
+
+  it('rejects filesChanged outside ownedPaths', () => {
+    const receipt = {
+      taskId: 'T-001',
+      filesChanged: ['src/hacked.ts'],
+      commandsRun: ['npm test'],
+      exitCodes: [0],
+      testsRun: ['npm test'],
+      evidencePaths: ['src/hacked.ts'],
+      diffHashes: { 'src/hacked.ts': 'abc123' },
+      status: 'PASS' as const,
+      retries: 0,
+      assumptions: [],
+      unresolvedFindings: [],
+    };
+    const result = validateWorkerReceipt(receipt, validAssignment);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.includes('outside owned paths'))).toBe(true);
+  });
+
+  it('rejects receipt missing diff hash for changed file', () => {
+    const receipt = {
+      taskId: 'T-001',
+      filesChanged: ['src/foo.ts'],
+      commandsRun: ['npm test'],
+      exitCodes: [0],
+      testsRun: ['npm test'],
+      evidencePaths: ['src/foo.ts'],
+      diffHashes: {},
+      status: 'PASS' as const,
+      retries: 0,
+      assumptions: [],
+      unresolvedFindings: [],
+    };
+    const result = validateWorkerReceipt(receipt, validAssignment);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.includes('Missing diff hash'))).toBe(true);
+  });
+
+  it('rejects mismatched taskId', () => {
+    const receipt = {
+      taskId: 'T-999',
+      filesChanged: ['src/foo.ts'],
+      commandsRun: ['npm test'],
+      exitCodes: [0],
+      testsRun: ['npm test'],
+      evidencePaths: ['src/foo.ts'],
+      diffHashes: { 'src/foo.ts': 'abc123' },
+      status: 'PASS' as const,
+      retries: 0,
+      assumptions: [],
+      unresolvedFindings: [],
+    };
+    const result = validateWorkerReceipt(receipt, validAssignment);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some(e => e.includes('taskId mismatch'))).toBe(true);
+  });
+
+  it('passes PASS with evidence but no commands', () => {
+    const receipt = {
+      taskId: 'T-001',
+      filesChanged: ['src/foo.ts'],
+      commandsRun: [],
+      exitCodes: [],
+      testsRun: [],
+      evidencePaths: ['src/foo.ts'],
+      diffHashes: { 'src/foo.ts': 'abc123' },
+      status: 'PASS' as const,
+      retries: 0,
+      assumptions: [],
+      unresolvedFindings: [],
+    };
+    const result = validateWorkerReceipt(receipt, validAssignment);
+    expect(result.valid).toBe(true);
+    expect(result.fakePassDetected).toBe(false);
   });
 });

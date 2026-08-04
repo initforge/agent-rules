@@ -16,6 +16,11 @@ export interface AuditEvent {
 }
 
 export interface SupervisorConfig {
+  // AM-0022: Adaptive ceiling (replaces stale maxWriters)
+  adaptiveCeilingNormal: number;  // 8 normal writers
+  adaptiveCeilingBurst: number;   // 10 burst writers
+  minReadyEvidence: number;       // 6 READY evidence threshold
+  // Legacy: non-authoritative compatibility only
   maxWriters: number;
   maxReviewers: number;
   childDepth: number;
@@ -70,6 +75,9 @@ export interface SupervisorPublicView {
   readonly revision: number;
   readonly sessionId: string;
   readonly children: readonly ChildAssignmentView[];
+  // AM-0022: adaptive ceiling (8 normal / 10 burst based on min 6 READY evidence)
+  readonly effectiveCeiling: number;
+  readonly readyEvidenceCount: number;
   readonly availableWriterSlots: number;
   readonly availableReviewerSlots: number;
   assignChild(p: { assignmentId: string; kind: ChildKind; ownedPaths: readonly string[]; forbiddenPaths: readonly string[]; contextKey?: ContextCapsuleKey; provider?: string; model?: string; effort?: string; }): { ok: true; assignment: ChildAssignmentView } | { ok: false; reason: string; };
@@ -141,6 +149,11 @@ function fsyncRenameDirectory(dir: string): void {
 
 // ── Internal state — held in WeakMap, not accessible from outside module ──
 interface InternalState {
+  // AM-0022: Adaptive ceiling config
+  adaptiveCeilingNormal: number;
+  adaptiveCeilingBurst: number;
+  minReadyEvidence: number;
+  // Legacy: non-authoritative compatibility only
   config: Required<Pick<SupervisorConfig, 'maxWriters'|'maxReviewers'|'childDepth'|'backpressureRssMb'|'backpressureCpuPct'|'assignmentTimeoutMs'|'defaultProvider'|'defaultModel'|'defaultEffort'>> & { statePath?: string };
   childrenList: ChildAssignment[];
   auditEvents: AuditEvent[];
@@ -158,6 +171,9 @@ export class SupervisorFacade implements SupervisorPublicView {
   get revision(): number { return STORE.get(this)!._revision; }
   get sessionId(): string { return STORE.get(this)!.supervisorId; }
   get children(): readonly ChildAssignmentView[] { return STORE.get(this)!.childrenList.map(toPublicView); }
+  // AM-0022: adaptive ceiling properties
+  get effectiveCeiling(): number { return calcEffectiveCeiling(STORE.get(this)!); }
+  get readyEvidenceCount(): number { return STORE.get(this)!.childrenList.filter(c => c.kind === 'writer' && c.status === 'COMPLETED').length; }
   get availableWriterSlots(): number { return calcWriterSlots(STORE.get(this)!); }
   get availableReviewerSlots(): number { return calcReviewerSlots(STORE.get(this)!); }
   assignChild(p: Parameters<SupervisorPublicView['assignChild']>[0]): ReturnType<SupervisorPublicView['assignChild']> { return assignChildImpl(STORE.get(this)!, p); }
@@ -168,7 +184,7 @@ export class SupervisorFacade implements SupervisorPublicView {
   failAssignment(id: string, error: string): ReturnType<SupervisorPublicView['failAssignment']> { return failAssignmentImpl(STORE.get(this)!, id, error); }
   abortAssignment(id: string): ReturnType<SupervisorPublicView['abortAssignment']> { return abortAssignmentImpl(STORE.get(this)!, id); }
   getAuditEvents(): AuditEvent[] { return STORE.get(this)!.auditEvents.map(e => ({ ...e })); }
-  resolveNativeMode(reason: NativeModeReason): { allowed: true } | { allowed: false; reason: string; } { return resolveNativeModeImpl(STORE.get(this)!, reason); }
+  resolveNativeMode(reason: NativeModeReason): { allowed: true } | { allowed: false; reason: string } { return resolveNativeModeImpl(STORE.get(this)!, reason); }
   checkResources(): { rssMb: number; cpuPct: number; underPressure: boolean; } { return checkResourcesImpl(); }
 }
 
@@ -216,6 +232,10 @@ function initializeState(config?: Partial<SupervisorConfig> & { completionVerifi
       const children = state.children.map(fromPersisted);
       const auditEvents = state.auditEvents;
       const inst: InternalState = {
+        // AM-0022: adaptive ceiling defaults
+        adaptiveCeilingNormal: config?.adaptiveCeilingNormal ?? 8,
+        adaptiveCeilingBurst: config?.adaptiveCeilingBurst ?? 10,
+        minReadyEvidence: config?.minReadyEvidence ?? 6,
         config: { ...defaultConfig, ...config, statePath },
         childrenList: children,
         auditEvents,
@@ -233,6 +253,9 @@ function initializeState(config?: Partial<SupervisorConfig> & { completionVerifi
   // Fresh state
   const supervisorId = config?.initialSessionId ?? randomUUID();
   return {
+    adaptiveCeilingNormal: config?.adaptiveCeilingNormal ?? 8,
+    adaptiveCeilingBurst: config?.adaptiveCeilingBurst ?? 10,
+    minReadyEvidence: config?.minReadyEvidence ?? 6,
     config: { ...defaultConfig, ...config, statePath },
     childrenList: [],
     auditEvents: [],
@@ -368,7 +391,24 @@ function remediateStaleAssignments(s: InternalState): void {
   if (remediated && s.statePath) writeState(s);
 }
 
+/**
+ * AM-0022: Calculate effective writer ceiling based on adaptive policy.
+ * Normal ceiling = 8 writers, Burst ceiling = 10 writers.
+ * Uses READY evidence count to determine burst eligibility.
+ */
+function calcEffectiveCeiling(s: InternalState): number {
+  const readyEvidence = s.childrenList.filter(c => c.kind === 'writer' && c.status === 'COMPLETED').length;
+  return readyEvidence >= s.minReadyEvidence ? s.adaptiveCeilingBurst : s.adaptiveCeilingNormal;
+}
+
 function calcWriterSlots(s: InternalState): number {
+  const activeWriters = s.childrenList.filter(c => c.kind === 'writer' && (c.status === 'PENDING' || c.status === 'DISPATCHED' || c.status === 'RUNNING')).length;
+  const effectiveCeiling = calcEffectiveCeiling(s);
+  return Math.max(0, effectiveCeiling - activeWriters);
+}
+
+/** ponytail: legacy compatibility — returns maxWriters-based slots */
+function calcLegacyWriterSlots(s: InternalState): number {
   return Math.max(0, s.config.maxWriters - s.childrenList.filter(c => c.kind === 'writer' && (c.status === 'PENDING' || c.status === 'DISPATCHED' || c.status === 'RUNNING')).length);
 }
 

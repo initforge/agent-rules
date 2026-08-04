@@ -1,0 +1,30 @@
+{
+  "id": "R3-P3",
+  "slice_id": "P3",
+  "agent": "foundation_rereviewer",
+  "role": "reviewer",
+  "model_class": "standard",
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "source_ids": ["DISC-001"],
+  "write_paths": [],
+  "context_paths": [
+    "platforms/**",
+    "automation/02-install-runtime.ps1",
+    "automation/09-doctor.ps1",
+    "automation/test-native-agent-policy.py"
+  ],
+  "forbidden_paths": ["**"],
+  "acceptance_ids": ["AC5", "AC6"],
+  "model_evidence": {
+    "requested_model": "gpt-5.6-terra",
+    "requested_effort": "medium",
+    "resolved_model": "gpt-5.6-terra",
+    "resolved_effort": "medium",
+    "observed_model": "gpt-5.6-terra",
+    "observed_effort": "medium",
+    "status": "observed",
+    "fallback_reason": "",
+    "main_direct_exception_reason": ""
+  }
+}

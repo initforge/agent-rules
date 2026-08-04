@@ -1,0 +1,402 @@
+{
+  "schema_version": 4,
+  "work_id": "5fedu-ui-contract-20260724",
+  "status": "running",
+  "lifecycle_status": "running",
+  "task_status": "open",
+  "orchestration_status": "healthy",
+  "created_at": "2026-07-24T07:18:08.324240+00:00",
+  "updated_at": "2026-07-24T07:26:46.806216+00:00",
+  "plan": {
+    "ref": "5fedu-ui-contract-execution-2026-07-24",
+    "sha256": "f38ef09aaf0a1a8887f1aa02b30b77973c9373d91657ead780bc92445f8bee45",
+    "identity": "legacy-init-ref"
+  },
+  "active_slices": [
+    "C1",
+    "C3",
+    "C2"
+  ],
+  "classification": {
+    "shape": "large",
+    "ledger": "required",
+    "strategy": "parallel",
+    "review_required": true,
+    "reasons": [
+      "multiple domains, independent groups, agents or acceptance criteria",
+      "file count is an advisory signal, not a risk classifier",
+      "risk-triggered independent review"
+    ]
+  },
+  "execution_contract": {
+    "mode": "automatic",
+    "max_active_agents_including_main": 4,
+    "max_delegation_depth": 1,
+    "effort_cap": "high",
+    "authorized_final_actions": [
+      "edit"
+    ],
+    "execute_authorization": {
+      "authorized": true,
+      "recorded_at": "2026-07-24T07:18:08.324240+00:00",
+      "source": "legacy-init",
+      "actions": [
+        "edit"
+      ]
+    },
+    "run_id": "1fb3dce549474528940da3137644f109",
+    "main_direct_policy": {
+      "allowed": false,
+      "allowed_tool_classes": [
+        "browser",
+        "edit",
+        "external-write",
+        "git",
+        "network",
+        "read",
+        "shell",
+        "test"
+      ]
+    }
+  },
+  "repository": {
+    "path": "P:\\agent-rules",
+    "branch": "unknown",
+    "baseline_commit": "unknown"
+  },
+  "host_refs": {
+    "host": "unknown",
+    "task_ref": "",
+    "session_ref": ""
+  },
+  "model_policy_reasons": [],
+  "control_plane_exceptions": [],
+  "proof_cache": [],
+  "telemetry_events": [],
+  "source_history": [
+    {
+      "id": "USR-001",
+      "kind": "original",
+      "summary": "Owner requires strict 5fedu UI behavior and contract parity from verified workspace-local template code.",
+      "slice_ids": [
+        "C1",
+        "C2",
+        "C3",
+        "C4"
+      ],
+      "captured_at": "2026-07-24T07:18:42.453969+00:00",
+      "redacted": false
+    }
+  ],
+  "slices": [
+    {
+      "id": "C1",
+      "name": "Canonical UI contract documentation",
+      "status": "running",
+      "depends_on": [],
+      "required": true,
+      "review_required": true,
+      "acceptance": [
+        {
+          "id": "AC1",
+          "claim": "5fedu documentation defines all required UI behavior contracts and vocabulary",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "static-change",
+          "required_proof_kinds": [
+            "static",
+            "diff"
+          ],
+          "required_dimensions": [
+            "outcome",
+            "regression"
+          ],
+          "receipt_ids": [],
+          "proof_epoch": 0,
+          "full_gate_fingerprint": "08d6b3bf6059f910089ccb0df3ef6194603c2cf8079d458ab2ea12de635be7c2"
+        }
+      ]
+    },
+    {
+      "id": "C2",
+      "name": "Template source gate and evidence",
+      "status": "running",
+      "depends_on": [],
+      "required": true,
+      "review_required": true,
+      "acceptance": [
+        {
+          "id": "AC2",
+          "claim": "Parity skill blocks UI work without a verified workspace-local template",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "static-change",
+          "required_proof_kinds": [
+            "static",
+            "diff"
+          ],
+          "required_dimensions": [
+            "outcome",
+            "regression"
+          ],
+          "receipt_ids": [],
+          "proof_epoch": 0,
+          "full_gate_fingerprint": "a579036b93065e946d5af37fb159aabd4d37a90906ece2cf015042c7dde27f9c"
+        }
+      ]
+    },
+    {
+      "id": "C3",
+      "name": "Harness enforcement and regression fixtures",
+      "status": "running",
+      "depends_on": [],
+      "required": true,
+      "review_required": true,
+      "acceptance": [
+        {
+          "id": "AC3",
+          "claim": "Automation rejects incomplete or superficial 5fedu parity contracts",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "static-change",
+          "required_proof_kinds": [
+            "static",
+            "unit",
+            "integration"
+          ],
+          "required_dimensions": [
+            "outcome",
+            "regression"
+          ],
+          "receipt_ids": [],
+          "proof_epoch": 0,
+          "full_gate_fingerprint": "33f6cd1e40809d753755a5d4df88398aaf67309631c5ff4ade5ad4a6a356b6e1"
+        }
+      ]
+    },
+    {
+      "id": "C4",
+      "name": "Integrated validation and runtime installation",
+      "status": "planned",
+      "depends_on": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "required": true,
+      "review_required": true,
+      "acceptance": [
+        {
+          "id": "AC4",
+          "claim": "Canonical contract validates, builds, and is installed in global runtime",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "static-change",
+          "required_proof_kinds": [
+            "static",
+            "build",
+            "integration"
+          ],
+          "required_dimensions": [
+            "outcome",
+            "regression"
+          ],
+          "receipt_ids": [],
+          "proof_epoch": 0,
+          "full_gate_fingerprint": "91dedca656e27e3b732dae90f4dc63189c3ca309d0ae6c50b20cbc3696148274"
+        }
+      ]
+    }
+  ],
+  "assignments": [
+    {
+      "id": "A-C1",
+      "slice_id": "C1",
+      "agent": "contract_docs",
+      "role": "executor",
+      "model_class": "standard",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "source_ids": [
+        "USR-001"
+      ],
+      "write_paths": [
+        "projects/5fedu/domains/ui-delivery.md",
+        "projects/5fedu/domains/surface-taxonomy.md",
+        "projects/5fedu/domains/module-mapping.md",
+        "projects/5fedu/domains/references/ui-delivery-detail.md"
+      ],
+      "context_paths": [
+        "projects/5fedu/domains/references/pattern-inventory.yaml",
+        "P:/pos-ops/5f-template-ket-noi-supabase-main"
+      ],
+      "forbidden_paths": [
+        "projects/5fedu/domains/references/pattern-inventory.yaml",
+        "skills/5fedu-module-parity/**",
+        "automation/**"
+      ],
+      "acceptance_ids": [
+        "AC1"
+      ],
+      "mission": "Define the human-readable 5fedu UI vocabulary, composition, source-of-truth workflow, and verification contracts without duplicating the inventory.",
+      "actor_session": "pending-contract_docs",
+      "allowed_tool_classes": [
+        "read",
+        "edit",
+        "test",
+        "shell",
+        "git"
+      ],
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": null,
+        "observed_effort": null,
+        "status": "fallback",
+        "fallback_reason": "Host does not expose independent worker model/effort attestation.",
+        "main_direct_exception_reason": ""
+      },
+      "status": "done",
+      "capsule_hash": "1a3c88b061a7d4b6984d57f85687a7677930b2d763e834457c3228cc991488cc",
+      "receipt_budget": 1,
+      "recovery_attempts": [],
+      "actor_telemetry_refs": [],
+      "ack_status": "acknowledged",
+      "completed_at": "2026-07-24T07:26:46.804211+00:00"
+    },
+    {
+      "id": "A-C2",
+      "slice_id": "C2",
+      "agent": "source_gate",
+      "role": "executor",
+      "model_class": "standard",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "source_ids": [
+        "USR-001"
+      ],
+      "write_paths": [
+        "skills/5fedu-module-parity/SKILL.md",
+        "projects/5fedu/AGENTS.md",
+        "projects/5fedu/00-context-map.md",
+        "projects/5fedu/decisions.md",
+        "projects/5fedu/evidence/owner-feedback-lessons.md",
+        "projects/known-5fedu-repos.md"
+      ],
+      "context_paths": [
+        "projects/5fedu/domains/references/pattern-inventory.yaml",
+        "P:/pos-ops/5f-template-ket-noi-supabase-main"
+      ],
+      "forbidden_paths": [
+        "projects/5fedu/domains/references/pattern-inventory.yaml",
+        "projects/5fedu/domains/ui-delivery.md",
+        "projects/5fedu/domains/surface-taxonomy.md",
+        "projects/5fedu/domains/module-mapping.md",
+        "automation/**"
+      ],
+      "acceptance_ids": [
+        "AC2"
+      ],
+      "mission": "Implement the workspace-local template source gate, fidelity packet workflow, current-repository wording, and archival evidence references.",
+      "actor_session": "pending-source_gate",
+      "allowed_tool_classes": [
+        "read",
+        "edit",
+        "test",
+        "shell",
+        "git"
+      ],
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": null,
+        "observed_effort": null,
+        "status": "fallback",
+        "fallback_reason": "Host does not expose independent worker model/effort attestation.",
+        "main_direct_exception_reason": ""
+      },
+      "status": "done",
+      "capsule_hash": "8347a36aec571d3e432dc7b23152a78873623cca77cbdb318dafc774a15513fc",
+      "receipt_budget": 1,
+      "recovery_attempts": [],
+      "actor_telemetry_refs": [],
+      "ack_status": "acknowledged",
+      "completed_at": "2026-07-24T07:24:19.871481+00:00"
+    },
+    {
+      "id": "A-C3",
+      "slice_id": "C3",
+      "agent": "automation_enforcement",
+      "role": "executor",
+      "model_class": "standard",
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "source_ids": [
+        "USR-001"
+      ],
+      "write_paths": [
+        "automation/audit-ui-routing.ps1",
+        "automation/context-route-cases.json",
+        "automation/evidence-profiles.json",
+        "automation/benchmarks/agent-quality-benchmark.json"
+      ],
+      "context_paths": [
+        "projects/5fedu/domains/references/pattern-inventory.yaml",
+        "skills/5fedu-module-parity/SKILL.md"
+      ],
+      "forbidden_paths": [
+        "projects/5fedu/**",
+        "skills/5fedu-module-parity/**",
+        "05-generated/**"
+      ],
+      "acceptance_ids": [
+        "AC3"
+      ],
+      "mission": "Strengthen deterministic audits, routing fixtures, benchmark cases, and UI-parity proof dimensions without changing canonical contracts.",
+      "actor_session": "pending-automation_enforcement",
+      "allowed_tool_classes": [
+        "read",
+        "edit",
+        "test",
+        "shell",
+        "git"
+      ],
+      "model_evidence": {
+        "requested_model": "gpt-5.6-terra",
+        "requested_effort": "medium",
+        "resolved_model": "gpt-5.6-terra",
+        "resolved_effort": "medium",
+        "observed_model": null,
+        "observed_effort": null,
+        "status": "fallback",
+        "fallback_reason": "Host does not expose independent worker model/effort attestation.",
+        "main_direct_exception_reason": ""
+      },
+      "status": "done",
+      "capsule_hash": "f2f6a46bf9230979581ac12c5eb182a889c0ae7dd7a1a4eaf831121a5519c08c",
+      "receipt_budget": 1,
+      "recovery_attempts": [],
+      "actor_telemetry_refs": [],
+      "ack_status": "acknowledged",
+      "completed_at": "2026-07-24T07:25:44.951130+00:00"
+    }
+  ],
+  "receipts": [],
+  "reviews": [],
+  "findings": [],
+  "checkpoints": [],
+  "usage": {
+    "input_tokens": 0,
+    "cached_input_tokens": 0,
+    "output_tokens": 0,
+    "reasoning_tokens": 0,
+    "agent_runs": 3,
+    "tool_calls": 0,
+    "records": []
+  },
+  "next_action": "Execute and verify C2."
+}

@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "work_id": "am0022-additive-convergence",
+  "ledger_path": "ledger.json",
+  "status": "IN_PROGRESS",
+  "reconciliation": {
+    "target": "AM-0022 8/10 composition",
+    "execution_policy": {
+      "reconciled_at": "2026-08-03T10:17:00+07:00",
+      "note": "Execution policy reconciled to AM-0022 effective contract composition: 8 normal children, 10 burst children",
+      "validation": {
+        "am0022_sha256": "e6181b608ccd980dd6925a7be7fdfd9dbb3dfe6d3f8c79a4dd66fd0906d55",
+        "am0021_sha256": "0dfb45500fe8a7d80f177e57ef8a6c231b44e28f8e4f973b31f85bf7d527cf1c",
+        "original_sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
+        "ledger_commit_hash": "37f3cfaa6f227bc8c6d1c93aaa2d689806902974",
+        "hash_mismatch_reported": {
+          "field": "execution_contract.plan.sha256",
+          "expected": "94d059fa48da496d008ea21e7e38d1505eb96ebf82295ec3fe2eafb3737b64f",
+          "actual_disk": "30990c1d51cd11163254780cda2d89ee0df802ba4985cd5dfe28178e18864fa6",
+          "status": "REPORTED_ONLY",
+          "action": "no alteration to immutable plan/amendment files"
+        }
+      },
+      "policy_updates": {
+        "max_active_agents_including_main": {
+          "from": 4,
+          "to": 9,
+          "reason": "AM-0022 normal native children: 8 + main coordinator = 9 total"
+        },
+        "execution_policy_added": [
+          "FRONTSTAGE_FIRST_CONTRACT_SAFE strategy",
+          "normal_native_children: 8",
+          "burst_native_children: 10",
+          "normal_role_composition: {writers:4, verifiers:2, reviewers:1, integration_preparation:1}",
+          "burst_role_composition: {writers:5, verifiers:2, reviewers:2, integration_preparation:1}",
+          "vitest_parent_limit_per_project: 2"
+        ]
+      },
+      "status_preservation": {
+        "note": "Candidate statuses preserved without receipts per requirement",
+        "slices": "all remain 'ready', no 'open' -> 'done' transitions",
+        "assignments": "all remain 'ready', no execution claimed"
+      }
+    },
+    "receipts": [],
+    "dirty_work_preserved": true
+  },
+  "author": "W4_reconciliation",
+  "authority": "owner"
+}

@@ -1,0 +1,29 @@
+{
+  "id": "PF-AC1-FINAL",
+  "acceptance_id": "AC1",
+  "proof_kind": "integration",
+  "dimensions": ["behavior", "context-budget", "no-duplication"],
+  "command": "powershell -NoProfile -ExecutionPolicy Bypass -File automation/03-validate-context.ps1",
+  "expected_exit_code": 0,
+  "timeout_seconds": 900,
+  "environment": "Windows PowerShell; P:/agent-rules",
+  "artifact_paths": [
+    "rules/10-execution.md",
+    "rules/25-task-lifecycle.md",
+    "skills/plan-and-handoff/references/adaptive-work-protocol.md"
+  ],
+  "agent": "shared_contract",
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "model_evidence": {
+    "requested_model": "gpt-5.6-terra",
+    "requested_effort": "medium",
+    "resolved_model": "gpt-5.6-terra",
+    "resolved_effort": "medium",
+    "observed_model": "gpt-5.6-terra",
+    "observed_effort": "medium",
+    "status": "observed",
+    "fallback_reason": "",
+    "main_direct_exception_reason": ""
+  }
+}

@@ -67,15 +67,16 @@ describe("DurableStore", () => {
     const plan2 = { steps: ["a", "b", "c"] };
     await store.createRun(run2Id, plan2);
 
-    const run = await store.getRun(run2Id);
-    run!.tasks = [
-      { id: "t1", name: "Task 1", status: "completed" },
-      { id: "t2", name: "Task 2", status: "pending" },
+    // Use updateState to get EXECUTING state first (checkpoint captures state at this point)
+    await store.updateState(run2Id, "EXECUTING");
+    // Inject tasks via compact JSON (matching store format) before checkpoint
+    const fp = path.join(tmpDir, ".agent", "runs", run2Id, "run.json");
+    const run = JSON.parse(fs.readFileSync(fp, "utf-8")) as Record<string, unknown>;
+    run.tasks = [
+      { id: "t1", taskId: "t1", state: "COMPLETED", status: "completed" },
+      { id: "t2", taskId: "t2", state: "PENDING", status: "pending" },
     ];
-    fs.writeFileSync(
-      path.join(tmpDir, ".agent", "runs", run2Id, "run.json"),
-      JSON.stringify(run, null, 2),
-    );
+    fs.writeFileSync(fp, JSON.stringify(run)); // compact: matches store + checkpoint hash
     await store.checkpoint(run2Id);
 
     const resumed = await store.resume(run2Id);
@@ -90,17 +91,15 @@ describe("DurableStore", () => {
   it("resume does NOT re-run completed tasks", async () => {
     const run3Id = "test-run-003";
     await store.createRun(run3Id, { tasks: ["x", "y"] });
-
-    let run = await store.getRun(run3Id);
-    run!.tasks = [
-      { id: "task-a", name: "Alpha", status: "completed" },
-      { id: "task-b", name: "Beta", status: "pending" },
-    ];
-    fs.writeFileSync(
-      path.join(tmpDir, ".agent", "runs", run3Id, "run.json"),
-      JSON.stringify(run, null, 2),
-    );
     await store.updateState(run3Id, "PLANNED");
+    // Inject tasks with state field before checkpoint (compact JSON)
+    const fp = path.join(tmpDir, ".agent", "runs", run3Id, "run.json");
+    const run = JSON.parse(fs.readFileSync(fp, "utf-8")) as Record<string, unknown>;
+    run.tasks = [
+      { id: "task-a", taskId: "task-a", state: "COMPLETED", status: "completed" },
+      { id: "task-b", taskId: "task-b", state: "PENDING", status: "pending" },
+    ];
+    fs.writeFileSync(fp, JSON.stringify(run)); // compact: matches store format
     const cp = await store.checkpoint(run3Id);
     expect(cp.completedTaskIds).toEqual(["task-a"]);
 
@@ -108,11 +107,12 @@ describe("DurableStore", () => {
     expect(completedBefore).toEqual(["task-a"]);
 
     const resumed = await store.resume(run3Id);
+    // resume restores from checkpoint which has PLANNED state (captured before task injection)
     expect(resumed!.state).toBe("PLANNED");
 
     const runAfterResume = await store.getRun(run3Id);
-    const completedTasks = (runAfterResume!.tasks as { id: string; status: string }[])
-      .filter(t => t.status === "completed");
+    const completedTasks = (runAfterResume!.tasks as { id: string; state: string }[])
+      .filter(t => t.state === "COMPLETED");
     expect(completedTasks).toHaveLength(1);
     expect(completedTasks[0].id).toBe("task-a");
 
@@ -145,17 +145,16 @@ describe("DurableStore", () => {
     const store1 = new DurableStore(tmpDir);
     await store1.createRun(interruptionId, { workload: "heavy" });
 
-    let run = await store1.getRun(interruptionId);
-    run!.tasks = [
-      { id: "i1", name: "Install", status: "completed" },
-      { id: "i2", name: "Build", status: "completed" },
-      { id: "i3", name: "Test", status: "pending" },
-    ];
-    fs.writeFileSync(
-      path.join(tmpDir, ".agent", "runs", interruptionId, "run.json"),
-      JSON.stringify(run, null, 2),
-    );
     await store1.updateState(interruptionId, "EXECUTING");
+    // Inject tasks after state transition (compact JSON to match store format)
+    const fp = path.join(tmpDir, ".agent", "runs", interruptionId, "run.json");
+    const run = JSON.parse(fs.readFileSync(fp, "utf-8")) as Record<string, unknown>;
+    run.tasks = [
+      { id: "i1", taskId: "i1", state: "COMPLETED", status: "completed" },
+      { id: "i2", taskId: "i2", state: "COMPLETED", status: "completed" },
+      { id: "i3", taskId: "i3", state: "PENDING", status: "pending" },
+    ];
+    fs.writeFileSync(fp, JSON.stringify(run)); // compact: matches store format
     await store1.checkpoint(interruptionId);
 
     const store2 = new DurableStore(tmpDir);
@@ -166,8 +165,8 @@ describe("DurableStore", () => {
     const completedIds = await store2.getCompletedTaskIds(interruptionId);
     expect(completedIds).toEqual(["i1", "i2"]);
 
-    const pendingTasks = (resumed!.tasks as { id: string; status: string }[])
-      .filter(t => t.status !== "completed");
+    const pendingTasks = (resumed!.tasks as { id: string; state: string }[])
+      .filter(t => t.state !== "COMPLETED");
     expect(pendingTasks).toHaveLength(1);
     expect(pendingTasks[0].id).toBe("i3");
 
@@ -251,6 +250,7 @@ describe("DurableStore", () => {
     const staleLockId = "lock-stale-test";
     await store.createRun(staleLockId, {});
     await store.updateState(staleLockId, "EXECUTING");
+    // checkpoint AFTER state transition so it captures EXECUTING state
     await store.checkpoint(staleLockId);
 
     // Dead PID: spawn a child that exits immediately and use its PID.
@@ -308,5 +308,138 @@ describe("DurableStore", () => {
       child.kill("SIGKILL");
     }
     await store.deleteRun(liveProcId);
+  });
+
+  it("getRun throws CORRUPTED_RUN_ERROR when run.json exists but is not valid JSON", async () => {
+    const corruptId = "corrupt-json-test";
+    await store.createRun(corruptId, {});
+    const fp = path.join(tmpDir, ".agent", "runs", corruptId, "run.json");
+    fs.writeFileSync(fp, "not valid json {{{", "utf-8");
+
+    await expect(store.getRun(corruptId)).rejects.toThrow(/not valid JSON/);
+    await store.deleteRun(corruptId);
+  });
+
+  it("validateRun throws on missing runId", async () => {
+    const corruptId = "missing-runid-test";
+    await store.createRun(corruptId, {});
+    const fp = path.join(tmpDir, ".agent", "runs", corruptId, "run.json");
+    const run = JSON.parse(fs.readFileSync(fp, "utf-8"));
+    delete run.runId;
+    fs.writeFileSync(fp, JSON.stringify(run), "utf-8");
+
+    await expect(store.getRun(corruptId)).rejects.toThrow(/missing runId/);
+    await store.deleteRun(corruptId);
+  });
+
+  it("validateRun throws on invalid state field", async () => {
+    const corruptId = "bad-state-test";
+    await store.createRun(corruptId, {});
+    const fp = path.join(tmpDir, ".agent", "runs", corruptId, "run.json");
+    const run = JSON.parse(fs.readFileSync(fp, "utf-8"));
+    run.state = "NOT_A_REAL_STATE";
+    fs.writeFileSync(fp, JSON.stringify(run), "utf-8");
+
+    await expect(store.getRun(corruptId)).rejects.toThrow(/invalid state/);
+    await store.deleteRun(corruptId);
+  });
+
+  it("validateRun throws when receipts is not an array", async () => {
+    const corruptId = "bad-receipts-test";
+    await store.createRun(corruptId, {});
+    const fp = path.join(tmpDir, ".agent", "runs", corruptId, "run.json");
+    const run = JSON.parse(fs.readFileSync(fp, "utf-8"));
+    run.receipts = "not an array";
+    fs.writeFileSync(fp, JSON.stringify(run), "utf-8");
+
+    await expect(store.getRun(corruptId)).rejects.toThrow(/receipts must be array/);
+    await store.deleteRun(corruptId);
+  });
+
+  it("addReceipt returns false (dedup) when receipt with same id already exists", async () => {
+    const dedupId = "dedup-test";
+    await store.createRun(dedupId, {});
+    const receipt = { id: "dup-1", taskId: "T-1", status: "PASS" };
+    const first = await store.addReceipt(dedupId, receipt);
+    expect(first).toBe(true);
+    const second = await store.addReceipt(dedupId, receipt);
+    expect(second).toBe(false);
+    const run = await store.getRun(dedupId);
+    expect(run!.receipts).toHaveLength(1);
+    await store.deleteRun(dedupId);
+  });
+
+  it("addReceipt adds receipts without id (no dedup, idempotent push)", async () => {
+    const noIdId = "no-id-receipt-test";
+    await store.createRun(noIdId, {});
+    await store.addReceipt(noIdId, { taskId: "T-1", status: "FAIL" });
+    await store.addReceipt(noIdId, { taskId: "T-1", status: "FAIL" });
+    const run = await store.getRun(noIdId);
+    expect(run!.receipts).toHaveLength(2);
+    await store.deleteRun(noIdId);
+  });
+
+  it("addReceipt rejects non-object receipt", async () => {
+    const badId = "bad-receipt-type";
+    await store.createRun(badId, {});
+    await expect(store.addReceipt(badId, "string receipt" as unknown as object)).rejects.toThrow(/must be an object/);
+    await expect(store.addReceipt(badId, null)).rejects.toThrow(/must be an object/);
+    await store.deleteRun(badId);
+  });
+
+  it("createRun overwrites existing run with fresh state and incremented attempt", async () => {
+    const overwriteId = "overwrite-test";
+    await store.createRun(overwriteId, { v: 1 });
+    const r1 = await store.getRun(overwriteId);
+    expect(r1!.attempt).toBe(1);
+    expect(r1!.plan).toEqual({ v: 1 });
+
+    await store.createRun(overwriteId, { v: 2 });
+    const r2 = await store.getRun(overwriteId);
+    expect(r2!.attempt).toBe(2);
+    expect(r2!.plan).toEqual({ v: 2 });
+    expect(r2!.state).toBe("CREATED");
+    await store.deleteRun(overwriteId);
+  });
+
+  it("checkpoint embeds completedTaskIds from tasks with state=COMPLETED", async () => {
+    const cpTaskId = "cp-taskids-test";
+    await store.createRun(cpTaskId, {});
+    const run = await store.getRun(cpTaskId);
+    run!.tasks = [
+      { id: "T-A", taskId: "T-A", state: "COMPLETED", status: "completed" },
+      { id: "T-B", taskId: "T-B", state: "PENDING", status: "pending" },
+      { id: "T-C", taskId: "T-C", state: "COMPLETED", completed: true },
+    ];
+    fs.writeFileSync(
+      path.join(tmpDir, ".agent", "runs", cpTaskId, "run.json"),
+      JSON.stringify(run, null, 2),
+    );
+    const cp = await store.checkpoint(cpTaskId);
+    expect(cp.completedTaskIds).toContain("T-A");
+    expect(cp.completedTaskIds).toContain("T-C");
+    expect(cp.completedTaskIds).not.toContain("T-B");
+    await store.deleteRun(cpTaskId);
+  });
+
+  it("resume with no checkpoint returns run unchanged", async () => {
+    const noCpId = "no-cp-test";
+    await store.createRun(noCpId, {});
+    await store.updateState(noCpId, "EXECUTING");
+    const resumed = await store.resume(noCpId);
+    expect(resumed!.state).toBe("EXECUTING");
+    expect(resumed!.tasks).toEqual([]);
+    await store.deleteRun(noCpId);
+  });
+
+  it("checkpoint data contains plan, tasks, receipts snapshot", async () => {
+    const snapId = "snapshot-test";
+    await store.createRun(snapId, { myPlan: true });
+    await store.addReceipt(snapId, { id: "r1", taskId: "T-1", status: "PASS" });
+    const cp = await store.checkpoint(snapId);
+    expect(cp.data.plan).toEqual({ myPlan: true });
+    expect(cp.data.receipts).toHaveLength(1);
+    expect(cp.schemaVersion).toBe(1);
+    await store.deleteRun(snapId);
   });
 });

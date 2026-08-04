@@ -25,7 +25,12 @@ import {
   type ResourceGovernorAdapter,
   type ResourceSnapshot,
 } from './resource-governor.js';
-import { POOL_CEILINGS } from './dispatch-ready-set.js';
+import {
+  POOL_CEILINGS,
+  poolCeilingsForSchedulerProfile,
+  type PoolCeilings,
+  type SchedulerProfile,
+} from './dispatch-ready-set.js';
 
 /**
  * Placeholder governor identity — NOT a credential. A fixed hex hash used only
@@ -72,6 +77,18 @@ export const AM0019 = {
   NORMAL_AGENTS: 8,
   /** Reduced heavy concurrency. */
   REDUCED_AGENTS: 4,
+} as const;
+
+/**
+ * AM-0022 reference envelope. The hardware fields are a sizing baseline, not a
+ * host assertion; live broker telemetry remains authoritative.
+ */
+export const AM0022 = {
+  BASELINE_MEMORY_BYTES: 16 * 1024 * 1024 * 1024,
+  BASELINE_CPU_MODEL: 'Intel Core i7-12700H',
+  BASELINE_LOGICAL_CPUS: 20,
+  NORMAL_AGENTS: 8,
+  BURST_AGENTS: 10,
 } as const;
 
 const PAGE_SIZE = 4096;
@@ -431,6 +448,21 @@ export function poolCeilingsForAction(action: BrokerAction): {
     build: action === 'pause' ? 0 : action === 'reduce' ? 1 : POOL_CEILINGS.build,
     compose: POOL_CEILINGS.compose,
   };
+}
+
+/** Map live broker actions onto the exact AM-0022 meaningful-agent profiles. */
+export function schedulerProfileForAction(action: BrokerAction): SchedulerProfile {
+  switch (action) {
+    case 'burst': return 'burst';
+    case 'normal':
+    case 'resume': return 'normal';
+    case 'reduce': return 'reduced';
+    case 'pause': return 'paused';
+  }
+}
+
+export function am22PoolCeilingsForAction(action: BrokerAction): Required<PoolCeilings> {
+  return poolCeilingsForSchedulerProfile(schedulerProfileForAction(action));
 }
 
 // ── Browser/MCP pool (lease semantics, no CDP) ─────────────────────────────

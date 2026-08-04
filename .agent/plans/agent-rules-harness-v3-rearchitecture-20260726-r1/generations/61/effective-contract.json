@@ -1,0 +1,100 @@
+{
+  "schema": "artifact/execution-contract",
+  "version": 1,
+  "kind": "effective-execution-contract",
+  "contract_id": "agent-rules-harness-v3-rearchitecture-20260726-r1-generation-61",
+  "plan_id": "agent-rules-harness-v3-rearchitecture-20260726-r1",
+  "status": "EFFECTIVE",
+  "original_sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
+  "effective_plan_sha256": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
+  "source_chain": [
+    {"artifact_id":"ORIGINAL","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/original.md","sha256":"c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31","status":"IMMUTABLE"},
+    {"artifact_id":"AM-0001","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0001-execution-authorization.md","sha256":"90b5f0e478e6a6762aba7976d73b0078152795b590ee147b1278da01d76a9528","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0002","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0002-adaptive-execution-optimization.md","sha256":"c68c3cbac57d44ef3aae543dc221de0a05319e034eec87226bfffbbd6e962fa4","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0003","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0003-owner-closure-decisions.md","sha256":"9637aa2f50177aa981ee3a2a00d7d5cb51c48bb81e7a5ace9f3a8c158152d9c4","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0005","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0005-terminal-convergence-control-plane-redesign.md","sha256":"5a23ce82685729dd0f2be31f559edea54bbe86876f8806666ab4eab5744613a9","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0006","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0006-three-mode-orchestration-and-opencode-federation.md","sha256":"65f550d58d1e5a02f1b76ccb86cd6c9a7ebc1d40db3aecfb47b9ce8be1583ade","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0007","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0007-cost-aware-deepseek-routing-and-release-convergence.md","sha256":"66905c862e5bba558e460219b67ddae4b5e3f9dbcda4f0849ea1d6782afbf73c","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0008","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0008-parallel-opencode-supervision-and-speed.md","sha256":"13d458df692bd46100415f55fa980fc09b57faa66062ee89086fb2631eb08334","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0009","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0009-session-scoped-child-pool-and-cache.md","sha256":"7a4569e099ac93391a837e08e50c4eadc9d34f59008d12c273665b35f9283113","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0010","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0010-dual-supervisor-balanced-concurrency.md","sha256":"c9bce7721a18305c7c7ab6ba78ff165cc8fc41feb4b0312443b85cd8dd196aee","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0011","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0011-claude-first-class-host-and-permanent-convergence.md","sha256":"d295ba000b728d5029b473466d6738a71d07352d59336cc104786d2be008bf91","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0012","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0012-native-swarm-artifact-handoff-and-fitness-closure.md","sha256":"2147aa9631fab0aab10a1e81b7339ba1b1b420d57080d2ef99bf2a88674b41a2","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0013","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0013-rolling-wavefront-critical-path-pipeline.md","sha256":"a8989935c5e0b188b42279b19b167ffad6458d39a17ecad5397ef29301433f0b","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0014","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0014-clustered-native-swarm-and-resource-safety.md","sha256":"951fe2028c3ed6db85530979ec910ed8fc14a7a5dfb041bb829da2f5e41fa209","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0015","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0015-progressive-quality-release-and-main-history-consolidation.md","sha256":"e6482360189a653ef2a3c5074162f75e5376f2e266062f38615fdfa34b32fbc3","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0016","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0016-required-host-certification-owner-decision.md","sha256":"90eb7a6d70652205cbe4e2a1adc5b4981e73a060bf69fe6b8d459c83e3543d15","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0017","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0017-continuous-execution-through-m10.md","sha256":"9477e2a8b23d0d973eafb138870071f6fa9eed831965f7ed14063d205d408730","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0018","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0018-durable-autopilot.md","sha256":"d0d2001ca7f9916d68f4bc66bcfc0545445d33220dc97e5b981d64c7ef1dab52","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0019","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0019-autonomous-native-swarm-whole-system-convergence.md","sha256":"074eda76c69d91b91bf25ab74888dc7ada13376cbfd29d0e67e4a8c6f8662a21","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0020","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0020-epistemic-integrity-adversarial-review-and-truthful-reporting.md","sha256":"f99e603c2e9c60194518938f78de4ab90645eb02d893f2ef811b436c444ee0cc","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0021","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0021-premium-main-context-economy-and-event-driven-orchestration.md","sha256":"0dfb45500fe8a7d80f177e57ef8a6c231b44e28f8e4f973b31f85bf7d527cf1c","status":"EFFECTIVE"},
+    {"artifact_id":"AM-0022","path":".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0022-additive-harness-convergence.md","sha256":"e6181b608ccd980dd6925a7be7fdfd9dbb3dfe6d3f8c79a4dd66fd0906d5db55","status":"EFFECTIVE"}
+  ],
+  "requirements": [
+    "M11-R11","M11-R12","M11-R13","M11-R14","M11-R15","M11-R16","M11-R17","M11-R18","M11-R19","M11-R20",
+    "M11-R21","M11-R22","M11-R23","M11-R24","M11-R25","M11-R26","M11-R27","M11-R28","M11-R29","M11-R30",
+    "M11-R31","M11-R32","M11-R33","M11-R34","M11-R35","M11-R36","M11-R37","M11-R38","M11-R39","M11-R40",
+    "M11-R41","M11-R42","M11-R43","M11-R44","M11-R45","M11-R46","M11-R47","M11-R48","M11-R49","M11-R50",
+    "M11-R51","M11-R52","M11-R53","M11-R54","M11-R55","M11-R56","M11-R57","M11-R58","M11-R59","M11-R60",
+    "M11-R61","M11-R62","M11-R63","M11-R64"
+  ],
+  "capability_preservation": {
+    "default_disposition": "CARRIED",
+    "unimplemented_backlog": "REMAINS_EFFECTIVE",
+    "entries": [
+      {
+        "concept": "all non-conflicting implemented capabilities and valid unimplemented backlog",
+        "source_requirement_ids": ["M11-R11","M11-R12","M11-R13","M11-R14","M11-R15","M11-R16","M11-R17","M11-R18","M11-R19","M11-R20","M11-R21","M11-R22","M11-R23","M11-R24","M11-R25","M11-R26","M11-R27","M11-R28","M11-R29","M11-R30","M11-R31","M11-R32","M11-R33","M11-R34","M11-R35","M11-R36","M11-R37","M11-R38","M11-R39","M11-R40","M11-R41","M11-R42","M11-R43","M11-R44","M11-R45","M11-R46","M11-R47","M11-R48","M11-R49","M11-R50"],
+        "disposition": "CARRIED",
+        "reason": "AM-0022 is additive; every non-conflicting clause and every still-valid unimplemented requirement remains effective."
+      },
+      {
+        "concept": "obsolete live cross-host/fixed supervisor tactics",
+        "source_requirement_ids": ["AM-0006","AM-0008","AM-0009","AM-0010","AM-0011"],
+        "disposition": "SUPERSEDED_CONFLICT",
+        "successor_requirement_ids": ["M11-R52","M11-R54","M11-R62"],
+        "reason": "Depth-one native execution and runtime capability negotiation replace fixed live-session tactics; unrelated adapter capabilities are retained."
+      },
+      {
+        "concept": "14-child and 10-to-14 burst defaults",
+        "source_requirement_ids": ["AM-0019"],
+        "disposition": "SUPERSEDED_CONFLICT",
+        "successor_requirement_ids": ["M11-R54"],
+        "reason": "The active-run targets are exactly 8 normal and 10 burst with meaningful role composition and adaptive scale-down."
+      },
+      {
+        "concept": "remote publication and history rewrite tactics",
+        "source_requirement_ids": ["AM-0003","AM-0006","AM-0015"],
+        "disposition": "SUPERSEDED_CONFLICT",
+        "successor_requirement_ids": ["M11-R57"],
+        "reason": "Only local checkpoint, commit and reviewed local integration are authorized; push, deploy and production remain denied."
+      },
+      {
+        "concept": "model-specific prompt routing and duplicated micro-review",
+        "source_requirement_ids": ["AM-0007","AM-0008","AM-0011","AM-0013","AM-0020"],
+        "disposition": "SUPERSEDED_CONFLICT",
+        "successor_requirement_ids": ["M11-R52","M11-R58","M11-R62"],
+        "reason": "Provider-neutral runtime routing and risk-tiered stable-cluster review replace only the conflicting prompt/review detail."
+      }
+    ]
+  },
+  "execution_policy": {
+    "strategy": "FRONTSTAGE_FIRST_CONTRACT_SAFE",
+    "main_role": "COORDINATOR_ONLY",
+    "normal_native_children": 8,
+    "burst_native_children": 10,
+    "child_target_scope": "LARGE_ACTIVE_RUN",
+    "normal_role_composition": {"writers":4,"verifiers":2,"reviewers":1,"integration_preparation":1},
+    "burst_role_composition": {"writers":5,"verifiers":2,"reviewers":2,"integration_preparation":1},
+    "adaptive_scale_down": true,
+    "speed_slo": {"small_pair_no_regression":true,"parallel_p50_reduction_min_percent":70,"parallel_p50_reduction_stretch_percent":90,"track_p95":true},
+    "vitest_parent_limit_per_project": 2,
+    "vitest_parent_workers": 1,
+    "vitest_file_parallelism": false,
+    "vitest_full_suite_exclusive": true,
+    "baseline_hardware": {"ram_gib":16,"cpu_class":"intel-core-i7-12700h-class","weaker_hosts_scale_down":true},
+    "local_authority": {"checkpoint":true,"commit":true,"local_merge":true,"named_nonprod_dev_volume_reset":true,"push":false,"deploy":false,"production_mutation":false},
+    "cleanup_policy": "PRESERVATION_FIRST"
+  }
+}

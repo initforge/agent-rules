@@ -6,13 +6,20 @@ description: OpenCode-specific runtime delta for agent-rules harness.
 # OpenCode overlay
 
 - Global runtime: `~/.config/opencode/`.
-- Project-local: `.opencode/` in the project root.
+- Project config: `opencode.json` in the project root.
+- Project-native assets: `.opencode/` for agents, commands, plugins, and skills.
 - Agents live at `{home}/agents/` (`.md` files with YAML frontmatter).
 - Skills live at `{home}/skills/<name>/SKILL.md`.
 - MCP servers are configured in `opencode.json` under the `mcp` key.
 - Model mapping is user-configured in `opencode.json` via the `model` and
   `agent.<name>.model` fields. The adapter maps logical classes
   (economy/standard/expert) to user-chosen provider/model IDs.
+- `opencode.json` is user-owned. Installers never replace provider, credential,
+  model, `enabled_providers`, or `disabled_providers` settings.
+- Provider allowlists require explicit owner intent. The default adapter keeps
+  `/connect` and `/models` open to every provider available to OpenCode.
+- Doctor reports an unapproved provider allowlist as `NOT_LIVE`; intentional
+  restrictions require the explicit doctor override.
 - Missing mappings are visible as `"unset"` placeholders — they never silently
   default to a hardcoded provider.
 - Agent permissions are defined in agent frontmatter (`permission:` key) and

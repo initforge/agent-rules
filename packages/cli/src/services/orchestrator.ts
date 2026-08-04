@@ -1,6 +1,6 @@
 import type { CompiledPlan } from './plan-compiler.js';
 
-export type RunState = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+export type RunState = 'PENDING' | 'READY' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
 export interface OrchestrationRun {
   runId: string;
@@ -13,7 +13,9 @@ export interface OrchestrationRun {
 
 export interface TaskState {
   taskId: string;
-  state: 'PENDING' | 'RUNNING' | 'VERIFYING' | 'COMPLETED' | 'FAILED' | 'BLOCKED' | 'CANCELLED';
+  state: 'PENDING' | 'READY' | 'RUNNING' | 'VERIFYING' | 'COMPLETED' | 'FAILED' | 'BLOCKED' | 'CANCELLED';
+  /** DISC-004: acknowledgment required before starting. */
+  ackStatus: 'pending' | 'acknowledged';
   assignment?: DelegationAssignment;
   receipt?: DelegationReceipt;
   verificationResult?: VerificationResult;
@@ -42,8 +44,10 @@ export interface DelegationReceipt {
   taskId: string;
   filesChanged: string[];
   commandsRun: string[];
+  exitCodes?: number[];
   testsRun: string[];
   evidencePaths: string[];
+  diffHashes?: Record<string, string>;
   status: 'PASS' | 'PARTIAL' | 'FAIL' | 'BLOCKED';
   retries: number;
   assumptions: string[];
@@ -59,6 +63,103 @@ export interface VerificationResult {
   verifier: string;
 }
 
+/** Validation errors for a DelegationReceipt */
+export interface ReceiptValidation {
+  valid: boolean;
+  errors: string[];
+  fakePassDetected: boolean;
+}
+
+/**
+ * Validates a receipt against its assignment and run context.
+ * Rejects fabricated PASS (no evidence/commands/exits/diffs).
+ * Validates owned paths, command integrity, exit codes.
+ */
+export function validateWorkerReceipt(
+  receipt: DelegationReceipt,
+  assignment: DelegationAssignment,
+  expectedSession?: string,
+): ReceiptValidation {
+  const errors: string[] = [];
+  let fakePassDetected = false;
+
+  // 1. Assignment validation
+  if (!receipt.taskId) {
+    errors.push('Receipt missing taskId');
+  } else if (receipt.taskId !== assignment.taskId) {
+    errors.push(`Receipt taskId mismatch: expected ${assignment.taskId}, got ${receipt.taskId}`);
+  }
+
+  // 2. Owned path validation - filesChanged must be subset of ownedPaths
+  for (const changed of receipt.filesChanged) {
+    if (!assignment.ownedPaths.includes(changed)) {
+      errors.push(`File changed outside owned paths: ${changed}`);
+    }
+  }
+
+  // 3. Evidence path validation - evidencePaths must be subset of filesChanged
+  for (const ev of receipt.evidencePaths) {
+    if (!receipt.filesChanged.includes(ev)) {
+      errors.push(`Evidence path not in filesChanged: ${ev}`);
+    }
+  }
+
+  // 4. Diff hash validation - must have hash for each changed file (when diffHashes provided)
+  if (receipt.diffHashes) {
+    for (const changed of receipt.filesChanged) {
+      if (!receipt.diffHashes[changed]) {
+        errors.push(`Missing diff hash for changed file: ${changed}`);
+      }
+    }
+  }
+
+  // 5. Command/exit code integrity - if commands run, must have exit codes (when exitCodes provided)
+  if (receipt.exitCodes !== undefined) {
+    if (receipt.commandsRun.length > 0 && receipt.exitCodes.length === 0) {
+      errors.push('Commands executed but no exit codes recorded');
+    }
+    if (receipt.exitCodes.length !== receipt.commandsRun.length) {
+      errors.push(`Exit code count mismatch: ${receipt.exitCodes.length} codes for ${receipt.commandsRun.length} commands`);
+    }
+    // 6. Exit code validation - all must be 0
+    const nonZeroExits = receipt.exitCodes.filter(c => c !== 0);
+    if (nonZeroExits.length > 0) {
+      errors.push(`Non-zero exit codes: ${nonZeroExits.join(', ')}`);
+    }
+  }
+
+  // 7. Fake PASS rejection (backward compatible - works with or without exitCodes/diffHashes)
+  const hasEvidence = receipt.evidencePaths.length > 0;
+  const hasCommand = receipt.commandsRun.length > 0;
+  const hasExit = receipt.exitCodes !== undefined && receipt.exitCodes.length > 0 && receipt.exitCodes.every(c => c === 0);
+  const hasDiffs = receipt.diffHashes !== undefined && Object.keys(receipt.diffHashes).length > 0;
+
+  if (receipt.status === 'PASS' && !hasEvidence && !hasCommand && !hasExit && !hasDiffs) {
+    fakePassDetected = true;
+    errors.push('FABRICATED PASS: no evidence/commands/exits/diffs');
+  }
+
+  return {
+    valid: errors.length === 0 && !fakePassDetected,
+    errors,
+    fakePassDetected,
+  };
+}
+
+/**
+ * Asserts receipt validity; throws on invalid or fake PASS.
+ */
+export function assertWorkerReceipt(
+  receipt: DelegationReceipt,
+  assignment: DelegationAssignment,
+  expectedSession?: string,
+): void {
+  const validation = validateWorkerReceipt(receipt, assignment, expectedSession);
+  if (!validation.valid) {
+    throw new Error(`Receipt validation failed: ${validation.errors.join('; ')}`);
+  }
+}
+
 export function createRun(plan: CompiledPlan): OrchestrationRun {
   const now = new Date().toISOString();
   return {
@@ -68,6 +169,7 @@ export function createRun(plan: CompiledPlan): OrchestrationRun {
     tasks: plan.tasks.map(t => ({
       taskId: t.id,
       state: 'PENDING',
+      ackStatus: 'pending',
       retryCount: 0,
       worker: '',
       model: '',
@@ -175,6 +277,10 @@ export function completeTask(run: OrchestrationRun, taskId: string, receipt: Del
         task.error = receipt.unresolvedFindings.join('; ');
       }
       break;
+    default:
+      // BUG-3: reject unknown receipt statuses — prevents silent state corruption
+      // on tampered receipts or future protocol extensions.
+      throw new Error(`Unknown receipt status: ${(receipt as { status: string }).status}`);
   }
 
   run.updatedAt = new Date().toISOString();

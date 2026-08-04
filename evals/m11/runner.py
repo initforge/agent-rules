@@ -11,8 +11,16 @@ NODE = shutil.which("node")
 
 
 def run_vitest(*paths: str, test_filter: str | None = None, timeout_s: int = 300) -> subprocess.CompletedProcess:
-    """Run vitest on the given test file paths from the repo root."""
-    cmd = [NODE, str(ROOT / "node_modules" / "vitest" / "vitest.mjs"), "run", *paths]
+    """Run vitest on the given test file paths through the governed launcher."""
+    cmd = [
+        NODE,
+        str(ROOT / "automation" / "run-governed-vitest.mjs"),
+        "--project-root", str(ROOT),
+        "--cwd", str(ROOT),
+        "--mode", "focused",
+        "--",
+        "run", *paths,
+    ]
     if test_filter:
         cmd += ["-t", test_filter]
     return subprocess.run(

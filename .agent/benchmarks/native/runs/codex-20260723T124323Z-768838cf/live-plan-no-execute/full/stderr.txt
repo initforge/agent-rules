@@ -1,0 +1,8 @@
+Reading additional input from stdin...
+2026-07-23T12:43:24.089841Z  WARN codex_core_skills::loader: ignoring interface.icon_small: icon path with '..' must resolve under plugin assets/
+2026-07-23T12:43:24.089876Z  WARN codex_core_skills::loader: ignoring interface.icon_large: icon path with '..' must resolve under plugin assets/
+2026-07-23T12:43:24.103782Z  WARN codex_core_plugins::loader: failed to load plugin: missing or invalid plugin.json plugin="sites@openai-bundled" path=C:\Users\ADMIN\.codex\plugins\cache\openai-bundled\sites\0.1.30
+2026-07-23T12:43:24.115860Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell
+2026-07-23T12:43:25.142642Z  WARN codex_core_skills::loader: ignoring interface.icon_small: icon path with '..' must resolve under plugin assets/
+2026-07-23T12:43:25.142677Z  WARN codex_core_skills::loader: ignoring interface.icon_large: icon path with '..' must resolve under plugin assets/
+2026-07-23T12:43:25.163594Z  WARN codex_core_plugins::loader: failed to load plugin: missing or invalid plugin.json plugin="sites@openai-bundled" path=C:\Users\ADMIN\.codex\plugins\cache\openai-bundled\sites\0.1.30

@@ -1,0 +1,5 @@
+PARTIAL — Đã sửa typo trong [message.txt](P:\agent-rules\.agent\benchmarks\native\runs\codex-20260723T130941Z-eda8e67c\live-tiny-one-file\full\workspace\message.txt).
+
+- Static content check: passed.
+- `git diff --check`: passed.
+- `.benchmark-verify.cmd`: không chạy được do `Access is denied.` trong môi trường này.

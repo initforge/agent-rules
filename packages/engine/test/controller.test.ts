@@ -6,6 +6,8 @@ import { createHash } from 'node:crypto';
 import { Controller } from '../src/controller.js';
 import type { BrokerDecision } from '../src/resource-broker.js';
 import type { WorkLedger, TaskAssignment, WorkerReceipt } from '../src/contracts.js';
+import type { WorkerAdapter } from '../src/worker-adapter.js';
+import type { VerifierAdapter, VerificationEvidence, VerificationResult } from '../src/verifier.js';
 
 const hash = 'a'.repeat(64);
 const tmpDirs: string[] = [];
@@ -258,6 +260,23 @@ describe('Controller', () => {
     expect(controller.getTaskState(assignmentId!)).toBe('IN_PROGRESS');
   });
 
+  describe('startWork', () => {
+    it('rejects null assignmentId with clear message', async () => {
+      const dir = tmpDir();
+      const controller = new Controller(writeLedger(dir, stubLedger()));
+      // Regression: dispatchNext returns null when no tasks ready, startWork must not crash
+      await controller.dispatchNext(); // dispatch A-TASK-A
+      await controller.dispatchNext(); // dispatch A-TASK-B (both done or pending blocked)
+      expect(() => controller.startWork(null as unknown as string)).toThrow(/assignmentId is null or empty/);
+    });
+
+    it('rejects empty string assignmentId', async () => {
+      const dir = tmpDir();
+      const controller = new Controller(writeLedger(dir, stubLedger()));
+      expect(() => controller.startWork('')).toThrow(/assignmentId is null or empty/);
+    });
+  });
+
   describe('checkpoint/resume', () => {
     it('checkpoint/resume roundtrip preserves state', async () => {
       const dir = tmpDir();
@@ -430,6 +449,190 @@ describe('Controller', () => {
       await controller.retry(assignmentId!);
       expect(controller.getTaskState(assignmentId!)).toBe('PENDING');
     });
+
+    it('retry persists explicit bounded reason and state', async () => {
+      const dir = tmpDir();
+      const ledgerPath = writeLedger(dir, stubLedger());
+      const controller = new Controller(ledgerPath);
+
+      const assignmentId = await controller.dispatchNext();
+      controller.startWork(assignmentId!);
+      await controller.cancel(assignmentId!);
+
+      await controller.retry(assignmentId!, 'verification-failed:probeExitCode=1');
+      const state = controller.getRetryState(assignmentId!);
+      expect(state).toBeDefined();
+      expect(state!.attempt).toBe(1);
+      expect(state!.maxAttempts).toBe(3);
+      expect(state!.reason).toBe('verification-failed:probeExitCode=1');
+      expect(state!.nextRetryAt).toBeGreaterThan(0);
+    });
+
+    it('retry increments attempt count on subsequent retries', async () => {
+      const dir = tmpDir();
+      const ledgerPath = writeLedger(dir, stubLedger());
+      const controller = new Controller(ledgerPath);
+
+      const assignmentId = await controller.dispatchNext();
+      controller.startWork(assignmentId!);
+      await controller.cancel(assignmentId!);
+
+      await controller.retry(assignmentId!, 'first-failure');
+      expect(controller.getRetryState(assignmentId!)!.attempt).toBe(1);
+
+      await controller.cancel(assignmentId!);
+      await controller.retry(assignmentId!, 'second-failure');
+      expect(controller.getRetryState(assignmentId!)!.attempt).toBe(2);
+    });
+
+    it('retry rejects when max attempts exceeded', async () => {
+      const dir = tmpDir();
+      const ledgerPath = writeLedger(dir, stubLedger());
+      const controller = new Controller(ledgerPath);
+
+      const assignmentId = await controller.dispatchNext();
+      controller.startWork(assignmentId!);
+
+      for (let i = 1; i <= 3; i++) {
+        await controller.cancel(assignmentId!);
+        await controller.retry(assignmentId!, `attempt-${i}`);
+        if (i < 3) controller.startWork(assignmentId!);
+      }
+
+      await controller.cancel(assignmentId!);
+      await expect(controller.retry(assignmentId!, 'attempt-4')).rejects.toThrow(/max attempts/);
+    });
+
+    it('retry truncates long reasons to bounded length', async () => {
+      const dir = tmpDir();
+      const ledgerPath = writeLedger(dir, stubLedger());
+      const controller = new Controller(ledgerPath);
+
+      const assignmentId = await controller.dispatchNext();
+      controller.startWork(assignmentId!);
+      await controller.cancel(assignmentId!);
+
+      const longReason = 'x'.repeat(500);
+      await controller.retry(assignmentId!, longReason);
+      const state = controller.getRetryState(assignmentId!);
+      expect(state!.reason.length).toBe(256);
+    });
+  });
+
+  describe('lease ownership enforcement', () => {
+    it('startWork blocks when active lease exists for different owner', async () => {
+      const dir = tmpDir();
+      const ledgerPath = writeLedger(dir, stubLedger());
+      const controller = new Controller(ledgerPath);
+
+      const assignmentId = await controller.dispatchNext();
+      // Acquire lease by different owner
+      controller.acquireLease('lease-1', 'other-worker', assignmentId!, 60000);
+
+      expect(() => controller.startWork(assignmentId!)).toThrow(/active lease held by other-worker/);
+    });
+
+    it('startWork allows when no conflicting lease', async () => {
+      const dir = tmpDir();
+      const ledgerPath = writeLedger(dir, stubLedger());
+      const controller = new Controller(ledgerPath);
+
+      const assignmentId = await controller.dispatchNext();
+      expect(() => controller.startWork(assignmentId!)).not.toThrow();
+    });
+
+    it('submitReceipt blocks when active lease held by different owner', async () => {
+      const dir = tmpDir();
+      const ledgerPath = writeLedger(dir, stubLedger());
+      const controller = new Controller(ledgerPath);
+
+      const assignmentId = await controller.dispatchNext();
+      controller.startWork(assignmentId!);
+
+      // Acquire lease by different owner
+      controller.acquireLease('lease-1', 'other-worker', assignmentId!, 60000);
+
+      const validHash = 'abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+      const receipt: WorkerReceipt = {
+        receiptId: 'R-LEASE', assignmentId: assignmentId!, workerIdentity: 'my-worker', host: 'localhost', model: 'test',
+        diffSha256: validHash, artifactUris: [], artifactHashes: [], filesChanged: [], commands: [], exitCodes: [0],
+        logUris: [], logHashes: [], testEvidenceUris: [], testEvidenceHashes: [],
+        startedAt: '2026-07-27T00:00:00.000Z', completedAt: '2026-07-27T00:01:00.000Z',
+      };
+
+      await expect(controller.submitReceipt(assignmentId!, receipt)).rejects.toThrow(/active lease held by other-worker/);
+    });
+
+    it('submitReceipt allows when lease matches worker identity', async () => {
+      const dir = tmpDir();
+      const ledgerPath = writeLedger(dir, stubLedger());
+      const controller = new Controller(ledgerPath);
+
+      const assignmentId = await controller.dispatchNext();
+      controller.startWork(assignmentId!);
+      controller.acquireLease('lease-1', 'my-worker', assignmentId!, 60000);
+
+      const validHash = 'abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+      const receipt: WorkerReceipt = {
+        receiptId: 'R-LEASE', assignmentId: assignmentId!, workerIdentity: 'my-worker', host: 'localhost', model: 'test',
+        diffSha256: validHash, artifactUris: [], artifactHashes: [], filesChanged: [], commands: [], exitCodes: [0],
+        logUris: [], logHashes: [], testEvidenceUris: [], testEvidenceHashes: [],
+        startedAt: '2026-07-27T00:00:00.000Z', completedAt: '2026-07-27T00:01:00.000Z',
+      };
+
+      await expect(controller.submitReceipt(assignmentId!, receipt)).resolves.not.toThrow();
+    });
+
+    it('heartbeatLease extends valid lease', async () => {
+      const dir = tmpDir();
+      const ledgerPath = writeLedger(dir, stubLedger());
+      const controller = new Controller(ledgerPath);
+
+      const assignmentId = 'A-TASK-A';
+      const original = controller.acquireLease('lease-1', 'worker-1', assignmentId, 100);
+      await new Promise(r => setTimeout(r, 10));
+      const renewed = controller.heartbeatLease(assignmentId, 'worker-1', 100);
+
+      expect(renewed).toBeDefined();
+      expect(renewed!.expiresAt).toBeGreaterThan(original.expiresAt);
+    });
+
+    it('heartbeatLease returns undefined for mismatched owner', async () => {
+      const dir = tmpDir();
+      const ledgerPath = writeLedger(dir, stubLedger());
+      const controller = new Controller(ledgerPath);
+
+      const assignmentId = 'A-TASK-A';
+      controller.acquireLease('lease-1', 'worker-1', assignmentId, 60000);
+      const renewed = controller.heartbeatLease(assignmentId, 'different-worker', 60000);
+
+      expect(renewed).toBeUndefined();
+    });
+
+    it('revokeLease removes active lease', async () => {
+      const dir = tmpDir();
+      const ledgerPath = writeLedger(dir, stubLedger());
+      const controller = new Controller(ledgerPath);
+
+      const assignmentId = 'A-TASK-A';
+      controller.acquireLease('lease-1', 'worker-1', assignmentId, 60000);
+      expect(controller.getLease(assignmentId)).toBeDefined();
+
+      controller.revokeLease(assignmentId, 'worker-1');
+      expect(controller.getLease(assignmentId)).toBeUndefined();
+    });
+
+    it('getLease returns undefined for expired lease', async () => {
+      const dir = tmpDir();
+      const ledgerPath = writeLedger(dir, stubLedger());
+      const controller = new Controller(ledgerPath);
+
+      const assignmentId = 'A-TASK-A';
+      controller.acquireLease('lease-1', 'worker-1', assignmentId, 1); // 1ms TTL
+      await new Promise(r => setTimeout(r, 10));
+
+      expect(controller.getLease(assignmentId)).toBeUndefined();
+    });
   });
 
   describe('dispatchReadySet with the C4 resource broker (AM-0019 §6)', () => {
@@ -500,6 +703,690 @@ describe('Controller', () => {
       });
       await controller.dispatchReadySet();
       expect(consulted).toBe(true);
+    });
+  });
+
+  describe('idempotent receipt submission (resume support)', () => {
+    it('skip duplicate receipt on resume instead of throwing', async () => {
+      const dir = tmpDir();
+      const ledgerPath = writeLedger(dir, stubLedger());
+      const controller = new Controller(ledgerPath);
+
+      const assignmentId = await controller.dispatchNext();
+      expect(assignmentId).toBe('A-TASK-A');
+      controller.startWork(assignmentId!);
+
+      const validHash = 'abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+      const receipt: WorkerReceipt = {
+        receiptId: 'R-IDEM-1',
+        assignmentId: assignmentId!,
+        workerIdentity: 'worker-1',
+        host: 'localhost',
+        model: 'test-model',
+        diffSha256: validHash,
+        artifactUris: [],
+        artifactHashes: [],
+        filesChanged: ['packages/engine/src/foo.ts'],
+        commands: [{ executable: 'npm', args: ['test'], cwd: 'packages/engine' }],
+        exitCodes: [0],
+        logUris: [],
+        logHashes: [],
+        testEvidenceUris: [],
+        testEvidenceHashes: [],
+        startedAt: '2026-07-27T00:00:00.000Z',
+        completedAt: '2026-07-27T01:00:00.000Z',
+      };
+
+      // First submission succeeds
+      await controller.submitReceipt(assignmentId!, receipt);
+      expect(controller.getTaskState(assignmentId!)).toBe('UNDER_REVIEW');
+
+      // Reset to IN_PROGRESS to simulate resume scenario
+      controller.taskStates.set(assignmentId!, 'IN_PROGRESS');
+      controller.runningAssignments.add(assignmentId!);
+      // Remove the receipt to simulate a fresh state
+      controller.receipts = controller.receipts.filter(r => r.receiptId !== receipt.receiptId);
+
+      // Second submission with same receiptId should be idempotent (skip, not throw)
+      await expect(controller.submitReceipt(assignmentId!, receipt)).resolves.not.toThrow();
+      // Receipt should be present once
+      const receipts = controller.receipts.filter(r => r.receiptId === receipt.receiptId);
+      expect(receipts).toHaveLength(1);
+    });
+
+    it('concurrent execution of independent tasks honors per-task errors', async () => {
+      const dir = tmpDir();
+      // Create independent tasks by using dispatchReadySet
+      const ledger = stubLedger({
+        assignments: [
+          {
+            ...stubLedger().assignments[0]!,
+            assignmentId: 'A-1',
+            taskId: 'TASK-1',
+            ownedPaths: ['packages/engine/area-1'],
+            dependencies: [],
+            verificationCommands: [],
+          },
+          {
+            ...stubLedger().assignments[0]!,
+            assignmentId: 'A-2',
+            taskId: 'TASK-2',
+            ownedPaths: ['packages/engine/area-2'],
+            dependencies: [],
+            verificationCommands: [],
+          },
+        ],
+        batches: [{ batchId: 'B1', status: 'PASSED', taskIds: ['TASK-1', 'TASK-2'] }],
+      });
+      const controller = new Controller(writeLedger(dir, ledger));
+
+      // Use dispatchReadySet to dispatch both independent tasks
+      const result = await controller.dispatchReadySet();
+      expect(result.ready).toContain('A-1');
+      expect(result.ready).toContain('A-2');
+      expect(controller.getTaskState('A-1')).toBe('READY');
+      expect(controller.getTaskState('A-2')).toBe('READY');
+
+      // Simulate concurrent start
+      controller.startWork('A-1');
+      controller.startWork('A-2');
+      expect(controller.getTaskState('A-1')).toBe('IN_PROGRESS');
+      expect(controller.getTaskState('A-2')).toBe('IN_PROGRESS');
+
+      const validHash = 'abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+
+      // Simulate concurrent submission
+      const results = await Promise.all([
+        controller.submitReceipt('A-1', {
+          receiptId: 'R-1', assignmentId: 'A-1', workerIdentity: 'w1', host: 'localhost', model: 'test',
+          diffSha256: validHash, artifactUris: [], artifactHashes: [], filesChanged: [],
+          commands: [], exitCodes: [0], logUris: [], logHashes: [],
+          testEvidenceUris: [], testEvidenceHashes: [],
+          startedAt: '2026-07-27T00:00:00.000Z', completedAt: '2026-07-27T01:00:00.000Z',
+        }),
+        controller.submitReceipt('A-2', {
+          receiptId: 'R-2', assignmentId: 'A-2', workerIdentity: 'w2', host: 'localhost', model: 'test',
+          diffSha256: validHash, artifactUris: [], artifactHashes: [], filesChanged: [],
+          commands: [], exitCodes: [0], logUris: [], logHashes: [],
+          testEvidenceUris: [], testEvidenceHashes: [],
+          startedAt: '2026-07-27T00:00:00.000Z', completedAt: '2026-07-27T01:00:00.000Z',
+        }),
+      ]);
+
+      // Both should succeed
+      expect(results).toHaveLength(2);
+      expect(controller.getTaskState('A-1')).toBe('UNDER_REVIEW');
+      expect(controller.getTaskState('A-2')).toBe('UNDER_REVIEW');
+    });
+  });
+
+  describe('runFullPlan sibling failure policy (cancel-others)', () => {
+    function makeFailingWorker(failOnAssignmentId: string): WorkerAdapter {
+      return {
+        async detect() { return { available: true }; },
+        async health() { return { ok: true }; },
+        async submit(assignment: TaskAssignment) {
+          return { jobId: `job-${assignment.assignmentId}` };
+        },
+        async collectReceipt(jobId: string) {
+          const assignmentId = jobId.slice('job-'.length);
+          const receipt: WorkerReceipt = {
+            receiptId: `receipt-${assignmentId}`,
+            assignmentId,
+            workerIdentity: 'test-worker',
+            host: 'localhost',
+            model: 'test',
+            diffSha256: 'a'.repeat(64),
+            artifactUris: ['file:///test'],
+            artifactHashes: ['a'.repeat(64) as any],
+            filesChanged: [],
+            commands: [],
+            exitCodes: [0],
+            logUris: [],
+            logHashes: [],
+            testEvidenceUris: [],
+            testEvidenceHashes: [],
+            startedAt: '2026-07-27T00:00:00.000Z',
+            completedAt: '2026-07-27T00:01:00.000Z',
+          };
+          // Inject failure for the targeted assignment by modifying exit code
+          if (assignmentId === failOnAssignmentId) {
+            (receipt as any).exitCodes = [1];
+          }
+          return receipt;
+        },
+      };
+    }
+
+    function passVerifier(): VerifierAdapter {
+      return {
+        async detect() { return { available: true }; },
+        async verify(_receipt: WorkerReceipt, _evidence: VerificationEvidence): Promise<VerificationResult> {
+          return {
+            passed: true,
+            scope: 'focused',
+            evidence: {},
+            fingerprint: 'test-fingerprint',
+            independent: true,
+          };
+        },
+      };
+    }
+
+    function conditionalVerifier(failOnAssignmentId: string): VerifierAdapter {
+      return {
+        async detect() { return { available: true }; },
+        async verify(receipt: WorkerReceipt, evidence: VerificationEvidence): Promise<VerificationResult> {
+          // Return failure for the targeted assignment
+          if (receipt.assignmentId === failOnAssignmentId) {
+            return {
+              passed: false,
+              scope: 'focused',
+              evidence: {},
+              fingerprint: 'test-fingerprint',
+              independent: true,
+            };
+          }
+          return {
+            passed: evidence.probeExitCode === 0,
+            scope: 'focused',
+            evidence: {},
+            fingerprint: 'test-fingerprint',
+            independent: true,
+          };
+        },
+      };
+    }
+
+    it('cancel-others cancels sibling tasks when one fails', async () => {
+      const dir = tmpDir();
+      const ledger = stubLedger({
+        assignments: [
+          {
+            ...stubLedger().assignments[0]!,
+            assignmentId: 'A-FAIL',
+            taskId: 'TASK-FAIL',
+            ownedPaths: ['packages/engine/area-fail'],
+            dependencies: [],
+            verificationCommands: [],
+          },
+          {
+            ...stubLedger().assignments[0]!,
+            assignmentId: 'A-KEEP',
+            taskId: 'TASK-KEEP',
+            ownedPaths: ['packages/engine/area-keep'],
+            dependencies: [],
+            verificationCommands: [],
+          },
+          {
+            ...stubLedger().assignments[0]!,
+            assignmentId: 'A-KEEP2',
+            taskId: 'TASK-KEEP2',
+            ownedPaths: ['packages/engine/area-keep2'],
+            dependencies: [],
+            verificationCommands: [],
+          },
+        ],
+        batches: [{ batchId: 'B1', status: 'PASSED', taskIds: ['TASK-FAIL', 'TASK-KEEP', 'TASK-KEEP2'] }],
+      });
+      const controller = new Controller(writeLedger(dir, ledger));
+      controller.setFailureSiblingPolicy('cancel-others');
+
+      await controller.runFullPlan(makeFailingWorker('A-FAIL'), conditionalVerifier('A-FAIL'));
+
+      // The failing task should be CLOSED_FAILED
+      expect(controller.getTaskState('A-FAIL')).toBe('CLOSED_FAILED');
+      // Sibling tasks should not remain in executable states
+      const keepState = controller.getTaskState('A-KEEP');
+      const keep2State = controller.getTaskState('A-KEEP2');
+      // They should not be left in READY or IN_PROGRESS (should be CLOSED_* or UNDER_REVIEW)
+      expect(keepState).not.toBe('READY');
+      expect(keepState).not.toBe('IN_PROGRESS');
+      expect(keep2State).not.toBe('READY');
+      expect(keep2State).not.toBe('IN_PROGRESS');
+    });
+
+    it('runFullPlan does not throw "Cannot start work on null" with cancel-others', async () => {
+      const dir = tmpDir();
+      const ledger = stubLedger({
+        assignments: [
+          {
+            ...stubLedger().assignments[0]!,
+            assignmentId: 'A-1',
+            taskId: 'TASK-1',
+            ownedPaths: ['packages/engine/area-1'],
+            verificationCommands: [],
+          },
+          {
+            ...stubLedger().assignments[0]!,
+            assignmentId: 'A-2',
+            taskId: 'TASK-2',
+            ownedPaths: ['packages/engine/area-2'],
+            dependencies: [],
+            verificationCommands: [],
+          },
+        ],
+        batches: [{ batchId: 'B1', status: 'PASSED', taskIds: ['TASK-1', 'TASK-2'] }],
+      });
+      const controller = new Controller(writeLedger(dir, ledger));
+      controller.setFailureSiblingPolicy('cancel-others');
+
+      // Should not throw "Cannot start work on null"
+      await expect(
+        controller.runFullPlan(makeFailingWorker('A-1'), conditionalVerifier('A-1')),
+      ).resolves.not.toThrow();
+    });
+
+    it('cancel-others preserves resource ceiling and overlap metrics', async () => {
+      const dir = tmpDir();
+      const ledger = stubLedger({
+        assignments: [
+          {
+            ...stubLedger().assignments[0]!,
+            assignmentId: 'A-1',
+            taskId: 'TASK-1',
+            ownedPaths: ['packages/engine/area-1'],
+            verificationCommands: [],
+          },
+          {
+            ...stubLedger().assignments[0]!,
+            assignmentId: 'A-2',
+            taskId: 'TASK-2',
+            ownedPaths: ['packages/engine/area-2'],
+            dependencies: [],
+            verificationCommands: [],
+          },
+        ],
+        batches: [{ batchId: 'B1', status: 'PASSED', taskIds: ['TASK-1', 'TASK-2'] }],
+      });
+      const controller = new Controller(writeLedger(dir, ledger));
+      controller.setFailureSiblingPolicy('cancel-others');
+      controller.resetConcurrencyMetrics();
+
+      await controller.runFullPlan(makeFailingWorker('A-1'), conditionalVerifier('A-1'));
+
+      const metrics = controller.getConcurrencyMetrics();
+      // Verify metrics structure is intact
+      expect(metrics).toHaveProperty('peakOverlap');
+      expect(metrics).toHaveProperty('windows');
+      expect(metrics).toHaveProperty('poolSnapshots');
+      expect(metrics).toHaveProperty('deferredByCeiling');
+      expect(metrics).toHaveProperty('siblingGroups');
+      // Windows should be recorded for both tasks
+      expect(metrics.windows.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('continue-others does not cancel siblings on failure', async () => {
+      const dir = tmpDir();
+      const ledger = stubLedger({
+        assignments: [
+          {
+            ...stubLedger().assignments[0]!,
+            assignmentId: 'A-FAIL',
+            taskId: 'TASK-FAIL',
+            ownedPaths: ['packages/engine/area-fail'],
+            dependencies: [],
+            verificationCommands: [],
+          },
+          {
+            ...stubLedger().assignments[0]!,
+            assignmentId: 'A-KEEP',
+            taskId: 'TASK-KEEP',
+            ownedPaths: ['packages/engine/area-keep'],
+            dependencies: [],
+            verificationCommands: [],
+          },
+        ],
+        batches: [{ batchId: 'B1', status: 'PASSED', taskIds: ['TASK-FAIL', 'TASK-KEEP'] }],
+      });
+      const controller = new Controller(writeLedger(dir, ledger));
+      controller.setFailureSiblingPolicy('continue-others');
+
+      await controller.runFullPlan(makeFailingWorker('A-FAIL'), conditionalVerifier('A-FAIL'));
+
+      // Failing task should be CLOSED_FAILED
+      expect(controller.getTaskState('A-FAIL')).toBe('CLOSED_FAILED');
+      // The other task should complete successfully (or be left in whatever state it reached)
+      const keepState = controller.getTaskState('A-KEEP');
+      // It should NOT be cancelled - it should complete or be retried
+      expect(keepState).not.toBe('CLOSED_FAILED');
+    });
+  });
+
+  describe('runFullPlan null state handling', () => {
+    it('handles orphaned assignment without crashing', async () => {
+      const dir = tmpDir();
+      const ledger = stubLedger({
+        assignments: [
+          {
+            ...stubLedger().assignments[0]!,
+            assignmentId: 'A-ORPHAN',
+            taskId: 'TASK-ORPHAN',
+            ownedPaths: ['packages/engine/orphan'],
+            dependencies: [],
+            verificationCommands: [],
+          },
+        ],
+        batches: [{ batchId: 'B1', status: 'PASSED', taskIds: ['TASK-ORPHAN'] }],
+      });
+      const controller = new Controller(writeLedger(dir, ledger));
+
+      // Simulate orphaned state by manually removing from taskStates
+      controller.taskStates.delete('A-ORPHAN');
+
+      // Should not throw "Cannot start work on null" or similar
+      await expect(
+        controller.runFullPlan(
+          {
+            async detect() { return { available: true }; },
+            async health() { return { ok: true }; },
+            async submit() { return { jobId: 'job-orphan' }; },
+            async collectReceipt() {
+              return {
+                receiptId: 'receipt-orphan',
+                assignmentId: 'A-ORPHAN',
+                workerIdentity: 'test',
+                host: 'localhost',
+                model: 'test',
+                diffSha256: 'a'.repeat(64),
+                artifactUris: [],
+                artifactHashes: [],
+                filesChanged: [],
+                commands: [],
+                exitCodes: [0],
+                logUris: [],
+                logHashes: [],
+                testEvidenceUris: [],
+                testEvidenceHashes: [],
+                startedAt: '2026-07-27T00:00:00.000Z',
+                completedAt: '2026-07-27T00:01:00.000Z',
+              };
+            },
+          },
+          {
+            async detect() { return { available: true }; },
+            async verify() { return { passed: true, scope: 'focused', evidence: {}, fingerprint: 'test', independent: true }; },
+          },
+        ),
+      ).resolves.not.toThrow();
+    });
+
+    it('handles UNDER_REVIEW state gracefully', async () => {
+      const dir = tmpDir();
+      const ledgerPath = writeLedger(dir, stubLedger());
+      const controller = new Controller(ledgerPath);
+
+      // Manually set task to UNDER_REVIEW (simulating mid-execution state)
+      controller.taskStates.set('A-TASK-A', 'UNDER_REVIEW');
+
+      // runTask should handle UNDER_REVIEW without throwing
+      await expect(
+        controller.runTask(
+          'A-TASK-A',
+          {
+            async detect() { return { available: true }; },
+            async health() { return { ok: true }; },
+            async submit() { return { jobId: 'job' }; },
+            async collectReceipt() {
+              return {
+                receiptId: 'r',
+                assignmentId: 'A-TASK-A',
+                workerIdentity: 'test',
+                host: 'localhost',
+                model: 'test',
+                diffSha256: 'a'.repeat(64),
+                artifactUris: [],
+                artifactHashes: [],
+                filesChanged: [],
+                commands: [],
+                exitCodes: [0],
+                logUris: [],
+                logHashes: [],
+                testEvidenceUris: [],
+                testEvidenceHashes: [],
+                startedAt: '2026-07-27T00:00:00.000Z',
+                completedAt: '2026-07-27T00:01:00.000Z',
+              };
+            },
+          },
+          {
+            async detect() { return { available: true }; },
+            async verify() { return { passed: true, scope: 'focused', evidence: {}, fingerprint: 'test', independent: true }; },
+          },
+        ),
+      ).resolves.toMatchObject({ success: false, state: 'UNDER_REVIEW' });
+    });
+
+    it('handles CLOSED_FAILED state without throwing', async () => {
+      const dir = tmpDir();
+      const ledgerPath = writeLedger(dir, stubLedger());
+      const controller = new Controller(ledgerPath);
+
+      // Manually set task to CLOSED_FAILED
+      controller.taskStates.set('A-TASK-A', 'CLOSED_FAILED');
+
+      // runTask should return failure without throwing
+      await expect(
+        controller.runTask(
+          'A-TASK-A',
+          {
+            async detect() { return { available: true }; },
+            async health() { return { ok: true }; },
+            async submit() { return { jobId: 'job' }; },
+            async collectReceipt() {
+              return {
+                receiptId: 'r',
+                assignmentId: 'A-TASK-A',
+                workerIdentity: 'test',
+                host: 'localhost',
+                model: 'test',
+                diffSha256: 'a'.repeat(64),
+                artifactUris: [],
+                artifactHashes: [],
+                filesChanged: [],
+                commands: [],
+                exitCodes: [0],
+                logUris: [],
+                logHashes: [],
+                testEvidenceUris: [],
+                testEvidenceHashes: [],
+                startedAt: '2026-07-27T00:00:00.000Z',
+                completedAt: '2026-07-27T00:01:00.000Z',
+              };
+            },
+          },
+          {
+            async detect() { return { available: true }; },
+            async verify() { return { passed: true, scope: 'focused', evidence: {}, fingerprint: 'test', independent: true }; },
+          },
+        ),
+      ).resolves.toMatchObject({ success: false, state: 'CLOSED_FAILED' });
+    });
+  });
+
+  describe('runFullPlan concurrency overlap', () => {
+    it('records overlapping execution windows', async () => {
+      const dir = tmpDir();
+      const ledger = stubLedger({
+        assignments: [
+          {
+            ...stubLedger().assignments[0]!,
+            assignmentId: 'A-1',
+            taskId: 'TASK-1',
+            ownedPaths: ['packages/engine/area-1'],
+            verificationCommands: [],
+          },
+          {
+            ...stubLedger().assignments[0]!,
+            assignmentId: 'A-2',
+            taskId: 'TASK-2',
+            ownedPaths: ['packages/engine/area-2'],
+            dependencies: [],
+            verificationCommands: [],
+          },
+          {
+            ...stubLedger().assignments[0]!,
+            assignmentId: 'A-3',
+            taskId: 'TASK-3',
+            ownedPaths: ['packages/engine/area-3'],
+            dependencies: [],
+            verificationCommands: [],
+          },
+        ],
+        batches: [{ batchId: 'B1', status: 'PASSED', taskIds: ['TASK-1', 'TASK-2', 'TASK-3'] }],
+      });
+      const controller = new Controller(writeLedger(dir, ledger));
+      controller.resetConcurrencyMetrics();
+
+      await controller.runFullPlan(
+        {
+          async detect() { return { available: true }; },
+          async health() { return { ok: true }; },
+          async submit(assignment: TaskAssignment) { return { jobId: `job-${assignment.assignmentId}` }; },
+          async collectReceipt(jobId: string) {
+            // Simulate some execution time
+            await new Promise(r => setTimeout(r, 50));
+            const assignmentId = jobId.slice('job-'.length);
+            return {
+              receiptId: `receipt-${assignmentId}`,
+              assignmentId,
+              workerIdentity: 'test',
+              host: 'localhost',
+              model: 'test',
+              diffSha256: 'a'.repeat(64),
+              artifactUris: [],
+              artifactHashes: [],
+              filesChanged: [],
+              commands: [],
+              exitCodes: [0],
+              logUris: [],
+              logHashes: [],
+              testEvidenceUris: [],
+              testEvidenceHashes: [],
+              startedAt: '2026-07-27T00:00:00.000Z',
+              completedAt: '2026-07-27T00:01:00.000Z',
+            };
+          },
+        },
+        {
+          async detect() { return { available: true }; },
+          async verify() { return { passed: true, scope: 'focused', evidence: {}, fingerprint: 'test', independent: true }; },
+        },
+      );
+
+      const metrics = controller.getConcurrencyMetrics();
+      // Should have recorded windows for all 3 tasks
+      expect(metrics.windows.length).toBe(3);
+
+      // Verify peak overlap is at least 2 (at least 2 tasks ran concurrently)
+      expect(metrics.peakOverlap).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  describe('runFullPlan per-task error isolation', () => {
+    it('isolates per-task errors and continues sibling execution', async () => {
+      const dir = tmpDir();
+      const ledger = stubLedger({
+        assignments: [
+          {
+            ...stubLedger().assignments[0]!,
+            assignmentId: 'A-OK-1',
+            taskId: 'TASK-OK-1',
+            ownedPaths: ['packages/engine/ok1'],
+            verificationCommands: [],
+          },
+          {
+            ...stubLedger().assignments[0]!,
+            assignmentId: 'A-FAIL',
+            taskId: 'TASK-FAIL',
+            ownedPaths: ['packages/engine/fail'],
+            verificationCommands: [],
+          },
+          {
+            ...stubLedger().assignments[0]!,
+            assignmentId: 'A-OK-2',
+            taskId: 'TASK-OK-2',
+            ownedPaths: ['packages/engine/ok2'],
+            dependencies: [],
+            verificationCommands: [],
+          },
+        ],
+        batches: [{ batchId: 'B1', status: 'PASSED', taskIds: ['TASK-OK-1', 'TASK-FAIL', 'TASK-OK-2'] }],
+      });
+      const controller = new Controller(writeLedger(dir, ledger));
+
+      // Worker that fails on specific task
+      const failingWorker: WorkerAdapter = {
+        async detect() { return { available: true }; },
+        async health() { return { ok: true }; },
+        async submit(assignment: TaskAssignment) { return { jobId: `job-${assignment.assignmentId}` }; },
+        async collectReceipt(jobId: string) {
+          const assignmentId = jobId.slice('job-'.length);
+          if (assignmentId === 'A-FAIL') {
+            throw new Error('Simulated worker failure');
+          }
+          return {
+            receiptId: `receipt-${assignmentId}`,
+            assignmentId,
+            workerIdentity: 'test',
+            host: 'localhost',
+            model: 'test',
+            diffSha256: 'a'.repeat(64),
+            artifactUris: [],
+            artifactHashes: [],
+            filesChanged: [],
+            commands: [],
+            exitCodes: [0],
+            logUris: [],
+            logHashes: [],
+            testEvidenceUris: [],
+            testEvidenceHashes: [],
+            startedAt: '2026-07-27T00:00:00.000Z',
+            completedAt: '2026-07-27T00:01:00.000Z',
+          };
+        },
+      };
+
+      const passVerifier: VerifierAdapter = {
+        async detect() { return { available: true }; },
+        async verify() { return { passed: true, scope: 'focused', evidence: {}, fingerprint: 'test', independent: true }; },
+      };
+
+      // Should not throw despite worker failure
+      const result = await controller.runFullPlan(failingWorker, passVerifier);
+
+      // At least one task should complete (the ones that didn't fail)
+      expect(result.completed + result.failed).toBe(3);
+    });
+
+    it('worker exception does not propagate out of runFullPlan', async () => {
+      const dir = tmpDir();
+      const ledger = stubLedger({
+        assignments: [
+          {
+            ...stubLedger().assignments[0]!,
+            assignmentId: 'A-1',
+            taskId: 'TASK-1',
+            ownedPaths: ['packages/engine/1'],
+            verificationCommands: [],
+          },
+        ],
+        batches: [{ batchId: 'B1', status: 'PASSED', taskIds: ['TASK-1'] }],
+      });
+      const controller = new Controller(writeLedger(dir, ledger));
+
+      const crashingWorker: WorkerAdapter = {
+        async detect() { return { available: true }; },
+        async health() { return { ok: true }; },
+        async submit() { throw new Error('Worker crashed'); },
+        async collectReceipt() { throw new Error('Worker crashed'); },
+      };
+
+      // Should resolve, not reject
+      await expect(controller.runFullPlan(crashingWorker, {
+        async detect() { return { available: true }; },
+        async verify() { return { passed: true, scope: 'focused', evidence: {}, fingerprint: 'test', independent: true }; },
+      })).resolves.toBeDefined();
     });
   });
 });

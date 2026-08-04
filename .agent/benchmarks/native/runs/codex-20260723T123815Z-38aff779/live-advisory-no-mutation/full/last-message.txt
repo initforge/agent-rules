@@ -1,0 +1,17 @@
+## Kiến trúc hiện tại
+
+Repo mô tả kiến trúc phân tầng một chiều:
+
+`Client request → Gateway → OrderService → OrderRepository → Storage`
+
+- **Gateway**: tiếp nhận request và kiểm tra dữ liệu ở tầng giao tiếp/transport.
+- **OrderService**: xử lý và sở hữu các quy tắc nghiệp vụ đơn hàng.
+- **OrderRepository**: đóng gói việc lưu trữ và truy xuất dữ liệu.
+
+Cách phân chia này giúp nghiệp vụ không phụ thuộc trực tiếp vào giao thức nhận request hoặc chi tiết persistence.
+
+Hiện repo mới chỉ có tài liệu kiến trúc, chưa có source triển khai, cấu hình hạ tầng, database schema, API contract hoặc test; vì vậy chưa thể xác nhận framework, cơ chế dependency injection hay loại cơ sở dữ liệu.
+
+Bằng chứng: [README.md](<P:/agent-rules/.agent/benchmarks/native/runs/codex-20260723T123815Z-38aff779/live-advisory-no-mutation/full/workspace/README.md:3>) và [architecture.txt](<P:/agent-rules/.agent/benchmarks/native/runs/codex-20260723T123815Z-38aff779/live-advisory-no-mutation/full/workspace/src/architecture.txt:1>).
+
+**PASS** — đã kiểm tra toàn bộ 2 file trong repo; `git status` và `git diff` đều sạch, không có file nào bị sửa.

@@ -22,7 +22,9 @@ function Assert-ScriptIntegrity {
   if ($null -eq $Manifest.files) { throw "Integrity manifest has no 'files' section" }
   $ExpectedHash = $Manifest.files.$Relative
   if (-not $ExpectedHash) { throw "No integrity entry for $Relative in $IntegrityManifestPath" }
-  $ActualHash = (Get-FileHash -LiteralPath $ScriptPath -Algorithm SHA256).Hash.ToLowerInvariant()
+  $RawBytes = [IO.File]::ReadAllBytes($ScriptPath)
+  $CanonicalText = [Text.Encoding]::UTF8.GetString($RawBytes) -replace "`r`n", "`n"
+  $ActualHash = ([Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($CanonicalText)) | ForEach-Object ToString x2) -join ""
   if ($ActualHash -ne ([string]$ExpectedHash).ToLowerInvariant()) { throw "Integrity check failed for $Relative`: expected $ExpectedHash, got $ActualHash" }
 }
 
@@ -36,7 +38,7 @@ $ManifestScripts = @(
   "automation/09-doctor.ps1"
 )
 foreach ($ManifestScript in $ManifestScripts) {
-  Assert-ScriptIntegrity -ScriptPath (Join-Path $Root ($ManifestScript -replace '/', [IO.Path]::DirectorySeparatorChar))
+  Assert-ScriptIntegrity -ScriptPath (Join-Path $Root $ManifestScript.Replace('/', [IO.Path]::DirectorySeparatorChar))
 }
 
 & (Join-Path $PSScriptRoot "03-validate-context.ps1")
@@ -410,6 +412,7 @@ if ($GitBash -and (Test-Path -LiteralPath $HooksScript)) {
 & (Join-Path $PSScriptRoot "13-cutover-context-routing.ps1") -Platform $Platform -Mode strict
 
 $DoctorArgs = @{ Root = $Root; Platform = $Platform }
+$DoctorArgs.IncludeOpenCode = $true
 if ($env:AGENT_RULES_SKIP_INTEGRATION_VERIFY -eq "1") {
   $DoctorArgs.SkipIntegrationVerify = $true
 }

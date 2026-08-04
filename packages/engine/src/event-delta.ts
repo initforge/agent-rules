@@ -88,7 +88,7 @@ function computeEventSha256(input: EventDeltaInput): Sha256 {
 
 export function createEventDelta(input: EventDeltaInput): EventDelta {
   const createdAt = input.createdAt ?? new Date().toISOString();
-  const eventSha256 = computeEventSha256(input);
+  const eventSha256 = computeEventSha256({ ...input, createdAt });
 
   return Object.freeze({
     sequence: input.sequence,
@@ -108,8 +108,8 @@ export function createEventDelta(input: EventDeltaInput): EventDelta {
 }
 
 export function verifyEventDeltaIntegrity(delta: EventDelta): boolean {
-  const { eventSha256, createdAt, ...rest } = delta;
-  const reconstructed = computeEventSha256({ ...rest, createdAt: '' });
+  const { eventSha256, ...rest } = delta;
+  const reconstructed = computeEventSha256({ ...rest, createdAt: delta.createdAt });
   return eventSha256 === reconstructed;
 }
 

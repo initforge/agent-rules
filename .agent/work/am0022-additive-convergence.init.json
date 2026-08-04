@@ -1,0 +1,105 @@
+{
+  "plan_ref": "owner://am-0022-additive-harness-convergence",
+  "signals": {
+    "file_count": 30,
+    "domain_count": 5,
+    "acceptance_count": 7,
+    "independent_groups": 3,
+    "agent_count": 4,
+    "resume_requested": true,
+    "risk_signals": ["public-api", "concurrency", "resource-lifetime", "cross-project"]
+  },
+  "repository": {
+    "path": "P:\\agent-rules",
+    "branch": "codex/agent-rules-convergence-current",
+    "baseline_commit": "37f3cfaa6f227bc8c6d1c93aaa2d689806902974"
+  },
+  "authorized_final_actions": ["edit"],
+  "max_active_agents_including_main": 4,
+  "max_delegation_depth": 1,
+  "effort_cap": "high",
+  "source_history": [
+    {
+      "id": "REQ-001",
+      "kind": "original",
+      "summary": "Implement additive AM-0022 convergence while preserving every valid old capability and unimplemented requirement.",
+      "captured_at": "2026-08-03T00:00:00+07:00",
+      "redacted": false,
+      "slice_ids": ["*"]
+    },
+    {
+      "id": "INJ-001",
+      "kind": "injection",
+      "summary": "Cleanup is preservation-first; do not remove good implemented or unimplemented harness capability.",
+      "captured_at": "2026-08-03T00:01:00+07:00",
+      "redacted": false,
+      "slice_ids": ["*"]
+    },
+    {
+      "id": "INJ-002",
+      "kind": "injection",
+      "summary": "Prepare project prompts; mini-toeic.score is nearly complete and must receive minimal intervention.",
+      "captured_at": "2026-08-03T00:02:00+07:00",
+      "redacted": false,
+      "slice_ids": ["S6"]
+    }
+  ],
+  "slices": [
+    {
+      "id": "S1",
+      "name": "AM22 contracts and current pointer",
+      "status": "ready",
+      "depends_on": [],
+      "required": true,
+      "acceptance": [{"id":"AC1","claim":"AM-0022 and canonical pointer preserve and compile all valid old capabilities.","status":"open","proof_required":true,"proof_profile":"schema","required_proof_kinds":["static","unit"],"required_dimensions":["behavior","negative-path"],"receipt_ids":[]}]
+    },
+    {
+      "id": "S2",
+      "name": "Engine runtime convergence",
+      "status": "ready",
+      "depends_on": ["S1"],
+      "required": true,
+      "acceptance": [{"id":"AC2","claim":"Existing engine primitives are reused in one execution runtime with 8/10 profiles, watchdog, review, and fidelity.","status":"open","proof_required":true,"proof_profile":"integration","required_proof_kinds":["unit","integration"],"required_dimensions":["behavior","negative-path"],"receipt_ids":[]}]
+    },
+    {
+      "id": "S3",
+      "name": "Governed Vitest",
+      "status": "ready",
+      "depends_on": [],
+      "required": true,
+      "acceptance": [{"id":"AC3","claim":"Vitest hard cap is two parents per project with exclusive full suite and stale recovery.","status":"open","proof_required":true,"proof_profile":"integration","required_proof_kinds":["unit","integration"],"required_dimensions":["behavior","negative-path"],"receipt_ids":[]}]
+    },
+    {
+      "id": "S4",
+      "name": "CLI and platform integration",
+      "status": "ready",
+      "depends_on": ["S1", "S2", "S3"],
+      "required": true,
+      "acceptance": [{"id":"AC4","claim":"Fresh session executes active contract through native adapters, worktree train, and compact evidence.","status":"open","proof_required":true,"proof_profile":"e2e","required_proof_kinds":["integration"],"required_dimensions":["behavior","negative-path"],"receipt_ids":[]}]
+    },
+    {
+      "id": "S5",
+      "name": "Independent integrated review",
+      "status": "ready",
+      "depends_on": ["S4"],
+      "required": true,
+      "acceptance": [{"id":"AC5","claim":"Integrated diff preserves old behavior and has no blocking correctness or maintainability finding.","status":"open","proof_required":true,"proof_profile":"review","required_proof_kinds":["diff","static"],"required_dimensions":["behavior","negative-path"],"receipt_ids":[]}]
+    },
+    {
+      "id": "S6",
+      "name": "Cross-project prompts",
+      "status": "ready",
+      "depends_on": ["S4"],
+      "required": true,
+      "acceptance": [{"id":"AC6","claim":"Concise model-neutral prompts are ready for POS and minimally invasive Mini continuation.","status":"open","proof_required":true,"proof_profile":"static","required_proof_kinds":["static"],"required_dimensions":["behavior"],"receipt_ids":[]}]
+    },
+    {
+      "id": "S7",
+      "name": "Final gates",
+      "status": "ready",
+      "depends_on": ["S5", "S6"],
+      "required": true,
+      "acceptance": [{"id":"AC7","claim":"Fresh focused and final verification supports truthful terminal status.","status":"open","proof_required":true,"proof_profile":"integration","required_proof_kinds":["unit","integration","diff"],"required_dimensions":["behavior","negative-path"],"receipt_ids":[]}]
+    }
+  ]
+}

@@ -96,6 +96,59 @@ describe('writeArtifact and readArtifact', () => {
     });
     expect(() => readArtifact(ptr, dir)).toThrow('Artifact file not found');
   });
+
+  // ── Atomic write: temp+rename — final file only appears after write completes ──
+  it('uses temp+rename; no partial file at target path during write', () => {
+    const dir = tmpDir();
+    const content = 'x'.repeat(100_000);
+    const ptr = createArtifactPointer('file:///tmp/large.txt', content, 1_700_000_000_000, [], {
+      artifactId: 'test-art-atomic',
+    });
+    const artifactBase = path.resolve(dir, '.agent/artifacts');
+    const artifactDir = path.resolve(artifactBase, ptr.artifactId.slice(0, 2));
+    const filePath = path.join(artifactDir, `${ptr.artifactId}.content`);
+
+    // Write
+    writeArtifact(ptr, content, dir);
+
+    // Target must exist and be complete
+    expect(fs.existsSync(filePath)).toBe(true);
+    expect(fs.readFileSync(filePath, 'utf-8')).toBe(content);
+
+    // No stray .tmp files left behind
+    const files = fs.readdirSync(artifactDir);
+    expect(files.some((f) => f.startsWith('.tmp-'))).toBe(false);
+  });
+
+  // ── Atomic write: cleans up temp file on SHA mismatch ──
+  it('removes temp file when SHA-256 mismatch is detected before rename', () => {
+    const dir = tmpDir();
+    const ptr = createArtifactPointer('file:///tmp/poison.txt', 'expected content', 1_700_000_000_000, [], {
+      artifactId: 'test-art-cleanup',
+    });
+    const artifactBase = path.resolve(dir, '.agent/artifacts');
+    const artifactDir = path.resolve(artifactBase, ptr.artifactId.slice(0, 2));
+    fs.mkdirSync(artifactDir, { recursive: true });
+
+    // Attempt write with wrong content — should throw AND leave no .tmp files
+    expect(() => writeArtifact(ptr, 'wrong content', dir)).toThrow('SHA-256 mismatch');
+    const files = fs.readdirSync(artifactDir);
+    expect(files.some((f) => f.startsWith('.tmp-'))).toBe(false);
+  });
+
+  // ── Atomic write: idempotent when called twice with same content ──
+  it('can overwrite an existing artifact atomically (second write replaces first)', () => {
+    const dir = tmpDir();
+    const ptr1 = createArtifactPointer('file:///tmp/update.txt', 'version 1', 1_700_000_000_000, [], {
+      artifactId: 'test-art-idempotent',
+    });
+    const ptr2 = createArtifactPointer('file:///tmp/update.txt', 'version 2', 1_700_000_000_002, [], {
+      artifactId: 'test-art-idempotent',
+    });
+    writeArtifact(ptr1, 'version 1', dir);
+    writeArtifact(ptr2, 'version 2', dir);
+    expect(readArtifact(ptr2, dir)).toBe('version 2');
+  });
 });
 
 describe('queryArtifacts', () => {

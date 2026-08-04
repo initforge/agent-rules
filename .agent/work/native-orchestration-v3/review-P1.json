@@ -1,0 +1,30 @@
+{
+  "id": "R-P1",
+  "slice_id": "P1",
+  "agent": "foundation_reviewer",
+  "role": "reviewer",
+  "model_class": "standard",
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "source_ids": [
+    "REQ-001",
+    "DEC-001",
+    "DEC-002",
+    "INJ-001"
+  ],
+  "write_paths": [],
+  "context_paths": [
+    "rules/**",
+    "skills/plan-and-handoff/**",
+    "skills/finish-to-completion/**",
+    "automation/model-policy.json",
+    "automation/test-model-policy.py"
+  ],
+  "forbidden_paths": [
+    "**"
+  ],
+  "acceptance_ids": [
+    "AC1",
+    "AC2"
+  ]
+}

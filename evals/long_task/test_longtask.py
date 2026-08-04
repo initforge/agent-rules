@@ -10,7 +10,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from .fixtures import LONG_TASK_FIXTURE
+from .fixtures import LONG_TASK_FIXTURE, ADVERSARIAL_FIXTURE
 from .runner import LongTaskRunner, RunPhase
 from .defects import detect_defects
 from .repair import repair_defects, verify_repair
@@ -89,6 +89,46 @@ class TestRunner(unittest.TestCase):
         found = detect_defects(Path(self.tmp), LONG_TASK_FIXTURE["seeded_defects"])
         self.assertEqual(set(found), {"currency-validation", "division-by-zero", "weak-email-regex"})
 
+    def test_defect_detection_finds_all_seeded_adversarial(self):
+        """Adversarial fixture's obfuscated seeded defects are all detected."""
+        ws = Path(self.tmp)
+        for path, content in ADVERSARIAL_FIXTURE["files"].items():
+            target = ws / path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(content, encoding="utf-8")
+
+        found = detect_defects(ws, ADVERSARIAL_FIXTURE["seeded_defects"])
+        self.assertEqual(set(found), {"currency-validation", "division-by-zero", "weak-email-regex"})
+
+    def test_weak_email_regex_detection_is_real(self):
+        """Weak email regex detected; strong regex (repaired) is not."""
+        ws = Path(self.tmp)
+        weak_file = ws / "src" / "api" / "validation.py"
+        weak_file.parent.mkdir(parents=True, exist_ok=True)
+
+        weak_content = (
+            "import re\n"
+            "def validate_email(email: str) -> bool:\n"
+            '    pattern = r".+@.+"\n'
+            "    return bool(re.match(pattern, email))\n"
+        )
+        weak_file.write_text(weak_content, encoding="utf-8")
+        found = detect_defects(ws, [{"id": "weak-email-regex"}])
+        self.assertEqual(found, ["weak-email-regex"])
+
+        strong_content = weak_content.replace(
+            'pattern = r".+@.+"',
+            'pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"',
+        )
+        weak_file.write_text(strong_content, encoding="utf-8")
+        found = detect_defects(ws, [{"id": "weak-email-regex"}])
+        self.assertEqual(found, [])
+
+    def test_detect_defects_requires_matching_content(self):
+        """Detection is content-based: empty/clean workspace finds nothing."""
+        found = detect_defects(Path(self.tmp), LONG_TASK_FIXTURE["seeded_defects"])
+        self.assertEqual(found, [])
+
     def test_repair_and_reverify(self):
         """Repair removes all detected defects; reverify passes."""
         runner = LongTaskRunner(output_dir=Path(self.tmp))
@@ -111,6 +151,45 @@ class TestRunner(unittest.TestCase):
         # No defects repaired -> verification fails
         verified = verify_repair(ws, LONG_TASK_FIXTURE["verification_commands"], ["currency-validation"], [])
         self.assertFalse(verified)
+
+
+class TestAdversarialRunner(unittest.TestCase):
+    """`--adversarial` variant: obfuscated defects + false-green end-to-end."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="longtask-adv-test-")
+
+    def test_adversarial_full_run_passes(self):
+        """Adversarial run completes PASS with all defects repaired & verified."""
+        from .runner import run_eval
+
+        result = run_eval(output_dir=Path(self.tmp), adversarial=True)
+
+        self.assertEqual(result.variant, "adversarial")
+        self.assertEqual(result.outcome, "PASS", msg=str(result.evidence))
+        self.assertEqual(result.defects_seeded, 3)
+        self.assertEqual(result.defects_found, 3)
+        self.assertTrue(result.verification_passed)
+
+        # All seeded obfuscated defects detected and repaired
+        expected_adv = {d["id"] for d in ADVERSARIAL_FIXTURE["adversarial_defects"]}
+        self.assertEqual(result.adversarial_found, len(expected_adv))
+        self.assertEqual(result.adversarial_repaired, len(expected_adv))
+
+        # All false-green patterns detected and repaired
+        self.assertGreaterEqual(result.falsegreen_found, 3)
+        self.assertEqual(result.falsegreen_found, result.falsegreen_repaired)
+
+    def test_adversarial_runner_no_infinite_loop(self):
+        """Runner must reach COMPLETE phase (regression: ADVERSARIAL_REPAIR
+        previously looped back into FALSEGREEN_DETECT -> outcome NOT_RUN)."""
+        from .runner import LongTaskRunner
+
+        runner = LongTaskRunner(output_dir=Path(self.tmp), adversarial=True)
+        result = runner.run()
+
+        self.assertEqual(result.outcome, "PASS")
+        self.assertEqual(result.evidence["phase"], "COMPLETE")
 
 
 class TestRunAsModule(unittest.TestCase):

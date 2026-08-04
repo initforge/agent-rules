@@ -1,6 +1,7 @@
 param(
   [string]$Root = (Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))),
   [string]$OpenCodeHome = "",
+  [switch]$AllowRestrictedProviders,
   [switch]$WhatIf
 )
 
@@ -110,6 +111,20 @@ if ($OpenCodeConfig) {
   }
 } else {
   $Report += [pscustomobject]@{ check = "model-mapping"; status = "NOT_LIVE"; detail = "No opencode.json found" }
+}
+
+# Provider catalog must remain open by default. OpenCode treats
+# enabled_providers as an absolute allowlist: credentials added through
+# /connect or environment variables are ignored when their provider is absent.
+if ($OpenCodeConfig) {
+  $EnabledProviders = @($OpenCodeConfig.enabled_providers | ForEach-Object { [string]$_ } | Where-Object { $_ })
+  if ($EnabledProviders.Count -eq 0) {
+    $Report += [pscustomobject]@{ check = "provider-catalog"; status = "OK"; detail = "Open catalog; /connect and /models are not allowlisted" }
+  } elseif ($AllowRestrictedProviders) {
+    $Report += [pscustomobject]@{ check = "provider-catalog"; status = "OWNER_RESTRICTED"; detail = "Explicit allowlist: $($EnabledProviders -join ', ')" }
+  } else {
+    $Report += [pscustomobject]@{ check = "provider-catalog"; status = "NOT_LIVE"; detail = "enabled_providers restricts /connect and /models to: $($EnabledProviders -join ', '). Remove it or rerun doctor with -AllowRestrictedProviders when intentional." }
+  }
 }
 
 # Check MCP/config

@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Sha256 } from './contracts.js';
@@ -62,7 +62,7 @@ const SAFE_ID = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,128}$/;
 
 function assertSafePathComponent(id: string, label: string): void {
   if (!SAFE_ID.test(id)) {
-    throw new Error(`${label} contains unsafe path characters: ${id}`);
+    throw new Error(`unsafe path: ${label} "${id}"`);
   }
 }
 
@@ -127,7 +127,17 @@ export function writeArtifact(
     throw new Error(`Content SHA-256 mismatch: expected ${pointer.sha256}, got ${writtenSha}`);
   }
 
-  fs.writeFileSync(filePath, content, 'utf-8');
+  // ponytail: atomic write via temp+rename; target must not exist
+  const tempPath = path.join(artifactDir, `.tmp-${pointer.artifactId}-${randomUUID()}`);
+  try {
+    fs.writeFileSync(tempPath, content, 'utf-8');
+    fs.renameSync(tempPath, filePath);
+  } finally {
+    // Clean up temp file on any error (rename succeeded = no temp file)
+    if (fs.existsSync(tempPath)) {
+      fs.unlinkSync(tempPath);
+    }
+  }
   return filePath;
 }
 

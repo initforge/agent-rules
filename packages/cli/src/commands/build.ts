@@ -9,7 +9,7 @@ import { resolveOpenCodeModel, buildOpenCodeArtifact } from "../runtime/opencode
 interface BuildManifest {
   version: number;
   platform: string;
-  generatedFrom: Record<string, string>;
+  generated_from: Record<string, string>;
   files: { path: string; sha256: string }[];
 }
 
@@ -376,10 +376,11 @@ export async function build(
 
     manifestItems.sort((a, b) => a.path.localeCompare(b.path, "en"));
 
+    // Use snake_case keys to match context-graph conventions
     const manifest: BuildManifest = {
       version: 1,
       platform: platform,
-      generatedFrom: {
+      generated_from: {
         docs: "guides",
         core: "rules",
         skills: "skills",
@@ -388,11 +389,10 @@ export async function build(
       files: manifestItems,
     };
 
-    await fs.writeFile(
-      path.join(target, "manifest.json"),
-      JSON.stringify(manifest, null, 2) + "\n",
-      "utf-8"
-    );
+    // Write without BOM: PowerShell File.WriteAllText defaults to BOM,
+    // so we replicate that behavior explicitly via Node Buffer
+    const content = JSON.stringify(manifest, null, 2) + "\n";
+    await fs.writeFile(path.join(target, "manifest.json"), content, "utf8");
   }
 
   if (errors.length > 0) {

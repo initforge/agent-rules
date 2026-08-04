@@ -1,0 +1,4 @@
+WARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir "C:\\Users\\ADMIN\\AppData\\Local\\Temp\\" (codex_home: AbsolutePathBuf("C:\\Users\\ADMIN\\AppData\\Local\\Temp\\codex-benchmark-home-8o7qleif"))
+Reading additional input from stdin...
+2026-07-21T08:24:05.233247Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell
+2026-07-21T08:24:21.042864Z ERROR codex_core::tools::router: error=`"C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command "Get-Item README.md, src\\architecture.txt | Select-Object FullName,Length; "'$i=0; Get-Content README.md | ForEach-Object { $i++; "README.md:$i $_" }; $i=0; Get-Content src'"\\architecture.txt | ForEach-Object { "'$i++; "src/architecture.txt:$i $_" }; git status --porcelain=v1'` rejected: blocked by policy

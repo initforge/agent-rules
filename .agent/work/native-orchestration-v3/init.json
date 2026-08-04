@@ -1,0 +1,265 @@
+{
+  "plan_ref": "conversation://portable-native-harness-20260724",
+  "signals": {
+    "file_count": 35,
+    "domain_count": 5,
+    "acceptance_count": 8,
+    "independent_groups": 3,
+    "agent_count": 4,
+    "resume_requested": true,
+    "risk_signals": [
+      "public-api",
+      "cross-platform-runtime"
+    ]
+  },
+  "repository": {
+    "path": "P:/agent-rules",
+    "branch": "main",
+    "baseline_commit": "75d13d6"
+  },
+  "authorized_final_actions": [
+    "edit",
+    "commit",
+    "push"
+  ],
+  "max_active_agents_including_main": 4,
+  "max_delegation_depth": 1,
+  "effort_cap": "high",
+  "source_history": [
+    {
+      "id": "REQ-001",
+      "kind": "original",
+      "summary": "Implement the approved portable native orchestration plan across Codex, Cursor, Antigravity, and Grok Build.",
+      "captured_at": "2026-07-24T00:00:00+07:00",
+      "redacted": false,
+      "slice_ids": [
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ]
+    },
+    {
+      "id": "DEC-001",
+      "kind": "decision",
+      "summary": "Cursor pins latest verified Composer Standard for implementation and latest verified Grok base for research/review; no Fast or Auto.",
+      "captured_at": "2026-07-24T00:01:00+07:00",
+      "redacted": false,
+      "slice_ids": [
+        "P1",
+        "P3",
+        "P4"
+      ]
+    },
+    {
+      "id": "DEC-002",
+      "kind": "decision",
+      "summary": "Antigravity uses Gemini Flash through Pro at medium or higher, bans Gemini 3.6 Flash, and uses Claude high only for exceptional expert review.",
+      "captured_at": "2026-07-24T00:02:00+07:00",
+      "redacted": false,
+      "slice_ids": [
+        "P1",
+        "P3",
+        "P4"
+      ]
+    },
+    {
+      "id": "INJ-001",
+      "kind": "injection",
+      "summary": "Apply the new orchestration concepts during this implementation, reinstall all four platform runtimes, then commit and push main.",
+      "captured_at": "2026-07-24T00:03:00+07:00",
+      "redacted": false,
+      "slice_ids": [
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ]
+    }
+  ],
+  "slices": [
+    {
+      "id": "P1",
+      "name": "Shared behavior and model policy",
+      "status": "ready",
+      "depends_on": [],
+      "required": true,
+      "review_required": true,
+      "acceptance": [
+        {
+          "id": "AC1",
+          "claim": "Shared rules use portable capability classes, meaningful-question gates, main-direct limits, bounded context capsules, and risk-triggered expert review.",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "harness-contract",
+          "required_proof_kinds": [
+            "static",
+            "integration"
+          ],
+          "required_dimensions": [
+            "behavior",
+            "context-budget",
+            "no-duplication"
+          ],
+          "receipt_ids": []
+        },
+        {
+          "id": "AC2",
+          "claim": "A single validated per-platform model policy encodes current allowed families, effort floors, hard-denied variants, and honest fallback evidence.",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "model-policy",
+          "required_proof_kinds": [
+            "static",
+            "integration"
+          ],
+          "required_dimensions": [
+            "model-routing",
+            "forbidden-models",
+            "fallback"
+          ],
+          "receipt_ids": []
+        }
+      ]
+    },
+    {
+      "id": "P2",
+      "name": "Portable ledger and workctl lifecycle",
+      "status": "ready",
+      "depends_on": [],
+      "required": true,
+      "review_required": true,
+      "acceptance": [
+        {
+          "id": "AC3",
+          "claim": "Ledger v3 records plan identity, execution authorization, host references, requested/resolved/observed model evidence, and main-direct exceptions with v2 migration.",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "ledger",
+          "required_proof_kinds": [
+            "unit",
+            "integration"
+          ],
+          "required_dimensions": [
+            "migration",
+            "resume",
+            "provenance",
+            "atomicity"
+          ],
+          "receipt_ids": []
+        },
+        {
+          "id": "AC4",
+          "claim": "workctl is callable from arbitrary projects after runtime installation and preserves existing lifecycle commands.",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "runtime-tool",
+          "required_proof_kinds": [
+            "integration",
+            "artifact"
+          ],
+          "required_dimensions": [
+            "portability",
+            "backward-compatibility"
+          ],
+          "receipt_ids": []
+        }
+      ]
+    },
+    {
+      "id": "P3",
+      "name": "Native platform agent adapters",
+      "status": "ready",
+      "depends_on": [],
+      "required": true,
+      "review_required": true,
+      "acceptance": [
+        {
+          "id": "AC5",
+          "claim": "All four platforms receive native agent profiles that map portable roles to approved models without forbidden variants.",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "native-adapter",
+          "required_proof_kinds": [
+            "static",
+            "integration"
+          ],
+          "required_dimensions": [
+            "codex",
+            "cursor",
+            "antigravity",
+            "grok"
+          ],
+          "receipt_ids": []
+        },
+        {
+          "id": "AC6",
+          "claim": "Unavailable or unobservable native capability degrades honestly to PARTIAL or approved fallback without a false model PASS.",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "native-adapter",
+          "required_proof_kinds": [
+            "integration"
+          ],
+          "required_dimensions": [
+            "capability-probe",
+            "honest-status",
+            "single-agent-fallback"
+          ],
+          "receipt_ids": []
+        }
+      ]
+    },
+    {
+      "id": "P4",
+      "name": "Build install doctor benchmark and release",
+      "status": "ready",
+      "depends_on": [
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "required": true,
+      "review_required": true,
+      "acceptance": [
+        {
+          "id": "AC7",
+          "claim": "Build, installer, validators, doctor, and benchmark prove distinct install, native, orchestration, model-policy, and cross-platform states.",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "release",
+          "required_proof_kinds": [
+            "integration",
+            "artifact"
+          ],
+          "required_dimensions": [
+            "build",
+            "install",
+            "doctor",
+            "benchmark",
+            "false-pass"
+          ],
+          "receipt_ids": []
+        },
+        {
+          "id": "AC8",
+          "claim": "Canonical changes are installed to all four runtimes, independently reviewed, committed, and pushed to origin/main.",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "release",
+          "required_proof_kinds": [
+            "integration",
+            "artifact"
+          ],
+          "required_dimensions": [
+            "mirrors",
+            "runtime-state",
+            "git"
+          ],
+          "receipt_ids": []
+        }
+      ]
+    }
+  ],
+  "next_action": "Run P1, P2, and P3 in parallel with exclusive ownership; then integrate P4."
+}

@@ -10,6 +10,7 @@ import {
   gateChildSessionControl,
   type OpenCodeHostProfile,
 } from '../src/opencode-adapter.js';
+import { SYMLINK_CAPABLE } from './helpers/symlink-capability.js';
 
 const tmpDirs: string[] = [];
 
@@ -159,30 +160,22 @@ describe('detectCommitSha (git ref security)', () => {
     expect(profile.attestation).toBeNull();
   });
 
-  it('rejects symbolic link HEAD', () => {
+  it.skipIf(!SYMLINK_CAPABLE)('rejects symbolic link HEAD', () => {
     const dir = tmpDir();
     fs.mkdirSync(path.join(dir, '.git/refs/heads'), { recursive: true });
     fs.writeFileSync(path.join(dir, '.git/refs/heads/main'), 'deadbeefcafebabedeadbeefcafebabedeadbeef\n', 'utf-8');
-    try {
-      fs.symlinkSync(path.join(dir, '.git/refs/heads/main'), path.join(dir, '.git/HEAD'));
-      const profile = buildOpenCodeProfile(dir);
-      expect(profile.attestation).toBeNull();
-    } catch {
-      // symlink may not be supported
-    }
+    fs.symlinkSync(path.join(dir, '.git/refs/heads/main'), path.join(dir, '.git/HEAD'));
+    const profile = buildOpenCodeProfile(dir);
+    expect(profile.attestation).toBeNull();
   });
 
-  it('rejects ref: pointing to symlinked ref file', () => {
+  it.skipIf(!SYMLINK_CAPABLE)('rejects ref: pointing to symlinked ref file', () => {
     const dir = tmpDir();
     fs.mkdirSync(path.join(dir, '.git/refs/heads'), { recursive: true });
     fs.writeFileSync(path.join(dir, '.git/HEAD'), 'ref: refs/heads/main\n', 'utf-8');
-    try {
-      fs.symlinkSync('/etc/passwd', path.join(dir, '.git/refs/heads/main'));
-      const profile = buildOpenCodeProfile(dir);
-      expect(profile.attestation).toBeNull();
-    } catch {
-      // symlink may not be supported
-    }
+    fs.symlinkSync('/etc/passwd', path.join(dir, '.git/refs/heads/main'));
+    const profile = buildOpenCodeProfile(dir);
+    expect(profile.attestation).toBeNull();
   });
 
   it('rejects ref: pointing outside .git', () => {

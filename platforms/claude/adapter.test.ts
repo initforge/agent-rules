@@ -14,6 +14,25 @@ import {
 
 const execFileAsync = promisify(execFile);
 
+// Windows requires Administrator / Developer Mode to create symlinks and
+// otherwise fails with EPERM; some POSIX sandboxes also block them. Probe once
+// at load so symlink-dependent checks skip explicitly instead of silently
+// passing. ponytail: probes 'file' symlinks only — Windows grants 'file' and
+// 'dir' under the same privilege, so one probe gates all symlink tests.
+const SYMLINK_CAPABLE = (() => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'symlink-cap-'));
+  try {
+    const target = path.join(dir, 'target');
+    fs.writeFileSync(target, 'x');
+    fs.symlinkSync(target, path.join(dir, 'link'));
+    return true;
+  } catch {
+    return false;
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+})();
+
 let fakeBinDir: string;
 let emptyPathDir: string;
 let homeDir: string;
@@ -22,7 +41,61 @@ let savedPath: string | undefined;
 let savedHome: string | undefined;
 
 async function fakeBinary(failDoctor: boolean): Promise<void> {
-  const script = `#!/usr/bin/env bash
+  const binaryPath = path.join(fakeBinDir, 'claude');
+  const logVar = '%FAKE_CLAUDE_LOG%';
+  const initModelVar = '%FAKE_INIT_MODEL%';
+  const msgModelVar = '%FAKE_MSG_MODEL%';
+  const dispatchFailVar = '%FAKE_DISPATCH_FAIL%';
+  const doctorFailVar = '%FAKE_DOCTOR_FAIL%';
+
+  // Windows batch script — compatible with spawn(exe, args, {shell: false}) on Windows.
+  // Node.js spawn on win32 uses cmd.exe /c for the executable when no shell is specified
+  // AND the executable has no extension... actually it needs .cmd or we use cmd.exe /c.
+  // Use cmd.exe directly to avoid PATH issues with 'which' on Windows.
+  const script = `@echo off
+if defined FAKE_CLAUDE_LOG (
+  for %%a in (%*) do echo %%a>>"%FAKE_CLAUDE_LOG%"
+)
+if "%1"=="--version" (
+  echo 2.1.220 (Claude Code)
+  exit /b 0
+)
+if "%1"=="doctor" (
+  if defined FAKE_DOCTOR_FAIL (
+    echo Claude Code doctor
+    echo Found installation issues: broken config
+    exit /b 1
+  )
+  echo Claude Code doctor
+  echo No installation issues found.
+  exit /b 0
+)
+if "%1"=="install" (
+  echo Installing Claude Code native build: OK
+  exit /b 0
+)
+if "%1"=="update" (
+  echo Claude Code is up to date.
+  exit /b 0
+)
+if "%1"=="-p" (
+  echo {"type":"system","subtype":"init","session_id":"sess","model":"%FAKE_INIT_MODEL%"}
+  echo {"type":"assistant","message":{"id":"m1","model":"%FAKE_MSG_MODEL%","role":"assistant"},"content":[{"type":"text","text":"PROBE_OK"}]}
+  if defined FAKE_DISPATCH_FAIL (
+    echo {"type":"result","is_error":true,"result":"failed"}
+  ) else (
+    echo {"type":"result","is_error":false,"result":"PROBE_OK"}
+  )
+  exit /b 0
+)
+echo unexpected args: %* >&2
+exit /b 2
+`;
+  await writeFile(`${binaryPath}.cmd`, script, { encoding: 'utf8' });
+  // On non-Windows, also write the bash script for completeness (though detect/probe
+  // use execFileAsync which works with bash scripts on Unix).
+  if (process.platform !== 'win32') {
+    const bashScript = `#!/usr/bin/env bash
 LOG="\${FAKE_CLAUDE_LOG:-}"
 if [ -n "$LOG" ]; then printf '%s\\n' "$*" >> "$LOG"; fi
 case "$1" in
@@ -50,8 +123,9 @@ case "$1" in
   *) echo "unexpected args: $*" >&2; exit 2;;
 esac
 `;
-  await writeFile(path.join(fakeBinDir, 'claude'), script, { mode: 0o755 });
-  await chmod(path.join(fakeBinDir, 'claude'), 0o755);
+    await writeFile(binaryPath, bashScript, { mode: 0o755 });
+    await chmod(binaryPath, 0o755);
+  }
 }
 
 async function initGitRepo(dir: string): Promise<void> {
@@ -117,7 +191,11 @@ describe('claude adapter — detect', () => {
     const result = await claudeAdapter.detect();
     expect(result.installed).toBe(true);
     expect(result.version).toContain('2.1.220');
-    expect(result.path).toBe(path.join(fakeBinDir, 'claude'));
+    // On Windows, the adapter resolves to .cmd; on POSIX, the bare filename.
+    const expectedPath = process.platform === 'win32'
+      ? path.join(fakeBinDir, 'claude.cmd')
+      : path.join(fakeBinDir, 'claude');
+    expect(result.path).toBe(expectedPath);
   });
 
   it('3. version() returns the claude version string', async () => {
@@ -171,13 +249,20 @@ describe('claude adapter — worktree isolation (fail closed)', () => {
     ).rejects.toThrow(/isolation rejection/);
   });
 
-  it('9. dispatch with symlink escape rejects', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('9. dispatch with symlink escape rejects', async () => {
     const outside = await mkdtemp(path.join(os.tmpdir(), 'c8-outside-'));
     const link = path.join(repoDir, 'escape-link');
+    // ponytail: UNVERIFIED on restricted symlink platforms; add real symlink
+    // capability detection when running on unrestricted POSIX or dev-mode
+    // Windows to re-enable this check.
     fs.symlinkSync(outside, link);
-    await expect(
-      claudeAdapter.nativeDispatch({ prompt: 'x', cwd: link, allowedRoot: repoDir }),
-    ).rejects.toThrow(/isolation rejection/);
+    try {
+      await expect(
+        claudeAdapter.nativeDispatch({ prompt: 'x', cwd: link, allowedRoot: repoDir }),
+      ).rejects.toThrow(/isolation rejection/);
+    } finally {
+      fs.unlinkSync(link);
+    }
   });
 
   it('10. unsafe worktree names reject before spawn', async () => {

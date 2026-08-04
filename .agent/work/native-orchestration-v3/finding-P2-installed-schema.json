@@ -1,0 +1,6 @@
+{
+  "id": "F-P2-INSTALLED-SCHEMA",
+  "severity": "high",
+  "summary": "Installed agent-rules-tools/workctl.py resolves the ledger schema through ROOT/automation, but the installed bundle places the schema beside workctl, so normal project init/status/resume/finalize cannot load it.",
+  "reviewer": "foundation_rereviewer"
+}

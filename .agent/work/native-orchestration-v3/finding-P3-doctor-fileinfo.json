@@ -1,0 +1,6 @@
+{
+  "id": "F-P3-DOCTOR-FILEINFO",
+  "severity": "high",
+  "summary": "Fresh isolated end-to-end installer reaches doctor, but Test-NativeStructure passes a FileInfo object through a string-typed collection so Get-FileHash receives only the bare filename and crashes instead of verifying the installed native artifact.",
+  "reviewer": "foundation_rereviewer"
+}

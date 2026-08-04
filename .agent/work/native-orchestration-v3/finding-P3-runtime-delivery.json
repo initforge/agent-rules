@@ -1,0 +1,6 @@
+{
+  "id": "F-P3-RUNTIME-DELIVERY",
+  "severity": "high",
+  "summary": "Native profiles and model-policy.json are not copied into generated builds or installed runtime homes, so source-only profiles cannot affect hosts.",
+  "reviewer": "foundation_reviewer"
+}

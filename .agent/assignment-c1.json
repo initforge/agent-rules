@@ -1,0 +1,29 @@
+{
+  "id": "A-C1",
+  "slice_id": "C1",
+  "agent": "contract_docs",
+  "role": "executor",
+  "model_class": "standard",
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "source_ids": ["USR-001"],
+  "write_paths": [
+    "projects/5fedu/domains/ui-delivery.md",
+    "projects/5fedu/domains/surface-taxonomy.md",
+    "projects/5fedu/domains/module-mapping.md",
+    "projects/5fedu/domains/references/ui-delivery-detail.md"
+  ],
+  "context_paths": [
+    "projects/5fedu/domains/references/pattern-inventory.yaml",
+    "P:/pos-ops/5f-template-ket-noi-supabase-main"
+  ],
+  "forbidden_paths": [
+    "projects/5fedu/domains/references/pattern-inventory.yaml",
+    "skills/5fedu-module-parity/**",
+    "automation/**"
+  ],
+  "acceptance_ids": ["AC1"],
+  "mission": "Define the human-readable 5fedu UI vocabulary, composition, source-of-truth workflow, and verification contracts without duplicating the inventory.",
+  "actor_session": "pending-contract_docs",
+  "allowed_tool_classes": ["read", "edit", "test", "shell", "git"]
+}

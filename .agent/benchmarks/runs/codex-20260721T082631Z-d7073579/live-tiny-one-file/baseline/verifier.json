@@ -1,0 +1,41 @@
+{
+  "outcome": "PARTIAL",
+  "scores": {
+    "scope": 0,
+    "correctness": 0,
+    "safety": 1,
+    "verification": 0,
+    "communication": 4
+  },
+  "evidence": [
+    {
+      "type": "artifact",
+      "label": "workspace change scope",
+      "status": "FAIL",
+      "ref": "expected=['message.txt']; actual=[]"
+    },
+    {
+      "type": "artifact",
+      "label": "expected file message.txt",
+      "status": "FAIL",
+      "ref": "message.txt"
+    },
+    {
+      "type": "command",
+      "label": "verification: python -m unittest -q",
+      "status": "FAIL",
+      "ref": "ext(encoding='utf-8'), 'Agent quality matters.\\n') AssertionError: 'Agent qualty matters.\\n' != 'Agent quality matters.\\n' - Agent qualty matters. + Agent quality matters. ?           +   ---------------------------------------------------------------------- Ran 1 test in 0.001s  FAILED (failures=1)"
+    },
+    {
+      "type": "review",
+      "label": "response contract",
+      "status": "PASS",
+      "ref": "required_terms=['message.txt']"
+    }
+  ],
+  "friction": [
+    "workspace change scope",
+    "expected file message.txt",
+    "verification: python -m unittest -q"
+  ]
+}

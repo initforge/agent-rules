@@ -55,8 +55,8 @@
       "anchor_text_sha256": "241276dfbe8bab6594469b3d457446770a8f7a2a920b2231022b9bba05106b8d",
       "requirement_id": "REQ-001",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -67,8 +67,8 @@
       "anchor_text_sha256": "910e4b85a3ff0a4bd9dd9597b011148d833ee4fba67cce613505e75c2ff48a34",
       "requirement_id": "REQ-002",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -79,8 +79,8 @@
       "anchor_text_sha256": "c2b70c597b093e3fb0cdd9da8c040d9b679901e917d4635a9ba14a55d27ef7e8",
       "requirement_id": "REQ-003",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -91,8 +91,8 @@
       "anchor_text_sha256": "d1727006866629f75f359824d9a559b4d5a260fe04b19cc66435eacc6f113cb7",
       "requirement_id": "REQ-004",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -103,8 +103,8 @@
       "anchor_text_sha256": "c945a296af90fe0818a94a82bf4c5447217252319e059f5173128f2be29ef3b5",
       "requirement_id": "REQ-005",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -115,8 +115,8 @@
       "anchor_text_sha256": "2758884adf1bfd7fca3c2023c0caf35ed563d1f29553ea66155f6b4aa7af68c8",
       "requirement_id": "REQ-006",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -127,8 +127,8 @@
       "anchor_text_sha256": "ecd20566dfea27ba00dcfa6020e81f33413e2974e35dfd6f26c11319bc891008",
       "requirement_id": "REQ-007",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -139,8 +139,8 @@
       "anchor_text_sha256": "d0cdfdffbf9bd36adf44c956cd9ca877cc2c28c962bd00e94e139e8c0a590fe8",
       "requirement_id": "REQ-006",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -151,8 +151,8 @@
       "anchor_text_sha256": "a9a12967dca796affe25e76b7fefac43f5fef5622c6dd597514f49dca287c187",
       "requirement_id": "REQ-006",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -163,8 +163,8 @@
       "anchor_text_sha256": "0af5d73031c1fcfe9118e10dac08628f7b51b9cd779d1c263933658855558063",
       "requirement_id": "REQ-006",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -175,8 +175,8 @@
       "anchor_text_sha256": "ddfb2100a5f89000ca2e1f029df706e4201c51a7e19789f3509240f9104cdb5f",
       "requirement_id": "REQ-006",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -187,8 +187,8 @@
       "anchor_text_sha256": "e1af22d02f90e7c9564785339682e80850e861ea25d4419ed08f7750df2ae08d",
       "requirement_id": "REQ-008",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -200,8 +200,8 @@
       "anchor_text_sha256": "91eadcb2678bb488b9f0841ec70db076f4a5d491270b87fc26d9c6e25eaf1d0d",
       "requirement_id": "AM0002-SAFE-TRANSITION",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -213,8 +213,8 @@
       "anchor_text_sha256": "bafb081622e8c452bc9bfae3dfdbb2df87fa89a3aa33c5fbf617b4ee1f471c37",
       "requirement_id": "AM0002-ARTIFACT-PLACEMENT",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -226,8 +226,8 @@
       "anchor_text_sha256": "c6b142420ea24a36498f32aa5daa6a80f92bca88357a718be09317e9aa6d26c7",
       "requirement_id": "AM0002-EP-01",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -239,8 +239,8 @@
       "anchor_text_sha256": "757f61009dc12c64882d8a12a0157f9f0046dc2dc4dcb289e40788795fe157af",
       "requirement_id": "AM0002-EP-02",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -252,8 +252,8 @@
       "anchor_text_sha256": "5d9d11c0df3f1d0a02fee6a8d0404a7fcac2e55db36a3ee273ed34c5d2809a52",
       "requirement_id": "AM0002-EP-03",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -265,8 +265,8 @@
       "anchor_text_sha256": "e225d0efd21b37fe6d176262343bf7cd64cff34d3cae9592e4bf253511b73c14",
       "requirement_id": "AM0002-EP-04",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -278,8 +278,8 @@
       "anchor_text_sha256": "56cea344c4a7611aece671c7616d388a34e4ca184ddc3f8f4a0d554c86f7e04d",
       "requirement_id": "AM0002-EP-05",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -291,8 +291,8 @@
       "anchor_text_sha256": "f4992c60141e0b335dec53cf5f089df224365252732929e3406247cae2e279fa",
       "requirement_id": "AM0002-EP-06",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -304,8 +304,8 @@
       "anchor_text_sha256": "87899c0153e7aa9348a9fd614b5268126e8333df90cba06a1aa758357286b59c",
       "requirement_id": "AM0002-EP-07",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -317,8 +317,8 @@
       "anchor_text_sha256": "39e674cdee4f82c50f228816fab544bf58a28ac7e28ca57b3daeeb10744116ed",
       "requirement_id": "AM0002-EP-08",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -330,8 +330,8 @@
       "anchor_text_sha256": "9f27dc029be3c5bd59e8c49b14ec3981dfe1fd3e4db53220ad6036f654be1e4e",
       "requirement_id": "AM0002-EP-09",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -343,8 +343,8 @@
       "anchor_text_sha256": "7ef64ef7fa21e00c1e878c6f0bcfe50d905acc957b68acc791b6f67638d6e58d",
       "requirement_id": "AM0002-CANONICAL-PLACEMENT",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -356,8 +356,8 @@
       "anchor_text_sha256": "4c1bc6fe1c51e44717b3c84d029212aa7676b6c905f8065823c8c54681d3f167",
       "requirement_id": "AM0002-ACCEPTANCE",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -369,8 +369,8 @@
       "requirement_id": "AM0012-NS0",
       "section_heading": "### NS0 — Activate AM-0012 safely",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -382,8 +382,8 @@
       "requirement_id": "AM0012-NS1",
       "section_heading": "### NS1 — Mode and schema migration",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -395,8 +395,8 @@
       "requirement_id": "AM0012-NS2",
       "section_heading": "### NS2 — Remove cross-host OpenCode session control",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -408,8 +408,8 @@
       "requirement_id": "AM0012-NS3",
       "section_heading": "### NS3 — Plan recognition and automatic adoption",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -421,8 +421,8 @@
       "requirement_id": "AM0012-NS4",
       "section_heading": "### NS4 — Native DAG and semantic conflict scheduler",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -434,8 +434,8 @@
       "requirement_id": "AM0012-NS5",
       "section_heading": "### NS5 — Sharded assurance and repair",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -447,8 +447,8 @@
       "requirement_id": "AM0012-NS6",
       "section_heading": "### NS6 — Integration train",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -460,8 +460,8 @@
       "requirement_id": "AM0012-NS7",
       "section_heading": "### NS7 — Routing, cache and resource governor",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -473,8 +473,8 @@
       "requirement_id": "AM0012-NS8",
       "section_heading": "### NS8 — Micro-fitness closure",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -486,8 +486,8 @@
       "requirement_id": "AM0012-NS9",
       "section_heading": "### NS9 — Terminal release",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     }
   ],
@@ -520,8 +520,8 @@
             "anchor_text_sha256": "d0cdfdffbf9bd36adf44c956cd9ca877cc2c28c962bd00e94e139e8c0a590fe8",
             "requirement_id": "REQ-006",
             "untrusted_candidate": true,
-            "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-            "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
             "ns0_status": "PENDING_FRESH_REVIEW"
           }
         }
@@ -555,8 +555,8 @@
             "anchor_text_sha256": "0af5d73031c1fcfe9118e10dac08628f7b51b9cd779d1c263933658855558063",
             "requirement_id": "REQ-006",
             "untrusted_candidate": true,
-            "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-            "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
             "ns0_status": "PENDING_FRESH_REVIEW"
           },
           "acceptance": [
@@ -584,8 +584,8 @@
             "anchor_text_sha256": "0af5d73031c1fcfe9118e10dac08628f7b51b9cd779d1c263933658855558063",
             "requirement_id": "REQ-006",
             "untrusted_candidate": true,
-            "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-            "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
             "ns0_status": "PENDING_FRESH_REVIEW"
           },
           "acceptance": [
@@ -612,8 +612,8 @@
             "anchor_text_sha256": "9265811a51dc0fe60de91195adca1aa3bf430609df9853456787a0a376931878",
             "requirement_id": "REQ-006",
             "untrusted_candidate": true,
-            "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-            "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
             "ns0_status": "PENDING_FRESH_REVIEW"
           },
           "acceptance": [
@@ -640,8 +640,8 @@
             "anchor_text_sha256": "9265811a51dc0fe60de91195adca1aa3bf430609df9853456787a0a376931878",
             "requirement_id": "REQ-006",
             "untrusted_candidate": true,
-            "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-            "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
             "ns0_status": "PENDING_FRESH_REVIEW"
           },
           "acceptance": [
@@ -675,8 +675,8 @@
             "anchor_text_sha256": "9265811a51dc0fe60de91195adca1aa3bf430609df9853456787a0a376931878",
             "requirement_id": "REQ-006",
             "untrusted_candidate": true,
-            "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-            "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
             "ns0_status": "PENDING_FRESH_REVIEW"
           },
           "acceptance": [
@@ -702,8 +702,8 @@
             "anchor_text_sha256": "9265811a51dc0fe60de91195adca1aa3bf430609df9853456787a0a376931878",
             "requirement_id": "REQ-006",
             "untrusted_candidate": true,
-            "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-            "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
             "ns0_status": "PENDING_FRESH_REVIEW"
           },
           "acceptance": [
@@ -734,8 +734,8 @@
             "anchor_text_sha256": "0af5d73031c1fcfe9118e10dac08628f7b51b9cd779d1c263933658855558063",
             "requirement_id": "REQ-006",
             "untrusted_candidate": true,
-            "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-            "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
             "ns0_status": "PENDING_FRESH_REVIEW"
           },
           "acceptance": [
@@ -771,8 +771,8 @@
             "anchor_text_sha256": "0af5d73031c1fcfe9118e10dac08628f7b51b9cd779d1c263933658855558063",
             "requirement_id": "REQ-006",
             "untrusted_candidate": true,
-            "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-            "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
             "ns0_status": "PENDING_FRESH_REVIEW"
           },
           "acceptance": [
@@ -799,8 +799,8 @@
             "anchor_text_sha256": "0af5d73031c1fcfe9118e10dac08628f7b51b9cd779d1c263933658855558063",
             "requirement_id": "REQ-006",
             "untrusted_candidate": true,
-            "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-            "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
             "ns0_status": "PENDING_FRESH_REVIEW"
           },
           "acceptance": [
@@ -832,8 +832,8 @@
             "anchor_text_sha256": "0af5d73031c1fcfe9118e10dac08628f7b51b9cd779d1c263933658855558063",
             "requirement_id": "REQ-006",
             "untrusted_candidate": true,
-            "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-            "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
             "ns0_status": "PENDING_FRESH_REVIEW"
           },
           "acceptance": [
@@ -867,8 +867,8 @@
             "anchor_text_sha256": "0af5d73031c1fcfe9118e10dac08628f7b51b9cd779d1c263933658855558063",
             "requirement_id": "REQ-006",
             "untrusted_candidate": true,
-            "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-            "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+            "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
             "ns0_status": "PENDING_FRESH_REVIEW"
           },
           "acceptance": [
@@ -1231,8 +1231,8 @@
       "finding_id": "FIND-P1-R3-COMPLETE-TREE-HARDLINK-001",
       "review_receipt_id": "REV-P1-R3A3-001",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -2574,8 +2574,8 @@
           "anchor_text_sha256": "0af5d73031c1fcfe9118e10dac08628f7b51b9cd779d1c263933658855558063",
           "requirement_id": "REQ-006",
           "untrusted_candidate": true,
-          "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-          "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+          "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+          "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
           "ns0_status": "PENDING_FRESH_REVIEW"
         },
         {
@@ -2586,8 +2586,8 @@
           "anchor_text_sha256": "4c06d85171d889aad99ef232eb27e189deca0aa9f56b67eb550d47e878a1cd60",
           "requirement_id": "REQ-006",
           "untrusted_candidate": true,
-          "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-          "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+          "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+          "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
           "ns0_status": "PENDING_FRESH_REVIEW"
         },
         {
@@ -2598,8 +2598,8 @@
           "anchor_text_sha256": "13ae986bc41770b6e5fbdc030db4313d6cdb3221d4e0f19bc9de183eb183a073",
           "requirement_id": "REQ-008",
           "untrusted_candidate": true,
-          "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-          "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+          "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+          "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
           "ns0_status": "PENDING_FRESH_REVIEW"
         }
       ],
@@ -2710,11 +2710,11 @@
       "status": "MIGRATED_SOURCE_REVIEW_MATCH"
     }
   ],
-  "shadow_revision": 60,
+  "shadow_revision": 61,
   "shadow_hashes": {
-    "tasks.md": "29247fe9b58c86eca30215ef34deece11f92d7124c8e19a2aab7708b04b7b87e",
-    "progress.md": "90ea6e147e3bcb54a3c9a38dabacd6c31900b08281668011171ea984f5b15f2c",
-    "amendments.md": "47916ad1cf1f196744415ad6522190e911c378dc6bc1b7aaa25795b55480507b",
+    "tasks.md": "ee079be1ec4da6a9ad59b9406a0bfd68e163c6957a842be2223a85a3b5bebf7f",
+    "progress.md": "4472461c23897791d78895ef8cf67ec7de064a625daf0a2354ca1220296195d2",
+    "amendments.md": "8f92c2739a04cfa963434f7a6fd4a351e3fee95d7987ec2d15fb1137c711490d",
     "reconciliation.md": "bd03829c90c1dd60bfdee7451d073c2f32be9b1ace49ded575764ce771649aff",
     "batches/bootstrap/tasks.md": "a75096b2109eb9869034c1c6cf4f7d25136fe0af0a79b37b38180210adc34ac9",
     "batches/bootstrap/progress.md": "10921867c253ef096709f77927852298429a3e7a7ce6cd41bf1368fe57a151ae",
@@ -2950,6 +2950,43 @@
       "supplements_plan_id": "agent-rules-harness-v3-rearchitecture-20260726-r1",
       "supplements_original_sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
       "activation_state": "EFFECTIVE"
+    },
+    {
+      "amendment_id": "AM-0022",
+      "status": "OWNER_APPROVED_EFFECTIVE",
+      "path": ".agent\\plans\\agent-rules-harness-v3-rearchitecture-20260726-r1\\amendments\\0022-additive-harness-convergence.md",
+      "sha256": "e6181b608ccd980dd6925a7be7fdfd9dbb3dfe6d3f8c79a4dd66fd0906d5db55",
+      "bytes": 19252,
+      "lines": 408,
+      "capture_sha256": "342708da1c3215e7cbdfdd49a58af4f6c920b24e356d35cb962f34e2c1de3de4",
+      "supplements_plan_id": "agent-rules-harness-v3-rearchitecture-20260726-r1",
+      "supplements_original_sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
+      "activation_state": "EFFECTIVE"
+    },
+    {
+      "amendment_id": "AM-0023",
+      "status": "OWNER_APPROVED_PENDING_ACTIVATION",
+      "path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0023-opencode-stuck-failure-modes-cas.md",
+      "sha256": "ae5f073144db1dca5646cb3fcf1262bb5967b52bb91945ef71589d08ad0adcee",
+      "bytes": 5827,
+      "lines": 120,
+      "supplements_plan_id": "agent-rules-harness-v3-rearchitecture-20260726-r1",
+      "supplements_original_sha256": "5793c9683b659ae9c1bad2934bce146bfaf420a5945b1d5cae23129f8cc8ac4b",
+      "activation_state": "PENDING_ACTIVATION",
+      "oc_stuck_ids": [
+        "OC-STUCK-01",
+        "OC-STUCK-02",
+        "OC-STUCK-03",
+        "OC-STUCK-04",
+        "OC-STUCK-05",
+        "OC-STUCK-06",
+        "OC-STUCK-07",
+        "OC-STUCK-08"
+      ],
+      "research_source": {
+        "path": ".agent/research/opencode-stuck-failure-modes-20260803.md",
+        "sha256": "5793c9683b659ae9c1bad2934bce146bfaf420a5945b1d5cae23129f8cc8ac4b"
+      }
     }
   ],
   "effective_plan_identity": {
@@ -3036,15 +3073,23 @@
         {
           "amendment_id": "AM-0021",
           "sha256": "0dfb45500fe8a7d80f177e57ef8a6c231b44e28f8e4f973b31f85bf7d527cf1c"
+        },
+        {
+          "amendment_id": "AM-0022",
+          "sha256": "e6181b608ccd980dd6925a7be7fdfd9dbb3dfe6d3f8c79a4dd66fd0906d5db55"
+        },
+        {
+          "amendment_id": "AM-0023",
+          "sha256": "ae5f073144db1dca5646cb3fcf1262bb5967b52bb91945ef71589d08ad0adcee"
         }
       ],
       "composition": "original-plus-ordered-approved-amendment-sha256",
       "original_plan_sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
       "version": 1
     },
-    "canonical_json_utf8": "{\"algorithm\":\"SHA-256\",\"approved_amendments\":[{\"amendment_id\":\"AM-0001\",\"sha256\":\"90b5f0e478e6a6762aba7976d73b0078152795b590ee147b1278da01d76a9528\"},{\"amendment_id\":\"AM-0002\",\"sha256\":\"c68c3cbac57d44ef3aae543dc221de0a05319e034eec87226bfffbbd6e962fa4\"},{\"amendment_id\":\"AM-0003\",\"sha256\":\"9637aa2f50177aa981ee3a2a00d7d5cb51c48bb81e7a5ace9f3a8c158152d9c4\"},{\"amendment_id\":\"AM-0005\",\"sha256\":\"5a23ce82685729dd0f2be31f559edea54bbe86876f8806666ab4eab5744613a9\"},{\"amendment_id\":\"AM-0006\",\"sha256\":\"65f550d58d1e5a02f1b76ccb86cd6c9a7ebc1d40db3aecfb47b9ce8be1583ade\"},{\"amendment_id\":\"AM-0007\",\"sha256\":\"66905c862e5bba558e460219b67ddae4b5e3f9dbcda4f0849ea1d6782afbf73c\"},{\"amendment_id\":\"AM-0008\",\"sha256\":\"13d458df692bd46100415f55fa980fc09b57faa66062ee89086fb2631eb08334\"},{\"amendment_id\":\"AM-0009\",\"sha256\":\"7a4569e099ac93391a837e08e50c4eadc9d34f59008d12c273665b35f9283113\"},{\"amendment_id\":\"AM-0010\",\"sha256\":\"c9bce7721a18305c7c7ab6ba78ff165cc8fc41feb4b0312443b85cd8dd196aee\"},{\"amendment_id\":\"AM-0011\",\"sha256\":\"d295ba000b728d5029b473466d6738a71d07352d59336cc104786d2be008bf91\"},{\"amendment_id\":\"AM-0012\",\"sha256\":\"2147aa9631fab0aab10a1e81b7339ba1b1b420d57080d2ef99bf2a88674b41a2\"},{\"amendment_id\":\"AM-0013\",\"sha256\":\"a8989935c5e0b188b42279b19b167ffad6458d39a17ecad5397ef29301433f0b\"},{\"amendment_id\":\"AM-0014\",\"sha256\":\"951fe2028c3ed6db85530979ec910ed8fc14a7a5dfb041bb829da2f5e41fa209\"},{\"amendment_id\":\"AM-0015\",\"sha256\":\"e6482360189a653ef2a3c5074162f75e5376f2e266062f38615fdfa34b32fbc3\"},{\"amendment_id\":\"AM-0016\",\"sha256\":\"90eb7a6d70652205cbe4e2a1adc5b4981e73a060bf69fe6b8d459c83e3543d15\"},{\"amendment_id\":\"AM-0017\",\"sha256\":\"9477e2a8b23d0d973eafb138870071f6fa9eed831965f7ed14063d205d408730\"},{\"amendment_id\":\"AM-0018\",\"sha256\":\"d0d2001ca7f9916d68f4bc66bcfc0545445d33220dc97e5b981d64c7ef1dab52\"},{\"amendment_id\":\"AM-0019\",\"sha256\":\"074eda76c69d91b91bf25ab74888dc7ada13376cbfd29d0e67e4a8c6f8662a21\"},{\"amendment_id\":\"AM-0020\",\"sha256\":\"f99e603c2e9c60194518938f78de4ab90645eb02d893f2ef811b436c444ee0cc\"},{\"amendment_id\":\"AM-0021\",\"sha256\":\"0dfb45500fe8a7d80f177e57ef8a6c231b44e28f8e4f973b31f85bf7d527cf1c\"}],\"composition\":\"original-plus-ordered-approved-amendment-sha256\",\"original_plan_sha256\":\"c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31\",\"version\":1}",
-    "canonical_json_utf8_bytes": 2273,
-    "sha256": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e"
+    "canonical_json_utf8": "{\"algorithm\":\"SHA-256\",\"approved_amendments\":[{\"amendment_id\":\"AM-0001\",\"sha256\":\"90b5f0e478e6a6762aba7976d73b0078152795b590ee147b1278da01d76a9528\"},{\"amendment_id\":\"AM-0002\",\"sha256\":\"c68c3cbac57d44ef3aae543dc221de0a05319e034eec87226bfffbbd6e962fa4\"},{\"amendment_id\":\"AM-0003\",\"sha256\":\"9637aa2f50177aa981ee3a2a00d7d5cb51c48bb81e7a5ace9f3a8c158152d9c4\"},{\"amendment_id\":\"AM-0005\",\"sha256\":\"5a23ce82685729dd0f2be31f559edea54bbe86876f8806666ab4eab5744613a9\"},{\"amendment_id\":\"AM-0006\",\"sha256\":\"65f550d58d1e5a02f1b76ccb86cd6c9a7ebc1d40db3aecfb47b9ce8be1583ade\"},{\"amendment_id\":\"AM-0007\",\"sha256\":\"66905c862e5bba558e460219b67ddae4b5e3f9dbcda4f0849ea1d6782afbf73c\"},{\"amendment_id\":\"AM-0008\",\"sha256\":\"13d458df692bd46100415f55fa980fc09b57faa66062ee89086fb2631eb08334\"},{\"amendment_id\":\"AM-0009\",\"sha256\":\"7a4569e099ac93391a837e08e50c4eadc9d34f59008d12c273665b35f9283113\"},{\"amendment_id\":\"AM-0010\",\"sha256\":\"c9bce7721a18305c7c7ab6ba78ff165cc8fc41feb4b0312443b85cd8dd196aee\"},{\"amendment_id\":\"AM-0011\",\"sha256\":\"d295ba000b728d5029b473466d6738a71d07352d59336cc104786d2be008bf91\"},{\"amendment_id\":\"AM-0012\",\"sha256\":\"2147aa9631fab0aab10a1e81b7339ba1b1b420d57080d2ef99bf2a88674b41a2\"},{\"amendment_id\":\"AM-0013\",\"sha256\":\"a8989935c5e0b188b42279b19b167ffad6458d39a17ecad5397ef29301433f0b\"},{\"amendment_id\":\"AM-0014\",\"sha256\":\"951fe2028c3ed6db85530979ec910ed8fc14a7a5dfb041bb829da2f5e41fa209\"},{\"amendment_id\":\"AM-0015\",\"sha256\":\"e6482360189a653ef2a3c5074162f75e5376f2e266062f38615fdfa34b32fbc3\"},{\"amendment_id\":\"AM-0016\",\"sha256\":\"90eb7a6d70652205cbe4e2a1adc5b4981e73a060bf69fe6b8d459c83e3543d15\"},{\"amendment_id\":\"AM-0017\",\"sha256\":\"9477e2a8b23d0d973eafb138870071f6fa9eed831965f7ed14063d205d408730\"},{\"amendment_id\":\"AM-0018\",\"sha256\":\"d0d2001ca7f9916d68f4bc66bcfc0545445d33220dc97e5b981d64c7ef1dab52\"},{\"amendment_id\":\"AM-0019\",\"sha256\":\"074eda76c69d91b91bf25ab74888dc7ada13376cbfd29d0e67e4a8c6f8662a21\"},{\"amendment_id\":\"AM-0020\",\"sha256\":\"f99e603c2e9c60194518938f78de4ab90645eb02d893f2ef811b436c444ee0cc\"},{\"amendment_id\":\"AM-0021\",\"sha256\":\"0dfb45500fe8a7d80f177e57ef8a6c231b44e28f8e4f973b31f85bf7d527cf1c\"},{\"amendment_id\":\"AM-0022\",\"sha256\":\"e6181b608ccd980dd6925a7be7fdfd9dbb3dfe6d3f8c79a4dd66fd0906d5db55\"},{\"amendment_id\":\"AM-0023\",\"sha256\":\"ae5f073144db1dca5646cb3fcf1262bb5967b52bb91945ef71589d08ad0adcee\"}],\"composition\":\"original-plus-ordered-approved-amendment-sha256\",\"original_plan_sha256\":\"c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31\",\"version\":1}",
+    "canonical_json_utf8_bytes": 2376,
+    "sha256": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f"
   },
   "reconciliations": [
     {
@@ -3643,8 +3688,8 @@
         "anchor_text_sha256": "d1727006866629f75f359824d9a559b4d5a260fe04b19cc66435eacc6f113cb7",
         "requirement_id": "REQ-004",
         "untrusted_candidate": true,
-        "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-        "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+        "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+        "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
         "ns0_status": "PENDING_FRESH_REVIEW"
       },
       "assignment": {
@@ -3694,8 +3739,8 @@
       "finding_id": "FIND-P0-F0-001",
       "scope": "Windows drive-relative path form was not rejected by the initial F0 repair",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -3709,8 +3754,8 @@
       "stale": true,
       "stale_reason": "RPR-F1-001 changed the integrated diff, evidence, anchor and shadow state; a fresh independent review must bind revision 14.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -3796,8 +3841,8 @@
       "stale": true,
       "stale_reason": "R2c-A is changing reviewed schemas/tests; FAIL receipt remains the finding source.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -3857,8 +3902,8 @@
       "stale": true,
       "stale_reason": "R3a3 is changing the same two installer/test files; this PARTIAL receipt remains the finding source and does not certify the repair.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -4827,8 +4872,8 @@
       "repair_slice_id": "RPR-P0-F0-001",
       "resolution": "Reject any Windows drive prefix, UNC/device namespace, mixed separator traversal and POSIX traversal before resolution.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -4838,8 +4883,8 @@
       "repair_slice_id": "RPR-P1-PROFILE-DOCTOR-001",
       "resolution": "Parenthesize raw UTF-8 content before -split and preserve recursive ownedFiles wildcard matching with a sentinel before single-star expansion.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -4849,8 +4894,8 @@
       "repair_slice_id": "RPR-P1-LEAN-001",
       "resolution": "Restore default-password, bootstrap-admin, and Employee whitelist claims; extend ownedFiles regression to Windows separators, Unicode, nested recursion, and negative paths.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -4861,8 +4906,8 @@
       "finding_type": "SHADOW_DRIFT",
       "resolution": "REV-F1-R10-001 independently matched the current six-file content with 127/127 tests, 39-field mutation audit and artifact-only stale rejection.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -4873,8 +4918,8 @@
       "finding_type": "STALE_REVIEW_BINDING",
       "resolution": "R10 deterministically binds the final review to original hash, amendment aggregate, owned-content fingerprint, evidence and shadow revision; REV-F1-R10-001 is the only fresh F1 receipt.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -4885,8 +4930,8 @@
       "finding_type": "GENERATED_DRIFT",
       "resolution": "Completed by Parity V3 ASN closure (2026-07-30): engine tests pass, schema validation pass, independent review pending",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW",
       "closed_at": "2026-07-30T01:14:36.787Z"
     },
@@ -4897,8 +4942,8 @@
       "repair_slice_id": "RPR-P1-R2B-001",
       "resolution": "R2b executable repro now rejects the owner-looking accepted deviation without corresponding deviations/proof.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -4908,8 +4953,8 @@
       "repair_slice_id": "RPR-P1-R2B-001",
       "resolution": "R2b executable repro now rejects arbitrary mutually-equal c*40 revision substitution.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -4919,8 +4964,8 @@
       "repair_slice_id": "RPR-P1-R2B-001",
       "resolution": "R2b executable repro now rejects fake/unopened per-surface reference and target paths.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -4930,8 +4975,8 @@
       "repair_slice_id": "RPR-P1-R2B-001",
       "resolution": "R2b executable repro now rejects absolute Windows and POSIX structural paths.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -4941,8 +4986,8 @@
       "repair_slice_id": "RPR-P1-R2B-001",
       "resolution": "R2b executable checks repair source-lock required shape, verifier_identity alignment and tested forbidden extras; broader declarative schema drift is tracked separately.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -4955,8 +5000,8 @@
       ],
       "resolution": "R2c patching exposed broader dual-truth drift. DEC-P1-PARITY-V3-001 replaces this repair approach without changing the owner plan. Parity V3 program fully closed ASN-01..11 at M9.5 with fresh review.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW",
       "closed_at": "2026-07-31T22:45:00+07:00"
     },
@@ -4968,8 +5013,8 @@
       "review_receipt_id": "REV-P1-R3A3-001",
       "resolution": "Recover deterministic stale stage/backup transactions after process crash, or fail closed on ambiguous states; never lose owner files.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -4980,8 +5025,8 @@
       "review_receipt_id": "REV-P1-R3A3-001",
       "resolution": "Preflight pointer destinations and restore every pointer mutation transactionally when any later pointer step fails.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -4992,8 +5037,8 @@
       "review_receipt_id": "REV-P1-R3A3-001",
       "resolution": "Reject every symlink/reparse component in ProjectRoot ancestry before materialization.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5003,8 +5048,8 @@
       "repair_slice_id": "RPR-P1-R3B-SKILL-WRAPPER",
       "resolution": "Remove known-repos/projects/00-index/ui-delivery stale references and expose Force/Profile/UpdatePointersOnly wrapper flags.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5015,8 +5060,8 @@
       "repair_slice_id": "RPR-P1-R3C-ACTIVATION-ROUTER",
       "resolution": "Reject empty/junk context activation, honor enabled profile marker, and keep activation behavior from becoming an extra source node.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5027,8 +5072,8 @@
       "repair_slice_id": "RPR-P1-R3A3-COMPLETE-TREE-HARDLINK",
       "resolution": "Recursively require every trusted tree file to have a single link before any copy, hash, move or delete; complete-tree Force/cleanup handling must remain fail-closed.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5039,8 +5084,8 @@
       "repair_slice_id": "RPR-P1-PARITY-V3-01-R1",
       "resolution": "Completed by Parity V3 ASN closure (2026-07-30): engine tests pass, schema validation pass, independent review pending",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW",
       "closed_at": "2026-07-30T01:14:36.789Z"
     },
@@ -5052,8 +5097,8 @@
       "repair_slice_id": "RPR-P1-PARITY-V3-01-R1",
       "resolution": "Completed by Parity V3 ASN closure (2026-07-30): engine tests pass, schema validation pass, independent review pending",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW",
       "closed_at": "2026-07-30T01:14:36.789Z"
     },
@@ -5065,8 +5110,8 @@
       "repair_slice_id": "RPR-P1-R3B-SKILL-WRAPPER",
       "resolution": "Closed by the two-file semantic carry reducer: G-04/G-09 are explicit without duplicating parity workflow; DA_CHOT remains executable.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5077,8 +5122,8 @@
       "repair_slice_id": "RPR-P1-R3B-R3-STABILIZATION",
       "resolution": "Closed by canonical double-generation stabilization: graph/runtime fingerprints are deterministic, router/skill-gate/profile, validate and mirror checks pass, graph has 145 nodes with no cache or bytecode artifacts, and the exact ordinary UI/setup activation routes remain truthful.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5089,8 +5134,8 @@
       "repair_assignment_id": "ASN-P1-R3C-R1-ACTIVATION-INTEGRITY",
       "resolution": "Closed at the R1/R1A source boundary by graph-bound canonical hash proof and independent security review.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5101,8 +5146,8 @@
       "repair_assignment_id": "ASN-P1-R3C-R1-ACTIVATION-INTEGRITY",
       "resolution": "Closed at the R1/R1A source boundary: marker/context/file ancestor symlinks and containment escapes fail closed.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5113,8 +5158,8 @@
       "repair_assignment_id": "ASN-P1-R3C-R1-ACTIVATION-INTEGRITY",
       "resolution": "Seven route objects are schema-invalid and both legacy harnesses materialize retired context facts; R1 establishes compatible fixture facts before R2 propagates them.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5125,8 +5170,8 @@
       "repair_assignment_id": "ASN-P1-R3C-R2-HARNESS-PROPAGATION",
       "resolution": "Codex skill-gate payload cwd is ignored; repair is serialized after activation-integrity facts are authoritative.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5137,8 +5182,8 @@
       "repair_assignment_id": "ASN-P1-R3C-R1A-GRAPH-UNIQUENESS",
       "resolution": "Closed by global expected node-ID/source uniqueness and same-record selection under independent security review.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5149,8 +5194,8 @@
       "repair_assignment_id": "ASN-P1-R3C-R1B-STABILIZATION",
       "resolution": "Closed by deterministic canonical regeneration with current managed hashes, graph-bound pack, runtime mirrors and independent reducer evidence.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5161,8 +5206,8 @@
       "repair_assignment_id": "ASN-PARITY-V3-05-R1-ENGINE-FIXTURE",
       "resolution": "Closed by the one-file canonical fixture repair: object-keyed routes pass, while a legacy route array fails TYPE_MISMATCH at the structural routes boundary.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5173,8 +5218,8 @@
       "repair_assignment_id": "ASN-P1-R3C-R2-R1-ABSOLUTE-PAYLOAD-WORKSPACE",
       "resolution": "Closed by absolute-path enforcement and relative-root fallback regressions.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5185,8 +5230,8 @@
       "repair_assignment_id": "ASN-PARITY-V3-06-R1-EXAMPLE-INTEGRITY",
       "resolution": "Closed by example integrity repair with direct schema and surface-parity evidence.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5197,8 +5242,8 @@
       "repair_assignment_id": "ASN-PARITY-V3-06-R2-ENGINE-FIXTURE",
       "resolution": "Closed by the V3 object-keyed visual fixture without embedded surface_key.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5212,8 +5257,8 @@
       "detail": "canonicalPacketValue retained a legacy behavior array, causing the only two engine failures while the five owned ASN07 sources and all focused behavior/cross-contract gates passed.",
       "resolution": "Closed by the one-file canonical object-keyed behavior fixture, removal of embedded surface_key, preserved explicit legacy-array rejection, engine 201/201 and fresh independent review.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5226,8 +5271,8 @@
       "detail": "The architecture example accepted_deviations value remains a legacy list and is not the exact canonical DEV-001, DEV-002, DEV-003 object with six-field payloads.",
       "resolution": "Closed by M9.5 fresh review REV-P1-PARITY-V3-08-R1-M95-001: accepted_deviations object-keyed DEV-001/002/003 with exact six-field canonical equality and direct schema validation PASS.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW",
       "closed_at": "2026-07-31T22:45:00+07:00"
     },
@@ -5241,8 +5286,8 @@
       "detail": "The engine canonical architecture fixture retains a legacy accepted_deviations array, causing exactly two engine failures while the five-file ASN08 core boundary passes.",
       "resolution": "Closed by M9.5 fresh review REV-P1-PARITY-V3-08-R2-M95-001: canonical fixture object-keyed {'DEV-001': deviation} with explicit legacy array rejection; engine 1142/1142 PASS.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW",
       "closed_at": "2026-07-31T22:45:00+07:00"
     },
@@ -5254,8 +5299,8 @@
       "repair_slice_id": "RPR-P1-PARITY-V3-01-R1",
       "resolution": "Closed by parsed YAML node/tag policy and independent adversarial review.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5266,8 +5311,8 @@
       "repair_slice_id": "RPR-P1-PARITY-V3-01-R1",
       "resolution": "Closed by parsed YAML node/tag policy and independent adversarial review.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5278,8 +5323,8 @@
       "repair_slice_id": "RPR-P1-PARITY-V3-01-R1",
       "resolution": "Closed by bounded preflight resource containment and independent accessor/proxy review.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5289,8 +5334,8 @@
       "architecture_decision_id": "DEC-P1-PARITY-V3-001",
       "resolution": "Completed by Parity V3 ASN closure (2026-07-30): engine tests pass, schema validation pass, independent review pending",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW",
       "closed_at": "2026-07-30T01:14:36.789Z"
     },
@@ -5301,8 +5346,8 @@
       "architecture_decision_id": "DEC-P1-PARITY-V3-001",
       "resolution": "Completed by Parity V3 ASN closure (2026-07-30): engine tests pass, schema validation pass, independent review pending",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW",
       "closed_at": "2026-07-30T01:14:36.790Z"
     },
@@ -5313,8 +5358,8 @@
       "architecture_decision_id": "DEC-P1-PARITY-V3-001",
       "resolution": "Completed by Parity V3 ASN closure (2026-07-30): engine tests pass, schema validation pass, independent review pending",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW",
       "closed_at": "2026-07-30T01:14:36.790Z"
     },
@@ -5325,8 +5370,8 @@
       "architecture_decision_id": "DEC-P1-PARITY-V3-001",
       "resolution": "Completed by Parity V3 ASN closure (2026-07-30): engine tests pass, schema validation pass, independent review pending",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW",
       "closed_at": "2026-07-30T01:14:36.790Z"
     },
@@ -5337,8 +5382,8 @@
       "architecture_decision_id": "DEC-P1-PARITY-V3-001",
       "resolution": "Completed by Parity V3 ASN closure (2026-07-30): engine tests pass, schema validation pass, independent review pending",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW",
       "closed_at": "2026-07-30T01:14:36.790Z"
     },
@@ -5353,8 +5398,8 @@
       ],
       "resolution": "SUPERSEDED by engine contract unification in activation-transaction.ts and contracts.ts (2026-07-30)",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW",
       "closed_at": "2026-07-30T01:19:21.678Z"
     },
@@ -5369,8 +5414,8 @@
       ],
       "resolution": "SUPERSEDED by native-swarm worker adapter implementation with real receipt/review pipeline (2026-07-30)",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW",
       "closed_at": "2026-07-30T01:19:21.713Z"
     },
@@ -5382,8 +5427,8 @@
       "repair_slice_id": "RPR-P1-PARITY-V3-02-R1",
       "resolution": "Closed by removing direct Ajv strict:false ownership; canonical engine validation is the single lexical authority.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5394,8 +5439,8 @@
       "repair_slice_id": "RPR-P1-PARITY-V3-02-R1",
       "resolution": "Closed by removing ASN03/04+ matrix leakage; legacy packet semantic coverage remains explicitly pending ASN11 staged cutover.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5433,8 +5478,8 @@
       },
       "resolution": "R36 preserves original receipts as historical and restores terminal linkage. M9.5 fresh review chain REV-P1-PARITY-V3-08-M95-001/-R1-M95-001/-R2-M95-001 plus ASN-09/10/11 closures clears the ASN08 current-boundary freshness gate.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW",
       "closed_at": "2026-07-31T22:45:00+07:00"
     },
@@ -5599,8 +5644,8 @@
       ],
       "independent_review_required": true,
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5619,8 +5664,8 @@
       ],
       "independent_review_required": true,
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5678,8 +5723,8 @@
       "review_receipt_id": "REV-P1-R3A3-001",
       "independent_review_required": false,
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5717,8 +5762,8 @@
       "open_finding_ids": [],
       "independent_review_required": true,
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5744,8 +5789,8 @@
       "remaining": null,
       "independent_review_required": true,
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5778,8 +5823,8 @@
       "runtime_file_count": 510,
       "independent_review_required": true,
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -5818,8 +5863,8 @@
       "independent_review_required": false,
       "final_reconciliation": "R1/R1A source integrity, R1B generated freshness, and R2/R2-R1 propagation collectively satisfy the R3C parent acceptance criteria.",
       "untrusted_candidate": true,
-      "ns0_old_identity": "21d0a8bbaaf40002c0be6a047476e1cbe7b105382c0877056a2252af9a246003",
-      "ns0_new_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_old_identity": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "ns0_new_identity": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
       "ns0_status": "PENDING_FRESH_REVIEW"
     },
     {
@@ -6610,6 +6655,18 @@
         "AM-0021"
       ],
       "shadow_revision": 60
+    },
+    {
+      "event_id": "E-BR-61",
+      "type": "BOUNDED_REPAIR",
+      "summary": "Bounded repair AM-0022 identity d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e→b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
+      "actor": "engine",
+      "prior_effective_sha256": "d38e0cc94127a71f3dd5b6bbddeec94834e6178ff8ac6491dd045960b6951f4e",
+      "new_effective_sha256": "b99e044b21480ad796c54b48762a4c4067726aacaa47d751013d49468751ed5f",
+      "amendment_ids": [
+        "AM-0022"
+      ],
+      "shadow_revision": 61
     }
   ],
   "ci_checks": [

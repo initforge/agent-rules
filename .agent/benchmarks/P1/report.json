@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "generated_at": "2026-07-21T00:29:05.036921+00:00",
+  "corpus_hash": "2dca26250e8162c7612b71d0c4818b8dc616e0d87abbf4190b6f9ecde54afd49",
+  "routing": {
+    "total": 20,
+    "passed": 20,
+    "failed": 0
+  },
+  "live": {
+    "total_runs": 3,
+    "unique_cases": 1,
+    "by_variant": {
+      "baseline": {
+        "runs": 1,
+        "pass": 1,
+        "partial": 0,
+        "blocked": 0,
+        "fail": 0,
+        "owner_corrections": 0,
+        "average_score": 2.8,
+        "average_duration_seconds": 5.0
+      },
+      "core": {
+        "runs": 1,
+        "pass": 1,
+        "partial": 0,
+        "blocked": 0,
+        "fail": 0,
+        "owner_corrections": 0,
+        "average_score": 3.6,
+        "average_duration_seconds": 4.0
+      },
+      "full": {
+        "runs": 1,
+        "pass": 1,
+        "partial": 0,
+        "blocked": 0,
+        "fail": 0,
+        "owner_corrections": 0,
+        "average_score": 4.0,
+        "average_duration_seconds": 4.0
+      }
+    }
+  },
+  "trace": {
+    "records": 1,
+    "warnings": []
+  },
+  "friction": [],
+  "recommendation": "KEEP",
+  "promotion_candidates": []
+}

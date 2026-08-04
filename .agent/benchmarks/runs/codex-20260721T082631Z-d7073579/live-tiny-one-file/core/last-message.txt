@@ -1,0 +1,6 @@
+BLOCKED — đã xác định typo trong [message.txt](P:\agent-rules\.agent\benchmarks\runs\codex-20260721T082631Z-d7073579\live-tiny-one-file\core\workspace\message.txt):
+
+- `Agent qualty matters.`
+- Cần sửa thành `Agent quality matters.`
+
+Workspace đang ở chế độ chỉ đọc nên không thể ghi thay đổi. Kiểm tra `git diff --check` hiện không báo lỗi; chưa thể chạy test Python do lệnh bị policy chặn.

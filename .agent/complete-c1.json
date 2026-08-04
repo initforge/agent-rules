@@ -1,0 +1,4 @@
+{
+  "status": "done",
+  "fallback_reason": "Host does not expose independent worker model/effort attestation."
+}

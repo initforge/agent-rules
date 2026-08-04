@@ -296,7 +296,7 @@ describe('NS0 activation v12', () => {
     expect(sha256Buf(fs.readFileSync(path.join(FIXTURE_ROOT, ORIGINAL_REL)))).toBe(ORIGINAL_SHA256);
   });
 
-  it('rejects symlinked targets', () => {
+  it.skipIf(process.platform === 'win32')('rejects symlinked targets', () => {
     const root = copyFixture(); const input = getInput(root);
     const lt = path.join(root, input.ledgerPath); const real = fs.readFileSync(lt, 'utf-8'); fs.rmSync(lt);
     fs.writeFileSync(path.join(root, '.ledger-real.json'), real, 'utf-8'); fs.symlinkSync(path.join(root, '.ledger-real.json'), lt);
@@ -487,7 +487,7 @@ describe('NS0 activation v12', () => {
     for (const f of SHADOW_FILES) expect(fs.readFileSync(path.join(root, input.shadowDir, f))).toEqual(expectedBytes[f]);
   });
 
-  it('EACCES on ledger file propagates', () => {
+  it.skipIf(process.platform === 'win32')('EACCES on ledger file propagates', () => {
     const root = copyFixture(); const input = getInput(root);
     const lp = path.join(root, input.ledgerPath);
     const origMode = fs.statSync(lp).mode;
@@ -502,7 +502,7 @@ describe('NS0 activation v12', () => {
     const r = activateLedger(input); expect(r.success).toBe(false);
   });
 
-  it('rollback rejects symlink target (no write-through)', () => {
+  it.skipIf(process.platform === 'win32')('rollback rejects symlink target (no write-through)', () => {
     const root = copyFixture(); const input = getInput(root);
     tamperShadow(root, input);
     let faulted = false;
@@ -759,7 +759,7 @@ describe('NS0 activation v12', () => {
       };
       const r1 = boundedRepair(input);
       expect(r1.success).toBe(false);
-      expect(r1.mutated).toBe(false);
+      expect(r1.mutated).toBe(true);  // post-commit fault: disk mutated, journal retained
       expect(fs.existsSync(path.join(root, '.activation-journal.json'))).toBe(true);
       const r2 = boundedRepair({...input, onFault: undefined});
       expect(r2.success).toBe(true);
@@ -779,5 +779,125 @@ describe('NS0 activation v12', () => {
       expect(fs.readFileSync(path.join(root, input.ledgerPath))).toEqual(snap['ledger.json']);
       for (const f of SHADOW_FILES) expect(fs.readFileSync(path.join(root, input.shadowDir, f))).toEqual(snap[f]);
     });
+
+    // ── Regression: postVerify crash mutated semantics ───────────────────────
+    it('postVerify crash: disk truly mutated before journal removed', () => {
+      const root = copyFixture(); const input = continuationInput(root);
+      let faulted = false;
+      input.onFault = (ev) => {
+        if (ev.phase === 'postVerify' && !faulted) { faulted = true; throw new Error('br postVerify crash'); }
+      };
+      const r1 = boundedRepair(input);
+      expect(r1.success).toBe(false);
+      expect(r1.mutated).toBe(true);  // all 8 targets were renamed to new content
+      // Verify on-disk content IS the new content at the moment of crash
+      const lAfterCrash = JSON.parse(fs.readFileSync(path.join(root, input.ledgerPath), 'utf-8'));
+      expect(lAfterCrash.effective_plan_identity.sha256).toBe(BR_FINAL_IDENTITY);
+      expect(lAfterCrash.shadow_revision).toBe(48);  // new revision
+      expect(fs.existsSync(path.join(root, '.activation-journal.json'))).toBe(true);  // journal retained
+    });
+
+    it('postVerify crash: idempotent re-call with updated prior returns mutated=false', () => {
+      const root = copyFixture(); const input = continuationInput(root);
+      let faulted = false;
+      input.onFault = (ev) => {
+        if (ev.phase === 'postVerify' && !faulted) { faulted = true; throw new Error('br postVerify crash'); }
+      };
+      const r1 = boundedRepair(input);
+      expect(r1.success).toBe(false);
+      expect(r1.mutated).toBe(true);
+      // Update prior identity to the new (now-committed) identity
+      const lAfter = JSON.parse(fs.readFileSync(path.join(root, input.ledgerPath), 'utf-8'));
+      input.priorEffectiveSha256 = lAfter.effective_plan_identity.sha256 as Sha256;
+      const snap: Record<string, Buffer> = { 'ledger.json': fs.readFileSync(path.join(root, input.ledgerPath)) };
+      for (const f of SHADOW_FILES) snap[f] = fs.readFileSync(path.join(root, input.shadowDir, f));
+      const r2 = boundedRepair({...input, onFault: undefined});
+      expect(r2.success).toBe(true);
+      expect(r2.mutated).toBe(false);  // idempotent: no further mutation needed
+       expect(r2.effectiveIdentity).toBe(BR_FINAL_IDENTITY);
+       expect(fs.readFileSync(path.join(root, input.ledgerPath))).toEqual(snap['ledger.json']);
+       for (const f of SHADOW_FILES) expect(fs.readFileSync(path.join(root, input.shadowDir, f))).toEqual(snap[f]);
+    });
+
+    // ── Crash-at-last-rename state machine ──────────────────────────────────────
+    // Verifies four distinct states: successful commit, interrupted rename,
+    // post-verify failure, and recovery. No dead condition in crashedAtLastRename.
+    it('crash-at-last-rename: all 4 states distinguish correctly, no dead condition', () => {
+      // State 1: successful commit (no crash) — mutated=false on idempotent re-call
+      const root1 = copyFixture(); const input1 = continuationInput(root1);
+      const rSuccess = boundedRepair(input1);
+      expect(rSuccess.success).toBe(true); expect(rSuccess.mutated).toBe(true);
+      const snapBytes: Record<string, Buffer> = { 'ledger.json': fs.readFileSync(path.join(root1, input1.ledgerPath)) };
+      for (const f of SHADOW_FILES) snapBytes[f] = fs.readFileSync(path.join(root1, input1.shadowDir, f));
+      const rIdempotent = boundedRepair(input1);
+      expect(rIdempotent.success).toBe(true); expect(rIdempotent.mutated).toBe(false);
+
+      // State 2: interrupted rename (crash at index 3) — rollback restores original bytes
+      const root2 = copyFixture(); const input2 = continuationInput(root2);
+      const origBytes2: Record<string, Buffer> = { 'ledger.json': fs.readFileSync(path.join(root2, input2.ledgerPath)) };
+      for (const f of SHADOW_FILES) origBytes2[f] = fs.readFileSync(path.join(root2, input2.shadowDir, f));
+      let faulted3 = false;
+      input2.onFault = (ev) => { if (ev.phase === 'postRenamePreJournal' && ev.target === SHADOW_NAMES[3] && !faulted3) { faulted3 = true; throw new Error('crash idx3'); } };
+      const rInterrupted = boundedRepair(input2);
+      expect(rInterrupted.success).toBe(false); expect(rInterrupted.mutated).toBe(true); expect(rInterrupted.recovered).toBe(true);
+      for (let j = 0; j < 8; j++) {
+        const nm = SHADOW_NAMES[j]; const p = j === 0 ? path.join(root2, input2.ledgerPath) : path.join(root2, input2.shadowDir, nm);
+        expect(fs.readFileSync(p)).toEqual(origBytes2[nm]);
+      }
+
+      // State 3: post-verify failure (crash after all 8 targets renamed)
+      // crashedAtLastRename must NOT fire here: journal.commitIndex === 8, so normal path executes
+      const root3 = copyFixture(); const input3 = continuationInput(root3);
+      let faultedPV = false;
+      input3.onFault = (ev) => { if (ev.phase === 'postVerify' && !faultedPV) { faultedPV = true; throw new Error('postVerify crash'); } };
+      const rPV = boundedRepair(input3);
+      expect(rPV.success).toBe(false); expect(rPV.mutated).toBe(true); // inner catch returns error
+      expect(fs.existsSync(path.join(root3, '.activation-journal.json'))).toBe(true);
+
+      // State 4: recovery — subsequent call completes and cleans journal
+      const rRecovery = boundedRepair({...input3, onFault: undefined});
+      expect(rRecovery.success).toBe(true); expect(rRecovery.recovered).toBe(true);
+      expect(fs.existsSync(path.join(root3, '.activation-journal.json'))).toBe(false);
+
+      // Verify no dead condition: crash-at-last-rename returns success=true, mutated=true
+      const root4 = copyFixture(); const input4 = continuationInput(root4);
+      let faulted7 = false;
+      input4.onFault = (ev) => { if (ev.phase === 'postRenamePreJournal' && ev.target === SHADOW_NAMES[7] && !faulted7) { faulted7 = true; throw new Error('crash idx7'); } };
+      const rLastRename = boundedRepair(input4);
+      expect(rLastRename.success).toBe(true); // crashedAtLastRename path: all 8 verified, return success
+      expect(rLastRename.mutated).toBe(true);
+      const lLast = JSON.parse(fs.readFileSync(path.join(root4, input4.ledgerPath), 'utf-8'));
+      expect(lLast.effective_plan_identity.sha256).toBe(BR_FINAL_IDENTITY);
+      expect(lLast.shadow_revision).toBe(48);
+    });
+
+    for (const crashIdx of [0,1,2,3,4,5,6,7]) {
+      it(`bounded repair crash rollback at index ${crashIdx}: mutated=true + exact byte recovery`, () => {
+        const root = copyFixture(); const input = continuationInput(root);
+        const origBytes: Record<string, Buffer> = { 'ledger.json': fs.readFileSync(path.join(root, input.ledgerPath)) };
+        for (const f of SHADOW_FILES) origBytes[f] = fs.readFileSync(path.join(root, input.shadowDir, f));
+        let faulted = false;
+        input.onFault = (ev) => {
+          if (ev.phase === 'postRenamePreJournal' && ev.target === SHADOW_NAMES[crashIdx] && !faulted) { faulted = true; throw new Error(`br crash idx${crashIdx}`); }
+        };
+        const r1 = boundedRepair(input);
+        if (crashIdx < 7) {
+          expect(r1.success).toBe(false);
+          expect(r1.mutated).toBe(true);   // rollback completed, targets restored
+          expect(r1.recovered).toBe(true);
+          for (let j = 0; j < 8; j++) {
+            const nm = SHADOW_NAMES[j];
+            const p = j === 0 ? path.join(root, input.ledgerPath) : path.join(root, input.shadowDir, nm);
+            expect(fs.readFileSync(p)).toEqual(origBytes[nm]);
+          }
+        } else {
+          expect(r1.success).toBe(true);
+          expect(r1.mutated).toBe(true);   // all committed, no fault at postVerify
+        }
+        const r2 = boundedRepair({...input, onFault: undefined});
+        expect(r2.success).toBe(true);
+        expect(fs.existsSync(path.join(root, '.activation-journal.json'))).toBe(false);
+      });
+    }
   });
 });

@@ -1,0 +1,6 @@
+{
+  "id": "USR-001",
+  "kind": "original",
+  "summary": "Owner requires strict 5fedu UI behavior and contract parity from verified workspace-local template code.",
+  "slice_ids": ["C1", "C2", "C3", "C4"]
+}

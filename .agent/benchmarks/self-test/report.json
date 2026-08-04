@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "generated_at": "2026-07-25T08:16:25.751146+00:00",
+  "corpus_hash": "2c8d46eb1f75ce8119053f1810a2fbf91ee4d7770f092e8b7b0b40fed2859ae7",
+  "routing": {
+    "total": 26,
+    "passed": 26,
+    "failed": 0
+  },
+  "live": {
+    "total_records": 3,
+    "empirical_runs": 0,
+    "synthetic_runs": 3,
+    "unique_cases": 0,
+    "known_false_passes": 0,
+    "known_false_pass_rate": null,
+    "comparable_triplets": 0,
+    "comparable_cases": 0,
+    "decision_thresholds": {
+      "minimum_comparable_cases": 6,
+      "minimum_comparable_triplets": 12
+    },
+    "by_variant": {
+      "baseline": {
+        "runs": 0,
+        "pass": 0,
+        "partial": 0,
+        "blocked": 0,
+        "fail": 0,
+        "owner_corrections": 0,
+        "average_score": null,
+        "average_duration_seconds": null,
+        "average_input_tokens": null,
+        "average_cached_input_tokens": null,
+        "average_uncached_input_tokens": null,
+        "average_output_tokens": null,
+        "average_total_input_tokens": null,
+        "average_total_cached_input_tokens": null,
+        "average_total_uncached_input_tokens": null,
+        "average_total_output_tokens": null,
+        "average_total_reasoning_output_tokens": null,
+        "average_tool_calls": null,
+        "average_turn_count": null,
+        "average_tool_output_chars": null
+      },
+      "core": {
+        "runs": 0,
+        "pass": 0,
+        "partial": 0,
+        "blocked": 0,
+        "fail": 0,
+        "owner_corrections": 0,
+        "average_score": null,
+        "average_duration_seconds": null,
+        "average_input_tokens": null,
+        "average_cached_input_tokens": null,
+        "average_uncached_input_tokens": null,
+        "average_output_tokens": null,
+        "average_total_input_tokens": null,
+        "average_total_cached_input_tokens": null,
+        "average_total_uncached_input_tokens": null,
+        "average_total_output_tokens": null,
+        "average_total_reasoning_output_tokens": null,
+        "average_tool_calls": null,
+        "average_turn_count": null,
+        "average_tool_output_chars": null
+      },
+      "full": {
+        "runs": 0,
+        "pass": 0,
+        "partial": 0,
+        "blocked": 0,
+        "fail": 0,
+        "owner_corrections": 0,
+        "average_score": null,
+        "average_duration_seconds": null,
+        "average_input_tokens": null,
+        "average_cached_input_tokens": null,
+        "average_uncached_input_tokens": null,
+        "average_output_tokens": null,
+        "average_total_input_tokens": null,
+        "average_total_cached_input_tokens": null,
+        "average_total_uncached_input_tokens": null,
+        "average_total_output_tokens": null,
+        "average_total_reasoning_output_tokens": null,
+        "average_tool_calls": null,
+        "average_turn_count": null,
+        "average_tool_output_chars": null
+      }
+    }
+  },
+  "trace": {
+    "records": 1,
+    "warnings": []
+  },
+  "friction": [],
+  "recommendation": "NO_CHANGE",
+  "promotion_candidates": []
+}

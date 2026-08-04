@@ -1,0 +1,6 @@
+{
+  "id": "F-P2-MODEL-PASS",
+  "severity": "high",
+  "summary": "Finalization can return WORK_PASS while current proof/review model evidence remains unobserved, contradicting the fail-honest model policy.",
+  "reviewer": "foundation_reviewer"
+}

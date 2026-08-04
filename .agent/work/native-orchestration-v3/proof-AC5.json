@@ -1,0 +1,35 @@
+{
+  "id": "PF-AC5-R2",
+  "acceptance_id": "AC5",
+  "proof_kind": "integration",
+  "dimensions": [
+    "codex",
+    "cursor",
+    "antigravity",
+    "grok"
+  ],
+  "command": "python .agent/work/native-orchestration-v3/verify-platform-profiles.py",
+  "expected_exit_code": 0,
+  "timeout_seconds": 300,
+  "environment": "Python 3 static native-profile verifier; P:/agent-rules",
+  "artifact_paths": [
+    "platforms/codex/profiles/researcher.config.toml",
+    "platforms/cursor/agents/implementer.md",
+    "platforms/antigravity/profiles/role-guidance.md",
+    "platforms/grok/README-agents.md"
+  ],
+  "agent": "platform_adapters",
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "model_evidence": {
+    "requested_model": "gpt-5.6-terra",
+    "requested_effort": "medium",
+    "resolved_model": "gpt-5.6-terra",
+    "resolved_effort": "medium",
+    "observed_model": null,
+    "observed_effort": null,
+    "status": "unobserved",
+    "fallback_reason": "",
+    "main_direct_exception_reason": ""
+  }
+}

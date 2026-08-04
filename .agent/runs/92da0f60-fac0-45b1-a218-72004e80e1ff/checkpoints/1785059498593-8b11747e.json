@@ -1,0 +1,104 @@
+{
+  "id": "1785059498593-8b11747e",
+  "phase": "EXECUTING",
+  "completedTaskIds": [],
+  "created_at": "2026-07-26T09:51:38.593Z",
+  "data": {
+    "plan": {
+      "schema": "artifact/plan",
+      "version": 1,
+      "schema_version": "1.0",
+      "repository_baseline": "fix/truthful-harness-release@67e7b8bb0e6c1a400bb2b43bca2fa8d15c9447d6",
+      "intent_reference": "097cd44e6b02166739b58b6a47dfc841c9886ab6fdbb5e4b709ced7fd9cf3c1c",
+      "decisions": [],
+      "tasks": [
+        {
+          "id": "T-001",
+          "objective": "Implement R-001",
+          "requirements": [
+            "R-001"
+          ],
+          "dependsOn": [],
+          "file_ownership": [],
+          "forbidden_files": [],
+          "acceptance_criteria": [
+            "R-001 is implemented and verified"
+          ],
+          "estimatedEffort": "small"
+        }
+      ],
+      "completion_policy": "all_tasks",
+      "validation": {
+        "valid": true,
+        "errors": [],
+        "warnings": [],
+        "requirementCoverage": [
+          {
+            "id": "R-001",
+            "covered": true,
+            "taskId": "T-001"
+          }
+        ]
+      }
+    },
+    "tasks": [
+      {
+        "taskId": "T-001",
+        "state": "COMPLETED",
+        "retryCount": 0,
+        "worker": "local-worker",
+        "model": "__host-resolved__",
+        "effort": "small",
+        "assignment": {
+          "schema": "artifact/assignment",
+          "version": 1,
+          "id": "T-001",
+          "slice_id": "T-001",
+          "source_ids": [
+            "R-001"
+          ],
+          "mission": "Implement R-001",
+          "write_paths": [],
+          "context_paths": [],
+          "forbidden_paths": [],
+          "acceptance_ids": [
+            "R-001 is implemented and verified"
+          ],
+          "capability_class": "economy",
+          "allowed_tool_classes": [
+            "read",
+            "edit",
+            "test",
+            "shell"
+          ],
+          "model_requested": "__host-resolved__",
+          "effort_requested": "small"
+        },
+        "receipt": {
+          "taskId": "T-001",
+          "actual_files_changed": [],
+          "tool_activity_summary": {
+            "total_tool_calls": 0,
+            "tool_classes_used": []
+          },
+          "evidence": [],
+          "result": "No write_paths assigned — mission acknowledged",
+          "status": "completed"
+        }
+      }
+    ],
+    "receipts": [
+      {
+        "taskId": "T-001",
+        "actual_files_changed": [],
+        "tool_activity_summary": {
+          "total_tool_calls": 0,
+          "tool_classes_used": []
+        },
+        "evidence": [],
+        "result": "No write_paths assigned — mission acknowledged",
+        "status": "completed"
+      }
+    ]
+  }
+}

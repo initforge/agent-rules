@@ -88,6 +88,8 @@ describe("ContextGraph", () => {
     expect(nodesById.get("profile:5fedu:module-mapping")?.source).toBe("profiles/5fedu/module-mapping/modules.yaml");
     expect(nodesById.get("profile:5fedu:ui-contracts")?.source).toBe("profiles/5fedu/module-mapping/ui-contracts.md");
     expect(graph.nodes.some(node => node.source.startsWith("profiles/5fedu/projects/"))).toBe(false);
+    // Canonical 5fedu skills are profile-owned; public skills/ copies must not leak into the graph
+    expect(graph.nodes.some(node => node.source.startsWith("skills/5fedu-"))).toBe(false);
   });
 
   it("keeps activation metadata narrow in a fresh 5fedu UI graph", () => {
@@ -150,9 +152,9 @@ describe("ContextGraph", () => {
     const routePack = fixture.routes["5fedu_ui_base"];
     expect(routePack).toEqual([
       "profiles/5fedu/README.md",
-      "skills/5fedu-project/SKILL.md",
-      "skills/5fedu-module-parity/SKILL.md",
-      "skills/5fedu-module-parity/references/index.md",
+      "profiles/5fedu/skills/5fedu-project/SKILL.md",
+      "profiles/5fedu/skills/5fedu-module-parity/SKILL.md",
+      "profiles/5fedu/skills/5fedu-module-parity/references/index.md",
       "profiles/5fedu/module-mapping/modules.yaml",
       "profiles/5fedu/module-mapping/ui-contracts.md",
     ]);
@@ -176,13 +178,35 @@ describe("ContextGraph", () => {
       "skills/5fedu-module-parity/references/index.md",
     ]);
 
+    // Resolve load targets through alias map (same as validateSkillLoads)
+    const aliases = new Map<string, string[]>();
+    const addAlias = (alias: string, nodeId: string): void => {
+      if (!alias) return;
+      aliases.set(alias, [...(aliases.get(alias) || []), nodeId]);
+    };
+    for (const node of graph.nodes) {
+      addAlias(node.id, node.id);
+      addAlias(node.source, node.id);
+      const profileSkill = node.source.match(/^profiles\/[^/]+\/skills\/(.+)$/);
+      if (profileSkill) addAlias(`skills/${profileSkill[1]}`, node.id);
+    }
+
+    const loads = parity?.routing.loads as string[];
     const loadedSources = new Set(graph.nodes
-      .filter(node => (parity?.routing.loads as string[]).includes(node.id) || (parity?.routing.loads as string[]).includes(node.source))
+      .filter(node => {
+        if (loads.includes(node.id) || loads.includes(node.source)) return true;
+        // Resolve through aliases for profile-owned paths
+        for (const target of loads) {
+          const resolved = aliases.get(target);
+          if (resolved?.includes(node.id)) return true;
+        }
+        return false;
+      })
       .map(node => node.source));
     expect(loadedSources).toEqual(new Set([
       "profiles/5fedu/module-mapping/modules.yaml",
       "profiles/5fedu/module-mapping/ui-contracts.md",
-      "skills/5fedu-module-parity/references/index.md",
+      "profiles/5fedu/skills/5fedu-module-parity/references/index.md",
     ]));
     expect([...loadedSources].some(source => source.includes("/examples/"))).toBe(false);
     expect([...loadedSources].some(source => source.endsWith(".py"))).toBe(false);

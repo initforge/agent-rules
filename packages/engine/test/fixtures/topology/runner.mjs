@@ -39,8 +39,8 @@ async function start(stateDir) {
   const pids = [];
   const procs = [];
   const spawnOne = (mode) => {
-    const p = spawn(process.execPath, [FIXTURE, mode, '--state', stateDir, '--public-port', String(publicPort), '--api-port', String(apiPort)], { stdio: 'ignore' });
-    p.on('exit', () => { p.exited = true; });
+    const p = spawn(process.execPath, [FIXTURE, mode, '--state', stateDir, '--public-port', String(publicPort), '--api-port', String(apiPort)], { stdio: 'ignore', detached: true });
+    p.unref(); // release handle so parent exit doesn't kill child
     pids.push(p.pid);
     procs.push(p);
   };

@@ -1,9 +1,13 @@
 {
   "name": "playwright-mcp",
-  "capability": "browser-interaction",
+  "policy": "recommended",
   "upstream": "https://github.com/microsoft/playwright-mcp",
-  "package": "@playwright/mcp",
-  "versionPolicy": "latest",
-  "installType": "npm-npx",
-  "healthCheck": "npx -y @playwright/mcp --help"
+  "npmPackage": "@playwright/mcp",
+  "commandName": "playwright-mcp",
+  "mcpServerKey": "playwright",
+  "installDirs": {
+    "windows": "%LOCALAPPDATA%\\npm",
+    "linux": "$HOME/.npm-global",
+    "darwin": "$HOME/.npm-global"
+  }
 }

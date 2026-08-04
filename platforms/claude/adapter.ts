@@ -29,6 +29,29 @@ export const HOST_UNOBSERVABLE = 'HOST_UNOBSERVABLE';
 const BINARY = 'claude';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** ponytail: G-01 env scoping. Safe keys passed to native children by default. */
+const SAFE_ENV_KEYS = new Set([
+  'PATH', 'HOME', 'USER', 'SHELL', 'TERM', 'TMPDIR', 'TEMP', 'TMP',
+  'CLAUDE_CONFIG_DIR', 'CLAUDE_API_KEY', 'CLAUDE_API_KEY_FILE',
+  'CLAUDE_MCP_SERVERS', 'CLAUDE_HTTP_PROXY', 'CLAUDE_NO_COLOR',
+  // platform-specific
+  'LOCALAPPDATA', 'USERPROFILE', 'USERNAME', 'COMSPEC', 'PATHEXT',
+  'XDG_CONFIG_HOME', 'XDG_DATA_HOME', 'XDG_CACHE_HOME',
+]);
+
+function safeEnv(overrides?: Record<string, string | undefined>): NodeJS.ProcessEnv {
+  const base: NodeJS.ProcessEnv = {};
+  for (const key of SAFE_ENV_KEYS) {
+    if (process.env[key] !== undefined) base[key] = process.env[key];
+  }
+  if (!overrides) return base;
+  for (const [k, v] of Object.entries(overrides)) {
+    if (v === undefined) delete base[k];
+    else base[k] = v;
+  }
+  return base;
+}
+
 /** Sibling PlatformAdapter contract — identical surface to codex/grok/cursor/antigravity. */
 export interface PlatformAdapter {
   detect(): Promise<{ installed: boolean; version?: string; path?: string }>;
@@ -123,22 +146,37 @@ function rulesDir(): string {
 }
 
 async function resolveClaudeBinary(): Promise<{ path: string; version?: string } | null> {
-  try {
-    const { stdout } = await execFileAsync('which', [BINARY], { timeout: 5000 });
-    const binaryPath = stdout.trim();
-    if (!binaryPath) return null;
-    let version: string | undefined;
+  // Search PATH directly — avoids dependency on `which` which may be absent or
+  // produce unexpected results on Windows in certain environments.
+  const pathDirs = (process.env.PATH ?? '').split(path.delimiter).filter(Boolean);
+  for (const dir of pathDirs) {
+    const candidate = path.join(dir, BINARY);
     try {
-      const { stdout: versionOut } = await execFileAsync(binaryPath, ['--version'], { timeout: 5000 });
-      const firstLine = versionOut.trim().split('\n')[0];
-      version = firstLine || undefined;
+      // On Windows, prefer .cmd extension for batch files; POSIX uses the bare name.
+      const resolved = process.platform === 'win32'
+        ? (fs.existsSync(`${candidate}.cmd`) ? `${candidate}.cmd` : candidate)
+        : candidate;
+      // Check file exists (X_OK is always granted on Windows, so we only check existence).
+      if (!fs.existsSync(resolved)) continue;
+      let version: string | undefined;
+      try {
+        // On Windows, execFileAsync with a .cmd file throws EINVAL because .cmd
+        // files need to be executed through cmd.exe /c. Use shell:true workaround.
+        const { stdout: versionOut } = await execFileAsync(resolved, ['--version'], {
+          timeout: 5000,
+          shell: process.platform === 'win32',
+        });
+        const firstLine = versionOut.trim().split('\n')[0];
+        version = firstLine || undefined;
+      } catch {
+        // version flag unsupported — keep the binary path only
+      }
+      return { path: resolved, version };
     } catch {
-      // version flag unsupported — keep the binary path only
+      // not found in this directory
     }
-    return { path: binaryPath, version };
-  } catch {
-    return null;
   }
+  return null;
 }
 
 async function gitHeadSha(cwd: string): Promise<string | null> {
@@ -239,15 +277,24 @@ function parseResult(stdout: string): { ok: boolean; result: string } {
 function runNative(
   binaryPath: string,
   args: readonly string[],
-  opts: { cwd?: string; timeoutMs?: number; env?: NodeJS.ProcessEnv },
+  opts: { cwd?: string; timeoutMs?: number; env?: Record<string, string | undefined> },
 ): Promise<{ exitCode: number; stdout: string; stderr: string }> {
+  // On Windows, spawn .cmd files through cmd.exe /c with a single command string
+  // to ensure all arguments are passed correctly to the batch.
+  const child = process.platform === 'win32'
+    ? spawn(`"${binaryPath}" ${[...args].map(a => `"${a}"`).join(' ')}`, [], {
+        cwd: opts.cwd,
+        env: safeEnv(opts.env),
+        stdio: ['pipe', 'pipe', 'pipe'],
+        shell: true,
+      })
+    : spawn(binaryPath, [...args], {
+        cwd: opts.cwd,
+        env: safeEnv(opts.env),
+        stdio: ['pipe', 'pipe', 'pipe'],
+        shell: false,
+      });
   return new Promise((resolve, reject) => {
-    const child = spawn(binaryPath, [...args], {
-      cwd: opts.cwd,
-      env: opts.env ?? process.env,
-      stdio: ['pipe', 'pipe', 'pipe'],
-      shell: false,
-    });
     let stdout = '';
     let stderr = '';
     const timer = setTimeout(() => {
@@ -275,6 +322,9 @@ const activeChildren = new Map<string, ChildProcess>();
 
 export const claudeAdapter: ClaudeAdapter = {
   async detect() {
+    // Try to locate the binary first — the binary path is the authoritative
+    // indicator of a real installation. Home directory existence alone is
+    // insufficient (desktop-mode config dir may exist without binary).
     const found = await resolveClaudeBinary();
     if (found) return { installed: true, version: found.version, path: found.path };
     const homeExists = fs.existsSync(claudeHome());
@@ -331,7 +381,11 @@ export const claudeAdapter: ClaudeAdapter = {
 
   async probe() {
     try {
-      const { stdout } = await execFileAsync(BINARY, ['--version'], { timeout: 5000 });
+      // Use shell:true on Windows for .cmd files (execFileAsync with .cmd throws EINVAL).
+      const { stdout } = await execFileAsync(BINARY, ['--version'], {
+        timeout: 5000,
+        shell: process.platform === 'win32',
+      });
       return { ok: true, detail: `claude ${stdout.trim()}` };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -341,7 +395,10 @@ export const claudeAdapter: ClaudeAdapter = {
 
   async install() {
     try {
-      const { stdout, stderr } = await execFileAsync(BINARY, ['install'], { timeout: 120_000 });
+      const { stdout, stderr } = await execFileAsync(BINARY, ['install'], {
+        timeout: 120_000,
+        shell: process.platform === 'win32',
+      });
       const detail = (stdout + stderr).trim() || 'claude install completed';
       return { ok: true, detail };
     } catch (err) {
@@ -352,7 +409,10 @@ export const claudeAdapter: ClaudeAdapter = {
 
   async update() {
     try {
-      const { stdout, stderr } = await execFileAsync(BINARY, ['update'], { timeout: 120_000 });
+      const { stdout, stderr } = await execFileAsync(BINARY, ['update'], {
+        timeout: 120_000,
+        shell: process.platform === 'win32',
+      });
       const detail = (stdout + stderr).trim() || 'claude update completed';
       return { ok: true, detail };
     } catch (err) {
@@ -364,7 +424,10 @@ export const claudeAdapter: ClaudeAdapter = {
   async rollback(version: string) {
     if (!/^[\w.\-]+$/.test(version)) return { ok: false, detail: `unsafe version token: "${version}"` };
     try {
-      const { stdout, stderr } = await execFileAsync(BINARY, ['install', version], { timeout: 120_000 });
+      const { stdout, stderr } = await execFileAsync(BINARY, ['install', version], {
+        timeout: 120_000,
+        shell: process.platform === 'win32',
+      });
       const detail = (stdout + stderr).trim() || `claude rolled back to ${version}`;
       return { ok: true, detail };
     } catch (err) {
@@ -383,7 +446,10 @@ export const claudeAdapter: ClaudeAdapter = {
 
   async doctor() {
     try {
-      const { stdout, stderr } = await execFileAsync(BINARY, ['doctor'], { timeout: 60_000 });
+      const { stdout, stderr } = await execFileAsync(BINARY, ['doctor'], {
+        timeout: 60_000,
+        shell: process.platform === 'win32',
+      });
       const detail = (stdout + stderr).trim();
       // Honest claim: healthy only when the host explicitly reports no installation issues.
       const healthy = /No installation issues found\./.test(detail);
@@ -400,7 +466,8 @@ export const claudeAdapter: ClaudeAdapter = {
     const sessionId = params.sessionId ?? randomUUID();
     if (params.sessionId) assertSafeSessionId(params.sessionId);
     const cwd = params.cwd ?? process.cwd();
-    if (params.allowedRoot) assertPathInsideRoot(cwd, params.allowedRoot);
+    // G-03: fail-closed path guard, defaults to cwd (repo root) when not provided
+    assertPathInsideRoot(cwd, params.allowedRoot ?? cwd);
     let worktreeName: string | undefined;
     if (params.worktree) {
       assertSafeWorktreeName(params.worktree);
@@ -426,12 +493,22 @@ export const claudeAdapter: ClaudeAdapter = {
     if (worktreeName) args.push('--worktree', worktreeName);
     args.push(params.prompt);
 
-    const child = spawn(found.path, args, {
-      cwd,
-      env: process.env,
-      stdio: ['pipe', 'pipe', 'pipe'],
-      shell: false,
-    });
+    // On Windows, spawn .cmd files through cmd.exe /c with a single command string
+    // to ensure all arguments (including the prompt) are passed correctly to the batch.
+    // Arguments are double-quoted to handle special characters and paths with spaces.
+    const child = process.platform === 'win32'
+      ? spawn(`"${found.path}" ${args.map(a => `"${a}"`).join(' ')}`, [], {
+          cwd,
+          env: safeEnv(),
+          stdio: ['pipe', 'pipe', 'pipe'],
+          shell: true,
+        })
+      : spawn(found.path, args, {
+          cwd,
+          env: safeEnv(),
+          stdio: ['pipe', 'pipe', 'pipe'],
+          shell: false,
+        });
     activeChildren.set(sessionId, child);
     let stdout = '';
     let stderr = '';
@@ -476,7 +553,8 @@ export const claudeAdapter: ClaudeAdapter = {
     const hostVersion = found?.version ?? '';
     assertSafeSessionId(params.sessionId);
     const cwd = params.cwd ?? process.cwd();
-    if (params.allowedRoot) assertPathInsideRoot(cwd, params.allowedRoot);
+    // G-03: fail-closed path guard, defaults to cwd (repo root) when not provided
+    assertPathInsideRoot(cwd, params.allowedRoot ?? cwd);
 
     if (!found) {
       return {
@@ -495,7 +573,28 @@ export const claudeAdapter: ClaudeAdapter = {
     const args = ['-p', '--output-format', 'stream-json', '--verbose', '--resume', params.sessionId];
     if (params.model) args.push('--model', params.model);
     args.push(params.prompt);
-    const { stdout } = await runNative(found.path, args, { cwd, timeoutMs: params.timeoutMs ?? 120_000 });
+
+    let stdout = '';
+    let stderr = '';
+    try {
+      const result = await runNative(found.path, args, { cwd, timeoutMs: params.timeoutMs ?? 120_000 });
+      stdout = result.stdout;
+      stderr = result.stderr;
+    } catch (err) {
+      // G-04: explicit failure on spawn/ENOENT, not unhandled rejection
+      return {
+        ok: false,
+        host: 'claude',
+        hostVersion,
+        commitSha: await gitHeadSha(cwd),
+        sessionId: params.sessionId,
+        model: { requested: params.model ?? HOST_UNOBSERVABLE, resolved: HOST_UNOBSERVABLE, observed: HOST_UNOBSERVABLE },
+        worktree: { isolated: false },
+        result: `claude spawn failed: ${err instanceof Error ? err.message : String(err)}`,
+        observedAt: new Date().toISOString(),
+      };
+    }
+
     const evidence = parseModelEvidence(stdout, params.model);
     const resultInfo = parseResult(stdout);
     return {

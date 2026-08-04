@@ -13,6 +13,7 @@ import {
 } from "../src/runtime/installer.js";
 import { compareRuntimeManifest } from "../src/commands/doctor.js";
 import { resolveOpenCodeModel } from "../src/runtime/opencode.js";
+import { SYMLINK_CAPABLE } from "./helpers/symlink-capability.js";
 
 const runtimeDirectory = "agent-rules-runtime";
 
@@ -281,15 +282,10 @@ describe("RuntimeInstaller", () => {
     await expect(verifyRuntimeReceipt(path.join(targetRoot, runtimeDirectory), "codex")).resolves.toBeDefined();
   });
 
-  it("rejects a symlinked manifest-owned legacy path without mutation", async () => {
+  it.skipIf(!SYMLINK_CAPABLE)("rejects a symlinked manifest-owned legacy path without mutation", async () => {
     await fs.mkdir(path.join(targetRoot, "rules"), { recursive: true });
     await fs.writeFile(path.join(targetRoot, "outside.md"), "legacy rule\n");
-    try {
-      await fs.symlink(path.join(targetRoot, "outside.md"), path.join(targetRoot, "rules", "legacy.md"));
-    } catch (error: unknown) {
-      if ((error as NodeJS.ErrnoException).code === "EPERM") return;
-      throw error;
-    }
+    await fs.symlink(path.join(targetRoot, "outside.md"), path.join(targetRoot, "rules", "legacy.md"));
     const agents = "legacy agents\n";
     await fs.writeFile(path.join(targetRoot, "AGENTS.md"), agents);
     await fs.writeFile(path.join(targetRoot, "agent-rules-manifest.json"), JSON.stringify({
@@ -440,7 +436,7 @@ describe("RuntimeInstaller", () => {
     await expect(installer().install("codex")).rejects.toThrow("Unverified effective_plan_identity");
   });
 
-  it("rejects a symlinked canonical ledger directory", async () => {
+  it.skipIf(!SYMLINK_CAPABLE)("rejects a symlinked canonical ledger directory", async () => {
     const ledgerRoot = path.join(repositoryRoot, ".agent", "ledger");
     const realLedgerRoot = path.join(repositoryRoot, ".agent", "real-ledger");
     await fs.rename(ledgerRoot, realLedgerRoot);
@@ -461,17 +457,12 @@ describe("RuntimeInstaller", () => {
     expect(second.receipt?.source.repositoryContext.relation).toBe("context-only-not-artifact-attestation");
   });
 
-  it("rejects symlinked build inputs", async () => {
+  it.skipIf(!SYMLINK_CAPABLE)("rejects symlinked build inputs", async () => {
     const buildRoot = path.join(repositoryRoot, "generated", "runtime-build", "codex");
     await fs.rm(buildRoot, { recursive: true, force: true });
     await fs.mkdir(buildRoot, { recursive: true });
     await fs.writeFile(path.join(repositoryRoot, "outside.md"), "outside\n");
-    try {
-      await fs.symlink(path.join(repositoryRoot, "outside.md"), path.join(buildRoot, "linked.md"));
-    } catch (error: unknown) {
-      if ((error as NodeJS.ErrnoException).code === "EPERM") return;
-      throw error;
-    }
+    await fs.symlink(path.join(repositoryRoot, "outside.md"), path.join(buildRoot, "linked.md"));
     await fs.writeFile(path.join(buildRoot, "manifest.json"), JSON.stringify({
       version: 1, platform: "codex", files: [{ path: "linked.md", sha256: sha256("outside\n") }],
     }));
@@ -511,20 +502,12 @@ describe("RuntimeInstaller", () => {
 
   it("rejects forged recovery journals without deleting roots, arbitrary subdirectories, or linked paths", async () => {
     const uuid = "11111111-1111-4111-8111-111111111111";
-    const cases: Array<{ name: string; mutate: (root: string, journal: Record<string, unknown>, victim: string) => Promise<void> | void }> = [
+    const cases: Array<{ name: string; mutate: (root: string, journal: Record<string, unknown>, victim: string) => void }> = [
       { name: "root staging equality", mutate: (root, journal) => { journal.staging = root; } },
       { name: "arbitrary staging directory", mutate: (_root, journal, victim) => { journal.staging = victim; } },
       { name: "arbitrary backup", mutate: (_root, journal, victim) => { journal.backup = victim; } },
       { name: "invalid operation", mutate: (_root, journal) => { journal.operation = "erase"; } },
       { name: "invalid platform", mutate: (_root, journal) => { journal.platform = "opencode"; } },
-      {
-        name: "linked reserved staging",
-        mutate: async (root, journal, victim) => {
-          const linked = path.join(root, `.agent-rules-runtime.stage-${uuid}`);
-          await fs.symlink(victim, linked, "dir");
-          journal.staging = linked;
-        },
-      },
     ];
 
     for (const testCase of cases) {
@@ -552,6 +535,34 @@ describe("RuntimeInstaller", () => {
       expect(await fs.readFile(path.join(victim, "keep.txt"), "utf8"), testCase.name).toBe("keep");
       expect(await pathExists(root), testCase.name).toBe(true);
     }
+  });
+
+  it.skipIf(!SYMLINK_CAPABLE)("rejects forged recovery journals with a linked reserved staging path", async () => {
+    const uuid = "11111111-1111-4111-8111-111111111111";
+    const root = path.join(temp, "forged-linked-reserved-staging");
+    const victim = path.join(root, "user-data");
+    await fs.mkdir(victim, { recursive: true });
+    await fs.writeFile(path.join(victim, "keep.txt"), "keep");
+    const linked = path.join(root, `.agent-rules-runtime.stage-${uuid}`);
+    await fs.symlink(victim, linked, "dir");
+    const journal: Record<string, unknown> = {
+      schema: "agent-rules/runtime-transaction",
+      version: 1,
+      operation: "install",
+      phase: "prepared",
+      platform: "codex",
+      target: path.join(root, runtimeDirectory),
+      staging: linked,
+      backup: path.join(root, ".agent-rules-runtime.rollback"),
+      expectedPlanSha256: "a".repeat(64),
+      expectedArtifactSha256: "b".repeat(64),
+    };
+    await fs.writeFile(path.join(root, ".agent-rules-runtime.transaction.json"), JSON.stringify(journal));
+    const forged = new RuntimeInstaller({ repositoryRoot, platformRoots: { codex: root } });
+
+    await expect(forged.uninstall("codex")).rejects.toThrow(/unsafe transaction|linked recovery/);
+    expect(await fs.readFile(path.join(victim, "keep.txt"), "utf8")).toBe("keep");
+    expect(await pathExists(root)).toBe(true);
   });
 
   it("materializes the platform-specific host discovery entrypoint", async () => {

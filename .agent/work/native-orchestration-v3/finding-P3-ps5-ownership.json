@@ -1,0 +1,6 @@
+{
+  "id": "F-P3-PS5-OWNERSHIP",
+  "severity": "high",
+  "summary": "The machine's available Windows PowerShell 5 enumerates single-item ConvertFrom-Json ownership arrays differently, producing false ownership mapping drift; full native install must work on the current supported machine rather than only pwsh.",
+  "reviewer": "main-integration-review"
+}

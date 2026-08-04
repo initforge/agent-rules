@@ -105,6 +105,25 @@ export class SupervisorRunner {
 
   get isInitialized(): boolean { return this.initialized; }
 
+  /** G-02/G-08/G-09: Reject ownedPaths/forbiddenPaths overlap before assignChild. */
+  private checkAuthorizationOverlap(ownedPaths: readonly string[], forbiddenPaths: readonly string[]): { ok: true } | { ok: false; reason: string } {
+    // Normalize for comparison (same as supervisor internals)
+    const normOwned = [...ownedPaths].map(p => p.replace(/\\/g, '/').split('/').filter(part => part !== '' && part !== '.'));
+    const normForbidden = [...forbiddenPaths].map(p => p.replace(/\\/g, '/').split('/').filter(part => part !== '' && part !== '.'));
+
+    for (const op of normOwned) {
+      const opStr = op.join('/');
+      for (const fp of normForbidden) {
+        const fpStr = fp.join('/');
+        // Check: owned path equals, starts with, or is prefix of forbidden path
+        if (fpStr === opStr || fpStr.startsWith(opStr + '/') || opStr.startsWith(fpStr + '/')) {
+          return { ok: false, reason: `Authorization overlap: owned=${opStr} conflicts with forbidden=${fpStr}` };
+        }
+      }
+    }
+    return { ok: true };
+  }
+
   async runAssignment(params: {
     assignmentId: string; kind: 'writer' | 'reviewer' | 'verifier';
     ownedPaths: readonly string[]; forbiddenPaths: readonly string[];
@@ -113,6 +132,10 @@ export class SupervisorRunner {
   }): Promise<{ ok: true; assignment: ChildAssignmentView } | { ok: false; reason: string }> {
     if (!this.initialized) return { ok: false, reason: 'Runner not initialized' };
     if (!this.parentSessionId) return { ok: false, reason: 'No parent session' };
+
+    // G-02/G-08/G-09: Authorization overlap fails before dispatch
+    const authCheck = this.checkAuthorizationOverlap(params.ownedPaths, params.forbiddenPaths);
+    if (!authCheck.ok) return authCheck;
 
     const assignResult = this._supervisor.assignChild({
       assignmentId: params.assignmentId, kind: params.kind,
@@ -348,6 +371,13 @@ export class SupervisorRunner {
 
 function journalPath(statePath: string): string { return statePath + '.reconcile'; }
 
+/**
+ * G-09: Platform-specific fsync behavior documented and observable.
+ * - POSIX: fsync on directory ensures rename durability.
+ * - Windows: FlushFileBuffers on directory handle is not supported; silently
+ *   ignores EPERM/EINVAL/ENOTSUP/EOPNOTSUPP. Journal integrity preserved via
+ *   file-level fsync before rename; directory sync is advisory on Windows.
+ */
 function fsyncJournalDirectory(dir: string): void {
   let fd: number | undefined;
   try {
@@ -356,6 +386,8 @@ function fsyncJournalDirectory(dir: string): void {
   } catch (error) {
     const code = (error as NodeJS.ErrnoException).code;
     if (!['EPERM', 'EINVAL', 'ENOTSUP', 'EOPNOTSUPP'].includes(code ?? '')) throw error;
+    // G-09: Observable warning for expected platform limitations
+    console.warn(`[fsyncJournalDirectory] directory fsync not supported on this platform (${code ?? 'unknown'}); journal integrity preserved via file-level fsync`);
   } finally {
     if (fd !== undefined) fs.closeSync(fd);
   }

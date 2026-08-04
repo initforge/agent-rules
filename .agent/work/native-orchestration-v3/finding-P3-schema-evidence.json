@@ -1,0 +1,6 @@
+{
+  "id": "F-P3-SCHEMA-EVIDENCE",
+  "severity": "medium",
+  "summary": "Native schema tests are repository allowlists and do not prove platform discovery layouts; they missed the Antigravity mapping and lack host validation evidence where CLIs are unavailable.",
+  "reviewer": "foundation_rereviewer"
+}

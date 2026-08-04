@@ -41,7 +41,7 @@ def load_yaml_via_node(path: Path) -> dict:
     )
     out = subprocess.run(
         ["node", "-e", script, str(path)],
-        capture_output=True, text=True, check=True, cwd=ROOT,
+        capture_output=True, encoding="utf-8", errors="replace", check=True, cwd=ROOT,
     )
     return json.loads(out.stdout)
 

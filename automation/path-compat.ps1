@@ -8,13 +8,13 @@ function Join-Path {
     [Parameter(Mandatory = $true, Position = 0)]
     [string]$Path,
     [Parameter(Mandatory = $true, Position = 1)]
-    [string[]]$ChildPath
+    [string]$ChildPath
   )
 
   $Normalized = if ([IO.Path]::DirectorySeparatorChar -eq '\') {
     $ChildPath
   } else {
-    @($ChildPath | ForEach-Object { $_ -replace '\\', '/' })
+    $ChildPath -replace '\\', '/'
   }
   Microsoft.PowerShell.Management\Join-Path -Path $Path -ChildPath $Normalized
 }

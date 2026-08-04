@@ -1,0 +1,20 @@
+Reading additional input from stdin...
+2026-07-23T12:48:57.163823Z  WARN codex_core_skills::loader: ignoring interface.icon_small: icon path with '..' must resolve under plugin assets/
+2026-07-23T12:48:57.163881Z  WARN codex_core_skills::loader: ignoring interface.icon_large: icon path with '..' must resolve under plugin assets/
+2026-07-23T12:48:57.187247Z  WARN codex_core_plugins::loader: failed to load plugin: missing or invalid plugin.json plugin="sites@openai-bundled" path=C:\Users\ADMIN\.codex\plugins\cache\openai-bundled\sites\0.1.30
+2026-07-23T12:48:57.199864Z  WARN codex_core::shell_snapshot: Failed to create shell snapshot for powershell: Shell snapshot not supported yet for PowerShell
+2026-07-23T12:48:57.870492Z  WARN codex_core_skills::loader: ignoring interface.icon_small: icon path with '..' must resolve under plugin assets/
+2026-07-23T12:48:57.870527Z  WARN codex_core_skills::loader: ignoring interface.icon_large: icon path with '..' must resolve under plugin assets/
+2026-07-23T12:48:57.901201Z  WARN codex_core_plugins::loader: failed to load plugin: missing or invalid plugin.json plugin="sites@openai-bundled" path=C:\Users\ADMIN\.codex\plugins\cache\openai-bundled\sites\0.1.30
+2026-07-23T12:50:30.190202Z ERROR codex_core::tools::router: error=Exit code: 1
+Wall time: 4.8 seconds
+Output:
+python : The term 'python' is not recognized as the name of a cmdlet, function, script file, or operable program. 
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:2 char:1
++ python -m unittest -v
++ ~~~~~~
+    + CategoryInfo          : ObjectNotFound: (python:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+

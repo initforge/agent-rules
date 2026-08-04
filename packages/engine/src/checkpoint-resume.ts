@@ -23,6 +23,9 @@ import { sha256Bytes } from './contracts.js';
 export type CheckpointTrigger = 'manual' | 'task_complete' | 'epoch_change' | 'crash_recovery';
 
 export interface CursorPosition {
+  readonly planId: string;
+  readonly runId: string;
+  readonly epoch: number;
   readonly taskId: string;
   readonly attemptCount: number;
   readonly completedTaskIds: readonly string[];
@@ -78,6 +81,9 @@ export interface ResumeContext {
 
 function validateCursor(cursor: CursorPosition): string[] {
   const errors: string[] = [];
+  if (!cursor.planId) errors.push('cursor.planId is required');
+  if (!cursor.runId) errors.push('cursor.runId is required');
+  if (cursor.epoch < 0) errors.push('cursor.epoch must be non-negative');
   if (!cursor.taskId) errors.push('cursor.taskId is required');
   if (cursor.attemptCount < 0) errors.push('cursor.attemptCount must be non-negative');
   // No overlapping task IDs across completed/failed/skipped
@@ -149,26 +155,34 @@ export function validateCheckpointIntegrity(checkpoint: Checkpoint): ResumeValid
   };
 }
 
-/** validateCursorCapsulePair — check cursor and capsule are a valid pair for resume */
+/** validateCursorCapsulePair — check cursor and capsule are a valid pair for resume.
+ * Enforces identity binding: plan/run/epoch must match between cursor and capsule.
+ * Honest stale rejection: mismatched identity fields cause immediate invalidation. */
 export function validateCursorCapsulePair(
   cursor: CursorPosition,
   capsule: CapsuleState,
 ): { valid: boolean; errors: readonly string[] } {
   const errors: string[] = [];
 
-  // Cursor planId must match capsule planId
-  // ponytail: skip — cross-run cursor binding. Add when multi-run resume needed.
-  // For now, we only validate that both reference the same plan
-  if (!cursor.taskId) errors.push('cursor.taskId must be set');
-  if (!capsule.planId) errors.push('capsule.planId must be set');
+  // First validate cursor internals
+  errors.push(...validateCursor(cursor));
+
+  // Identity binding: cursor ↔ capsule plan/run/epoch must match
+  if (cursor.planId !== capsule.planId) {
+    errors.push(`cursor.planId "${cursor.planId}" !== capsule.planId "${capsule.planId}"`);
+  }
+  if (cursor.runId !== capsule.runId) {
+    errors.push(`cursor.runId "${cursor.runId}" !== capsule.runId "${capsule.runId}"`);
+  }
+  if (cursor.epoch !== capsule.epoch) {
+    errors.push(`cursor.epoch ${cursor.epoch} !== capsule.epoch ${capsule.epoch}`);
+  }
 
   // Cursor's completed tasks should be reflected in capsule decisions (eventual consistency)
-  // Warning only (tasks may have committed decisions not yet reflected in task lists)
   const completedTaskIds = new Set(cursor.completedTaskIds);
   const decidedTaskIds = new Set(
     capsule.decisions
       .map(d => {
-        // Extract task ID from decision context if present
         try {
           const ctx = JSON.parse(d.decision);
           return ctx.taskId ?? null;
@@ -232,9 +246,12 @@ export function buildResumeContext(checkpoint: Checkpoint): ResumeContext {
   };
 }
 
-/** computeCursorSha — deterministic hash for cursor state */
+/** computeCursorSha — deterministic hash for cursor state, including identity */
 export function computeCursorSha(cursor: CursorPosition): Sha256 {
   return sha256Bytes(new TextEncoder().encode(JSON.stringify({
+    planId: cursor.planId,
+    runId: cursor.runId,
+    epoch: cursor.epoch,
     taskId: cursor.taskId,
     attemptCount: cursor.attemptCount,
     completedTaskIds: cursor.completedTaskIds.slice().sort(),
@@ -255,4 +272,104 @@ export function computeCapsuleSha(capsule: CapsuleState): Sha256 {
     activeWorkers: capsule.activeWorkers.slice().sort(),
     mode: capsule.mode,
   })));
+}
+
+/** CheckpointCompatibility — result of comparing two checkpoints for resume eligibility */
+export interface CheckpointCompatibility {
+  readonly compatible: boolean;
+  readonly reason?: string;
+  readonly cursorProgress: boolean;
+  readonly identityMatches: boolean;
+}
+
+/**
+ * isCheckpointCompatible — verify checkpoint B can resume from checkpoint A.
+ * Checks: identity binding (plan/run/epoch), cursor progress (no rollback), SHA integrity.
+ */
+export function isCheckpointCompatible(
+  previous: Checkpoint,
+  next: Checkpoint,
+): CheckpointCompatibility {
+  // Identity must match across checkpoints
+  const identityFields = [
+    { field: 'planId', prev: previous.cursor.planId, next: next.cursor.planId },
+    { field: 'runId', prev: previous.cursor.runId, next: next.cursor.runId },
+    { field: 'epoch', prev: previous.cursor.epoch, next: next.cursor.epoch },
+  ];
+
+  for (const { field, prev, next: n } of identityFields) {
+    if (prev !== n) {
+      return {
+        compatible: false,
+        reason: `identity mismatch: ${field} changed from "${prev}" to "${n}"`,
+        cursorProgress: false,
+        identityMatches: false,
+      };
+    }
+  }
+
+  // Cursor progress: completed tasks must not decrease (no rollback)
+  const prevCompleted = new Set(previous.cursor.completedTaskIds);
+  const nextCompleted = new Set(next.cursor.completedTaskIds);
+  const hasProgress = [...prevCompleted].every(id => nextCompleted.has(id));
+  const hasNewWork = nextCompleted.size >= prevCompleted.size;
+
+  if (!hasProgress || !hasNewWork) {
+    return {
+      compatible: false,
+      reason: 'cursor rollback detected: completed tasks decreased',
+      cursorProgress: false,
+      identityMatches: true,
+    };
+  }
+
+  // Chain integrity: next.previousCheckpointId should match previous.checkpointId
+  if (next.previousCheckpointId !== null && next.previousCheckpointId !== previous.checkpointId) {
+    return {
+      compatible: false,
+      reason: `checkpoint chain broken: expected previous "${previous.checkpointId}", got "${next.previousCheckpointId}"`,
+      cursorProgress: true,
+      identityMatches: true,
+    };
+  }
+
+  return {
+    compatible: true,
+    cursorProgress: true,
+    identityMatches: true,
+  };
+}
+
+/** validateCheckpointForResume — full validation pipeline: integrity + identity + compatibility */
+export function validateCheckpointForResume(
+  checkpoint: Checkpoint,
+  expectedPlanId: string,
+  expectedRunId: string,
+  expectedEpoch: number,
+): ResumeValidation {
+  const integrity = validateCheckpointIntegrity(checkpoint);
+  const errors = [...integrity.errors];
+
+  // Hard identity constraints
+  if (checkpoint.cursor.planId !== expectedPlanId) {
+    errors.push(`planId mismatch: checkpoint "${checkpoint.cursor.planId}" !== expected "${expectedPlanId}"`);
+  }
+  if (checkpoint.cursor.runId !== expectedRunId) {
+    errors.push(`runId mismatch: checkpoint "${checkpoint.cursor.runId}" !== expected "${expectedRunId}"`);
+  }
+  if (checkpoint.cursor.epoch !== expectedEpoch) {
+    errors.push(`epoch mismatch: checkpoint ${checkpoint.cursor.epoch} !== expected ${expectedEpoch}`);
+  }
+
+  // Cursor-capsule binding
+  const pairValidation = validateCursorCapsulePair(checkpoint.cursor, checkpoint.capsule);
+  errors.push(...pairValidation.errors);
+
+  return {
+    valid: errors.length === 0 && integrity.valid,
+    cursorMatches: integrity.cursorMatches && checkpoint.cursor.planId === expectedPlanId,
+    capsuleMatches: integrity.capsuleMatches && checkpoint.capsule.planId === expectedPlanId,
+    errors: Object.freeze([...new Set(errors)]),
+    warnings: integrity.warnings,
+  };
 }

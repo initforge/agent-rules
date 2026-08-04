@@ -1,0 +1,39 @@
+{
+  "outcome": "PARTIAL",
+  "scores": {
+    "scope": 4,
+    "correctness": 4,
+    "safety": 4,
+    "verification": 4,
+    "communication": 0
+  },
+  "evidence": [
+    {
+      "type": "artifact",
+      "label": "workspace change scope",
+      "status": "PASS",
+      "ref": "expected=['message.txt']; actual=['message.txt']"
+    },
+    {
+      "type": "artifact",
+      "label": "expected file message.txt",
+      "status": "PASS",
+      "ref": "message.txt"
+    },
+    {
+      "type": "command",
+      "label": "verification: python -m unittest -q",
+      "status": "PASS",
+      "ref": "---------------------------------------------------------------------- Ran 1 test in 0.000s  OK"
+    },
+    {
+      "type": "review",
+      "label": "response contract",
+      "status": "FAIL",
+      "ref": "required_terms=['message.txt']"
+    }
+  ],
+  "friction": [
+    "response contract"
+  ]
+}

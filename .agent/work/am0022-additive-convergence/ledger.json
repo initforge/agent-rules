@@ -1,0 +1,632 @@
+{
+  "schema_version": 4,
+  "work_id": "am0022-additive-convergence",
+  "status": "planned",
+  "lifecycle_status": "planned",
+  "task_status": "open",
+  "orchestration_status": "healthy",
+  "created_at": "2026-08-02T22:55:17.854840+00:00",
+  "updated_at": "2026-08-03T10:17:00+07:00",
+  "plan": {
+    "ref": "owner://am-0022-additive-harness-convergence",
+    "sha256": "973cdd0e6971dc1ac12bc714240d8847d43c13e2f6997ca33e09df02c2f41d8b",
+    "identity": "legacy-init-ref"
+  },
+  "active_slices": [
+    {
+      "slice_id": "S1",
+      "dispatched_at": "2026-08-03T10:17:00+07:00",
+      "receipt_ref": "assignment-contract.json",
+      "status": "dispatched"
+    },
+    {
+      "slice_id": "S3",
+      "dispatched_at": "2026-08-03T10:17:00+07:00",
+      "receipt_ref": "assignment-vitest.json",
+      "status": "dispatched"
+    }
+  ],
+  "classification": {
+    "shape": "resumable",
+    "ledger": "required",
+    "strategy": "parallel",
+    "review_required": true,
+    "reasons": [
+      "risk/resume/external wait/long runtime",
+      "file count is an advisory signal, not a risk classifier",
+      "risk-triggered independent review"
+    ]
+  },
+  "execution_contract": {
+    "mode": "frontstage-first-contract-safe",
+    "max_active_agents_including_main": 9,
+    "max_delegation_depth": 1,
+    "effort_cap": "high",
+    "authorized_final_actions": [
+      "edit"
+    ],
+    "execute_authorization": {
+      "authorized": true,
+      "recorded_at": "2026-08-03T10:17:00+07:00",
+      "source": "AM-0022-reconciliation",
+      "actions": [
+        "edit"
+      ]
+    },
+    "run_id": "baec21cf357340d3a231772d0fee3469",
+    "main_direct_policy": {
+      "allowed": false,
+      "allowed_tool_classes": [
+        "browser",
+        "edit",
+        "external-write",
+        "git",
+        "network",
+        "read",
+        "shell",
+        "test"
+      ]
+    },
+    "am22_composition": {
+      "normal_children": 8,
+      "burst_children": 10,
+      "normal_role_composition": {"writers": 4, "verifiers": 2, "reviewers": 1, "integration_preparation": 1},
+      "burst_role_composition": {"writers": 5, "verifiers": 2, "reviewers": 2, "integration_preparation": 1},
+      "source_contract_id": "agent-rules-harness-v3-rearchitecture-20260726-r1-generation-61",
+      "reconciled_at": "2026-08-03T10:17:00+07:00"
+    }
+  },
+  "repository": {
+    "path": "P:\\agent-rules",
+    "branch": "codex/agent-rules-convergence-current",
+    "baseline_commit": "37f3cfaa6f227bc8c6d1c93aaa2d689806902974"
+  },
+  "host_refs": {
+    "host": "unknown",
+    "task_ref": "",
+    "session_ref": ""
+  },
+  "model_policy_reasons": [],
+  "control_plane_exceptions": [],
+  "proof_cache": [],
+  "telemetry_events": [
+    {
+      "id": "TEL-001",
+      "type": "dependency-correction",
+      "work_id": "am0022-additive-convergence",
+      "author": "W2-writer",
+      "recorded_at": "2026-08-03T10:17:00+07:00",
+      "event": "Removed S1 from S4 depends_on. S1 and S3 are independent workstreams per CK-001 next_action; S4 requires S3 test output and S2 runtime, not S1 contracts pointer.",
+      "changes": {
+        "S4_depends_on_before": ["S1", "S2", "S3"],
+        "S4_depends_on_after": ["S2", "S3"]
+      },
+      "evidence": {
+        "dispatched_slices": ["S1", "S3"],
+        "dispatch_receipts": ["assignment-contract.json", "assignment-vitest.json"],
+        "next_action_ref": "CK-001"
+      },
+      "fabricated_pass": false
+    }
+  ],
+  "source_history": [
+    {
+      "id": "REQ-001",
+      "kind": "original",
+      "summary": "Implement additive AM-0022 convergence while preserving every valid old capability and unimplemented requirement.",
+      "captured_at": "2026-08-03T00:00:00+07:00",
+      "redacted": false,
+      "slice_ids": [
+        "*"
+      ]
+    },
+    {
+      "id": "INJ-001",
+      "kind": "injection",
+      "summary": "Cleanup is preservation-first; do not remove good implemented or unimplemented harness capability.",
+      "captured_at": "2026-08-03T00:01:00+07:00",
+      "redacted": false,
+      "slice_ids": [
+        "*"
+      ]
+    },
+    {
+      "id": "INJ-002",
+      "kind": "injection",
+      "summary": "Prepare project prompts; mini-toeic.score is nearly complete and must receive minimal intervention.",
+      "captured_at": "2026-08-03T00:02:00+07:00",
+      "redacted": false,
+      "slice_ids": [
+        "S6"
+      ]
+    }
+  ],
+  "slices": [
+    {
+      "id": "S1",
+      "name": "AM22 contracts and current pointer",
+      "status": "ready",
+      "depends_on": [],
+      "required": true,
+      "acceptance": [
+        {
+          "id": "AC1",
+          "claim": "AM-0022 and canonical pointer preserve and compile all valid old capabilities.",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "schema",
+          "required_proof_kinds": [
+            "static",
+            "unit"
+          ],
+          "required_dimensions": [
+            "behavior",
+            "negative-path"
+          ],
+          "receipt_ids": [],
+          "proof_epoch": 0,
+          "full_gate_fingerprint": "03a156738876047636c82b2b74641afe828eff801f79453a7cf6fb5e57b0b32a"
+        }
+      ],
+      "review_required": true
+    },
+    {
+      "id": "S2",
+      "name": "Engine runtime convergence",
+      "status": "ready",
+      "depends_on": [
+        "S1"
+      ],
+      "required": true,
+      "acceptance": [
+        {
+          "id": "AC2",
+          "claim": "Existing engine primitives are reused in one execution runtime with 8/10 profiles, watchdog, review, and fidelity.",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "integration",
+          "required_proof_kinds": [
+            "unit",
+            "integration"
+          ],
+          "required_dimensions": [
+            "behavior",
+            "negative-path"
+          ],
+          "receipt_ids": [],
+          "proof_epoch": 0,
+          "full_gate_fingerprint": "b59fd5ab78b81793b6671d1d245f0f15e366353b87713df374338e68cea0340a"
+        }
+      ],
+      "review_required": true
+    },
+    {
+      "id": "S3",
+      "name": "Governed Vitest",
+      "status": "ready",
+      "depends_on": [],
+      "required": true,
+      "acceptance": [
+        {
+          "id": "AC3",
+          "claim": "Vitest hard cap is two parents per project with exclusive full suite and stale recovery.",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "integration",
+          "required_proof_kinds": [
+            "unit",
+            "integration"
+          ],
+          "required_dimensions": [
+            "behavior",
+            "negative-path"
+          ],
+          "receipt_ids": [],
+          "proof_epoch": 0,
+          "full_gate_fingerprint": "7fed954347facc4f333f9b97c4b39c01a89fcca200c1a61ce62f47b7400092f1"
+        }
+      ],
+      "review_required": true
+    },
+    {
+      "id": "S4",
+      "name": "CLI and platform integration",
+      "status": "ready",
+      "depends_on": [
+        "S2",
+        "S3"
+      ],
+      "required": true,
+      "acceptance": [
+        {
+          "id": "AC4",
+          "claim": "Fresh session executes active contract through native adapters, worktree train, and compact evidence.",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "e2e",
+          "required_proof_kinds": [
+            "integration"
+          ],
+          "required_dimensions": [
+            "behavior",
+            "negative-path"
+          ],
+          "receipt_ids": [],
+          "proof_epoch": 0,
+          "full_gate_fingerprint": "72be534e4d06401c599458c3d928baf1685a01d170d3542b899929556ac4171f"
+        }
+      ],
+      "review_required": true
+    },
+    {
+      "id": "S5",
+      "name": "Independent integrated review",
+      "status": "ready",
+      "depends_on": [
+        "S4"
+      ],
+      "required": true,
+      "acceptance": [
+        {
+          "id": "AC5",
+          "claim": "Integrated diff preserves old behavior and has no blocking correctness or maintainability finding.",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "review",
+          "required_proof_kinds": [
+            "diff",
+            "static"
+          ],
+          "required_dimensions": [
+            "behavior",
+            "negative-path"
+          ],
+          "receipt_ids": [],
+          "proof_epoch": 0,
+          "full_gate_fingerprint": "e7ec9b410de36f97a75df4ef4528cdea8888c99f63fba39e428e0e6cf0758351"
+        }
+      ],
+      "review_required": true
+    },
+    {
+      "id": "S6",
+      "name": "Cross-project prompts",
+      "status": "ready",
+      "depends_on": [
+        "S4"
+      ],
+      "required": true,
+      "acceptance": [
+        {
+          "id": "AC6",
+          "claim": "Concise model-neutral prompts are ready for POS and minimally invasive Mini continuation.",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "static",
+          "required_proof_kinds": [
+            "static"
+          ],
+          "required_dimensions": [
+            "behavior"
+          ],
+          "receipt_ids": [],
+          "proof_epoch": 0,
+          "full_gate_fingerprint": "7fc03e7c0199da9cab44c4afe1cb1d769d5ee2c1040da6f9b5291afcce3a8359"
+        }
+      ],
+      "review_required": true
+    },
+    {
+      "id": "S7",
+      "name": "Final gates",
+      "status": "ready",
+      "depends_on": [
+        "S5",
+        "S6"
+      ],
+      "required": true,
+      "acceptance": [
+        {
+          "id": "AC7",
+          "claim": "Fresh focused and final verification supports truthful terminal status.",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "integration",
+          "required_proof_kinds": [
+            "unit",
+            "integration",
+            "diff"
+          ],
+          "required_dimensions": [
+            "behavior",
+            "negative-path"
+          ],
+          "receipt_ids": [],
+          "proof_epoch": 0,
+          "full_gate_fingerprint": "15c12cc81c6c11d447a3c8d2275fe4f50d5f72013c39e949a64848ce1cea3c88"
+        }
+      ],
+      "review_required": true
+    }
+  ],
+  "assignments": [
+    {
+      "id": "A1",
+      "slice_id": "S1",
+      "agent": "am_lineage_audit",
+      "role": "executor",
+      "model_class": "expert",
+      "model": "host-policy",
+      "effort": "high",
+      "source_ids": [
+        "REQ-001",
+        "INJ-001"
+      ],
+      "write_paths": [
+        ".agent/current.json",
+        ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/amendments/0022-additive-harness-convergence.md",
+        "schemas/**"
+      ],
+      "context_paths": [
+        "docs/architecture/target-operating-model.md",
+        ".agent/ledger/agent-rules-harness-v3-rearchitecture-20260726-r1.json"
+      ],
+      "forbidden_paths": [
+        "generated/**",
+        "packages/**",
+        "platforms/**"
+      ],
+      "acceptance_ids": [
+        "AC1"
+      ],
+      "model_evidence": {
+        "requested_model": "host-policy",
+        "requested_effort": "high",
+        "resolved_model": "host-policy",
+        "resolved_effort": "high",
+        "observed_model": null,
+        "observed_effort": null,
+        "status": "unobserved",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "status": "dispatched",
+      "dispatched_at": "2026-08-03T10:17:00+07:00",
+      "mission": "Complete slice S1 acceptance criteria.",
+      "actor_session": "legacy-unobserved",
+      "allowed_tool_classes": [
+        "browser",
+        "edit",
+        "external-write",
+        "git",
+        "network",
+        "read",
+        "shell",
+        "test"
+      ],
+      "capsule_hash": "be551e2958d2bf9086f1fcc33ee2b20ea9a52660a30c33c0110789532b36c9da",
+      "receipt_budget": 1,
+      "recovery_attempts": [],
+      "actor_telemetry_refs": [],
+      "ack_status": "acknowledged"
+    },
+    {
+      "id": "A2",
+      "slice_id": "S2",
+      "agent": "runtime_enforcement_audit",
+      "role": "executor",
+      "model_class": "expert",
+      "model": "host-policy",
+      "effort": "high",
+      "source_ids": [
+        "REQ-001",
+        "INJ-001"
+      ],
+      "write_paths": [
+        "packages/engine/**"
+      ],
+      "context_paths": [
+        "docs/architecture/target-operating-model.md",
+        "schemas/**"
+      ],
+      "forbidden_paths": [
+        "generated/**",
+        ".agent/**",
+        "automation/**",
+        "packages/cli/**",
+        "platforms/**"
+      ],
+      "acceptance_ids": [
+        "AC2"
+      ],
+      "model_evidence": {
+        "requested_model": "host-policy",
+        "requested_effort": "high",
+        "resolved_model": "host-policy",
+        "resolved_effort": "high",
+        "observed_model": null,
+        "observed_effort": null,
+        "status": "unobserved",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "status": "ready",
+      "mission": "Complete slice S2 acceptance criteria.",
+      "actor_session": "legacy-unobserved",
+      "allowed_tool_classes": [
+        "browser",
+        "edit",
+        "external-write",
+        "git",
+        "network",
+        "read",
+        "shell",
+        "test"
+      ],
+      "capsule_hash": "59f316e30c64e2b2eb2d61eb84c8fa4338a6c8cf498dc3cac4ea39d6a1379325",
+      "receipt_budget": 1,
+      "recovery_attempts": [],
+      "actor_telemetry_refs": [],
+      "ack_status": "acknowledged"
+    },
+    {
+      "id": "A3",
+      "slice_id": "S3",
+      "agent": "cross_project_dogfood_audit",
+      "role": "executor",
+      "model_class": "standard",
+      "model": "host-policy",
+      "effort": "high",
+      "source_ids": [
+        "REQ-001",
+        "INJ-001"
+      ],
+      "write_paths": [
+        "packages/cli/src/services/governed-vitest.ts",
+        "packages/cli/test/governed-vitest.test.ts",
+        "automation/run-vitest-governed.ps1",
+        "automation/verify-all.ps1",
+        "package.json",
+        "packages/cli/package.json"
+      ],
+      "context_paths": [
+        "docs/architecture/target-operating-model.md"
+      ],
+      "forbidden_paths": [
+        "generated/**",
+        ".agent/**",
+        "packages/engine/**",
+        "platforms/**"
+      ],
+      "acceptance_ids": [
+        "AC3"
+      ],
+      "model_evidence": {
+        "requested_model": "host-policy",
+        "requested_effort": "high",
+        "resolved_model": "host-policy",
+        "resolved_effort": "high",
+        "observed_model": null,
+        "observed_effort": null,
+        "status": "unobserved",
+        "fallback_reason": "",
+        "main_direct_exception_reason": ""
+      },
+      "status": "dispatched",
+      "dispatched_at": "2026-08-03T10:17:00+07:00",
+      "mission": "Complete slice S3 acceptance criteria.",
+      "actor_session": "legacy-unobserved",
+      "allowed_tool_classes": [
+        "browser",
+        "edit",
+        "external-write",
+        "git",
+        "network",
+        "read",
+        "shell",
+        "test"
+      ],
+      "capsule_hash": "59fae8f700d596dc558c8b0946833bcd8af56911a77353f1dd25ac4cbcbd88ee",
+      "receipt_budget": 1,
+      "recovery_attempts": [],
+      "actor_telemetry_refs": [],
+      "ack_status": "acknowledged"
+    }
+  ],
+  "receipts": [],
+  "reviews": [],
+  "findings": [
+    {
+      "id": "HASH-001",
+      "type": "validation",
+      "severity": "info",
+      "status": "reported",
+      "description": "Effective contract on-disk SHA-256 differs from lineage capture hash. On-disk: 30990c1d51cd11163254780cda2d89ee0df802ba4985cd5dfe28178e18864fa6. Lineage-captured: 94d059fa48da496d008ea21e7e38d1505eb96ebf82295ec3fe2eafb3737b. No alteration to immutable plan/amendment or generated files.",
+      "owner": "W4-writer",
+      "first_observed_at": "2026-08-03T10:15:00+07:00",
+      "remediation": "Report only; does not block execution-contract reconciliation"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "CK-001",
+      "label": "am22-execution-policy-reconciliation",
+      "created_at": "2026-08-03T10:17:00+07:00",
+      "author": "W4-writer",
+      "actor": "host-reconciler",
+      "summary": "Execution policy reconciled to AM-0022 8/10 composition; max_active_agents updated 4->9; candidate statuses preserved without receipts; hash validation report filed.",
+      "status": "checkpointed",
+      "snapshot_files": [
+        ".agent/work/am0022-additive-convergence/ledger.json",
+        ".agent/work/am0022-additive-convergence/shadow/progress.json"
+      ],
+      "next_action": "Begin dependency-ready slices S1/S3 (no cross-dependency) with full receipt backing only"
+    }
+  ],
+  "validation_trace": {
+    "reconciled_at": "2026-08-03T10:17:00+07:00",
+    "target": "AM-0022 effective contract 8/10 composition",
+    "policy_reconciliation": {
+      "execution_contract_mode": {
+        "from": "automatic",
+        "to": "frontstage-first-contract-safe"
+      },
+      "max_active_agents_including_main": {
+        "from": 4,
+        "to": 9,
+        "reason": "AM-0022 M11-R54: 8 normal children + 1 main coordinator"
+      },
+      "am22_composition": {
+        "normal_children": 8,
+        "burst_children": 10,
+        "normal_role_composition": {"writers": 4, "verifiers": 2, "reviewers": 1, "integration_preparation": 1},
+        "burst_role_composition": {"writers": 5, "verifiers": 2, "reviewers": 2, "integration_preparation": 1},
+        "source": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/generations/61/effective-contract.json"
+      },
+      "execute_authorization_source": {
+        "from": "legacy-init",
+        "to": "AM-0022-reconciliation"
+      }
+    },
+    "hash_validation": {
+      "original_sha256": {
+        "ledger_value": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
+        "disk_value": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
+        "status": "verified"
+      },
+      "am0021_sha256": {
+        "ledger_value": "0dfb45500fe8a7d80f177e57ef8a6c231b44e28f8e4f973b31f85bf7d527cf1c",
+        "disk_value": "0dfb45500fe8a7d80f177e57ef8a6c231b44e28f8e4f973b31f85bf7d527cf1c",
+        "status": "verified"
+      },
+      "am0022_sha256": {
+        "ledger_value": "973cdd0e6971dc1ac12bc714240d8847d43c13e2f6997ca33e09df02c2f41d8b",
+        "disk_value": "e6181b608ccd980dd6925a7be7fdfd9dbb3dfe6d3f8c79a4dd66fd0906d55",
+        "status": "mismatch_reported"
+      },
+      "effective_contract_sha256": {
+        "lineage_capture": "94d059fa48da496d008ea21e7e38d1505eb96ebf82295ec3fe2eafb3737b",
+        "disk_value": "30990c1d51cd11163254780cda2d89ee0df802ba4985cd5dfe28178e18864fa6",
+        "status": "mismatch_reported"
+      }
+    },
+    "status_preservation": {
+      "candidates_marked_done": 0,
+      "receipts_fabricated": 0,
+      "policy": "statuses unchanged pending receipt-backed proof",
+      "slices": "all remain ready; no open->done transitions",
+      "assignments": "all remain ready; no execution claimed"
+    },
+    "dirty_work_preserved": true
+  },
+  "usage": {
+    "input_tokens": 0,
+    "cached_input_tokens": 0,
+    "output_tokens": 0,
+    "reasoning_tokens": 0,
+    "agent_runs": 3,
+    "tool_calls": 0,
+    "records": []
+  },
+  "next_action": "S1/S3 dispatched with receipts. S4 dependency corrected: S1 removed from depends_on (false indirect coupling via S4). A1/A3 in dispatched state; A2 ready (blocked on S1). S2 blocked on S1; S4 blocked on S2+S3. No PASS fabricated."
+}

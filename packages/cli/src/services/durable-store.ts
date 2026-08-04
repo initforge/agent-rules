@@ -9,13 +9,35 @@ export type RunState =
 
 export const RUN_LOCKED_ERROR = 'run locked by live process';
 export const RUN_ACTIVE_ERROR = 'run already executing';
+export const CORRUPTED_RUN_ERROR = 'run data corrupted';
+export const CORRUPTED_CHECKPOINT_ERROR = 'checkpoint data corrupted';
+
+// ponytail: Schema versions for future migrations
+const RUN_SCHEMA_VERSION = 1;
+const CHECKPOINT_SCHEMA_VERSION = 1;
+
+const VALID_STATES: Set<RunState> = new Set([
+  'CREATED', 'DISCOVERING', 'CLARIFYING', 'PLANNED', 'PLAN_VALIDATED',
+  'EXECUTING', 'VERIFYING', 'REVIEWING', 'REMEDIATING', 'READY_FOR_APPROVAL',
+  'COMPLETED', 'BLOCKED', 'FAILED', 'CANCELLED',
+]);
+
+export interface Receipt {
+  id: string;
+  taskId?: string;
+  status?: string;
+  result?: unknown;
+  evidencePaths?: string[];
+  timestamp?: string;
+  [key: string]: unknown;
+}
 
 export interface DurableRun {
   runId: string;
   state: RunState;
   plan: unknown;
   tasks: unknown[];
-  receipts: unknown[];
+  receipts: Receipt[];
   checkpoints: Checkpoint[];
   createdAt: string;
   updatedAt: string;
@@ -23,6 +45,7 @@ export interface DurableRun {
   error?: string;
   staleProcess?: boolean;
   orphanPid?: number;
+  schemaVersion?: number;
 }
 
 export interface Checkpoint {
@@ -31,6 +54,11 @@ export interface Checkpoint {
   completedTaskIds: string[];
   createdAt: string;
   data: Record<string, unknown>;
+  schemaVersion?: number;
+}
+
+function validateRunState(state: unknown): state is RunState {
+  return typeof state === 'string' && VALID_STATES.has(state as RunState);
 }
 
 function runDir(basePath: string, runId: string): string {
@@ -74,6 +102,55 @@ function pidAlive(pid: number): boolean {
   }
 }
 
+// ── Atomic write helpers ──────────────────────────────────────────────────────
+
+/**
+ * Atomic write: write to temp file (exclusive creation), then rename.
+ * - crypto.randomUUID() gives 128 bits of entropy — collision-resistant.
+ * - flag 'wx' fails fast if temp file already exists (covers concurrent collisions).
+ * - rename is atomic on POSIX; on Windows it is close enough (no partial writes).
+ */
+function atomicWrite(filePath: string, content: string): void {
+  const dir = path.dirname(filePath);
+  const tmp = path.join(dir, `.tmp-${crypto.randomUUID()}`);
+  try {
+    fs.writeFileSync(tmp, content, { flag: 'wx', encoding: 'utf-8' });
+    fs.renameSync(tmp, filePath);
+  } catch (e) {
+    try { fs.rmSync(tmp, { force: true }); } catch {}
+    throw e;
+  }
+}
+
+// ── Schema validation ─────────────────────────────────────────────────────────
+
+function validateRun(raw: unknown): asserts raw is DurableRun {
+  if (!raw || typeof raw !== 'object') throw new Error(CORRUPTED_RUN_ERROR);
+  const r = raw as Record<string, unknown>;
+  if (typeof r.runId !== 'string') throw new Error(`${CORRUPTED_RUN_ERROR}: missing runId`);
+  if (!validateRunState(r.state)) throw new Error(`${CORRUPTED_RUN_ERROR}: invalid state`);
+  if (!Array.isArray(r.tasks)) throw new Error(`${CORRUPTED_RUN_ERROR}: tasks must be array`);
+  if (!Array.isArray(r.receipts)) throw new Error(`${CORRUPTED_RUN_ERROR}: receipts must be array`);
+  if (!Array.isArray(r.checkpoints)) throw new Error(`${CORRUPTED_RUN_ERROR}: checkpoints must be array`);
+  if (typeof r.createdAt !== 'string') throw new Error(`${CORRUPTED_RUN_ERROR}: missing createdAt`);
+  if (typeof r.updatedAt !== 'string') throw new Error(`${CORRUPTED_RUN_ERROR}: missing updatedAt`);
+  if (typeof r.attempt !== 'number') throw new Error(`${CORRUPTED_RUN_ERROR}: missing attempt`);
+  // Validate receipts (id is optional — allow id-less receipts for forward compat)
+  for (const receipt of r.receipts) {
+    if (!receipt || typeof receipt !== 'object') throw new Error(`${CORRUPTED_RUN_ERROR}: invalid receipt`);
+  }
+}
+
+function validateCheckpoint(raw: unknown): asserts raw is Checkpoint {
+  if (!raw || typeof raw !== 'object') throw new Error(CORRUPTED_CHECKPOINT_ERROR);
+  const c = raw as Record<string, unknown>;
+  if (typeof c.id !== 'string') throw new Error(`${CORRUPTED_CHECKPOINT_ERROR}: missing id`);
+  if (!validateRunState(c.state)) throw new Error(`${CORRUPTED_CHECKPOINT_ERROR}: invalid state`);
+  if (!Array.isArray(c.completedTaskIds)) throw new Error(`${CORRUPTED_CHECKPOINT_ERROR}: invalid completedTaskIds`);
+  if (typeof c.createdAt !== 'string') throw new Error(`${CORRUPTED_CHECKPOINT_ERROR}: missing createdAt`);
+  if (!c.data || typeof c.data !== 'object') throw new Error(`${CORRUPTED_CHECKPOINT_ERROR}: missing data`);
+}
+
 export class DurableStore {
   private basePath: string;
 
@@ -82,10 +159,24 @@ export class DurableStore {
   }
 
   async createRun(runId: string, plan: unknown): Promise<DurableRun> {
+    const fp = runFilePath(this.basePath, runId);
     const dir = runDir(this.basePath, runId);
     ensureDir(dir);
-    // GAP-4: exclusive lock on run start; break stale (dead PID) locks.
-    this.acquireLock(runId);
+    // GAP-4: exclusive lock; break stale (dead PID) locks; allow self-lock for overwrite.
+    try {
+      this.acquireLock(runId);
+    } catch {
+      // Lock held by live foreign process — fail fast rather than corrupt.
+      throw new Error(`Run ${runId} is locked by another process`);
+    }
+    // Increment attempt on overwrite; start at 1 for fresh runs.
+    let attempt = 1;
+    if (fs.existsSync(fp)) {
+      try {
+        const prev = JSON.parse(fs.readFileSync(fp, 'utf-8')) as Record<string, unknown>;
+        attempt = (typeof prev.attempt === 'number' ? prev.attempt : 0) + 1;
+      } catch { /* corrupt or unreadable — start fresh at attempt 1 */ }
+    }
     const run: DurableRun = {
       runId,
       state: 'CREATED',
@@ -95,24 +186,38 @@ export class DurableStore {
       checkpoints: [],
       createdAt: now(),
       updatedAt: now(),
-      attempt: 1,
+      attempt,
+      schemaVersion: RUN_SCHEMA_VERSION,
     };
-    fs.writeFileSync(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
+    atomicWrite(fp, JSON.stringify(run, null, 2));
     return run;
   }
 
   async getRun(runId: string): Promise<DurableRun | null> {
     const fp = runFilePath(this.basePath, runId);
     if (!fs.existsSync(fp)) return null;
-    return JSON.parse(fs.readFileSync(fp, 'utf-8')) as DurableRun;
+    let raw: unknown;
+    try {
+      raw = JSON.parse(fs.readFileSync(fp, 'utf-8'));
+    } catch {
+      // File exists but is corrupted (not valid JSON)
+      throw new Error(`${CORRUPTED_RUN_ERROR}: ${runId} is not valid JSON`);
+    }
+    try {
+      validateRun(raw);
+    } catch (e: any) {
+      throw new Error(`${e.message} in run ${runId}`);
+    }
+    return raw;
   }
 
   async updateState(runId: string, state: RunState): Promise<void> {
+    if (!validateRunState(state)) throw new Error(`Invalid state: ${state}`);
     const run = await this.getRun(runId);
     if (!run) throw new Error(`Run not found: ${runId}`);
     run.state = state;
     run.updatedAt = now();
-    fs.writeFileSync(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
+    atomicWrite(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
   }
 
   async updateError(runId: string, error: string): Promise<void> {
@@ -120,17 +225,35 @@ export class DurableStore {
     if (!run) throw new Error(`Run not found: ${runId}`);
     run.error = error;
     run.updatedAt = now();
-    fs.writeFileSync(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
+    atomicWrite(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
   }
 
-  async addReceipt(runId: string, receipt: unknown): Promise<void> {
+  /**
+   * Deduplication: if receipt with same id already exists, skip push.
+   * Expects receipt to have an `id` field (string). Unknown receipts without id
+   * are still added (idempotent by nature of push, but no dedup).
+   */
+  async addReceipt(runId: string, receipt: unknown): Promise<boolean> {
+    if (!receipt || typeof receipt !== 'object') throw new Error('Receipt must be an object');
+    const rec = receipt as Receipt;
     const run = await this.getRun(runId);
     if (!run) throw new Error(`Run not found: ${runId}`);
-    run.receipts.push(receipt);
+    // Deduplication by id
+    if (rec.id && run.receipts.some(r => r.id === rec.id)) {
+      return false; // already exists, skip
+    }
+    run.receipts.push(rec);
     run.updatedAt = now();
-    fs.writeFileSync(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
+    atomicWrite(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
+    return true;
   }
 
+  /**
+   * Atomic checkpoint: writes both checkpoint file and run.json atomically.
+   * Order: (1) write checkpoint to temp + rename, (2) update run.json.
+   * If crash after step 1, checkpoint exists but run.json not updated → recoverable.
+   * If crash after step 2, run references checkpoint that exists → consistent.
+   */
   async checkpoint(runId: string): Promise<Checkpoint> {
     const run = await this.getRun(runId);
     if (!run) throw new Error(`Run not found: ${runId}`);
@@ -148,31 +271,56 @@ export class DurableStore {
       completedTaskIds,
       createdAt: now(),
       data: { plan: run.plan, tasks: run.tasks, receipts: run.receipts },
+      schemaVersion: CHECKPOINT_SCHEMA_VERSION,
     };
     ensureDir(checkpointDir(this.basePath, runId));
     // GAP-3: store sha256 of the canonical JSON in the filename
     // (engine Controller pattern: checkpoint-<id>-<hash16>.json).
-    const content = JSON.stringify(cp, null, 2);
+    // ponytail: compact serialization ensures canonical byte-for-byte form.
+    const content = JSON.stringify(cp);
     const hash = crypto.createHash('sha256').update(content).digest('hex').slice(0, 16);
-    fs.writeFileSync(
-      path.join(checkpointDir(this.basePath, runId), `checkpoint-${cpId}-${hash}.json`),
-      content,
-    );
+    const cpFileName = `checkpoint-${cpId}-${hash}.json`;
+    // Atomic write of checkpoint file
+    atomicWrite(path.join(checkpointDir(this.basePath, runId), cpFileName), content);
+    // Then update run.json (checkpoint metadata only, not full data)
     run.checkpoints.push(cp);
     run.updatedAt = now();
-    fs.writeFileSync(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
+    atomicWrite(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
     return cp;
   }
 
   private readVerifiedCheckpoint(cpDir: string, fileName: string): Checkpoint {
     const m = fileName.match(/^checkpoint-(.+)-([0-9a-f]{16})\.json$/);
     if (!m) throw new Error(`checkpoint tamper detected: ${fileName}`);
-    const content = fs.readFileSync(path.join(cpDir, fileName), 'utf-8');
-    const hash = crypto.createHash('sha256').update(content).digest('hex').slice(0, 16);
+    const filePath = path.join(cpDir, fileName);
+    const rawContent = fs.readFileSync(filePath, 'utf-8');
+    // Hash exact file bytes — no re-serialization (avoids spacing/reorder drift).
+    const hash = crypto.createHash('sha256').update(rawContent).digest('hex').slice(0, 16);
     if (hash !== m[2]) throw new Error('checkpoint tamper detected');
-    return JSON.parse(content) as Checkpoint;
+    let raw: unknown;
+    try {
+      raw = JSON.parse(rawContent);
+    } catch {
+      throw new Error(`${CORRUPTED_CHECKPOINT_ERROR}: not valid JSON in ${fileName}`);
+    }
+    try {
+      validateCheckpoint(raw);
+    } catch (e: any) {
+      throw new Error(`${e.message} in ${fileName}`);
+    }
+    return raw as Checkpoint;
   }
 
+  /**
+   * Resume with improved lock handling:
+   * - Check lock first; refuse if live foreign lock
+   * - Check process registry; refuse if live foreign process
+   * - Single atomic write for the entire resume operation (state + data)
+   * - Clean stale locks/processes atomically with state update
+   * - Distinguish live contention (BLOCKED) from stale recoverable state (proceed)
+   * - Stale RUNNING tasks → PENDING (worker crashed, must retry with preserved assignment)
+   * - Completed tasks → stay COMPLETED (do not rerun)
+   */
   async resume(runId: string): Promise<DurableRun | null> {
     const run = await this.getRun(runId);
     if (!run) return null;
@@ -184,7 +332,7 @@ export class DurableStore {
       run.state = 'BLOCKED';
       run.error = RUN_LOCKED_ERROR;
       run.updatedAt = now();
-      fs.writeFileSync(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
+      atomicWrite(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
       return run;
     }
     if (lock) this.releaseLock(runId);
@@ -194,7 +342,7 @@ export class DurableStore {
     if (proc && proc.alive && proc.pid !== process.pid) {
       run.error = RUN_ACTIVE_ERROR;
       run.updatedAt = now();
-      fs.writeFileSync(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
+      atomicWrite(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
       return run;
     }
     if (proc) {
@@ -220,17 +368,34 @@ export class DurableStore {
           run.state = 'FAILED';
           run.error = 'checkpoint tamper detected';
           run.updatedAt = now();
-          fs.writeFileSync(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
+          atomicWrite(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
           return run;
         }
         run.state = cp.state;
         if (cp.data.plan) run.plan = cp.data.plan;
-        if (cp.data.tasks) run.tasks = cp.data.tasks as unknown[];
-        if (cp.data.receipts) run.receipts = cp.data.receipts as unknown[];
+        if (cp.data.tasks) {
+          run.tasks = cp.data.tasks as unknown[];
+          // ponytail: filter stale RUNNING tasks → PENDING (worker crashed, preserve assignment/retryCount)
+          // Completed tasks stay COMPLETED (do not rerun per AC).
+          // IMP-003: this ensures stale recoverable state distinguishes from live contention.
+          const completedSet = new Set(cp.completedTaskIds);
+          for (const t of run.tasks) {
+            const task = t as Record<string, unknown>;
+            if (task.state === 'RUNNING' && !completedSet.has(task.id as string)) {
+              task.state = 'PENDING'; // stale — will be retried with preserved assignment
+            }
+          }
+        }
+        if (cp.data.receipts) run.receipts = cp.data.receipts as Receipt[];
         run.updatedAt = now();
-        fs.writeFileSync(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
+        // Atomic: single write for all resume state changes
+        atomicWrite(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
+        return run;
       }
     }
+    // Update updatedAt even when no checkpoint restored
+    run.updatedAt = now();
+    atomicWrite(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
     return run;
   }
 
@@ -269,19 +434,28 @@ export class DurableStore {
   acquireLock(runId: string): void {
     const fp = lockFilePath(this.basePath, runId);
     ensureDir(runDir(this.basePath, runId));
-    const write = (): void => {
-      fs.writeFileSync(fp, `${process.pid}\n${Date.now()}`, { flag: 'wx' });
-    };
+    // Try exclusive creation first — fails fast on any existing lock.
     try {
-      write();
+      fs.writeFileSync(fp, `${process.pid}\n${Date.now()}`, { flag: 'wx' });
+      return;
     } catch (e: any) {
       if (e.code !== 'EEXIST') throw e;
-      const lock = this.checkLock(runId);
-      if (lock && lock.alive && lock.pid !== process.pid) {
-        throw new Error(`Run is locked by live process ${lock.pid}: ${runId}`);
+    }
+    // Lock exists — check if it is live foreign.
+    const lock = this.checkLock(runId);
+    if (lock && lock.alive && lock.pid !== process.pid) {
+      throw new Error(`Run is locked by live process ${lock.pid}: ${runId}`);
+    }
+    // Stale or self-lock: remove and retry with exclusive creation.
+    // If another process claims it between rm and write, 'wx' fails closed — correct.
+    try { fs.rmSync(fp, { force: true }); } catch {}
+    try {
+      fs.writeFileSync(fp, `${process.pid}\n${Date.now()}`, { flag: 'wx' });
+    } catch (e2: any) {
+      if (e2.code === 'EEXIST') {
+        throw new Error(`Run is locked by another process: ${runId}`);
       }
-      try { fs.rmSync(fp, { force: true }); } catch {}
-      write();
+      throw e2;
     }
   }
 
@@ -310,7 +484,7 @@ export class DurableStore {
 
   registerProcess(runId: string): void {
     ensureDir(runDir(this.basePath, runId));
-    fs.writeFileSync(
+    atomicWrite(
       processFilePath(this.basePath, runId),
       JSON.stringify({ pid: process.pid, startedAt: now() }, null, 2),
     );
@@ -343,7 +517,7 @@ export class DurableStore {
     run.staleProcess = true;
     run.orphanPid = proc.pid;
     run.updatedAt = now();
-    fs.writeFileSync(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
+    atomicWrite(runFilePath(this.basePath, runId), JSON.stringify(run, null, 2));
     this.unregisterProcess(runId);
   }
 }

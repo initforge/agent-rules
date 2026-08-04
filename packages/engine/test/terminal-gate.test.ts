@@ -897,3 +897,54 @@ describe('assertCertificationAttestation', () => {
     expect(() => assertCertificationAttestation(ledger, hash)).not.toThrow();
   });
 });
+
+// --- Crash/Atomicity Tests ----------------------------------------------------
+
+describe('finalizeM11 � atomic write', () => {
+  it('uses atomic write � ledger readable immediately after emission', () => {
+    const dir = tmpDir();
+    const { evidence, checks, epoch } = eligibleM11Fixture();
+    const ledger = stubLedger({ execution_state: 'EXECUTING', status: 'EXECUTING', candidate_epoch: epoch });
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+    const result = finalizeM11({ ledgerPath, evidence, checks, now: Date.now() });
+    expect(result.passed).toBe(true);
+    const reloaded = JSON.parse(fs.readFileSync(ledgerPath, 'utf-8'));
+    expect(reloaded.execution_state).toBe(M11_TERMINAL_TOKEN);
+    expect(reloaded.audit_events).toBeDefined();
+  });
+
+  it('leaves ledger intact when emission fails (fail-closed)', () => {
+    const dir = tmpDir();
+    const { evidence, checks } = eligibleM11Fixture();
+    // Set ledger to NEEDS_REMEDIATION so M11_EXECUTION_STATE_OK gate fails
+    const ledger = stubLedger({ execution_state: 'NEEDS_REMEDIATION', status: 'NEEDS_REMEDIATION', candidate_epoch: makeEpoch() });
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+    const before = fs.readFileSync(ledgerPath, 'utf-8');
+    const result = finalizeM11({ ledgerPath, evidence, checks, now: Date.now() });
+    expect(result.passed).toBe(false);
+    expect(result.failedGates).toContain('M11_EXECUTION_STATE_OK');
+    expect(fs.readFileSync(ledgerPath, 'utf-8')).toBe(before);
+  });
+});
+
+describe('assertNoResidualBeforeFinal � atomic write', () => {
+  it('uses atomic write � ledger readable after needs-remediation transition', () => {
+    const dir = tmpDir();
+    const ledger = stubLedger({ execution_state: 'ADOPTED', plan_id: 'P-001' });
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+    try { assertNoResidualBeforeFinal(ledgerPath, hash); } catch {}
+    const reloaded = JSON.parse(fs.readFileSync(ledgerPath, 'utf-8'));
+    expect(reloaded.execution_state).toBe('NEEDS_REMEDIATION');
+    expect(reloaded.plan_id).toBe('P-001');
+  });
+
+  it('preserves existing fields after atomic needs-remediation write', () => {
+    const dir = tmpDir();
+    const ledger = stubLedger({ execution_state: 'ADOPTED', plan_id: 'P-002', headCommit: hash });
+    const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
+    try { assertNoResidualBeforeFinal(ledgerPath, hash); } catch {}
+    const reloaded = JSON.parse(fs.readFileSync(ledgerPath, 'utf-8'));
+    expect(reloaded.execution_state).toBe('NEEDS_REMEDIATION');
+    expect(reloaded.plan_id).toBe('P-002');
+  });
+});

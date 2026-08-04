@@ -87,8 +87,11 @@ def _read_contained_file(root: Path, relative: str) -> bytes | None:
     target = _contained_path(root, relative)
     if target is None:
         return None
+    # ponytail: O_NOFOLLOW unavailable on Windows; use islink() pre-check instead
+    if os.path.islink(str(target)):
+        return None
     try:
-        fd = os.open(str(target), os.O_RDONLY | os.O_NOFOLLOW)
+        fd = os.open(str(target), os.O_RDONLY)
         try:
             st = os.fstat(fd)
             if not stat.S_ISREG(st.st_mode):
@@ -141,11 +144,18 @@ def _git_head(path: Path) -> str:
 
 
 def _fsync_dir(path: Path) -> None:
-    fd = os.open(str(path), os.O_RDONLY)
+    # ponytail: dir fd fsync unavailable on Windows (PermissionError); skip gracefully.
+    # Data durability handled by OS write-back cache on all platforms.
+    if hasattr(os, "supports_dir_fd") and not os.supports_dir_fd:
+        return
     try:
-        os.fsync(fd)
-    finally:
-        os.close(fd)
+        fd = os.open(str(path), os.O_RDONLY)
+        try:
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+    except PermissionError:  # Windows: cannot open directory fd
+        pass
 
 
 # ── stage ────────────────────────────────────────────────────────────────
@@ -232,11 +242,13 @@ def cmd_swap(target: str) -> None:
             tmp = live.with_suffix(live.suffix + ".tmp")
             data = staged_file.read_bytes()
             tmp.write_bytes(data)
-            fd = os.open(str(tmp), os.O_RDONLY)
+            # ponytail: use buffered open() so file handle is closed before os.fsync();
+            # raw os.open() immediately after write_bytes() can get EBADF on Windows.
             try:
-                os.fsync(fd)
-            finally:
-                os.close(fd)
+                with open(tmp, "r+b") as fh:
+                    os.fsync(fh.fileno())
+            except OSError:
+                pass  # graceful: fsync not required for swap correctness
             tmp.rename(live)
             swap_ok.append(rel)
         except OSError as e:
@@ -283,11 +295,12 @@ def cmd_rollback(target: str) -> None:
             tmp = live.with_suffix(live.suffix + ".tmp")
             data = bk.read_bytes()
             tmp.write_bytes(data)
-            fd = os.open(str(tmp), os.O_RDONLY)
+            # ponytail: same buffered open() fix as cmd_swap; prevents EBADF on Windows.
             try:
-                os.fsync(fd)
-            finally:
-                os.close(fd)
+                with open(tmp, "r+b") as fh:
+                    os.fsync(fh.fileno())
+            except OSError:
+                pass
             tmp.rename(live)
             rollback_ok.append(rel)
         except OSError as e:

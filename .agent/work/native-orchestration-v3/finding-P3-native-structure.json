@@ -1,0 +1,6 @@
+{
+  "id": "F-P3-NATIVE-STRUCTURE",
+  "severity": "medium",
+  "summary": "Doctor excludes native artifacts from live hash checks and can finish without a blocking structural capability result when required native files are missing or corrupt.",
+  "reviewer": "foundation_rereviewer"
+}

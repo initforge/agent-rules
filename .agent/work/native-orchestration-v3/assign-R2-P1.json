@@ -1,0 +1,31 @@
+{
+  "id": "R2-P1",
+  "slice_id": "P1",
+  "agent": "foundation_rereviewer",
+  "role": "reviewer",
+  "model_class": "standard",
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "source_ids": ["REQ-001", "DEC-001", "DEC-002", "INJ-001"],
+  "write_paths": [],
+  "context_paths": [
+    "rules/**",
+    "skills/plan-and-handoff/**",
+    "skills/finish-to-completion/**",
+    "automation/model-policy.json",
+    "automation/test-model-policy.py"
+  ],
+  "forbidden_paths": ["**"],
+  "acceptance_ids": ["AC1", "AC2"],
+  "model_evidence": {
+    "requested_model": "gpt-5.6-terra",
+    "requested_effort": "medium",
+    "resolved_model": "gpt-5.6-terra",
+    "resolved_effort": "medium",
+    "observed_model": "gpt-5.6-terra",
+    "observed_effort": "medium",
+    "status": "observed",
+    "fallback_reason": "",
+    "main_direct_exception_reason": ""
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "schema_version": 4,
+  "work_id": "behavioral-parity-v4",
+  "status": "planned",
+  "lifecycle_status": "planned",
+  "task_status": "open",
+  "orchestration_status": "healthy",
+  "created_at": "2026-07-24T09:05:03.310178+00:00",
+  "updated_at": "2026-07-24T09:05:03.384261+00:00",
+  "plan": {
+    "ref": "conversation://behavioral-parity-implementation-20260724",
+    "sha256": "87b802845895b937af2b35c2c5fc47029e2edec4a27745c5c2b95cdd1d4ad572",
+    "identity": "legacy-init-ref"
+  },
+  "active_slices": [],
+  "classification": {
+    "shape": "resumable",
+    "ledger": "required",
+    "strategy": "delegated",
+    "review_required": false,
+    "reasons": [
+      "risk/resume/external wait/long runtime"
+    ]
+  },
+  "execution_contract": {
+    "mode": "automatic",
+    "max_active_agents_including_main": 4,
+    "max_delegation_depth": 2,
+    "effort_cap": "high",
+    "authorized_final_actions": [
+      "edit",
+      "commit",
+      "push"
+    ],
+    "execute_authorization": {
+      "authorized": true,
+      "recorded_at": "2026-07-24T09:05:03.310178+00:00",
+      "source": "owner explicit implementation and push request",
+      "actions": [
+        "edit",
+        "commit",
+        "push"
+      ]
+    },
+    "run_id": "b441293287274c3eaf1ed368c684fa00",
+    "main_direct_policy": {
+      "allowed": false,
+      "allowed_tool_classes": [
+        "read",
+        "test",
+        "shell",
+        "git"
+      ]
+    }
+  },
+  "repository": {
+    "path": "P:\\agent-rules",
+    "branch": "unknown",
+    "baseline_commit": "unknown"
+  },
+  "host_refs": {
+    "host": "unknown",
+    "task_ref": "",
+    "session_ref": ""
+  },
+  "model_policy_reasons": [],
+  "control_plane_exceptions": [],
+  "proof_cache": [],
+  "telemetry_events": [],
+  "source_history": [],
+  "slices": [
+    {
+      "id": "P1",
+      "name": "Implementation",
+      "status": "ready",
+      "depends_on": [],
+      "required": true,
+      "acceptance": [
+        {
+          "id": "AC1",
+          "claim": "Requested outcome is verified",
+          "status": "open",
+          "proof_required": true,
+          "proof_profile": "standard",
+          "required_proof_kinds": [
+            "integration"
+          ],
+          "required_dimensions": [
+            "behavior"
+          ],
+          "receipt_ids": [],
+          "proof_epoch": 0,
+          "full_gate_fingerprint": "ef208bfed37202afc477579d859403afdcb69fdf081520bdd89777de9ad65784"
+        }
+      ],
+      "review_required": false
+    }
+  ],
+  "assignments": [],
+  "receipts": [],
+  "reviews": [],
+  "findings": [],
+  "checkpoints": [],
+  "usage": {
+    "input_tokens": 0,
+    "cached_input_tokens": 0,
+    "output_tokens": 0,
+    "reasoning_tokens": 0,
+    "agent_runs": 0,
+    "tool_calls": 0,
+    "records": []
+  },
+  "next_action": "Start the first dependency-ready slice."
+}

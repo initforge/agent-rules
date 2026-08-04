@@ -15,6 +15,7 @@ import { dashboard } from "./commands/dashboard.js";
 import { contextGraphCmd } from "./commands/context-graph.js";
 import { planCmd } from "./commands/plan.js";
 import { worktreeCmd } from "./commands/worktree.js";
+import { cleanupCmd } from "./commands/cleanup.js";
 import { trainCmd } from "./commands/train.js";
 import { verifyCmd } from "./commands/verify.js";
 import { parityCmd } from "./commands/parity.js";
@@ -263,6 +264,32 @@ Subcommands:
   .action(async (args: string[]) => {
     const opts = program.optsWithGlobals() as CliOptions;
     const result = await worktreeCmd(args, opts);
+    formatOutput(result, opts);
+  });
+
+// ── cleanup ──────────────────────────────────────────────────────────
+program
+  .command("cleanup")
+  .description("Cleanup, migration and garbage collection (SS-24, R-042, B05)")
+  .argument("[args...]", "Subcommand and its arguments")
+  .allowUnknownOption(true)
+  .addHelpText(
+    "after",
+    `
+Subcommands:
+  inventory <path...>   Classify exact paths (delete/rescue/keep)
+  rescue <path...>      Move exact paths into quarantine; receipt = rollback
+                        (flags: --root <repo> --quarantine <dir> --dry-run)
+  delete <path...>      Guarded removal of exact-named non-production junk
+                        (flags: --root <repo> --receipts <dir> --dry-run)
+                        Guard: exact names only, no globs; protected segments
+                        (.git, src, packages, generated, .agent, dist, ...)
+                        fail closed; irreversibility + rollback receipt emitted
+    `
+  )
+  .action(async (args: string[]) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const result = await cleanupCmd(args, opts);
     formatOutput(result, opts);
   });
 

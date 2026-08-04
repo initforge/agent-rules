@@ -1,0 +1,17 @@
+﻿[
+    {
+        "name":  "04-verify-mirrors",
+        "exit_code":  0,
+        "log":  ".agent\\release-verification\\04-verify-mirrors.log"
+    },
+    {
+        "name":  "05-verify-runtime-state-all",
+        "exit_code":  0,
+        "log":  ".agent\\release-verification\\05-verify-runtime-state-all.log"
+    },
+    {
+        "name":  "09-doctor-all",
+        "exit_code":  0,
+        "log":  ".agent\\release-verification\\09-doctor-all.log"
+    }
+]

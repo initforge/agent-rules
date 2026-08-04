@@ -1,5 +1,5 @@
 ﻿param(
-  [ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platform = "all",
+  [ValidateSet("codex","claude","grok","antigravity","cursor","all")][string]$Platform = "all",
   [ValidateSet("strict")][string]$Mode = "strict"
 )
 
@@ -48,11 +48,12 @@ foreach ($Node in @($Graph.nodes)) {
 $UserHome = if ($env:USERPROFILE) { $env:USERPROFILE } elseif ($env:HOME) { $env:HOME } else { throw "Cannot resolve user home directory" }
 $PlatformHomes = @{
   codex = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $UserHome ".codex" }
+  claude = if ($env:CLAUDE_CONFIG_DIR) { $env:CLAUDE_CONFIG_DIR } else { Join-Path $UserHome ".claude" }
   grok = if ($env:GROK_HOME) { $env:GROK_HOME } else { Join-Path $UserHome ".grok" }
   antigravity = Join-Path $UserHome ".gemini\config"
   cursor = Join-Path $UserHome ".cursor"
 }
-$Selected = if ($Platform -eq "all") { @("codex", "grok", "antigravity", "cursor") } else { @($Platform) }
+$Selected = if ($Platform -eq "all") { @("codex", "claude", "grok", "antigravity", "cursor") } else { @($Platform) }
 $GraphHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $GraphPath).Hash.ToLowerInvariant()
 $RouteCasesHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $RouteCasesPath).Hash.ToLowerInvariant()
 $RouteSchemaHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $RouteSchemaPath).Hash.ToLowerInvariant()

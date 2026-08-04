@@ -1,0 +1,40 @@
+{
+  "id": "A-P2",
+  "slice_id": "P2",
+  "agent": "ledger_tooling",
+  "role": "executor",
+  "model_class": "standard",
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "source_ids": [
+    "REQ-001",
+    "INJ-001"
+  ],
+  "write_paths": [
+    "automation/workctl.py",
+    "automation/workctl.ps1",
+    "automation/workctl.sh",
+    "automation/work-ledger.schema.json",
+    "automation/test-workctl.py"
+  ],
+  "context_paths": [
+    "skills/finish-to-completion/references/completion-ledger.md",
+    "skills/plan-and-handoff/references/plan-artifact-template.md",
+    "automation/02-install-runtime.ps1",
+    "automation/09-doctor.ps1"
+  ],
+  "forbidden_paths": [
+    "rules/**",
+    "skills/**",
+    "platforms/**",
+    "automation/01-build-runtime.ps1",
+    "automation/02-install-runtime.ps1",
+    "automation/03-validate-context.ps1",
+    "automation/09-doctor.ps1",
+    "05-generated/**"
+  ],
+  "acceptance_ids": [
+    "AC3",
+    "AC4"
+  ]
+}

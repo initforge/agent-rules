@@ -1,0 +1,44 @@
+{
+  "id": "A-P3-RUNTIME",
+  "slice_id": "P3",
+  "agent": "runtime_delivery",
+  "role": "executor",
+  "model_class": "standard",
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "source_ids": [
+    "REQ-001",
+    "DEC-001",
+    "DEC-002",
+    "INJ-001"
+  ],
+  "write_paths": [
+    "automation/01-build-runtime.ps1",
+    "automation/02-install-runtime.ps1",
+    "automation/03-validate-context.ps1",
+    "automation/04-verify-mirrors.ps1",
+    "automation/05-verify-runtime-state.ps1",
+    "automation/09-doctor.ps1",
+    "automation/10-audit-harness-health.ps1",
+    "automation/test-native-agent-policy.py",
+    "automation/README.md"
+  ],
+  "context_paths": [
+    "automation/model-policy.json",
+    "automation/workctl.py",
+    "platforms/**",
+    "05-generated/runtime-build/**"
+  ],
+  "forbidden_paths": [
+    "rules/**",
+    "skills/**",
+    "automation/workctl.py",
+    "automation/work-ledger.schema.json",
+    "automation/test-workctl.py",
+    "integrations/**"
+  ],
+  "acceptance_ids": [
+    "AC5",
+    "AC6"
+  ]
+}

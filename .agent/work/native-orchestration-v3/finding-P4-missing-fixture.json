@@ -1,0 +1,6 @@
+{
+  "id": "F-P4-MISSING-MULTIFILE-FIXTURE",
+  "severity": "high",
+  "summary": "The release benchmark case live-normal-multifile exists in the corpus but has no executable fixture oracle, so native empirical validation aborts before launching Codex and cannot measure implementation behavior or token cost.",
+  "reviewer": "release_executor"
+}

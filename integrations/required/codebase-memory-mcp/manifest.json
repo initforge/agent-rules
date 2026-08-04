@@ -1,6 +1,6 @@
 {
   "name": "codebase-memory-mcp",
-  "capability": "code-intelligence",
+  "capability": "codebase-intelligence",
   "upstream": "https://github.com/DeusData/codebase-memory-mcp",
   "version": "0.8.1",
   "installDirs": {

@@ -1,0 +1,6 @@
+{
+  "id": "F-P3-NATIVE-SCHEMA",
+  "severity": "high",
+  "summary": "Codex sources are CLI profiles rather than ~/.codex/agents custom subagents, and Grok role TOML uses ignored system_prompt fields instead of current native SubagentRole fields.",
+  "reviewer": "main-source-review"
+}

@@ -143,6 +143,52 @@ function assertStringList(values: unknown[], field: string): void {
   }
 }
 
+/** Canonicalize path separators for the current OS. Normalizes both Windows
+ *  backslashes and POSIX forward slashes to the native separator. */
+function normalizePath(p: string): string {
+  return p.replace(/[\/\\]+/g, path.sep);
+}
+
+/** Validate owned paths: normalize separators and reject overlaps.
+ *  A path overlaps if it is a prefix of another (or vice versa). */
+function validateOwnedPaths(paths: string[]): string[] {
+  const normalized: string[] = [];
+  for (const p of paths) {
+    const n = normalizePath(p.trim());
+    // Reject: empty, absolute, starts with parent traversal
+    if (!n || n === '.' || path.isAbsolute(n) || n.startsWith('..')) {
+      throw new WorktreeTrainError('INVALID_PATH', `invalid owned path: ${JSON.stringify(p)}`);
+    }
+    // Reject paths with parent traversal segments anywhere (security hygiene)
+    const parts = n.split(/[\/\\]/);
+    if (parts.some((part) => part === '..')) {
+      throw new WorktreeTrainError('INVALID_PATH', `owned path must not contain '..': ${JSON.stringify(p)}`);
+    }
+    normalized.push(n);
+  }
+  // Deduplicate before overlap check (duplicates are not overlaps)
+  const unique = [...new Set(normalized)];
+  const sorted = unique.sort();
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const curr = sorted[i] + path.sep;
+    const next = sorted[i + 1];
+    // Check prefix overlap (curr is a directory prefix of next)
+    if (next.startsWith(curr) || curr.startsWith(next)) {
+      throw new WorktreeTrainError('PATH_OVERLAP', `owned path overlap: ${sorted[i]} and ${sorted[i + 1]}`);
+    }
+  }
+  return unique;
+}
+
+/** Validate semantic resource keys: normalize separators and check for overlaps.
+ *  Semantic resources use prefixes like "api:", "schema:", "port:" etc. */
+function validateSemanticResources(resources: string[]): string[] {
+  const normalized = resources.map((r) => normalizePath(r.trim()));
+  // ponytail: overlap detection for semantic resources is resource-type-specific;
+  // for now validate no duplicate exact strings; extend per-type when needed
+  return [...new Set(normalized)];
+}
+
 interface GitResult {
   status: number;
   stdout: Buffer;
@@ -222,6 +268,8 @@ export class WorktreeTrain {
     assertTaskId(input.taskId);
     assertStringList(input.ownedPaths, 'ownedPaths');
     assertStringList(input.semanticResources, 'semanticResources');
+    const ownedPaths = input.ownedPaths.length ? validateOwnedPaths(input.ownedPaths) : [];
+    const semanticResources = input.semanticResources.length ? validateSemanticResources(input.semanticResources) : [];
     const leasePath = `${this.#paths.leases}/${input.taskId}.lease.json`;
     if (await this.#root.exists(leasePath)) {
       throw new WorktreeTrainError('LEASE_EXISTS', `task ${input.taskId} already leased`);
@@ -238,8 +286,8 @@ export class WorktreeTrain {
       schema: 'artifact/worktree-lease',
       taskId: input.taskId,
       baseEpoch,
-      ownedPaths: [...input.ownedPaths],
-      semanticResources: [...input.semanticResources],
+      ownedPaths,
+      semanticResources,
       clusterId: input.clusterId,
       dependencyRank: rank.rank,
       dependencyRankSource: rank.source,
@@ -363,6 +411,9 @@ export class WorktreeTrain {
       if (!review.marker && !opts.allowUnreviewed) {
         throw new WorktreeTrainError('NO_REVIEW', `task ${id} has no review marker; record a review or pass allowUnreviewed`);
       }
+      if (review.marker && !review.marker.approved) {
+        throw new WorktreeTrainError('REVIEW_NOT_APPROVED', `task ${id}: review marker exists but approved=false; require explicit approval`);
+      }
     }
 
     // Ensure the train branch + dedicated train worktree exist.
@@ -392,6 +443,14 @@ export class WorktreeTrain {
     for (const { id, lease } of ordered) {
       if (!this.isRegisteredWorktree(lease.worktreePath)) {
         refused.push({ taskId: id, reason: 'WORKTREE_MISSING' });
+        continue;
+      }
+      // Idempotent: skip if already merged (branch head is ancestor of train head).
+      const branchHead = this.git(['rev-parse', lease.branch]).stdout.toString('utf8').trim();
+      if (this.isAncestor(branchHead, trainHead)) {
+        // Already reachable from train head — record as accepted, idempotent skip.
+        accepted[id] = branchHead;
+        mergeOrder.push(id);
         continue;
       }
       // Rebase accepted branch onto the current train head (rolling).
@@ -445,6 +504,7 @@ export class WorktreeTrain {
       integratedAt: new Date().toISOString(),
     };
     const receiptPath = `${this.#paths.receipts}/integration-${Date.now()}.json`;
+    // Write receipt first; if train-state write fails, rollback the orphan receipt.
     await this.#root.atomicWrite(receiptPath, Buffer.from(`${JSON.stringify(receipt, null, 2)}\n`, 'utf8'));
     const previous = await this.readTrainState();
     const trainState: TrainState = {
@@ -454,7 +514,13 @@ export class WorktreeTrain {
       receiptCount: (previous?.receiptCount ?? 0) + 1,
       lastReceipt: receiptPath,
     };
-    await this.#root.atomicWrite(this.#paths.trainState, Buffer.from(`${JSON.stringify(trainState, null, 2)}\n`, 'utf8'));
+    try {
+      await this.#root.atomicWrite(this.#paths.trainState, Buffer.from(`${JSON.stringify(trainState, null, 2)}\n`, 'utf8'));
+    } catch (persistError) {
+      // Rollback: delete the orphan receipt to maintain consistency.
+      try { await this.#root.unlink(receiptPath); } catch { /* best-effort */ }
+      throw persistError;
+    }
     return receipt;
   }
 
@@ -536,7 +602,9 @@ export class WorktreeTrain {
 
   private isRegisteredWorktree(worktreePath: string): boolean {
     const output = this.git(['worktree', 'list', '--porcelain']).stdout.toString('utf8');
-    return output.split('\n').some((line) => line.startsWith('worktree ') && line.slice('worktree '.length) === worktreePath);
+    // Normalize to forward slashes for cross-platform comparison (git uses forward slashes)
+    const normalizedPath = worktreePath.replace(/\\/g, '/');
+    return output.split('\n').some((line) => line.startsWith('worktree ') && line.slice('worktree '.length) === normalizedPath);
   }
 
   private resolveDependencyRank(input: WorktreeLeaseInput): { rank: number; source: DependencyRankSource } {

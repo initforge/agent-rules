@@ -1,0 +1,5 @@
+automation/01-build-runtime.ps1
+automation/09-doctor.ps1
+automation/source-integrity.json
+packages/control-plane/tests/browser-qa.test.ts
+packages/engine/src/checkpoint-resume.ts

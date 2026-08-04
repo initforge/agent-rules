@@ -123,6 +123,22 @@ describe('assertIndependence', () => {
     assert.match((r as { reason: string }).reason, /ordering/);
   });
 
+  it('rejects simultaneous blind pass and worker-verdict read (equality is not blind-first)', () => {
+    const evidence = {
+      blind_review_completed: true,
+      threat_hypotheses: ['h'],
+      adversarial_probes: ['p'],
+      verdict_formed_before_comparing: true,
+      ordering_evidence: [
+        { event: 'blind_pass_captured' as const, at: '2026-08-01T10:05:00.000Z' },
+        { event: 'worker_verdict_read' as const, at: '2026-08-01T10:05:00.000Z' }, // same timestamp
+      ],
+    };
+    const r = assertIndependence(identity('sess-reviewer'), identity('sess-writer'), evidence);
+    assert.equal(r.status, 'NOT_INDEPENDENT');
+    assert.match((r as { reason: string }).reason, /ordering/);
+  });
+
   it('rejects missing hypotheses or probes', () => {
     const r = assertIndependence(identity('sess-reviewer'), identity('sess-writer'), {
       blind_review_completed: true,
@@ -211,7 +227,7 @@ describe('requiredReviewersFor (AM-0020 §6 topology)', () => {
 describe('finalizeReview — blind protocol', () => {
   it('records provisional verdict before comparison and confirms agreement', () => {
     const rcpt = receipt('REV-1', 'CLAIM-1', 'ACCEPT_SCOPE', []);
-    const pass = blindPass('REV-1', 'ACCEPT_SCOPE');
+    const pass = blindPass('REV-1', 'ACCEPT_SCOPE', '2026-08-01T10:00:00.000Z');
     const out = finalizeReview(rcpt, pass, 'ACCEPT_SCOPE', '2026-08-01T10:05:00.000Z');
     assert.equal(out.confirmation, 'CONFIRMATION');
     assert.equal(out.final_verdict, 'ACCEPT_SCOPE');
@@ -221,7 +237,7 @@ describe('finalizeReview — blind protocol', () => {
   it('records divergence when worker verdict differs from the blind verdict', () => {
     const out = finalizeReview(
       receipt('REV-2', 'CLAIM-1', 'NEEDS_REPAIR', []),
-      blindPass('REV-2', 'NEEDS_REPAIR'),
+      blindPass('REV-2', 'NEEDS_REPAIR', '2026-08-01T10:00:00.000Z'),
       'ACCEPT_SCOPE',
       '2026-08-01T10:05:00.000Z',
     );
@@ -234,6 +250,18 @@ describe('finalizeReview — blind protocol', () => {
       () => finalizeReview(
         receipt('REV-3', 'CLAIM-1', 'ACCEPT_SCOPE', []),
         blindPass('REV-3', 'ACCEPT_SCOPE', '2026-08-01T10:06:00.000Z'),
+        'ACCEPT_SCOPE',
+        '2026-08-01T10:05:00.000Z',
+      ),
+      /ordering proof violated|postdates/,
+    );
+  });
+
+  it('throws when the blind pass is captured at the same instant as the comparison', () => {
+    assert.throws(
+      () => finalizeReview(
+        receipt('REV-3b', 'CLAIM-1', 'ACCEPT_SCOPE', []),
+        blindPass('REV-3b', 'ACCEPT_SCOPE', '2026-08-01T10:05:00.000Z'),
         'ACCEPT_SCOPE',
         '2026-08-01T10:05:00.000Z',
       ),

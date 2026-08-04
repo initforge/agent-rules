@@ -16,7 +16,7 @@ const roots: string[] = [];
 const draftHeader = `$schema: "${DRAFT_07_SCHEMA_URI}"\n`;
 const canonicalSchemasDirectory = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  '../../../skills/5fedu-module-parity/references/schemas',
+  '../../../profiles/5fedu/skills/5fedu-module-parity/references/schemas',
 );
 const canonicalSchemaNames = [
   'parity-packet.schema.yaml',

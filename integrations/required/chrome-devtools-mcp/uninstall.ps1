@@ -1,5 +1,1 @@
-$ErrorActionPreference = "Stop"
-$Manifest = Get-Content -Raw (Join-Path $PSScriptRoot "manifest.json") | ConvertFrom-Json
-# npx packages are cached on-demand; no global uninstall needed
-Write-Host "Uninstalling $($Manifest.name) (npx cache managed by npm)..."
-Write-Host "$($Manifest.name) uninstalled"
+Write-Host "chrome-devtools-mcp is npx-based; remove adapter entries from platform MCP config if needed."

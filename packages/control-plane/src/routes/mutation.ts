@@ -6,21 +6,9 @@ import * as differ from '../services/differ.js';
 import * as validator from '../services/validator.js';
 import * as audit from '../services/audit.js';
 import { computeDiff } from '../services/differ.js';
-import { safeResolve, checkCanonicalAllowlist, checkMutationAllowlist } from '../services/safety.js';
+import { safeResolve, checkCanonicalAllowlist, checkMutationAllowlist, checkAM22Production, MUTATION_ALLOWLIST, apiError } from '../services/safety.js';
 
 const router = Router();
-
-function apiError(res: Response, code: number, err: unknown): void {
-  if (err instanceof Error && err.message.includes('Path traversal')) {
-    res.status(403).json({ ok: false, error: 'Forbidden' });
-    return;
-  }
-  if (err instanceof Error && err.message.includes('allowlist')) {
-    res.status(403).json({ ok: false, error: 'Forbidden' });
-    return;
-  }
-  res.status(code).json({ ok: false, error: 'An internal error occurred' });
-}
 
 router.post('/diff', (req, res) => {
   try {
@@ -65,6 +53,7 @@ router.post('/apply', async (req, res) => {
       res.status(400).json({ ok: false, error: 'filePath and data required' });
       return;
     }
+    checkAM22Production(fp);   // fail-closed production check BEFORE allowlist
     checkMutationAllowlist(fp);
 
     const validation = validator.validateAgainstSchema(fp, data);
@@ -111,6 +100,7 @@ router.post('/rollback', async (req, res) => {
       res.status(400).json({ ok: false, error: 'backupPath and targetPath required' });
       return;
     }
+    checkAM22Production(targetPath);   // fail-closed production check BEFORE allowlist
     checkMutationAllowlist(targetPath);
     safeResolve(targetPath);
     const ok = writer.rollback(backupPath, targetPath);

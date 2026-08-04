@@ -1,0 +1,3 @@
+PASS — đã sửa typo trong [message.txt](P:/agent-rules/.agent/benchmarks/native/runs/codex-20260723T125331Z-e9337ac0/live-tiny-one-file/full/workspace/message.txt).
+
+Verification: nội dung khớp chính xác chuỗi mong đợi và `git diff --check` pass. Python/Python launcher không có trong môi trường nên không thể chạy unittest trực tiếp.

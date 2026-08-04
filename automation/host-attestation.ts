@@ -742,6 +742,19 @@ const DEFAULT_ALLOWED_ROOTS = [
   '.grok/downloads',
 ];
 
+/** Normalize both slash styles to platform separator, then split into segments. */
+function pathSegments(value: string): string[] {
+  const normalized = path.normalize(value);
+  return normalized.split(path.sep).filter(Boolean);
+}
+
+/** Check raw input for traversal before normalization. */
+function hasTraversalInRawInput(value: string): boolean {
+  // Match '..' as whole path segments (preceded by / or start, followed by / or end)
+  // Also catches encoded: %2e%2e, %2e., .%2e
+  return /(^|\/|\/)\.\.(\/|$)/.test(value) || /%2e%2e/i.test(value);
+}
+
 export function securePathProbe(
   candidatePath: string,
   options: SecurePathProbeOptions = {},
@@ -752,34 +765,25 @@ export function securePathProbe(
     return { path: candidatePath, safe: false, reason: 'non-absolute path' };
   }
 
-  const segments = candidatePath.split(path.sep).filter(Boolean);
+  if (hasTraversalInRawInput(candidatePath)) {
+    return { path: candidatePath, safe: false, reason: 'path traversal component (..) detected' };
+  }
+
+  const segments = pathSegments(candidatePath);
   if (segments.length < 2) {
     return { path: candidatePath, safe: false, reason: 'path too short' };
   }
 
-  // Check for parent directory traversal
-  if (segments.includes('..')) {
-    return { path: candidatePath, safe: false, reason: 'path traversal component (..) detected' };
-  }
-
-  // Verify path contains an allowed root anywhere in its hierarchy
-  // e.g., /home/user/.grok/downloads/grok -> contains .grok/downloads
+  // Verify path contains an allowed root anywhere in its hierarchy.
   let foundAllowedRoot = false;
   for (const root of allowedRoots) {
-    const rootSegments = root.split('/');
-    // Try matching root at each position in path segments
-    for (let start = 0; start <= segments.length - rootSegments.length; start++) {
-      let matches = true;
+    const rootSegments = pathSegments(root.replace(/\//g, path.sep));
+    outer: for (let start = 0; start <= segments.length - rootSegments.length; start++) {
       for (let i = 0; i < rootSegments.length; i++) {
-        if (segments[start + i] !== rootSegments[i]) {
-          matches = false;
-          break;
-        }
+        if (segments[start + i] !== rootSegments[i]) continue outer;
       }
-      if (matches) {
-        foundAllowedRoot = true;
-        break;
-      }
+      foundAllowedRoot = true;
+      break outer;
     }
     if (foundAllowedRoot) break;
   }

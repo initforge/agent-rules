@@ -1,0 +1,10 @@
+Không thể sửa vì workspace đang bị khóa chỉ đọc.
+
+Bản vá cần áp dụng trong [message.txt](P:/agent-rules/.agent/benchmarks/runs/codex-20260721T082631Z-d7073579/live-tiny-one-file/baseline/workspace/message.txt:1):
+
+```diff
+-Agent qualty matters.
++Agent quality matters.
+```
+
+`test_message.py` xác nhận nội dung đúng phải là `Agent quality matters.\n`. Việc chạy test cũng bị policy chặn.

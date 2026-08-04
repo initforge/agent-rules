@@ -58,7 +58,7 @@ Cấu trúc packet:
 | `deviations.yaml` | Approved deviations (theo custom_deviation_contract của inventory) |
 | `proof.yaml` | Verification evidence, cross-reference packet integrity |
 
-Schema xác thực tại `skills/5fedu-module-parity/references/schemas/*.schema.yaml`.
+Schema xác thực tại `profiles/5fedu/skills/5fedu-module-parity/references/schemas/*.schema.yaml`.
 Packet phải validate trước khi giao worker bằng
 `references/validate-parity-packet.py`. Xem workflow chi tiết tại
 `references/workflow/planning-workflow.md` và example tại

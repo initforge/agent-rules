@@ -1,0 +1,21 @@
+{
+  "id": "REV-P1-FINAL",
+  "reviewer": "foundation_rereviewer",
+  "status": "PASS",
+  "scope": "Shared orchestration behavior, model policy, fallback, and token-budget review",
+  "observed": "Fresh stable review found no remaining finding; shared contract and current proof set match AC1 and AC2.",
+  "receipt_ids": ["PF-AC1-FINAL", "PF-AC2-FINAL"],
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "model_evidence": {
+    "requested_model": "gpt-5.6-terra",
+    "requested_effort": "medium",
+    "resolved_model": "gpt-5.6-terra",
+    "resolved_effort": "medium",
+    "observed_model": "gpt-5.6-terra",
+    "observed_effort": "medium",
+    "status": "observed",
+    "fallback_reason": "",
+    "main_direct_exception_reason": ""
+  }
+}

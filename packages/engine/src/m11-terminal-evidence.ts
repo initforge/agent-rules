@@ -14,8 +14,50 @@
  * rejects any mismatch.
  */
 import { createHash } from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 import { candidateEpochHash, type CandidateEpoch } from './candidate-epoch.js';
 import type { M11Evidence, M11Review } from './terminal-gate.js';
+
+/**
+ * Atomic ledger write: temp file + rename + fsync.
+ * Prevents partial-file observers during write; cleans temp on failure.
+ */
+export function atomicLedgerWrite(ledgerPath: string, content: string): void {
+  const dir = path.dirname(ledgerPath);
+  const tmp = path.join(dir, `.tmp-${path.basename(ledgerPath)}-${process.pid}-${(Math.random() * 0x100000000).toString(36)}`);
+  const fd = fs.openSync(tmp, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW, 0o600);
+  let closed = false;
+  try {
+    let off = 0;
+    while (off < content.length) {
+      const n = fs.writeSync(fd, Buffer.from(content, 'utf-8'), off, content.length - off);
+      if (n === 0) throw new Error('atomicLedgerWrite: write zero bytes');
+      off += n;
+    }
+    fs.fsyncSync(fd);
+    fs.closeSync(fd);
+    closed = true;
+    // Verify target is not a symlink or hardlink before rename
+    try {
+      const lst = fs.lstatSync(ledgerPath);
+      if (lst.isSymbolicLink()) throw new Error('atomicLedgerWrite: target is a symlink');
+      if (lst.nlink > 1) throw new Error(`atomicLedgerWrite: target is a hardlink (nlink=${lst.nlink})`);
+    } catch (e2: any) {
+      if (e2.code !== 'ENOENT') throw e2;
+    }
+    fs.renameSync(tmp, ledgerPath);
+    // fsync parent directory for durability (skipped on Windows)
+    if (process.platform !== 'win32') {
+      const dirFd = fs.openSync(dir, fs.constants.O_RDONLY);
+      try { fs.fsyncSync(dirFd); } finally { fs.closeSync(dirFd); }
+    }
+  } catch (e) {
+    if (!closed) { try { fs.closeSync(fd); } catch { /* ignore */ } }
+    try { fs.unlinkSync(tmp); } catch { /* ignore */ }
+    throw e;
+  }
+}
 
 export interface M11TerminalEvidenceEnvelope {
   headCommit: string;
@@ -236,10 +278,9 @@ export function writeM11TerminalEvidence(
   const produce = produceM11TerminalEvidence(input);
   if (!produce.ok) return produce;
 
-  const fs = require('node:fs');
   const raw = fs.readFileSync(ledgerPath, 'utf8');
   const ledger = JSON.parse(raw) as Record<string, any>;
   ledger.m11_terminal_evidence = produce.envelope;
-  fs.writeFileSync(ledgerPath, JSON.stringify(ledger, null, 2) + '\n', 'utf8');
+  atomicLedgerWrite(ledgerPath, JSON.stringify(ledger, null, 2) + '\n');
   return { ok: true };
 }

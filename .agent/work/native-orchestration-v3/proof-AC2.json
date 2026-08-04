@@ -1,0 +1,32 @@
+{
+  "id": "PF-AC2",
+  "acceptance_id": "AC2",
+  "proof_kind": "integration",
+  "dimensions": [
+    "model-routing",
+    "forbidden-models",
+    "fallback"
+  ],
+  "command": "python automation/test-model-policy.py",
+  "expected_exit_code": 0,
+  "timeout_seconds": 300,
+  "environment": "Python 3; P:/agent-rules",
+  "artifact_paths": [
+    "automation/model-policy.json",
+    "automation/test-model-policy.py"
+  ],
+  "agent": "shared_contract",
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "model_evidence": {
+    "requested_model": "gpt-5.6-terra",
+    "requested_effort": "medium",
+    "resolved_model": "gpt-5.6-terra",
+    "resolved_effort": "medium",
+    "observed_model": null,
+    "observed_effort": null,
+    "status": "unobserved",
+    "fallback_reason": "",
+    "main_direct_exception_reason": ""
+  }
+}

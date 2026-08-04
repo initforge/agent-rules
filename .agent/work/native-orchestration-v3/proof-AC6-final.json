@@ -1,0 +1,30 @@
+{
+  "id": "PF-AC6-FINAL2",
+  "acceptance_id": "AC6",
+  "proof_kind": "integration",
+  "dimensions": ["capability-probe", "honest-status", "single-agent-fallback"],
+  "command": "python automation/test-native-agent-policy.py --build --isolated-install",
+  "expected_exit_code": 0,
+  "timeout_seconds": 900,
+  "environment": "Python 3 plus isolated Windows PowerShell 5 all-platform install/doctor; real user runtimes untouched",
+  "artifact_paths": [
+    "automation/test-native-agent-policy.py",
+    "automation/09-doctor.ps1",
+    "rules/25-task-lifecycle.md",
+    "skills/plan-and-handoff/references/adaptive-work-protocol.md"
+  ],
+  "agent": "runtime_delivery",
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "model_evidence": {
+    "requested_model": "gpt-5.6-terra",
+    "requested_effort": "medium",
+    "resolved_model": "gpt-5.6-terra",
+    "resolved_effort": "medium",
+    "observed_model": "gpt-5.6-terra",
+    "observed_effort": "medium",
+    "status": "observed",
+    "fallback_reason": "",
+    "main_direct_exception_reason": ""
+  }
+}

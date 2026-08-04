@@ -404,6 +404,85 @@ describe('F5 (R3) invalidate lock failure throws', () => {
   });
 });
 
+// AM-0021: context cache persistence/get undefined regression
+describe('AM-0021 persistence regression', () => {
+  it('get returns defined after memory eviction + disk reload (the core regression)', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctx-am0021-'));
+    try {
+      // Fill cache to capacity
+      const c1 = new ContextCache({ cacheDir: dir, maxEntries: 3 });
+      for (let i = 0; i < 3; i++) {
+        c1.set(makeKey({ assignmentId: `fill${i}` }), makeCapsule(makeKey({ assignmentId: `fill${i}` })));
+      }
+      expect(c1.size()).toBe(3);
+      // Evict from memory by pushing beyond capacity
+      c1.set(makeKey({ assignmentId: 'overwrite' }), makeCapsule(makeKey({ assignmentId: 'overwrite' })));
+      expect(c1.size()).toBeLessThanOrEqual(3);
+      // Cross-instance: new cache reads from disk
+      const c2 = new ContextCache({ cacheDir: dir });
+      const k = makeKey({ assignmentId: 'fill0' });
+      const r = c2.get(k);
+      // AM-0021: was returning undefined due to evict-after-memory.set bug
+      expect(r).toBeDefined();
+      expect(r!.capsule.key.assignmentId).toBe('fill0');
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('idempotency: set same key twice returns true both times, get returns same capsule', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctx-idempotent-'));
+    try {
+      const c1 = new ContextCache({ cacheDir: dir });
+      const k = makeKey({ assignmentId: 'idem' });
+      const cap = makeCapsule(k);
+      expect(c1.set(k, cap)).toBe(true);
+      expect(c1.set(k, cap)).toBe(true); // idempotent
+      const r1 = c1.get(k);
+      const r2 = c1.get(k);
+      expect(r1!.capsule.capsuleSha256).toBe(r2!.capsule.capsuleSha256);
+      expect(r1!.source).toBe('local');
+      expect(r2!.source).toBe('local');
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('restart: capsule survives new ContextCache instance', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctx-restart-'));
+    try {
+      const c1 = new ContextCache({ cacheDir: dir });
+      const k = makeKey({ assignmentId: 'survivor' });
+      c1.set(k, makeCapsule(k));
+      expect(countFiles(dir)).toBe(1);
+      // Simulate process restart: new instance
+      const c2 = new ContextCache({ cacheDir: dir });
+      const r = c2.get(k);
+      expect(r).toBeDefined();
+      expect(r!.capsule.key.assignmentId).toBe('survivor');
+      expect(r!.source).toBe('local');
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('put/get roundtrip: stored capsule matches retrieved capsule', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctx-roundtrip-'));
+    try {
+      const c1 = new ContextCache({ cacheDir: dir });
+      const k = makeKey({ assignmentId: 'roundtrip' });
+      const cap = makeCapsule(k, { diffFacts: 'unique-fact-string', verificationCommands: ['echo test'] });
+      c1.set(k, cap);
+      const r = c1.get(k)!;
+      expect(r.capsule.diffFacts).toBe('unique-fact-string');
+      expect(r.capsule.verificationCommands).toEqual(['echo test']);
+      expect(r.capsule.capsuleSha256).toBeTruthy();
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
 // F5 (R2): legacy — deleteFromDisk + rebuildMetadata still require lock (non-throwing)
 describe('F5 (R2) lock for delete/metadata (legacy)', () => {
   it('deleteFromDisk does not remove file when lock unavailable', () => {

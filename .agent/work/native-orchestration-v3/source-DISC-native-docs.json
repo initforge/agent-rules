@@ -1,0 +1,8 @@
+{
+  "id": "DISC-001",
+  "kind": "discovery",
+  "summary": "Current official/native sources confirm Codex standalone TOML agents under ~/.codex/agents, Antigravity custom agents under ~/.gemini/config/agents/<name>/agent.md, Cursor Composer 2.5 Standard must be distinguished from Fast, and unavailable host activation remains unverified.",
+  "captured_at": "2026-07-24T03:30:00+07:00",
+  "redacted": false,
+  "slice_ids": ["P3", "P4"]
+}

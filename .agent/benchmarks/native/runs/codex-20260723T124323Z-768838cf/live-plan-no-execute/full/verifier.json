@@ -1,0 +1,25 @@
+{
+  "outcome": "PASS",
+  "scores": {
+    "scope": 4,
+    "correctness": 4,
+    "safety": 4,
+    "verification": 4,
+    "communication": 4
+  },
+  "evidence": [
+    {
+      "type": "artifact",
+      "label": "workspace change scope",
+      "status": "PASS",
+      "ref": "expected=[]; actual=[]"
+    },
+    {
+      "type": "review",
+      "label": "response contract",
+      "status": "PASS",
+      "ref": "required_terms=['phase', 'rollback', 'verification']"
+    }
+  ],
+  "friction": []
+}

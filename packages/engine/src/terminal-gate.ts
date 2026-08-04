@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { assertWorkLedger as canonicalAssertWorkLedger, assertCertificationAttestation as canonicalAssertCertificationAttestation, CERTIFICATION_REQUIRED_HOSTS } from './contracts.js';
 import { candidateEpochHash, type CandidateEpoch } from './candidate-epoch.js';
+import { atomicLedgerWrite } from './m11-terminal-evidence.js';
 import { MATURITY_RANK, type EvidenceMaturity } from './claim-registry.js';
 
 export interface GateResult {
@@ -443,7 +444,7 @@ export function assertNoResidualBeforeFinal(ledgerPath: string, headCommit: stri
     const msg = `Cannot issue final: gates failing: ${result.failedGates.join(', ')}`;
     const raw = JSON.parse(fs.readFileSync(path.resolve(ledgerPath), 'utf-8'));
     raw.execution_state = 'NEEDS_REMEDIATION';
-    fs.writeFileSync(path.resolve(ledgerPath), JSON.stringify(raw, null, 2));
+    atomicLedgerWrite(path.resolve(ledgerPath), JSON.stringify(raw, null, 2));
     throw new Error(msg);
   }
 }
@@ -735,7 +736,7 @@ export function finalizeM11(options: M11FinalizeOptions): M11FinalizeResult {
   ledger.shadow_hashes = hashes;
   ledger.shadowHashes = hashes;
 
-  fs.writeFileSync(resolved, `${JSON.stringify(ledger, null, 2)}\n`, 'utf-8');
+  atomicLedgerWrite(resolved, `${JSON.stringify(ledger, null, 2)}\n`);
   return { passed: true, token: M11_TERMINAL_TOKEN };
 }
 

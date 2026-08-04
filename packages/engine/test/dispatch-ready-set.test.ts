@@ -12,6 +12,7 @@ import { describe, it } from 'vitest';
 import assert from 'node:assert/strict';
 import {
   computeReadySet, leaseKey, leaseSetsOverlap,
+  DEFAULT_SCHEDULER_PROFILE, poolCeilingsForSchedulerProfile,
   type ExecutionGraph, type ExecutionNode,
 } from '../src/dispatch-ready-set.js';
 
@@ -32,8 +33,10 @@ function allPending(graph: ExecutionGraph): Record<string, 'PENDING'> {
 const ids = (result: { ready: string[] }): Set<string> => new Set(result.ready);
 
 // ── AM-0019 §12: 14 conflict-free tasks, no wave barrier ────────────────────
+// AM-0019's 14-slot table is superseded by AM-0022 (8 normal) but remains a
+// preserved capability: it must be opted into explicitly via `ceilings`.
 
-describe('14-task antichain (AM-0019 §12)', () => {
+describe('14-task antichain (AM-0019 §12, explicit legacy opt-in)', () => {
   it('dispatches all 14 in one call across two logical waves (SOFT/VERIFY_AFTER only)', () => {
     const nodes: ExecutionNode[] = [];
     const wave1: ExecutionNode[] = [];
@@ -53,7 +56,12 @@ describe('14-task antichain (AM-0019 §12)', () => {
     nodes.push(...wave1, ...wave2);
 
     const g = graph(...nodes);
-    const result = computeReadySet({ graph: g, state: { status: allPending(g) } });
+    // Explicit legacy AM-0019 §5 ceilings — B01: never silent, always explicit.
+    const result = computeReadySet({
+      graph: g,
+      state: { status: allPending(g) },
+      ceilings: { total: 14, writers: 8, reviewers: 5 },
+    });
 
     assert.equal(result.ready.length, 14, 'all 14 conflict-free tasks dispatch in one call');
     assert.equal(ids(result).size, 14);
@@ -137,9 +145,13 @@ describe('conflict rejection', () => {
 // ── Pool ceilings (AM-0019 §5) ──────────────────────────────────────────────
 
 describe('pool ceiling enforcement', () => {
-  it('caps writers at 8', () => {
+  it('caps writers at 8 (legacy ceiling must be explicit)', () => {
     const g = graph(...Array.from({ length: 10 }, (_, i) => node(`W${i}`, { kind: 'writer' })));
-    const result = computeReadySet({ graph: g, state: { status: allPending(g) } });
+    const result = computeReadySet({
+      graph: g,
+      state: { status: allPending(g) },
+      ceilings: { total: 14, writers: 8 },
+    });
 
     assert.equal(result.ready.length, 8);
     assert.equal(result.usage.writers, 8);
@@ -287,5 +299,70 @@ describe('recoverable waiting states (AM-0019 §4)', () => {
     for (const e of result.waitingClosure) {
       assert.ok(e.wake.length > 0, `${e.taskId} carries a wake condition`);
     }
+  });
+});
+
+// ── B01: default scheduler profile bound to AM-0022 effective contract ──
+
+describe('B01 — default scheduler profile bound to effective contract', () => {
+  it('DEFAULT_SCHEDULER_PROFILE is normal and matches the effective contract', () => {
+    assert.equal(DEFAULT_SCHEDULER_PROFILE, 'normal');
+    const normal = poolCeilingsForSchedulerProfile(DEFAULT_SCHEDULER_PROFILE);
+    assert.equal(normal.total, 8);
+    assert.equal(normal.writers, 4);
+    assert.equal(normal.verifiers, 2);
+    assert.equal(normal.reviewers, 1);
+    assert.equal(normal.integration, 1);
+  });
+
+  it('an unconfigured call targets 8 meaningful children, not legacy 14', () => {
+    const g = graph(
+      node('A1', { kind: 'writer' }),
+      node('A2', { kind: 'writer' }),
+      node('A3', { kind: 'writer' }),
+      node('A4', { kind: 'writer' }),
+      node('A5', { kind: 'verifier' }),
+      node('A6', { kind: 'verifier' }),
+      node('A7', { kind: 'reviewer' }),
+      node('A8', { kind: 'integration' }),
+      node('A9', { kind: 'browser' }),
+    );
+    const result = computeReadySet({ graph: g, state: { status: allPending(g) } });
+    // normal profile caps: writers 4, verifiers 2, reviewers 1, integration 1, browser 2, total 8.
+    assert.equal(result.ready.length, 8, 'default total ceiling is 8, never legacy 14');
+    assert.equal(result.usage.total, 8);
+    assert.equal(result.usage.writers, 4);
+    assert.equal(result.usage.verifiers, 2);
+    assert.equal(result.usage.reviewers, 1);
+    assert.equal(result.usage.integration, 1);
+    assert.equal(result.usage.browser, 1);
+    assert.equal(result.deferredByPool.length, 1);
+  });
+
+  it('records below-target reasons for the bound default profile', () => {
+    const g = graph(node('W0', { kind: 'writer' }));
+    const result = computeReadySet({ graph: g, state: { status: allPending(g) } });
+    assert.equal(result.ready.length, 1);
+    assert.ok(
+      result.belowTargetReasons.some((r) => r.code === 'INSUFFICIENT_READY'),
+      'bound default profile records underfill',
+    );
+    assert.ok(result.belowTargetReasons[0].detail.includes('normal'), 'reason names the bound profile');
+  });
+
+  it('legacy 14-slot ceilings remain available only via explicit opt-in', () => {
+    const g = graph(
+      ...Array.from({ length: 8 }, (_, i) => node(`W${i}`, { kind: 'writer' })),
+      ...Array.from({ length: 5 }, (_, i) => node(`R${i}`, { kind: 'reviewer' })),
+      node('B1', { kind: 'browser' }),
+    );
+    // Explicit legacy AM-0019 §5 ceilings — never silent.
+    const result = computeReadySet({
+      graph: g,
+      state: { status: allPending(g) },
+      ceilings: { total: 14, writers: 8, reviewers: 5 },
+    });
+    assert.equal(result.ready.length, 14, 'explicit legacy 14-slot ceiling preserved');
+    assert.equal(result.usage.total, 14);
   });
 });

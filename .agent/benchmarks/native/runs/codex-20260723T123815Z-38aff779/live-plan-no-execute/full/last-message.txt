@@ -1,0 +1,91 @@
+## Trạng thái: PARTIAL
+
+Đã lập plan migration theo chiến lược **expand → dual-write → backfill → cutover → contract**, nhưng PAF đang ở `DRAFT`: repo chưa cung cấp database engine/version, migration runner, enum values/mapping và application consumers. Không thể viết DDL/verification command chính xác mà không đoán.
+
+### Mục tiêu và phạm vi
+
+**Outcome:** Chuyển `accounts.status` từ free text sang enum, không downtime; các bản ứng dụng cũ vẫn hoạt động trong rolling deployment; rollback không mất hoặc làm sai dữ liệu hiện hữu.
+
+**Deliverables:**
+
+- D1: Chốt migration contract và baseline dữ liệu.
+- D2: Mở rộng schema bằng enum/shadow column có thể rollback.
+- D3: Thiết lập tương thích đọc/ghi giữa phiên bản cũ và mới.
+- D4: Backfill có thể tạm dừng, tiếp tục và chạy lại.
+- D5: Cutover có canary, reconciliation và rollback rehearsal.
+- D6: Xóa legacy artifacts sau rollback window.
+
+**Ngoài phạm vi:**
+
+- Không tự đoán enum values hoặc cách map dữ liệu lạ.
+- Không `ALTER` cột tại chỗ trước khi đo lock/rewrite risk.
+- Không xóa cột text trong rollback window.
+- Không deploy, chạy migration hoặc sửa source trong phiên plan này.
+
+## Kế hoạch nhiều phase
+
+| Phase | Phụ thuộc | Nội dung và exit gate |
+|---|---|---|
+| **P1 — Preflight và khóa contract** | — | Xác định DB/version, migration runner, transaction/locking semantics; trace toàn bộ readers/writers; thống kê `status`, unmapped values, số dòng và write rate; chốt enum/mapping, rollback window và tên schema cuối. **Exit:** mọi giá trị có mapping được phê duyệt, có baseline và rehearsal plan; nếu không thì `BLOCKED`. |
+| **P2 — Expand schema** | P1 | Tạo enum representation và nullable shadow column; chưa đổi/xóa `status`; migration phải tránh table rewrite/lock vượt budget. Xác minh phiên bản ứng dụng cũ vẫn đọc/ghi được. **Rollback:** chỉ loại bỏ artifacts mới, không chạm dữ liệu legacy. |
+| **P3 — Compatibility/dual-write** | P2 | Triển khai writer tương thích: application dual-write hoặc DB synchronization, lựa chọn tại P1; legacy column vẫn là read source ban đầu. Theo dõi mismatch và kiểm thử hỗn hợp old/new instances. **Exit:** rolling deployment không tạo dữ liệu mất đồng bộ. |
+| **P4 — Backfill và reconciliation** | P3 | Backfill theo batch bằng khóa `id`, idempotent, có throttle/checkpoint/resume; chỉ map giá trị đã duyệt; unmapped rows bị dừng/quarantine chứ không tự sửa. Chạy tail catch-up đến khi mismatch bằng 0. **Rollback:** dừng worker; cột text vẫn nguyên vẹn. |
+| **P5 — Cutover** | P4 | Xác nhận không còn legacy-only writers; validate enum/`NOT NULL`; canary chuyển reads sang enum. Tiếp tục dual-write về cột text trong toàn bộ rollback window. **Rollback:** chuyển reads về legacy mà không cần reverse migration dữ liệu. |
+| **P6 — Contract/cleanup** | P5 + hết rollback window | Xác nhận không còn consumer legacy; dừng dual-write; tạo bằng chứng/snapshot; xóa hoặc đổi tên cột legacy và cleanup trigger/type tạm. Down migration phải tái tạo text từ enum trước khi loại enum. **Exit:** row count, IDs và status semantics không đổi; schema cuối được xác minh. |
+
+### Proof bắt buộc
+
+- Baseline và hậu migration: row count, phân bố `status`, unmapped count.
+- Reconciliation: legacy ↔ enum mismatch bằng `0`.
+- Compatibility: old-only, new-only và mixed-version deployment đều qua.
+- Backfill: chạy lại không đổi kết quả; pause/resume không bỏ sót.
+- Rollback rehearsal trên staging clone: row IDs/count/status được giữ nguyên.
+- Lock duration, error rate và latency nằm trong budget đã chốt ở P1.
+
+### Known-unknowns cần khóa tại P1
+
+- Database engine và version.
+- Migration framework, naming và transaction model.
+- Danh sách enum hợp lệ cùng mapping từ dữ liệu hiện tại.
+- Kích thước bảng, write rate và lock-time budget.
+- Vị trí source của mọi reader/writer.
+- Thời lượng rollback window và final column naming.
+
+## HANDOFF — Phase 1 בלבד
+
+```text
+Plan ID: account-status-enum-20260723
+Slice ID: P1-preflight
+Ledger: .agent/plans/account-status-enum-20260723/ledger/P1-preflight.md
+Execute: Phase P1 ONLY
+Pivot: "làm đi phase P1"
+preferred_tier: L2
+min_tier: L2
+allowed_tiers: [L2]
+Scope lock: [D1]
+Context:
+- README.md
+- migration-constraints.md
+- schema.sql
+Verify:
+- DB/schema introspection
+- status distribution and unmapped-value query
+- reader/writer consumer trace
+- rollback and locking capability assessment
+Forbidden:
+- DDL changes
+- backfill
+- deploy
+- guessing enum mappings
+Report:
+- Assumptions checked
+- Mismatches
+- Locked migration contract
+- Open blockers
+- Verification evidence
+- Status
+```
+
+Bằng chứng khảo sát: [README.md](</P:/agent-rules/.agent/benchmarks/native/runs/codex-20260723T123815Z-38aff779/live-plan-no-execute/full/workspace/README.md>), [migration-constraints.md](</P:/agent-rules/.agent/benchmarks/native/runs/codex-20260723T123815Z-38aff779/live-plan-no-execute/full/workspace/migration-constraints.md>) và [schema.sql](</P:/agent-rules/.agent/benchmarks/native/runs/codex-20260723T123815Z-38aff779/live-plan-no-execute/full/workspace/schema.sql>) đã được đọc; Git vẫn sạch, không có file nào bị sửa.
+
+Để nâng plan lên `READY`, cần một gói thông tin: **DB engine/version, migration runner, enum values/mapping và đường dẫn repo của ứng dụng đang đọc/ghi `accounts.status`**.

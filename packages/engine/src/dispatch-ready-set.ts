@@ -27,8 +27,32 @@ export const POOL_CEILINGS = {
   absoluteMax: DEFAULT_MAX_PROCESS_CEILING,
 } as const;
 
-export type PoolKind = 'writer' | 'reviewer' | 'integration' | 'browser' | 'build' | 'compose';
-export const POOL_KINDS: readonly PoolKind[] = ['writer', 'reviewer', 'integration', 'browser', 'build', 'compose'];
+/**
+ * AM-0022 meaningful-agent profiles (M11-R54). An unconfigured scheduler binds
+ * to the effective contract via DEFAULT_SCHEDULER_PROFILE: 8 meaningful
+ * children normally (4 writers, 2 verifiers, 1 reviewer, 1 integration).
+ * AM-0019's superseded 14-slot table stays reachable only through explicit
+ * `ceilings` or an explicit profile — never silently.
+ */
+export const AM22_SCHEDULER_PROFILES = {
+  normal: { total: 8, writers: 4, verifiers: 2, reviewers: 1, integration: 1 },
+  burst: { total: 10, writers: 5, verifiers: 2, reviewers: 2, integration: 1 },
+  reduced: { total: 4, writers: 2, verifiers: 1, reviewers: 0, integration: 1 },
+  paused: { total: 2, writers: 0, verifiers: 1, reviewers: 0, integration: 1 },
+} as const;
+
+export type SchedulerProfile = keyof typeof AM22_SCHEDULER_PROFILES;
+
+/**
+ * Default scheduler profile, bound to the AM-0022 effective contract (M11-R54).
+ * When neither a profile nor explicit ceilings are supplied, the scheduler
+ * targets the normal profile instead of silently inheriting the superseded
+ * AM-0019 14-slot ceilings.
+ */
+export const DEFAULT_SCHEDULER_PROFILE: SchedulerProfile = 'normal';
+
+export type PoolKind = 'writer' | 'verifier' | 'reviewer' | 'integration' | 'browser' | 'build' | 'compose';
+export const POOL_KINDS: readonly PoolKind[] = ['writer', 'verifier', 'reviewer', 'integration', 'browser', 'build', 'compose'];
 
 export const BLOCKING_DEPENDENCY_TYPES: readonly DependencyType[] = ['HARD', 'GLOBAL_GATE'];
 export const NONBLOCKING_DEPENDENCY_TYPES = DEPENDENCY_TYPES.filter((t) => !BLOCKING_DEPENDENCY_TYPES.includes(t));
@@ -81,13 +105,40 @@ export interface SchedulerState {
 }
 
 export interface PoolCeilings {
-  total?: number; writers?: number; reviewers?: number; integration?: number;
+  total?: number; writers?: number; verifiers?: number; reviewers?: number; integration?: number;
   browser?: number; build?: number; compose?: number;
 }
 
 export interface PoolUsage {
-  total: number; writers: number; reviewers: number; integration: number;
+  total: number; writers: number; verifiers: number; reviewers: number; integration: number;
   browser: number; build: number; compose: number;
+}
+
+/** Historical callers may omit the AM-0022 verifier counter. */
+export type PoolUsageInput = Omit<PoolUsage, 'verifiers'> & { verifiers?: number };
+
+/** Resolve an AM-0022 profile into the existing scheduler ceiling contract. */
+export function poolCeilingsForSchedulerProfile(profile: SchedulerProfile): Required<PoolCeilings> {
+  const meaningful = AM22_SCHEDULER_PROFILES[profile];
+  return {
+    ...meaningful,
+    browser: profile === 'burst' ? POOL_CEILINGS.browserBurst : profile === 'paused' ? 1 : POOL_CEILINGS.browserDefault,
+    build: profile === 'paused' ? 0 : profile === 'reduced' ? 1 : POOL_CEILINGS.build,
+    compose: POOL_CEILINGS.compose,
+  };
+}
+
+export type BelowTargetCode =
+  | 'INSUFFICIENT_READY'
+  | 'CONFLICT_LIMITED'
+  | 'ROLE_CEILING'
+  | 'WAITING_OR_DEPENDENCY'
+  | 'GRAPH_EXHAUSTED';
+
+export interface BelowTargetReason {
+  code: BelowTargetCode;
+  detail: string;
+  taskIds: string[];
 }
 
 export interface WaitingClosureEntry {
@@ -108,11 +159,13 @@ export interface ReadySetInput {
   /** Task ids currently holding leases/slots (running or READY-but-not-started). */
   running?: readonly string[];
   /** Explicit current usage; when omitted it is derived from running node kinds. */
-  usage?: PoolUsage;
+  usage?: PoolUsageInput;
   /** Allow browser burst ceiling (4) instead of default (2). */
   browserBurst?: boolean;
   /** Ceiling overrides, e.g. tests with tiny pools. */
   ceilings?: PoolCeilings;
+  /** AM-0022 meaningful-agent profile. Omit to bind DEFAULT_SCHEDULER_PROFILE (normal). */
+  profile?: SchedulerProfile;
 }
 
 export interface ReadySetResult {
@@ -126,14 +179,17 @@ export interface ReadySetResult {
   rejectedConflicts: RejectedConflict[];
   /** Candidates deferred purely by pool ceilings. */
   deferredByPool: string[];
+  /** Structured reasons whenever an AM-0022 profile cannot reach its useful target. */
+  belowTargetReasons: BelowTargetReason[];
 }
 
 export const EMPTY_READY_SET: ReadySetResult = {
   ready: [],
   waitingClosure: [],
-  usage: { total: 0, writers: 0, reviewers: 0, integration: 0, browser: 0, build: 0, compose: 0 },
+  usage: { total: 0, writers: 0, verifiers: 0, reviewers: 0, integration: 0, browser: 0, build: 0, compose: 0 },
   rejectedConflicts: [],
   deferredByPool: [],
+  belowTargetReasons: [],
 };
 
 // ── Path normalization + glob matching ──────────────────────────────────────
@@ -231,18 +287,23 @@ export function leaseSetsOverlap(a: readonly ConflictDomain[], b: readonly Confl
 // ── Ceiling helpers ─────────────────────────────────────────────────────────
 
 function effectiveCeilings(input: ReadySetInput): {
-  total: number; writers: number; reviewers: number; integration: number;
+  total: number; writers: number; verifiers: number; reviewers: number; integration: number;
   browser: number; build: number; compose: number;
 } {
   const c = input.ceilings ?? {};
+  // B01: bind the default scheduler profile to the AM-0022 effective contract.
+  // The superseded AM-0019 14-slot ceilings apply only when explicitly supplied
+  // via `ceilings` (or an explicit profile) — never silently.
+  const profile = poolCeilingsForSchedulerProfile(input.profile ?? DEFAULT_SCHEDULER_PROFILE);
   return {
-    total: Math.min(c.total ?? POOL_CEILINGS.total, POOL_CEILINGS.absoluteMax),
-    writers: c.writers ?? POOL_CEILINGS.writers,
-    reviewers: c.reviewers ?? POOL_CEILINGS.reviewers,
-    integration: c.integration ?? POOL_CEILINGS.integration,
-    browser: c.browser ?? (input.browserBurst ? POOL_CEILINGS.browserBurst : POOL_CEILINGS.browserDefault),
-    build: c.build ?? POOL_CEILINGS.build,
-    compose: c.compose ?? POOL_CEILINGS.compose,
+    total: Math.min(c.total ?? profile.total, POOL_CEILINGS.absoluteMax),
+    writers: c.writers ?? profile.writers,
+    verifiers: c.verifiers ?? profile.verifiers,
+    reviewers: c.reviewers ?? profile.reviewers,
+    integration: c.integration ?? profile.integration,
+    browser: c.browser ?? (input.browserBurst ? POOL_CEILINGS.browserBurst : profile.browser),
+    build: c.build ?? profile.build,
+    compose: c.compose ?? profile.compose,
   };
 }
 
@@ -252,12 +313,12 @@ function kindOf(node: ExecutionNode | undefined): PoolKind {
 }
 
 const USAGE_KEY: Record<PoolKind, keyof PoolUsage> = {
-  writer: 'writers', reviewer: 'reviewers', integration: 'integration',
+  writer: 'writers', verifier: 'verifiers', reviewer: 'reviewers', integration: 'integration',
   browser: 'browser', build: 'build', compose: 'compose',
 };
 
 function usageFromRunning(running: readonly string[], nodes: ReadonlyMap<string, ExecutionNode>): PoolUsage {
-  const usage = { total: 0, writers: 0, reviewers: 0, integration: 0, browser: 0, build: 0, compose: 0 };
+  const usage = { total: 0, writers: 0, verifiers: 0, reviewers: 0, integration: 0, browser: 0, build: 0, compose: 0 };
   for (const id of running) {
     usage.total++;
     usage[USAGE_KEY[kindOf(nodes.get(id))]]++;
@@ -268,6 +329,7 @@ function usageFromRunning(running: readonly string[], nodes: ReadonlyMap<string,
 function kindFits(usage: PoolUsage, kind: PoolKind, ceilings: ReturnType<typeof effectiveCeilings>): boolean {
   switch (kind) {
     case 'writer': return usage.writers < ceilings.writers;
+    case 'verifier': return (usage.verifiers ?? 0) < ceilings.verifiers;
     case 'reviewer': return usage.reviewers < ceilings.reviewers;
     case 'integration': return usage.integration < ceilings.integration;
     case 'browser': return usage.browser < ceilings.browser;
@@ -320,7 +382,10 @@ export function computeReadySet(input: ReadySetInput): ReadySetResult {
   const status = input.state.status;
   const waiting = input.state.waiting ?? {};
   const ceilings = effectiveCeilings(input);
-  const usage: PoolUsage = input.usage ?? usageFromRunning(input.running ?? [], nodes);
+  const usage: PoolUsage = input.usage
+    ? { ...input.usage, verifiers: input.usage.verifiers ?? 0 }
+    : usageFromRunning(input.running ?? [], nodes);
+  const startingUsage = { ...usage };
   const runningDomains: Array<{ id: string; domains: ConflictDomain[] }> = [];
   for (const id of input.running ?? []) {
     const node = nodes.get(id);
@@ -454,7 +519,49 @@ export function computeReadySet(input: ReadySetInput): ReadySetResult {
     }
   }
 
-  return { ready, waitingClosure, usage, rejectedConflicts, deferredByPool };
+  const belowTargetReasons: BelowTargetReason[] = [];
+  // The bound default (DEFAULT_SCHEDULER_PROFILE) is an active AM-0022 profile:
+  // an underfilled run records the constraint instead of staying silent.
+  const profileName = input.profile ?? DEFAULT_SCHEDULER_PROFILE;
+  if (usage.total < ceilings.total) {
+    if (candidates.length + startingUsage.total < ceilings.total) {
+      belowTargetReasons.push({
+        code: 'INSUFFICIENT_READY',
+        detail: `${candidates.length} runnable candidate(s) plus ${startingUsage.total} running slot(s) cannot fill ${profileName} target ${ceilings.total}`,
+        taskIds: candidates.map((candidate) => candidate.id),
+      });
+    }
+    if (rejectedConflicts.length > 0) {
+      belowTargetReasons.push({
+        code: 'CONFLICT_LIMITED',
+        detail: `${rejectedConflicts.length} candidate(s) conflict with an active or selected lease`,
+        taskIds: rejectedConflicts.map((entry) => entry.taskId),
+      });
+    }
+    if (deferredByPool.length > 0) {
+      belowTargetReasons.push({
+        code: 'ROLE_CEILING',
+        detail: `${deferredByPool.length} candidate(s) exceed a meaningful-role ceiling`,
+        taskIds: [...deferredByPool],
+      });
+    }
+    if (waitingClosure.length > 0) {
+      belowTargetReasons.push({
+        code: 'WAITING_OR_DEPENDENCY',
+        detail: `${waitingClosure.length} task(s) are waiting or depend on waiting work`,
+        taskIds: waitingClosure.map((entry) => entry.taskId),
+      });
+    }
+    if (candidates.length === 0 && waitingClosure.length === 0) {
+      belowTargetReasons.push({
+        code: 'GRAPH_EXHAUSTED',
+        detail: `no nonterminal work remains to fill ${profileName} target ${ceilings.total}`,
+        taskIds: [],
+      });
+    }
+  }
+
+  return { ready, waitingClosure, usage, rejectedConflicts, deferredByPool, belowTargetReasons };
 }
 
 /** Zero-copy graph helper for callers that hold flat records. */

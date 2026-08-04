@@ -1,0 +1,45 @@
+{
+  "id": "A-P4-BENCH",
+  "slice_id": "P4",
+  "agent": "benchmark_fixture",
+  "role": "executor",
+  "model_class": "standard",
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "source_ids": ["REQ-001", "INJ-001", "DISC-001"],
+  "write_paths": [
+    "automation/benchmarks/live-fixtures.json",
+    "automation/live_workspace_verifier.py",
+    "automation/test-live-agent-adapter.py",
+    "automation/test-agent-quality-benchmark.py"
+  ],
+  "context_paths": [
+    "automation/benchmarks/agent-quality-benchmark.json",
+    "automation/benchmarks/live-fixtures.schema.json",
+    "automation/live_benchmark_runner.py",
+    "automation/benchmarks/README.md"
+  ],
+  "forbidden_paths": [
+    "rules/**",
+    "skills/**",
+    "platforms/**",
+    "automation/workctl.py",
+    "automation/work-ledger.schema.json",
+    "automation/01-build-runtime.ps1",
+    "automation/02-install-runtime.ps1",
+    "automation/09-doctor.ps1",
+    "05-generated/**"
+  ],
+  "acceptance_ids": ["AC7"],
+  "model_evidence": {
+    "requested_model": "gpt-5.6-terra",
+    "requested_effort": "medium",
+    "resolved_model": "gpt-5.6-terra",
+    "resolved_effort": "medium",
+    "observed_model": "gpt-5.6-terra",
+    "observed_effort": "medium",
+    "status": "observed",
+    "fallback_reason": "",
+    "main_direct_exception_reason": ""
+  }
+}

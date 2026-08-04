@@ -5,6 +5,7 @@ import * as crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { verifyRuntimeReceipt, type RuntimePlatform } from "../runtime/installer.js";
+import { collectHostKitDoctorReport, type HostKitDoctorReport } from "../host-kit/doctor.js";
 
 interface DoctorCheck {
   platform: string;
@@ -396,6 +397,116 @@ export async function doctor(
     }
   }
 
+  // ── Host-kit doctor: live process / runtime diagnostics ─────────────────
+  let hostKitReport: HostKitDoctorReport | null = null;
+  try {
+    hostKitReport = await collectHostKitDoctorReport(root);
+
+    // Config generation / hash
+    const cfg = hostKitReport.loadedConfig;
+    report.push({
+      platform: "host-kit", check: "loaded-config-generation",
+      status: cfg.generation !== null ? "OK" : "MISSING",
+      detail: cfg.configSource
+        ? `gen=${cfg.generation} hash=${cfg.configHash?.slice(0, 12) ?? "?"} source=${cfg.configSource}`
+        : "no loaded config detected",
+    });
+
+    // Roles / permissions
+    const roleCount = hostKitReport.roles.length;
+    const permCount = hostKitReport.permissions.length;
+    report.push({
+      platform: "host-kit", check: "roles-permissions",
+      status: roleCount > 0 ? "OK" : "NONE",
+      detail: `roles=${roleCount} permissions=${permCount}`,
+    });
+
+    // Child / session handles
+    const childCount = hostKitReport.childHandles.length;
+    report.push({
+      platform: "host-kit", check: "child-handles",
+      status: "REPORTED",
+      detail: `count=${childCount} pids=[${hostKitReport.childHandles.slice(0, 5).map((h) => h.pid).join(",")}${childCount > 5 ? ",..." : ""}]`,
+    });
+
+    // PIDs / process groups
+    const pids = hostKitReport.pids;
+    report.push({
+      platform: "host-kit", check: "process-ids",
+      status: "REPORTED",
+      detail: `pid=${pids.current} ppid=${pids.parent ?? "?"} pgrp=${pids.group ?? "?"} session=${pids.session ?? "?"}`,
+    });
+
+    // Semantic / event cursors / deadlines
+    const sc = hostKitReport.semanticCursor;
+    const cursorStatus = sc.deadline ? "OK" : "NONE";
+    report.push({
+      platform: "host-kit", check: "semantic-cursor",
+      status: cursorStatus,
+      detail: `position=${sc.position} deadline=${sc.deadline ?? "none"}`,
+    });
+    if (hostKitReport.eventCursors.length > 0) {
+      report.push({
+        platform: "host-kit", check: "event-cursors",
+        status: "REPORTED",
+        detail: `streams=${hostKitReport.eventCursors.length}: ${hostKitReport.eventCursors.map((c) => `${c.stream}:${c.index}`).join("; ")}`,
+      });
+    }
+
+    // Queue age
+    report.push({
+      platform: "host-kit", check: "queue-age",
+      status: hostKitReport.queueAgeMs !== null ? "OK" : "NONE",
+      detail: hostKitReport.queueAgeMs !== null ? `${hostKitReport.queueAgeMs}ms` : "no queue activity detected",
+    });
+
+    // Open ports
+    const portCount = hostKitReport.openPorts.length;
+    report.push({
+      platform: "host-kit", check: "open-ports",
+      status: portCount > 0 ? "REPORTED" : "NONE",
+      detail: portCount > 0
+        ? `count=${portCount}: ${hostKitReport.openPorts.slice(0, 3).map((p) => `${p.port}/${p.protocol}`).join(", ")}${portCount > 3 ? ",..." : ""}`
+        : "no open ports in process tree",
+    });
+
+    // Test / MCP / browser / Compose leases
+    const leasesByKind = groupBy(hostKitReport.leases, (l) => l.kind);
+    for (const [kind, entries] of Object.entries(leasesByKind)) {
+      const active = entries.filter((e) => e.status === "active").length;
+      report.push({
+        platform: "host-kit", check: `${kind}-leases`,
+        status: active > 0 ? "ACTIVE" : "NONE",
+        detail: `active=${active} total=${entries.length}`,
+      });
+    }
+    if (hostKitReport.leases.length === 0) {
+      report.push({ platform: "host-kit", check: "all-leases", status: "NONE", detail: "no test/mcp/browser/compose leases detected" });
+    }
+
+    // Orphans
+    const orphanCount = hostKitReport.orphans.length;
+    if (orphanCount > 0) {
+      report.push({
+        platform: "host-kit", check: "orphans",
+        status: "ORPHANS",
+        detail: `count=${orphanCount}: ${hostKitReport.orphans.slice(0, 3).map((o) => `${o.kind}:${o.path}`).join("; ")}${orphanCount > 3 ? ",..." : ""}`,
+      });
+    } else {
+      report.push({ platform: "host-kit", check: "orphans", status: "CLEAN", detail: "no orphaned resources detected" });
+    }
+
+    // Fresh-process JSON proof
+    const proof = hostKitReport.freshProof;
+    report.push({
+      platform: "host-kit", check: "fresh-process-proof",
+      status: "OK",
+      detail: `proofId=${proof.proofId} pid=${proof.pid} gen=${proof.generation} mem=${proof.systemSnapshot.freeMemoryMb}/${proof.systemSnapshot.totalMemoryMb}MB cpu=${proof.systemSnapshot.cpuCount} host=${proof.hostname}`,
+    });
+  } catch (error) {
+    report.push({ platform: "host-kit", check: "host-kit-doctor", status: "ERROR", detail: (error as Error).message });
+  }
+
   // Output
   const table = report
     .map((r) => `${r.platform}\t${r.check}\t${r.status}\t${r.detail}`)
@@ -408,7 +519,7 @@ export async function doctor(
   }
 
   const bad = report.filter((r) =>
-    ["MISSING", "NOT_LIVE", "MODEL_POLICY_DRIFT", "MODEL_POLICY_MISSING", "NATIVE_PARTIAL"].includes(r.status)
+    ["MISSING", "NOT_LIVE", "MODEL_POLICY_DRIFT", "MODEL_POLICY_MISSING", "NATIVE_PARTIAL", "ORPHANS", "ERROR"].includes(r.status)
   );
   const nativeObserved = report.filter((r) => r.status === "NATIVE_OBSERVED").length;
   const nativeUnverified = report.filter((r) => r.status === "NATIVE_UNVERIFIED").length;
@@ -418,7 +529,7 @@ export async function doctor(
     return {
       exitCode: ExitCode.LegacyFailed,
       message: `Doctor found ${bad.length} issue(s)`,
-      data: { report, badCount: bad.length, nativeObserved, nativeUnverified },
+      data: { report, badCount: bad.length, nativeObserved, nativeUnverified, hostKit: hostKitReport ?? null },
     };
   }
 
@@ -426,8 +537,19 @@ export async function doctor(
   return {
     exitCode: ExitCode.Success,
     message: "Doctor health check passed",
-    data: { report, nativeObserved, nativeUnverified },
+    data: { report, nativeObserved, nativeUnverified, hostKit: hostKitReport ?? null },
   };
+}
+
+// ── Utility ───────────────────────────────────────────────────────────────────
+
+function groupBy<T>(arr: T[], keyFn: (item: T) => string): Record<string, T[]> {
+  return arr.reduce<Record<string, T[]>>((acc, item) => {
+    const key = keyFn(item);
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(item);
+    return acc;
+  }, {});
 }
 
 async function walkDir(dir: string): Promise<string[]> {

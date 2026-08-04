@@ -306,10 +306,13 @@ export class OpenCodeV2Adapter {
       let lineBuf = '';
       const sseState = resetSSEState();
 
+      // G-08: Track deadlineTimer reference for cancel() cleanup
+      let deadlineTimer: ReturnType<typeof setTimeout> | null = null;
+
       return new ReadableStream<SSEEvent>({
         async pull(control) {
           // F1 (R3): deadline timer cancels pending reader.read
-          const deadlineTimer = setTimeout(() => {
+          deadlineTimer = setTimeout(() => {
             reader.cancel();
           }, Math.max(0, deadline - Date.now()));
 
@@ -375,11 +378,15 @@ export class OpenCodeV2Adapter {
               if (events.length > 0) return;
             }
             } finally {
-              clearTimeout(deadlineTimer);
+              if (deadlineTimer) clearTimeout(deadlineTimer);
+              deadlineTimer = null;
             }
         },
         cancel() {
           if (fetchTimer) clearTimeout(fetchTimer);
+          fetchTimer = null;
+          if (deadlineTimer) clearTimeout(deadlineTimer);
+          deadlineTimer = null;
           reader.cancel();
         },
       });

@@ -1,0 +1,7 @@
+PASS — đã sửa `qualty` → `quality` trong [message.txt](P:/agent-rules/.agent/benchmarks/native/runs/codex-20260723T124043Z-03e1192f/live-tiny-one-file/full/workspace/message.txt).
+
+Kiểm tra nhanh:
+
+- Nội dung UTF-8 khớp chính xác giá trị mong đợi.
+- `git diff --check` sạch.
+- Không chạy được unittest vì môi trường thiếu Python.

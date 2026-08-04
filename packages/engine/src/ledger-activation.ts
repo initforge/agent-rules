@@ -104,7 +104,7 @@ function sha256(data: Buffer): Sha256 { return createHash('sha256').update(data)
 function sha256s(s: string): Sha256 { return sha256(Buffer.from(s, 'utf-8')); }
 function fsyncPath(p:string):void{
   const fd=fs.openSync(p,fs.constants.O_RDONLY|fs.constants.O_NOFOLLOW);
-  try{fs.fsyncSync(fd)}finally{fs.closeSync(fd)}
+  try{fs.fsyncSync(fd)}catch(e){if(process.platform==='win32')return;throw e}finally{fs.closeSync(fd)}
 }
 function stableJson(v:unknown):string{
   if(v===null||typeof v==='boolean')return String(v);
@@ -127,10 +127,11 @@ function approvedWithoutAm0012(amends:Record<string,unknown>[]):Array<{amendment
 }
 // ─── Secure mkdir (under lock) ─────────────────────────────────────────
 function secureMkdirAll(abs:string):void{
-  const parts=abs.split(path.sep).filter(Boolean);
-  let cur='';
+  const rootPart=path.parse(abs).root;
+  const parts=abs.slice(rootPart.length).split(path.sep).filter(Boolean);
+  let cur=rootPart;
   for(let i=0;i<parts.length;i++){
-    cur=cur+path.sep+parts[i];
+    cur=path.join(cur,parts[i]);
     if(!fs.existsSync(cur)){
       const parentDi=dirDevIno(path.dirname(cur));
       fs.mkdirSync(cur,0o700);
@@ -536,7 +537,6 @@ function rollbackTargets(vj:Journal,tPaths:string[],root:string):boolean{
       const name=SHADOW_NAMES[i];const t=tPaths[i];const oldH=vj.oldHashes[name];
       if(oldH===null){try{fs.rmSync(t)}catch{}continue}
       const bp=path.join(genAbs,'backups',name);
-      // Symlink-guarded write: temp O_EXCL|O_NOFOLLOW + fsync + atomic rename + parent verification
       const dir=path.dirname(t);
       const tmp=path.join(dir,`.rollback-${path.basename(t)}-${process.pid}-${(Math.random()*0x100000000).toString(36)}`);
       const bBuf=fs.readFileSync(bp);
@@ -550,14 +550,12 @@ function rollbackTargets(vj:Journal,tPaths:string[],root:string):boolean{
         }
         fs.fsyncSync(fd);
       }finally{fs.closeSync(fd)}
-      // Verify target dir inode unchanged (TOCTOU on parent)
       const di=dirDevIno(dir);
       const afterDi=dirDevIno(dir);
       if(di.dev!==afterDi.dev||di.ino!==afterDi.ino){try{fs.rmSync(tmp)}catch{};return false}
       fs.renameSync(tmp,t);
-      // Durable: fsync parent
-      const dirFd=fs.openSync(dir,fs.constants.O_RDONLY);
-      try{fs.fsyncSync(dirFd)}finally{fs.closeSync(dirFd)}
+      const dirFd=fs.openSync(dir,fs.constants.O_RDONLY|fs.constants.O_NOFOLLOW);
+      try{fs.fsyncSync(dirFd)}catch(e){if(process.platform!=='win32')throw e}finally{fs.closeSync(dirFd)}
       if(sha256(fs.readFileSync(t))!==oldH)return false;
     }
     return true;
@@ -673,7 +671,8 @@ function brRender(l:Record<string,unknown>,nid:Sha256,oid:Sha256):Record<string,
   return{'tasks.md':renderTasks(l),'progress.md':renderProgress(l,nid,oid),'amendments.md':amendMd,'reconciliation.md':renderReconciliation(l),'batches/bootstrap/tasks.md':renderBootstrapTasks(l),'batches/bootstrap/progress.md':renderBootstrapProgress(l),'batches/bootstrap/reconciliation.md':renderBootstrapReconciliation(l)};
 }
 function rollbackThen(vj:Journal,tp:string[],rt:string):ActivationResult{
-  if(rollbackTargets(vj,tp,rt))return{success:false,error:'BR: rolled back',mutated:true,recovered:true};throw new Error('BR: unrecovered');
+  if(rollbackTargets(vj,tp,rt))return{success:false,error:'BR: rolled back',mutated:true,recovered:true};
+  return{success:false,error:'BR: unrecovered',mutated:true,recovered:false};
 }
 export function boundedRepair(input:BoundedRepairInput):ActivationResult{
   try{const requestedRoot=path.resolve(input.canonicalRoot);if(fs.lstatSync(requestedRoot).isSymbolicLink())throw new Error('Canonical root is symlink');const root=fs.realpathSync.native(requestedRoot);const res=new SecureResolver(root);
@@ -694,7 +693,7 @@ function brInner(input:BoundedRepairInput,root:string,res:SecureResolver):Activa
   // fully committed and ledger identity updated past input.priorEffectiveSha256.
   const jE=readJournalBounded(jP);
   if(jE){const vj=validateJournal(jE,root,res);if(vj){let ok=true;for(const[n,h]of Object.entries(vj.newHashes)){const p=n==='ledger.json'?input.ledgerPath:path.join(input.shadowDir,n);const b=res.readBuf(p);if(b===null||sha256(b)!==h){ok=false;break}}
-  if(ok){const rb=res.readBuf(input.ledgerPath);if(rb){const rl=validateLedger(rb);if(brVerifyAll(rl,input,res)){remJournal(jP);if(fs.existsSync(path.dirname(jP)))fsyncPath(path.dirname(jP));return{success:true,mutated:true,recovered:true,effectiveIdentity:(rl.effective_plan_identity as Record<string,unknown>)?.sha256 as Sha256,shadowRevision:rl.shadow_revision as number}}}
+  if(ok){const rb=res.readBuf(input.ledgerPath);if(rb){const rl=validateLedger(rb);if(brVerifyAll(rl,input,res)){const recEi=(rl.effective_plan_identity as Record<string,unknown>)?.sha256 as Sha256;const recOs=(rl.original_plan as Record<string,unknown>)?.sha256 as string;const recAp=(rl.amendments as Record<string,unknown>[]).filter((a:Record<string,unknown>)=>ACTIVE.has(a.status as string)).map((a:Record<string,unknown>)=>({amendment_id:a.amendment_id as string,sha256:a.sha256 as Sha256}));const recNId=computeIdentity(recOs,recAp);const isMutated=recNId.sha256!==recEi;remJournal(jP);if(fs.existsSync(path.dirname(jP)))fsyncPath(path.dirname(jP));return{success:true,mutated:isMutated,recovered:true,effectiveIdentity:recEi,shadowRevision:rl.shadow_revision as number}}}
   writeJournal(vj,jP);return{success:false,error:'BR: recovery verifyAll failed',mutated:true,recovered:true}}}}
   const ei=ledger.effective_plan_identity as Record<string,unknown>|undefined;
   if(!ei||typeof ei.sha256!=='string')return{success:false,error:'BR: no identity',mutated:false};
@@ -736,10 +735,39 @@ function brInner(input:BoundedRepairInput,root:string,res:SecureResolver):Activa
   try{committed=commitTargets(tN,tP,gD,dS,journal,jP,{canonicalRoot:root,ledgerPath:input.ledgerPath,amendmentPath:amends[0].amendmentPath,capturePath:amends[0].capturePath,shadowDir:input.shadowDir,originalSha256:input.originalSha256,amendmentSha256:amends[0].amendmentSha256,priorEffectiveSha256:input.priorEffectiveSha256,onFault:input.onFault} as ActivationInput)
   }catch{let eff=0;for(let i=0;i<journal.commitIndex;i++){try{const tp=tP[i];const cu=sha256(fs.readFileSync(tp));if(cu===journal.newHashes[SHADOW_NAMES[i]]){eff=i+1}else{break}}catch{break}}
   if(journal.inflightIndex!==undefined&&journal.inflightIndex>=eff){try{const tp=tP[journal.inflightIndex];const cu=sha256(fs.readFileSync(tp));if(cu===journal.newHashes[SHADOW_NAMES[journal.inflightIndex]]){eff=Math.max(eff,journal.inflightIndex+1)}}catch{}}journal.inflightIndex=undefined;committed=eff}
+  if(committed===tN.length){
+    // All 8 targets carry the new bytes. Two sub-cases:
+    // A) journal.commitIndex < tN.length → crash during the final rename loop
+    //    iteration (e.g. fault between rename and journal.write). All targets are
+    //    already committed but the on-disk journal still reflects a pre-commit
+    //    state.  Report success=true (bytes are correct) but keep the journal so
+    //    the next call can reconcile.
+    // B) journal.commitIndex === tN.length → normal completion path. Verify,
+    //    finalise and clean the journal.
+    const crashedAtLastRename=journal.commitIndex!==tN.length;
+    if(crashedAtLastRename){
+      return{success:true,mutated:true,effectiveIdentity:nId.sha256,shadowRevision:nR};
+    }
+    // Normal completion: all targets written, journal reflects completed state.
+    try{
+      input.onFault?.({phase:'postVerify'});
+      for(const[n,h]of Object.entries(journal.newHashes)){const p=n==='ledger.json'?input.ledgerPath:path.join(input.shadowDir,n);const b=res.readBuf(p);if(b===null||sha256(b)!==h){const r=rollbackTargets(journal,tP,root);if(!r)return{success:false,error:`BR: unrecovered: ${n}`,mutated:true,recovered:false};return{success:false,error:`BR: hash ${n}`,mutated:true,recovered:true}}}
+      remJournal(jP);fsyncPath(root);
+    }catch(e){return{success:false,error:`BR: ${e instanceof Error?e.message:String(e)}`,mutated:true}}
+    input.onFault?.({phase:'done'});
+    return{success:true,mutated:true,effectiveIdentity:nId.sha256,shadowRevision:nR};
+  }
   if(committed<tN.length){if(committed>0){const rj={...journal,commitIndex:committed,inflightIndex:undefined};return rollbackThen(rj,tP,root)}input.onFault?.({phase:'postVerify',error:'TOCTOU'});return{success:false,error:'BR: abort',mutated:false}}
-  input.onFault?.({phase:'postVerify'});
-  for(const[n,h]of Object.entries(nH)){const p=n==='ledger.json'?input.ledgerPath:path.join(input.shadowDir,n);const b=res.readBuf(p);if(b===null||sha256(b)!==h){const r=rollbackTargets(journal,tP,root);if(!r)throw new Error('BR: unrecovered');return{success:false,error:`BR: hash ${n}`,mutated:true,recovered:true}}}
-  remJournal(jP);fsyncPath(root);input.onFault?.({phase:'done'});
+  try{
+    input.onFault?.({phase:'postVerify'});
+    for(const[n,h]of Object.entries(nH)){const p=n==='ledger.json'?input.ledgerPath:path.join(input.shadowDir,n);const b=res.readBuf(p);if(b===null||sha256(b)!==h){const r=rollbackTargets(journal,tP,root);if(!r)return{success:false,error:`BR: unrecovered: ${n}`,mutated:true,recovered:false};return{success:false,error:`BR: hash ${n}`,mutated:true,recovered:true}}}
+    remJournal(jP);fsyncPath(root);
+  }catch(e){
+    // All targets already committed here: canonical files carry the new bytes.
+    // Report mutation truthfully; journal retained for next-call recovery.
+    return{success:false,error:`BR: ${e instanceof Error?e.message:String(e)}`,mutated:true};
+  }
+  input.onFault?.({phase:'done'});
   return{success:true,mutated:true,effectiveIdentity:nId.sha256,shadowRevision:nR};
 }
 function journalRecoverySuccess(ledgerBuf:Buffer,res:SecureResolver,input:ActivationInput,priorCheck:Sha256,jPath:string):ActivationResult|null{

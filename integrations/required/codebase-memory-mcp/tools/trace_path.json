@@ -1,0 +1,62 @@
+{
+  "name": "trace_path",
+  "description": "Trace paths through the code graph. Modes: calls (callers/callees), data_flow (value propagation with args at each hop), cross_service (through HTTP/async Route nodes). Use INSTEAD OF grep for callers, dependencies, impact analysis, or data flow tracing.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "function_name": {
+        "type": "string"
+      },
+      "project": {
+        "type": "string"
+      },
+      "direction": {
+        "type": "string",
+        "enum": [
+          "inbound",
+          "outbound",
+          "both"
+        ],
+        "default": "both"
+      },
+      "depth": {
+        "type": "integer",
+        "default": 3
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "calls",
+          "data_flow",
+          "cross_service"
+        ],
+        "default": "calls",
+        "description": "calls: follow CALLS edges. data_flow: follow CALLS+DATA_FLOWS with arg expressions. cross_service: follow HTTP_CALLS+ASYNC_CALLS+DATA_FLOWS through Routes."
+      },
+      "parameter_name": {
+        "type": "string",
+        "description": "For data_flow mode: scope trace to a specific parameter name"
+      },
+      "edge_types": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "risk_labels": {
+        "type": "boolean",
+        "default": false,
+        "description": "Add risk classification (CRITICAL/HIGH/MEDIUM/LOW) based on hop distance"
+      },
+      "include_tests": {
+        "type": "boolean",
+        "default": false,
+        "description": "Include test files in results. When false (default), test files are filtered out. When true, test nodes are included with is_test=true marker."
+      }
+    },
+    "required": [
+      "function_name",
+      "project"
+    ]
+  }
+}

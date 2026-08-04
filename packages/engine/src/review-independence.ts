@@ -151,7 +151,7 @@ function orderingViolation(evidence: IndependenceEvidence): string | null {
   if (read) {
     const readAt = Date.parse(read.at);
     if (Number.isNaN(readAt)) return 'worker_verdict_read has no parseable timestamp';
-    if (readAt < blindAt) return 'worker_verdict_read predates blind_pass_captured — ordering proof violated';
+    if (readAt <= blindAt) return 'worker_verdict_read predates blind_pass_captured — ordering proof violated';
   }
   return null;
 }
@@ -264,7 +264,7 @@ export function finalizeReview(
   if (Number.isNaN(blindAt) || Number.isNaN(compareAt)) {
     throw new BlindReviewProtocolError('BAD_TIMESTAMP', `review ${receipt.review_id}: blind/comparison timestamps unparseable`);
   }
-  if (compareAt < blindAt) {
+  if (compareAt <= blindAt) {
     throw new BlindReviewProtocolError('BLIND_AFTER_COMPARISON', `review ${receipt.review_id}: blind pass postdates comparison — ordering proof violated`);
   }
   return {

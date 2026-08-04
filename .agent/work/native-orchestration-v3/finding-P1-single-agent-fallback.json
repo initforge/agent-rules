@@ -1,0 +1,6 @@
+{
+  "id": "F-P1-SINGLE-AGENT-FALLBACK",
+  "severity": "high",
+  "summary": "Shared rules restrict medium/large implementation to delegation but do not define the AC6 single-agent fallback when a host lacks callable subagents, which can reduce task strength or deadlock execution instead of preserving the plan sequentially.",
+  "reviewer": "main-integration-review"
+}

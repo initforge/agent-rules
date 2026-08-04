@@ -148,6 +148,34 @@
     "./checkpoint-resume": {
       "types": "./dist/checkpoint-resume.d.ts",
       "import": "./dist/checkpoint-resume.js"
+    },
+    "./execution-facade": {
+      "types": "./dist/execution-facade.d.ts",
+      "import": "./dist/execution-facade.js"
+    },
+    "./coordinator-contract": {
+      "types": "./dist/coordinator-contract.d.ts",
+      "import": "./dist/coordinator-contract.js"
+    },
+    "./projection-fidelity": {
+      "types": "./dist/projection-fidelity.d.ts",
+      "import": "./dist/projection-fidelity.js"
+    },
+    "./watchdog": {
+      "types": "./dist/watchdog.d.ts",
+      "import": "./dist/watchdog.js"
+    },
+    "./review-bundle": {
+      "types": "./dist/review-bundle.d.ts",
+      "import": "./dist/review-bundle.js"
+    },
+    "./execution-runtime": {
+      "types": "./dist/execution-runtime.d.ts",
+      "import": "./dist/execution-runtime.js"
+    },
+    "./host-kit/adapters": {
+      "types": "./dist/host-kit/adapters/types.d.ts",
+      "import": "./dist/host-kit/adapters/index.js"
     }
   },
   "engines": {
@@ -156,7 +184,9 @@
   "scripts": {
     "build": "node ../../node_modules/typescript/bin/tsc",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "node ../../automation/run-governed-vitest.mjs --project-root ../.. --cwd . --mode full -- run",
+    "test:jest": "node --experimental-vm-modules node_modules/.bin/jest --config jest.config.ts",
+    "test:jest:watch": "node --experimental-vm-modules node_modules/.bin/jest --config jest.config.ts --watch"
   },
   "dependencies": {
     "ajv": "8.20.0",
@@ -164,8 +194,11 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
+    "@types/jest": "^29.5.14",
     "@types/node": "^22.14.0",
+    "jest": "^29.7.0",
     "playwright": "^1.62.0",
+    "ts-jest": "^29.4.12",
     "typescript": "^5.9.3",
     "vitest": "^3.1.1"
   }

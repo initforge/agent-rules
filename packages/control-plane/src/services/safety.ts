@@ -36,6 +36,22 @@ const CANONICAL_READ_ALLOWLIST = new Set([
   'platforms/platform-contracts.json',
 ])
 
+// ponytail: AM22 = Writer W2 authority; W2 may mutate local non-production config
+// but must NEVER mutate push/deploy/production artifacts.  Fail-closed here.
+const AM22_PRODUCTION_PATTERNS: Array<{ prefix: string }> = [
+  { prefix: 'generated/' },
+  { prefix: '.agent/' },
+  { prefix: '.github/' },
+]
+
+export function checkAM22Production(relativePath: string): void {
+  for (const p of AM22_PRODUCTION_PATTERNS) {
+    if (relativePath.startsWith(p.prefix)) {
+      throw new Error(`AM22: production path denied: ${relativePath}`)
+    }
+  }
+}
+
 const MUTATION_ALLOWLIST = new Set([
   'automation/model-policy.json',
   'automation/trigger-audit.json',
@@ -96,7 +112,7 @@ export function safeResolveAgainst(root: string, relativePath: string): string {
 
 export function apiError(res: Response, code: number, err: unknown): void {
   if (err instanceof Error) {
-    if (err.message.includes('Path traversal') || err.message.includes('not allowed') || err.message.includes('allowlist')) {
+    if (err.message.includes('Path traversal') || err.message.includes('not allowed') || err.message.includes('allowlist') || err.message.includes('AM22')) {
       res.status(403).json({ ok: false, error: 'Forbidden' });
       return;
     }
@@ -104,4 +120,4 @@ export function apiError(res: Response, code: number, err: unknown): void {
   res.status(code).json({ ok: false, error: 'An internal error occurred' });
 }
 
-export { ROOT };
+export { ROOT, MUTATION_ALLOWLIST };

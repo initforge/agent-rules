@@ -1,0 +1,34 @@
+{
+  "id": "PF-AC6-R2",
+  "acceptance_id": "AC6",
+  "proof_kind": "integration",
+  "dimensions": [
+    "capability-probe",
+    "honest-status",
+    "single-agent-fallback"
+  ],
+  "command": "python .agent/work/native-orchestration-v3/verify-platform-profiles.py",
+  "expected_exit_code": 0,
+  "timeout_seconds": 300,
+  "environment": "Python 3 static native-profile verifier; Grok/Antigravity CLI unavailable locally",
+  "artifact_paths": [
+    "automation/model-policy.json",
+    "platforms/antigravity/profiles/role-guidance.md",
+    "platforms/grok/README-agents.md",
+    "platforms/cursor/agents/README.md"
+  ],
+  "agent": "platform_adapters",
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "model_evidence": {
+    "requested_model": "gpt-5.6-terra",
+    "requested_effort": "medium",
+    "resolved_model": "gpt-5.6-terra",
+    "resolved_effort": "medium",
+    "observed_model": null,
+    "observed_effort": null,
+    "status": "unobserved",
+    "fallback_reason": "",
+    "main_direct_exception_reason": ""
+  }
+}

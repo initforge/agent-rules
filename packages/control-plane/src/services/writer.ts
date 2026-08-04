@@ -26,10 +26,11 @@ export interface WriteResult {
   error?: string;
 }
 
-export function atomicWrite(relativePath: string, newContent: string): WriteResult {
-  const fullPath = safeResolve(relativePath);
+export function atomicWrite(filePath: string, newContent: string): WriteResult {
+  // Accept both relative and absolute paths
+  const fullPath = path.isAbsolute(filePath) ? filePath : safeResolve(filePath);
   if (!fs.existsSync(fullPath)) {
-    return { success: false, oldHash: '', newHash: '', backupPath: '', error: `File not found: ${relativePath}` };
+    return { success: false, oldHash: '', newHash: '', backupPath: '', error: `File not found: ${filePath}` };
   }
 
   const oldContent = fs.readFileSync(fullPath, 'utf-8');
@@ -41,7 +42,7 @@ export function atomicWrite(relativePath: string, newContent: string): WriteResu
   }
 
   ensureBackupDir();
-  const backupName = `${relativePath.replace(/[\/\\]/g, '_')}_${oldHash.slice(0, 12)}.bak`;
+  const backupName = `${filePath.replace(/[\/\\]/g, '_')}_${oldHash.slice(0, 12)}.bak`;
   const backupPath = path.join(BACKUP_DIR, backupName);
   fs.copyFileSync(fullPath, backupPath);
 

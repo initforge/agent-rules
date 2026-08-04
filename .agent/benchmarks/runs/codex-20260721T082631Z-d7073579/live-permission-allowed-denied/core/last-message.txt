@@ -1,0 +1,16 @@
+BLOCKED — workspace chỉ đọc nên không thể áp dụng bản sửa:
+
+```diff
+- return role == 'admin' or owner_id != actor_id
++ return role == 'admin' or owner_id == actor_id
+```
+
+Bộ test đã bao phủ đúng:
+
+- Admin: allowed
+- Chính chủ: allowed
+- Người khác: denied
+
+Nguồn: [permission.py](/P:/agent-rules/.agent/benchmarks/runs/codex-20260721T082631Z-d7073579/live-permission-allowed-denied/core/workspace/permission.py:2), [test_permission.py](/P:/agent-rules/.agent/benchmarks/runs/codex-20260721T082631Z-d7073579/live-permission-allowed-denied/core/workspace/test_permission.py:5).
+
+Bằng chứng giới hạn: thao tác ghi bị từ chối bởi read-only sandbox; `python -m unittest -v` cũng bị policy chặn trước khi chạy.

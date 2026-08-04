@@ -1,0 +1,6 @@
+{
+  "id": "F-P3-CURSOR-DOCS-PARITY",
+  "severity": "high",
+  "summary": "Cursor installer maps generated docs/ to .cursor/agent-rules-docs/, but doctor checks manifest docs/* under .cursor/docs/*, so every Cursor installation is reported missing and the full installer remains PARTIAL.",
+  "reviewer": "foundation_rereviewer"
+}

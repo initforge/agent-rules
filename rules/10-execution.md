@@ -9,7 +9,7 @@ description: Scope, execution, verification, and reporting contract.
 For mode classification, work shapes, roles, delegation, and task state lifecycle, see [25-task-lifecycle.md](25-task-lifecycle.md).
 
 1. Start from the observable outcome; read the nearest entrypoint and only context that can change it.
-2. Turn the request into deliverables, interfaces, and claim-matched proof. (Risk and work-shape classification: see 25-task-lifecycle.md.)
+2. Classify risk before work shape, then turn the request into deliverables, interfaces, and claim-matched proof. (See 25-task-lifecycle.md for mode and lifecycle details.)
 3. After execute is authorized, own orchestration: sequence dependencies, delegate independent work, integrate, review, fix, and continue.
 4. Trace consumers before shared changes; verify material assumptions against real interfaces.
 5. Complete all feasible in-scope work. A local blocker does not stop independent work.

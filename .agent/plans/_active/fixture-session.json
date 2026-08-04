@@ -1,0 +1,10 @@
+﻿{
+    "version":  1,
+    "owner_session_id":  "fixture-session",
+    "plan_id":  "fixture-lifecycle-20260721",
+    "admission_id":  "fixture-admission-20260721",
+    "admission_path":  "P:\\agent-rules\\.agent\\planctl-lifecycle-tests\\admission.json",
+    "state_path":  "P:\\agent-rules\\.agent\\plans\\fixture-lifecycle-20260721\\state.json",
+    "lease_id":  "",
+    "updated_at":  "2026-07-23T17:26:38.4959342Z"
+}
