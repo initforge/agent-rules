@@ -14,26 +14,17 @@ import { evalCmd } from "./commands/eval.js";
 import { dashboard } from "./commands/dashboard.js";
 import { contextGraphCmd } from "./commands/context-graph.js";
 import { planCmd } from "./commands/plan.js";
-import { worktreeCmd } from "./commands/worktree.js";
 import { cleanupCmd } from "./commands/cleanup.js";
-import { trainCmd } from "./commands/train.js";
 import { verifyCmd } from "./commands/verify.js";
 import { parityCmd } from "./commands/parity.js";
 import { runtimeCmd } from "./commands/runtime.js";
 import { modelsCmd } from "./commands/models.js";
 import { skillsCmd } from "./commands/skills.js";
-import { autopilotCmd } from "./commands/autopilot.js";
 import { runnerCmd } from "./commands/runner.js";
 import { topologyCmd } from "./commands/topology.js";
 import { adversarialCmd } from "./commands/adversarial.js";
 import { createOpencodeClient } from "@opencode-ai/sdk/v2/client";
 import { OpenCodeNativeSessionAdapter } from "@initforge/agent-rules-engine/native-session-adapter";
-import {
-  executeRun,
-  getRunStatus,
-  resumeRun,
-  cancelRunById,
-} from "./services/runner.js";
 
 const program = new Command();
 
@@ -55,19 +46,6 @@ program.command("runner")
       console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
       process.exit(ExitCode.GeneralError);
     }
-  });
-
-program.command("autopilot")
-  .description("Continue native worker autopilot")
-  .argument("[action]", "start, continue, ci, checkpoint, status", "status")
-  .argument("[runId]", "Run identity", "default")
-  .argument("[value]", "Session ID, CI result, checkpoint, or continuation text")
-  .action(async (action: string, runId: string, value?: string) => {
-    try { const client = action === 'continue' ? createOpencodeClient({ baseUrl: process.env.OPENCODE_URL ?? 'http://127.0.0.1:4096' }) : undefined; const native = client ? new OpenCodeNativeSessionAdapter(client, process.env.OPENCODE_CONTINUATION_PROMPT ?? 'Continue') : undefined; formatOutput({ exitCode: ExitCode.Success, message: 'autopilot', data: { result: await autopilotCmd([action, runId, value].filter((v): v is string => Boolean(v)), process.cwd(), native) } }, program.optsWithGlobals() as CliOptions); }
-     catch (err) {
-       console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
-       process.exit(ExitCode.GeneralError);
-     }
   });
 
 program
@@ -262,31 +240,6 @@ Subcommands:
     formatOutput(result, opts);
   });
 
-// ── worktree ─────────────────────────────────────────────────────────
-program
-  .command("worktree")
-  .description("Manage isolated worker worktrees (C3, AM-0019 §5)")
-  .argument("[args...]", "Subcommand and its arguments")
-  .allowUnknownOption(true)
-  .addHelpText(
-    "after",
-    `
-Subcommands:
-  create <task-id> --base <epoch-sha>   Create branch + isolated worktree + lease
-                                        (flags: --owned a,b --semantic r1,r2 --cluster C4
-                                         --rank N --provider P --model M --effort E
-                                         --resource-class RC --budget B --expected-duration D
-                                         --deadline ISO --root <repo> --worktrees-dir <dir>)
-  release <task-id>                     Verify clean, record release receipt, unregister
-                                        (flags: --exit-codes 0,0 --root <repo>)
-  status [task-id]                      Show active leases or one task's lease + review state
-    `
-  )
-  .action(async (args: string[]) => {
-    const opts = program.optsWithGlobals() as CliOptions;
-    const result = await worktreeCmd(args, opts);
-    formatOutput(result, opts);
-  });
 
 // ── cleanup ──────────────────────────────────────────────────────────
 program
@@ -314,27 +267,6 @@ Subcommands:
     formatOutput(result, opts);
   });
 
-// ── train ─────────────────────────────────────────────────────────────
-program
-  .command("train")
-  .description("Manage the rolling integration train (C3, AM-0019 §5)")
-  .argument("[args...]", "Subcommand and its arguments")
-  .allowUnknownOption(true)
-  .addHelpText(
-    "after",
-    `
-Subcommands:
-  integrate <task-id...>  Deterministically merge accepted work into the train now
-                          (flags: --root <repo> --worktrees-dir <dir> --train <branch>
-                           --validate-cmd <shell> --allow-unreviewed)
-  status                  Show train head + receipt count
-    `
-  )
-  .action(async (args: string[]) => {
-    const opts = program.optsWithGlobals() as CliOptions;
-    const result = await trainCmd(args, opts);
-    formatOutput(result, opts);
-  });
 
 // ── verify ──────────────────────────────────────────────────────────
 program
@@ -483,144 +415,9 @@ Subcommands:
     formatOutput(result, opts);
   });
 
-// ── run ────────────────────────────────────────────────────────────
-program
-  .command("run")
-  .description("Execute a natural-language request through the harness")
-  .argument("<request>", "Natural language request to execute")
-  .option("--project <path>", "Project root directory")
-  .option("--profile <name>", "Profile name")
-  .option("--platform <name>", "Target platform")
-  .option("--dry-run", "Compile and validate without executing")
-  .option("--autonomy <level>", "Autonomy level (0-10)", "5")
-  .action(async (request: string, cmdOpts: Record<string, string | undefined>) => {
-    const opts = program.optsWithGlobals() as CliOptions;
-    try {
-      const result = await executeRun(request, {
-        project: cmdOpts.project,
-        profile: cmdOpts.profile,
-        platform: cmdOpts.platform,
-        dryRun: cmdOpts.dryRun === "true" || cmdOpts.dryRun === "" || opts.dryRun,
-        autonomy: cmdOpts.autonomy ? parseInt(cmdOpts.autonomy, 10) : undefined,
-      });
-      if (opts.json) {
-        process.stdout.write(JSON.stringify(result, null, 2) + "\n");
-      } else {
-        console.log(`Run ${result.runId} [${result.state}]`);
-        console.log(`  Tasks: ${(result.tasks as { taskId: string; state: string }[]).length}`);
-        console.log(`  Receipts: ${result.receipts.length}`);
-        if (result.error) console.log(`  Error: ${result.error}`);
-      }
-      process.exit(
-        result.state === "FAILED" || result.state === "BLOCKED"
-          ? ExitCode.GeneralError
-          : ExitCode.Success
-      );
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      if (opts.json) {
-        process.stdout.write(JSON.stringify({ exitCode: ExitCode.GeneralError, message }) + "\n");
-      } else {
-        console.error(`Error: ${message}`);
-      }
-      process.exit(ExitCode.GeneralError);
-    }
-  });
 
-// ── status ──────────────────────────────────────────────────────────
-program
-  .command("status")
-  .description("Show run status")
-  .argument("<runId>", "Run ID to inspect")
-  .action(async (runId: string) => {
-    const opts = program.optsWithGlobals() as CliOptions;
-    try {
-      const result = await getRunStatus(runId);
-      if (!result) {
-        const msg = `Run not found: ${runId}`;
-        if (opts.json) {
-          process.stdout.write(JSON.stringify({ exitCode: ExitCode.GeneralError, message: msg }) + "\n");
-        } else {
-          console.error(msg);
-        }
-        process.exit(ExitCode.GeneralError);
-      }
-      if (opts.json) {
-        process.stdout.write(JSON.stringify(result, null, 2) + "\n");
-      } else {
-        console.log(`Run:      ${result.runId}`);
-        console.log(`State:    ${result.state}`);
-        console.log(`Created:  ${result.createdAt}`);
-        console.log(`Updated:  ${result.updatedAt}`);
-        console.log(`Receipts: ${result.receipts.length}`);
-        const tasks = result.tasks as { taskId: string; state: string }[];
-        console.log(`Tasks:`);
-        for (const t of tasks) {
-          console.log(`  ${t.taskId}: ${t.state}`);
-        }
-      }
-      process.exit(ExitCode.Success);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.error(`Error: ${message}`);
-      process.exit(ExitCode.GeneralError);
-    }
-  });
 
-// ── resume ──────────────────────────────────────────────────────────
-program
-  .command("resume")
-  .description("Resume a previously interrupted run")
-  .argument("<runId>", "Run ID to resume")
-  .option("--project <path>", "Project root directory")
-  .action(async (runId: string, cmdOpts: Record<string, string | undefined>) => {
-    const opts = program.optsWithGlobals() as CliOptions;
-    try {
-      const result = await resumeRun(runId, { project: cmdOpts.project });
-      if (opts.json) {
-        process.stdout.write(JSON.stringify(result, null, 2) + "\n");
-      } else {
-        console.log(`Run ${result.runId} resumed — state: ${result.state}`);
-        console.log(`  Receipts: ${result.receipts.length}`);
-        if (result.error) console.log(`  Error: ${result.error}`);
-      }
-      process.exit(
-        result.state === "FAILED" || result.state === "BLOCKED"
-          ? ExitCode.GeneralError
-          : ExitCode.Success
-      );
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.error(`Error: ${message}`);
-      process.exit(ExitCode.GeneralError);
-    }
-  });
 
-// ── cancel ──────────────────────────────────────────────────────────
-program
-  .command("cancel")
-  .description("Cancel a run and mark pending tasks as cancelled")
-  .argument("<runId>", "Run ID to cancel")
-  .action(async (runId: string) => {
-    const opts = program.optsWithGlobals() as CliOptions;
-    try {
-      const result = await cancelRunById(runId);
-      if (opts.json) {
-        process.stdout.write(JSON.stringify(result, null, 2) + "\n");
-      } else {
-        console.log(`Run ${result.runId} cancelled`);
-        const tasks = result.tasks as { taskId: string; state: string }[];
-        for (const t of tasks) {
-          console.log(`  ${t.taskId}: ${t.state}`);
-        }
-      }
-      process.exit(ExitCode.Success);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      console.error(`Error: ${message}`);
-      process.exit(ExitCode.GeneralError);
-    }
-  });
 
 function formatOutput(
   result: { exitCode: ExitCode; message: string; data?: Record<string, unknown> },

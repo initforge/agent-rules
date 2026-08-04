@@ -8,6 +8,8 @@ import { TaskQueue, type QueuedTask } from './queue.js';
 import { HeadlessExecutor, detectAgent, DEFAULT_TIMEOUT_MS, type AgentKind } from './headless-executor.js';
 import { captureDiff, isDocOnly } from './diff.js';
 import { SafeArgvRunner } from '../worker-adapter.js';
+import { TelemetryCollector, DEFAULT_CONFIG, type TelemetryConfig } from '../telemetry.js';
+import { createCheckpoint, buildResumeContext, type Checkpoint } from '../checkpoint-resume.js';
 import type { CommandInvocation } from '../contracts.js';
 
 export type { AgentKind };
@@ -35,6 +37,9 @@ export type { AgentKind };
 
 export const DEFAULT_MAX_REPAIR_DEPTH = 2;
 
+/** Stand-in commit hash for a task that settled without producing a diff. */
+const EMPTY_SHA256 = '0'.repeat(64);
+
 export interface RunnerConfig {
   /** Repo the agent operates in. */
   cwd: string;
@@ -52,6 +57,14 @@ export interface RunnerConfig {
   maxTasks?: number;
   /** Extra fields recorded once in RUN_START, e.g. the git SHA the run began from. */
   runContext?: Record<string, unknown>;
+  /**
+   * Telemetry sink for analytics and OTLP export. Distinct from the journal: the
+   * journal is a tamper-evident record of what happened, telemetry is aggregate
+   * measurement. Both were present in the old engine; neither was ever written to,
+   * which is why `.agent/trace.jsonl` held 3 records for the project's whole history.
+   * Omit to use local JSONL under the queue root.
+   */
+  telemetry?: TelemetryConfig | false;
   /**
    * Override the argv used to launch the agent. Lets tests drive the real process
    * lifecycle against a harmless binary, and lets a host with a differently-named
@@ -98,13 +111,22 @@ export class Runner {
   private readonly queue: TaskQueue;
   private readonly journal: Journal;
   private readonly executor: HeadlessExecutor;
+  private readonly telemetry: TelemetryCollector | null;
   private readonly maxRepairDepth: number;
+  private lastCheckpoint: Checkpoint | null = null;
   private stopRequested = false;
 
   constructor(private readonly config: RunnerConfig) {
     this.queue = new TaskQueue(config.queueRoot);
     this.journal = new Journal(config.journalPath, config.identity);
     this.maxRepairDepth = config.maxRepairDepth ?? DEFAULT_MAX_REPAIR_DEPTH;
+    this.telemetry =
+      config.telemetry === false
+        ? null
+        : new TelemetryCollector(
+            config.telemetry ?? DEFAULT_CONFIG,
+            path.join(config.queueRoot, '..', 'telemetry.jsonl')
+          );
     this.executor = new HeadlessExecutor({
       kind: config.agent,
       cwd: config.cwd,
@@ -156,6 +178,7 @@ export class Runner {
       agentVersion = detection.version;
     }
 
+    const runStartedAt = Date.now();
     const recovered = this.queue.recoverAbandoned();
     if (recovered.length > 0) {
       this.journal.append('RUN_RECOVERED', {
@@ -171,6 +194,14 @@ export class Runner {
       maxRepairDepth: this.maxRepairDepth,
       pending: this.queue.counts().ready,
       ...this.config.runContext,
+    });
+    this.telemetry?.record({
+      kind: 'run_start',
+      runId: this.config.identity.plan,
+      planId: this.config.identity.plan,
+      host: os.hostname(),
+      model: this.config.agent,
+      effort: `max-repair-depth=${this.maxRepairDepth}`,
     });
 
     const summary: RunSummary = {
@@ -203,6 +234,14 @@ export class Runner {
       failed: summary.failed,
       needsUser: summary.needsUser,
     });
+    this.telemetry?.record({
+      kind: 'run_end',
+      runId: this.config.identity.plan,
+      totalTokens: 0, // headless CLIs do not report token counts on stdout
+      totalCost: 0,
+      durationMs: Date.now() - runStartedAt,
+    });
+    await this.telemetry?.flush();
 
     return summary;
   }
@@ -214,6 +253,7 @@ export class Runner {
       repairDepth: task.repairDepth,
       parentId: task.parentId,
     });
+    this.telemetry?.record({ kind: 'task_start', taskId: task.id, assignmentId: task.id });
 
     const execution = await this.executor.execute(task);
     const diff = captureDiff(this.config.cwd, task.ownedPaths, this.runnerOwnedPaths());
@@ -240,6 +280,11 @@ export class Runner {
       commands: task.verification,
       exitCodes: verificationExitCodes,
       passed: allPassed,
+    });
+    this.telemetry?.record({
+      kind: 'verification',
+      assignmentId: task.id,
+      result: allPassed ? 'PASS' : 'FAIL',
     });
 
     const base: Omit<TaskReport, 'outcome' | 'reason'> = {
@@ -308,7 +353,71 @@ export class Runner {
       outcome: report.outcome,
       reason: report.reason,
     });
+    this.recordCheckpoint(task, report);
     return report;
+  }
+
+  /**
+   * Checkpoint after every settled task so a restarted runner can report where it was,
+   * not merely that state exists. The queue already guarantees no work is lost; this
+   * adds a human- and machine-readable position.
+   */
+  private recordCheckpoint(task: QueuedTask, report: TaskReport): void {
+    const counts = this.queue.counts();
+    try {
+      this.lastCheckpoint = createCheckpoint(
+        'task_complete',
+        {
+          planId: this.config.identity.plan,
+          runId: this.config.identity.revision,
+          // The runner is sequential, so there is exactly one epoch. The field exists
+          // for the wave-based model this replaced.
+          epoch: 0,
+          taskId: task.id,
+          attemptCount: task.repairDepth + 1,
+          completedTaskIds: this.queue.list('done').map((x) => x.id),
+          failedTaskIds: this.queue.list('failed').map((x) => x.id),
+          skippedTaskIds: this.queue.list('needs-user').map((x) => x.id),
+        },
+        {
+          planId: this.config.identity.plan,
+          runId: this.config.identity.revision,
+          epoch: 0,
+          decisions: [
+            {
+              decisionId: task.id,
+              decision: report.outcome,
+              rationale: report.reason ?? 'all verification commands exited 0',
+              committedAt: new Date().toISOString(),
+              commitSha256: (report.diffSha256 ?? EMPTY_SHA256) as never,
+            },
+          ],
+          pendingClaims: this.queue.list('ready').map((x) => x.id),
+          pendingEvidence: [],
+          // One task at a time by design; a pool is what removed the executor.
+          activeWorkers: [],
+          mode: `max-repair-depth=${this.maxRepairDepth}`,
+        },
+        this.lastCheckpoint?.checkpointId ?? null
+      );
+      this.journal.append('CHECKPOINT', {
+        checkpointId: this.lastCheckpoint.checkpointId,
+        taskId: task.id,
+        remaining: counts.ready,
+      });
+    } catch (err) {
+      // A checkpoint is an aid, not a gate: failing to build one must never lose a
+      // settled task or halt an overnight run.
+      this.journal.append('CHECKPOINT_FAILED', {
+        taskId: task.id,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  /** Where the last completed task left off, for resuming or reporting. */
+  resumeContext(): ReturnType<typeof buildResumeContext> | null {
+    return this.lastCheckpoint ? buildResumeContext(this.lastCheckpoint) : null;
   }
 
   /** Run every verification command, returning one exit code each. */

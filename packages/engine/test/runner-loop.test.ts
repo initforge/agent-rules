@@ -304,6 +304,7 @@ describe('Runner', () => {
       'AGENT_EXIT',
       'VERIFICATION',
       'TASK_END',
+      'CHECKPOINT',
       'RUN_END',
     ]);
 
@@ -312,6 +313,72 @@ describe('Runner', () => {
     expect(agentExit.data?.stdoutSha256).toMatch(/^[0-9a-f]{64}$/);
     expect(agentExit.data?.stdoutPath).toBeDefined();
     expect(agentExit.data).not.toHaveProperty('stdout');
+  });
+
+  // Telemetry is aggregate measurement; the journal is tamper-evident history. Both
+  // existed before and neither was ever written to — .agent/trace.jsonl held 3 records
+  // for the project's entire history.
+  it('writes telemetry events alongside the journal', async () => {
+    const runner = makeRunner(repo, `require('fs').writeFileSync('${path.join(repo, 'out.ts')}', 'export const x = 1;\\n')`);
+    runner.tasks.add({
+      prompt: 'x',
+      verification: [`${process.execPath} -e process.exit(0)`],
+      ownedPaths: [],
+      repairDepth: 0,
+    });
+
+    await runner.run();
+
+    const telemetryPath = path.join(repo, 'telemetry.jsonl');
+    expect(fs.existsSync(telemetryPath)).toBe(true);
+    const kinds = fs
+      .readFileSync(telemetryPath, 'utf8')
+      .split('\n')
+      .filter(Boolean)
+      .map((l) => JSON.parse(l))
+      .map((e) => e.event?.kind ?? e.kind);
+    expect(kinds).toContain('run_start');
+    expect(kinds).toContain('task_start');
+    expect(kinds).toContain('verification');
+    expect(kinds).toContain('run_end');
+  });
+
+  it('can be disabled with telemetry: false', async () => {
+    const runner = makeRunner(repo, `require('fs').writeFileSync('${path.join(repo, 'out.ts')}', 'export const x = 1;\\n')`, {
+      telemetry: false,
+    });
+    runner.tasks.add({
+      prompt: 'x',
+      verification: [`${process.execPath} -e process.exit(0)`],
+      ownedPaths: [],
+      repairDepth: 0,
+    });
+
+    await runner.run();
+    expect(fs.existsSync(path.join(repo, 'telemetry.jsonl'))).toBe(false);
+  });
+
+  it('checkpoints after each settled task and exposes a resume context', async () => {
+    const runner = makeRunner(repo, `require('fs').appendFileSync('${path.join(repo, 'log.ts')}', '// step\\n')`);
+    for (let i = 0; i < 2; i += 1) {
+      runner.tasks.add({
+        prompt: `step ${i}`,
+        verification: [`${process.execPath} -e process.exit(0)`],
+        ownedPaths: [],
+        repairDepth: 0,
+      });
+    }
+
+    await runner.run();
+    const journal = new Journal(path.join(repo, '.journal.jsonl'), IDENTITY);
+
+    // One per settled task, chained so a restart knows the order.
+    expect(journal.ofType('CHECKPOINT')).toHaveLength(2);
+    expect(journal.ofType('CHECKPOINT_FAILED')).toHaveLength(0);
+
+    const resume = runner.resumeContext();
+    expect(resume).not.toBeNull();
+    expect(journal.verify().ok).toBe(true);
   });
 
   it('records the repair chain in the journal', async () => {

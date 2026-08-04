@@ -25,10 +25,6 @@
       "types": "./dist/plan-readiness.d.ts",
       "import": "./dist/plan-readiness.js"
     },
-    "./dispatch-ready-set": {
-      "types": "./dist/dispatch-ready-set.d.ts",
-      "import": "./dist/dispatch-ready-set.js"
-    },
     "./terminal-gate": {
       "types": "./dist/terminal-gate.d.ts",
       "import": "./dist/terminal-gate.js"
@@ -49,14 +45,6 @@
       "types": "./dist/plan-identity.d.ts",
       "import": "./dist/plan-identity.js"
     },
-    "./autopilot": {
-      "types": "./dist/autopilot.d.ts",
-      "import": "./dist/autopilot.js"
-    },
-    "./m11-integration": {
-      "types": "./dist/m11-integration.d.ts",
-      "import": "./dist/m11-integration.js"
-    },
     "./candidate-epoch": {
       "types": "./dist/candidate-epoch.d.ts",
       "import": "./dist/candidate-epoch.js"
@@ -64,14 +52,6 @@
     "./native-session-adapter": {
       "types": "./dist/native-session-adapter.d.ts",
       "import": "./dist/native-session-adapter.js"
-    },
-    "./worktree-train": {
-      "types": "./dist/worktree-train.d.ts",
-      "import": "./dist/worktree-train.js"
-    },
-    "./resource-broker": {
-      "types": "./dist/resource-broker.d.ts",
-      "import": "./dist/resource-broker.js"
     },
     "./topology-compiler": {
       "types": "./dist/topology-compiler.d.ts",
@@ -109,10 +89,6 @@
       "types": "./dist/main-run-capsule.d.ts",
       "import": "./dist/main-run-capsule.js"
     },
-    "./semantic-wake-policy": {
-      "types": "./dist/semantic-wake-policy.d.ts",
-      "import": "./dist/semantic-wake-policy.js"
-    },
     "./token-attribution": {
       "types": "./dist/token-attribution.d.ts",
       "import": "./dist/token-attribution.js"
@@ -125,33 +101,13 @@
       "types": "./dist/checkpoint-resume.d.ts",
       "import": "./dist/checkpoint-resume.js"
     },
-    "./execution-facade": {
-      "types": "./dist/execution-facade.d.ts",
-      "import": "./dist/execution-facade.js"
-    },
-    "./coordinator-contract": {
-      "types": "./dist/coordinator-contract.d.ts",
-      "import": "./dist/coordinator-contract.js"
-    },
     "./projection-fidelity": {
       "types": "./dist/projection-fidelity.d.ts",
       "import": "./dist/projection-fidelity.js"
     },
-    "./watchdog": {
-      "types": "./dist/watchdog.d.ts",
-      "import": "./dist/watchdog.js"
-    },
     "./review-bundle": {
       "types": "./dist/review-bundle.d.ts",
       "import": "./dist/review-bundle.js"
-    },
-    "./execution-runtime": {
-      "types": "./dist/execution-runtime.d.ts",
-      "import": "./dist/execution-runtime.js"
-    },
-    "./host-kit/adapters": {
-      "types": "./dist/host-kit/adapters/types.d.ts",
-      "import": "./dist/host-kit/adapters/index.js"
     },
     "./runner/journal": {
       "types": "./dist/runner/journal.d.ts",
