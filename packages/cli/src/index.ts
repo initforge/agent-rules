@@ -23,6 +23,7 @@ import { runtimeCmd } from "./commands/runtime.js";
 import { modelsCmd } from "./commands/models.js";
 import { skillsCmd } from "./commands/skills.js";
 import { autopilotCmd } from "./commands/autopilot.js";
+import { runnerCmd } from "./commands/runner.js";
 import { topologyCmd } from "./commands/topology.js";
 import { adversarialCmd } from "./commands/adversarial.js";
 import { createOpencodeClient } from "@opencode-ai/sdk/v2/client";
@@ -35,6 +36,26 @@ import {
 } from "./services/runner.js";
 
 const program = new Command();
+
+program.command("runner")
+  .description("Durable runner: one headless agent process per task, all state on disk")
+  .argument("[action]", "add, seed, start, status, journal", "status")
+  .allowUnknownOption()
+  .allowExcessArguments()
+  .action(async (action: string, _opts: unknown, command: Command) => {
+    try {
+      // Pass raw argv through: the runner parses repeatable flags (--verify, --own)
+      // which commander's option model does not express well.
+      const raw = command.args.length > 0 ? command.args : [action];
+      formatOutput(
+        { exitCode: ExitCode.Success, message: `runner ${action}`, data: { result: await runnerCmd(raw, process.cwd()) } },
+        program.optsWithGlobals() as CliOptions
+      );
+    } catch (err) {
+      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      process.exit(ExitCode.GeneralError);
+    }
+  });
 
 program.command("autopilot")
   .description("Continue native worker autopilot")

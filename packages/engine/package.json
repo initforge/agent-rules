@@ -176,6 +176,26 @@
     "./host-kit/adapters": {
       "types": "./dist/host-kit/adapters/types.d.ts",
       "import": "./dist/host-kit/adapters/index.js"
+    },
+    "./runner/journal": {
+      "types": "./dist/runner/journal.d.ts",
+      "import": "./dist/runner/journal.js"
+    },
+    "./runner/queue": {
+      "types": "./dist/runner/queue.d.ts",
+      "import": "./dist/runner/queue.js"
+    },
+    "./runner/headless-executor": {
+      "types": "./dist/runner/headless-executor.d.ts",
+      "import": "./dist/runner/headless-executor.js"
+    },
+    "./runner/diff": {
+      "types": "./dist/runner/diff.d.ts",
+      "import": "./dist/runner/diff.js"
+    },
+    "./runner/loop": {
+      "types": "./dist/runner/loop.d.ts",
+      "import": "./dist/runner/loop.js"
     }
   },
   "engines": {
