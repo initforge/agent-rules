@@ -9,12 +9,31 @@
 | Intent Compiler (P3) | OPERATIONAL | `packages/cli/src/compiler/` |
 | Canonical Contracts (P4) | VERIFIED | `packages/engine/src/contracts.ts` |
 | Plan Lifecycle (P5) | OPERATIONAL | `packages/engine/src/plan-lifecycle.ts` |
-| **Evaluation & Telemetry (P7)** | **PARTIAL** | `packages/engine/src/telemetry.ts` |
-| Orchestration Runtime (P8) | VERIFIED | `packages/engine/src/controller.ts` |
+| Evaluation & Telemetry (P7) | PARTIAL | `packages/engine/src/telemetry.ts` |
+| **Durable Runner** | **OPERATIONAL** | `packages/engine/src/runner/` |
+| Legacy orchestration runtime | SUPERSEDED | `packages/engine/src/controller.ts` |
 
-### P7 Telemetry
+### Durable Runner
 
-`packages/engine/src/telemetry.ts` — Canonical event collector. Records structured events (`run_start`, `agent_start`, `task_start`, `tool_call`, `model_turn`, `verification`, `review`, `handoff`, `run_end`) through the full agent lifecycle. Supports local JSONL storage and OTLP export. Configurable retention (default 30d metadata, 7d raw content).
+`agent-rules runner {add,seed,start,status,journal}` drives tasks unattended.
+
+One short-lived headless agent process per task (`claude -p`, `codex exec`, or
+`opencode run`), all state on disk. The coordinating process holds no model context, so
+it has nothing to compact and no window to exhaust — a run is bounded by wall-clock, not
+tokens, and can be killed at any point: anything in flight returns to the queue.
+
+A task passes only when every one of its verification commands exits 0 **and** the agent
+produced a real `git diff`. Repair is bounded (`--max-repair-depth`, default 2); past the
+bound a task becomes `needs-user` and mints no child task. Every run appends to a
+hash-chained journal that refuses to read if a record is altered, reordered, or removed.
+
+### Legacy orchestration runtime
+
+`controller.ts` and its neighbours are retained only because `host-kit/runtime` and two
+CLI/control-plane call sites still import them. They never executed autonomous work: the
+worker adapter's `buildWorkerScript()` returned a single `console.log`, cross-host child
+sessions were gated off, and `.agent/trace.jsonl` held 3 records for the project's entire
+history. Do not build on them.
 
 ## Shape
 
@@ -63,6 +82,31 @@ Run conformance evals:
 ```bash
 cd evals/conformance && python -m pytest
 ```
+
+Verify everything (cross-platform; requires `pwsh`):
+
+```bash
+npm run verify:all
+```
+
+## Running work unattended
+
+```bash
+# Queue one task. At least one --verify command is required: a task with no
+# machine-checkable condition can never be closed.
+agent-rules runner add "Add subtract() to src/math.ts" \
+  --verify "npx vitest run test/math.test.ts" --own src
+
+# Or queue every active requirement from the plan ledger
+agent-rules runner seed --own src
+
+agent-rules runner start --agent claude --max-repair-depth 2
+agent-rules runner status          # queue counts, and anything waiting on you
+agent-rules runner journal --verify   # check the hash chain
+```
+
+Tasks that exhaust their repair budget land in `needs-user` with the reason recorded —
+they do not silently retry forever.
 
 ## CI/CD
 

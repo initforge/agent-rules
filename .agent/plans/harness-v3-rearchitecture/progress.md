@@ -1,7 +1,8 @@
 # Progress — harness-v3-rearchitecture
 
 **Updated:** 2026-08-04
-**Overall:** S1–S4 complete. The runner executes real work, end-to-end verified.
+**Overall:** S1–S8 done. The runner executes real work, end-to-end verified, and the
+docs now describe what the code does.
 
 ## Where this stands
 
@@ -38,7 +39,38 @@ real `claude` CLI, not a mock:
 | S5 | PARTIAL | 10 of 23 superseded modules deleted (−10,349 lines). The other 13 have real consumers — see below |
 | S6 | DONE | PowerShell runs fine on Linux via pwsh — the port was unnecessary. Fixed the 4 real bugs it was hiding instead |
 | S7 | DONE | Registry: context7 → required, caveman dropped, Serena skipped (unverifiable here). Skills 16 → 14 |
-| S8 | TODO | Correct README P8 status and system-map `.agent` claim |
+| S8 | DONE | README/README-vi/AGENTS: P8 VERIFIED → Durable Runner OPERATIONAL + legacy SUPERSEDED |
+
+## S8 note
+
+`Orchestration Runtime (P8) = VERIFIED` was the single most damaging line in the repo:
+it told every reader — including any agent that read it — that an executor existed. It
+is now replaced by two honest rows: **Durable Runner / OPERATIONAL /
+`packages/engine/src/runner/`**, and **Legacy orchestration runtime / SUPERSEDED**, the
+latter with the reason it is still present (`host-kit/runtime` and two CLI/control-plane
+call sites import it) and an explicit "do not build on them".
+
+Note the ordering: the claim was corrected in S8, *after* S3 made it true, rather than
+by editing the word in isolation.
+
+Both READMEs and `AGENTS.md` now document how to actually run work unattended, so the
+runner is discoverable rather than buried in the engine. `check-internal-links.py`
+passes; `validate-context` PASSes at 14 skills.
+
+## Remaining, for owner decision
+
+1. **The other 13 orchestration modules.** Deleting them means refactoring
+   `host-kit/runtime` and two call sites (see the S5 table). Mechanical deletion is not
+   possible.
+2. **`jsonschema` is missing** on this host and there is no `pip`, so
+   `test-artifact-schemas.py` cannot pass here. Environment, not code.
+3. **Runtime mirror drift.** The pre-commit hook reports `rules/` and `skills/` changes
+   not yet mirrored to `~/.config` and `~/.grok`. Syncing writes outside the repo, so it
+   is left to you: `./automation/run.sh 02-install-runtime && ./automation/run.sh
+   04-verify-mirrors`.
+4. **14 pre-existing test failures** across 9 files (symlink and cyclic-supersession
+   assertions, `host-kit/oc-stuck`, `context-cache`). Present before this work and
+   untouched by it.
 
 ## S7 notes
 

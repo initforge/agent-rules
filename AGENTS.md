@@ -10,7 +10,24 @@ Subsystem registry: section 6 of operating model
 ```bash
 cd packages/cli && npm ci && npm run build
 npm run test
+npm run verify:all      # full gate; needs pwsh (cross-platform)
 ```
+
+## Running work unattended
+
+`agent-rules runner` drives tasks with one short-lived headless agent process per task
+and all state on disk, so it survives being killed and has no context window to exhaust.
+Protocol: `.agent/README.md`. Source: `packages/engine/src/runner/`.
+
+```bash
+agent-rules runner add "<task>" --verify "<command>" --own <path>
+agent-rules runner start --agent claude --max-repair-depth 2
+agent-rules runner status
+```
+
+Every task needs at least one verification command — a task with no machine-checkable
+condition can never be closed. `packages/engine/src/controller.ts` and its neighbours are
+superseded; do not build on them.
 
 ## Repository map
 
