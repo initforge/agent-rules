@@ -13,6 +13,7 @@ import { createCheckpoint, buildResumeContext, type Checkpoint } from '../checkp
 import type { CommandInvocation } from '../contracts.js';
 import { VerificationEngine, type VerificationOutcome, type EvidenceRef } from './verifier.js';
 import { liftVerification, type VerificationProfile } from './profile.js';
+import { materializeMcpConfig, type McpConfigPaths } from './mcp-config.js';
 
 export type { AgentKind };
 
@@ -75,6 +76,15 @@ export interface RunnerConfig {
   invocationOverride?: (prompt: string) => { executable: string; args: string[] };
   /** Skip the PATH probe. Only meaningful together with `invocationOverride`. */
   skipAgentDetection?: boolean;
+  /**
+   * MCP integration IDs to materialise into the agent's per-task config.
+   * Common values: `'playwright-mcp'`, `'chrome-devtools-mcp'`. When set,
+   * the spawned agent will have those MCP servers available so it can drive
+   * browser-based verification itself (no human opening Chrome needed).
+   */
+  mcpIntegrationIds?: readonly string[];
+  /** Registry root, defaults to `<repo>/integrations/required`. */
+  mcpRegistryRoot?: string;
 }
 
 export type TaskOutcome = 'done' | 'failed' | 'needs-user';
@@ -136,6 +146,28 @@ export class Runner {
       logDir: config.logDir ?? path.join(config.queueRoot, '..', 'logs'),
       permissionMode: config.permissionMode,
       invocationOverride: config.invocationOverride,
+    });
+  }
+
+  /**
+   * Materialise MCP config for one task into `<runRoot>/mcp/<taskId>/`.
+   * Returns `undefined` if no MCP integrations are configured, so the
+   * executor falls back to a plain agent invocation with no MCP servers.
+   */
+  private mcpConfigForTask(taskId: string): import('./mcp-config.js').McpConfigPaths | undefined {
+    const ids = this.config.mcpIntegrationIds;
+    if (!ids || ids.length === 0) return undefined;
+    const registryRoot =
+      this.config.mcpRegistryRoot ??
+      path.join(this.config.cwd, 'integrations', 'required');
+    const outDir = path.join(
+      this.config.logDir ?? path.join(this.config.queueRoot, '..', 'logs'),
+      'mcp',
+      taskId,
+    );
+    return materializeMcpConfig(outDir, {
+      registryRoot,
+      integrationIds: ids,
     });
   }
 
@@ -257,7 +289,12 @@ export class Runner {
     });
     this.telemetry?.record({ kind: 'task_start', taskId: task.id, assignmentId: task.id });
 
-    const execution = await this.executor.execute(task);
+    // Materialise MCP config per task so two concurrent tasks cannot race on
+    // a shared browser profile / cookie jar. Returns undefined when the
+    // runner was started without MCP integrations, in which case the agent
+    // runs plain with no MCP servers available.
+    const mcpConfig = this.mcpConfigForTask(task.id);
+    const execution = await this.executor.execute(task, mcpConfig);
     const diff = captureDiff(this.config.cwd, task.ownedPaths, this.runnerOwnedPaths());
 
     this.journal.append('AGENT_EXIT', {
