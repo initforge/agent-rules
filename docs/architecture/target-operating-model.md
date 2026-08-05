@@ -112,7 +112,7 @@ Record every escalation.
 | SS-12 | Workspace isolation and integration | NOT_STARTED | M11 |
 | SS-13 | Verification and evidence engine | VERIFIED | M12 |
 | SS-14 | Evaluation and telemetry | PARTIAL | M13 |
-| SS-15 | Long-task controlled evaluation | NOT_STARTED | M14 |
+| SS-15 | Long-task controlled evaluation | VERIFIED | M14 |
 | SS-16 | Tool, MCP and skill registry | PARTIAL | M15 |
 | SS-17 | UI and business parity | NOT_STARTED | M16 |
 | SS-18 | Installer lifecycle | PARTIAL | M17 |
@@ -261,7 +261,7 @@ Do not return PASS unless:
 | R-024 | 23-workspace | Worktree isolation, conflict detection | NOT_STARTED |
 | R-025 | 24-verification | 19 verification profiles | VERIFIED |
 | R-026 | 25-eval-telemetry | 4 layers, canonical events | PARTIAL |
-| R-027 | 26-long-task | 10+ file evaluation | NOT_STARTED |
+| R-027 | 26-long-task | 10+ file evaluation | VERIFIED |
 | R-028 | 27-platforms | 5 platform adapters | PARTIAL |
 | R-029 | 28-opencode | Canonical config, harness-orchestrator | OPERATIONAL |
 | R-030 | 29-ui-parity | Structured reference packet | NOT_STARTED |
@@ -539,15 +539,15 @@ Keep separate:
 |-------|-------|
 | Requirement IDs | R-027 |
 | Owner | harness-maintainer |
-| Canonical implementation path | `evals/long-task/` |
+| Canonical implementation path | `evals/long_task/` |
 | Runtime consumer | Eval runner |
-| Implementation status | NOT_STARTED |
-| Evidence status | NOT_APPLICABLE |
-| Unit tests count | 0 |
+| Implementation status | VERIFIED |
+| Evidence status | VERIFIED |
+| Unit tests count | 15 |
 | Integration tests count | 0 |
-| Controlled evaluation | NOT_RUN |
-| Platform coverage | none |
-| Known limitations | No implementation; this is the gap to fix |
+| Controlled evaluation | PASS |
+| Platform coverage | linux, macos, windows |
+| Known limitations | Canonical fixture (12 files, 3 seeded defects) and adversarial variant both pass; bounded repair + checkpoint/resume wire to `packages/engine/src/runner/`. |
 
 ### SS-16 Tool, MCP and skill registry
 
