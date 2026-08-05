@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { SafeArgvRunner } from '../worker-adapter.js';
 import type { CommandInvocation } from '../contracts.js';
@@ -212,7 +213,8 @@ export class VerificationEngine {
     // Absolute path to playwright so the driver does not depend on
     // NODE_PATH resolution (which behaves inconsistently when the spawn
     // cwd has no resolving node_modules tree of its own).
-    const playwrightPath = require.resolve('playwright', { paths: [path.dirname(fileURLToPath(import.meta.url)) + '/../..'] });
+    const req = createRequire(fileURLToPath(import.meta.url));
+    const playwrightPath = req.resolve('playwright', { paths: [path.dirname(fileURLToPath(import.meta.url)) + '/../..'] });
     const driver = `
 const { chromium } = require(${JSON.stringify(playwrightPath)});
 (async () => {
