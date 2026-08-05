@@ -11,6 +11,8 @@ import { SafeArgvRunner } from '../worker-adapter.js';
 import { TelemetryCollector, DEFAULT_CONFIG, type TelemetryConfig } from '../telemetry.js';
 import { createCheckpoint, buildResumeContext, type Checkpoint } from '../checkpoint-resume.js';
 import type { CommandInvocation } from '../contracts.js';
+import { VerificationEngine, type VerificationOutcome, type EvidenceRef } from './verifier.js';
+import { liftVerification, type VerificationProfile } from './profile.js';
 
 export type { AgentKind };
 
@@ -272,7 +274,7 @@ export class Runner {
       filesChanged: diff.filesChanged,
     });
 
-    const verificationExitCodes = this.verify(task);
+    const { codes: verificationExitCodes, evidence } = await this.verify(task);
     const allPassed = verificationExitCodes.length > 0 && verificationExitCodes.every((c) => c === 0);
 
     this.journal.append('VERIFICATION', {
@@ -280,6 +282,7 @@ export class Runner {
       commands: task.verification,
       exitCodes: verificationExitCodes,
       passed: allPassed,
+      evidence: evidence.map((e) => ({ kind: e.kind, path: e.path, sha256: e.sha256 })),
     });
     this.telemetry?.record({
       kind: 'verification',
@@ -420,30 +423,43 @@ export class Runner {
     return this.lastCheckpoint ? buildResumeContext(this.lastCheckpoint) : null;
   }
 
-  /** Run every verification command, returning one exit code each. */
-  private verify(task: QueuedTask): number[] {
-    const codes: number[] = [];
-    for (const command of task.verification) {
-      let invocation: CommandInvocation;
-      try {
-        invocation = parseCommand(command, this.config.cwd);
-      } catch {
-        codes.push(-1);
-        continue;
-      }
-      const validation = SafeArgvRunner.validateCommand(invocation);
-      if (!validation.valid) {
+  /**
+   * Run every verification step via VerificationEngine, returning one exit code
+   * per step plus any evidence refs collected. Backward-compatible: a flat
+   * `task.verification: string[]` is lifted into a single-shell-step profile
+   * and the order of exit codes is preserved so the rest of the loop, the
+   * repair prompt, and the journal event can stay unchanged.
+   */
+  private async verify(task: QueuedTask): Promise<{ codes: number[]; evidence: EvidenceRef[]; outcome: VerificationOutcome }> {
+    let profile: VerificationProfile;
+    try {
+      profile = liftVerification(task.verification);
+    } catch (err) {
+      this.journal.append('COMMAND_REJECTED', {
+        taskId: task.id,
+        reason: err instanceof Error ? err.message : String(err),
+      });
+      return { codes: [-1], evidence: [], outcome: { passed: false, stepResults: [], evidence: [], totalDurationMs: 0 } };
+    }
+    const engine = new VerificationEngine({
+      cwd: this.config.cwd,
+      evidenceDir: path.join(this.config.logDir ?? path.join(this.config.queueRoot, '..', 'logs'), 'evidence'),
+    });
+    const outcome = await engine.evaluate(profile);
+    const codes = outcome.stepResults.map((r) => r.exitCode);
+    // Surface COMMAND_REJECTED entries for negative codes so the journal
+    // contract stays the same; the verifier already recorded the underlying
+    // rejection via SafeArgvRunner but the loop historically emitted its own.
+    for (let i = 0; i < outcome.stepResults.length; i += 1) {
+      const r = outcome.stepResults[i];
+      if (r.exitCode === -1 && r.step.kind === 'shell') {
         this.journal.append('COMMAND_REJECTED', {
           taskId: task.id,
-          command,
-          reason: validation.reason,
+          command: r.step.command,
         });
-        codes.push(-1);
-        continue;
       }
-      codes.push(runSyncExitCode(invocation));
     }
-    return codes;
+    return { codes, evidence: [...outcome.evidence], outcome };
   }
 
   private repairPrompt(task: QueuedTask, reason: string, exitCodes: number[]): string {
