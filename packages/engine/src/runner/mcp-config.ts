@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { AgentKind } from './headless-executor.js';
+import { posixJoin, toMcpCommandArgv, isWindows } from './platform.js';
 
 /**
  * Materialise an MCP config for the spawned agent.
@@ -175,6 +176,21 @@ export function materializeMcpConfig(outDir: string, opts: MaterializeOptions): 
   }
   if (opencodeBodies.length > 0) {
     const merged = mergeOpencodeAdapters(opencodeBodies);
+    // On Windows, paths in the opencode.json are written forward-slash so
+    // the JSON loader does not have to deal with mixed backslashes. Spawn
+    // args on Windows are still native; only the on-disk config content
+    // is normalised.
+    if (isWindows()) {
+      const mcpRecord = merged.mcp as Record<string, { command?: unknown }>;
+      for (const [name, def] of Object.entries(mcpRecord)) {
+        if (Array.isArray(def.command)) {
+          mcpRecord[name] = {
+            ...def,
+            command: toMcpCommandArgv(def.command as string[]),
+          };
+        }
+      }
+    }
     const configPath = path.join(outDir, 'opencode.json');
     fs.writeFileSync(configPath, JSON.stringify(merged, null, 2), 'utf8');
     result.opencode = { configPath };

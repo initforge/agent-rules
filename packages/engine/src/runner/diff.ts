@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { resolveGitPath } from './platform.js';
 
 /**
  * Real diff capture via git.
@@ -25,7 +26,13 @@ export interface DiffCapture {
 }
 
 function git(cwd: string, args: string[]): { ok: boolean; stdout: string } {
-  const res = spawnSync('git', args, { cwd, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+  // Resolve the system `git` once. If the host has no git on PATH the
+  // runner still returns `{ ok: false, stdout: '' }` instead of crashing;
+  // callers downstream treat an empty diff as "no changes" and pass.
+  // The clearer error belongs at the call site (captureDiff), not here.
+  const exe = resolveGitPath();
+  if (!exe) return { ok: false, stdout: '' };
+  const res = spawnSync(exe, args, { cwd, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
   return { ok: res.status === 0, stdout: res.stdout ?? '' };
 }
 
