@@ -96,41 +96,66 @@ describe('VerificationEngine (runner/verifier)', () => {
   });
   });
 
-  describe('non-shell step kinds (P2 stub)', () => {
-    it('playwright throws NotImplementedError', async () => {
+  describe('non-shell step kinds (P2 wiring)', () => {
+    it('playwright runs the driver and records screenshot evidence', async () => {
       const engine = new VerificationEngine({ cwd: TMP });
       const profile: VerificationProfile = {
-        steps: [{ kind: 'playwright', spec: 'tests/x.spec.ts' }],
+        steps: [{ kind: 'playwright', spec: 'tests/x.spec.ts', baseUrl: 'about:blank' }],
         evidence: [],
       };
-      await expect(engine.evaluate(profile)).rejects.toBeInstanceOf(NotImplementedError);
+      const out = await engine.evaluate(profile);
+      // about:blank loads cleanly with no console errors → exit 0.
+      expect(out.stepResults[0].exitCode).toBe(0);
+      const shot = out.evidence.find((e) => e.kind === 'screenshot');
+      expect(shot).toBeDefined();
     });
 
-    it('browser-script throws NotImplementedError', async () => {
+    it('browser-script runs the script and collects any *.screenshot.png / *.console.log', async () => {
       const engine = new VerificationEngine({ cwd: TMP });
+      const script = scriptFile('happy.mjs', `process.exit(0);`);
       const profile: VerificationProfile = {
-        steps: [{ kind: 'browser-script', path: 'scripts/x.mjs' }],
+        steps: [{ kind: 'browser-script', path: script }],
         evidence: [],
       };
-      await expect(engine.evaluate(profile)).rejects.toBeInstanceOf(NotImplementedError);
+      const out = await engine.evaluate(profile);
+      expect(out.stepResults[0].exitCode).toBe(0);
     });
 
-    it('mcp-tool-call throws NotImplementedError', async () => {
+    it('mcp-tool-call fails cleanly when the registry entry is missing', async () => {
       const engine = new VerificationEngine({ cwd: TMP });
       const profile: VerificationProfile = {
-        steps: [{ kind: 'mcp-tool-call', server: 'chrome-devtools', tool: 'list_console_messages' }],
+        steps: [{ kind: 'mcp-tool-call', server: 'no-such-integration-xyz', tool: 'noop' }],
         evidence: [],
       };
-      await expect(engine.evaluate(profile)).rejects.toBeInstanceOf(NotImplementedError);
+      const out = await engine.evaluate(profile);
+      // The driver exits 2 because the integration directory does not exist;
+      // the harness records the failure rather than throwing, so a profile
+      // with a missing integration does not abort the rest of the run.
+      expect(out.stepResults[0].exitCode).toBeGreaterThan(0);
     });
 
-    it('visual-diff throws NotImplementedError (threshold not wired)', async () => {
+    it('visual-diff returns 0 when baseline and current match', async () => {
       const engine = new VerificationEngine({ cwd: TMP });
+      const image = scriptFile('snap.png', Buffer.from([0, 1, 2, 3]));
+      // Hashes will match because both files contain the same bytes.
       const profile: VerificationProfile = {
-        steps: [{ kind: 'visual-diff', baseline: '/nonexistent.png', current: '/nonexistent.png' }],
+        steps: [{ kind: 'visual-diff', baseline: image, current: image }],
         evidence: [],
       };
-      await expect(engine.evaluate(profile)).rejects.toBeInstanceOf(NotImplementedError);
+      const out = await engine.evaluate(profile);
+      expect(out.stepResults[0].exitCode).toBe(0);
+    });
+
+    it('visual-diff returns 1 when hashes differ', async () => {
+      const engine = new VerificationEngine({ cwd: TMP });
+      const a = scriptFile('a.png', Buffer.from([0, 1, 2, 3]));
+      const b = scriptFile('b.png', Buffer.from([4, 5, 6, 7]));
+      const profile: VerificationProfile = {
+        steps: [{ kind: 'visual-diff', baseline: a, current: b }],
+        evidence: [],
+      };
+      const out = await engine.evaluate(profile);
+      expect(out.stepResults[0].exitCode).toBe(1);
     });
   });
 
