@@ -4,7 +4,7 @@ import path from 'node:path';
 import { assertWorkLedger as canonicalAssertWorkLedger, assertCertificationAttestation as canonicalAssertCertificationAttestation, CERTIFICATION_REQUIRED_HOSTS } from './contracts.js';
 import { candidateEpochHash, type CandidateEpoch } from './candidate-epoch.js';
 import { atomicLedgerWrite } from './m11-terminal-evidence.js';
-import { MATURITY_RANK, type EvidenceMaturity } from './claim-registry.js';
+import { MATURITY_RANK, type EvidenceMaturity } from './plan-readiness.js';
 
 export interface GateResult {
   name: string;

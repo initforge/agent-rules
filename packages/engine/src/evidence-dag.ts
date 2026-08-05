@@ -26,7 +26,7 @@
 import { createHash } from 'node:crypto';
 import type { CandidateEpoch, EvidenceBinding } from './candidate-epoch.js';
 import { bindEvidence, candidateEpochHash } from './candidate-epoch.js';
-import type { ClaimDefinition, ClaimEvidenceInput } from './claim-registry.js';
+import type { ClaimDefinition, ClaimEvidenceInput } from './plan-readiness.js';
 
 export const EVIDENCE_ENVELOPE_SCHEMA = 'evidence/envelope/v1';
 

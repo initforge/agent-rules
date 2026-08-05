@@ -12,8 +12,9 @@ import {
   type ClaimDefinition,
   type ClaimEvidenceInput,
   type EvidenceMaturity,
-} from '../src/claim-registry.js';
-import { compileRequirements, readLedger } from '../src/plan-readiness.js';
+  compileRequirements,
+  readLedger,
+} from '../src/plan-readiness.js';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '..', '..', '..');
 const PLAN_ID = 'agent-rules-harness-v3-rearchitecture-20260726-r1';
@@ -258,3 +259,4 @@ describe('evaluateClaimFormulas — maturity ladder and fail-closed aggregates',
     expect(FORMULA_THRESHOLDS.HV3_M11_LOCAL_COMPLETE).toBeGreaterThanOrEqual(FORMULA_THRESHOLDS.STAGING_READY);
   });
 });
+

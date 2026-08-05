@@ -24,7 +24,7 @@ import {
   type ReviewerRegistry,
 } from '../src/review-receipt.js';
 import { candidateEpochHash, type CandidateEpoch } from '../src/candidate-epoch.js';
-import type { ClaimDefinition, ClaimEvidenceInput } from '../src/claim-registry.js';
+import type { ClaimDefinition, ClaimEvidenceInput } from '../src/plan-readiness.js';
 import type { Counterexample } from '../src/adversarial-compiler.js';
 
 function makeProbe(probeId: string): Counterexample {

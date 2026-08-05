@@ -24,7 +24,7 @@
  * module is self-contained; when R29 merges, `assertIndependence` composes as
  * the independence_proof supplier inside the R29 ReviewReceipt record.
  */
-import type { RiskTier } from './claim-registry.js';
+import type { RiskTier } from './plan-readiness.js';
 
 // ── verdicts (AM-0020 §5) ────────────────────────────────────────────────────
 

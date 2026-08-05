@@ -161,7 +161,12 @@ function atomicWrite(targetPath: string, data: string): void {
   } finally { fs.closeSync(fd); }
   fs.renameSync(tmp, targetPath);
   const dirFd = fs.openSync(dir, 'r');
-  try { fs.fsyncSync(dirFd); } finally { fs.closeSync(dirFd); }
+  try {
+    // Windows / some FS reject fsync on directory handles with EPERM.
+    // The file is already durable via the file fsync above; the dir fsync is only
+    // a power-loss meta-data flush, so a best-effort attempt is enough.
+    try { fs.fsyncSync(dirFd); } catch { /* not supported on this platform */ }
+  } finally { fs.closeSync(dirFd); }
   // ponytail: if rename fails (exception above), cleanup temp on next startup via exists check
   if (fs.existsSync(tmp)) try { fs.unlinkSync(tmp); } catch { /* ok */ }
 }
@@ -360,7 +365,10 @@ export class ContextCache {
             try { fs.fsyncSync(tmpFd); } finally { fs.closeSync(tmpFd); }
             fs.renameSync(tmpPath, fpath);
             const dirFd = fs.openSync(path.dirname(fpath), 'r');
-            try { fs.fsyncSync(dirFd); } finally { fs.closeSync(dirFd); }
+            try {
+              // See atomicWrite: Windows directory handles reject fsync with EPERM.
+              try { fs.fsyncSync(dirFd); } catch { /* not supported on this platform */ }
+            } finally { fs.closeSync(dirFd); }
           } else {
             try { if (fs.existsSync(fpath)) fs.unlinkSync(fpath); } catch { /* ok */ }
           }

@@ -29,7 +29,7 @@ import {
   type ClaimDefinition,
   type ClaimEvidenceInput,
   type EvidenceMaturity,
-} from './claim-registry.js';
+} from './plan-readiness.js';
 
 // ── Public enums ──────────────────────────────────────────────────────────────
 

@@ -34,7 +34,7 @@ import {
   type CalibrationEvent,
   type CalibrationSink,
 } from '../src/review-independence.js';
-import { RISK_TIERS } from '../src/claim-registry.js';
+import { RISK_TIERS } from '../src/plan-readiness.js';
 
 function identity(session: string, provider = 'deepseek', observed = 'deepseek-flash-high'): AgentIdentity {
   return { session, provider, model: { requested: observed, resolved: observed, observed } };

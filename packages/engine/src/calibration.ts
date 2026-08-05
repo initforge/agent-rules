@@ -29,7 +29,7 @@
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { RiskTier } from './claim-registry.js';
+import type { RiskTier } from './plan-readiness.js';
 
 export const CALIBRATION_SCHEMA = 'telemetry/calibration/v1';
 

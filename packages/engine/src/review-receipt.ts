@@ -40,7 +40,7 @@ import {
   type ClaimDefinition,
   type ClaimEvidenceInput,
   type RiskTier,
-} from './claim-registry.js';
+} from './plan-readiness.js';
 import type { Counterexample } from './adversarial-compiler.js';
 
 // ── §5 verdicts and receipt shape ────────────────────────────────────────────
