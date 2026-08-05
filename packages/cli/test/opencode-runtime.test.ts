@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 import { buildOpenCodeArtifact, installOpenCodeArtifact } from "../src/runtime/opencode.js";
 
-const repo = path.resolve(import.meta.dirname, "../../..");
+const repo = path.resolve(__dirname, "../../..");
 
 async function fixture() {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "opencode-artifact-"));

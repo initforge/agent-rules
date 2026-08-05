@@ -743,16 +743,31 @@ const DEFAULT_ALLOWED_ROOTS = [
 ];
 
 /** Normalize both slash styles to platform separator, then split into segments. */
+/**
+ * Split a path into segments on either separator.
+ *
+ * Attestation paths are compared across hosts — a Windows path can reach a Linux
+ * verifier and vice versa — so segmentation must not depend on the local `path.sep`.
+ * Previously a backslash path analyzed on POSIX produced one segment and was rejected
+ * as "too short" no matter what it contained.
+ */
 function pathSegments(value: string): string[] {
-  const normalized = path.normalize(value);
-  return normalized.split(path.sep).filter(Boolean);
+  return value.split(/[\\/]+/).filter((s) => s !== '' && s !== '.');
 }
 
-/** Check raw input for traversal before normalization. */
+/** True for a path absolute on either POSIX (/x) or Windows (C:\x, \\server\share). */
+function isAbsoluteAnyPlatform(value: string): boolean {
+  return (
+    value.startsWith('/') ||
+    /^[A-Za-z]:[\\/]/.test(value) ||
+    value.startsWith('\\\\')
+  );
+}
+
+/** Check raw input for traversal before normalization. Both separators count. */
 function hasTraversalInRawInput(value: string): boolean {
-  // Match '..' as whole path segments (preceded by / or start, followed by / or end)
-  // Also catches encoded: %2e%2e, %2e., .%2e
-  return /(^|\/|\/)\.\.(\/|$)/.test(value) || /%2e%2e/i.test(value);
+  // '..' as a whole segment, on either separator, plus percent-encoded forms.
+  return /(^|[\\/])\.\.([\\/]|$)/.test(value) || /%2e%2e/i.test(value);
 }
 
 export function securePathProbe(
@@ -761,7 +776,7 @@ export function securePathProbe(
 ): SecurePathProbeResult {
   const allowedRoots = options.allowedRoots ?? DEFAULT_ALLOWED_ROOTS;
 
-  if (!path.isAbsolute(candidatePath)) {
+  if (!isAbsoluteAnyPlatform(candidatePath)) {
     return { path: candidatePath, safe: false, reason: 'non-absolute path' };
   }
 
@@ -777,7 +792,7 @@ export function securePathProbe(
   // Verify path contains an allowed root anywhere in its hierarchy.
   let foundAllowedRoot = false;
   for (const root of allowedRoots) {
-    const rootSegments = pathSegments(root.replace(/\//g, path.sep));
+    const rootSegments = pathSegments(root);
     outer: for (let start = 0; start <= segments.length - rootSegments.length; start++) {
       for (let i = 0; i < rootSegments.length; i++) {
         if (segments[start + i] !== rootSegments[i]) continue outer;

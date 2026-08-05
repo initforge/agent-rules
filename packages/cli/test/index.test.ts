@@ -4,6 +4,10 @@ import { createHash } from "node:crypto";
 import * as path from "node:path";
 import * as fs from "node:fs";
 import * as os from "node:os";
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // ── Helper to get repo root ────────────────────────────────────
 function getRepoRoot(): string {
@@ -179,7 +183,7 @@ describe("Runtime CLI options", () => {
 
   it("accepts the typed runtime root override without mutating it during dry-run", () => {
     const target = path.join(os.tmpdir(), `agent-rules-runtime-cli-dry-run-${process.pid}`);
-    const output = require("node:child_process").execFileSync(
+    const output = execFileSync(
       "node",
       [cliEntry, "--json", "--dry-run", "runtime", "install", "codex", "--root", target],
       { encoding: "utf8" },
@@ -192,7 +196,7 @@ describe("Runtime CLI options", () => {
 
   it("runs the native install and uninstall lifecycle against an explicit temporary root", () => {
     const target = fs.mkdtempSync(path.join(os.tmpdir(), "agent-rules-runtime-cli-"));
-    const child = require("node:child_process");
+    const child = { execFileSync: execFileSync };
     child.execFileSync("node", [cliEntry, "runtime", "install", "codex", "--root", target], { encoding: "utf8" });
     expect(fs.existsSync(path.join(target, "agent-rules-runtime", "agent-rules-runtime-receipt.json"))).toBe(true);
 
@@ -218,7 +222,7 @@ describe("Runtime CLI options", () => {
         ],
       }));
 
-      const child = require("node:child_process");
+      const child = { execFileSync: execFileSync };
       expect(() => child.execFileSync(
         "node",
         [cliEntry, "runtime", "install", "codex", "--root", target],

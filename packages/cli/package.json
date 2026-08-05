@@ -25,7 +25,7 @@
     "start": "node dist/index.js",
     "clean": "rimraf dist",
     "prepack": "npm run build",
-    "test": "jest --runInBand",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
     "test:watch": "jest --runInBand --watch",
     "test:package-smoke": "node test/runtime-package-smoke.mjs"
   },

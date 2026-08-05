@@ -10,6 +10,9 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /** Shared test workspace */
 let testDir: string;
@@ -24,6 +27,7 @@ function distUrl(module: string): string {
 
 beforeEach(() => {
   testDir = fs.mkdtempSync(path.join(os.tmpdir(), "xproc-lifecycle-"));
+  process.env.TEST_DIR = testDir;
 });
 
 afterEach(() => {
@@ -35,8 +39,13 @@ afterEach(() => {
 /** Run a snippet of JS in a fresh Node process, return stdout */
 function runChild(code: string, cwd?: string): Promise<string> {
   return new Promise((resolve) => {
+    // The child reads `testDir` from the inherited environment so the same
+    // snippet string can be shared across tests without template-literal
+    // evaluation at module load (when `testDir` is still undefined).
+    const env = { ...process.env, TEST_DIR: cwd ?? testDir };
     const child = spawn(process.execPath, ["--input-type=module", "--eval", code], {
       cwd: cwd ?? testDir,
+      env,
       stdio: ["pipe", "pipe", "pipe"],
     });
     let stdout = "";
@@ -56,7 +65,7 @@ describe("Memory lifecycle — cross-process", () => {
   it("child process creates memory entry, parent reads it", async () => {
     await runChild(`
 import { storeMemory } from "${distUrl("lifecycle/memory.js")}";
-const entry = storeMemory("${testDir.replace(/\\/g, "\\\\")}", "cross-key", { hello: "world" });
+const entry = storeMemory("${process.env.TEST_DIR}", "cross-key", { hello: "world" });
 console.log(JSON.stringify({ id: entry.id, key: entry.key }));
     `);
 
@@ -65,7 +74,7 @@ console.log(JSON.stringify({ id: entry.id, key: entry.key }));
     const entries = JSON.parse(
       await runChild(`
 import { listMemory } from "${distUrl("lifecycle/memory.js")}";
-console.log(JSON.stringify(listMemory("${testDir.replace(/\\/g, "\\\\")}")));
+console.log(JSON.stringify(listMemory("${process.env.TEST_DIR}")));
       `)
     ) as Array<{ id: string; key: string }>;
 
@@ -78,7 +87,7 @@ console.log(JSON.stringify(listMemory("${testDir.replace(/\\/g, "\\\\")}")));
     const du = distUrl("lifecycle/memory.js");
     const code = (name: string) => `
 import { storeMemory, listMemory } from "${du}";
-const d = "${testDir.replace(/\\/g, "\\\\")}";
+const d = "${process.env.TEST_DIR}";
 storeMemory(d, "key-${name}", { from: "${name}" });
 const all = listMemory(d).map(e => e.key);
 console.log(JSON.stringify(all));
@@ -112,7 +121,7 @@ console.log(JSON.stringify(all));
     // Child evicts it
     await runChild(`
 import { evictMemory } from "${distUrl("lifecycle/memory.js")}";
-const result = evictMemory("${testDir.replace(/\\/g, "\\\\")}", "${entry.id}");
+const result = evictMemory("${process.env.TEST_DIR}", "${entry.id}");
 console.log(result);
     `);
 
@@ -124,7 +133,7 @@ console.log(result);
     // Child stores
     await runChild(`
 import { storeMemory } from "${distUrl("lifecycle/memory.js")}";
-storeMemory("${testDir.replace(/\\/g, "\\\\")}", "audit-test", { v: 1 });
+storeMemory("${process.env.TEST_DIR}", "audit-test", { v: 1 });
     `);
 
     const { loadAuditLog } = await import("../../src/lifecycle/memory.js");
@@ -139,7 +148,7 @@ describe("Improvement lifecycle — cross-process", () => {
   it("child creates and promotes improvement, parent reads final stage", async () => {
     const result = await runChild(`
 import { createImprovement, promoteImprovement, getImprovement } from "${distUrl("lifecycle/improvement.js")}";
-const d = "${testDir.replace(/\\/g, "\\\\")}";
+const d = "${process.env.TEST_DIR}";
 const imp = createImprovement(d, "cross-imp", "1.0.0", "test", [{ path: "/x", sha256: "a", size: 1 }]);
 promoteImprovement(d, imp.id);
 promoteImprovement(d, imp.id);
@@ -157,7 +166,7 @@ console.log(JSON.stringify({ stage: final?.stage, status: final?.status }));
     // Set up: v1 in production, v2 promoted to production (supersedes v1)
     await runChild(`
 import { createImprovement, promoteImprovement } from "${distUrl("lifecycle/improvement.js")}";
-const d = "${testDir.replace(/\\/g, "\\\\")}";
+const d = "${process.env.TEST_DIR}";
 const v1 = createImprovement(d, "rollback-imp", "1.0.0", "v1", [{ path: "/x", sha256: "a", size: 1 }]);
 promoteImprovement(d, v1.id);
 promoteImprovement(d, v1.id); // v1 now production
@@ -198,7 +207,7 @@ console.log("done");
   it("improvement history file is created and readable across processes", async () => {
     const childId = await runChild(`
 import { createImprovement, loadImprovementHistory } from "${distUrl("lifecycle/improvement.js")}";
-const d = "${testDir.replace(/\\/g, "\\\\")}";
+const d = "${process.env.TEST_DIR}";
 const imp = createImprovement(d, "history-test", "1.0.0", "test", [{ path: "/x", sha256: "a", size: 1 }]);
 const hist = loadImprovementHistory(d, imp.id);
 console.log(hist.length);
@@ -220,7 +229,7 @@ console.log(hist.length);
   it("audit trail visible across processes", async () => {
     await runChild(`
 import { createImprovement, promoteImprovement } from "${distUrl("lifecycle/improvement.js")}";
-const d = "${testDir.replace(/\\/g, "\\\\")}";
+const d = "${process.env.TEST_DIR}";
 const imp = createImprovement(d, "audit-xproc", "1.0.0", "test", [{ path: "/x", sha256: "a", size: 1 }]);
 promoteImprovement(d, imp.id);
     `);
@@ -238,10 +247,11 @@ describe("GC lifecycle — cross-process", () => {
   it("scanForOrphans detects orphans created by child process", async () => {
     // Child creates an orphan run directory (no run.json)
     await runChild(`
+import path from "node:path";
 import fs from "node:fs";
-const runsDir = "${testDir.replace(/\\/g, "\\\\")}\\\\.agent\\\\runs\\\\orphan-child";
+const runsDir = path.join(process.env.TEST_DIR, '.agent', 'runs', 'orphan-child');
 fs.mkdirSync(runsDir, { recursive: true });
-fs.writeFileSync(runsDir + "\\\\test.txt", "orphan content");
+fs.writeFileSync(path.join(runsDir, "test.txt"), "orphan content");
     `);
 
     const { scanForOrphans } = await import("../../src/lifecycle/gc.js");
@@ -252,12 +262,13 @@ fs.writeFileSync(runsDir + "\\\\test.txt", "orphan content");
   it("cleanup receipts persist and are loadable from different process", async () => {
     // Child creates orphan and cleans it up
     await runChild(`
+import path from "node:path";
 import fs from "node:fs";
 import { scanForOrphans, cleanupOrphans } from "${distUrl("lifecycle/gc.js")}";
-const d = "${testDir.replace(/\\/g, "\\\\")}";
-const runsDir = d + "\\\\.agent\\\\runs\\\\receipt-xproc";
+const d = "${process.env.TEST_DIR}";
+const runsDir = path.join(d, '.agent', 'runs', 'receipt-xproc');
 fs.mkdirSync(runsDir, { recursive: true });
-fs.writeFileSync(runsDir + "\\\\test.txt", "data");
+fs.writeFileSync(path.join(runsDir, "test.txt"), "data");
 const orphans = scanForOrphans(d);
 const receipt = cleanupOrphans(d, orphans);
 console.log(receipt.stats.removed);
@@ -277,7 +288,7 @@ console.log(receipt.stats.removed);
 
     await runChild(`
 import { evictOldMemory } from "${distUrl("lifecycle/gc.js")}";
-const receipt = evictOldMemory("${testDir.replace(/\\/g, "\\\\")}", 3);
+const receipt = evictOldMemory("${process.env.TEST_DIR}", 3);
 console.log(JSON.stringify({ removed: receipt.stats.removed }));
     `);
 
@@ -289,12 +300,13 @@ console.log(JSON.stringify({ removed: receipt.stats.removed }));
 
   it("archive mode creates archive metadata readable by parent", async () => {
     await runChild(`
+import path from "node:path";
 import fs from "node:fs";
 import { scanForOrphans, cleanupOrphans } from "${distUrl("lifecycle/gc.js")}";
-const d = "${testDir.replace(/\\/g, "\\\\")}";
-const runsDir = d + "\\\\.agent\\\\runs\\\\archive-xproc";
+const d = "${process.env.TEST_DIR}";
+const runsDir = path.join(d, '.agent', 'runs', 'archive-xproc');
 fs.mkdirSync(runsDir, { recursive: true });
-fs.writeFileSync(runsDir + "\\\\important.txt", "keep this");
+fs.writeFileSync(path.join(runsDir, "important.txt"), "keep this");
 const orphans = scanForOrphans(d);
 cleanupOrphans(d, orphans, { archive: true });
     `);
@@ -315,7 +327,7 @@ cleanupOrphans(d, orphans, { archive: true });
   it("migration records persist across processes", async () => {
     await runChild(`
 import { recordMigration } from "${distUrl("lifecycle/gc.js")}";
-const d = "${testDir.replace(/\\/g, "\\\\")}";
+const d = "${process.env.TEST_DIR}";
 const mig = recordMigration(d, "/old/path", "/new/path", "file");
 console.log(mig.id);
     `);
@@ -330,21 +342,23 @@ console.log(mig.id);
     const du = distUrl("lifecycle/gc.js");
     // Process A: create orphan and cleanup
     await runChild(`
+import path from "node:path";
 import fs from "node:fs";
 import { scanForOrphans, cleanupOrphans } from "${du}";
-const d = "${testDir.replace(/\\/g, "\\\\")}";
-fs.mkdirSync(d + "\\\\.agent\\\\runs\\\\cleanup-a", { recursive: true });
-fs.writeFileSync(d + "\\\\.agent\\\\runs\\\\cleanup-a\\\\a.txt", "a");
+const d = "${process.env.TEST_DIR}";
+fs.mkdirSync(path.join(d, '.agent', 'runs', 'cleanup-a'), { recursive: true });
+fs.writeFileSync(path.join(d, '.agent', 'runs', 'cleanup-a', 'a.txt'), "a");
 cleanupOrphans(d, scanForOrphans(d));
     `);
 
     // Process B: create orphan and cleanup
     await runChild(`
+import path from "node:path";
 import fs from "node:fs";
 import { scanForOrphans, cleanupOrphans } from "${du}";
-const d = "${testDir.replace(/\\/g, "\\\\")}";
-fs.mkdirSync(d + "\\\\.agent\\\\runs\\\\cleanup-b", { recursive: true });
-fs.writeFileSync(d + "\\\\.agent\\\\runs\\\\cleanup-b\\\\b.txt", "b");
+const d = "${process.env.TEST_DIR}";
+fs.mkdirSync(path.join(d, '.agent', 'runs', 'cleanup-b'), { recursive: true });
+fs.writeFileSync(path.join(d, '.agent', 'runs', 'cleanup-b', 'b.txt'), "b");
 cleanupOrphans(d, scanForOrphans(d));
     `);
 

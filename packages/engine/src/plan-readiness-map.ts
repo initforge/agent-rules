@@ -53,7 +53,7 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
     status: 'SUPERSEDED',
     partialReason:
       'superseded: typed ready-set dispatch replaced by the sequential runner queue (see .agent/plans/harness-v3-rearchitecture/requirements.yaml R-014)',
-    modules: ['packages/engine/src/plan-readiness.ts', 'packages/engine/src/dispatch-ready-set.ts'],
+    modules: ['packages/engine/src/plan-readiness.ts', 'packages/engine/src/dispatch-ready-set.ts [DELETED S5]'],
     tests: [ 'packages/engine/test/plan-readiness.test.ts'],
     acceptanceCriteria: [
       'execution-graph.yaml emits typed cross-stage dependency edges (HARD/SOFT/VERIFY_AFTER/…/EXTERNAL)',
@@ -65,7 +65,7 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
     status: 'SUPERSEDED',
     partialReason:
       'superseded: controller/dispatch scheduling replaced by runner/loop.ts (R-014)',
-    modules: ['packages/engine/src/dispatch-ready-set.ts', 'packages/engine/src/controller.ts'],
+    modules: ['packages/engine/src/dispatch-ready-set.ts [DELETED S5]', 'packages/engine/src/controller.ts [DELETED S5]'],
     tests: [ 'packages/engine/test/controller.test.ts'],
     acceptanceCriteria: [
       'max-useful conflict-free ready antichain scheduling without starving independent work',
@@ -77,7 +77,7 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
     status: 'SUPERSEDED',
     partialReason:
       'superseded: worktree isolation and the integration train are unnecessary for a sequential runner (R-016)',
-    modules: ['packages/engine/src/worktree-train.ts', 'packages/cli/src/commands/train.ts', 'packages/cli/src/commands/worktree.ts'],
+    modules: ['packages/engine/src/worktree-train.ts [DELETED S5]', 'packages/cli/src/commands/train.ts', 'packages/cli/src/commands/worktree.ts'],
     tests: [ 'packages/engine/test/worktree-inventory.test.ts'],
     acceptanceCriteria: [
       'per-assignment worktree isolation with leased lifecycle (create/integrate/release)',
@@ -89,7 +89,7 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
     status: 'SUPERSEDED',
     partialReason:
       'superseded: resource broker/governor arbitrated a worker pool that never existed (R-018)',
-    modules: ['packages/engine/src/resource-broker.ts', 'packages/engine/src/resource-governor.ts'],
+    modules: ['packages/engine/src/resource-broker.ts [DELETED S5]', 'packages/engine/src/resource-governor.ts [DELETED S5]'],
     tests: [ 'packages/engine/test/resource-governor.test.ts'],
     acceptanceCriteria: [
       'global broker multiplexes resource/tool/browser pools under leases',
@@ -101,7 +101,7 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
     status: 'SUPERSEDED',
     partialReason:
       'superseded: dual autopilot replaced by runner/loop.ts with bounded repair (R-015)',
-    modules: ['packages/engine/src/autopilot-m11.ts', 'packages/engine/src/supervisor.ts', 'packages/engine/src/terminal-gate.ts'],
+    modules: ['packages/engine/src/autopilot-m11.ts [DELETED S5]', 'packages/engine/src/supervisor.ts [DELETED S5]', 'packages/engine/src/terminal-gate.ts'],
     tests: [ 'packages/engine/test/terminal-gate.test.ts'],
     acceptanceCriteria: [
       'nonterminal continuation across WAITING_EXTERNAL/WAITING_AUTHORITY/WAITING_RESOURCE/RETRY_SCHEDULED',
@@ -187,7 +187,7 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
     status: 'SUPERSEDED',
     partialReason:
       'superseded: supervisor pool replaced by one headless process per task (R-014)',
-    modules: ['packages/engine/src/supervisor.ts', 'packages/engine/src/worker-adapter.ts', 'evals/m11'],
+    modules: ['packages/engine/src/supervisor.ts [DELETED S5]', 'packages/engine/src/worker-adapter.ts', 'evals/m11'],
     tests: [ 'packages/engine/test/worker-verifier.test.ts', 'evals/m11/aggregation.test.ts'],
     acceptanceCriteria: [
       'subagent-first audit/review with independent verifier/reviewer paths',
@@ -355,7 +355,7 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
     status: 'SUPERSEDED',
     partialReason:
       'superseded: semantic wake states were never driven by a real executor; replaced by the single NEEDS_USER terminal (R-021)',
-    modules: ['packages/engine/src/semantic-wake-policy.ts', 'packages/engine/src/main-run-capsule.ts'],
+    modules: ['packages/engine/src/semantic-wake-policy.ts [DELETED S5]', 'packages/engine/src/main-run-capsule.ts'],
     tests: [ 'packages/engine/test/main-run-capsule.test.ts'],
     acceptanceCriteria: [
       'Premium main wakes only under the closed semantic wake policy (ARCHITECTURE_DECISION, AUTHORITY_REQUIRED, CONTRACT_CONFLICT, REPAIR_ESCALATION, REVIEW_CONFLICT, INTEGRATION_CONFLICT, CONTEXT_FIDELITY_FAILURE, TERMINAL_RECONCILIATION)',

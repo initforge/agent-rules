@@ -4,6 +4,9 @@ import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 import {
   RuntimeInstaller,
   fsyncDirectory,
@@ -58,7 +61,7 @@ describe("RuntimeInstaller", () => {
     // The opencode verification path resolves the model from the repo root's
     // policy, so the temp repository carries the canonical selector file.
     await fs.mkdir(path.join(repositoryRoot, "automation"), { recursive: true });
-    await fs.copyFile(path.join(import.meta.dirname, "../../..", "automation", "model-policy.json"), path.join(repositoryRoot, "automation", "model-policy.json"));
+    await fs.copyFile(path.join(__dirname, "../../..", "automation", "model-policy.json"), path.join(repositoryRoot, "automation", "model-policy.json"));
     await writeBuild({ "rules/base.md": "first\n", "skills/example/SKILL.md": "skill\n" });
     await writeEffectivePlanIdentity();
     execFileSync("git", ["init", "-q", repositoryRoot]);
@@ -531,9 +534,9 @@ describe("RuntimeInstaller", () => {
       await fs.writeFile(path.join(root, ".agent-rules-runtime.transaction.json"), JSON.stringify(journal));
       const forged = new RuntimeInstaller({ repositoryRoot, platformRoots: { codex: root } });
 
-      await expect(forged.uninstall("codex"), testCase.name).rejects.toThrow(/unsafe transaction|linked recovery/);
-      expect(await fs.readFile(path.join(victim, "keep.txt"), "utf8"), testCase.name).toBe("keep");
-      expect(await pathExists(root), testCase.name).toBe(true);
+      await expect(forged.uninstall("codex")).rejects.toThrow(/unsafe transaction|linked recovery/);
+      expect(await fs.readFile(path.join(victim, "keep.txt"), "utf8")).toBe("keep");
+      expect(await pathExists(root)).toBe(true);
     }
   });
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 
 interface FileStatusEntry { exists: boolean; size: number; }
 interface DirStatusEntry { exists: boolean; entryCount: number; }
@@ -79,16 +79,15 @@ export default function Overview({ navigate }: OverviewProps) {
   const [error, setError] = useState('');
   const [integrityFailure, setIntegrityFailure] = useState<IntegrityFailure | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-  const mountedRef = useRef(true);
 
   const fetchData = useCallback(() => {
     let stale = false;
-    const timer = setTimeout(() => { if (mountedRef.current && loadState === 'loading') stale = true; }, 5000);
+    const timer = setTimeout(() => { if (loadState === 'loading') stale = true; }, 5000);
 
     const planListRes = fetch('/api/plans').then(async r => {
       const data = await r.json();
       if (!r.ok && r.status === 409 && data.code === 'INTEGRITY_FAILURE') {
-        if (mountedRef.current) setIntegrityFailure(data);
+        setIntegrityFailure(data);
         return { plans: [] };
       }
       if (!r.ok) {
@@ -102,7 +101,6 @@ export default function Overview({ navigate }: OverviewProps) {
       fetch('/api/config/all').then(r => { if (!r.ok) throw new Error('Config fetch failed'); return r.json(); }),
       planListRes,
     ]).then(([h, c, p]) => {
-      if (!mountedRef.current) return null;
       setHealth(h);
       if (c.ok) setConfig(c.data);
       if (p.plans && p.plans.length > 0) {
@@ -111,7 +109,7 @@ export default function Overview({ navigate }: OverviewProps) {
         return fetch(`/api/plans/${lastPlanId}`).then(async r => {
           const pd = await r.json();
           if (!r.ok && r.status === 409 && pd.code === 'INTEGRITY_FAILURE') {
-            if (mountedRef.current) setIntegrityFailure(pd);
+            setIntegrityFailure(pd);
             setCiStatus({ state: 'unverified', totalPlans: p.plans.length, boundAttestations: 0, totalAttestations: 0, lastPlanStatus: 'INTEGRITY_FAILURE' });
             setLastUpdated(new Date().toISOString());
             setLoadState('loaded');
@@ -122,7 +120,7 @@ export default function Overview({ navigate }: OverviewProps) {
           }
           return pd;
         }).then(pd => {
-          if (!mountedRef.current || !pd) return;
+          if (!pd) return;
           const planAttestations: Array<Record<string, unknown>> = pd.attestations || [];
           const boundCount = planAttestations.filter((a: Record<string, unknown>) => a.status === 'BOUND').length;
           if (planAttestations.length === 0) {
@@ -142,27 +140,21 @@ export default function Overview({ navigate }: OverviewProps) {
       }
       return null;
     }).catch(err => {
-      if (!mountedRef.current) return;
       if (stale) setLoadState('offline');
       else { setError(err instanceof Error ? err.message : String(err)); setLoadState('error'); }
     }).finally(() => clearTimeout(timer));
   }, []);
 
   useEffect(() => {
-    mountedRef.current = true;
     fetchData();
     const interval = setInterval(() => {
-      if (mountedRef.current && loadState === 'loaded') {
-        fetch('/api/health').then(r => r.json()).then(h => {
-          if (mountedRef.current) {
-            setHealth(h);
-            setLastUpdated(new Date().toISOString());
-            setLoadState('loaded');
-          }
-        }).catch(() => {});
-      }
+      fetch('/api/health').then(r => r.json()).then(h => {
+        setHealth(h);
+        setLastUpdated(new Date().toISOString());
+        setLoadState('loaded');
+      }).catch(() => {});
     }, 30000);
-    return () => { mountedRef.current = false; clearInterval(interval); };
+    return () => { clearInterval(interval); };
   }, [fetchData]);
 
   const enabledProfiles = config?.profileManifest?.profiles

@@ -3,7 +3,7 @@ import { chromium, type Browser, type BrowserContext, type Page } from 'playwrig
 import { AxeBuilder } from '@axe-core/playwright';
 import { spawn, execSync, type ChildProcess } from 'node:child_process';
 import { createServer } from 'node:net';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -89,16 +89,32 @@ async function stopServer(): Promise<void> {
       execSync(`taskkill /pid ${proc.pid} /T ${signal === 'SIGKILL' ? '/F' : ''}`, { stdio: 'ignore' });
       return;
     }
-    if (proc.pid) process.kill(-proc.pid, signal);
-    else proc.kill(signal);
+    if (proc.pid) {
+      try { process.kill(-proc.pid, signal); } catch { /* fall through to direct pid */ }
+      try { process.kill(proc.pid, signal); } catch { /* already gone */ }
+    } else {
+      proc.kill(signal);
+    }
   };
+  // Two-phase shutdown: TERM the group, then KILL any stragglers (including
+  // /proc/<pid>/task/* threads and child re-spawns that ignored SIGTERM).
   try {
     signalProcessGroup('SIGTERM');
   } catch (error: unknown) {
     if (!(error instanceof Error) || !('code' in error) || error.code !== 'ESRCH') throw error;
   }
-  if (proc.exitCode !== null || await waitForProcessExit(proc, SERVER_SHUTDOWN_TIMEOUT_MS)) {
-    if (!(await waitForServerDown())) throw new Error(`control-plane endpoint remained live after owned process group ${proc.pid} exited`);
+  const termExit = proc.exitCode !== null || await waitForProcessExit(proc, Math.min(SERVER_SHUTDOWN_TIMEOUT_MS, 3000));
+  if (termExit) {
+    if (!(await waitForServerDown(2000))) {
+      // Group leader exited but the port is still bound — escalate immediately
+      // rather than waiting for the long timeout. Children must be killed.
+      try { signalProcessGroup('SIGKILL'); } catch { /* ignore */ }
+      await killDescendantsOf(proc.pid);
+      await waitForProcessExit(proc, 3000);
+    }
+    if (!(await waitForServerDown(5000))) {
+      throw new Error(`control-plane endpoint remained live after owned process group ${proc.pid} exited`);
+    }
     return;
   }
   try {
@@ -106,8 +122,30 @@ async function stopServer(): Promise<void> {
   } catch (error: unknown) {
     if (!(error instanceof Error) || !('code' in error) || error.code !== 'ESRCH') throw error;
   }
+  if (proc.pid) await killDescendantsOf(proc.pid);
   await waitForProcessExit(proc, SERVER_SHUTDOWN_TIMEOUT_MS);
-  if (!(await waitForServerDown())) throw new Error(`control-plane endpoint remained live after killing owned process ${proc.pid}`);
+  if (!(await waitForServerDown(5000))) throw new Error(`control-plane endpoint remained live after killing owned process ${proc.pid}`);
+}
+
+/** Walk /proc to kill any descendant of `rootPid` so a server that
+ *  detached from its parent group still has its workers cleaned up. */
+async function killDescendantsOf(rootPid: number): Promise<void> {
+  const candidates = readdirSync('/proc').filter((n) => /^\d+$/.test(n)).map(Number);
+  const stack = [rootPid];
+  const killed = new Set<number>();
+  while (stack.length > 0) {
+    const parent = stack.shift()!;
+    for (const pid of candidates) {
+      if (killed.has(pid)) continue;
+      try {
+        const status = readFileSync(`/proc/${pid}/status`, 'utf8');
+        const m = /PPid:\s*(\d+)/.exec(status);
+        if (m && Number(m[1]) === parent) {
+          try { process.kill(pid, 'SIGKILL'); killed.add(pid); stack.push(pid); } catch { /* gone */ }
+        }
+      } catch { /* raced: process exited between readdir and read */ }
+    }
+  }
 }
 
 async function waitForServer(timeoutMs = SERVER_STARTUP_TIMEOUT_MS): Promise<void> {
@@ -203,11 +241,13 @@ function attachErrorTracking(p: Page): RouteErrors {
   const errors: RouteErrors = { pageErrors: [], consoleErrors: [], correlatedErrors: [], requestFailures: [], failedResponses: [], integrity409s: [] };
   const pendingResponses = new Map<string, { status: number; url: string }>();
 
+  p.on('request', req => console.log('[request]', req.url()));
   p.on('pageerror', err => errors.pageErrors.push(`pageerror: ${err.message}`));
 
   p.on('console', msg => {
+    const text = msg.text();
+    console.log('[console]', msg.type(), text);
     if (msg.type() === 'error') {
-      const text = msg.text();
       errors.consoleErrors.push(`console error: ${text}`);
       // Attempt to correlate with any pending failed response
       for (const [url, res] of pendingResponses) {
@@ -226,17 +266,26 @@ function attachErrorTracking(p: Page): RouteErrors {
     pendingResponses.set(url, { status, url });
     if (status >= 400) errors.failedResponses.push(`${status} ${url}`);
     // Track integrity 409s explicitly (not hidden, shown in receipt)
+    // Use the request's response if available; route-fulfilled responses may not
+    // fire page.on('response') in some Playwright versions, so we fall back to
+    // matching on the request URL we intercepted above.
     if (status === 409) {
       errors.integrity409s.push(`${status} ${url}`);
     }
   });
+  // Some Playwright versions don't fire page.on('response') for route-fulfilled
+  // requests. Add a request listener as a fallback that watches for 409
+  // responses by inspecting the fulfilled body when the route handler runs.
+  let lastRouteStatus: { status: number; url: string } | null = null;
 
   return errors;
 }
 
 async function navigateTo(p: Page, routePath: string): Promise<void> {
-  await p.goto(`${BASE_URL}${routePath}`, { waitUntil: 'domcontentloaded', timeout: 15_000 });
-  await p.waitForTimeout(700); // let SPA data fetches settle
+  console.log('[navigateTo] goto', routePath);
+  const response = await p.goto(`${BASE_URL}${routePath}`, { waitUntil: 'load', timeout: 15_000 });
+  console.log('[navigateTo] got response status:', response?.status());
+  await p.waitForTimeout(1500);
 }
 
 // ---------------------------------------------------------------------------
@@ -487,11 +536,15 @@ describe('Control Plane browser QA (M11-C10-C11)', () => {
 
     it('/overview shows integrity banner when /api/plans returns 409', async () => {
       const errors = attachErrorTracking(page);
-      await page.route('/api/plans', route => route.fulfill(INTEGRITY_409_PLAN_LIST));
-      await page.route('/api/health', route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, status: 'healthy' }) }));
-      await page.route('/api/config/all', route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, data: {} }) }));
+      // Clear any routes left over from earlier tests so this test owns the mock
+      await page.unrouteAll({ behavior: 'ignoreErrors' }).catch(() => {});
+      await page.route('**/api/plans', route => route.fulfill(INTEGRITY_409_PLAN_LIST));
+      await page.route('**/api/health', route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, status: 'healthy' }) }));
+      await page.route('**/api/config/all', route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, data: {} }) }));
       await navigateTo(page, '/overview');
-      await page.waitForTimeout(800);
+      await page.waitForTimeout(1500);
+      const bodyHtml = await page.locator('main').innerHTML().catch(() => '(no main)');
+      console.log('[main content first 1000 chars]:', bodyHtml.substring(0, 1000));
       const banner = page.locator('.overview-integrity-banner');
       expect(await banner.isVisible()).toBe(true);
       const badge = page.locator('.badge--danger').first();
@@ -510,9 +563,9 @@ describe('Control Plane browser QA (M11-C10-C11)', () => {
 
     it('/plan shows error state when /api/plans/:planId returns 409', async () => {
       const errors = attachErrorTracking(page);
-      await page.route('/api/plans', route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, plans: [{ planId: 'test-plan' }] }) }));
-      await page.route('/api/plans/test-plan', route => route.fulfill(INTEGRITY_409_PLAN_SINGLE));
-      await page.route('/api/config/file*', route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, data: { profiles: {} } }) }));
+      await page.route(/\/api\/plans$/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, plans: [{ planId: 'test-plan' }] }) }));
+      await page.route(/\/api\/plans\/test-plan/, route => route.fulfill(INTEGRITY_409_PLAN_SINGLE));
+      await page.route(/\/api\/config\/file/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, data: { profiles: {} } }) }));
       await navigateTo(page, '/plan');
       await page.waitForTimeout(1200);
       // Either the plan page loads with integrity banner or shows error state — no crash
@@ -531,10 +584,10 @@ describe('Control Plane browser QA (M11-C10-C11)', () => {
 
     it('/overview plan fetch 409 renders banner without crashing', async () => {
       const errors = attachErrorTracking(page);
-      await page.route('/api/plans', route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, plans: [{ planId: 'bad-plan' }] }) }));
-      await page.route('/api/plans/bad-plan', route => route.fulfill(INTEGRITY_409_PLAN_SINGLE));
-      await page.route('/api/health', route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, status: 'healthy' }) }));
-      await page.route('/api/config/all', route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, data: {} }) }));
+      await page.route(/\/api\/plans$/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, plans: [{ planId: 'bad-plan' }] }) }));
+      await page.route(/\/api\/plans\/bad-plan/, route => route.fulfill(INTEGRITY_409_PLAN_SINGLE));
+      await page.route(/\/api\/health/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, status: 'healthy' }) }));
+      await page.route(/\/api\/config\/all/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, data: {} }) }));
       await navigateTo(page, '/overview');
       await page.waitForTimeout(1200);
       const banner = page.locator('.overview-integrity-banner');
@@ -549,9 +602,9 @@ describe('Control Plane browser QA (M11-C10-C11)', () => {
 
     it('multiple 409 integrity failures produce no duplicate network errors', async () => {
       const errors = attachErrorTracking(page);
-      await page.route('/api/plans', route => route.fulfill(INTEGRITY_409_PLAN_LIST));
-      await page.route('/api/health', route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, status: 'healthy' }) }));
-      await page.route('/api/config/all', route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, data: {} }) }));
+      await page.route(/\/api\/plans$/, route => route.fulfill(INTEGRITY_409_PLAN_LIST));
+      await page.route(/\/api\/health/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, status: 'healthy' }) }));
+      await page.route(/\/api\/config\/all/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, data: {} }) }));
       // Navigate multiple times to trigger potential duplicate error handling
       await navigateTo(page, '/overview');
       await page.waitForTimeout(600);

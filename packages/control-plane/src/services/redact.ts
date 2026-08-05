@@ -13,11 +13,23 @@ const SENSITIVE_PATTERNS = [
   /bearer/gi,
 ]
 
+/**
+ * Value-redaction patterns. Each captures the key and separator in group 1 and the
+ * secret in group 2, so the replacement keeps `password=` and masks only the value.
+ *
+ * These previously replaced the whole match with `[REDACTED]`, erasing the field name
+ * along with the secret. That makes a redacted log unreadable — you can no longer tell
+ * whether a token or a password was present — while protecting nothing extra, since the
+ * key name is not the sensitive part.
+ */
 const VALUE_REDACTION_PATTERNS: readonly [RegExp, string][] = [
-  [/(?:password|secret|token|api[_-]?key|private[_-]?key)\s*[:=]\s*(\S+)/gi, '[REDACTED]'],
-  [/(?:aws|gcp|azure)[_-]?(?:secret|key|token)\s*[:=]\s*(\S+)/gi, '[REDACTED]'],
-  [/(?:bearer|authorization)\s*[:=]\s*(\S+)/gi, '[REDACTED]'],
-  [/(?:npm|pip|maven|gradle)\s+(?:token|key|auth)\s*[:=]\s*(\S+)/gi, '[REDACTED]'],
+  [/((?:password|secret|token|api[_-]?key|private[_-]?key)\s*[:=]\s*)(\S+)/gi, '$1[REDACTED]'],
+  [/((?:aws|gcp|azure)[_-]?(?:secret|key|token)\s*[:=]\s*)(\S+)/gi, '$1[REDACTED]'],
+  // `Authorization: Bearer <jwt>` first: the scheme word sits between the key and the
+  // secret, so the single-token pattern below would mask "Bearer" and leave the JWT.
+  [/((?:authorization|proxy-authorization)\s*[:=]\s*(?:bearer|basic|digest|token)\s+)(\S+)/gi, '$1[REDACTED]'],
+  [/((?:bearer|authorization)\s*[:=]\s*)(\S+)/gi, '$1[REDACTED]'],
+  [/((?:npm|pip|maven|gradle)\s+(?:token|key|auth)\s*[:=]\s*)(\S+)/gi, '$1[REDACTED]'],
 ]
 
 function isRedactableKey(key: string): boolean {

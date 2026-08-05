@@ -190,7 +190,10 @@ describe('redact', () => {
   it('redacts nested arrays of objects', () => {
     const input = { items: [{ api_key: 'secret1' }, { token: 'secret2', name: 'test' }] }
     const result = redactSensitive(input)
-    const items = result.redacted as Array<Record<string, unknown>>
+    // The input is an object wrapping the array, so reach through `items` — the cast
+    // used to treat result.redacted itself as the array, which made items[0] undefined
+    // and the assertion throw before it could check anything.
+    const items = (result.redacted as Record<string, unknown>).items as Array<Record<string, unknown>>
     expect(items[0]).toHaveProperty('api_key', '[REDACTED]')
     expect(items[1]).toHaveProperty('token', '[REDACTED]')
     expect(items[1]).toHaveProperty('name', 'test')

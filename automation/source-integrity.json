@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Canonical SHA256 hashes for all scripts the installer may execute. Scripts are verified against this manifest before execution.",
-  "generated_at": "2026-08-04T09:56:17+00:00",
+  "generated_at": "2026-08-04T12:22:13+00:00",
   "files": {
     "automation/02-install-runtime.ps1": "435b059f493ef59aebd0ff94abfbcc78506de1bdaaf0bcabe64ee32cb4885f18",
     "automation/11-install-runtime-hooks.sh": "0b7ec19e30100165dee8eca04582146df2333aa0f4701176fb7cb9f9b8a59be2",

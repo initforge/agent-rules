@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 import Ajv from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 
-const root = resolve(import.meta.dirname, "..", "..", "..");
+const root = resolve(__dirname, "..", "..", "..");
 const schema = JSON.parse(
   readFileSync(resolve(root, "schemas", "execution-contract.schema.json"), "utf8"),
 );
@@ -128,12 +131,12 @@ function reviewBundle() {
 describe("execution contract schema", () => {
   it("validates the repository current pointer", () => {
     const validate = validator();
-    expect(validate(currentPointer), JSON.stringify(validate.errors)).toBe(true);
+    expect(validate(currentPointer)).toBe(true);
   });
 
   it("requires capability preservation and the locked AM-0022 execution policy", () => {
     const validate = validator();
-    expect(validate(effectiveContract()), JSON.stringify(validate.errors)).toBe(true);
+    expect(validate(effectiveContract())).toBe(true);
 
     const invalid = effectiveContract();
     invalid.capability_preservation.default_disposition = "DROP";
@@ -143,7 +146,7 @@ describe("execution contract schema", () => {
 
   it("requires compact read-only review bundles with targeted drill-down", () => {
     const validate = validator();
-    expect(validate(reviewBundle()), JSON.stringify(validate.errors)).toBe(true);
+    expect(validate(reviewBundle())).toBe(true);
 
     const invalid = reviewBundle();
     invalid.policy.raw_logs_default = true;

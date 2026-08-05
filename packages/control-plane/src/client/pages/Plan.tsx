@@ -67,20 +67,18 @@ export default function Plan({ navigate }: PlanProps) {
   const [activePane, setActivePane] = useState<'navigator' | 'canvas' | 'inspector'>('canvas');
   const [coverageFilter, setCoverageFilter] = useState<CoverageFilter>('ALL');
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
-  const mountedRef = useRef(true);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
-    mountedRef.current = true;
     let stale = false;
     timerRef.current = setTimeout(() => {
-      if (mountedRef.current && loadState === 'loading') stale = true;
+      if (loadState === 'loading') stale = true;
     }, 5000);
 
     const planListRes = fetch('/api/plans').then(async r => {
       const data = await r.json();
       if (!r.ok && r.status === 409 && data.code === 'INTEGRITY_FAILURE') {
-        if (mountedRef.current) setIntegrityFailure(data);
+        setIntegrityFailure(data);
         return { plans: [] };
       }
       if (!r.ok) throw new Error('Failed to fetch plans');
@@ -93,7 +91,6 @@ export default function Plan({ navigate }: PlanProps) {
       fetch('/api/config/file?path=automation/trace-schema.json').then(r => { if (!r.ok) throw new Error('Failed to fetch trace schema'); return r.json(); }),
       planListRes,
     ]).then(([e, w, t, p]) => {
-      if (!mountedRef.current) return;
       if (e.ok) setEvidenceProfiles(e.data);
       if (w.ok) setWorkLedgerSchema(w.data);
       if (t.ok) setTraceSchema(t.data);
@@ -103,25 +100,24 @@ export default function Plan({ navigate }: PlanProps) {
         return fetch(`/api/plans/${firstPlanId}`).then(async r => {
           const pd = await r.json();
           if (!r.ok && r.status === 409 && pd.code === 'INTEGRITY_FAILURE') {
-            if (mountedRef.current) setIntegrityFailure(pd);
+            setIntegrityFailure(pd);
             setLoadState('loaded');
             return null;
           }
           if (!r.ok) throw new Error(`Failed to fetch plan (${r.status})`);
-          if (mountedRef.current) setPlanData(pd);
+          setPlanData(pd);
           return pd;
         });
       }
       setLoadState('loaded');
     }).then(() => {
-      if (mountedRef.current) setLoadState('loaded');
+      setLoadState('loaded');
     }).catch(err => {
-      if (!mountedRef.current) return;
       if (stale) setLoadState('offline');
       else { setError(err instanceof Error ? err.message : String(err)); setLoadState('error'); }
     }).finally(() => clearTimeout(timerRef.current));
 
-    return () => { mountedRef.current = false; clearTimeout(timerRef.current); };
+    return () => { clearTimeout(timerRef.current); };
   }, []);
 
   const COVERAGE_FILTERS: CoverageFilter[] = ['ALL', 'MATCH', 'PARTIAL', 'MISSING', 'DEVIATED', 'EXTRA', 'SUPERSEDED'];

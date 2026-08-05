@@ -39,10 +39,25 @@ const SAFE_ENV_KEYS = new Set([
   'XDG_CONFIG_HOME', 'XDG_DATA_HOME', 'XDG_CACHE_HOME',
 ]);
 
+/**
+ * Prefix for variables a test harness may pass through to a stubbed child.
+ *
+ * `safeEnv` is an allowlist so a real dispatch cannot leak credentials into the child.
+ * That is correct, but it also silently dropped the FAKE_* variables the adapter tests
+ * use to drive their stub `claude` binary, so five of those tests asserted against a
+ * child that never saw its configuration. Allowing exactly this prefix keeps the
+ * allowlist meaningful — no real secret is named FAKE_* — while letting the stub be
+ * configured.
+ */
+const TEST_ENV_PREFIX = 'FAKE_';
+
 function safeEnv(overrides?: Record<string, string | undefined>): NodeJS.ProcessEnv {
   const base: NodeJS.ProcessEnv = {};
   for (const key of SAFE_ENV_KEYS) {
     if (process.env[key] !== undefined) base[key] = process.env[key];
+  }
+  for (const [key, value] of Object.entries(process.env)) {
+    if (key.startsWith(TEST_ENV_PREFIX) && value !== undefined) base[key] = value;
   }
   if (!overrides) return base;
   for (const [k, v] of Object.entries(overrides)) {

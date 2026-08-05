@@ -12,6 +12,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { spawn, spawnSync } from 'node:child_process';
+import { fileURLToPath } from "node:url";
+import { dirname as _pathDirname } from "node:path";
+const __dirname = _pathDirname(fileURLToPath(import.meta.url));
 
 describe('governed-vitest', () => {
   let tempDir: string;
@@ -153,6 +156,9 @@ setInterval(() => {}, 1000);
       const testFile = path.join(tempDir, 'test.ts');
       fs.writeFileSync(testFile, `
 import { describe, it, expect } from 'vitest';
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 describe('sample', () => {
   it('works', () => expect(true).toBe(true));
 });

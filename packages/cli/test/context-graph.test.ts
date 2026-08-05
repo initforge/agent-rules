@@ -3,6 +3,9 @@ import { buildContextGraph, validateGraph } from "../src/services/context-graph.
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function getRepoRoot(): string {
   return path.resolve(__dirname, "..", "..", "..");

@@ -424,6 +424,9 @@ describe('Runner', () => {
   });
 
   it('processes many tasks in one run without accumulating state', async () => {
+    // 12 sequential headless-agent spawns plus verification under load have
+    // occasionally exceeded the 10s global timeout on cold CI; give the suite
+    // a longer budget to keep the assertion about non-accumulation deterministic.
     const runner = makeRunner(repo, `require('fs').appendFileSync('${path.join(repo, 'log.ts')}', '// step\\n')`);
     for (let i = 0; i < 12; i += 1) {
       runner.tasks.add({
@@ -439,7 +442,7 @@ describe('Runner', () => {
     expect(summary.tasksProcessed).toBe(12);
     expect(summary.done).toBe(12);
     expect(runner.tasks.counts()).toMatchObject({ ready: 0, active: 0, done: 12 });
-  });
+  }, 30000);
 
   it('stops after maxTasks and leaves the rest queued', async () => {
     const runner = makeRunner(

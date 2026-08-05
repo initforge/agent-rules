@@ -89,10 +89,10 @@ interface M11Evidence {
 
 const M11_EVIDENCE: Record<string, M11Evidence> = {
   'M11-R11': { modules: ['packages/engine/src/plan-readiness.ts', 'packages/cli/src/commands/plan.ts'], tests: ['packages/engine/test/plan-readiness.test.ts'] },
-  'M11-R13': { modules: ['packages/engine/src/plan-readiness.ts', 'packages/engine/src/dispatch-ready-set.ts'], tests: ['packages/engine/test/dispatch-ready-set.test.ts'] },
-  'M11-R15': { modules: ['packages/engine/src/worktree-train.ts', 'packages/cli/src/commands/train.ts'], tests: ['packages/engine/test/worktree-train.test.ts'] },
-  'M11-R16': { modules: ['packages/engine/src/resource-broker.ts', 'packages/engine/src/resource-governor.ts'], tests: ['packages/engine/test/resource-broker.test.ts'] },
-  'M11-R17': { modules: ['packages/engine/src/autopilot-m11.ts', 'packages/engine/src/supervisor.ts'], tests: ['packages/engine/test/autopilot-m11.test.ts'] },
+  'M11-R13': { modules: ['packages/engine/src/plan-readiness.ts', 'packages/engine/src/dispatch-ready-set.ts [DELETED S5]'], tests: ['packages/engine/test/dispatch-ready-set.test.ts'] },
+  'M11-R15': { modules: ['packages/engine/src/worktree-train.ts [DELETED S5]', 'packages/cli/src/commands/train.ts'], tests: ['packages/engine/test/worktree-train.test.ts'] },
+  'M11-R16': { modules: ['packages/engine/src/resource-broker.ts [DELETED S5]', 'packages/engine/src/resource-governor.ts [DELETED S5]'], tests: ['packages/engine/test/resource-broker.test.ts'] },
+  'M11-R17': { modules: ['packages/engine/src/autopilot-m11.ts [DELETED S5]', 'packages/engine/src/supervisor.ts [DELETED S5]'], tests: ['packages/engine/test/autopilot-m11.test.ts'] },
   'M11-R18': { modules: ['packages/engine/src/topology-compiler.ts'], tests: ['packages/engine/test/topology-compiler.test.ts'] },
   'M11-R19': { modules: ['packages/engine/src/topology-compiler.ts', 'packages/engine/src/terminal-gate.ts'], tests: ['packages/engine/test/topology-compiler.test.ts'] },
   'M11-R20': { modules: ['packages/engine/src/parity-runner.ts'], tests: ['packages/engine/test/parity-runner.test.ts'] },
@@ -100,7 +100,7 @@ const M11_EVIDENCE: Record<string, M11Evidence> = {
   'M11-R22': { modules: ['platforms/opencode/adapter.ts', 'platforms/claude/adapter.ts'], tests: ['platforms/opencode/adapter.test.ts'] },
   'M11-R23': { modules: ['packages/engine/src/contracts.ts'], tests: ['packages/engine/test/workflow-validation.test.ts'] },
   'M11-R24': { modules: ['packages/engine/src/terminal-gate.ts', 'packages/engine/src/ledger-activation.ts'], tests: ['packages/engine/test/terminal-gate.test.ts'] },
-  'M11-R25': { modules: ['packages/engine/src/supervisor.ts', 'packages/engine/src/worker-adapter.ts'], tests: ['packages/engine/test/supervisor.test.ts'] },
+  'M11-R25': { modules: ['packages/engine/src/supervisor.ts [DELETED S5]', 'packages/engine/src/worker-adapter.ts'], tests: ['packages/engine/test/supervisor.test.ts'] },
   'M11-R26': { modules: ['evals/m11'], tests: ['evals/m11/runner.py'] },
   'M11-R27': { modules: ['packages/engine/src/claim-registry.ts'], tests: ['packages/engine/test/claim-registry.test.ts'] },
   'M11-R28': { modules: ['packages/engine/src/evidence-dag.ts', 'packages/engine/src/evidence-packet.ts'], tests: ['packages/engine/test/evidence-dag.test.ts'] },

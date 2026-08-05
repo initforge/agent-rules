@@ -128,9 +128,11 @@ export function buildGovernedVitestCommand(
 }
 
 /**
- * Kills the process tree rooted at `pid`. On Windows uses taskkill /T /F;
- * on POSIX sends SIGTERM to the negative pid (process group) with a fallback
- * to the direct pid.
+ * Kills the process tree rooted at `pid`. On Windows uses taskkill /T /F.
+ * On POSIX it sends SIGTERM to the pid's process group (if `pid` was started
+ * with `detached: true`), then falls back to a /proc-based descendant walk
+ * to cover the case where the child was not a group leader. SIGKILL follows
+ * if any descendants are still alive after a short grace period.
  */
 export function terminateProcessTree(pid: number): void {
   if (!Number.isInteger(pid) || pid <= 0) return;
@@ -140,18 +142,73 @@ export function terminateProcessTree(pid: number): void {
     } catch {
       // best-effort
     }
-  } else {
+    return;
+  }
+  // Try the process group first (works when the child was detached).
+  try {
+    process.kill(-pid, 'SIGTERM');
+  } catch {
+    /* not a process group leader */
+  }
+  // Walk /proc to find any descendants of `pid` and signal them too.
+  const descendants = collectDescendantPids(pid);
+  for (const d of descendants) {
+    try { process.kill(d, 'SIGTERM'); } catch { /* already gone */ }
+  }
+  try {
+    process.kill(pid, 'SIGTERM');
+  } catch {
+    /* already gone */
+  }
+  // If any descendants survived, escalate to SIGKILL after a brief grace.
+  const survivors = descendants.filter((d) => {
+    try { process.kill(d, 0); return true; } catch { return false; }
+  });
+  for (const d of survivors) {
+    try { process.kill(d, 'SIGKILL'); } catch { /* already gone */ }
+  }
+}
+
+/**
+ * Reads /proc/<pid>/status once for each candidate and returns the pids whose
+ * PPid matches any of the roots. Recurses one level at a time so a transient
+ * /proc entry (process exiting between readdir and read) does not abort the
+ * walk. Linux-only; /proc is not exposed on macOS so the test scope (Linux CI)
+ * is sufficient.
+ */
+function collectDescendantPids(rootPid: number): number[] {
+  const result: number[] = [];
+  const frontier: number[] = [rootPid];
+  const visited = new Set<number>();
+  while (frontier.length > 0) {
+    const parent = frontier.shift()!;
+    if (visited.has(parent)) continue;
+    visited.add(parent);
+    let pids: number[];
     try {
-      process.kill(-pid, 'SIGTERM');
+      const entries = fs.readdirSync('/proc');
+      pids = entries
+        .filter((name) => /^\d+$/.test(name))
+        .map((name) => Number(name));
     } catch {
-      /* no process group */
+      return result;
     }
-    try {
-      process.kill(pid, 'SIGTERM');
-    } catch {
-      /* already gone */
+    for (const pid of pids) {
+      if (visited.has(pid)) continue;
+      let status: string;
+      try {
+        status = fs.readFileSync(`/proc/${pid}/status`, 'utf8');
+      } catch {
+        continue;
+      }
+      const ppidMatch = /PPid:\s*(\d+)/.exec(status);
+      if (ppidMatch && Number(ppidMatch[1]) === parent) {
+        result.push(pid);
+        frontier.push(pid);
+      }
     }
   }
+  return result;
 }
 
 /**

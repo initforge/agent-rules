@@ -27,6 +27,11 @@ export const LIMITS = {
     'runs',
     'artifacts',
     'tmp',
+    // Bootstrap artifacts needed for the runtime installer and execution-contract
+    // schema validation to boot cleanly on fresh checkout. Both are committed
+    // per the protocol (harness must boot without manual setup).
+    'ledger',
+    'current.json',
   ]),
   requiredPlanFiles: ['plan.md', 'requirements.yaml'],
   validStatuses: new Set(['active', 'superseded', 'dropped', 'blocked']),
