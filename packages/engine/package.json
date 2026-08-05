@@ -17,6 +17,9 @@
     "build": "node ../../node_modules/typescript/bin/tsc",
     "typecheck": "tsc --noEmit",
     "test": "node ../../automation/run-governed-vitest.mjs --project-root ../.. --cwd . --mode full -- run",
+    "test:smoke": "node ../../node_modules/vitest/vitest.mjs run --testNamePattern=\"^(?!.*\\\\[(e2e|browser)\\\\]\").*$\"",
+    "test:e2e": "node ../../node_modules/vitest/vitest.mjs run --testNamePattern=\"\\\\[e2e\\\\]\"",
+    "test:browser": "node ../../node_modules/vitest/vitest.mjs run --testNamePattern=\"\\\\[browser\\\\]\"",
     "test:jest": "node --experimental-vm-modules node_modules/.bin/jest --config jest.config.ts",
     "test:jest:watch": "node --experimental-vm-modules node_modules/.bin/jest --config jest.config.ts --watch"
   },

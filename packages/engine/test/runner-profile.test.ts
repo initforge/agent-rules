@@ -6,6 +6,20 @@ import {
   type VerificationProfile,
 } from '../src/runner/profile.js';
 
+// Test name conventions (smoke / e2e / browser):
+//   - Default: any test not prefixed [e2e] or [browser] runs in `npm run smoke`
+//     via the standard `vitest run`. Smoke subset finishes in < 30s.
+//   - [e2e]:   may spawn a real agent / open a browser. Run with
+//     `npm run test:e2e -- engine`.  Skipped by default smoke.
+//   - [browser]: Playwright / chrome-devtools MCP. Run with
+//     `npm run test:browser -- engine`. Skipped by default smoke.
+//   - [flaky]: known flaky on Windows symlink tests; tracked separately
+//     in `npm run test:flaky`.
+//
+// Filter via `--testNamePattern`:
+//   vitest run --testNamePattern="^(?!.*\\[browser\\]).*$"
+//   vitest run --testNamePattern="^\\[e2e\\] .*"
+
 describe('VerificationProfile (runner/profile)', () => {
   describe('liftVerification', () => {
     it('wraps every command as a shell step', () => {
