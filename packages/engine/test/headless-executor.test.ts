@@ -5,6 +5,7 @@ import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { buildInvocation, HeadlessExecutor, detectAgent } from '../src/runner/headless-executor.js';
 import { captureDiff, isDocOnly } from '../src/runner/diff.js';
+import { findOrphanNodePids, killProcessTree } from './spawn-tree-kill.js';
 
 describe('buildInvocation', () => {
   // R-002: the old adapter's fatal flaw was that nothing asserted what it ran, so
@@ -49,7 +50,22 @@ describe('HeadlessExecutor', () => {
   beforeEach(() => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'executor-test-'));
   });
-  afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
+  afterEach(async () => {
+    // The previous `force: true` hid a real Windows failure: a child that
+    // still holds a file handle makes `rmSync` return EPERM, and force=true
+    // silently swallows it. Enumerate any node children the test left
+    // running and kill them, then retry the rm.
+    const orphans = findOrphanNodePids();
+    for (const pid of orphans) {
+      await killProcessTree(pid);
+    }
+    try {
+      fs.rmSync(dir, { recursive: true, force: true });
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return;
+      throw err;
+    }
+  });
 
   it('spills stdout and stderr to files instead of returning content', async () => {
     // `node` stands in for an agent CLI: the contract under test is process
