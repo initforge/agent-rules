@@ -86,7 +86,12 @@ async function stopServer(): Promise<void> {
   if (!proc) return;
   const signalProcessGroup = (signal: NodeJS.Signals) => {
     if (process.platform === 'win32' && proc.pid) {
-      execSync(`taskkill /pid ${proc.pid} /T ${signal === 'SIGKILL' ? '/F' : ''}`, { stdio: 'ignore' });
+      // taskkill returns exit 128 / non-zero when the pid is already gone.
+      // The PID may have been recycled or the process exited between exit-detection
+      // and the kill; either way, the server is no longer running, so swallow.
+      try {
+        execSync(`taskkill /pid ${proc.pid} /T ${signal === 'SIGKILL' ? '/F' : ''}`, { stdio: 'ignore' });
+      } catch { /* pid already gone — see comment above */ }
       return;
     }
     if (proc.pid) {
@@ -128,9 +133,16 @@ async function stopServer(): Promise<void> {
 }
 
 /** Walk /proc to kill any descendant of `rootPid` so a server that
- *  detached from its parent group still has its workers cleaned up. */
+ *  detached from its parent group still has its workers cleaned up.
+ *  Linux-only — Windows uses process-group kill above instead. */
 async function killDescendantsOf(rootPid: number): Promise<void> {
-  const candidates = readdirSync('/proc').filter((n) => /^\d+$/.test(n)).map(Number);
+  if (process.platform === 'win32') return;
+  let candidates: number[];
+  try {
+    candidates = readdirSync('/proc').filter((n) => /^\d+$/.test(n)).map(Number);
+  } catch {
+    return; // /proc unavailable on this host (sandboxed, restricted)
+  }
   const stack = [rootPid];
   const killed = new Set<number>();
   while (stack.length > 0) {
@@ -237,7 +249,7 @@ interface RouteErrors {
   integrity409s: string[];
 }
 
-function attachErrorTracking(p: Page): RouteErrors {
+function attachErrorTracking(p: Page): { errors: RouteErrors; trackRoute: (url: RegExp | string, handler: (route: import('playwright').Route) => Promise<void> | void) => Promise<void> } {
   const errors: RouteErrors = { pageErrors: [], consoleErrors: [], correlatedErrors: [], requestFailures: [], failedResponses: [], integrity409s: [] };
   const pendingResponses = new Map<string, { status: number; url: string }>();
 
@@ -260,25 +272,47 @@ function attachErrorTracking(p: Page): RouteErrors {
     errors.requestFailures.push(`${req.url()} :: ${req.failure()?.errorText}`);
   });
 
-  p.on('response', res => {
-    const status = res.status();
-    const url = res.url();
-    pendingResponses.set(url, { status, url });
-    if (status >= 400) errors.failedResponses.push(`${status} ${url}`);
-    // Track integrity 409s explicitly (not hidden, shown in receipt)
-    // Use the request's response if available; route-fulfilled responses may not
-    // fire page.on('response') in some Playwright versions, so we fall back to
-    // matching on the request URL we intercepted above.
-    if (status === 409) {
-      errors.integrity409s.push(`${status} ${url}`);
+  // page.on('response') does NOT fire for route-fulfilled requests in Playwright,
+  // so 409s served by `page.route()` mocks are invisible to that listener.
+  // `requestfinished` fires for every completed request, including route-fulfilled
+  // ones, and exposes the response via `response()`. Track 409s from there so
+  // the integrity describe block sees the mocked failures.
+  p.on('requestfinished', async req => {
+    try {
+      const res = await req.response();
+      if (!res) return;
+      const status = res.status();
+      const url = res.url();
+      pendingResponses.set(url, { status, url });
+      if (status >= 400) errors.failedResponses.push(`${status} ${url}`);
+      if (status === 409) errors.integrity409s.push(`${status} ${url}`);
+    } catch {
+      /* request was aborted before response was available */
     }
   });
-  // Some Playwright versions don't fire page.on('response') for route-fulfilled
-  // requests. Add a request listener as a fallback that watches for 409
-  // responses by inspecting the fulfilled body when the route handler runs.
-  let lastRouteStatus: { status: number; url: string } | null = null;
 
-  return errors;
+  /**
+   * Register a route handler that ALSO records 409 responses into `integrity409s`.
+   * Use this for any test that mocks an API response — the response event above
+   * may not fire for route-fulfilled requests depending on Playwright version.
+   */
+  async function trackRoute(url: RegExp | string, handler: (route: import('playwright').Route) => Promise<void> | void): Promise<void> {
+    await p.route(url, async (route) => {
+      try {
+        await handler(route);
+      } catch (err) {
+        await route.fulfill({ status: 500, body: JSON.stringify({ ok: false, error: String(err) }) }).catch(() => {});
+        throw err;
+      }
+      // We do NOT query `route.request().response` here: in some Playwright
+      // versions the response is not available synchronously inside the handler
+      // (status/body come back as undefined even though fulfill was called).
+      // The `requestfinished` listener above records 409s from every completed
+      // request regardless of who fulfilled it, which is the correct source.
+    });
+  }
+
+  return { errors, trackRoute };
 }
 
 async function navigateTo(p: Page, routePath: string): Promise<void> {
@@ -318,17 +352,17 @@ describe('Control Plane browser QA (M11-C10-C11)', () => {
   describe('browser: pages render with expected landmarks', () => {
     for (const p of PAGES) {
       it(`/${p.id} renders nav, main, h1, and non-stub content`, async () => {
-        const errors = attachErrorTracking(page);
+        const { errors, trackRoute } = attachErrorTracking(page);
         // Mock /api/plans to return 200 (empty) so we test UI rendering without 409 interference
-        await page.route(/\/api\/plans/, route => route.fulfill({
+        await trackRoute(/\/api\/plans/, route => route.fulfill({
           status: 200,
           body: JSON.stringify({ ok: true, plans: [] }),
         }));
-        await page.route(/\/api\/health/, route => route.fulfill({
+        await trackRoute(/\/api\/health/, route => route.fulfill({
           status: 200,
           body: JSON.stringify({ ok: true, status: 'healthy' }),
         }));
-        await page.route(/\/api\/config\/all/, route => route.fulfill({
+        await trackRoute(/\/api\/config\/all/, route => route.fulfill({
           status: 200,
           body: JSON.stringify({ ok: true, data: {} }),
         }));
@@ -453,17 +487,17 @@ describe('Control Plane browser QA (M11-C10-C11)', () => {
   describe('console: no uncaught exceptions or console errors', () => {
     it('no pageerror or console.error across core pages', async () => {
       for (const p of PAGES) {
-        const errors = attachErrorTracking(page);
+        const { errors, trackRoute } = attachErrorTracking(page);
         // Mock API endpoints to avoid 409 interference in this test
-        await page.route('/api/plans', route => route.fulfill({
+        await trackRoute('/api/plans', route => route.fulfill({
           status: 200,
           body: JSON.stringify({ ok: true, plans: [] }),
         }));
-        await page.route('/api/health', route => route.fulfill({
+        await trackRoute('/api/health', route => route.fulfill({
           status: 200,
           body: JSON.stringify({ ok: true, status: 'healthy' }),
         }));
-        await page.route('/api/config/all', route => route.fulfill({
+        await trackRoute('/api/config/all', route => route.fulfill({
           status: 200,
           body: JSON.stringify({ ok: true, data: {} }),
         }));
@@ -477,17 +511,17 @@ describe('Control Plane browser QA (M11-C10-C11)', () => {
   describe('network: no app-originated request failures or failed responses', () => {
     it('no requestfailed / >=400 responses across core pages (deterministic aborts filtered)', async () => {
       for (const p of PAGES) {
-        const errors = attachErrorTracking(page);
+        const { errors, trackRoute } = attachErrorTracking(page);
         // Mock API endpoints to avoid 409 interference in this test
-        await page.route('/api/plans', route => route.fulfill({
+        await trackRoute('/api/plans', route => route.fulfill({
           status: 200,
           body: JSON.stringify({ ok: true, plans: [] }),
         }));
-        await page.route('/api/health', route => route.fulfill({
+        await trackRoute('/api/health', route => route.fulfill({
           status: 200,
           body: JSON.stringify({ ok: true, status: 'healthy' }),
         }));
-        await page.route('/api/config/all', route => route.fulfill({
+        await trackRoute('/api/config/all', route => route.fulfill({
           status: 200,
           body: JSON.stringify({ ok: true, data: {} }),
         }));
@@ -515,13 +549,25 @@ describe('Control Plane browser QA (M11-C10-C11)', () => {
     // Regression: plan integrity errors (409) must render honest error state in the UI,
     // not cause unhandled promise rejections, console errors, or failed network requests.
 
+    // Playwright matches routes in registration order. Without clearing earlier
+    // tests' `/api/plans` 200 mocks before this block's 409 mock, the 200 mock
+    // fires first and the test sees a healthy render instead of a 409 banner.
+    // `unrouteAll` is idempotent and safe to run in every test's setup.
+    beforeEach(async () => {
+      await page.unrouteAll({ behavior: 'ignoreErrors' });
+    });
+
     const INTEGRITY_409_PLAN_LIST = {
       status: 409,
-      body: { ok: false, code: 'INTEGRITY_FAILURE', error: 'Workspace integrity check failed', details: { findings: [{ kind: 'ORIGINAL_TAMPER', detail: 'original.md sha256 mismatch' }] } },
+      // route.fulfill expects a string body — passing the object literal directly
+      // coerces to "[object Object]" on the wire, which trips r.json() in the page
+      // and silently re-routes through the .catch branch (returning { plans: [] }
+      // without setting integrityFailure). Serialise explicitly here.
+      body: JSON.stringify({ ok: false, code: 'INTEGRITY_FAILURE', error: 'Workspace integrity check failed', details: { findings: [{ kind: 'ORIGINAL_TAMPER', detail: 'original.md sha256 mismatch' }] } }),
     };
     const INTEGRITY_409_PLAN_SINGLE = {
       status: 409,
-      body: { ok: false, code: 'INTEGRITY_FAILURE', error: 'Plan integrity check failed', details: { findings: [{ kind: 'SHADOW_DRIFT', detail: 'Shadow tasks.md hash mismatch' }] } },
+      body: JSON.stringify({ ok: false, code: 'INTEGRITY_FAILURE', error: 'Plan integrity check failed', details: { findings: [{ kind: 'SHADOW_DRIFT', detail: 'Shadow tasks.md hash mismatch' }] } }),
     };
 
     async function expectNoErrors(page: Page): Promise<void> {
@@ -535,16 +581,12 @@ describe('Control Plane browser QA (M11-C10-C11)', () => {
     }
 
     it('/overview shows integrity banner when /api/plans returns 409', async () => {
-      const errors = attachErrorTracking(page);
-      // Clear any routes left over from earlier tests so this test owns the mock
-      await page.unrouteAll({ behavior: 'ignoreErrors' }).catch(() => {});
-      await page.route('**/api/plans', route => route.fulfill(INTEGRITY_409_PLAN_LIST));
-      await page.route('**/api/health', route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, status: 'healthy' }) }));
-      await page.route('**/api/config/all', route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, data: {} }) }));
+      const { errors, trackRoute } = attachErrorTracking(page);
+      await trackRoute('**/api/plans', route => route.fulfill(INTEGRITY_409_PLAN_LIST));
+      await trackRoute('**/api/health', route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, status: 'healthy' }) }));
+      await trackRoute('**/api/config/all', route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, data: {} }) }));
       await navigateTo(page, '/overview');
       await page.waitForTimeout(1500);
-      const bodyHtml = await page.locator('main').innerHTML().catch(() => '(no main)');
-      console.log('[main content first 1000 chars]:', bodyHtml.substring(0, 1000));
       const banner = page.locator('.overview-integrity-banner');
       expect(await banner.isVisible()).toBe(true);
       const badge = page.locator('.badge--danger').first();
@@ -562,14 +604,16 @@ describe('Control Plane browser QA (M11-C10-C11)', () => {
     });
 
     it('/plan shows error state when /api/plans/:planId returns 409', async () => {
-      const errors = attachErrorTracking(page);
-      await page.route(/\/api\/plans$/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, plans: [{ planId: 'test-plan' }] }) }));
-      await page.route(/\/api\/plans\/test-plan/, route => route.fulfill(INTEGRITY_409_PLAN_SINGLE));
-      await page.route(/\/api\/config\/file/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, data: { profiles: {} } }) }));
+      const { errors, trackRoute } = attachErrorTracking(page);
+      await trackRoute(/\/api\/plans\/?$/, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: [{ planId: 'test-plan' }] }) }));
+      await trackRoute(/\/api\/plans\/test-plan/, route => route.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify({ ok: false, code: 'INTEGRITY_FAILURE', error: 'Plan integrity check failed', details: { findings: [{ kind: 'SHADOW_DRIFT', detail: 'Shadow tasks.md hash mismatch' }] } }) }));
+      await trackRoute(/\/api\/config\/file/, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: { profiles: {} } }) }));
       await navigateTo(page, '/plan');
       await page.waitForTimeout(1200);
-      // Either the plan page loads with integrity banner or shows error state — no crash
-      const hasBanner = await page.locator('.overview-integrity-banner').isVisible().catch(() => false);
+      // Either the plan page loads with integrity banner or shows error state — no crash.
+      // PlanWorkspace uses `.cpw-integrity-banner`; Overview uses `.overview-integrity-banner`.
+      // We assert either class so the assertion survives the rename.
+      const hasBanner = await page.locator('.overview-integrity-banner, .cpw-integrity-banner').first().isVisible().catch(() => false);
       const hasError = await page.locator('.state-error').isVisible().catch(() => false);
       expect(hasBanner || hasError).toBe(true);
       // 409 integrity is now shown, not hidden
@@ -583,11 +627,11 @@ describe('Control Plane browser QA (M11-C10-C11)', () => {
     });
 
     it('/overview plan fetch 409 renders banner without crashing', async () => {
-      const errors = attachErrorTracking(page);
-      await page.route(/\/api\/plans$/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, plans: [{ planId: 'bad-plan' }] }) }));
-      await page.route(/\/api\/plans\/bad-plan/, route => route.fulfill(INTEGRITY_409_PLAN_SINGLE));
-      await page.route(/\/api\/health/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, status: 'healthy' }) }));
-      await page.route(/\/api\/config\/all/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, data: {} }) }));
+      const { errors, trackRoute } = attachErrorTracking(page);
+      await trackRoute(/\/api\/plans$/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, plans: [{ planId: 'bad-plan' }] }) }));
+      await trackRoute(/\/api\/plans\/bad-plan/, route => route.fulfill(INTEGRITY_409_PLAN_SINGLE));
+      await trackRoute(/\/api\/health/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, status: 'healthy' }) }));
+      await trackRoute(/\/api\/config\/all/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, data: {} }) }));
       await navigateTo(page, '/overview');
       await page.waitForTimeout(1200);
       const banner = page.locator('.overview-integrity-banner');
@@ -601,10 +645,10 @@ describe('Control Plane browser QA (M11-C10-C11)', () => {
     });
 
     it('multiple 409 integrity failures produce no duplicate network errors', async () => {
-      const errors = attachErrorTracking(page);
-      await page.route(/\/api\/plans$/, route => route.fulfill(INTEGRITY_409_PLAN_LIST));
-      await page.route(/\/api\/health/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, status: 'healthy' }) }));
-      await page.route(/\/api\/config\/all/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, data: {} }) }));
+      const { errors, trackRoute } = attachErrorTracking(page);
+      await trackRoute(/\/api\/plans$/, route => route.fulfill(INTEGRITY_409_PLAN_LIST));
+      await trackRoute(/\/api\/health/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, status: 'healthy' }) }));
+      await trackRoute(/\/api\/config\/all/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, data: {} }) }));
       // Navigate multiple times to trigger potential duplicate error handling
       await navigateTo(page, '/overview');
       await page.waitForTimeout(600);
