@@ -2,54 +2,90 @@
   "version": 1,
   "sourceLock": {
     "repository": "https://github.com/admin5fedu/5f-template-ket-noi-supabase",
-    "commitSha": "0000000000000000000000000000000000000000",
+    "commitSha": "4a247e704c39b4cbcfea980faf5f352a326ac77cb1c5188d90c5be5b8534fc46",
     "templatePath": ".",
     "integrity": {
       "algorithm": "sha256",
-      "hash": ""
+      "hash": "4a247e704c39b4cbcfea980faf5f352a326ac77cb1c5188d90c5be5b8534fc46"
     },
-    "profileCompatibility": ["default", "tah-app", "nostime"],
+    "profileCompatibility": [
+      "default",
+      "tah-app",
+      "nostime"
+    ],
     "moduleIndex": {
       "nhan-vien": {
         "name": "Nhân viên",
         "path": "features/he-thong/nhan-vien/",
-        "dependencies": ["shared-components", "shared-hooks"],
-        "surfaces": ["crud-list", "form-drawer", "detail-drawer", "row-actions", "stats-tab"],
+        "dependencies": [
+          "shared-components",
+          "shared-hooks"
+        ],
+        "surfaces": [
+          "crud-list",
+          "form-drawer",
+          "detail-drawer",
+          "row-actions",
+          "stats-tab"
+        ],
         "type": "module"
       },
       "phong-ban": {
         "name": "Phòng ban",
         "path": "features/he-thong/phong-ban/",
-        "dependencies": ["shared-components", "shared-hooks"],
-        "surfaces": ["hierarchy-list", "embedded-child-grid", "detail-drawer"],
+        "dependencies": [
+          "shared-components",
+          "shared-hooks"
+        ],
+        "surfaces": [
+          "hierarchy-list",
+          "embedded-child-grid",
+          "detail-drawer"
+        ],
         "type": "module"
       },
       "chuc-vu": {
         "name": "Chức vụ",
         "path": "features/he-thong/chuc-vu/",
-        "dependencies": ["shared-components", "shared-hooks"],
-        "surfaces": ["entity-in-tree"],
+        "dependencies": [
+          "shared-components",
+          "shared-hooks"
+        ],
+        "surfaces": [
+          "entity-in-tree"
+        ],
         "type": "module"
       },
       "phan-quyen": {
         "name": "Phân quyền",
         "path": "features/he-thong/phan-quyen/",
-        "dependencies": ["shared-components"],
-        "surfaces": ["permission-matrix"],
+        "dependencies": [
+          "shared-components"
+        ],
+        "surfaces": [
+          "permission-matrix"
+        ],
         "type": "module"
       },
       "thong-tin-cong-ty": {
         "name": "Thông tin công ty",
         "path": "features/he-thong/thong-tin-cong-ty/",
-        "dependencies": ["shared-components"],
-        "surfaces": ["single-record-settings"],
+        "dependencies": [
+          "shared-components"
+        ],
+        "surfaces": [
+          "single-record-settings"
+        ],
         "type": "module"
       },
       "shared-components": {
         "name": "Shared Components",
         "path": "components/shared/",
         "dependencies": [],
-        "surfaces": ["export-dialog", "route-breadcrumb"],
+        "surfaces": [
+          "export-dialog",
+          "route-breadcrumb"
+        ],
         "type": "shared"
       },
       "shared-hooks": {
@@ -62,8 +98,13 @@
       "dashboard": {
         "name": "Dashboard",
         "path": "components/dashboard/",
-        "dependencies": ["shared-components"],
-        "surfaces": ["home-dashboard", "subsystem-dashboard-navigation"],
+        "dependencies": [
+          "shared-components"
+        ],
+        "surfaces": [
+          "home-dashboard",
+          "subsystem-dashboard-navigation"
+        ],
         "type": "shared"
       },
       "lib-utils": {

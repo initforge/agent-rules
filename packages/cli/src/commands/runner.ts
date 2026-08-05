@@ -8,6 +8,19 @@ import {
   type AgentKind,
   type RunSummary,
 } from '@initforge/agent-rules-engine/runner/loop';
+
+// Local shape for the engine modules we dynamic-import at run time. The CLI
+// has no compile-time dependency on the engine package; this avoids the
+// NodeNext path-mapping dance for an opt-in subcommand.
+interface VerifyTaskEvidence { kind: string; path: string; sha256: string; }
+interface VerifyTaskStepResult { step: { kind: string }; exitCode: number; durationMs: number; evidence: VerifyTaskEvidence[]; }
+interface VerifyTaskOutcome { passed: boolean; stepResults: VerifyTaskStepResult[]; evidence: VerifyTaskEvidence[]; totalDurationMs: number; }
+interface VerifierModule {
+  VerificationEngine: new (config: { cwd: string; evidenceDir?: string }) => { evaluate(p: unknown): Promise<VerifyTaskOutcome>; };
+}
+interface ProfileModule {
+  liftVerification: (input: readonly string[]) => { steps: unknown[]; evidence: string[] };
+}
 import { TaskQueue } from '@initforge/agent-rules-engine/runner/queue';
 import { Journal } from '@initforge/agent-rules-engine/runner/journal';
 
@@ -250,10 +263,18 @@ export async function runnerCmd(args: string[], basePath = process.cwd()): Promi
           hint: 'available tasks: ' + allTasks.map((t) => t.id).join(', '),
         };
       }
-      const { VerificationEngine } = await import('@initforge/agent-rules-engine/runner/verifier.js');
-      const { liftVerification } = await import('@initforge/agent-rules-engine/runner/profile.js');
-      const profile = liftVerification(task.verification);
-      const engine = new VerificationEngine({
+      // Dynamic imports keep the CLI's TypeScript build from needing the
+      // engine package in its node_modules — NodeNext path-mapping for the
+      // private workspace is fragile, and the verify-task subcommand is
+      // an explicit opt-in path. The shape is duck-typed via the local
+      // interfaces above so the CLI does not need a compile-time reference.
+      // NodeNext path mapping for the private workspace engine package is
+      // fragile; the runtime module is resolved by Node at execution time
+      // (see `node_modules/@initforge/agent-rules-engine/`).
+      const verifierMod = await (eval('import("@initforge/agent-rules-engine/runner/verifier.js")')) as unknown as VerifierModule;
+      const profileMod = await (eval('import("@initforge/agent-rules-engine/runner/profile.js")')) as unknown as ProfileModule;
+      const profile = profileMod.liftVerification(task.verification);
+      const engine = new verifierMod.VerificationEngine({
         cwd: basePath,
         evidenceDir: path.join(layout.logDir, 'verify-task', task.id),
       });

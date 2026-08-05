@@ -114,7 +114,7 @@ export async function build(
 ): Promise<CommandResult> {
   const root = getRepoRoot();
   const buildRoot = path.join(root, "generated", "runtime-build");
-  const platforms = ["codex", "grok", "antigravity", "cursor", "opencode"];
+  const platforms = ["codex", "grok", "antigravity", "cursor", "opencode", "claude"];
   const errors: string[] = [];
 
   if (options.dryRun) {
