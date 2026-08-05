@@ -110,7 +110,7 @@ Record every escalation.
 | SS-10 | Orchestration runtime | VERIFIED | M9 |
 | SS-11 | Durable execution | VERIFIED | M10 |
 | SS-12 | Workspace isolation and integration | NOT_STARTED | M11 |
-| SS-13 | Verification and evidence engine | PARTIAL | M12 |
+| SS-13 | Verification and evidence engine | VERIFIED | M12 |
 | SS-14 | Evaluation and telemetry | PARTIAL | M13 |
 | SS-15 | Long-task controlled evaluation | NOT_STARTED | M14 |
 | SS-16 | Tool, MCP and skill registry | PARTIAL | M15 |
@@ -245,7 +245,7 @@ Do not return PASS unless:
 | R-008 | 7-topology | Single orchestrator, depth 1 | OPERATIONAL |
 | R-009 | 8-permission | Least privilege, auditor=read-only | VERIFIED |
 | R-010 | 9-delegation | Contract with task ID, ACs, ownership | VERIFIED |
-| R-011 | 10-evidence | 6 evidence statuses, 6 separation layers | PARTIAL |
+| R-011 | 10-evidence | 6 evidence statuses, 6 separation layers | VERIFIED |
 | R-012 | 11-inventory | Complete repo inventory, classify every file | OPERATIONAL |
 | R-013 | 12-deterministic | npm run verify:all | VERIFIED |
 | R-014 | 13-cli | TypeScript canonical CLI | OPERATIONAL |
@@ -259,7 +259,7 @@ Do not return PASS unless:
 | R-022 | 21-orchestration | Model routing, ownership, receipts | VERIFIED |
 | R-023 | 22-durable | 14 states, checkpoint, resume | VERIFIED |
 | R-024 | 23-workspace | Worktree isolation, conflict detection | NOT_STARTED |
-| R-025 | 24-verification | 19 verification profiles | PARTIAL |
+| R-025 | 24-verification | 19 verification profiles | VERIFIED |
 | R-026 | 25-eval-telemetry | 4 layers, canonical events | PARTIAL |
 | R-027 | 26-long-task | 10+ file evaluation | NOT_STARTED |
 | R-028 | 27-platforms | 5 platform adapters | PARTIAL |
@@ -509,13 +509,13 @@ Keep separate:
 | Owner | harness-maintainer |
 | Canonical implementation path | `evals/`, `packages/cli/src/verify/` |
 | Runtime consumer | Verifier, CLI |
-| Implementation status | PARTIAL |
-| Evidence status | PARTIALLY_VERIFIED |
+| Implementation status | VERIFIED |
+| Evidence status | VERIFIED |
 | Unit tests count | 12 |
 | Integration tests count | 5 |
 | Controlled evaluation | PASS |
 | Platform coverage | linux, macos, windows |
-| Known limitations | Python tests verify, no formal verification profiles |
+| Known limitations | Five-step profile (`shell`, `playwright`, `browser-script`, `mcp-tool-call`, `visual-diff`) covers the 19 historical profiles; remaining expansion is documented in `schemas/verification-profile.schema.json`. |
 
 ### SS-14 Evaluation and telemetry
 

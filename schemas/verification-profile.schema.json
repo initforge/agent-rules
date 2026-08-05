@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "$id": "https://agent-rules.local/schemas/verification-profile.schema.json",
+  "title": "Verification Profile",
+  "description": "DoD §37 / SS-13 / R-025 verification contract for a harness task. The profile is the bridge between the runner's historical `verification: string[]` and the richer evidence surface (Playwright / browser-script / mcp-tool-call / visual-diff) required by browser-based verification.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["steps", "evidence"],
+  "properties": {
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/ShellStep"
+          },
+          {
+            "$ref": "#/$defs/PlaywrightStep"
+          },
+          {
+            "$ref": "#/$defs/BrowserScriptStep"
+          },
+          {
+            "$ref": "#/$defs/McpToolCallStep"
+          },
+          {
+            "$ref": "#/$defs/VisualDiffStep"
+          }
+        ]
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["screenshot", "console", "network", "a11y", "mcp-response"]
+      },
+      "default": []
+    },
+    "timeoutMs": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Hard ceiling on the whole profile. Defaults to 10 minutes per step when unset."
+    }
+  },
+  "$defs": {
+    "ShellStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "command"],
+      "properties": {
+        "kind": { "const": "shell" },
+        "command": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Exit-0 command. The historical runner contract."
+        }
+      }
+    },
+    "PlaywrightStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "spec"],
+      "properties": {
+        "kind": { "const": "playwright" },
+        "spec": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Path or label for the Playwright spec; the harness writes a tiny driver that launches Chromium with a per-task browser-profile directory (tab/profile isolation)."
+        },
+        "baseUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL the harness navigates to before screenshotting."
+        },
+        "headed": {
+          "type": "boolean",
+          "default": false,
+          "description": "Open Chromium visibly so the operator can watch the verification."
+        },
+        "tabProfile": {
+          "type": "string",
+          "description": "Per-task browser-profile directory name; defaults to a per-task isolated profile under `.agent/runs/<run-id>/browser-profiles/`."
+        }
+      }
+    },
+    "BrowserScriptStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "path"],
+      "properties": {
+        "kind": { "const": "browser-script" },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Path to a Node script that drives a real browser through MCP. The script writes evidence to <evidenceDir>/."
+        },
+        "headed": { "type": "boolean", "default": false },
+        "tabProfile": { "type": "string" }
+      }
+    },
+    "McpToolCallStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "server", "tool"],
+      "properties": {
+        "kind": { "const": "mcp-tool-call" },
+        "server": {
+          "type": "string",
+          "minLength": 1,
+          "description": "MCP server id (matches an entry in integrations/registry.json)."
+        },
+        "tool": {
+          "type": "string",
+          "minLength": 1
+        },
+        "args": {
+          "description": "Arbitrary JSON the harness forwards to the tool as the call arguments."
+        }
+      }
+    },
+    "VisualDiffStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "baseline", "current"],
+      "properties": {
+        "kind": { "const": "visual-diff" },
+        "baseline": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Reference image path."
+        },
+        "current": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Image path to compare against baseline."
+        },
+        "threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.01,
+          "description": "Allowed pixel-difference ratio."
+        }
+      }
+    }
+  }
+}
