@@ -227,7 +227,56 @@ export async function runnerCmd(args: string[], basePath = process.cwd()): Promi
       };
     }
 
+    case 'verify-task': {
+      // Re-runs a single task's verification profile from the queue.
+      // Useful for re-driving a Playwright / browser-script / mcp-tool-call
+      // step on the most recent state of the repo, without re-spawning
+      // the agent. Pure shell verification re-runs as well.
+      const taskId = positional[0];
+      if (!taskId) throw new Error('usage: runner verify-task <task-id>');
+      const queue = new TaskQueue(layout.queueRoot);
+      const allTasks = [
+        ...queue.list('ready'),
+        ...queue.list('done'),
+        ...queue.list('failed'),
+        ...queue.list('needs-user'),
+      ];
+      const task = allTasks.find((t) => t.id === taskId);
+      if (!task) {
+        return {
+          plan: plan.planId,
+          taskId,
+          status: 'NOT_FOUND',
+          hint: 'available tasks: ' + allTasks.map((t) => t.id).join(', '),
+        };
+      }
+      const { VerificationEngine } = await import('@initforge/agent-rules-engine/runner/verifier.js');
+      const { liftVerification } = await import('@initforge/agent-rules-engine/runner/profile.js');
+      const profile = liftVerification(task.verification);
+      const engine = new VerificationEngine({
+        cwd: basePath,
+        evidenceDir: path.join(layout.logDir, 'verify-task', task.id),
+      });
+      const outcome = await engine.evaluate(profile);
+      return {
+        plan: plan.planId,
+        taskId,
+        status: outcome.passed ? 'PASS' : 'FAIL',
+        stepResults: outcome.stepResults.map((r) => ({
+          kind: r.step.kind,
+          exitCode: r.exitCode,
+          durationMs: r.durationMs,
+        })),
+        evidence: outcome.evidence.map((e) => ({
+          kind: e.kind,
+          path: e.path,
+          sha256: e.sha256,
+        })),
+        totalDurationMs: outcome.totalDurationMs,
+      };
+    }
+
     default:
-      throw new Error(`unknown run action "${action}"; expected add, seed, start, status, or journal`);
+      throw new Error(`unknown run action "${action}"; expected add, seed, start, status, journal, or verify-task`);
   }
 }

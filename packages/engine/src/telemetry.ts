@@ -11,7 +11,15 @@ export type TelemetryEvent =
   | { kind: 'review'; reviewId: string; outcome: string }
   | { kind: 'handoff'; from: string; to: string; bundleHash: string }
   | { kind: 'attestation_collected'; host: string; commitSha: string; attestationType: 'native' | 'functional'; evidenceHash: string; verified: boolean }
-  | { kind: 'run_end'; runId: string; totalTokens: number; totalCost: number; durationMs: number };
+  | { kind: 'run_end'; runId: string; totalTokens: number; totalCost: number; durationMs: number }
+  /**
+   * Emitted once per `live_verify` step the runner executes (a Playwright
+   * run, a browser-script, an mcp-tool-call, a visual-diff). `evidence`
+   * is a list of relative paths to the files the step produced — the
+   * dashboard surfaces them so an operator can click through to a
+   * screenshot or console log without leaving the run timeline.
+   */
+  | { kind: 'live_verify'; taskId: string; profileKind: string; result: 'PASS' | 'FAIL'; evidence: string[]; durationMs: number };
 
 export interface TelemetryConfig {
   metadataRetentionDays: number;

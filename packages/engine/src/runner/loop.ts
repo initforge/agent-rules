@@ -311,7 +311,7 @@ export class Runner {
       filesChanged: diff.filesChanged,
     });
 
-    const { codes: verificationExitCodes, evidence } = await this.verify(task);
+    const { codes: verificationExitCodes, evidence, outcome } = await this.verify(task);
     const allPassed = verificationExitCodes.length > 0 && verificationExitCodes.every((c) => c === 0);
 
     this.journal.append('VERIFICATION', {
@@ -321,6 +321,23 @@ export class Runner {
       passed: allPassed,
       evidence: evidence.map((e) => ({ kind: e.kind, path: e.path, sha256: e.sha256 })),
     });
+
+    // Emit a `live_verify` telemetry event per non-shell step so the
+    // dashboard can render screenshots / console / mcp-response refs as
+    // they happen. Pure shell tasks are already covered by the existing
+    // `verification` event above.
+    for (const step of outcome.stepResults) {
+      if (step.step.kind === 'shell') continue;
+      const stepEvidence = step.evidence.map((e) => e.path);
+      this.telemetry?.record({
+        kind: 'live_verify',
+        taskId: task.id,
+        profileKind: step.step.kind,
+        result: step.exitCode === 0 ? 'PASS' : 'FAIL',
+        evidence: stepEvidence,
+        durationMs: step.durationMs,
+      });
+    }
     this.telemetry?.record({
       kind: 'verification',
       assignmentId: task.id,
