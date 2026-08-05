@@ -8,9 +8,11 @@ foundation + A2 spawn-tree-kill).
 
 | Slice | Commit | Status |
 |---|---|---|
-| A1 test-name prefix convention + smoke/e2e/browser scripts | `e46aee3` | ✅ |
-| OpencodeDriver (in-process opencode SDK + MCP native + tab/profile isolation) | `9605cd3` | ✅ |
-| A2 spawn-tree-kill helper + headless-executor afterEach hardening | `5aa59df` | ✅ |
+| A1 test-name prefix convention + smoke/e2e/browser scripts | `e46aee3` | ✅ pushed |
+| OpencodeDriver (in-process opencode SDK + MCP native + tab/profile isolation) | `9605cd3` | ✅ pushed |
+| A2 spawn-tree-kill helper + headless-executor afterEach hardening | `5aa59df` | ✅ pushed |
+| A3 cross-platform path detection + .cmd shim wrapper | `ee65f70` | ✅ pushed |
+| Progress snapshot doc | `faf4562` | ✅ pushed |
 
 ## In progress / not yet committed
 
@@ -68,17 +70,16 @@ CLI. The `claude` and `codex` paths are kept because they each bind
 to a different provider+model id and may be useful for CI pinning
 later; the harness does not depend on the vendor binary.
 
-## Test status snapshot
+## Test status snapshot (post A1 + A2 + A3)
 
-- Engine runner-* + verifier + opencode-driver + spawn-tree-kill:
-  **81 / 81 pass** (with the `[e2e] | [browser]` tag convention from A1
+- Engine runner-* + verifier + opencode-driver + spawn-tree-kill + platform:
+  **94 / 94 pass** (with the `[e2e] | [browser]` tag convention from A1
   filtering out the live MCP tests from the default smoke run).
 - Control-plane browser-qa: **19 / 19 pass** (unchanged from P0).
 - CLI: **361 / 379 pass** (14 pre-existing symlink test failures, all
   flagged for A3 + Windows symlink fixes; not caused by this slice).
-- Engine full surface: **1446 / 1492 pass** (37 pre-existing failures
-  unchanged; 21 new tests across this session; A1 added tag
-  convention, A2 added spawn-tree-kill suite).
+- Engine full surface: **1459 / 1505 pass** (37 pre-existing failures
+  unchanged; 13 new tests from A3 added to the smoke).
 
 ## Open items for owner review
 
