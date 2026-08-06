@@ -1,0 +1,4 @@
+{
+  "mcpServers": {},
+  "_rtk_note": "RTK uses hook-based rewrite, not MCP. Run: rtk init -g"
+}

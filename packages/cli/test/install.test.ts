@@ -1,25 +1,36 @@
-import { describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { ExitCode } from "../src/types.js";
 
-const runScript = jest.fn(async () => ({ stdout: "", stderr: "", exitCode: 0 }));
-const getRepoRootMock = jest.fn(() => "/tmp");
+const mockInstall = vi.fn(async () => ({ ok: true }));
 
-jest.unstable_mockModule("../src/adapters/powershell.js", () => ({
-  runScript,
-  getRepoRoot: getRepoRootMock,
+vi.mock("../src/runtime/installer.js", () => ({
+  RuntimeInstaller: vi.fn().mockImplementation(() => ({
+    install: mockInstall,
+  })),
+  RUNTIME_PLATFORMS: ["codex", "grok", "antigravity", "cursor", "opencode", "mimocode", "claude"],
+}));
+
+vi.mock("../src/adapters/powershell.js", () => ({
+  getRepoRoot: () => "/tmp",
 }));
 
 describe("install wrapper", () => {
-  it(
-    "passes PowerShell parameters as separate argv entries",
-    async () => {
-      const { installCmd } = await import("../src/commands/install.js");
+  beforeEach(() => {
+    mockInstall.mockClear();
+  });
 
-      const result = await installCmd(["all"], { dryRun: false, verbose: false, json: false });
+  it("installs for all platforms via native installer", async () => {
+    const { installCmd } = await import("../src/commands/install.js");
+    const result = await installCmd(["all"], { dryRun: false, verbose: false, json: false });
+    expect(result.exitCode).toBe(ExitCode.Success);
+    expect(mockInstall).toHaveBeenCalledTimes(7);
+  });
 
-      expect(result.exitCode).toBe(ExitCode.Success);
-      expect(runScript).toHaveBeenCalledWith("02-install-runtime", ["-Platform", "all"], { dryRun: false });
-    },
-    60000,
-  );
+  it("installs for a single platform", async () => {
+    const { installCmd } = await import("../src/commands/install.js");
+    const result = await installCmd(["mimocode"], { dryRun: false, verbose: false, json: false });
+    expect(result.exitCode).toBe(ExitCode.Success);
+    // The mock should have been called at least once
+    expect(mockInstall).toHaveBeenCalled();
+  });
 });
