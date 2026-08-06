@@ -11,6 +11,7 @@ import {
   ParityContractError,
   type ParityContractRuntime,
 } from '../src/parity-contracts.js';
+import { SYMLINK_CAPABLE } from './helpers/symlink-capability.js';
 
 const roots: string[] = [];
 const draftHeader = `$schema: "${DRAFT_07_SCHEMA_URI}"\n`;
@@ -440,7 +441,9 @@ describe('Draft-07 parity schema runtime', () => {
       'common.schema.yaml': commonSchema(),
       'real/target.schema.yaml': `${draftHeader}type: object\n`,
     });
-    fs.symlinkSync(path.join(root, 'real'), path.join(root, 'linked'), 'junction');
+    if (SYMLINK_CAPABLE) {
+      fs.symlinkSync(path.join(root, 'real'), path.join(root, 'linked'), 'junction');
+    }
     expect(() => runtime(root)).toThrowError(expect.objectContaining({
       code: 'SCHEMA_SYMLINK_REJECTED',
     }));

@@ -15,6 +15,9 @@
   "scripts": {
     "build": "npm run build -w packages/engine && npm run build -w packages/cli && npm run build -w packages/control-plane && node packages/cli/dist/index.js build",
     "test": "node automation/run-governed-vitest.mjs --project-root . --cwd . --mode full --timeout-ms 600000 -- run --config vitest.config.ts && npm run test --workspaces --if-present",
+    "test:fast": "vitest run --tag fast --config vitest.config.ts",
+    "test:e2e": "vitest run --tag e2e --config vitest.config.ts",
+    "test:browser": "vitest run --tag browser --config vitest.config.ts",
     "check": "npm run typecheck --workspaces --if-present",
     "check:agent-dir": "node automation/validate-agent-dir.mjs",
     "ci:quality": "npm run build && npm run check && npm run test",

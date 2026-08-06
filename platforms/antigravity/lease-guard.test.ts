@@ -5,6 +5,7 @@ import path from 'node:path';
 import { mkdtemp, mkdir, symlink } from 'node:fs/promises';
 import { LeaseGuard } from './lease-guard.js';
 import { antigravityAdapter, createAntigravityLeaseGuard } from './adapter.js';
+import { SYMLINK_CAPABLE } from '../../packages/engine/test/helpers/symlink-capability.js';
 
 /** Fresh guard over a temp project root + temp worktree, canonical `.agent` under project root. */
 async function freshGuard(): Promise<{ guard: LeaseGuard; projectRoot: string; worktreeRoot: string }> {
@@ -44,8 +45,8 @@ describe('antigravity lease guard — path confinement (fail closed)', () => {
         /lease rejection/,
       );
     }
-    // Symlink escape: symlink inside owned root points outside
-    {
+    // Symlink escape: symlink inside owned root points outside (skip on Windows without symlink privileges)
+    if (SYMLINK_CAPABLE) {
       const { guard, projectRoot } = await freshGuard();
       const outside = await mkdtemp(path.join(os.tmpdir(), 'ag-outside2-'));
       const link = path.join(projectRoot, 'escape-link');

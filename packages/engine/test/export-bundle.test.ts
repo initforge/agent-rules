@@ -4,6 +4,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { exportPlanBundle, importPlanBundle } from '../src/export-bundle.js';
 import type { PlanBundle } from '../src/export-bundle.js';
+import { SYMLINK_CAPABLE } from './helpers/symlink-capability.js';
 
 let tmpBase: string;
 
@@ -217,7 +218,7 @@ describe('importPlanBundle', () => {
 // ─── Adversarial: Symlink / containment ───────────────────────────────────
 
 describe('export-bundle adversarial', () => {
-  it('rejects symlink in plan dir (O_NOFOLLOW via SecureFsRoot)', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('rejects symlink in plan dir (O_NOFOLLOW via SecureFsRoot)', async () => {
     const planDir = path.join(tmpBase, 'symlink-attack');
     fs.mkdirSync(planDir, { recursive: true });
     write(path.join(planDir, 'original.md'), 'plan');
@@ -228,7 +229,7 @@ describe('export-bundle adversarial', () => {
     await expect(exportPlanBundle(planDir)).rejects.toThrow();
   });
 
-  it('rejects symlink in lineage dir (O_NOFOLLOW via SecureFsRoot)', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('rejects symlink in lineage dir (O_NOFOLLOW via SecureFsRoot)', async () => {
     const planDir = path.join(tmpBase, 'symlink-attack2');
     fs.mkdirSync(planDir, { recursive: true });
     write(path.join(planDir, 'original.md'), 'plan');
@@ -238,7 +239,7 @@ describe('export-bundle adversarial', () => {
     await expect(exportPlanBundle(planDir)).rejects.toThrow();
   });
 
-  it('rejects import when original.md is a symlink', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('rejects import when original.md is a symlink', async () => {
     const srcDir = path.join(tmpBase, 'src5');
     const dstDir = path.join(tmpBase, 'dst5');
     fs.mkdirSync(srcDir, { recursive: true });

@@ -526,7 +526,7 @@ foreach ($Name in $Selected) {
   $Report += [pscustomobject]@{ platform = $Name; check = "state-semantic-cursor"; status = $CursorStatus; detail = $CursorDetail }
 
   # 5. Queue age: oldest session transcript file age (claude only; others SKIP)
-  if (Test-Path $ProjectsPath -and $SessionCount -gt 0) {
+  if ((Test-Path $ProjectsPath) -and $SessionCount -gt 0) {
     $AllSessionsForQueue = @(Get-ChildItem -LiteralPath $ProjectsPath -Recurse -Filter "*.jsonl" -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notmatch '[\\/]subagents[\\/]' })
     if ($AllSessionsForQueue.Count -gt 0) {
       $OldestQ = $AllSessionsForQueue | Sort-Object LastWriteTimeUtc | Select-Object -First 1

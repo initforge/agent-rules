@@ -10,6 +10,7 @@ import {
 import { exportPlanBundle, importPlanBundle } from '../src/export-bundle.js';
 import type { WorkLedger, ReviewReceipt } from '../src/contracts.js';
 import { planAnchorId } from '../src/contracts.js';
+import { SYMLINK_CAPABLE } from './helpers/symlink-capability.js';
 
 const tmpDirs: string[] = [];
 
@@ -254,7 +255,7 @@ describe('lockFile', () => {
     lock2.unlock();
   });
 
-  it('rejects symlink at lock path (O_NOFOLLOW)', () => {
+  it.skipIf(!SYMLINK_CAPABLE)('rejects symlink at lock path (O_NOFOLLOW)', () => {
     const dir = tmpDir();
     const lockTarget = path.join(dir, 'data.json');
     const fakeLock = path.join(dir, 'data.json.lock');
@@ -282,7 +283,7 @@ describe('lockDirectory', () => {
     lock2.unlock();
   });
 
-  it('rejects symlink at lock path (O_NOFOLLOW)', () => {
+  it.skipIf(!SYMLINK_CAPABLE)('rejects symlink at lock path (O_NOFOLLOW)', () => {
     const dir = tmpDir();
     const lockPath = path.join(dir, '.lock');
     const outside = path.join(dir, 'outside');

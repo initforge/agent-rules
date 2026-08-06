@@ -4,6 +4,7 @@ import { app } from '../src/server/app'
 import { getDb, closeDb } from '../src/db'
 import { validatePlanId, PlanNotFoundError, PlanValidationError } from '@initforge/agent-rules-engine/plan-identity'
 import { buildManifestJson } from '@initforge/agent-rules-engine/plan-identity'
+import { SYMLINK_CAPABLE } from '../../engine/test/helpers/symlink-capability.js'
 
 describe('API', () => {
   beforeAll(async () => { process.env.PORT = '0'; await getDb() })
@@ -547,12 +548,12 @@ describe('Plan workspace API', () => {
     const res2 = await request(app).get('/api/plans/test%2Fplan'); expect(res2.status).toBe(400)
   })
 
-  it('symlink ledger returns 409', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('symlink ledger returns 409', async () => {
     createFixture(tmp, 'sl', { symlinkLedger: true })
     const res = await request(app).get('/api/plans/sl'); expect(res.status).toBe(409)
   })
 
-  it('symlink original returns 409', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('symlink original returns 409', async () => {
     createFixture(tmp, 'so', { symlinkOriginal: true })
     const res = await request(app).get('/api/plans/so'); expect(res.status).toBe(409)
   })
@@ -643,14 +644,14 @@ describe('Plan workspace API', () => {
     expect(res.body.details.findings.some((f: { kind: string }) => f.kind === 'MANIFEST')).toBe(true)
   })
 
-  it('symlink manifest returns 409', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('symlink manifest returns 409', async () => {
     createFixture(tmp, 'smf', { symlinkManifest: true })
     const res = await request(app).get('/api/plans/smf')
     expect(res.status).toBe(409)
     expect(res.body.details.findings.some((f: { kind: string }) => f.kind === 'SYMLINK')).toBe(true)
   })
 
-  it('symlink amendment artifact returns 409', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('symlink amendment artifact returns 409', async () => {
     createFixture(tmp, 'saa', { symlinkAmendment: true })
     const res = await request(app).get('/api/plans/saa')
     expect(res.status).toBe(409)
@@ -676,14 +677,14 @@ describe('Plan workspace API', () => {
     expect(res.status).toBe(409); expect(res.body.details.findings.some((f: { kind: string }) => f.kind === 'MANIFEST')).toBe(true)
   })
 
-  it('shadow traversal via symlink returns 409 SYMLINK', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('shadow traversal via symlink returns 409 SYMLINK', async () => {
     createFixture(tmp, 'st', { shadowTraversal: true })
     const res = await request(app).get('/api/plans/st')
     expect(res.status).toBe(409)
     expect(res.body.details.findings.some((f: { kind: string }) => f.kind === 'SYMLINK')).toBe(true)
   })
 
-  it('parent-directory symlink returns 409 SYMLINK', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('parent-directory symlink returns 409 SYMLINK', async () => {
     createFixture(tmp, 'ps', { parentSymlink: true })
     const res = await request(app).get('/api/plans/ps')
     expect(res.status).toBe(409)
@@ -752,7 +753,7 @@ describe('Plan workspace API', () => {
     const res = await request(app).get(`/api/plans/${planId}`)
     expect(res.status).toBe(409)
   })
-  it('listPlans fails on symlink in ledger dir returns 409', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('listPlans fails on symlink in ledger dir returns 409', async () => {
     const fs = require('node:fs'); const path = require('node:path')
     const tgt = path.join(tmp, 'symlink-target'); fs.writeFileSync(tgt, '{}')
     fs.symlinkSync(tgt, path.join(tmp, '.agent', 'ledger', 'symlink-plan.json'))
@@ -838,7 +839,7 @@ describe('Overview plan-integrity regression', () => {
 describe('Adversarial integrity', () => {
   beforeAll(() => { process.env.HARNESS_ROOT = tmp })
   afterAll(() => { delete process.env.HARNESS_ROOT })
-  it('.agent symlink returns 409 SYMLINK', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('.agent symlink returns 409 SYMLINK', async () => {
     const fs = require('node:fs'); const path = require('node:path')
     createFixture(tmp, 'ag-sym')
     const agentPath = path.join(tmp, '.agent'); const realAgent = path.join(tmp, '_real_agent')
@@ -847,7 +848,7 @@ describe('Adversarial integrity', () => {
     expect(res.status).toBe(409); expect(res.body.details.findings.some((f: { kind: string }) => f.kind === 'SYMLINK')).toBe(true)
     fs.unlinkSync(agentPath); fs.renameSync(realAgent, agentPath)
   })
-  it('ledger dir symlink returns 409 SYMLINK', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('ledger dir symlink returns 409 SYMLINK', async () => {
     const fs = require('node:fs'); const path = require('node:path')
     createFixture(tmp, 'ld-sym')
     const ld = path.join(tmp, '.agent', 'ledger'); const realLd = path.join(tmp, '.agent', '_real_ledger')
@@ -856,7 +857,7 @@ describe('Adversarial integrity', () => {
     expect(res.status).toBe(409); expect(res.body.details.findings.some((f: { kind: string }) => f.kind === 'SYMLINK')).toBe(true)
     fs.unlinkSync(ld); fs.renameSync(realLd, ld)
   })
-  it('plans dir symlink returns 409 SYMLINK', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('plans dir symlink returns 409 SYMLINK', async () => {
     const fs = require('node:fs'); const path = require('node:path')
     createFixture(tmp, 'pd-sym')
     const pd = path.join(tmp, '.agent', 'plans'); const realPd = path.join(tmp, '.agent', '_real_plans')
@@ -865,7 +866,7 @@ describe('Adversarial integrity', () => {
     expect(res.status).toBe(409); expect(res.body.details.findings.some((f: { kind: string }) => f.kind === 'SYMLINK')).toBe(true)
     fs.unlinkSync(pd); fs.renameSync(realPd, pd)
   })
-  it('root symlink returns 409 SYMLINK', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('root symlink returns 409 SYMLINK', async () => {
     const fs = require('node:fs'); const path = require('node:path')
     const altRoot = path.join(require('node:os').tmpdir(), 'cp-root-test-' + Date.now())
     fs.mkdirSync(altRoot, { recursive: true }); createFixture(altRoot, 'vp')

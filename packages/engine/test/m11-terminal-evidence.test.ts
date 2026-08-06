@@ -12,6 +12,7 @@ import {
   type M11TerminalEvidenceEnvelope,
 } from '../src/m11-terminal-evidence.js';
 import { candidateEpochHash, type CandidateEpoch } from '../src/candidate-epoch.js';
+import { SYMLINK_CAPABLE } from './helpers/symlink-capability.js';
 
 const CANDIDATE_EPOCH_SCHEMA = 'artifact/candidate-epoch/v1';
 
@@ -453,7 +454,7 @@ describe('atomicLedgerWrite', () => {
     expect(JSON.parse(fs.readFileSync(p, 'utf-8'))).toEqual({ v: 2 });
   });
 
-  it('rejects symlink target', () => {
+  it.skipIf(!SYMLINK_CAPABLE)('rejects symlink target', () => {
     const p = path.join(tmpDir, 'link-target.json');
     fs.writeFileSync(p, 'original');
     const link = path.join(tmpDir, 'link.json');
