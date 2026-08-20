@@ -168,6 +168,16 @@ describe('North-Star CLI UX', () => {
     expect(result.work_id).toMatch(/^W-/);
   });
 
+  it('REQ-013: ambiguous intent is classified and never handed to a weak worker without a planner contract', async () => {
+    const root = tempRepo();
+    const result = await northStarRun({ repoRoot: root, intent: 'decide between two architectures', owned: ['src'] }) as { outcome: string; reason: string; work_id: string; intake_decision?: { determinacy: string } };
+    expect(result.outcome).toBe('BLOCKED');
+    // The intent is semantically ambiguous: it must not be compiled
+    // deterministically by a weak worker; it stops at the planner boundary.
+    expect(result.reason).toMatch(/planner|PLANNER/);
+    expect(result.work_id).toMatch(/^W-/);
+  });
+
   it('auto-escalates incomplete direct input to the strong planner and blocks if no planner host is available', async () => {
     const root = tempRepo();
     const result = await northStarRun({ repoRoot: root, intent: 'fix typo', owned: ['README.md'], planner: 'claude' }) as { outcome: string; reason: string };

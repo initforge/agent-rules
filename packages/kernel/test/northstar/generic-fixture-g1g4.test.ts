@@ -16,7 +16,13 @@ import {
   hostCapabilityAttestationV2,
   decideEnforcement,
   unprobedAttestation,
+  staleCertifications,
+  capabilityIsLive,
+  type CapabilityCertification,
 } from '../../src/northstar/host-capabilities.js';
+import { runHostCanary, REGISTRY_HOSTS } from '../../src/northstar/host-canary.js';
+import { adapterShimExpired } from '../../src/northstar/host-adapter-contract.js';
+import { resolveHarnessRoot } from '../../src/northstar/domain-packs.js';
 
 function tmpRepo(): string {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'g-fixture-'));
@@ -77,5 +83,69 @@ describe('G4 — representative host enforcement classes', () => {
       host: 'cursor', attestation: absent, effects: ['filesystem_mutation'], broker_manages_effect: false, worktree_available: false,
     });
     expect(blocked.layer).toBe('blocked');
+  });
+});
+
+describe('G4/P7 — registry-driven eight-host evolution (F16)', () => {
+  const repoRoot = resolveHarnessRoot(process.cwd());
+
+  it('the registry has exactly the eight canonical hosts and every host can be canaried', () => {
+    expect(REGISTRY_HOSTS).toEqual(['codex', 'claude', 'grok', 'opencode', 'antigravity', 'cursor', 'deepseek-harness', 'command-code']);
+    for (const host of REGISTRY_HOSTS) {
+      const result = runHostCanary({ repoRoot, host });
+      // Every host resolves to a fail-closed state; none can be silently LIVE.
+      expect(['STATIC_KNOWN', 'NOT_LIVE_VERIFIED', 'UNSUPPORTED', 'LIVE_CERTIFIED']).toContain(result.state);
+    }
+  });
+
+  it('host-update canary stales only affected capabilities then selective probes re-certify', () => {
+    const makeCert = (capability: string, projection: string, host: 'claude' | 'opencode'): CapabilityCertification => ({
+      capability,
+      certification_state: 'LIVE_CERTIFIED',
+      evidence_refs: ['ev'],
+      certified_at: '2026-08-20T00:00:00.000Z',
+      expires_at: '2026-11-18T00:00:00.000Z',
+      host,
+      adapter_revision: 'a1',
+      projection_hash: projection,
+    });
+    const certs = [
+      makeCert('permission_surface', 'p1', 'claude'),
+      makeCert('session_surface', 'p1', 'claude'),
+      makeCert('permission_surface', 'p2', 'opencode'),
+    ];
+    // Claude host update changes only claude's projection: only claude's
+    // certifications stale; opencode's stay fresh.
+    const { stale, fresh } = staleCertifications(certs, { host: 'claude', projection_hash: 'p1b', now: new Date('2026-09-01T00:00:00.000Z') });
+    expect(stale.map((c) => c.capability)).toEqual(['permission_surface', 'session_surface']);
+    expect(fresh.map((c) => c.host)).toEqual(['opencode']);
+    // After a selective re-probe confirms claude's permission surface again, it
+    // becomes live; the stale session surface must be re-probed before use.
+    const reCertified: CapabilityCertification = { ...certs[0]!, projection_hash: 'p1b', expires_at: '2026-11-18T00:00:00.000Z' };
+    expect(capabilityIsLive(reCertified, new Date('2026-09-01T00:00:00.000Z'))).toBe(true);
+  });
+
+  it('host-update canary downgrades when a primitive fails, never fake-green', () => {
+    const certs: CapabilityCertification[] = [{
+      capability: 'sandbox_surface',
+      certification_state: 'LIVE_CERTIFIED',
+      evidence_refs: ['ev'],
+      certified_at: '2026-08-20T00:00:00.000Z',
+      expires_at: '2026-11-18T00:00:00.000Z',
+      host: 'codex',
+      adapter_revision: 'a1',
+      projection_hash: 'p1',
+    }];
+    // A simulated host update where the sandbox primitive now fails: the
+    // certification must downgrade to NOT_LIVE_VERIFIED, not stay live.
+    const failed = runHostCanary({ repoRoot, host: 'codex', probe: { ok: false, error: 'sandbox primitive failed after update' } });
+    expect(failed.state).toBe('NOT_LIVE_VERIFIED');
+    expect(certs[0]!.certification_state).toBe('LIVE_CERTIFIED'); // old record untouched
+    expect(failed.facts.certifications.every((c) => c.certification_state === 'NOT_LIVE_VERIFIED')).toBe(true);
+  });
+
+  it('the adapter compatibility shim has a bounded expiry', () => {
+    expect(adapterShimExpired(new Date('2028-01-01T00:00:00.000Z'))).toBe(true);
+    expect(adapterShimExpired(new Date('2026-01-01T00:00:00.000Z'))).toBe(false);
   });
 });

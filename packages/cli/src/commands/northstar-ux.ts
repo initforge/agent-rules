@@ -21,6 +21,9 @@ import {
   type HostResourceSnapshot,
   type VerifierDefinition,
   type WorkRequest,
+  classifyIntake,
+  weakWorkerMayExecute,
+  requiresPlannerButNone,
 } from '@initforge/agent-rules-engine/northstar/index';
 import type { AgentKind } from '@initforge/agent-rules-engine/runner/headless-executor';
 
@@ -173,6 +176,26 @@ export async function northStarRun(input: {
   }
   const needsStrongPlanner = risk === 'S2' || risk === 'S3' || !input.verifier || input.owned.length === 0;
   if (needsStrongPlanner) {
+    // REQ-013: only SEMANTICALLY_AMBIGUOUS work may invoke a strong planner.
+    // EXPLICIT/DISCOVERABLE work compiles deterministically; without a planner
+    // the ambiguous task stops NEEDS_USER/PLANNER_REQUIRED, never invented.
+    const intakeDecision = classifyIntake({
+      raw_intent: input.intent,
+      risk_class: risk as 'S0' | 'S1' | 'S2' | 'S3',
+      explicit_scope: (input.owned?.length ?? 0) > 0,
+      explicit_acceptance: input.verifier !== undefined,
+      repo_facts_available: true,
+      has_verifiable_surface: input.verifier !== undefined,
+      planner_configured: Boolean(input.planner ?? config.default_planner),
+    });
+    if (requiresPlannerButNone(intakeDecision)) {
+      return {
+        outcome: 'BLOCKED',
+        reason: `plannerless intake: ${intakeDecision.determinacy} requires a strong planner but none is configured; NEEDS_USER/PLANNER_REQUIRED (${intakeDecision.gap})`,
+        work_id: request.work_id,
+        intake_decision: intakeDecision,
+      };
+    }
     const planner = input.planner ?? config.default_planner;
     const domainPackId = input.domainPack ?? config.domain_pack;
     try {

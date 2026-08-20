@@ -8,7 +8,7 @@
   },
   "canonical_ledger": {
     "path": ".agent/ledger/portable-host-native-supervision-v1.json",
-    "sha256": "d122794e132162ad3bab775fe8f5f6978c6b50eb50668cb5b1e1e3d6a6fb7e5e",
+    "sha256": "761c152ac3e33b77a62d8e1024cbc3a0a939e4d03d44316a2749473e8774e380",
     "observed_revision": 0,
     "observed_effective_sha256": "801d9589e25eda77f6a5b319445a7ddf946fb6f0b0daaf085a0afbddfc50c854",
     "plan_status": "ADOPTED",
@@ -59,19 +59,19 @@
   "schema": "artifact/execution-contract",
   "version": 1,
   "kind": "current-pointer",
-  "generation": 42,
+  "generation": 43,
   "supersession": {
-    "transaction_id": "b4a00b02-d5fb-443d-8678-d869b864b9a5",
+    "transaction_id": "08bdfd50-d68a-457f-87f4-fdf5b4a35a3f",
     "previous_work_id": "portable-host-native-supervision-v1",
     "previous_plan_id": "portable-host-native-supervision-v1",
-    "reason": "AM0015 scorecard binding fix: observed_effective_sha256 now equals ledger effective_plan_identity.sha256. BOOTSTRAP_UNCERTIFIED",
-    "changed_at": "2026-08-20T20:17:12.128Z"
+    "reason": "Ledger note updated with honest CI state (pre-existing Windows browser-QA flake documented); pointer re-bound at BOOTSTRAP_UNCERTIFIED. BOOTSTRAP_UNCERTIFIED",
+    "changed_at": "2026-08-20T20:57:23.486Z"
   },
   "atomicity": {
     "protocol": "generation-compare-and-swap",
-    "expected_previous_generation": 41,
+    "expected_previous_generation": 42,
     "commit_target": ".agent/current.json",
     "activation_state": "BOOTSTRAP_UNCERTIFIED",
-    "updated_at": "2026-08-20T20:17:12.128Z"
+    "updated_at": "2026-08-20T20:57:23.486Z"
   }
 }
