@@ -1,0 +1,97 @@
+# 5fedu UI contract — domain level. Load matched surface before planning or coding.
+version: 2
+
+template_source:
+  discovery:
+    required: true
+    scope: "active workspace only; never a fixed absolute path"
+    positive_anchors:
+      - "package identity for 5f-template-react-supa or an owner-confirmed fork"
+      - "features/he-thong/nhan-vien"
+      - "components/shared/GenericToolbar.tsx"
+      - "components/shared/GenericDrawer.tsx"
+    selection: "If zero candidates, stop and ask the owner. If multiple or unclear, ask which is authoritative."
+    snapshot: "Record Git commit or deterministic hash of opened anchors."
+  precedence:
+    - "Scoped owner-approved custom or current spec"
+    - "Project schema/spec for variable business content"
+    - "Verified local template code for shell/behavior/state/motion/responsive"
+    - "Compatible live-app primitive only when template lacks behavior"
+  forbidden_substitutes:
+    - "memory, screenshots, remote URLs, or static context"
+    - "copying a functional defect from visual reference"
+
+custom_deviation_contract:
+  default: "Exact reference fidelity outside variable slots."
+  allowed_only_when: "Owner or accepted spec explicitly names custom behavior."
+  record: [source, affected_surface, changed_invariant, rationale, unchanged_invariants, proof]
+  promotion: "Project custom never becomes domain rule without separate context decision."
+
+surfaces:
+  home-dashboard:
+    aliases: ["trang chủ", "home", "dashboard chính"]
+    reference: "pages/Home.tsx + components/dashboard/MainCard.tsx"
+    shell_must: ["permission-filtered cards", "unique SVG/icon per card", "clean grouped layout"]
+    behavior_must: ["hide inaccessible destinations", "card opens registered destination"]
+    variable_slots: ["allowed destinations", "permission predicates", "labels from route registry"]
+
+  crud-list:
+    aliases: ["listview", "danh sách", "bảng chính", "trang list"]
+    reference: "nhan-vien"
+    shell_must: ["tab/page shell fills viewport", "Back + search/filter/reset left", "column manager/export/add right", "GenericTable + PaginationFooter"]
+    behavior_must: ["search shortcut and clear filters", "row click opens detail drawer", "permission-gated actions"]
+    variable_slots: ["filter choices", "columns", "column presets", "row-action set"]
+
+  form-drawer:
+    aliases: ["drawer form thêm", "drawer thêm", "form drawer"]
+    reference: "nhan-vien + GenericDrawer"
+    shell_must: ["icon/title/subtitle header", "sectioned FormSection + FormGrid", "sticky Hủy/Thêm-or-Lưu footer"]
+    behavior_must: ["schema/RHF validation", "focus trap, Escape, focus restore", "async submit disables controls"]
+    variable_slots: ["fields", "schema", "defaults", "relation pickers"]
+
+  detail-drawer:
+    aliases: ["drawer chi tiết", "detail drawer"]
+    reference: "nhan-vien + GenericDrawer"
+    shell_must: ["icon/title/subtitle header", "hero summary + colored status", "sectioned detail cards", "DetailToolbar", "sticky Đóng/Sửa/Xóa footer"]
+    behavior_must: ["opens from row click", "permission-gated actions", "edit/delete sync list without reload"]
+    variable_slots: ["summary fields", "status mapping", "detail sections", "related child data"]
+
+  stats-tab:
+    aliases: ["tabview thống kê", "báo cáo", "dashboard thống kê"]
+    reference: "nhan-vien-stats"
+    shell_must: ["same shell as list", "date range + filter chips", "KPI grid + chart + stats grid"]
+    behavior_must: ["date/filter drives all aggregates", "export respects visible scope"]
+    variable_slots: ["metric keys", "KPI labels", "chart series", "stats columns"]
+
+  hierarchy-list:
+    aliases: ["danh mục cha con", "cây hai cấp", "listview phòng ban"]
+    reference: "phong-ban"
+    shell_must: ["HierarchyListShell + HierarchyTable", "expandable parent-child rows", "search preserves ancestry"]
+    variable_slots: ["parent/child fields", "root filters", "depth approved by spec"]
+
+  permission-matrix:
+    aliases: ["phân quyền", "ma trận quyền"]
+    reference: "phan-quyen"
+    shell_must: ["desktop module nav + right-side matrix", "Back + filter + save", "mobile list + detail overlay"]
+    variable_slots: ["permission actions", "organization grouping", "module registry"]
+
+  single-record-settings:
+    aliases: ["thông tin công ty", "cấu hình một dòng", "settings"]
+    reference: "thong-tin-cong-ty"
+    shell_must: ["Back header with title/description", "sectioned branding/legal cards", "responsive form + save"]
+    variable_slots: ["branding fields", "legal fields", "storage/provider integration"]
+
+  route-breadcrumb:
+    aliases: ["breadcrumb", "đường dẫn header", "nhãn tiếng Việt"]
+    reference: "Breadcrumbs.tsx + sidebar-menu.tsx"
+    shell_must: ["registered route label + parent hierarchy", "Vietnamese labels retain full diacritics"]
+    variable_slots: ["route path", "label", "parentPath", "access guard"]
+
+fidelity_packet_required:
+  - template_identity_and_snapshot
+  - target_surface_and_reference_paths
+  - target_paths
+  - shell_behavior_state_motion_responsive_map
+  - variable_map_with_schema_or_spec_source
+  - approved_deviations
+  - verification_evidence

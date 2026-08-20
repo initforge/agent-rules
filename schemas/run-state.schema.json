@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/run-state.schema.json",
+  "title": "Portable Durable Run State",
+  "description": "A durable run state contract that captures the current phase, task progress, attempts, checkpoints, workspace, artifacts, failures, next actions, resumability, and cancellation state. Platform-neutral; supports cross-session recovery and observability.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "version", "run_id", "current_phase"
+  ],
+  "properties": {
+    "schema": { "const": "artifact/run-state" },
+    "version": { "const": 1 },
+    "schema_version": { "type": "string", "minLength": 1 },
+    "run_id": { "type": "string", "minLength": 1 },
+    "current_phase": {
+      "type": "string",
+      "enum": [
+        "CREATED",
+        "DISCOVERING",
+        "CLARIFYING",
+        "PLANNED",
+        "PLAN_VALIDATED",
+        "EXECUTING",
+        "VERIFYING",
+        "REVIEWING",
+        "REMEDIATING",
+        "READY_FOR_APPROVAL",
+        "COMPLETED",
+        "BLOCKED",
+        "FAILED",
+        "CANCELLED"
+      ]
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "in_progress", "completed", "blocked", "failed", "cancelled"]
+          },
+          "assigned_to": { "type": "string" },
+          "started_at": { "type": "string", "format": "date-time" },
+          "completed_at": { "type": "string", "format": "date-time" },
+          "evidence_refs": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "attempts": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "checkpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "phase", "created_at"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "CREATED",
+              "DISCOVERING",
+              "CLARIFYING",
+              "PLANNED",
+              "PLAN_VALIDATED",
+              "EXECUTING",
+              "VERIFYING",
+              "REVIEWING",
+              "REMEDIATING",
+              "READY_FOR_APPROVAL",
+              "COMPLETED",
+              "BLOCKED",
+              "FAILED",
+              "CANCELLED"
+            ]
+          },
+          "summary": { "type": "string" },
+          "commit_hash": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "workspace": {
+      "type": "string",
+      "description": "Path to the workspace root."
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "size_bytes": { "type": "integer", "minimum": 0 },
+          "generated_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "failures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["message", "occurred_at"],
+        "properties": {
+          "message": { "type": "string", "minLength": 1 },
+          "phase": { "type": "string" },
+          "task_id": { "type": "string" },
+          "occurred_at": { "type": "string", "format": "date-time" },
+          "recoverable": { "type": "boolean" }
+        }
+      }
+    },
+    "next_action": { "type": "string" },
+    "resumability": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "can_resume": { "type": "boolean" },
+        "resume_from_phase": {
+          "type": "string",
+          "enum": [
+            "CREATED",
+            "DISCOVERING",
+            "CLARIFYING",
+            "PLANNED",
+            "PLAN_VALIDATED",
+            "EXECUTING",
+            "VERIFYING",
+            "REVIEWING",
+            "REMEDIATING",
+            "READY_FOR_APPROVAL",
+            "COMPLETED",
+            "BLOCKED",
+            "FAILED",
+            "CANCELLED"
+          ]
+        },
+        "resume_checkpoint_id": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "cancellation_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cancelled": { "type": "boolean" },
+        "reason": { "type": "string" },
+        "cancelled_at": { "type": "string", "format": "date-time" },
+        "cancelled_by": { "type": "string" }
+      }
+    }
+  }
+}

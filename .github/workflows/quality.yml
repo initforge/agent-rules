@@ -1,0 +1,108 @@
+name: Quality
+on:
+  push:
+  pull_request:
+concurrency:
+  group: quality-${{ github.sha }}-${{ github.event_name }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  quality:
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        include:
+          - host: linux
+            os: ubuntu-latest
+          - host: windows
+            os: windows-latest
+          - host: macos
+            os: macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
+        with:
+          node-version: lts/*
+      - run: npm ci
+      - name: Playwright preflight check
+        if: matrix.host == 'linux'
+        run: |
+          npx playwright install chromium --with-deps
+          npx playwright install --dry-run 2>/dev/null || true
+          echo "PLAYWRIGHT_READY=true" >> $GITHUB_ENV
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: '0'
+      - run: npm run build
+      - run: npm run check
+      - run: npm run test
+      - name: Start Control Plane
+        run: node packages/control-plane/dist/server/server/index.js &
+        env:
+          PORT: '3099'
+          HOST: '127.0.0.1'
+      - name: Wait for Control Plane
+        run: npx wait-on http://127.0.0.1:3099/api/health
+      - name: Run C4 integration tests
+        run: npx vitest run packages/control-plane/tests/c4.test.ts
+        env:
+          CI: 'true'
+      - name: Cleanup Control Plane
+        if: always()
+        run: kill $(lsof -ti:3099) 2>/dev/null || true
+
+  python-tests:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
+        with:
+          node-version: lts/*
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - run: npm ci
+      - run: npm run build
+      - name: Generate context graph
+        run: npx tsx packages/cli/src/index.ts context-graph build
+      - run: pip install --require-hashes -r requirements.txt
+      - run: python automation/run-python-tests.py
+
+  security:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
+        with:
+          node-version: lts/*
+      - run: npm ci
+      - name: npm audit
+        run: npm audit --audit-level=high
+        continue-on-error: true
+      - name: Semgrep SAST
+        uses: semgrep/semgrep-action@713efdd345f3035192eaa63f56867b88e63e4e5d
+        with:
+          config: p/default
+        continue-on-error: true
+      - name: Secret scanning
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7
+        continue-on-error: true
+
+  quality-aggregate:
+    if: always()
+    needs: [quality, python-tests, security]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - run: |
+          echo 'Quality: ${{ toJSON(needs.quality.result) }}'
+          echo 'Security: ${{ toJSON(needs.security.result) }}'
+          if [ "${{ needs.quality.result }}" != "success" ]; then
+            echo "Quality check failed on one or more matrix jobs"
+            exit 1
+          fi

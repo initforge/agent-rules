@@ -1,0 +1,41 @@
+# deviations.yaml — Example: Nhập hàng module
+# All approved deviations following custom_deviation_contract from pattern-inventory.yaml.
+# Context note: DEV-003 follows the existing embedded-child-grid pattern. DEV-001
+# and DEV-002 remain project-specific and require a separate context decision
+# before promotion to common 5fedu rules.
+default: "Exact reference fidelity outside variable slots."
+allowed_only_when: "Owner or accepted spec explicitly names the custom behavior."
+deviations:
+  DEV-001:
+    source: "owner spec section 4.2"
+    affected_surface: form-drawer
+    changed_invariant: "Section 2 of form drawer uses embedded line-item editor (EditableChildDataGrid) instead of static FormSection fields"
+    rationale: "Purchase receipt requires variable-number-of-line-items entry; static form fields cannot support add/remove rows"
+    unchanged_invariants:
+      - "GenericDrawer shell (header, sectioned layout, sticky footer)"
+      - "Section 1: standard FormSection/FormGrid with date, supplier picker"
+      - "Hủy / Lưu footer behavior (disables controls, async submit, progress/error)"
+      - "Focus trap, Escape close, backdrop behavior"
+    proof: "Owner-approved wireframe in spec section 4.2; approval date 2026-07-20"
+  DEV-002:
+    source: "owner spec section 4.3"
+    affected_surface: row-actions
+    changed_invariant: "Duyệt (approve) action added as visible primary action alongside Sửa"
+    rationale: "Purchase receipt approval is a frequent high-value action; requiring users to open detail drawer first creates friction"
+    unchanged_invariants:
+      - "Sửa remains visible primary when permitted"
+      - "Overflow menu for secondary actions (In phiếu, Xóa)"
+      - "Automatic separator before destructive Xóa action"
+      - "Danger confirmation for Duyệt (irreversible status change)"
+    proof: "Owner-approved spec 4.3; approval date 2026-07-20"
+  DEV-003:
+    source: "owner spec section 5.1"
+    affected_surface: detail-drawer
+    changed_invariant: "EmbeddedChildDataGrid for phieu_nhap_chi_tiet rows inside detail drawer"
+    rationale: "Purchase receipt detail must show line items; this is a real parent-child relationship matching the embedded-child-grid surface pattern"
+    unchanged_invariants:
+      - "DetailToolbar with permitted actions"
+      - "Hero summary with status badge"
+      - "Sectioned cards with Thông tin chung card + Chi tiết hàng hóa card"
+      - "Sticky Đóng / Sửa / Xóa footer"
+    proof: "Aligns with embedded-child-grid surface in pattern-inventory.yaml; ref phong-ban detail"

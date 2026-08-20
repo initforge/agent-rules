@@ -1,0 +1,22 @@
+{
+  "name": "agent-rules",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Agent Rules harness — cross-platform context management for AI coding assistants",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "packageManager": "npm@11.13.0",
+  "workspaces": [
+    "packages/cli",
+    "packages/control-plane",
+    "packages/engine"
+  ],
+  "scripts": {
+    "build": "npm run build -w packages/engine && npm run build -w packages/cli && npm run build -w packages/control-plane",
+    "test": "npx vitest run automation/host-attestation.test.ts packages/engine/test/contracts.test.ts packages/engine/test/terminal-gate.test.ts platforms/opencode/adapter.test.ts platforms/opencode/supervisor-runner.test.ts && npm run test --workspaces --if-present",
+    "check": "npm run typecheck --workspaces --if-present",
+    "ci:quality": "npm run build && npm run check && npm run test",
+    "ci:certify": "bash automation/ci-certify.sh"
+  }
+}

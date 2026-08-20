@@ -1,0 +1,10 @@
+{
+  "schema": "artifact/telemetry-event",
+  "version": 1,
+  "event_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "session_id": "session-001",
+  "actor": "main",
+  "event": "quantum_computation",
+  "timestamp": "2026-07-25T08:00:00Z",
+  "outcome": "unknown"
+}

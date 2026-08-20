@@ -1,0 +1,37 @@
+{
+  "schema": "artifact/evidence",
+  "version": 1,
+  "id": "EV-001",
+  "claim": "Unit tests pass for the schema validator",
+  "claim_hash": "33334444555566667777888899990000aaaabbbbccccddddeeeeffff00001111",
+  "contract_hash": "4444555566667777888899990000aaaabbbbccccddddeeeeffff000011112222",
+  "status": "PASS",
+  "provenance": "runner",
+  "proof_kind": "unit",
+  "dimensions": ["outcome", "regression"],
+  "environment": {
+    "platform": "windows",
+    "host_os": "Windows 10",
+    "runtime_version": "Python 3.12"
+  },
+  "command": {
+    "executable": "python",
+    "arguments": ["-m", "pytest", "test_schemas.py", "-v"],
+    "working_directory": "P:/agent-rules",
+    "expected_exit_code": 0
+  },
+  "artifact": {
+    "path": "test-results.xml",
+    "sha256": "555566667777888899990000aaaabbbbccccddddeeeeffff0000111122223333",
+    "size_bytes": 2048,
+    "modified_at": "2026-07-25T10:00:00Z"
+  },
+  "expected": "all tests pass",
+  "observed": "12 passed, 0 failed",
+  "exit_code": 0,
+  "output_hash": "66667777888899990000aaaabbbbccccddddeeeeffff00001111222233334444",
+  "captured_at": "2026-07-25T10:05:00Z",
+  "proof_profile": "static-change",
+  "acceptance_id": "AC2",
+  "assignment_id": "A-S2"
+}

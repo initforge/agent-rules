@@ -1,0 +1,22 @@
+{
+  "schema": "artifact/claim-evidence",
+  "version": 1,
+  "schema_version": "1.0.0",
+  "claim_id": "CLM-001",
+  "requirement_id": "REQ-002",
+  "statement": "JWT middleware rejects tokens with invalid signature",
+  "evidence_class": "VERIFIED",
+  "status": "PASS",
+  "evidence_artifact": "test-results/jwt-invalid-signature.xml",
+  "timestamp": "2026-07-26T10:15:00Z",
+  "runtime": {
+    "platform": "nodejs",
+    "host_os": "linux",
+    "runtime_version": "20.11.0"
+  },
+  "verifier": "jest-test-runner",
+  "limitations": [
+    "Only tested with RS256 algorithm",
+    "Did not test expired-but-valid-signature edge case"
+  ]
+}

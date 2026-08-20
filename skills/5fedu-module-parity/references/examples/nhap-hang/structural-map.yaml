@@ -1,0 +1,183 @@
+# structural-map.yaml — Example: Nhập hàng module
+# One authoritative mapping per source → target with explicit create/adapt/reuse decisions.
+planner_owns:
+  - "nhap-hang-stats → nhan-vien-stats adapter"
+  - "cross-module supplier sync in form drawer"
+component_mappings:
+  - source_component: "features/he-thong/nhan-vien/index.tsx"
+    target_component: "features/he-thong/nhap-hang/index.tsx"
+    decision: adapt
+    rationale: "Rename mechanical changes; add stats tab route"
+    key_properties:
+      - "page shell with outlet"
+      - "Lazy load list and stats"
+  - source_component: "features/he-thong/nhan-vien/components/nhan-vien-list.tsx"
+    target_component: "features/he-thong/nhap-hang/components/nhap-hang-list.tsx"
+    decision: adapt
+    rationale: "Keep all toolbar/filter/table shell; replace columns, filter chips, and row actions per schema"
+    key_properties:
+      - "GenericTable + TablePaginationFooter"
+      - "search + filter chips + reset on left"
+      - "column manager, import, export, add on right"
+  - source_component: "features/he-thong/nhan-vien/components/nhan-vien-form.tsx"
+    target_component: "features/he-thong/nhap-hang/components/nhap-hang-form.tsx"
+    decision: adapt
+    rationale: "Same form drawer shell; fields differ per phieu_nhap schema; add supplier picker"
+    key_properties:
+      - "GenericDrawer + FormDrawerFooter"
+      - "icon/title/subtitle header"
+      - "sectioned FormSection + FormGrid"
+      - "sticky Hủy / Thêm-or-Lưu footer"
+  - source_component: "features/he-thong/nhan-vien/components/nhan-vien-detail.tsx"
+    target_component: "features/he-thong/nhap-hang/components/nhap-hang-detail.tsx"
+    decision: adapt
+    rationale: "Same detail drawer shell; recipient hero with status; add embedded child grid for line items"
+    key_properties:
+      - "GenericDrawer + DetailToolbar"
+      - "hero summary + sectioned detail cards"
+      - "sticky Đóng / Sửa / Xóa footer"
+  - source_component: "features/he-thong/nhan-vien/components/employee-table-row-actions.tsx"
+    target_component: "features/he-thong/nhap-hang/components/nhap-hang-table-row-actions.tsx"
+    decision: adapt
+    rationale: "Same overflow menu shell; add 'Duyệt' action for receipt approval workflow"
+    key_properties:
+      - "RowActionsOverflowMenu"
+      - "visible Edit primary, overflow secondary, separator before destructive"
+  - source_component: "features/he-thong/nhan-vien/components/nhan-vien-stats.tsx"
+    target_component: "features/he-thong/nhap-hang/components/nhap-hang-stats.tsx"
+    decision: adapt
+    rationale: "Same DashboardToolbar/KPI/StatsDataGrid shell; metric keys from phieu_nhap aggregates"
+    uncertainty: true
+    key_properties:
+      - "DashboardToolbar + StatsKpiGrid + StatsDataGrid"
+  - source_component: "components/shared/GenericToolbar.tsx"
+    target_component: "components/shared/GenericToolbar.tsx"
+    decision: reuse
+    rationale: "Shared component, no change needed"
+  - source_component: "components/shared/GenericDrawer.tsx"
+    target_component: "components/shared/GenericDrawer.tsx"
+    decision: reuse
+    rationale: "Shared component, no change needed"
+  - source_component: "components/shared/GenericTable.tsx"
+    target_component: "components/shared/GenericTable.tsx"
+    decision: reuse
+    rationale: "Shared component, no change needed"
+  - source_component: "components/shared/FormDrawerFooter.tsx"
+    target_component: "components/shared/FormDrawerFooter.tsx"
+    decision: reuse
+    rationale: "Shared component, no change needed"
+  - source_component: "components/shared/DetailToolbar.tsx"
+    target_component: "components/shared/DetailToolbar.tsx"
+    decision: reuse
+    rationale: "Shared component, no change needed"
+nesting_hierarchy:
+  nhap-hang-index:
+    - nhap-hang-list
+    - nhap-hang-stats
+  nhap-hang-list:
+    - GenericToolbar
+    - nhap-hang-table-row-actions
+    - GenericTable
+    - TablePaginationFooter
+    - GenericDrawer (nhap-hang-form)
+    - GenericDrawer (nhap-hang-detail)
+  nhap-hang-detail:
+    - DetailToolbar
+    - EmbeddedChildDataGrid (line-items)
+  nhap-hang-stats:
+    - DashboardToolbar
+    - StatsKpiGrid
+    - StatsDataGrid
+routes:
+  /he-thong/nhap-hang:
+    component: "nhap-hang-index"
+    breadcrumb_label: "Nhập hàng"
+    parent_path: "/he-thong"
+    permission_key: "nhap_hang_xem"
+  /he-thong/nhap-hang/stats:
+    component: "nhap-hang-stats"
+    breadcrumb_label: "Thống kê nhập hàng"
+    parent_path: "/he-thong/nhap-hang"
+    permission_key: "nhap_hang_thong_ke"
+state_ownership:
+  - state_key: "nhapHangList"
+    owner: "nhap-hang-store"
+    shared_with:
+      - "nhap-hang-list"
+      - "nhap-hang-detail"
+  - state_key: "nhapHangForm"
+    owner: "nhap-hang-form (local)"
+    shared_with: []
+  - state_key: "nhapHangDetail"
+    owner: "nhap-hang-detail (local)"
+    shared_with:
+      - "nhap-hang-list"
+  - state_key: "nhapHangStats"
+    owner: "nhap-hang-stats (local)"
+    shared_with: []
+data_contracts:
+  - interface_or_type: "PhieuNhap"
+    source: "types/supabase.ts (generated)"
+    fields:
+      - name: "id"
+        type: "uuid"
+        nullable: false
+      - name: "ngay_nhap"
+        type: "timestamptz"
+        nullable: false
+      - name: "nha_cung_cap_id"
+        type: "uuid"
+        nullable: false
+      - name: "tong_tien"
+        type: "numeric"
+        nullable: false
+      - name: "trang_thai"
+        type: "text"
+        nullable: false
+      - name: "ghi_chu"
+        type: "text"
+        nullable: true
+      - name: "nhan_vien_id"
+        type: "uuid"
+        nullable: false
+      - name: "created_at"
+        type: "timestamptz"
+        nullable: false
+  - interface_or_type: "PhieuNhapChiTiet"
+    source: "types/supabase.ts (generated)"
+    fields:
+      - name: "id"
+        type: "uuid"
+        nullable: false
+      - name: "phieu_nhap_id"
+        type: "uuid"
+        nullable: false
+      - name: "hang_hoa_id"
+        type: "uuid"
+        nullable: false
+      - name: "so_luong"
+        type: "numeric"
+        nullable: false
+      - name: "don_gia"
+        type: "numeric"
+        nullable: false
+      - name: "thanh_tien"
+        type: "numeric"
+        nullable: false
+event_flows:
+  - event: "nhap-hang:created"
+    producer: "nhap-hang-form"
+    consumer: "nhap-hang-list"
+    payload_type: "PhieuNhap"
+  - event: "nhap-hang:updated"
+    producer: "nhap-hang-form"
+    consumer: "nhap-hang-list"
+    payload_type: "PhieuNhap"
+  - event: "nhap-hang:deleted"
+    producer: "nhap-hang-detail"
+    consumer: "nhap-hang-list"
+    payload_type: "{ id: uuid }"
+  - event: "nhap-hang:status-changed"
+    producer: "nhap-hang-detail"
+    consumer: "nhap-hang-list"
+    payload_type: "{ id: uuid, trang_thai: string }"

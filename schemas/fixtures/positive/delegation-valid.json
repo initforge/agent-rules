@@ -1,0 +1,33 @@
+{
+  "schema": "artifact/delegation",
+  "version": 1,
+  "schema_version": "1.0.0",
+  "task_id": "DLG-20260726-001",
+  "objective": "Implement JWT middleware for protected API routes",
+  "requirement_ids": ["REQ-002", "REQ-003"],
+  "role": "implementer",
+  "model": "gpt-5-standard",
+  "effort": "medium",
+  "supplied_context": ["rules/security-policy.md", "schemas/plan.schema.json"],
+  "owned_files": ["src/middleware/jwt.ts", "src/middleware/jwt.test.ts"],
+  "forbidden_files": ["src/legacy/"],
+  "actual_files_changed": [
+    "src/middleware/jwt.ts",
+    "src/middleware/jwt.test.ts",
+    "src/app.ts"
+  ],
+  "tool_activity_summary": {
+    "total_tool_calls": 24,
+    "tool_classes_used": ["read", "edit", "test", "shell"]
+  },
+  "result": "JWT middleware implemented with 12 passing tests",
+  "evidence": [
+    {
+      "claim_id": "CLM-001",
+      "status": "PASS",
+      "artifact": "jwt_middleware_test_output.json"
+    }
+  ],
+  "status": "completed",
+  "integration_verdict": "clean"
+}

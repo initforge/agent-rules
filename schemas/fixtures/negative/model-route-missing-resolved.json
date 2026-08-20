@@ -1,0 +1,14 @@
+{
+  "schema": "artifact/model-route",
+  "version": 1,
+  "assignment_id": "A-S1",
+  "capability_class": "standard",
+  "requested": {
+    "capability_class": "standard",
+    "effort": "medium"
+  },
+  "observed": {
+    "attestation_status": "unverified"
+  },
+  "attested_at": "2026-07-25T08:35:00Z"
+}

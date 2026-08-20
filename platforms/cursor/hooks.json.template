@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [{ "command": "\"__PYTHON__\" \"__CURSOR_HOME__/scripts/cursor-hook.py\" beforeSubmitPrompt" }],
+    "stop": [{ "command": "\"__PYTHON__\" \"__CURSOR_HOME__/scripts/cursor-hook.py\" stop" }]
+  }
+}

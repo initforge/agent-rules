@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/intent.schema.json",
+  "title": "Portable Intent Contract",
+  "description": "Captures the user's original request and derived requirements. Platform-neutral; immutable source of truth for what was asked, desired outcomes, constraints, non-goals, quality attributes, assumptions, unknowns, and irreversible decisions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "version", "request"
+  ],
+  "properties": {
+    "schema": { "const": "artifact/intent" },
+    "version": { "const": 1 },
+    "schema_version": { "type": "string", "minLength": 1 },
+    "request": { "type": "string", "minLength": 1 },
+    "outcomes": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "constraints": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "non_goals": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "quality_attributes": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "unknowns": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "irreversible_decisions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "description"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 },
+          "provenance": { "type": "string" }
+        }
+      }
+    }
+  }
+}

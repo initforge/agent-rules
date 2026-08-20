@@ -1,0 +1,675 @@
+{
+  "schema_version": 1,
+  "description": "Domain verification profiles that select checks from claims, changed surfaces, and risk. Each profile lists available checks; the selection algorithm chooses which to run based on context.",
+  "domain_profiles": {
+    "frontend": {
+      "description": "UI components, pages, styles, interactions, and browser behavior",
+      "signals": {
+        "file_patterns": ["**/*.tsx", "**/*.jsx", "**/*.vue", "**/*.svelte", "**/*.css", "**/*.scss", "**/*.less", "**/*.html", "**/*.stories.*", "**/*.spec.tsx", "**/*.test.tsx"],
+        "claim_keywords": ["ui", "frontend", "component", "page", "layout", "style", "responsive", "viewport", "visual", "parity", "shell", "drawer", "toolbar", "listview"],
+        "domains": ["frontend", "ui", "web"]
+      },
+      "checks": [
+        {
+          "id": "typecheck",
+          "name": "TypeScript type check",
+          "proof_kind": "build",
+          "evidence_profile": "static-change",
+          "required_dimensions": ["outcome", "regression"],
+          "tools": ["tsc", "tsc --noEmit", "vue-tsc"],
+          "missing_tool_action": "blocked",
+          "command_template": "{tool} --noEmit",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.ts", "**/*.tsx", "**/*.vue", "**/*.js", "**/*.jsx"]
+        },
+        {
+          "id": "lint",
+          "name": "Lint static analysis",
+          "proof_kind": "build",
+          "evidence_profile": "static-change",
+          "required_dimensions": ["outcome"],
+          "tools": ["eslint", "oxlint", "biome lint", "ruff"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool} .",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.ts", "**/*.tsx", "**/*.vue", "**/*.js", "**/*.jsx", "**/*.css", "**/*.scss"]
+        },
+        {
+          "id": "unit-test",
+          "name": "Unit and component tests",
+          "proof_kind": "unit",
+          "evidence_profile": "implementation-runtime",
+          "required_dimensions": ["outcome", "integration", "regression"],
+          "tools": ["jest", "vitest", "uvu", "ava", "mocha"],
+          "missing_tool_action": "blocked",
+          "command_template": "{tool} run",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.{spec,test}.{ts,tsx,js,jsx,vue}", "**/*.stories.*"]
+        },
+        {
+          "id": "browser-interaction",
+          "name": "Browser interaction and state verification",
+          "proof_kind": "browser",
+          "evidence_profile": "ui-runtime",
+          "required_dimensions": ["interaction", "state", "regression"],
+          "tools": ["playwright", "cypress", "puppeteer"],
+          "missing_tool_action": "blocked",
+          "command_template": "{tool} test",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.tsx", "**/*.vue", "**/*.spec.tsx", "**/*.e2e.*"]
+        },
+        {
+          "id": "responsive-states",
+          "name": "Responsive viewport verification",
+          "proof_kind": "browser",
+          "evidence_profile": "ui-runtime",
+          "required_dimensions": ["interaction", "state", "regression"],
+          "conditional_dimensions": {"viewport": ["responsive", "mobile", "viewport"]},
+          "tools": ["playwright"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool} test --grep responsive",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.css", "**/*.scss", "**/*.tsx", "**/*.vue"]
+        },
+        {
+          "id": "visual-comparison",
+          "name": "Visual regression comparison",
+          "proof_kind": "browser",
+          "evidence_profile": "ui-parity",
+          "required_dimensions": ["visual", "reference"],
+          "tools": ["playwright", "chromatic", "percy", "loki"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool} visual",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.css", "**/*.scss", "**/*.tsx"]
+        },
+        {
+          "id": "accessibility",
+          "name": "Accessibility audit",
+          "proof_kind": "browser",
+          "evidence_profile": "behavior-safety",
+          "required_dimensions": ["outcome", "scope", "negative-constraint"],
+          "tools": ["axe", "pa11y", "playwright"],
+          "missing_tool_action": "skip",
+          "command_template": "npx axe",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.tsx", "**/*.vue", "**/*.html", "**/*.css"]
+        },
+        {
+          "id": "console-network",
+          "name": "Browser console and network error check",
+          "proof_kind": "browser",
+          "evidence_profile": "ui-runtime",
+          "required_dimensions": ["interaction", "state"],
+          "tools": ["chrome-devtools"],
+          "missing_tool_action": "blocked",
+          "command_template": "",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.tsx", "**/*.vue", "**/*.js"]
+        }
+      ]
+    },
+    "backend-api": {
+      "description": "Server-side APIs, services, business logic, and endpoint behavior",
+      "signals": {
+        "file_patterns": ["**/*.controller.*", "**/*.service.*", "**/*.handler.*", "**/*.route.*", "**/*.middleware.*", "**/*.dto.*", "**/*.validat*.*", "**/api/**", "**/routes/**", "**/controllers/**", "**/*.graphql*", "**/*.proto"],
+        "claim_keywords": ["api", "endpoint", "backend", "service", "dto", "contract", "integration", "http", "rest", "grpc", "graphql"],
+        "domains": ["backend", "api", "server", "service"]
+      },
+      "checks": [
+        {
+          "id": "unit-test",
+          "name": "Unit tests for backend logic",
+          "proof_kind": "unit",
+          "evidence_profile": "implementation-runtime",
+          "required_dimensions": ["outcome", "integration", "regression"],
+          "tools": ["jest", "vitest", "pytest", "rspec", "junit"],
+          "missing_tool_action": "blocked",
+          "command_template": "{tool} run",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.spec.*", "**/*.test.*", "**/*.controller.*", "**/*.service.*"]
+        },
+        {
+          "id": "integration-test",
+          "name": "Integration tests across service boundaries",
+          "proof_kind": "integration",
+          "evidence_profile": "api-contract",
+          "required_dimensions": ["positive", "invalid-error", "regression"],
+          "tools": ["supertest", "pytest", "newman", "httparty"],
+          "missing_tool_action": "blocked",
+          "command_template": "{tool} integration",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/integration/**", "**/*.int.spec.*", "**/api/**"]
+        },
+        {
+          "id": "contract-test",
+          "name": "Contract and pact verification",
+          "proof_kind": "api",
+          "evidence_profile": "api-contract",
+          "required_dimensions": ["positive", "invalid-error", "regression"],
+          "tools": ["pact", "@pact-foundation/pact", "pact-js"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool} verify",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/contracts/**", "**/*.pact.*", "**/*.proto"]
+        },
+        {
+          "id": "authorization-matrix",
+          "name": "Authorization matrix verification",
+          "proof_kind": "security",
+          "evidence_profile": "access-control",
+          "required_dimensions": ["allowed", "denied", "isolation"],
+          "tools": ["supertest", "pytest", "newman"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool} auth --matrix",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.controller.*", "**/*.middleware.*", "**/auth*/*", "**/permission*/*"]
+        },
+        {
+          "id": "validation-test",
+          "name": "Input validation and error handling",
+          "proof_kind": "integration",
+          "evidence_profile": "api-contract",
+          "required_dimensions": ["positive", "invalid-error"],
+          "tools": ["supertest", "pytest", "newman"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool} validation",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.validat*.*", "**/*.dto.*", "**/*.schema.*"]
+        },
+        {
+          "id": "failure-retry-idempotency",
+          "name": "Failure, retry, and idempotency verification",
+          "proof_kind": "integration",
+          "evidence_profile": "concurrency-idempotency",
+          "required_dimensions": ["contention", "retry-failure", "idempotency"],
+          "tools": ["pytest", "jest"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool} retry",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.retry*", "**/*.idempot*", "**/*.queue*", "**/*.worker*"]
+        },
+        {
+          "id": "timeout-test",
+          "name": "Timeout and deadline propagation",
+          "proof_kind": "integration",
+          "evidence_profile": "implementation-runtime",
+          "required_dimensions": ["outcome", "integration"],
+          "tools": ["pytest", "jest"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool} timeout",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.timeout*", "**/*.deadline*", "**/client*.*", "**/*.http*"]
+        },
+        {
+          "id": "observability",
+          "name": "Observability instrumentation check",
+          "proof_kind": "static",
+          "evidence_profile": "implementation-runtime",
+          "required_dimensions": ["outcome", "regression"],
+          "tools": [],
+          "missing_tool_action": "skip",
+          "command_template": "",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.ts", "**/*.py", "**/*.go", "**/*.java", "**/*.rb"]
+        }
+      ]
+    },
+    "database": {
+      "description": "Schema changes, migrations, queries, and data integrity",
+      "signals": {
+        "file_patterns": ["**/migrations/**", "**/*.migration.*", "**/*.sql", "**/*.prisma", "**/schema.*", "**/*.entity.*", "**/*.model.*", "**/*.repository.*", "**/*.dao.*", "**/seed*"],
+        "claim_keywords": ["migration", "schema", "database", "query", "data", "entity", "model", "repository", "index", "constraint"],
+        "domains": ["database", "data", "migration", "persistence"]
+      },
+      "checks": [
+        {
+          "id": "schema-diff",
+          "name": "Schema diff comparison",
+          "proof_kind": "diff",
+          "evidence_profile": "migration-reconciliation",
+          "required_dimensions": ["blank", "existing-clone", "reconciliation"],
+          "tools": ["prisma", "typeorm", "sequelize", "alembic", "diesel"],
+          "missing_tool_action": "blocked",
+          "command_template": "{tool} migrate:diff",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/migrations/**", "**/schema*", "**/*.entity.*"]
+        },
+        {
+          "id": "fresh-migration",
+          "name": "Fresh-database migration",
+          "proof_kind": "integration",
+          "evidence_profile": "migration-reconciliation",
+          "required_dimensions": ["blank", "reconciliation", "failure-path"],
+          "tools": ["prisma", "typeorm", "sequelize", "alembic", "diesel"],
+          "missing_tool_action": "blocked",
+          "command_template": "{tool} migrate:fresh",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/migrations/**", "**/schema*"]
+        },
+        {
+          "id": "existing-migration",
+          "name": "Existing-database migration up",
+          "proof_kind": "integration",
+          "evidence_profile": "migration-reconciliation",
+          "required_dimensions": ["existing-clone", "reconciliation"],
+          "tools": ["prisma", "typeorm", "sequelize", "alembic", "diesel"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool} migrate:up",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/migrations/**"]
+        },
+        {
+          "id": "constraints",
+          "name": "Constraint and index verification",
+          "proof_kind": "integration",
+          "evidence_profile": "migration-reconciliation",
+          "required_dimensions": ["reconciliation", "failure-path"],
+          "tools": ["prisma", "typeorm", "sequelize", "alembic"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool} constraint:check",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.entity.*", "**/schema*", "**/migrations/**"]
+        },
+        {
+          "id": "backfill",
+          "name": "Backfill verification",
+          "proof_kind": "integration",
+          "evidence_profile": "migration-reconciliation",
+          "required_dimensions": ["reconciliation", "failure-path"],
+          "tools": [],
+          "missing_tool_action": "skip",
+          "command_template": "",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/migrations/**"]
+        },
+        {
+          "id": "rollback",
+          "name": "Migration rollback",
+          "proof_kind": "integration",
+          "evidence_profile": "migration-reconciliation",
+          "required_dimensions": ["failure-path", "reconciliation"],
+          "tools": ["prisma", "typeorm", "sequelize", "alembic", "diesel"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool} migrate:rollback",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/migrations/**"]
+        },
+        {
+          "id": "permission-rls",
+          "name": "Row-level security and permission verification",
+          "proof_kind": "security",
+          "evidence_profile": "access-control",
+          "required_dimensions": ["allowed", "denied", "isolation"],
+          "tools": [],
+          "missing_tool_action": "skip",
+          "command_template": "",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.entity.*", "**/migrations/**", "**/schema*"]
+        },
+        {
+          "id": "query-performance",
+          "name": "Performance-sensitive query plan check",
+          "proof_kind": "performance",
+          "evidence_profile": "query-index",
+          "required_dimensions": ["representative-query", "query-plan", "write-regression"],
+          "tools": ["prisma", "typeorm", "sequelize", "pg_stat_statements"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool} query:analyze",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.repository.*", "**/*.dao.*", "**/queries/**", "**/*.sql"]
+        }
+      ]
+    },
+    "infrastructure": {
+      "description": "Infrastructure as code, deployments, and environment configuration",
+      "signals": {
+        "file_patterns": ["**/*.tf", "**/*.tfvars", "**/terraform/**", "**/*.yaml", "**/*.yml", "**/deploy*", "**/infra*", "**/Dockerfile*", "**/*.k8s.*", "**/*.helm/**", "**/*.nix"],
+        "claim_keywords": ["infra", "terraform", "deploy", "kubernetes", "docker", "helm", "infrastructure", "cloud", "environment"],
+        "domains": ["infrastructure", "infra", "ops", "devops", "deployment"]
+      },
+      "checks": [
+        {
+          "id": "format",
+          "name": "Infrastructure formatting check",
+          "proof_kind": "static",
+          "evidence_profile": "static-change",
+          "required_dimensions": ["outcome"],
+          "tools": ["terraform fmt", "prettier", "helm lint"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool} -check",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.tf", "**/*.tfvars", "**/*.yaml", "**/*.yml"]
+        },
+        {
+          "id": "validate",
+          "name": "Infrastructure configuration validation",
+          "proof_kind": "build",
+          "evidence_profile": "static-change",
+          "required_dimensions": ["outcome", "regression"],
+          "tools": ["terraform validate", "helm template", "kubectl validate"],
+          "missing_tool_action": "blocked",
+          "command_template": "{tool}",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.tf", "**/*.tfvars", "**/*.yaml", "**/*.yml", "**/Dockerfile*", "**/*.k8s.*"]
+        },
+        {
+          "id": "plan",
+          "name": "Infrastructure plan verification",
+          "proof_kind": "diff",
+          "evidence_profile": "static-change",
+          "required_dimensions": ["outcome", "regression"],
+          "tools": ["terraform plan"],
+          "missing_tool_action": "blocked",
+          "command_template": "{tool} -out=plan.tfplan",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.tf", "**/*.tfvars"]
+        },
+        {
+          "id": "policy-check",
+          "name": "Infrastructure policy compliance",
+          "proof_kind": "security",
+          "evidence_profile": "behavior-safety",
+          "required_dimensions": ["outcome", "scope", "negative-constraint"],
+          "tools": ["terraform plan", "conftest", "opa", "checkov", "tfsec"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool} policy",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.tf"]
+        },
+        {
+          "id": "ephemeral-deployment",
+          "name": "Ephemeral deployment smoke test",
+          "proof_kind": "integration",
+          "evidence_profile": "external-release",
+          "required_dimensions": ["target-identity", "terminal-run", "smoke"],
+          "tools": [],
+          "missing_tool_action": "skip",
+          "command_template": "",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/deploy*", "**/*.tf"]
+        },
+        {
+          "id": "smoke-test",
+          "name": "Post-deployment smoke test",
+          "proof_kind": "e2e",
+          "evidence_profile": "external-release",
+          "required_dimensions": ["target-identity", "smoke"],
+          "tools": ["playwright", "curl", "http"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool} smoke",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/deploy*", "**/*.tf"]
+        },
+        {
+          "id": "rollback-test",
+          "name": "Infrastructure rollback verification",
+          "proof_kind": "e2e",
+          "evidence_profile": "external-release",
+          "required_dimensions": ["rollback"],
+          "tools": [],
+          "missing_tool_action": "skip",
+          "command_template": "",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/deploy*", "**/*.tf"]
+        },
+        {
+          "id": "drift-detection",
+          "name": "Infrastructure drift detection",
+          "proof_kind": "diff",
+          "evidence_profile": "static-change",
+          "required_dimensions": ["outcome", "regression"],
+          "tools": ["terraform plan"],
+          "missing_tool_action": "blocked",
+          "command_template": "{tool} -detailed-exitcode",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.tf"]
+        }
+      ]
+    },
+    "security": {
+      "description": "Security boundaries, vulnerability scanning, secrets, and access control",
+      "signals": {
+        "file_patterns": ["**/security/**", "**/auth*/*", "**/*.auth.*", "**/permission*/*", "**/*.secret*", "**/*.credential*", "**/*.token*", "**/crypto*", "**/*.csp.*"],
+        "claim_keywords": ["security", "auth", "permission", "rbac", "credential", "secret", "token", "encrypt", "sanitize", "csp", "cors"],
+        "domains": ["security", "auth", "permission"]
+      },
+      "checks": [
+        {
+          "id": "sast",
+          "name": "Static application security testing",
+          "proof_kind": "security",
+          "evidence_profile": "security-boundary",
+          "required_dimensions": ["positive", "negative", "leakage-sanitization"],
+          "tools": ["semgrep", "codeql", "sonarscanner", "bandit", "brakeman"],
+          "missing_tool_action": "blocked",
+          "command_template": "{tool} scan",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.ts", "**/*.py", "**/*.go", "**/*.java", "**/*.js", "**/*.rb"]
+        },
+        {
+          "id": "dependency-scan",
+          "name": "Dependency vulnerability scanning",
+          "proof_kind": "security",
+          "evidence_profile": "security-boundary",
+          "required_dimensions": ["positive", "negative"],
+          "tools": ["npm audit", "snyk", "owasp-dependency-check", "trivy", "grype"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool}",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["package.json", "package-lock.json", "yarn.lock", "pnpm-lock.yaml", "requirements.txt", "go.mod", "go.sum", "Cargo.toml", "Cargo.lock"]
+        },
+        {
+          "id": "secret-scan",
+          "name": "Hardcoded secret detection",
+          "proof_kind": "security",
+          "evidence_profile": "security-boundary",
+          "required_dimensions": ["positive", "negative", "leakage-sanitization"],
+          "tools": ["trufflehog", "git-secrets", "gitleaks", "detect-secrets"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool} scan",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*"]
+        },
+        {
+          "id": "auth-permission-test",
+          "name": "Authentication and permission boundary test",
+          "proof_kind": "security",
+          "evidence_profile": "access-control",
+          "required_dimensions": ["allowed", "denied", "isolation"],
+          "tools": ["pytest", "jest", "supertest"],
+          "missing_tool_action": "blocked",
+          "command_template": "{tool} auth",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/auth*/*", "**/permission*/*", "**/security/**"]
+        }
+      ]
+    },
+    "documentation-configuration": {
+      "description": "Documentation, configuration files, and project metadata",
+      "signals": {
+        "file_patterns": ["**/*.md", "**/*.mdx", "**/docs/**", "**/*.yaml", "**/*.yml", "**/*.json", "**/*.toml", "**/*.cfg", "**/*.ini", "**/README*", "**/AGENTS*", "**/CHANGELOG*", "**/CONTRIBUTING*"],
+        "claim_keywords": ["doc", "readme", "changelog", "config", "configuration", "settings", "yml", "yaml"],
+        "domains": ["documentation", "config", "docs"]
+      },
+      "checks": [
+        {
+          "id": "spelling-grammar",
+          "name": "Spelling and grammar check",
+          "proof_kind": "static",
+          "evidence_profile": "static-change",
+          "required_dimensions": ["outcome"],
+          "tools": ["codespell", "mdspell", "vale", "hunspell"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool} .",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.md", "**/*.mdx"]
+        },
+        {
+          "id": "link-validation",
+          "name": "Link and reference validation",
+          "proof_kind": "static",
+          "evidence_profile": "static-change",
+          "required_dimensions": ["outcome"],
+          "tools": ["lychee", "markdown-link-check", "broken-link-checker"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool} .",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.md", "**/*.mdx"]
+        },
+        {
+          "id": "format-validation",
+          "name": "Configuration format validation",
+          "proof_kind": "static",
+          "evidence_profile": "static-change",
+          "required_dimensions": ["outcome"],
+          "tools": ["yaml-lint", "yamllint", "jsonlint", "prettier"],
+          "missing_tool_action": "skip",
+          "command_template": "{tool} --check .",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["**/*.yaml", "**/*.yml", "**/*.json", "**/*.toml"]
+        }
+      ]
+    },
+    "harness-runtime": {
+      "description": "Agent harness, runtime configuration, context routing, and tool registry",
+      "signals": {
+        "file_patterns": ["automation/**", "rules/**", "skills/**/SKILL.md", "integrations/**", "platforms/**", "AGENTS.md", "opencode.json", "opencode.jsonc", ".opencode/**"],
+        "claim_keywords": ["harness", "runtime", "context", "routing", "tool", "registry", "manifest", "schema", "workflow", "agent", "mcp"],
+        "domains": ["harness", "runtime", "automation", "platform"]
+      },
+      "checks": [
+        {
+          "id": "schema-validation",
+          "name": "Ledger schema validation",
+          "proof_kind": "build",
+          "evidence_profile": "static-change",
+          "required_dimensions": ["outcome", "regression"],
+          "tools": ["python"],
+          "missing_tool_action": "blocked",
+          "command_template": "python automation/workctl.py",
+          "expected_exit_code": 0,
+          "mandatory": true,
+          "affected_by": ["automation/**", "AGENTS.md"]
+        },
+        {
+          "id": "manifest-validation",
+          "name": "Manifest and context validation",
+          "proof_kind": "static",
+          "evidence_profile": "static-change",
+          "required_dimensions": ["outcome"],
+          "tools": ["python"],
+          "missing_tool_action": "blocked",
+          "command_template": "python automation/03-validate-context.ps1",
+          "expected_exit_code": 0,
+          "mandatory": true,
+          "affected_by": ["rules/manifest.yaml", "rules/**", "AGENTS.md"]
+        },
+        {
+          "id": "tool-registry-check",
+          "name": "Tool registry and integration health check",
+          "proof_kind": "static",
+          "evidence_profile": "static-change",
+          "required_dimensions": ["outcome"],
+          "tools": ["python"],
+          "missing_tool_action": "blocked",
+          "command_template": "python automation/validate-tool-registry.ps1",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["integrations/registry.json", "integrations/**"]
+        },
+        {
+          "id": "doctor-health",
+          "name": "Platform doctor health check",
+          "proof_kind": "unit",
+          "evidence_profile": "implementation-runtime",
+          "required_dimensions": ["outcome", "integration"],
+          "tools": ["powershell", "sh"],
+          "missing_tool_action": "skip",
+          "command_template": "./automation/09-doctor.ps1",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["automation/**", "platforms/**"]
+        },
+        {
+          "id": "existing-workflow-test",
+          "name": "Existing workflow regression test",
+          "proof_kind": "unit",
+          "evidence_profile": "implementation-runtime",
+          "required_dimensions": ["outcome", "regression"],
+          "tools": ["python"],
+          "missing_tool_action": "blocked",
+          "command_template": "python -m pytest automation/test-*.py",
+          "expected_exit_code": 0,
+          "mandatory": true,
+          "affected_by": ["automation/**"]
+        },
+        {
+          "id": "skill-gate-test",
+          "name": "Skill gate and routing test",
+          "proof_kind": "unit",
+          "evidence_profile": "implementation-runtime",
+          "required_dimensions": ["outcome", "regression"],
+          "tools": ["python"],
+          "missing_tool_action": "blocked",
+          "command_template": "python automation/test-skill-gate-stack.py",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["skills/**", "rules/**"]
+        },
+        {
+          "id": "context-routing-test",
+          "name": "Context graph routing test",
+          "proof_kind": "unit",
+          "evidence_profile": "implementation-runtime",
+          "required_dimensions": ["outcome", "regression"],
+          "tools": ["python"],
+          "missing_tool_action": "blocked",
+          "command_template": "python automation/test-context-router.py",
+          "expected_exit_code": 0,
+          "mandatory": false,
+          "affected_by": ["automation/context-graph-router.py", "automation/context-route-cases.json"]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/trace-schema.json",
+  "type": "object",
+  "required": ["ts", "lane", "status", "task_summary", "files_changed", "verification", "friction"],
+  "properties": {
+    "ts": { "type": "string", "minLength": 1 },
+    "lane": { "enum": ["tiny", "normal", "high-risk"] },
+    "status": { "enum": ["PASS", "PARTIAL", "BLOCKED", "FAIL"] },
+    "task_summary": { "type": "string", "minLength": 1 },
+    "files_changed": { "type": ["integer", "array"] },
+    "verification": { "type": ["string", "array"] },
+    "friction": { "type": ["string", "array", "null"] },
+    "mode": { "enum": ["advisory", "plan-authoring", "plan-review", "execution"] },
+    "primary_skill": { "type": ["string", "null"] },
+    "supporting_skills": { "type": "array", "items": { "type": "string" } },
+    "route_tokens": { "type": "integer", "minimum": 0 },
+    "model": { "type": "string" },
+    "platform": { "type": "string" },
+    "owner_correction": { "type": "boolean" },
+    "verification_count": { "type": "integer", "minimum": 0 }
+  },
+  "additionalProperties": true
+}
