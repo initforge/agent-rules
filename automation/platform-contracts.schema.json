@@ -1,16 +1,109 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Agent Rules Platform Contract",
+  "title": "Agent Rules Platform Contract (registry v2)",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "version",
+    "registry",
     "parity_contract",
     "platforms"
   ],
   "properties": {
     "version": {
-      "const": 1
+      "const": 2
+    },
+    "registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host_ids",
+        "certification_policy",
+        "capability_to_canary"
+      ],
+      "properties": {
+        "host_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 8,
+          "items": {
+            "enum": [
+              "codex",
+              "claude",
+              "opencode",
+              "cursor",
+              "antigravity",
+              "grok",
+              "deepseek-harness",
+              "command-code"
+            ]
+          }
+        },
+        "certification_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "certification_required_hosts",
+            "deferred_supported_targets",
+            "not_live_verified_targets"
+          ],
+          "properties": {
+            "certification_required_hosts": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "type": "string" }
+            },
+            "deferred_supported_targets": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "type": "string" }
+            },
+            "not_live_verified_targets": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "capability_to_canary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "instruction_surface",
+            "context_injection",
+            "skill_surface",
+            "hook_surface",
+            "permission_surface",
+            "sandbox_surface",
+            "subagent_surface",
+            "session_surface",
+            "worktree_surface",
+            "mcp_surface",
+            "headless_surface",
+            "compaction_surface",
+            "structured_event_surface",
+            "planning_surface",
+            "model_observability"
+          ],
+          "properties": {
+            "instruction_surface": { "type": "string" },
+            "context_injection": { "type": "string" },
+            "skill_surface": { "type": "string" },
+            "hook_surface": { "type": "string" },
+            "permission_surface": { "type": "string" },
+            "sandbox_surface": { "type": "string" },
+            "subagent_surface": { "type": "string" },
+            "session_surface": { "type": "string" },
+            "worktree_surface": { "type": "string" },
+            "mcp_surface": { "type": "string" },
+            "headless_surface": { "type": "string" },
+            "compaction_surface": { "type": "string" },
+            "structured_event_surface": { "type": "string" },
+            "planning_surface": { "type": "string" },
+            "model_observability": { "type": "string" }
+          }
+        }
+      }
     },
     "parity_contract": {
       "type": "object",
@@ -69,7 +162,9 @@
         "grok",
         "opencode",
         "antigravity",
-        "cursor"
+        "cursor",
+        "deepseek-harness",
+        "command-code"
       ],
       "properties": {
         "codex": {
@@ -88,6 +183,12 @@
           "$ref": "#/$defs/platform"
         },
         "cursor": {
+          "$ref": "#/$defs/platform"
+        },
+        "deepseek-harness": {
+          "$ref": "#/$defs/platform"
+        },
+        "command-code": {
           "$ref": "#/$defs/platform"
         }
       }

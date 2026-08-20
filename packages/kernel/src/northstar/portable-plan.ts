@@ -36,19 +36,55 @@ export interface CompiledDoD {
   reason: string;
 }
 
-export function compileDoD(input: { disposition: ExecutionDisposition; riskClass?: string; hasReleaseScope?: boolean }): CompiledDoD {
-  if (input.disposition === 'PLAN_ONLY') return { required: ['CODE'], reason: 'plan-only scope: no behavior/release/terminal execution' };
-  // EXPORT_HANDOFF keeps the FULL self-contained DoD. A generic worker receiving the
-  // one-copy handoff must complete the entire lifecycle (code/behavior/release/terminal)
-  // without rediscovery. DoD depth is compiled from claims/risk/release/live scope — NOT
-  // from "who executes" (the disposition only selects plan-only vs handoff vs local).
+/**
+ * REQ-008 — compile depth-of-done from requirement/claim/proof obligations and
+ * release/migration/live scope, NOT from who executes. The disposition only
+ * decides WHERE execution happens (plan-only vs handoff vs local). A local S0
+ * task with a release obligation must still carry RELEASE; an EXPORT_HANDOFF
+ * without release obligations is not over-deepened.
+ */
+export interface DoDObligations {
+  requires_release?: boolean;
+  requires_migration?: boolean;
+  requires_live?: boolean;
+  proof_obligations?: readonly string[];
+}
+
+export function compileDoD(input: {
+  disposition: ExecutionDisposition;
+  riskClass?: string;
+  hasReleaseScope?: boolean;
+  obligations?: DoDObligations;
+}): CompiledDoD {
+  const obligations = input.obligations ?? {};
+  const requiresRelease = obligations.requires_release
+    || obligations.requires_migration
+    || obligations.requires_live
+    || input.hasReleaseScope === true
+    || input.riskClass === 'S2'
+    || input.riskClass === 'S3';
+  if (input.disposition === 'PLAN_ONLY') {
+    // PLAN_ONLY plans the contract but still carries release/live/terminal
+    // obligations when the underlying work demands them — depth comes from the
+    // obligations, not from the fact that we are only planning.
+    const stages: CompiledDoDStage[] = ['CODE'];
+    if (requiresRelease) stages.push('RELEASE');
+    if (obligations.requires_live) stages.push('TERMINAL');
+    return { required: stages, reason: `plan-only scope with obligations: ${stages.join('+')}` };
+  }
   if (input.disposition === 'EXPORT_HANDOFF') {
-    return { required: ['CODE', 'BEHAVIOR', 'RELEASE', 'TERMINAL'], reason: 'export handoff: full self-contained DoD (code+behavior+release+terminal)' };
+    // EXPORT_HANDOFF carries the obligations of the handed-off work. When the
+    // work has no release/migration/live scope it stays CODE+BEHAVIOR+TERMINAL;
+    // when it does, the full set is preserved.
+    const stages: CompiledDoDStage[] = ['CODE', 'BEHAVIOR'];
+    if (requiresRelease) stages.push('RELEASE');
+    stages.push('TERMINAL');
+    return { required: stages, reason: `export handoff with obligations: ${stages.join('+')}` };
   }
   const stages: CompiledDoDStage[] = ['CODE', 'BEHAVIOR'];
-  if (input.hasReleaseScope || input.riskClass === 'S2' || input.riskClass === 'S3') stages.push('RELEASE');
+  if (requiresRelease) stages.push('RELEASE');
   stages.push('TERMINAL');
-  return { required: stages, reason: `local execute: ${stages.join('+')}` };
+  return { required: stages, reason: `local execute with obligations: ${stages.join('+')}` };
 }
 
 export interface FrozenIntentRef {
@@ -283,7 +319,19 @@ export function compileFrozenContract(input: {
       stop_conditions: undefined,
     },
     disposition: input.disposition ?? 'LOCAL_EXECUTE',
-    compiled_dod: compileDoD({ disposition: input.disposition ?? 'LOCAL_EXECUTE', riskClass: input.spec.risk_class, hasReleaseScope: input.packets.some((p) => p.scope.owned.some((o) => o.includes('release') || o.includes('install'))) }),
+    compiled_dod: compileDoD({
+      disposition: input.disposition ?? 'LOCAL_EXECUTE',
+      riskClass: input.spec.risk_class,
+      // REQ-008: DoD depth comes from requirement/claim obligations and the
+      // release/migration/live scope in the effective spec — never from a path
+      // substring sniff of "release|install".
+      obligations: {
+        requires_release: requirements.some((requirement) => /release|deploy|ship|publish|rollout/i.test(requirement.statement)),
+        requires_migration: requirements.some((requirement) => /migrat|upgrade|rollback/i.test(requirement.statement)),
+        requires_live: requirements.some((requirement) => /live|production|browser|mobile|real\s+(device|browser)/i.test(requirement.statement)),
+        proof_obligations: input.packets.flatMap((packet) => packet.policy?.proof?.required_categories ?? []),
+      },
+    }),
   };
   const semanticHash = contractSemanticHash(frozen);
   return { ...frozen, semantic_hash: semanticHash };

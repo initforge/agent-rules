@@ -120,7 +120,11 @@
             "expected_previous_generation": { "type": "integer", "minimum": 0 },
             "commit_target": { "const": ".agent/current.json" },
             "activation_state": {
-              "enum": ["BOOTSTRAP_POINTER", "CANONICALLY_ACTIVATED"]
+              "enum": [
+                "BOOTSTRAP_POINTER",
+                "BOOTSTRAP_UNCERTIFIED",
+                "CANONICALLY_ACTIVATED"
+              ]
             },
             "updated_at": { "type": "string", "format": "date-time" }
           }

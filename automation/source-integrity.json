@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Canonical SHA256 hashes for all scripts the installer may execute. Scripts are verified against this manifest before execution.",
-  "generated_at": "2026-08-19T15:32:03+00:00",
+  "generated_at": "2026-08-20T18:08:54+00:00",
   "files": {
     "automation/02-install-runtime.ps1": "21862ba08b4fed9ad0f3c30174248f9090805ab7a9e7727fe77cc26cb5be45fe",
     "automation/11-install-runtime-hooks.sh": "0b7ec19e30100165dee8eca04582146df2333aa0f4701176fb7cb9f9b8a59be2",
@@ -37,7 +37,7 @@
     "automation/generate-doc-references.py": "bab6f6e202fb06614f93cc67d95fec36174e8261773f2481a5a3666a7a78cbde",
     "automation/validate-doc-drift.py": "238a8c8e794149a75267c52434e1404ab8f595183a51348eee8b78648a5b8e9b",
     "automation/workctl.py": "6516d4beb4ffeb0bda38f16f7ef8a7e47022f3ea36b4e5da0d1068d30c4ebb5d",
-    "automation/test-cross-language-manifests.py": "ee36024af260c706812d3aa1906648cf993bd33f5bf6d5ad00a48e84dc9c5121",
-    "automation/test-platform-lifecycle.py": "54b310cc0d6fafdf85bb9f59fb8002c119ceefc8d82029599c3cd98928a06019"
+    "automation/test-cross-language-manifests.py": "76f08d56fd5f7504d29655c5d9f3a64e145a8ce28d701163396ac28b2200e587",
+    "automation/test-platform-lifecycle.py": "3e34f96ba3af9a2c9a0e3743c44fc790311a1e96bbb1b94159716e6efb317ff9"
   }
 }

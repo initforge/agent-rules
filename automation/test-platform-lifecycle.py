@@ -59,15 +59,21 @@ def test_integration_registry_version_tracking() -> None:
 
 
 def test_platform_contracts_version_tracking() -> None:
-    """Verify platform-contracts.json has version field."""
+    """Verify platform-contracts.json has version field (registry v2)."""
     contracts_path = ROOT / "platforms" / "platform-contracts.json"
     contracts = json.loads(contracts_path.read_text(encoding="utf-8"))
     
     version = contracts.get("version")
-    if version != 1:
-        fail(f"platform-contracts version must be 1, got {version}")
+    if version != 2:
+        fail(f"platform-contracts version must be 2, got {version}")
     else:
-        ok("platform-contracts.json version: 1")
+        ok("platform-contracts.json version: 2")
+    
+    # Check registry host_ids for the eight canonical hosts
+    registry = contracts.get("registry", {})
+    host_ids = registry.get("host_ids", [])
+    if host_ids != ["codex", "claude", "grok", "opencode", "antigravity", "cursor", "deepseek-harness", "command-code"]:
+        fail(f"registry host_ids drift: {host_ids}")
     
     # Check parity_contract has aggregate_rule for version tracking
     parity = contracts.get("parity_contract", {})

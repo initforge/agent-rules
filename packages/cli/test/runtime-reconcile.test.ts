@@ -101,8 +101,8 @@ describe("host inventory, projection, and transactional repair (S4)", () => {
     expect(isRegisteredHost("not-a-host")).toBe(false);
   });
 
-  it("covers exactly the seven registered hosts with specs", () => {
-    expect(REGISTERED_HOSTS).toEqual(["opencode", "codex", "claude", "grok", "antigravity", "cursor"]);
+  it("covers exactly the eight registered hosts with specs", () => {
+    expect(REGISTERED_HOSTS).toEqual(["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code"]);
     for (const host of REGISTERED_HOSTS) {
       expect(HOST_SPECS[host]).toBeDefined();
       expect(HOST_SPECS[host].binaries.length).toBeGreaterThan(0);
@@ -172,7 +172,7 @@ describe("host inventory, projection, and transactional repair (S4)", () => {
 
   it("reconciles all hosts with installed-only semantics without mutating absent hosts", async () => {
     const result = await reconcileHosts([...REGISTERED_HOSTS], { installedOnly: true, reportOnly: true });
-    expect(result.reconciled).toHaveLength(6);
+    expect(result.reconciled).toHaveLength(8);
     for (const item of result.reconciled) {
       expect(item.taskAuthority).toBe(false);
       if (item.installed) expect(item.receipt?.mutated ?? false).toBe(false);

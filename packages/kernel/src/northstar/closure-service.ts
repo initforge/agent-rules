@@ -255,7 +255,7 @@ function isSha256(value: string): boolean {
   return /^[a-f0-9]{64}$/i.test(value);
 }
 
-const VALID_HOSTS = new Set(['codex', 'claude', 'opencode', 'cursor', 'antigravity', 'grok']);
+const VALID_HOSTS = new Set(['codex', 'claude', 'opencode', 'cursor', 'antigravity', 'grok', 'deepseek-harness', 'command-code']);
 
 /** Five-identity binding validation. harness ≠ consumer. */
 export function assertEvidenceBinding(binding: EvidenceBindingManifest): void {
@@ -424,8 +424,15 @@ export function stageClosureTransaction(input: ClosureInput, repoRoot: string): 
     }
   }
 
-  // Derive outcome from actual evidence (never defaults to PASS)
-  const terminalOutcome = input.terminal_outcome ?? deriveOutcome(input);
+  // Derive outcome from actual evidence (never defaults to PASS, never caller-forced)
+  const derivedOutcome = deriveOutcome(input);
+  if (input.terminal_outcome !== undefined && input.terminal_outcome !== derivedOutcome) {
+    throw new ClosureServiceError(
+      CLOSURE_ERRORS.COMMIT_FAILED,
+      `caller terminal_outcome override rejected: requested ${input.terminal_outcome} but evidence derives ${derivedOutcome} for ${input.plan_id}`,
+    );
+  }
+  const terminalOutcome = derivedOutcome;
 
   // Compute per-requirement evidence counts
   const passEvidence = new Set(['pass', 'pre_existing']);
@@ -780,6 +787,97 @@ export const DEFAULT_IGNORED_OPERATIONAL_STATE = [
   '.agent/planner/',
   '.agent/research/',
 ];
+
+/** Schema-valid active activation states for the generation-CAS pointer. */
+export const VALID_ACTIVE_ACTIVATION_STATES: readonly string[] = [
+  'BOOTSTRAP_POINTER',
+  'BOOTSTRAP_UNCERTIFIED',
+  'CANONICALLY_ACTIVATED',
+];
+
+/**
+ * Generic stale/invalid-terminal detection and correction (F01/REQ-001).
+ *
+ * Reads the generation-CAS pointer and its referenced ledger. When the pointer's
+ * activation state is NOT a schema-valid active state, or the ledger self-reports
+ * a terminal PASS/COMPLETED that cannot be trusted (stale final SHA, invalid
+ * schema state, or the pointer has already moved on to a successor), the plan is
+ * reclassified to SUPERSEDED/INACTIVE/PARTIAL. The correction is driven entirely
+ * by pointer/ledger/CI facts and never hard-codes a plan id.
+ */
+export function correctStaleTerminal(input: {
+  repoRoot: string;
+  pointer?: { plan_id: string; generation: number; activation_state?: string } | null;
+  currentHead?: string;
+  reason?: string;
+}): InvalidClosureCorrection | { corrected: false; reason: string } {
+  const pointer = input.pointer ?? null;
+  if (!pointer || !pointer.plan_id) {
+    return { corrected: false, reason: 'no active pointer — nothing to correct' };
+  }
+  const ledgerPath = `.agent/ledger/${pointer.plan_id}.json`;
+  const ledgerAbsPath = path.join(input.repoRoot, ledgerPath);
+  if (!fs.existsSync(ledgerAbsPath)) {
+    return { corrected: false, reason: `ledger not found: ${ledgerPath}` };
+  }
+  let ledger: Record<string, unknown>;
+  try {
+    ledger = JSON.parse(fs.readFileSync(ledgerAbsPath, 'utf8'));
+  } catch {
+    return { corrected: false, reason: `invalid ledger JSON: ${ledgerPath}` };
+  }
+
+  const activationValid = pointer.activation_state !== undefined
+    && VALID_ACTIVE_ACTIVATION_STATES.includes(pointer.activation_state);
+  const ledgerClaimsTerminal = ledger.status === 'COMPLETED'
+    || (ledger.closure && (ledger.closure as Record<string, unknown>).terminal_outcome === 'PASS');
+  const closureFinalSha = ledger.closure && typeof (ledger.closure as Record<string, unknown>).final_sha === 'string'
+    ? (ledger.closure as Record<string, unknown>).final_sha as string
+    : null;
+  const staleFinalSha = input.currentHead
+    && closureFinalSha !== null
+    && closureFinalSha !== input.currentHead;
+
+  // A schema-invalid pointer state, or a ledger claiming terminal PASS that
+  // cannot be trusted, forces the generic SUPERSEDED/INACTIVE/PARTIAL correction.
+  const needsCorrection = !activationValid || (ledgerClaimsTerminal && Boolean(staleFinalSha));
+  if (!needsCorrection) {
+    return { corrected: false, reason: `plan ${pointer.plan_id} terminal state is consistent (activation=${pointer.activation_state ?? 'n/a'}, head=${input.currentHead ?? 'n/a'})` };
+  }
+
+  const reason = input.reason ?? `canonical truth reopened: pointer generation ${pointer.generation} is not schema-valid active (${pointer.activation_state ?? 'missing'}) or its terminal PASS is stale; reclassified SUPERSEDED/INACTIVE/PARTIAL`;
+
+  const correction: InvalidClosureCorrection = {
+    plan_id: pointer.plan_id,
+    corrected: true,
+    previous_status: (ledger.status as string) ?? null,
+    previous_execution_state: (ledger.execution_state as string) ?? null,
+    corrected_status: 'SUPERSEDED',
+    corrected_execution_state: 'INACTIVE',
+    terminal_outcome: 'PARTIAL',
+    reason,
+    correction_sha256: '',
+  };
+  const body = { ...correction, correction_sha256: undefined };
+  correction.correction_sha256 = sha256hex(JSON.stringify(body));
+
+  ledger.status = 'SUPERSEDED';
+  ledger.execution_state = 'INACTIVE';
+  ledger.correction = correction;
+
+  const stagePath = ledgerAbsPath + '.stage';
+  fs.writeFileSync(stagePath, JSON.stringify(ledger, null, 2) + '\n', { encoding: 'utf8', mode: 0o600 });
+  fsyncRegularFileSafe(stagePath);
+  fs.renameSync(stagePath, ledgerAbsPath);
+  fsyncDirectorySafe(path.dirname(ledgerAbsPath));
+
+  const correctionDir = path.join(input.repoRoot, '.agent', 'closure');
+  fs.mkdirSync(correctionDir, { recursive: true });
+  const correctionPath = path.join(correctionDir, `${pointer.plan_id}.correction.json`);
+  fs.writeFileSync(correctionPath, JSON.stringify(correction, null, 2) + '\n', { encoding: 'utf8', mode: 0o600 });
+
+  return correction;
+}
 
 /** Write the operational-state ignore markers for a consumer worktree. */
 export function writeOperationalIgnore(repoRoot: string, gitIgnoreFile = '.gitignore'): void {

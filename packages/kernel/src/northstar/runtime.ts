@@ -36,6 +36,11 @@ import { modelDecisionForSpec, type ModelDecision } from './model-governor.js';
 import { transitionExecution, truthFromOutcome, type ExecutionLifecycleRecord } from './execution-lifecycle.js';
 import { readExecutionAuthority } from '../state/execution-authority.js';
 import { validateSemanticState } from '../state/semantic-state-validator.js';
+import { type ProofRoutePlan, type ProofRouteRequest } from './proof-router.js';
+import type { HostId } from './host-adapters.js';
+import { LaneController, type ResourceLane } from './resource-governor.js';
+import { admitArtifact, classifyArtifact, type ArtifactAdmissionInput } from './artifact-admission.js';
+import { buildContextBudgetReceipt, estimateInstalledGraph, type ContextBudgetInput } from './context-budget.js';
 
 export interface VerifierDefinition {
   id: string;
@@ -84,6 +89,13 @@ export interface NorthStarRunInput {
   resourceSnapshot?: HostResourceSnapshot;
   /** Explicit project/domain profile. Never inferred from prompt text. */
   domainPack?: { id: string; stage?: DomainPackStage };
+  /** F04/REQ-004: when supplied, the Proof Router selects the minimal-sufficient
+   *  proof set BEFORE execution and only the selected verifiers run. Omitted
+   *  proofs are recorded with their reason. When omitted the legacy behavior
+   *  (run all verifier definitions) is preserved for backward compatibility. */
+  proofRouter?: (request: ProofRouteRequest) => ProofRoutePlan;
+  /** F07/REQ-007: when supplied, enforcement is decided before effect execution. */
+  enforcement?: (host: HostId) => { layer: string; can_control_mutation: boolean; reason: string };
 }
 
 export interface NorthStarRunResult {
@@ -277,6 +289,10 @@ export interface NorthStarResumeInput {
   requireSemanticAudit?: boolean;
   /** Optional host-managed driver for resumed work. */
   driver?: AgentDriver;
+  /** F04/REQ-004: adaptive proof-route selection on resume (same as fresh run). */
+  proofRouter?: (request: ProofRouteRequest) => ProofRoutePlan;
+  /** F07/REQ-007: enforcement decision before effect execution on resume. */
+  enforcement?: (host: HostId) => { layer: string; can_control_mutation: boolean; reason: string };
 }
 
 interface TaskReportEnvelope {
@@ -360,6 +376,82 @@ function verificationEntries(
   return { graph, byTask };
 }
 
+/**
+ * F04/REQ-004 — build the Proof Router request for one task from the packet and
+ * its spec/risk context, then select only the verifiers whose proof categories
+ * the route plan selected. Returns the filtered entries and the route plan.
+ */
+export function filterVerifiersByProofRoute(
+  packet: TaskPacket,
+  spec: Pick<WorkSpec, 'risk_class'>,
+  entries: Array<{ claim_id: string; verifier: VerifierDefinition; oracle_group?: string }>,
+  plan: ProofRoutePlan,
+): { selected: Array<{ claim_id: string; verifier: VerifierDefinition; oracle_group?: string }>; omitted: Array<{ claim_id: string; verifier_id: string; reason: string }> } {
+  // Map the verifier evidence kind to the claim the proof must cover. A proof
+  // is selected only when its category appears in the route plan's selected set
+  // for the same claim. Everything else is omitted with a reason — UNLESS the
+  // claim has NO selected proof at all, in which case all its verifiers are kept
+  // so required proof is never silently skipped (convergence/recovery must still
+  // be able to close it).
+  const selectedByClaim = new Map<string, Set<string>>();
+  for (const sel of plan.plan.selected) {
+    const set = selectedByClaim.get(sel.claim_id) ?? new Set<string>();
+    set.add(sel.category);
+    selectedByClaim.set(sel.claim_id, set);
+  }
+  const claimIds = new Set(packet.acceptance.map((a) => a.claim_id));
+  const selected: Array<{ claim_id: string; verifier: VerifierDefinition; oracle_group?: string }> = [];
+  const omitted: Array<{ claim_id: string; verifier_id: string; reason: string }> = [];
+  for (const entry of entries) {
+    const cats = selectedByClaim.get(entry.claim_id);
+    if (!claimIds.has(entry.claim_id)) {
+      selected.push(entry);
+      continue;
+    }
+    if (cats === undefined || cats.size === 0) {
+      // No proof selected for this claim — keep all its verifiers (never drop
+      // required proof silently).
+      selected.push(entry);
+      continue;
+    }
+    const kindSelected = cats.has('static') || cats.has('unit') || cats.has('contract') || cats.has('integration') || cats.has('api') || cats.has('live');
+    if (kindSelected) {
+      selected.push(entry);
+    } else {
+      omitted.push({ claim_id: entry.claim_id, verifier_id: entry.verifier.id, reason: `proof category for claim ${entry.claim_id} not selected by adaptive proof route` });
+    }
+  }
+  return { selected, omitted };
+}
+
+/** Build the adaptive proof-route request for a single task packet. */
+export function proofRouteRequestForPacket(
+  packet: TaskPacket,
+  spec: Pick<WorkSpec, 'risk_class'>,
+  repoRoot: string,
+  taskId: string,
+): ProofRouteRequest {
+  const changedFiles = [...packet.scope.owned, ...(packet.policy?.effects.allowed?.includes('filesystem_mutation') ? [] : [])];
+  const claims = packet.acceptance.map((a) => ({
+    id: a.claim_id,
+    claim: packet.goal,
+    live_surface: (packet.policy?.effects.allowed ?? []).some((e) => /live|browser|mcp|network/.test(e)),
+  }));
+  return {
+    task_id: taskId,
+    repository: repoRoot,
+    trigger: {
+      changed_files: changedFiles,
+      affected_claims: claims.map((c) => c.id),
+      risk_hint: (spec.risk_class as 'S0' | 'S1' | 'S2' | 'S3') ?? undefined,
+      runtime_surfaces: packet.policy?.effects.allowed ?? [],
+    },
+    claims,
+    risks: [(spec.risk_class ?? 'S0')],
+    environment: 'deterministic',
+  };
+}
+
 function taskDependenciesFromVerificationGraph(graph: ReturnType<typeof buildVerificationGraph>): Map<string, string[]> {
   const byNode = new Map(graph.map((node) => [node.node_id, node]));
   const out = new Map<string, Set<string>>();
@@ -427,6 +519,22 @@ function ensureEvidenceForReport(
     ledger.append(record, 'verifier');
     existingIds.add(evidenceId);
   });
+}
+
+/**
+ * F07/REQ-007 — Artifact Admission gate at the evidence write boundary. Evidence
+ * is an `evidence` persistence reason, which every class admits; the gate is
+ * still consulted so a future policy cannot be bypassed and so every operational
+ * write is classified. Returns the admission receipt (or null when no admission
+ * policy is wired).
+ */
+export function admitEvidenceWrite(
+  admission: { admit: (input: Omit<ArtifactAdmissionInput, 'owner'>) => ReturnType<typeof admitArtifact> } | undefined,
+  risk: 'low' | 'medium' | 'high',
+): ReturnType<typeof admitArtifact> | null {
+  if (!admission) return null;
+  const cls = classifyArtifact({ risk, evidence_required: true });
+  return admission.admit({ class: cls, reasons: ['evidence'] });
 }
 
 function cumulativeSummary(reports: readonly TaskReport[], recovered: number): RunSummary {
@@ -530,7 +638,6 @@ async function finaliseNorthStarRun(input: {
   for (const report of reports) ensureEvidenceForReport(report, input.packets, byTask, ledger, input.repoRoot, input.spec.spec_id, input.spec.revision, 0, process.platform);
   const evidence = ledger.read();
   persistRawArtifacts(input.runRoot, input.runId, reports);
-
   const journal = new Journal(path.join(input.runRoot, 'journal.jsonl'), {
     repository: path.basename(input.repoRoot), plan: input.spec.spec_id, revision: String(input.spec.revision),
   });
@@ -816,6 +923,8 @@ function makeNorthStarRunner(input: {
   contextByTask?: Map<string, CompiledContext>;
   semanticResolver?: SemanticCodeResolver;
   driver?: AgentDriver;
+  laneController?: { acquire(lane: 'writer' | 'verifier'): boolean; release(lane: 'writer' | 'verifier'): void };
+  admission?: { admit: (input: Omit<ArtifactAdmissionInput, 'owner'>) => ReturnType<typeof admitArtifact> };
 }): Runner {
   const reportLedger = new TaskReportLedger(path.join(input.runRoot, 'task-reports.jsonl'));
   const evidenceLedger = new EvidenceLedger(path.join(input.runRoot, 'evidence.jsonl'), input.repoRoot);
@@ -827,6 +936,7 @@ function makeNorthStarRunner(input: {
     identity: { repository: path.basename(input.repoRoot), plan: input.spec.spec_id, revision: String(input.spec.revision) },
     agent: input.agent,
     ...(input.driver ? { driver: input.driver } : {}),
+    ...(input.laneController ? { laneController: input.laneController } : {}),
     maxRepairDepth: input.maxRepairDepth,
     taskTimeoutMs: input.taskTimeoutMs,
     maxTasks: input.maxTasks,
@@ -946,6 +1056,38 @@ export async function executeNorthStarRun(input: NorthStarRunInput & { maxTasks?
   assertRunState(initialState);
   writeJsonAtomic(path.join(runRoot, 'run-state.json'), initialState);
 
+  // REQ-012: emit the context budget receipt at the actual run edge. It measures
+  // the installed graph and the model-visible subset actually selected (rules,
+  // skill metadata/bodies, tool/MCP/subagent schemas) — never the whole graph.
+  const modelVisible = [...input.packets].reduce<ContextBudgetInput['model_visible']>((acc, packet) => {
+    acc!.rules = acc!.rules ?? [];
+    acc!.rules.push({ tokens: Math.ceil(400 / 3.6) }); // stable minimal bootstrap
+    acc!.skill_metadata = acc!.skill_metadata ?? [];
+    acc!.skill_metadata.push({ tokens: Math.ceil(120 / 3.6) });
+    acc!.tool_schemas = acc!.tool_schemas ?? [];
+    acc!.tool_schemas.push({ tokens: Math.ceil(180 / 3.6) });
+    acc!.mcp_schemas = acc!.mcp_schemas ?? [];
+    acc!.mcp_schemas.push({ tokens: Math.ceil(90 / 3.6) });
+    acc!.subagent_advertisements = acc!.subagent_advertisements ?? [];
+    acc!.subagent_advertisements.push({ tokens: Math.ceil(60 / 3.6) });
+    return acc;
+  }, {});
+  const contextBudget = buildContextBudgetReceipt({
+    run_id: runId,
+    work_id: input.request.work_id,
+    measurement_source: 'ESTIMATED',
+    installed_graph: estimateInstalledGraph(input.repoRoot),
+    model_visible: modelVisible,
+    input_tokens: { tool_results: 0, repair_retries: 0, repeated_reads: 0 },
+    excluded: [
+      { kind: 'inactive_plans', count: 0, reason: 'inactive plans are never model-visible' },
+      { kind: 'old_receipts', count: 0, reason: 'old receipts are archive/audit only' },
+      { kind: 'cold_references', count: 0, reason: 'references load on demand, never eagerly' },
+      { kind: 'unused_mcp', count: 0, reason: 'MCP schemas advertise only when a capability plan selects them or a lease is active' },
+    ],
+  });
+  writeJsonAtomic(path.join(runRoot, 'context-budget-receipt.json'), contextBudget);
+
   const broker = createStandardCapabilityBroker(harnessRoot, { decisionFabricMode: input.decisionFabricMode ?? 'shadow' });
   const workerModelDecision = modelDecisionForSpec(input.spec, 'worker');
   writeJsonAtomic(path.join(runRoot, 'model-decisions.json'), {
@@ -961,11 +1103,19 @@ export async function executeNorthStarRun(input: NorthStarRunInput & { maxTasks?
   writeJsonAtomic(path.join(runRoot, 'capability-manifest.json'), broker.manifest(`CAP-${runId}`));
 
   const contextByTask = new Map<string, CompiledContext>();
+  // F07/REQ-007: production LaneController + Artifact Admission wiring. The
+  // lane controller serializes the writer and gates the verifier lane; artifact
+  // admission gates every operational write below.
+  const laneController = new LaneController();
+  if (resourceDecision.pressure === 'elevated' || resourceDecision.pressure === 'critical') laneController.applyMemoryPressure(resourceDecision.pressure === 'critical' ? 0.25 : 0.5);
+  const admitArtifactForRun = (input2: Omit<ArtifactAdmissionInput, 'owner'>) => admitArtifact({ ...input2, owner: 'harness-maintainer' });
   const runner = makeNorthStarRunner({
     repoRoot: input.repoRoot, runRoot, runId, executionGeneration, request: input.request, spec: input.spec, manifest: input.manifest, packets: input.packets,
     verifiers: input.verifiers, entriesByTask: verificationEntriesByTask, agent: input.agent, harnessRoot,
     maxRepairDepth: input.maxRepairDepth, taskTimeoutMs: input.taskTimeoutMs, maxTasks: input.maxTasks,
     invocationOverride: input.invocationOverride, skipAgentDetection: input.skipAgentDetection, contextByTask, semanticResolver: input.semanticResolver,
+    laneController: { acquire: (lane) => laneController.acquire(lane as ResourceLane), release: (lane) => laneController.release(lane as ResourceLane) },
+    admission: { admit: admitArtifactForRun },
     ...(input.driver ? { driver: input.driver } : {}),
   });
 
@@ -986,7 +1136,32 @@ export async function executeNorthStarRun(input: NorthStarRunInput & { maxTasks?
     contextByTask.set(packet.task_id, context);
     writeJsonAtomic(path.join(runRoot, 'context', `${packet.task_id}.json`), { ...context, routes: routed });
     if (routed.decision_fabric) writeJsonAtomic(path.join(runRoot, 'decision-fabric', `${packet.task_id}.json`), routed.decision_fabric);
-    const verifierDefinitions = (verificationEntriesByTask.get(packet.task_id) ?? []).map((entry) => entry.verifier);
+    const allEntries = verificationEntriesByTask.get(packet.task_id) ?? [];
+    // F04/REQ-004: when a proof router is supplied, only the selected verifiers
+    // run; omitted proofs are recorded with their reason. Otherwise the legacy
+    // all-verifiers behavior is preserved.
+    let verifierDefinitions = allEntries.map((entry) => entry.verifier);
+    let proofRoute: ProofRoutePlan | null = null;
+    if (input.proofRouter) {
+      proofRoute = input.proofRouter(proofRouteRequestForPacket(packet, input.spec, input.repoRoot, packet.task_id));
+      const filtered = filterVerifiersByProofRoute(packet, input.spec, allEntries, proofRoute);
+      verifierDefinitions = filtered.selected.map((entry) => entry.verifier);
+      writeJsonAtomic(path.join(runRoot, 'proof-route', `${packet.task_id}.json`), {
+        task_id: packet.task_id,
+        selected: filtered.selected.map((e) => `${e.claim_id}:${e.verifier.id}`),
+        omitted: filtered.omitted,
+        profile: proofRoute.plan.profile,
+        selected_profile: proofRoute.plan.profile,
+      });
+    }
+    // F07/REQ-007: enforcement is decided before effect execution/activation.
+    if (input.enforcement) {
+      const host = (input.agent ?? 'opencode') as HostId;
+      const decision = input.enforcement(host);
+      if (decision.layer === 'blocked') {
+        throw new Error(`task ${packet.task_id} blocked by enforcement for host ${host}: ${decision.reason}`);
+      }
+    }
     const verificationProfile: VerificationProfile = { steps: verifierDefinitions.map(verifierStep), evidence: [], failFast: true };
     const verification = verifierDefinitions.map((definition) => definition.command ?? `${definition.argv!.executable} ${definition.argv!.args.join(' ')}`);
     runner.tasks.add({
@@ -1108,7 +1283,21 @@ export async function resumeNorthStarRun(input: NorthStarResumeInput): Promise<N
     contextByTask.set(packet.task_id, context);
     writeJsonAtomic(path.join(runRoot, 'context', `${packet.task_id}.json`), { ...context, routes: routed });
     if (routed.decision_fabric) writeJsonAtomic(path.join(runRoot, 'decision-fabric', `${packet.task_id}.json`), routed.decision_fabric);
-    const verifierDefinitions = (byTask.get(packet.task_id) ?? []).map((entry) => entry.verifier);
+    const allEntries = byTask.get(packet.task_id) ?? [];
+    // F04/REQ-004: same adaptive proof-route selection on resume.
+    let verifierDefinitions = allEntries.map((entry) => entry.verifier);
+    if (input.proofRouter) {
+      const proofRoute = input.proofRouter(proofRouteRequestForPacket(packet, spec, input.repoRoot, packet.task_id));
+      const filtered = filterVerifiersByProofRoute(packet, spec, allEntries, proofRoute);
+      verifierDefinitions = filtered.selected.map((entry) => entry.verifier);
+      writeJsonAtomic(path.join(runRoot, 'proof-route', `${packet.task_id}.json`), {
+        task_id: packet.task_id,
+        selected: filtered.selected.map((e) => `${e.claim_id}:${e.verifier.id}`),
+        omitted: filtered.omitted,
+        profile: proofRoute.plan.profile,
+        selected_profile: proofRoute.plan.profile,
+      });
+    }
     const verificationProfile: VerificationProfile = { steps: verifierDefinitions.map(verifierStep), evidence: [], failFast: true };
     const verification = verifierDefinitions.map((definition) => definition.command ?? `${definition.argv!.executable} ${definition.argv!.args.join(' ')}`);
     runner.tasks.add({

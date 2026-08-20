@@ -196,7 +196,7 @@ export interface HostAttestationEvidenceRef {
 }
 
 export interface HostAttestation {
-  readonly host: 'codex' | 'claude' | 'cursor' | 'antigravity' | 'grok' | 'opencode';
+  readonly host: 'codex' | 'claude' | 'cursor' | 'antigravity' | 'grok' | 'opencode' | 'deepseek-harness' | 'command-code';
   readonly hostVersion: string;
   readonly commitSha: string;
   readonly capabilityStatus: CapabilityStatus;

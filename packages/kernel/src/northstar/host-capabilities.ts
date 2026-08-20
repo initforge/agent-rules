@@ -57,7 +57,7 @@ export const HOST_CONTRACT_METADATA: Record<HostId, HostContractMetadata> = {
   codex: {
     doc_version: '2026-08',
     doc_accessed_at: '2026-08-20',
-    source_url: 'https://learn.chatgpt.com/docs/config-file/config-reference',
+    source_url: 'https://developers.openai.com/codex/guides/agents-md',
     max_age_days: 90,
   },
   claude: {
@@ -75,20 +75,32 @@ export const HOST_CONTRACT_METADATA: Record<HostId, HostContractMetadata> = {
   cursor: {
     doc_version: '2026-08',
     doc_accessed_at: '2026-08-20',
-    source_url: 'https://docs.cursor.com/cli/reference/permissions',
+    source_url: 'https://prod.cursor.com/docs/plugins',
     max_age_days: 90,
   },
   antigravity: {
     doc_version: '2026-08',
     doc_accessed_at: '2026-08-20',
-    source_url: 'https://antigravity.google/docs/features',
+    source_url: 'https://www.antigravity.google/docs/projects',
     max_age_days: 90,
   },
   grok: {
     doc_version: '2026-08',
     doc_accessed_at: '2026-08-20',
-    source_url: 'https://docs.x.ai/build/overview',
+    source_url: 'https://github.com/xai-org/grok-build',
     max_age_days: 90,
+  },
+  'deepseek-harness': {
+    doc_version: 'developer-preview-2026-08',
+    doc_accessed_at: '2026-08-20',
+    source_url: 'https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/architecture.md',
+    max_age_days: 14,
+  },
+  'command-code': {
+    doc_version: 'experimental-mod-2026-08',
+    doc_accessed_at: '2026-08-20',
+    source_url: 'https://commandcode.ai/docs/mods',
+    max_age_days: 14,
   },
 };
 
@@ -133,6 +145,8 @@ const BASELINE: Record<HostId, HostCapabilityAttestationV2['baseline']> = {
   opencode: { native_pre_effect_enforcement: 'EMULATED', sandbox: 'UNVERIFIED', path_permissions: 'EMULATED', mcp_lifecycle: 'HOST_NATIVE', worktree_support: 'HOST_NATIVE', telemetry: 'HOST_NATIVE', compaction: 'EMULATED' },
   cursor: { native_pre_effect_enforcement: 'UNVERIFIED', sandbox: 'UNVERIFIED', path_permissions: 'UNVERIFIED', mcp_lifecycle: 'UNVERIFIED', worktree_support: 'HOST_NATIVE', telemetry: 'UNVERIFIED', compaction: 'UNVERIFIED' },
   grok: { native_pre_effect_enforcement: 'UNVERIFIED', sandbox: 'UNVERIFIED', path_permissions: 'UNVERIFIED', mcp_lifecycle: 'UNVERIFIED', worktree_support: 'HOST_NATIVE', telemetry: 'UNVERIFIED', compaction: 'UNVERIFIED' },
+  'deepseek-harness': { native_pre_effect_enforcement: 'UNVERIFIED', sandbox: 'UNVERIFIED', path_permissions: 'UNVERIFIED', mcp_lifecycle: 'UNVERIFIED', worktree_support: 'UNVERIFIED', telemetry: 'UNVERIFIED', compaction: 'UNVERIFIED' },
+  'command-code': { native_pre_effect_enforcement: 'UNVERIFIED', sandbox: 'UNVERIFIED', path_permissions: 'UNVERIFIED', mcp_lifecycle: 'UNVERIFIED', worktree_support: 'UNVERIFIED', telemetry: 'UNVERIFIED', compaction: 'UNVERIFIED' },
 };
 
 /**
@@ -258,4 +272,161 @@ export function decideEnforcement(input: EnforcementInput): EnforcementDecision 
 /** Default attestation for a host that has not been probed: everything UNVERIFIED. */
 export function unprobedAttestation(host: HostId): HostCapabilityAttestationV2 {
   return hostCapabilityAttestationV2(host, { ok: false, error: 'no live probe performed' });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// REQ-011 — typed HostCapabilityFacts ABI (registry v2, per-capability).
+// Semantic enums describe what a host can actually do; UNKNOWN never becomes
+// allow. Each capability certification binds the five identities and carries
+// expiry/TTL. Host/projection/config fingerprint changes re-probe immediately
+// and stale only the dependent capabilities.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export type CertificationState =
+  | 'UNSUPPORTED'
+  | 'STATIC_KNOWN'
+  | 'STATIC_CONFORMED'
+  | 'INSTALLED_UNVERIFIED'
+  | 'LIVE_CERTIFIED'
+  | 'STALE_REQUIRES_RECERTIFICATION'
+  | 'NOT_LIVE_VERIFIED';
+
+export type SkillSurfaceMode = 'NONE' | 'EAGER' | 'METADATA_THEN_LAZY_BODY' | 'PATH_SCOPED_LAZY';
+export type PermissionSurfaceMode = 'PROMPT_ONLY' | 'NATIVE_ALLOW_ASK_DENY' | 'NATIVE_PRE_EFFECT_DENY' | 'BROKER_ONLY';
+export type SubagentSurfaceMode = 'NONE' | 'SHARED_CONTEXT' | 'ISOLATED_CONTEXT' | 'ISOLATED_WORKTREE';
+export type SurfacePresence = 'NONE' | 'PARTIAL' | 'FULL';
+
+export interface HostIdentity {
+  host: HostId;
+  host_version?: string;
+}
+export interface AdapterIdentity {
+  adapter_revision: string;
+  contract_revision: string;
+}
+export interface ProjectionIdentity {
+  projection_hash: string;
+  projection_path?: string;
+}
+
+export interface InstructionSurface { presence: SurfacePresence; entrypoint?: string; }
+export interface ContextSurface { presence: SurfacePresence; delivery?: string; }
+export interface SkillSurface { mode: SkillSurfaceMode; lazy_body?: boolean; path_scoped?: boolean; }
+export interface HookSurface { presence: SurfacePresence; lifecycle?: string; failure_semantics?: 'fail_open' | 'fail_closed'; }
+export interface PermissionSurface { mode: PermissionSurfaceMode; pre_effect_deny?: boolean; }
+export interface SandboxSurface { presence: SurfacePresence; mutation_denied?: boolean; }
+export interface SubagentSurface { mode: SubagentSurfaceMode; }
+export interface SessionSurface { presence: SurfacePresence; headless?: boolean; }
+export interface WorktreeSurface { presence: SurfacePresence; isolated_transaction?: boolean; }
+export interface McpSurface { presence: SurfacePresence; lease?: boolean; schema_exposure?: boolean; }
+export interface HeadlessSurface { presence: SurfacePresence; high_trust_mutation_denied?: boolean; }
+export interface CompactionSurface { presence: SurfacePresence; native?: boolean; }
+export interface EventSurface { presence: SurfacePresence; structured_events?: boolean; }
+export interface PlanningSurface { presence: SurfacePresence; write_hooks_in_plan_mode?: boolean; }
+export interface ModelObservability { observed_models?: boolean; attestation: 'native' | 'host-attested' | 'declared' | 'unconfirmed'; }
+
+export interface CapabilityCertification {
+  capability: string;
+  certification_state: CertificationState;
+  evidence_refs: string[];
+  certified_at: string;
+  expires_at: string;
+  host: HostId;
+  adapter_revision: string;
+  projection_hash: string;
+  host_version?: string;
+  config_fingerprint?: string;
+  session_id?: string;
+}
+
+export interface HostCapabilityFacts {
+  host: HostIdentity;
+  adapter: AdapterIdentity;
+  projection: ProjectionIdentity;
+
+  instruction_surface: InstructionSurface;
+  context_injection: ContextSurface;
+  skill_surface: SkillSurface;
+  hook_surface: HookSurface;
+  permission_surface: PermissionSurface;
+  sandbox_surface: SandboxSurface;
+  subagent_surface: SubagentSurface;
+  session_surface: SessionSurface;
+  worktree_surface: WorktreeSurface;
+  mcp_surface: McpSurface;
+  headless_surface: HeadlessSurface;
+  compaction_surface: CompactionSurface;
+  structured_event_surface: EventSurface;
+  planning_surface: PlanningSurface;
+  model_observability: ModelObservability;
+
+  capability_fingerprint: string;
+  static_contract_revision: string;
+  observed_runtime_revision?: string;
+  certifications: CapabilityCertification[];
+}
+
+/** Per-capability TTL in days; developer-preview/experimental surfaces expire fast. */
+export const CAPABILITY_TTL_DAYS: Record<string, number> = {
+  instruction_surface: 90,
+  context_injection: 90,
+  skill_surface: 90,
+  hook_surface: 90,
+  permission_surface: 30,
+  sandbox_surface: 30,
+  subagent_surface: 90,
+  session_surface: 90,
+  worktree_surface: 90,
+  mcp_surface: 30,
+  headless_surface: 30,
+  compaction_surface: 90,
+  structured_event_surface: 90,
+  planning_surface: 30,
+  model_observability: 90,
+};
+
+/** Capabilities whose TTL shortens for developer-preview/experimental hosts. */
+const DEVELOPER_PREVIEW_HOSTS: readonly HostId[] = ['deepseek-harness', 'command-code'];
+
+export function capabilityTtlDays(capability: string, host?: HostId): number {
+  const base = CAPABILITY_TTL_DAYS[capability] ?? 90;
+  if (host && DEVELOPER_PREVIEW_HOSTS.includes(host)) return Math.min(base, 14);
+  return base;
+}
+
+/**
+ * Selective staleness: a fingerprint (or identity component) change stales only
+ * the certifications whose declared fingerprint/components differ. A TTL expiry
+ * stales only the expired certifications. Never silently widens authority.
+ * When `host` is supplied, only that host's certifications are evaluated
+ * against the observed components; other hosts' certifications are untouched.
+ */
+export function staleCertifications(
+  certifications: readonly CapabilityCertification[],
+  input: { now?: Date; host?: HostId; host_version?: string; adapter_revision?: string; projection_hash?: string; config_fingerprint?: string; session_id?: string },
+): { stale: CapabilityCertification[]; fresh: CapabilityCertification[] } {
+  const now = input.now ?? new Date();
+  const stale: CapabilityCertification[] = [];
+  const fresh: CapabilityCertification[] = [];
+  for (const cert of certifications) {
+    const hostScopeMatches = input.host === undefined || cert.host === input.host;
+    const componentsChanged = hostScopeMatches && [
+      input.host_version !== undefined && cert.host_version !== undefined && input.host_version !== cert.host_version,
+      input.adapter_revision !== undefined && input.adapter_revision !== cert.adapter_revision,
+      input.projection_hash !== undefined && input.projection_hash !== cert.projection_hash,
+      input.config_fingerprint !== undefined && cert.config_fingerprint !== undefined && input.config_fingerprint !== cert.config_fingerprint,
+      input.session_id !== undefined && cert.session_id !== undefined && input.session_id !== cert.session_id,
+    ].some(Boolean);
+    const expired = now.getTime() > Date.parse(cert.expires_at);
+    if (componentsChanged || expired) stale.push(cert);
+    else fresh.push(cert);
+  }
+  return { stale, fresh };
+}
+
+/** A capability whose live certification is missing/stale/expired is NOT usable as native enforcement. */
+export function capabilityIsLive(cert?: CapabilityCertification, now: Date = new Date()): boolean {
+  if (!cert) return false;
+  if (cert.certification_state !== 'LIVE_CERTIFIED') return false;
+  return now.getTime() <= Date.parse(cert.expires_at);
 }

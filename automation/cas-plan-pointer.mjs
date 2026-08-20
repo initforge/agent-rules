@@ -66,7 +66,15 @@ function readLedgerEffectiveIdentitySha256(ledgerPath) {
 
 const planId = process.argv[2];
 if (!planId) {
-  console.error("usage: node automation/cas-plan-pointer.mjs <plan-id> [expected-generation]");
+  console.error("usage: node automation/cas-plan-pointer.mjs <plan-id> [expected-generation] [--activation-state <state>]");
+  process.exit(2);
+}
+
+const stateIdx = process.argv.indexOf("--activation-state");
+const activationState = stateIdx >= 0 ? process.argv[stateIdx + 1] : "CANONICALLY_ACTIVATED";
+const VALID_STATES = ["BOOTSTRAP_POINTER", "BOOTSTRAP_UNCERTIFIED", "CANONICALLY_ACTIVATED"];
+if (!VALID_STATES.includes(activationState)) {
+  console.error(`invalid --activation-state ${activationState}; must be one of ${VALID_STATES.join(", ")}`);
   process.exit(2);
 }
 
@@ -159,7 +167,7 @@ const candidate = {
     protocol: "generation-compare-and-swap",
     expected_previous_generation: expectedPrev,
     commit_target: ".agent/current.json",
-    activation_state: "CANONICALLY_ACTIVATED",
+    activation_state: activationState,
     updated_at: new Date().toISOString(),
   },
 };

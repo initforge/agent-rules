@@ -1,0 +1,156 @@
+plan_id: portable-host-native-supervision-v1
+canonical_chain: "symptom -> canonical authority -> host-neutral semantics -> host mapping -> install/migration -> consumer observation -> proof"
+
+maps:
+  - id: C-F01-CANONICAL-TRUTH
+    symptom: "pointer generation 33 + ledger self-report COMPLETED/PASS/21/21 with stale final SHA 1ecb8fd and invalid activation_state DEACTIVATED_TERMINAL; exact-SHA CI red."
+    canonical_authority: "generation-CAS current pointer + canonical ledger + execution-contract schema"
+    host_neutral: "terminal state is invalid/stale, never PASS; successor pointer must be schema-valid and active"
+    host_mapping: "activate/pointer service opens generation 34 with BOOTSTRAP_UNCERTIFIED; generic closure correction reclassifies old plan"
+    install_migration: "installed harness reads only schema-valid active pointer; stale terminals are not release evidence"
+    consumer_observation: "arbitrary consumer cannot observe a green release for a red/invalid state"
+    proof: "schema validation of new pointer; generic correction of old ledger; REQ-001 unit/contract tests"
+
+  - id: C-F02-CLI-OUTCOME
+    symptom: "run command checks top-level result.outcome; northStarRun returns {processed, remaining, results}; PARTIAL/FAILED can exit 0 and render completed."
+    canonical_authority: "TrustedTerminalDecision consumed by every public success path"
+    host_neutral: "exit 0/DONE only from trusted PASS; outcome derived from aggregate trusted_outcome"
+    host_mapping: "run/drain/queue/render all read the same decision type"
+    install_migration: "packaged CLI run on isolated host home must not exit 0 for non-PASS"
+    consumer_observation: "consumer task PARTIAL never shows DONE or exit 0"
+    proof: "adversarial: PARTIAL!=exit0, FAILED!=DONE, BLOCKED!=completed"
+
+  - id: C-F03-CLOSURE
+    symptom: "close fabricates pending evidence for every requirement yet commits and exits 0; stageClosureTransaction accepts caller terminal_outcome; no public attest->deactivate->compact composition."
+    canonical_authority: "Closure Service stage/commit/attest/deactivate/compact pipeline"
+    host_neutral: "outcome derived only from real ledger/evidence/reconciliation/proof identities; pending -> PARTIAL"
+    host_mapping: "close loads real evidence; caller cannot force PASS"
+    install_migration: "installed candidate close rejects empty/pending/mismatched evidence"
+    consumer_observation: "consumer closure is identity-bound, idempotent, and never PASS without sufficient evidence"
+    proof: "closure adversarial tests; double-close idempotent; forced PASS rejected"
+
+  - id: C-F04-PROOF-ROUTER
+    symptom: "Proof Router exists but runtime/resume runs all verifier definitions; adaptive minimum-proof is API/test only."
+    canonical_authority: "Proof Router planProofRoute()/completeProofRoute()"
+    host_neutral: "select smallest sufficient proof set before execution; run only selected; record omitted reasons"
+    host_mapping: "runtime/resume/install use the same route plan"
+    install_migration: "packaged harness uses router on production path"
+    consumer_observation: "generic consumer task runs fewer safe verifiers"
+    proof: "router truly reduces verifiers safely; omitted proofs carry reason + invalidation"
+
+  - id: C-F05-DECISION-FABRIC
+    symptom: "Decision Fabric defaults to shadow; legacy routeSkills() is the real authority for skill/context selection."
+    canonical_authority: "Decision Fabric + typed RepoFacts/TaskFacts/policy"
+    host_neutral: "skill/context chosen by facts + explicit request, not phrase or repo name"
+    host_mapping: "phrase only a hint; default no skill"
+    install_migration: "installed harness routes by facts"
+    consumer_observation: "generic repo facts drive selection; no false domain authority"
+    proof: "shadow-parity then deletion of legacy authority"
+
+  - id: C-F06-MCP-IDLE-ZERO
+    symptom: "idle_zero_attested conflated with cleanup confirmation; receipt-write error swallowed; loss of receipt looks like successful teardown."
+    canonical_authority: "MCP receipt schema/predicate + cleanup fail-closed"
+    host_neutral: "idle-zero = no process/socket/lease/provider/orphan/schema exposure; receipt write is terminal-critical"
+    host_mapping: "teardown receipt write error surfaces as terminal BLOCKED"
+    install_migration: "packaged harness teardown verified in isolated home"
+    consumer_observation: "generic no-MCP task leaves zero managed process/socket and a valid receipt"
+    proof: "G1 no-MCP, G3 stale, concurrency, crash; cleanup receipt fail-closed"
+
+  - id: C-F07-ADMISSION-LANES-ENFORCEMENT
+    symptom: "Artifact Admission, LaneController and decideEnforcement() have no production callers; runtime writes/runs directly."
+    canonical_authority: "artifact admission + resource governor + enforcement ladder at operational boundaries"
+    host_neutral: "every write/run/install passes admission, lanes and enforcement before effect"
+    host_mapping: "same gates on all hosts"
+    install_migration: "packaged harness enforces at actual boundaries"
+    consumer_observation: "consumer writes respect admission/lanes/enforcement"
+    proof: "production-path wiring tests; direct-write bypass impossible"
+
+  - id: C-F08-COMPILE-DOD
+    symptom: "compileDoD() infers depth from disposition/risk/path containing release|install; PLAN_ONLY loses depth, EXPORT always over-deep."
+    canonical_authority: "CompiledDoD from requirements/claims/proof obligations + release/migration/live scope"
+    host_neutral: "disposition only decides where execution happens"
+    host_mapping: "handoff keeps full obligations regardless of disposition"
+    install_migration: "installed harness handoff keeps full CODE/BEHAVIOR/RELEASE/TERMINAL"
+    consumer_observation: "generic worker honors full DoD on EXPORT_HANDOFF and PLAN_ONLY"
+    proof: "compileDoD independence negative tests"
+
+  - id: C-F09-REGISTRY
+    symptom: "hosts hard-coded in platform-contracts.json, CLI/kernel host arrays and automation; certification 5 hosts, runtime 6; stale Mimocode references."
+    canonical_authority: "platform-contracts.json registry v2 with eight canonical HostIds"
+    host_neutral: "registry is the single source; automation/schema/doctor/installer/docs/fixtures/CI derive from it"
+    host_mapping: "runtime uses validated/branded HostId"
+    install_migration: "adding a host does not require editing unrelated logic"
+    consumer_observation: "generic install uses one consistent host set"
+    proof: "registry schema validation; no hard-coded host drift"
+
+  - id: C-F10-ADAPTER-CONTRACT
+    symptom: "two independent adapter contracts plus capability matrix; siblings forced into detect/render/stage; many hosts only write rules/capsule."
+    canonical_authority: "single HostAdapter contract shared by CLI runtime and platforms/*/adapter.ts"
+    host_neutral: "lifecycle separated from semantics; mapRequirement returns EnforcementPlan"
+    host_mapping: "enforcement order native -> broker -> isolated worktree -> BLOCKED/UNSUPPORTED"
+    install_migration: "packaged harness uses one contract"
+    consumer_observation: "consumer sessions get correct native mapping per host"
+    proof: "adapter contract unit tests; UNKNOWN never allow"
+
+  - id: C-F11-CAPABILITY-FACTS
+    symptom: "capability facts coarse/boolean; lack exact projection/config/session binding and selective staleness; host update can drop enforcement while old receipts remain valid."
+    canonical_authority: "HostCapabilityFacts per-capability fingerprint/TTL/staleness"
+    host_neutral: "semantic enum values; five-identity certification binding; fingerprint change re-probes"
+    host_mapping: "staleness stales only dependent capabilities; never silent-widen authority"
+    install_migration: "packaged harness re-probes on fingerprint change"
+    consumer_observation: "consumer enforcement never silently disappears"
+    proof: "fingerprint stability, selective invalidation, TTL expiry tests"
+
+  - id: C-F12-CONTEXT-ECONOMY
+    symptom: "installed graph 160,747 tokens with no model-visible budget receipt; tool/MCP/subagent/skill exposure unmeasured end-to-end."
+    canonical_authority: "ContextBudgetReceipt emitted at actual host edge; aggregate per trusted PASS"
+    host_neutral: "stable minimal bootstrap + objective + relevant facts + on-demand bodies; exclude inactive/cold context"
+    host_mapping: "per-host context measurement source HOST_OBSERVED|EXACT_SERIALIZED|ESTIMATED"
+    install_migration: "installed harness emits context receipts"
+    consumer_observation: "weak worker sees small stable context on S0/S1"
+    proof: "context -20%, duplicate reads/tool calls -30%, p50 +5% bound, trusted success non-decreasing"
+
+  - id: C-F13-INTAKE
+    symptom: "non-trivial S1 without explicit draft/verifier forced into strong planner; no EXPLICIT/DISCOVERABLE/SEMANTICALLY_AMBIGUOUS distinction."
+    canonical_authority: "IntakeDecision classifier + planner authority boundaries"
+    host_neutral: "EXPLICIT/DISCOVERABLE compile deterministically; only SEMANTICALLY_AMBIGUOUS calls planner"
+    host_mapping: "missing planner -> NEEDS_USER/PLANNER_REQUIRED"
+    install_migration: "installed harness never invents requirements"
+    consumer_observation: "case D stops with NEEDS_USER/PLANNER_REQUIRED"
+    proof: "intake classifier tests; zero invented requirements; zero model override"
+
+  - id: C-F14-NEW-HOSTS
+    symptom: "DeepSeek Harness and Command Code have no adapter, projection, lifecycle, certification or fixtures."
+    canonical_authority: "platforms/deepseek-harness + platforms/command-code with native lifecycle"
+    host_neutral: "DSH via Cordis bundle/profile (no core patch); Command Code via session-scoped mods/skills/native permissions/events"
+    host_mapping: "DSH bundle hash + config fingerprint verified pre-launch; Command Code hard boundary is native permissions, mod/hook failures fail closed"
+    install_migration: "managed bundles/profiles reversible; --mod session-scoped; never global-enable"
+    consumer_observation: "consumer cannot unload/replace trust bundle; forbidden mutations blocked"
+    proof: "DSH and Command Code adversarial + lifecycle tests"
+
+  - id: C-F15-CI-CERTIFICATION
+    symptom: "self-hosted matrix can sit queued beyond job timeout; static/live truth not bounded on exact SHA."
+    canonical_authority: "hosted static jobs + signed live attestations within bounded window"
+    host_neutral: "unavailable host -> NOT_LIVE_VERIFIED; broken primitive -> real certification failure"
+    host_mapping: "LIVE_CERTIFIED only from actual behavior evidence"
+    install_migration: "packaged candidate runs canaries on exact SHA"
+    consumer_observation: "release metadata matches latest non-stale receipts"
+    proof: "CI policy tests; no fake green; no unconditional self-hosted matrix"
+
+  - id: C-F16-REGISTRY-MATRIX
+    symptom: "G1-G4 fixtures exist but don't cover registry-driven 8-host package/install/update path or host fingerprint evolution."
+    canonical_authority: "registry-driven generic matrix + host-update canary"
+    host_neutral: "package/install path used end-to-end; kernel-only invocation insufficient"
+    host_mapping: "host-update stales only affected capabilities then selective probes + recertify/fallback/downgrade"
+    install_migration: "installed harness exercises fresh/upgrade/update/rollback/remove"
+    consumer_observation: "generic consumers pass regardless of dogfood"
+    proof: "G1-G4 + update-drift fixtures green"
+
+  - id: C-GIT-CONVERGENCE
+    symptom: "history convergence and final push must keep local == origin/main with <=9 commits and exact-SHA CI."
+    canonical_authority: "direct main work; squash to <=2 commits; force-with-lease with recorded remote lease"
+    host_neutral: "git protocol invariants"
+    host_mapping: "no PR, no temp branch, no intermediate push"
+    install_migration: "final candidate install from exact package artifact"
+    consumer_observation: "generic rerun + live canaries green on exact final SHA"
+    proof: "rev-list count <=9; local == origin/main; exact-SHA CI green"

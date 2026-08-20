@@ -34,6 +34,7 @@ import { topologyCmd } from "./commands/topology.js";
 import { adversarialCmd } from "./commands/adversarial.js";
 import { certifyCmd } from "./commands/certify.js";
 import { proofPlanCmd } from "./commands/proof-plan.js";
+import { hostCanaryCmd } from "./commands/host-canary.js";
 import { handoffCmd } from "./commands/handoff.js";
 import { initNorthStar, northStarDrain, northStarReference, northStarReferenceSearch, northStarRun, northStarStatus, NORTHSTAR_AGENTS, NORTHSTAR_EVIDENCE_KINDS } from "./commands/northstar-ux.js";
 import { createOpencodeClient } from "@opencode-ai/sdk/v2/client";
@@ -96,7 +97,7 @@ program
         domainPack: cmdOpts.domainPack,
         capabilityProviders: cmdOpts.capabilityProvider,
       });
-      const blocked = result.results.some((item) => item.status === 'BLOCKED' || item.status === 'FAILED');
+      const blocked = result.results.some((item) => item.status !== 'PASS');
       formatOutput({ exitCode: blocked ? ExitCode.GeneralError : ExitCode.Success, message: `Processed ${result.processed} queued request(s)`, data: result as unknown as Record<string, unknown> }, program.optsWithGlobals() as CliOptions);
     } catch (error) {
       formatOutput({ exitCode: ExitCode.GeneralError, message: error instanceof Error ? error.message : String(error) }, program.optsWithGlobals() as CliOptions);
@@ -208,8 +209,15 @@ program
         domainPack: cmdOpts.domainPack,
         plannerContract,
       });
-      const blocked = typeof result === "object" && result !== null && "outcome" in result && (result as { outcome?: unknown }).outcome === "BLOCKED";
-      formatOutput({ exitCode: blocked ? ExitCode.GeneralError : ExitCode.Success, message: blocked ? "North-Star run blocked" : "North-Star run completed", data: result as Record<string, unknown> }, program.optsWithGlobals() as CliOptions);
+      const outcome = typeof result === "object" && result !== null
+        ? (result as { trusted_outcome?: string; outcome?: string }).trusted_outcome ?? (result as { outcome?: string }).outcome
+        : undefined;
+      const passed = outcome === "PASS";
+      formatOutput({
+        exitCode: passed ? ExitCode.Success : ExitCode.GeneralError,
+        message: passed ? "North-Star run completed" : `North-Star run not trusted PASS (outcome: ${outcome ?? "unknown"})`,
+        data: result as Record<string, unknown>,
+      }, program.optsWithGlobals() as CliOptions);
     } catch (error) {
       formatOutput({ exitCode: ExitCode.GeneralError, message: error instanceof Error ? error.message : String(error) }, program.optsWithGlobals() as CliOptions);
     }
@@ -300,7 +308,7 @@ program
   .description(
     "Install agent-rules runtime for all platforms (native transactional installer)"
   )
-  .argument("[platform]", "Platform: codex, grok, antigravity, cursor, opencode, claude, all", "all")
+  .argument("[platform]", "Platform: codex, grok, antigravity, cursor, opencode, claude, deepseek-harness, command-code, all", "all")
   .option("--force", "Force reinstall: remove old activation before installing")
   .action(async (platform: string, cmdOpts: { force?: boolean }) => {
     const opts = program.optsWithGlobals() as CliOptions;
@@ -314,7 +322,7 @@ program
 program
   .command("doctor")
   .description("Run harness health checks for all platforms")
-  .argument("[platform]", "Platform: codex, grok, antigravity, cursor, opencode, claude, all", "all")
+  .argument("[platform]", "Platform: codex, grok, antigravity, cursor, opencode, claude, deepseek-harness, command-code, all", "all")
   .option("--skip-integration-verify", "Skip external MCP integration verification")
   .action(async (platform: string, cmdOpts: { skipIntegrationVerify?: boolean }) => {
     const opts = program.optsWithGlobals() as CliOptions;
@@ -470,7 +478,7 @@ program
 program
   .command("closeout")
   .description("Prepare the exact owner-gated CloseoutReceipt (no git mutation)")
-  .argument("[plan-id]", "Plan id", "harness-universal-reconciliation-v1")
+  .argument("[plan-id]", "Plan id", "portable-host-native-supervision-v1")
   .action(async (planId: string) => {
     const opts = program.optsWithGlobals() as CliOptions;
     const result = await closeoutCmd([planId], opts);
@@ -484,9 +492,10 @@ program
   .argument("<plan-id>", "Successor plan id to activate")
   .option("--dry-run", "Verify successor artifacts without mutating the pointer")
   .option("--reason <text>", "Owner-authorized supersession reason (required)")
-  .action(async (planId: string, cmdOpts: { dryRun?: boolean; reason?: string }) => {
+  .option("--activation-state <state>", "Schema-valid activation state: BOOTSTRAP_POINTER, BOOTSTRAP_UNCERTIFIED, CANONICALLY_ACTIVATED (default)")
+  .action(async (planId: string, cmdOpts: { dryRun?: boolean; reason?: string; activationState?: string }) => {
     const opts = program.optsWithGlobals() as CliOptions;
-    const args = [planId, ...(cmdOpts.dryRun ? ["--dry-run"] : []), ...(cmdOpts.reason ? ["--reason", cmdOpts.reason] : [])];
+    const args = [planId, ...(cmdOpts.dryRun ? ["--dry-run"] : []), ...(cmdOpts.reason ? ["--reason", cmdOpts.reason] : []), ...(cmdOpts.activationState ? ["--activation-state", cmdOpts.activationState] : [])];
     const result = await activateCmd(args, opts);
     formatOutput(result, opts);
   });
@@ -494,8 +503,8 @@ program
 // ── close ───────────────────────────────────────────────────────────
 program
   .command("close")
-  .description("Unified closure transaction (vNext trust root): mandatory gates (non-empty requirements/reconciliation/bound evidence, no unresolved, 4-identity binding), stage+commit single-point with idempotent replay, correction of invalid v1 closures. Never accepts shallow verified:true or empty reconciliation as PASS.")
-  .argument("[plan-id]", "Plan id", "terminal-harness-vnext")
+  .description("Unified closure transaction (trust root): mandatory gates (non-empty requirements/reconciliation/bound evidence, no unresolved, five-identity binding), derive-only terminal outcome (caller cannot override), stage+commit with idempotent replay, generic stale-terminal correction, and attest -> deactivate -> compact composition. Only a trusted PASS exits 0.")
+  .argument("[plan-id]", "Plan id", "portable-host-native-supervision-v1")
   .option("--dry-run", "Run the mandatory gates without mutating anything")
   .action(async (planId: string, cmdOpts: { dryRun?: boolean }) => {
     const opts = program.optsWithGlobals() as CliOptions;
@@ -560,6 +569,17 @@ program
     formatOutput(result, opts);
   });
 
+
+// ── host-canary ──────────────────────────────────────────────────────────
+program
+  .command("host-canary")
+  .description("Run the per-host capability certification canary (REQ-011/REQ-018): LIVE_CERTIFIED only from a live probe; absent binaries are NOT_LIVE_VERIFIED, never fake green")
+  .argument("<host>", `Host id (one of: codex, claude, grok, opencode, antigravity, cursor, deepseek-harness, command-code)`)
+  .action(async (host: string) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const result = await hostCanaryCmd([host], opts);
+    formatOutput(result, opts);
+  });
 
 // ── cleanup ──────────────────────────────────────────────────────────
 program

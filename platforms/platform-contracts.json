@@ -1,5 +1,50 @@
 {
-  "version": 1,
+  "version": 2,
+  "registry": {
+    "host_ids": [
+      "codex",
+      "claude",
+      "grok",
+      "opencode",
+      "antigravity",
+      "cursor",
+      "deepseek-harness",
+      "command-code"
+    ],
+    "certification_policy": {
+      "certification_required_hosts": [
+        "codex",
+        "claude",
+        "grok",
+        "opencode",
+        "antigravity"
+      ],
+      "deferred_supported_targets": [
+        "cursor"
+      ],
+      "not_live_verified_targets": [
+        "deepseek-harness",
+        "command-code"
+      ]
+    },
+    "capability_to_canary": {
+      "instruction_surface": "instruction_delivery_canary",
+      "context_injection": "context_injection_canary",
+      "skill_surface": "skill_selection_canary",
+      "hook_surface": "hook_invocation_canary",
+      "permission_surface": "permission_deny_canary",
+      "sandbox_surface": "sandbox_mutation_canary",
+      "subagent_surface": "subagent_spawn_canary",
+      "session_surface": "session_lifecycle_canary",
+      "worktree_surface": "worktree_isolate_canary",
+      "mcp_surface": "mcp_lease_canary",
+      "headless_surface": "headless_session_canary",
+      "compaction_surface": "compaction_canary",
+      "structured_event_surface": "event_emission_canary",
+      "planning_surface": "plan_mode_canary",
+      "model_observability": "model_observability_canary"
+    }
+  },
   "parity_contract": {
     "required_live_invariants": [
       "activation",
@@ -201,6 +246,66 @@
         "format": "json_mcpServers",
         "native_inspect": "opencode_mcp_ui",
         "live_doctor": "native_mcp_ping"
+      }
+    },
+    "deepseek-harness": {
+      "runtime": {
+        "home_env": "DSH_HOME",
+        "home_default": "~/.config/deepseek-harness",
+        "global_entrypoint": "managed profile/bundle via dsh plugin"
+      },
+      "bootstrap": {
+        "strategy": "managed_bundle_profile",
+        "entrypoint": "dsh plugin --profile add",
+        "restart_action": "supervised_launch"
+      },
+      "routing": {
+        "hook_lifecycle": "agent.inject_pre_execute_waterfall",
+        "context_delivery": "system_prompt_seam"
+      },
+      "orchestration": {
+        "native_spawn_tool": "dsh_native_subagent",
+        "agent_discovery": "managed_profile_bundle",
+        "model_attestation": "host_attested",
+        "permission_capability": "native_approval_tool_guard",
+        "isolation_capability": "native_sandbox",
+        "agent_materialization": "host_native"
+      },
+      "mcp": {
+        "config_path": "$DSH_HOME/mcp.json",
+        "format": "json_mcpServers",
+        "native_inspect": "dsh --dump-config",
+        "live_doctor": "bundle_hash_and_config_fingerprint"
+      }
+    },
+    "command-code": {
+      "runtime": {
+        "home_env": "COMMAND_CODE_HOME",
+        "home_default": "~/.command-code",
+        "global_entrypoint": "session-scoped --mod"
+      },
+      "bootstrap": {
+        "strategy": "managed_session_mod",
+        "entrypoint": "--mod agent-rules",
+        "restart_action": "supervised_session_launch"
+      },
+      "routing": {
+        "hook_lifecycle": "beforeToolCall_preToolUse",
+        "context_delivery": "appendSystemPrompt_transformContext"
+      },
+      "orchestration": {
+        "native_spawn_tool": "built_in_isolated_agent",
+        "agent_discovery": "namespaced_custom_agents_on_demand",
+        "model_attestation": "host_attested",
+        "permission_capability": "native_permission_rules_modes",
+        "isolation_capability": "native_permission_layer",
+        "agent_materialization": "host_native"
+      },
+      "mcp": {
+        "config_path": "$COMMAND_CODE_HOME/mcp.json",
+        "format": "json_mcpServers",
+        "native_inspect": "command-code mcp list",
+        "live_doctor": "native_permission_fingerprint"
       }
     }
   }

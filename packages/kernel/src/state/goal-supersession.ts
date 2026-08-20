@@ -29,6 +29,8 @@ export interface GoalSupersessionRequest {
   expected_generation: number;
   target: GoalSupersessionTarget;
   reason: string;
+  /** Schema-valid activation state for the successor pointer. Defaults to CANONICALLY_ACTIVATED. */
+  activation_state?: 'BOOTSTRAP_POINTER' | 'BOOTSTRAP_UNCERTIFIED' | 'CANONICALLY_ACTIVATED';
 }
 
 export interface GoalSupersessionResult {
@@ -81,7 +83,7 @@ export function supersedeGoal(repoRoot: string, request: GoalSupersessionRequest
       protocol: 'generation-compare-and-swap',
       expected_previous_generation: previous.generation,
       commit_target: '.agent/current.json',
-      activation_state: 'CANONICALLY_ACTIVATED',
+      activation_state: request.activation_state ?? 'CANONICALLY_ACTIVATED',
       updated_at: changedAt,
     },
   };

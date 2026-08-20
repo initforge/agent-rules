@@ -1,0 +1,42 @@
+{
+  "schema": "artifact/phase-proof-receipt",
+  "version": 1,
+  "plan_id": "portable-host-native-supervision-v1",
+  "phase": "P2/P3",
+  "status": "PARTIAL",
+  "certification": "BOOTSTRAP_UNCERTIFIED",
+  "candidate_sha": "d793d2c5d185b5cefef2a5ca77760b321d085e1a",
+  "observed_at": "2026-08-20T00:00:00Z",
+  "summary": "DeepSeek Harness and Command Code native projections created and installed; adapters probe real binaries and fail closed on missing credentials; hosts are NOT_LIVE_VERIFIED pending credentials.",
+  "findings_addressed": ["F14"],
+  "evidence": [
+    {
+      "id": "P2-REQ-014-dsh",
+      "claim": "DeepSeek Harness native projection exists and uses the documented Cordis profile/plugin lifecycle without patching core.",
+      "proof": "platforms/deepseek-harness/adapter.ts (detect/inspectProjection/runSupervised with bundle-hash + dsh --dump-config fingerprint verification and guard-enabled BLOCKED); installed @deepseek-ai/dsh 0.1.0-rc.7; dsh --profile headless supervised launch verified to reach the runtime (BLOCKED at MISSING_CREDENTIAL for DEEPSEEK_API_KEY).",
+      "verifier": "platforms/deepseek-harness/adapter.test.ts; live probe (dsh --profile headless reached credential check)"
+    },
+    {
+      "id": "P3-REQ-015-command-code",
+      "claim": "Command Code native projection exists: exact cmdc/command-code detection (never cmd.exe), native permission layer as hard boundary, session-scoped mods/skills, structured JSON events, --yolo never used, Taste preserved.",
+      "proof": "platforms/command-code/adapter.ts (resolveCommandCodeBinary rejects cmd.exe, inspectCapabilities parses --help for --permission-mode/--worktree/--output-format json/--plan/--mod/--skill, runSupervised refuses without proven permission layer and never uses --yolo); installed command-code 1.28.4; supervised launch verified to reach auth (Not authenticated: run cmdc login).",
+      "verifier": "platforms/deepseek-harness/adapter.test.ts P3 suite; live probe (command-code --print reached auth check)"
+    }
+  ],
+  "omitted": [
+    {
+      "kind": "live-terminal-certification",
+      "count": 0,
+      "reason": "DSH requires DEEPSEEK_API_KEY and Command Code requires cmdc login; until credentials are provisioned the hosts are honestly NOT_LIVE_VERIFIED, never fake green."
+    },
+    {
+      "kind": "dsh-managed-bundle-install",
+      "count": 0,
+      "reason": "The @initforge/agent-rules-dsh bundle and profile creation are staged; profile creation via dsh plugin add requires an API key to exercise end-to-end."
+    }
+  ],
+  "residual_risk": [
+    "Credentials (DEEPSEEK_API_KEY for DSH, cmdc login for Command Code) are required to reach live behavior certification.",
+    "DSH is developer preview; its plugin API may evolve (14-day contract TTL applied)."
+  ]
+}

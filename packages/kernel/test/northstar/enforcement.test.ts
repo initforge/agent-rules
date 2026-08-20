@@ -10,8 +10,15 @@ import {
   hostCapabilityAttestationV2,
   probeHostCapabilities,
   unprobedAttestation,
+  capabilityTtlDays,
+  staleCertifications,
+  capabilityIsLive,
+  type CapabilityCertification,
+  type CertificationState,
   type EnforcementDecision,
 } from '../../src/northstar/host-capabilities.js';
+import { LaneController } from '../../src/northstar/resource-governor.js';
+import { admitArtifact, classifyArtifact } from '../../src/northstar/artifact-admission.js';
 import { superviseTrajectory, type TrajectoryEvent } from '../../src/northstar/trajectory-supervisor.js';
 
 function attestationFor(host: 'codex' | 'claude' | 'opencode', confirmed: Array<keyof ReturnType<typeof hostCapabilityAttestationV2>['capabilities']> = []): ReturnType<typeof hostCapabilityAttestationV2> {
@@ -99,6 +106,111 @@ describe('REQ-014 — enforcement order', () => {
       effects: ['filesystem_mutation'],
     });
     expect(decision.layer).not.toBe('native');
+  });
+});
+
+describe('REQ-011 — typed HostCapabilityFacts ABI: TTL, staleness, selective invalidation', () => {
+  function cert(over: Partial<CapabilityCertification>): CapabilityCertification {
+    return {
+      capability: 'permission_surface',
+      certification_state: 'LIVE_CERTIFIED',
+      evidence_refs: ['ev-1'],
+      certified_at: '2026-08-20T00:00:00.000Z',
+      expires_at: '2026-10-19T00:00:00.000Z',
+      host: 'opencode',
+      adapter_revision: 'a1',
+      projection_hash: 'p1',
+      ...over,
+    };
+  }
+
+  it('developer-preview hosts get a shorter TTL (14 days)', () => {
+    expect(capabilityTtlDays('permission_surface')).toBe(30);
+    expect(capabilityTtlDays('permission_surface', 'deepseek-harness')).toBe(14);
+    expect(capabilityTtlDays('permission_surface', 'command-code')).toBe(14);
+    expect(capabilityTtlDays('context_injection', 'claude')).toBe(90);
+  });
+
+  it('stales only certifications whose declared components changed (selective invalidation)', () => {
+    const list = [
+      cert({ capability: 'permission_surface', projection_hash: 'p1' }),
+      cert({ capability: 'skill_surface', projection_hash: 'p2' }),
+    ];
+    const { stale, fresh } = staleCertifications(list, { projection_hash: 'p2', now: new Date('2026-09-01T00:00:00.000Z') });
+    expect(stale.map((c) => c.capability)).toEqual(['permission_surface']);
+    expect(fresh.map((c) => c.capability)).toEqual(['skill_surface']);
+  });
+
+  it('a host-version change stales only the affected host certifications', () => {
+    const list = [
+      cert({ host: 'claude', host_version: '2.1.237', projection_hash: 'p1' }),
+      cert({ host: 'opencode', host_version: '1.18.18', projection_hash: 'p1' }),
+    ];
+    const { stale, fresh } = staleCertifications(list, { host: 'claude', host_version: '2.2.0', now: new Date('2026-09-01T00:00:00.000Z') });
+    expect(stale.map((c) => c.host)).toEqual(['claude']);
+    expect(fresh.map((c) => c.host)).toEqual(['opencode']);
+  });
+
+  it('an expired certification is staled regardless of components', () => {
+    const expired = cert({ expires_at: '2026-08-01T00:00:00.000Z' });
+    const { stale, fresh } = staleCertifications([expired], { now: new Date('2026-09-01T00:00:00.000Z') });
+    expect(stale).toHaveLength(1);
+    expect(fresh).toHaveLength(0);
+  });
+
+  it('a config-fingerprint change stales certifications bound to that config', () => {
+    const list = [
+      cert({ config_fingerprint: 'cfg-a' }),
+      cert({ config_fingerprint: 'cfg-b' }),
+    ];
+    const { stale, fresh } = staleCertifications(list, { config_fingerprint: 'cfg-b', now: new Date('2026-09-01T00:00:00.000Z') });
+    expect(stale.map((c) => c.config_fingerprint)).toEqual(['cfg-a']);
+    expect(fresh.map((c) => c.config_fingerprint)).toEqual(['cfg-b']);
+  });
+
+  it('only LIVE_CERTIFIED and non-expired certifications are usable as live proof', () => {
+    expect(capabilityIsLive(cert({}), new Date('2026-09-01T00:00:00.000Z'))).toBe(true);
+    expect(capabilityIsLive(cert({ certification_state: 'STATIC_CONFORMED' as CertificationState }), new Date('2026-09-01T00:00:00.000Z'))).toBe(false);
+    expect(capabilityIsLive(cert({ expires_at: '2026-08-01T00:00:00.000Z' }), new Date('2026-09-01T00:00:00.000Z'))).toBe(false);
+    expect(capabilityIsLive(undefined)).toBe(false);
+  });
+});
+
+describe('F07/REQ-007 — LaneController and Artifact Admission production wiring', () => {
+  it('the writer lane always serializes and the verifier lane gates capacity', () => {
+    const lanes = new LaneController();
+    // Writer budget is 1: a second writer cannot acquire while one is active.
+    expect(lanes.acquire('writer')).toBe(true);
+    expect(lanes.acquire('writer')).toBe(false);
+    lanes.release('writer');
+    expect(lanes.acquire('writer')).toBe(true);
+    // Verifier lane supports its budget and releases in finally.
+    expect(lanes.acquire('verifier')).toBe(true);
+    expect(lanes.acquire('verifier')).toBe(true);
+    lanes.release('verifier');
+    lanes.release('verifier');
+  });
+
+  it('memory pressure sheds the expensive lanes first', () => {
+    const lanes = new LaneController();
+    lanes.acquire('browser');
+    lanes.acquire('heavy_process');
+    lanes.applyMemoryPressure(0.5);
+    const usage = lanes.utilization();
+    expect(usage.browser.budget).toBe(0);
+    expect(usage.heavy_process.budget).toBe(0);
+    expect(usage.writer.budget).toBe(1);
+  });
+
+  it('Artifact Admission gates evidence persistence (evidence is admitted; bare ephemeral is not)', () => {
+    expect(admitArtifact({ class: 'EPHEMERAL', reasons: ['evidence'] }).persist).toBe(true);
+    expect(admitArtifact({ class: 'EPHEMERAL', reasons: [] }).persist).toBe(false);
+    expect(admitArtifact({ class: 'AUDITED', reasons: ['audit_replay'] }).persist).toBe(true);
+  });
+
+  it('classifyArtifact maps evidence-required high-risk work to AUDITED (never dropped)', () => {
+    expect(classifyArtifact({ risk: 'high', evidence_required: true })).toBe('AUDITED');
+    expect(classifyArtifact({ risk: 'low' })).toBe('EPHEMERAL');
   });
 });
 

@@ -1,0 +1,18 @@
+{
+  "schema": "artifact/goal-supersession-receipt",
+  "version": 1,
+  "transaction_id": "be767b28-1339-47ee-8678-ccfbb70e13d6",
+  "previous": {
+    "work_id": "portable-host-native-supervision-v1",
+    "plan_id": "portable-host-native-supervision-v1",
+    "generation": 40
+  },
+  "current": {
+    "work_id": "portable-host-native-supervision-v1",
+    "plan_id": "portable-host-native-supervision-v1",
+    "generation": 41
+  },
+  "reason": "P7 progress rebind: registry-driven eight-host evolution matrix (host-update canaries, selective staleness) recorded PARTIAL; pointer re-bound at BOOTSTRAP_UNCERTIFIED. BOOTSTRAP_UNCERTIFIED",
+  "created_at": "2026-08-20T19:57:02.805Z",
+  "sha256": "693420a92d877187ec2c4e6c88333c941c45884c5935fb773f1937f285d2c577"
+}

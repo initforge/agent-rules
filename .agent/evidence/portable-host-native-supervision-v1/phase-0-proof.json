@@ -1,0 +1,48 @@
+{
+  "schema": "artifact/phase-proof-receipt",
+  "version": 1,
+  "plan_id": "portable-host-native-supervision-v1",
+  "phase": "P0",
+  "status": "PARTIAL",
+  "certification": "BOOTSTRAP_UNCERTIFIED",
+  "candidate_sha": "d793d2c5d185b5cefef2a5ca77760b321d085e1a",
+  "observed_at": "2026-08-20T00:00:00Z",
+  "summary": "Canonical truth reopened: invalid DEACTIVATED_TERMINAL pointer replaced by generation-34 BOOTSTRAP_UNCERTIFIED active pointer; old plan reclassified SUPERSEDED/INACTIVE/PARTIAL by generic correction; CLI aggregate outcome and closure composition fixed.",
+  "findings_addressed": ["F01", "F02", "F03"],
+  "evidence": [
+    {
+      "id": "P0-REQ-001-pointer",
+      "claim": "Pointer generation 34 is schema-valid active at BOOTSTRAP_UNCERTIFIED; old plan ledger reclassified by generic correction without hard-coded plan id.",
+      "proof": "schemas/execution-contract.schema.json activation_state enum includes BOOTSTRAP_UNCERTIFIED; packages/kernel/src/northstar/closure-service.ts correctStaleTerminal(); automation/reopen-canonical-truth.mjs applied -> terminal-harness-convergence-v1 SUPERSEDED/INACTIVE/PARTIAL; .agent/current.json generation 34.",
+      "verifier": "execution-contract-schema.test.ts; kernel closure-service.test.ts H suite; vnext-trust-root.test.ts generic correction"
+    },
+    {
+      "id": "P0-REQ-002-cli",
+      "claim": "Public CLI success paths consume one TrustedTerminalDecision; non-PASS never exit 0/DONE.",
+      "proof": "packages/cli/src/index.ts run/drain exit code derives from trusted_outcome/PASS-only; verified end-to-end: BLOCKED run exits 1.",
+      "verifier": "CLI e2e probe (run with plannerless S2/S3 -> exit 1); northstar-ux tests trusted_outcome PASS"
+    },
+    {
+      "id": "P0-REQ-003-closure",
+      "claim": "Closure outcome derived only from real evidence; caller cannot override terminal_outcome; attest -> deactivate composition; close loads real ledger evidence.",
+      "proof": "packages/kernel/src/northstar/closure-service.ts stageClosureTransaction rejects caller override; packages/cli/src/commands/close.ts loads evidenceStatusFor() and attests/deactivates only on PASS.",
+      "verifier": "kernel closure-service.test.ts G suite; vnext-trust-root.test.ts never-false-PASS"
+    }
+  ],
+  "omitted": [
+    {
+      "kind": "live-host-certification",
+      "count": 0,
+      "reason": "P0 is source/state reopen; live host certification is P2/P3/P4 and requires installed DSH/Command Code binaries."
+    },
+    {
+      "kind": "final-terminal-attestation",
+      "count": 0,
+      "reason": "Non-final phase; only exact final SHA may create final terminal attestation (plan section L)."
+    }
+  ],
+  "residual_risk": [
+    "P1-P8 not yet executed; phase is PARTIAL by design.",
+    "DeepSeek Harness and Command Code not yet installed; live verification deferred to P2/P3."
+  ]
+}

@@ -14,11 +14,12 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
+import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { activateCmd } from "../src/commands/activate.js";
 import { closeCmd } from "../src/commands/close.js";
 import { ExitCode } from "../src/types.js";
-import { readCurrentPointer } from "../src/services/current-pointer.js";
+import { commitCurrentPointer, readCurrentPointer, type CurrentPointer } from "../src/services/current-pointer.js";
 
 const roots: string[] = [];
 let fixture: string;
@@ -147,23 +148,62 @@ describe("close — unified closure transaction (never false PASS)", () => {
     expect(result.message).toContain("zero reconciliations");
   });
 
-  it("commits manifest + residue + correction on a valid fixture", async () => {
+  it("commits manifest + residue + generic stale-terminal correction (never false PASS)", async () => {
     seedPlan(fixture, "good", ["PASS", "PASS"]);
-    // Seed old ledger so correctInvalidClosure can atomically update it
+    // Seed an active pointer whose plan ledger claims a terminal PASS with a
+    // stale final SHA and an invalid activation state. The generic correction
+    // must reclassify the pointed plan SUPERSEDED/INACTIVE/PARTIAL — driven by
+    // pointer/ledger facts, never a hard-coded plan id.
+    const stalePlan = "stale-terminal-plan";
+    const planDir = path.join(fixture, ".agent", "plans", stalePlan);
+    fs.mkdirSync(planDir, { recursive: true });
+    fs.writeFileSync(path.join(planDir, "plan.md"), `# ${stalePlan}\n\nFrozen contract.`);
+    fs.writeFileSync(path.join(planDir, "original.md"), `# ${stalePlan} original`);
     fs.mkdirSync(path.join(fixture, ".agent", "ledger"), { recursive: true });
     fs.writeFileSync(
-      path.join(fixture, ".agent", "ledger", "northstar-on-demand-portable-harness.json"),
-      JSON.stringify({ plan_id: "northstar-on-demand-portable-harness", status: "RETIRED", execution_state: "CLOSED" })
+      path.join(fixture, ".agent", "ledger", `${stalePlan}.json`),
+      JSON.stringify({
+        plan_id: stalePlan,
+        status: "COMPLETED",
+        execution_state: "COMPLETED",
+        closure: { terminal_outcome: "PASS", final_sha: "1ecb8fd880233cdfd105a4caa825be6b98b1c892" },
+      })
     );
+    const sha = (p: string) => createHash("sha256").update(fs.readFileSync(path.join(fixture, p))).digest("hex");
+    const staleLedgerPath = `.agent/ledger/${stalePlan}.json`;
+    const stalePointer: CurrentPointer = {
+      schema: "artifact/execution-contract",
+      version: 1,
+      kind: "current-pointer",
+      generation: 1,
+      work_id: stalePlan,
+      plan_id: stalePlan,
+      plan_root: `.agent/plans/${stalePlan}`,
+      original: { path: `.agent/plans/${stalePlan}/original.md`, sha256: sha(`.agent/plans/${stalePlan}/original.md`) },
+      canonical_ledger: { path: staleLedgerPath, sha256: sha(staleLedgerPath), observed_revision: 1, observed_effective_sha256: "b".repeat(64), plan_status: "COMPLETED", execution_state: "COMPLETED" },
+      effective_chain_tip: { amendment_id: "AM-0000", path: `.agent/plans/${stalePlan}/plan.md`, sha256: sha(`.agent/plans/${stalePlan}/plan.md`) },
+      candidate_chain_tip: { amendment_id: "AM-0000", status: "OWNER_APPROVED_EFFECTIVE", path: `.agent/plans/${stalePlan}/plan.md`, sha256: sha(`.agent/plans/${stalePlan}/plan.md`) },
+      contract: { path: `.agent/plans/${stalePlan}/plan.md`, sha256: sha(`.agent/plans/${stalePlan}/plan.md`), schema_path: "schemas/execution-contract.schema.json", requirement_ids: [], status: "EFFECTIVE" },
+      atomicity: { protocol: "generation-compare-and-swap", expected_previous_generation: 0, commit_target: ".agent/current.json", activation_state: "DEACTIVATED_TERMINAL", updated_at: new Date().toISOString() },
+    };
+    commitCurrentPointer(fixture, stalePointer, 0);
     git(fixture, ["add", "-A"]);
     git(fixture, ["commit", "-q", "-m", "seed"]);
     const result = await runClose(fixture, "good");
-    expect(result.exitCode).toBe(ExitCode.Success);
+    // The fixture evidence is COMPLETED_NO_PASS_CLAIM, so closure must be PARTIAL
+    // and never exit 0 — fail-closed, no false PASS.
+    expect(result.exitCode).toBe(ExitCode.GeneralError);
+    expect(result.data?.terminal_outcome).toBe("PARTIAL");
+    expect(result.data?.deactivated).toBe(false);
     expect(result.data?.committed).toBe(true);
     const closureDir = path.join(fixture, ".agent", "closure");
     expect(fs.existsSync(path.join(closureDir, "good.committed.json"))).toBe(true);
     expect(fs.existsSync(path.join(closureDir, "good.residue.json"))).toBe(true);
-    expect(fs.existsSync(path.join(closureDir, "northstar-on-demand-portable-harness.correction.json"))).toBe(true);
+    // Generic correction reclassified the pointed stale-terminal plan.
+    expect(fs.existsSync(path.join(closureDir, `${stalePlan}.correction.json`))).toBe(true);
+    const correctedLedger = JSON.parse(fs.readFileSync(path.join(fixture, ".agent", "ledger", `${stalePlan}.json`), "utf8")) as Record<string, unknown>;
+    expect(correctedLedger.status).toBe("SUPERSEDED");
+    expect(correctedLedger.execution_state).toBe("INACTIVE");
   });
 
   it("keeps the consumer worktree source-clean after closure", async () => {

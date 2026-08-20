@@ -1,0 +1,41 @@
+{
+  "schema": "artifact/phase-proof-receipt",
+  "version": 1,
+  "plan_id": "portable-host-native-supervision-v1",
+  "phase": "P4",
+  "status": "PARTIAL",
+  "certification": "BOOTSTRAP_UNCERTIFIED",
+  "candidate_sha": "d793d2c5d185b5cefef2a5ca77760b321d085e1a",
+  "observed_at": "2026-08-20T00:00:00Z",
+  "summary": "Per-host capability certification canary runner added (REQ-011/REQ-018); all eight registry hosts probed live; five hosts live-probed, three NOT_LIVE_VERIFIED. Per-capability LIVE_CERTIFIED remains fail-closed and requires explicit confirmation.",
+  "findings_addressed": ["F11", "F18"],
+  "evidence": [
+    {
+      "id": "P4-REQ-018-canary",
+      "claim": "Per-host capability certification canary binds registry v2 static facts with live binary probes and emits HostCapabilityFacts with honest certifications.",
+      "proof": "packages/kernel/src/northstar/host-canary.ts runHostCanary; packages/cli/src/commands/host-canary.ts; live probes: codex 0.148.0, claude 2.1.237, opencode 1.18.18, deepseek-harness 0.1.0-rc.7, command-code 1.28.4 -> live-probed; cursor/antigravity/grok absent -> NOT_LIVE_VERIFIED.",
+      "verifier": "kernel host-canary.test.ts (6 tests); cli host-canary.test.ts (4 tests); live CLI run on all 8 hosts"
+    },
+    {
+      "id": "P4-REQ-011-selectivity",
+      "claim": "Fingerprint change re-probes immediately and stales only dependent certifications; per-capability LIVE_CERTIFIED requires explicit confirmation (never binary-detection only).",
+      "proof": "staleCertifications + capabilityIsLive in host-capabilities.ts; host-canary emits per-capability STATIC_CONFORMED unless confirmed in the probe.",
+      "verifier": "enforcement.test.ts REQ-011 suite; host-canary.test.ts fail-closed assertions"
+    }
+  ],
+  "omitted": [
+    {
+      "kind": "full-native-adapter-rewrite-per-host",
+      "count": 0,
+      "reason": "Existing per-host adapters (claude/codex/opencode/cursor/antigravity/grok) are already rich; P4 remaps them onto the shared HostAdapter contract through the compatibility shim and the canary runner, rather than rewriting each from scratch."
+    },
+    {
+      "kind": "per-capability-live-confirmation",
+      "count": 0,
+      "reason": "Binary live probes prove the host runs; per-capability LIVE_CERTIFIED requires explicit capability confirmation (e.g. permission deny canary, sandbox mutation canary) which is gated for the live certification stage."
+    }
+  ],
+  "residual_risk": [
+    "Capability-specific live canaries (permission deny, sandbox mutation, worktree isolate) still require explicit confirmation probes."
+  ]
+}

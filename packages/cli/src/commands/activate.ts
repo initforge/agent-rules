@@ -33,12 +33,18 @@ export async function activateCmd(args: string[], _opts: CliOptions): Promise<Co
   const dryRun = args.includes("--dry-run");
   const planId = positional[0];
   if (!planId) {
-    return { exitCode: ExitCode.InvalidArgument, message: "Usage: activate <plan-id> [--dry-run] [--reason <text>]" };
+    return { exitCode: ExitCode.InvalidArgument, message: "Usage: activate <plan-id> [--dry-run] [--reason <text>] [--activation-state <state>]" };
   }
   const reasonArg = args.indexOf("--reason");
   const reason = reasonArg >= 0 ? args.slice(reasonArg + 1).filter((arg) => !arg.startsWith("--")).join(" ") : `Owner-authorized successor activation for ${planId}`;
   if (!reason) {
     return { exitCode: ExitCode.InvalidArgument, message: "--reason is required for activation" };
+  }
+  const stateArg = args.indexOf("--activation-state");
+  const activationState = stateArg >= 0 ? args.slice(stateArg + 1).filter((arg) => !arg.startsWith("--"))[0] : undefined;
+  const VALID_ACTIVATION_STATES = ["BOOTSTRAP_POINTER", "BOOTSTRAP_UNCERTIFIED", "CANONICALLY_ACTIVATED"];
+  if (activationState && !VALID_ACTIVATION_STATES.includes(activationState)) {
+    return { exitCode: ExitCode.InvalidArgument, message: `--activation-state must be one of ${VALID_ACTIVATION_STATES.join(", ")}` };
   }
 
   // The successor plan must exist and be hash-verifiable.
@@ -71,7 +77,11 @@ export async function activateCmd(args: string[], _opts: CliOptions): Promise<Co
     path: `.agent/ledger/${planId}.json`,
     sha256: sha(ledgerPath),
     observed_revision: 0,
-    observed_effective_sha256: effectivePlanSha,
+    // AM0015 scorecard binding: observed_effective_sha256 must equal the
+    // ledger's effective_plan_identity.sha256 (the canonical plan JSON hash),
+    // NOT the plan.md file hash — gather-scorecard-evidence.py requires this
+    // equality for the evidence to be considered bound.
+    observed_effective_sha256: readLedgerEffectiveIdentitySha256(ledgerPath),
     plan_status: "ADOPTED",
     execution_state: "IN_PROGRESS",
   };
@@ -95,6 +105,7 @@ export async function activateCmd(args: string[], _opts: CliOptions): Promise<Co
         effective: effectivePlanSha,
         requirements: requirements.length,
         bytes: { plan: planBytes, ledger: ledgerBytes },
+        activation_state: activationState ?? "CANONICALLY_ACTIVATED",
       },
     };
   }
@@ -112,6 +123,7 @@ export async function activateCmd(args: string[], _opts: CliOptions): Promise<Co
       contract,
     },
     reason,
+    ...(activationState ? { activation_state: activationState as 'BOOTSTRAP_POINTER' | 'BOOTSTRAP_UNCERTIFIED' | 'CANONICALLY_ACTIVATED' } : {}),
   });
 
   return {
@@ -124,6 +136,7 @@ export async function activateCmd(args: string[], _opts: CliOptions): Promise<Co
       receipt_path: result.receipt_path,
       effective_sha256: effectivePlanSha,
       requirement_count: requirements.length,
+      activation_state: result.current.atomicity.activation_state,
     },
   };
 }
@@ -138,6 +151,20 @@ function readRequirements(planDir: string): string[] {
     if (m) out.push(m[1]!);
   }
   return out;
+}
+
+/** Read effective_plan_identity.sha256 from a ledger file (AM0015 binding). */
+function readLedgerEffectiveIdentitySha256(ledgerPath: string): string {
+  try {
+    const ledger = JSON.parse(fs.readFileSync(ledgerPath, "utf8")) as { effective_plan_identity?: { sha256?: string } };
+    const id = ledger.effective_plan_identity?.sha256;
+    if (typeof id === "string" && /^[a-f0-9]{64}$/.test(id)) return id;
+  } catch { /* fall through */ }
+  return sha256(ledgerPath);
+}
+
+function sha256(file: string): string {
+  return createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 }
 
 function bootstrapActivate(input: {
@@ -163,7 +190,8 @@ function bootstrapActivate(input: {
     path: `.agent/ledger/${input.planId}.json`,
     sha256: sha(input.ledgerPath),
     observed_revision: 0,
-    observed_effective_sha256: effectivePlanSha,
+    // AM0015 scorecard binding: equals the ledger's effective_plan_identity.sha256.
+    observed_effective_sha256: readLedgerEffectiveIdentitySha256(input.ledgerPath),
     plan_status: "ADOPTED",
     execution_state: "IN_PROGRESS",
   };

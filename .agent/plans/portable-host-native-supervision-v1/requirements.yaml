@@ -1,0 +1,121 @@
+version: 1
+plan_id: portable-host-native-supervision-v1
+frozen_contract: .agent/plans/portable-host-native-supervision-v1/plan.md
+mapping_source: original.md sections C (findings F01-F16), D (host matrix), E (target contracts), F (phases P0-P8), L (terminal acceptance)
+
+requirements:
+  - id: REQ-001
+    source_id: F01
+    statement: "Canonical truth is reopened: the invalid DEACTIVATED_TERMINAL pointer state is replaced by a schema-valid active pointer for the successor plan at BOOTSTRAP_UNCERTIFIED; the old plan ledger is reclassified SUPERSEDED/INACTIVE/PARTIAL by generic correction (no hard-coded plan id); final SHA and evidence bind current HEAD."
+    phases: [P0]
+    status: pending
+  - id: REQ-002
+    source_id: F02
+    statement: "CLI public success paths (run, drain, queue, close, certify, renderer) consume one TrustedTerminalDecision; northStarRun() returns aggregate with trusted_outcome; exit 0 and DONE/completed are produced only from trusted PASS; PARTIAL/FAILED/BLOCKED/NEEDS_USER/UNSUPPORTED never exit success or render completed."
+    phases: [P0, P1]
+    status: pending
+  - id: REQ-003
+    source_id: F03
+    statement: "Closure composition is complete: stageClosureTransaction always derives outcome from real ledger/evidence/reconciliation/proof identities; caller can never override terminal_outcome; pending evidence only yields PARTIAL; attestation checks exact candidate SHA/manifest/evidence; only PASS deactivates; compaction runs after durable attestation; no public close path accepts insufficient evidence."
+    phases: [P0, P1]
+    status: pending
+  - id: REQ-004
+    source_id: F04
+    statement: "Proof Router is on the production path: planProofRoute() selects the smallest sufficient proof set before execution and completeProofRoute() records completion; runtime/resume/install run only selected verifiers and persist omitted reasons with invalidation conditions."
+    phases: [P1, P6]
+    status: pending
+  - id: REQ-005
+    source_id: F05
+    statement: "Decision Fabric is the production authority for skill/context routing; legacy routeSkills() stops being authority and is deleted after shadow parity; phrase is only a hint; no self-granted domain authority."
+    phases: [P1, P6]
+    status: pending
+  - id: REQ-006
+    source_id: F06
+    statement: "MCP idle-zero attestation is distinct from cleanup confirmation; receipt-write errors fail closed as terminal BLOCKED; no harness-owned process/socket/lease/provider/orphan/schema exposure after no-MCP tasks."
+    phases: [P1, P7]
+    status: pending
+  - id: REQ-007
+    source_id: F07
+    statement: "Artifact Admission, Resource Lanes and decideEnforcement() are wired at actual operational write/run/install boundaries, not only tests; enforcement and resource policy are real gates on production path."
+    phases: [P1, P7]
+    status: pending
+  - id: REQ-008
+    source_id: F08
+    statement: "compileDoD() derives depth-of-done from requirements, claims, proof obligations and release/migration/live scope; execution disposition only decides where execution happens; PLAN_ONLY and EXPORT_HANDOFF keep full obligations."
+    phases: [P1, P2]
+    status: pending
+  - id: REQ-009
+    source_id: F09
+    statement: "platform-contracts.json becomes the single canonical host registry v2 with the eight canonical HostIds (codex, claude, opencode, cursor, antigravity, grok, deepseek-harness, command-code); independent host arrays (RUNTIME_PLATFORMS, VALID_HOSTS, CERTIFICATION_REQUIRED_HOSTS) are removed or derived from the registry; stale Mimocode references removed; runtime uses validated/branded HostId."
+    phases: [P1, P8]
+    status: pending
+  - id: REQ-010
+    source_id: F10
+    statement: "One HostAdapter contract (discover/inspectProjection/planLifecycle/applyLifecycle/observeCapabilities/mapRequirement/runCanary) is shared by CLI runtime and platforms/*/adapter.ts; duplicate contracts are merged with a time-boxed compatibility shim; enforcement order native hard guard -> Agent Rules broker -> isolated worktree transaction + diff validation -> BLOCKED/UNSUPPORTED; UNKNOWN never becomes allow."
+    phases: [P1, P4]
+    status: pending
+  - id: REQ-011
+    source_id: F11
+    statement: "HostCapabilityFacts are per-capability with semantic enums, five-identity certification binding, expiry/TTL, and selective staleness; host/projection/config fingerprint change re-probes immediately and stales only dependent capabilities; stale receipts never silently widen authority."
+    phases: [P1, P7]
+    status: pending
+  - id: REQ-012
+    source_id: F12
+    statement: "ContextBudgetReceipt is emitted per run measuring installed graph size, actual model-visible rule/skill/tool/MCP/subagent schema and input tokens with measurement source; inactive plans, old receipts, cold references and unused tools/MCP/subagents are excluded from normal model-visible context."
+    phases: [P1, P5]
+    status: pending
+  - id: REQ-013
+    source_id: F13
+    statement: "Plannerless intake: IntakeDecision classifies EXPLICIT, DISCOVERABLE or SEMANTICALLY_AMBIGUOUS; explicit/discoverable tasks compile deterministically without a planner; only semantic ambiguity calls a configured strong planner; missing planner yields NEEDS_USER/PLANNER_REQUIRED; workers never self-lower risk or override model/provider."
+    phases: [P6]
+    status: pending
+  - id: REQ-014
+    source_id: F14
+    statement: "DeepSeek Harness native integration: platforms/deepseek-harness adapter, @initforge/agent-rules-dsh package/bundle installed via official dsh plugin/profile lifecycle without patching core; bounded context, hard tool policy, event/evidence, approval/sandbox/subagent/MCP/headless mapping; bundle hash and config fingerprint verified before every supervised launch; DSH turn completion is host observation, never terminal PASS."
+    phases: [P2, P7]
+    status: pending
+  - id: REQ-015
+    source_id: F14
+    statement: "Command Code native integration: platforms/command-code adapter and session-scoped @initforge/agent-rules-command-code package; exact cmd/cmdc/command-code detection (never Windows cmd.exe); native permissions are the hard boundary, mods/hooks are supplementary; mod/hook failure yields terminal BLOCKED; Taste preserved; --yolo never used in certification; broker/worktree validation remains for non-native invariants."
+    phases: [P3, P7]
+    status: pending
+  - id: REQ-016
+    source_id: F15
+    statement: "Certification/CI converges on exact SHA with honest static/live split: no unconditional self-hosted matrix that can queue indefinitely; live runners publish signed exact-SHA attestations within a bounded window; unavailable hosts are NOT_LIVE_VERIFIED, never fake green; LIVE_CERTIFIED requires actual behavior evidence."
+    phases: [P1, P8]
+    status: pending
+  - id: REQ-017
+    source_id: F16
+    statement: "Registry-driven generic eight-host/evolution matrix: G1-G4 fixtures extend to registry-driven package/install/update path and host fingerprint evolution; named projects run only as optional regression fixtures after the generic matrix."
+    phases: [P7]
+    status: pending
+  - id: REQ-018
+    source_id: P4
+    statement: "Six existing hosts (Claude, OpenCode, Cursor, Antigravity, Codex, Grok) are re-mapped to current official surfaces with fresh/install/update/remove/rollback lifecycle and capability-specific canaries before legacy adapter behavior is removed."
+    phases: [P4]
+    status: pending
+  - id: REQ-019
+    source_id: P5
+    statement: "Context/token acceptance: model-visible context reduced at least 20%, duplicate reads/tool calls reduced at least 30%, trusted success non-decreasing, warm p50 not regressed by more than 5% on paired arbitrary S0/S1 fixtures."
+    phases: [P5]
+    status: pending
+  - id: REQ-020
+    source_id: P6
+    statement: "Plannerless/weak-worker and permission-toil acceptance: cases A/B/C PASS by evidence, case D is NEEDS_USER/PLANNER_REQUIRED, zero invented requirements and zero model override; repeated equivalent approval prompts on prompt-heavy corpus reduced at least 30% with no global grant; metrics collected."
+    phases: [P6]
+    status: pending
+  - id: REQ-021
+    source_id: P8
+    statement: "Simplification/removal happens only after behavioral parity: duplicated adapter contracts, hard-coded host arrays, stale Mimocode branches, shadow Decision Fabric, caller-forced closure outcome, hard-coded old-plan correction and dead wrappers are removed; generated/ regenerated by automation, never hand-edited."
+    phases: [P8]
+    status: pending
+  - id: REQ-022
+    source_id: K
+    statement: "Git/main convergence: work happens directly on main; history stays at 7 commits until final squash to at most two coherent commits; final reachable count <= 9; local main == origin/main with no non-main branches; tags preserved; exact final SHA CI observed."
+    phases: [P8]
+    status: pending
+  - id: REQ-023
+    source_id: L
+    statement: "Terminal acceptance gates all hold: canonical state valid, single TrustedTerminalDecision everywhere with zero false-DONE, production wiring present, DoD from claims, eight-host registry, DSH and Command Code native integration, honest staleness and unsupported declarations, parity of source/schema/generated/package/manifests/docs/CI, final exact-SHA CI green, and final closure binds five identities with deactivate/compact only after trusted PASS."
+    phases: [P8]
+    status: pending

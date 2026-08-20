@@ -21,6 +21,7 @@ import {
   commitClosureTransaction,
   attestTerminal,
   correctInvalidClosure,
+  correctStaleTerminal,
   deriveMetadataDeltaManifest,
   writeOperationalIgnore,
   ClosureServiceError,
@@ -442,6 +443,104 @@ describe('F — correctInvalidClosure atomically updates state', () => {
     const updatedLedger = JSON.parse(fs.readFileSync(path.join(repo, ledgerPath), 'utf8'));
     expect(updatedLedger.status).toBe('SUPERSEDED');
     expect(updatedLedger.execution_state).toBe('INACTIVE');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// G — derive-only terminal outcome (F03): caller can never force PASS
+// ═══════════════════════════════════════════════════════════════════════════════
+describe('G — caller can never override terminal_outcome', () => {
+  let repo: string;
+  beforeEach(() => { repo = tempRepo(); });
+  afterEach(() => { try { fs.rmSync(repo, { recursive: true, force: true }); } catch { /* best-effort */ } });
+
+  it('rejects a caller-forced PASS when evidence derives PARTIAL', () => {
+    const forced = input({
+      requirements: [{ id: 'R-1', statement: 'x', status: 'ACTIVE', evidence_status: 'pending' }],
+      terminal_outcome: 'PASS',
+    });
+    try {
+      stageClosureTransaction(forced, repo);
+      expect('unreachable').toBe(true);
+    } catch (e: any) {
+      expect(e.code).toBe(CLOSURE_ERRORS.COMMIT_FAILED);
+      expect(e.message).toContain('caller terminal_outcome override rejected');
+    }
+  });
+
+  it('accepts a caller hint that matches the derived outcome', () => {
+    const staged = stageClosureTransaction(input({ terminal_outcome: 'PASS' }), repo);
+    expect(staged.manifest.terminal_outcome).toBe('PASS');
+  });
+
+  it('pending evidence yields PARTIAL even when a caller hint is absent', () => {
+    const staged = stageClosureTransaction(input({
+      requirements: [{ id: 'R-1', statement: 'x', status: 'ACTIVE', evidence_status: 'pending' }],
+    }), repo);
+    expect(staged.manifest.terminal_outcome).toBe('PARTIAL');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// H — generic stale/invalid-terminal correction (F01/REQ-001): no hard-coded id
+// ═══════════════════════════════════════════════════════════════════════════════
+describe('H — correctStaleTerminal generic correction', () => {
+  let repo: string;
+  beforeEach(() => { repo = tempRepo(); });
+  afterEach(() => { try { fs.rmSync(repo, { recursive: true, force: true }); } catch { /* best-effort */ } });
+
+  it('returns BLOCKED when no pointer is supplied', () => {
+    const result = correctStaleTerminal({ repoRoot: repo, pointer: null });
+    expect('corrected' in result && result.corrected).toBe(false);
+  });
+
+  it('reclassifies SUPERSEDED/INACTIVE/PARTIAL when activation_state is not schema-valid active', () => {
+    const ledgerDir = path.join(repo, '.agent', 'ledger');
+    fs.mkdirSync(ledgerDir, { recursive: true });
+    const ledgerPath = '.agent/ledger/plan-a.json';
+    fs.writeFileSync(path.join(repo, ledgerPath), JSON.stringify({ plan_id: 'plan-a', status: 'COMPLETED', execution_state: 'COMPLETED' }));
+    const result = correctStaleTerminal({
+      repoRoot: repo,
+      pointer: { plan_id: 'plan-a', generation: 33, activation_state: 'DEACTIVATED_TERMINAL' },
+    });
+    expect('corrected' in result).toBe(true);
+    if ('corrected' in result) {
+      expect(result.corrected_status).toBe('SUPERSEDED');
+      expect(result.corrected_execution_state).toBe('INACTIVE');
+      expect(result.terminal_outcome).toBe('PARTIAL');
+    }
+    const updated = JSON.parse(fs.readFileSync(path.join(repo, ledgerPath), 'utf8'));
+    expect(updated.status).toBe('SUPERSEDED');
+    expect(updated.execution_state).toBe('INACTIVE');
+  });
+
+  it('reclassifies when a terminal PASS ledger has a stale final SHA', () => {
+    const ledgerDir = path.join(repo, '.agent', 'ledger');
+    fs.mkdirSync(ledgerDir, { recursive: true });
+    const ledgerPath = '.agent/ledger/plan-b.json';
+    fs.writeFileSync(path.join(repo, ledgerPath), JSON.stringify({
+      plan_id: 'plan-b', status: 'COMPLETED', execution_state: 'COMPLETED',
+      closure: { terminal_outcome: 'PASS', final_sha: '1ecb8fd880233cdfd105a4caa825be6b98b1c892' },
+    }));
+    const result = correctStaleTerminal({
+      repoRoot: repo,
+      pointer: { plan_id: 'plan-b', generation: 33, activation_state: 'CANONICALLY_ACTIVATED' },
+      currentHead: 'd793d2c5d185b5cefef2a5ca77760b321d085e1a',
+    });
+    expect('corrected' in result && result.corrected).toBe(true);
+  });
+
+  it('does NOT correct a consistent active pointer', () => {
+    const ledgerDir = path.join(repo, '.agent', 'ledger');
+    fs.mkdirSync(ledgerDir, { recursive: true });
+    const ledgerPath = '.agent/ledger/plan-c.json';
+    fs.writeFileSync(path.join(repo, ledgerPath), JSON.stringify({ plan_id: 'plan-c', status: 'ACTIVE', execution_state: 'IN_PROGRESS' }));
+    const result = correctStaleTerminal({
+      repoRoot: repo,
+      pointer: { plan_id: 'plan-c', generation: 34, activation_state: 'BOOTSTRAP_UNCERTIFIED' },
+      currentHead: 'd793d2c5d185b5cefef2a5ca77760b321d085e1a',
+    });
+    expect('corrected' in result && result.corrected).toBe(false);
   });
 });
 

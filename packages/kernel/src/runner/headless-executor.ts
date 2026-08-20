@@ -269,41 +269,47 @@ export class HeadlessExecutor {
   }
 
   /**
-   * REQ-010 — durable per-task MCP lifecycle receipt: which MCP set this task
-   * routed, where its configs were materialised, and that the whole process
-   * tree (agent + any MCP servers) was observed down at settlement. Written
-   * even when the task routed no MCP (the "0 managed processes" guarantee is
-   * then trivially attested).
+   * REQ-010/REQ-006 — durable per-task MCP lifecycle receipt: which MCP set this
+   * task routed, where its configs were materialised, and that the whole process
+   * tree (agent + any MCP servers) was observed down at settlement. Written even
+   * when the task routed no MCP (the "0 managed processes" guarantee is then
+   * trivially attested).
+   *
+   * idle_zero_attested is DISTINCT from cleanup_confirmed: cleanup_confirmed
+   * only proves the harness observer recorded the process tree down, while
+   * idle-zero additionally asserts no harness-owned process/socket/lease/
+   * provider/orphan/schema exposure remains. A receipt-write failure fails the
+   * task closed (a lost receipt must never look like successful teardown).
    */
   private writeMcpLifecycleReceipt(task: QueuedTask, mcpConfigPaths: McpConfigPaths | undefined, outcome: { exitCode: number; timedOut: boolean; termination: string; cleanupConfirmed: boolean; agentPid: number }): void {
-    try {
-      const dir = mcpConfigPaths?.dir ?? this.config.logDir;
-      fs.mkdirSync(dir, { recursive: true });
-      const receiptPath = path.join(dir, 'mcp-process-receipt.json');
-      const receipt = {
-        schema: 'agent-rules/mcp-process-receipt',
-        version: 1,
-        task_id: task.id,
-        work_id: task.workId,
-        execution_generation: task.executionGeneration ?? 0,
-        routed_mcp_integration_ids: task.mcpIntegrationIds ?? [],
-        mcp_config_dir: mcpConfigPaths?.dir ?? null,
-        resolved_integrations: mcpConfigPaths?.resolved ?? [],
-        agent: {
-          kind: this.config.kind,
-          pid: outcome.agentPid,
-          exit_code: outcome.exitCode,
-          timed_out: outcome.timedOut,
-          termination: outcome.termination,
-          cleanup_confirmed: outcome.cleanupConfirmed,
-        },
-        idle_zero_attested: outcome.cleanupConfirmed,
-        ended_at: new Date().toISOString(),
-      };
-      fs.writeFileSync(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, { mode: 0o600 });
-    } catch {
-      /* a receipt write failure must not fail the task */
-    }
+    const dir = mcpConfigPaths?.dir ?? this.config.logDir;
+    fs.mkdirSync(dir, { recursive: true });
+    const receiptPath = path.join(dir, 'mcp-process-receipt.json');
+    const receipt = {
+      schema: 'agent-rules/mcp-process-receipt',
+      version: 1,
+      task_id: task.id,
+      work_id: task.workId,
+      execution_generation: task.executionGeneration ?? 0,
+      routed_mcp_integration_ids: task.mcpIntegrationIds ?? [],
+      mcp_config_dir: mcpConfigPaths?.dir ?? null,
+      resolved_integrations: mcpConfigPaths?.resolved ?? [],
+      agent: {
+        kind: this.config.kind,
+        pid: outcome.agentPid,
+        exit_code: outcome.exitCode,
+        timed_out: outcome.timedOut,
+        termination: outcome.termination,
+        cleanup_confirmed: outcome.cleanupConfirmed,
+      },
+      // idle-zero is a stronger claim than cleanup confirmation. It asserts no
+      // harness-owned process/socket/lease/advertised provider/orphan/schema
+      // exposure remains. Without a live no-exposure attestation it must not be
+      // conflated with cleanup confirmation.
+      idle_zero_attested: outcome.cleanupConfirmed && (task.mcpIntegrationIds?.length ?? 0) === 0,
+      ended_at: new Date().toISOString(),
+    };
+    fs.writeFileSync(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, { mode: 0o600 });
   }
 
   host(): string {

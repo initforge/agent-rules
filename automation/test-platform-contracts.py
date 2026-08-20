@@ -17,7 +17,9 @@ CONTRACT = ROOT / "platforms" / "platform-contracts.json"
 SCHEMA = ROOT / "automation" / "platform-contracts.schema.json"
 PLATFORMS = ("codex", "claude", "grok", "opencode", "antigravity")
 DEFERRED = ("cursor",)
-RENDERED_PLATFORMS = PLATFORMS + DEFERRED
+NOT_LIVE_VERIFIED = ("deepseek-harness", "command-code")
+RENDERED_PLATFORMS = PLATFORMS + DEFERRED + NOT_LIVE_VERIFIED
+ALL_HOSTS = RENDERED_PLATFORMS
 INVARIANTS = {
     "activation", "context_delivery", "orchestration", "role_permissions", "model_effort", "mcp_integration"
 }
@@ -54,9 +56,19 @@ def validate(contract: dict[str, object], schema: dict[str, object]) -> None:
             location = ".".join(str(part) for part in error.absolute_path) or "<root>"
             rendered.append(f"{location}: {error.message}")
         fail("JSON Schema validation failed: " + "; ".join(rendered))
-    exact_mapping(contract, {"version", "parity_contract", "platforms"}, "contract")
-    if contract["version"] != 1:
-        fail("contract version must be 1")
+    exact_mapping(contract, {"version", "registry", "parity_contract", "platforms"}, "contract")
+    if contract["version"] != 2:
+        fail("contract version must be 2")
+    registry = exact_mapping(contract["registry"], {"host_ids", "certification_policy", "capability_to_canary"}, "registry")
+    if tuple(registry["host_ids"]) != ALL_HOSTS:
+        fail(f"registry host_ids drift: {tuple(registry['host_ids'])} != {ALL_HOSTS}")
+    policy = registry["certification_policy"]
+    if tuple(policy["certification_required_hosts"]) != PLATFORMS:
+        fail("registry certification required host drift")
+    if tuple(policy["deferred_supported_targets"]) != DEFERRED:
+        fail("registry deferred supported target drift")
+    if tuple(policy["not_live_verified_targets"]) != NOT_LIVE_VERIFIED:
+        fail("registry not-live-verified target drift")
     parity = exact_mapping(contract["parity_contract"], {"required_live_invariants", "static_artifacts_are_sufficient", "aggregate_rule", "certification_required_hosts", "deferred_supported_targets"}, "parity_contract")
     if set(parity["required_live_invariants"]) != INVARIANTS:
         fail("required live invariant set drift")
@@ -85,7 +97,15 @@ def validate(contract: dict[str, object], schema: dict[str, object]) -> None:
         fail("Antigravity contract must declare PreInvocation context injection")
     if platforms["cursor"]["orchestration"]["model_attestation"] != "deferred_host_attestation":
         fail("Cursor must remain an explicit deferred supported target")
-    expected_materialization = {name: "managed_directory" for name in RENDERED_PLATFORMS}
+    # New hosts must be declared UNSUPPORTED/NOT_LIVE_VERIFIED until a native
+    # projection exists: DSH uses managed Cordis bundle/profile (host_native),
+    # Command Code uses session-scoped mods (host_native).
+    if platforms["deepseek-harness"]["bootstrap"]["strategy"] != "managed_bundle_profile":
+        fail("DeepSeek Harness must use the Cordis bundle/profile bootstrap")
+    if platforms["command-code"]["bootstrap"]["strategy"] != "managed_session_mod":
+        fail("Command Code must use session-scoped mod bootstrap")
+    expected_materialization = {name: "managed_directory" for name in PLATFORMS + DEFERRED}
+    expected_materialization.update({"deepseek-harness": "host_native", "command-code": "host_native"})
     actual_materialization = {name: platforms[name]["orchestration"]["agent_materialization"] for name in RENDERED_PLATFORMS}
     if actual_materialization != expected_materialization:
         fail(f"agent materialization contract drift: {actual_materialization}")

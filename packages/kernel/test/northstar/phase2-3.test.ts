@@ -48,8 +48,19 @@ describe('Phase 2 — compiled DoD / disposition', () => {
   });
 
   it('EXPORT_HANDOFF keeps the full self-contained DoD', () => {
-    const dod = compileDoD({ disposition: 'EXPORT_HANDOFF' });
+    const dod = compileDoD({ disposition: 'EXPORT_HANDOFF', obligations: { requires_release: true } });
     expect(dod.required).toEqual(['CODE', 'BEHAVIOR', 'RELEASE', 'TERMINAL']);
+  });
+
+  it('EXPORT_HANDOFF without release obligations is not over-deepened (REQ-008)', () => {
+    const dod = compileDoD({ disposition: 'EXPORT_HANDOFF' });
+    expect(dod.required).toEqual(['CODE', 'BEHAVIOR', 'TERMINAL']);
+  });
+
+  it('PLAN_ONLY with a release obligation still carries RELEASE (REQ-008)', () => {
+    const dod = compileDoD({ disposition: 'PLAN_ONLY', obligations: { requires_release: true } });
+    expect(dod.required).toContain('RELEASE');
+    expect(dod.required).toContain('CODE');
   });
 
   it('LOCAL_EXECUTE with S2 risk requires CODE+BEHAVIOR+RELEASE+TERMINAL', () => {

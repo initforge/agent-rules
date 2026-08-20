@@ -5,7 +5,8 @@
  * evidence references and final status.
  */
 import { describe, it, expect } from 'vitest';
-import { routeProofs, type ProofRouteRequest } from '../../src/northstar/proof-router.js';
+import { routeProofs, planProofRoute, type ProofRouteRequest } from '../../src/northstar/proof-router.js';
+import { filterVerifiersByProofRoute, type VerifierDefinition } from '../../src/northstar/runtime.js';
 
 function request(over: Partial<ProofRouteRequest> = {}): ProofRouteRequest {
   return {
@@ -17,6 +18,38 @@ function request(over: Partial<ProofRouteRequest> = {}): ProofRouteRequest {
     ...over,
   };
 }
+
+function verifier(id: string): VerifierDefinition {
+  return { id, kind: 'test', argv: { executable: 'node', args: ['-e', 'process.exit(0)'] } };
+}
+
+describe('F04/REQ-004 — filterVerifiersByProofRoute on the production path', () => {
+  it('keeps verifiers for claims whose proof the route plan selected', () => {
+    const plan = planProofRoute({
+      ...request({ claims: [{ id: 'C-1', claim: 'API route validates input' }] }),
+      claims: [{ id: 'C-1', claim: 'API route validates input' }],
+    });
+    const packet = {
+      task_id: 'T-1', goal: 'g', requirements: [], acceptance: [{ claim_id: 'C-1', verifier_id: 'V-1' }],
+      scope: { owned: [], forbidden: [] }, work_id: 'W-1', execution_generation: 0, spec_revision: 1,
+    } as any;
+    const { selected, omitted } = filterVerifiersByProofRoute(packet, { risk_class: 'S1' }, [{ claim_id: 'C-1', verifier: verifier('V-1') }], plan);
+    expect(selected.map((e) => e.verifier.id)).toContain('V-1');
+    // The route plan selected proof for C-1, so nothing is silently dropped.
+    expect(omitted.filter((o) => o.claim_id === 'C-1' && o.verifier_id === 'V-1')).toHaveLength(0);
+  });
+
+  it('keeps ALL verifiers for a claim with no selected proof (never silently skips required proof)', () => {
+    const plan = planProofRoute({ ...request(), claims: [{ id: 'C-UNROUTED', claim: 'unrouted claim' }] });
+    // Plan has no selection for C-UNROUTED.
+    const packet = {
+      task_id: 'T-1', goal: 'g', requirements: [], acceptance: [{ claim_id: 'C-UNROUTED', verifier_id: 'V-1' }],
+      scope: { owned: [], forbidden: [] }, work_id: 'W-1', execution_generation: 0, spec_revision: 1,
+    } as any;
+    const { selected } = filterVerifiersByProofRoute(packet, { risk_class: 'S1' }, [{ claim_id: 'C-UNROUTED', verifier: verifier('V-1') }], plan);
+    expect(selected.map((e) => e.verifier.id)).toContain('V-1');
+  });
+});
 
 describe('proof router — receipt completeness', () => {
   it('emits a complete receipt with every owner §12 field', () => {

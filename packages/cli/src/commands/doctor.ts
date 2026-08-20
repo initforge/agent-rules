@@ -185,7 +185,7 @@ export async function doctor(
   const root = getRepoRoot();
   const platformArg = args[0] || "all";
   const skipIntegrationVerify = args.includes("--skip-integration-verify");
-  const valid = ["codex", "grok", "antigravity", "cursor", "opencode", "claude", "all"];
+  const valid = ["codex", "grok", "antigravity", "cursor", "opencode", "claude", "deepseek-harness", "command-code", "all"];
   if (!valid.includes(platformArg)) {
     return { exitCode: ExitCode.InvalidArgument, message: `Invalid platform: ${platformArg}` };
   }
@@ -193,6 +193,14 @@ export async function doctor(
   if (options.dryRun) {
     console.log(`[dry-run] Would run doctor for ${platformArg}`);
     return { exitCode: ExitCode.Success, message: "Dry-run: doctor skipped" };
+  }
+
+  // New hosts are registered but NOT_LIVE_VERIFIED until their native
+  // projections are installed and probed. Doctor reports them honestly.
+  const notLiveVerified: string[] = ["deepseek-harness", "command-code"];
+  if (notLiveVerified.includes(platformArg)) {
+    const report: DoctorCheck[] = [{ platform: platformArg, check: "install", status: "NOT_LIVE", detail: "registered host with no installed native projection yet" }];
+    return { exitCode: ExitCode.Success, message: `doctor for ${platformArg}: NOT_LIVE_VERIFIED`, data: { report } };
   }
 
   const allPlatforms = ["codex", "grok", "antigravity", "cursor", "opencode", "claude"] as const;

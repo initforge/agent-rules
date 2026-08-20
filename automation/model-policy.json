@@ -265,16 +265,16 @@
       ],
       "denial_behavior": "fail_closed"
     },
-    "mimocode": {
+    "deepseek-harness": {
       "economy": {
         "family": "user-configured",
         "selector": "__host_selected__",
-        "note": "MiMoCode supports MiMo Auto, Xiaomi MiMo and custom/mainstream providers; resolve from the host rather than hardcoding."
+        "note": "DeepSeek Harness resolves model from the active profile/provider; record observed resolution."
       },
       "standard": {
         "family": "user-configured",
         "selector": "__host_selected__",
-        "note": "Use the model selected/configured in MiMoCode and record observed resolution."
+        "note": "Use the model selected/configured in the managed DSH profile; record observed resolution."
       },
       "expert": {
         "family": "user-configured",
@@ -287,9 +287,9 @@
           "standard",
           "expert"
         ],
-        "user_config_location": ".mimocode/mimocode.jsonc or global MiMoCode config / model picker",
+        "user_config_location": "managed DSH profile / dsh --dump-config",
         "missing_mapping_behavior": "visible: keep requested logical class and mark resolved/observed model UNVERIFIED",
-        "resolve_chain": "TaskPacket logical class -> MiMoCode configured/provider model -> observed session model"
+        "resolve_chain": "TaskPacket logical class -> DSH profile provider model -> observed session model"
       },
       "recorded_evidence": [
         "requested",
@@ -298,7 +298,42 @@
       ],
       "denial_behavior": "fail_closed",
       "subagent_model_override": "host_configured",
-      "model_attestation": "host_declared"
+      "model_attestation": "host_attested"
+    },
+    "command-code": {
+      "economy": {
+        "family": "user-configured",
+        "selector": "__host_selected__",
+        "note": "Command Code resolves model from the session/provider; record observed resolution."
+      },
+      "standard": {
+        "family": "user-configured",
+        "selector": "__host_selected__",
+        "note": "Use the model selected/configured in the supervised session; record observed resolution."
+      },
+      "expert": {
+        "family": "user-configured",
+        "selector": "__host_selected__",
+        "note": "Escalation selects a logical class; exact model remains a host/user decision unless explicitly pinned."
+      },
+      "mapping_contract": {
+        "classes": [
+          "economy",
+          "standard",
+          "expert"
+        ],
+        "user_config_location": "session-scoped --mod / provider selection",
+        "missing_mapping_behavior": "visible: keep requested logical class and mark resolved/observed model UNVERIFIED",
+        "resolve_chain": "TaskPacket logical class -> Command Code session model -> observed session model"
+      },
+      "recorded_evidence": [
+        "requested",
+        "resolved",
+        "observed"
+      ],
+      "denial_behavior": "fail_closed",
+      "subagent_model_override": "host_configured",
+      "model_attestation": "host_attested"
     }
   }
 }

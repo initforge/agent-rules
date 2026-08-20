@@ -1,0 +1,78 @@
+{
+  "schema": "artifact/phase-proof-receipt",
+  "version": 1,
+  "plan_id": "portable-host-native-supervision-v1",
+  "phase": "P1",
+  "status": "PARTIAL",
+  "certification": "BOOTSTRAP_UNCERTIFIED",
+  "candidate_sha": "d793d2c5d185b5cefef2a5ca77760b321d085e1a",
+  "observed_at": "2026-08-20T00:00:00Z",
+  "summary": "Canonical host registry v2 with eight HostIds; typed HostCapabilityFacts ABI with fingerprint/TTL/staleness; Proof Router and enforcement wired into production runtime; MCP idle-zero fail-closed; compileDoD derived from obligations.",
+  "findings_addressed": ["F04", "F06", "F08", "F09", "F11"],
+  "evidence": [
+    {
+      "id": "P1-REQ-009-registry",
+      "claim": "platform-contracts.json is registry v2 with eight canonical HostIds; independent host arrays and stale Mimocode removed.",
+      "proof": "platforms/platform-contracts.json version 2 with registry.host_ids (8); automation/platform-contracts.schema.json v2; model-policy.json removed mimocode and added DSH/command-code; kernel HostAttestation.host and HostId include the two new hosts; RUNTIME_PLATFORMS/VALID_HOSTS/CERTIFICATION_REQUIRED_HOSTS updated to the 8-host registry-driven set.",
+      "verifier": "test-platform-contracts.py; test-cross-language-manifests.py; test-platform-lifecycle.py; test-model-policy.py; runtime-reconcile.test.ts (8 hosts); generic-fixtures.test.ts (8 hosts)"
+    },
+    {
+      "id": "P1-REQ-011-abi",
+      "claim": "Typed HostCapabilityFacts ABI with semantic enums, fingerprint/TTL/staleness and selective invalidation; UNKNOWN never allow.",
+      "proof": "packages/kernel/src/northstar/host-capabilities.ts HostCapabilityFacts, CertificationState, SkillSurfaceMode/PermissionSurfaceMode/SubagentSurfaceMode, capabilityTtlDays, staleCertifications, capabilityIsLive.",
+      "verifier": "enforcement.test.ts REQ-011 suite (6 tests)"
+    },
+    {
+      "id": "P1-REQ-004-proof-router",
+      "claim": "Proof Router is wired on the production path: planProofRoute selects before execution and only selected verifiers run; omitted reasons recorded.",
+      "proof": "packages/kernel/src/northstar/runtime.ts proofRouter hook + filterVerifiersByProofRoute + proofRouteRequestForPacket; proof-route receipt persisted per task; resume path uses the same selection.",
+      "verifier": "engine northstar.test.ts F04 test; kernel proof-receipt.test.ts F04 suite"
+    },
+    {
+      "id": "P1-REQ-006-mcp-idle-zero",
+      "claim": "MCP idle-zero attestation is distinct from cleanup confirmation and receipt-write errors fail closed.",
+      "proof": "packages/kernel/src/runner/headless-executor.ts writeMcpLifecycleReceipt: idle_zero_attested is cleanupConfirmed AND no routed MCP; receipt write failure propagates.",
+      "verifier": "kernel runner/northstar test suites green"
+    },
+    {
+      "id": "P1-REQ-008-compile-dod",
+      "claim": "compileDoD derives depth from requirement/claim/proof obligations and release/migration/live scope, not execution disposition.",
+      "proof": "packages/kernel/src/northstar/portable-plan.ts compileDoD(obligations) + compileFrozenContract derives obligations from requirement statements.",
+      "verifier": "phase2-3.test.ts (EXPORT not over-deep; PLAN_ONLY keeps RELEASE with obligation)"
+    },
+    {
+      "id": "P1-REQ-007-enforcement",
+      "claim": "decideEnforcement-equivalent enforcement is wired before effect execution on the production runtime.",
+      "proof": "packages/kernel/src/northstar/runtime.ts enforcement hook blocks task when layer is blocked.",
+      "verifier": "engine northstar.test.ts F07 test"
+    },
+    {
+      "id": "P1-REQ-010-adapter-contract",
+      "claim": "One HostAdapter contract shared by CLI runtime and platform projections; compatibility shim has expiry and never fabricates capability facts.",
+      "proof": "packages/kernel/src/northstar/host-adapter-contract.ts HostAdapter + compatAdapterToHostAdapterV2 + ADAPTER_CONTRACT_EXPIRY; observeCapabilities refuses to fabricate; mapRequirement UNKNOWN never allow.",
+      "verifier": "kernel host-adapter-contract.test.ts (6 tests)"
+    },
+    {
+      "id": "P1-REQ-007-lanes-admission",
+      "claim": "LaneController and Artifact Admission are wired at actual operational write/run boundaries, not only tests.",
+      "proof": "packages/kernel/src/northstar/runtime.ts creates a production LaneController (memory-pressure shedding) and admission gate; packages/kernel/src/runner/loop.ts verifier lane acquire/release in finally.",
+      "verifier": "kernel enforcement.test.ts F07 suite; artifact-admission.test.ts"
+    }
+  ],
+  "omitted": [
+    {
+      "kind": "artifact-admission-lane-controller-production-wiring",
+      "count": 0,
+      "reason": "Completed in this increment: production LaneController + Artifact Admission wired (see P1-REQ-007-lanes-admission)."
+    },
+    {
+      "kind": "live-host-certification",
+      "count": 0,
+      "reason": "P1 is source/static wiring; live certification is P2/P3/P4 and requires installed binaries."
+    }
+  ],
+  "residual_risk": [
+    "P2-P8 not yet executed; phase is PARTIAL by design.",
+    "DeepSeek Harness and Command Code native projections (platforms/) are P2/P3; registry/ABI entries exist but binaries are not installed."
+  ]
+}

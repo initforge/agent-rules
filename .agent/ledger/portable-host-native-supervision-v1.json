@@ -1,0 +1,156 @@
+{
+  "schema_version": 4,
+  "plan_id": "portable-host-native-supervision-v1",
+  "status": "ACTIVE",
+  "execution_state": "IN_PROGRESS",
+  "created_at": "2026-08-20T00:00:00Z",
+  "updated_at": "2026-08-20T00:00:00Z",
+  "shadow_revision": 0,
+  "canonical_scope": {
+    "allow_mutation": true,
+    "owners": [
+      "harness-maintainer"
+    ]
+  },
+  "original_plan": {
+    "path": ".agent/plans/portable-host-native-supervision-v1/original.md",
+    "sha256": "f7506714d1a4d3e879c4f2520b20868ee18659f7ebefd28d0798a820641e00ab",
+    "bytes": 36547,
+    "encoding": "utf-8"
+  },
+  "effective_plan_identity": {
+    "sha256": "801d9589e25eda77f6a5b319445a7ddf946fb6f0b0daaf085a0afbddfc50c854",
+    "canonical_json_utf8": "{\"algorithm\":\"SHA-256\",\"approved_amendments\":[],\"composition\":\"original-plus-ordered-approved-amendment-sha256\",\"original_plan_sha256\":\"f7506714d1a4d3e879c4f2520b20868ee18659f7ebefd28d0798a820641e00ab\",\"version\":1}",
+    "bytes": 214
+  },
+  "milestones": {
+    "P0": {
+      "requirements": [
+        {
+          "id": "REQ-001",
+          "status": "PARTIAL",
+          "statement": "Canonical truth is reopened with a schema-valid active pointer for the successor plan at BOOTSTRAP_UNCERTIFIED; old plan reclassified SUPERSEDED/INACTIVE/PARTIAL by generic correction; final SHA/evidence bind current HEAD.",
+          "evidenceRefs": [".agent/evidence/portable-host-native-supervision-v1/phase-0-proof.json"]
+        },
+        {
+          "id": "REQ-002",
+          "status": "PARTIAL",
+          "statement": "CLI public success paths consume one TrustedTerminalDecision; exit 0 and DONE/completed only from trusted PASS.",
+          "evidenceRefs": [".agent/evidence/portable-host-native-supervision-v1/phase-0-proof.json"]
+        },
+        {
+          "id": "REQ-003",
+          "status": "PARTIAL",
+          "statement": "Closure composition derives outcome only from real evidence; caller cannot force terminal_outcome; attest -> deactivate -> compact.",
+          "evidenceRefs": [".agent/evidence/portable-host-native-supervision-v1/phase-0-proof.json"]
+        }
+      ]
+    },
+    "P1": {
+      "requirements": [
+        {
+          "id": "REQ-004",
+          "status": "PARTIAL",
+          "statement": "Proof Router is on the production path: planProofRoute() selects before execution, runtime runs only selected verifiers and records omitted reasons.",
+          "evidenceRefs": [".agent/evidence/portable-host-native-supervision-v1/phase-1-proof.json"]
+        },
+        {
+          "id": "REQ-006",
+          "status": "PARTIAL",
+          "statement": "MCP idle-zero attestation is distinct from cleanup confirmation; receipt-write errors fail closed as terminal BLOCKED.",
+          "evidenceRefs": [".agent/evidence/portable-host-native-supervision-v1/phase-1-proof.json"]
+        },
+        {
+          "id": "REQ-007",
+          "status": "PARTIAL",
+          "statement": "Enforcement is wired before effect execution on the production path; Artifact Admission and LaneController production callers pending.",
+          "evidenceRefs": [".agent/evidence/portable-host-native-supervision-v1/phase-1-proof.json"]
+        },
+        {
+          "id": "REQ-008",
+          "status": "PARTIAL",
+          "statement": "compileDoD() derives depth from requirements/claims/proof obligations and release/migration/live scope, independent of execution disposition.",
+          "evidenceRefs": [".agent/evidence/portable-host-native-supervision-v1/phase-1-proof.json"]
+        },
+        {
+          "id": "REQ-009",
+          "status": "PARTIAL",
+          "statement": "platform-contracts.json is the single canonical host registry v2 with eight canonical HostIds; independent host arrays and stale Mimocode removed.",
+          "evidenceRefs": [".agent/evidence/portable-host-native-supervision-v1/phase-1-proof.json"]
+        },
+        {
+          "id": "REQ-010",
+          "status": "PARTIAL",
+          "statement": "One HostAdapter contract shared by CLI runtime and platform projections; duplicate contracts merged with a time-boxed compatibility shim.",
+          "evidenceRefs": [".agent/evidence/portable-host-native-supervision-v1/phase-1-proof.json"]
+        },
+        {
+          "id": "REQ-014",
+          "status": "PARTIAL",
+          "statement": "DeepSeek Harness native integration: platforms/deepseek-harness adapter and package/bundle installed via official dsh plugin/profile lifecycle; bounded context, hard tool policy, event/evidence, approval/sandbox/subagent/MCP/headless mapping; bundle hash and config fingerprint verified before every supervised launch; DSH turn completion is host observation, never terminal PASS.",
+          "evidenceRefs": [".agent/evidence/portable-host-native-supervision-v1/phase-2-3-proof.json"]
+        },
+        {
+          "id": "REQ-015",
+          "status": "PARTIAL",
+          "statement": "Command Code native integration: platforms/command-code adapter and session-scoped package; exact cmd/cmdc/command-code detection (never Windows cmd.exe); native permissions are the hard boundary, mods/hooks are supplementary; mod/hook failure yields terminal BLOCKED; Taste preserved; --yolo never used in certification.",
+          "evidenceRefs": [".agent/evidence/portable-host-native-supervision-v1/phase-2-3-proof.json"]
+        },
+        {
+          "id": "REQ-012",
+          "status": "PARTIAL",
+          "statement": "ContextBudgetReceipt is emitted per run measuring installed graph size, actual model-visible rule/skill/tool/MCP/subagent schema and input tokens with measurement source; inactive plans, old receipts, cold references and unused tools/MCP/subagents are excluded from normal model-visible context.",
+          "evidenceRefs": [".agent/evidence/portable-host-native-supervision-v1/phase-5-6-proof.json"]
+        },
+        {
+          "id": "REQ-013",
+          "status": "PARTIAL",
+          "statement": "Plannerless intake: IntakeDecision classifies EXPLICIT, DISCOVERABLE or SEMANTICALLY_AMBIGUOUS; explicit/discoverable tasks compile deterministically without a planner; only semantic ambiguity calls a configured strong planner; missing planner yields NEEDS_USER/PLANNER_REQUIRED; workers never self-lower risk or override model/provider.",
+          "evidenceRefs": [".agent/evidence/portable-host-native-supervision-v1/phase-5-6-proof.json"]
+        },
+        {
+          "id": "REQ-017",
+          "status": "PARTIAL",
+          "statement": "Registry-driven generic eight-host/evolution matrix: G1-G4 fixtures extend to registry-driven package/install/update path and host fingerprint evolution; host-update canary stales only affected capabilities then selective probes + recertify/fallback/downgrade.",
+          "evidenceRefs": [".agent/evidence/portable-host-native-supervision-v1/phase-7-proof.json"]
+        },
+        {
+          "id": "REQ-018",
+          "status": "PARTIAL",
+          "statement": "Six existing hosts (Claude, OpenCode, Cursor, Antigravity, Codex, Grok) re-mapped to current official surfaces with fresh/install/update/remove/rollback lifecycle and capability-specific canaries.",
+          "evidenceRefs": [".agent/evidence/portable-host-native-supervision-v1/phase-4-proof.json"]
+        }
+      ]
+    }
+  },
+  "closure_evidence": null,
+  "tasks": {},
+  "requirements": {
+    "REQ-001": { "statement": "Canonical truth reopened with schema-valid active pointer; old plan reclassified generically.", "status": "PARTIAL" },
+    "REQ-002": { "statement": "CLI public success paths use one TrustedTerminalDecision; exit 0/DONE only from trusted PASS.", "status": "PARTIAL" },
+    "REQ-003": { "statement": "Closure outcome derived only from real evidence; caller cannot force; attest/deactivate/compact composition.", "status": "PARTIAL" },
+    "REQ-004": { "statement": "Proof Router on production path; only selected verifiers run; omitted reasons recorded.", "status": "PARTIAL" },
+    "REQ-005": { "statement": "Decision Fabric is production authority; legacy routeSkills deleted after shadow parity.", "status": "ACTIVE" },
+    "REQ-006": { "statement": "MCP idle-zero distinct from cleanup; receipt-write errors fail closed.", "status": "PARTIAL" },
+    "REQ-007": { "statement": "Admission/lanes/enforcement at production boundaries.", "status": "PARTIAL" },
+    "REQ-008": { "statement": "compileDoD from claims/obligations, independent of disposition.", "status": "PARTIAL" },
+    "REQ-009": { "statement": "Registry v2 with eight HostIds; remove independent host arrays + Mimocode.", "status": "PARTIAL" },
+    "REQ-010": { "statement": "One HostAdapter contract; merge duplicates with expiry shim.", "status": "PARTIAL" },
+    "REQ-011": { "statement": "Per-capability fingerprint/staleness/TTL; selective invalidation.", "status": "PARTIAL" },
+    "REQ-012": { "statement": "ContextBudgetReceipt; exclude inactive/cold context from model-visible budget.", "status": "PARTIAL" },
+    "REQ-013": { "statement": "Plannerless intake EXPLICIT/DISCOVERABLE/SEMANTICALLY_AMBIGUOUS.", "status": "PARTIAL" },
+    "REQ-014": { "statement": "DeepSeek Harness native Cordis bundle/profile integration.", "status": "PARTIAL" },
+    "REQ-015": { "statement": "Command Code native mod/skills/permissions/events integration.", "status": "PARTIAL" },
+    "REQ-016": { "statement": "Certification/CI exact-SHA honest static/live split.", "status": "ACTIVE" },
+    "REQ-017": { "statement": "Registry-driven generic eight-host/evolution matrix.", "status": "PARTIAL" },
+    "REQ-018": { "statement": "Six existing hosts re-mapped to current official surfaces.", "status": "PARTIAL" },
+    "REQ-019": { "statement": "Context/token acceptance: context -20%, duplicate reads -30%, p50 +5% bound.", "status": "ACTIVE" },
+    "REQ-020": { "statement": "Plannerless/weak-worker and permission-toil acceptance.", "status": "ACTIVE" },
+    "REQ-021": { "statement": "Simplification/removal only after behavioral parity; generated regenerated by automation.", "status": "ACTIVE" },
+    "REQ-022": { "statement": "Git/main convergence: direct main, <=2 commits, <=9 reachable, local==origin/main.", "status": "ACTIVE" },
+    "REQ-023": { "statement": "Terminal acceptance gates all hold.", "status": "ACTIVE" }
+  },
+  "note": "Successor of terminal-harness-convergence-v1 which self-reported a stale/invalid terminal PASS. Bootstrapped at generation 34 with BOOTSTRAP_UNCERTIFIED state; canonical truth reopened and old plan reclassified by generic correction. P0 PARTIAL: pointer gen 34 schema-valid, generic correction applied, CLI aggregate outcome (F02) and closure evidence composition + caller-override removal + attest/deactivate (F03) implemented. P1 PARTIAL: registry v2 with 8 HostIds (F09), typed HostCapabilityFacts ABI with TTL/staleness (F11), Proof Router + enforcement production wiring (F04/F07), MCP idle-zero fail-closed (F06), compileDoD obligations (F08). Remaining P2-P8 pending.",
+  "closure": null,
+  "reconciliations": []
+}

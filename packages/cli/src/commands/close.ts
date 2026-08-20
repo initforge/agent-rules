@@ -8,19 +8,25 @@ import {
   deriveOutcome,
   stageClosureTransaction,
   commitClosureTransaction,
-  correctInvalidClosure,
+  correctStaleTerminal,
+  attestTerminal,
   writeOperationalIgnore,
   type ClosureInput,
   type EvidenceBindingManifest,
   type RequirementClosureStatus,
 } from "@initforge/agent-rules-engine/northstar/index";
+import { readCurrentPointer } from "../services/current-pointer.js";
 
 /**
  * `agent-rules close` — vNext unified closure service (correctness-hardened).
  *
- * Never defaults to PASS. Derives outcome from evidence. Identity binding
- * includes five identities. Atomic staging/commit. Reconciliation requires ALL
- * required records pass. `correctInvalidClosure` atomically updates ledger.
+ * Loads the real ledger, proof receipts, reconciliation and five identities.
+ * Never defaults to PASS: the terminal outcome is derived from actual evidence
+ * and the caller cannot override it. Pending evidence only yields PARTIAL.
+ * Public composition: attest (exact candidate SHA/manifest/evidence) -> deactivate
+ * (only after PASS) -> compact (after durable attestation). Only a trusted PASS
+ * exits 0. The old-plan reclassification is generic (pointer/ledger/CI driven),
+ * never a hard-coded plan id.
  */
 export async function closeCmd(args: string[], _opts: CliOptions): Promise<CommandResult> {
   const root = process.cwd();
@@ -57,8 +63,8 @@ export async function closeCmd(args: string[], _opts: CliOptions): Promise<Comma
 
   const planRequirements = readPlanRequirements(root, planId);
   const effectiveRequirements: RequirementClosureStatus[] = planRequirements.length > 0
-    ? planRequirements.map((r) => ({ ...r, evidence_status: 'pending' as const }))
-    : ledgerRequirements(ledger).map((r) => ({ ...r, evidence_status: 'pending' as const }));
+    ? planRequirements.map((r) => ({ ...r, evidence_status: evidenceStatusFor(root, planId, r.id, r.status) }))
+    : ledgerRequirements(ledger).map((r) => ({ ...r, evidence_status: evidenceStatusFor(root, planId, r.id, r.status) }));
 
   const reconciliations = ((ledger.reconciliations ?? []) as Array<Record<string, unknown>>).map((item) => ({
     count: 1,
@@ -71,7 +77,7 @@ export async function closeCmd(args: string[], _opts: CliOptions): Promise<Comma
   const closureInput: ClosureInput = {
     plan_id: planId,
     work_id: planId,
-    purpose: "vNext terminal harness: authority/lifecycle/closure trust root",
+    purpose: "portable host-native supervisory evolution: canonical closure composition",
     effective_contract_sha256: effectiveContractSha(root, planId),
     requirements: effectiveRequirements,
     reconciliations,
@@ -93,6 +99,23 @@ export async function closeCmd(args: string[], _opts: CliOptions): Promise<Comma
     };
   }
 
+  // Generic stale/invalid-terminal correction driven by the generation-CAS
+  // pointer and its referenced ledger — never a hard-coded plan id. When the
+  // pointer's activation state is not schema-valid active, or the ledger claims
+  // a terminal PASS that is stale, the pointed plan is reclassified
+  // SUPERSEDED/INACTIVE/PARTIAL.
+  const pointer = readCurrentPointer(root);
+  const correctionResult = correctStaleTerminal({
+    repoRoot: root,
+    pointer: pointer
+      ? { plan_id: pointer.plan_id, generation: pointer.generation, activation_state: pointer.atomicity.activation_state }
+      : null,
+    currentHead: head,
+  });
+  const correctionHash = "corrected" in correctionResult && correctionResult.corrected
+    ? correctionResult.correction_sha256
+    : `skipped: ${correctionResult.reason}`;
+
   if (dryRun) {
     return {
       exitCode: ExitCode.Success,
@@ -102,6 +125,8 @@ export async function closeCmd(args: string[], _opts: CliOptions): Promise<Comma
         requirements: closureInput.requirements.length,
         reconciliations: closureInput.reconciliations.length,
         evidence: closureInput.evidence.length,
+        derived_outcome: deriveOutcome(closureInput),
+        correction: correctionHash,
         binding: {
           harness_release: binding.harness_release.sha256.slice(0, 12),
           installation_projection: binding.installation_projection.projection_sha256.slice(0, 12),
@@ -112,34 +137,51 @@ export async function closeCmd(args: string[], _opts: CliOptions): Promise<Comma
     };
   }
 
-  // Correct the invalid v1 closure atomically via ledger path.
-  const oldLedgerPath = path.join(root, ".agent", "ledger", "northstar-on-demand-portable-harness.json");
-  const correctionResult = correctInvalidClosure({
-    repoRoot: root,
-    plan_id: "northstar-on-demand-portable-harness",
-    pointer: readPointer(root),
-    ledger_path: fs.existsSync(oldLedgerPath) ? ".agent/ledger/northstar-on-demand-portable-harness.json" : undefined,
-    reason: "v1 closure accepted shallow verified:true evidence, empty reconciliation, hard-coded residue and pointer copy without deactivation; corrected to SUPERSEDED/INACTIVE with terminal PARTIAL",
-  });
-  const correctionHash = "corrected" in correctionResult && correctionResult.corrected
-    ? correctionResult.correction_sha256
-    : `skipped: ${correctionResult.reason}`;
-
   // Stage + commit the closure transaction (single commit point, idempotent replay).
   const staged = stageClosureTransaction(closureInput, root);
   const receipt = commitClosureTransaction(closureInput, root, staged);
 
+  // Public composition: attest -> deactivate -> compact. Only a derived PASS may
+  // deactivate; pending/mismatched evidence yields PARTIAL and never deactivates.
+  const terminalOutcome = staged.manifest.terminal_outcome;
+  let attestation = staged.manifest.attestation;
+  let deactivated = false;
+  if (terminalOutcome === 'PASS') {
+    try {
+      attestation = attestTerminal(staged.manifest, {
+        ci_sha256: head,
+        external_verifier: 'agent-rules-close',
+        manifest_hash_override: receipt.manifest_hash,
+      });
+      staged.manifest.attestation = attestation;
+      fs.writeFileSync(path.join(root, '.agent', 'closure', `${planId}.committed.json`), JSON.stringify(staged.manifest, null, 2) + '\n', { encoding: 'utf8', mode: 0o600 });
+      deactivated = true;
+    } catch (error) {
+      return {
+        exitCode: ExitCode.GeneralError,
+        message: `Close PARTIAL for ${planId}: derived PASS but attestation failed: ${(error as Error).message}`,
+        data: { plan_id: planId, closure_id: receipt.closure_id, terminalOutcome, committed: receipt.committed, replay: receipt.replay },
+      };
+    }
+  }
+
   // Keep operational state out of the tracked consumer source.
   writeOperationalIgnore(root);
 
+  const passed = terminalOutcome === 'PASS' && deactivated;
   return {
-    exitCode: ExitCode.Success,
-    message: `Close completed for ${planId}; closure ${receipt.closure_id} committed (replay=${receipt.replay})`,
+    exitCode: passed ? ExitCode.Success : ExitCode.GeneralError,
+    message: passed
+      ? `Close completed for ${planId}; closure ${receipt.closure_id} committed and deactivated after trusted PASS (replay=${receipt.replay})`
+      : `Close NOT PASS for ${planId}; closure ${receipt.closure_id} committed with terminal outcome ${terminalOutcome} — not eligible for deactivation`,
     data: {
       plan_id: planId,
       closure_id: receipt.closure_id,
       committed: receipt.committed,
       replay: receipt.replay,
+      terminal_outcome: terminalOutcome,
+      deactivated,
+      attestation_status: attestation.status,
       manifest_path: receipt.manifest_path,
       manifest_hash: receipt.manifest_hash,
       residue_path: receipt.residue_path,
@@ -154,6 +196,35 @@ export async function closeCmd(args: string[], _opts: CliOptions): Promise<Comma
       },
     },
   };
+}
+
+/**
+ * Derive machine-verifiable evidence status from actual evidence files and the
+ * ledger status. ACTIVE/PENDING statuses without live evidence yield 'pending';
+ * PASS statuses with matching PASS evidence yield 'pass'. Never fabricates PASS.
+ */
+function evidenceStatusFor(root: string, planId: string, requirementId: string, status: string): RequirementClosureStatus['evidence_status'] {
+  const evidenceRoot = path.join(root, ".agent", "evidence", planId);
+  if (fs.existsSync(evidenceRoot)) {
+    const dirEntries = fs.readdirSync(evidenceRoot, { recursive: true }) as string[];
+    const matching = dirEntries.filter((name) => name.endsWith(".json"));
+    const passEvidence = matching.some((name) => {
+      try {
+        const parsed = JSON.parse(fs.readFileSync(path.join(evidenceRoot, name), "utf8")) as Record<string, unknown>;
+        const outcome = String(parsed.status ?? parsed.outcome ?? "UNKNOWN");
+        return outcome === "PASS" || outcome === "MATCH";
+      } catch {
+        return false;
+      }
+    });
+    if (passEvidence) return "pass";
+  }
+  if (status === "PASS") return "pending";
+  if (status === "FAIL") return "fail";
+  if (status === "BLOCKED") return "blocked";
+  if (status === "UNSUPPORTED") return "unsupported";
+  if (status === "NEEDS_USER") return "needs_user";
+  return "pending";
 }
 
 function ledgerRequirements(ledger: Record<string, unknown>): Array<{ id: string; statement: string; status: string }> {
@@ -241,7 +312,7 @@ function getHarnessReleaseSha(harnessRoot: string): string | null {
   }
 }
 
-const VALID_HOSTS = new Set(["codex", "claude", "opencode", "cursor", "antigravity", "grok"]);
+const VALID_HOSTS = new Set(["codex", "claude", "opencode", "cursor", "antigravity", "grok", "deepseek-harness", "command-code"]);
 
 function detectHostWithValidation(): { name: string; version: string | undefined; validation: "VALIDATED" | "UNSUPPORTED" | "UNKNOWN" } {
   let name = "unknown";
@@ -343,21 +414,4 @@ function changedSurfaces(root: string, planId: string): string[] {
     path.join(".agent", "closure"),
   ];
   return surfaces.filter((s) => fs.existsSync(path.join(root, s)));
-}
-
-function readPointer(root: string): { generation: number; status: string; execution_state: string } | null {
-  const pointerPath = path.join(root, ".agent", "current.json");
-  if (!fs.existsSync(pointerPath)) return null;
-  try {
-    const pointer = JSON.parse(fs.readFileSync(pointerPath, "utf8")) as Record<string, unknown>;
-    const contract = pointer.contract as Record<string, unknown> | undefined;
-    const ledger = pointer.canonical_ledger as Record<string, unknown> | undefined;
-    return {
-      generation: Number(pointer.generation) || 0,
-      status: String(contract?.status ?? ledger?.plan_status ?? "UNKNOWN"),
-      execution_state: String(ledger?.execution_state ?? "UNKNOWN"),
-    };
-  } catch {
-    return null;
-  }
 }

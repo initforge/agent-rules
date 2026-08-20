@@ -108,6 +108,13 @@ export interface RunnerConfig {
   repairPromptHints?: (task: QueuedTask, reason: string, exitCodes: number[]) => string[];
   /** Optional durable sink invoked after a task is settled/checkpointed. A throwing sink aborts the run fail-closed. */
   onTaskSettled?: (report: TaskReport) => void;
+  /** F07/REQ-007: optional lane controller. Writer lane always serializes; the
+   *  verifier lane gates the verification step. When omitted the legacy
+   *  unconstrained behavior is preserved. */
+  laneController?: {
+    acquire(lane: 'writer' | 'verifier'): boolean;
+    release(lane: 'writer' | 'verifier'): void;
+  };
 }
 
 export type TaskOutcome = 'done' | 'failed' | 'needs-user';
@@ -591,7 +598,17 @@ export class Runner {
     }
 
     heartbeat.phase('verification', budget.softTimeoutMs, budget.hardTimeoutMs, budget.executionClass);
-    const { codes: verificationExitCodes, evidence, outcome } = await this.verify(task, budget.hardTimeoutMs);
+    // F07/REQ-007: the verifier lane gates the verification step; released in
+    // finally so a failure can never leak the slot.
+    const lane = this.config.laneController;
+    const verifierAcquired = lane ? lane.acquire('verifier') : true;
+    let verificationResult: { codes: number[]; evidence: EvidenceRef[]; outcome: VerificationOutcome };
+    try {
+      verificationResult = await this.verify(task, budget.hardTimeoutMs);
+    } finally {
+      if (lane && verifierAcquired) lane.release('verifier');
+    }
+    const { codes: verificationExitCodes, evidence, outcome } = verificationResult;
     heartbeat.finish(verificationExitCodes.length > 0 && verificationExitCodes.every((code) => code === 0) ? 'COMPLETED' : 'FAILED');
     const allPassed = verificationExitCodes.length > 0 && verificationExitCodes.every((c) => c === 0);
 

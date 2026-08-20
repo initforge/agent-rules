@@ -12,6 +12,8 @@ import {
   validateTraceability,
 } from '../src/northstar/protocol.js';
 import { compileTaskPackets, compileWorkSpec, createWorkRequest } from '../src/northstar/compiler.js';
+import { planProofRoute } from '../src/northstar/proof-router.js';
+import { proofRouteRequestForPacket } from '../src/northstar/runtime.js';
 import { compileContext } from '../src/northstar/context.js';
 import { createStandardCapabilityBroker, routeSkills } from '../src/northstar/routing.js';
 import { EvidenceLedger, deriveAcceptance } from '../src/northstar/evidence-ledger.js';
@@ -437,9 +439,72 @@ describe('North-Star runtime on production Runner', () => {
   });
 
 
-  it('requires the independent semantic seam when explicitly requested and lets it only downgrade deterministic truth', async () => {
+  it('F04/REQ-004: a supplied proof router runs only selected verifiers on the production path', async () => {
+    const request = createWorkRequest({ raw_intent: 'Implement proof-routed behavior' });
+    const compiled = compileWorkSpec(request, { requirements: [{
+      statement: 'A claim is routed through the adaptive proof router.',
+      claims: [
+        { claim_id: 'C-a', statement: 'mechanical behavior passes', class: 'mechanical', required_kinds: ['test'], verifier_id: 'V-a' },
+        { claim_id: 'C-b', statement: 'second behavior passes', class: 'mechanical', required_kinds: ['test'], verifier_id: 'V-b' },
+      ],
+    }] });
+    const packets = compileTaskPackets(compiled, [{
+      goal: 'Implement both claims', requirement_ids: ['R-001'], claim_ids: ['C-a', 'C-b'], owned: ['src'],
+      verifier_by_claim: { 'C-a': 'V-a', 'C-b': 'V-b' },
+    }]);
+    const vAMarker = path.join(repo, 'v-a-ran');
+    const vBMarker = path.join(repo, 'v-b-ran');
+    const result = await executeNorthStarTestRun({
+      repoRoot: repo,
+      request: compiled.request,
+      spec: compiled.spec,
+      manifest: compiled.manifest,
+      packets,
+      verifiers: [
+        { id: 'V-a', kind: 'test', argv: { executable: process.execPath, args: ['-e', `require('fs').writeFileSync(${JSON.stringify(vAMarker)}, 'ran')`] } },
+        { id: 'V-b', kind: 'test', argv: { executable: process.execPath, args: ['-e', `require('fs').writeFileSync(${JSON.stringify(vBMarker)}, 'ran')`] } },
+      ],
+      agent: 'claude',
+      invocationOverride: () => ({ executable: process.execPath, args: ['-e', `require('fs').writeFileSync(${JSON.stringify(path.join(repo, 'src', 'out.ts'))}, ${JSON.stringify('export const out = 1;\n')})`] }),
+      skipAgentDetection: true,
+      maxRepairDepth: 0,
+      proofRouter: (r) => planProofRoute(r),
+    });
+    expect(result.acceptance.outcome).toBe('PASS');
+    expect(fs.existsSync(vAMarker)).toBe(true);
+    expect(fs.existsSync(vBMarker)).toBe(true);
+    // The route plan + selected/omitted record is persisted at the run edge.
+    const routeFile = path.join(result.run_root, 'proof-route', packets[0].task_id + '.json');
+    expect(fs.existsSync(routeFile)).toBe(true);
+    const route = JSON.parse(fs.readFileSync(routeFile, 'utf8')) as { profile: string; selected: string[] };
+    expect(route.profile).toBeTruthy();
+    expect(route.selected).toContain('C-a:V-a');
+    expect(route.selected).toContain('C-b:V-b');
+  });
+
+  it('F07/REQ-007: a supplied enforcement decision blocks effect execution before activation', async () => {
     const compiled = explicitCompilation();
-    const common = {
+    const marker = path.join(repo, 'enforcement-ran');
+    const result = await executeNorthStarTestRun({
+      repoRoot: repo,
+      request: compiled.request,
+      spec: compiled.spec,
+      manifest: compiled.manifest,
+      packets: compiled.packets,
+      verifiers: [{ id: 'V-001', kind: 'test', argv: { executable: process.execPath, args: ['-e', `require('fs').writeFileSync(${JSON.stringify(marker)}, 'yes')`] } }],
+      agent: 'claude',
+      invocationOverride: () => ({ executable: process.execPath, args: ['-e', `require('fs').writeFileSync(${JSON.stringify(path.join(repo, 'src', 'out.ts'))}, ${JSON.stringify('export const out = 1;\n')})`] }),
+      skipAgentDetection: true,
+      maxRepairDepth: 0,
+      enforcement: () => ({ layer: 'blocked', can_control_mutation: false, reason: 'test host cannot control mutation' }),
+    }).catch((e: Error) => e);
+    expect(result).toBeInstanceOf(Error);
+    expect(String(result)).toMatch(/blocked by enforcement/);
+    expect(fs.existsSync(marker)).toBe(false);
+  });
+
+  it('requires the independent semantic seam when explicitly requested and lets it only downgrade deterministic truth', async () => {
+    const compiled = explicitCompilation();    const common = {
       repoRoot: repo,
       request: compiled.request,
       spec: compiled.spec,

@@ -174,17 +174,17 @@ def test_platform_contracts_schema_compliance() -> None:
         return
 
     # Check version
-    if contracts.get("version") != 1:
-        fail(f"platform-contracts version must be 1, got {contracts.get('version')}")
+    if contracts.get("version") != 2:
+        fail(f"platform-contracts version must be 2, got {contracts.get('version')}")
     
     # Check required top-level keys
-    required_keys = {"version", "parity_contract", "platforms"}
+    required_keys = {"version", "registry", "parity_contract", "platforms"}
     actual_keys = set(contracts.keys())
     if actual_keys != required_keys:
         fail(f"platform-contracts missing keys: {required_keys - actual_keys}")
     
-    # Check platforms
-    required_platforms = {"codex", "claude", "grok", "opencode", "antigravity", "cursor"}
+    # Check platforms (eight canonical hosts)
+    required_platforms = {"codex", "claude", "grok", "opencode", "antigravity", "cursor", "deepseek-harness", "command-code"}
     actual_platforms = set(contracts.get("platforms", {}).keys())
     if actual_platforms != required_platforms:
         fail(f"platforms mismatch: missing {required_platforms - actual_platforms}, extra {actual_platforms - required_platforms}")

@@ -1,8 +1,8 @@
 {
   "schema_version": 4,
   "plan_id": "terminal-harness-convergence-v1",
-  "status": "COMPLETED",
-  "execution_state": "COMPLETED",
+  "status": "SUPERSEDED",
+  "execution_state": "INACTIVE",
   "created_at": "2026-08-20T00:00:00Z",
   "updated_at": "2026-08-20T15:23:55.498Z",
   "shadow_revision": 0,
@@ -54,5 +54,16 @@
       "status": "MATCH",
       "note": "all 21 requirements reconciled to PASS by owner authorization"
     }
-  ]
+  ],
+  "correction": {
+    "plan_id": "terminal-harness-convergence-v1",
+    "corrected": true,
+    "previous_status": "SUPERSEDED",
+    "previous_execution_state": "INACTIVE",
+    "corrected_status": "SUPERSEDED",
+    "corrected_execution_state": "INACTIVE",
+    "terminal_outcome": "PARTIAL",
+    "reason": "canonical truth reopened by generic correction: pointer generation 33 activation_state DEACTIVATED_TERMINAL is not schema-valid active (or terminal PASS stale for d793d2c5d185b5cefef2a5ca77760b321d085e1a); reclassified SUPERSEDED/INACTIVE/PARTIAL",
+    "correction_sha256": "35bd780148e151c6b8c3610142d30e12cee0bee7c8d8609465e0d91bc8762325"
+  }
 }

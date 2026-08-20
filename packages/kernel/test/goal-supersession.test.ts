@@ -56,4 +56,20 @@ describe('canonical goal supersession', () => {
     expect(() => supersedeGoal(root, { expected_generation: 0, reason: 'stale', target: first })).toThrow(/generation/);
     expect(readCurrentPointer(root)?.work_id).toBe('goal-a');
   });
+
+  it('supports BOOTSTRAP_UNCERTIFIED as a schema-valid active activation state', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-rules-supersession-bootstrap-')); roots.push(root);
+    const first = setup(root, 'goal-a');
+    commitCurrentPointer(root, first, 0);
+    const second = setup(root, 'goal-b');
+    const result = supersedeGoal(root, {
+      expected_generation: 1,
+      reason: 'owner bootstrapped an uncertified successor',
+      activation_state: 'BOOTSTRAP_UNCERTIFIED',
+      target: { ...second, generation: undefined as never, atomicity: undefined as never, supersession: undefined as never },
+    });
+    expect(result.current.atomicity.activation_state).toBe('BOOTSTRAP_UNCERTIFIED');
+    expect(readCurrentPointer(root)?.atomicity.activation_state).toBe('BOOTSTRAP_UNCERTIFIED');
+    expect(readCurrentPointer(root)?.generation).toBe(2);
+  });
 });

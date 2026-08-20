@@ -190,10 +190,16 @@ describe('G4 — Representative host enforcement classes', () => {
     expect(HOST_CAPABILITIES.claude.headless).toBe(true);
   });
 
-  it('6 hosts only (Mimocode removed from certified/deferred)', () => {
+  it('8 hosts only (Mimocode removed; DSH and Command Code registered, not live-verified)', () => {
     const hosts = Object.keys(HOST_CAPABILITIES);
-    expect(hosts.length).toBe(6);
+    expect(hosts.length).toBe(8);
+    expect(hosts).toContain('deepseek-harness');
+    expect(hosts).toContain('command-code');
     expect(hosts).not.toContain('mimocode');
+    // New hosts are registered but NOT_LIVE_VERIFIED: headless entries exist but
+    // attestation stays unconfirmed until a native projection is installed.
+    expect(HOST_CAPABILITIES['deepseek-harness'].attestation).toBe('unconfirmed');
+    expect(HOST_CAPABILITIES['command-code'].attestation).toBe('unconfirmed');
   });
 
   it('artifact admission refuses EPHEMERAL with no persistence reasons', () => {

@@ -98,6 +98,26 @@ export const HOST_SPECS: Record<string, HostSpec> = {
     probeArgs: ["--version"],
     managedPaths: [".cursorrules", "AGENTS.md"],
   },
+  "deepseek-harness": {
+    id: "deepseek-harness",
+    binaries: ["dsh"],
+    desktopProcessPatterns: ["deepseek-harness", "dsh"],
+    installRoots: [path.join(os.homedir(), ".config", "deepseek-harness")],
+    configDir: process.env.DSH_HOME ?? path.join(os.homedir(), ".config", "deepseek-harness"),
+    receiptRelativePath: "agent-rules-runtime/receipt.json",
+    probeArgs: ["--version"],
+    managedPaths: [],
+  },
+  "command-code": {
+    id: "command-code",
+    binaries: ["cmdc", "command-code", "cc"],
+    desktopProcessPatterns: ["command-code", "cmdc"],
+    installRoots: [path.join(os.homedir(), ".command-code")],
+    configDir: process.env.COMMAND_CODE_HOME ?? path.join(os.homedir(), ".command-code"),
+    receiptRelativePath: "agent-rules-runtime/receipt.json",
+    probeArgs: ["--version"],
+    managedPaths: [],
+  },
 };
 
 export function isRegisteredHost(host: string): host is (typeof REGISTERED_HOSTS)[number] {

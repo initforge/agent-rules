@@ -1,0 +1,18 @@
+{
+  "schema": "artifact/goal-supersession-receipt",
+  "version": 1,
+  "transaction_id": "a892f2a4-19ce-4d44-bce7-a5563bb47caf",
+  "previous": {
+    "work_id": "terminal-harness-convergence-v1",
+    "plan_id": "terminal-harness-convergence-v1",
+    "generation": 33
+  },
+  "current": {
+    "work_id": "portable-host-native-supervision-v1",
+    "plan_id": "portable-host-native-supervision-v1",
+    "generation": 34
+  },
+  "reason": "Owner-authorized successor activation: portable-host-native-supervision-v1 supersedes terminal-harness-convergence-v1 after generic stale-terminal correction (REQ-001). New plan carries eight-host registry, typed capability ABI, native DSH/Command Code projections, context economy and plannerless intake. BOOTSTRAP_UNCERTIFIED",
+  "created_at": "2026-08-20T16:29:32.522Z",
+  "sha256": "666d079c1358ffa8e6e9eaeb289cff93a4b46a7e387682da3d83074ed7d3aec6"
+}
