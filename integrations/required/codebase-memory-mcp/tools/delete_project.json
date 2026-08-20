@@ -1,0 +1,15 @@
+{
+  "name": "delete_project",
+  "description": "Delete a project from the index",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "project"
+    ]
+  }
+}

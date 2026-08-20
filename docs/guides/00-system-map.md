@@ -10,7 +10,7 @@ Repo này được tổ chức để người mới nhìn cây thư mục là bi
 - `platforms/`: chỉ chứa delta riêng cho từng runtime.
 - `automation/`: scripts build, cài, kiểm tra, sync guard.
 - `generated/`: build preview/generated mirrors, không sửa tay.
-- `.agent/`: trace log, research notes, tombstones (gitignored, per-repo advisory layer).
+- `.agent/`: plan ledger, progress, journal, research. **Có trong git** để giữ progress qua crash/máy mới; chỉ cache tái tạo được (`source-lock-cache/`, `runs/`, `artifacts/`, `tmp/`) là gitignored. Protocol: `.agent/README.md`.
 
 ## Global đang chạy như thế nào
 

@@ -7,14 +7,14 @@ $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "path-compat.ps1")
 if (Test-Path $BuildRoot) { Remove-Item -LiteralPath $BuildRoot -Recurse -Force }
 
-$Platforms = @("codex", "grok", "antigravity", "cursor")
+$Platforms = @("codex", "claude", "grok", "opencode", "antigravity", "cursor")
 $Core = Join-Path $Root "rules"
 $SkillsRoot = Join-Path $Root "skills"
 $SystemMap = Join-Path $Root "docs\guides"
 $ManifestText = Get-Content -Raw -Encoding UTF8 (Join-Path $Core "manifest.yaml")
 $ModelPolicy = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "automation\model-policy.json") | ConvertFrom-Json
+$PlatformContracts = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "platforms\platform-contracts.json") | ConvertFrom-Json
 $ManifestRules = @([regex]::Matches($ManifestText, '(?m)^\s+-\s+(\S+\.md)\s*$') | ForEach-Object { $_.Groups[1].Value })
-$GeneratedCoreImports = ($ManifestRules | ForEach-Object { "@__CODEX_HOME__/rules/$($_)" }) -join "`n"
 $UserHome = if ($env:USERPROFILE) { $env:USERPROFILE } elseif ($env:HOME) { $env:HOME } else { throw "Cannot resolve user home directory" }
 $CodexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $UserHome ".codex" }
 $ContextGraphPath = Join-Path $Root "generated\context-graph.json"
@@ -34,6 +34,9 @@ foreach ($Platform in $Platforms) {
   $Native = Join-Path $Target "native"
   $Tools = Join-Path $Target "agent-rules-tools"
   New-Item -ItemType Directory -Force -Path $Rules, $Skills, $Scripts, $Docs, $Native, $Tools | Out-Null
+  if (-not ($PlatformContracts.platforms.PSObject.Properties.Name -contains $Platform)) { throw "Missing platform contract: $Platform" }
+  [pscustomobject]@{ version = 1; platform = $Platform; source = "platforms/platform-contracts.json"; contract = $PlatformContracts.platforms.$Platform } |
+    ConvertTo-Json -Depth 10 | ForEach-Object { [System.IO.File]::WriteAllText((Join-Path $Target "runtime-contract.json"), $_, [System.Text.UTF8Encoding]::new($false)) }
 
   # Portable orchestration must be available outside this repository after install.
   foreach ($ToolName in @("workctl.py", "workctl.ps1", "workctl.sh", "work-ledger.schema.json")) {
@@ -67,12 +70,12 @@ foreach ($Platform in $Platforms) {
   }
 
   $NativeTokens = @{
-    "__CODEX_STANDARD_MODEL__" = $ModelPolicy.platforms.codex.standard.selector
-    "__CODEX_STANDARD_EFFORT__" = $ModelPolicy.platforms.codex.standard.effort
-    "__CURSOR_IMPLEMENTATION_MODEL__" = $ModelPolicy.platforms.cursor.implementation.selector
-    "__CURSOR_RESEARCH_REVIEW_MODEL__" = $ModelPolicy.platforms.cursor.research_review.selector
-    "__GROK_BASE_MODEL__" = $ModelPolicy.platforms.grok.base.selector
-    "__GROK_MINIMUM_EFFORT__" = $ModelPolicy.platforms.grok.minimum_effort
+    "__CODEX_STANDARD_MODEL__" = $ModelPolicy.platforms.codex.adapter_defaults.model_selectors.standard.selector
+    "__CODEX_STANDARD_EFFORT__" = $ModelPolicy.platforms.codex.adapter_defaults.model_selectors.standard.effort
+    "__CURSOR_IMPLEMENTATION_MODEL__" = $ModelPolicy.platforms.cursor.adapter_defaults.model_selectors.implementation.selector
+    "__CURSOR_RESEARCH_REVIEW_MODEL__" = $ModelPolicy.platforms.cursor.adapter_defaults.model_selectors.research_review.selector
+    "__GROK_BASE_MODEL__" = $ModelPolicy.platforms.grok.adapter_defaults.model_selectors.base.selector
+    "__GROK_MINIMUM_EFFORT__" = $ModelPolicy.platforms.grok.adapter_defaults.model_selectors.base.effort
   }
   Get-ChildItem -LiteralPath $Native -Recurse -File | ForEach-Object {
     $Content = Get-Content -Raw -Encoding UTF8 $_.FullName
@@ -100,11 +103,22 @@ foreach ($Platform in $Platforms) {
   $PlatformAgents = Join-Path $Root "platforms\$Platform\AGENTS.md"
   if (Test-Path $PlatformAgents) {
     $AgentsBody = Get-Content -Raw -Encoding UTF8 $PlatformAgents
-    if ($Platform -eq "codex") {
-      $AgentsBody = $AgentsBody.Replace("@__GENERATED_CORE_IMPORTS__", $GeneratedCoreImports)
-      $AgentsBody = $AgentsBody.Replace("__CODEX_HOME__", $CodexHome.Replace('\', '/'))
-      $AgentsBody = $AgentsBody.Replace("__AGENT_RULES_ROOT__", $Root.Replace('\', '/'))
+    $PlatformHomeToken = switch ($Platform) {
+      "codex"    { "__CODEX_HOME__" }
+      "claude"   { "__CLAUDE_HOME__" }
+      default    { $null }
     }
+    $ResolvedHome = switch ($Platform) {
+      "codex"    { $CodexHome.Replace('\', '/') }
+      "claude"   { "`$CLAUDE_CONFIG_DIR" }
+      default    { $null }
+    }
+    if ($PlatformHomeToken) {
+      $PlatformImports = ($ManifestRules | ForEach-Object { "@$PlatformHomeToken/rules/$($_)" }) -join "`n"
+      $AgentsBody = $AgentsBody.Replace("@__GENERATED_CORE_IMPORTS__", $PlatformImports)
+      if ($ResolvedHome) { $AgentsBody = $AgentsBody.Replace($PlatformHomeToken, $ResolvedHome) }
+    }
+    $AgentsBody = $AgentsBody.Replace("__AGENT_RULES_ROOT__", $Root.Replace('\', '/'))
     [System.IO.File]::WriteAllText((Join-Path $Target "AGENTS.md"), $AgentsBody)
   }
 
@@ -137,17 +151,18 @@ Get-ChildItem $SkillsRoot -Directory | ForEach-Object {
 
   Copy-Item -Path (Join-Path $SystemMap "*") -Destination (Join-Path $Target "docs") -Recurse -Force
 
-  $ManifestItems = Get-ChildItem $Target -Recurse -File | Sort-Object FullName | ForEach-Object {
+  # Use Ordinal comparison for deterministic ordering across Windows locales
+  $ManifestItems = Get-ChildItem $Target -Recurse -File | Sort-Object { $_.FullName } -Culture en-US | ForEach-Object {
     [pscustomobject]@{
-      Path = $_.FullName.Substring($Target.Length + 1).Replace('\', '/')
-      Sha256 = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+      path = $_.FullName.Substring($Target.Length + 1).Replace('\', '/')
+      sha256 = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
     }
   }
 
   $Inventory = [pscustomobject]@{
     version = 1
     platform = $Platform
-    generatedFrom = [pscustomobject]@{
+    generated_from = [pscustomobject]@{
       docs = "docs/guides"
       core = "rules"
       skills = "skills"
@@ -156,7 +171,8 @@ Get-ChildItem $SkillsRoot -Directory | ForEach-Object {
     files = $ManifestItems
   }
 
-  $Inventory | ConvertTo-Json -Depth 5 | Set-Content -Encoding UTF8 (Join-Path $Target "manifest.json")
+  # Use explicit UTF8-without-BOM so generated JSON is consistent across PowerShell versions
+  $Inventory | ConvertTo-Json -Depth 5 | ForEach-Object { [System.IO.File]::WriteAllText((Join-Path $Target "manifest.json"), $_, [System.Text.UTF8Encoding]::new($false)) }
 }
 
 Write-Host "Runtime builds created: $BuildRoot"

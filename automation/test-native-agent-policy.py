@@ -256,7 +256,7 @@ if "--build" in sys.argv:
         if platform == "antigravity" and (build / "native/instructions").exists(): fail("Antigravity build retained stale inert guidance")
         if sha(build / "model-policy.json") != sha(ROOT / "automation/model-policy.json"): fail(f"{platform} model policy hash drift")
         if {p.name for p in (build / "agent-rules-tools").iterdir() if p.is_file()} != TOOLS: fail(f"{platform} workctl bundle mismatch")
-        manifest = {item["Path"]: item["Sha256"] for item in json.loads((build / "manifest.json").read_text(encoding="utf-8-sig"))["files"]}
+        manifest = {item["path"]: item["sha256"] for item in json.loads((build / "manifest.json").read_text(encoding="utf-8-sig"))["files"]}
         for relative in {"model-policy.json", *(f"agent-rules-tools/{name}" for name in TOOLS)}:
             if manifest.get(relative) != sha(build / relative): fail(f"{platform} manifest hash missing/drift: {relative}")
         for source, destination, names in groups:

@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 """AM0015 scorecard evidence pipeline.
 
-Collects exact git candidate/effective identity, local gate receipts, GitHub runs
-(via gh/read-only if available), ledger state, and install/doctor evidence.
-Validates evidence URIs + hashes + freshness. Derives scores strictly from the
-AM0015 rubric with caps (no CI/install/native evidence => honest low score;
-Critical/High cap <8). All 18 dimensions. No self-claim.
+Collects raw AM0015 evidence. Scores and review status remain permanently UNVERIFIED.
+Never certifies a milestone.
 
 Writes automation/scorecard-evidence.json atomically (tempfile + rename).
 """
@@ -31,15 +28,19 @@ CANONICAL_OUTPUT = SCRIPT_DIR / "scorecard-evidence.json"
 SCHEMA_PATH = ROOT / "schemas" / "scorecard-evidence.schema.json"
 FIXTURES_DIR = ROOT / "evals" / "fixtures"
 
-SEVERITY_MAX: dict[str, int] = {
-    "Critical": 7,
-    "High": 7,
-    "Medium": 10,
-    "Low": 10,
-}
+CI_MAX_AGE_SECONDS = 24 * 60 * 60
+REPORT_MAX_AGE_SECONDS = 24 * 60 * 60
 
 _GIT_RE = re.compile(r"^[a-f0-9]{7,40}$")
 _SHA256_PREFIX = "sha256:"
+_SHA256_RE = re.compile(r"^[a-f0-9]{64}$")
+_CLOSED_FINDING_STATUSES = {"RESOLVED", "SUPERSEDED", "ACCEPTED"}
+_SELF_CLAIM_PATHS = {
+    "automation/gather-scorecard-evidence.py",
+    "automation/test-scorecard-evidence.py",
+    "automation/scorecard-evidence.json",
+    "schemas/scorecard-evidence.schema.json",
+}
 
 RUBRIC: list[dict[str, Any]] = [
     {
@@ -278,21 +279,82 @@ RUBRIC: list[dict[str, Any]] = [
         ],
     },
 ]
+CANONICAL_DIMENSIONS = tuple((d["id"], d["label"]) for d in RUBRIC)
+
+
+def _parent_identities(path: Path) -> tuple[tuple[str, int, int], ...]:
+    """Capture every existing parent; reject symlinked/non-directory parents."""
+    identities = []
+    for parent in reversed(path.absolute().parents):
+        stat = parent.lstat()
+        if parent.is_symlink() or not parent.is_dir():
+            raise OSError("unsafe parent directory")
+        identities.append((str(parent), stat.st_dev, stat.st_ino))
+    return tuple(identities)
+
+
+def _read_regular_nofollow(path: Path) -> bytes:
+    """Descriptor read with final-path and complete parent-chain revalidation."""
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0)
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    parents_before = _parent_identities(path)
+    before = path.lstat()
+    if path.is_symlink():
+        raise OSError("symlink evidence forbidden")
+    fd = os.open(path, flags)
+    try:
+        opened = os.fstat(fd)
+        data = b""
+        while chunk := os.read(fd, 1024 * 1024):
+            data += chunk
+        after = path.lstat()
+        parents_after = _parent_identities(path)
+        if parents_before != parents_after:
+            raise OSError("parent directory changed during read")
+        if path.is_symlink() or (before.st_dev, before.st_ino) != (opened.st_dev, opened.st_ino) or (after.st_dev, after.st_ino) != (opened.st_dev, opened.st_ino):
+            raise OSError("evidence path changed during read")
+        return data
+    finally:
+        os.close(fd)
+
+
+def _read_json_nofollow(path: Path) -> Any:
+    return json.loads(_read_regular_nofollow(path).decode("utf-8"))
 
 
 def file_hash(path: Path) -> str:
+    if path.is_symlink():
+        raise OSError("symlink evidence forbidden")
     h = hashlib.sha256()
     if path.is_dir():
         for p in sorted(path.rglob("*")):
             if p.is_file():
-                h.update(p.read_bytes())
+                if p.is_symlink():
+                    raise OSError("symlink evidence forbidden")
+                h.update(p.relative_to(path).as_posix().encode("utf-8") + b"\0")
+                h.update(_read_regular_nofollow(p))
     else:
-        h.update(path.read_bytes())
+        h.update(_read_regular_nofollow(path))
     return f"{_SHA256_PREFIX}{h.hexdigest()}"
 
 
 def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _run_git(root: Path, args: list[str]) -> subprocess.CompletedProcess[str] | None:
+    try:
+        return subprocess.run(
+            ["git", *args], cwd=root, capture_output=True, text=True,
+            timeout=15, check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
 
 
 def gather_git_identity(root: Path) -> dict[str, str]:
@@ -354,7 +416,7 @@ def gather_git_identity(root: Path) -> dict[str, str]:
 def _gh_runs_with_timeout(root: Path) -> list[dict[str, Any]]:
     try:
         result = subprocess.run(
-            ["gh", "run", "list", "--limit", "5", "--json", "databaseId,headBranch,status,conclusion,startedAt"],
+            ["gh", "run", "list", "--limit", "20", "--json", "databaseId,headBranch,headSha,status,conclusion,startedAt,updatedAt,workflowName"],
             cwd=root, capture_output=True, text=True, timeout=10, check=False,
         )
         if result.returncode != 0:
@@ -365,9 +427,12 @@ def _gh_runs_with_timeout(root: Path) -> list[dict[str, Any]]:
         return [{
             "id": str(r.get("databaseId", "")),
             "branch": str(r.get("headBranch", "")),
+            "head_sha": str(r.get("headSha", "")),
             "status": str(r.get("status", "")),
             "conclusion": str(r.get("conclusion", "")),
             "started_at": str(r.get("startedAt", "")),
+            "updated_at": str(r.get("updatedAt", "")),
+            "workflow": str(r.get("workflowName", "")),
         } for r in data]
     except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError, UnicodeDecodeError):
         return []
@@ -380,9 +445,18 @@ def gather_gh_runs(root: Path) -> list[dict[str, Any]]:
 
 
 def check_evidence(root: Path, rel_path: str) -> dict[str, Any]:
-    full = root / rel_path
+    normalized = rel_path.replace("\\", "/")
+    candidate = Path(normalized)
+    if candidate.is_absolute() or ".." in candidate.parts or "\x00" in normalized:
+        return {"uri": rel_path, "hash": "", "freshness_seconds": -1, "exists": False}
+    full = (root / candidate).resolve()
+    try:
+        full.relative_to(root.resolve())
+    except ValueError:
+        return {"uri": rel_path, "hash": "", "freshness_seconds": -1, "exists": False}
     now = time.time()
-    if not full.exists():
+    unresolved = root / candidate
+    if not full.exists() or unresolved.is_symlink() or any(parent.is_symlink() for parent in unresolved.parents if parent != root.parent):
         return {"uri": rel_path, "hash": "", "freshness_seconds": -1, "exists": False}
     try:
         stat_result = full.stat()
@@ -391,6 +465,106 @@ def check_evidence(root: Path, rel_path: str) -> dict[str, Any]:
         return {"uri": rel_path, "hash": h, "freshness_seconds": round(max(0, age)), "exists": True}
     except (OSError, PermissionError):
         return {"uri": rel_path, "hash": "", "freshness_seconds": -1, "exists": False}
+
+
+def is_self_claim_path(rel_path: str) -> bool:
+    return rel_path.replace("\\", "/") in _SELF_CLAIM_PATHS
+
+
+def is_head_bound(root: Path, rel_path: str, head_commit: str) -> bool:
+    """Return true only for a tracked, clean path that is present at exact HEAD."""
+    if not _GIT_RE.fullmatch(head_commit) or is_self_claim_path(rel_path):
+        return False
+    tracked = _run_git(root, ["ls-tree", "-r", "--name-only", head_commit, "--", rel_path])
+    if tracked is None or tracked.returncode != 0 or not tracked.stdout.strip():
+        return False
+    worktree = _run_git(root, ["diff", "--quiet", head_commit, "--", rel_path])
+    index = _run_git(root, ["diff", "--cached", "--quiet", head_commit, "--", rel_path])
+    return bool(worktree and index and worktree.returncode == 0 and index.returncode == 0)
+
+
+def _parse_time(value: str) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def collect_effective_plan_binding(root: Path) -> dict[str, Any]:
+    """Read one canonical ledger and verify its serialized effective-plan identity."""
+    ledgers = sorted((root / ".agent" / "ledger").glob("*.json"))
+    unavailable = {
+        "sha256": "", "ledger_uri": "", "ledger_hash": "", "verified": False,
+        "reason": "expected exactly one readable canonical ledger",
+    }
+    if len(ledgers) != 1:
+        return unavailable
+    ledger_path = ledgers[0]
+    try:
+        ledger = json.loads(_read_regular_nofollow(ledger_path).decode("utf-8"))
+        identity = dict(ledger.get("effective_plan_identity") or {})
+        plan_sha = str(identity.get("sha256") or "")
+        canonical = str(identity.get("canonical_json_utf8") or "")
+        if not _SHA256_RE.fullmatch(plan_sha) or not canonical or sha256_text(canonical) != plan_sha:
+            return {**unavailable, "ledger_uri": str(ledger_path.relative_to(root))}
+        return {
+            "sha256": plan_sha,
+            "ledger_uri": str(ledger_path.relative_to(root)),
+            "ledger_hash": file_hash(ledger_path),
+            "verified": True,
+            "reason": "effective plan SHA-256 matches its canonical identity payload",
+        }
+    except (OSError, ValueError, json.JSONDecodeError):
+        return unavailable
+
+
+def collect_ci_binding(git_info: dict[str, str], gh_runs: list[dict[str, Any]]) -> dict[str, Any]:
+    head_commit = git_info.get("commit", "")
+    base = {
+        "status": "unavailable", "head_commit": head_commit,
+        "freshness_seconds": -1, "run_ids": [], "reason": "no fresh successful CI run for exact HEAD",
+    }
+    if not _GIT_RE.fullmatch(head_commit):
+        return {**base, "reason": "Git HEAD is unavailable"}
+    matched = [run for run in gh_runs if run.get("head_sha") == head_commit]
+    if not matched:
+        return {**base, "reason": "no GitHub Actions run binds exact HEAD"}
+    completed = [run for run in matched if str(run.get("status", "")).lower() == "completed"]
+    if any(str(run.get("conclusion", "")).lower() != "success" for run in completed):
+        return {**base, "status": "failed", "run_ids": [run["id"] for run in completed], "reason": "a completed CI run for exact HEAD failed"}
+    successful = [run for run in completed if str(run.get("conclusion", "")).lower() == "success"]
+    if not successful:
+        return {**base, "status": "pending", "run_ids": [run["id"] for run in matched], "reason": "CI for exact HEAD is not successfully completed"}
+    ages = []
+    for run in successful:
+        timestamp = _parse_time(str(run.get("updated_at") or run.get("started_at") or ""))
+        if timestamp is not None:
+            ages.append(max(0, round((datetime.now(timezone.utc) - timestamp).total_seconds())))
+    if not ages:
+        return {**base, "status": "stale", "run_ids": [run["id"] for run in successful], "reason": "successful CI has no verifiable completion freshness"}
+    age = min(ages)
+    if age > CI_MAX_AGE_SECONDS:
+        return {**base, "status": "stale", "freshness_seconds": age, "run_ids": [run["id"] for run in successful], "reason": "successful CI for exact HEAD is stale"}
+    return {
+        "status": "passed", "head_commit": head_commit, "freshness_seconds": age,
+        "run_ids": [run["id"] for run in successful], "reason": "fresh successful CI binds exact HEAD",
+    }
+
+
+def collect_binding(root: Path, git_info: dict[str, str], gh_runs: list[dict[str, Any]]) -> dict[str, Any]:
+    plan = collect_effective_plan_binding(root)
+    ci = collect_ci_binding(git_info, gh_runs)
+    head_commit = git_info.get("commit", "")
+    head_verified = bool(_GIT_RE.fullmatch(head_commit))
+    return {
+        "head_commit": head_commit,
+        "head_verified": head_verified,
+        "effective_plan": plan,
+        "ci": ci,
+        "verified": bool(head_verified and plan["verified"] and ci["status"] == "passed"),
+    }
 
 
 def validate_evidence_hash(ev: dict[str, Any]) -> list[str]:
@@ -407,51 +581,22 @@ def validate_evidence_hash(ev: dict[str, Any]) -> list[str]:
     return findings
 
 
-def score_dimension(dim: dict[str, Any], evidence_map: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    max_allowed = SEVERITY_MAX[dim["severity"]]
-    score_float = 0.0
-    evidence_items: list[dict[str, Any]] = []
-    findings: list[str] = []
-    for check in dim["checks"]:
-        ev = evidence_map.get(check["path"], {"uri": check["path"], "hash": "", "freshness_seconds": -1, "exists": False})
-        passed = ev["exists"]
-        item = {
-            "uri": check["path"],
-            "hash": ev.get("hash", ""),
-            "freshness_seconds": ev.get("freshness_seconds", -1),
-            "kind": check["kind"],
-            "passed": passed,
-            "finding": "",
-        }
-        check_findings = validate_evidence_hash(ev)
-        if check_findings:
-            item["finding"] = "; ".join(check_findings)
-            findings.extend(check_findings)
-        if passed:
-            score_float += check["weight"] * max_allowed
-        evidence_items.append(item)
-    score = min(round(score_float), max_allowed)
-    if score >= max_allowed:
-        status = "pass"
-    elif score >= max_allowed * 0.5:
-        status = "warn"
-    else:
-        status = "fail"
-    return {
-        "id": dim["id"],
-        "label": dim["label"],
-        "severity": dim["severity"],
-        "score": score,
-        "maxScore": max_allowed,
-        "status": status,
-        "evidence_items": evidence_items,
-        "findings": findings,
-    }
+def candidate_diff_sha256(root: Path, commit: str) -> str:
+    result = _run_git(root, ["diff", "--binary", f"{commit}^", commit])
+    return sha256_text(result.stdout) if result and result.returncode == 0 else ""
 
 
 def gather_scores(rubric: list[dict[str, Any]], root: Path) -> dict[str, Any]:
     git_info = gather_git_identity(root)
     gh_runs = gather_gh_runs(root)
+    binding = collect_binding(root, git_info, gh_runs)
+    ledger_path = binding.get("effective_plan", {}).get("ledger_uri", "")
+    ledger_findings: list[dict[str, Any]] = []
+    if ledger_path:
+        try:
+            ledger_findings = list(json.loads(_read_regular_nofollow(root / ledger_path).decode("utf-8")).get("findings") or [])
+        except (OSError, ValueError, json.JSONDecodeError):
+            pass
     all_evidence: dict[str, dict[str, Any]] = {}
     evidence_kinds: dict[str, set[str]] = {}
     for dim in rubric:
@@ -460,8 +605,13 @@ def gather_scores(rubric: list[dict[str, Any]], root: Path) -> dict[str, Any]:
             kind = check["kind"]
             if path not in all_evidence:
                 all_evidence[path] = check_evidence(root, path)
+                all_evidence[path]["head_bound"] = is_head_bound(root, path, git_info.get("commit", ""))
             evidence_kinds.setdefault(path, set()).add(kind)
-    scored = [score_dimension(d, all_evidence) for d in rubric]
+    scored = [{
+        "id": d["id"], "label": d["label"], "severity": d["severity"],
+        "score": "UNVERIFIED", "status": "UNVERIFIED",
+        "evidence_items": [{**all_evidence[c["path"]], "kind": c["kind"]} for c in d["checks"]],
+    } for d in rubric]
     evidence_sources = []
     for path, ev in all_evidence.items():
         if ev.get("exists"):
@@ -480,23 +630,25 @@ def gather_scores(rubric: list[dict[str, Any]], root: Path) -> dict[str, Any]:
         "_gathered_at": now,
         "_git": git_info,
         "_gh_runs": gh_runs,
+        "_binding": binding,
+        "_review": {"status": "UNVERIFIED", "packet": None, "findings": ["review verification unsupported: canonical ledger has no immutable authenticated receipt format"]},
         "_evidence_sources": evidence_sources,
         "dimensions": scored,
     }
 
 
-def validate_output(output: dict[str, Any], schema_path: Path | None = None) -> list[str]:
+def validate_output(output: dict[str, Any], schema_path: Path | None = None, root: Path | None = None, expected_head: str | None = None) -> list[str]:
     errors: list[str] = []
     if not output.get("schema", "").startswith("am0015/scorecard-evidence/"):
         errors.append("missing or wrong schema marker")
-    if schema_path and schema_path.is_file():
+    if schema_path is not None:
         try:
-            schema = json.loads(schema_path.read_text(encoding="utf-8"))
+            schema = _read_json_nofollow(schema_path)
             try:
                 from jsonschema import validate as js_validate, ValidationError as JSError
                 js_validate(output, schema)
             except ImportError:
-                pass
+                errors.append("jsonschema dependency unavailable")
             except JSError as e:
                 errors.append(f"schema violation: {e.message}")
         except (json.JSONDecodeError, OSError) as e:
@@ -505,19 +657,48 @@ def validate_output(output: dict[str, Any], schema_path: Path | None = None) -> 
     if len(dims) != 18:
         errors.append(f"expected 18 dimensions, got {len(dims)}")
     seen_ids: set[str] = set()
+    actual_dimensions = tuple((d.get("id"), d.get("label")) for d in dims if isinstance(d, dict))
+    if actual_dimensions != CANONICAL_DIMENSIONS:
+        errors.append("dimensions are not the exact ordered AM0015 canonical dimensions")
+    gathered_at = _parse_time(str(output.get("_gathered_at") or ""))
+    if gathered_at is None:
+        errors.append("missing or invalid gather timestamp")
+    else:
+        age = (datetime.now(timezone.utc) - gathered_at).total_seconds()
+        if age < 0 or age > REPORT_MAX_AGE_SECONDS:
+            errors.append("scorecard evidence is stale")
+    binding = dict(output.get("_binding") or {})
+    review = output.get("_review")
+    if review != {"status": "UNVERIFIED", "packet": None, "findings": ["review verification unsupported: canonical ledger has no immutable authenticated receipt format"]}:
+        errors.append("review must remain canonical UNVERIFIED; local/OIDC verification is unsupported")
+    effective_plan = dict(binding.get("effective_plan") or {})
+    ci_binding = dict(binding.get("ci") or {})
+    if root is not None:
+        observed_git = gather_git_identity(root)
+        observed_binding = collect_binding(root, observed_git, gather_gh_runs(root))
+        if binding != observed_binding:
+            errors.append("binding differs from repository/ledger/CI observation")
+    if not _GIT_RE.fullmatch(str(binding.get("head_commit") or "")):
+        errors.append("binding has no exact Git HEAD")
+    if expected_head and binding.get("head_commit") != expected_head:
+        errors.append("binding does not match candidate SHA")
+    if output.get("_git", {}).get("commit") != binding.get("head_commit"):
+        errors.append("Git identity does not match candidate SHA")
+    git_identity = output.get("_git", {})
+    if not git_identity.get("author"):
+        errors.append("commit author identity is missing")
+    if not _SHA256_RE.fullmatch(str(effective_plan.get("sha256") or "")):
+        errors.append("binding has no effective plan SHA-256")
     for d in dims:
         if d["id"] in seen_ids:
             errors.append(f"duplicate dimension id: {d['id']}")
         seen_ids.add(d["id"])
-        if d.get("severity", "") in ("Critical", "High") and d.get("maxScore", 0) >= 8:
-            errors.append(f"{d['id']}: {d['severity']} cap violation (maxScore={d['maxScore']} >= 8)")
-        if d.get("score", -1) < 0 or d.get("maxScore", 0) <= 0:
-            errors.append(f"{d['id']}: invalid score={d['score']} maxScore={d['maxScore']}")
-        if d.get("score", 0) > d.get("maxScore", 0):
-            errors.append(f"{d['id']}: score {d['score']} exceeds maxScore {d['maxScore']}")
+        if d.get("score") != "UNVERIFIED" or d.get("status") != "UNVERIFIED":
+            errors.append(f"{d['id']}: automated score/status forbidden")
         for ev in d.get("evidence_items", []):
-            if ev.get("passed") and not ev.get("hash"):
-                errors.append(f"{d['id']}: passed evidence without hash: {ev['uri']}")
+            checked = check_evidence(root, str(ev.get("uri") or "")) if root else None
+            if checked and (not checked["exists"] or checked["hash"] != ev.get("hash")):
+                errors.append(f"{d['id']}: evidence hash/path mismatch: {ev.get('uri', '')}")
     return errors
 
 
@@ -541,38 +722,43 @@ def write_atomic(path: Path, value: Any) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description="AM0015 scorecard evidence pipeline")
     parser.add_argument("--root", default=str(ROOT), help="Repository root")
-    parser.add_argument("--output", default=str(CANONICAL_OUTPUT), help="Output path")
+    parser.add_argument("--output", default=os.environ.get("SCORECARD_OUTPUT", str(CANONICAL_OUTPUT)), help="Output path")
     parser.add_argument("--validate-only", action="store_true", help="Validate existing output")
     parser.add_argument("--validate", action="store_true", help="Validate output after writing")
     parser.add_argument("--validate-schema", action="store_true", help="Validate against JSON Schema (implies --validate)")
+    parser.add_argument("--candidate-sha", default=os.environ.get("GITHUB_SHA", ""), help="Expected candidate commit")
     args = parser.parse_args()
 
     root = Path(args.root).resolve()
-    output_path = Path(args.output).resolve()
+    output_path = Path(args.output).absolute()
     schema_path = SCHEMA_PATH if args.validate_schema else None
 
     if args.validate_only:
-        if not output_path.is_file():
-            print(f"FAIL: {output_path} not found")
+        if output_path == CANONICAL_OUTPUT.absolute():
+            print("REJECTED: canonical scorecard artifact is stale by policy")
             return 1
-        existing = json.loads(output_path.read_text(encoding="utf-8"))
-        errors = validate_output(existing, schema_path=SCHEMA_PATH)
+        try:
+            existing = _read_json_nofollow(output_path)
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            print(f"REJECTED: unsafe or invalid output artifact: {exc}")
+            return 1
+        errors = validate_output(existing, schema_path=SCHEMA_PATH, root=root, expected_head=args.candidate_sha or None)
         if errors:
             for e in errors:
                 print(f"  VALIDATION: {e}")
             return 1
-        print(f"PASS: {output_path} validates")
+        print(f"VALID: raw AM0015 evidence {output_path}")
         return 0
 
     report = gather_scores(RUBRIC, root)
     if args.validate or args.validate_schema:
-        errors = validate_output(report, schema_path=schema_path)
+        errors = validate_output(report, schema_path=schema_path, root=root, expected_head=args.candidate_sha or None)
         if errors:
             for e in errors:
                 print(f"  VALIDATION: {e}")
             return 1
     write_atomic(output_path, report)
-    print(f"PASS: AM0015 scorecard evidence -> {output_path}")
+    print(f"WROTE: raw AM0015 evidence -> {output_path}; milestone score UNVERIFIED")
     return 0
 
 

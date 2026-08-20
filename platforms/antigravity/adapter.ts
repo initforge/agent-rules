@@ -3,6 +3,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { promisify } from 'node:util';
+import {
+  LeaseGuard,
+  type DiffBoundaryResult,
+  type LeaseState,
+  type MutationVerdict,
+} from './lease-guard.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -21,6 +27,33 @@ const BINARY = 'gemini';
 const ANTIGRAVITY_HOME = path.join(os.homedir(), '.antigravity');
 const RULES_DIR = path.join(ANTIGRAVITY_HOME, 'rules');
 
+/** M11-C10-C10: the adapter's constrained-surface extensions (AM-0019 §10/§12). */
+export interface AntigravityAdapter extends PlatformAdapter {
+  readonly leaseGuard: LeaseGuard;
+  /** Fail-closed single mutation-path check against the owned-path lease. */
+  checkMutation(candidate: string): MutationVerdict;
+  /** Diff-boundary validator: reject any diff touching out-of-lease paths. */
+  validateDiff(paths: readonly string[]): DiffBoundaryResult;
+  /** Lease state: 'ACTIVE' or 'ADVISORY_READ_ONLY' after a guard rejection. */
+  leaseState(): LeaseState;
+}
+
+function defaultProjectRoot(): string {
+  return process.env.ANTIGRAVITY_PROJECT_ROOT ?? process.cwd();
+}
+
+/** Default lease scope: project root + worktree root are owned; `.agent` is canonical. */
+export function createAntigravityLeaseGuard(): LeaseGuard {
+  const projectRoot = defaultProjectRoot();
+  return new LeaseGuard({
+    ownedRoots: [
+      projectRoot,
+      process.env.ANTIGRAVITY_WORKTREE_ROOT ?? path.join(projectRoot, '.worktrees'),
+    ],
+    canonicalAgentPath: path.join(projectRoot, '.agent'),
+  });
+}
+
 async function whichAntigravity(): Promise<{ path: string; version?: string } | null> {
   try {
     const { stdout } = await execFileAsync('which', [BINARY]);
@@ -37,7 +70,21 @@ async function whichAntigravity(): Promise<{ path: string; version?: string } | 
   }
 }
 
-export const antigravityAdapter: PlatformAdapter = {
+export const antigravityAdapter: AntigravityAdapter = {
+  leaseGuard: createAntigravityLeaseGuard(),
+
+  checkMutation(candidate: string): MutationVerdict {
+    return this.leaseGuard.checkMutation(candidate);
+  },
+
+  validateDiff(paths: readonly string[]): DiffBoundaryResult {
+    return this.leaseGuard.validateDiff(paths);
+  },
+
+  leaseState(): LeaseState {
+    return this.leaseGuard.mode;
+  },
+
   async detect() {
     const found = await whichAntigravity();
     if (found) {

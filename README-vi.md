@@ -9,12 +9,32 @@
 | Intent Compiler (P3) | OPERATIONAL | `packages/cli/src/compiler/` |
 | Canonical Contracts (P4) | VERIFIED | `packages/engine/src/contracts.ts` |
 | Plan Lifecycle (P5) | OPERATIONAL | `packages/engine/src/plan-lifecycle.ts` |
-| **Evaluation & Telemetry (P7)** | **PARTIAL** | `packages/engine/src/telemetry.ts` |
-| Orchestration Runtime (P8) | VERIFIED | `packages/engine/src/controller.ts` |
+| Evaluation & Telemetry (P7) | PARTIAL | `packages/engine/src/telemetry.ts` |
+| **Durable Runner** | **OPERATIONAL** | `packages/engine/src/runner/` |
+| Legacy orchestration runtime | SUPERSEDED | `packages/engine/src/controller.ts` |
 
-### P7 Telemetry
+### Durable Runner
 
-`packages/engine/src/telemetry.ts` — Bộ thu thập sự kiện canonical. Ghi lại các sự kiện có cấu trúc (`run_start`, `agent_start`, `task_start`, `tool_call`, `model_turn`, `verification`, `review`, `handoff`, `run_end`) trong toàn bộ vòng đời agent. Hỗ trợ lưu trữ JSONL cục bộ và xuất OTLP. Có thể cấu hình thời gian lưu giữ (mặc định 30 ngày cho metadata, 7 ngày cho raw content).
+`agent-rules runner {add,seed,start,status,journal}` chạy task không cần người trực.
+
+Mỗi task là **một process headless riêng, sống ngắn** (`claude -p`, `codex exec`, hoặc
+`opencode run`); toàn bộ state nằm trên đĩa. Process điều phối không giữ model context
+nên không có gì để compact và không có context window để tràn — một lượt chạy bị giới
+hạn bởi thời gian thực, không phải token, và có thể bị kill bất cứ lúc nào: task đang
+dở sẽ quay lại queue.
+
+Task chỉ PASS khi **mọi** verification command exit 0 **và** agent tạo ra `git diff`
+thật. Repair có chặn (`--max-repair-depth`, mặc định 2); vượt chặn thì task thành
+`needs-user` và **không** sinh task con. Mỗi lượt chạy ghi vào journal hash-chained, và
+journal từ chối đọc nếu có record bị sửa, đổi thứ tự, hoặc xoá.
+
+### Legacy orchestration runtime
+
+`controller.ts` và các module lân cận chỉ còn lại vì `host-kit/runtime` và hai call site
+ở CLI/control-plane vẫn import. Chúng chưa từng thực thi công việc tự trị:
+`buildWorkerScript()` của worker adapter chỉ trả về một `console.log`, child session
+cross-host bị gate tắt, và `.agent/trace.jsonl` chỉ có 3 record cho toàn bộ lịch sử dự
+án. Không nên xây thêm trên chúng.
 
 ## Cấu trúc
 
@@ -28,7 +48,7 @@
 | `platforms/` | Per-runtime overlays (Codex, Grok, Antigravity, Cursor) | stable |
 | `automation/` | Build, install, validate, sync, doctor | stable |
 | `generated/` | Build output — không sửa tay | generated (machine-only) |
-| `.agent/` | Advisory trace log, research notes, tombstones (gitignored) | ephemeral |
+| `.agent/` | Plan ledger, progress, journal, research bền vững (có trong git; xem [`.agent/README.md`](.agent/README.md)) | protocol-governed |
 
 ## Tích hợp
 
@@ -39,9 +59,11 @@ Canonical registry: `integrations/registry.json` (v2, 4 mục):
 | codebase-memory-mcp | bắt buộc | codebase-intelligence | adapter-verified |
 | playwright-mcp | bắt buộc | browser-interaction | adapter-verified |
 | chrome-devtools-mcp | bắt buộc | browser-diagnostics | adapter-verified |
-| caveman | tùy chọn | workflow-utility | advisory-only |
+| context7 | bắt buộc | research-context | adapter-verified |
 
-Hồ sơ: `core` (codebase-memory-mcp), `qa` (playwright-mcp + chrome-devtools-mcp), `frontend` (playwright-mcp + chrome-devtools-mcp).
+Hồ sơ: `core` (codebase-memory-mcp + context7), `qa` và `frontend` (playwright-mcp + chrome-devtools-mcp), `research` (context7).
+
+Cả bốn đều cài qua `npx` hoặc binary đã pin, và được `automation/validate-tool-registry.ps1` kiểm tra.
 
 ## Chạy nhanh
 

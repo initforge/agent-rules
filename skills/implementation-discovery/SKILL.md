@@ -1,7 +1,7 @@
 ---
 name: implementation-discovery
 description: Reality-check only when a shared behavior, plan assumption, schema, permission, template or runtime detail may be wrong. Trigger on "verify trước khi sửa", "known-unknowns", stack vs spec, migration/auth/permission uncertainty, mojibake, orphaned records, stale closure or template gaps. Do NOT use for an obvious one-file fix, pure Q&A or plan-only work.
-routing: {"signals":["verify trước khi sửa","known-unknowns","schema uncertainty","permission uncertainty","runtime detail","template gap","stale closure","mojibake"],"excludes":["obvious one-file fix","pure q&a","plan-only"],"priority":60,"loads":["skill:implementation-discovery"],"supports":["finish-to-completion","clean-code"],"project_scope":"","platform_scope":"all","max_route_tokens":2600,"default":false}
+routing: {"signals":["verify trước khi sửa","known-unknowns","schema uncertainty","permission uncertainty","runtime detail","template gap","stale closure","mojibake"],"excludes":["obvious one-file fix","pure q&a","plan-only"],"priority":60,"loads":["skill:implementation-discovery"],"supports":["finish-to-completion","quality"],"project_scope":"","platform_scope":"all","max_route_tokens":2600,"default":false}
 ---
 
 # DEPRECATED — use engine discovery

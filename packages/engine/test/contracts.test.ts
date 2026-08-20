@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   assertCertificationAttestation, assertHarnessManifestV3, assertPlanAnchor, assertPortablePlanIdentity, assertTaskAssignment,
   assertVerificationClaim, assertWorkerReceipt, assertWorkLedger, assertProvenanceTimestamp,
+  HOST_ATTESTATION_EVIDENCE_ROLES, hostAttestationEvidenceRef, hostAttestationEvidenceSubjectSha256,
   planAnchorId, reviewedStateFingerprint, sha256Bytes,
   type HarnessManifestV3, type HostAttestation, type PlanAnchor, type PortablePlan, type TaskAssignment,
   type VerificationClaim, type WorkerReceipt, type WorkLedger,
@@ -13,7 +14,7 @@ const anchorBytes = new TextEncoder().encode('## Requirement\nDo the work.\n');
 const hash = 'a'.repeat(64);
 const tasksShadowBytes = new TextEncoder().encode('# Tasks\n\n- T1\n');
 const tasksShadowHash = sha256Bytes(tasksShadowBytes);
-const anchor: PlanAnchor = { planSha256: planHash, sectionHeading: 'Requirement', lineStart: 3, lineEnd: 4, anchorTextSha256: sha256Bytes(anchorBytes), requirementId: 'REQ-001' };
+const anchor: PlanAnchor = { planSha256: planHash, sectionHeading: 'Requirement', lineStart: 3, lineEnd: 4, anchorTextSha256: sha256Bytes(anchorBytes), requirementId: 'REQ-001', chunkIndex: 0 };
 
 function aggregateRows(rows: readonly string[]): string {
   return sha256Bytes(new TextEncoder().encode(JSON.stringify([...rows].sort())));
@@ -80,8 +81,21 @@ function planWithUncoveredRequirement(): PortablePlan {
 }
 
 function attestation(status: HostAttestation['capabilityStatus'] = 'HOST_NATIVE'): HostAttestation {
-  return { host: 'codex', hostVersion: '1', commitSha: 'deadbeef', capabilityStatus: status, capabilityIds: ['run'], contractSetSha256: hash,
-    requestedModel: 'standard', resolvedModel: 'gpt', observedModel: 'gpt', evidenceHashes: [hash], nativeRunnerIdentity: 'codex-cli', issuedAt: '2026-07-26T00:00:00.000Z', expiresAt: '2026-07-26T01:00:00.000Z' };
+  const value = { host: 'codex' as const, hostVersion: '1', commitSha: 'deadbeef', capabilityStatus: status, capabilityIds: ['run'], contractSetSha256: hash,
+    requestedModel: 'standard', resolvedModel: 'gpt', observedModel: 'gpt', nativeRunnerIdentity: 'codex-cli', issuedAt: '2026-07-26T00:00:00.000Z', expiresAt: '2026-07-26T01:00:00.000Z' };
+  const provisional = value as HostAttestation;
+  return {
+    ...value,
+    evidenceRefs: HOST_ATTESTATION_EVIDENCE_ROLES.map((role) => ({
+      role,
+      host: value.host,
+      commitSha: value.commitSha,
+      evidenceSha256: sha256Bytes(new TextEncoder().encode(`evidence:${role}`)),
+      evidenceRef: hostAttestationEvidenceRef(value.host, value.commitSha, role, sha256Bytes(new TextEncoder().encode(`evidence:${role}`))),
+      subjectSha256: hostAttestationEvidenceSubjectSha256(role, provisional),
+      observedAt: value.issuedAt,
+    })),
+  };
 }
 
 function ledger(): WorkLedger {
@@ -220,6 +234,14 @@ describe('certification and ledger gates', () => {
   it('rejects unparseable expiresAt', () => { const value = attestation(); expect(() => assertCertificationAttestation({ ...value, expiresAt: 'bad-date' }, 'deadbeef')).toThrow('not parseable'); });
   it('rejects future issuedAt', () => { const value = attestation(); expect(() => assertCertificationAttestation({ ...value, issuedAt: '2099-07-29T00:00:00.000Z' }, 'deadbeef', new Date('2026-07-26T00:00:00.000Z'))).toThrow('future'); });
   it('rejects unbounded TTL exceeding 24h maximum', () => { const value = attestation(); expect(() => assertCertificationAttestation({ ...value, expiresAt: '2026-07-28T00:00:00.000Z' }, 'deadbeef', new Date('2026-07-26T01:00:00.000Z'))).toThrow('TTL'); });
+  it('rejects fabricated hash-only evidence', () => { const value = attestation(); expect(() => assertCertificationAttestation({ ...value, evidenceRefs: undefined, evidenceHashes: [hash] }, 'deadbeef', new Date('2026-07-26T00:30:00.000Z'))).toThrow('explicit per-role'); });
+  it('rejects foreign, stale, and mismatched evidence', () => {
+    const value = attestation();
+    const now = new Date('2026-07-26T00:30:00.000Z');
+    expect(() => assertCertificationAttestation({ ...value, evidenceRefs: value.evidenceRefs!.map((evidence, index) => index === 0 ? { ...evidence, host: 'claude' } : evidence) }, 'deadbeef', now)).toThrow('foreign');
+    expect(() => assertCertificationAttestation({ ...value, evidenceRefs: value.evidenceRefs!.map((evidence, index) => index === 0 ? { ...evidence, observedAt: '2026-07-25T00:00:00.000Z' } : evidence) }, 'deadbeef', now)).toThrow('stale');
+    expect(() => assertCertificationAttestation({ ...value, evidenceRefs: value.evidenceRefs!.map((evidence, index) => index === 0 ? { ...evidence, subjectSha256: hash } : evidence) }, 'deadbeef', now)).toThrow('does not match');
+  });
   it('accepts valid provenance timestamp within window', () => expect(() => assertProvenanceTimestamp('2026-07-26T00:00:00.000Z', '2026-07-26T00:00:00.000Z', '2026-07-26T01:00:00.000Z', new Date('2026-07-26T00:30:00.000Z'))).not.toThrow());
   it('rejects unparseable provenance timestamp', () => expect(() => assertProvenanceTimestamp('not-a-date', '2026-07-26T00:00:00.000Z', '2026-07-26T01:00:00.000Z')).toThrow('not parseable'));
   it('rejects provenance timestamp in the future', () => expect(() => assertProvenanceTimestamp('2099-07-26T00:00:00.000Z', '2026-07-26T00:00:00.000Z', '2026-07-26T01:00:00.000Z', new Date('2026-07-26T00:00:00.000Z'))).toThrow('future'));

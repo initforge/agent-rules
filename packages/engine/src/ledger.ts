@@ -71,11 +71,9 @@ export class WorkLedger {
       if (e.code !== 'ENOENT') throw e;
     }
     fs.renameSync(this.tmpPath, this.path);
-    const dirFd = fs.openSync(path.dirname(this.path), 'r');
-    try {
-      fs.fsyncSync(dirFd);
-    } finally {
-      fs.closeSync(dirFd);
+    if (process.platform !== 'win32') {
+      const dirFd = fs.openSync(path.dirname(this.path), 'r');
+      try { fs.fsyncSync(dirFd); } finally { fs.closeSync(dirFd); }
     }
   }
 

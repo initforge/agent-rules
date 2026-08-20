@@ -4,17 +4,28 @@ import fs from "node:fs/promises";
 import * as crypto from "node:crypto";
 import path from "node:path";
 import { buildContextGraph } from "../services/context-graph.js";
+import { resolveOpenCodeModel, buildOpenCodeArtifact } from "../runtime/opencode.js";
 
 interface BuildManifest {
   version: number;
   platform: string;
-  generatedFrom: Record<string, string>;
+  generated_from: Record<string, string>;
   files: { path: string; sha256: string }[];
 }
 
 async function sha256(filePath: string): Promise<string> {
   const content = await fs.readFile(filePath);
   return crypto.createHash("sha256").update(content).digest("hex");
+}
+
+async function verifyCanonicalFixture(root: string): Promise<void> {
+  const fixture = path.join(root, "packages", "engine", "test", "fixtures", "plan-identity", "original.md");
+  const provenance = path.join(root, "packages", "engine", "test", "fixtures", "plan-identity", "provenance.json");
+  const meta = JSON.parse(await fs.readFile(provenance, "utf8")) as { sha256?: string; bytes?: number };
+  const bytes = await fs.readFile(fixture);
+  if (bytes.length !== meta.bytes || crypto.createHash("sha256").update(bytes).digest("hex") !== meta.sha256) {
+    throw new Error("canonical plan fixture integrity mismatch");
+  }
 }
 
 function escapePath(p: string): string {
@@ -86,8 +97,9 @@ async function replaceTokensInDir(
 ): Promise<void> {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   for (const entry of entries) {
-    if (!entry.isFile()) continue;
     const fp = path.join(dir, entry.name);
+    if (entry.isDirectory()) { await replaceTokensInDir(fp, tokens); continue; }
+    if (!entry.isFile()) continue;
     let content = await fs.readFile(fp, "utf-8");
     for (const [key, val] of Object.entries(tokens)) {
       content = content.replaceAll(key, val);
@@ -102,7 +114,7 @@ export async function build(
 ): Promise<CommandResult> {
   const root = getRepoRoot();
   const buildRoot = path.join(root, "generated", "runtime-build");
-  const platforms = ["codex", "grok", "antigravity", "cursor"];
+  const platforms = ["codex", "grok", "antigravity", "cursor", "opencode"];
   const errors: string[] = [];
 
   if (options.dryRun) {
@@ -111,6 +123,7 @@ export async function build(
   }
 
   try {
+    await verifyCanonicalFixture(root);
     await verifyUiTasteSourcePack(root);
   } catch (e) {
     return { exitCode: ExitCode.GeneralError, message: e instanceof Error ? e.message : String(e) };
@@ -144,6 +157,15 @@ export async function build(
       exitCode: ExitCode.GeneralError,
       message: "Cannot read model-policy.json",
     };
+  }
+
+  // OpenCode model binds the policy selector lazily (fail-closed at use time,
+  // never at module load). Resolve once for token replacement below.
+  let openCodeModel: string;
+  try {
+    openCodeModel = await resolveOpenCodeModel(root);
+  } catch (e) {
+    return { exitCode: ExitCode.GeneralError, message: e instanceof Error ? e.message : String(e) };
   }
 
   // Read manifest.yaml for load order
@@ -227,6 +249,7 @@ export async function build(
         tokens["__CODEX_STANDARD_MODEL__"] = String(platformPolicy.standard.selector ?? "");
         tokens["__CODEX_STANDARD_EFFORT__"] = String(platformPolicy.standard.effort ?? "");
       }
+      if (platform === "opencode") tokens["__OPENCODE_MODEL_CLASS__"] = openCodeModel;
       if (platformPolicy.implementation) {
         tokens["__CURSOR_IMPLEMENTATION_MODEL__"] = String(platformPolicy.implementation.selector ?? "");
       }
@@ -242,6 +265,9 @@ export async function build(
       try {
         await replaceTokensInDir(nativeDir, tokens);
       } catch { errors.push(`Token replacement failed for ${platform}`); }
+    } else if (platform === "opencode") {
+      try { await replaceTokensInDir(nativeDir, { "__OPENCODE_MODEL_CLASS__": openCodeModel }); }
+      catch { errors.push("Token replacement failed for opencode"); }
     }
 
     // Copy shared scripts
@@ -350,10 +376,11 @@ export async function build(
 
     manifestItems.sort((a, b) => a.path.localeCompare(b.path, "en"));
 
+    // Use snake_case keys to match context-graph conventions
     const manifest: BuildManifest = {
       version: 1,
       platform: platform,
-      generatedFrom: {
+      generated_from: {
         docs: "guides",
         core: "rules",
         skills: "skills",
@@ -362,11 +389,10 @@ export async function build(
       files: manifestItems,
     };
 
-    await fs.writeFile(
-      path.join(target, "manifest.json"),
-      JSON.stringify(manifest, null, 2) + "\n",
-      "utf-8"
-    );
+    // Write without BOM: PowerShell File.WriteAllText defaults to BOM,
+    // so we replicate that behavior explicitly via Node Buffer
+    const content = JSON.stringify(manifest, null, 2) + "\n";
+    await fs.writeFile(path.join(target, "manifest.json"), content, "utf8");
   }
 
   if (errors.length > 0) {
@@ -375,6 +401,12 @@ export async function build(
       message: `Build completed with errors: ${errors.join("; ")}`,
       data: { buildRoot, errors },
     };
+  }
+
+  try {
+    await buildOpenCodeArtifact(root, buildRoot);
+  } catch (e) {
+    return { exitCode: ExitCode.GeneralError, message: `OpenCode artifact build failed: ${e instanceof Error ? e.message : String(e)}`, data: { buildRoot } };
   }
 
   console.log(`Runtime builds created: ${buildRoot}`);

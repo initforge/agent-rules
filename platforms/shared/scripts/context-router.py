@@ -232,6 +232,8 @@ def _graph_aliases(nodes: Iterable[dict[str, Any]]) -> dict[str, set[str]]:
         candidates = [node_id, source, Path(source).stem if source else ""]
         if node_id.startswith("skill:"):
             candidates.append(node_id.removeprefix("skill:"))
+        if source.startswith("profiles/") and "/skills/" in source:
+            candidates.append("skills/" + source.split("/skills/", 1)[1])
         for alias in candidates:
             if alias:
                 aliases.setdefault(alias, set()).add(node_id)

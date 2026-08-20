@@ -251,6 +251,14 @@ function loadAliases(nodes: RoutingNode[]): Map<string, string[]> {
     const stem = path.basename(node.source, path.extname(node.source));
     add(stem, node.id);
     if (node.id.startsWith('skill:')) add(node.id.slice('skill:'.length), node.id);
+    // Profile-owned skills and their references historically referenced their
+    // old public path in routing metadata. Keep that alias resolvable during
+    // the migration while the canonical node source remains under
+    // profiles/<name>/skills/.
+    const profileSkill = node.source.match(/^profiles\/[^/]+\/skills\/(.+)$/);
+    if (profileSkill) add(`skills/${profileSkill[1]}`, node.id);
+    // ponytail: profiles/*/skills/<skill>/references/* also alias via
+    // the skills/ layer; add when profile skills gain nested subdirs
   }
   return aliases;
 }

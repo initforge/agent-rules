@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import shutil
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -55,7 +56,19 @@ def materialize_workspace_facts(workspace: Path, facts: dict) -> None:
     elif pack == "ancestor-symlink":
         outside = workspace / "outside-context"
         outside.mkdir()
-        (workspace / "context").symlink_to(outside, target_is_directory=True)
+        link = workspace / "context"
+        try:
+            link.symlink_to(outside, target_is_directory=True)
+        except OSError:
+            if sys.platform != "win32":
+                raise
+            result = subprocess.run(
+                ["cmd", "/c", "mklink", "/J", str(link), str(outside)],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                raise OSError(result.returncode, result.stderr.strip() or result.stdout.strip())
     if facts.get("profile_marker"):
         marker = workspace / ".agent" / "profiles" / "5fedu.enabled"
         marker.parent.mkdir(parents=True)

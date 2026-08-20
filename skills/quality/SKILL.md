@@ -43,9 +43,9 @@ deep maintainability audits with "code judo" restructuring ambition.
 
 ## Skill directory contents
 
-This skill merges two legacy skill directories:
-- `skills/clean-code/` — now deprecated; references at `skills/clean-code/references/`
-- `skills/code-review/` — now deprecated; SKILL.md directs here
+This skill absorbed the former `clean-code` and `code-review` skills, both of which
+had been marked deprecated while still carrying routing metadata and consuming
+routing budget. Their reference material lives at `references/`.
 
 ## 1. Triage Lanes
 
@@ -62,7 +62,7 @@ prefer it. Profile conventions override general clean-code guidance.
 
 ## 3. Hard-block validation (always run at finish)
 
-Apply the full hard-block list from `skills/clean-code/references/clean-code-checklist.md`.
+Apply the full hard-block list from [references/clean-code-checklist.md](references/clean-code-checklist.md).
 
 ## 4. Deep maintainability review (when triggered or high-risk)
 
@@ -129,6 +129,4 @@ Do not approve merely because behavior seems correct. Presumptive blockers:
 
 ## References
 
-- `skills/clean-code/references/clean-code-checklist.md` — hard-block list
-- `skills/clean-code/SKILL.md` — legacy clean-code skill (deprecated)
-- `skills/code-review/SKILL.md` — legacy code-review skill (deprecated)
+- [references/clean-code-checklist.md](references/clean-code-checklist.md) — hard-block list

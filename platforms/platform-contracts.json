@@ -3,7 +3,9 @@
   "parity_contract": {
     "required_live_invariants": ["activation", "context_delivery", "orchestration", "role_permissions", "model_effort", "mcp_integration"],
     "static_artifacts_are_sufficient": false,
-    "aggregate_rule": "all_platforms_require_current_live_evidence"
+    "aggregate_rule": "all_platforms_require_current_live_evidence",
+    "certification_required_hosts": ["codex", "claude", "grok", "opencode", "antigravity"],
+    "deferred_supported_targets": ["cursor"]
   },
   "platforms": {
     "codex": {
@@ -12,6 +14,13 @@
       "routing": {"hook_lifecycle": "UserPromptSubmit", "context_delivery": "route_capsule_injection"},
       "orchestration": {"native_spawn_tool": "spawn_agent", "agent_discovery": "$CODEX_HOME/agents", "model_attestation": "host_attested", "permission_capability": "sandbox_enforced", "isolation_capability": "worktree_or_shared"},
       "mcp": {"config_path": "$CODEX_HOME/config.toml", "format": "toml_mcp_servers", "native_inspect": "codex mcp list", "live_doctor": "native_mcp_ping"}
+    },
+    "claude": {
+      "runtime": {"home_env": "CLAUDE_CONFIG_DIR", "home_default": "~/.claude", "global_entrypoint": "$CLAUDE_CONFIG_DIR/CLAUDE.md"},
+      "bootstrap": {"strategy": "managed_file", "entrypoint": "CLAUDE.md", "restart_action": "start_new_session"},
+      "routing": {"hook_lifecycle": "UserPromptSubmit", "context_delivery": "hook_additional_context"},
+      "orchestration": {"native_spawn_tool": "Agent", "agent_discovery": "$CLAUDE_CONFIG_DIR/agents", "model_attestation": "host_attested", "permission_capability": "host_enforced", "isolation_capability": "worktree_or_shared"},
+      "mcp": {"config_path": "~/.claude.json", "format": "json_mcpServers", "native_inspect": "claude mcp list", "live_doctor": "native_mcp_ping"}
     },
     "grok": {
       "runtime": {"home_env": "GROK_HOME", "home_default": "~/.grok", "global_entrypoint": "$GROK_HOME/.grok/rules"},
@@ -31,7 +40,7 @@
       "runtime": {"home_env": "CURSOR_HOME", "home_default": "~/.cursor", "global_entrypoint": "$CURSOR_HOME/rules"},
       "bootstrap": {"strategy": "local_plugin", "entrypoint": "rules", "restart_action": "reload_window"},
       "routing": {"hook_lifecycle": "beforeSubmitPrompt", "context_delivery": "local_plugin_route_capsule"},
-      "orchestration": {"native_spawn_tool": "Task", "agent_discovery": "$CURSOR_HOME/agents", "model_attestation": "host_attested", "permission_capability": "host_declared", "isolation_capability": "host_declared"},
+      "orchestration": {"native_spawn_tool": "Task", "agent_discovery": "$CURSOR_HOME/agents", "model_attestation": "deferred_host_attestation", "permission_capability": "host_declared", "isolation_capability": "host_declared"},
       "mcp": {"config_path": "$CURSOR_HOME/mcp.json", "format": "json_mcpServers", "native_inspect": "cursor_mcp_ui", "live_doctor": "native_mcp_ping"}
     },
     "opencode": {

@@ -6,6 +6,19 @@ export type PlanArtifactStatus = 'DRAFT' | 'APPROVED' | 'ADOPTED' | 'ACTIVE' | '
 export type LineageResolution = 'CARRIED' | 'SUPERSEDED' | 'REJECTED_OBSOLETE';
 export type VerificationOutcome = 'PASS' | 'FAIL' | 'BLOCKED' | 'UNVERIFIED';
 export type ReconciliationStatus = 'MATCH' | 'PARTIAL' | 'MISSING' | 'DEVIATED' | 'EXTRA' | 'SUPERSEDED';
+
+/** Shared graph edge types (C2 dispatch-ready-set, plan-readiness). Single source of truth. */
+export const DEPENDENCY_TYPES = [
+  'HARD', 'SOFT', 'VERIFY_AFTER', 'SEMANTIC_CONFLICT', 'INTEGRATION', 'GLOBAL_GATE', 'EXTERNAL',
+] as const;
+export type DependencyType = (typeof DEPENDENCY_TYPES)[number];
+
+/** Recoverable (nonterminal) scheduler states shared by readiness + dispatch. */
+export const RECOVERABLE_STATES = [
+  'WAITING_EXTERNAL', 'WAITING_AUTHORITY', 'WAITING_RESOURCE', 'RETRY_SCHEDULED', 'NEEDS_REMEDIATION',
+] as const;
+export type RecoverableState = (typeof RECOVERABLE_STATES)[number];
+
 export type WorkLedgerStatus =
   | 'ADOPTED' | 'DISCOVERING' | 'PLANNED' | 'VALIDATED' | 'DISPATCHING' | 'EXECUTING' | 'VERIFYING' | 'REVIEWING'
   | 'needs-remediation' | 'needs-replan' | 'COMPLETED' | 'PARTIAL' | 'BLOCKED' | 'FAILED' | 'CANCELLED';
@@ -61,6 +74,7 @@ export interface PlanAnchor {
   readonly lineEnd: number;
   readonly anchorTextSha256: Sha256;
   readonly requirementId: string;
+  readonly chunkIndex: number;
 }
 
 export interface PlanRequirement { readonly requirementId: string; readonly statement: string; readonly acceptanceCriteria: readonly AcceptanceCriterion[]; }
@@ -157,6 +171,30 @@ export interface VerificationClaim {
   readonly outcome: VerificationOutcome;
 }
 
+export type HostAttestationEvidenceRole = 'version' | 'capabilities' | 'requestedModel' | 'resolvedModel' | 'observedModel';
+export const HOST_ATTESTATION_EVIDENCE_ROLES: readonly HostAttestationEvidenceRole[] = [
+  'version', 'capabilities', 'requestedModel', 'resolvedModel', 'observedModel',
+];
+
+/**
+ * A content-addressed observation used to support one attestation claim.
+ *
+ * `evidenceRef` is deliberately deterministic: it identifies the host, the
+ * attested commit, the role, and the immutable evidence content hash. The
+ * `subjectSha256` separately binds that evidence to the attestation field it
+ * purports to prove, preventing a valid record from another host or model
+ * claim being replayed here.
+ */
+export interface HostAttestationEvidenceRef {
+  readonly role: HostAttestationEvidenceRole;
+  readonly host: HostAttestation['host'];
+  readonly commitSha: string;
+  readonly evidenceRef: string;
+  readonly evidenceSha256: Sha256;
+  readonly subjectSha256: Sha256;
+  readonly observedAt: string;
+}
+
 export interface HostAttestation {
   readonly host: 'codex' | 'claude' | 'cursor' | 'antigravity' | 'grok' | 'opencode';
   readonly hostVersion: string;
@@ -167,7 +205,10 @@ export interface HostAttestation {
   readonly requestedModel: string;
   readonly resolvedModel: string;
   readonly observedModel: string;
-  readonly evidenceHashes: readonly Sha256[];
+  /** Required to certify. One content-addressed record is required for each role. */
+  readonly evidenceRefs?: readonly HostAttestationEvidenceRef[];
+  /** @deprecated Legacy hash-only evidence cannot satisfy certification. */
+  readonly evidenceHashes?: readonly Sha256[];
   readonly nativeRunnerIdentity: string;
   readonly issuedAt: string;
   readonly expiresAt: string;
@@ -175,8 +216,8 @@ export interface HostAttestation {
 
 /** Supported host identity union (all known hosts). Certification requires only the subset below. */
 export type SupportedHost = HostAttestation['host'];
-/** Hosts that MUST produce attestations for certification. Cursor/Antigravity are deferred. */
-export const CERTIFICATION_REQUIRED_HOSTS: readonly SupportedHost[] = ['codex', 'claude', 'grok', 'opencode'];
+/** Hosts that MUST produce attestations for certification. Cursor remains deferred. */
+export const CERTIFICATION_REQUIRED_HOSTS: readonly SupportedHost[] = ['codex', 'claude', 'grok', 'opencode', 'antigravity'];
 
 export interface ManifestSubsystem { readonly subsystemId: string; readonly owner: string; readonly capabilities: readonly string[]; }
 export interface ManifestCapability { readonly capabilityId: string; readonly dependencies: readonly string[]; readonly requiredEvidence: readonly string[]; readonly routingMetadata: Readonly<Record<string, string>>; }
@@ -363,6 +404,7 @@ export function assertPlanAnchor(anchor: PlanAnchor, expectedPlanSha256: Sha256,
   requireSha(anchor.planSha256, 'PlanAnchor.planSha256');
   requireSha(anchor.anchorTextSha256, 'PlanAnchor.anchorTextSha256');
   requireValue(Boolean(anchor.sectionHeading && anchor.requirementId) && Number.isInteger(anchor.lineStart) && Number.isInteger(anchor.lineEnd) && anchor.lineStart >= 1 && anchor.lineEnd >= anchor.lineStart, 'PlanAnchor has invalid location or requirement');
+  requireValue(Number.isInteger(anchor.chunkIndex) && anchor.chunkIndex >= 0, 'PlanAnchor chunkIndex must be a non-negative integer');
   requireValue(anchor.planSha256 === expectedPlanSha256, 'PlanAnchor plan SHA mismatch');
   requireValue(sha256Bytes(originalBytes) === anchor.planSha256, 'Original physical bytes do not match plan SHA');
   requireValue(sha256Bytes(physicalLines(originalBytes, anchor.lineStart, anchor.lineEnd)) === anchor.anchorTextSha256, 'PlanAnchor physical bytes mismatch');
@@ -424,6 +466,31 @@ export function assertPortablePlanIdentity(plan: PortablePlan, originalBytes: Ui
   requireAcyclicGraph(new Map(plan.taskDag.map((task) => [task.taskId, task.dependencies])), 'PortablePlan task DAG');
 }
 
+function hostAttestationEvidenceSubject(role: HostAttestationEvidenceRole, attestation: HostAttestation): string | readonly string[] {
+  switch (role) {
+    case 'version': return attestation.hostVersion;
+    case 'capabilities': return [...attestation.capabilityIds].sort();
+    case 'requestedModel': return attestation.requestedModel;
+    case 'resolvedModel': return attestation.resolvedModel;
+    case 'observedModel': return attestation.observedModel;
+  }
+}
+
+/** SHA-256 binding for the attestation field represented by an evidence role. */
+export function hostAttestationEvidenceSubjectSha256(role: HostAttestationEvidenceRole, attestation: HostAttestation): Sha256 {
+  return sha256Bytes(new TextEncoder().encode(JSON.stringify(hostAttestationEvidenceSubject(role, attestation))));
+}
+
+/** Canonical, content-addressed reference for an attestation evidence record. */
+export function hostAttestationEvidenceRef(
+  host: HostAttestation['host'],
+  commitSha: string,
+  role: HostAttestationEvidenceRole,
+  evidenceSha256: Sha256,
+): string {
+  return `evidence://${host}/${commitSha}/${role}/${evidenceSha256}`;
+}
+
 export function assertCertificationAttestation(attestation: HostAttestation, commitSha: string, now = new Date()): void {
   requireValue(attestation.capabilityStatus === 'HOST_NATIVE' && Boolean(attestation.nativeRunnerIdentity), 'Certification requires native host attestation');
   requireValue(attestation.commitSha === commitSha, 'Host attestation commit mismatch');
@@ -437,7 +504,29 @@ export function assertCertificationAttestation(attestation: HostAttestation, com
   const ttl = expiresAt.getTime() - issuedAt.getTime();
   requireValue(ttl > 0 && ttl <= MAX_TTL_MS, `Host attestation TTL ${ttl}ms exceeds maximum ${MAX_TTL_MS}ms`);
   requireSha(attestation.contractSetSha256, 'HostAttestation.contractSetSha256');
-  requireValue(attestation.evidenceHashes.length > 0 && attestation.evidenceHashes.every(isSha256), 'Host attestation evidence is invalid');
+  requireValue(Array.isArray(attestation.capabilityIds) && attestation.capabilityIds.length > 0
+    && attestation.capabilityIds.every((capabilityId) => typeof capabilityId === 'string' && capabilityId.trim().length > 0)
+    && new Set(attestation.capabilityIds).size === attestation.capabilityIds.length, 'Host attestation capabilities are invalid');
+  requireValue(Array.isArray(attestation.evidenceRefs), 'Host attestation evidence must use explicit per-role content-addressed references');
+  requireValue(attestation.evidenceHashes === undefined, 'Host attestation hash-only evidence is not certifiable');
+  const evidenceRefs = attestation.evidenceRefs;
+  requireValue(evidenceRefs.length === HOST_ATTESTATION_EVIDENCE_ROLES.length, 'Host attestation evidence roles are incomplete');
+  const observedRoles = new Set<HostAttestationEvidenceRole>();
+  for (const evidence of evidenceRefs) {
+    requireValue(HOST_ATTESTATION_EVIDENCE_ROLES.includes(evidence.role), 'Host attestation evidence has an unknown role');
+    requireValue(!observedRoles.has(evidence.role), `Host attestation evidence has duplicate role ${evidence.role}`);
+    observedRoles.add(evidence.role);
+    requireValue(evidence.host === attestation.host, `Host attestation evidence for ${evidence.role} is foreign to host ${attestation.host}`);
+    requireValue(evidence.commitSha === commitSha, `Host attestation evidence for ${evidence.role} does not bind HEAD`);
+    requireSha(evidence.evidenceSha256, `Host attestation ${evidence.role} evidence SHA`);
+    requireSha(evidence.subjectSha256, `Host attestation ${evidence.role} subject SHA`);
+    requireValue(evidence.evidenceRef === hostAttestationEvidenceRef(attestation.host, commitSha, evidence.role, evidence.evidenceSha256), `Host attestation evidence for ${evidence.role} has a mismatched content reference`);
+    const observedAt = new Date(evidence.observedAt);
+    requireValue(!isNaN(observedAt.getTime()), `Host attestation evidence for ${evidence.role} observedAt is not parseable`);
+    requireValue(observedAt.getTime() >= issuedAt.getTime() && observedAt.getTime() <= expiresAt.getTime() && observedAt.getTime() <= now.getTime(), `Host attestation evidence for ${evidence.role} is stale or outside the attestation window`);
+    requireValue(evidence.subjectSha256 === hostAttestationEvidenceSubjectSha256(evidence.role, attestation), `Host attestation evidence for ${evidence.role} does not match the attested value`);
+  }
+  requireValue(HOST_ATTESTATION_EVIDENCE_ROLES.every((role) => observedRoles.has(role)), 'Host attestation evidence roles are incomplete');
 }
 
 /** Canonical provenance timestamp contract: parseable, not future, within issuedAt..expiresAt. */
@@ -454,7 +543,7 @@ export function assertProvenanceTimestamp(provenanceTimestamp: string, issuedAt:
 }
 
 function planAnchorKey(anchor: PlanAnchor): string {
-  return [anchor.planSha256, anchor.sectionHeading, anchor.lineStart, anchor.lineEnd, anchor.anchorTextSha256, anchor.requirementId].join(':');
+  return [anchor.planSha256, anchor.sectionHeading, anchor.lineStart, anchor.lineEnd, anchor.anchorTextSha256, anchor.requirementId, anchor.chunkIndex].join(':');
 }
 
 export function planAnchorId(anchor: PlanAnchor): Sha256 {

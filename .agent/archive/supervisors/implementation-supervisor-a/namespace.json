@@ -1,0 +1,19 @@
+{
+  "schema": "harness/supervisor-namespace/v1",
+  "supervisor": "A",
+  "role": "implementation",
+  "session_id": "ses_0574ca763ffe4Zz3QfWuaFK8PO",
+  "worktree": "/home/linhnx/Projects/agent-rules-supervisor-wave",
+  "max_writers": 2,
+  "max_reviewers": 0,
+  "owned_paths": [
+    "packages/engine",
+    "packages/cli",
+    "platforms/opencode"
+  ],
+  "forbidden_paths": [
+    ".agent/plans/*/original.md",
+    "/home/linhnx/Projects/agent-rules-qa-supervisor"
+  ],
+  "amendment_sha256": "c9bce7721a18305c7c7ab6ba78ff165cc8fc41feb4b0312443b85cd8dd196aee"
+}

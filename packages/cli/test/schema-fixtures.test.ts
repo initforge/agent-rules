@@ -1,11 +1,15 @@
 import { describe, it, expect } from "vitest";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { fileURLToPath } from "node:url";
+import { dirname as _pathDirname } from "node:path";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = _pathDirname(__filename);
 import Ajv from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 
 // ── Paths ────────────────────────────────────────────────────────────
-const REPO_ROOT = path.resolve(import.meta.dirname, "..", "..", "..");
+const REPO_ROOT = path.resolve(__dirname, "..", "..", "..");
 const SCHEMAS_DIR = path.join(REPO_ROOT, "schemas");
 const FIXTURES_DIR = path.join(SCHEMAS_DIR, "fixtures");
 
@@ -25,7 +29,7 @@ const KNOWN_PREFIXES = [
   "agent", "assignment", "capability", "claim-evidence", "context",
   "decision", "delegation", "evidence", "intent", "model-route",
   "model-routing", "plan", "policy-approval", "profile", "requirement",
-  "run-state", "telemetry",
+  "run-state", "scorecard-evidence", "telemetry",
 ].sort((a, b) => b.length - a.length);
 
 function fixturePrefixToSchema(prefix: string): string {
@@ -38,6 +42,7 @@ function fixturePrefixToSchema(prefix: string): string {
     "policy-approval": "policy-approval",
     profile: "profile-manifest",
     "run-state": "run-state",
+    "scorecard-evidence": "scorecard-evidence",
     telemetry: "telemetry-event",
   };
   return mapping[prefix] ?? prefix;

@@ -1,8 +1,7 @@
 param(
   [string]$Root = (Split-Path -Parent $PSScriptRoot),
-  [ValidateSet("codex","grok","antigravity","cursor","all")][string]$Platform = "all",
-  [switch]$SkipIntegrationVerify,
-  [switch]$IncludeOpenCode
+  [ValidateSet("codex","claude","grok","antigravity","cursor","all")][string]$Platform = "all",
+  [switch]$SkipIntegrationVerify
 )
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "path-compat.ps1")
@@ -19,13 +18,16 @@ function Assert-ScriptIntegrity {
   $Manifest = Get-Content -Raw -LiteralPath $IntegrityManifestPath | ConvertFrom-Json
   $Expected = [string]$Manifest.files.$Relative
   if (-not $Expected) { throw "No integrity entry for $Relative" }
-  $Actual = (Get-FileHash -LiteralPath $ScriptPath -Algorithm SHA256).Hash.ToLowerInvariant()
+  $RawBytes = [IO.File]::ReadAllBytes($ScriptPath)
+  $CanonicalText = [Text.Encoding]::UTF8.GetString($RawBytes) -replace "`r`n", "`n"
+  $Actual = ([Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($CanonicalText)) | ForEach-Object ToString x2) -join ""
   if ($Actual -ne $Expected.ToLowerInvariant()) { throw "Integrity check failed for $Relative" }
 }
 
 $UserHome = if ($env:USERPROFILE) { $env:USERPROFILE } elseif ($env:HOME) { $env:HOME } else { throw "Cannot resolve user home" }
 $PlatformHomes = @{
   codex = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $UserHome ".codex" }
+  claude = if ($env:CLAUDE_CONFIG_DIR) { $env:CLAUDE_CONFIG_DIR } else { Join-Path $UserHome ".claude" }
   grok = if ($env:GROK_HOME) { $env:GROK_HOME } else { Join-Path $UserHome ".grok" }
   antigravity = Join-Path $UserHome ".gemini\config"
   cursor = Join-Path $UserHome ".cursor"
@@ -33,12 +35,13 @@ $PlatformHomes = @{
 }
 $McpConfigPaths = @{
   codex = Join-Path $PlatformHomes["codex"] "config.toml"
+  claude = Join-Path $UserHome ".claude.json"
   grok = Join-Path $PlatformHomes["grok"] "mcp.json"
   antigravity = Join-Path $PlatformHomes["antigravity"] "mcp_config.json"
   cursor = Join-Path $PlatformHomes["cursor"] "mcp.json"
   opencode = Join-Path $PlatformHomes["opencode"] "opencode.json"
 }
-$Selected = if ($Platform -eq "all") { @("codex", "grok", "antigravity", "cursor", "opencode") } else { @($Platform) }
+$Selected = if ($Platform -eq "all") { @("codex", "claude", "grok", "antigravity", "cursor", "opencode") } else { @($Platform) }
 
 $Report = @()
 $RegistryPath = Join-Path $Root "integrations\registry.json"
@@ -49,6 +52,7 @@ $NativeContractOk = $LASTEXITCODE -eq 0
 function Test-NativeStructure {
   param([string]$Name, [string]$RuntimeHome, [string]$Root, [bool]$ContractOk)
   $Problems = @()
+  if ($Name -eq "claude") { return @() }
   if (-not $ContractOk) { $Problems += "source/build native schema contract failed" }
   $Groups = switch ($Name) {
     "grok" { @(
@@ -92,6 +96,10 @@ foreach ($Name in $Selected) {
   $RuntimeHome = $PlatformHomes[$Name]
   $ManifestPath = Join-Path $RuntimeHome "agent-rules-manifest.json"
   if (-not (Test-Path $ManifestPath)) {
+    if ($Name -eq "opencode" -and (Test-Path (Join-Path $RuntimeHome "agent-rules-owned.json"))) {
+      $Report += [pscustomobject]@{ platform = $Name; check = "runtime-manifest"; status = "ADAPTER_PASS"; detail = "OpenCode adapter ownership manifest is present; native runtime manifest is not required" }
+      continue
+    }
     $Report += [pscustomobject]@{ platform = $Name; check = "runtime-manifest"; status = "MISSING"; detail = $ManifestPath }
     continue
   }
@@ -103,7 +111,7 @@ foreach ($Name in $Selected) {
   } else {
     $Report += [pscustomobject]@{ platform = $Name; check = "native-structure"; status = "NATIVE_PARTIAL"; detail = ($NativeProblems -join "; ") }
   }
-  $NativeCli = switch ($Name) { "codex" { "codex" }; "cursor" { "cursor" }; "grok" { "grok" }; "antigravity" { "gemini" } }
+  $NativeCli = switch ($Name) { "codex" { "codex" }; "claude" { "claude" }; "cursor" { "cursor" }; "grok" { "grok" }; "antigravity" { "gemini" } }
   $Cli = Get-Command $NativeCli -ErrorAction SilentlyContinue
   $NativeDetail = if ($Cli) { "$NativeCli binary is available, but no trusted host-activation receipt exists" } else { "$NativeCli binary is unavailable; Antigravity host activation is unobserved" }
   $Report += [pscustomobject]@{ platform = $Name; check = "native-activation"; status = "NATIVE_UNVERIFIED"; detail = $NativeDetail }
@@ -137,6 +145,8 @@ foreach ($Name in $Selected) {
       if ($Ins -and $Ins.Sha256 -ne $Exp.Sha256) { $HashMismatch += $Exp.Path }
       $RuntimeRelative = if ($Name -eq "cursor" -and $Exp.Path -like "docs/*") {
         "agent-rules-docs/" + $Exp.Path.Substring(5)
+      } elseif ($Name -eq "claude" -and $Exp.Path -eq "AGENTS.md") {
+        "CLAUDE.md"
       } else { $Exp.Path }
       $LivePath = Join-Path $RuntimeHome ($RuntimeRelative -replace '/', [IO.Path]::DirectorySeparatorChar)
       if (-not (Test-Path -LiteralPath $LivePath)) {
@@ -203,6 +213,11 @@ foreach ($Name in $Selected) {
       $HookConfig = Join-Path $RuntimeHome "hooks\skill-orchestrator.json"
       $HookNeedle = "grok-skill-gate"
       $HookScript = Join-Path $RuntimeHome "hooks\bin\grok-skill-gate.py"
+    }
+    "claude" {
+      $HookConfig = Join-Path $RuntimeHome "settings.json"
+      $HookNeedle = "context-hook.py"
+      $HookScript = Join-Path $RuntimeHome "scripts\context-hook.py"
     }
   }
   if ($Name -eq "cursor") {
@@ -417,8 +432,140 @@ if (Test-Path $GrokInject) {
   }
 }
 
+# --- Runtime state: config hash/gen, roles/permissions, child/session, semantic cursor, queue age, ownership/orphan ---
+foreach ($Name in $Selected) {
+  $RuntimeHome = $PlatformHomes[$Name]
+  $ManifestPath = Join-Path $RuntimeHome "agent-rules-manifest.json"
+  if (-not (Test-Path $ManifestPath)) { continue }
+
+  # 1. Loaded config hash/generation
+  try {
+    $M = Get-Content -Raw $ManifestPath | ConvertFrom-Json
+    $ManifestHash = (Get-FileHash -LiteralPath $ManifestPath -Algorithm SHA256).Hash.Substring(0, 12).ToLowerInvariant()
+    $MTime = (Get-Item -LiteralPath $ManifestPath).LastWriteTimeUtc
+    $Gen = if ($M.PSObject.Properties["version"]) { [int]$M.version } else { 0 }
+    $SrcCore = if ($M.generated_from) { $M.generated_from.core } else { "" }
+    $SrcSkills = if ($M.generated_from) { $M.generated_from.skills } else { "" }
+    $SrcDocs = if ($M.generated_from) { $M.generated_from.docs } else { "" }
+    $Report += [pscustomobject]@{
+      platform = $Name; check = "state-config-generation"
+      status   = "INFO"
+      detail   = "gen=$Gen hash=$ManifestHash mtime=$($MTime.ToString('yyyy-MM-ddTHH:mm:ssZ')) core=$SrcCore skills=$SrcSkills docs=$SrcDocs"
+    }
+  } catch { $Report += [pscustomobject]@{ platform = $Name; check = "state-config-generation"; status = "WARN"; detail = $_.Exception.Message } }
+
+  # 2. Roles/permissions
+  $PolicyPath = Join-Path $RuntimeHome "model-policy.json"
+  $ContractPath = Join-Path $RuntimeHome "runtime-contract.json"
+  $RoleDetail = ""; $PermDetail = ""
+  if (Test-Path $PolicyPath) {
+    try {
+      $P = Get-Content -Raw $PolicyPath | ConvertFrom-Json
+      $Roles = @($P.role_defaults.PSObject.Properties.Name)
+      $RoleDetail = "roles=$($Roles.Count) [$($Roles -join ',')]"
+    } catch { $RoleDetail = "roles-parse-error" }
+  } else { $RoleDetail = "no-model-policy" }
+  if (Test-Path $ContractPath) {
+    try {
+      $C = Get-Content -Raw $ContractPath | ConvertFrom-Json
+      $Perm = $C.contract.orchestration.permission_capability
+      $Attest = $C.contract.orchestration.model_attestation
+      $PermDetail = "perm=$Perm attest=$Attest"
+    } catch { $PermDetail = "perm-parse-error" }
+  } else { $PermDetail = "no-runtime-contract" }
+  $Report += [pscustomobject]@{
+    platform = $Name; check = "state-roles-permissions"
+    status   = "INFO"
+    detail   = "$RoleDetail $PermDetail".Trim()
+  }
+
+  # 3. Child/session (claude projects store)
+  $ProjectsPath = Join-Path $RuntimeHome "projects"
+  $ChildCount = 0; $SessionCount = 0; $OldestSessionAge = ""
+  if (Test-Path $ProjectsPath) {
+    $AllSessions = @(Get-ChildItem -LiteralPath $ProjectsPath -Recurse -Filter "*.jsonl" -File -ErrorAction SilentlyContinue)
+    $Children = $AllSessions | Where-Object { $_.FullName -match '[\\/]subagents[\\/]' }
+    $Sessions = $AllSessions | Where-Object { $_.FullName -notmatch '[\\/]subagents[\\/]' }
+    $ChildCount = $Children.Count; $SessionCount = $Sessions.Count
+    if ($Sessions.Count -gt 0) {
+      $Oldest = $Sessions | Sort-Object LastWriteTimeUtc | Select-Object -First 1
+      $AgeH = [Math]::Round(([DateTimeOffset]::UtcNow - $Oldest.LastWriteTimeUtc).TotalHours, 1)
+      $OldestSessionAge = "oldest=$($Oldest.LastWriteTimeUtc.ToString('u')) age=${AgeH}h"
+    } else { $OldestSessionAge = "oldest=none" }
+  } else { $OldestSessionAge = "no-projects-dir" }
+  $Report += [pscustomobject]@{
+    platform = $Name; check = "state-child-session"
+    status   = "INFO"
+    detail   = "sessions=$SessionCount children=$ChildCount $OldestSessionAge"
+  }
+
+  # 4. Semantic cursor/deadline: routing-mode graph hash + freshness
+  $RoutingModePath = Join-Path $RuntimeHome "skill-state\routing-mode.json"
+  $RoutingGraphPath = Join-Path $RuntimeHome "context-graph.json"
+  $CursorDetail = ""; $CursorStatus = "INFO"
+  if (Test-Path $RoutingModePath) {
+    try {
+      $RM = Get-Content -Raw $RoutingModePath | ConvertFrom-Json
+      $GraphHash = [string]$RM.graph_hash
+      $CheckedAt = if ([string]$RM.conformance_checked_at_utc) { [DateTimeOffset]::Parse([string]$RM.conformance_checked_at_utc) } else { $null }
+      $UpdatedAt = if ([string]$RM.updated_at_utc) { [DateTimeOffset]::Parse([string]$RM.updated_at_utc) } else { $null }
+      $CursorHashShort = $GraphHash.Substring(0, 12).ToLowerInvariant()
+      $FreshHours = if ($UpdatedAt) { [Math]::Round(([DateTimeOffset]::UtcNow - $UpdatedAt).TotalHours, 1) } else { -1 }
+      $IsStale = $FreshHours -gt 168  # 7 days
+      $StaleFlag = if ($IsStale) { "STALE" } else { "fresh" }
+      $CursorDetail = "cursor=$CursorHashShort mode=$($RM.mode) graph_v=$($RM.graph_version) updated=${FreshHours}h [$StaleFlag]"
+      if ($IsStale) { $CursorStatus = "WARN" }
+      # verify installed graph hash matches routing-mode reference
+      if (Test-Path $RoutingGraphPath) {
+        $InstalledGraphHash = (Get-FileHash -LiteralPath $RoutingGraphPath -Algorithm SHA256).Hash.Substring(0,12).ToLowerInvariant()
+        if ($InstalledGraphHash -eq $CursorHashShort) { $CursorDetail += " graph=match" }
+        else { $CursorDetail += " graph=DRIFT($InstalledGraphHash)"; $CursorStatus = "WARN" }
+      } else { $CursorDetail += " graph=missing"; $CursorStatus = "WARN" }
+    } catch { $CursorDetail = "parse-error=$($_.Exception.Message)"; $CursorStatus = "WARN" }
+  } else { $CursorDetail = "no-routing-mode"; $CursorStatus = "SKIP" }
+  $Report += [pscustomobject]@{ platform = $Name; check = "state-semantic-cursor"; status = $CursorStatus; detail = $CursorDetail }
+
+  # 5. Queue age: oldest session transcript file age (claude only; others SKIP)
+  if (Test-Path $ProjectsPath -and $SessionCount -gt 0) {
+    $AllSessionsForQueue = @(Get-ChildItem -LiteralPath $ProjectsPath -Recurse -Filter "*.jsonl" -File -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notmatch '[\\/]subagents[\\/]' })
+    if ($AllSessionsForQueue.Count -gt 0) {
+      $OldestQ = $AllSessionsForQueue | Sort-Object LastWriteTimeUtc | Select-Object -First 1
+      $NewestQ = $AllSessionsForQueue | Sort-Object LastWriteTimeUtc | Select-Object -Last 1
+      $QAgeH = [Math]::Round(([DateTimeOffset]::UtcNow - $OldestQ.LastWriteTimeUtc).TotalHours, 1)
+      $QNewH = [Math]::Round(([DateTimeOffset]::UtcNow - $NewestQ.LastWriteTimeUtc).TotalHours, 1)
+      $QStale = $QAgeH -gt 720  # 30 days
+      $QFlag = if ($QStale) { "STALE" } else { "ok" }
+      $Report += [pscustomobject]@{
+        platform = $Name; check = "state-queue-age"
+        status   = if ($QStale) { "WARN" } else { "INFO" }
+        detail   = "sessions=$($AllSessionsForQueue.Count) oldest=${QAgeH}h newest=${QNewH}h [$QFlag]"
+      }
+    } else { $Report += [pscustomobject]@{ platform = $Name; check = "state-queue-age"; status = "SKIP"; detail = "no-session-files" } }
+  } else { $Report += [pscustomobject]@{ platform = $Name; check = "state-queue-age"; status = "SKIP"; detail = "no-projects-or-sessions" } }
+
+  # 6. Ownership and orphan: owned.json vs manifest files
+  $OwnedPath = Join-Path $RuntimeHome "agent-rules-owned.json"
+  $OrphanDetail = ""; $OrphanStatus = "OK"
+  if (Test-Path $OwnedPath) {
+    try {
+      $OwnedList = @(Get-Content -Raw $OwnedPath | ConvertFrom-Json | ForEach-Object { [string]$_ })
+      $ManifestFiles = @($M.files | ForEach-Object { [string]$_.path })
+      $OwnedSet = @($OwnedList | Sort-Object)
+      $ManifestSet = @($ManifestFiles | Sort-Object)
+      $Orphaned = @($OwnedSet | Where-Object { $_ -notin $ManifestSet })
+      $Unclaimed = @($ManifestSet | Where-Object { $_ -notin $OwnedSet })
+      $OwnedCount = $OwnedSet.Count; $ManifestCount = $ManifestSet.Count
+      if ($Orphaned.Count -gt 0) { $OrphanDetail += "owned-not-built=$($Orphaned.Count) "; $OrphanStatus = "WARN" }
+      if ($Unclaimed.Count -gt 0) { $OrphanDetail += "built-not-owned=$($Unclaimed.Count) "; $OrphanStatus = "WARN" }
+      if (-not $OrphanDetail) { $OrphanDetail = "owned=$OwnedCount manifest=$ManifestCount clean" }
+      else { $OrphanDetail = "owned=$OwnedCount manifest=$ManifestCount " + $OrphanDetail.Trim() }
+    } catch { $OrphanDetail = "parse-error"; $OrphanStatus = "WARN" }
+  } else { $OrphanDetail = "no-owned-manifest"; $OrphanStatus = "SKIP" }
+  $Report += [pscustomobject]@{ platform = $Name; check = "state-ownership-orphan"; status = $OrphanStatus; detail = $OrphanDetail }
+}
+
 # --- OpenCode-specific doctor (independent adapter, not in main install pipeline) ---
-if ($IncludeOpenCode) {
+if ($Selected -contains "opencode") {
   $OpenCodeHome = $PlatformHomes["opencode"]
   $OpenCodeOwned = Join-Path $OpenCodeHome "agent-rules-owned.json"
   $OpenCodeAgents = Join-Path $OpenCodeHome "agents"

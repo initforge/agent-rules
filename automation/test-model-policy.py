@@ -29,7 +29,14 @@ def main() -> int:
     assert telemetry["hook_error_behavior"] == "fail_open"
 
     platforms = policy["platforms"]
-    assert set(platforms) == {"codex", "cursor", "antigravity", "grok", "opencode"}
+    # Every platform with a contract must have a policy entry. Asserting an exact set
+    # meant adding a platform broke this test even when the policy was correct — which
+    # is what pushed the Claude selector into a hardcoded value in
+    # platforms/claude/scripts/sync-opencode-parity.ps1.
+    contracts = json.loads((ROOT / "platforms/platform-contracts.json").read_text(encoding="utf-8"))
+    missing = set(contracts["platforms"]) - set(platforms)
+    assert not missing, f"platforms with a contract but no model policy: {sorted(missing)}"
+    assert {"codex", "cursor", "antigravity", "grok", "opencode"} <= set(platforms)
 
     cdx = platforms["codex"]
     ms = cdx["adapter_defaults"]["model_selectors"]
@@ -44,7 +51,7 @@ def main() -> int:
     assert cms["research_review"]["display"] == "Grok 4.5 base"
     assert cms["implementation"]["selector"] == "composer-2.5[fast=false]"
     assert "Fast" in cursor["denied_modes"]
-    assert cursor["denial_behavior"] == "fail_closed_partial"
+    assert cursor["denial_behavior"] == "fail_closed"
     assert cursor["subagent_model_override"] == "supported"
 
     ag = platforms["antigravity"]
@@ -76,7 +83,7 @@ def main() -> int:
     assert "observed" in opencode["recorded_evidence"]
 
     assert all(
-        item.get("denial_behavior") == "fail_closed_partial"
+        item.get("denial_behavior") == "fail_closed"
         for item in platforms.values()
         if "denial_behavior" in item
     )

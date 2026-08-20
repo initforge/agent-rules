@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 
 interface FileStatusEntry { exists: boolean; size: number; }
 interface DirStatusEntry { exists: boolean; entryCount: number; }
@@ -8,6 +8,20 @@ interface AttestationStaleness {
   unboundCount?: number;
   unboundProfiles?: string[];
   error?: string;
+}
+
+interface IntegrityFinding {
+  kind: string;
+  detail: string;
+}
+
+interface IntegrityFailure {
+  ok: false;
+  code: 'INTEGRITY_FAILURE';
+  error: string;
+  details: {
+    findings: IntegrityFinding[];
+  };
 }
 
 interface HealthData {
@@ -63,28 +77,50 @@ export default function Overview({ navigate }: OverviewProps) {
   const [ciStatus, setCiStatus] = useState<CiStatus>({ state: 'unknown', totalPlans: 0, boundAttestations: 0, totalAttestations: 0, lastPlanStatus: '' });
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [error, setError] = useState('');
+  const [integrityFailure, setIntegrityFailure] = useState<IntegrityFailure | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-  const mountedRef = useRef(true);
 
   const fetchData = useCallback(() => {
     let stale = false;
-    const timer = setTimeout(() => { if (mountedRef.current && loadState === 'loading') stale = true; }, 5000);
+    const timer = setTimeout(() => { if (loadState === 'loading') stale = true; }, 5000);
 
-    const planListRes = fetch('/api/plans').then(r => r.json()).catch(() => ({ plans: [] }));
+    const planListRes = fetch('/api/plans').then(async r => {
+      const data = await r.json();
+      if (!r.ok && r.status === 409 && data.code === 'INTEGRITY_FAILURE') {
+        setIntegrityFailure(data);
+        return { plans: [] };
+      }
+      if (!r.ok) {
+        throw new Error('Failed to fetch plans');
+      }
+      return data;
+    }).catch(() => ({ plans: [] }));
 
     Promise.all([
       fetch('/api/health').then(r => { if (!r.ok) throw new Error('Health check failed'); return r.json(); }),
       fetch('/api/config/all').then(r => { if (!r.ok) throw new Error('Config fetch failed'); return r.json(); }),
       planListRes,
     ]).then(([h, c, p]) => {
-      if (!mountedRef.current) return null;
       setHealth(h);
       if (c.ok) setConfig(c.data);
       if (p.plans && p.plans.length > 0) {
         setPlans(p.plans);
         const lastPlanId = p.plans[p.plans.length - 1].planId;
-        return fetch(`/api/plans/${lastPlanId}`).then(r => r.json()).then(pd => {
-          if (!mountedRef.current) return;
+        return fetch(`/api/plans/${lastPlanId}`).then(async r => {
+          const pd = await r.json();
+          if (!r.ok && r.status === 409 && pd.code === 'INTEGRITY_FAILURE') {
+            setIntegrityFailure(pd);
+            setCiStatus({ state: 'unverified', totalPlans: p.plans.length, boundAttestations: 0, totalAttestations: 0, lastPlanStatus: 'INTEGRITY_FAILURE' });
+            setLastUpdated(new Date().toISOString());
+            setLoadState('loaded');
+            return null;
+          }
+          if (!r.ok) {
+            throw new Error(`Failed to fetch plan (${r.status})`);
+          }
+          return pd;
+        }).then(pd => {
+          if (!pd) return;
           const planAttestations: Array<Record<string, unknown>> = pd.attestations || [];
           const boundCount = planAttestations.filter((a: Record<string, unknown>) => a.status === 'BOUND').length;
           if (planAttestations.length === 0) {
@@ -104,27 +140,21 @@ export default function Overview({ navigate }: OverviewProps) {
       }
       return null;
     }).catch(err => {
-      if (!mountedRef.current) return;
       if (stale) setLoadState('offline');
       else { setError(err instanceof Error ? err.message : String(err)); setLoadState('error'); }
     }).finally(() => clearTimeout(timer));
   }, []);
 
   useEffect(() => {
-    mountedRef.current = true;
     fetchData();
     const interval = setInterval(() => {
-      if (mountedRef.current && loadState === 'loaded') {
-        fetch('/api/health').then(r => r.json()).then(h => {
-          if (mountedRef.current) {
-            setHealth(h);
-            setLastUpdated(new Date().toISOString());
-            setLoadState('loaded');
-          }
-        }).catch(() => {});
-      }
+      fetch('/api/health').then(r => r.json()).then(h => {
+        setHealth(h);
+        setLastUpdated(new Date().toISOString());
+        setLoadState('loaded');
+      }).catch(() => {});
     }, 30000);
-    return () => { mountedRef.current = false; clearInterval(interval); };
+    return () => { clearInterval(interval); };
   }, [fetchData]);
 
   const enabledProfiles = config?.profileManifest?.profiles
@@ -140,24 +170,39 @@ export default function Overview({ navigate }: OverviewProps) {
 
   if (loadState === 'loading') {
     return (
-      <div className="page">
+      <div className="page" aria-busy="true" aria-live="polite">
         <div className="page-header">
           <h1 className="typography-title">Repository Overview</h1>
           <p className="typography-caption">System health, CI status, and configuration drift</p>
         </div>
-        <div className="state-loading"><div className="spinner" /> Loading...</div>
+        <div className="state-loading" role="status"><div className="spinner" /> Loading...</div>
       </div>
     );
   }
 
   if (loadState === 'error') {
     return (
-      <div className="page">
+      <div className="page" role="alert" aria-live="assertive">
         <div className="page-header">
           <h1 className="typography-title">Repository Overview</h1>
           <p className="typography-caption">System health, CI status, and configuration drift</p>
         </div>
         <div className="state-error">{error}</div>
+        {integrityFailure && (
+          <div className="surface overview-integrity-banner" role="alert" aria-live="assertive">
+            <div className="overview-integrity-header">
+              <span className="badge badge--danger">Integrity Failure</span>
+              <span className="typography-caption">Workspace integrity check failed</span>
+            </div>
+            <ul className="overview-integrity-findings">
+              {(integrityFailure.details?.findings || []).slice(0, 5).map((f, i) => (
+                <li key={i} className="typography-caption">
+                  <span className="badge badge--danger badge--sm">{f.kind}</span> {f.detail}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     );
   }
@@ -171,6 +216,14 @@ export default function Overview({ navigate }: OverviewProps) {
         </div>
         <div className="state-offline">Server unreachable. Showing cached data if available.</div>
         {health && <div className="state-stale">Data may be stale — last known status: {health.status}</div>}
+        {integrityFailure && (
+          <div className="surface overview-integrity-banner" role="alert" aria-live="assertive">
+            <div className="overview-integrity-header">
+              <span className="badge badge--danger">Integrity Failure</span>
+              <span className="typography-caption">Cached data may be unreliable due to integrity check failure</span>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -190,6 +243,25 @@ export default function Overview({ navigate }: OverviewProps) {
           )}
         </div>
       </div>
+
+      {integrityFailure && (
+        <div className="surface overview-integrity-banner" role="alert" aria-live="assertive">
+          <div className="overview-integrity-header">
+            <span className="badge badge--danger">Integrity Failure</span>
+            <span className="typography-caption">Workspace integrity check failed — evidence may not be reliable</span>
+          </div>
+          <ul className="overview-integrity-findings">
+            {(integrityFailure.details?.findings || []).slice(0, 5).map((f, i) => (
+              <li key={i} className="typography-caption">
+                <span className="badge badge--danger badge--sm">{f.kind}</span> {f.detail}
+              </li>
+            ))}
+            {(integrityFailure.details?.findings || []).length > 5 && (
+              <li className="typography-caption">+{(integrityFailure.details?.findings || []).length - 5} more findings</li>
+            )}
+          </ul>
+        </div>
+      )}
 
       <div className="overview-grid">
         <div className="surface overview-card">

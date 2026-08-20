@@ -5,7 +5,13 @@ import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const REPO_ROOT = path.resolve(__dirname, "..", "..", "..", "..");
+const PACKAGED_ROOT = path.resolve(__dirname, "..", "..", "..", "..");
+const TEST_REPOSITORY_ROOT = process.env.AGENT_RULES_REPOSITORY_ROOT;
+if (TEST_REPOSITORY_ROOT && process.env.NODE_ENV !== "test") {
+  throw new Error("AGENT_RULES_REPOSITORY_ROOT is test-only and unavailable in production");
+}
+// ponytail: repository injection is limited to subprocess package tests; production roots require a signed installer contract.
+const REPO_ROOT = TEST_REPOSITORY_ROOT ? path.resolve(TEST_REPOSITORY_ROOT) : PACKAGED_ROOT;
 const AUTOMATION_DIR = path.join(REPO_ROOT, "automation");
 
 export interface PowershellResult {
@@ -14,22 +20,22 @@ export interface PowershellResult {
   exitCode: number;
 }
 
-function escapeArg(arg: string): string {
-  return `'${arg.replace(/'/g, "''")}'`;
-}
-
 export async function findPowershell(): Promise<string> {
-  const candidates = ["pwsh", "powershell"];
+  // Probe by execution, not by `access()`: `access("pwsh")` resolves relative to
+  // cwd and therefore never finds a binary on PATH.
+  // pwsh (PowerShell 7+) is cross-platform and preferred; `powershell` (5.1) is a
+  // Windows-only fallback and must never be attempted on Linux/macOS.
+  const candidates = process.platform === "win32" ? ["pwsh", "powershell"] : ["pwsh"];
   for (const cmd of candidates) {
-    try {
-      await access(cmd);
-      return cmd;
-    } catch {
-      continue;
-    }
+    const found = await new Promise<boolean>((resolve) => {
+      execFile(cmd, ["-NoProfile", "-Command", "exit 0"], { timeout: 15_000 }, (error) => {
+        resolve(!error);
+      });
+    });
+    if (found) return cmd;
   }
   throw new Error(
-    "PowerShell Core (pwsh) or Windows PowerShell is required. Install from https://github.com/PowerShell/PowerShell"
+    "PowerShell Core (pwsh) is required. Install from https://github.com/PowerShell/PowerShell#get-powershell"
   );
 }
 
@@ -56,15 +62,25 @@ export async function runScript(
     return { stdout: dryMsg, stderr: "", exitCode: 0 };
   }
 
+  let shell: string;
+  try {
+    shell = await findPowershell();
+  } catch (error) {
+    return {
+      stdout: "",
+      stderr: error instanceof Error ? error.message : String(error),
+      exitCode: 127,
+    };
+  }
+
   return new Promise<PowershellResult>((resolve) => {
-    const shell = process.platform === "win32" ? "powershell" : "pwsh";
     const child = execFile(
       shell,
       [
         "-NoProfile",
         "-File",
         scriptPath,
-        ...args.map(escapeArg),
+        ...args,
       ],
       {
         cwd: REPO_ROOT,

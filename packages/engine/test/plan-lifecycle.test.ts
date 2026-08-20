@@ -87,13 +87,16 @@ describe('adoptPlan', () => {
   it('copies raw source and computes SHA', () => {
     const dir = tmpDir();
     const sourcePath = writeFile(path.join(dir, 'plan.md'), '# Test Plan\n\n## Section A\nDo the work.\n');
-    const result = adoptPlan(sourcePath, 'test-plan-adopt-1');
+    // Adopt into a temp plans dir: writing fixtures into the real .agent/plans left
+    // test directories among real plans.
+    const plansDir = path.join(dir, 'plans');
+    const result = adoptPlan(sourcePath, 'test-plan-adopt-1', plansDir);
 
     expect(result.planId).toBe('test-plan-adopt-1');
     expect(result.originalSha256).toMatch(/^[a-f0-9]{64}$/);
     expect(result.amendmentIds).toEqual([]);
 
-    const expectedTarget = path.resolve('.agent/plans/test-plan-adopt-1/original.md');
+    const expectedTarget = path.resolve(plansDir, 'test-plan-adopt-1/original.md');
     expect(fs.existsSync(expectedTarget)).toBe(true);
     expect(fs.readFileSync(expectedTarget, 'utf-8')).toBe('# Test Plan\n\n## Section A\nDo the work.\n');
 

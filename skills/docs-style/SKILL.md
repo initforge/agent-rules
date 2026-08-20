@@ -1,6 +1,6 @@
 ---
 name: docs-style
-description: Use this skill when creating, reviewing, rewriting, or restructuring high-quality project documentation for README.md, README-vi.md, technical specs, tech stack badges, screenshots, documentation cleanup, or /docs/**. Trigger for source-grounded docs, repo documentation architecture, docs quality complaints, README style, Vietnamese/English README parity, current-vs-legacy tech stack accuracy, or docs that must match/exceed a strong hand-written spec such as vhdg-conhon/SPECS.md.
+description: Use this skill when creating, reviewing, rewriting, or restructuring high-quality project documentation for README.md, README-vi.md, technical specs, tech stack badges, screenshots, documentation cleanup, or /docs/**. Trigger for source-grounded docs, repo documentation architecture, docs quality complaints, README style, Vietnamese/English README parity, current-vs-legacy tech stack accuracy, or docs that must match or exceed a strong hand-written technical spec.
 routing: {"signals":["README","README-vi","/docs/","documentation","tài liệu","docs cleanup","tech stack"],"excludes":["pure code implementation"],"priority":50,"loads":["skill:docs-style"],"supports":[],"project_scope":"","platform_scope":"all","max_route_tokens":4500,"default":false}
 ---
 
@@ -30,7 +30,7 @@ If a fact cannot be proven, omit it or write `TODO: xác minh ...`. Never fill g
 2. **Read source before writing.** Inspect manifests, lockfiles, entry points, route/API definitions, schemas/migrations, env examples, deployment files, CI, tests/scripts, and the main UI/CLI surfaces.
 3. **Build an evidence map privately.** For every major claim, know the source path or runtime check behind it. Use source paths sparingly in docs as "Where to verify", not as the main prose.
 4. **Write from thesis to detail.** Start with the domain/product pressure, then system shape, then workflows, decisions, operations, and risks.
-5. **Use verified visuals only when useful.** Prefer existing safe screenshots/assets. For Codex, capture new browser screenshots only when the user asks for visual proof or docs quality depends on it.
+5. **Capture verified visuals.** For any repo with a UI this is mandatory, not optional — see [Screenshots](#screenshots-mandatory-for-any-repo-with-a-ui). Reuse existing safe assets when they still match the UI; otherwise drive the app or production and capture. If blocked, ask the user rather than shipping docs without visuals.
 6. **Clean the docs surface.** Move useful scattered markdown into `/docs`, merge repeated shallow files, delete stale migration/setup/task files only after preserving useful facts, and move loose docs assets into subfolders.
 7. **Verify.** Check links, images, badge URLs, commands, formatting, and repo status. Do not report PASS until the quality gates pass.
 
@@ -200,9 +200,37 @@ docs/
   assets/
 ```
 
-## Screenshots
+## Screenshots (mandatory for any repo with a UI)
 
-Rules: use existing safe visuals when available; capture browser screenshots only when requested or necessary; store them under `/docs/assets/` or the existing docs image folder; use descriptive filenames; verify files exist and render; never include sensitive data, placeholders, broken links, or screenshots from another project.
+Docs for a repo with a UI **must** carry verified screenshots. There is no "skip"
+branch. The old wording here ("only when requested or necessary") produced exactly the
+outcome you would expect: an empty `docs/assets/` and READMEs with no images at all.
+
+Two ways to get one, in order:
+
+1. **Drive the app and capture it.** Launch the app (see the `run` skill for
+   per-project-type commands), then capture with `playwright-mcp` or
+   `chrome-devtools-mcp`. Save to `docs/assets/<surface>.png`.
+2. **Capture production.** When a live URL exists, screenshot the real deployment.
+
+If neither is possible — no run command, missing credentials, no live URL — **ask the
+user** for what is missing. Do not silently omit the screenshot, and do not write
+`TODO: xác minh` in its place; that turns a blocked step into a permanent gap.
+
+Rules for the files themselves: prefer existing safe visuals when they are current;
+store under `/docs/assets/` or the repo's existing docs image folder; use descriptive
+filenames; verify each file exists and renders; never include sensitive data,
+placeholders, broken links, or a screenshot taken from a different project.
+
+### How to capture, by project type
+
+| Project | Launch | Capture |
+|---|---|---|
+| Web app (Vite/Next/CRA) | `npm run dev` | navigate to the dev URL, screenshot each key surface |
+| Static site | serve `dist/` | screenshot the built output, not the source |
+| Backend with an admin UI | start the server | screenshot the admin routes that exist |
+| CLI | run the command | terminal capture, or a cast → SVG |
+| Library, no UI | — | no screenshot required; say so explicitly in the report |
 
 ## Cleanup Rules
 
@@ -260,6 +288,7 @@ Fail the docs if any item is true:
 - Stack is guessed, stale, or contradicted by manifests/config/imports.
 - Current and legacy code paths are mixed without labels.
 - Screenshots, live links, badges, or docs links are broken.
+- The repo has a UI and the docs carry no screenshot, or a screenshot predates the last UI change.
 - The spec lacks thesis, design rationale, rejected alternatives, operating risks, or failure paths.
 - `/docs` is many shallow files that repeat the README.
 - Diagrams do not match runtime boundaries.
@@ -275,7 +304,8 @@ When reporting work, state:
 
 - repos/files changed;
 - evidence inspected;
-- screenshots or links verified;
+- screenshots captured or reused, and how (app driven locally, or production URL);
+- links verified;
 - commands/tests run;
 - facts left as `TODO: xác minh ...`;
 - whether CI/CD was skipped, avoided by branch/workflow rules, or impossible to guarantee.

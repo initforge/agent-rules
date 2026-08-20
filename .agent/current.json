@@ -1,0 +1,47 @@
+{
+  "schema": "artifact/execution-contract",
+  "version": 1,
+  "kind": "current-pointer",
+  "generation": 1,
+  "plan_id": "harness-v3-rearchitecture",
+  "plan_root": ".agent/plans/harness-v3-rearchitecture",
+  "original": {
+    "path": ".agent/plans/harness-v3-rearchitecture/plan.md",
+    "sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31"
+  },
+  "canonical_ledger": {
+    "path": ".agent/ledger/harness-v3-rearchitecture.json",
+    "sha256": "c291d8ad5972b9d79183ee11abd44945bfbf9f31a65c443fd297760d42c67c89",
+    "observed_revision": 1,
+    "observed_effective_sha256": "c291d8ad5972b9d79183ee11abd44945bfbf9f31a65c443fd297760d42c67c89",
+    "plan_status": "ADOPTED",
+    "execution_state": "IN_PROGRESS"
+  },
+  "effective_chain_tip": {
+    "amendment_id": "AM-0000",
+    "path": ".agent/plans/harness-v3-rearchitecture/plan.md",
+    "sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31"
+  },
+  "candidate_chain_tip": {
+    "amendment_id": "AM-0000",
+    "status": "OWNER_APPROVED_PENDING_CANONICAL_ACTIVATION",
+    "path": ".agent/plans/harness-v3-rearchitecture/plan.md",
+    "sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31"
+  },
+  "contract": {
+    "path": "schemas/execution-contract.schema.json",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "schema_path": "schemas/execution-contract.schema.json",
+    "requirement_ids": [
+      "M11-R01"
+    ],
+    "status": "PENDING_CANONICAL_ACTIVATION"
+  },
+  "atomicity": {
+    "protocol": "generation-compare-and-swap",
+    "commit_target": ".agent/current.json",
+    "expected_previous_generation": 0,
+    "activation_state": "CANONICALLY_ACTIVATED",
+    "updated_at": "2026-08-04T00:00:00+07:00"
+  }
+}

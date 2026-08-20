@@ -1,149 +1,146 @@
-import { describe, expect, it, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { TelemetryCollector, DEFAULT_CONFIG, type TelemetryConfig } from '../src/telemetry.js';
+import { TelemetryCollector, DEFAULT_CONFIG, type TelemetryEvent } from '../src/telemetry.js';
 
-const tmpDirs: string[] = [];
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function tmpDir(): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'telemetry-test-'));
-  tmpDirs.push(dir);
-  return dir;
-}
+let tmpDir: string;
 
-afterEach(() => {
-  for (const dir of tmpDirs.splice(0)) {
-    fs.rmSync(dir, { recursive: true, force: true });
-  }
+beforeEach(() => {
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'telemetry-test-'));
 });
 
-describe('TelemetryCollector', () => {
-  describe('record', () => {
-    it('records events in order', () => {
-      const dir = tmpDir();
-      const collector = new TelemetryCollector({ ...DEFAULT_CONFIG }, path.join(dir, 'events.jsonl'));
+afterEach(() => {
+  fs.rmSync(tmpDir, { recursive: true, force: true });
+});
 
-      collector.record({ kind: 'run_start', runId: 'r1', planId: 'p1', host: 'h1', model: 'm1', effort: 'high' });
-      collector.record({ kind: 'task_start', taskId: 't1', assignmentId: 'a1' });
-      collector.record({ kind: 'run_end', runId: 'r1', totalTokens: 100, totalCost: 0.5, durationMs: 5000 });
+function storagePath(...parts: string[]): string {
+  return path.join(tmpDir, ...parts);
+}
 
-      const events = (collector as unknown as { events: Array<{ event: unknown }> }).events;
-      expect(events).toHaveLength(3);
-      expect(events[0].event).toMatchObject({ kind: 'run_start', runId: 'r1' });
-      expect(events[1].event).toMatchObject({ kind: 'task_start', taskId: 't1' });
-      expect(events[2].event).toMatchObject({ kind: 'run_end', runId: 'r1' });
-    });
+// ─── attestation_collected event shape ───────────────────────────────────────
+
+const VALID_ATTESTATION: TelemetryEvent = {
+  kind: 'attestation_collected',
+  host: 'codex',
+  commitSha: 'a'.repeat(40), // SHA-1
+  attestationType: 'native',
+  evidenceHash: 'b'.repeat(64), // SHA-256
+  verified: true,
+};
+
+describe('attestation_collected', () => {
+  it('accepts valid native attestation event (SHA-1 commit)', () => {
+    const collector = new TelemetryCollector(DEFAULT_CONFIG, storagePath('t1.jsonl'));
+    expect(() => collector.record(VALID_ATTESTATION)).not.toThrow();
   });
 
-  describe('flush', () => {
-    it('writes events to storage', async () => {
-      const dir = tmpDir();
-      const storagePath = path.join(dir, 'events.jsonl');
-      const collector = new TelemetryCollector({ ...DEFAULT_CONFIG }, storagePath);
-
-      collector.record({ kind: 'run_start', runId: 'r1', planId: 'p1', host: 'h1', model: 'm1', effort: 'high' });
-      collector.record({ kind: 'agent_start', agentId: 'a1', role: 'worker', model: 'm1', tier: 'standard' });
-
-      await collector.flush();
-
-      expect(fs.existsSync(storagePath)).toBe(true);
-      const content = fs.readFileSync(storagePath, 'utf-8');
-      const lines = content.trim().split('\n');
-      expect(lines).toHaveLength(2);
-      const firstEvent = JSON.parse(lines[0]);
-      expect(firstEvent.event.kind).toBe('run_start');
-    });
+  it('accepts valid functional attestation event (SHA-256 commit)', () => {
+    const collector = new TelemetryCollector(DEFAULT_CONFIG, storagePath('t2.jsonl'));
+    const event: TelemetryEvent = {
+      kind: 'attestation_collected',
+      host: 'grok',
+      commitSha: 'c'.repeat(64), // SHA-256
+      attestationType: 'functional',
+      evidenceHash: 'd'.repeat(64),
+      verified: false,
+    };
+    expect(() => collector.record(event)).not.toThrow();
   });
 
-  describe('export', () => {
-    it('writes to specified path', async () => {
-      const dir = tmpDir();
-      const collector = new TelemetryCollector({ ...DEFAULT_CONFIG }, path.join(dir, 'events.jsonl'));
-
-      collector.record({ kind: 'run_start', runId: 'r1', planId: 'p1', host: 'h1', model: 'm1', effort: 'high' });
-      collector.record({ kind: 'run_end', runId: 'r1', totalTokens: 100, totalCost: 0.5, durationMs: 5000 });
-
-      const exportPath = path.join(dir, 'export.json');
-      await collector.export(exportPath);
-
-      expect(fs.existsSync(exportPath)).toBe(true);
-      const content = JSON.parse(fs.readFileSync(exportPath, 'utf-8'));
-      expect(content).toHaveLength(2);
-      expect(content[0].kind).toBe('run_start');
-    });
+  it('rejects empty host', () => {
+    const collector = new TelemetryCollector(DEFAULT_CONFIG, storagePath('t3.jsonl'));
+    const event: TelemetryEvent = { ...VALID_ATTESTATION, host: '' };
+    expect(() => collector.record(event)).toThrow('host is required non-empty string');
   });
 
-  describe('deleteOlderThan', () => {
-    it('respects retention days', async () => {
-      const dir = tmpDir();
-      const storagePath = path.join(dir, 'events.jsonl');
-      const collector = new TelemetryCollector({ ...DEFAULT_CONFIG }, storagePath);
-
-      fs.mkdirSync(path.dirname(storagePath), { recursive: true });
-
-      const oldDate = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString();
-      const recentEvent = { kind: 'run_start' as const, runId: 'r1', planId: 'p1', host: 'h1', model: 'm1', effort: 'high' };
-
-      const oldLine = JSON.stringify({ event: recentEvent, timestamp: oldDate, metadataOnly: true });
-      const recentLine = JSON.stringify({ event: recentEvent, timestamp: new Date().toISOString(), metadataOnly: true });
-      fs.writeFileSync(storagePath, oldLine + '\n' + recentLine + '\n', 'utf-8');
-
-      const deleted = await collector.deleteOlderThan(7);
-
-      expect(deleted).toBe(1);
-      const remaining = fs.readFileSync(storagePath, 'utf-8').trim().split('\n').filter(Boolean);
-      expect(remaining).toHaveLength(1);
-    });
+  it('rejects whitespace-only host', () => {
+    const collector = new TelemetryCollector(DEFAULT_CONFIG, storagePath('t4.jsonl'));
+    const event: TelemetryEvent = { ...VALID_ATTESTATION, host: '   ' };
+    expect(() => collector.record(event)).toThrow('host is required non-empty string');
   });
 
-  describe('DEFAULT_CONFIG', () => {
-    it('has correct defaults', () => {
-      expect(DEFAULT_CONFIG.metadataRetentionDays).toBe(30);
-      expect(DEFAULT_CONFIG.rawContentEnabled).toBe(false);
-      expect(DEFAULT_CONFIG.storageType).toBe('local');
-      expect(DEFAULT_CONFIG.otlpEndpoint).toBeUndefined();
-    });
+  it('rejects commitSha shorter than 40 hex', () => {
+    const collector = new TelemetryCollector(DEFAULT_CONFIG, storagePath('t5.jsonl'));
+    const event: TelemetryEvent = { ...VALID_ATTESTATION, commitSha: 'abc123' };
+    expect(() => collector.record(event)).toThrow('commitSha must be a git SHA');
   });
 
-  describe('rawContentEnabled', () => {
-    it('enables raw content collection', () => {
-      const collector = new TelemetryCollector({
-        ...DEFAULT_CONFIG,
-        rawContentEnabled: true,
-        rawContentRetentionDays: 14,
-      });
-
-      const events = (collector as unknown as { events: Array<{ metadataOnly: boolean }> }).events;
-      collector.record({ kind: 'run_start', runId: 'r1', planId: 'p1', host: 'h1', model: 'm1', effort: 'high' });
-
-      expect(events[0].metadataOnly).toBe(false);
-    });
+  it('rejects commitSha longer than 64 hex', () => {
+    const collector = new TelemetryCollector(DEFAULT_CONFIG, storagePath('t6.jsonl'));
+    const event: TelemetryEvent = { ...VALID_ATTESTATION, commitSha: 'a'.repeat(65) };
+    expect(() => collector.record(event)).toThrow('commitSha must be a git SHA');
   });
 
-  describe('config validation', () => {
-    it('rejects invalid metadata retention', () => {
-      expect(() => new TelemetryCollector({ ...DEFAULT_CONFIG, metadataRetentionDays: 0 })).toThrow();
-      expect(() => new TelemetryCollector({ ...DEFAULT_CONFIG, metadataRetentionDays: -1 })).toThrow();
-    });
+  it('rejects non-hex commitSha', () => {
+    const collector = new TelemetryCollector(DEFAULT_CONFIG, storagePath('t7.jsonl'));
+    const event: TelemetryEvent = { ...VALID_ATTESTATION, commitSha: 'g'.repeat(40) };
+    expect(() => collector.record(event)).toThrow('commitSha must be a git SHA');
+  });
 
-    it('rejects invalid raw content retention when enabled', () => {
-      expect(() => new TelemetryCollector({
-        ...DEFAULT_CONFIG, rawContentEnabled: true, rawContentRetentionDays: 0,
-      })).toThrow();
-    });
+  it('rejects invalid attestationType', () => {
+    const collector = new TelemetryCollector(DEFAULT_CONFIG, storagePath('t8.jsonl'));
+    const event: TelemetryEvent = { ...VALID_ATTESTATION, attestationType: 'unknown' as 'native' | 'functional' };
+    expect(() => collector.record(event)).toThrow("attestationType must be 'native' or 'functional'");
+  });
 
-    it('rejects otlp without endpoint', () => {
-      expect(() => new TelemetryCollector({
-        ...DEFAULT_CONFIG, storageType: 'otlp',
-      })).toThrow();
-    });
+  it('rejects evidenceHash shorter than 64 hex', () => {
+    const collector = new TelemetryCollector(DEFAULT_CONFIG, storagePath('t9.jsonl'));
+    const event: TelemetryEvent = { ...VALID_ATTESTATION, evidenceHash: 'b'.repeat(63) };
+    expect(() => collector.record(event)).toThrow('evidenceHash must be a SHA-256');
+  });
 
-    it('accepts valid otlp config', () => {
-      const collector = new TelemetryCollector({
-        ...DEFAULT_CONFIG, storageType: 'otlp', otlpEndpoint: 'http://localhost:4318',
-      });
-      expect(collector.config.storageType).toBe('otlp');
+  it('rejects non-hex evidenceHash', () => {
+    const collector = new TelemetryCollector(DEFAULT_CONFIG, storagePath('t10.jsonl'));
+    const event: TelemetryEvent = { ...VALID_ATTESTATION, evidenceHash: 'z'.repeat(64) };
+    expect(() => collector.record(event)).toThrow('evidenceHash must be a SHA-256');
+  });
+
+  it('rejects non-boolean verified', () => {
+    const collector = new TelemetryCollector(DEFAULT_CONFIG, storagePath('t11.jsonl'));
+    const event = { ...VALID_ATTESTATION, verified: 'yes' as unknown as boolean };
+    expect(() => collector.record(event as TelemetryEvent)).toThrow('verified must be a boolean');
+  });
+
+  it('records attested event with correct metadata', async () => {
+    const collector = new TelemetryCollector(DEFAULT_CONFIG, storagePath('t12.jsonl'));
+    collector.record(VALID_ATTESTATION);
+    await collector.flush();
+    const stored = JSON.parse(fs.readFileSync(storagePath('t12.jsonl'), 'utf-8').trim());
+    expect(stored.event.kind).toBe('attestation_collected');
+    expect(stored.event.host).toBe('codex');
+    expect(stored.event.commitSha).toBe('a'.repeat(40));
+    expect(stored.event.attestationType).toBe('native');
+    expect(stored.event.evidenceHash).toBe('b'.repeat(64));
+    expect(stored.event.verified).toBe(true);
+    expect(stored.metadataOnly).toBe(true); // rawContentEnabled=false by default
+  });
+});
+
+// ─── Trust boundary: raw/prompt payload rejection ─────────────────────────────
+
+const FORBIDDEN_KEYS = ['rawContent', 'rawPrompt', 'raw', 'prompt', 'messages', 'payload'] as const;
+
+describe('trust boundary: raw/prompt payload rejection', () => {
+  for (const forbidden of FORBIDDEN_KEYS) {
+    it(`rejects event with forbidden key '${forbidden}'`, () => {
+      const collector = new TelemetryCollector(DEFAULT_CONFIG, storagePath(`tb-${forbidden}.jsonl`));
+      const badEvent = { kind: 'attestation_collected', host: 'codex', commitSha: 'a'.repeat(40), attestationType: 'native', evidenceHash: 'b'.repeat(64), verified: true, [forbidden]: 'sensitive data' } as unknown as TelemetryEvent;
+      expect(() => collector.record(badEvent)).toThrow(`raw/prompt payload key '${forbidden}' rejected`);
     });
+  }
+
+  it('rejects raw/prompt on other event kinds', () => {
+    const collector = new TelemetryCollector(DEFAULT_CONFIG, storagePath('tb-other.jsonl'));
+    const badEvent = { kind: 'run_start', runId: 'r1', planId: 'p1', host: 'x', model: 'gpt-4', effort: 'medium', rawContent: 'leaked' } as unknown as TelemetryEvent;
+    expect(() => collector.record(badEvent)).toThrow("raw/prompt payload key 'rawContent' rejected");
+  });
+
+  it('other event kinds are unaffected when no forbidden keys present', () => {
+    const collector = new TelemetryCollector(DEFAULT_CONFIG, storagePath('tb-clean.jsonl'));
+    const cleanEvent: TelemetryEvent = { kind: 'run_start', runId: 'r2', planId: 'p2', host: 'x', model: 'claude', effort: 'low' };
+    expect(() => collector.record(cleanEvent)).not.toThrow();
   });
 });

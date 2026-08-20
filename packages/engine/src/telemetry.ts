@@ -10,6 +10,7 @@ export type TelemetryEvent =
   | { kind: 'verification'; assignmentId: string; result: 'PASS' | 'FAIL' | 'PARTIAL' }
   | { kind: 'review'; reviewId: string; outcome: string }
   | { kind: 'handoff'; from: string; to: string; bundleHash: string }
+  | { kind: 'attestation_collected'; host: string; commitSha: string; attestationType: 'native' | 'functional'; evidenceHash: string; verified: boolean }
   | { kind: 'run_end'; runId: string; totalTokens: number; totalCost: number; durationMs: number };
 
 export interface TelemetryConfig {
@@ -31,6 +32,41 @@ interface StoredEvent {
   event: TelemetryEvent;
   timestamp: string;
   metadataOnly: boolean;
+}
+
+// Trust boundary: raw/prompt payload keys that must never enter telemetry events
+const RAW_PAYLOAD_KEYS = new Set(['rawContent', 'rawPrompt', 'raw', 'prompt', 'messages', 'payload']);
+
+// Attestation_collected field validators aligned with Python canonical schema (assertCertificationAttestation)
+const COMMIT_SHA_RE = /^[0-9a-f]{40,64}$/i; // git SHA-1 or SHA-256
+const SHA256_RE = /^[0-9a-f]{64}$/i; // content-addressed hash
+
+function assertNoRawPayload(event: TelemetryEvent): void {
+  for (const key of Object.keys(event)) {
+    if (RAW_PAYLOAD_KEYS.has(key)) {
+      throw new Error(`telemetry trust boundary: raw/prompt payload key '${key}' rejected`);
+    }
+  }
+}
+
+function assertAttestationCollectedShape(
+  event: Extract<TelemetryEvent, { kind: 'attestation_collected' }>,
+): void {
+  if (typeof event.host !== 'string' || event.host.trim() === '') {
+    throw new Error('attestation_collected: host is required non-empty string');
+  }
+  if (!COMMIT_SHA_RE.test(event.commitSha)) {
+    throw new Error('attestation_collected: commitSha must be a git SHA (40-64 hex chars)');
+  }
+  if (event.attestationType !== 'native' && event.attestationType !== 'functional') {
+    throw new Error("attestation_collected: attestationType must be 'native' or 'functional'");
+  }
+  if (typeof event.evidenceHash !== 'string' || !SHA256_RE.test(event.evidenceHash)) {
+    throw new Error('attestation_collected: evidenceHash must be a SHA-256 (64 hex chars)');
+  }
+  if (typeof event.verified !== 'boolean') {
+    throw new Error('attestation_collected: verified must be a boolean');
+  }
 }
 
 export class TelemetryCollector {
@@ -62,6 +98,10 @@ export class TelemetryCollector {
   }
 
   record(event: TelemetryEvent): void {
+    assertNoRawPayload(event);
+    if (event.kind === 'attestation_collected') {
+      assertAttestationCollectedShape(event);
+    }
     this.events.push({
       event,
       timestamp: new Date().toISOString(),

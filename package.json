@@ -13,10 +13,15 @@
     "packages/engine"
   ],
   "scripts": {
-    "build": "npm run build -w packages/engine && npm run build -w packages/cli && npm run build -w packages/control-plane",
-    "test": "npx vitest run automation/host-attestation.test.ts packages/engine/test/contracts.test.ts packages/engine/test/terminal-gate.test.ts platforms/opencode/adapter.test.ts platforms/opencode/supervisor-runner.test.ts && npm run test --workspaces --if-present",
+    "build": "npm run build -w packages/engine && npm run build -w packages/cli && npm run build -w packages/control-plane && node packages/cli/dist/index.js build",
+    "test": "node automation/run-governed-vitest.mjs --project-root . --cwd . --mode full --timeout-ms 600000 -- run --config vitest.config.ts && npm run test --workspaces --if-present",
     "check": "npm run typecheck --workspaces --if-present",
+    "check:agent-dir": "node automation/validate-agent-dir.mjs",
     "ci:quality": "npm run build && npm run check && npm run test",
-    "ci:certify": "bash automation/ci-certify.sh"
+    "ci:certify": "bash automation/ci-certify.sh",
+    "verify:all": "node automation/run-pwsh.mjs automation/verify-all.ps1"
+  },
+  "devDependencies": {
+    "@opencode-ai/sdk": "^1.18.10"
   }
 }

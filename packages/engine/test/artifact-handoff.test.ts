@@ -11,6 +11,7 @@ import {
   type HandoffArtifact,
 } from '../src/artifact-handoff.js';
 import type { WorkerReceipt } from '../src/contracts.js';
+import { SYMLINK_CAPABLE } from './helpers/symlink-capability.js';
 
 const tmpDirs: string[] = [];
 
@@ -132,18 +133,14 @@ describe('readHandoffArtifact', () => {
     expect(() => readHandoffArtifact('ho-1\0../etc', dir)).toThrow('unsafe path');
   });
 
-  it('rejects symlink handoff.json', () => {
+  it.skipIf(!SYMLINK_CAPABLE)('rejects symlink handoff.json', () => {
     const dir = tmpDir();
     const handoff = writeHandoffArtifact('plan-001', 'opencode', 'session-1', 'Review', [], {}, dir);
     const handoffJson = path.join(dir, '.agent/handoff', handoff.handoffId, 'handoff.json');
     const linkPath = path.join(dir, '.agent/handoff', handoff.handoffId, 'handoff-link.json');
-    try {
-      fs.renameSync(handoffJson, linkPath);
-      fs.symlinkSync(linkPath, handoffJson);
-      expect(() => readHandoffArtifact(handoff.handoffId, dir)).toThrow('Symlink');
-    } catch {
-      // symlink may not be supported
-    }
+    fs.renameSync(handoffJson, linkPath);
+    fs.symlinkSync(linkPath, handoffJson);
+    expect(() => readHandoffArtifact(handoff.handoffId, dir)).toThrow('Symlink');
   });
 });
 
@@ -212,18 +209,14 @@ describe('adversarial: handoffId traversal', () => {
 });
 
 describe('adversarial: symlink handoff dir', () => {
-  it('skips symlinked entries in listHandoffArtifacts', () => {
+  it.skipIf(!SYMLINK_CAPABLE)('skips symlinked entries in listHandoffArtifacts', () => {
     const dir = tmpDir();
     writeHandoffArtifact('plan-001', 'opencode', 's1', 'Review', [], {}, dir);
     const handoffDir = path.join(dir, '.agent/handoff');
     const entries = fs.readdirSync(handoffDir);
-    try {
-      fs.symlinkSync('/tmp', path.join(handoffDir, 'evil-link'));
-      const artifacts = listHandoffArtifacts(dir);
-      expect(artifacts).toHaveLength(entries.length);
-    } catch {
-      // symlink may not be supported
-    }
+    fs.symlinkSync('/tmp', path.join(handoffDir, 'evil-link'));
+    const artifacts = listHandoffArtifacts(dir);
+    expect(artifacts).toHaveLength(entries.length);
   });
 });
 

@@ -10,8 +10,13 @@ import {
   finalizePlan as engineFinalizePlan,
   reconcilePlan as engineReconcilePlan,
 } from "@initforge/agent-rules-engine/plan-lifecycle";
+import { compilePlanReadiness } from "@initforge/agent-rules-engine/plan-readiness";
+import { evaluateM11Terminal, finalizeM11, M11_TERMINAL_TOKEN, type M11Checks } from "@initforge/agent-rules-engine/terminal-gate";
+import { loadM11TerminalEvidenceEnvelope } from "@initforge/agent-rules-engine/m11-terminal-evidence";
 import path from "node:path";
 import fs from "node:fs";
+import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 
 function resolveStoreBase(root?: string): string {
   return root ?? process.cwd();
@@ -19,6 +24,18 @@ function resolveStoreBase(root?: string): string {
 
 function makeStore(basePath: string): DurableStore {
   return new DurableStore(basePath);
+}
+
+function resolveCanonicalOriginal(root: string, planId: string, ledgerPath: string): string {
+  const runtime = path.join(root, ".agent", "plans", planId, "original.md");
+  if (fs.existsSync(runtime)) return runtime;
+  const fixture = path.join(root, "packages", "engine", "test", "fixtures", "plan-identity", "original.md");
+  const ledger = JSON.parse(fs.readFileSync(ledgerPath, "utf8")) as { original_plan?: { sha256?: string } };
+  const expected = ledger.original_plan?.sha256;
+  if (!expected || !fs.existsSync(fixture) || createHash("sha256").update(fs.readFileSync(fixture)).digest("hex") !== expected) {
+    throw new Error(`Canonical original fixture unavailable or hash mismatch for ${planId}`);
+  }
+  return fixture;
 }
 
 export async function planInventory(
@@ -206,7 +223,7 @@ export async function planReconcile(
     const ledgerPath = path.join(".agent", "ledger", `${planId}.json`);
     if (fs.existsSync(ledgerPath)) {
       try {
-        const originalPath = path.join(".agent", "plans", planId, "original.md");
+        const originalPath = resolveCanonicalOriginal(process.cwd(), planId, ledgerPath);
         const diffFingerprint = opts.dryRun ? "dry-run-fingerprint" : `reconcile-${Date.now()}`;
         const reconciliation = engineReconcilePlan(ledgerPath, originalPath, diffFingerprint);
         return {
@@ -361,6 +378,14 @@ export async function planFinalize(
   if (!run) {
     return { exitCode: ExitCode.GeneralError, message: `Run not found: ${runId}` };
   }
+  // F1: never promote a FAILED/BLOCKED run to COMPLETED.
+  if (run.state === "FAILED" || run.state === "BLOCKED") {
+    return {
+      exitCode: ExitCode.GeneralError,
+      message: `Cannot finalize: run is ${run.state}`,
+      data: { runId, state: run.state },
+    };
+  }
   const tasks = (run.tasks as Array<Record<string, unknown>>) ?? [];
   const pending = tasks.filter((t) => {
     const s = t.state ?? t.status;
@@ -374,12 +399,218 @@ export async function planFinalize(
       data: { runId, pendingTasks: pending.map((t) => t.id ?? t.taskId) },
     };
   }
+  if (run.state !== "COMPLETED") {
+    const notCompleted = tasks.filter((t) => {
+      const s = t.state ?? t.status;
+      return s !== "COMPLETED" && s !== "completed" && t.completed !== true;
+    });
+    if (notCompleted.length > 0) {
+      return {
+        exitCode: ExitCode.GeneralError,
+        message: `Cannot finalize: ${notCompleted.length} task(s) not completed (FAILED/BLOCKED/CANCELLED)`,
+        data: { runId, failedTasks: notCompleted.map((t) => t.id ?? t.taskId) },
+      };
+    }
+  }
   await store.updateState(runId, "COMPLETED");
   return {
     exitCode: ExitCode.Success,
     message: `Plan ${runId} finalized`,
     data: { runId, state: "COMPLETED" },
   };
+}
+
+export async function planReadiness(
+  args: string[],
+  opts: CliOptions
+): Promise<CommandResult> {
+  const planId = args[0];
+  if (!planId) {
+    return {
+      exitCode: ExitCode.InvalidArgument,
+      message: "Usage: plan readiness <plan-id> [repoRoot]",
+    };
+  }
+  const root = resolveStoreBase(args[1]);
+  const ledgerPath = path.join(root, ".agent", "ledger", `${planId}.json`);
+  if (!fs.existsSync(ledgerPath)) {
+    return {
+      exitCode: ExitCode.GeneralError,
+      message: `Ledger not found: ${ledgerPath}`,
+    };
+  }
+  try {
+    const planDir = path.join(root, ".agent", "plans", planId);
+    const originalPath = path.join(planDir, "original.md");
+    // The engine auto-scans <planDir>/amendments for the M11-R registries
+    // (AM-0019 §14 + AM-0020 §14); no explicit amendment list is needed.
+    const result = compilePlanReadiness({
+      ledgerPath,
+      planDir,
+      originalPath: fs.existsSync(originalPath) ? originalPath : undefined,
+      headCommit: runHeadCommit(root),
+    });
+    return {
+      exitCode: ExitCode.Success,
+      message: `Plan ${result.planId} readiness: ${result.readinessState} (${result.requirementCount} requirements, revision ${result.revision})`,
+      data: {
+        planId: result.planId,
+        readinessState: result.readinessState,
+        revision: result.revision,
+        effectiveIdentity: result.effectiveIdentity,
+        requirementCount: result.requirementCount,
+        reasons: result.reasons,
+        files: result.files,
+      },
+    };
+  } catch (err) {
+    return {
+      exitCode: ExitCode.GeneralError,
+      message: `Plan readiness failed: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
+}
+
+function runHeadCommit(root: string): string | undefined {
+  try {
+    const out = execFileSync(
+      "git",
+      ["rev-parse", "HEAD"],
+      { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
+    );
+    return out.trim();
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Minimal M11 terminal wiring: `plan m11 <plan-id> [repoRoot]` evaluates
+ * HV3_M11_LOCAL_COMPLETE eligibility from the real ledger + the dynamically
+ * compiled effective requirement set. Terminal truth comes ONLY from the
+ * engine-generated canonical `m11_terminal_evidence` envelope stored in the
+ * ledger: the CLI reads it, verifies head/identity/epoch basics, and forwards
+ * it to the engine evaluator. No CLI flag or prose can synthesize a PASS; an
+ * absent or incomplete envelope fails closed. The evaluator never writes the
+ * terminal token — only `--finalize` invokes the engine emission path, which
+ * writes execution_state + audit event + regenerated shadows ONLY when all
+ * gates pass (fail-closed, zero mutation otherwise).
+ */
+export async function planM11(
+  args: string[],
+  opts: CliOptions
+): Promise<CommandResult> {
+  const finalize = args.includes("--finalize");
+  const positional = args.filter((a) => a !== "--finalize");
+  const planId = positional[0];
+  if (!planId) {
+    return { exitCode: ExitCode.InvalidArgument, message: "Usage: plan m11 <plan-id> [repoRoot] [--finalize]" };
+  }
+  const root = resolveStoreBase(positional[1]);
+  const ledgerPath = path.join(root, ".agent", "ledger", `${planId}.json`);
+  if (!fs.existsSync(ledgerPath)) {
+    return { exitCode: ExitCode.GeneralError, message: `Ledger not found: ${ledgerPath}` };
+  }
+  try {
+    const planDir = path.join(root, ".agent", "plans", planId);
+    const originalPath = path.join(planDir, "original.md");
+    const ledger = JSON.parse(fs.readFileSync(ledgerPath, "utf8")) as Record<string, unknown>;
+
+    const actualHead = runHeadCommit(root);
+    if (!actualHead) {
+      return { exitCode: ExitCode.GeneralError, message: 'Cannot determine actual repository HEAD; terminal gate requires real HEAD' };
+    }
+
+    // Fail closed FIRST: only an engine-generated canonical terminal evidence
+    // envelope from the ledger can authorize the evaluator. No CLI flag or
+    // prose can synthesize a PASS. Missing/incomplete/unbound envelope = reject.
+    // The loader verifies that the envelope headCommit, ledger headCommit,
+    // and candidate epoch head all equal the ACTUAL repository HEAD.
+    const envelope = loadM11TerminalEvidenceEnvelope(ledger, actualHead);
+    if (!envelope.ok) {
+      return {
+        exitCode: ExitCode.GeneralError,
+        message: `${planId} M11 terminal NOT eligible — no mutation: ${envelope.reason}`,
+        data: {
+          planId,
+          terminalToken: M11_TERMINAL_TOKEN,
+          eligible: false,
+          failedGates: ["M11_TERMINAL_EVIDENCE_ENVELOPE"],
+          mutated: false,
+        },
+      };
+    }
+
+    const readiness = compilePlanReadiness({
+      ledgerPath,
+      planDir,
+      originalPath: fs.existsSync(originalPath) ? originalPath : undefined,
+      headCommit: actualHead,
+    });
+    const evidence = envelope.evidence;
+    const scorecard = (ledger as { milestones?: { M8?: { scorecard?: { dimensions?: Array<{ id: string; score: number | null; status: string }> } } } }).milestones?.M8?.scorecard?.dimensions ?? [];
+    const checks: M11Checks = {
+      requirements: readiness.requirements.map((r) => ({ requirement_id: r.requirement_id, status: r.status })),
+      scorecard,
+      waitingGates: [],
+    };
+
+    if (finalize) {
+      const shadowDir = path.join(planDir, "shadow");
+      const finalized = finalizeM11({
+        ledgerPath,
+        evidence,
+        checks,
+        shadowDir: fs.existsSync(shadowDir) ? shadowDir : undefined,
+        headCommit: actualHead,
+      });
+      if (!finalized.passed) {
+        return {
+          exitCode: ExitCode.GeneralError,
+          message: `${planId} M11 terminal NOT eligible — no mutation: ${finalized.reason}`,
+          data: {
+            planId,
+            terminalToken: M11_TERMINAL_TOKEN,
+            eligible: false,
+            failedGates: finalized.failedGates ?? [],
+            mutated: false,
+          },
+        };
+      }
+      return {
+        exitCode: ExitCode.Success,
+        message: `${planId} M11 terminal emitted: ${M11_TERMINAL_TOKEN}`,
+        data: {
+          planId,
+          terminalToken: M11_TERMINAL_TOKEN,
+          eligible: true,
+          mutated: true,
+        },
+      };
+    }
+
+    const result = evaluateM11Terminal(ledger, evidence, checks, Date.now(), undefined, actualHead);
+    const eligible = result.passed;
+    return {
+      exitCode: eligible ? ExitCode.Success : ExitCode.GeneralError,
+      message: eligible
+        ? `${planId} M11 terminal eligible: ${M11_TERMINAL_TOKEN}`
+        : `${planId} M11 terminal NOT eligible: ${result.failedGates.join(', ')}`,
+      data: {
+        planId,
+        terminalToken: M11_TERMINAL_TOKEN,
+        eligible,
+        requirementCount: readiness.requirementCount,
+        failedGates: result.failedGates,
+        gates: result.gates,
+      },
+    };
+  } catch (err) {
+    return {
+      exitCode: ExitCode.GeneralError,
+      message: `M11 terminal evaluation failed: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
 }
 
 export async function planCmd(
@@ -408,10 +639,14 @@ export async function planCmd(
       return planExport(rest, opts);
     case "finalize":
       return planFinalize(rest, opts);
+    case "readiness":
+      return planReadiness(rest, opts);
+    case "m11":
+      return planM11(rest, opts);
     default:
       return {
         exitCode: ExitCode.InvalidArgument,
-        message: `Unknown plan subcommand: ${subcommand}. Available: inventory, adopt, status, checkpoint, lineage, reconcile, repair, export, finalize`,
+        message: `Unknown plan subcommand: ${subcommand}. Available: inventory, adopt, status, checkpoint, lineage, reconcile, repair, export, finalize, readiness, m11`,
       };
   }
 }

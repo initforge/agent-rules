@@ -43,9 +43,17 @@ export interface LastCacheTelemetry {
 
 export interface ContextCacheConfig {
   cacheDir?: string;
+  /** In-memory entry ceiling. Evicted entries spill to disk and stay readable. */
   maxEntries?: number;
   maxBytes?: number;
   defaultTTLMs?: number;
+  /**
+   * On-disk entry ceiling. Must exceed `maxEntries` for spill-then-reload to work:
+   * memory eviction is what puts an entry on disk, so a disk budget equal to the
+   * memory budget would delete the entry the moment it spilled. Defaults to a
+   * multiple of `maxEntries`.
+   */
+  maxDiskEntries?: number;
 }
 
 interface MetadataEntry {
@@ -67,6 +75,8 @@ const METADATA_FILE = 'index.json';
 const LOCK_FILE = '.lock';
 const CACHE_VERSION = 1;
 const DEFAULT_MAX_ENTRIES = 1000;
+/** Disk holds more than memory so evicted entries remain reloadable. */
+const DISK_ENTRY_MULTIPLIER = 10;
 const DEFAULT_MAX_BYTES = 100 * 1024 * 1024;
 const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -144,12 +154,16 @@ function atomicWrite(targetPath: string, data: string): void {
   const dir = path.dirname(targetPath);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   const tmp = targetPath + '.' + randomUUID() + '.tmp';
-  fs.writeFileSync(tmp, data, 'utf-8');
-  const fd = fs.openSync(tmp, 'r');
-  try { fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
+  const fd = fs.openSync(tmp, 'wx');
+  try {
+    fs.writeFileSync(fd, data, 'utf-8');
+    fs.fsyncSync(fd);
+  } finally { fs.closeSync(fd); }
   fs.renameSync(tmp, targetPath);
   const dirFd = fs.openSync(dir, 'r');
   try { fs.fsyncSync(dirFd); } finally { fs.closeSync(dirFd); }
+  // ponytail: if rename fails (exception above), cleanup temp on next startup via exists check
+  if (fs.existsSync(tmp)) try { fs.unlinkSync(tmp); } catch { /* ok */ }
 }
 
 /** F5 (R5): disk entry info for bootstrap enforcement */
@@ -163,6 +177,7 @@ interface DiskEntryInfo {
 export class ContextCache {
   private readonly cacheDir: string | null;
   private readonly maxEntries: number;
+  private readonly maxDiskEntries: number;
   private readonly maxBytes: number;
   private readonly defaultTTLMs: number;
   private memory = new Map<string, ContextCapsule>();
@@ -179,6 +194,7 @@ export class ContextCache {
   constructor(config?: ContextCacheConfig) {
     this.cacheDir = config?.cacheDir ? path.resolve(config.cacheDir) : null;
     this.maxEntries = config?.maxEntries ?? DEFAULT_MAX_ENTRIES;
+    this.maxDiskEntries = config?.maxDiskEntries ?? this.maxEntries * DISK_ENTRY_MULTIPLIER;
     this.maxBytes = config?.maxBytes ?? DEFAULT_MAX_BYTES;
     this.defaultTTLMs = config?.defaultTTLMs ?? DEFAULT_TTL_MS;
     if (this.cacheDir && !fs.existsSync(this.cacheDir)) {
@@ -281,6 +297,17 @@ export class ContextCache {
       }
     }
 
+    // F4 (R3): reject if new entry alone exceeds maxBytes (pre-write check)
+    if (this.maxBytes < Number.MAX_SAFE_INTEGER) {
+      const newEntrySize = new TextEncoder().encode(JSON.stringify(stored)).length;
+      let projectedTotal = this.totalBytes - (preMemory.has(k) ? new TextEncoder().encode(JSON.stringify(preMemory.get(k))).length : 0);
+      projectedTotal += newEntrySize;
+      if (projectedTotal > this.maxBytes) {
+        if (lockPath && lockAcquired) releaseLock(lockPath);
+        return false;
+      }
+    }
+
     try {
       // Stage 1: write new entry to disk (overwrites old file under lock)
       if (this.cacheDir) {
@@ -304,6 +331,11 @@ export class ContextCache {
 
       // Stage 3: evict if over limits (evict handles disk+memory)
       this.evict();
+      // Spilled entries stay readable on disk, but the disk cannot grow without bound:
+      // enforce the disk budget on every write, not only at bootstrap. Without this,
+      // `maxEntries` was silently a memory-only limit and the cache directory kept
+      // every capsule ever written.
+      this.deleteOldestDiskEntries(lockAcquired);
 
       this.lastTelemetry = { reads: this.cacheReads, writes: this.cacheWrites, localHits: this.localHits, providerHits: this.providerHits, providerCacheStatus: 'VERIFIED' };
       return true;
@@ -449,19 +481,25 @@ export class ContextCache {
         const size = new TextEncoder().encode(JSON.stringify(removed)).length;
         this.totalBytes = Math.max(0, this.totalBytes - size);
         this.memory.delete(oldest);
-        // If also on disk, add to diskAccounted for future eviction
-        if (this.cacheDir) this.diskAccounted.add(oldest);
+        // Memory eviction spills to disk rather than deleting: a later get() must be
+        // able to reload the capsule, which is the whole point of a disk-backed cache.
+        // The disk budget is enforced separately by deleteOldestDiskEntries().
+        if (this.cacheDir && !this.diskAccounted.has(oldest)) {
+          const fp = path.join(this.cacheDir, oldest + '.json');
+          if (fs.existsSync(fp)) this.diskAccounted.add(oldest);
+        }
       } else if (this.diskAccounted.has(oldest)) {
         // Disk-only entry — remove from accounting and disk
         this.diskAccounted.delete(oldest);
         if (this.cacheDir) {
+          let stat: fs.Stats | null = null;
           try {
-            const stat = fs.statSync(path.join(this.cacheDir, oldest + '.json'));
-            this.totalBytes = Math.max(0, this.totalBytes - stat.size);
+            stat = fs.statSync(path.join(this.cacheDir, oldest + '.json'));
           } catch { /* already deleted */ }
+          this.deleteFromDisk(oldest);
+          if (stat) this.totalBytes = Math.max(0, this.totalBytes - stat.size);
         }
       }
-      if (this.cacheDir) this.deleteFromDisk(oldest);
     }
   }
 
@@ -489,21 +527,30 @@ export class ContextCache {
         return undefined;
       }
       const existing = this.memory.get(k);
-      if (existing) {
-        const oldSize = new TextEncoder().encode(JSON.stringify(existing)).length;
-        this.totalBytes = Math.max(0, this.totalBytes - oldSize);
-      } else if (this.diskAccounted.has(k)) {
-        // Already counted in totalBytes from bootstrap — remove from diskAccounted
-        // (now loaded into memory, size tracked via memory)
-        this.diskAccounted.delete(k);
+      const capsuleSize = new TextEncoder().encode(JSON.stringify(capsule)).length;
+      // AM-0021 fix: evict to make room BEFORE adding to memory + accounting
+      if (!existing && !this.diskAccounted.has(k)) {
+        this.totalBytes += capsuleSize;
+        this.evict();
+        // Eviction may have removed entries; verify we're still within limits
+        if (this.totalBytes > this.maxBytes || this.accessOrder.length >= this.maxEntries) {
+          // Not enough room — return undefined (entry stays on disk for later)
+          this.totalBytes -= capsuleSize;
+          return undefined;
+        }
+        this.totalBytes -= capsuleSize; // will be re-added below
       } else {
-        // New disk entry not previously counted — add to totalBytes
-        this.totalBytes += new TextEncoder().encode(JSON.stringify(capsule)).length;
+        // Re-loading existing entry: adjust accounting for old size
+        if (existing) {
+          this.totalBytes = Math.max(0, this.totalBytes - new TextEncoder().encode(JSON.stringify(existing)).length);
+        }
+        if (this.diskAccounted.has(k)) {
+          this.diskAccounted.delete(k);
+        }
       }
       this.memory.set(k, capsule);
+      this.totalBytes += capsuleSize;
       this.touchAccess(k);
-      this.evict();
-      if (!this.memory.has(k)) return undefined;
       return capsule;
     } catch {
       this.handleCorruption(entryPath);
@@ -559,8 +606,15 @@ export class ContextCache {
     } catch { /* best-effort */ }
   }
 
-  /** Delete oldest disk entries until within maxBytes/maxEntries budget */
-  private deleteOldestDiskEntries(): void {
+  /**
+   * Delete oldest disk entries until within the maxBytes/maxEntries budget.
+   *
+   * `alreadyLocked` exists because `set()` holds the cache lock for its whole
+   * transaction. Re-acquiring it here would always fail, and the failure path was a
+   * silent `break` — so calling this from `set()` did nothing at all and the disk cache
+   * grew without bound.
+   */
+  private deleteOldestDiskEntries(alreadyLocked = false): void {
     if (!this.cacheDir) return;
     let diskEntries: DiskEntryInfo[] = [];
     try {
@@ -585,16 +639,21 @@ export class ContextCache {
     let totalSize = diskEntries.reduce((s, e) => s + e.size, 0);
     let totalCount = diskEntries.length;
 
-    while ((totalCount > this.maxEntries || totalSize > this.maxBytes) && diskEntries.length > 0) {
+    while ((totalCount > this.maxDiskEntries || totalSize > this.maxBytes) && diskEntries.length > 0) {
       const oldest = diskEntries.shift()!;
-      const lockPath = path.join(this.cacheDir!, LOCK_FILE);
-      const acquired = acquireLock(lockPath);
-      if (!acquired) break;
-      try {
+      if (alreadyLocked) {
         try { fs.unlinkSync(oldest.path); } catch { /* ok */ }
-      } finally {
-        releaseLock(lockPath);
+      } else {
+        const lockPath = path.join(this.cacheDir!, LOCK_FILE);
+        if (!acquireLock(lockPath)) break;
+        try {
+          try { fs.unlinkSync(oldest.path); } catch { /* ok */ }
+        } finally {
+          releaseLock(lockPath);
+        }
       }
+      // Keep in-memory accounting consistent with what is left on disk.
+      this.diskAccounted.delete(oldest.key);
       totalSize -= oldest.size;
       totalCount--;
     }

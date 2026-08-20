@@ -5,45 +5,9 @@
   "description": "Canonical contracts and execution engine for Agent Rules",
   "type": "module",
   "exports": {
-    "./contracts": {
-      "types": "./dist/contracts.d.ts",
-      "import": "./dist/contracts.js"
-    },
-    "./parity-contracts": {
-      "types": "./dist/parity-contracts.d.ts",
-      "import": "./dist/parity-contracts.js"
-    },
-    "./plan-lifecycle": {
-      "types": "./dist/plan-lifecycle.d.ts",
-      "import": "./dist/plan-lifecycle.js"
-    },
-    "./terminal-gate": {
-      "types": "./dist/terminal-gate.d.ts",
-      "import": "./dist/terminal-gate.js"
-    },
-    "./activation-transaction": {
-      "types": "./dist/activation-transaction.d.ts",
-      "import": "./dist/activation-transaction.js"
-    },
-    "./secure-fs": {
-      "types": "./dist/secure-fs.d.ts",
-      "import": "./dist/secure-fs.js"
-    },
-    "./activation-semantics": {
-      "types": "./dist/activation-semantics.d.ts",
-      "import": "./dist/activation-semantics.js"
-    },
-    "./activation-projections": {
-      "types": "./dist/activation-projections.d.ts",
-      "import": "./dist/activation-projections.js"
-    },
-    "./ledger-activation": {
-      "types": "./dist/ledger-activation.d.ts",
-      "import": "./dist/ledger-activation.js"
-    },
-    "./plan-identity": {
-      "types": "./dist/plan-identity.d.ts",
-      "import": "./dist/plan-identity.js"
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js"
     }
   },
   "engines": {
@@ -52,7 +16,9 @@
   "scripts": {
     "build": "node ../../node_modules/typescript/bin/tsc",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "node ../../automation/run-governed-vitest.mjs --project-root ../.. --cwd . --mode full -- run",
+    "test:jest": "node --experimental-vm-modules node_modules/.bin/jest --config jest.config.ts",
+    "test:jest:watch": "node --experimental-vm-modules node_modules/.bin/jest --config jest.config.ts --watch"
   },
   "dependencies": {
     "ajv": "8.20.0",
@@ -60,8 +26,11 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
+    "@types/jest": "^29.5.14",
     "@types/node": "^22.14.0",
+    "jest": "^29.7.0",
     "playwright": "^1.62.0",
+    "ts-jest": "^29.4.12",
     "typescript": "^5.9.3",
     "vitest": "^3.1.1"
   }

@@ -9,18 +9,20 @@
     "parity_contract": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["required_live_invariants", "static_artifacts_are_sufficient", "aggregate_rule"],
+      "required": ["required_live_invariants", "static_artifacts_are_sufficient", "aggregate_rule", "certification_required_hosts", "deferred_supported_targets"],
       "properties": {
         "required_live_invariants": {"type": "array", "uniqueItems": true, "minItems": 6, "items": {"enum": ["activation", "context_delivery", "orchestration", "role_permissions", "model_effort", "mcp_integration"]}},
         "static_artifacts_are_sufficient": {"const": false},
-        "aggregate_rule": {"const": "all_platforms_require_current_live_evidence"}
+        "aggregate_rule": {"const": "all_platforms_require_current_live_evidence"},
+        "certification_required_hosts": {"const": ["codex", "claude", "grok", "opencode", "antigravity"]},
+        "deferred_supported_targets": {"const": ["cursor"]}
       }
     },
     "platforms": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["codex", "grok", "antigravity", "cursor"],
-      "properties": {"codex": {"$ref": "#/$defs/platform"}, "grok": {"$ref": "#/$defs/platform"}, "antigravity": {"$ref": "#/$defs/platform"}, "cursor": {"$ref": "#/$defs/platform"}}
+      "required": ["codex", "claude", "grok", "opencode", "antigravity", "cursor"],
+      "properties": {"codex": {"$ref": "#/$defs/platform"}, "claude": {"$ref": "#/$defs/platform"}, "grok": {"$ref": "#/$defs/platform"}, "antigravity": {"$ref": "#/$defs/platform"}, "opencode": {"$ref": "#/$defs/platform"}, "cursor": {"$ref": "#/$defs/platform"}}
     }
   },
   "$defs": {

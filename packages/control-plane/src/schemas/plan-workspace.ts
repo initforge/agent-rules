@@ -338,10 +338,29 @@ function validateShadowDir(shadowDir: string, shadowHashes: Record<string, Sha25
 
 export function listPlans(root: string, seamOverride?: Partial<FsSeamReaders>): PlanListItem[] {
   validateDirSafe(['.agent'], root, '.agent', seamOverride)
-  validateDirSafe(['.agent', 'ledger'], root, 'ledger dir', seamOverride)
 
+  // An absent ledger directory means "no plans in the legacy layout", not an integrity
+  // failure. Treating it as one made every dashboard route answer 409 as soon as the
+  // repo moved to the flat requirements ledger (.agent/README.md), because the whole UI
+  // funnels through this call.
   const f: FsSeamReaders = { ...DEFAULT_SEAM, ...seamOverride }
   const ld = path.resolve(root, '.agent', 'ledger')
+  try {
+    const st = f.lstatSync(ld)
+    if (st.isSymbolicLink()) {
+      throw new PlanIntegrityError([{ kind: 'SYMLINK', detail: 'ledger dir is a symlink' }])
+    }
+    if (!st.isDirectory()) {
+      throw new PlanIntegrityError([{ kind: 'WRONG_TYPE', detail: 'ledger dir is not a directory' }])
+    }
+  } catch (e: unknown) {
+    if (e instanceof PlanIntegrityError) throw e
+    if ((e as NodeJS.ErrnoException).code === 'ENOENT') return []
+    throw new PlanIntegrityError([
+      { kind: 'IO_FAULT', detail: `stat ledger dir: ${(e as Error).message}` },
+    ])
+  }
+
   let entries: fs.Dirent[]
   try { entries = f.readdirSync(ld) } catch (e: unknown) {
     throw new PlanIntegrityError([{ kind: 'IO_FAULT', detail: `listPlans readdir: ${(e as Error).message}` }])

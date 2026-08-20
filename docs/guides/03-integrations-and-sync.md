@@ -31,10 +31,9 @@ Xem schema tại `integrations/registry.yaml` (header comments liệt kê tất 
 | ID | Policy | Kind |
 |---|---|---|
 | `codebase-memory-mcp` | required | mcp |
-| `context7` | recommended | mcp |
-| `playwright-mcp` | recommended | mcp |
-| `chrome-devtools-mcp` | recommended | mcp |
-| `caveman` | optional | tool |
+| `playwright-mcp` | required | mcp |
+| `chrome-devtools-mcp` | required | mcp |
+| `context7` | required | mcp |
 
 MCP adapter theo platform: `integrations/*/adapters/{codex.toml,grok.json,antigravity.json,cursor.json}`.
 

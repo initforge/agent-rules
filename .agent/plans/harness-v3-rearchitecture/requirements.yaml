@@ -1,0 +1,189 @@
+version: 1
+plan_id: harness-v3-rearchitecture
+
+# Migrated 2026-08-04 from the amendment-ledger layout (23 amendments / 4,933 lines
+# against an 824-line original). See ../../README.md for the protocol.
+#
+# HONEST STATE AT MIGRATION: the previous ledger reported `execution_state:
+# NEEDS_REMEDIATION` at revision 61 with 8 consecutive BLOCKED tasks. Its
+# effective-contract listed 54 requirement IDs with no statements and no
+# verification commands, so none of them were machine-checkable. `shadow/progress.md`
+# recorded only hash reconciliations and bounded repairs — no evidence that any
+# runtime capability shipped.
+#
+# The requirements below are therefore rewritten as testable statements. Anything
+# that could not be stated as a command is marked `dropped` with a reason rather
+# than carried forward as unverifiable scope.
+
+requirements:
+  # ---- Active: the durable runner (the capability that was promised but absent) ----
+  - id: R-001
+    statement: A task queue on disk supports atomic claim so a crashed runner leaves no half-claimed task.
+    status: active
+    verification:
+      - npx vitest run packages/engine/test/runner-queue.test.ts
+    added_by: 0025
+
+  - id: R-002
+    statement: The worker adapter spawns a real headless agent CLI and produces a diff, not a log line.
+    status: active
+    verification:
+      - npx vitest run packages/engine/test/headless-executor.test.ts
+    added_by: 0025
+
+  - id: R-003
+    statement: The runner loop processes a queue to exhaustion without an LLM in the loop, so it cannot exhaust a context window or be compacted.
+    status: active
+    verification:
+      - npx vitest run packages/engine/test/runner-loop.test.ts
+    added_by: 0025
+
+  - id: R-004
+    statement: Repair depth is bounded at 2; a task failing beyond it becomes NEEDS_USER and mints no child task.
+    status: active
+    verification:
+      - npx vitest run packages/engine/test/runner-loop.test.ts
+    added_by: 0025
+
+  - id: R-005
+    statement: The journal is append-only and hash-chained; tampering with any record makes verification throw.
+    status: active
+    verification:
+      - npx vitest run packages/engine/test/journal.test.ts
+    added_by: 0025
+
+  - id: R-006
+    statement: Receipts are rejected when verified=true accompanies a nonzero exit code, when the diff is doc-only, or when neither diff nor artifact is present.
+    status: active
+    verification:
+      - npx vitest run packages/engine/test/worker-adapter.test.ts
+    added_by: 0025
+
+  - id: R-007
+    statement: Commands with shell metacharacters, null bytes, path traversal, or relative cwd are refused before spawn.
+    status: active
+    verification:
+      - npx vitest run packages/engine/test/worker-adapter.test.ts
+    added_by: 0025
+
+  - id: R-008
+    statement: The .agent directory protocol is enforced by a validator that fails on duplicate change numbers, missing verification on active requirements, and stray root files.
+    status: active
+    verification:
+      - node automation/validate-agent-dir.mjs
+    added_by: 0025
+
+  # ---- Active: carried from the old contract, restated as testable ----
+  - id: R-009
+    statement: Canonical artifact contracts validate against their schemas.
+    status: active
+    verification:
+      - npx vitest run packages/engine/test/contracts.test.ts
+    added_by: plan
+
+  - id: R-010
+    statement: Parity verification (structural, visual, behavioral) runs against a manifest and reports per-pair verdicts.
+    status: active
+    verification:
+      - npx vitest run packages/engine/test/parity-contracts.test.ts
+    added_by: plan
+
+  - id: R-011
+    statement: The build produces runtime mirrors for every configured platform overlay without hand-editing generated output.
+    status: active
+    verification:
+      - npm run build
+    added_by: plan
+
+  - id: R-012
+    statement: Telemetry events are actually written to the journal during a run, not merely modeled.
+    status: active
+    verification:
+      - npx vitest run packages/engine/test/telemetry.test.ts
+    added_by: 0025
+
+  - id: R-013
+    statement: The critical path (build, install, validate, doctor) runs on Linux, Windows, and macOS.
+    status: active
+    verification:
+      - node automation/run-pwsh.mjs automation/path-compat.ps1
+    added_by: 0025
+
+  # ---- Superseded: replaced by the runner ----
+  - id: R-014
+    statement: A controller/supervisor pair schedules assignments across a worker pool with leases, heartbeats, and an adaptive concurrency ceiling.
+    status: superseded
+    superseded_by: R-003
+    added_by: plan
+    note: >
+      Never functional. The pool had no real worker: buildWorkerScript() returned a
+      single console.log. Concurrency ceilings (8 normal / 10 burst) were unsupported
+      by trace data — .agent/trace.jsonl held 3 lines total.
+
+  - id: R-015
+    statement: Two autopilots (autopilot, autopilot-m11) drive continuous execution to their respective terminal tokens.
+    status: superseded
+    superseded_by: R-003
+    added_by: plan
+    note: >
+      Two parallel implementations with two terminal tokens
+      (HARNESS_V3_10_OF_10_COMPLETE, HV3_M11_LOCAL_COMPLETE). The journal
+      hash-chain was the only salvageable part and is now R-005.
+
+  - id: R-016
+    statement: Worktree isolation plus a rolling integration train coordinates parallel writers via owned-path and semantic-resource leases.
+    status: superseded
+    superseded_by: R-003
+    added_by: plan
+    note: >
+      Produced 4 gitlink entries (mode 160000) committed as fake submodules.
+      Sequential runs on ordinary branches need none of it.
+
+  - id: R-017
+    statement: An amendment ledger maintains effective-contract lineage with a global hash and bounded repair.
+    status: superseded
+    superseded_by: R-008
+    added_by: plan
+    note: >
+      Root cause of HASH-001: the on-disk contract hash diverged from its own lineage
+      capture, and the only sanctioned repair was boundedRepair() — hundreds of
+      characters per line, effectively unreviewable. The flat ledger has no global
+      hash and therefore no such failure mode.
+
+  - id: R-018
+    statement: Resource broker and resource governor arbitrate concurrent access to shared resources.
+    status: superseded
+    superseded_by: R-003
+    added_by: plan
+    note: Two overlapping implementations for a runner whose concurrency is 1.
+
+  # ---- Dropped: structurally blocked or unverifiable ----
+  - id: R-019
+    statement: Remote host attestation proves TPM identity, Secure Boot state, and DeviceGuard policy hash.
+    status: dropped
+    added_by: plan
+    note: >
+      Structurally blocked, not merely incomplete. Verified on the Windows host
+      (see ../../archive/2026-08-02-windows-host-diagnostics.md): Get-Tpm requires
+      elevation, the Win32_Tpm WMI namespace is inaccessible, and PCRs/UEFI vars
+      cannot be read unelevated. Verdict was NOT YET CAPABLE. A whole work cycle
+      went into a goal no amount of work could close.
+
+  - id: R-020
+    statement: Cross-host live child-session control federates OpenCode workers from a coordinating host.
+    status: dropped
+    added_by: plan
+    note: >
+      Deliberately disabled in code: gateChildSessionControl() throws when
+      OPENCODE_CHILD_SESSION=1 outside artifact mode, and opencode-adapter reports
+      attestation: null / NATIVE_ATTESTATION_MISSING. Local headless spawn (R-002)
+      covers the actual need.
+
+  - id: R-021
+    statement: Semantic wake policy resumes waiting work when external conditions are satisfied.
+    status: dropped
+    added_by: plan
+    note: >
+      Waiting states (WAITING_EXTERNAL, WAITING_AUTHORITY, WAITING_RESOURCE,
+      RETRY_SCHEDULED, NEEDS_REMEDIATION) were never driven by a real executor.
+      Replaced by the single explicit NEEDS_USER terminal in R-004.

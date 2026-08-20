@@ -2,6 +2,10 @@ import { describe, it, expect, beforeAll } from "vitest";
 import * as path from "node:path";
 import * as fs from "node:fs";
 import * as crypto from "node:crypto";
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function getRepoRoot(): string {
   return path.resolve(__dirname, "..", "..", "..");
@@ -109,7 +113,7 @@ describe("CLI help output", () => {
   const cliEntry = path.join(root, "packages", "cli", "dist", "index.js");
 
   it("shows all migrated commands in help", () => {
-    const { execFileSync } = require("node:child_process");
+    // execFileSync imported from "node:child_process"
     const help = execFileSync("node", [cliEntry, "--help"], {
       encoding: "utf-8",
     });
@@ -120,7 +124,7 @@ describe("CLI help output", () => {
   });
 
   it("shows migrated descriptions for migrated commands", () => {
-    const { execFileSync } = require("node:child_process");
+    // execFileSync imported from "node:child_process"
     const help = execFileSync("node", [cliEntry, "--help"], {
       encoding: "utf-8",
     });

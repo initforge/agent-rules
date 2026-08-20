@@ -1,0 +1,65 @@
+{
+  "host": "opencode",
+  "hostVersion": "1.18.10",
+  "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+  "capabilityStatus": "HOST_NATIVE",
+  "capabilityIds": [
+    "opencode:mcp",
+    "opencode:model",
+    "opencode:run"
+  ],
+  "contractSetSha256": "dd7dbd7efa5e1869380ccca70a2e052f7c8cdb646d47b0524c1688e084c0a6b6",
+  "requestedModel": "HOST_UNOBSERVABLE",
+  "resolvedModel": "deepseek-v4-flash",
+  "observedModel": "deepseek-v4-flash",
+  "nativeRunnerIdentity": "36:1857263|/home/linhnx/.opencode/bin/opencode|2735f786be499db50c823d961fb8627dfb74f920e2320686b67e6c5c81c66f16",
+  "issuedAt": "2026-08-01T09:21:58.520Z",
+  "expiresAt": "2026-08-01T10:21:58.520Z",
+  "evidenceRefs": [
+    {
+      "role": "version",
+      "host": "opencode",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+      "evidenceSha256": "c8d473bdc3da32a45fde4175b01ca75575fc6f6737bba4c65124836453990db6",
+      "evidenceRef": "evidence://opencode/f1020e0799d4a768655af72b0625873ade880552/version/c8d473bdc3da32a45fde4175b01ca75575fc6f6737bba4c65124836453990db6",
+      "subjectSha256": "ad16138c909f3ed40fac2ebd9bc62d329f458bb546925570a6a5fc03181637f6",
+      "observedAt": "2026-08-01T09:21:58.520Z"
+    },
+    {
+      "role": "capabilities",
+      "host": "opencode",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+      "evidenceSha256": "ab6662e143971d33c43cdf318c69149f3a889009c5cbcb51c8986aeb4d6a5d45",
+      "evidenceRef": "evidence://opencode/f1020e0799d4a768655af72b0625873ade880552/capabilities/ab6662e143971d33c43cdf318c69149f3a889009c5cbcb51c8986aeb4d6a5d45",
+      "subjectSha256": "8584b3669bfff70b5e562ffe656e39398fe915f62866a2b85013989766238096",
+      "observedAt": "2026-08-01T09:21:58.520Z"
+    },
+    {
+      "role": "requestedModel",
+      "host": "opencode",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+      "evidenceSha256": "8bbf6d465f118d3a7bd7ee851f8ec9526ea7f72356744fe968e83cec2178332a",
+      "evidenceRef": "evidence://opencode/f1020e0799d4a768655af72b0625873ade880552/requestedModel/8bbf6d465f118d3a7bd7ee851f8ec9526ea7f72356744fe968e83cec2178332a",
+      "subjectSha256": "7e7927c7d3104cf2d08ebf08a2bedd89eab5c2a6943626c5e52e4f0f6956a8bd",
+      "observedAt": "2026-08-01T09:21:58.520Z"
+    },
+    {
+      "role": "resolvedModel",
+      "host": "opencode",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+      "evidenceSha256": "67a3c6f75f6bfdb1d9c6e9a40c7e07e0ae499a28b371dfc61460e220c664fc7a",
+      "evidenceRef": "evidence://opencode/f1020e0799d4a768655af72b0625873ade880552/resolvedModel/67a3c6f75f6bfdb1d9c6e9a40c7e07e0ae499a28b371dfc61460e220c664fc7a",
+      "subjectSha256": "e98d638851947d32cad623d495009bf6f7e6689668e4d8a0f33e4669c25a4cdc",
+      "observedAt": "2026-08-01T09:21:58.520Z"
+    },
+    {
+      "role": "observedModel",
+      "host": "opencode",
+      "commitSha": "f1020e0799d4a768655af72b0625873ade880552",
+      "evidenceSha256": "a53af25cf90bce5abaa4d74a0b38620d42b16c8429c6e1311fb83eaafff908c3",
+      "evidenceRef": "evidence://opencode/f1020e0799d4a768655af72b0625873ade880552/observedModel/a53af25cf90bce5abaa4d74a0b38620d42b16c8429c6e1311fb83eaafff908c3",
+      "subjectSha256": "e98d638851947d32cad623d495009bf6f7e6689668e4d8a0f33e4669c25a4cdc",
+      "observedAt": "2026-08-01T09:21:58.520Z"
+    }
+  ]
+}

@@ -5,7 +5,7 @@ import * as differ from '../src/services/differ';
 import * as validator from '../src/services/validator';
 import * as writer from '../src/services/writer';
 import * as safety from '../src/services/safety';
-import { redactSensitive, redactStringJson } from '../src/services/redact';
+import { redactSensitive, redactStringJson, redactTextContent, containsSensitiveContent, redactSensitiveValue } from '../src/services/redact';
 
 describe('differ', () => {
   it('detects no changes', () => {
@@ -158,47 +158,54 @@ describe('writer', () => {
 describe('redact', () => {
   it('redacts api_key case-insensitively', () => {
     const input = { api_key: 'sk-1234567890abcdef', name: 'test' }
-    const result = redactSensitive(input) as Record<string, unknown>
-    expect(result.api_key).toBe('[REDACTED]')
-    expect(result.name).toBe('test')
+    const result = redactSensitive(input)
+    expect(result.redacted).toHaveProperty('api_key', '[REDACTED]')
+    expect(result.redacted).toHaveProperty('name', 'test')
+    expect(result.hadRedactions).toBe(true)
   })
 
   it('redacts ApiKey camelCase', () => {
     const input = { ApiKey: 'secret-value', data: 'visible' }
-    const result = redactSensitive(input) as Record<string, unknown>
-    expect(result.ApiKey).toBe('[REDACTED]')
-    expect(result.data).toBe('visible')
+    const result = redactSensitive(input)
+    expect(result.redacted).toHaveProperty('ApiKey', '[REDACTED]')
+    expect(result.redacted).toHaveProperty('data', 'visible')
   })
 
   it('redacts API-KEY hyphenated', () => {
     const input = { 'API-KEY': 'supersecret', normal: 'ok' }
-    const result = redactSensitive(input) as Record<string, unknown>
-    expect(result['API-KEY']).toBe('[REDACTED]')
+    const result = redactSensitive(input)
+    expect(result.redacted).toHaveProperty('API-KEY', '[REDACTED]')
   })
 
   it('redacts nested objects', () => {
     const input = { outer: { api_key: 'nested-secret', inner: { token: 'deep-token' } }, ok: true }
-    const result = redactSensitive(input) as Record<string, unknown>
-    expect((result.outer as Record<string, unknown>).api_key).toBe('[REDACTED]')
-    expect((((result.outer as Record<string, unknown>).inner) as Record<string, unknown>).token).toBe('[REDACTED]')
-    expect(result.ok).toBe(true)
+    const result = redactSensitive(input)
+    expect(result.redacted).toHaveProperty('outer')
+    expect((result.redacted as Record<string, unknown>).outer).toHaveProperty('api_key', '[REDACTED]')
+    expect(((result.redacted as Record<string, unknown>).outer as Record<string, unknown>).inner).toHaveProperty('token', '[REDACTED]')
+    expect(result.redacted).toHaveProperty('ok', true)
+    expect(result.hadRedactions).toBe(true)
   })
 
   it('redacts nested arrays of objects', () => {
     const input = { items: [{ api_key: 'secret1' }, { token: 'secret2', name: 'test' }] }
-    const result = redactSensitive(input) as Record<string, unknown>
-    const items = result.items as Array<Record<string, unknown>>
-    expect(items[0].api_key).toBe('[REDACTED]')
-    expect(items[1].token).toBe('[REDACTED]')
-    expect(items[1].name).toBe('test')
+    const result = redactSensitive(input)
+    // The input is an object wrapping the array, so reach through `items` — the cast
+    // used to treat result.redacted itself as the array, which made items[0] undefined
+    // and the assertion throw before it could check anything.
+    const items = (result.redacted as Record<string, unknown>).items as Array<Record<string, unknown>>
+    expect(items[0]).toHaveProperty('api_key', '[REDACTED]')
+    expect(items[1]).toHaveProperty('token', '[REDACTED]')
+    expect(items[1]).toHaveProperty('name', 'test')
+    expect(result.hadRedactions).toBe(true)
   })
 
   it('redacts string JSON via redactStringJson', () => {
     const json = JSON.stringify({ apiKey: 'sk-xxx', data: { token: 'tok-abc' } })
     const redacted = redactStringJson(json)
     const parsed = JSON.parse(redacted)
-    expect(parsed.apiKey).toBe('[REDACTED]')
-    expect(parsed.data.token).toBe('[REDACTED]')
+    expect(parsed).toHaveProperty('apiKey', '[REDACTED]')
+    expect(parsed.data).toHaveProperty('token', '[REDACTED]')
   })
 
   it('returns non-JSON string unchanged', () => {
@@ -206,8 +213,69 @@ describe('redact', () => {
   })
 
   it('handles null/undefined', () => {
-    expect(redactSensitive(null)).toBe(null)
-    expect(redactSensitive(undefined)).toBe(undefined)
+    expect(redactSensitive(null).redacted).toBe(null)
+    expect(redactSensitive(undefined).redacted).toBe(undefined)
+  })
+
+  it('reports hadRedactions flag correctly', () => {
+    const noSecret = redactSensitive({ name: 'test', value: 42 })
+    expect(noSecret.hadRedactions).toBe(false)
+    const withSecret = redactSensitive({ api_key: 'secret' })
+    expect(withSecret.hadRedactions).toBe(true)
+  })
+
+  it('redactSensitiveValue backward compatibility', () => {
+    const result = redactSensitiveValue({ password: 'secret' })
+    expect(result).toHaveProperty('password', '[REDACTED]')
+  })
+})
+
+describe('redactTextContent', () => {
+  it('redacts password=value patterns', () => {
+    expect(redactTextContent('password=supersecret')).toBe('password=[REDACTED]')
+  })
+
+  it('redacts api_key patterns', () => {
+    expect(redactTextContent('api_key=sk-abc123')).toBe('api_key=[REDACTED]')
+  })
+
+  it('redacts AWS/GCP/Azure patterns', () => {
+    expect(redactTextContent('AWS_SECRET=mykey')).toBe('AWS_SECRET=[REDACTED]')
+    expect(redactTextContent('GCP_TOKEN=token')).toBe('GCP_TOKEN=[REDACTED]')
+    expect(redactTextContent('azure_key=key')).toBe('azure_key=[REDACTED]')
+  })
+
+  it('redacts bearer token', () => {
+    const result = redactTextContent('Authorization: Bearer eyJhbGc...')
+    expect(result).toContain('[REDACTED]')
+    expect(result).not.toContain('eyJ')
+  })
+
+  it('redacts multiple secrets', () => {
+    const result = redactTextContent('api_key=sk-1 token=tok-1 password=pass-1')
+    expect(result).toBe('api_key=[REDACTED] token=[REDACTED] password=[REDACTED]')
+  })
+
+  it('returns unchanged with no secrets', () => {
+    expect(redactTextContent('All systems operational')).toBe('All systems operational')
+  })
+
+  it('handles npm/pip/maven tokens', () => {
+    expect(redactTextContent('npm_token=abc123')).toBe('npm_token=[REDACTED]')
+    expect(redactTextContent('pip_auth_token=xyz')).toBe('pip_auth_token=[REDACTED]')
+  })
+})
+
+describe('containsSensitiveContent', () => {
+  it('detects sensitive content', () => {
+    expect(containsSensitiveContent('api_key=sk-secret')).toBe(true)
+    expect(containsSensitiveContent('password=12345')).toBe(true)
+    expect(containsSensitiveContent('AWS_SECRET=key')).toBe(true)
+  })
+
+  it('returns false for clean content', () => {
+    expect(containsSensitiveContent('Build successful. No errors.')).toBe(false)
+    expect(containsSensitiveContent('User: admin, Status: active')).toBe(false)
   })
 })
 

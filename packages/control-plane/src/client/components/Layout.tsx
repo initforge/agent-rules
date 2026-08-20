@@ -32,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'profiles', label: 'Profiles', icon: '⊡', path: '/profiles' },
   { id: 'audit', label: 'Audit Log', icon: '⊡', path: '/audit' },
   { id: 'c4', label: 'C4 Architecture', icon: '⊞', path: '/c4' },
+  { id: 'm11', label: 'M11 Views', icon: '⊠', path: '/m11/readiness' },
 ];
 
 function matchNavItem(path: string): string {
@@ -43,6 +44,7 @@ function matchNavItem(path: string): string {
   if (base === 'configuration') return 'configuration';
   if (base === 'profiles') return 'profiles';
   if (base === 'c4') return 'c4';
+  if (base === 'm11') return 'm11';
   return 'overview';
 }
 
@@ -76,67 +78,67 @@ export default function Layout({ currentPath, onNavigate, health, healthError, c
     setDark(next === 'dark');
   }
 
-  const sidebar = (
-    <nav
-      ref={sidebarRef}
-      className={`layout-sidebar ${mobileMenuOpen ? 'layout-sidebar--open' : ''}`}
-      role="navigation"
-      aria-label="Main navigation"
-    >
-      <div className="layout-sidebar-header">
-        <div className="layout-sidebar-brand">
-          <span className="layout-sidebar-icon">⊡</span>
-          <span className="layout-sidebar-title">Control Plane</span>
-        </div>
-        <div className="layout-sidebar-status">
-          {healthError ? (
-            <span className="status-indicator status-indicator--offline">
-              <span className="status-dot status-dot--danger" /> offline
-            </span>
-          ) : (
-            <span className={`status-indicator ${health.status === 'healthy' ? '' : 'status-indicator--warn'}`}>
-              <span className={`status-dot ${health.status === 'healthy' ? 'status-dot--success' : 'status-dot--warning'}`} />
-              {health.status || '?'}
-              {health.commit ? <span className="status-commit" style={{color: dark ? '#e6edf3' : '#585860'}}>#{health.commit.slice(0, 7)}</span> : null}
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div className="layout-sidebar-nav" tabIndex={0}>
-        {NAV_ITEMS.map(item => (
-          <a
-            key={item.id}
-            href={item.path}
-            onClick={(e) => { e.preventDefault(); onNavigate(item.path); }}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigate(item.path); } }}
-            className={`layout-nav-item ${activeId === item.id ? 'layout-nav-item--active' : ''}`}
-            aria-current={activeId === item.id ? 'page' : undefined}
-          >
-            <span className="layout-nav-icon">{item.icon}</span>
-            <span className="layout-nav-label">{item.label}</span>
-          </a>
-        ))}
-      </div>
-
-      <div className="layout-sidebar-footer">
-        <span className="layout-sidebar-version">v0.1.0</span>
-        <a
-          ref={toggleRef}
-          onClick={toggleTheme}
-          className="theme-toggle-btn"
-          title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-          aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {dark ? '\u2600' : '\uD83C\uDF19'}
-        </a>
-      </div>
-    </nav>
-  );
-
   return (
     <div className="layout-root">
-      {sidebar}
+      {/* ponytail: skip link — minimal, add focus-visible style when upgrading */}
+      <a href="#main-content" className="skip-link">Skip to main content</a>
+
+      <nav
+        ref={sidebarRef}
+        id="sidebar-navigation"
+        className={`layout-sidebar ${mobileMenuOpen ? 'layout-sidebar--open' : ''}`}
+        role="navigation"
+        aria-label="Main navigation"
+      >
+        <div className="layout-sidebar-header">
+          <div className="layout-sidebar-brand">
+            <span className="layout-sidebar-icon" aria-hidden="true">⊡</span>
+            <span className="layout-sidebar-title">Control Plane</span>
+          </div>
+          <div className="layout-sidebar-status">
+            {healthError ? (
+              <span className="status-indicator status-indicator--offline">
+                <span className="status-dot status-dot--danger" /> offline
+              </span>
+            ) : (
+              <span className={`status-indicator ${health.status === 'healthy' ? '' : 'status-indicator--warn'}`}>
+                <span className={`status-dot ${health.status === 'healthy' ? 'status-dot--success' : 'status-dot--warning'}`} />
+                {health.status || '?'}
+                {health.commit ? <span className="status-commit" style={{color: dark ? '#e6edf3' : '#585860'}}>#{health.commit.slice(0, 7)}</span> : null}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="layout-sidebar-nav" tabIndex={0}>
+          {NAV_ITEMS.map(item => (
+            <a
+              key={item.id}
+              href={item.path}
+              onClick={(e) => { e.preventDefault(); onNavigate(item.path); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigate(item.path); } }}
+              className={`layout-nav-item ${activeId === item.id ? 'layout-nav-item--active' : ''}`}
+              aria-current={activeId === item.id ? 'page' : undefined}
+            >
+              <span className="layout-nav-icon" aria-hidden="true">{item.icon}</span>
+              <span className="layout-nav-label">{item.label}</span>
+            </a>
+          ))}
+        </div>
+
+        <div className="layout-sidebar-footer">
+          <span className="layout-sidebar-version">v0.1.0</span>
+          <a
+            ref={toggleRef}
+            onClick={toggleTheme}
+            className="theme-toggle-btn"
+            title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {dark ? '\u2600' : '\uD83C\uDF19'}
+          </a>
+        </div>
+      </nav>
 
       <div className="layout-mobile-header">
         <a
@@ -173,7 +175,7 @@ export default function Layout({ currentPath, onNavigate, health, healthError, c
         />
       )}
 
-      <main className="layout-content" role="main" tabIndex={0}>
+      <main id="main-content" className="layout-content" role="main" tabIndex={0}>
         {children}
       </main>
 

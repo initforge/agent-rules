@@ -8,6 +8,7 @@ import {
   detectPlanFromFile,
   type RecognizedPlan,
 } from '../src/plan-recognizer.js';
+import { SYMLINK_CAPABLE } from './helpers/symlink-capability.js';
 
 const tmpDirs: string[] = [];
 
@@ -158,19 +159,18 @@ describe('detectPlanFromFile', () => {
 
   it('blocks traversal via absolute path', () => {
     const dir = tmpDir();
-    expect(() => detectPlanFromFile('/etc/passwd', dir)).toThrow('traversal');
+    const outside = tmpDir();
+    const outsideFile = path.join(outside, 'original.md');
+    fs.writeFileSync(outsideFile, '# Outside\n', 'utf-8');
+    expect(() => detectPlanFromFile(outsideFile, dir)).toThrow('traversal');
   });
 
-  it('rejects symlink within plans dir', () => {
+  it.skipIf(!SYMLINK_CAPABLE)('rejects symlink within plans dir', () => {
     const dir = tmpDir();
     writeFile(path.join(dir, '.agent/plans/p-001/original.md'), '# Plan\nContent');
     const linkPath = path.join(dir, '.agent/plans/p-001/link.md');
-    try {
-      fs.symlinkSync(path.join(dir, '.agent/plans/p-001/original.md'), linkPath);
-      expect(() => detectPlanFromFile(linkPath, dir)).toThrow('traversal');
-    } catch {
-      // symlink may not be supported on all platforms
-    }
+    fs.symlinkSync(path.join(dir, '.agent/plans/p-001/original.md'), linkPath);
+    expect(() => detectPlanFromFile(linkPath, dir)).toThrow('traversal');
   });
 
   it('rejects plan outside canonical plans root via adopted plan', () => {

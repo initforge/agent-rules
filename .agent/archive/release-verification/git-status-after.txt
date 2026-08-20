@@ -1,0 +1,25 @@
+﻿ M automation/01-build-runtime.ps1
+ M automation/02-install-runtime.ps1
+ M automation/03-validate-context.ps1
+ M automation/04-verify-mirrors.ps1
+ M automation/05-verify-runtime-state.ps1
+ M automation/09-doctor.ps1
+ M automation/README.md
+ M automation/test-workctl.py
+ M automation/work-ledger.schema.json
+ M automation/workctl.py
+ M rules/10-execution.md
+ M rules/25-task-lifecycle.md
+ M skills/finish-to-completion/SKILL.md
+ M skills/finish-to-completion/references/completion-ledger.md
+ M skills/plan-and-handoff/references/adaptive-work-protocol.md
+ M skills/plan-and-handoff/references/capability-tier-routing.md
+?? automation/model-policy.json
+?? automation/test-model-policy.py
+?? automation/test-native-agent-policy.py
+?? platforms/antigravity/agents/
+?? platforms/codex/agents/
+?? platforms/cursor/agents/
+?? platforms/grok/README-agents.md
+?? platforms/grok/agents/
+?? platforms/grok/personas/

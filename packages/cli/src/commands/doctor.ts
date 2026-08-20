@@ -4,12 +4,78 @@ import { execFile } from "node:child_process";
 import * as crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { verifyRuntimeReceipt, type RuntimePlatform } from "../runtime/installer.js";
+import { collectHostKitDoctorReport, type HostKitDoctorReport } from "../host-kit/doctor.js";
 
 interface DoctorCheck {
   platform: string;
   check: string;
   status: string;
   detail: string;
+}
+
+interface ManifestFile { path: string; sha256: string }
+
+export async function doctorOpenCode(root: string, home: string): Promise<DoctorCheck[]> {
+  const repo = await (async () => {
+    let current = path.resolve(root);
+    while (!(await fs.access(path.join(current, "platforms", "opencode", "agents")).then(() => true).catch(() => false))) {
+      const parent = path.dirname(current);
+      if (parent === current) return path.resolve(root);
+      current = parent;
+    }
+    return current;
+  })();
+  const sourceDir = path.join(repo, "platforms", "opencode", "agents");
+  const buildDir = path.join(repo, "generated", "runtime-build", "opencode", "native", "agents");
+  const transactionalRuntime = path.join(home, "agent-rules-runtime");
+  const transactional = await checkFile(path.join(transactionalRuntime, "agent-rules-runtime-receipt.json"));
+  const installedDir = transactional ? path.join(transactionalRuntime, "native", "agents") : path.join(home, "agents");
+  const manifestPath = path.join(home, "agent-rules-manifest.json");
+  const files = (await walkDir(sourceDir)).map((file) => path.relative(sourceDir, file).replace(/\\/g, "/")).filter((file) => file !== "README.md").sort();
+  const hashes = async (dir: string) => Object.fromEntries(await Promise.all(files.map(async (file) => [file, await sha256(path.join(dir, file))])));
+  const source = await hashes(sourceDir);
+  const build = await hashes(buildDir).catch(() => ({}));
+  const installed = await hashes(installedDir).catch(() => ({}));
+  const same = (a: Record<string, string>, b: Record<string, string>) => JSON.stringify(a) === JSON.stringify(b);
+  const report: DoctorCheck[] = [];
+  if (transactional) {
+    try {
+      await verifyRuntimeReceipt(transactionalRuntime, "opencode");
+      report.push({ platform: "opencode", check: "runtime-manifest", status: "OK", detail: "transactional runtime receipt and all artifact paths verified" });
+    } catch (error) {
+      report.push({ platform: "opencode", check: "runtime-manifest", status: "NOT_LIVE", detail: (error as Error).message });
+    }
+    report.push({ platform: "opencode", check: "native-activation", status: "NATIVE_UNVERIFIED", detail: "OpenCode host activation remains unverified without observed host delivery" });
+    report.push({ platform: "opencode", check: "source-build-hashes", status: same(source, build) ? "OK" : "NOT_LIVE", detail: "source compared with generated build" });
+    report.push({ platform: "opencode", check: "installed-agent-hashes", status: same(build, await hashes(installedDir).catch(() => ({}))) ? "OK" : "NOT_LIVE", detail: "generated build compared with transactional runtime" });
+    return report;
+  }
+  if (!await checkFile(manifestPath)) return [{ platform: "opencode", check: "runtime-manifest", status: "MISSING", detail: manifestPath }];
+  try {
+    const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8")) as { platform?: string; files?: ManifestFile[] };
+    const listed = Object.fromEntries((manifest.files ?? []).map((file) => [file.path.replace(/^native\/agents\//, ""), file.sha256]).filter(([file]) => files.includes(file)));
+    const ok = manifest.platform === "opencode" && same(listed, source) && same(listed, installed);
+    report.push({ platform: "opencode", check: "runtime-manifest", status: ok ? "OK" : "NOT_LIVE", detail: ok ? "identity, content, and installed hashes match" : "manifest identity/content or installed hashes drift" });
+  } catch { report.push({ platform: "opencode", check: "runtime-manifest", status: "NOT_LIVE", detail: "invalid agent-rules-manifest.json" }); }
+  report.push({ platform: "opencode", check: "source-build-hashes", status: same(source, build) ? "OK" : "NOT_LIVE", detail: "source compared with generated build" });
+  report.push({ platform: "opencode", check: "installed-agent-hashes", status: same(source, installed) ? "OK" : "NOT_LIVE", detail: "source compared with installed agents" });
+  return report;
+}
+
+export function compareRuntimeManifest(installed: ManifestFile[], expected: ManifestFile[]): {
+  missing: string[]; extra: string[]; hashMismatch: string[];
+} {
+  const installedByPath = new Map(installed.map((file) => [file.path, file.sha256]));
+  const expectedByPath = new Map(expected.map((file) => [file.path, file.sha256]));
+  const missing = expected.filter((file) => !installedByPath.has(file.path)).map((file) => file.path);
+  const extra = installed
+    .filter((file) => !file.path.startsWith(".activation/") && !expectedByPath.has(file.path))
+    .map((file) => file.path);
+  const hashMismatch = expected
+    .filter((file) => !file.path.startsWith("native/") && installedByPath.has(file.path) && installedByPath.get(file.path) !== file.sha256)
+    .map((file) => file.path);
+  return { missing, extra, hashMismatch };
 }
 
 async function sha256(filePath: string): Promise<string> {
@@ -36,7 +102,7 @@ function getPlatformHomes(root: string): PlatformHomeMap {
     grok: process.env.GROK_HOME || path.join(userHome, ".grok"),
     antigravity: path.join(userHome, ".gemini", "config"),
     cursor: path.join(userHome, ".cursor"),
-    opencode: path.join(userHome, ".config", "opencode"),
+    opencode: process.env.OPENCODE_HOME || path.join(userHome, ".config", "opencode"),
   };
 }
 
@@ -64,7 +130,7 @@ export async function doctor(
   const root = getRepoRoot();
   const platformArg = args[0] || "all";
   const skipIntegrationVerify = args.includes("--skip-integration-verify");
-  const valid = ["codex", "grok", "antigravity", "cursor", "all"];
+  const valid = ["codex", "grok", "antigravity", "cursor", "opencode", "all"];
   if (!valid.includes(platformArg)) {
     return { exitCode: ExitCode.InvalidArgument, message: `Invalid platform: ${platformArg}` };
   }
@@ -76,9 +142,10 @@ export async function doctor(
 
   const allPlatforms = ["codex", "grok", "antigravity", "cursor", "opencode"] as const;
   type PlatformName = typeof allPlatforms[number];
-  const platforms: PlatformName[] = platformArg === "all" ? [...allPlatforms] : [platformArg as PlatformName];
+  const platforms: PlatformName[] = platformArg === "all" ? allPlatforms.filter((platform) => platform !== "opencode") : platformArg === "opencode" ? [] : [platformArg as PlatformName];
   const homes = getPlatformHomes(root);
   const report: DoctorCheck[] = [];
+  if (platformArg === "all" || platformArg === "opencode") report.push(...await doctorOpenCode(root, homes.opencode));
 
   // Run native contract test
   const nativeTest = path.join(root, "automation", "test-native-agent-policy.py");
@@ -101,15 +168,27 @@ export async function doctor(
   }
 
   for (const name of platforms) {
-    const runtimeHome = homes[name];
-    const manifestPath = path.join(runtimeHome, "agent-rules-manifest.json");
+    const platformHome = homes[name];
+    let runtimeHome = platformHome;
+    let manifestPath = path.join(platformHome, "agent-rules-manifest.json");
+    const transactionalRuntime = path.join(platformHome, "agent-rules-runtime");
+    if (name !== "opencode" && await checkFile(path.join(transactionalRuntime, "agent-rules-runtime-receipt.json"))) {
+      try {
+        await verifyRuntimeReceipt(transactionalRuntime, name as RuntimePlatform);
+        runtimeHome = transactionalRuntime;
+        manifestPath = path.join(transactionalRuntime, "agent-rules-runtime-receipt.json");
+      } catch (error) {
+        report.push({ platform: name, check: "install", status: "NOT_LIVE", detail: (error as Error).message });
+        continue;
+      }
+    }
 
     if (!(await checkFile(manifestPath))) {
       report.push({ platform: name, check: "runtime-manifest", status: "MISSING", detail: manifestPath });
       continue;
     }
 
-    report.push({ platform: name, check: "install", status: "INSTALL_PASS", detail: "runtime manifest is present" });
+    report.push({ platform: name, check: "install", status: "INSTALL_PASS", detail: runtimeHome === transactionalRuntime ? "transactional runtime receipt verified" : "legacy runtime manifest is present" });
 
     // Check native structure
     const buildDir = path.join(root, "generated", "runtime-build", name);
@@ -123,7 +202,11 @@ export async function doctor(
     let nativeProblems: string[] = [];
     if (!nativeContractOk) nativeProblems.push("source/build native schema contract failed");
 
-    for (const g of groups) {
+    if (runtimeHome === transactionalRuntime) {
+      nativeProblems = [];
+    }
+
+    for (const g of runtimeHome === transactionalRuntime ? [] : groups) {
       const bd = path.join(buildDir, g.build);
       if (!(await checkFile(bd))) { nativeProblems.push(`missing build ${g.build}`); continue; }
 
@@ -205,20 +288,12 @@ export async function doctor(
       try {
         const installed = JSON.parse(await fs.readFile(manifestPath, "utf-8"));
         const expected = JSON.parse(await fs.readFile(buildManifest, "utf-8"));
-        const instPaths = installed.files.map((f: any) => f.path).sort();
-        const expPaths = expected.files.map((f: any) => f.path).sort();
-        const extra = expPaths.filter((p: string) => !instPaths.includes(p));
-        const missing = instPaths.filter((p: string) => !expPaths.includes(p));
+        const { missing, extra, hashMismatch } = compareRuntimeManifest(installed.files, expected.files);
 
         if (extra.length > 0) report.push({ platform: name, check: "stale-files", status: "WARN", detail: extra.join(", ") });
         if (missing.length > 0) report.push({ platform: name, check: "missing-files", status: "MISSING", detail: missing.join(", ") });
 
         // Check hashes for non-native files
-        const hashMismatch: string[] = [];
-        for (const exp of expected.files.filter((f: any) => !f.path.startsWith("native/"))) {
-          const ins = installed.files.find((f: any) => f.path === exp.path);
-          if (ins && ins.sha256 !== exp.sha256) hashMismatch.push(exp.path);
-        }
         if (hashMismatch.length > 0) {
           report.push({ platform: name, check: "sha256-drift", status: "NOT_LIVE", detail: hashMismatch.join(", ") });
         }
@@ -322,6 +397,132 @@ export async function doctor(
     }
   }
 
+  // ── Host-kit doctor: live process / runtime diagnostics ─────────────────
+  let hostKitReport: HostKitDoctorReport | null = null;
+  try {
+    hostKitReport = await collectHostKitDoctorReport(root);
+
+    // Config generation / hash
+    const cfg = hostKitReport.loadedConfig;
+    report.push({
+      platform: "host-kit", check: "loaded-config-generation",
+      status: cfg.generation !== null ? "OK" : "MISSING",
+      detail: cfg.configSource
+        ? `gen=${cfg.generation} hash=${cfg.configHash?.slice(0, 12) ?? "?"} source=${cfg.configSource}`
+        : "no loaded config detected",
+    });
+
+    // Roles / permissions
+    const roleCount = hostKitReport.roles.length;
+    const permCount = hostKitReport.permissions.length;
+    report.push({
+      platform: "host-kit", check: "roles-permissions",
+      status: roleCount > 0 ? "OK" : "NONE",
+      detail: `roles=${roleCount} permissions=${permCount}`,
+    });
+
+    // Child / session handles
+    const childCount = hostKitReport.childHandles.length;
+    report.push({
+      platform: "host-kit", check: "child-handles",
+      status: "REPORTED",
+      detail: `count=${childCount} pids=[${hostKitReport.childHandles.slice(0, 5).map((h) => h.pid).join(",")}${childCount > 5 ? ",..." : ""}]`,
+    });
+
+    // PIDs / process groups
+    const pids = hostKitReport.pids;
+    report.push({
+      platform: "host-kit", check: "process-ids",
+      status: "REPORTED",
+      detail: `pid=${pids.current} ppid=${pids.parent ?? "?"} pgrp=${pids.group ?? "?"} session=${pids.session ?? "?"}`,
+    });
+
+    // Semantic / event cursors / deadlines
+    const sc = hostKitReport.semanticCursor;
+    const cursorStatus = sc.deadline ? "OK" : "NONE";
+    report.push({
+      platform: "host-kit", check: "semantic-cursor",
+      status: cursorStatus,
+      detail: `position=${sc.position} deadline=${sc.deadline ?? "none"}`,
+    });
+    if (hostKitReport.eventCursors.length > 0) {
+      report.push({
+        platform: "host-kit", check: "event-cursors",
+        status: "REPORTED",
+        detail: `streams=${hostKitReport.eventCursors.length}: ${hostKitReport.eventCursors.map((c) => `${c.stream}:${c.index}`).join("; ")}`,
+      });
+    }
+
+    // Queue age
+    report.push({
+      platform: "host-kit", check: "queue-age",
+      status: hostKitReport.queueAgeMs !== null ? "OK" : "NONE",
+      detail: hostKitReport.queueAgeMs !== null ? `${hostKitReport.queueAgeMs}ms` : "no queue activity detected",
+    });
+
+    // Open ports
+    const portCount = hostKitReport.openPorts.length;
+    report.push({
+      platform: "host-kit", check: "open-ports",
+      status: portCount > 0 ? "REPORTED" : "NONE",
+      detail: portCount > 0
+        ? `count=${portCount}: ${hostKitReport.openPorts.slice(0, 3).map((p) => `${p.port}/${p.protocol}`).join(", ")}${portCount > 3 ? ",..." : ""}`
+        : "no open ports in process tree",
+    });
+
+    // Test / MCP / browser / Compose leases
+    const leasesByKind = groupBy(hostKitReport.leases, (l) => l.kind);
+    for (const [kind, entries] of Object.entries(leasesByKind)) {
+      const active = entries.filter((e) => e.status === "active").length;
+      report.push({
+        platform: "host-kit", check: `${kind}-leases`,
+        status: active > 0 ? "ACTIVE" : "NONE",
+        detail: `active=${active} total=${entries.length}`,
+      });
+    }
+    if (hostKitReport.leases.length === 0) {
+      report.push({ platform: "host-kit", check: "all-leases", status: "NONE", detail: "no test/mcp/browser/compose leases detected" });
+    }
+
+    // Orphans
+    const orphanCount = hostKitReport.orphans.length;
+    if (orphanCount > 0) {
+      report.push({
+        platform: "host-kit", check: "orphans",
+        status: "ORPHANS",
+        detail: `count=${orphanCount}: ${hostKitReport.orphans.slice(0, 3).map((o) => `${o.kind}:${o.path}`).join("; ")}${orphanCount > 3 ? ",..." : ""}`,
+      });
+    } else {
+      report.push({ platform: "host-kit", check: "orphans", status: "CLEAN", detail: "no orphaned resources detected" });
+    }
+
+    // Fresh-process JSON proof
+    const proof = hostKitReport.freshProof;
+    report.push({
+      platform: "host-kit", check: "fresh-process-proof",
+      status: "OK",
+      detail: `proofId=${proof.proofId} pid=${proof.pid} gen=${proof.generation} mem=${proof.systemSnapshot.freeMemoryMb}/${proof.systemSnapshot.totalMemoryMb}MB cpu=${proof.systemSnapshot.cpuCount} host=${proof.hostname}`,
+    });
+  } catch (error) {
+    report.push({ platform: "host-kit", check: "host-kit-doctor", status: "ERROR", detail: (error as Error).message });
+  }
+
+  // RTK check
+  try {
+    const rtkResult = await new Promise<{ ok: boolean; stdout: string; stderr: string }>((resolve) => {
+      execFile("rtk", ["--version"], (error, stdout, stderr) => {
+        resolve({ ok: !error, stdout: stdout ?? "", stderr: stderr ?? "" });
+      });
+    });
+    if (rtkResult.ok) {
+      report.push({ platform: "rtk", check: "rtk-install", status: "OK", detail: rtkResult.stdout.trim() });
+    } else {
+      report.push({ platform: "rtk", check: "rtk-install", status: "WARN", detail: "RTK not installed — run: curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh" });
+    }
+  } catch {
+    report.push({ platform: "rtk", check: "rtk-install", status: "WARN", detail: "RTK not available on PATH" });
+  }
+
   // Output
   const table = report
     .map((r) => `${r.platform}\t${r.check}\t${r.status}\t${r.detail}`)
@@ -334,7 +535,7 @@ export async function doctor(
   }
 
   const bad = report.filter((r) =>
-    ["MISSING", "NOT_LIVE", "MODEL_POLICY_DRIFT", "MODEL_POLICY_MISSING", "NATIVE_PARTIAL"].includes(r.status)
+    ["MISSING", "NOT_LIVE", "MODEL_POLICY_DRIFT", "MODEL_POLICY_MISSING", "NATIVE_PARTIAL", "ORPHANS", "ERROR"].includes(r.status)
   );
   const nativeObserved = report.filter((r) => r.status === "NATIVE_OBSERVED").length;
   const nativeUnverified = report.filter((r) => r.status === "NATIVE_UNVERIFIED").length;
@@ -344,7 +545,7 @@ export async function doctor(
     return {
       exitCode: ExitCode.LegacyFailed,
       message: `Doctor found ${bad.length} issue(s)`,
-      data: { report, badCount: bad.length, nativeObserved, nativeUnverified },
+      data: { report, badCount: bad.length, nativeObserved, nativeUnverified, hostKit: hostKitReport ?? null },
     };
   }
 
@@ -352,8 +553,19 @@ export async function doctor(
   return {
     exitCode: ExitCode.Success,
     message: "Doctor health check passed",
-    data: { report, nativeObserved, nativeUnverified },
+    data: { report, nativeObserved, nativeUnverified, hostKit: hostKitReport ?? null },
   };
+}
+
+// ── Utility ───────────────────────────────────────────────────────────────────
+
+function groupBy<T>(arr: T[], keyFn: (item: T) => string): Record<string, T[]> {
+  return arr.reduce<Record<string, T[]>>((acc, item) => {
+    const key = keyFn(item);
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(item);
+    return acc;
+  }, {});
 }
 
 async function walkDir(dir: string): Promise<string[]> {

@@ -1,0 +1,62 @@
+{
+  "name": "search_graph",
+  "description": "Search the code knowledge graph for functions, classes, routes, and variables. Use INSTEAD OF grep/glob when finding code definitions, implementations, or relationships. Three search modes: (1) query='update settings' for BM25 ranked full-text search with camelCase splitting and structural label boosting — recommended for natural-language discovery; (2) name_pattern='.*regex.*' for exact pattern matching; (3) semantic_query=[...] for vector cosine search that bridges vocabulary (finds 'publish' when you search 'send'). The three modes are independent and can be combined in a single call. PAGINATION: results are capped at limit (default 200) — broader queries are silently truncated. The response always includes 'total' (full match count before limit) and 'has_more' (true when total > offset+returned). Detect truncation with has_more, then page by re-calling with offset=offset+limit until has_more is false. Narrow first via label/file_pattern/min_degree before paginating large result sets.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string"
+      },
+      "query": {
+        "type": "string",
+        "description": "Natural-language or keyword full-text search using BM25 ranking. Tokens are split on whitespace; camelCase identifiers are indexed as individual words (updateCloudClient → update, cloud, client). Results are ranked with structural boosting: Functions/Methods +10, Routes +8, Classes/Interfaces +5. Noise labels (File/Folder/Module/Variable) are filtered out. When provided, name_pattern is ignored."
+      },
+      "label": {
+        "type": "string"
+      },
+      "name_pattern": {
+        "type": "string"
+      },
+      "qn_pattern": {
+        "type": "string"
+      },
+      "file_pattern": {
+        "type": "string"
+      },
+      "relationship": {
+        "type": "string"
+      },
+      "min_degree": {
+        "type": "integer"
+      },
+      "max_degree": {
+        "type": "integer"
+      },
+      "exclude_entry_points": {
+        "type": "boolean"
+      },
+      "include_connected": {
+        "type": "boolean"
+      },
+      "semantic_query": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "MUST be an ARRAY of keyword strings (e.g. [\"send\",\"pubsub\",\"publish\"]) — NOT a single string. Each keyword is scored independently via per-keyword min-cosine; results reflect functions that score well on ALL keywords. Requires moderate/full index mode. Results appear in the 'semantic_results' field (separate from 'results')."
+      },
+      "limit": {
+        "type": "integer",
+        "description": "Max results per call. Default 200. Response carries 'total' (full match count) and 'has_more' (true if truncated) so callers can detect the limit and paginate."
+      },
+      "offset": {
+        "type": "integer",
+        "default": 0,
+        "description": "Skip the first N matching nodes. Combine with 'limit' to page: increment offset by limit and re-call while has_more is true."
+      }
+    },
+    "required": [
+      "project"
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "id": "REV-P4-final",
+  "reviewer": "foundation_rereviewer",
+  "status": "PASS",
+  "scope": "Benchmark oracle, all-platform release evidence, clean commit, and honest native activation boundaries",
+  "observed": "Both oracle findings are resolved. P4-AC7-recovered and P4-AC8-final pass with matching artifact hashes; HEAD equals origin/main at e934053; mirrors and runtime state pass on all four; native activation remains explicitly UNVERIFIED.",
+  "receipt_ids": ["P4-AC7-recovered", "P4-AC8-final"],
+  "model": "gpt-5.6-terra",
+  "effort": "medium",
+  "model_evidence": {
+    "requested_model": "gpt-5.6-terra",
+    "requested_effort": "medium",
+    "resolved_model": "gpt-5.6-terra",
+    "resolved_effort": "medium",
+    "observed_model": "gpt-5.6-terra",
+    "observed_effort": "medium",
+    "status": "observed",
+    "fallback_reason": "",
+    "main_direct_exception_reason": ""
+  }
+}

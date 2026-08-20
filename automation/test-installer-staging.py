@@ -135,7 +135,13 @@ def test_stage_rejects_symlink_source() -> None:
         build_temp_profile(source, source)
 
         link = Path(tmp) / "link-source"
-        os.symlink(str(source), str(link))
+        try:
+            os.symlink(str(source), str(link))
+        except OSError as e:
+            if e.winerror == 1314:  # Privilege not held
+                ok("symlink skipped (no privilege on this host)")
+                return
+            raise
 
         out = run_installer("stage", str(target), f"--source={link}")
         if out is not None:

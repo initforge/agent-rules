@@ -1,0 +1,22 @@
+{
+  "name": "ingest_traces",
+  "description": "Ingest runtime traces to enhance the knowledge graph",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "traces": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        }
+      },
+      "project": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "traces",
+      "project"
+    ]
+  }
+}

@@ -3,11 +3,65 @@
   "generated_at": "2026-07-25T23:45:00Z",
   "canonical_sha": "bc2dc92dc8648de51e50d92065d85a4b35ddac4b",
   "top_level": [
-    { "path": "AGENTS.md", "type": "documentation", "owner": "harness-maintainer", "canonical_source": null, "consumers": ["subagents", "workctl"], "public": true, "status": "active", "recommended_future_location": "root", "confidence": "high", "evidence": "Referenced by every work session" },
-    { "path": "README.md", "type": "documentation", "owner": "harness-maintainer", "canonical_source": null, "public": true, "status": "active", "recommended_future_location": "root", "confidence": "high", "evidence": "GitHub landing page" },
-    { "path": "README-vi.md", "type": "documentation", "owner": "harness-maintainer", "canonical_source": null, "public": true, "status": "active", "recommended_future_location": "root", "confidence": "high", "evidence": "Vietnamese mirror of README.md" },
-    { "path": ".gitignore", "type": "config", "owner": "harness-maintainer", "canonical_source": null, "public": true, "status": "active", "recommended_future_location": "root", "confidence": "high", "evidence": "Standard gitignore" },
-    { "path": ".opencode/", "type": "organization-specific profile", "owner": "agent-user", "canonical_source": null, "public": false, "status": "active", "recommended_future_location": ".opencode/", "confidence": "high", "evidence": "OpenCode agent configuration" }
+    {
+      "path": "AGENTS.md",
+      "type": "documentation",
+      "owner": "harness-maintainer",
+      "canonical_source": null,
+      "consumers": [
+        "subagents",
+        "workctl"
+      ],
+      "public": true,
+      "status": "active",
+      "recommended_future_location": "root",
+      "confidence": "high",
+      "evidence": "Referenced by every work session"
+    },
+    {
+      "path": "README.md",
+      "type": "documentation",
+      "owner": "harness-maintainer",
+      "canonical_source": null,
+      "public": true,
+      "status": "active",
+      "recommended_future_location": "root",
+      "confidence": "high",
+      "evidence": "GitHub landing page"
+    },
+    {
+      "path": "README-vi.md",
+      "type": "documentation",
+      "owner": "harness-maintainer",
+      "canonical_source": null,
+      "public": true,
+      "status": "active",
+      "recommended_future_location": "root",
+      "confidence": "high",
+      "evidence": "Vietnamese mirror of README.md"
+    },
+    {
+      "path": ".gitignore",
+      "type": "config",
+      "owner": "harness-maintainer",
+      "canonical_source": null,
+      "public": true,
+      "status": "active",
+      "recommended_future_location": "root",
+      "confidence": "high",
+      "evidence": "Standard gitignore"
+    },
+    {
+      "path": ".opencode/",
+      "type": "organization-specific profile",
+      "owner": "agent-user",
+      "canonical_source": null,
+      "public": false,
+      "status": "active",
+      "recommended_future_location": ".opencode/",
+      "confidence": "high",
+      "evidence": "OpenCode agent configuration"
+    }
   ],
   "directories": [
     {
@@ -18,12 +72,33 @@
       "public": true,
       "status": "active",
       "recommended_future_location": ".github/",
-      "consumers": ["GitHub Actions"],
+      "consumers": [
+        "GitHub Actions"
+      ],
       "confidence": "high",
       "evidence": "CI/CD pipeline",
       "entries": [
-        { "path": ".github/workflows/quality.yml", "type": "workflow", "owner": "harness-maintainer", "public": true, "status": "active", "consumers": ["all-agents", "CI/CD gate"] },
-        { "path": ".github/workflows/certification.yml", "type": "workflow", "owner": "harness-maintainer", "public": true, "status": "advisory", "consumers": ["maintainers"] }
+        {
+          "path": ".github/workflows/quality.yml",
+          "type": "workflow",
+          "owner": "harness-maintainer",
+          "public": true,
+          "status": "active",
+          "consumers": [
+            "all-agents",
+            "CI/CD gate"
+          ]
+        },
+        {
+          "path": ".github/workflows/certification.yml",
+          "type": "workflow",
+          "owner": "harness-maintainer",
+          "public": true,
+          "status": "advisory",
+          "consumers": [
+            "maintainers"
+          ]
+        }
       ]
     },
     {
@@ -34,17 +109,69 @@
       "public": true,
       "status": "active",
       "recommended_future_location": "docs/guides/",
-      "consumers": ["maintainers", "new-contributors"],
+      "consumers": [
+        "maintainers",
+        "new-contributors"
+      ],
       "confidence": "high",
       "evidence": "Listed in AGENTS.md as canonical doc path",
       "entries": [
-        { "path": "docs/guides/README.md", "type": "documentation", "status": "active", "consumers": ["new-contributors"] },
-        { "path": "docs/guides/00-system-map.md", "type": "documentation", "status": "active", "consumers": ["all-agents"] },
-        { "path": "docs/guides/01-runtime-model.md", "type": "documentation", "status": "active", "consumers": ["maintainers"] },
-        { "path": "docs/guides/02-knowledge-system.md", "type": "documentation", "status": "active", "consumers": ["maintainers"] },
-        { "path": "docs/guides/03-integrations-and-sync.md", "type": "documentation", "status": "active", "consumers": ["maintainers"] },
-        { "path": "docs/guides/04-maintenance-and-risks.md", "type": "documentation", "status": "active", "consumers": ["maintainers"] },
-        { "path": "docs/guides/05-maturity.md", "type": "documentation", "status": "active", "consumers": ["maintainers"] }
+        {
+          "path": "docs/guides/README.md",
+          "type": "documentation",
+          "status": "active",
+          "consumers": [
+            "new-contributors"
+          ]
+        },
+        {
+          "path": "docs/guides/00-system-map.md",
+          "type": "documentation",
+          "status": "active",
+          "consumers": [
+            "all-agents"
+          ]
+        },
+        {
+          "path": "docs/guides/01-runtime-model.md",
+          "type": "documentation",
+          "status": "active",
+          "consumers": [
+            "maintainers"
+          ]
+        },
+        {
+          "path": "docs/guides/02-knowledge-system.md",
+          "type": "documentation",
+          "status": "active",
+          "consumers": [
+            "maintainers"
+          ]
+        },
+        {
+          "path": "docs/guides/03-integrations-and-sync.md",
+          "type": "documentation",
+          "status": "active",
+          "consumers": [
+            "maintainers"
+          ]
+        },
+        {
+          "path": "docs/guides/04-maintenance-and-risks.md",
+          "type": "documentation",
+          "status": "active",
+          "consumers": [
+            "maintainers"
+          ]
+        },
+        {
+          "path": "docs/guides/05-maturity.md",
+          "type": "documentation",
+          "status": "active",
+          "consumers": [
+            "maintainers"
+          ]
+        }
       ]
     },
     {
@@ -55,24 +182,107 @@
       "public": true,
       "status": "active",
       "recommended_future_location": "rules/",
-      "consumers": ["all-agents", "runtime-build", "workctl"],
+      "consumers": [
+        "all-agents",
+        "runtime-build",
+        "workctl"
+      ],
       "confidence": "high",
       "evidence": "Listed in AGENTS.md, loaded by manifest.yaml",
       "manifest": "rules/manifest.yaml",
       "entries": [
-        { "path": "rules/README.md", "type": "documentation", "status": "active" },
-        { "path": "rules/manifest.yaml", "type": "config", "status": "active", "consumers": ["03-validate-context.ps1", "01-build-runtime.ps1", "context-router.py"] },
-        { "path": "rules/00-bootstrap.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "load_order": 1 },
-        { "path": "rules/05-critical-thinking.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "load_order": 2 },
-        { "path": "rules/10-execution.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "load_order": 3 },
-        { "path": "rules/15-output-economy.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "load_order": 4 },
-        { "path": "rules/16-context-style.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "load_order": "lazy" },
-        { "path": "rules/20-quality-and-safety.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "load_order": 5 },
-        { "path": "rules/25-task-lifecycle.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "load_order": 6 },
-        { "path": "rules/30-context-routing.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "load_order": 7 },
-        { "path": "rules/40-harness-governance.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "load_order": "lazy" },
-        { "path": "rules/41-harness-maintainer.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "load_order": "lazy" },
-        { "path": "rules/50-context-budget.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "load_order": "lazy" }
+        {
+          "path": "rules/README.md",
+          "type": "documentation",
+          "status": "active"
+        },
+        {
+          "path": "rules/manifest.yaml",
+          "type": "config",
+          "status": "active",
+          "consumers": [
+            "03-validate-context.ps1",
+            "01-build-runtime.ps1",
+            "context-router.py"
+          ]
+        },
+        {
+          "path": "rules/00-bootstrap.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "load_order": 1
+        },
+        {
+          "path": "rules/05-critical-thinking.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "load_order": 2
+        },
+        {
+          "path": "rules/10-execution.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "load_order": 3
+        },
+        {
+          "path": "rules/15-output-economy.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "load_order": 4
+        },
+        {
+          "path": "rules/16-context-style.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "load_order": "lazy"
+        },
+        {
+          "path": "rules/20-quality-and-safety.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "load_order": 5
+        },
+        {
+          "path": "rules/25-task-lifecycle.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "load_order": 6
+        },
+        {
+          "path": "rules/30-context-routing.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "load_order": 7
+        },
+        {
+          "path": "rules/40-harness-governance.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "load_order": "lazy"
+        },
+        {
+          "path": "rules/41-harness-maintainer.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "load_order": "lazy"
+        },
+        {
+          "path": "rules/50-context-budget.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "load_order": "lazy"
+        }
       ]
     },
     {
@@ -83,25 +293,105 @@
       "public": true,
       "status": "active",
       "recommended_future_location": "skills/",
-      "consumers": ["all-agents", "runtime-build"],
+      "consumers": [
+        "all-agents",
+        "runtime-build"
+      ],
       "confidence": "high",
       "evidence": "Referenced by AGENTS.md and manifest.yaml routing",
       "entries": [
-        { "path": "skills/5fedu-module-parity/SKILL.md", "type": "public core", "owner": "5fedu-maintainer", "status": "active", "skill_slug": "5fedu-module-parity" },
-        { "path": "skills/5fedu-project/SKILL.md", "type": "public core", "owner": "5fedu-maintainer", "status": "active", "skill_slug": "5fedu-project" },
-        { "path": "skills/best-of-n/SKILL.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "skill_slug": "best-of-n" },
-        { "path": "skills/browser-qa/SKILL.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "skill_slug": "browser-qa" },
-        { "path": "skills/clean-code/SKILL.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "skill_slug": "clean-code" },
-        { "path": "skills/code-review/SKILL.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "skill_slug": "code-review" },
-        { "path": "skills/context-evolution-protocol/SKILL.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "skill_slug": "context-evolution-protocol" },
-        { "path": "skills/docs-style/SKILL.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "skill_slug": "docs-style" },
-        { "path": "skills/finish-to-completion/SKILL.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "skill_slug": "finish-to-completion" },
-        { "path": "skills/frontend-architect/SKILL.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "skill_slug": "frontend-architect" },
-        { "path": "skills/implementation-discovery/SKILL.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "skill_slug": "implementation-discovery" },
-        { "path": "skills/master-image-generation/SKILL.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "skill_slug": "master-image-generation" },
-        { "path": "skills/plan-and-handoff/SKILL.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "skill_slug": "plan-and-handoff" },
-        { "path": "skills/qa-skills/SKILL.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "skill_slug": "qa-skills", "upstream": "petrkindlmann/qa-skills" },
-        { "path": "skills/researcher/SKILL.md", "type": "public core", "owner": "harness-maintainer", "status": "active", "skill_slug": "researcher" }
+        {
+          "path": "skills/5fedu-module-parity/SKILL.md",
+          "type": "public core",
+          "owner": "5fedu-maintainer",
+          "status": "active",
+          "skill_slug": "5fedu-module-parity"
+        },
+        {
+          "path": "skills/5fedu-project/SKILL.md",
+          "type": "public core",
+          "owner": "5fedu-maintainer",
+          "status": "active",
+          "skill_slug": "5fedu-project"
+        },
+        {
+          "path": "skills/best-of-n/SKILL.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "skill_slug": "best-of-n"
+        },
+        {
+          "path": "skills/browser-qa/SKILL.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "skill_slug": "browser-qa"
+        },
+        {
+          "path": "skills/context-evolution-protocol/SKILL.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "skill_slug": "context-evolution-protocol"
+        },
+        {
+          "path": "skills/docs-style/SKILL.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "skill_slug": "docs-style"
+        },
+        {
+          "path": "skills/finish-to-completion/SKILL.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "skill_slug": "finish-to-completion"
+        },
+        {
+          "path": "skills/frontend-architect/SKILL.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "skill_slug": "frontend-architect"
+        },
+        {
+          "path": "skills/implementation-discovery/SKILL.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "skill_slug": "implementation-discovery"
+        },
+        {
+          "path": "skills/master-image-generation/SKILL.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "skill_slug": "master-image-generation"
+        },
+        {
+          "path": "skills/plan-and-handoff/SKILL.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "skill_slug": "plan-and-handoff"
+        },
+        {
+          "path": "skills/qa-skills/SKILL.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "skill_slug": "qa-skills",
+          "upstream": "petrkindlmann/qa-skills"
+        },
+        {
+          "path": "skills/researcher/SKILL.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "skill_slug": "researcher"
+        }
       ]
     },
     {
@@ -112,17 +402,73 @@
       "public": true,
       "status": "active",
       "recommended_future_location": "integrations/",
-      "consumers": ["02-install-runtime.ps1", "09-doctor.ps1", "Merge-Mcp-Adapters.ps1"],
+      "consumers": [
+        "02-install-runtime.ps1",
+        "09-doctor.ps1",
+        "Merge-Mcp-Adapters.ps1"
+      ],
       "confidence": "high",
       "evidence": "Reference by AGENTS.md, consumed by installer",
       "registry": "integrations/registry.json",
       "entries": [
-        { "path": "integrations/registry.json", "type": "config", "status": "active", "consumers": ["02-install-runtime.ps1", "09-doctor.ps1", "validate-tool-registry.ps1"] },
-        { "path": "integrations/required/codebase-memory-mcp/", "type": "installer", "status": "active", "policy": "required", "hosts": ["codex","grok","antigravity","cursor"] },
-        { "path": "integrations/recommended/context7/", "type": "installer", "status": "active", "policy": "recommended", "hosts": ["codex","grok","antigravity","cursor"] },
-        { "path": "integrations/recommended/playwright-mcp/", "type": "installer", "status": "active", "policy": "recommended", "hosts": ["codex","grok","antigravity","cursor"] },
-        { "path": "integrations/recommended/chrome-devtools-mcp/", "type": "installer", "status": "active", "policy": "recommended", "hosts": ["codex","grok","antigravity","cursor"] },
-        { "path": "integrations/optional/caveman/", "type": "installer", "status": "active", "policy": "optional", "hosts": [] }
+        {
+          "path": "integrations/registry.json",
+          "type": "config",
+          "status": "active",
+          "consumers": [
+            "02-install-runtime.ps1",
+            "09-doctor.ps1",
+            "validate-tool-registry.ps1"
+          ]
+        },
+        {
+          "path": "integrations/required/codebase-memory-mcp/",
+          "type": "installer",
+          "status": "active",
+          "policy": "required",
+          "hosts": [
+            "codex",
+            "grok",
+            "antigravity",
+            "cursor"
+          ]
+        },
+        {
+          "path": "integrations/recommended/context7/",
+          "type": "installer",
+          "status": "active",
+          "policy": "recommended",
+          "hosts": [
+            "codex",
+            "grok",
+            "antigravity",
+            "cursor"
+          ]
+        },
+        {
+          "path": "integrations/recommended/playwright-mcp/",
+          "type": "installer",
+          "status": "active",
+          "policy": "recommended",
+          "hosts": [
+            "codex",
+            "grok",
+            "antigravity",
+            "cursor"
+          ]
+        },
+        {
+          "path": "integrations/recommended/chrome-devtools-mcp/",
+          "type": "installer",
+          "status": "active",
+          "policy": "recommended",
+          "hosts": [
+            "codex",
+            "grok",
+            "antigravity",
+            "cursor"
+          ]
+        }
       ]
     },
     {
@@ -133,15 +479,51 @@
       "public": true,
       "status": "active",
       "recommended_future_location": "integrations/",
-      "consumers": ["codex", "cursor", "grok", "antigravity"],
+      "consumers": [
+        "codex",
+        "cursor",
+        "grok",
+        "antigravity"
+      ],
       "confidence": "medium",
       "evidence": "Tool JSON schemas for MCP servers; source unknown",
       "entries": [
-        { "path": "integrations/codebase-memory/", "type": "runtime adapter", "status": "active", "server": "codebase-memory-mcp", "tool_count": 13, "note": "Canonical identity; underscore variant removed in 4dccb80+2" },
-        { "path": "integrations/chrome-devtools/", "type": "runtime adapter", "status": "active", "server": "chrome-devtools-mcp", "tool_count": 29 },
-        { "path": "integrations/context7/", "type": "runtime adapter", "status": "active", "server": "context7-mcp", "tool_count": 2 },
-        { "path": "integrations/playwright/", "type": "runtime adapter", "status": "active", "server": "playwright-mcp", "tool_count": 27 },
-        { "path": "integrations/tasks/", "type": "runtime adapter", "status": "active", "server": "tasks-mcp", "tool_count": 7 }
+        {
+          "path": "integrations/codebase-memory/",
+          "type": "runtime adapter",
+          "status": "active",
+          "server": "codebase-memory-mcp",
+          "tool_count": 13,
+          "note": "Canonical identity; underscore variant removed in 4dccb80+2"
+        },
+        {
+          "path": "integrations/chrome-devtools/",
+          "type": "runtime adapter",
+          "status": "active",
+          "server": "chrome-devtools-mcp",
+          "tool_count": 29
+        },
+        {
+          "path": "integrations/context7/",
+          "type": "runtime adapter",
+          "status": "active",
+          "server": "context7-mcp",
+          "tool_count": 2
+        },
+        {
+          "path": "integrations/playwright/",
+          "type": "runtime adapter",
+          "status": "active",
+          "server": "playwright-mcp",
+          "tool_count": 27
+        },
+        {
+          "path": "integrations/tasks/",
+          "type": "runtime adapter",
+          "status": "active",
+          "server": "tasks-mcp",
+          "tool_count": 7
+        }
       ]
     },
     {
@@ -152,17 +534,66 @@
       "public": true,
       "status": "active",
       "recommended_future_location": "platforms/",
-      "consumers": ["01-build-runtime.ps1", "02-install-runtime.ps1", "09-doctor.ps1"],
+      "consumers": [
+        "01-build-runtime.ps1",
+        "02-install-runtime.ps1",
+        "09-doctor.ps1"
+      ],
       "confidence": "high",
       "evidence": "Listed in AGENTS.md; contract validated by build script",
       "entries": [
-        { "path": "platforms/platform-contracts.json", "type": "config", "owner": "harness-maintainer", "status": "active", "consumers": ["01-build-runtime.ps1", "test-platform-contracts.py"] },
-        { "path": "platforms/README.md", "type": "documentation", "status": "active" },
-        { "path": "platforms/codex/", "type": "runtime adapter", "platform": "codex", "status": "active", "install_home": "$CODEX_HOME / ~/.codex", "mcp_format": "toml_mcp_servers" },
-        { "path": "platforms/grok/", "type": "runtime adapter", "platform": "grok", "status": "active", "install_home": "$GROK_HOME / ~/.grok", "mcp_format": "json_mcpServers" },
-        { "path": "platforms/antigravity/", "type": "runtime adapter", "platform": "antigravity", "status": "active", "install_home": "~/.gemini/config", "mcp_format": "json_mcpServers" },
-        { "path": "platforms/cursor/", "type": "runtime adapter", "platform": "cursor", "status": "active", "install_home": "~/.cursor", "mcp_format": "json_mcpServers" },
-        { "path": "platforms/shared/", "type": "runtime adapter", "status": "active" }
+        {
+          "path": "platforms/platform-contracts.json",
+          "type": "config",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "consumers": [
+            "01-build-runtime.ps1",
+            "test-platform-contracts.py"
+          ]
+        },
+        {
+          "path": "platforms/README.md",
+          "type": "documentation",
+          "status": "active"
+        },
+        {
+          "path": "platforms/codex/",
+          "type": "runtime adapter",
+          "platform": "codex",
+          "status": "active",
+          "install_home": "$CODEX_HOME / ~/.codex",
+          "mcp_format": "toml_mcp_servers"
+        },
+        {
+          "path": "platforms/grok/",
+          "type": "runtime adapter",
+          "platform": "grok",
+          "status": "active",
+          "install_home": "$GROK_HOME / ~/.grok",
+          "mcp_format": "json_mcpServers"
+        },
+        {
+          "path": "platforms/antigravity/",
+          "type": "runtime adapter",
+          "platform": "antigravity",
+          "status": "active",
+          "install_home": "~/.gemini/config",
+          "mcp_format": "json_mcpServers"
+        },
+        {
+          "path": "platforms/cursor/",
+          "type": "runtime adapter",
+          "platform": "cursor",
+          "status": "active",
+          "install_home": "~/.cursor",
+          "mcp_format": "json_mcpServers"
+        },
+        {
+          "path": "platforms/shared/",
+          "type": "runtime adapter",
+          "status": "active"
+        }
       ]
     },
     {
@@ -173,14 +604,36 @@
       "public": true,
       "status": "active",
       "recommended_future_location": "profiles/5fedu/projects/",
-      "consumers": ["08-install-5fedu-context.ps1", "15-sync-project-agents.ps1", "5fedu-project skill"],
+      "consumers": [
+        "08-install-5fedu-context.ps1",
+        "15-sync-project-agents.ps1",
+        "5fedu-project skill"
+      ],
       "confidence": "high",
       "evidence": "Referenced by AGENTS.md; consumed by 5fedu installer",
       "entries": [
-        { "path": "profiles/5fedu/projects/README.md", "type": "documentation", "status": "active" },
-        { "path": "profiles/5fedu/known-repos.md", "type": "documentation", "status": "active" },
-        { "path": "profiles/5fedu/projects/", "type": "project-specific context", "status": "active", "template": true },
-        { "path": "profiles/5fedu/projects/context-template/", "type": "project-specific context", "status": "active", "template": true }
+        {
+          "path": "profiles/5fedu/projects/README.md",
+          "type": "documentation",
+          "status": "active"
+        },
+        {
+          "path": "profiles/5fedu/known-repos.md",
+          "type": "documentation",
+          "status": "active"
+        },
+        {
+          "path": "profiles/5fedu/projects/",
+          "type": "project-specific context",
+          "status": "active",
+          "template": true
+        },
+        {
+          "path": "profiles/5fedu/projects/context-template/",
+          "type": "project-specific context",
+          "status": "active",
+          "template": true
+        }
       ]
     },
     {
@@ -194,67 +647,344 @@
       "confidence": "high",
       "evidence": "Listed in AGENTS.md; entry point for all operations",
       "entries": [
-        { "path": "automation/01-build-runtime.ps1", "type": "installer", "status": "active", "pipeline_order": 2 },
-        { "path": "automation/02-install-runtime.ps1", "type": "installer", "status": "active", "pipeline_order": 3 },
-        { "path": "automation/03-validate-context.ps1", "type": "validator", "status": "active", "pipeline_order": 1 },
-        { "path": "automation/04-verify-mirrors.ps1", "type": "validator", "status": "active", "pipeline_order": 4 },
-        { "path": "automation/05-verify-runtime-state.ps1", "type": "validator", "status": "active" },
-        { "path": "automation/06-export-runtime-state.ps1", "type": "utility", "status": "active" },
-        { "path": "automation/07-import-reviewed-changes.ps1", "type": "auditor", "status": "active" },
-        { "path": "automation/08-install-5fedu-context.ps1", "type": "installer", "status": "active" },
-        { "path": "automation/09-doctor.ps1", "type": "auditor", "status": "active", "pipeline_order": 5 },
-        { "path": "automation/10-audit-harness-health.ps1", "type": "auditor", "status": "active" },
-        { "path": "automation/14-export-5fedu-writeback.ps1", "type": "utility", "status": "active" },
-        { "path": "automation/15-sync-project-agents.ps1", "type": "installer", "status": "active" },
-        { "path": "automation/11-install-runtime-hooks.sh", "type": "installer", "status": "active" },
-        { "path": "automation/12-regression-harness-guards.ps1", "type": "validator", "status": "active" },
-        { "path": "automation/13-cutover-context-routing.ps1", "type": "validator", "status": "active" },
-        { "path": "automation/path-compat.ps1", "type": "utility", "status": "active" },
-        { "path": "automation/run.sh", "type": "utility", "status": "active" },
-        { "path": "automation/workctl.py", "type": "utility", "status": "active", "install_destinations": ["agent-rules-tools/"] },
-        { "path": "automation/workctl.ps1", "type": "utility", "status": "active", "install_destinations": ["agent-rules-tools/"] },
-        { "path": "automation/workctl.sh", "type": "utility", "status": "active", "install_destinations": ["agent-rules-tools/"] },
-        { "path": "automation/Merge-Mcp-Adapters.ps1", "type": "utility", "status": "active" },
-        { "path": "automation/work-ledger.schema.json", "type": "schema", "status": "active", "consumers": ["workctl.py", "test-workctl.py"] },
-        { "path": "automation/context-graph.schema.json", "type": "schema", "status": "active" },
-        { "path": "automation/context-route-cases.schema.json", "type": "schema", "status": "active" },
-        { "path": "automation/platform-contracts.schema.json", "type": "schema", "status": "active", "consumers": ["test-platform-contracts.py"] },
-        { "path": "automation/trace-schema.json", "type": "schema", "status": "active" },
-        { "path": "automation/model-policy.json", "type": "config", "status": "active", "consumers": ["01-build-runtime.ps1", "test-native-agent-policy.py"] },
-        { "path": "automation/evidence-profiles.json", "type": "config", "status": "active" },
-        { "path": "automation/efficiency-policy.json", "type": "config", "status": "active" },
-        { "path": "automation/trigger-audit.json", "type": "config", "status": "active", "consumers": ["03-validate-context.ps1"], "note": "CI fixture only, NOT runtime router" },
-        { "path": "automation/context-route-cases.json", "type": "config", "status": "active", "consumers": ["03-validate-context.ps1", "test-context-router.py"] },
-        { "path": "automation/legacy-context-path-map.json", "type": "config", "status": "active" },
-        { "path": "automation/agent_quality.py", "type": "benchmark", "status": "active" },
-        { "path": "automation/live_benchmark_runner.py", "type": "benchmark", "status": "active" },
-        { "path": "automation/live_workspace_verifier.py", "type": "benchmark", "status": "active" },
-        { "path": "automation/build-benchmark-runtime.ps1", "type": "benchmark", "status": "active" },
-        { "path": "automation/test-workctl.py", "type": "tester", "status": "active" },
-        { "path": "automation/test-native-agent-policy.py", "type": "tester", "status": "active" },
-        { "path": "automation/test-platform-contracts.py", "type": "tester", "status": "active" },
-        { "path": "automation/test-context-router.py", "type": "tester", "status": "active" },
-        { "path": "automation/test-model-policy.py", "type": "tester", "status": "active" },
-        { "path": "automation/test-agent-quality-benchmark.py", "type": "tester", "status": "active" },
-        { "path": "automation/test-skill-gate-stack.py", "type": "tester", "status": "active" },
-        { "path": "automation/test-live-agent-adapter.py", "type": "tester", "status": "active" },
-        { "path": "automation/test-external-receipt.py", "type": "tester", "status": "active" },
-        { "path": "automation/verify-external-receipt.py", "type": "validator", "status": "active" },
-        { "path": "automation/context-graph-router.py", "type": "utility", "status": "active" },
-        { "path": "automation/audit-ui-routing.ps1", "type": "auditor", "status": "active" },
-        { "path": "automation/audit-plan-artifact.ps1", "type": "auditor", "status": "active" },
-        { "path": "automation/audit-workflow-clarity.ps1", "type": "auditor", "status": "active" },
-        { "path": "profiles/5fedu/automation/audit-5fedu-template-purity.ps1", "type": "auditor", "status": "active" },
-        { "path": "automation/audit-harness-commit-compare.ps1", "type": "auditor", "status": "active" },
-        { "path": "automation/audit-context-pre-commit.sh", "type": "auditor", "status": "active" },
-        { "path": "automation/validate-tool-registry.ps1", "type": "validator", "status": "active" },
-        { "path": "automation/profiles/tah-app.json", "type": "organization-specific profile", "status": "active" },
-        { "path": "automation/profiles/nostime.json", "type": "organization-specific profile", "status": "active" },
-        { "path": "evals/fixtures/", "type": "evaluation fixtures", "status": "active" },
-        { "path": "automation/migrate-nostime-project-local.ps1", "type": "migration", "status": "deprecated" },
-        { "path": "automation/migrate-tahapp-project-local.ps1", "type": "migration", "status": "deprecated" },
-        { "path": "automation/install-pre-commit-hook.sh", "type": "installer", "status": "active" },
-        { "path": "automation/fixtures/", "type": "fixture", "status": "empty" }
+        {
+          "path": "automation/01-build-runtime.ps1",
+          "type": "installer",
+          "status": "active",
+          "pipeline_order": 2
+        },
+        {
+          "path": "automation/02-install-runtime.ps1",
+          "type": "installer",
+          "status": "active",
+          "pipeline_order": 3
+        },
+        {
+          "path": "automation/03-validate-context.ps1",
+          "type": "validator",
+          "status": "active",
+          "pipeline_order": 1
+        },
+        {
+          "path": "automation/04-verify-mirrors.ps1",
+          "type": "validator",
+          "status": "active",
+          "pipeline_order": 4
+        },
+        {
+          "path": "automation/05-verify-runtime-state.ps1",
+          "type": "validator",
+          "status": "active"
+        },
+        {
+          "path": "automation/06-export-runtime-state.ps1",
+          "type": "utility",
+          "status": "active"
+        },
+        {
+          "path": "automation/07-import-reviewed-changes.ps1",
+          "type": "auditor",
+          "status": "active"
+        },
+        {
+          "path": "automation/08-install-5fedu-context.ps1",
+          "type": "installer",
+          "status": "active"
+        },
+        {
+          "path": "automation/09-doctor.ps1",
+          "type": "auditor",
+          "status": "active",
+          "pipeline_order": 5
+        },
+        {
+          "path": "automation/10-audit-harness-health.ps1",
+          "type": "auditor",
+          "status": "active"
+        },
+        {
+          "path": "automation/14-export-5fedu-writeback.ps1",
+          "type": "utility",
+          "status": "active"
+        },
+        {
+          "path": "automation/15-sync-project-agents.ps1",
+          "type": "installer",
+          "status": "active"
+        },
+        {
+          "path": "automation/11-install-runtime-hooks.sh",
+          "type": "installer",
+          "status": "active"
+        },
+        {
+          "path": "automation/12-regression-harness-guards.ps1",
+          "type": "validator",
+          "status": "active"
+        },
+        {
+          "path": "automation/13-cutover-context-routing.ps1",
+          "type": "validator",
+          "status": "active"
+        },
+        {
+          "path": "automation/path-compat.ps1",
+          "type": "utility",
+          "status": "active"
+        },
+        {
+          "path": "automation/run.sh",
+          "type": "utility",
+          "status": "active"
+        },
+        {
+          "path": "automation/workctl.py",
+          "type": "utility",
+          "status": "active",
+          "install_destinations": [
+            "agent-rules-tools/"
+          ]
+        },
+        {
+          "path": "automation/workctl.ps1",
+          "type": "utility",
+          "status": "active",
+          "install_destinations": [
+            "agent-rules-tools/"
+          ]
+        },
+        {
+          "path": "automation/workctl.sh",
+          "type": "utility",
+          "status": "active",
+          "install_destinations": [
+            "agent-rules-tools/"
+          ]
+        },
+        {
+          "path": "automation/Merge-Mcp-Adapters.ps1",
+          "type": "utility",
+          "status": "active"
+        },
+        {
+          "path": "automation/work-ledger.schema.json",
+          "type": "schema",
+          "status": "active",
+          "consumers": [
+            "workctl.py",
+            "test-workctl.py"
+          ]
+        },
+        {
+          "path": "automation/context-graph.schema.json",
+          "type": "schema",
+          "status": "active"
+        },
+        {
+          "path": "automation/context-route-cases.schema.json",
+          "type": "schema",
+          "status": "active"
+        },
+        {
+          "path": "automation/platform-contracts.schema.json",
+          "type": "schema",
+          "status": "active",
+          "consumers": [
+            "test-platform-contracts.py"
+          ]
+        },
+        {
+          "path": "automation/trace-schema.json",
+          "type": "schema",
+          "status": "active"
+        },
+        {
+          "path": "automation/model-policy.json",
+          "type": "config",
+          "status": "active",
+          "consumers": [
+            "01-build-runtime.ps1",
+            "test-native-agent-policy.py"
+          ]
+        },
+        {
+          "path": "automation/evidence-profiles.json",
+          "type": "config",
+          "status": "active"
+        },
+        {
+          "path": "automation/efficiency-policy.json",
+          "type": "config",
+          "status": "active"
+        },
+        {
+          "path": "automation/trigger-audit.json",
+          "type": "config",
+          "status": "active",
+          "consumers": [
+            "03-validate-context.ps1"
+          ],
+          "note": "CI fixture only, NOT runtime router"
+        },
+        {
+          "path": "automation/context-route-cases.json",
+          "type": "config",
+          "status": "active",
+          "consumers": [
+            "03-validate-context.ps1",
+            "test-context-router.py"
+          ]
+        },
+        {
+          "path": "automation/legacy-context-path-map.json",
+          "type": "config",
+          "status": "active"
+        },
+        {
+          "path": "automation/agent_quality.py",
+          "type": "benchmark",
+          "status": "active"
+        },
+        {
+          "path": "automation/live_benchmark_runner.py",
+          "type": "benchmark",
+          "status": "active"
+        },
+        {
+          "path": "automation/live_workspace_verifier.py",
+          "type": "benchmark",
+          "status": "active"
+        },
+        {
+          "path": "automation/build-benchmark-runtime.ps1",
+          "type": "benchmark",
+          "status": "active"
+        },
+        {
+          "path": "automation/test-workctl.py",
+          "type": "tester",
+          "status": "active"
+        },
+        {
+          "path": "automation/test-native-agent-policy.py",
+          "type": "tester",
+          "status": "active"
+        },
+        {
+          "path": "automation/test-platform-contracts.py",
+          "type": "tester",
+          "status": "active"
+        },
+        {
+          "path": "automation/test-context-router.py",
+          "type": "tester",
+          "status": "active"
+        },
+        {
+          "path": "automation/test-model-policy.py",
+          "type": "tester",
+          "status": "active"
+        },
+        {
+          "path": "automation/test-agent-quality-benchmark.py",
+          "type": "tester",
+          "status": "active"
+        },
+        {
+          "path": "automation/test-skill-gate-stack.py",
+          "type": "tester",
+          "status": "active"
+        },
+        {
+          "path": "automation/test-live-agent-adapter.py",
+          "type": "tester",
+          "status": "active"
+        },
+        {
+          "path": "automation/test-external-receipt.py",
+          "type": "tester",
+          "status": "active"
+        },
+        {
+          "path": "automation/verify-external-receipt.py",
+          "type": "validator",
+          "status": "active"
+        },
+        {
+          "path": "automation/context-graph-router.py",
+          "type": "utility",
+          "status": "active"
+        },
+        {
+          "path": "automation/audit-ui-routing.ps1",
+          "type": "auditor",
+          "status": "active"
+        },
+        {
+          "path": "automation/audit-plan-artifact.ps1",
+          "type": "auditor",
+          "status": "active"
+        },
+        {
+          "path": "automation/audit-workflow-clarity.ps1",
+          "type": "auditor",
+          "status": "active"
+        },
+        {
+          "path": "profiles/5fedu/automation/audit-5fedu-template-purity.ps1",
+          "type": "auditor",
+          "status": "active"
+        },
+        {
+          "path": "automation/audit-harness-commit-compare.ps1",
+          "type": "auditor",
+          "status": "active"
+        },
+        {
+          "path": "automation/audit-context-pre-commit.sh",
+          "type": "auditor",
+          "status": "active"
+        },
+        {
+          "path": "automation/validate-tool-registry.ps1",
+          "type": "validator",
+          "status": "active"
+        },
+        {
+          "path": "automation/profiles/tah-app.json",
+          "type": "organization-specific profile",
+          "status": "active"
+        },
+        {
+          "path": "automation/profiles/nostime.json",
+          "type": "organization-specific profile",
+          "status": "active"
+        },
+        {
+          "path": "evals/fixtures/",
+          "type": "evaluation fixtures",
+          "status": "active"
+        },
+        {
+          "path": "automation/migrate-nostime-project-local.ps1",
+          "type": "migration",
+          "status": "deprecated"
+        },
+        {
+          "path": "automation/migrate-tahapp-project-local.ps1",
+          "type": "migration",
+          "status": "deprecated"
+        },
+        {
+          "path": "automation/install-pre-commit-hook.sh",
+          "type": "installer",
+          "status": "active"
+        },
+        {
+          "path": "automation/fixtures/",
+          "type": "fixture",
+          "status": "empty"
+        }
       ]
     },
     {
@@ -265,15 +995,38 @@
       "public": true,
       "status": "generated",
       "recommended_future_location": "generated/",
-      "consumers": ["02-install-runtime.ps1", "09-doctor.ps1"],
+      "consumers": [
+        "02-install-runtime.ps1",
+        "09-doctor.ps1"
+      ],
       "confidence": "high",
       "evidence": "Marked DO NOT EDIT in AGENTS.md; regenerated by build script",
       "entries": [
-        { "path": "generated/context-graph.json", "type": "generated output", "canonical_source": "automation/build-context-graph.ps1 + skills/ + profiles/5fedu/projects/ + rules/manifest.yaml" },
-        { "path": "generated/runtime-build/codex/", "type": "generated output", "canonical_source": "01-build-runtime.ps1 + rules/ + skills/ + platforms/codex/" },
-        { "path": "generated/runtime-build/grok/", "type": "generated output", "canonical_source": "01-build-runtime.ps1 + rules/ + skills/ + platforms/grok/" },
-        { "path": "generated/runtime-build/antigravity/", "type": "generated output", "canonical_source": "01-build-runtime.ps1 + rules/ + skills/ + platforms/antigravity/" },
-        { "path": "generated/runtime-build/cursor/", "type": "generated output", "canonical_source": "01-build-runtime.ps1 + rules/ + skills/ + platforms/cursor/" }
+        {
+          "path": "generated/context-graph.json",
+          "type": "generated output",
+          "canonical_source": "automation/build-context-graph.ps1 + skills/ + profiles/5fedu/projects/ + rules/manifest.yaml"
+        },
+        {
+          "path": "generated/runtime-build/codex/",
+          "type": "generated output",
+          "canonical_source": "01-build-runtime.ps1 + rules/ + skills/ + platforms/codex/"
+        },
+        {
+          "path": "generated/runtime-build/grok/",
+          "type": "generated output",
+          "canonical_source": "01-build-runtime.ps1 + rules/ + skills/ + platforms/grok/"
+        },
+        {
+          "path": "generated/runtime-build/antigravity/",
+          "type": "generated output",
+          "canonical_source": "01-build-runtime.ps1 + rules/ + skills/ + platforms/antigravity/"
+        },
+        {
+          "path": "generated/runtime-build/cursor/",
+          "type": "generated output",
+          "canonical_source": "01-build-runtime.ps1 + rules/ + skills/ + platforms/cursor/"
+        }
       ]
     },
     {
@@ -317,7 +1070,13 @@
       {
         "severity": "medium",
         "finding": "integrations/ tool JSONs have unknown upstream source; no manifest or README documents provenance",
-        "paths": ["integrations/codebase-memory/", "integrations/chrome-devtools/", "integrations/context7/", "integrations/playwright/", "integrations/tasks/"]
+        "paths": [
+          "integrations/codebase-memory/",
+          "integrations/chrome-devtools/",
+          "integrations/context7/",
+          "integrations/playwright/",
+          "integrations/tasks/"
+        ]
       },
       {
         "severity": "low",
@@ -329,7 +1088,12 @@
       {
         "severity": "low",
         "finding": "platforms/codex/scripts/__pycache__/ files are compiled bytecode; source is skill-gate.py",
-        "paths": ["platforms/codex/scripts/__pycache__/", "platforms/antigravity/scripts/__pycache__/", "platforms/cursor/scripts/__pycache__/", "platforms/shared/scripts/__pycache__/"]
+        "paths": [
+          "platforms/codex/scripts/__pycache__/",
+          "platforms/antigravity/scripts/__pycache__/",
+          "platforms/cursor/scripts/__pycache__/",
+          "platforms/shared/scripts/__pycache__/"
+        ]
       }
     ],
     "numbered_scripts_numering_anomalies_resolved": [
@@ -389,9 +1153,21 @@
     "total_generated_files": 299,
     "total_gitignored_files": 1469,
     "top_level_directories": 12,
-    "canonical_source_dirs": ["rules/", "skills/", "platforms/", "profiles/5fedu/projects/", "docs/guides/", "integrations/", "automation/"],
-    "generated_dirs": ["generated/"],
-    "advisory_dirs": [".agent/"],
+    "canonical_source_dirs": [
+      "rules/",
+      "skills/",
+      "platforms/",
+      "profiles/5fedu/projects/",
+      "docs/guides/",
+      "integrations/",
+      "automation/"
+    ],
+    "generated_dirs": [
+      "generated/"
+    ],
+    "advisory_dirs": [
+      ".agent/"
+    ],
     "confidence_distribution": {
       "high": "85%",
       "medium": "10%",

@@ -104,14 +104,9 @@ Test-Contains "rules\25-task-lifecycle.md" @(
   "non-overlapping writes",
   "sufficient context",
   "meaningful parallelism",
-  "Required delegation receipts",
-  "subagent_requested",
-  "subagent_resolved",
-  "subagent_started",
-  "subagent_completed",
-  "result_consumed",
-  "result_rejected",
-  "delegation_skipped"
+  "Record what you delegated",
+  "delegated",
+  "outcome"
 )
 Test-Contains "skills\plan-and-handoff\references\adaptive-work-protocol.md" @(
   "Coordinator",

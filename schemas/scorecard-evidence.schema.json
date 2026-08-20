@@ -1,90 +1,57 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "am0015/scorecard-evidence/v2",
-  "title": "AM0015 Scorecard Evidence",
-  "description": "Machine-verified evidence for the 18-dimension AM0015 maturity scorecard. Populated by automation/gather-scorecard-evidence.py. Each dimension carries scored evidence with validated URIs, content hashes, and freshness.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/scorecard-evidence.schema.json",
+  "title": "AM0015 Raw Scorecard Evidence",
   "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "updated_at", "_gathered_at", "_git", "_gh_runs", "_binding", "_review", "_evidence_sources", "dimensions"],
   "properties": {
-    "schema": { "type": "string", "pattern": "^am0015/scorecard-evidence/v" },
-    "updated_at": { "type": "string", "format": "date-time" },
-    "_gathered_at": { "type": "string", "format": "date-time" },
+    "schema": {"const": "am0015/scorecard-evidence/v2"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "_gathered_at": {"type": "string", "format": "date-time"},
     "_git": {
-      "type": "object",
-      "description": "Exact git identity at gather time",
+      "type": "object", "additionalProperties": false,
+      "required": ["commit", "author", "branch", "identity_candidate", "identity_effective"],
       "properties": {
-        "commit": { "type": "string", "pattern": "^[a-f0-9]{7,40}$" },
-        "author": { "type": "string" },
-        "branch": { "type": "string" },
-        "identity_candidate": { "type": "string", "description": "git config user.name for the candidate identity" },
-        "identity_effective": { "type": "string", "description": "Verified effective identity (committer or author)" }
-      },
-      "required": ["commit", "author", "branch"]
-    },
-    "_gh_runs": {
-      "type": "array",
-      "description": "Recent GitHub Actions runs (best-effort, empty when gh unavailable or no network)",
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "branch": { "type": "string" },
-          "status": { "type": "string" },
-          "conclusion": { "type": "string" },
-          "started_at": { "type": "string" }
-        }
+        "commit": {"type": "string", "pattern": "^[a-f0-9]{40}$"}, "author": {"type": "string", "minLength": 1},
+        "branch": {"type": "string", "minLength": 1}, "identity_candidate": {"type": "string"}, "identity_effective": {"type": "string"}
       }
     },
-    "_evidence_sources": {
-      "type": "array",
-      "description": "Aggregate list of evidence URIs that exist on disk, with their content hash, freshness, and kind. Missing/unreachable paths are omitted.",
-      "items": {
-        "type": "object",
-        "properties": {
-          "uri": { "type": "string" },
-          "hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
-          "freshness_seconds": { "type": "number", "minimum": 0 },
-          "kind": { "type": "string", "enum": ["source", "test", "gate", "ci", "install", "doctor", "ledger"] }
-        },
-        "required": ["uri", "hash", "freshness_seconds", "kind"]
-      }
+    "_gh_runs": {"type": "array", "items": {"$ref":"#/$defs/ghRun"}},
+    "_binding": {"type":"object","additionalProperties":false,"required":["head_commit","head_verified","effective_plan","ci","verified"],"properties":{"head_commit":{"type":"string","pattern":"^[a-f0-9]{40}$"},"head_verified":{"type":"boolean"},"effective_plan":{"type":"object","additionalProperties":false,"required":["sha256","ledger_uri","ledger_hash","verified","reason"],"properties":{"sha256":{"type":"string","pattern":"^[a-f0-9]{64}$"},"ledger_uri":{"type":"string","pattern":"^\\.agent/ledger/[A-Za-z0-9._-]+\\.json$"},"ledger_hash":{"type":"string","pattern":"^sha256:[a-f0-9]{64}$"},"verified":{"type":"boolean"},"reason":{"type":"string","minLength":1}}},"ci":{"type":"object","additionalProperties":false,"required":["status","head_commit","freshness_seconds","run_ids","reason"],"properties":{"status":{"enum":["passed","failed","pending","stale","unavailable"]},"head_commit":{"type":"string","pattern":"^[a-f0-9]{40}$"},"freshness_seconds":{"type":"number","minimum":-1},"run_ids":{"type":"array","items":{"type":"string","pattern":"^[0-9]+$"},"uniqueItems":true},"reason":{"type":"string","minLength":1}}},"verified":{"type":"boolean"}}},
+    "_review": {
+      "type": "object", "additionalProperties": false, "required": ["status", "packet", "findings"],
+       "properties": {"status": {"const":"UNVERIFIED"}, "packet": {"anyOf":[{"type":"null"},{"$ref":"#/$defs/evidencePacket"}]}, "findings": {"type":"array","prefixItems":[{"const":"review verification unsupported: canonical ledger has no immutable authenticated receipt format"}],"items":false,"minItems":1,"maxItems":1}}
     },
+    "_evidence_sources": {"type": "array", "items": {"$ref": "#/$defs/evidence"}},
     "dimensions": {
-      "type": "array",
-      "description": "18 AM0015 maturity dimensions with scored evidence",
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string", "pattern": "^d\\d{2}$" },
-          "label": { "type": "string" },
-          "severity": { "type": "string", "enum": ["Critical", "High", "Medium", "Low"] },
-          "score": { "type": "integer", "minimum": 0 },
-          "maxScore": { "type": "integer", "minimum": 0 },
-          "status": { "type": "string", "enum": ["pass", "warn", "fail", "unknown"] },
-          "evidence_items": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "uri": { "type": "string" },
-                "hash": { "type": "string", "pattern": "^(sha256:[a-f0-9]{64})?$" },
-                "freshness_seconds": { "type": "number", "minimum": -1 },
-                "kind": { "type": "string" },
-                "passed": { "type": "boolean" },
-                "finding": { "type": "string" }
-              },
-              "required": ["uri", "hash", "freshness_seconds", "kind", "passed"]
-            }
-          },
-          "findings": {
-            "type": "array",
-            "items": { "type": "string" }
-          }
-        },
-        "required": ["id", "label", "severity", "score", "maxScore", "status", "evidence_items", "findings"]
-      },
-      "minItems": 18,
-      "maxItems": 18
+      "type": "array", "prefixItems": [
+        {"$ref":"#/$defs/d01"},{"$ref":"#/$defs/d02"},{"$ref":"#/$defs/d03"},{"$ref":"#/$defs/d04"},{"$ref":"#/$defs/d05"},{"$ref":"#/$defs/d06"},{"$ref":"#/$defs/d07"},{"$ref":"#/$defs/d08"},{"$ref":"#/$defs/d09"},{"$ref":"#/$defs/d10"},{"$ref":"#/$defs/d11"},{"$ref":"#/$defs/d12"},{"$ref":"#/$defs/d13"},{"$ref":"#/$defs/d14"},{"$ref":"#/$defs/d15"},{"$ref":"#/$defs/d16"},{"$ref":"#/$defs/d17"},{"$ref":"#/$defs/d18"}
+      ], "items": false, "minItems": 18, "maxItems": 18
     }
   },
-  "required": ["schema", "updated_at", "dimensions"]
+  "$defs": {
+    "evidence": {"type":"object","required":["uri","hash","freshness_seconds","kind"],"properties":{"uri":{"type":"string","pattern":"^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\u0000]+$"},"hash":{"type":"string","pattern":"^(sha256:[a-f0-9]{64})?$"},"freshness_seconds":{"type":"number","minimum":-1},"kind":{"type":"string"},"exists":{"type":"boolean"},"head_bound":{"type":"boolean"}},"additionalProperties":false},
+    "dimension": {"type":"object","required":["id","label","severity","score","status","evidence_items"],"properties":{"id":{"type":"string"},"label":{"type":"string"},"severity":{"enum":["Critical","High","Medium","Low"]},"score":{"const":"UNVERIFIED"},"status":{"const":"UNVERIFIED"},"evidence_items":{"type":"array","items":{"$ref":"#/$defs/evidence"}}},"additionalProperties":false},
+    "ghRun":{"type":"object","additionalProperties":false,"required":["id","branch","head_sha","status","conclusion","started_at","updated_at","workflow"],"properties":{"id":{"type":"string","pattern":"^[0-9]+$"},"branch":{"type":"string","minLength":1},"head_sha":{"type":"string","pattern":"^[a-f0-9]{40}$"},"status":{"enum":["queued","in_progress","completed","waiting","requested","pending"]},"conclusion":{"enum":["","success","failure","cancelled","skipped","timed_out","action_required","neutral","stale"]},"started_at":{"type":"string","format":"date-time"},"updated_at":{"type":"string","format":"date-time"},"workflow":{"type":"string","minLength":1}}},
+    "evidencePacket":{"type":"object","additionalProperties":false,"required":["schema","headCommit","effectivePlanIdentity","requestedModel","resolvedModel","epoch","reconciliationIds","receipt"],"properties":{"schema":{"const":"worker-secondary/evidence-packet/v1"},"headCommit":{"type":"string","pattern":"^[a-f0-9]{40}$"},"effectivePlanIdentity":{"type":"string","pattern":"^[a-f0-9]{64}$"},"requestedModel":{"const":"qwencoder/glm-5.2"},"resolvedModel":{"const":"qwencoder/glm-5.2"},"epoch":{"type":"integer","minimum":0},"reconciliationIds":{"type":"array","prefixItems":[{"const":"REQ-001"},{"const":"REQ-002"},{"const":"REQ-003"},{"const":"REQ-004"},{"const":"REQ-005"},{"const":"REQ-006"},{"const":"REQ-007"},{"const":"REQ-008"},{"const":"REQ-009"},{"const":"REQ-010"},{"const":"REQ-011"},{"const":"REQ-012"},{"const":"REQ-013"},{"const":"REQ-014"},{"const":"REQ-015"}],"items":false,"minItems":15,"maxItems":15},"receipt":{"type":"object","required":["contentSha256","signature","publicKey"],"properties":{"contentSha256":{"type":"string","pattern":"^[a-f0-9]{64}$"},"signature":{"type":"string","minLength":1},"publicKey":{"type":"string","minLength":1}},"additionalProperties":true}}},
+    "d01":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d01"},"label":{"const":"Context Routing"}}}]},
+    "d02":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d02"},"label":{"const":"Plan Identity Integrity"}}}]},
+    "d03":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d03"},"label":{"const":"Evidence Binding"}}}]},
+    "d04":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d04"},"label":{"const":"Amendment Tracking"}}}]},
+    "d05":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d05"},"label":{"const":"Shadow Hash Verification"}}}]},
+    "d06":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d06"},"label":{"const":"Reconciliation Accuracy"}}}]},
+    "d07":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d07"},"label":{"const":"Verification Claims Coverage"}}}]},
+    "d08":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d08"},"label":{"const":"Batch Execution"}}}]},
+    "d09":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d09"},"label":{"const":"Attestation Completeness"}}}]},
+    "d10":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d10"},"label":{"const":"Audit Trail Integrity"}}}]},
+    "d11":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d11"},"label":{"const":"Path Traversal Protection"}}}]},
+    "d12":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d12"},"label":{"const":"Symlink Protection"}}}]},
+    "d13":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d13"},"label":{"const":"Schema Validation Rigor"}}}]},
+    "d14":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d14"},"label":{"const":"C4 Visualization Maturity"}}}]},
+    "d15":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d15"},"label":{"const":"Multi-Platform Support"}}}]},
+    "d16":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d16"},"label":{"const":"API Security Posture"}}}]},
+    "d17":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d17"},"label":{"const":"Telemetry & Monitoring"}}}]},
+    "d18":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d18"},"label":{"const":"Release Readiness"}}}]}
+  }
 }

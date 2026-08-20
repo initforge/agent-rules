@@ -14,7 +14,9 @@ function Assert-ScriptIntegrity {
   $Manifest = Get-Content -Raw -LiteralPath $IntegrityManifestPath | ConvertFrom-Json
   $Expected = [string]$Manifest.files.$Rel
   if (-not $Expected) { throw "No integrity entry for $Rel" }
-  $Actual = (Get-FileHash -LiteralPath $ScriptPath -Algorithm SHA256).Hash.ToLowerInvariant()
+  $RawBytes = [IO.File]::ReadAllBytes($ScriptPath)
+  $CanonicalText = [Text.Encoding]::UTF8.GetString($RawBytes) -replace "`r`n", "`n"
+  $Actual = ([Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($CanonicalText)) | ForEach-Object ToString x2) -join ""
   if ($Actual -ne $Expected.ToLowerInvariant()) { throw "Integrity check failed for $Rel" }
 }
 
@@ -138,7 +140,7 @@ if (Test-Path $CodexAgentsTemplate) {
 $ForbiddenTopLevel = @(
   "00-huong-dan", "00-guides", "01-global", "02-du-an", "02-projects",
   "03-nen-tang", "03-platforms", "04-tu-dong-hoa", "04-automation",
-  "06-ke-hoach", "06-plans", "05-ban-dung", "knowledge", "build", "docs", "plan"
+  "06-ke-hoach", "06-plans", "05-ban-dung", "knowledge", "build", "plan"
 )
 foreach ($Name in $ForbiddenTopLevel) {
   if (Test-Path (Join-Path $Root $Name)) { $Problems.Add("Legacy top-level folder still exists: $Name") }
@@ -175,7 +177,7 @@ $RegistryPath = Join-Path $Root "integrations\registry.json"
 if (Test-Path $RegistryPath) {
   $Registry = Get-Content -Raw $RegistryPath | ConvertFrom-Json
   foreach ($Integration in $Registry.integrations) {
-    $IntegPath = if ($Integration.PSObject.Properties["install"]) { $Integration.install.script -replace "/install\.ps1$", "" } else { $null }
+    $IntegPath = if ($Integration.PSObject.Properties["install"]) { $Integration.install.script -replace "/install\.ps1$", "" } elseif ($Integration.PSObject.Properties["path"]) { $Integration.path } else { $null }
     if ($IntegPath -and -not (Test-Path (Join-Path $Root $IntegPath))) {
       $Problems.Add("Integration install path missing: $IntegPath")
     }
@@ -220,16 +222,18 @@ if (Test-Path $TriggerAuditPath) {
 
 $UiRoutingAudit = Join-Path $Root "automation\audit-ui-routing.ps1"
 if (Test-Path $UiRoutingAudit) {
-  $UiLogPath = Join-Path $Root ".agent\validate-ui-routing.log"
+  # Per-run output goes under .agent/artifacts/, not .agent/ root: the root holds only
+  # protocol-defined entries (see .agent/README.md, enforced by validate-agent-dir.mjs).
+  $UiLogPath = Join-Path $Root ".agent\artifacts\validate-ui-routing.log"
   $UiLogDir = Split-Path $UiLogPath -Parent
   if (-not (Test-Path $UiLogDir)) { New-Item -ItemType Directory -Force -Path $UiLogDir | Out-Null }
   try {
     & $UiRoutingAudit -Root $Root -RunId validate-context -LogPath $UiLogPath | Out-Null
     if ($LASTEXITCODE -ne 0) {
-      $Problems.Add("UI routing audit failed - see .agent/validate-ui-routing.log and automation/audit-ui-routing.ps1")
+      $Problems.Add("UI routing audit failed - see .agent/artifacts/validate-ui-routing.log and automation/audit-ui-routing.ps1")
     }
   } catch {
-    $Problems.Add("UI routing audit crashed - error: $_ - see .agent/validate-ui-routing.log")
+    $Problems.Add("UI routing audit crashed - error: $_ - see .agent/artifacts/validate-ui-routing.log")
   }
 } else {
   $Problems.Add("Missing UI routing audit: automation/audit-ui-routing.ps1")
@@ -465,13 +469,56 @@ if (Test-Path $ContextGraphPath) {
     $Problems.Add("Context graph invalid JSON: $ContextGraphPath")
   }
 }
+# BOM check: generated JSON must not have UTF-8 BOM (0xEF 0xBB 0xBF)
+$GeneratedJsonFiles = @(
+  (Join-Path $Root "generated\context-graph.json"),
+  (Join-Path $Root "generated\runtime-build\claude\manifest.json"),
+  (Join-Path $Root "generated\runtime-build\claude\runtime-contract.json")
+)
+foreach ($JsonFile in $GeneratedJsonFiles) {
+  if (Test-Path $JsonFile) {
+    $bytes = [System.IO.File]::ReadAllBytes($JsonFile)
+    if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+      $Problems.Add("Generated JSON has UTF-8 BOM (repair builder to use BOM-free encoding): $JsonFile")
+    }
+  }
+}
+
+# Schema/casing: manifest.json must use snake_case (generated_from, path, sha256)
+$ManifestPath = Join-Path $Root "generated\runtime-build\claude\manifest.json"
+if (Test-Path $ManifestPath) {
+  try {
+    $Manifest = Get-Content -Raw -Encoding UTF8 $ManifestPath | ConvertFrom-Json
+    $ManifestText = Get-Content -Raw -Encoding UTF8 $ManifestPath
+    # Check top-level keys
+    $RequiredSnake = @("version", "platform", "generated_from", "files")
+    $ForbiddenCamel = @("generatedFrom")
+    foreach ($key in $ForbiddenCamel) {
+      $escaped = [regex]::Escape($key)
+      if ($ManifestText -match ('"' + $escaped + '"\s*:')) {
+        $Problems.Add("manifest.json uses camelCase '$key' but must use snake_case (e.g., 'generated_from'). Repair builder casing.")
+      }
+    }
+    # Check file item keys
+    if ($Manifest.files -and $Manifest.files.Count -gt 0) {
+      $FirstFile = $Manifest.files[0]
+      $FileKeys = @($FirstFile.PSObject.Properties.Name)
+      $RequiredFileSnake = @("path", "sha256")
+      $ForbiddenFileCamel = @("Path", "Sha256")
+      foreach ($key in $ForbiddenFileCamel) {
+        if ($FileKeys -ccontains $key) {
+          $Problems.Add("manifest.json file item uses '$key' but must use snake_case (e.g., 'path', 'sha256').")
+        }
+      }
+    }
+  } catch {
+    $Problems.Add("Cannot validate manifest.json casing: $_")
+  }
+}
+
 $Researcher = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "skills\researcher\SKILL.md")
 if ($Researcher -match "when Codex needs") {
   $Problems.Add("skills/researcher/SKILL.md must be platform-neutral (not 'when Codex needs')")
-}
-$CleanCode = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "skills\clean-code\SKILL.md")
-if ($CleanCode -match '"review code"' -or $CleanCode -match 'Trigger on.*"review code"') {
-  $Problems.Add("skills/clean-code must not claim generic 'review code' (belongs to code-review)")
 }
 $KnowledgeSystem = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "docs\guides\02-knowledge-system.md")
 if (

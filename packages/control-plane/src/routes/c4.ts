@@ -1,7 +1,10 @@
 import { Router, type Request, type Response } from 'express'
 import fs from 'fs'
 import path from 'path'
+import { execFileSync } from 'child_process'
 import { fileURLToPath } from 'url'
+import { verifyTerminalGate, type TerminalGateResult } from '@initforge/agent-rules-engine/terminal-gate'
+import { verifyEvidencePacket } from '@initforge/agent-rules-engine/evidence-packet'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
@@ -17,6 +20,12 @@ const ROOT = (() => {
   }
   return path.resolve(__dirname, '..', '..', '..')
 })()
+
+function harnessRoot(): string {
+  const configured = process.env.HARNESS_ROOT
+  if (configured && fs.existsSync(path.join(configured, 'rules', 'manifest.yaml'))) return path.resolve(configured)
+  return ROOT
+}
 
 interface C4Component {
   name: string
@@ -147,7 +156,7 @@ function buildC4Containers(): C4Container[] {
     },
   ]
 
-  const platformDir = path.join(ROOT, 'platforms')
+  const platformDir = path.join(harnessRoot(), 'platforms')
   if (fs.existsSync(platformDir)) {
     const platforms = fs.readdirSync(platformDir).filter(f => fs.statSync(path.join(platformDir, f)).isDirectory())
     for (const p of platforms) {
@@ -166,7 +175,7 @@ function buildC4Containers(): C4Container[] {
 }
 
 function buildC4Code(scope?: string): C4CodeItem[] {
-  const root = scope ? path.join(ROOT, scope) : path.join(__dirname, '..')
+  const root = scope ? path.join(harnessRoot(), scope) : path.join(__dirname, '..')
   const codeItems: C4CodeItem[] = []
 
   function walk(dir: string, basePath: string) {
@@ -196,20 +205,130 @@ function buildC4Code(scope?: string): C4CodeItem[] {
   return codeItems
 }
 
-function loadScorecardEvidence(): Record<string, { score: number; maxScore: number; status: string }> | null {
-  const evidencePath = path.join(ROOT, 'automation', 'scorecard-evidence.json')
+interface ScorecardEvidence {
+  dimensions: Record<string, { score: number; maxScore: number; status: string }>
+  commit?: string
+  branch?: string
+  packet?: unknown
+  packetStatus?: 'VERIFIED' | 'UNVERIFIED'
+  packetReason?: string
+}
+
+interface GitState {
+  head: string
+  branch: string
+  dirty: boolean
+}
+
+interface LedgerTruth {
+  planId: string
+  status: string
+  executionState: string
+  passed: boolean
+  failedGates: string[]
+}
+
+interface OperationalTruth {
+  status: 'healthy' | 'degraded' | 'unknown'
+  source: 'canonical-ledger'
+  ledgerDirectory: string
+  ledgers: LedgerTruth[]
+  head?: string
+  branch?: string
+  dirty: boolean
+  reasons: string[]
+}
+
+function gitState(root: string): GitState | null {
+  try {
+    const run = (args: string[]) => execFileSync('git', args, { cwd: root, encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
+    return { head: run(['rev-parse', 'HEAD']), branch: run(['branch', '--show-current']), dirty: run(['status', '--porcelain']).length > 0 }
+  } catch {
+    return null
+  }
+}
+
+function canonicalLedgerTruth(root: string): OperationalTruth {
+  const ledgerDirectory = path.join(root, '.agent', 'ledger')
+  const git = gitState(root)
+  const reasons: string[] = []
+  const ledgers: LedgerTruth[] = []
+
+  if (!git) reasons.push('GIT_STATE_UNAVAILABLE')
+  if (!fs.existsSync(ledgerDirectory)) reasons.push('LEDGER_DIRECTORY_MISSING')
+  else {
+    const files = fs.readdirSync(ledgerDirectory, { withFileTypes: true })
+      .filter(entry => entry.isFile() && entry.name.endsWith('.json'))
+      .sort((left, right) => left.name.localeCompare(right.name))
+    if (files.length === 0) reasons.push('LEDGER_MISSING')
+    for (const entry of files) {
+      const ledgerPath = path.join(ledgerDirectory, entry.name)
+      let raw: Record<string, unknown>
+      try {
+        raw = JSON.parse(fs.readFileSync(ledgerPath, 'utf-8')) as Record<string, unknown>
+      } catch {
+        ledgers.push({ planId: path.basename(entry.name, '.json'), status: 'INVALID', executionState: 'INVALID', passed: false, failedGates: ['LEDGER_INVALID'] })
+        reasons.push(`LEDGER_INVALID:${entry.name}`)
+        continue
+      }
+      let gate: TerminalGateResult | null = null
+      if (git) {
+        try {
+          gate = verifyTerminalGate(ledgerPath, git.head)
+        } catch {
+          gate = null
+        }
+      }
+      const failedGates = gate?.failedGates ?? ['LEDGER_UNVERIFIABLE']
+      const passed = gate?.passed === true
+      ledgers.push({
+        planId: typeof raw.plan_id === 'string' ? raw.plan_id : path.basename(entry.name, '.json'),
+        status: typeof raw.status === 'string' ? raw.status : 'UNKNOWN',
+        executionState: typeof raw.execution_state === 'string' ? raw.execution_state : (typeof raw.status === 'string' ? raw.status : 'UNKNOWN'),
+        passed,
+        failedGates,
+      })
+      if (!passed) reasons.push(`LEDGER_GATE_FAILED:${entry.name}`)
+    }
+  }
+
+  if (git?.dirty) reasons.push('WORKTREE_DIRTY')
+  const healthy = Boolean(git) && !git!.dirty && ledgers.length > 0 && ledgers.every(ledger => ledger.passed)
+  return {
+    status: healthy ? 'healthy' : (ledgers.length === 0 ? 'unknown' : 'degraded'),
+    source: 'canonical-ledger',
+    ledgerDirectory,
+    ledgers,
+    head: git?.head,
+    branch: git?.branch,
+    dirty: git?.dirty ?? false,
+    reasons,
+  }
+}
+
+function loadScorecardEvidence(): ScorecardEvidence | null {
+  // Local-only override lets tests prove the unknown state without mutating
+  // canonical evidence. Production defaults to the real repository artifact.
+  const evidencePath = process.env.C4_SCORECARD_EVIDENCE_PATH
+    ? path.resolve(process.env.C4_SCORECARD_EVIDENCE_PATH)
+    : path.join(harnessRoot(), 'automation', 'scorecard-evidence.json')
   if (!fs.existsSync(evidencePath)) return null
   try {
     const raw = JSON.parse(fs.readFileSync(evidencePath, 'utf-8'))
     const dims = raw?.dimensions
     if (!Array.isArray(dims)) return null
-    const map: Record<string, { score: number; maxScore: number; status: string }> = {}
+    const dimensions: Record<string, { score: number; maxScore: number; status: string }> = {}
     for (const d of dims) {
       if (d?.id) {
-        map[d.id] = { score: d.score ?? 0, maxScore: d.maxScore ?? 0, status: d.status || 'fail' }
+        dimensions[d.id] = { score: d.score ?? 0, maxScore: d.maxScore ?? 0, status: d.status || 'fail' }
       }
     }
-    return map
+    return {
+      dimensions,
+      commit: typeof raw?._git?.commit === 'string' ? raw._git.commit : undefined,
+      branch: typeof raw?._git?.branch === 'string' ? raw._git.branch : undefined,
+      packet: raw?._review?.packet,
+    }
   } catch {
     return null
   }
@@ -267,9 +386,16 @@ router.get('/scorecard', (_req: Request, res: Response) => {
   try {
     const evidence = loadScorecardEvidence()
     const evidencePresent = evidence !== null
-    const evidenceMeaningful = evidencePresent && Object.values(evidence).some(e => (e.score ?? 0) > 0)
+    const evidenceMeaningful = evidencePresent && Object.values(evidence.dimensions).some(e => (e.score ?? 0) > 0)
+    const operational = canonicalLedgerTruth(harnessRoot())
+    const packet = verifyEvidencePacket(evidence?.packet, operational.head || '')
+    const scorecardFreshness = !evidenceMeaningful
+      ? 'unverified'
+      : evidence!.commit !== operational.head || (evidence!.branch && evidence!.branch !== operational.branch)
+        ? 'stale'
+        : 'current'
     const dimensions = CANONICAL_DIMENSIONS.map(d => {
-      const ev = evidence?.[d.id]
+      const ev = evidence?.dimensions[d.id]
       if (!evidenceMeaningful) {
         return { id: d.id, label: d.label, description: d.description, score: 0, maxScore: 0, status: 'unknown' }
       }
@@ -289,7 +415,12 @@ router.get('/scorecard', (_req: Request, res: Response) => {
     const overallScore = dimensions.reduce((s, d) => s + d.score, 0)
     const overallMax = dimensions.reduce((s, d) => s + d.maxScore, 0)
     const overallPct = overallMax > 0 ? Math.round((overallScore / overallMax) * 100) : 0
-    const health = evidenceMeaningful ? (overallPct >= 80 ? 'healthy' : 'degraded') : 'unknown'
+    // Scorecard evidence enriches canonical ledger truth; it cannot promote an
+    // unverified, stale, foreign, or dirty operational state to healthy.
+    const health = !evidenceMeaningful ? 'unknown'
+      : operational.status === 'healthy' && packet.verified && scorecardFreshness === 'current' && overallPct >= 80
+        ? 'healthy'
+        : 'degraded'
     res.json({
       ok: true,
       data: {
@@ -297,6 +428,9 @@ router.get('/scorecard', (_req: Request, res: Response) => {
         description: '18 agent-maturity dimensions across the harness',
         health,
         evidencePresent: evidenceMeaningful,
+        scorecardFreshness,
+        evidencePacket: packet,
+        operational,
         overall: { score: overallScore, maxScore: overallMax, pct: overallPct },
         summary: { pass: passCount, warn: warnCount, fail: failCount, unknown: unknownCount, total: dimensions.length },
         dimensions,
@@ -308,12 +442,14 @@ router.get('/scorecard', (_req: Request, res: Response) => {
 })
 
 router.get('/health', (_req: Request, res: Response) => {
-  const rulesExist = fs.existsSync(path.join(ROOT, 'rules', 'manifest.yaml'))
+  const root = harnessRoot()
+  const rulesExist = fs.existsSync(path.join(root, 'rules', 'manifest.yaml'))
   if (!rulesExist) {
     res.json({ ok: false, status: 'unhealthy', error: 'rules/manifest.yaml missing', timestamp: new Date().toISOString() })
     return
   }
-  res.json({ ok: true, status: 'healthy', timestamp: new Date().toISOString() })
+  const operational = canonicalLedgerTruth(root)
+  res.json({ ok: operational.status === 'healthy', status: operational.status, operational, timestamp: new Date().toISOString() })
 })
 
 export default router

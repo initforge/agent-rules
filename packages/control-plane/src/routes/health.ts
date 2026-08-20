@@ -24,7 +24,7 @@ router.get('/', (_req, res) => {
   try {
     const manifestExists = fs.existsSync(path.join(ROOT, 'rules', 'manifest.yaml'))
     if (!manifestExists) {
-      res.json({
+      res.status(503).json({
         ok: false,
         status: 'unhealthy',
         error: 'rules/manifest.yaml missing',

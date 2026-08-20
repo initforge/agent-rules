@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/schemas/host-kit/capability.schema.json",
+  "title": "Host Kit Capability",
+  "description": "Portable capability contract for host-kit workers. Model-neutral; no provider or model IDs present. Capabilities describe what a role can do within its defined scope.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["capability", "required_for", "description", "portable_prompt"],
+  "properties": {
+    "capability": {
+      "type": "string",
+      "enum": [
+        "dispatch",
+        "child-dispatch",
+        "focused-verification",
+        "approved-integration",
+        "source-reading",
+        "source-writing",
+        "test-authoring",
+        "test-execution",
+        "tool-execution",
+        "evidence-collection",
+        "diff-review",
+        "evidence-attestation",
+        "design-proposal",
+        "integration-planning",
+        "domain-expertise",
+        "conflict-resolution",
+        "adjudication",
+        "blocking",
+        "escalation"
+      ]
+    },
+    "required_for": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["coordinator", "architect-integrator", "implementer", "utility", "verifier", "reviewer", "specialist", "adjudicator"]
+      },
+      "minItems": 1
+    },
+    "description": { "type": "string", "minLength": 1 },
+    "portable_prompt": { "type": "boolean" }
+  }
+}

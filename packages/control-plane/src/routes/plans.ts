@@ -16,28 +16,48 @@ import type { WorkLedger } from '@initforge/agent-rules-engine/contracts'
 
 const router = Router()
 
+export interface IntegrityFailureResponse {
+  ok: false;
+  code: 'INTEGRITY_FAILURE';
+  error: string;
+  details: {
+    findings: Array<{ kind: string; detail: string }>;
+  };
+}
+
 function sendError(res: Response, status: number, code: string, message: string, details?: unknown): void {
   const body: Record<string, unknown> = { ok: false, error: message, code }
   if (details) body.details = details
   res.status(status).json(body)
 }
 
+function sendIntegrityError(res: Response, err: PlanIntegrityError): void {
+  const response: IntegrityFailureResponse = {
+    ok: false,
+    code: 'INTEGRITY_FAILURE',
+    error: err.message,
+    details: { findings: err.findings ?? [] },
+  }
+  res.status(409).json(response)
+}
+
 router.get('/', (_req, res: Response) => {
   try {
     const root = findRoot()
-    const plans = listPlans(root)
-    res.json({ ok: true, data: plans, total: plans.length })
+    const planList = listPlans(root)
+    const plans = planList.filter(({ planId }) => {
+      try { readPlanWorkspace(planId, root); return true }
+      catch (err) { if (err instanceof LegacyRejectionError) return false; throw err }
+    })
+    res.json({ ok: true, data: plans, total: plans.length, totalFound: planList.length })
   } catch (err) {
     if (err instanceof PlanValidationError) {
       sendError(res, 400, 'VALIDATION_ERROR', err.message)
     } else if (err instanceof PlanIntegrityError) {
-      if (err.findings?.some((f: { kind?: string }) => String(f.kind).startsWith('MISSING_'))) {
-        res.json({ ok: true, data: [], total: 0 })
-      } else {
-        sendError(res, 409, 'INTEGRITY_FAILURE', err.message, { findings: err.findings })
-      }
+      sendIntegrityError(res, err)
     } else {
-      sendError(res, 500, 'INTERNAL', err instanceof Error ? err.message : String(err))
+      // Unexpected error: return empty list with warning rather than 500
+      res.json({ ok: true, data: [], total: 0, totalFound: 0, warning: 'could not read plans' })
     }
   }
 })
@@ -104,7 +124,7 @@ router.get('/:planId', (req, res: Response) => {
     } else if (err instanceof LegacyRejectionError) {
       sendError(res, 422, 'LEGACY_SHAPE', err.message)
     } else if (err instanceof PlanIntegrityError) {
-      sendError(res, 409, 'INTEGRITY_FAILURE', err.message, { findings: err.findings })
+      sendIntegrityError(res, err)
     } else {
       sendError(res, 500, 'INTERNAL', err instanceof Error ? err.message : String(err))
     }

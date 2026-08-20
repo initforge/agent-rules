@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import copy
 import shutil
 import subprocess
 import tempfile
@@ -12,7 +13,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "platforms" / "platform-contracts.json"
 SCHEMA = ROOT / "automation" / "platform-contracts.schema.json"
-PLATFORMS = ("codex", "grok", "antigravity", "cursor", "opencode")
+PLATFORMS = ("codex", "claude", "grok", "opencode", "antigravity")
+DEFERRED = ("cursor",)
+RENDERED_PLATFORMS = PLATFORMS + DEFERRED
 INVARIANTS = {
     "activation", "context_delivery", "orchestration", "role_permissions", "model_effort", "mcp_integration"
 }
@@ -42,31 +45,56 @@ def validate(contract: dict[str, object], schema: dict[str, object]) -> None:
     exact_mapping(contract, {"version", "parity_contract", "platforms"}, "contract")
     if contract["version"] != 1:
         fail("contract version must be 1")
-    parity = exact_mapping(contract["parity_contract"], {"required_live_invariants", "static_artifacts_are_sufficient", "aggregate_rule"}, "parity_contract")
+    parity = exact_mapping(contract["parity_contract"], {"required_live_invariants", "static_artifacts_are_sufficient", "aggregate_rule", "certification_required_hosts", "deferred_supported_targets"}, "parity_contract")
     if set(parity["required_live_invariants"]) != INVARIANTS:
         fail("required live invariant set drift")
     if parity["static_artifacts_are_sufficient"] is not False:
         fail("static artifacts must not be sufficient parity evidence")
     if parity["aggregate_rule"] != "all_platforms_require_current_live_evidence":
         fail("aggregate evidence rule drift")
+    if tuple(parity["certification_required_hosts"]) != PLATFORMS:
+        fail("certification required host drift")
+    if tuple(parity["deferred_supported_targets"]) != DEFERRED:
+        fail("deferred supported target drift")
 
-    platforms = exact_mapping(contract["platforms"], set(PLATFORMS), "platforms")
-    for name in PLATFORMS:
+    platforms = exact_mapping(contract["platforms"], set(RENDERED_PLATFORMS), "platforms")
+    for name in RENDERED_PLATFORMS:
         platform = exact_mapping(platforms[name], set(SECTIONS), f"platforms.{name}")
         for section, fields in SECTIONS.items():
             values = exact_mapping(platform[section], fields, f"platforms.{name}.{section}")
             if not all(isinstance(value, str) and value for value in values.values()):
                 fail(f"platforms.{name}.{section} has an empty field")
 
-    expected_spawn = {"codex": "spawn_agent", "grok": "native_subagent", "antigravity": "invoke_subagent", "cursor": "Task", "opencode": "none"}
+    expected_spawn = {"codex": "spawn_agent", "claude": "Agent", "grok": "native_subagent", "opencode": "none", "antigravity": "invoke_subagent"}
     actual_spawn = {name: platforms[name]["orchestration"]["native_spawn_tool"] for name in PLATFORMS}
     if actual_spawn != expected_spawn:
         fail(f"native spawn tool contract drift: {actual_spawn}")
     if platforms["antigravity"]["routing"]["context_delivery"] != "injectSteps.ephemeralMessage":
         fail("Antigravity contract must declare PreInvocation context injection")
+    if platforms["cursor"]["orchestration"]["model_attestation"] != "deferred_host_attestation":
+        fail("Cursor must remain an explicit deferred supported target")
 
 
-def verify_rendered_build(contract: dict[str, object], platforms: tuple[str, ...] = PLATFORMS) -> None:
+def verify_negative_cases(contract: dict[str, object], schema: dict[str, object]) -> None:
+    cases = []
+    missing = copy.deepcopy(contract)
+    del missing["platforms"]["codex"]
+    cases.append(("missing", missing))
+    extra = copy.deepcopy(contract)
+    extra["platforms"]["synthetic"] = copy.deepcopy(extra["platforms"]["codex"])
+    cases.append(("extra", extra))
+    drift = copy.deepcopy(contract)
+    drift["platforms"]["cursor"]["orchestration"]["unexpected"] = "drift"
+    cases.append(("drift", drift))
+    for label, candidate in cases:
+        try:
+            validate(candidate, schema)
+        except SystemExit:
+            continue
+        fail(f"negative {label} contract was accepted")
+
+
+def verify_rendered_build(contract: dict[str, object], platforms: tuple[str, ...] = RENDERED_PLATFORMS) -> None:
     shell = shutil.which("pwsh") or shutil.which("powershell")
     if not shell:
         fail("PowerShell is required for build rendering verification")
@@ -84,8 +112,7 @@ def verify_rendered_build(contract: dict[str, object], platforms: tuple[str, ...
         for name in platforms:
             rendered_path = build_root / name / "runtime-contract.json"
             if not rendered_path.is_file():
-                print(f"  [WARN] build omitted runtime contract for {name}")
-                continue
+                fail(f"build omitted required runtime contract for {name}")
             rendered = json.loads(rendered_path.read_text(encoding="utf-8-sig"))
             expected = {"version": 1, "platform": name, "source": "platforms/platform-contracts.json", "contract": contract["platforms"][name]}
             if rendered != expected:
@@ -96,13 +123,13 @@ def main() -> int:
     contract = json.loads(CONTRACT.read_text(encoding="utf-8"))
     schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
     validate(contract, schema)
+    verify_negative_cases(contract, schema)
     for name in PLATFORMS:
-        if name == "opencode":
-            continue
         legacy = ROOT / "platforms" / name / "runtime.yaml"
         if legacy.exists():
             fail(f"legacy runtime manifest remains: {legacy.relative_to(ROOT)}")
-    rendered_platforms = tuple(p for p in PLATFORMS if p != "opencode")
+    # Exact mappings above are negative tests for missing, extra, and field drift.
+    rendered_platforms = RENDERED_PLATFORMS
     readme = (ROOT / "platforms" / "README.md").read_text(encoding="utf-8")
     if "only differ" in readme or "artifact parity" in readme.lower():
         fail("platform README retains the artifact-parity thesis")

@@ -353,7 +353,7 @@ function createFixture(root: string, planId_: string, opts: FixtureOpts = {}): s
   const hash = 'a'.repeat(64)
 
   const anchor = { planSha256: originalSha, sectionHeading: 'Requirement 1', lineStart: 4, lineEnd: 4,
-    anchorTextSha256: c.createHash('sha256').update(Buffer.from('Do the work.\n', 'utf-8')).digest('hex'), requirementId: 'REQ-001' }
+    anchorTextSha256: c.createHash('sha256').update(Buffer.from('Do the work.\n', 'utf-8')).digest('hex'), requirementId: 'REQ-001', chunkIndex: 0 }
 
   const planArt = { artifactId: 'PLAN-001', planId: planId_, sourceKind: 'chat_plan_artifact', sourceRef: 'msg-001',
     rawPath: `.agent/plans/${planId_}/original.md`, sha256: originalSha, bytes: originalBytes.length,
@@ -363,7 +363,7 @@ function createFixture(root: string, planId_: string, opts: FixtureOpts = {}): s
     ownerIdentity: 'owner', approvalEvent: 'owner-approved', supersedes: [], supplements: [], derivedFrom: [] }
 
   function planAnchorId(a: typeof anchor): string {
-    return c.createHash('sha256').update(Buffer.from([a.planSha256,a.sectionHeading,String(a.lineStart),String(a.lineEnd),a.anchorTextSha256,a.requirementId].join(':'),'utf-8')).digest('hex')
+    return c.createHash('sha256').update(Buffer.from([a.planSha256,a.sectionHeading,String(a.lineStart),String(a.lineEnd),a.anchorTextSha256,a.requirementId,String(a.chunkIndex)].join(':'),'utf-8')).digest('hex')
   }
   const anchorId = planAnchorId(anchor)
   function agg(rows: string[]): string { return c.createHash('sha256').update(Buffer.from(JSON.stringify([...rows].sort()),'utf-8')).digest('hex') }
@@ -424,8 +424,8 @@ function zeroAmendmentFixture(root: string, planId: string, overrides?: { noMani
   const hash = 'a'.repeat(64)
   if (!overrides?.noManifest) fs.writeFileSync(path.join(ad, 'manifest.json'), buildManifestJson(planId, oSha, []))
   if (overrides?.extraFile) fs.writeFileSync(path.join(ad, overrides.extraFile), '# ROGUE')
-  const anchor = { planSha256: oSha, sectionHeading: 'R', lineStart: 1, lineEnd: 1, anchorTextSha256: c.createHash('sha256').update(Buffer.from('# Z\n', 'utf-8')).digest('hex'), requirementId: 'R1' }
-  const aid = c.createHash('sha256').update(Buffer.from([anchor.planSha256, anchor.sectionHeading, String(anchor.lineStart), String(anchor.lineEnd), anchor.anchorTextSha256, anchor.requirementId].join(':'), 'utf-8')).digest('hex')
+  const anchor = { planSha256: oSha, sectionHeading: 'R', lineStart: 1, lineEnd: 1, anchorTextSha256: c.createHash('sha256').update(Buffer.from('# Z\n', 'utf-8')).digest('hex'), requirementId: 'R1', chunkIndex: 0 }
+  const aid = c.createHash('sha256').update(Buffer.from([anchor.planSha256, anchor.sectionHeading, String(anchor.lineStart), String(anchor.lineEnd), anchor.anchorTextSha256, anchor.requirementId, String(anchor.chunkIndex)].join(':'), 'utf-8')).digest('hex')
   function agg(r: string[]) { return c.createHash('sha256').update(Buffer.from(JSON.stringify([...r].sort()), 'utf-8')).digest('hex') }
   const pa = { artifactId: 'PA', planId, sourceKind: 'chat_plan_artifact', sourceRef: 'msg', rawPath: `.agent/plans/${planId}/original.md`, sha256: oSha, bytes: oB.length, capturedAt: '2026-01-01T00:00:00Z', status: 'ADOPTED', repositoryIdentity: 'r', repositoryBaseline: { commit: 'c', branch: 'b', dirtyFingerprint: hash }, hostTask: { host: 'h', taskRef: 't', sessionRef: 's' }, authorIdentity: 'a', ownerIdentity: 'o', approvalEvent: 'a', supersedes: [], supplements: [], derivedFrom: [] }
   const pp = { schema: 'harness/portable-plan', version: 3, planId, original: pa, projectionSha256: hash, objective: 'T', scope: { in: ['packages'], out: [] }, decisions: [{ decisionId: 'D1', decision: 'x', rationale: 'x', tradeOffs: [] }], assumptions: [], knownUnknowns: [], taskDag: [{ taskId: 'T1', requirementIds: ['R1'], criterionIds: ['C1'], dependencies: [] }], ownedPaths: ['packages'], forbiddenPaths: [], evidenceProfiles: ['p'], rollback: ['r'], handoff: { recipientRole: 'r', requiredArtifacts: ['r'], nextSafeAction: 'r' }, lineage: { head: pa, ancestors: [], resolutionMatrix: [{ requirementId: 'R1', sourceArtifactId: 'PA', resolution: 'CARRIED', rationale: 'r' }], verified: true, reconciliationResult: 'PASS', reconciliationSha256: hash }, requirements: [{ requirementId: 'R1', statement: 'x', acceptanceCriteria: [{ criterionId: 'C1', claim: 'x', evidenceProfile: 'p', binding: { kind: 'plan-anchor', anchor } }] }], anchors: [anchor] }
@@ -454,8 +454,8 @@ function orderSensitivityFixture(root: string, pid: string, orderIds: string[]):
   for (const id of orderIds) { amendMap[id] = { amendmentId: id, filename: shaContent[id].filename, sha256: shaContent[id].sha256, order: -1 } }
   const manEntries = orderIds.map((id, i) => ({ amendmentId: amendMap[id].amendmentId, sha256: amendMap[id].sha256, filename: amendMap[id].filename, order: i }))
   fs.writeFileSync(path.join(ad, 'manifest.json'), buildManifestJson(pid, oSha, manEntries))
-  const anchor = { planSha256: oSha, sectionHeading: 'R', lineStart: 1, lineEnd: 1, anchorTextSha256: c.createHash('sha256').update(Buffer.from('# O\n', 'utf-8')).digest('hex'), requirementId: 'R1' }
-  const aid = c.createHash('sha256').update(Buffer.from([anchor.planSha256, anchor.sectionHeading, String(anchor.lineStart), String(anchor.lineEnd), anchor.anchorTextSha256, anchor.requirementId].join(':'), 'utf-8')).digest('hex')
+  const anchor = { planSha256: oSha, sectionHeading: 'R', lineStart: 1, lineEnd: 1, anchorTextSha256: c.createHash('sha256').update(Buffer.from('# O\n', 'utf-8')).digest('hex'), requirementId: 'R1', chunkIndex: 0 }
+  const aid = c.createHash('sha256').update(Buffer.from([anchor.planSha256, anchor.sectionHeading, String(anchor.lineStart), String(anchor.lineEnd), anchor.anchorTextSha256, anchor.requirementId, String(anchor.chunkIndex)].join(':'), 'utf-8')).digest('hex')
   function agg(r: string[]) { return c.createHash('sha256').update(Buffer.from(JSON.stringify([...r].sort()), 'utf-8')).digest('hex') }
   const ledgerAmends = orderIds.map((id, i) => ({ amendmentId: id, approved: true, sha256: amendMap[id].sha256, sourceRef: `.agent/plans/${pid}/amendments/${amendMap[id].filename}` }))
   const pa = { artifactId: 'PA', planId: pid, sourceKind: 'chat_plan_artifact', sourceRef: 'msg', rawPath: `.agent/plans/${pid}/original.md`, sha256: oSha, bytes: oB.length, capturedAt: '2026-01-01T00:00:00Z', status: 'ADOPTED', repositoryIdentity: 'r', repositoryBaseline: { commit: 'c', branch: 'b', dirtyFingerprint: hash }, hostTask: { host: 'h', taskRef: 't', sessionRef: 's' }, authorIdentity: 'a', ownerIdentity: 'o', approvalEvent: 'a', supersedes: [], supplements: [], derivedFrom: [] }
@@ -463,13 +463,12 @@ function orderSensitivityFixture(root: string, pid: string, orderIds: string[]):
   fs.writeFileSync(path.join(ld, pid + '.json'), JSON.stringify({ status: 'REVIEWING', plan: pp, planAnchors: [anchor], batches: [{ batchId: 'P0', status: 'PASSED', taskIds: ['T1'] }], amendments: ledgerAmends, assignments: [], receipts: [], verificationClaims: [], attestations: [{ host: 'codex', hostVersion: '1', commitSha: 'deadbeef', capabilityStatus: 'HOST_NATIVE', capabilityIds: ['run'], contractSetSha256: hash, requestedModel: 'standard', resolvedModel: 'gpt', observedModel: 'gpt', evidenceHashes: [hash], nativeRunnerIdentity: 'codex-cli', issuedAt: '2026-01-01T00:00:00Z', expiresAt: '2099-01-01T00:00:00Z' }], reconciliations: [{ requirementId: 'R1', status: 'PARTIAL', anchorIds: [aid], verificationClaimIds: [] }], repairSlices: [], sourceAcquisitionReceipts: [], orphanFindings: [], shadowRevision: 1, shadowHashes: sHashes, latestReview: { reviewId: 'R1', stale: false, originalSha256: oSha, amendmentsSha256: agg(ledgerAmends.map(a => JSON.stringify([a.amendmentId, a.sha256, a.sourceRef]))), diffFingerprint: agg([]), receiptEvidenceFingerprint: agg([]), evidenceHashes: [], shadowRevision: 1, reviewerIdentity: 'r' } }))
 }
 
-const tmp = require('node:path').join(require('node:os').tmpdir(), 'cp-plan-test-' + Date.now())
+const tmp = require('node:fs').mkdtempSync(require('node:path').join(require('node:fs').realpathSync(require('node:os').tmpdir()), 'cp-plan-test-'))
 
 describe('Plan workspace API', () => {
   beforeAll(() => {
     const fs = require('node:fs'); const path = require('node:path')
-    if (fs.existsSync(tmp)) fs.rmSync(tmp, { recursive: true, force: true })
-    fs.mkdirSync(tmp, { recursive: true }); process.env.HARNESS_ROOT = tmp
+    process.env.HARNESS_ROOT = tmp
   })
   afterAll(() => {
     delete process.env.HARNESS_ROOT
@@ -747,9 +746,9 @@ describe('Plan workspace API', () => {
     fs.writeFileSync(path.join(ad, 'amd-001.md'), '# A1\n')
     fs.writeFileSync(path.join(ad, 'manifest.json'), JSON.stringify({ schema: 'harness/amendments-manifest/v1', planId, originalSha256: oSha, amendments: [{ amendmentId: 'AM-0004', sha256: a1Sha, filename: 'amd-001.md', order: 0 }] }, null, 2))
     const pa = { artifactId: 'PA', planId, sourceKind: 'chat_plan_artifact', sourceRef: 'msg', rawPath: `.agent/plans/${planId}/original.md`, sha256: oSha, bytes: oB.length, capturedAt: '2026-01-01T00:00:00Z', status: 'ADOPTED', repositoryIdentity: 'r', repositoryBaseline: { commit: 'c', branch: 'b', dirtyFingerprint: hash }, hostTask: { host: 'h', taskRef: 't', sessionRef: 's' }, authorIdentity: 'a', ownerIdentity: 'o', approvalEvent: 'a', supersedes: [], supplements: [], derivedFrom: [] }
-    const pp = { schema: 'harness/portable-plan', version: 3, planId, original: pa, projectionSha256: hash, objective: 'T', scope: { in: ['pkg'], out: [] }, decisions: [{ decisionId: 'D', decision: 'x', rationale: 'x', tradeOffs: [] }], assumptions: [], knownUnknowns: [], taskDag: [{ taskId: 'T1', requirementIds: ['R1'], criterionIds: ['C1'], dependencies: [] }], ownedPaths: ['pkg'], forbiddenPaths: [], evidenceProfiles: ['p'], rollback: ['r'], handoff: { recipientRole: 'r', requiredArtifacts: ['r'], nextSafeAction: 'r' }, lineage: { head: pa, ancestors: [], resolutionMatrix: [{ requirementId: 'R1', sourceArtifactId: 'PA', resolution: 'CARRIED', rationale: 'r' }], verified: true, reconciliationResult: 'PASS', reconciliationSha256: hash }, requirements: [{ requirementId: 'R1', statement: 'x', acceptanceCriteria: [{ criterionId: 'C1', claim: 'x', evidenceProfile: 'p', binding: { kind: 'plan-anchor', anchor: { planSha256: oSha, sectionHeading: 'R', lineStart: 1, lineEnd: 1, anchorTextSha256: c.createHash('sha256').update(Buffer.from('# A\n')).digest('hex'), requirementId: 'R1' } } }] }], anchors: [{ planSha256: oSha, sectionHeading: 'R', lineStart: 1, lineEnd: 1, anchorTextSha256: c.createHash('sha256').update(Buffer.from('# A\n')).digest('hex'), requirementId: 'R1' }] }
+    const pp = { schema: 'harness/portable-plan', version: 3, planId, original: pa, projectionSha256: hash, objective: 'T', scope: { in: ['pkg'], out: [] }, decisions: [{ decisionId: 'D', decision: 'x', rationale: 'x', tradeOffs: [] }], assumptions: [], knownUnknowns: [], taskDag: [{ taskId: 'T1', requirementIds: ['R1'], criterionIds: ['C1'], dependencies: [] }], ownedPaths: ['pkg'], forbiddenPaths: [], evidenceProfiles: ['p'], rollback: ['r'], handoff: { recipientRole: 'r', requiredArtifacts: ['r'], nextSafeAction: 'r' }, lineage: { head: pa, ancestors: [], resolutionMatrix: [{ requirementId: 'R1', sourceArtifactId: 'PA', resolution: 'CARRIED', rationale: 'r' }], verified: true, reconciliationResult: 'PASS', reconciliationSha256: hash }, requirements: [{ requirementId: 'R1', statement: 'x', acceptanceCriteria: [{ criterionId: 'C1', claim: 'x', evidenceProfile: 'p', binding: { kind: 'plan-anchor', anchor: { planSha256: oSha, sectionHeading: 'R', lineStart: 1, lineEnd: 1, anchorTextSha256: c.createHash('sha256').update(Buffer.from('# A\n')).digest('hex'), requirementId: 'R1', chunkIndex: 0 } } }] }], anchors: [{ planSha256: oSha, sectionHeading: 'R', lineStart: 1, lineEnd: 1, anchorTextSha256: c.createHash('sha256').update(Buffer.from('# A\n')).digest('hex'), requirementId: 'R1', chunkIndex: 0 }] }
     function agg(r: string[]) { return c.createHash('sha256').update(Buffer.from(JSON.stringify([...r].sort()),'utf-8')).digest('hex') }
-    fs.writeFileSync(path.join(ld, planId+'.json'), JSON.stringify({ status: 'REVIEWING', plan: pp, planAnchors: [{ planSha256: oSha, sectionHeading: 'R', lineStart: 1, lineEnd: 1, anchorTextSha256: c.createHash('sha256').update(Buffer.from('# A\n')).digest('hex'), requirementId: 'R1' }], batches: [{ batchId: 'P0', status: 'PASSED', taskIds: ['T1'] }], amendments: [{ amendmentId: 'AM-0004', approved: true, sha256: a1Sha, sourceRef: `.agent/plans/${planId}/amendments/amd-001.md` }], assignments: [], receipts: [], verificationClaims: [], attestations: [{ host: 'codex', hostVersion: '1', commitSha: 'deadbeef', capabilityStatus: 'HOST_NATIVE', capabilityIds: ['run'], contractSetSha256: hash, requestedModel: 'standard', resolvedModel: 'gpt', observedModel: 'gpt', evidenceHashes: [hash], nativeRunnerIdentity: 'codex-cli', issuedAt: '2026-01-01T00:00:00Z', expiresAt: '2099-01-01T00:00:00Z' }], reconciliations: [{ requirementId: 'R1', status: 'PARTIAL', anchorIds: [c.createHash('sha256').update(Buffer.from('dummy')).digest('hex')], verificationClaimIds: [] }], repairSlices: [], sourceAcquisitionReceipts: [], orphanFindings: [], shadowRevision: 1, shadowHashes: { 'tasks.md': tSha, 'progress.md': pSha, 'amendments.md': aSha, 'reconciliation.md': rSha }, latestReview: { reviewId: 'R1', stale: false, originalSha256: oSha, amendmentsSha256: agg([]), diffFingerprint: agg([]), receiptEvidenceFingerprint: agg([]), evidenceHashes: [], shadowRevision: 1, reviewerIdentity: 'r' } }))
+    fs.writeFileSync(path.join(ld, planId+'.json'), JSON.stringify({ status: 'REVIEWING', plan: pp, planAnchors: [{ planSha256: oSha, sectionHeading: 'R', lineStart: 1, lineEnd: 1, anchorTextSha256: c.createHash('sha256').update(Buffer.from('# A\n')).digest('hex'), requirementId: 'R1', chunkIndex: 0 }], batches: [{ batchId: 'P0', status: 'PASSED', taskIds: ['T1'] }], amendments: [{ amendmentId: 'AM-0004', approved: true, sha256: a1Sha, sourceRef: `.agent/plans/${planId}/amendments/amd-001.md` }], assignments: [], receipts: [], verificationClaims: [], attestations: [{ host: 'codex', hostVersion: '1', commitSha: 'deadbeef', capabilityStatus: 'HOST_NATIVE', capabilityIds: ['run'], contractSetSha256: hash, requestedModel: 'standard', resolvedModel: 'gpt', observedModel: 'gpt', evidenceHashes: [hash], nativeRunnerIdentity: 'codex-cli', issuedAt: '2026-01-01T00:00:00Z', expiresAt: '2099-01-01T00:00:00Z' }], reconciliations: [{ requirementId: 'R1', status: 'PARTIAL', anchorIds: [c.createHash('sha256').update(Buffer.from('dummy')).digest('hex')], verificationClaimIds: [] }], repairSlices: [], sourceAcquisitionReceipts: [], orphanFindings: [], shadowRevision: 1, shadowHashes: { 'tasks.md': tSha, 'progress.md': pSha, 'amendments.md': aSha, 'reconciliation.md': rSha }, latestReview: { reviewId: 'R1', stale: false, originalSha256: oSha, amendmentsSha256: agg([]), diffFingerprint: agg([]), receiptEvidenceFingerprint: agg([]), evidenceHashes: [], shadowRevision: 1, reviewerIdentity: 'r' } }))
     const res = await request(app).get(`/api/plans/${planId}`)
     expect(res.status).toBe(409)
   })
@@ -767,6 +766,72 @@ describe('Plan workspace API', () => {
     const res = await request(app).get('/api/plans')
     expect(res.status).toBe(409)
     fs.unlinkSync(path.join(tmp, '.agent', 'ledger', 'README.md'))
+  })
+})
+
+describe('Overview plan-integrity regression', () => {
+  // These tests verify that plan integrity errors on the overview/plan read path
+  // produce a well-formed 409 response so the UI can render an honest error state.
+  beforeAll(() => { process.env.HARNESS_ROOT = tmp })
+  afterAll(() => { delete process.env.HARNESS_ROOT })
+
+  function cleanupRegFixtures(planIds: string[]) {
+    const fs = require('node:fs'); const path = require('node:path')
+    for (const id of planIds) {
+      try { fs.rmSync(path.join(tmp, '.agent', 'ledger', `${id}.json`), { force: true }) } catch {}
+      try { fs.rmSync(path.join(tmp, '.agent', 'plans', id), { recursive: true, force: true }) } catch {}
+    }
+  }
+
+  afterEach(() => { cleanupRegFixtures(['reg-tampered', 'reg-multi', 'reg-malformed', 'reg-valid-x', 'reg-legacy', 'reg-corrupt-file']) })
+
+  it('tampered plan returns 409 on individual fetch', async () => {
+    // Individual plan fetch is the primary path for overview/plan UI
+    createFixture(tmp, 'reg-tampered', { tamperOriginal: true })
+    const badRes = await request(app).get('/api/plans/reg-tampered')
+    expect(badRes.status).toBe(409)
+    expect(badRes.body.code).toBe('INTEGRITY_FAILURE')
+    expect(badRes.body.details.findings.some((f: { kind: string }) => f.kind === 'ORIGINAL_TAMPER')).toBe(true)
+    expect(badRes.body.error).toBeTruthy()
+  })
+
+  it('list endpoint returns 409 on ledger corruption (not 500)', async () => {
+    // Verifies fail-closed: any ledger corruption causes 409, not crash
+    const fs = require('node:fs'); const path = require('node:path')
+    fs.writeFileSync(path.join(tmp, '.agent', 'ledger', 'reg-corrupt-file.json'), 'not-json{')
+    const res = await request(app).get('/api/plans')
+    expect(res.status).toBe(409)
+    expect(res.body.code).toBe('INTEGRITY_FAILURE')
+    expect(res.body.details.findings.length).toBeGreaterThan(0)
+    fs.unlinkSync(path.join(tmp, '.agent', 'ledger', 'reg-corrupt-file.json'))
+  })
+
+  it('individual plan fetch returns 409 with full findings on multiple failures', async () => {
+    // Verifies the 409 response includes all findings, not just the first
+    createFixture(tmp, 'reg-multi', { tamperOriginal: true, tamperShadow: true })
+    const res = await request(app).get('/api/plans/reg-multi')
+    expect(res.status).toBe(409)
+    expect(res.body.code).toBe('INTEGRITY_FAILURE')
+    const kinds = res.body.details.findings.map((f: { kind: string }) => f.kind)
+    expect(kinds).toContain('ORIGINAL_TAMPER')
+    expect(kinds).toContain('SHADOW_DRIFT')
+  })
+
+  // Note: list endpoint is fail-closed — any legacy or corrupt plan in ledger causes 409,
+  // not partial results. The primary path for "get a specific plan" is GET /api/plans/:planId.
+
+  it('409 response body is valid JSON with required fields', async () => {
+    createFixture(tmp, 'reg-malformed', { malformedManifest: true })
+    const res = await request(app).get('/api/plans/reg-malformed')
+    expect(res.status).toBe(409)
+    expect(res.body).toHaveProperty('ok', false)
+    expect(res.body).toHaveProperty('code', 'INTEGRITY_FAILURE')
+    expect(res.body).toHaveProperty('error')
+    expect(res.body).toHaveProperty('details')
+    expect(res.body.details).toHaveProperty('findings')
+    expect(Array.isArray(res.body.details.findings)).toBe(true)
+    expect(res.body.details.findings[0]).toHaveProperty('kind')
+    expect(res.body.details.findings[0]).toHaveProperty('detail')
   })
 })
 
@@ -838,7 +903,7 @@ describe('Adversarial integrity', () => {
     const rSha = c.createHash('sha256').update(Buffer.from('# Recon\n', 'utf-8')).digest('hex')
     const hash = 'a'.repeat(64)
     fs.writeFileSync(path.join(ad, 'manifest.json'), JSON.stringify({ schema: 'harness/amendments-manifest/v1', planId, originalSha256: oSha, amendments: [{ amendmentId: 'AM-0001', sha256: hash, filename: '.hidden.md', order: 0 }] }))
-    const anchor = { planSha256: oSha, sectionHeading: 'R', lineStart: 1, lineEnd: 1, anchorTextSha256: c.createHash('sha256').update(Buffer.from('# D\n', 'utf-8')).digest('hex'), requirementId: 'R1' }
+    const anchor = { planSha256: oSha, sectionHeading: 'R', lineStart: 1, lineEnd: 1, anchorTextSha256: c.createHash('sha256').update(Buffer.from('# D\n', 'utf-8')).digest('hex'), requirementId: 'R1', chunkIndex: 0 }
     const aid = c.createHash('sha256').update(Buffer.from([anchor.planSha256,anchor.sectionHeading,String(anchor.lineStart),String(anchor.lineEnd),anchor.anchorTextSha256,anchor.requirementId].join(':'),'utf-8')).digest('hex')
     function agg(r: string[]) { return c.createHash('sha256').update(Buffer.from(JSON.stringify([...r].sort()),'utf-8')).digest('hex') }
     const pa = { artifactId:'PA', planId, sourceKind:'chat_plan_artifact', sourceRef:'msg', rawPath:`.agent/plans/${planId}/original.md`, sha256:oSha, bytes:oB.length, capturedAt:'2026-01-01T00:00:00Z', status:'ADOPTED', repositoryIdentity:'r', repositoryBaseline:{commit:'c',branch:'b',dirtyFingerprint:hash}, hostTask:{host:'h',taskRef:'t',sessionRef:'s'}, authorIdentity:'a', ownerIdentity:'o', approvalEvent:'a', supersedes:[], supplements:[], derivedFrom:[] }

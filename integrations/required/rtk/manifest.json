@@ -1,0 +1,19 @@
+{
+  "id": "rtk",
+  "displayName": "RTK — Rust Token Killer",
+  "version": "0.28.2",
+  "description": "CLI proxy that reduces LLM token consumption by 60-90% on common dev commands",
+  "kind": "cli-tool",
+  "capabilities": ["output-compression", "token-saving"],
+  "profiles": ["core"],
+  "trust": "adapter-verified",
+  "sideEffects": "read-only",
+  "tokenClass": "low",
+  "nativeHosts": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
+  "install": {
+    "type": "shell",
+    "script": "install.sh",
+    "healthCheck": "rtk --version"
+  },
+  "mcpServerKey": null
+}

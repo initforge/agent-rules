@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/schemas/host-kit/role-contract.schema.json",
+  "title": "Host Kit Role Contract",
+  "description": "Portable role contract for host-kit workers. Model-neutral; no provider or model IDs present. Dirty work is preserved; generated/ and .agent/ paths are never referenced.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["role", "label", "authority", "permissions", "receipt", "fallback"],
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": ["coordinator", "architect-integrator", "implementer", "utility", "verifier", "reviewer", "specialist", "adjudicator"]
+    },
+    "label": { "type": "string", "minLength": 1 },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "scope", "constraints"],
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["host", "delegate", "read-only", "advisory", "override"]
+        },
+        "scope": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "constraints": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "permissions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action", "target", "effect"],
+        "properties": {
+          "action": { "type": "string", "minLength": 1 },
+          "target": { "type": "string", "minLength": 1 },
+          "effect": {
+            "type": "string",
+            "enum": ["allow", "deny", "conditional", "escalate"]
+          },
+          "condition": { "type": "string" }
+        }
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["receipt_id", "role", "issued_at", "status", "decision", "evidence_refs", "authority", "fallback"],
+      "properties": {
+        "receipt_id": { "type": "string", "minLength": 1 },
+        "role": {
+          "type": "string",
+          "enum": ["coordinator", "architect-integrator", "implementer", "utility", "verifier", "reviewer", "specialist", "adjudicator"]
+        },
+        "issued_at": { "type": "string", "format": "date-time" },
+        "status": {
+          "type": "string",
+          "enum": ["issued", "accepted", "rejected", "escalated", "superseded"]
+        },
+        "decision": { "type": "string", "minLength": 1 },
+        "evidence_refs": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "authority": {
+          "type": "string",
+          "enum": ["host", "delegate", "read-only", "advisory", "override"]
+        },
+        "fallback": { "type": "string", "enum": ["deny", "halt", "request-clarification", "escalate", "defer", "block"] }
+      }
+    },
+    "fallback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trigger", "action", "reason"],
+      "properties": {
+        "trigger": { "type": "string", "minLength": 1 },
+        "action": {
+          "type": "string",
+          "enum": ["deny", "halt", "request-clarification", "escalate", "defer", "block"]
+        },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

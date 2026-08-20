@@ -8,15 +8,15 @@
     "dev": "concurrently \"tsx watch src/server/index.ts\" \"vite\"",
     "build": "tsc -p tsconfig.server.json && vite build",
     "start": "node dist/server/server/index.js",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "test": "node ../../automation/run-governed-vitest.mjs --project-root ../.. --cwd . --mode focused -- run",
+    "test:watch": "node ../../automation/run-governed-vitest.mjs --project-root ../.. --cwd . --mode focused -- --watch",
     "typecheck": "tsc --noEmit -p tsconfig.server.json && tsc --noEmit -p tsconfig.client.json"
   },
   "dependencies": {
     "@initforge/agent-rules-engine": "0.1.0",
     "ajv": "^8.20.0",
     "cors": "^2.8.5",
-    "diff": "^7.0.0",
+    "diff": "^9.0.0",
     "express": "^4.21.1",
     "js-yaml": "^4.1.0",
     "react": "^18.3.1",
@@ -31,13 +31,14 @@
     "@types/node": "^22.10.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@types/supertest": "^6.0.2",
+    "@types/supertest": "^6.0.3",
     "@vitejs/plugin-react": "^4.3.4",
+    "chai": "^5.3.3",
     "concurrently": "^9.1.0",
-    "supertest": "^7.1.0",
+    "supertest": "^7.2.2",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vite": "^6.0.3",
-    "vitest": "^2.1.8"
+    "vitest": "^3.2.7"
   }
 }

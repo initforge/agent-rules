@@ -17,26 +17,34 @@
   "bin": {
     "agent-rules": "./dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node test/opencode-artifact-smoke.mjs",
     "start": "node dist/index.js",
     "clean": "rimraf dist",
     "prepack": "npm run build",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
+    "test:watch": "jest --runInBand --watch",
+    "test:package-smoke": "node test/runtime-package-smoke.mjs"
   },
   "dependencies": {
     "@initforge/agent-rules-engine": "0.1.0",
+    "@opencode-ai/sdk": "^1.18.10",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "commander": "^13.1.0",
     "js-yaml": "^4.3.0"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.14",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.14.0",
+    "jest": "^29.7.0",
     "rimraf": "^6.0.1",
-    "typescript": "^5.8.3",
+    "ts-jest": "^29.4.12",
+    "typescript": "^5.9.3",
     "vitest": "^3.1.1"
   },
   "packageManager": "npm@11.13.0"

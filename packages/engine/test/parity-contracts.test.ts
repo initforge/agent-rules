@@ -16,7 +16,7 @@ const roots: string[] = [];
 const draftHeader = `$schema: "${DRAFT_07_SCHEMA_URI}"\n`;
 const canonicalSchemasDirectory = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  '../../../skills/5fedu-module-parity/references/schemas',
+  '../../../profiles/5fedu/skills/5fedu-module-parity/references/schemas',
 );
 const canonicalSchemaNames = [
   'parity-packet.schema.yaml',
@@ -641,10 +641,19 @@ $schema: "${DRAFT_07_SCHEMA_URI}"
       'nested/foo.schema.yaml': `${draftHeader}$ref: "FOO.schema.yaml"\n`,
       'nested/FOO.schema.yaml': `${draftHeader}type: object\n`,
     });
-    expect(() => runtime(root)).toThrowError(expect.objectContaining({
-      code: 'INVALID_SCHEMA_PATH',
-      details: ['nested/FOO.schema.yaml', 'nested/foo.schema.yaml'],
-    }));
+    const nestedEntries = fs.readdirSync(path.join(root, 'nested'));
+    if (nestedEntries.includes('FOO.schema.yaml') && nestedEntries.includes('foo.schema.yaml')) {
+      expect(() => runtime(root)).toThrowError(expect.objectContaining({
+        code: 'INVALID_SCHEMA_PATH',
+        details: ['nested/FOO.schema.yaml', 'nested/foo.schema.yaml'],
+      }));
+    } else {
+      // A case-insensitive checkout cannot represent both entries; the
+      // filesystem has already collapsed the collision before the runtime can
+      // inspect it. The portable path policy still rejects the pair whenever
+      // both entries are representable.
+      expect(() => runtime(root)).not.toThrow();
+    }
   });
 
   it('rejects exact duplicate schema IDs as well as case variants', () => {
@@ -965,6 +974,12 @@ describe('canonical V3 aggregate and deviations schemas', () => {
       schema: 'parity-packet.schema.yaml',
       value: canonicalPacketValue(),
     })).toMatchObject({ valid: true, diagnostics: [] });
+
+    const packet = canonicalPacketValue();
+    const architecture = packet['architecture-adaptation.yaml'] as Record<string, unknown>;
+    const deviations = packet['deviations.yaml'] as Record<string, unknown>;
+    expect(architecture.accepted_deviations).toEqual(deviations.deviations);
+    expect(Object.keys(architecture.accepted_deviations as Record<string, unknown>)).toEqual(['DEV-001']);
   });
 
   it.each([

@@ -17,8 +17,9 @@ export interface MessagePart {
 }
 
 export interface MessageResponse {
-  info: { id: string; role: string; created: string };
+  info: { id: string; role: string; created: string; model?: string };
   parts: MessagePart[];
+  model?: string; // resolved/observed model from response
 }
 
 export interface HealthResponse {
@@ -30,6 +31,71 @@ export interface SSEEvent {
   type: string;
   data: unknown;
   id?: string;
+}
+
+/**
+ * Sentinel for model slots the OpenCode host does not expose.
+ * Fail-closed: never fabricate model values.
+ */
+export const HOST_UNOBSERVABLE = 'HOST_UNOBSERVABLE';
+
+/**
+ * Model provenance evidence: requested, resolved, observed.
+ * Model truth rule: only values the host actually exposes are recorded.
+ * Anything else is HOST_UNOBSERVABLE. Nothing is fabricated.
+ */
+export interface OpenCodeModelEvidence {
+  readonly requested: string;
+  readonly resolved: string;
+  readonly observed: string;
+}
+
+/**
+ * Parse requested/resolved/observed model evidence from SSE event data.
+ * Returns UNOBSERVABLE for any slot the host does not expose.
+ */
+export function parseModelEvidence(
+  events: Record<string, unknown>[],
+  requestedModel?: string,
+): OpenCodeModelEvidence {
+  let resolved = HOST_UNOBSERVABLE;
+  let observed = HOST_UNOBSERVABLE;
+
+  for (const ev of events) {
+    if (typeof ev !== 'object' || ev === null) continue;
+
+    // Init events may carry resolved model
+    if (ev.type === 'init' || ev.type === 'server.connected') {
+      const model = (ev as Record<string, unknown>).model;
+      if (typeof model === 'string' && model) {
+        resolved = model;
+      }
+    }
+
+    // Message events carry observed model
+    if (ev.type === 'message' || ev.type === 'assistant') {
+      const msgData = (ev as Record<string, unknown>);
+      // Nested model field in message payload
+      const model = (msgData as Record<string, unknown>).model;
+      if (typeof model === 'string' && model && model !== '<synthetic>' && model !== '') {
+        observed = model;
+      }
+      // Alternative: model in info block
+      const info = (msgData as Record<string, unknown>).info;
+      if (info && typeof info === 'object') {
+        const infoModel = (info as Record<string, unknown>).model;
+        if (typeof infoModel === 'string' && infoModel && infoModel !== '<synthetic>') {
+          observed = infoModel;
+        }
+      }
+    }
+  }
+
+  return {
+    requested: requestedModel ?? HOST_UNOBSERVABLE,
+    resolved,
+    observed,
+  };
 }
 
 function buildUrl(base: string, path: string): string {
@@ -240,10 +306,13 @@ export class OpenCodeV2Adapter {
       let lineBuf = '';
       const sseState = resetSSEState();
 
+      // G-08: Track deadlineTimer reference for cancel() cleanup
+      let deadlineTimer: ReturnType<typeof setTimeout> | null = null;
+
       return new ReadableStream<SSEEvent>({
         async pull(control) {
           // F1 (R3): deadline timer cancels pending reader.read
-          const deadlineTimer = setTimeout(() => {
+          deadlineTimer = setTimeout(() => {
             reader.cancel();
           }, Math.max(0, deadline - Date.now()));
 
@@ -309,11 +378,15 @@ export class OpenCodeV2Adapter {
               if (events.length > 0) return;
             }
             } finally {
-              clearTimeout(deadlineTimer);
+              if (deadlineTimer) clearTimeout(deadlineTimer);
+              deadlineTimer = null;
             }
         },
         cancel() {
           if (fetchTimer) clearTimeout(fetchTimer);
+          fetchTimer = null;
+          if (deadlineTimer) clearTimeout(deadlineTimer);
+          deadlineTimer = null;
           reader.cancel();
         },
       });

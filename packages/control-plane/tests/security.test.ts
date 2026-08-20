@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import request from 'supertest'
 import { app } from '../src/server/app'
 import { getDb, closeDb } from '../src/db'
+import { MUTATION_ALLOWLIST } from '../src/services/safety'
 
 describe('security: auth', () => {
   beforeAll(async () => { await getDb() })
@@ -24,6 +25,24 @@ describe('security: auth', () => {
   it('auth uses req.socket.remoteAddress not req.ip to prevent spoofing', () => {
     const settings = app.get('trust proxy')
     expect(settings).toBe(false)
+  })
+})
+
+describe('security: mutation allowlist verification', () => {
+  it('MUTATION_ALLOWLIST contains only non-production config paths', () => {
+    expect(MUTATION_ALLOWLIST.size).toBe(4)
+    expect(MUTATION_ALLOWLIST.has('automation/model-policy.json')).toBe(true)
+    expect(MUTATION_ALLOWLIST.has('profiles/manifest.yaml')).toBe(true)
+    expect(MUTATION_ALLOWLIST.has('automation/trigger-audit.json')).toBe(true)
+    expect(MUTATION_ALLOWLIST.has('integrations/registry.json')).toBe(true)
+  })
+
+  it('MUTATION_ALLOWLIST does NOT contain production paths', () => {
+    const productionPaths = ['generated/', '.agent/', '.github/']
+    for (const p of productionPaths) {
+      const found = [...MUTATION_ALLOWLIST].some(path => path.startsWith(p))
+      expect(found).toBe(false)
+    }
   })
 })
 
@@ -59,11 +78,59 @@ describe('security: path traversal', () => {
   })
 })
 
+describe('security: CORS origin restriction', () => {
+  const configuredOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173'
+
+  it('never emits a wildcard ACAO for a disallowed origin', async () => {
+    const res = await request(app)
+      .get('/api/health')
+      .set('Origin', 'http://evil.example')
+    // cors() restricts ACAO to the configured origin — never `*`.
+    expect(res.headers['access-control-allow-origin'] ?? '*').not.toBe('*')
+    expect(res.headers['access-control-allow-origin']).toBe(configuredOrigin)
+  })
+
+  it('does not send ACAO:* on responses when no origin is supplied', async () => {
+    const res = await request(app).get('/api/health')
+    expect(res.headers['access-control-allow-origin'] ?? '*').not.toBe('*')
+  })
+
+  it('grants the configured loopback origin', async () => {
+    const res = await request(app)
+      .get('/api/health')
+      .set('Origin', configuredOrigin)
+    expect(res.headers['access-control-allow-origin']).toBe(configuredOrigin)
+  })
+})
+
 describe('security: rate limiting', () => {
   it('sets rate limit headers', async () => {
     const res = await request(app).get('/api/health')
     expect(res.headers['x-ratelimit-limit']).toBeDefined()
     expect(res.headers['x-ratelimit-remaining']).toBeDefined()
+  })
+})
+
+describe('security: CSP and nosniff', () => {
+  it('sets Content-Security-Policy header', async () => {
+    const res = await request(app).get('/api/health')
+    expect(res.headers['content-security-policy']).toBeDefined()
+    expect(res.headers['content-security-policy']).toContain("default-src 'self'")
+  })
+
+  it('sets X-Content-Type-Options to nosniff', async () => {
+    const res = await request(app).get('/api/health')
+    expect(res.headers['x-content-type-options']).toBe('nosniff')
+  })
+
+  it('CSP blocks frame embedding', async () => {
+    const res = await request(app).get('/api/health')
+    expect(res.headers['content-security-policy']).toContain("frame-src 'none'")
+  })
+
+  it('CSP restricts object embedding', async () => {
+    const res = await request(app).get('/api/health')
+    expect(res.headers['content-security-policy']).toContain("object-src 'none'")
   })
 })
 
@@ -98,5 +165,58 @@ describe('security: api key auth', () => {
     process.env.CONTROL_PLANE_API_KEY = 'test-key-12345'
     const res = await request(app).get('/api/runs')
     expect(res.status).toBe(401)
+  })
+})
+
+describe('security: AM22 production mutation denial', () => {
+  it('rejects mutation on generated/ path', async () => {
+    const res = await request(app)
+      .post('/api/mutation/apply')
+      .send({ filePath: 'generated/test.json', data: { test: true } })
+    expect(res.status).toBe(403)
+    expect(res.body.ok).toBe(false)
+    expect(res.body.error).toBe('Forbidden')
+  })
+
+  it('rejects mutation on .agent/ path', async () => {
+    const res = await request(app)
+      .post('/api/mutation/apply')
+      .send({ filePath: '.agent/ledger/test.json', data: { test: true } })
+    expect(res.status).toBe(403)
+    expect(res.body.ok).toBe(false)
+    expect(res.body.error).toBe('Forbidden')
+  })
+
+  it('rejects mutation on .github/ path', async () => {
+    const res = await request(app)
+      .post('/api/mutation/apply')
+      .send({ filePath: '.github/workflows/test.yml', data: 'test' })
+    expect(res.status).toBe(403)
+    expect(res.body.ok).toBe(false)
+    expect(res.body.error).toBe('Forbidden')
+  })
+
+  it('rejects rollback to generated path', async () => {
+    const res = await request(app)
+      .post('/api/mutation/rollback')
+      .send({ backupPath: '/tmp/backup', targetPath: 'generated/test.json' })
+    expect(res.status).toBe(403)
+    expect(res.body.ok).toBe(false)
+    expect(res.body.error).toBe('Forbidden')
+  })
+
+  it('allows mutation on non-production allowlisted path', async () => {
+    const res = await request(app)
+      .get('/api/config/file?path=automation/model-policy.json')
+    expect(res.status).toBe(200)
+  })
+
+  it('rejects non-allowlisted mutation path (allowlist enforcement)', async () => {
+    const res = await request(app)
+      .post('/api/mutation/apply')
+      .send({ filePath: 'somefile.json', data: { test: true } })
+    expect(res.status).toBe(403)
+    expect(res.body.ok).toBe(false)
+    expect(res.body.error).toBe('Forbidden')
   })
 })

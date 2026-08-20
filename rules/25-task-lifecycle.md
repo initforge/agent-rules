@@ -53,14 +53,13 @@ For execution contract, proof matching, evidence standards, and risk-triggered r
 
 Delegate when: stable boundary, clear ACs, non-overlapping writes, sufficient context, meaningful parallelism. Not for multiple files alone. Small tasks need no subagents.
 
-## Required delegation receipts
+## Record what you delegated
 
-- `subagent_requested` — why delegated
-- `subagent_resolved` — model/effort
-- `subagent_started` — acknowledged
-- `subagent_completed` — result returned
-- `result_consumed` — integrated
-- `result_rejected` — with reason
-- `delegation_skipped` — why skipped
+Two facts, not a ceremony:
 
-Missing receipts are detectable.
+- `delegated` — what went out, to whom, and why
+- `outcome` — `consumed` | `rejected` (with reason) | `skipped` (with reason)
+
+A seven-event receipt chain was tracked here previously. For a single operator it cost
+more to emit than it ever paid back in traceability, and missing entries were treated
+as findings, which made the ceremony itself a source of review churn.

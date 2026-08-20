@@ -16,6 +16,15 @@ interface JsonSchema {
 
 type LoadState = 'loading' | 'loaded' | 'error' | 'stale' | 'offline';
 
+interface IntegrityFinding { kind: string; detail: string; }
+
+interface IntegrityFailure {
+  ok: false;
+  code: 'INTEGRITY_FAILURE';
+  error: string;
+  details: { findings: IntegrityFinding[] };
+}
+
 interface PlanData {
   planId: string;
   originalSha256: string | null;
@@ -29,9 +38,7 @@ interface PlanData {
   shadowRevision: string | null;
 }
 
-interface PlanListItem {
-  planId: string;
-}
+interface PlanListItem { planId: string; }
 
 const PROOF_KINDS = [
   { kind: 'static-change', dims: ['outcome', 'regression'], requiredEvidence: ['source-assertion', 'unit-test', 'integration-test'] },
@@ -56,46 +63,61 @@ export default function Plan({ navigate }: PlanProps) {
   const [plans, setPlans] = useState<PlanListItem[]>([]);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [error, setError] = useState('');
+  const [integrityFailure, setIntegrityFailure] = useState<IntegrityFailure | null>(null);
   const [activePane, setActivePane] = useState<'navigator' | 'canvas' | 'inspector'>('canvas');
   const [coverageFilter, setCoverageFilter] = useState<CoverageFilter>('ALL');
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
-  const mountedRef = useRef(true);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
-    mountedRef.current = true;
     let stale = false;
     timerRef.current = setTimeout(() => {
-      if (mountedRef.current && loadState === 'loading') stale = true;
+      if (loadState === 'loading') stale = true;
     }, 5000);
+
+    const planListRes = fetch('/api/plans').then(async r => {
+      const data = await r.json();
+      if (!r.ok && r.status === 409 && data.code === 'INTEGRITY_FAILURE') {
+        setIntegrityFailure(data);
+        return { plans: [] };
+      }
+      if (!r.ok) throw new Error('Failed to fetch plans');
+      return data;
+    }).catch(() => ({ plans: [] }));
 
     Promise.all([
       fetch('/api/config/file?path=automation/evidence-profiles.json').then(r => { if (!r.ok) throw new Error('Failed to fetch evidence profiles'); return r.json(); }),
       fetch('/api/config/file?path=automation/work-ledger.schema.json').then(r => { if (!r.ok) throw new Error('Failed to fetch work ledger schema'); return r.json(); }),
       fetch('/api/config/file?path=automation/trace-schema.json').then(r => { if (!r.ok) throw new Error('Failed to fetch trace schema'); return r.json(); }),
-      fetch('/api/plans').then(r => { if (!r.ok) throw new Error('Failed to fetch plans'); return r.json(); }),
+      planListRes,
     ]).then(([e, w, t, p]) => {
-      if (!mountedRef.current) return;
       if (e.ok) setEvidenceProfiles(e.data);
       if (w.ok) setWorkLedgerSchema(w.data);
       if (t.ok) setTraceSchema(t.data);
       if (p.plans && p.plans.length > 0) {
         setPlans(p.plans);
         const firstPlanId = p.plans[0].planId;
-        return fetch(`/api/plans/${firstPlanId}`).then(r => r.json()).then(pd => {
-          if (mountedRef.current) setPlanData(pd);
+        return fetch(`/api/plans/${firstPlanId}`).then(async r => {
+          const pd = await r.json();
+          if (!r.ok && r.status === 409 && pd.code === 'INTEGRITY_FAILURE') {
+            setIntegrityFailure(pd);
+            setLoadState('loaded');
+            return null;
+          }
+          if (!r.ok) throw new Error(`Failed to fetch plan (${r.status})`);
+          setPlanData(pd);
+          return pd;
         });
       }
       setLoadState('loaded');
     }).then(() => {
-      if (mountedRef.current) setLoadState('loaded');
+      setLoadState('loaded');
     }).catch(err => {
-      if (!mountedRef.current) return;
       if (stale) setLoadState('offline');
       else { setError(err instanceof Error ? err.message : String(err)); setLoadState('error'); }
     }).finally(() => clearTimeout(timerRef.current));
 
-    return () => { mountedRef.current = false; clearTimeout(timerRef.current); };
+    return () => { clearTimeout(timerRef.current); };
   }, []);
 
   const COVERAGE_FILTERS: CoverageFilter[] = ['ALL', 'MATCH', 'PARTIAL', 'MISSING', 'DEVIATED', 'EXTRA', 'SUPERSEDED'];
@@ -150,6 +172,21 @@ export default function Plan({ navigate }: PlanProps) {
           <p className="typography-caption">Requirement evidence tracking and reconciliation</p>
         </div>
         <div className="state-error">{error}</div>
+        {integrityFailure && (
+          <div className="surface overview-integrity-banner" role="alert" aria-live="assertive">
+            <div className="overview-integrity-header">
+              <span className="badge badge--danger">Integrity Failure</span>
+              <span className="typography-caption">Workspace integrity check failed</span>
+            </div>
+            <ul className="overview-integrity-findings">
+              {(integrityFailure.details?.findings || []).slice(0, 5).map((f, i) => (
+                <li key={i} className="typography-caption">
+                  <span className="badge badge--danger badge--sm">{f.kind}</span> {f.detail}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     );
   }
@@ -174,6 +211,21 @@ export default function Plan({ navigate }: PlanProps) {
           <p className="typography-caption">Requirement evidence tracking and reconciliation</p>
         </div>
         <div className="state-empty">No plans found in ledger</div>
+        {integrityFailure && (
+          <div className="surface overview-integrity-banner" role="alert" aria-live="assertive">
+            <div className="overview-integrity-header">
+              <span className="badge badge--danger">Integrity Failure</span>
+              <span className="typography-caption">Workspace integrity check failed</span>
+            </div>
+            <ul className="overview-integrity-findings">
+              {(integrityFailure.details?.findings || []).slice(0, 5).map((f, i) => (
+                <li key={i} className="typography-caption">
+                  <span className="badge badge--danger badge--sm">{f.kind}</span> {f.detail}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     );
   }
@@ -205,6 +257,25 @@ export default function Plan({ navigate }: PlanProps) {
           </div>
         )}
       </div>
+
+      {integrityFailure && (
+        <div className="surface overview-integrity-banner" role="alert" aria-live="assertive">
+          <div className="overview-integrity-header">
+            <span className="badge badge--danger">Integrity Failure</span>
+            <span className="typography-caption">Plan workspace integrity check failed — evidence may not be reliable</span>
+          </div>
+          <ul className="overview-integrity-findings">
+            {(integrityFailure.details?.findings || []).slice(0, 5).map((f, i) => (
+              <li key={i} className="typography-caption">
+                <span className="badge badge--danger badge--sm">{f.kind}</span> {f.detail}
+              </li>
+            ))}
+            {(integrityFailure.details?.findings || []).length > 5 && (
+              <li className="typography-caption">+{(integrityFailure.details?.findings || []).length - 5} more findings</li>
+            )}
+          </ul>
+        </div>
+      )}
 
       <div className="plan-mobile-tabs" aria-label="Plan panes">
         {(['navigator' as const, 'canvas' as const, 'inspector' as const]).map(pane => (

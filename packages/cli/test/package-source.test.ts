@@ -3,6 +3,9 @@ import path from "node:path";
 import fs from "node:fs";
 import { execSync } from "node:child_process";
 import { verifyUiTasteSourcePack } from "../src/commands/build.js";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function getRepoRoot(): string {
   return path.resolve(__dirname, "..", "..", "..");

@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import os from 'node:os';
 import { join, extname, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
+import { CERTIFICATION_REQUIRED_HOSTS, HOST_ATTESTATION_EVIDENCE_ROLES, hostAttestationEvidenceRef, hostAttestationEvidenceSubjectSha256 } from '../src/contracts.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -19,7 +24,7 @@ interface Workflow {
 
 interface Job {
   'runs-on'?: string | string[];
-  strategy?: { matrix?: { include?: Record<string, unknown>[] } };
+  strategy?: { matrix?: { include?: Record<string, unknown>[]; host?: string[] } };
   steps?: Step[];
   needs?: string | string[];
   'if'?: string;
@@ -109,15 +114,15 @@ describe('Workflow structure validation', () => {
     }
   });
 
-  it('quality.yml has no duplicate build step', () => {
+  it('quality.yml has one root build step and no duplicate root build', () => {
     const wf = loadWorkflow('quality.yml');
     let buildCount = 0;
     for (const job of Object.values(wf.jobs!)) {
       for (const step of job.steps || []) {
-        if (step.run && step.run.includes('npm run build')) buildCount++;
+        if (step.run && /^npm run build\s*$/m.test(step.run)) buildCount++;
       }
     }
-    expect(buildCount).toBeLessThanOrEqual(1);
+    expect(buildCount).toBe(1);
   });
 
   it('certification.yml uses self-hosted runners, never on pull_request (only trusted push/manual/schedule/release)', () => {
@@ -147,15 +152,22 @@ describe('Quality workflow validation', () => {
     expect(hosts).toContain('macos');
   });
 
-  it('linux runner has Playwright preflight check with deps', () => {
+  it('all quality runners install Playwright Chromium with Linux system dependencies', () => {
     const wf = loadWorkflow('quality.yml');
     const qualityJob = wf.jobs!.quality;
-    const pwStep = qualityJob!.steps!.find(s => s.name === 'Playwright preflight check');
-    expect(pwStep).toBeTruthy();
-    expect(pwStep!.run).toContain('npx playwright install chromium --with-deps');
-    const pwEnv = pwStep!.env!;
-    expect(pwEnv).toHaveProperty('PLAYWRIGHT_BROWSERS_PATH');
-    expect(String(pwEnv.PLAYWRIGHT_BROWSERS_PATH)).toBe('0');
+    const linux = qualityJob!.steps!.find(s => s.name === 'Playwright preflight check (Linux)');
+    const windows = qualityJob!.steps!.find(s => s.name === 'Playwright preflight check (Windows)');
+    const macos = qualityJob!.steps!.find(s => s.name === 'Playwright preflight check (macOS)');
+    expect(linux?.run).toContain('npx playwright install chromium --with-deps');
+    expect(windows?.run).toContain('npx playwright install chromium');
+    expect(macos?.run).toContain('npx playwright install chromium');
+    expect(linux?.if).toBe("matrix.host == 'linux'");
+    expect(windows?.if).toBe("matrix.host == 'windows'");
+    expect(macos?.if).toBe("matrix.host == 'macos'");
+    for (const step of [linux, windows, macos]) {
+      expect(step?.env).toHaveProperty('PLAYWRIGHT_BROWSERS_PATH');
+      expect(String(step?.env?.PLAYWRIGHT_BROWSERS_PATH)).toBe('0');
+    }
   });
 
   it('quality job has timeout-minutes set', () => {
@@ -174,10 +186,22 @@ describe('Quality workflow validation', () => {
     const startStep = qualityJob!.steps!.find(s => s.name === 'Start Control Plane');
     const cleanupStep = qualityJob!.steps!.find(s => s.name === 'Cleanup Control Plane');
     expect(startStep).toBeTruthy();
-    expect(startStep!.run).toContain('node packages/control-plane/dist/server/server/index.js');
+    expect(startStep!.run).toContain('node automation/control-plane-ci.mjs start');
     expect(cleanupStep).toBeTruthy();
     expect(cleanupStep!['if']).toBe('always()');
-    expect(cleanupStep!.run).toContain('kill');
+    expect(cleanupStep!.run).toContain('node automation/control-plane-ci.mjs stop');
+  });
+
+  it('builds the engine dependency before generating the context graph', () => {
+    const wf = loadWorkflow('quality.yml');
+    const pythonSteps = wf.jobs!['python-tests']!.steps!;
+    const dependencyBuildIndex = pythonSteps.findIndex(s => s.name === 'Build context graph dependency');
+    const contextGraphIndex = pythonSteps.findIndex(s => s.name === 'Generate context graph');
+
+    expect(dependencyBuildIndex).toBeGreaterThanOrEqual(0);
+    expect(pythonSteps[dependencyBuildIndex]!.run).toBe('npm run build -w packages/engine');
+    expect(contextGraphIndex).toBeGreaterThan(dependencyBuildIndex);
+    expect(pythonSteps[contextGraphIndex]!.run).toContain('npx tsx packages/cli/src/index.ts context-graph build');
   });
 
   it('has security job with audit, semgrep, and gitleaks', () => {
@@ -212,28 +236,18 @@ describe('Quality workflow validation', () => {
 });
 
 describe('Certification workflow validation', () => {
-  it('has matrix with all 5 native hosts', () => {
+  it('has exact matrix Codex, Claude, Grok, OpenCode, Antigravity; Cursor deferred', () => {
     const wf = loadWorkflow('certification.yml');
     const certifyJob = wf.jobs!.certify;
     expect(certifyJob).toBeTruthy();
     const matrix = certifyJob!.strategy?.matrix;
     expect(matrix).toBeTruthy();
-    const hosts = matrix!.include!.map(i => i.host);
-    expect(hosts).toContain('codex');
-    expect(hosts).toContain('cursor');
-    expect(hosts).toContain('antigravity');
-    expect(hosts).toContain('grok');
-    expect(hosts).toContain('opencode');
+    expect(matrix!.host).toEqual(['codex', 'claude', 'grok', 'opencode', 'antigravity']);
   });
 
   it('each host has a self-hosted runner label', () => {
     const wf = loadWorkflow('certification.yml');
-    const matrix = wf.jobs!.certify!.strategy!.matrix!;
-    for (const entry of matrix.include!) {
-      const runner = entry.runner as string[];
-      expect(runner).toContain('self-hosted');
-      expect(runner).toContain(`${entry.host}-native`);
-    }
+    expect(wf.jobs!.certify!['runs-on']).toEqual(['self-hosted', "${{ matrix.host }}-native"]);
   });
 
   it('certify job uploads attestation artifacts', () => {
@@ -251,14 +265,14 @@ describe('Certification workflow validation', () => {
     const agg = wf.jobs!['certify-aggregate'];
     expect(agg).toBeTruthy();
     const stepNames = agg!.steps!.map(s => s.name || '');
-    expect(stepNames).toContain('Verify attestations via manifest content, hash, metadata and host uniqueness');
-    expect(stepNames).toContain('Verify aggregate');
+    expect(stepNames).toContain('Verify exact host set, hashes, metadata, TTL, and model evidence');
+    expect(stepNames).toContain('Verify matrix result');
   });
 
   it('certify job generates artifact manifest with SHA and uploads attestation+manifest', () => {
     const wf = loadWorkflow('certification.yml');
     const certifySteps = wf.jobs!.certify!.steps!;
-    expect(certifySteps.some(s => s.name === 'Generate artifact manifest')).toBeTruthy();
+    expect(certifySteps.some(s => s.name === 'Build exact artifact manifest')).toBeTruthy();
     const uploadStep = certifySteps.find(s => s.uses?.startsWith('actions/upload-artifact'));
     expect(uploadStep).toBeTruthy();
     expect(uploadStep!.with!['if-no-files-found']).toBe('error');
@@ -267,7 +281,7 @@ describe('Certification workflow validation', () => {
   it('certification has timeout-minutes set on both jobs', () => {
     const wf = loadWorkflow('certification.yml');
     expect(wf.jobs!.certify!['timeout-minutes']).toBeGreaterThan(0);
-    expect(wf.jobs!['certify-aggregate']!['timeout-minutes']).toBeUndefined();
+    expect(wf.jobs!['certify-aggregate']!['timeout-minutes']).toBeGreaterThan(0);
   });
 
   it('certification triggers: workflow_dispatch, push main, schedule, release — no pull_request', () => {
@@ -279,6 +293,46 @@ describe('Certification workflow validation', () => {
     expect(triggers).toContain('release');
     expect(triggers).not.toContain('pull_request');
   });
+});
+
+describe('Certification artifact verifier adversarial checks', () => {
+  const commit = 'a'.repeat(64);
+  const env = {
+    ...process.env, CERTIFICATION_COMMIT_SHA: commit, CERTIFICATION_REPOSITORY: 'owner/repo',
+    CERTIFICATION_RUN_ID: '42', CERTIFICATION_RUN_URL: 'https://github.com/owner/repo/actions/runs/42',
+    CERTIFICATION_WORKFLOW: 'Certification',
+  };
+  const sha = (value: Buffer | string) => createHash('sha256').update(value).digest('hex');
+  function attestation(host: string) {
+    const fields = { host, hostVersion: '1.2.3', commitSha: commit, capabilityStatus: 'HOST_NATIVE', capabilityIds: [`${host}:model`], contractSetSha256: 'b'.repeat(64), requestedModel: 'qwencoder/glm-5.2', resolvedModel: 'qwencoder/glm-5.2', observedModel: 'qwencoder/glm-5.2', nativeRunnerIdentity: `runner:${host}`, issuedAt: new Date(Date.now() - 60_000).toISOString(), expiresAt: new Date(Date.now() + 3_600_000).toISOString() } as any;
+    fields.evidenceRefs = HOST_ATTESTATION_EVIDENCE_ROLES.map(role => { const evidenceSha256 = sha(`${host}:${role}`); return { role, host, commitSha: commit, evidenceSha256, evidenceRef: hostAttestationEvidenceRef(host as any, commit, role, evidenceSha256), subjectSha256: hostAttestationEvidenceSubjectSha256(role, fields), observedAt: fields.issuedAt }; });
+    return fields;
+  }
+  function fixture() {
+    const root = mkdtempSync(join(os.tmpdir(), 'cert-artifacts-'));
+    for (const host of CERTIFICATION_REQUIRED_HOSTS) {
+      const bytes = Buffer.from(`${JSON.stringify(attestation(host))}\n`);
+      writeFileSync(join(root, `attestation-${host}.json`), bytes);
+      writeFileSync(join(root, `manifest-${host}.json`), JSON.stringify({ schema: 'host-certification-manifest/v1', host, attestationFile: `attestation-${host}.json`, attestationSha256: sha(bytes), commitSha: commit, repository: 'owner/repo', runId: '42', runUrl: 'https://github.com/owner/repo/actions/runs/42', workflow: 'Certification', check: 'certify' }));
+    }
+    return root;
+  }
+  const verify = (root: string) => execFileSync(process.execPath, ['automation/control-plane-ci.mjs', 'certification-verify'], { cwd: join(__dirname, '..', '..', '..'), env: { ...env, CERTIFICATION_ARTIFACTS: root }, stdio: 'pipe' });
+  const manifest = (root: string, host = 'codex') => join(root, `manifest-${host}.json`);
+  const mutateManifest = (root: string, change: (value: any) => void, host = 'codex') => { const file = manifest(root, host); const value = JSON.parse(readFileSync(file, 'utf8')); change(value); writeFileSync(file, JSON.stringify(value)); };
+
+  it('accepts exactly ten basenames forming five exact host pairs', () => { const root = fixture(); expect(() => verify(root)).not.toThrow(); rmSync(root, { recursive: true }); });
+  it.each([
+    ['extra file', (root: string) => writeFileSync(join(root, 'extra.json'), '{}')],
+    ['extra directory', (root: string) => mkdirSync(join(root, 'nested'))],
+    ['duplicate nested basename', (root: string) => { mkdirSync(join(root, 'nested')); cpSync(manifest(root), join(root, 'nested', 'manifest-codex.json')); }],
+    ['traversal', (root: string) => mutateManifest(root, value => { value.attestationFile = '../attestation-codex.json'; })],
+    ['wrong hash', (root: string) => mutateManifest(root, value => { value.attestationSha256 = '0'.repeat(64); })],
+    ['foreign host', (root: string) => mutateManifest(root, value => { value.host = 'cursor'; })],
+    ['wrong commit', (root: string) => mutateManifest(root, value => { value.commitSha = 'c'.repeat(64); })],
+    ['stale TTL', (root: string) => { const file = join(root, 'attestation-codex.json'); const value = JSON.parse(readFileSync(file, 'utf8')); value.expiresAt = new Date(Date.now() - 1).toISOString(); const bytes = Buffer.from(JSON.stringify(value)); writeFileSync(file, bytes); mutateManifest(root, manifest => { manifest.attestationSha256 = sha(bytes); }); }],
+    ['model mismatch', (root: string) => { const file = join(root, 'attestation-codex.json'); const value = JSON.parse(readFileSync(file, 'utf8')); value.requestedModel = 'synthetic'; const bytes = Buffer.from(JSON.stringify(value)); writeFileSync(file, bytes); mutateManifest(root, manifest => { manifest.attestationSha256 = sha(bytes); }); }],
+  ])('rejects %s', (_label, mutate) => { const root = fixture(); mutate(root); expect(() => verify(root)).toThrow(); rmSync(root, { recursive: true }); });
 });
 
 describe('Action SHA integrity', () => {
@@ -342,11 +396,7 @@ describe('External assumptions documented', () => {
 
   it('certification workflow needs native CLIs on self-hosted runners', () => {
     const wf = loadWorkflow('certification.yml');
-    const matrix = wf.jobs!.certify!.strategy!.matrix!;
-    for (const entry of matrix.include!) {
-      const runner = entry.runner as string[];
-      expect(runner).toContain(`${entry.host}-native`);
-    }
+    expect(wf.jobs!.certify!['runs-on']).toEqual(['self-hosted', "${{ matrix.host }}-native"]);
   });
 
   it('certification aggregate needs download-artifact to retrieve per-host attestations', () => {

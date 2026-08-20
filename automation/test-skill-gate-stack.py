@@ -174,11 +174,16 @@ def main() -> int:
                         f"relative payload workspace did not fall back to the environment root: {relative_root}"
                     )
             symlink_root = Path(holder) / "workspace-link"
-            symlink_root.symlink_to(workspace, target_is_directory=True)
-            if gate.valid_payload_workspace(str(symlink_root)) is not None:
-                raise AssertionError("symlink payload workspace was accepted")
-            if gate.payload_workspace({"cwd": str(symlink_root)}) != workspace:
-                raise AssertionError("symlink payload workspace did not retain environment-root compatibility")
+            symlink_supported = True
+            try:
+                symlink_root.symlink_to(workspace, target_is_directory=True)
+            except OSError:
+                symlink_supported = False
+            if symlink_supported:
+                if gate.valid_payload_workspace(str(symlink_root)) is not None:
+                    raise AssertionError("symlink payload workspace was accepted")
+                if gate.payload_workspace({"cwd": str(symlink_root)}) != workspace:
+                    raise AssertionError("symlink payload workspace did not retain environment-root compatibility")
             if (gate.graph_decision("Sửa module 5fedu lệch pattern drawer") or {}).get("primary") != "5fedu-module-parity":
                 raise AssertionError("environment workspace root no longer routes a canonical pack")
         finally:

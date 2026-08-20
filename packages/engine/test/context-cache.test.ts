@@ -201,15 +201,43 @@ describe('ContextCache', () => {
       expect(tmpFiles.length).toBe(0);
     });
 
-    it('evicts disk entries when maxEntries is low', () => {
+    it('evicts disk entries when the disk budget is low', () => {
       const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctx-evict-'));
       tmpDirs.push(dir);
-      const small = new ContextCache({ cacheDir: dir, maxEntries: 3 });
+      // maxDiskEntries is separate from maxEntries on purpose: memory eviction spills
+      // to disk, so a disk budget equal to the memory budget would delete an entry the
+      // instant it spilled and break reload. Here the disk ceiling is stated directly.
+      const small = new ContextCache({ cacheDir: dir, maxEntries: 3, maxDiskEntries: 3 });
       for (let i = 0; i < 10; i++) {
         small.set(makeKey({ assignmentId: `e${i}` }), makeCapsule(makeKey({ assignmentId: `e${i}` })));
       }
       expect(small.size()).toBeLessThanOrEqual(3);
       expect(countFiles(dir)).toBeLessThanOrEqual(3);
+    });
+
+    it('keeps a memory-evicted entry on disk when the disk budget allows', () => {
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctx-spill-'));
+      tmpDirs.push(dir);
+      const cache = new ContextCache({ cacheDir: dir, maxEntries: 2 });
+      for (let i = 0; i < 6; i++) {
+        cache.set(makeKey({ assignmentId: `s${i}` }), makeCapsule(makeKey({ assignmentId: `s${i}` })));
+      }
+      expect(cache.size()).toBeLessThanOrEqual(2);
+      // Everything written is still reachable: spill, not deletion.
+      expect(cache.get(makeKey({ assignmentId: 's0' }))).toBeDefined();
+    });
+
+    it('enforces the default disk ceiling rather than growing without bound', () => {
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctx-bound-'));
+      tmpDirs.push(dir);
+      const cache = new ContextCache({ cacheDir: dir, maxEntries: 2 });
+      for (let i = 0; i < 40; i++) {
+        cache.set(makeKey({ assignmentId: `b${i}` }), makeCapsule(makeKey({ assignmentId: `b${i}` })));
+      }
+      // Default disk ceiling is maxEntries * 10; before this fix the write path could
+      // not evict at all (it deadlocked on the lock it already held) and every capsule
+      // ever written stayed on disk.
+      expect(countFiles(dir)).toBeLessThanOrEqual(20);
     });
 
     it('rebuilds metadata after corruption', () => {
@@ -398,6 +426,85 @@ describe('F5 (R3) invalidate lock failure throws', () => {
       c1.set(makeKey({ assignmentId: 'lock-ok' }), makeCapsule(makeKey({ assignmentId: 'lock-ok' })));
       c1.invalidateAll();
       expect(c1.size()).toBe(0);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+// AM-0021: context cache persistence/get undefined regression
+describe('AM-0021 persistence regression', () => {
+  it('get returns defined after memory eviction + disk reload (the core regression)', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctx-am0021-'));
+    try {
+      // Fill cache to capacity
+      const c1 = new ContextCache({ cacheDir: dir, maxEntries: 3 });
+      for (let i = 0; i < 3; i++) {
+        c1.set(makeKey({ assignmentId: `fill${i}` }), makeCapsule(makeKey({ assignmentId: `fill${i}` })));
+      }
+      expect(c1.size()).toBe(3);
+      // Evict from memory by pushing beyond capacity
+      c1.set(makeKey({ assignmentId: 'overwrite' }), makeCapsule(makeKey({ assignmentId: 'overwrite' })));
+      expect(c1.size()).toBeLessThanOrEqual(3);
+      // Cross-instance: new cache reads from disk
+      const c2 = new ContextCache({ cacheDir: dir });
+      const k = makeKey({ assignmentId: 'fill0' });
+      const r = c2.get(k);
+      // AM-0021: was returning undefined due to evict-after-memory.set bug
+      expect(r).toBeDefined();
+      expect(r!.capsule.key.assignmentId).toBe('fill0');
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('idempotency: set same key twice returns true both times, get returns same capsule', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctx-idempotent-'));
+    try {
+      const c1 = new ContextCache({ cacheDir: dir });
+      const k = makeKey({ assignmentId: 'idem' });
+      const cap = makeCapsule(k);
+      expect(c1.set(k, cap)).toBe(true);
+      expect(c1.set(k, cap)).toBe(true); // idempotent
+      const r1 = c1.get(k);
+      const r2 = c1.get(k);
+      expect(r1!.capsule.capsuleSha256).toBe(r2!.capsule.capsuleSha256);
+      expect(r1!.source).toBe('local');
+      expect(r2!.source).toBe('local');
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('restart: capsule survives new ContextCache instance', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctx-restart-'));
+    try {
+      const c1 = new ContextCache({ cacheDir: dir });
+      const k = makeKey({ assignmentId: 'survivor' });
+      c1.set(k, makeCapsule(k));
+      expect(countFiles(dir)).toBe(1);
+      // Simulate process restart: new instance
+      const c2 = new ContextCache({ cacheDir: dir });
+      const r = c2.get(k);
+      expect(r).toBeDefined();
+      expect(r!.capsule.key.assignmentId).toBe('survivor');
+      expect(r!.source).toBe('local');
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('put/get roundtrip: stored capsule matches retrieved capsule', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ctx-roundtrip-'));
+    try {
+      const c1 = new ContextCache({ cacheDir: dir });
+      const k = makeKey({ assignmentId: 'roundtrip' });
+      const cap = makeCapsule(k, { diffFacts: 'unique-fact-string', verificationCommands: ['echo test'] });
+      c1.set(k, cap);
+      const r = c1.get(k)!;
+      expect(r.capsule.diffFacts).toBe('unique-fact-string');
+      expect(r.capsule.verificationCommands).toEqual(['echo test']);
+      expect(r.capsule.capsuleSha256).toBeTruthy();
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
