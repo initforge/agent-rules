@@ -263,9 +263,9 @@ describe('North-Star governance', () => {
     ])).toThrow(/recursive/);
   });
 
-  it('declares host surfaces honestly and includes MiMoCode headless support', () => {
+  it('declares host surfaces honestly and certifies headless hosts', () => {
     expect(() => assertHostSurface(repoRoot)).not.toThrow();
-    expect(HOST_CAPABILITIES.mimocode.headless).toBe(true);
+    expect(HOST_CAPABILITIES.codex.headless).toBe(true);
     expect(() => requireHostMode('cursor', 'headless')).toThrow(/does not have a certified headless/);
   });
 

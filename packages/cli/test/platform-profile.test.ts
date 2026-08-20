@@ -10,24 +10,16 @@ describe("platform/profile command contracts", () => {
     expect(result.exitCode).toBe(0);
     const names = (result.data as { platforms: Array<{ name: string }> }).platforms.map((p) => p.name);
     expect(names).toContain("claude");
-    expect(names).toContain("mimocode");
+    expect(names).not.toContain("mimocode");
     expect(names).toContain("opencode");
   });
 
-  it("does not report host-native MimoCode surfaces as missing managed files", async () => {
+  it("lists all registered platforms including cursor and opencode", async () => {
     const result = await platformCmd(["list"], options);
     expect(result.exitCode).toBe(0);
-    const mimo = (result.data as { platforms: Array<{
-      name: string;
-      agentMaterialization: string;
-      managedSurfaceExpected: boolean;
-      managedSurfaceStatus: string;
-    }> }).platforms.find((platform) => platform.name === "mimocode");
-    expect(mimo).toMatchObject({
-      agentMaterialization: "host_native",
-      managedSurfaceExpected: false,
-      managedSurfaceStatus: "HOST_NATIVE_DEFERRED",
-    });
+    const names = (result.data as { platforms: Array<{ name: string }> }).platforms.map((p) => p.name);
+    expect(names).toContain("cursor");
+    expect(names).toContain("claude");
   });
 
   it("shows Claude from the canonical platform contract", async () => {

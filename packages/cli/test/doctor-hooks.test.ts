@@ -15,7 +15,6 @@ describe("doctor host hook probes", () => {
 
   it("does not invent a hook surface for providers without a host hook contract", () => {
     expect(hookProbePaths("opencode", "/tmp/opencode-home")).toBeNull();
-    expect(hookProbePaths("mimocode", "/tmp/mimocode-home")).toBeNull();
     expect(hookProbePaths("claude", "/tmp/claude-home")).toBeNull();
   });
 });

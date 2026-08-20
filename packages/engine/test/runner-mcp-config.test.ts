@@ -7,7 +7,7 @@ import { checkVisibleMcpHost, materializeMcpConfig } from '../src/runner/mcp-con
 import { buildInvocation } from '../src/runner/headless-executor.js';
 
 const VISIBLE_ENV = { DISPLAY: ':99' } as NodeJS.ProcessEnv;
-const ADAPTER_HOSTS = ['antigravity', 'claude', 'codex', 'cursor', 'grok', 'mimocode', 'opencode'] as const;
+const ADAPTER_HOSTS = ['antigravity', 'claude', 'codex', 'cursor', 'grok', 'opencode'] as const;
 
 describe('materializeMcpConfig', () => {
   // packages/engine/test/runner-mcp-config.test.ts
@@ -78,8 +78,7 @@ describe('materializeMcpConfig', () => {
   it('copies the exact native Pencil entry for every runner host', () => {
     const home = fs.mkdtempSync(path.join(os.tmpdir(), 'pencil-native-home-'));
     fs.mkdirSync(path.join(home, '.codex'), { recursive: true });
-    fs.mkdirSync(path.join(home, '.config', 'opencode'), { recursive: true });
-    fs.mkdirSync(path.join(home, '.config', 'mimocode'), { recursive: true });
+      fs.mkdirSync(path.join(home, '.config', 'opencode'), { recursive: true });
     fs.writeFileSync(path.join(home, '.codex', 'config.toml'), [
       '[mcp_servers.pencil]',
       "command = '/tmp/pen-codex-server'",
@@ -91,7 +90,6 @@ describe('materializeMcpConfig', () => {
     ].join('\n'));
     fs.writeFileSync(path.join(home, '.claude.json'), JSON.stringify({ mcpServers: { pencil: { command: '/tmp/pen-claude-server', args: ['--app', 'desktop', '--agent', 'claudeCodeCLI'], env: { PENCIL_TOKEN: 'claude-token' } } } }));
     fs.writeFileSync(path.join(home, '.config', 'opencode', 'opencode.json'), JSON.stringify({ mcp: { pencil: { command: ['/tmp/pen-opencode-server', '--app', 'desktop', '--agent', 'openCodeCLI'], environment: { PENCIL_TOKEN: 'opencode-token' } } } }));
-    fs.writeFileSync(path.join(home, '.config', 'mimocode', 'mimocode.jsonc'), JSON.stringify({ mcp: { pencil: { command: ['/tmp/pen-mimocode-server', '--app', 'desktop', '--agent', 'mimocodeCLI'] } } }));
     const out = fs.mkdtempSync(path.join(os.tmpdir(), 'mcp-pencil-'));
     const paths = materializeMcpConfig(out, {
       registryRoot: REGISTRY,
@@ -115,12 +113,6 @@ describe('materializeMcpConfig', () => {
     };
     expect(parsed.mcp.pencil.command).toEqual(['/tmp/pen-opencode-server', '--app', 'desktop', '--agent', 'openCodeCLI']);
     expect(parsed.mcp.pencil.environment?.PENCIL_TOKEN).toBe('opencode-token');
-    expect(paths.mimocode).toBeDefined();
-    const mimo = JSON.parse(fs.readFileSync(paths.mimocode!.configPath, 'utf8')) as {
-      mcp: Record<string, { type: string; command: string[] }>;
-    };
-    expect(mimo.mcp.pencil.type).toBe('local');
-    expect(mimo.mcp.pencil.command).toEqual(['/tmp/pen-mimocode-server', '--app', 'desktop', '--agent', 'mimocodeCLI']);
   });
 
   it('blocks foreground MCP when the operator desktop is unavailable', () => {

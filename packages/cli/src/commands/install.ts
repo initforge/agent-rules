@@ -3,6 +3,7 @@ import { getRepoRoot } from "../adapters/repo.js";
 import { RuntimeInstaller, RUNTIME_PLATFORMS } from "../runtime/installer.js";
 import type { RuntimePlatform } from "../runtime/contracts.js";
 import { provisionMcps } from "../integration/provisioning.js";
+import { convergeAllHostMcpConfigs } from "../runtime/mcp-convergence.js";
 
 /**
  * Install agent-rules runtime for one or all platforms.
@@ -55,13 +56,22 @@ export async function installCmd(
     }
   }
 
-  // MCP provisioning is a canonical part of the install lifecycle: every
-  // `kind: mcp` entry is provisioned fully, independent of activation policy.
+  // REQ-008: MCP provisioning is part of the install lifecycle, but ONLY for
+  // entries inside the active install profile (AGENT_RULES_INTEGRATION_PROFILE,
+  // default core); explicit-only integrations install only when explicitly
+  // selected. After provisioning, host configs converge to the global MCP
+  // profile (default none): agent-rules-owned entries are removed or disabled.
   let provisioning;
   try {
     provisioning = await provisionMcps(repoRoot, { dryRun: options.dryRun });
   } catch (error) {
     provisioning = { kind: "mcp", source: "integrations/registry.json", total: 0, status: "BLOCKED", success: false, results: [], error: (error as Error).message };
+  }
+  let convergence;
+  try {
+    convergence = await convergeAllHostMcpConfigs(repoRoot, undefined, { dryRun: options.dryRun });
+  } catch (error) {
+    convergence = [{ host: "all", config_path: "", exists: false, status: "SKIPPED", entries: [], error: (error as Error).message }];
   }
 
   if (platform === "all") {
@@ -73,10 +83,11 @@ export async function installCmd(
     const allOk = Object.values(results).every((r) => r.ok);
     const failed = Object.entries(results).filter(([, r]) => !r.ok);
     const mcpsOk = provisioning.success;
-    const overallOk = allOk && mcpsOk;
+    const convergenceOk = !convergence.some((result) => result.status === "NEEDS_USER");
+    const overallOk = allOk && mcpsOk && convergenceOk;
 
     if (options.json) {
-      console.log(JSON.stringify({ ...results, mcps: provisioning }, null, 2));
+      console.log(JSON.stringify({ ...results, mcps: provisioning, mcp_convergence: convergence }, null, 2));
     } else {
       console.log(`Install results:`);
       for (const [p, r] of Object.entries(results)) {
@@ -84,26 +95,30 @@ export async function installCmd(
         const detail = r.ok ? r.action : r.error;
         console.log(`  ${icon} ${p}: ${detail}`);
       }
-      console.log(`MCP provisioning (${provisioning.total} canonical MCP entries): ${provisioning.status}${provisioning.success ? "" : " — not all MCPs are fully installed"}`);
+      console.log(`MCP provisioning (${provisioning.total} profile-scoped MCP entries): ${provisioning.status}${provisioning.success ? "" : " — not all MCPs are fully installed"}`);
+      const needsUser = convergence.filter((result) => result.status === "NEEDS_USER");
+      if (needsUser.length > 0) {
+        console.log(`MCP host config convergence NEEDS_USER: ${needsUser.map((result) => `${result.host}: ${result.entries.filter((entry) => entry.disposition === "user-modified").map((entry) => entry.id).join(", ")}`).join("; ")}`);
+      }
     }
 
     return {
       exitCode: overallOk ? ExitCode.Success : ExitCode.LegacyFailed,
       message: overallOk
-        ? `All ${RUNTIME_PLATFORMS.length} platforms ready and ${provisioning.total} canonical MCP entries provisioned`
-        : `${failed.length} platform(s) failed and/or MCP provisioning ${provisioning.status}: ${[failed.map(([p]) => p).join(", "), provisioning.status === "PASS" ? "" : `mcp=${provisioning.status}`].filter(Boolean).join("; ")}`,
-      data: { results, mcps: provisioning },
+        ? `All ${RUNTIME_PLATFORMS.length} platforms ready and ${provisioning.total} profile-scoped MCP entries provisioned`
+        : `${failed.length} platform(s) failed and/or MCP provisioning ${provisioning.status}${convergenceOk ? "" : " and/or host MCP convergence needs user"}: ${[failed.map(([p]) => p).join(", "), provisioning.status === "PASS" ? "" : `mcp=${provisioning.status}`, convergenceOk ? "" : "mcp-convergence=NEEDS_USER"].filter(Boolean).join("; ")}`,
+      data: { results, mcps: provisioning, mcp_convergence: convergence },
     };
   }
 
   // Single platform
   const result = await installOrUpdate(platform);
-  const overallOk = result.ok && provisioning.success;
+  const overallOk = result.ok && provisioning.success && !convergence.some((item) => item.status === "NEEDS_USER");
   return {
     exitCode: overallOk ? ExitCode.Success : ExitCode.GeneralError,
     message: overallOk
       ? `${platform}: ${result.action}; MCP provisioning ${provisioning.status}`
       : `${platform} failed: ${result.error ?? `MCP provisioning ${provisioning.status}`}`,
-    data: { platform, ...result, mcps: provisioning },
+    data: { platform, ...result, mcps: provisioning, mcp_convergence: convergence },
   };
 }

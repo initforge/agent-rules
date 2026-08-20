@@ -55,8 +55,7 @@
         },
         "deferred_supported_targets": {
           "const": [
-            "cursor",
-            "mimocode"
+            "cursor"
           ]
         }
       }
@@ -70,8 +69,7 @@
         "grok",
         "opencode",
         "antigravity",
-        "cursor",
-        "mimocode"
+        "cursor"
       ],
       "properties": {
         "codex": {
@@ -90,9 +88,6 @@
           "$ref": "#/$defs/platform"
         },
         "cursor": {
-          "$ref": "#/$defs/platform"
-        },
-        "mimocode": {
           "$ref": "#/$defs/platform"
         }
       }

@@ -68,14 +68,6 @@ const HOSTS: Array<{ id: string; display: string; binary: string; config: string
     candidate: '6e9a554a',
     effective: null,
   },
-  {
-    id: 'mimocode',
-    display: 'MiMoCode',
-    binary: 'mimocode',
-    config: path.join('.config', 'mimocode', 'mimocode.jsonc'),
-    candidate: '6e9a554a',
-    effective: null,
-  },
 ];
 
 function onPath(binary: string): boolean {

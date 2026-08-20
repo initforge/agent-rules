@@ -63,8 +63,7 @@
     "grok",
     "antigravity",
     "cursor",
-    "opencode",
-    "mimocode"
+    "opencode"
    ],
    "fallback": "browser console/network evidence when a host-native DevTools session is available",
    "deprecatedAliases": [],
@@ -160,8 +159,7 @@
     "grok",
     "antigravity",
     "cursor",
-    "opencode",
-    "mimocode"
+    "opencode"
    ],
    "fallback": "rg plus targeted reads and native symbol navigation",
    "deprecatedAliases": [
@@ -238,8 +236,7 @@
     "grok",
     "antigravity",
     "cursor",
-    "opencode",
-    "mimocode"
+    "opencode"
    ],
    "fallback": "upstream docs retrieval via curl or manual lookup",
    "deprecatedAliases": [],
@@ -382,8 +379,7 @@
     "grok",
     "antigravity",
     "cursor",
-    "opencode",
-    "mimocode"
+    "opencode"
    ],
    "fallback": "report the live-interaction proof gap; do not infer it from build output",
    "deprecatedAliases": [],
@@ -458,8 +454,7 @@
     "grok",
     "antigravity",
     "cursor",
-    "opencode",
-    "mimocode"
+    "opencode"
    ],
    "fallback": "manual command rewriting via rtk CLI",
    "deprecatedAliases": [],
@@ -527,8 +522,7 @@
     "claude",
     "antigravity",
     "cursor",
-    "opencode",
-    "mimocode"
+    "opencode"
    ],
    "fallback": "builtin rg plus codebase-memory-mcp; Serena stays explicit until resource/reliability ablations justify promotion",
    "deprecatedAliases": [],
@@ -661,8 +655,7 @@
      "grok",
      "antigravity",
      "cursor",
-     "opencode",
-     "mimocode"
+     "opencode"
     ],
     "fallback": "browser/design evidence via real tooling when Pencil is not explicitly selected; Pencil stays explicit-only",
     "deprecatedAliases": [],

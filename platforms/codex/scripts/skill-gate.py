@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Graph-aware Codex skill orchestrator hook — advisory + state (fail-open, never deny commands).
-PreToolUse: allow always; inject E2E ladder hints when deep would be risky.
+Graph-aware Codex skill orchestrator hook — advisory + state (fail-open, never denies commands).
+PreToolUse: allow always UNLESS AGENT_RULES_EXECUTION_POLICY is attached, in which case
+it returns deny/ask/force_ask per the execution policy (REQ-017).
 PostToolUse: track smoke/spec/deep_runs for reminders.
 UserPromptSubmit / SessionStart: internal guard state + anti-stuck context.
 """
@@ -678,7 +679,7 @@ def handle_user_prompt_submit(payload: dict[str, Any]) -> None:
 
 
 def e2e_ladder_advisory(state: dict[str, Any], command: str) -> str | None:
-    """Advisory only — PreToolUse never denies."""
+    """Advisory only — PreToolUse never denies without an explicit execution policy."""
     if os.environ.get("GROK_SKILL_GATE_DISABLE") == "1":
         return None
     if not DEEP_PATTERNS.search(command):
@@ -739,19 +740,76 @@ def handle_pre_tool_use(payload: dict[str, Any]) -> None:
     sid = session_id_from_env(payload)
     st = load_state(sid)
     hints: list[str] = []
+    cmd = ""
     if tool in BASH_TOOLS:
         cmd = extract_command(payload)
-        if cmd:
-            adv = e2e_ladder_advisory(st, cmd)
-            if adv:
-                hints.append(adv)
-            hadv = harness_commit_advisory(st, cmd)
-            if hadv:
-                hints.append(hadv)
-            if DEEP_PATTERNS.search(cmd):
-                st["e2e"]["deep_runs"] = int(st["e2e"].get("deep_runs", 0)) + 1
-                save_state(st)
+
+    # REQ-017: when an explicit execution policy is attached
+    # (AGENT_RULES_EXECUTION_POLICY), PreToolUse returns deny/ask/force_ask per
+    # that policy instead of always allowing. Without a policy the hook keeps
+    # its advisory-only (fail-open) behavior so normal interactive use is
+    # never blocked by the harness.
+    policy_decision = pre_tool_policy_decision(cmd, tool)
+    if policy_decision is not None:
+        policy_decision()
+        return
+
+    if cmd:
+        adv = e2e_ladder_advisory(st, cmd)
+        if adv:
+            hints.append(adv)
+        hadv = harness_commit_advisory(st, cmd)
+        if hadv:
+            hints.append(hadv)
+        if DEEP_PATTERNS.search(cmd):
+            st["e2e"]["deep_runs"] = int(st["e2e"].get("deep_runs", 0)) + 1
+            save_state(st)
     allow_with_hint(" ".join(hints) if hints else None, "PreToolUse")
+
+
+def pre_tool_policy_decision(command: str, tool: str) -> Any | None:
+    """Return a stdout-emitting callable when AGENT_RULES_EXECUTION_POLICY is set.
+
+    Policy shape (JSON in the env var):
+      { "pre_tool": {
+           "mode": "deny" | "ask" | "force_ask" | "allow",
+           "deny_patterns": ["regex", ...],
+           "allow_patterns": ["regex", ...] } }
+    - mode deny      -> block when a deny pattern matches the command (or the
+                        tool is listed in a deny rule).
+    - mode ask       -> block with an ask reason (operator must explicitly allow).
+    - mode force_ask -> same as ask.
+    - mode allow     -> allow (never blocks).
+    Default (mode absent): block when a deny pattern matches, else allow.
+    """
+    raw = os.environ.get("AGENT_RULES_EXECUTION_POLICY")
+    if not raw:
+        return None
+    try:
+        policy = json.loads(raw)
+    except json.JSONDecodeError:
+        return None
+    pre_tool = policy.get("pre_tool") if isinstance(policy, dict) else None
+    if not isinstance(pre_tool, dict):
+        return None
+    mode = pre_tool.get("mode", "deny-if-matched")
+    deny_patterns = pre_tool.get("deny_patterns") or []
+    allow_patterns = pre_tool.get("allow_patterns") or []
+    deny_tools = pre_tool.get("deny_tools") or []
+    if mode == "allow":
+        return None
+    matched_deny = any(re.search(p, command, re.I) for p in deny_patterns)
+    matched_allow = any(re.search(p, command, re.I) for p in allow_patterns)
+    tool_denied = any(d == tool for d in deny_tools)
+    if tool_denied or (matched_deny and not matched_allow):
+        if mode in ("ask", "force_ask"):
+            reason = f"PreToolUse {mode}: command '{command[:120]}' requires explicit operator approval per execution policy"
+        else:
+            reason = f"PreToolUse deny: command '{command[:120]}' matched the execution policy"
+        if hook_platform() == "codex":
+            return lambda: print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "decision": "block", "reason": reason}}))
+        return lambda: print(json.dumps({"decision": "block", "reason": reason}))
+    return None
 
 
 def handle_post_tool_use(payload: dict[str, Any]) -> None:

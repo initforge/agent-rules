@@ -19,7 +19,7 @@ import { createHash } from "node:crypto";
 import { randomUUID } from "node:crypto";
 
 export interface OrphanCandidate {
-  type: "run" | "checkpoint" | "worktree" | "improvement" | "memory";
+  type: "run" | "checkpoint" | "worktree" | "improvement" | "memory" | "regenerable";
   id: string;
   path: string;
   detectedAt: string;
@@ -310,6 +310,87 @@ function detectOrphanMemory(basePath: string): OrphanCandidate[] {
   return orphans;
 }
 
+/**
+ * REQ-018 — regenerable artifact detection. Per-task MCP config directories
+ * and worktree-transaction patches are temporary helpers with an owner, a
+ * purpose, a regeneration rule and a TTL. After the TTL they become
+ * PURGE_ELIGIBLE and are removed by reachability/retention GC; they never
+ * become project truth.
+ */
+const REGENERABLE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+export interface RegenerableArtifact extends OrphanCandidate {
+  owner: string;
+  purpose: string;
+  regeneration_rule: string;
+  expiresAt: string;
+}
+
+function detectRegenerableArtifacts(basePath: string): RegenerableArtifact[] {
+  const out: RegenerableArtifact[] = [];
+  const runsDir = path.join(agentDir(basePath), "runs");
+  if (!fs.existsSync(runsDir)) return out;
+  const nowMs = Date.now();
+
+  const visitRun = (runPath: string): void => {
+    // Per-task MCP config dirs are marked by their mcp-process-receipt.json.
+    const walk = (dir: string): void => {
+      if (!fs.existsSync(dir)) return;
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) walk(full);
+        else if (entry.name === "mcp-process-receipt.json") {
+          const configDir = path.dirname(full);
+          const mtime = fs.statSync(configDir).mtimeMs;
+          const expiresAt = new Date(mtime + REGENERABLE_TTL_MS);
+          if (nowMs >= mtime + REGENERABLE_TTL_MS) {
+            out.push({
+              type: "regenerable",
+              id: path.relative(agentDir(basePath), configDir).split(path.sep).join("/"),
+              path: configDir,
+              detectedAt: now(),
+              reason: `per-task MCP config expired (TTL ${REGENERABLE_TTL_MS}ms); no task routes it`,
+              size: getDirSize(configDir),
+              owner: "harness-runner",
+              purpose: "task-scoped MCP config materialised for exactly one task",
+              regeneration_rule: "materializeMcpConfig (regenerated per task route)",
+              expiresAt: expiresAt.toISOString(),
+            });
+          }
+        }
+      }
+    };
+    walk(runPath);
+  };
+
+  // Worktree-transaction receipts/patches under .agent/worktree-transactions.
+  const wtxDir = path.join(agentDir(basePath), "worktree-transactions");
+  if (fs.existsSync(wtxDir)) {
+    for (const entry of fs.readdirSync(wtxDir, { withFileTypes: true })) {
+      const full = path.join(wtxDir, entry.name);
+      const mtime = fs.statSync(full).mtimeMs;
+      if (nowMs >= mtime + REGENERABLE_TTL_MS) {
+        out.push({
+          type: "regenerable",
+          id: `worktree-transactions/${entry.name}`,
+          path: full,
+          detectedAt: now(),
+          reason: "worktree transaction artifact expired (TTL); transaction should have been closed",
+          size: entry.isDirectory() ? getDirSize(full) : fs.statSync(full).size,
+          owner: "harness-runner",
+          purpose: "disposable worktree transaction receipt/patch",
+          regeneration_rule: "recreated per worktree transaction",
+          expiresAt: new Date(mtime + REGENERABLE_TTL_MS).toISOString(),
+        });
+      }
+    }
+  }
+
+  const runEntries = fs.readdirSync(runsDir, { withFileTypes: true }).filter((entry) => entry.isDirectory());
+  for (const run of runEntries) visitRun(path.join(runsDir, run.name));
+  return out;
+}
+
 /** Copy directory recursively */
 function copyDir(src: string, dest: string): void {
   fs.mkdirSync(dest, { recursive: true });
@@ -343,6 +424,7 @@ export function scanForOrphans(basePath: string): OrphanCandidate[] {
   allOrphans.push(...detectOrphanCheckpoints(basePath));
   allOrphans.push(...detectOrphanImprovements(basePath));
   allOrphans.push(...detectOrphanMemory(basePath));
+  allOrphans.push(...detectRegenerableArtifacts(basePath));
   
   return allOrphans;
 }

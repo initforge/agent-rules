@@ -1,0 +1,59 @@
+{
+  "schema": "artifact/bootstrap-envelope",
+  "version": 1,
+  "kind": "bootstrap-envelope",
+  "status": "BOOTSTRAP_UNCERTIFIED",
+  "work_id": "terminal-harness-vnext",
+  "plan_id": "terminal-harness-vnext",
+  "created_at": "2026-08-19T00:00:00+07:00",
+  "harness_source_identity": {
+    "repository": "https://github.com/initforge/agent-rules.git",
+    "branch": "vnext/terminal-harness",
+    "source_baseline": "e8481aa477aa1de25cb6c16d534e1d7cbf5db2ed",
+    "worktree_clean": true
+  },
+  "consumer_target_identity": {
+    "status": "UNRESOLVED",
+    "class": "generic-consumer-repository",
+    "scope": "G1 fresh unrelated repo, G2 existing with project-owned instructions, G3 stale upgraded env, G4 host enforcement classes",
+    "named_projects": "none (optional regression fixtures only, after G1-G4)"
+  },
+  "host_runtime_identity": {
+    "status": "UNRESOLVED",
+    "live_candidates": ["codex", "opencode"],
+    "opencode_version": "1.18.18",
+    "absent_hosts": ["claude", "cursor", "grok"],
+    "antigravity": "NOT_LIVE_VERIFIED"
+  },
+  "successor_contract": {
+    "path": ".agent/plans/terminal-harness-vnext/plan.md",
+    "sha256": "d7358d66d6e33096ca5266935074f3819d930ba46bf20af77f8f43e08dc96925",
+    "bytes": 53988,
+    "encoding": "utf-8",
+    "requirements_path": ".agent/plans/terminal-harness-vnext/requirements.yaml",
+    "requirements_sha256": "bb96b84c6431b180fa22b248d16e629b70bdd7a0c8cd936250fc9574692ae82c",
+    "requirement_ids": [
+      "REQ-001", "REQ-002", "REQ-003", "REQ-004", "REQ-005", "REQ-006",
+      "REQ-007", "REQ-008", "REQ-009", "REQ-010", "REQ-011", "REQ-012",
+      "REQ-013", "REQ-014", "REQ-015", "REQ-016", "REQ-017", "REQ-018",
+      "REQ-019", "REQ-020", "REQ-021"
+    ]
+  },
+  "predecessor_disposition": {
+    "work_id": "northstar-on-demand-portable-harness",
+    "pointer_generation": 31,
+    "pointer_status": "EFFECTIVE",
+    "pointer_execution_state": "IN_PROGRESS",
+    "ledger_status": "RETIRED",
+    "ledger_execution_state": "CLOSED",
+    "classification": "SUPERSESSION_PENDING_OWNER_SANCTIONED",
+    "carried_requirements": "unresolved requirements carried forward; Mimocode requirement explicitly superseded",
+    "old_closure": "INVALID_UNTIL_CORRECTED (false closure: verified:true without bound evidence, PRE-EXISTING without comparative proof)"
+  },
+  "bootstrap_trust_root": {
+    "certification": "BOOTSTRAP_UNCERTIFIED",
+    "independent_verification_required": true,
+    "prohibited_paths": ["close", "closeout", "certify"],
+    "terminal_gate": "trust-root slice only; no PASS claim"
+  }
+}

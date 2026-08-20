@@ -245,7 +245,7 @@ export async function build(
 
     // Materialize native agent definitions only when the canonical platform
     // contract declares a managed directory. Host-native platforms (for
-    // example MiMoCode) keep their own agent/workflow discovery surface.
+    // example host-native platforms) keep their own agent/workflow discovery surface.
     const materialization = platformContracts.platforms[platform]?.orchestration.agent_materialization;
     if (materialization === "managed_directory") {
       const agentsSrc = path.join(root, "platforms", platform, "agents");

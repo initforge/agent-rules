@@ -2,7 +2,6 @@ import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
 import { getRepoRoot } from "../adapters/repo.js";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { build } from "./build.js";
 
 interface ManifestFile {
   path: string;
@@ -32,18 +31,15 @@ export async function verifyMirrors(
     return { exitCode: ExitCode.Success, message: "Dry-run: verify skipped" };
   }
 
-  // Ensure build exists
+  // REQ-011: verify is strictly read-only. A missing build is reported as
+  // BLOCKED, never repaired by running a build from within verification.
   try {
     await fs.access(path.join(buildRoot, "codex", "manifest.json"));
   } catch {
-    console.log("Build not found; running build first...");
-    const buildResult = await build(args, options);
-    if (buildResult.exitCode !== ExitCode.Success) {
-      return {
-        exitCode: ExitCode.GeneralError,
-        message: "Build failed before mirror verification",
-      };
-    }
+    return {
+      exitCode: ExitCode.ValidationFailed,
+      message: "Mirror verification BLOCKED: build missing at generated/runtime-build (verify is read-only; run `agent-rules build` first)",
+    };
   }
 
   // Load base (codex) manifest

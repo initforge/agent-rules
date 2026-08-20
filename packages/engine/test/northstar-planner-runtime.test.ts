@@ -50,12 +50,12 @@ describe('North-Star isolated strong planner runtime', () => {
     expect(snapshot.omitted.some((item) => item.startsWith('.env:'))).toBe(true);
   });
 
-  it('uses read-only host posture and never enables MiMo dangerous permission bypass for planning', () => {
+  it('uses read-only host posture and never enables dangerous permission bypass for planning', () => {
     expect(buildStrongPlannerInvocation('claude', 'x').args).toContain('plan');
     expect(buildStrongPlannerInvocation('codex', 'x').args).toEqual(expect.arrayContaining(['--sandbox', 'read-only']));
-    const mimo = buildStrongPlannerInvocation('mimocode', 'x');
-    expect(mimo.args).not.toContain('--dangerously-skip-permissions');
-    expect(mimo.env?.OPENCODE_CONFIG_CONTENT).toContain('"edit":"deny"');
+    const opencode = buildStrongPlannerInvocation('opencode', 'x');
+    expect(opencode.args).not.toContain('--dangerously-skip-permissions');
+    expect(opencode.env?.OPENCODE_CONFIG_CONTENT).toContain('"edit":"deny"');
   });
 
   it('extracts a JSON object but leaves semantic validation to the contract compiler', () => {

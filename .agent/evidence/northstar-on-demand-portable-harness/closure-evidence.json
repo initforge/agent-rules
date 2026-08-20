@@ -1,0 +1,20 @@
+{
+    "version":  1,
+    "gates":  {
+                  "CI python-tests":  "PASS",
+                  "CI quality (macos)":  "PASS",
+                  "CI quality (windows)":  "PRE-EXISTING (2 control-plane browser-qa axe flakes, control-plane untouched by this phase)",
+                  "npm run build":  "PASS",
+                  "CI security":  "PASS",
+                  "npm test":  "PASS",
+                  "npm run verify:all":  "PASS (2723 passed)",
+                  "npm run check":  "PASS",
+                  "npm ci":  "PASS",
+                  "CI quality (linux)":  "PASS"
+              },
+    "schema":  "agent-rules/closure-evidence",
+    "final_baseline":  "81438775bec19ce5072af87c178940d54f67012f",
+    "plan_id":  "northstar-on-demand-portable-harness",
+    "recorded_by":  "harness-maintainer closure gate (results captured from real verifier/CI runs)",
+    "verified":  true
+}

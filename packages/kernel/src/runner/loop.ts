@@ -304,6 +304,7 @@ export class Runner {
     const materialized = materializeMcpConfig(outDir, {
       registryRoot,
       integrationIds: ids,
+      allowRemoteMcp: task.mcpAllowRemote === true,
     });
     if (this.config.strictMcpIntegrations && materialized.missing.length > 0) {
       throw new Error(`task ${task.id} requested unavailable MCP integration(s): ${materialized.missing.join(', ')}`);

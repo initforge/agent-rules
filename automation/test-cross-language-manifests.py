@@ -184,7 +184,7 @@ def test_platform_contracts_schema_compliance() -> None:
         fail(f"platform-contracts missing keys: {required_keys - actual_keys}")
     
     # Check platforms
-    required_platforms = {"codex", "claude", "grok", "opencode", "antigravity", "cursor", "mimocode"}
+    required_platforms = {"codex", "claude", "grok", "opencode", "antigravity", "cursor"}
     actual_platforms = set(contracts.get("platforms", {}).keys())
     if actual_platforms != required_platforms:
         fail(f"platforms mismatch: missing {required_platforms - actual_platforms}, extra {actual_platforms - required_platforms}")
@@ -337,7 +337,7 @@ def test_adapter_consistency() -> None:
             continue
         
         # Check each platform has an adapter
-        expected_adapters = ["codex.toml", "claude.json", "opencode.json", "grok.json", "cursor.json", "antigravity.json", "mimocode.json"]
+        expected_adapters = ["codex.toml", "claude.json", "opencode.json", "grok.json", "cursor.json", "antigravity.json"]
         native_hosts = integ.get("nativeHosts", [])
         
         for adapter in expected_adapters:

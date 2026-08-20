@@ -90,9 +90,10 @@ export interface ProviderSelection {
 }
 
 /**
- * Empirical edge selector. The logical-class governor remains the safety floor;
- * this only ranks providers that satisfy it. Low-sample estimates are shrunk
- * toward 0.5 so one lucky run cannot dominate routing.
+ * Telemetry-only empirical ranking. NOT part of execution authority: the
+ * operator always selects host/model and the harness only records what the
+ * host requested/resolved/observed. This ranking may be used for reports.
+ * @deprecated Telemetry/report only; never used to route or override execution.
  */
 export function selectProviderByEvidence(input: {
   decision: ModelDecision;
@@ -122,4 +123,53 @@ export function selectProviderByEvidence(input: {
   }).sort((a, b) => b.score - a.score || b.candidate.sample_size - a.candidate.sample_size || a.candidate.provider_id.localeCompare(b.candidate.provider_id));
   const best = scored[0]!;
   return { provider_id: best.candidate.provider_id, score: best.score, reasons: [`empirical success=${best.success.toFixed(3)}`, `health=${best.health.toFixed(3)}`, `samples=${best.candidate.sample_size}`, `logical floor=${input.decision.logical_class}`] };
+}
+
+/**
+ * Model observation contract (North-Star vNext REQ-007): the operator always
+ * selects host/model; the harness records requested/resolved/observed when the
+ * host provides them, and never selects or switches providers itself.
+ */
+export interface ModelObservation {
+  role: ModelRole;
+  /** Operator-requested host/model (null when the operator did not specify). */
+  requested: string | null;
+  /** What the host resolved for the role. */
+  resolved: string | null;
+  /** What was actually observed running (when the host exposes it). */
+  observed: string | null;
+  /** Whether a policy-required strong capability was actually verifiable. */
+  capability_proven: boolean | null;
+  source: 'operator' | 'host' | 'unknown';
+  /** Legacy manifest mapping carried for compatibility; never execution authority. */
+  legacy?: {
+    routing_class: string | null;
+    approved_models: string[];
+  };
+}
+
+/**
+ * Compatibility reader for legacy approvedModels/approvedRouting manifest
+ * artifacts (HarnessManifestV3). It converts the legacy routing table into
+ * observation records; it never grants execution authority.
+ */
+export function observeModelFromLegacyManifest(manifest: {
+  modelClasses?: ReadonlyArray<{ classId: string; approvedModels?: readonly string[] }>;
+  approvedRouting?: Readonly<Record<string, string>>;
+}, roles: readonly ModelRole[] = ['worker', 'planner', 'reviewer']): ModelObservation[] {
+  const routing = manifest.approvedRouting ?? {};
+  const byClass = new Map((manifest.modelClasses ?? []).map((c) => [c.classId, c.approvedModels ?? []]));
+  return roles.map((role): ModelObservation => {
+    const legacyClass = routing[role];
+    const approved = legacyClass ? byClass.get(legacyClass) ?? [] : [];
+    return {
+      role,
+      requested: null,
+      resolved: null,
+      observed: null,
+      capability_proven: null,
+      source: 'unknown',
+      legacy: { routing_class: legacyClass ?? null, approved_models: [...approved] },
+    };
+  });
 }

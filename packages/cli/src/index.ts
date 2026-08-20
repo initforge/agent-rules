@@ -18,6 +18,8 @@ import { ingestCmd } from "./commands/ingest.js";
 import { goalCmd } from "./commands/goal.js";
 import { repairCmd } from "./commands/repair.js";
 import { closeoutCmd } from "./commands/closeout.js";
+import { closeCmd } from "./commands/close.js";
+import { activateCmd } from "./commands/activate.js";
 import { cleanupCmd } from "./commands/cleanup.js";
 import { verifyCmd } from "./commands/verify.js";
 import { parityCmd } from "./commands/parity.js";
@@ -32,6 +34,7 @@ import { topologyCmd } from "./commands/topology.js";
 import { adversarialCmd } from "./commands/adversarial.js";
 import { certifyCmd } from "./commands/certify.js";
 import { proofPlanCmd } from "./commands/proof-plan.js";
+import { handoffCmd } from "./commands/handoff.js";
 import { initNorthStar, northStarDrain, northStarReference, northStarReferenceSearch, northStarRun, northStarStatus, NORTHSTAR_AGENTS, NORTHSTAR_EVIDENCE_KINDS } from "./commands/northstar-ux.js";
 import { createOpencodeClient } from "@opencode-ai/sdk/v2/client";
 import { OpenCodeNativeSessionAdapter } from "@initforge/agent-rules-engine/native-session-adapter";
@@ -120,12 +123,23 @@ program
 
 program
   .command("reference")
-  .description("Read one verified central domain-pack reference file without copying it into the project")
+  .description("Read one verified central domain-pack reference file without copying it into the project; records a consumption receipt (REQ-013) so the result renderer can disclose what was actually used")
   .argument("<pack>", "Explicit domain pack id, for example 5fedu")
   .argument("<path>", "Manifest-bound reference path inside the bundled source")
-  .action(async (pack: string, relativePath: string) => {
+  .option("--component <value>", "Component/behavior this reference is used for (defaults to the first two path segments)")
+  .option("--behavior <value>", "Alias for --component")
+  .option("--anchor <value>", "Source anchor within the reference file")
+  .option("--work <id>", "Work id to bind the receipt to (only that run's renderer may show the footer)")
+  .option("--no-record", "Read without recording a consumption receipt (no footer will be disclosed)")
+  .action(async (pack: string, relativePath: string, cmdOpts: { component?: string; behavior?: string; anchor?: string; work?: string; record?: boolean }) => {
     try {
-      const result = northStarReference(process.cwd(), pack, relativePath);
+      const result = northStarReference(process.cwd(), pack, relativePath, {
+        component: cmdOpts.component,
+        behavior: cmdOpts.behavior,
+        anchor: cmdOpts.anchor,
+        record: cmdOpts.record !== false,
+        workId: cmdOpts.work,
+      });
       const opts = program.optsWithGlobals() as CliOptions;
       if (opts.json) {
         process.stdout.write(JSON.stringify(result, null, 2) + "\n");
@@ -286,7 +300,7 @@ program
   .description(
     "Install agent-rules runtime for all platforms (native transactional installer)"
   )
-  .argument("[platform]", "Platform: codex, grok, antigravity, cursor, opencode, mimocode, claude, all", "all")
+  .argument("[platform]", "Platform: codex, grok, antigravity, cursor, opencode, claude, all", "all")
   .option("--force", "Force reinstall: remove old activation before installing")
   .action(async (platform: string, cmdOpts: { force?: boolean }) => {
     const opts = program.optsWithGlobals() as CliOptions;
@@ -300,7 +314,7 @@ program
 program
   .command("doctor")
   .description("Run harness health checks for all platforms")
-  .argument("[platform]", "Platform: codex, grok, antigravity, cursor, opencode, mimocode, claude, all", "all")
+  .argument("[platform]", "Platform: codex, grok, antigravity, cursor, opencode, claude, all", "all")
   .option("--skip-integration-verify", "Skip external MCP integration verification")
   .action(async (platform: string, cmdOpts: { skipIntegrationVerify?: boolean }) => {
     const opts = program.optsWithGlobals() as CliOptions;
@@ -463,6 +477,33 @@ program
     formatOutput(result, opts);
   });
 
+// ── activate ───────────────────────────────────────────────────────
+program
+  .command("activate")
+  .description("Activate a successor plan through the generation-CAS pointer transaction (Phase 1 trust root). Only mechanism that moves the current pointer.")
+  .argument("<plan-id>", "Successor plan id to activate")
+  .option("--dry-run", "Verify successor artifacts without mutating the pointer")
+  .option("--reason <text>", "Owner-authorized supersession reason (required)")
+  .action(async (planId: string, cmdOpts: { dryRun?: boolean; reason?: string }) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const args = [planId, ...(cmdOpts.dryRun ? ["--dry-run"] : []), ...(cmdOpts.reason ? ["--reason", cmdOpts.reason] : [])];
+    const result = await activateCmd(args, opts);
+    formatOutput(result, opts);
+  });
+
+// ── close ───────────────────────────────────────────────────────────
+program
+  .command("close")
+  .description("Unified closure transaction (vNext trust root): mandatory gates (non-empty requirements/reconciliation/bound evidence, no unresolved, 4-identity binding), stage+commit single-point with idempotent replay, correction of invalid v1 closures. Never accepts shallow verified:true or empty reconciliation as PASS.")
+  .argument("[plan-id]", "Plan id", "terminal-harness-vnext")
+  .option("--dry-run", "Run the mandatory gates without mutating anything")
+  .action(async (planId: string, cmdOpts: { dryRun?: boolean }) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const args = [planId, ...(cmdOpts.dryRun ? ["--dry-run"] : [])];
+    const result = await closeCmd(args, opts);
+    formatOutput(result, opts);
+  });
+
 // ── certify ───────────────────────────────────────────────────────
 program
   .command("certify")
@@ -475,6 +516,37 @@ program
     formatOutput(result, opts);
   });
 
+
+// ── handoff ─────────────────────────────────────────────────────────
+program
+  .command("handoff")
+  .description("One-copy handoff of the frozen execution contract: plan or prompt rendered from the same revision (mandatory pre-handoff audit gates the output)")
+  .argument("[renderer]", "plan | prompt")
+  .allowUnknownOption(true)
+  .allowExcessArguments(true)
+  .addHelpText(
+    "after",
+    `
+Flags:
+  --run <runId>                Compile from a persisted north-star run (.agent/runs/<runId>)
+  --request/--spec/--packets   Explicit canonical JSON inputs (all three together)
+  --output <path>|-            Default "-" = one self-contained artifact on stdout
+  --persist auto|never|always  auto = persist when --run is given; always = write .agent/handoff/<contract_id>/
+  --assumption <stmt>          Authorize an assumption for the pre-handoff audit (repeatable)
+  --provided-reference <path>  Reference actually provisioned for the worker (repeatable)
+
+Audit verdicts: PASS emits the artifact; NEEDS_USER exits with the receipt;
+BLOCKED exits and emits nothing beyond the receipt. plan compile remains the
+legacy compatibility alias; handoff is the canonical path.
+    `
+  )
+  .action(async (renderer: string, _opts: unknown, command: Command) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    // commander repeats the declared renderer at command.args[0]; flags follow.
+    const extra = (command.args as string[]).slice(1);
+    const result = await handoffCmd(renderer ? [renderer, ...extra] : extra, opts);
+    formatOutput(result, opts);
+  });
 
 // ── proof-plan ──────────────────────────────────────────────────────
 program

@@ -49,6 +49,8 @@
             }
           },
           "target_catalog": { "type": "string", "minLength": 1 },
+          "semantic_role": { "type": "string", "enum": ["procedure", "lens", "policy", "profile", "facade"], "description": "Phase 3: semantic role of the skill (procedure/lens/policy/profile/facade)" },
+          "applicable_phases": { "type": "array", "items": { "type": "string", "enum": ["DISCOVER", "PLAN", "IMPLEMENT", "VERIFY", "REPAIR", "CLOSE", "RESEARCH", "DESIGN"] }, "description": "Phase 3: phases where this skill may be loaded; unload on phase exit" },
           "disposition": { "enum": ["retain", "migrate-to-policy", "compatibility-facade", "profile-explicit"] },
           "compatibility_period": {
             "type": "object",

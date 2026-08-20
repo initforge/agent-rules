@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Canonical SHA256 hashes for all scripts the installer may execute. Scripts are verified against this manifest before execution.",
-  "generated_at": "2026-08-17T00:47:06+00:00",
+  "generated_at": "2026-08-19T15:32:03+00:00",
   "files": {
     "automation/02-install-runtime.ps1": "21862ba08b4fed9ad0f3c30174248f9090805ab7a9e7727fe77cc26cb5be45fe",
     "automation/11-install-runtime-hooks.sh": "0b7ec19e30100165dee8eca04582146df2333aa0f4701176fb7cb9f9b8a59be2",
@@ -25,7 +25,7 @@
     "automation/audit-ui-routing.ps1": "de224c97c9fbe424033ac4722db484575b88689572b079198148a16acfc92c11",
     "automation/audit-plan-artifact.ps1": "94b46b1007a644b29db16d4bc9858841eaa16b3aaef7bfde8ee977edcded6997",
     "automation/test-workctl.py": "0ddcea2fb53c4013cb14a0e658ec7718f35a2ee4caba145a08329fdd00068944",
-    "automation/test-skill-gate-stack.py": "fec179a51860bea271cd752e7f6e996723598edacba06384d3d475384857c35b",
+    "automation/test-skill-gate-stack.py": "f1cb68e71896c3af38bf5caa6182a48eab3cd77e8dd1515a84f8ddad7848cf98",
     "automation/test-external-receipt.py": "a06043c654f7fa7c46e5dd5db49c00abfff0dc82de30462d067c9ee4ca89e294",
     "automation/audit-workflow-clarity.ps1": "34d1888594b71e4acc7dc02512d6629fd06fe14876c594ba5ff629c4aa66c395",
     "automation/validate-tool-registry.ps1": "7e9d77df3344d5fd86c1bbb05e13a203f128ad10616049abbb0f31b401a3713a",
@@ -37,7 +37,7 @@
     "automation/generate-doc-references.py": "bab6f6e202fb06614f93cc67d95fec36174e8261773f2481a5a3666a7a78cbde",
     "automation/validate-doc-drift.py": "238a8c8e794149a75267c52434e1404ab8f595183a51348eee8b78648a5b8e9b",
     "automation/workctl.py": "6516d4beb4ffeb0bda38f16f7ef8a7e47022f3ea36b4e5da0d1068d30c4ebb5d",
-    "automation/test-cross-language-manifests.py": "066d0ebf407bdfe31c41357f86ad56989a49477b1c27a2fdedcb815e7cf6d4e4",
+    "automation/test-cross-language-manifests.py": "ee36024af260c706812d3aa1906648cf993bd33f5bf6d5ad00a48e84dc9c5121",
     "automation/test-platform-lifecycle.py": "54b310cc0d6fafdf85bb9f59fb8002c119ceefc8d82029599c3cd98928a06019"
   }
 }

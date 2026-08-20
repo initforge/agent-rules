@@ -16,8 +16,6 @@ import { checkPencilDesktopApp, discoverPencilNativeServer, pencilServerAsAdapte
  *               a per-task set without touching the user's real config).
  *  - opencode  \`opencode.json\` with \`mcp\` map; loaded from the explicit
  *               config path the opencode binary reads at startup.
- *  - mimocode  \`mimocode.jsonc\` with \`mcp\` map; loaded from a per-task
- *               config directory through \`MIMOCODE_CONFIG_DIR\`.
  *
  * We materialise the requested integrations into a per-task directory
  * under \`<runRoot>/mcp/<taskId>/\` so two concurrent tasks cannot collide
@@ -40,7 +38,6 @@ export interface McpConfigPaths {
   readonly claude?: { configPath: string };
   readonly codex?: { configDir: string; envVarName: string };
   readonly opencode?: { configPath: string };
-  readonly mimocode?: { configDir: string; configPath: string; envVarName: string };
   readonly resolved: readonly string[];
   readonly missing: readonly string[];
   /** Visibility mode applied to interactive browser/design MCPs. */
@@ -91,13 +88,19 @@ export interface MaterializeOptions {
   readonly pencilNativeHome?: string;
   /** The actual host this task runs under; used to fail closed for Pencil discovery. */
   readonly activeAgent?: AgentKind;
+  /**
+   * REQ-011 remote-MCP isolation: remote (url-based) MCP servers are refused
+   * unless the task policy explicitly allows network for a routed integration.
+   * Default false (fail closed): no task-local config may silently connect to
+   * a remote MCP endpoint.
+   */
+  readonly allowRemoteMcp?: boolean;
 }
 
 const ADAPTER_FILES: Partial<Record<AgentKind, string>> = {
   claude: 'claude.json',
   codex: 'codex.toml',
   opencode: 'opencode.json',
-  mimocode: 'mimocode.json',
 };
 
 const SHELL_METACHARS = /[;&|`${}<>\\!#*?"']/;
@@ -509,19 +512,17 @@ export function materializeMcpConfig(outDir: string, opts: MaterializeOptions): 
   const claudeBodies: string[] = [];
   const codexBodies: string[] = [];
   const opencodeBodies: string[] = [];
-  const mimocodeBodies: string[] = [];
 
   for (const id of opts.integrationIds) {
     let any = false;
-    for (const agent of ['claude', 'codex', 'opencode', 'mimocode'] as const) {
+    for (const agent of ['claude', 'codex', 'opencode'] as const) {
       const adapter = readAdapter(opts.registryRoot, id, agent, opts.pencilNativeEnv, opts.pencilNativeHome);
       if (!adapter) continue;
       any = true;
       const transformed = transformAdapter(adapter.body, adapter.parser, id, visibilityMode, interactiveIntegrations.includes(id), guardian);
       if (agent === 'claude') claudeBodies.push(transformed);
       else if (agent === 'codex') codexBodies.push(transformed);
-      else if (agent === 'opencode') opencodeBodies.push(transformed);
-      else mimocodeBodies.push(transformed);
+      else opencodeBodies.push(transformed);
     }
     if (any) resolved.push(id);
     else missing.push(id);
@@ -586,15 +587,22 @@ export function materializeMcpConfig(outDir: string, opts: MaterializeOptions): 
     fs.writeFileSync(configPath, JSON.stringify(merged, null, 2), 'utf8');
     result.opencode = { configPath };
   }
-  if (mimocodeBodies.length > 0) {
-    // MiMoCode uses the same `mcp` object shape as OpenCode, but discovers
-    // config through an XDG-style directory rather than a config-file flag.
-    const merged = mergeOpencodeAdapters(mimocodeBodies, visibilityMode, guardian);
-    const configDir = path.join(outDir, 'mimocode');
-    fs.mkdirSync(configDir, { recursive: true });
-    const configPath = path.join(configDir, 'mimocode.jsonc');
-    fs.writeFileSync(configPath, JSON.stringify(merged, null, 2), 'utf8');
-    result.mimocode = { configDir, configPath, envVarName: 'MIMOCODE_CONFIG_DIR' };
+
+  // REQ-011: refuse remote (url-based) MCP servers unless the task policy
+  // explicitly allowed network for a routed integration. Remote MCPs must
+  // never connect outside a routed task; the default posture is fail-closed.
+  if (!opts.allowRemoteMcp) {
+    const remoteHits = [...claudeBodies, ...codexBodies, ...opencodeBodies]
+      .filter((body) => /"url"\s*:/m.test(body))
+      .map((body) => {
+        const match = /"url"\s*:\s*"([^"]+)"/m.exec(body);
+        return match?.[1] ?? '(unknown remote url)';
+      });
+    if (remoteHits.length > 0) {
+      throw new Error(
+        `remote MCP refused (REQ-011): task materialised url-based MCP server(s) without an explicit network policy: ${[...new Set(remoteHits)].join(', ')}`,
+      );
+    }
   }
 
   return result as McpConfigPaths;

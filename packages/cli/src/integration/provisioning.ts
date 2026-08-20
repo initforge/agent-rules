@@ -8,17 +8,22 @@ import {
   type ProviderResult,
   type ProvisionAggregateStatus,
 } from "./provider-result.js";
+import { resolveIntegrationProfile, selectInstallEntries, type IntegrationProfile } from "./mcp-profile.js";
 
 /**
  * Shared MCP provisioning orchestrator. Every lifecycle that provisions
  * (init/install/sync/update/reconcile/repair/doctor) MUST go through these
  * functions instead of copying per-command install loops. The orchestrator:
  *   - loads the canonical registry (fail closed on missing/malformed);
- *   - provisions every `kind: mcp` entry regardless of activation policy;
+ *   - INSTALLS ONLY entries inside the active install profile
+ *     (AGENT_RULES_INTEGRATION_PROFILE, default core); explicit-only entries
+ *     (e.g. Pencil) install only when explicitly selected;
  *   - verifies before installing (idempotent PRE-EXISTING requires PASS);
  *   - keeps installation and activation as two independent states;
  *   - never auto-activates explicit-only/claim-driven MCPs;
  *   - aggregates so a BLOCKED/UNSUPPORTED/NEEDS_USER MCP is never success.
+ * Read-only verification still reports the full inventory surface but never
+ * mutates anything.
  */
 
 export interface ProvisionOptions {
@@ -26,6 +31,10 @@ export interface ProvisionOptions {
   dryRun?: boolean;
   /** Verify-only: never install; report the current provisioning state. */
   readOnly?: boolean;
+  /** Install profile; default comes from AGENT_RULES_INTEGRATION_PROFILE (core). */
+  installProfile?: string;
+  /** Explicit-only integration ids the operator explicitly selected. */
+  explicitIds?: string[];
 }
 
 export interface ProvisionSummary {
@@ -35,6 +44,8 @@ export interface ProvisionSummary {
   status: ProvisionAggregateStatus;
   success: boolean;
   results: ProviderResult[];
+  /** Entries installed but never activated (explicit-only or claim-driven). */
+  activation_not_applied?: string[];
   /** Set when the registry could not be loaded; status is then BLOCKED. */
   error?: string;
 }
@@ -42,11 +53,32 @@ export interface ProvisionSummary {
 export async function provisionMcps(repoRoot: string, options: ProvisionOptions = {}): Promise<ProvisionSummary> {
   const inventory = await loadIntegrationInventory(repoRoot);
   const results: ProviderResult[] = [];
-  for (const entry of inventory.mcps) {
+  // REQ-008: the installer provisions ONLY the install profile surface.
+  // The read-only verify path reports the full inventory by default (doctor),
+  // but when an install profile is explicitly supplied it reports only that
+  // profile's MCP surface (reconcile gating) — explicit-only/optional entries
+  // the operator never selected cannot poison a reconcile green.
+  let entries: RegistryEntry[];
+  if (!options.readOnly) {
+    entries = selectInstallEntries(inventory, (options.installProfile ?? resolveIntegrationProfile()) as IntegrationProfile, options.explicitIds ?? []);
+  } else if (options.installProfile !== undefined) {
+    entries = selectInstallEntries(inventory, options.installProfile as IntegrationProfile, options.explicitIds ?? []).filter((entry) => entry.kind === "mcp");
+  } else {
+    entries = inventory.mcps;
+  }
+  for (const entry of entries) {
     results.push(await provisionOne(repoRoot, entry, options));
   }
   const aggregate = aggregateProvisioning(results);
-  return { kind: "mcp", source: inventory.source, total: results.length, ...aggregate, results };
+  const activationNotApplied = results.filter((result) => result.activation?.status === "NOT_ACTIVATED").map((result) => result.id);
+  return {
+    kind: "mcp",
+    source: inventory.source,
+    total: results.length,
+    ...aggregate,
+    results,
+    ...(activationNotApplied.length ? { activation_not_applied: activationNotApplied } : {}),
+  };
 }
 
 export async function verifyMcps(repoRoot: string): Promise<ProvisionSummary> {

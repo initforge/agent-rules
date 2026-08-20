@@ -37,8 +37,27 @@ export async function goalCmd(args: string[], opts: CliOptions): Promise<Command
   const path = await import("node:path");
   const root = process.cwd();
   const packPath = path.join(root, packDir, "pack.json");
+  const intentArg = args.indexOf("--intent");
+  const intent = intentArg >= 0 ? args.slice(intentArg + 1).filter((arg) => !arg.startsWith("--")).join(" ") : `Execute goal bundle for ${planId}`;
+
+  // REQ-018: the support pack is an OPTIONAL projection. goal must not require
+  // it when the frozen contract / TaskPacket is sufficient — it compiles the
+  // canonical WorkRequest either way and only validates the pack when present.
   if (!fs.default.existsSync(packPath)) {
-    return { exitCode: ExitCode.GeneralError, message: `Support pack not found for ${planId}: ${packPath} (compile the plan first)` };
+    const receipt = compileWorkRequest({ adapter: "command", intent, planId });
+    const planMd = path.join(root, ".agent", "plans", planId, "plan.md");
+    const contractAvailable = fs.default.existsSync(planMd);
+    return {
+      exitCode: ExitCode.Success,
+      message: `Goal ${planId} compiled without a support pack (EMULATED adapter; support pack is optional)`,
+      data: {
+        planId,
+        support_pack: "absent-optional",
+        contract_source: contractAvailable ? ".agent/plans/{planId}/plan.md" : "none",
+        capability: "EMULATED",
+        workRequest: receipt,
+      },
+    };
   }
   try {
     const pack = JSON.parse(fs.default.readFileSync(packPath, "utf8")) as { packSha256?: string; manifest?: { manifestSha256?: string; recipes?: Array<{ taskId: string; sha256: string }>; planRevision?: number; claimIds?: string[]; requirementIds?: string[] } };

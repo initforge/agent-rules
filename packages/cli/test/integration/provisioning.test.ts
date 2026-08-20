@@ -5,12 +5,14 @@ import path from "node:path";
 import { loadIntegrationInventory } from "../../src/integration/inventory.js";
 import { provisionMcps, verifyMcps, uninstallMcps } from "../../src/integration/provisioning.js";
 import { registerHandler, clearHandlerOverrides, type IntegrationHandler, type HandlerResult } from "../../src/integration/installer-registry.js";
+import { selectInstallEntries, selectGlobalAdapterEntries } from "../../src/integration/mcp-profile.js";
 
 /**
- * Regression tests for framework-level MCP behavior: every `kind: mcp` entry
- * in the canonical registry is always fully provisioned, independent of
- * activation; installation and activation are two independent states; an MCP
- * that is BLOCKED/UNSUPPORTED/NEEDS_USER is never full-install success.
+ * Regression tests for framework-level MCP behavior (REQ-008): the installer
+ * provisions ONLY entries inside the active install profile (default core);
+ * explicit-only integrations install only when explicitly selected; a BLOCKED/
+ * UNSUPPORTED/NEEDS_USER MCP is never full-install success; read-only verify
+ * reports the full inventory without mutating anything.
  *
  * Uses temp directories, fake handlers and fake executables — never real
  * installs or user-home mutation.
@@ -47,7 +49,7 @@ function mcpEntry(id: string, overrides: Record<string, unknown> = {}): Record<s
     id,
     kind: "mcp",
     policy: "recommended",
-    profiles: [],
+    profiles: ["core"],
     source: { type: "npm", version: "1.0.0" },
     capabilities: ["browser.explore"],
     triggers: [],
@@ -111,12 +113,106 @@ describe("canonical MCP provisioning", () => {
     await expect(loadIntegrationInventory(root)).rejects.toThrow(/contract mismatch/);
   });
 
-  it("attempts provisioning for every MCP entry (none silently skipped)", async () => {
+  it("provisions only entries inside the active install profile (REQ-008)", async () => {
+    const root = await tempRepo([
+      mcpEntry("core-mcp"),
+      mcpEntry("research-mcp", { profiles: ["research"] }),
+      mcpEntry("frontend-mcp", { profiles: ["frontend"] }),
+    ]);
+    roots.push(root);
+    register("core-mcp", fakeHandler({ ok: true, message: "PASS" }));
+    register("research-mcp", fakeHandler({ ok: false, status: "BLOCKED", message: "must not be installed outside profile" }));
+    register("frontend-mcp", fakeHandler({ ok: false, status: "BLOCKED", message: "must not be installed outside profile" }));
+    const summary = await provisionMcps(root); // default profile = core
+    expect(summary.total).toBe(1);
+    expect(summary.success).toBe(true);
+    expect(summary.results.map((r) => r.id)).toEqual(["core-mcp"]);
+  });
+
+  it("profile all provisions every non-explicit entry", async () => {
+    const root = await tempRepo([
+      mcpEntry("core-mcp"),
+      mcpEntry("research-mcp", { profiles: ["research"] }),
+    ]);
+    roots.push(root);
+    register("core-mcp", fakeHandler({ ok: true, message: "PASS" }));
+    register("research-mcp", fakeHandler({ ok: true, message: "PASS" }));
+    const summary = await provisionMcps(root, { installProfile: "all" });
+    expect(summary.total).toBe(2);
+    expect(summary.success).toBe(true);
+  });
+
+  it("explicit-only MCPs install only when explicitly selected (REQ-008)", async () => {
+    const root = await tempRepo([
+      mcpEntry("pencil-mcp", { activation: "explicit-only" }),
+      mcpEntry("core-mcp"),
+    ]);
+    roots.push(root);
+    register("pencil-mcp", fakeHandler({ ok: false, status: "BLOCKED", message: "must not install unless selected" }));
+    register("core-mcp", fakeHandler({ ok: true, message: "PASS" }));
+    const summary = await provisionMcps(root);
+    expect(summary.total).toBe(1);
+    expect(summary.results.map((r) => r.id)).toEqual(["core-mcp"]);
+
+    // Explicit selection provisions the explicit-only entry (never auto-activated).
+    register("pencil-mcp", fakeHandler({ ok: true, message: "PASS" }));
+    const explicit = await provisionMcps(root, { explicitIds: ["pencil-mcp"] });
+    expect(explicit.results.map((r) => r.id)).toEqual(expect.arrayContaining(["core-mcp", "pencil-mcp"]));
+    const pencil = explicit.results.find((r) => r.id === "pencil-mcp")!;
+    expect(pencil.activation.policy).toBe("explicit-only");
+    expect(pencil.activation.status).toBe("NOT_ACTIVATED");
+  });
+
+  it("read-only verify reports the full inventory regardless of profile", async () => {
+    const root = await tempRepo([
+      mcpEntry("core-mcp"),
+      mcpEntry("research-mcp", { profiles: ["research"] }),
+    ]);
+    roots.push(root);
+    register("core-mcp", fakeHandler({ ok: true, message: "PASS" }));
+    register("research-mcp", fakeHandler({ ok: true, message: "PASS" }));
+    const summary = await verifyMcps(root);
+    expect(summary.total).toBe(2);
+    expect(summary.success).toBe(true);
+  });
+
+  it("global adapter selection: default none exposes nothing", async () => {
+    const root = await tempRepo([
+      mcpEntry("core-mcp"),
+      mcpEntry("pencil-mcp", { activation: "explicit-only" }),
+      mcpEntry("opt-mcp", { policy: "optional" }),
+    ]);
+    roots.push(root);
+    const inventory = await loadIntegrationInventory(root);
+    expect(selectGlobalAdapterEntries(inventory, "none")).toEqual([]);
+    expect(selectGlobalAdapterEntries(inventory, "core").map((entry) => entry.id)).toEqual(["core-mcp"]);
+    // optional + explicit-only never globally exposed
+    const all = selectGlobalAdapterEntries(inventory, "all");
+    expect(all.map((entry) => entry.id)).toEqual(["core-mcp"]);
+  });
+
+  it("selectInstallEntries never auto-installs explicit-only or optional entries", async () => {
+    const root = await tempRepo([
+      mcpEntry("core-mcp"),
+      mcpEntry("pencil-mcp", { activation: "explicit-only" }),
+      mcpEntry("serena-mcp", { policy: "optional" }),
+    ]);
+    roots.push(root);
+    const inventory = await loadIntegrationInventory(root);
+    const selected = selectInstallEntries(inventory, "core");
+    expect(selected.map((entry) => entry.id)).toEqual(["core-mcp"]);
+    const all = selectInstallEntries(inventory, "all");
+    expect(all.map((entry) => entry.id)).toEqual(["core-mcp"]);
+    const withExplicit = selectInstallEntries(inventory, "core", ["pencil-mcp"]);
+    expect(withExplicit.map((entry) => entry.id)).toEqual(expect.arrayContaining(["core-mcp", "pencil-mcp"]));
+  });
+
+  it("attempts provisioning for every profile-scoped MCP entry (none silently skipped)", async () => {
     const root = await tempRepo([mcpEntry("a-mcp"), mcpEntry("b-mcp")]);
     roots.push(root);
     register("a-mcp", fakeHandler({ ok: true, message: "PASS" }));
     register("b-mcp", fakeHandler({ ok: true, message: "PASS" }));
-    const summary = await provisionMcps(root);
+    const summary = await provisionMcps(root, { installProfile: "all" });
     expect(summary.total).toBe(2);
     expect(summary.success).toBe(true);
     expect(summary.status).toBe("PASS");
@@ -159,11 +255,11 @@ describe("canonical MCP provisioning", () => {
     expect(summary2.success).toBe(false);
   });
 
-  it("explicit-only MCPs are provisioned but never auto-activated", async () => {
+  it("explicit-only MCPs are provisioned (when selected) but never auto-activated", async () => {
     const root = await tempRepo([mcpEntry("pencil-mcp", { activation: "explicit-only" })]);
     roots.push(root);
     register("pencil-mcp", fakeHandler({ ok: true, message: "PASS" }));
-    const summary = await provisionMcps(root);
+    const summary = await provisionMcps(root, { explicitIds: ["pencil-mcp"] });
     const result = summary.results[0];
     expect(result.installation.status).toBe("PRE-EXISTING");
     expect(result.activation.policy).toBe("explicit-only");
@@ -183,12 +279,12 @@ describe("canonical MCP provisioning", () => {
     expect(result.installation.evidence).toContain("PASS");
   });
 
-  it("provisioning targets only kind:mcp entries — non-MCP cli-tools are not auto-provisioned", async () => {
-    const root = await tempRepo([mcpEntry("mcp-only"), { ...mcpEntry(CLI_ID), id: CLI_ID, kind: "cli-tool" }]);
+  it("provisioning targets only profile-scoped entries — non-MCP cli-tools outside the profile are not auto-provisioned", async () => {
+    const root = await tempRepo([mcpEntry("mcp-only"), { ...mcpEntry(CLI_ID), id: CLI_ID, kind: "cli-tool", profiles: ["frontend"] }]);
     roots.push(root);
     register("mcp-only", fakeHandler({ ok: true, message: "PASS" }));
     register(CLI_ID, fakeHandler({ ok: false, status: "BLOCKED", message: "must never be called" }));
-    const summary = await provisionMcps(root);
+    const summary = await provisionMcps(root); // default profile = core
     expect(summary.total).toBe(1);
     expect(summary.success).toBe(true);
     expect(summary.results.map((r) => r.id)).toEqual(["mcp-only"]);

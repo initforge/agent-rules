@@ -7,6 +7,7 @@ import { Journal } from '../runner/journal.js';
 import {
   NORTH_STAR_PROTOCOL_VERSION,
   assertRunState,
+  assertSpecExecutable,
   assertTaskPacket,
   assertWorkRequest,
   assertWorkSpec,
@@ -30,7 +31,7 @@ import { type IndependentSemanticAuditor, type SemanticAuditResult } from './sem
 import { assessConvergence, compileConvergenceDeltaPackets, detectConvergenceOscillation, type ConvergenceResult } from './convergence.js';
 import { assertResourceBudget, governResources, observeHostResources, type HostResourceSnapshot } from './resource-governor.js';
 import { buildVerificationGraph } from './verification-graph.js';
-import { assertDomainPackStage, loadDomainPack, resolveHarnessRoot, summarizeDomainBehavior, type DomainPackStage, type LoadedDomainPack } from './domain-packs.js';
+import { assertDomainPackStage, loadDomainPack, resolveHarnessRoot, type DomainPackStage, type DomainReferenceReceipt, type LoadedDomainPack, renderDomainReferenceFooters } from './domain-packs.js';
 import { modelDecisionForSpec, type ModelDecision } from './model-governor.js';
 import { transitionExecution, truthFromOutcome, type ExecutionLifecycleRecord } from './execution-lifecycle.js';
 import { readExecutionAuthority } from '../state/execution-authority.js';
@@ -142,7 +143,7 @@ function requirementStatus(requirementClaims: string[], acceptance: AcceptanceRe
   return 'PARTIAL';
 }
 
-function renderTrustedResult(report: ProofOfWorkReport): string {
+function renderTrustedResult(report: ProofOfWorkReport, domainFooter: string): string {
   const lines = [
     `Outcome: ${report.outcome}`,
     '',
@@ -163,6 +164,10 @@ function renderTrustedResult(report: ProofOfWorkReport): string {
     `Spec revision: ${report.spec_revision}`,
     `Run: ${report.run_id}`,
     '',
+    // REQ-013: short evidence footer ONLY when the domain pack's reference
+    // broker was actually consumed during the run. No receipt -> no footer,
+    // no banner, no "the forbidden disclosure phrase".
+    ...(domainFooter ? [domainFooter, ''] : []),
   ];
   return lines.join('\n');
 }
@@ -207,6 +212,24 @@ function verifierStep(definition: VerifierDefinition): VerificationStep {
   return { kind: 'shell', command: definition.command };
 }
 
+/**
+ * REQ-013 — minimal domain disclosure in the worker prompt. The pack is
+ * explicitly activated (never keyword-triggered), so the prompt only points
+ * at the reference broker for exact source evidence. It never prints a broad
+ * domain/template summary for every task and never emits "the forbidden disclosure phrase"
+ * or "the forbidden disclosure phrase".
+ */
+function domainPrompt(taskId: string, domainPack: LoadedDomainPack): string {
+  const pack = domainPack.descriptor.id;
+  return [
+    `Domain pack: ${pack} (explicitly activated for this work; never inferred from wording)`,
+    `Reference broker: agent-rules reference ${pack} <manifest-bound-path> [--component <component>]`,
+    `Reference search: agent-rules reference-search ${pack} <literal-query>`,
+    `Source gate: ${domainPack.sourceVerified ? 'verified bundled source is available via the broker' : 'BLOCKED/NEEDS_USER — mandatory source not accessible; do not claim it was checked'}`,
+    'Use the central bundled reference only by pointer or through the reference broker: inspect exact source evidence before domain-specific edits. Do not copy/vendor the reference template into the target project, and do not infer target requirements merely because the reference implements a feature. Active project schema/spec owns variable business slots.',
+  ].join('\n');
+}
+
 function taskPrompt(packet: TaskPacket, context: ReturnType<typeof compileContext>, providers: Record<string, string | null>, providerHints: readonly string[], workspaceRoot: string, domainPack: LoadedDomainPack | undefined, modelDecision: ModelDecision): string {
   const blocks = context.items.map((item) => `## ${item.kind}: ${item.source}\n${item.content}`).join('\n\n');
   return [
@@ -221,7 +244,7 @@ function taskPrompt(packet: TaskPacket, context: ReturnType<typeof compileContex
     `Capabilities: ${Object.entries(providers).map(([cap, provider]) => `${cap}=${provider ?? 'UNAVAILABLE'}`).join(', ')}`,
     providerHints.length ? `Provider execution hints:\n- ${providerHints.join('\n- ')}` : '',
     `Requested logical model class: ${modelDecision.logical_class}. Host/model resolution remains an edge concern and must be attested separately; do not silently downgrade this safety floor.`,
-    domainPack ? `Domain pack: ${domainPack.descriptor.id} (explicitly activated)\nSource verified: ${domainPack.sourceVerified}\nSource receipt: ${domainPack.sourceVerification.detail}\nReference broker: agent-rules reference ${domainPack.descriptor.id} <manifest-bound-path>\nReference search: agent-rules reference-search ${domainPack.descriptor.id} <literal-query>\nSource-grounded owner constraints:\n${summarizeDomainBehavior(domainPack)}\nUse the central bundled reference only by pointer or through the reference broker: inspect exact source evidence before domain-specific edits. Do not copy/vendor the reference template into the target project, and do not infer target requirements merely because the reference implements a feature. Active project schema/spec owns variable business slots.` : '',
+    domainPack ? domainPrompt(packet.task_id, domainPack) : '',
     blocks,
     '# Worker contract\nInspect authoritative references before editing. Do not weaken tests or verification. Do not modify forbidden scope. If required information is unavailable, stop and report the blocker. Do not claim PASS; the harness derives completion from evidence.',
   ].filter(Boolean).join('\n\n');
@@ -303,7 +326,7 @@ function assertRuntimeInputs(input: Pick<NorthStarRunInput, 'request' | 'spec' |
   if (input.manifest.spec_id !== input.spec.spec_id || input.manifest.spec_revision !== input.spec.revision) throw new Error('traceability manifest revision does not match WorkSpec');
   const trace = validateTraceability(input.spec, input.packets);
   if (!trace.valid) throw new Error(`traceability gate failed: ${trace.problems.map((problem) => problem.message).join('; ')}`);
-  if (input.spec.unresolved?.length) throw new Error(`cannot execute unresolved WorkSpec: ${input.spec.unresolved.join('; ')}`);
+  assertSpecExecutable(input.spec);
   for (const verifier of input.verifiers) {
     const hasArgv = verifier.argv !== undefined;
     const hasCommand = verifier.command !== undefined;
@@ -432,6 +455,37 @@ function journalViolations(journal: Journal): { scope: string[]; policy: string[
     }
   }
   return { scope: [...new Set(scope)], policy: [...new Set(policy)] };
+}
+
+/**
+ * REQ-013 — read consumed domain-reference receipts for a run and render the
+ * short disclosure footer. Receipts are append-only records written by the
+ * reference broker CLI (`agent-rules reference`); the renderer adds the footer
+ * ONLY when the active domain pack's reference broker was actually consumed.
+ * No receipt -> '' -> no banner, no "the forbidden disclosure phrase", no footer.
+ */
+function domainReferenceFooter(repoRoot: string, runRoot: string, request: WorkRequest, runtimeConfig: { domain_pack?: { id: string } | null } | null): string {
+  const packId = runtimeConfig?.domain_pack?.id;
+  if (!packId) return '';
+  const candidates = [
+    path.join(runRoot, 'domain-reference-receipts.jsonl'),
+    path.join(repoRoot, '.agent', 'domain-reference-receipts.jsonl'),
+  ];
+  const receipts: DomainReferenceReceipt[] = [];
+  for (const file of candidates) {
+    if (!fs.existsSync(file)) continue;
+    for (const line of fs.readFileSync(file, 'utf8').split('\n').filter(Boolean)) {
+      try {
+        const record = JSON.parse(line) as DomainReferenceReceipt & { work_id?: string };
+        if (record.pack_id !== packId) continue;
+        if (record.work_id && record.work_id !== request.work_id) continue;
+        receipts.push(record);
+      } catch {
+        /* skip malformed receipt lines */
+      }
+    }
+  }
+  return renderDomainReferenceFooters(receipts);
 }
 
 function persistRawArtifacts(runRoot: string, runId: string, reports: readonly TaskReport[]): void {
@@ -641,7 +695,16 @@ async function finaliseNorthStarRun(input: {
     },
   };
   writeJsonAtomic(proofOfWorkFile, proofOfWork);
-  fs.writeFileSync(resultFile, renderTrustedResult(proofOfWork), { mode: 0o600 });
+  // REQ-013: append the 5fedu reference-disclosure footer only when the
+  // reference broker was actually consumed during this run.
+  let runtimeConfigForFooter: { domain_pack?: { id: string } | null } | null = null;
+  try {
+    runtimeConfigForFooter = readJson<{ domain_pack?: { id: string } | null }>(path.join(input.runRoot, 'runtime-config.json'));
+  } catch {
+    /* not present on resumed/legacy runs */
+  }
+  const domainFooter = domainReferenceFooter(input.repoRoot, input.runRoot, input.request, runtimeConfigForFooter);
+  fs.writeFileSync(resultFile, renderTrustedResult(proofOfWork, domainFooter), { mode: 0o600 });
   const runnerSummary = cumulativeSummary(reports, input.latestSummary.recovered);
   const lifecycleFile = path.join(input.runRoot, 'execution-lifecycle.json');
   if (fs.existsSync(lifecycleFile)) {
@@ -942,6 +1005,11 @@ export async function executeNorthStarRun(input: NorthStarRunInput & { maxTasks?
       requirementId: packet.requirements.join(','),
       ...(dependencies.get(packet.task_id)?.length ? { dependsOnContractTaskIds: dependencies.get(packet.task_id) } : {}),
       ...(mcpIntegrationIds.length ? { mcpIntegrationIds } : {}),
+      // REQ-011: remote (url-based) MCP servers are only materialised when the
+      // execution policy explicitly allowed network for the routed set.
+      ...(packet.policy?.effects.network?.require_routed_mcp_only === false && packet.policy.effects.allowed.includes('network')
+        ? { mcpAllowRemote: true }
+        : {}),
     });
   };
 

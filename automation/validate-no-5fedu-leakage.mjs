@@ -31,6 +31,51 @@ else {
   if (fs.existsSync(path.join(profiles, '5fedu')) && !fs.existsSync(path.join(profiles, '5fedu', 'profile.yaml'))) problems.push('[LEAK R5] Missing profiles/5fedu/profile.yaml.');
 }
 
+// REQ-012/REQ-013: router telemetry and "template checked"/"intent detected"
+// strings must never reach ordinary answers or the worker prompt. These
+// phrases must not exist in canonical source or the built runtime (a stale
+// projection could reintroduce them). The only sanctioned 5fedu disclosure is
+// the short receipt footer produced by renderDomainReferenceFooters.
+const forbiddenPhrases = ['intent detected', 'template checked'];
+const scanDirs = [path.join(root, 'packages', 'kernel', 'src'), path.join(root, 'packages', 'engine', 'src'), path.join(root, 'packages', 'cli', 'src')];
+for (const dir of scanDirs) {
+  if (!fs.existsSync(dir)) continue;
+  const walk = (p) => {
+    for (const entry of fs.readdirSync(p, { withFileTypes: true })) {
+      const full = path.join(p, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.isFile() && /\.(ts|js)$/.test(entry.name)) {
+        const content = fs.readFileSync(full, 'utf8');
+        for (const phrase of forbiddenPhrases) {
+          if (content.toLowerCase().includes(phrase.toLowerCase())) {
+            problems.push(`[LEAK R6] forbidden disclosure phrase "${phrase}" in ${path.relative(root, full)}`);
+          }
+        }
+      }
+    }
+  };
+  walk(dir);
+}
+// Installed-runtime parity: the built dist must not contain the phrases either.
+for (const distDir of [path.join(root, 'packages', 'kernel', 'dist'), path.join(root, 'packages', 'engine', 'dist'), path.join(root, 'packages', 'cli', 'dist')]) {
+  if (!fs.existsSync(distDir)) continue;
+  const walk = (p) => {
+    for (const entry of fs.readdirSync(p, { withFileTypes: true })) {
+      const full = path.join(p, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.isFile() && /\.(js|mjs)$/.test(entry.name)) {
+        const content = fs.readFileSync(full, 'utf8');
+        for (const phrase of forbiddenPhrases) {
+          if (content.toLowerCase().includes(phrase.toLowerCase())) {
+            problems.push(`[LEAK R6] forbidden disclosure phrase "${phrase}" in built runtime ${path.relative(root, full)}`);
+          }
+        }
+      }
+    }
+  };
+  walk(distDir);
+}
+
 if (problems.length) {
   for (const problem of problems) console.error(problem);
   process.exit(1);

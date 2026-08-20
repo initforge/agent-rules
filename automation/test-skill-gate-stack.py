@@ -95,6 +95,42 @@ def main() -> int:
     if gate.efficiency_checkpoint(tiny) is not None:
         raise AssertionError("tiny work emitted unnecessary ceremony")
 
+    # REQ-017: PreToolUse returns deny/ask/force_ask per the execution policy
+    # instead of always allowing; without a policy it stays advisory-only.
+    os.environ.pop("AGENT_RULES_EXECUTION_POLICY", None)
+    if gate.pre_tool_policy_decision("npm run test", "Bash") is not None:
+        raise AssertionError("PreToolUse must remain advisory without an execution policy")
+    os.environ["AGENT_RULES_EXECUTION_POLICY"] = json.dumps({
+        "pre_tool": {"mode": "deny", "deny_patterns": [r"git push|npm publish"]},
+    })
+    deny = gate.pre_tool_policy_decision("git push origin main", "Bash")
+    if deny is None:
+        raise AssertionError("deny policy did not produce a decision")
+    import contextlib
+    import io
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        deny()
+    if "block" not in buf.getvalue():
+        raise AssertionError(f"deny decision did not block: {buf.getvalue()}")
+    if gate.pre_tool_policy_decision("npm test", "Bash") is not None:
+        raise AssertionError("non-matching command should not block under deny mode")
+    os.environ["AGENT_RULES_EXECUTION_POLICY"] = json.dumps({
+        "pre_tool": {"mode": "ask", "deny_patterns": [r"git push"]},
+    })
+    ask = gate.pre_tool_policy_decision("git push", "Bash")
+    buf2 = io.StringIO()
+    with contextlib.redirect_stdout(buf2):
+        ask()
+    if "ask" not in buf2.getvalue().lower():
+        raise AssertionError(f"ask decision did not surface ask: {buf2.getvalue()}")
+    os.environ["AGENT_RULES_EXECUTION_POLICY"] = json.dumps({
+        "pre_tool": {"mode": "allow", "deny_patterns": [r"git push"]},
+    })
+    if gate.pre_tool_policy_decision("git push", "Bash") is not None:
+        raise AssertionError("allow mode must never block")
+    os.environ.pop("AGENT_RULES_EXECUTION_POLICY", None)
+
     sys.path.insert(0, str(SHARED))
     from context_router import load_graph, route  # noqa: E402
 

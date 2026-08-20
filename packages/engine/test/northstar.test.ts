@@ -257,12 +257,18 @@ describe('North-Star runtime on production Runner', () => {
       maxRepairDepth: 0,
     });
     expect(result.acceptance.outcome).toBe('PASS');
-    expect(capturedPrompt).toContain('Domain pack: 5fedu (explicitly activated)');
-    expect(capturedPrompt).toContain('Source verified: true');
-    expect(capturedPrompt).toContain('employee.row.actions');
-    expect(capturedPrompt).toContain('employee-table-row-actions.tsx');
+    // REQ-012/REQ-013: activation stays explicit and the prompt carries a
+    // minimal broker pointer — never a broad per-task domain/template summary.
+    expect(capturedPrompt).toContain('Domain pack: 5fedu (explicitly activated');
+    expect(capturedPrompt).toContain('agent-rules reference 5fedu');
     expect(capturedPrompt).toContain('agent-rules reference-search 5fedu');
     expect(capturedPrompt).toContain('Do not copy/vendor the reference template');
+    // The broad summary and "template checked" disclosure are gone; the
+    // employee behavior pointers appear only in a consumed-reference footer.
+    expect(capturedPrompt).not.toContain('Source verified: true');
+    expect(capturedPrompt).not.toContain('employee.row.actions');
+    expect(capturedPrompt).not.toContain('employee-table-row-actions.tsx');
+    expect(capturedPrompt).not.toContain('Source-grounded owner constraints');
     expect(fs.existsSync(path.join(repo, 'profiles', '5fedu'))).toBe(false);
     expect(fs.existsSync(path.join(repo, 'context', '5fedu'))).toBe(false);
   });

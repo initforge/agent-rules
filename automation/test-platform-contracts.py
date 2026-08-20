@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "platforms" / "platform-contracts.json"
 SCHEMA = ROOT / "automation" / "platform-contracts.schema.json"
 PLATFORMS = ("codex", "claude", "grok", "opencode", "antigravity")
-DEFERRED = ("cursor", "mimocode")
+DEFERRED = ("cursor",)
 RENDERED_PLATFORMS = PLATFORMS + DEFERRED
 INVARIANTS = {
     "activation", "context_delivery", "orchestration", "role_permissions", "model_effort", "mcp_integration"
@@ -85,7 +85,7 @@ def validate(contract: dict[str, object], schema: dict[str, object]) -> None:
         fail("Antigravity contract must declare PreInvocation context injection")
     if platforms["cursor"]["orchestration"]["model_attestation"] != "deferred_host_attestation":
         fail("Cursor must remain an explicit deferred supported target")
-    expected_materialization = {name: ("host_native" if name == "mimocode" else "managed_directory") for name in RENDERED_PLATFORMS}
+    expected_materialization = {name: "managed_directory" for name in RENDERED_PLATFORMS}
     actual_materialization = {name: platforms[name]["orchestration"]["agent_materialization"] for name in RENDERED_PLATFORMS}
     if actual_materialization != expected_materialization:
         fail(f"agent materialization contract drift: {actual_materialization}")

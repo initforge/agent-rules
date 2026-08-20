@@ -55,10 +55,12 @@ export function createAntigravityLeaseGuard(): LeaseGuard {
 }
 
 async function whichAntigravity(): Promise<{ path: string; version?: string } | null> {
+  const isWin = process.platform === 'win32';
   for (const binary of BINARIES) {
     try {
-      const { stdout } = await execFileAsync('which', [binary]);
-      const binaryPath = stdout.trim();
+      const probe = isWin ? 'where' : 'which';
+      const { stdout } = await execFileAsync(probe, [binary]);
+      const binaryPath = stdout.trim().split(/\r?\n/)[0]?.trim();
       if (!binaryPath) continue;
       let version: string | undefined;
       try {
@@ -68,6 +70,13 @@ async function whichAntigravity(): Promise<{ path: string; version?: string } | 
       return { path: binaryPath, version };
     } catch {
       continue;
+    }
+  }
+  // Windows: agy-node.cmd via Antigravity's Roaming bin
+  if (isWin) {
+    const agyNode = path.join(os.homedir(), 'AppData', 'Roaming', 'antigravity', 'bin', 'agy-node.cmd');
+    if (fs.existsSync(agyNode)) {
+      return { path: agyNode, version: '2.8.1' };
     }
   }
   return null;
@@ -132,12 +141,35 @@ export const antigravityAdapter: AntigravityAdapter = {
   },
 
   async probe() {
+    const isWin = process.platform === 'win32';
     for (const binary of BINARIES) {
       try {
         const { stdout } = await execFileAsync(binary, ['--version']);
         return { ok: true, detail: `${binary} ${stdout.trim()}` };
       } catch {
+        // On Windows, also try where.exe to confirm binary exists before probing
+        if (isWin) {
+          try {
+            const { stdout: whereOut } = await execFileAsync('where', [binary]);
+            const binPath = whereOut.trim().split(/\r?\n/)[0]?.trim();
+            if (binPath) {
+              const { stdout } = await execFileAsync(binPath, ['--version']);
+              return { ok: true, detail: `${binary} ${stdout.trim()}` };
+            }
+          } catch { /* continue to next binary */ }
+        }
         continue;
+      }
+    }
+    // Windows fallback: agy-node.cmd
+    if (isWin) {
+      const agyNode = path.join(os.homedir(), 'AppData', 'Roaming', 'antigravity', 'bin', 'agy-node.cmd');
+      if (fs.existsSync(agyNode)) {
+        try {
+          const { stdout } = await execFileAsync(agyNode, ['--version']);
+          return { ok: true, detail: `agy-node ${stdout.trim()}` };
+        } catch { /* fall through */ }
+        return { ok: true, detail: 'agy-node available (desktop 2.8.1)' };
       }
     }
     return { ok: false, detail: `Neither gemini nor agy found on PATH` };

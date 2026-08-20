@@ -115,9 +115,6 @@ function candidatePaths(agent: AgentKind, env: NodeJS.ProcessEnv, home: string):
     case 'opencode':
       append(env.PENCIL_MCP_OPENCODE_CONFIG, env.OPENCODE_CONFIG, env.OPENCODE_HOME ? path.join(env.OPENCODE_HOME, 'opencode.json') : undefined, path.join(home, '.config', 'opencode', 'opencode.json'));
       break;
-    case 'mimocode':
-      append(env.PENCIL_MCP_MIMOCODE_CONFIG, env.MIMOCODE_CONFIG_DIR ? path.join(env.MIMOCODE_CONFIG_DIR, 'mimocode.jsonc') : undefined, path.join(home, '.config', 'mimocode', 'mimocode.jsonc'), path.join(home, '.config', 'mimocode', 'mimocode.json'));
-      break;
   }
   return candidates;
 }

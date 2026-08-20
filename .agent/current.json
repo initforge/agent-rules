@@ -1,37 +1,33 @@
 {
-  "schema": "artifact/execution-contract",
-  "version": 1,
-  "kind": "current-pointer",
-  "generation": 30,
-  "work_id": "northstar-on-demand-portable-harness",
-  "plan_id": "northstar-on-demand-portable-harness",
-  "plan_root": ".agent/plans/northstar-on-demand-portable-harness",
+  "work_id": "terminal-harness-vnext",
+  "plan_id": "terminal-harness-vnext",
+  "plan_root": ".agent/plans/terminal-harness-vnext",
   "original": {
-    "path": ".agent/plans/northstar-on-demand-portable-harness/plan.md",
-    "sha256": "e7460747e304f2e1d5108611ca6dfbcbf1c6253e5b4dd58a7f9562652ef1199f"
+    "path": ".agent/plans/terminal-harness-vnext/original.md",
+    "sha256": "d7358d66d6e33096ca5266935074f3819d930ba46bf20af77f8f43e08dc96925"
   },
   "canonical_ledger": {
-    "path": ".agent/ledger/northstar-on-demand-portable-harness.json",
-    "sha256": "9bd25c6e6a843ef80dc23e2ba497a15683ccab6d4acd090c7f291710097a055f",
+    "path": ".agent/ledger/terminal-harness-vnext.json",
+    "sha256": "05648c89c0c458fd3f0ad4707d0dc81c996b0f6d91136c6fada48c0723aa0d5d",
     "observed_revision": 0,
-    "observed_effective_sha256": "fd86eceb8884e4c07ca4c941b5589aa39d463bfa9d34af83aa442557832f2582",
+    "observed_effective_sha256": "ad33e942263dbd6764789252a09433210d48a5127f9a5a9d605a928dc086b78f",
     "plan_status": "ADOPTED",
     "execution_state": "IN_PROGRESS"
   },
   "effective_chain_tip": {
     "amendment_id": "AM-0000",
-    "path": ".agent/plans/northstar-on-demand-portable-harness/plan.md",
-    "sha256": "e7460747e304f2e1d5108611ca6dfbcbf1c6253e5b4dd58a7f9562652ef1199f"
+    "path": ".agent/plans/terminal-harness-vnext/original.md",
+    "sha256": "d7358d66d6e33096ca5266935074f3819d930ba46bf20af77f8f43e08dc96925"
   },
   "candidate_chain_tip": {
     "amendment_id": "AM-0000",
-    "status": "OWNER_APPROVED_PENDING_CANONICAL_ACTIVATION",
-    "path": ".agent/plans/northstar-on-demand-portable-harness/plan.md",
-    "sha256": "e7460747e304f2e1d5108611ca6dfbcbf1c6253e5b4dd58a7f9562652ef1199f"
+    "status": "OWNER_APPROVED_EFFECTIVE",
+    "path": ".agent/plans/terminal-harness-vnext/original.md",
+    "sha256": "d7358d66d6e33096ca5266935074f3819d930ba46bf20af77f8f43e08dc96925"
   },
   "contract": {
-    "path": "schemas/execution-contract.schema.json",
-    "sha256": "eb7c9a154048982c4771155f7a2eacb442fc5d1db32636dbb4008fca7a3107e9",
+    "path": ".agent/plans/terminal-harness-vnext/plan.md",
+    "sha256": "d7358d66d6e33096ca5266935074f3819d930ba46bf20af77f8f43e08dc96925",
     "schema_path": "schemas/execution-contract.schema.json",
     "requirement_ids": [
       "REQ-001",
@@ -54,25 +50,26 @@
       "REQ-018",
       "REQ-019",
       "REQ-020",
-      "REQ-021",
-      "REQ-022",
-      "REQ-023",
-      "REQ-024"
+      "REQ-021"
     ],
     "status": "EFFECTIVE"
   },
+  "schema": "artifact/execution-contract",
+  "version": 1,
+  "kind": "current-pointer",
+  "generation": 32,
   "supersession": {
-    "transaction_id": "db8c43be-94d0-4087-9cee-64d5eb514e57",
-    "previous_work_id": "adaptive-minimal-proof-testing",
-    "previous_plan_id": "adaptive-minimal-proof-testing",
-    "reason": "Owner-authorized new phase: North-Star vNext on-demand MCP, deterministic 5fedu, portable one-copy harness. Pointer audit: adaptive-minimal-proof-testing baseline merged in origin/main with COMPLETE acceptance evidence; pointer retired.",
-    "changed_at": "2026-08-18T17:32:56.984Z"
+    "transaction_id": "a85e77c0-cf7a-484b-af7f-93b8cfcb685f",
+    "previous_work_id": "northstar-on-demand-portable-harness",
+    "previous_plan_id": "northstar-on-demand-portable-harness",
+    "reason": "Owner-authorized successor activation: vNext terminal harness (frozen contract hash d7358d66) supersedes invalid northstar-on-demand-portable-harness closure",
+    "changed_at": "2026-08-19T11:38:10.029Z"
   },
   "atomicity": {
     "protocol": "generation-compare-and-swap",
-    "expected_previous_generation": 29,
+    "expected_previous_generation": 31,
     "commit_target": ".agent/current.json",
     "activation_state": "CANONICALLY_ACTIVATED",
-    "updated_at": "2026-08-18T17:32:56.984Z"
+    "updated_at": "2026-08-19T11:38:10.029Z"
   }
 }

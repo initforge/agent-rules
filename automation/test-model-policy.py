@@ -71,14 +71,6 @@ def main() -> int:
     assert grok["subagent_model_override"] == "supported"
     assert "Per-role and spawn-time effort overrides are supported" in grok["adapter_defaults"]["effort_evidence"]
 
-    mimocode = platforms["mimocode"]
-    assert mimocode["economy"]["family"] == "user-configured"
-    assert mimocode["standard"]["selector"] == "__host_selected__"
-    assert mimocode["expert"]["selector"] == "__host_selected__"
-    assert mimocode["model_attestation"] == "host_declared"
-    assert mimocode["denial_behavior"] == "fail_closed"
-    assert set(mimocode["recorded_evidence"]) == {"requested", "resolved", "observed"}
-
     opencode = platforms["opencode"]
     assert opencode["economy"]["family"] == "user-configured"
     assert opencode["standard"]["family"] == "user-configured"

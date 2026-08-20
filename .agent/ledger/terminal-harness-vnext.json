@@ -1,0 +1,46 @@
+{
+  "schema_version": 4,
+  "plan_id": "terminal-harness-vnext",
+  "status": "ACTIVE",
+  "execution_state": "IN_PROGRESS",
+  "created_at": "2026-08-19T00:00:00+07:00",
+  "updated_at": "2026-08-19T00:00:00+07:00",
+  "shadow_revision": 0,
+  "canonical_scope": {
+    "allow_mutation": true,
+    "owners": ["harness-maintainer"]
+  },
+  "original_plan": {
+    "path": ".agent/plans/terminal-harness-vnext/original.md",
+    "sha256": "d7358d66d6e33096ca5266935074f3819d930ba46bf20af77f8f43e08dc96925",
+    "bytes": 53988,
+    "encoding": "utf-8"
+  },
+  "effective_plan_identity": {
+    "sha256": "ad33e942263dbd6764789252a09433210d48a5127f9a5a9d605a928dc086b78f",
+    "canonical_json_utf8": "{\"algorithm\":\"SHA-256\",\"approved_amendments\":[],\"composition\":\"original-plus-ordered-approved-amendment-sha256\",\"original_plan_sha256\":\"d7358d66d6e33096ca5266935074f3819d930ba46bf20af77f8f43e08dc96925\",\"version\":1}",
+    "bytes": 214
+  },
+  "milestones": {
+    "P0": {
+      "requirements": [
+        { "id": "REQ-004", "status": "PASS", "statement": "Freeze successor contract and bootstrap trust island on an isolated branch; persist plan hash and BOOTSTRAP_UNCERTIFIED envelope with separated identities; no PASS claim at bootstrap.", "evidenceRefs": [".agent/evidence/terminal-harness-vnext/phase-0-proof.json", ".agent/evidence/terminal-harness-vnext/bootstrap-envelope.json"] }
+      ]
+    },
+    "P1": {
+      "requirements": [
+        { "id": "REQ-005", "status": "PASS", "statement": "Unified closure service: mandatory gates reject empty requirements/reconciliation/evidence and unresolved requirements; four-identity evidence binding; behavioral baseline B + allowlisted metadata commit C + exact-SHA attestation; prepare/stage/commit single-point transaction with idempotent replay; invalid v1 closure corrected to SUPERSEDED/INACTIVE with terminal PARTIAL; operational state ignored in consumer worktrees.", "evidenceRefs": [".agent/evidence/terminal-harness-vnext/phase-1-proof.json"] },
+        { "id": "REQ-006", "status": "PENDING", "statement": "Release completion: exact package install, G1-G4 generic fixtures, exact-SHA CI green, terminal closure idempotent and atomically deactivated.", "evidenceRefs": [] },
+        { "id": "REQ-007", "status": "PENDING", "statement": "Terminality: generic consumer tasks must not stop at code complete; compiled lifecycle stages enforced.", "evidenceRefs": [] },
+        { "id": "REQ-014", "status": "PENDING", "statement": "Evidence binding: every receipt binds harness release, installation/projection, consumer candidate and host runtime; cross-repo replay rejects.", "evidenceRefs": [] },
+        { "id": "REQ-018", "status": "PENDING", "statement": "Artifacts: operational state ignored/out-of-source on arbitrary worktrees; fresh repos remain source-clean.", "evidenceRefs": [] }
+      ]
+    }
+  },
+  "reconciliations": [],
+  "closure_evidence": null,
+  "tasks": {},
+  "requirements": {},
+  "note": "Successor of northstar-on-demand-portable-harness (invalid v1 closure corrected to SUPERSEDED/INACTIVE with terminal PARTIAL). Owner-authorized frozen vNext contract; implementation proceeds phase by phase.",
+  "closure": null
+}

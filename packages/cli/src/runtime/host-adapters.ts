@@ -98,16 +98,6 @@ export const HOST_SPECS: Record<string, HostSpec> = {
     probeArgs: ["--version"],
     managedPaths: [".cursorrules", "AGENTS.md"],
   },
-  mimocode: {
-    id: "mimocode",
-    binaries: ["mimocode", "mi-mo"],
-    desktopProcessPatterns: ["mimocode"],
-    installRoots: [path.join(os.homedir(), ".mimocode")],
-    configDir: path.join(os.homedir(), ".mimocode"),
-    receiptRelativePath: "agent-rules-runtime/receipt.json",
-    probeArgs: ["--version"],
-    managedPaths: ["AGENTS.md", "agents"],
-  },
 };
 
 export function isRegisteredHost(host: string): host is (typeof REGISTERED_HOSTS)[number] {

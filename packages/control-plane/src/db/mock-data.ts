@@ -78,7 +78,7 @@ export const mockArchitecture = {
     { name: 'control-plane', path: 'packages/control-plane', tests: 372, coverage: 82 }
   ],
   integrations: ['playwright', 'chrome-devtools', 'context7', 'codebase-memory'],
-  platforms: ['claude', 'codex', 'cursor', 'antigravity', 'grok', 'mimocode']
+  platforms: ['claude', 'codex', 'cursor', 'antigravity', 'grok']
 };
 
 export const mockProfiles = [

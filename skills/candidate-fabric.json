@@ -18,8 +18,7 @@
       "grok",
       "opencode",
       "antigravity",
-      "cursor",
-      "mimocode"
+      "cursor"
     ],
     "selected_external_skills": [
       "anthropic-frontend-design",
@@ -59,10 +58,6 @@
         "cursor": {
           "path": "skills/anthropic-frontend-design/SKILL.md",
           "sha256": "a2479d19e6f2323c556c5523f54e7548d5994df9bf011dd01b7c8ede7d2ed82b"
-        },
-        "mimocode": {
-          "path": "skills/anthropic-frontend-design/SKILL.md",
-          "sha256": "a2479d19e6f2323c556c5523f54e7548d5994df9bf011dd01b7c8ede7d2ed82b"
         }
       },
       "callstack-react-native-best-practices": {
@@ -87,10 +82,6 @@
           "sha256": "930032795254e014890a2bd0f27ffd68bf8620d061b82018c678e9fc0ada21eb"
         },
         "cursor": {
-          "path": "skills/callstack-react-native-best-practices/SKILL.md",
-          "sha256": "930032795254e014890a2bd0f27ffd68bf8620d061b82018c678e9fc0ada21eb"
-        },
-        "mimocode": {
           "path": "skills/callstack-react-native-best-practices/SKILL.md",
           "sha256": "930032795254e014890a2bd0f27ffd68bf8620d061b82018c678e9fc0ada21eb"
         }
@@ -119,10 +110,6 @@
         "cursor": {
           "path": "skills/expo-skills/SKILL.md",
           "sha256": "17731ed5996e62d09867314aab46bf5a8f1053cea3b3edf850306790c401c781"
-        },
-        "mimocode": {
-          "path": "skills/expo-skills/SKILL.md",
-          "sha256": "17731ed5996e62d09867314aab46bf5a8f1053cea3b3edf850306790c401c781"
         }
       },
       "hashicorp-agent-skills": {
@@ -147,10 +134,6 @@
           "sha256": "852943d9990ac5e6c43e0047ffecfe9594e9058ad13c9769558c92244e1f120f"
         },
         "cursor": {
-          "path": "skills/hashicorp-agent-skills/SKILL.md",
-          "sha256": "852943d9990ac5e6c43e0047ffecfe9594e9058ad13c9769558c92244e1f120f"
-        },
-        "mimocode": {
           "path": "skills/hashicorp-agent-skills/SKILL.md",
           "sha256": "852943d9990ac5e6c43e0047ffecfe9594e9058ad13c9769558c92244e1f120f"
         }
@@ -179,10 +162,6 @@
         "cursor": {
           "path": "skills/impeccable/SKILL.md",
           "sha256": "ef64f46d74c5c2ecf69d3f11ef838bfd7856a2840905efa33ce9f0bdb188f94e"
-        },
-        "mimocode": {
-          "path": "skills/impeccable/SKILL.md",
-          "sha256": "ef64f46d74c5c2ecf69d3f11ef838bfd7856a2840905efa33ce9f0bdb188f94e"
         }
       },
       "prisma-skills": {
@@ -207,10 +186,6 @@
           "sha256": "4d4625b477debdf91e232444bdd9d329974c40095d18e9e17b30e722f06426f2"
         },
         "cursor": {
-          "path": "skills/prisma-skills/SKILL.md",
-          "sha256": "4d4625b477debdf91e232444bdd9d329974c40095d18e9e17b30e722f06426f2"
-        },
-        "mimocode": {
           "path": "skills/prisma-skills/SKILL.md",
           "sha256": "4d4625b477debdf91e232444bdd9d329974c40095d18e9e17b30e722f06426f2"
         }
@@ -239,10 +214,6 @@
         "cursor": {
           "path": "skills/supabase-agent-skills/SKILL.md",
           "sha256": "fe571085a7edc03deb007fac3db543490f52890ad4de65b8595e838ac2cc5197"
-        },
-        "mimocode": {
-          "path": "skills/supabase-agent-skills/SKILL.md",
-          "sha256": "fe571085a7edc03deb007fac3db543490f52890ad4de65b8595e838ac2cc5197"
         }
       },
       "trail-of-bits-security": {
@@ -267,10 +238,6 @@
           "sha256": "e53b4f53da0d2f972eb2bf73748571fab0cd389a426e301077f947523a227634"
         },
         "cursor": {
-          "path": "skills/trail-of-bits-security/SKILL.md",
-          "sha256": "e53b4f53da0d2f972eb2bf73748571fab0cd389a426e301077f947523a227634"
-        },
-        "mimocode": {
           "path": "skills/trail-of-bits-security/SKILL.md",
           "sha256": "e53b4f53da0d2f972eb2bf73748571fab0cd389a426e301077f947523a227634"
         }
@@ -299,10 +266,6 @@
         "cursor": {
           "path": "skills/vercel-agent-skills/SKILL.md",
           "sha256": "3099ae9d1c11dc654ee004b91420798f38764fba43060dea7c7edfe2ba30c04e"
-        },
-        "mimocode": {
-          "path": "skills/vercel-agent-skills/SKILL.md",
-          "sha256": "3099ae9d1c11dc654ee004b91420798f38764fba43060dea7c7edfe2ba30c04e"
         }
       },
       "vercel-react-best-practices": {
@@ -329,10 +292,6 @@
         "cursor": {
           "path": "skills/vercel-react-best-practices/SKILL.md",
           "sha256": "c914ea58827731821d382bc3822f2483680c5db017933119d27c8d63416ab3d8"
-        },
-        "mimocode": {
-          "path": "skills/vercel-react-best-practices/SKILL.md",
-          "sha256": "c914ea58827731821d382bc3822f2483680c5db017933119d27c8d63416ab3d8"
         }
       },
       "vercel-web-design-guidelines": {
@@ -357,10 +316,6 @@
           "sha256": "2e1fcd1d4963fdc25faf8b3f0e14cbfd938983b8194b8c03f3c24cf2b129dfe6"
         },
         "cursor": {
-          "path": "skills/vercel-web-design-guidelines/SKILL.md",
-          "sha256": "2e1fcd1d4963fdc25faf8b3f0e14cbfd938983b8194b8c03f3c24cf2b129dfe6"
-        },
-        "mimocode": {
           "path": "skills/vercel-web-design-guidelines/SKILL.md",
           "sha256": "2e1fcd1d4963fdc25faf8b3f0e14cbfd938983b8194b8c03f3c24cf2b129dfe6"
         }
@@ -419,8 +374,7 @@
             "grok",
             "opencode",
             "antigravity",
-            "cursor",
-            "mimocode"
+            "cursor"
           ]
         },
         "route_precision": {
@@ -592,8 +546,7 @@
             "grok",
             "opencode",
             "antigravity",
-            "cursor",
-            "mimocode"
+            "cursor"
           ]
         },
         "route_precision": {
@@ -758,8 +711,7 @@
             "grok",
             "opencode",
             "antigravity",
-            "cursor",
-            "mimocode"
+            "cursor"
           ]
         },
         "route_precision": {
@@ -921,8 +873,7 @@
             "grok",
             "opencode",
             "antigravity",
-            "cursor",
-            "mimocode"
+            "cursor"
           ]
         },
         "route_precision": {
@@ -1084,8 +1035,7 @@
             "grok",
             "opencode",
             "antigravity",
-            "cursor",
-            "mimocode"
+            "cursor"
           ]
         },
         "route_precision": {
@@ -1247,8 +1197,7 @@
             "grok",
             "opencode",
             "antigravity",
-            "cursor",
-            "mimocode"
+            "cursor"
           ]
         },
         "route_precision": {
@@ -1410,8 +1359,7 @@
             "grok",
             "opencode",
             "antigravity",
-            "cursor",
-            "mimocode"
+            "cursor"
           ]
         },
         "route_precision": {
@@ -1567,8 +1515,7 @@
             "grok",
             "opencode",
             "antigravity",
-            "cursor",
-            "mimocode"
+            "cursor"
           ]
         },
         "route_precision": {
@@ -1724,8 +1671,7 @@
             "grok",
             "opencode",
             "antigravity",
-            "cursor",
-            "mimocode"
+            "cursor"
           ]
         },
         "route_precision": {
@@ -1896,8 +1842,7 @@
             "grok",
             "opencode",
             "antigravity",
-            "cursor",
-            "mimocode"
+            "cursor"
           ]
         },
         "route_precision": {
@@ -2072,8 +2017,7 @@
             "grok",
             "opencode",
             "antigravity",
-            "cursor",
-            "mimocode"
+            "cursor"
           ]
         },
         "route_precision": {
@@ -2247,8 +2191,7 @@
             "grok",
             "opencode",
             "antigravity",
-            "cursor",
-            "mimocode"
+            "cursor"
           ]
         },
         "route_precision": {
@@ -2414,8 +2357,7 @@
             "grok",
             "opencode",
             "antigravity",
-            "cursor",
-            "mimocode"
+            "cursor"
           ]
         },
         "route_precision": {

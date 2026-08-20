@@ -51,7 +51,7 @@ export function evaluateNorthStarClosure(input: NorthStarClosureInput): NorthSta
     ['proof-dag', input.proof_dag, 'claim proof dependencies are explicit, acyclic and oracle-aware'],
     ['context-feedback-loop', input.context_feedback_loop, 'failed attempts generate bounded targeted retrieval without replaying whole context'],
     ['bounded-surface', input.bounded_skill_capability_surface, 'skills/capabilities are provenance checked and bounded'],
-    ['empirical-model-routing', input.empirical_model_routing, 'provider selection is evidence-driven above a logical safety floor'],
+    ['empirical-model-routing', input.empirical_model_routing, 'provider ranking is telemetry/report only; execution authority is operator selection plus host-edge attestation'],
     ['crash-resume', input.crash_resume, 'restart preserves task truth, checkpoint integrity and idempotency'],
     ['forbidden-scope', input.forbidden_scope_enforcement, 'out-of-scope edits fail closed'],
     ['evidence-integrity', input.evidence_integrity, 'evidence is immutable/hash-bound and stale proof is not reused'],

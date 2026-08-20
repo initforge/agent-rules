@@ -1,0 +1,48 @@
+{
+  "schema": "artifact/phase-proof-receipt",
+  "version": 1,
+  "phase": 1,
+  "title": "Authority, lifecycle and closure trust root",
+  "status": "COMPLETED_SOURCE_DOGFOOD",
+  "work_id": "terminal-harness-vnext",
+  "plan_id": "terminal-harness-vnext",
+  "created_at": "2026-08-19T00:00:00+07:00",
+  "evidence": {
+    "unified_closure_service": {
+      "source": "packages/kernel/src/northstar/closure-service.ts",
+      "exports": ["assertClosureInput", "assertEvidenceBinding", "stageClosureTransaction", "commitClosureTransaction", "attestTerminal", "correctInvalidClosure", "deriveMetadataDeltaManifest", "writeOperationalIgnore"],
+      "gates": [
+        "CLOSURE_EMPTY_REQUIREMENTS rejects zero requirements",
+        "CLOSURE_EMPTY_RECONCILIATION rejects zero reconciliations",
+        "CLOSURE_NO_EVIDENCE rejects zero bound evidence records",
+        "CLOSURE_UNRESOLVED_REQUIREMENTS rejects PENDING/UNRESOLVED requirements",
+        "CLOSURE_MISSING_BINDING rejects incomplete four-identity evidence binding",
+        "CLOSURE_NO_BEHAVIORAL_BASELINE rejects missing 40/64-hex baseline B",
+        "CLOSURE_METADATA_NOT_ALLOWLISTED rejects metadata commit C touching non-allowlisted paths"
+      ]
+    },
+    "transaction": {
+      "prepare": "assertClosureInput -> stage manifest + residue (fsync staged file)",
+      "commit": "single commit point writes committed manifest + residue; idempotent replay on double close",
+      "attest": "exact-SHA CI terminal attestation (PENDING until external verifier signs exact SHA)"
+    },
+    "cli": {
+      "close": "packages/cli/src/commands/close.ts uses unified closure service; no shallow verified:true receipts; no empty-reconciliation PASS; writes operational-state .gitignore markers",
+      "activate": "packages/cli/src/commands/activate.ts bootstrap/supersession CAS pointer move via supersedeGoal/commitCurrentPointer",
+      "correction": "invalid v1 closure (northstar-on-demand-portable-harness) corrected to SUPERSEDED/INACTIVE with terminal PARTIAL"
+    },
+    "tests": [
+      "packages/kernel/test/northstar/closure-service.test.ts (19 tests PASS)",
+      "packages/cli/test/vnext-trust-root.test.ts (7 tests PASS)",
+      "kernel full suite 283 tests PASS"
+    ],
+    "identity_separation": {
+      "harness_release": "vnext/terminal-harness branch",
+      "consumer_target": "G1/G2/G3 generic fixtures (disposable, no named projects)",
+      "host_runtime": "opencode 1.18.18 / codex (live candidates)"
+    }
+  },
+  "terminal_gate": "current false closure no longer accepted; G1 fresh closure and G3 upgraded recovery behave deterministically",
+  "next_step": "Phase 2: effective intent, disposition and executable DoD",
+  "certification": "BOOTSTRAP_UNCERTIFIED (source-dogfood only; generic installed-package acceptance deferred to Phase 9)"
+}

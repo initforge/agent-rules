@@ -115,9 +115,15 @@ export async function runtimeReconcile(
     const hosts = target === "all" ? [...RUNTIME_PLATFORMS] : [target as RuntimePlatform];
     const result = await reconcileAll({ installedOnly, reportOnly, root: getRepoRoot() });
     const requested = result.reconciled.filter((item) => hosts.includes(item.host as RuntimePlatform));
+    // REQ-011: reconcile exit code reflects MCP BLOCKED/NEEDS_USER state on
+    // the profile-scoped gating surface (explicit-only/optional entries the
+    // operator never selected cannot poison it). The full inventory is still
+    // reported as providerProvisioning.
+    const gating = result.providerGating;
+    const mcpsBlocked = gating.status === "BLOCKED" || gating.status === "NEEDS_USER" || !gating.success;
     return {
-      exitCode: ExitCode.Success,
-      message: `Runtime reconcile: ${requested.filter((item) => item.installed).length} installed, ${requested.filter((item) => item.status === "unsupported").length} unsupported, ${requested.filter((item) => item.skipped).length} skipped (${reportOnly ? "report-only" : "repair-enabled"}); MCP provisioning ${result.providerProvisioning.status}`,
+      exitCode: mcpsBlocked ? ExitCode.LegacyFailed : ExitCode.Success,
+      message: `Runtime reconcile: ${requested.filter((item) => item.installed).length} installed, ${requested.filter((item) => item.status === "unsupported").length} unsupported, ${requested.filter((item) => item.skipped).length} skipped (${reportOnly ? "report-only" : "repair-enabled"}); MCP gating ${gating.status} (full inventory ${result.providerProvisioning.status})${mcpsBlocked ? " — reconcile NOT green" : ""}`,
       data: {
         installedOnly,
         reportOnly,
@@ -134,6 +140,7 @@ export async function runtimeReconcile(
         })),
         receipts: result.receipts.filter((receipt) => hosts.includes(receipt.host as RuntimePlatform)),
         mcps: result.providerProvisioning,
+        mcps_gating: result.providerGating,
       },
     };
   } catch (error) {

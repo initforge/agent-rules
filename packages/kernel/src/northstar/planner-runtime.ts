@@ -255,15 +255,6 @@ export function buildStrongPlannerInvocation(kind: AgentKind, prompt: string): P
           OPENCODE_CONFIG_CONTENT: JSON.stringify({ permission: { '*': 'deny', read: 'allow', glob: 'allow', grep: 'allow', list: 'allow', lsp: 'allow', webfetch: 'deny', websearch: 'deny', edit: 'deny', bash: 'deny', task: 'deny', external_directory: 'deny' } }),
         },
       };
-    case 'mimocode':
-      // MiMoCode documents a read-only plan agent, but its headless selector is not
-      // treated as stable here. We therefore rely on deny rules plus the disposable
-      // snapshot, and never use --dangerously-skip-permissions for planning.
-      return {
-        executable: 'mimo', args: ['run', prompt], env: {
-          OPENCODE_CONFIG_CONTENT: JSON.stringify({ permission: { '*': 'deny', read: 'allow', glob: 'allow', grep: 'allow', list: 'allow', lsp: 'allow', edit: 'deny', bash: 'deny', task: 'deny', external_directory: 'deny' } }),
-        },
-      };
   }
 }
 

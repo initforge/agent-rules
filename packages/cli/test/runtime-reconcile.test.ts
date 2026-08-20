@@ -32,7 +32,7 @@ function probesWith(opts: {
       // Normalize separators: on Windows path.join produces backslash paths
       // (e.g. \usr\local\bin\codex) that must match the same binary set.
       const norm = filePath.replace(/\\/g, '/');
-      if (opts.binaryOnPath && /(?:\/usr\/local\/bin\/|\/usr\/bin\/|C:\/Program Files\/|C:\/Users\/)(codex|claude|grok|opencode|antigravity|gemini|cursor|cursor-agent|mimocode|mi-mo)(?:\.exe)?$/.test(norm)) return true;
+      if (opts.binaryOnPath && /(?:\/usr\/local\/bin\/|\/usr\/bin\/|C:\/Program Files\/|C:\/Users\/)(codex|claude|grok|opencode|antigravity|gemini|cursor|cursor-agent)(?:\.exe)?$/.test(norm)) return true;
       if (opts.configDir && filePath === opts.configDir) return true;
       if (opts.receiptSha && /agent-rules-runtime\/receipt\.json$/.test(filePath)) return true;
       return false;
@@ -102,7 +102,7 @@ describe("host inventory, projection, and transactional repair (S4)", () => {
   });
 
   it("covers exactly the seven registered hosts with specs", () => {
-    expect(REGISTERED_HOSTS).toEqual(["opencode", "codex", "claude", "grok", "antigravity", "mimocode", "cursor"]);
+    expect(REGISTERED_HOSTS).toEqual(["opencode", "codex", "claude", "grok", "antigravity", "cursor"]);
     for (const host of REGISTERED_HOSTS) {
       expect(HOST_SPECS[host]).toBeDefined();
       expect(HOST_SPECS[host].binaries.length).toBeGreaterThan(0);
@@ -172,7 +172,7 @@ describe("host inventory, projection, and transactional repair (S4)", () => {
 
   it("reconciles all hosts with installed-only semantics without mutating absent hosts", async () => {
     const result = await reconcileHosts([...REGISTERED_HOSTS], { installedOnly: true, reportOnly: true });
-    expect(result.reconciled).toHaveLength(7);
+    expect(result.reconciled).toHaveLength(6);
     for (const item of result.reconciled) {
       expect(item.taskAuthority).toBe(false);
       if (item.installed) expect(item.receipt?.mutated ?? false).toBe(false);

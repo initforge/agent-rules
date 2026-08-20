@@ -54,6 +54,26 @@ export const DEFAULT_RESOURCE_POLICY: ResourcePolicy = {
   critical_cpu_load_per_core: 1.25,
 };
 
+/** Phase 7 — cost/effect lanes for the resource governor (one global cap is insufficient). */
+export type ResourceLane = 'read_search' | 'research' | 'writer' | 'browser' | 'verifier' | 'mcp' | 'heavy_process';
+
+export interface LaneBudget {
+  lane: ResourceLane;
+  max_concurrency: number;
+  max_cost: number;
+  effect: 'read' | 'write' | 'heavy';
+}
+
+export const DEFAULT_LANE_BUDGETS: LaneBudget[] = [
+  { lane: 'read_search', max_concurrency: 4, max_cost: 10, effect: 'read' },
+  { lane: 'research', max_concurrency: 2, max_cost: 20, effect: 'read' },
+  { lane: 'writer', max_concurrency: 1, max_cost: 30, effect: 'write' },
+  { lane: 'browser', max_concurrency: 1, max_cost: 40, effect: 'heavy' },
+  { lane: 'verifier', max_concurrency: 2, max_cost: 20, effect: 'read' },
+  { lane: 'mcp', max_concurrency: 2, max_cost: 15, effect: 'read' },
+  { lane: 'heavy_process', max_concurrency: 1, max_cost: 50, effect: 'heavy' },
+];
+
 const mb = (bytes: number): number => Math.round(bytes / 1024 / 1024);
 
 export function observeHostResources(): HostResourceSnapshot {

@@ -26,10 +26,9 @@ describe('buildInvocation', () => {
     expect(args[args.indexOf('--permission-mode') + 1]).toBe('bypassPermissions');
   });
 
-  it('builds codex, opencode, and mimocode invocations', () => {
+  it('builds codex and opencode invocations', () => {
     expect(buildInvocation('codex', 'task', {})).toEqual({ executable: 'codex', args: ['exec', 'task'] });
     expect(buildInvocation('opencode', 'task', {})).toEqual({ executable: 'opencode', args: ['run', 'task'] });
-    expect(buildInvocation('mimocode', 'task', {})).toEqual({ executable: 'mimo', args: ['run', '--dangerously-skip-permissions', 'task'] });
   });
 
   it('passes the prompt as one argv entry, never through a shell', () => {

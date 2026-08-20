@@ -2,13 +2,12 @@ import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
 import { build } from "./build.js";
 import { verifyMirrors } from "./verify-mirrors.js";
 import { installCmd } from "./install.js";
-import { provisionMcps } from "../integration/provisioning.js";
-import { getRepoRoot } from "../adapters/repo.js";
 
 /**
- * Sync: orchestrates build + install + MCP provisioning + verify mirrors.
- * Uses native TS build, install, and verify-mirrors. MCP provisioning is part
- * of the canonical sync lifecycle and its failures poison the aggregate result.
+ * Sync: orchestrates build + install (which provisions profile-scoped MCPs
+ * exactly once and converges host configs) + verify mirrors.
+ * REQ-011: MCP provisioning happens exactly once per sync (inside install);
+ * this command never provisions a second time.
  */
 export async function syncCmd(
   args: string[],
@@ -17,7 +16,7 @@ export async function syncCmd(
   const platform = args[0] || "all";
 
   if (options.dryRun) {
-    console.log("[dry-run] Would run: build → install → provision MCPs → verify-mirrors");
+    console.log("[dry-run] Would run: build → install (provision MCPs once + converge host configs) → verify-mirrors");
     return {
       exitCode: ExitCode.Success,
       message: "Dry-run: sync sequence would execute",
@@ -34,40 +33,34 @@ export async function syncCmd(
     };
   }
 
-  // Step 2: Install using native installer
+  // Step 2: Install using native installer. This is the single provisioning
+  // point: profile-scoped MCP provisioning + host MCP config convergence both
+  // happen here exactly once.
   const installResult = await installCmd([platform, "--force"], options);
   if (installResult.exitCode !== 0) {
     return {
       exitCode: ExitCode.LegacyFailed,
       message: "Sync failed at install step",
-      data: { step: "install", exitCode: installResult.exitCode },
+      data: { step: "install", exitCode: installResult.exitCode, install: installResult.data },
     };
-  }
-
-  // Step 2b: Provision canonical MCPs (shared orchestrator, registry-driven)
-  const repoRoot = getRepoRoot();
-  let provisioning;
-  try {
-    provisioning = await provisionMcps(repoRoot, { dryRun: options.dryRun });
-  } catch (error) {
-    provisioning = { kind: "mcp", source: "integrations/registry.json", total: 0, status: "BLOCKED", success: false, results: [], error: (error as Error).message };
   }
 
   // Step 3: Verify mirrors (native TS)
   const verifyResult = await verifyMirrors([], options);
-  const success = verifyResult.exitCode === 0 && provisioning.success;
+  const success = verifyResult.exitCode === 0;
 
   return {
     exitCode: success ? ExitCode.Success : ExitCode.LegacyFailed,
     message: success
-      ? `Sync completed for ${platform}; ${provisioning.total} canonical MCP entries provisioned`
-      : `Sync completed but mirror verification failed or MCP provisioning ${provisioning.status}`,
+      ? `Sync completed for ${platform}`
+      : "Sync completed but mirror verification failed",
     data: {
       platform,
       buildExitCode: buildResult.exitCode,
       installExitCode: installResult.exitCode,
       verifyExitCode: verifyResult.exitCode,
-      mcps: provisioning,
+      mcps: installResult.data?.mcps,
+      mcp_convergence: installResult.data?.mcp_convergence,
     },
   };
 }

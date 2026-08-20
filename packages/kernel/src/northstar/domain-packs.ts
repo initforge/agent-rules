@@ -356,6 +356,77 @@ export function readDomainReference(pack: LoadedDomainPack, relativePath: string
   return { pack_id: pack.descriptor.id, path: normalized, sha256: digest, bytes: bytes.length, content: bytes.toString('utf8') };
 }
 
+/**
+ * REQ-013 — reference receipt. The broker returns a receipt (manifest id,
+ * source path, anchor, hash and the component/behavior actually used) so the
+ * renderer can append a short, evidence-grounded footer ONLY when a reference
+ * was really consumed. No receipt -> no footer, no "the forbidden disclosure phrase", no banner.
+ */
+export interface DomainReferenceReceipt {
+  schema: 'agent-rules/domain-reference-receipt';
+  version: 1;
+  pack_id: string;
+  manifest_id: string;
+  /** Manifest-bound source path. */
+  path: string;
+  anchor?: string;
+  sha256: string;
+  /** Component/behavior the worker actually used this reference for. */
+  component: string;
+  consumed_at: string;
+}
+
+export interface DomainReferenceReadWithReceipt extends DomainReferenceRead {
+  receipt: DomainReferenceReceipt;
+}
+
+/**
+ * Read a manifest-bound reference AND emit its consumption receipt. The
+ * `component`/`behavior` is what the worker actually used the reference for.
+ */
+export function consumeDomainReference(pack: LoadedDomainPack, relativePath: string, options: { component?: string; behavior?: string; anchor?: string; maxBytes?: number } = {}): DomainReferenceReadWithReceipt {
+  const read = readDomainReference(pack, relativePath, options.maxBytes);
+  const component = options.component ?? options.behavior ?? deriveComponentFromPath(read.path);
+  const manifest = pack.sourceManifest;
+  const manifestId = manifest?.source_archive_sha256 ?? manifest?.tree_sha256 ?? 'unknown';
+  const receipt: DomainReferenceReceipt = {
+    schema: 'agent-rules/domain-reference-receipt',
+    version: 1,
+    pack_id: pack.descriptor.id,
+    manifest_id: manifestId,
+    path: read.path,
+    ...(options.anchor ? { anchor: options.anchor } : {}),
+    sha256: read.sha256,
+    component,
+    consumed_at: new Date().toISOString(),
+  };
+  return { ...read, receipt };
+}
+
+/** Derive a component/behavior label from a manifest-bound path (first two segments). */
+export function deriveComponentFromPath(pathValue: string): string {
+  const segments = pathValue.split('/').filter(Boolean);
+  if (segments.length >= 2) return `${segments[0]}/${segments[1]}`;
+  return segments[0] ?? pathValue;
+}
+
+/**
+ * Render the short disclosure footer. Returns '' when there is nothing to
+ * disclose (no consumed reference) — never a banner, never "the forbidden disclosure phrase".
+ */
+export function renderDomainReferenceFooters(receipts: readonly DomainReferenceReceipt[]): string {
+  const unique = new Map<string, DomainReferenceReceipt>();
+  for (const receipt of receipts) {
+    unique.set(`${receipt.path}#${receipt.sha256}`, receipt);
+  }
+  const lines: string[] = [];
+  for (const receipt of unique.values()) {
+    const anchor = receipt.anchor ? `#${receipt.anchor}` : '';
+    lines.push(`${receipt.pack_id} reference used: ${receipt.component} — ${receipt.path}${anchor}, sha256:${receipt.sha256.slice(0, 12)}`);
+  }
+  return lines.join('\n');
+}
+
 export interface DomainReferenceMatch {
   pack_id: string;
   path: string;

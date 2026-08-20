@@ -7,7 +7,7 @@ vi.mock("../src/runtime/installer.js", () => ({
   RuntimeInstaller: vi.fn().mockImplementation(() => ({
     install: mockInstall,
   })),
-  RUNTIME_PLATFORMS: ["codex", "grok", "antigravity", "cursor", "opencode", "mimocode", "claude"],
+  RUNTIME_PLATFORMS: ["codex", "grok", "antigravity", "cursor", "opencode", "claude"],
 }));
 
 vi.mock("../src/adapters/powershell.js", () => ({
@@ -33,13 +33,13 @@ describe("install wrapper", () => {
     const { installCmd } = await import("../src/commands/install.js");
     const result = await installCmd(["all"], { dryRun: false, verbose: false, json: false });
     expect(result.exitCode).toBe(ExitCode.Success);
-    expect(mockInstall).toHaveBeenCalledTimes(7);
+    expect(mockInstall).toHaveBeenCalledTimes(6);
     expect(mockProvision).toHaveBeenCalledTimes(1);
   });
 
   it("installs for a single platform", async () => {
     const { installCmd } = await import("../src/commands/install.js");
-    const result = await installCmd(["mimocode"], { dryRun: false, verbose: false, json: false });
+    const result = await installCmd([], { dryRun: false, verbose: false, json: false });
     expect(result.exitCode).toBe(ExitCode.Success);
     // The mock should have been called at least once
     expect(mockInstall).toHaveBeenCalled();

@@ -19,8 +19,7 @@
       "antigravity"
     ],
     "deferred_supported_targets": [
-      "cursor",
-      "mimocode"
+      "cursor"
     ]
   },
   "platforms": {
@@ -201,36 +200,6 @@
         "config_path": "$OPENCODE_HOME/opencode.json",
         "format": "json_mcpServers",
         "native_inspect": "opencode_mcp_ui",
-        "live_doctor": "native_mcp_ping"
-      }
-    },
-    "mimocode": {
-      "runtime": {
-        "home_env": "MIMOCODE_HOME",
-        "home_default": "XDG config/data paths",
-        "global_entrypoint": "platform adapter managed context"
-      },
-      "bootstrap": {
-        "strategy": "managed_directory",
-        "entrypoint": "mimocode.jsonc + managed context",
-        "restart_action": "start_new_session"
-      },
-      "routing": {
-        "hook_lifecycle": "host_native",
-        "context_delivery": "managed context / skill surface"
-      },
-      "orchestration": {
-        "native_spawn_tool": "native subagents/workflows",
-        "agent_discovery": ".mimocode + user data skills",
-        "model_attestation": "host_declared",
-        "permission_capability": "host_enforced",
-        "isolation_capability": "workflow/worktree where configured",
-        "agent_materialization": "host_native"
-      },
-      "mcp": {
-        "config_path": "mimocode.jsonc",
-        "format": "jsonc MCP configuration",
-        "native_inspect": "mimo configuration/TUI",
         "live_doctor": "native_mcp_ping"
       }
     }

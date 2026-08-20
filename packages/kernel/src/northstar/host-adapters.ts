@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-export type HostId = 'claude' | 'codex' | 'opencode' | 'cursor' | 'antigravity' | 'grok' | 'mimocode';
+export type HostId = 'claude' | 'codex' | 'opencode' | 'cursor' | 'antigravity' | 'grok';
 export type HostExecutionMode = 'ambient' | 'headless';
 
 export interface HostCapability {
@@ -25,7 +25,6 @@ export const HOST_CAPABILITIES: Record<HostId, HostCapability> = {
   cursor: { host: 'cursor', ambient: true, headless: false, native_subagents: true, mcp: true, attestation: 'unconfirmed', notes: ['headless execution intentionally not claimed'] },
   antigravity: { host: 'antigravity', ambient: true, headless: false, native_subagents: true, mcp: true, attestation: 'host-attested', notes: ['ambient adapter supported; headless contract not certified here'] },
   grok: { host: 'grok', ambient: true, headless: false, native_subagents: true, mcp: true, attestation: 'host-attested', notes: ['ambient adapter supported; headless contract not certified here'] },
-  mimocode: { host: 'mimocode', ambient: true, headless: true, native_subagents: true, mcp: true, attestation: 'declared', notes: ['official CLI supports `mimo run`; exact observed model still requires host evidence'] },
 };
 
 export function assertHostSurface(repoRoot: string): void {

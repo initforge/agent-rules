@@ -153,9 +153,9 @@ describe('North-Star CLI UX', () => {
 
   it('initializes a schema-versioned config and reports idle before any run', () => {
     const root = tempRepo();
-    const init = initNorthStar(root, 'mimocode');
+    const init = initNorthStar(root, 'codex');
     expect(init.created).toBe(true);
-    expect(init.config.default_agent).toBe('mimocode');
+    expect(init.config.default_agent).toBe('codex');
     expect(init.config.default_planner).toBe('claude');
     expect(northStarStatus(root)).toEqual({ status: 'idle', runs: 0 });
   });

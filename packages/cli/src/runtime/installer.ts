@@ -96,7 +96,6 @@ function defaultPlatformRoots(): Record<RuntimePlatform, string> {
     antigravity: path.join(home, ".gemini", "config"),
     cursor: path.join(home, ".cursor"),
     opencode: process.env.OPENCODE_HOME || path.join(home, ".config", "opencode"),
-    mimocode: process.env.MIMOCODE_CONFIG_DIR || path.join(home, ".config", "mimocode"),
     claude: process.env.CLAUDE_CONFIG_DIR || path.join(home, ".claude"),
   };
 }

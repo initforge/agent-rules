@@ -1,0 +1,80 @@
+{
+  "schema": "artifact/execution-contract",
+  "version": 1,
+  "kind": "current-pointer",
+  "generation": 31,
+  "work_id": "northstar-on-demand-portable-harness",
+  "plan_id": "northstar-on-demand-portable-harness",
+  "plan_root": ".agent/plans/northstar-on-demand-portable-harness",
+  "original": {
+    "path": ".agent/plans/northstar-on-demand-portable-harness/plan.md",
+    "sha256": "e7460747e304f2e1d5108611ca6dfbcbf1c6253e5b4dd58a7f9562652ef1199f"
+  },
+  "canonical_ledger": {
+    "path": ".agent/ledger/northstar-on-demand-portable-harness.json",
+    "sha256": "9bd25c6e6a843ef80dc23e2ba497a15683ccab6d4acd090c7f291710097a055f",
+    "observed_revision": 0,
+    "observed_effective_sha256": "fd86eceb8884e4c07ca4c941b5589aa39d463bfa9d34af83aa442557832f2582",
+    "plan_status": "ADOPTED",
+    "execution_state": "IN_PROGRESS"
+  },
+  "effective_chain_tip": {
+    "amendment_id": "AM-0000",
+    "path": ".agent/plans/northstar-on-demand-portable-harness/plan.md",
+    "sha256": "e7460747e304f2e1d5108611ca6dfbcbf1c6253e5b4dd58a7f9562652ef1199f"
+  },
+  "candidate_chain_tip": {
+    "amendment_id": "AM-0000",
+    "status": "OWNER_APPROVED_PENDING_CANONICAL_ACTIVATION",
+    "path": ".agent/plans/northstar-on-demand-portable-harness/plan.md",
+    "sha256": "e7460747e304f2e1d5108611ca6dfbcbf1c6253e5b4dd58a7f9562652ef1199f"
+  },
+  "contract": {
+    "path": ".agent/plans/northstar-on-demand-portable-harness/plan.md",
+    "sha256": "e7460747e304f2e1d5108611ca6dfbcbf1c6253e5b4dd58a7f9562652ef1199f",
+    "schema_path": "schemas/execution-contract.schema.json",
+    "requirement_ids": [
+      "REQ-001",
+      "REQ-002",
+      "REQ-003",
+      "REQ-004",
+      "REQ-005",
+      "REQ-006",
+      "REQ-007",
+      "REQ-008",
+      "REQ-009",
+      "REQ-010",
+      "REQ-011",
+      "REQ-012",
+      "REQ-013",
+      "REQ-014",
+      "REQ-015",
+      "REQ-016",
+      "REQ-017",
+      "REQ-018",
+      "REQ-019",
+      "REQ-020",
+      "REQ-021",
+      "REQ-022",
+      "REQ-023",
+      "REQ-024"
+    ],
+    "status": "EFFECTIVE"
+  },
+  "supersession": {
+    "transaction_id": "db8c43be-94d0-4087-9cee-64d5eb514e57",
+    "previous_work_id": "adaptive-minimal-proof-testing",
+    "previous_plan_id": "adaptive-minimal-proof-testing",
+    "reason": "Owner-authorized new phase: North-Star vNext on-demand MCP, deterministic 5fedu, portable one-copy harness. Pointer audit: adaptive-minimal-proof-testing baseline merged in origin/main with COMPLETE acceptance evidence; pointer retired.",
+    "changed_at": "2026-08-18T17:32:56.984Z"
+  },
+  "atomicity": {
+    "protocol": "generation-compare-and-swap",
+    "expected_previous_generation": 30,
+    "commit_target": ".agent/current.json",
+    "activation_state": "CANONICALLY_ACTIVATED",
+    "updated_at": "2026-08-19T02:57:35.152Z"
+  },
+  "retired_at": "2026-08-19T04:25:08.605Z",
+  "final_baseline": "e511f9f58bf81d53093f099cc086c225d4e0421c"
+}

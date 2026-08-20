@@ -65,6 +65,12 @@ export interface QueuedTask {
   requirementId?: string;
   /** MCP integrations selected by the capability broker for this task only. */
   mcpIntegrationIds?: string[];
+  /**
+   * REQ-011: when the task policy explicitly allowed network for a routed
+   * integration, remote (url-based) MCP servers may be materialised; default
+   * (false/undefined) refuses remote MCPs fail-closed.
+   */
+  mcpAllowRemote?: boolean;
   /** Stable contract task ids that must reach DONE before this task may execute. */
   dependsOnContractTaskIds?: string[];
   /** Task this one was created to repair. */

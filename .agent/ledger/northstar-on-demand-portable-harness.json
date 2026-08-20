@@ -1,8 +1,8 @@
 {
   "schema_version": 4,
   "plan_id": "northstar-on-demand-portable-harness",
-  "status": "ADOPTED",
-  "execution_state": "IN_PROGRESS",
+  "status": "SUPERSEDED",
+  "execution_state": "INACTIVE",
   "created_at": "2026-08-19T00:00:00+07:00",
   "updated_at": "2026-08-19T00:00:00+07:00",
   "shadow_revision": 0,
@@ -197,5 +197,17 @@
   "closure_evidence": null,
   "tasks": {},
   "requirements": {},
-  "note": "Owner-authorized new phase: North-Star vNext (on-demand MCP, deterministic 5fedu, portable one-copy harness). Supersedes adaptive-minimal-proof-testing pointer (baseline merged in main, acceptance COMPLETE). Single frozen contract is this plan; no default support directory."
+  "note": "Owner-authorized new phase: North-Star vNext (on-demand MCP, deterministic 5fedu, portable one-copy harness). Supersedes adaptive-minimal-proof-testing pointer (baseline merged in main, acceptance COMPLETE). Single frozen contract is this plan; no default support directory.",
+  "closure": {
+    "closed_at": "2026-08-19T04:25:08.604Z",
+    "residue_sha256": "1758fd5b0933aa15fc612e361f701289a6b4bb17fa3022799d2b1911c7833a08",
+    "final_baseline": "e511f9f58bf81d53093f099cc086c225d4e0421c"
+  },
+  "vnext_correction": {
+    "corrected_at": "2026-08-19T00:00:00+07:00",
+    "corrected_status": "SUPERSEDED",
+    "corrected_execution_state": "INACTIVE",
+    "terminal_outcome": "PARTIAL",
+    "reason": "v1 closure accepted shallow verified:true evidence, empty reconciliation, hard-coded residue and pointer copy without deactivation; corrected by unified closure-service (Phase 1). Pointer now points to terminal-harness-vnext at generation 32."
+  }
 }

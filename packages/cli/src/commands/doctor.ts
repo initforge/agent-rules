@@ -156,7 +156,7 @@ function getPlatformHomes(root: string): PlatformHomeMap {
     antigravity: path.join(userHome, ".gemini", "config"),
     cursor: path.join(userHome, ".cursor"),
     opencode: process.env.OPENCODE_HOME || path.join(userHome, ".config", "opencode"),
-    mimocode: process.env.MIMOCODE_CONFIG_DIR || path.join(userHome, ".config", "mimocode"),
+
     claude: process.env.CLAUDE_CONFIG_DIR || path.join(userHome, ".claude"),
   };
 }
@@ -185,7 +185,7 @@ export async function doctor(
   const root = getRepoRoot();
   const platformArg = args[0] || "all";
   const skipIntegrationVerify = args.includes("--skip-integration-verify");
-  const valid = ["codex", "grok", "antigravity", "cursor", "opencode", "mimocode", "claude", "all"];
+  const valid = ["codex", "grok", "antigravity", "cursor", "opencode", "claude", "all"];
   if (!valid.includes(platformArg)) {
     return { exitCode: ExitCode.InvalidArgument, message: `Invalid platform: ${platformArg}` };
   }
@@ -195,7 +195,7 @@ export async function doctor(
     return { exitCode: ExitCode.Success, message: "Dry-run: doctor skipped" };
   }
 
-  const allPlatforms = ["codex", "grok", "antigravity", "cursor", "opencode", "mimocode", "claude"] as const;
+  const allPlatforms = ["codex", "grok", "antigravity", "cursor", "opencode", "claude"] as const;
   type PlatformName = typeof allPlatforms[number];
   const platforms: PlatformName[] = platformArg === "all" ? allPlatforms.filter((platform) => platform !== "opencode") : platformArg === "opencode" ? [] : [platformArg as PlatformName];
   const homes = getPlatformHomes(root);
@@ -216,7 +216,7 @@ export async function doctor(
     antigravity: "mcp_config.json",
     cursor: "mcp.json",
     opencode: "opencode.json",
-    mimocode: "mimocode.jsonc",
+
     claude: ".claude.json",
   };
   const mcpConfigPaths: { [key in PlatformName]?: string } = {};
@@ -309,7 +309,7 @@ export async function doctor(
     }
 
     // Native activation
-    const nativeCliMap: { [key in PlatformName]: string } = { codex: "codex", cursor: "cursor", grok: "grok", antigravity: "gemini/agy", opencode: "opencode", mimocode: "mimo", claude: "claude" };
+    const nativeCliMap: { [key in PlatformName]: string } = { codex: "codex", cursor: "cursor", grok: "grok", antigravity: "gemini/agy", opencode: "opencode", claude: "claude" };
     report.push({
       platform: name, check: "native-activation", status: "NATIVE_UNVERIFIED",
       detail: `${nativeCliMap[name]} CLI availability check; no trusted host-activation receipt exists`,
@@ -589,6 +589,34 @@ export async function doctor(
     }
   } catch (error) {
     report.push({ platform: "mcp", check: "mcp-registry", status: "MCP_BLOCKED", detail: (error as Error).message });
+  }
+
+  // ── Host MCP config convergence health (read-only classification) ─────
+  // REQ-008/REQ-009: host configs must not contain enabled agent-rules MCP
+  // entries under the default global MCP profile (none). Classification is
+  // strictly read-only here; convergence (backup + remove/disable) happens
+  // in install/sync/reconcile.
+  try {
+    const { classifyHostMcpConfig, ALL_MCP_HOSTS, HOST_CONFIG_FILES } = await import("../runtime/mcp-convergence.js");
+    const { hostHome } = await import("../runtime/mcp-convergence.js");
+    for (const host of ALL_MCP_HOSTS) {
+      const classified = await classifyHostMcpConfig(root, host);
+      if (!classified.exists) continue;
+      const touched = classified.entries.filter((entry) => entry.disposition !== "user-owned");
+      if (touched.length === 0) continue;
+      for (const entry of touched) {
+        report.push({
+          platform: "mcp",
+          check: `mcp-convergence-${host}-${entry.id}`,
+          status: entry.disposition === "user-modified" ? "MCP_NEEDS_USER" : "MCP_CONVERGED",
+          detail: `${entry.reason} (${path.join(hostHome(host), HOST_CONFIG_FILES[host])})`,
+        });
+      }
+    }
+  } catch {
+    // Classification is advisory; a failure here must not fake a pass, so it
+    // is surfaced as a warning-level MCP_PARTIAL.
+    report.push({ platform: "mcp", check: "mcp-convergence", status: "MCP_PARTIAL", detail: "host MCP convergence classification unavailable" });
   }
 
   // Output

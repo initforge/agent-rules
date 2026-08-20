@@ -22,7 +22,7 @@ import type { ExecutionBudget } from './execution-policy.js';
  * at all, so the number of tasks it can drive is bounded by wall-clock, not tokens.
  */
 
-export type AgentKind = 'claude' | 'codex' | 'opencode' | 'mimocode';
+export type AgentKind = 'claude' | 'codex' | 'opencode';
 
 export interface AgentInvocation {
   executable: string;
@@ -86,11 +86,6 @@ export function buildInvocation(kind: AgentKind, prompt: string, config: Pick<Ex
         return { executable: 'codex', args: ['exec', prompt] };
       case 'opencode':
         return { executable: 'opencode', args: ['run', prompt] };
-      case 'mimocode':
-        // Official MiMoCode CLI exposes a headless `mimo run` mode. The explicit
-        // permission flag is required for unattended edits, mirroring the other
-        // headless adapters' non-interactive posture.
-        return { executable: 'mimo', args: ['run', '--dangerously-skip-permissions', prompt] };
     }
   })();
   const mcp = config.mcpConfigPaths;
@@ -121,7 +116,7 @@ export interface ExecutionResult {
 
 /** True when the CLI for `kind` is on PATH and responds to `--version`. */
 export async function detectAgent(kind: AgentKind): Promise<{ available: boolean; version?: string }> {
-  const executable = kind === 'mimocode' ? 'mimo' : kind;
+  const executable = kind;
   return new Promise((resolve) => {
     const proc = spawn(executable, ['--version'], { stdio: ['ignore', 'pipe', 'ignore'] });
     let out = '';
@@ -184,6 +179,7 @@ export class HeadlessExecutor {
     let timedOut = false;
     let termination: ExecutionResult['termination'] = 'natural';
     let cleanupConfirmed = true;
+    let agentPid = -1;
 
     try {
       const proc = spawn(executable, args, {
@@ -209,6 +205,7 @@ export class HeadlessExecutor {
         },
         ...processGroupSpawnOptions(),
       });
+      agentPid = proc.pid ?? -1;
 
       exitCode = await new Promise<number>((resolve) => {
         let settled = false;
@@ -242,11 +239,21 @@ export class HeadlessExecutor {
           settle(-1);
         });
       });
+
+      // REQ-010 idle-zero: after settlement (natural end, timeout, crash or
+      // cancellation), sweep the recorded process tree once more so any MCP
+      // server that outlived the agent is terminated and observed. This makes
+      // "no task -> no managed MCP process" verifiable instead of assumed.
+      if (agentPid > 0) {
+        const sweep = await terminateProcessTree(agentPid, undefined, { graceMs: killGraceMs });
+        if (timedOut) cleanupConfirmed = cleanupConfirmed && sweep.confirmedExited;
+      }
     } finally {
       fs.closeSync(stdoutFd);
       fs.closeSync(stderrFd);
     }
 
+    this.writeMcpLifecycleReceipt(task, effectiveMcp, { exitCode, timedOut, termination, cleanupConfirmed, agentPid });
     return {
       exitCode,
       timedOut,
@@ -259,6 +266,44 @@ export class HeadlessExecutor {
       cleanupConfirmed,
       ...(budget ? { executionClass: budget.executionClass } : {}),
     };
+  }
+
+  /**
+   * REQ-010 — durable per-task MCP lifecycle receipt: which MCP set this task
+   * routed, where its configs were materialised, and that the whole process
+   * tree (agent + any MCP servers) was observed down at settlement. Written
+   * even when the task routed no MCP (the "0 managed processes" guarantee is
+   * then trivially attested).
+   */
+  private writeMcpLifecycleReceipt(task: QueuedTask, mcpConfigPaths: McpConfigPaths | undefined, outcome: { exitCode: number; timedOut: boolean; termination: string; cleanupConfirmed: boolean; agentPid: number }): void {
+    try {
+      const dir = mcpConfigPaths?.dir ?? this.config.logDir;
+      fs.mkdirSync(dir, { recursive: true });
+      const receiptPath = path.join(dir, 'mcp-process-receipt.json');
+      const receipt = {
+        schema: 'agent-rules/mcp-process-receipt',
+        version: 1,
+        task_id: task.id,
+        work_id: task.workId,
+        execution_generation: task.executionGeneration ?? 0,
+        routed_mcp_integration_ids: task.mcpIntegrationIds ?? [],
+        mcp_config_dir: mcpConfigPaths?.dir ?? null,
+        resolved_integrations: mcpConfigPaths?.resolved ?? [],
+        agent: {
+          kind: this.config.kind,
+          pid: outcome.agentPid,
+          exit_code: outcome.exitCode,
+          timed_out: outcome.timedOut,
+          termination: outcome.termination,
+          cleanup_confirmed: outcome.cleanupConfirmed,
+        },
+        idle_zero_attested: outcome.cleanupConfirmed,
+        ended_at: new Date().toISOString(),
+      };
+      fs.writeFileSync(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, { mode: 0o600 });
+    } catch {
+      /* a receipt write failure must not fail the task */
+    }
   }
 
   host(): string {

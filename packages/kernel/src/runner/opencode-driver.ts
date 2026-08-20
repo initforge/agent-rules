@@ -284,7 +284,5 @@ export function modelForAgent(kind: AgentKind, modelOverride?: string): { provid
       return { providerID: 'openai', modelID: 'codex-mini-latest' };
     case 'opencode':
       return { providerID: 'opencode', modelID: 'big-pickle' };
-    case 'mimocode':
-      throw new Error('MiMoCode uses its native mimo CLI and has no OpenCode SDK model mapping');
   }
 }

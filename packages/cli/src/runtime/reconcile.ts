@@ -10,7 +10,8 @@ import {
   type RuntimeProjection,
 } from "./contracts.js";
 import { createHostAdapters, isRegisteredHost, unsupportedHostDetection } from "./host-adapters.js";
-import { verifyMcps, type ProvisionSummary } from "../integration/provisioning.js";
+import { verifyMcps, provisionMcps, type ProvisionSummary } from "../integration/provisioning.js";
+import { resolveIntegrationProfile } from "../integration/mcp-profile.js";
 
 export interface ReconcileOptions {
   /** Only hosts that are actually installed are reconciled. */
@@ -48,6 +49,11 @@ export interface ReconcileResult {
    * states; this is distinct from the projected host runtime above.
    */
   providerProvisioning: ProvisionSummary;
+  /**
+   * Profile-scoped MCP gating surface (default core). Explicit-only and
+   * optional entries the operator never selected cannot poison the exit code.
+   */
+  providerGating: ProvisionSummary;
   readonly taskAuthority: false;
 }
 
@@ -133,6 +139,18 @@ export async function reconcileHosts(hosts: string[], options: ReconcileOptions)
       status: "BLOCKED", success: false, results: [], error: (error as Error).message,
     };
   }
+  // REQ-011: the exit-code gating surface is the install profile (default
+  // core) — explicit-only and optional entries the operator never selected
+  // cannot poison a reconcile green. Reported alongside the full inventory.
+  let providerGating: ProvisionSummary;
+  try {
+    providerGating = await provisionMcps(root, { readOnly: true, installProfile: resolveIntegrationProfile() });
+  } catch (error) {
+    providerGating = {
+      kind: "mcp", source: "integrations/registry.json", total: 0,
+      status: "BLOCKED", success: false, results: [], error: (error as Error).message,
+    };
+  }
 
   return {
     requestedHosts: hosts,
@@ -141,6 +159,7 @@ export async function reconcileHosts(hosts: string[], options: ReconcileOptions)
     unknownCount,
     receipts,
     providerProvisioning,
+    providerGating,
     taskAuthority: false,
   };
 }

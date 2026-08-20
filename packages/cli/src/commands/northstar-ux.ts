@@ -14,6 +14,7 @@ import {
   normalizeTrigger,
   TriggerQueue,
   readDomainReference,
+  consumeDomainReference,
   searchDomainReferences,
   resolveHarnessRoot,
   type EvidenceKind,
@@ -23,7 +24,7 @@ import {
 } from '@initforge/agent-rules-engine/northstar/index';
 import type { AgentKind } from '@initforge/agent-rules-engine/runner/headless-executor';
 
-export const NORTHSTAR_AGENTS: AgentKind[] = ['claude', 'codex', 'opencode', 'mimocode'];
+export const NORTHSTAR_AGENTS: AgentKind[] = ['claude', 'codex', 'opencode'];
 export const NORTHSTAR_EVIDENCE_KINDS: EvidenceKind[] = ['static', 'test', 'integration', 'api', 'browser', 'visual', 'mobile', 'security', 'scope', 'semantic', 'other'];
 
 export interface NorthStarCliConfig {
@@ -362,10 +363,19 @@ export async function northStarDrain(repoRoot: string, options: {
   return { processed: results.length, remaining: queue.list().filter((item) => item.record.status === 'READY').length, results };
 }
 
-export function northStarReference(repoRoot: string, packId: string, relativePath: string): ReturnType<typeof readDomainReference> {
+export function northStarReference(repoRoot: string, packId: string, relativePath: string, options: { component?: string; behavior?: string; anchor?: string; record?: boolean; workId?: string } = {}): ReturnType<typeof readDomainReference> {
   const harnessRoot = resolveHarnessRoot(repoRoot);
   const pack = loadDomainPack(harnessRoot, packId);
-  return readDomainReference(pack, relativePath);
+  const consumed = consumeDomainReference(pack, relativePath, { component: options.component, behavior: options.behavior, anchor: options.anchor });
+  if (options.record) {
+    // REQ-013: append the consumption receipt (append-only) so the result
+    // renderer can add the short disclosure footer for THIS work only.
+    const record = options.workId ? { ...consumed.receipt, work_id: options.workId } : consumed.receipt;
+    const receiptsFile = path.join(repoRoot, '.agent', 'domain-reference-receipts.jsonl');
+    fs.mkdirSync(path.dirname(receiptsFile), { recursive: true });
+    fs.appendFileSync(receiptsFile, `${JSON.stringify(record)}\n`, { mode: 0o600 });
+  }
+  return consumed;
 }
 
 
