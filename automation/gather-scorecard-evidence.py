@@ -535,17 +535,17 @@ def collect_effective_plan_binding(root: Path) -> dict[str, Any]:
         plan_sha = str(identity.get("sha256") or "")
         canonical = str(identity.get("canonical_json_utf8") or "")
         if not _SHA256_RE.fullmatch(plan_sha) or not canonical or sha256_text(canonical) != plan_sha:
-            return {**unavailable, "ledger_uri": str(ledger_path.relative_to(root))}
+            return {**unavailable, "ledger_uri": ledger_path.relative_to(root).as_posix()}
         pointer_effective = ""
         try:
             pointer_effective = str(dict(json.loads(_read_regular_nofollow(pointer_path).decode("utf-8")).get("canonical_ledger") or {}).get("observed_effective_sha256") or "")
         except (OSError, ValueError, json.JSONDecodeError):
             pass
         if pointer_effective and pointer_effective != plan_sha:
-            return {**unavailable, "ledger_uri": str(ledger_path.relative_to(root)), "reason": "current pointer effective-plan SHA does not match ledger"}
+            return {**unavailable, "ledger_uri": ledger_path.relative_to(root).as_posix(), "reason": "current pointer effective-plan SHA does not match ledger"}
         return {
             "sha256": plan_sha,
-            "ledger_uri": str(ledger_path.relative_to(root)),
+            "ledger_uri": ledger_path.relative_to(root).as_posix(),
             "ledger_hash": file_hash(ledger_path),
             "verified": True,
             "reason": "current pointer selects a hash-bound ledger whose effective-plan SHA-256 verifies",

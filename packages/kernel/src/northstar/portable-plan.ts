@@ -38,7 +38,13 @@ export interface CompiledDoD {
 
 export function compileDoD(input: { disposition: ExecutionDisposition; riskClass?: string; hasReleaseScope?: boolean }): CompiledDoD {
   if (input.disposition === 'PLAN_ONLY') return { required: ['CODE'], reason: 'plan-only scope: no behavior/release/terminal execution' };
-  if (input.disposition === 'EXPORT_HANDOFF') return { required: ['CODE', 'BEHAVIOR'], reason: 'export handoff: code + behavior proof' };
+  // EXPORT_HANDOFF keeps the FULL self-contained DoD. A generic worker receiving the
+  // one-copy handoff must complete the entire lifecycle (code/behavior/release/terminal)
+  // without rediscovery. DoD depth is compiled from claims/risk/release/live scope — NOT
+  // from "who executes" (the disposition only selects plan-only vs handoff vs local).
+  if (input.disposition === 'EXPORT_HANDOFF') {
+    return { required: ['CODE', 'BEHAVIOR', 'RELEASE', 'TERMINAL'], reason: 'export handoff: full self-contained DoD (code+behavior+release+terminal)' };
+  }
   const stages: CompiledDoDStage[] = ['CODE', 'BEHAVIOR'];
   if (input.hasReleaseScope || input.riskClass === 'S2' || input.riskClass === 'S3') stages.push('RELEASE');
   stages.push('TERMINAL');

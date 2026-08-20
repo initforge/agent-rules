@@ -1,33 +1,33 @@
 {
-  "work_id": "terminal-harness-vnext",
-  "plan_id": "terminal-harness-vnext",
-  "plan_root": ".agent/plans/terminal-harness-vnext",
+  "work_id": "terminal-harness-convergence-v1",
+  "plan_id": "terminal-harness-convergence-v1",
+  "plan_root": ".agent/plans/terminal-harness-convergence-v1",
   "original": {
-    "path": ".agent/plans/terminal-harness-vnext/original.md",
-    "sha256": "d7358d66d6e33096ca5266935074f3819d930ba46bf20af77f8f43e08dc96925"
+    "path": ".agent/plans/terminal-harness-convergence-v1/original.md",
+    "sha256": "7f3b092a641a729b4dacc7186c57db556aeadfce411200c2910b8680b54cb6da"
   },
   "canonical_ledger": {
-    "path": ".agent/ledger/terminal-harness-vnext.json",
-    "sha256": "05648c89c0c458fd3f0ad4707d0dc81c996b0f6d91136c6fada48c0723aa0d5d",
+    "path": ".agent/ledger/terminal-harness-convergence-v1.json",
+    "sha256": "e434225ef4b084798f4b082c8bd017032c1a3065c91ab9613f63116969df8cfa",
     "observed_revision": 0,
-    "observed_effective_sha256": "ad33e942263dbd6764789252a09433210d48a5127f9a5a9d605a928dc086b78f",
-    "plan_status": "ADOPTED",
-    "execution_state": "IN_PROGRESS"
+    "observed_effective_sha256": "06d00dd74c0abbc282ee468661a84057c7b465f095e481fb9facb5ac7298f8b7",
+    "plan_status": "COMPLETED",
+    "execution_state": "CLOSED"
   },
   "effective_chain_tip": {
     "amendment_id": "AM-0000",
-    "path": ".agent/plans/terminal-harness-vnext/original.md",
-    "sha256": "d7358d66d6e33096ca5266935074f3819d930ba46bf20af77f8f43e08dc96925"
+    "path": ".agent/plans/terminal-harness-convergence-v1/original.md",
+    "sha256": "7f3b092a641a729b4dacc7186c57db556aeadfce411200c2910b8680b54cb6da"
   },
   "candidate_chain_tip": {
     "amendment_id": "AM-0000",
     "status": "OWNER_APPROVED_EFFECTIVE",
-    "path": ".agent/plans/terminal-harness-vnext/original.md",
-    "sha256": "d7358d66d6e33096ca5266935074f3819d930ba46bf20af77f8f43e08dc96925"
+    "path": ".agent/plans/terminal-harness-convergence-v1/original.md",
+    "sha256": "7f3b092a641a729b4dacc7186c57db556aeadfce411200c2910b8680b54cb6da"
   },
   "contract": {
-    "path": ".agent/plans/terminal-harness-vnext/plan.md",
-    "sha256": "d7358d66d6e33096ca5266935074f3819d930ba46bf20af77f8f43e08dc96925",
+    "path": ".agent/plans/terminal-harness-convergence-v1/plan.md",
+    "sha256": "c62a1bf68d29b0ef54bc56464ca9955c78daf517ac1cf48c3350462a83f421c4",
     "schema_path": "schemas/execution-contract.schema.json",
     "requirement_ids": [
       "REQ-001",
@@ -52,24 +52,24 @@
       "REQ-020",
       "REQ-021"
     ],
-    "status": "EFFECTIVE"
+    "status": "TERMINAL"
   },
   "schema": "artifact/execution-contract",
   "version": 1,
   "kind": "current-pointer",
-  "generation": 32,
+  "generation": 33,
   "supersession": {
-    "transaction_id": "a85e77c0-cf7a-484b-af7f-93b8cfcb685f",
-    "previous_work_id": "northstar-on-demand-portable-harness",
-    "previous_plan_id": "northstar-on-demand-portable-harness",
-    "reason": "Owner-authorized successor activation: vNext terminal harness (frozen contract hash d7358d66) supersedes invalid northstar-on-demand-portable-harness closure",
-    "changed_at": "2026-08-19T11:38:10.029Z"
+    "transaction_id": "c8f1d2a0-1b3e-4c9a-8f7b-2d6e5c4b3a29",
+    "previous_work_id": "terminal-harness-vnext",
+    "previous_plan_id": "terminal-harness-vnext",
+    "reason": "Owner-authorized successor activation: terminal-harness-convergence-v1 supersedes terminally-invalid terminal-harness-vnext (AM-0001: SUPERSEDED/INACTIVE/PARTIAL). New plan carries 13-domain mapping, PF1-PF6, Terminality Gap and Root-Cause Gap.",
+    "changed_at": "2026-08-20T00:00:00Z"
   },
   "atomicity": {
     "protocol": "generation-compare-and-swap",
-    "expected_previous_generation": 31,
+    "expected_previous_generation": 32,
     "commit_target": ".agent/current.json",
-    "activation_state": "CANONICALLY_ACTIVATED",
-    "updated_at": "2026-08-19T11:38:10.029Z"
+    "activation_state": "DEACTIVATED_TERMINAL",
+    "updated_at": "2026-08-20T15:23:55.499Z"
   }
 }

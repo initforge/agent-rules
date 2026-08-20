@@ -47,9 +47,9 @@ describe('Phase 2 — compiled DoD / disposition', () => {
     expect(dod.required).toEqual(['CODE']);
   });
 
-  it('EXPORT_HANDOFF requires CODE+BEHAVIOR', () => {
+  it('EXPORT_HANDOFF keeps the full self-contained DoD', () => {
     const dod = compileDoD({ disposition: 'EXPORT_HANDOFF' });
-    expect(dod.required).toEqual(['CODE', 'BEHAVIOR']);
+    expect(dod.required).toEqual(['CODE', 'BEHAVIOR', 'RELEASE', 'TERMINAL']);
   });
 
   it('LOCAL_EXECUTE with S2 risk requires CODE+BEHAVIOR+RELEASE+TERMINAL', () => {

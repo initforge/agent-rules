@@ -29,11 +29,93 @@ export interface HostCapabilityAttestationV2 {
   };
   /** Baseline hints from the official host contract; only used when a live probe confirms them. */
   baseline: Partial<Record<keyof HostCapabilityAttestationV2['capabilities'], V2CapabilityStatus>>;
+  /** Provenance of the baseline: which official doc version it was refreshed from and when. */
+  contract_metadata: HostContractMetadata;
+  /** Secret redaction + path/effect policy applied to any persisted host/MCP/output. */
+  secret_redaction: SecretRedactionPolicy;
   probe: {
     probed_at?: string;
     probe_failed?: boolean;
     probe_error?: string;
   };
+}
+
+/**
+ * P4 — each host capability contract records the official doc version it was
+ * refreshed from, the access date, and the canonical source URL. A stale
+ * (expired) contract must not be treated as live certification.
+ */
+export interface HostContractMetadata {
+  doc_version: string;
+  doc_accessed_at: string;
+  source_url: string;
+  /** Days before this contract metadata is considered stale and must be re-verified. */
+  max_age_days: number;
+}
+
+export const HOST_CONTRACT_METADATA: Record<HostId, HostContractMetadata> = {
+  codex: {
+    doc_version: '2026-08',
+    doc_accessed_at: '2026-08-20',
+    source_url: 'https://learn.chatgpt.com/docs/config-file/config-reference',
+    max_age_days: 90,
+  },
+  claude: {
+    doc_version: '2026-08',
+    doc_accessed_at: '2026-08-20',
+    source_url: 'https://code.claude.com/docs/en/hooks',
+    max_age_days: 90,
+  },
+  opencode: {
+    doc_version: 'v2-2026-08',
+    doc_accessed_at: '2026-08-20',
+    source_url: 'https://opencode.ai/v2/docs/permissions',
+    max_age_days: 90,
+  },
+  cursor: {
+    doc_version: '2026-08',
+    doc_accessed_at: '2026-08-20',
+    source_url: 'https://docs.cursor.com/cli/reference/permissions',
+    max_age_days: 90,
+  },
+  antigravity: {
+    doc_version: '2026-08',
+    doc_accessed_at: '2026-08-20',
+    source_url: 'https://antigravity.google/docs/features',
+    max_age_days: 90,
+  },
+  grok: {
+    doc_version: '2026-08',
+    doc_accessed_at: '2026-08-20',
+    source_url: 'https://docs.x.ai/build/overview',
+    max_age_days: 90,
+  },
+};
+
+export interface SecretRedactionPolicy {
+  env_files: boolean;
+  credentials: boolean;
+  host_config: boolean;
+  mcp_output: boolean;
+  logs: boolean;
+  persisted_artifacts: boolean;
+}
+
+export const DEFAULT_SECRET_REDACTION: SecretRedactionPolicy = {
+  env_files: true,
+  credentials: true,
+  host_config: true,
+  mcp_output: true,
+  logs: true,
+  persisted_artifacts: true,
+};
+
+/** A contract is stale once it exceeds its max age; stale contracts cannot certify live. */
+export function isContractStale(meta: HostContractMetadata, now: Date = new Date()): boolean {
+  const accessed = Date.parse(meta.doc_accessed_at);
+  if (Number.isNaN(accessed)) return true;
+  const ageDays = (now.getTime() - accessed) / 86_400_000;
+  return ageDays > meta.max_age_days;
 }
 
 export function capabilityProven(status: V2CapabilityStatus | undefined): boolean {
@@ -76,6 +158,8 @@ export function hostCapabilityAttestationV2(host: HostId, probe?: { ok?: boolean
     host,
     capabilities,
     baseline,
+    contract_metadata: HOST_CONTRACT_METADATA[host] ?? { doc_version: 'unknown', doc_accessed_at: '1970-01-01', source_url: '', max_age_days: 0 },
+    secret_redaction: DEFAULT_SECRET_REDACTION,
     probe: {
       ...(probe?.ok !== undefined ? { probed_at: new Date().toISOString() } : {}),
       ...(probe?.ok === false ? { probe_failed: true } : {}),

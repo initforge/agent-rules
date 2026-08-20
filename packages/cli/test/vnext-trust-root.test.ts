@@ -148,8 +148,13 @@ describe("close — unified closure transaction (never false PASS)", () => {
   });
 
   it("commits manifest + residue + correction on a valid fixture", async () => {
-    
     seedPlan(fixture, "good", ["PASS", "PASS"]);
+    // Seed old ledger so correctInvalidClosure can atomically update it
+    fs.mkdirSync(path.join(fixture, ".agent", "ledger"), { recursive: true });
+    fs.writeFileSync(
+      path.join(fixture, ".agent", "ledger", "northstar-on-demand-portable-harness.json"),
+      JSON.stringify({ plan_id: "northstar-on-demand-portable-harness", status: "RETIRED", execution_state: "CLOSED" })
+    );
     git(fixture, ["add", "-A"]);
     git(fixture, ["commit", "-q", "-m", "seed"]);
     const result = await runClose(fixture, "good");

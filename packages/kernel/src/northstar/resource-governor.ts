@@ -160,3 +160,57 @@ export function assertResourceBudget(input: {
   }
   return policy;
 }
+
+/** Lanes shed first under memory pressure, in order of cost. */
+export const PRESSURE_SHED_ORDER: ResourceLane[] = ['browser', 'heavy_process', 'mcp', 'verifier'];
+
+interface LaneSlot {
+  active: number;
+  budget: number;
+}
+
+/**
+ * P5 — minimum viable lane controller. The runtime, verifier, browser, MCP and
+ * heavy build/full-suite processes acquire a lane slot via acquire() and release
+ * it in a finally block. The writer lane always serializes (budget 1). Under
+ * memory pressure the expensive lanes shrink first; an unknown Windows load state
+ * is never treated as idle (see observeHostResources).
+ */
+export class LaneController {
+  private readonly slots = new Map<ResourceLane, LaneSlot>();
+
+  constructor(budgets: readonly LaneBudget[] = DEFAULT_LANE_BUDGETS) {
+    for (const { lane, max_concurrency } of budgets) {
+      this.slots.set(lane, { active: 0, budget: max_concurrency });
+    }
+  }
+
+  acquire(lane: ResourceLane): boolean {
+    const slot = this.slots.get(lane);
+    if (!slot) return false;
+    if (slot.active >= slot.budget) return false;
+    slot.active += 1;
+    return true;
+  }
+
+  release(lane: ResourceLane): void {
+    const slot = this.slots.get(lane);
+    if (!slot) return;
+    slot.active = Math.max(0, slot.active - 1);
+  }
+
+  /** Shrink the most expensive lanes first when memory pressure rises. */
+  applyMemoryPressure(factor = 0.5): void {
+    for (const lane of PRESSURE_SHED_ORDER) {
+      const slot = this.slots.get(lane);
+      if (!slot) continue;
+      slot.budget = Math.max(0, Math.floor(slot.budget * factor));
+    }
+  }
+
+  utilization(): Record<ResourceLane, { active: number; budget: number }> {
+    const out = {} as Record<ResourceLane, { active: number; budget: number }>;
+    for (const [lane, slot] of this.slots) out[lane] = { active: slot.active, budget: slot.budget };
+    return out;
+  }
+}

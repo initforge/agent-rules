@@ -44,9 +44,13 @@ export interface McpIdleReceipt {
   state: McpLifecycleState;
   idle: boolean;
   managed_processes: number;
-  managed_cpu_ms: number;
-  managed_rss_bytes: number;
+  managed_cpu_ms: number | 'NOT_APPLICABLE';
+  managed_rss_bytes: number | 'NOT_APPLICABLE';
   managed_sockets: number;
+  /** Outstanding leases still held by the harness (idle-zero requires 0). */
+  managed_leases: number;
+  /** Harness-advertised provider/schema tokens still exposed (idle-zero requires 0). */
+  exposed_schema_tokens: number;
   schema_tokens: string[];
   invocation_count: number;
   teardown_at: string;
@@ -91,13 +95,25 @@ export function transitionMcpState(lease: McpLease, to: McpLifecycleState): McpL
 export function buildMcpIdleReceipt(input: {
   lease: McpLease;
   managed_processes: number;
-  managed_cpu_ms: number;
-  managed_rss_bytes: number;
+  managed_cpu_ms?: number;
+  managed_rss_bytes?: number;
   managed_sockets: number;
+  /** Outstanding leases still held by the harness. */
+  managed_leases?: number;
+  /** Harness-advertised provider/schema tokens still exposed. */
+  exposed_schema_tokens?: number;
   schema_tokens?: string[];
   invocation_count?: number;
 }): McpIdleReceipt {
-  const idle = input.managed_processes === 0 && input.managed_sockets === 0;
+  const leases = input.managed_leases ?? 0;
+  const exposed = input.exposed_schema_tokens ?? 0;
+  // Idle-zero = no harness-owned process / socket / lease / advertised provider /
+  // orphan / schema exposure. CPU/RSS only matter when there is PID attribution.
+  const idle = input.managed_processes === 0 && input.managed_sockets === 0 && leases === 0 && exposed === 0;
+  // CPU/RSS are recorded ONLY with PID attribution. With no process they are
+  // NOT_APPLICABLE — never fabricated as 0.
+  const cpu: number | 'NOT_APPLICABLE' = input.managed_processes === 0 ? 'NOT_APPLICABLE' : (input.managed_cpu_ms ?? 0);
+  const rss: number | 'NOT_APPLICABLE' = input.managed_processes === 0 ? 'NOT_APPLICABLE' : (input.managed_rss_bytes ?? 0);
   const body = {
     schema: 'agent-rules/mcp-idle-receipt/v1' as const,
     version: 1 as const,
@@ -110,12 +126,31 @@ export function buildMcpIdleReceipt(input: {
     state: 'TEARDOWN' as McpLifecycleState,
     idle,
     managed_processes: input.managed_processes,
-    managed_cpu_ms: input.managed_cpu_ms,
-    managed_rss_bytes: input.managed_rss_bytes,
+    managed_cpu_ms: cpu,
+    managed_rss_bytes: rss,
     managed_sockets: input.managed_sockets,
+    managed_leases: leases,
+    exposed_schema_tokens: exposed,
     schema_tokens: input.schema_tokens ?? [],
     invocation_count: input.invocation_count ?? 0,
     teardown_at: new Date().toISOString(),
   };
   return { ...body, receipt_sha256: createHash('sha256').update(JSON.stringify(body)).digest('hex') };
+}
+
+/**
+ * Fail-closed consumer guard: a receipt may never be accepted as idle-zero while
+ * any harness-owned process/socket/lease/advertised-provider/schema exposure
+ * remains. Callers must invoke this before treating teardown as idle; a false
+ * idle claim is rejected rather than silently trusted.
+ */
+export function assertIdleZeroReceipt(receipt: McpIdleReceipt): void {
+  if (receipt.idle && (
+    receipt.managed_processes > 0
+    || receipt.managed_sockets > 0
+    || receipt.managed_leases > 0
+    || receipt.exposed_schema_tokens > 0
+  )) {
+    throw new Error('MCP idle-zero FAIL-CLOSED: receipt claims idle with residual resources');
+  }
 }

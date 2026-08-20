@@ -7,24 +7,52 @@
 - Isolated branch `vnext/terminal-harness` created from baseline `e8481aa`; worktree clean.
 - Evidence: `.agent/evidence/terminal-harness-vnext/phase-0-proof.json`.
 
-## Phase 1 — IN PROGRESS
+## Phase 1 — COMPLETED
 
-- Unified closure service: `packages/kernel/src/northstar/closure-service.ts` (exported via kernel and engine facades).
-  - Mandatory gates: non-empty requirements, non-empty reconciliation, non-empty bound evidence, no unresolved/pending requirements, 40/64-hex behavioral baseline, complete four-identity binding.
-  - Evidence binding identities: harness_release, installation_projection, consumer_repository/candidate, host_runtime.
-  - Behavioral baseline B + allowlisted metadata commit C + exact-SHA terminal attestation.
-  - Prepare/stage/commit single-point transaction with idempotent replay.
-  - Invalid v1 closure correction -> SUPERSEDED/INACTIVE with terminal PARTIAL (never fabricates PASS).
-  - Operational state ignore markers for consumer worktrees (source-clean after closure).
-- CLI: `agent-rules close` rewired to the unified closure service (no shallow verified:true receipts, no empty-reconciliation PASS).
-- CLI: new `agent-rules activate <plan-id>` for bootstrap/supersession CAS pointer moves.
-- Tests: 19 kernel closure-service tests + 7 CLI trust-root tests PASS; kernel full suite 283 tests PASS.
+- Unified closure service (v2): `packages/kernel/src/northstar/closure-service.ts`
+  - A: `deriveOutcome` never defaults PASS; `evidence_status` required per requirement; all reconciliation records must pass (not `some`).
+  - B: atomic staging (rm residual → write → fsync → verify hash); atomic commit (single-commit-point); `manifest_hash` in receipt; idempotent replay with input drift detection.
+  - C: five-identity binding with harness ≠ consumer; `host_runtime.validation_status` VALIDATED/UNSUPPORTED/UNKNOWN.
+  - D: `attestTerminal` validates SHA matches baseline/candidate; validates evidence refs; binds to manifest_hash.
+  - E: metadata delta disallows source implementation files.
+  - F: `correctInvalidClosure` atomically updates ledger via stage→fsync→rename; returns BLOCKED when state insufficient.
+- Tests: 36/36 closure-service, 13/13 generic fixtures, 7/7 CLI trust-root.
 
 ### Proof
 
 - `.agent/evidence/terminal-harness-vnext/phase-1-proof.json`
 
-### Next
+## Phases 2–7 — COMPLETED
 
-- Activate successor pointer (CAS generation 31 -> 32) in the dogfood repo.
-- Phase 2: effective intent, disposition, compiled DoD, one-copy handoff.
+- Phase 2: intent corrections, `ExecutionDisposition`/`CompiledDoD`, target consumer identity.
+- Phase 3: causal map, `semantic_role`/`applicable_phases`, artifact admission.
+- Phase 4: MCP lifecycle `REGISTERED→TEARDOWN`, 7 resource lanes.
+- Phase 5: Mimocode retired (source + `candidate-fabric` + `registry` + `schema` + `platforms/`).
+- Phase 6: ledger `effective_plan_identity` hash fix.
+- Phase 7: `verify:all` PASSED.
+
+## Phase 8 — COMPLETED
+
+- G1–G4 generic fixture matrix: 13/13 PASS.
+- G1: fresh unrelated repo closure + source-clean + correction.
+- G2: project AGENTS.md preserved + source untouched.
+- G3: stale harness state corrected to SUPERSEDED/INACTIVE/PARTIAL.
+- G4: 6-host matrix, artifact admission, causal maps, CompiledDoD.
+
+## Phase 9 — COMPLETED
+
+- G1 live proof: activate + close + correction on fresh fixture.
+- 0 managed MCP processes (idle-zero).
+- Source-clean after closure (only operational ignores).
+- Terminal attestation receipt.
+- `verify:all` PASSED.
+
+## Final state
+
+- Branch: `vnext/terminal-harness` (13 commits from `e8481aa`)
+- Kernel: 325/325 ALL_PASS, 31 skipped
+- CLI: 557/557 ALL_PASS, 4 skipped
+- G1–G4: 13/13 PASS
+- `verify:all`: PASSED
+- Host evidence: OpenCode 1.18.18 (LIVE_CERTIFIED), Antigravity 2.8.1 (LIVE_CERTIFIED), Codex/Claude/Cursor/Grok (absent, static-only)
+- Frozen contract: `d7358d66`, generation `32` CANONICALLY_ACTIVATED

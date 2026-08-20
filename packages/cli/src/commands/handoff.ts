@@ -101,6 +101,10 @@ export async function handoffCmd(args: string[], opts: CliOptions): Promise<Comm
       request: inputs.request,
       spec: inputs.spec,
       packets: inputs.packets,
+      // Handoff is the one-copy export path: it must always carry the full
+      // self-contained DoD (code/behavior/release/terminal) so a generic worker
+      // receiving the artifact can finish the lifecycle without rediscovery.
+      disposition: "EXPORT_HANDOFF",
     });
     const authorizedAssumptions = [...(inputs.spec.assumed ?? []), ...commandOpts.assumption];
     const providedReferences = [...(inputs.spec.references ?? []).map((reference) => reference.path), ...commandOpts.providedReference];

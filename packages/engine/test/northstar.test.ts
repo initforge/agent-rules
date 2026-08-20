@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+﻿import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
@@ -138,7 +138,7 @@ describe('North-Star routing/context', () => {
     const packet = packets[0];
     packet.goal = 'Sửa module 5fedu lệch pattern drawer';
     const root = path.resolve(process.cwd(), '../..');
-    const broker = createStandardCapabilityBroker(root);
+    const broker = createStandardCapabilityBroker(root, { decisionFabricMode: 'shadow' });
     const routed = broker.route(packet, [], { activeProjectScope: '5fedu' });
     const direct = routeSkills(packet, root, { activeProjectScope: '5fedu' });
     expect(routed.skills).toEqual(direct);
@@ -477,7 +477,7 @@ describe('North-Star capability economy and semantic retrieval', () => {
     (packet as { capabilities?: string[] }).capabilities = undefined;
     packet.goal = 'Implement React frontend UI and verify it in the browser';
     packet.scope.owned = ['src/page.tsx'];
-    const broker = createStandardCapabilityBroker(path.resolve(process.cwd()));
+    const broker = createStandardCapabilityBroker(path.resolve(process.cwd()), { decisionFabricMode: 'shadow' });
     const normal = broker.route(packet);
     expect(normal.capabilities).toContain('browser.verify');
     expect(normal.providers['browser.verify']).toBe('playwright-cli');
@@ -494,7 +494,7 @@ describe('North-Star capability economy and semantic retrieval', () => {
     const packet = packets[0];
     (packet as { capabilities?: string[] }).capabilities = undefined;
     packet.goal = 'Diagnose production latency from logs, metrics, and OpenTelemetry traces';
-    const broker = createStandardCapabilityBroker(path.resolve(process.cwd()));
+    const broker = createStandardCapabilityBroker(path.resolve(process.cwd()), { decisionFabricMode: 'shadow' });
     const routed = broker.route(packet);
     expect(routed.providers['runtime.logs']).toBe('host-runtime-logs');
     expect(routed.providers['runtime.metrics']).toBe('host-runtime-metrics');
@@ -508,7 +508,7 @@ describe('North-Star capability economy and semantic retrieval', () => {
     const packet = packets[0];
     (packet as { capabilities?: string[] }).capabilities = undefined;
     packet.goal = 'Trace callers and references for a cross-file refactor';
-    const broker = createStandardCapabilityBroker(path.resolve(process.cwd()));
+    const broker = createStandardCapabilityBroker(path.resolve(process.cwd()), { decisionFabricMode: 'shadow' });
     const automatic = broker.route(packet);
     expect(automatic.providers['code.semantic']).toBe('codebase-memory-mcp');
     expect(automatic.suppressed).toContainEqual({ id: 'serena', reason: 'explicit-only provider was not requested' });

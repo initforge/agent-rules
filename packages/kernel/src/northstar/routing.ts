@@ -400,7 +400,7 @@ function registerManualExplicitProviders(broker: CapabilityBroker, harnessRoot: 
 export class CapabilityBroker {
   private readonly providers: CapabilityProvider[] = [];
 
-  constructor(private readonly harnessRoot?: string, private readonly decisionFabricMode: DecisionFabricMode = 'shadow') {}
+  constructor(private readonly harnessRoot?: string, private readonly decisionFabricMode: DecisionFabricMode = 'active') {}
 
   register(provider: CapabilityProvider): void {
     if (this.providers.some((p) => p.id === provider.id && p.capability === provider.capability)) throw new Error(`duplicate capability provider: ${provider.id} for ${provider.capability}`);
@@ -543,7 +543,7 @@ export function createDefaultCapabilityBroker(harnessRoot?: string): CapabilityB
  */
 export function createStandardCapabilityBroker(harnessRoot?: string, options: { decisionFabricMode?: DecisionFabricMode } = {}): CapabilityBroker {
   const resolvedRoot = resolveCapabilityHarnessRoot(harnessRoot ?? process.cwd());
-  const broker = new CapabilityBroker(resolvedRoot, options.decisionFabricMode ?? 'shadow');
+  const broker = new CapabilityBroker(resolvedRoot, options.decisionFabricMode ?? 'active');
   const builtins: CapabilityProvider[] = [
     { id: 'builtin-filesystem-read', capability: 'filesystem.read', priority: 1, tokenClass: 'low', trust: 'native-live', effect: { effect_level: 'read-only', environment: 'local', approval: 'policy', reversible: true, network: false, credentials: 'none', timeout_ms: 120000, provider_evidence: 'live-receipt' } },
     { id: 'builtin-filesystem-write', capability: 'filesystem.write', priority: 1, tokenClass: 'low', trust: 'native-live', effect: { effect_level: 'write', environment: 'local', approval: 'task-scope', reversible: true, network: false, credentials: 'none', timeout_ms: 120000, provider_evidence: 'live-receipt' } },

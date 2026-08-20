@@ -226,13 +226,19 @@ describe('Quality workflow validation', () => {
     expect(stepNames).toContain('Secret scanning');
   });
 
-  it('uses SHA-pinned semgrep and gitleaks actions', () => {
+  it('uses SHA-pinned semgrep action and a pinned-version gitleaks binary', () => {
     const wf = loadWorkflow('quality.yml');
     const securityJob = wf.jobs!.security;
     const semgrep = securityJob!.steps!.find(s => s.name === 'Semgrep SAST');
     const gitleaks = securityJob!.steps!.find(s => s.name === 'Secret scanning');
     expect(isShaPin(semgrep!.uses!)).toBe(true);
-    expect(isShaPin(gitleaks!.uses!)).toBe(true);
+    // After the history-convergence rewrite the ref's root has no parent, so
+    // gitleaks-action's `event.before^` base is ambiguous. The secret-scan step
+    // therefore runs a pinned-version gitleaks binary over the whole rewritten
+    // chain (root..HEAD) instead of the action's event-based diff range.
+    const run = gitleaks!.run ?? '';
+    expect(run).toContain('gitleaks_8.24.3_linux_x64.tar.gz');
+    expect(run).toContain('--log-opts');
   });
 
   it('aggregate checks both quality and security results', () => {

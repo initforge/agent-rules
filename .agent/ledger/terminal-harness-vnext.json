@@ -1,8 +1,9 @@
 {
   "schema_version": 4,
   "plan_id": "terminal-harness-vnext",
-  "status": "ACTIVE",
-  "execution_state": "IN_PROGRESS",
+  "status": "SUPERSEDED",
+  "execution_state": "INACTIVE",
+  "terminal_outcome": "PARTIAL",
   "created_at": "2026-08-19T00:00:00+07:00",
   "updated_at": "2026-08-19T00:00:00+07:00",
   "shadow_revision": 0,
@@ -41,6 +42,6 @@
   "closure_evidence": null,
   "tasks": {},
   "requirements": {},
-  "note": "Successor of northstar-on-demand-portable-harness (invalid v1 closure corrected to SUPERSEDED/INACTIVE with terminal PARTIAL). Owner-authorized frozen vNext contract; implementation proceeds phase by phase.",
+  "note": "Superseded by terminal-harness-convergence-v1 (AM-0001). Terminally invalid: old 'PASS' reports were not terminal truth; 21 source requirements remained pending and reconciliation was empty. Classified SUPERSEDED/INACTIVE/PARTIAL, never flipped to PASS.",
   "closure": null
 }

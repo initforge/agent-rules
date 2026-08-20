@@ -51,8 +51,20 @@ export interface ProofRouteReceipt {
   route_trace: string[];
 }
 
-/** The always-on router pipeline: trigger -> profile -> select -> receipt. */
-export function routeProofs(request: ProofRouteRequest, results: ProofReceiptInput['results'], opts: { evidence_refs?: string[]; escalation_decisions?: string[] } = {}): ProofRouteReceipt {
+/** Result of planning a proof route before execution. */
+export interface ProofRoutePlan {
+  trigger: ProofTriggerResult;
+  plan: ReturnType<typeof selectProofs>;
+}
+
+/**
+ * PLAN the proof route BEFORE execution: derive the trigger and select the
+ * minimal-sufficient proof set (including omitted-with-reason). Every host
+ * surface (CLI, runtime, resume, handoff, proof-plan, MCP/provider flows)
+ * calls this first to decide WHICH proofs to run — only the selected verifiers
+ * are executed.
+ */
+export function planProofRoute(request: ProofRouteRequest): ProofRoutePlan {
   const trigger = deriveProofTrigger(request.trigger);
   const plan = selectProofs({
     task_id: request.task_id,
@@ -67,8 +79,23 @@ export function routeProofs(request: ProofRouteRequest, results: ProofReceiptInp
     force_full_suite: request.force_full_suite,
     full_suite_reason: request.full_suite_reason,
   });
+  return { trigger, plan };
+}
+
+/**
+ * COMPLETE the proof route AFTER execution: build the receipt from actual
+ * results against the planned route. Only the proofs selected by
+ * `planProofRoute` are honored; omitted proofs carry their reason and
+ * invalidation condition.
+ */
+export function completeProofRoute(
+  request: ProofRouteRequest,
+  routePlan: ProofRoutePlan,
+  results: ProofReceiptInput['results'],
+  opts: { evidence_refs?: string[]; escalation_decisions?: string[] } = {},
+): ProofRouteReceipt {
   const receipt = buildProofReceipt({
-    plan,
+    plan: routePlan.plan,
     results,
     escalation_decisions: opts.escalation_decisions ?? [],
     environment: request.environment ?? 'deterministic',
@@ -78,18 +105,29 @@ export function routeProofs(request: ProofRouteRequest, results: ProofReceiptInp
     schema: 'agent-rules/proof-route-receipt/v1',
     version: 1,
     task_id: request.task_id,
-    trigger,
-    plan,
+    trigger: routePlan.trigger,
+    plan: routePlan.plan,
     receipt,
     route_trace: [
-      `trigger: ${trigger.surfaces.join(',')} (${trigger.reasons.length} reason(s))`,
-      `profile: ${plan.profile}`,
-      `fidelity: ${plan.required_fidelity}`,
-      `selected: ${plan.selected.length}, omitted: ${plan.omitted.length}`,
-      `full_suite: ${plan.full_suite_required}`,
+      `trigger: ${routePlan.trigger.surfaces.join(',')} (${routePlan.trigger.reasons.length} reason(s))`,
+      `profile: ${routePlan.plan.profile}`,
+      `fidelity: ${routePlan.plan.required_fidelity}`,
+      `selected: ${routePlan.plan.selected.length}, omitted: ${routePlan.plan.omitted.length}`,
+      `full_suite: ${routePlan.plan.full_suite_required}`,
       `final_status: ${receipt.final_status}`,
     ],
   };
+}
+
+/**
+ * The always-on router pipeline (composition helper): plan then complete in one
+ * call. Runtime/resume/handoff/provider flows that do not need to interleave
+ * execution may call this directly; surfaces that gate execution on the plan
+ * call `planProofRoute` first.
+ */
+export function routeProofs(request: ProofRouteRequest, results: ProofReceiptInput['results'], opts: { evidence_refs?: string[]; escalation_decisions?: string[] } = {}): ProofRouteReceipt {
+  const routePlan = planProofRoute(request);
+  return completeProofRoute(request, routePlan, results, opts);
 }
 
 export type { EvidenceCategory, ProofReceipt, ProofStatus };

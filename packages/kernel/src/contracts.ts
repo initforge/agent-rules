@@ -789,3 +789,95 @@ export function assertWorkLedger(ledger: WorkLedger, originalBytes: Uint8Array, 
     requireValue(ledger.repairSlices.every((item) => item.status === 'PASSED'), 'COMPLETED requires reviewed repair slices');
   }
 }
+
+// ---------------------------------------------------------------------------
+// Canonical terminal authority (convergence P1)
+//
+// ONE terminal authority is the single source of truth for CLI DONE / release /
+// closure / attestation / deactivation / compaction. The evidence ledger,
+// acceptance audit, convergence and closure-service reducers delegate to this
+// type; they must not keep independent terminal semantics.
+//
+// `PRE_EXISTING` is an evidence/proof STATUS only — never a terminal outcome.
+// Fail-closed ordering: FAILED -> NEEDS_USER -> BLOCKED -> UNSUPPORTED ->
+// PARTIAL -> PASS. Exit 0 and the words "DONE"/"completed" are produced ONLY
+// from PASS.
+// ---------------------------------------------------------------------------
+
+export type TrustedTerminalOutcome =
+  | 'PASS'
+  | 'PARTIAL'
+  | 'BLOCKED'
+  | 'FAILED'
+  | 'UNSUPPORTED'
+  | 'NEEDS_USER';
+
+/** Evidence/proof status only; never a terminal outcome. */
+export type ProofEvidenceStatus = 'PASS' | 'FAIL' | 'BLOCKED' | 'UNVERIFIED' | 'PRE_EXISTING';
+
+/** The five identities every proof/closure/install receipt must bind. */
+export interface TerminalEvidenceBinding {
+  harness_release: string;
+  installed_projection: string;
+  consumer_repository: string;
+  consumer_candidate: string;
+  host_runtime: string;
+}
+
+export interface TrustedTerminalDecision {
+  outcome: TrustedTerminalOutcome;
+  unresolved_requirements: readonly string[];
+  reason_codes: readonly string[];
+  bound_evidence: TerminalEvidenceBinding;
+  release_eligible: boolean;
+  closure_eligible: boolean;
+  attestation_eligible: boolean;
+  deactivation_eligible: boolean;
+  compaction_eligible: boolean;
+}
+
+/** Fail-closed precedence: earlier entries win over later ones. */
+export const TERMINAL_FAIL_CLOSED_ORDER: readonly TrustedTerminalOutcome[] = [
+  'FAILED',
+  'NEEDS_USER',
+  'BLOCKED',
+  'UNSUPPORTED',
+  'PARTIAL',
+  'PASS',
+];
+
+/** Return the worst (most fail-closed) outcome present in `candidates`. */
+export function failClosedOutcome(candidates: readonly TrustedTerminalOutcome[]): TrustedTerminalOutcome {
+  for (const outcome of TERMINAL_FAIL_CLOSED_ORDER) {
+    if (candidates.includes(outcome)) return outcome;
+  }
+  return 'PASS';
+}
+
+/** PASS only when outcome is PASS, nothing unresolved, and release+closure eligible. */
+export function isTerminalPass(decision: TrustedTerminalDecision): boolean {
+  return decision.outcome === 'PASS'
+    && decision.unresolved_requirements.length === 0
+    && decision.release_eligible
+    && decision.closure_eligible;
+}
+
+/**
+ * Single source of truth for the public verb rendered to an operator. "DONE" is
+ * produced ONLY from a terminal PASS; every other outcome renders a non-DONE
+ * verb. Diagnostic/prepare/status paths must use PREPARED/STATUS and must never
+ * claim task completion. This is the canonical guard against false-DONE.
+ */
+export type TerminalVerb = 'DONE' | 'NEEDS_USER' | 'BLOCKED' | 'PARTIAL' | 'FAILED' | 'UNSUPPORTED';
+
+export function terminalVerb(decision: TrustedTerminalDecision): TerminalVerb {
+  if (isTerminalPass(decision)) return 'DONE';
+  const nonPass: Record<Exclude<TrustedTerminalOutcome, 'PASS'>, TerminalVerb> = {
+    FAILED: 'FAILED',
+    NEEDS_USER: 'NEEDS_USER',
+    BLOCKED: 'BLOCKED',
+    UNSUPPORTED: 'UNSUPPORTED',
+    PARTIAL: 'PARTIAL',
+  };
+  return nonPass[decision.outcome as Exclude<TrustedTerminalOutcome, 'PASS'>];
+}

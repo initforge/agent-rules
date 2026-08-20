@@ -1,0 +1,111 @@
+plan_id: terminal-harness-convergence-v1
+canonical_chain: "symptom -> canonical authority -> host-neutral semantics -> host mapping -> install/migration -> consumer observation -> proof"
+
+maps:
+  - id: C-TERMINAL-AUTHORITY
+    symptom: "north-star run prints 'completed' and exits 0 for PARTIAL/FAILED; queue summary drops trusted_outcome."
+    canonical_authority: "evidence-ledger reducer / convergence reducer / closure service (to be merged into one TrustedTerminalDecision authority)"
+    host_neutral: "single outcome enum + five gates; outcome derived only from bound evidence and mandatory requirements"
+    host_mapping: "CLI renderer + queue runner + release automation consume the same decision; no independent success interpretation"
+    install_migration: "packaged harness used in isolated host home must render DONE only from PASS"
+    consumer_observation: "arbitrary consumer task run must not show completed for non-PASS"
+    proof: "adversarial: PARTIAL!=DONE, FAILED!=exit0, BLOCKED!=completed; G1/G2/G4"
+
+  - id: C-CLOSURE
+    symptom: "close synthesizes every requirement as evidence_status=pending yet stages/commits and returns Success; no attest->deactivate->compact composition."
+    canonical_authority: "Closure Service (canonical)"
+    host_neutral: "closure aggregates real evidence ledger + proof receipt + reconciliation + five identities"
+    host_mapping: "CLI close loads ledger/proof/reconciliation, not a filesystem primitive"
+    install_migration: "installed candidate closure must reject empty reconciliation/requirements"
+    consumer_observation: "consumer closure must be idempotent and identity-bound"
+    proof: "close with pending evidence does not produce PASS; double-close idempotent; G1 fresh, G3 upgraded"
+
+  - id: C-CLOSURE-TRANSACTION
+    symptom: "Linux/macOS CI EISDIR; replay does not bind full input/evidence/identity drift."
+    canonical_authority: "secure-fs cross-platform atomic/fsync helper"
+    host_neutral: "never openSync(dir,'r+'); fsync files; replay hashes all inputs + five identities"
+    host_mapping: "same helper on all OSes"
+    install_migration: "packaged harness closure works cross-platform in isolated home"
+    consumer_observation: "generic consumer repo closure/crash/replay behaves deterministically"
+    proof: "Linux/macOS/Windows stage/commit/correction/crash/replay/input-drift tests"
+
+  - id: C-DISPOSITION-DOD
+    symptom: "PLAN_ONLY and EXPORT_HANDOFF downgraded DoD; handoff defaults to LOCAL_EXECUTE."
+    canonical_authority: "compileDoD() driven by claims/risk/release/live scope"
+    host_neutral: "CompiledDoD independent of disposition/executor"
+    host_mapping: "handoff always EXPORT_HANDOFF with full DoD"
+    install_migration: "installed harness handoff keeps full CODE/BEHAVIOR/RELEASE/TERMINAL"
+    consumer_observation: "generic worker honors EXPORT_HANDOFF one-copy contract"
+    proof: "EXPORT_HANDOFF retains full DoD; handoff negative test"
+
+  - id: C-PROOF-ROUTER
+    symptom: "Adaptive Proof Router exists but production runtime runs full verifier mapping."
+    canonical_authority: "Proof Router planProofRoute()/completeProofRoute()"
+    host_neutral: "route before execution; run only selected; omit-with-reason"
+    host_mapping: "runtime/resume/proof-plan/handoff all use one route plan"
+    install_migration: "packaged harness uses router on production path"
+    consumer_observation: "generic consumer task runs fewer safe verifiers"
+    proof: "router truly reduces verifiers safely; omitted proofs carry reason"
+
+  - id: C-SKILLS
+    symptom: "Decision Fabric shadowed; legacy routeSkills()+literal phrase are actual authority."
+    canonical_authority: "Decision Fabric + typed RepoFacts/TaskFacts/policy"
+    host_neutral: "skill authority = explicit request + facts + phase + claim class + impact + risk + observed diff"
+    host_mapping: "phrase only a hint; default no skill; multilingual equivalent"
+    install_migration: "installed harness routes by facts, not repo name/path"
+    consumer_observation: "generic repo facts drive skill selection; no false domain authority"
+    proof: "Việt/Anh equivalent; phrase cannot self-grant dangerous authority"
+
+  - id: C-HOST-CONVERGENCE
+    symptom: "Capability contracts stale; enforcement decision not called across runtime/installer."
+    canonical_authority: "host adapter contracts + installer enforcement decision"
+    host_neutral: "static doc -> adapter metadata -> installed projection -> live receipt as one identity chain"
+    host_mapping: "enforcement order native -> broker -> isolated worktree -> BLOCKED"
+    install_migration: "adapter->projection->package hash->install->isolated home->generic session"
+    consumer_observation: "generic consumer session uses correct native mapping per host"
+    proof: "G4 static/live split; absent host stays NOT_LIVE_VERIFIED"
+
+  - id: C-ARTIFACT-ADMISSION
+    symptom: "Admission primitive exists but does not gate operational writes; evidence_required over-AUDITs tasks."
+    canonical_authority: "artifact admission at runtime/planner/handoff/evidence entrypoints"
+    host_neutral: "EPHEMERAL keeps minimal durable terminal evidence; support/audit state classified separately"
+    host_mapping: "operational state outside tracked consumer source or ignored harness state"
+    install_migration: "fresh install leaves no file forest in consumer repo"
+    consumer_observation: "fresh unrelated repo remains source-clean"
+    proof: "admission not bypassed; fresh repo source-clean; G1/G3"
+
+  - id: C-RESOURCE-LANES
+    symptom: "Seven lanes declared; runtime uses only global concurrency."
+    canonical_authority: "lane controller semaphore/lease"
+    host_neutral: "read_search/research/writer/browser/verifier/mcp/heavy_process lanes"
+    host_mapping: "writer serializes; expensive lanes shrink before pressure"
+    install_migration: "packaged harness connects lanes to runner/verifier/browser/MCP/build"
+    consumer_observation: "generic workload holds speed budget without dogfood cache bias"
+    proof: "duplicate reads/tool -30%, S0/S1 context -20%, no p50 regression on generic corpus"
+
+  - id: C-MCP-IDLE-ZERO
+    symptom: "idle=true only by process/socket; CPU/RSS no attribution; runner may swallow receipt write."
+    canonical_authority: "MCP receipt schema/predicate + cleanup fail-closed"
+    host_neutral: "idle-zero = no process/socket/lease/provider/orphan/schema exposure"
+    host_mapping: "CPU/RSS recorded only with PID attribution else NOT_APPLICABLE"
+    install_migration: "packaged harness teardown verified in isolated home"
+    consumer_observation: "generic no-MCP task leaves zero managed process/socket"
+    proof: "G1 no-MCP, G3 stale projection, concurrency, crash; cleanup receipt fail-closed"
+
+  - id: C-COMPOSITION-EVALS
+    symptom: "Primitive tests strong; public composition weak; G1-G4 mostly call kernel directly."
+    canonical_authority: "composition + adversarial oracle"
+    host_neutral: "test actual CLI/package/install/host path with adversarial oracle"
+    host_mapping: "generic fixtures + adversarial cases mandatory gates"
+    install_migration: "packaged harness exercised end-to-end in isolated homes"
+    consumer_observation: "arbitrary consumer runs reach terminal through full path"
+    proof: "G1-G4, one-copy, adversarial, 13-domain audit all pass"
+
+  - id: C-CANONICAL-STATE-HISTORY-CI
+    symptom: ".agent conflicts with executable truth; 284 commits; Quality red; Certification queued."
+    canonical_authority: "canonical source/evidence; final remote convergence protocol"
+    host_neutral: "progress receipts never stronger than source/evidence"
+    host_mapping: "current.json CAS pointer is the only active-plan authority"
+    install_migration: "deterministic commit-tree rewrite to <=9 commits; exact-SHA CI"
+    consumer_observation: "generic acceptance gates block release regardless of dogfood PASS"
+    proof: "rev-list count == 7; final tree == verified tree; remote == local; CI green on exact SHA"

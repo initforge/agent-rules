@@ -144,10 +144,15 @@ jobs:
         with:
           config: p/default
       - name: Secret scanning
-        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7
         timeout-minutes: 15
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          # gitleaks-action resolves the scan base from github.event.before. After the
+          # history convergence rewrite the ref is rewritten so the base commit has no
+          # parent, which makes `before^` ambiguous. Scan the whole rewritten chain
+          # (root..HEAD) deterministically instead.
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz | tar xz gitleaks
+          BASE="$(git rev-list --max-parents=0 HEAD)"
+          ./gitleaks detect --source . --config .gitleaks.toml --redact --report-format=sarif --report-path=results.sarif --log-opts="--first-parent --no-merges $BASE..HEAD"
 
   quality-aggregate:
     if: always()

@@ -220,7 +220,7 @@ describe('North-Star governance', () => {
     const request = createWorkRequest({ raw_intent: 'Verify visual parity in the browser' });
     const compiled = compileWorkSpec(request, { requirements: [{ statement: 'Parity is verified', claims: [{ statement: 'parity passes', class: 'runtime', verifier_id: 'V' }] }] });
     const [packet] = compileTaskPackets(compiled, [{ goal: 'Verify visual parity in the browser', requirement_ids: ['R-001'], claim_ids: ['C-001a'], owned: ['src'], verifier_by_claim: { 'C-001a': 'V' } }]);
-    const routed = createStandardCapabilityBroker(repoRoot).route(packet, [], { repoRoot });
+    const routed = createStandardCapabilityBroker(repoRoot, { decisionFabricMode: 'shadow' }).route(packet, [], { repoRoot });
     expect(routed.decision_fabric?.mode).toBe('shadow');
     expect(routed.skills[0]?.id).toBe('parity-verification');
     expect(routed.decision_fabric?.legacy?.skills).toContain('parity-verification');

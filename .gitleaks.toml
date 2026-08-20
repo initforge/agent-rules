@@ -1,0 +1,16 @@
+# gitleaks allowlist: scoped to explicit test-fixture / design / archived-evidence
+# files that intentionally contain dummy API-key-shaped literals. This does NOT
+# weaken scanning for real source/config: every other path is scanned strictly.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "dummy key-shaped literals in explicit test fixtures and design/evidence archives"
+paths = [
+  '''docs/design/agent_rules_controlplane\.pen''',
+  '''packages/engine/test/portable-checkpoint\.test\.ts''',
+  '''packages/kernel/test/checkpoint-resume-adversarial\.test\.ts''',
+  '''packages/control-plane/tests/services\.test\.ts''',
+  '''packages/control-plane/tests/api\.test\.ts''',
+  '''\.agent/archive/evidence/candidate-freeze-.*\.json''',
+]
