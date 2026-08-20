@@ -1,3 +1,8 @@
+> **LEGACY — compatibility reference only.** This template was replaced by the
+> portable plan contract. New plans must use
+> [`portable-plan-contract.md`](portable-plan-contract.md); do not reference this
+> file as the target for new plan or research handoff artifacts.
+
 # Executable plan template
 
 Scale detail to risk, but never omit implementation truth or proof. A plan is an execution contract, not an A-B-C topic list.

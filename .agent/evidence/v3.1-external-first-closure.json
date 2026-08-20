@@ -1,0 +1,83 @@
+{
+  "schema": "harness/v3.1-external-first-closure/v1",
+  "status": "PASS",
+  "plan_id": "v3.1-external-first",
+  "effective_plan_identity_sha256": "963ec943c23edc414cd1512f10bc13e153a27b194cb49836b1a495edb1aae2d6",
+  "source_phase_commit": "4a2435128936a58447248ac37d9507a08d8d3936",
+  "pointer_generation": 6,
+  "criteria_audit": {
+    "v3": 101,
+    "v3_1": 86,
+    "result": "PASS"
+  },
+  "local_verification": {
+    "command": "npm run verify:all",
+    "result": "PASS",
+    "suites": 108,
+    "tests": 2427,
+    "passed": 2426,
+    "failed": 0,
+    "approved_skips": 1,
+    "missing": 0,
+    "unreported": 0
+  },
+  "hosted_ci": {
+    "workflow": "Quality",
+    "run_id": "31555981548",
+    "run_url": "https://github.com/initforge/agent-rules/actions/runs/31555981548",
+    "head_sha": "4a2435128936a58447248ac37d9507a08d8d3936",
+    "attestation_sha256": "2b870d362360cd05b9c84362a637ff6e8277aa675f7f3af84ad10c42372433a7",
+    "required_jobs": {
+      "quality": "success",
+      "python_tests": "success",
+      "security": "success"
+    },
+    "self_referential_closure": false,
+    "status": "PASS"
+  },
+  "installation": {
+    "command": "node packages/cli/dist/index.js --json runtime reinstall all",
+    "result": "PASS",
+    "doctor_command": "node packages/cli/dist/index.js --json doctor all --skip-integration-verify",
+    "doctor_exit_code": 0,
+    "doctor_native_observed": 0,
+    "doctor_native_unverified": 7,
+    "effective_plan_sha256": "963ec943c23edc414cd1512f10bc13e153a27b194cb49836b1a495edb1aae2d6",
+    "effective_plan_ledger_sha256": "a455c18acfcc8e51d350a60060bd3e532f0257902078306d91b2ca49ca928775",
+    "installed_against_commit": "4a2435128936a58447248ac37d9507a08d8d3936",
+    "platforms": [
+      "codex",
+      "grok",
+      "antigravity",
+      "cursor",
+      "opencode",
+      "mimocode",
+      "claude"
+    ],
+    "receipt_sha256": [
+      "9e2dc1dd09ee0f8e12c633289b35a459cd804bef0445a1d61f0eef2bd178b466",
+      "e838bb4d1a51c792d0feb297061c55761ef15d78c673cd6168c7a9e95cb87cec",
+      "1297a95945604d811f8be7e48205bdd5e843ff894acc1f65364c7a8f1563fe40",
+      "2a3627332347d1203413b1224798c201b9fcb98c6c1a34faa06eeba52c208a4e",
+      "69de34fdf8ceab1b7fd671a9adc5a1eabf112744865eab0fadf25a116c4ac24e",
+      "f4e13821dc3fd9b931de9bef426c877609289df1965b2220d9b4728460868f4f",
+      "5a25ed7a1e6727e5d090bf8eafc435ae6ab7e28e3fdaec387033ed88f59ed8a5"
+    ]
+  },
+  "cleanup": {
+    "result": "PASS",
+    "purged": 5,
+    "tombstone": ".agent/tombstones/lifecycle-2026-08-12T01-57-37-174Z.json",
+    "historical_ledgers_retained": true
+  },
+  "residual_capabilities": {
+    "native_certification": {
+      "status": "BLOCKED",
+      "reason": "GitHub Actions reports zero self-hosted runners; native Certification cannot be synthesized"
+    },
+    "pencil": {
+      "status": "BLOCKED",
+      "reason": "Pencil desktop/editor or connected pencil-mcp/.pen capability is unavailable"
+    }
+  }
+}

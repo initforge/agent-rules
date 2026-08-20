@@ -45,7 +45,7 @@ const SUITES: EvalSuite[] = [
 
 function resolvePython(): string | null {
   for (const candidate of [process.env.PYTHON, "python3", "python"].filter((value): value is string => Boolean(value))) {
-    const probe = spawnSync(candidate, ["--version"], { encoding: "utf8", stdio: "pipe" });
+    const probe = spawnSync(candidate, ["--version"], { encoding: "utf8", stdio: "pipe", timeout: 15_000 });
     if (!probe.error && probe.status === 0) return candidate;
   }
   return null;

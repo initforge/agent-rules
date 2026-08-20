@@ -20,7 +20,7 @@ Use this capability to make a deliberate design read before changing a frontend 
 
 ## Routing precedence
 
-- **Control Plane:** Apple-inspired product-UI contract is authoritative; use this skill as an anti-slop and visual-review lens.
+- **Control Plane:** the approved Control Plane brief is authoritative; this skill is a brief/taste lens **only when the brief selects it** (anti-slop and visual review), never a default product direction.
 - **5fedu ERP:** `5fedu-module-parity`, module mapping, and the project shell are authoritative. Do not replace their information architecture, interaction contract, or reference shell. Load this skill only when an explicit taste review is requested.
 - **Landing, portfolio, or redesign:** infer direction from the brief; use the pinned upstream reference pack selectively.
 - **Image-first deliverables:** route image generation only when the requested output needs a visual asset or reference image.

@@ -23,12 +23,13 @@ def load_json(path: Path):
 
 
 KNOWN_PREFIXES = sorted([
-    "agent", "assignment", "capability", "claim-evidence", "context",
+    "agent", "assignment", "capability", "claim-evidence", "claim-evidence-envelope", "context",
     "decision", "delegation", "evidence", "intent", "model-route",
     "model-routing", "plan", "policy-approval", "profile", "requirement",
     "run-state", "scorecard-evidence", "telemetry",
+    "failure-eval", "sensor-policy", "repair-finding", "repair-packet",
+    "mcp-focus-receipt",
 ], key=lambda p: -len(p))
-
 
 def collect_fixtures(subdir: str):
     pos_dir = FIXTURES_DIR / subdir
@@ -50,6 +51,7 @@ def fixture_prefix_to_schema(prefix: str) -> str:
     mapping = {
         "agent": "agent-result",
         "claim-evidence": "claim-evidence",
+        "claim-evidence-envelope": "claim-evidence-envelope",
         "evidence": "evidence",
         "model-route": "model-route",
         "model-routing": "model-routing",

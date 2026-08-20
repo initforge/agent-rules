@@ -5,6 +5,25 @@ import { NORTH_STAR_PROTOCOL_VERSION, assertCapabilityManifest, type CapabilityM
 import { compareDecisionFabric, decide, loadRepoFacts, type DecisionFabricDecision, type DecisionFabricMode } from './decision-fabric.js';
 export type { DecisionFabricMode } from './decision-fabric.js';
 
+/**
+ * Additive capability aliases (REQ-002 / skill-mcp-fabric-v1). The logical
+ * capability names proposed by the fabric research resolve to the legacy
+ * canonical capability names the registry is keyed on. Legacy names remain
+ * canonical; aliases never rename or break existing providers.
+ */
+export const CAPABILITY_ALIASES: Readonly<Record<string, string>> = {
+  'docs.library': 'docs.lookup',
+  'shell.output.reduce': 'output.compress',
+  'code.graph': 'code.semantic',
+  'code.symbol': 'code.semantic',
+  'design.pen': 'design.inspect',
+};
+
+/** Resolve a requested capability to its canonical registry name (identity when unknown). */
+export function canonicalCapability(capability: string): string {
+  return CAPABILITY_ALIASES[capability] ?? capability;
+}
+
 export interface SkillRoute {
   id: string;
   primary: boolean;
@@ -366,6 +385,10 @@ function registerManualExplicitProviders(broker: CapabilityBroker, harnessRoot: 
     if (!fs.existsSync(manifestPath)) continue;
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as { id?: string; activation?: string; capabilities?: string[]; effect?: CapabilityEffect; health?: { command: string; expectedExitCodes: number[] }; fallback?: string };
     if (!manifest.id || !Array.isArray(manifest.capabilities)) continue;
+    // One concept has one owner (REQ-014): when the same integration id is
+    // already registered from the canonical integrations/registry.json, the
+    // manual manifest is a legacy mirror and must not register a second time.
+    if (broker.provider(manifest.id)) continue;
     if (manifest.activation !== 'explicit-only') throw new Error(`manual integration ${manifest.id} must be explicit-only`);
     if (!manifest.effect) throw new Error(`manual integration ${manifest.id} has no effect contract`);
     for (const capability of manifest.capabilities) {
@@ -385,8 +408,9 @@ export class CapabilityBroker {
   }
 
   resolve(capability: string, explicitProviders: readonly string[] = [], authorization: CapabilityAuthorization = {}): CapabilityProvider | null {
+    const canonical = canonicalCapability(capability);
     const eligible = this.providers
-      .filter((provider) => provider.capability === capability && provider.available !== false)
+      .filter((provider) => provider.capability === canonical && provider.available !== false)
       .filter((provider) => !provider.explicitOnly || explicitProviders.includes(provider.id))
       .filter((provider) => capabilityAuthorizationReason(provider, explicitProviders, authorization) === null);
     const explicitlyRequested = eligible
@@ -397,7 +421,8 @@ export class CapabilityBroker {
   }
 
   provider(id: string, capability?: string): CapabilityProvider | null {
-    return this.providers.find((provider) => provider.id === id && (!capability || provider.capability === capability)) ?? null;
+    const canonical = capability ? canonicalCapability(capability) : undefined;
+    return this.providers.find((provider) => provider.id === id && (!canonical || provider.capability === canonical)) ?? null;
   }
 
   hint(id: string, capability?: string): string | null {

@@ -1,0 +1,37 @@
+{
+  "schema": "harness/implementation-intent-receipt",
+  "version": 1,
+  "planId": "harness-universal-reconciliation-v1",
+  "planRevision": 4,
+  "taskId": "S4",
+  "requirementIds": [
+    "REQ-004",
+    "REQ-005",
+    "REQ-006"
+  ],
+  "claimIds": [
+    "C-004",
+    "C-005",
+    "C-006"
+  ],
+  "goal": "Implement seven-host inventory, projection, parity, and transactional repair.",
+  "ownedPaths": [
+    "packages/cli/src/automation/verify-runtime-state.ts",
+    "packages/cli/src/runtime",
+    "packages/cli/test/runtime-reconcile.test.ts",
+    "platforms"
+  ],
+  "forbiddenPaths": [
+    ".env",
+    ".git/objects",
+    "generated"
+  ],
+  "expectedChange": "Common HostAdapter detect/inventory/project/probe/repair/rollback contract over the seven registered hosts with unknown-host UNSUPPORTED, live installed-only inventory, desired-vs-actual reconciliation, and transactional per-host repair receipts.",
+  "proofPlan": [
+    "C-004:V-004",
+    "C-005:V-005",
+    "C-006:V-006"
+  ],
+  "understood": true,
+  "receiptSha256": "ba4e8dd0e012ed45d5cf22b1bbf73a8697dc7f30fff011770e747115bd6c555c"
+}

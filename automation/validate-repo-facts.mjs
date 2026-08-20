@@ -22,4 +22,5 @@ for (const fact of artifact.facts) {
   }
 }
 if (artifact.facts.some((fact) => String(fact.fact_id).startsWith('domain'))) throw new Error('RepoFacts must not infer business domain');
+if (artifact.hierarchy && (!Array.isArray(artifact.hierarchy.package_scopes) || !Array.isArray(artifact.hierarchy.source_scopes) || !Array.isArray(artifact.hierarchy.test_scopes))) throw new Error('RepoFacts hierarchy is malformed');
 process.stdout.write(JSON.stringify({ status: 'PASS', facts: artifact.facts.length, workspace: artifact.workspace_root }) + '\n');

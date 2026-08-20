@@ -1,0 +1,21 @@
+{
+  "schema": "harness/repair-finding",
+  "version": 1,
+  "finding_id": "F-pair-002",
+  "raw_text": "The owner now requires Control Plane work to begin before the harness closeout.",
+  "plan_id": "harness-universal-reconciliation-v1",
+  "candidate_epoch": 1,
+  "repository_state": {
+    "head_sha": "6e9a554a164e3a7d26df3cdb296392284c8c3166",
+    "worktree_dirty": false
+  },
+  "observed_surface": "conversation-report",
+  "classification": "changed_owner_intent",
+  "binding": {
+    "ledger_ref": ".agent/ledger/harness-universal-reconciliation-v1.json",
+    "diff_ref": "main..candidate",
+    "evidence_refs": [],
+    "authority_facts_agree": true
+  },
+  "created_at": "2026-08-12T12:05:00+07:00"
+}

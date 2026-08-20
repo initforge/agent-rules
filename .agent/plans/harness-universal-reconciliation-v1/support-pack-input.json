@@ -1,0 +1,1563 @@
+{
+  "schema": "harness/support-pack-input",
+  "version": 1,
+  "planId": "harness-universal-reconciliation-v1",
+  "revision": 4,
+  "rawIntent": "Implement Harness Universal Reconciliation v1 from the owner-authorized artifacts under .agent/plans/harness-universal-reconciliation-v1 without losing requirements, weakening proof, or performing unapproved Git closeout.",
+  "objective": "Deliver a portable prompt-first plan execution system with typed closed-loop reconciliation, conversational pair repair, complete skill/provider/host parity, semantic workflow convergence, pragmatic claim verification, visible local app behavior, bounded CI, dogfood, owner-gated closeout, and Control Plane eligibility only as the final phase.",
+  "decisions": [
+    "DEC-001",
+    "DEC-002",
+    "DEC-003",
+    "DEC-004",
+    "DEC-005",
+    "DEC-006",
+    "DEC-007",
+    "DEC-008",
+    "DEC-009",
+    "DEC-010",
+    "DEC-011",
+    "DEC-012",
+    "DEC-013",
+    "DEC-014",
+    "DEC-015",
+    "DEC-016",
+    "DEC-017",
+    "DEC-018",
+    "DEC-019",
+    "DEC-020",
+    "DEC-021",
+    "DEC-022"
+  ],
+  "assumptions": [],
+  "knownUnknowns": [],
+  "unresolved": [],
+  "requiresUser": [],
+  "requirements": [
+    {
+      "requirementId": "REQ-001",
+      "statement": "A portable hash-bound resumable execution bundle preserves the full approved plan.",
+      "claimIds": [
+        "C-001"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-002",
+      "statement": "Ordinary conversation is a sufficient first-class entrypoint, and conversation, optional slash commands, CLI/API calls, and native host actions compile into the same canonical WorkRequest; /goal is optional and never authoritative.",
+      "claimIds": [
+        "C-002"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-003",
+      "statement": "Worker recipes enforce intent receipts, ownership, checkpoints, amendments, and bounded repair.",
+      "claimIds": [
+        "C-003"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-004",
+      "statement": "Mechanical reconciliation covers plan, implementation, evidence, providers, hosts, and runtime state.",
+      "claimIds": [
+        "C-004"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-005",
+      "statement": "Every registered host adapter is supported and unknown hosts fail as UNSUPPORTED.",
+      "claimIds": [
+        "C-005"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-006",
+      "statement": "Installed hosts receive complete selected-skill and provider parity with repair receipts.",
+      "claimIds": [
+        "C-006"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-007",
+      "statement": "External sources are immutable, provenance-bound, qualified, and rollback-capable.",
+      "claimIds": [
+        "C-007"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-008",
+      "statement": "Selected skills materialize completely across installed hosts while unselected candidates remain links.",
+      "claimIds": [
+        "C-008"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-009",
+      "statement": "All named provider classes have claim-specific adapters and bounded lifecycle proof.",
+      "claimIds": [
+        "C-009"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-010",
+      "statement": "Verification is claim-complete, pragmatic, and behavior-oriented where appropriate.",
+      "claimIds": [
+        "C-010"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-011",
+      "statement": "Local browser, mobile, and Pencil sessions are foreground-observable.",
+      "claimIds": [
+        "C-011"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-012",
+      "statement": "Pencil discovery rejects persisted ephemeral mounts and follows safe install fallback.",
+      "claimIds": [
+        "C-012"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-013",
+      "statement": "Routing uses deterministic facts, impact, claim class, availability, and risk.",
+      "claimIds": [
+        "C-013"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-014",
+      "statement": "Context concepts have one canonical owner and proven behavior remains until parity.",
+      "claimIds": [
+        "C-014"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-015",
+      "statement": "CI processes and waits are bounded and unavailable native runners cannot block required checks forever.",
+      "claimIds": [
+        "C-015"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-016",
+      "statement": "The phase dogfoods its own bundles, reconciliation, routing, and evidence.",
+      "claimIds": [
+        "C-016"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-017",
+      "statement": "Plan compaction preserves authority and terminal evidence while reducing active artifacts.",
+      "claimIds": [
+        "C-017"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-018",
+      "statement": "Closeout is exact-receipt owner-gated and leaves final main/runtime/CI state reconciled.",
+      "claimIds": [
+        "C-018"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-019",
+      "statement": "Typed closed-loop sensors, evidence freshness and independence, failure-to-eval feedback, expiring model workarounds, and runtime clamps mechanically bound convergence.",
+      "claimIds": [
+        "C-019"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-020",
+      "statement": "High-impact rules and skills are semantically converged while full-catalog structural fixtures remain green.",
+      "claimIds": [
+        "C-020"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-021",
+      "statement": "Control Plane remains ineligible until complete skill/provider/tool/MCP/rule/command/host/runtime parity, terminal harness proof, green exact-SHA CI, fresh installed-host receipts, and owner-approved closeout; it then becomes the final phase.",
+      "claimIds": [
+        "C-021"
+      ],
+      "mandatory": true
+    },
+    {
+      "requirementId": "REQ-022",
+      "statement": "Ordinary review prompts support typed pair repair with raw-finding preservation, classification, claim-impact analysis, selective reopen, fresh evidence epochs, bounded repair packets, and immutable historical PASS evidence.",
+      "claimIds": [
+        "C-022"
+      ],
+      "mandatory": true
+    }
+  ],
+  "claims": [
+    {
+      "claimId": "C-001",
+      "statement": "A portable hash-bound resumable execution bundle preserves the full approved plan.",
+      "verifierIds": [
+        "V-001"
+      ]
+    },
+    {
+      "claimId": "C-002",
+      "statement": "Ordinary conversation and every available optional host entrypoint compile into semantically equivalent WorkRequests; /goal absence does not affect readiness or completion.",
+      "verifierIds": [
+        "V-002"
+      ]
+    },
+    {
+      "claimId": "C-003",
+      "statement": "Worker recipes enforce intent receipts, ownership, checkpoints, amendments, and bounded repair.",
+      "verifierIds": [
+        "V-003"
+      ]
+    },
+    {
+      "claimId": "C-004",
+      "statement": "Mechanical reconciliation covers plan, implementation, evidence, providers, hosts, and runtime state.",
+      "verifierIds": [
+        "V-004"
+      ]
+    },
+    {
+      "claimId": "C-005",
+      "statement": "Every registered host adapter is supported and unknown hosts fail as UNSUPPORTED.",
+      "verifierIds": [
+        "V-005"
+      ]
+    },
+    {
+      "claimId": "C-006",
+      "statement": "Installed hosts receive complete selected-skill and provider parity with repair receipts.",
+      "verifierIds": [
+        "V-006"
+      ]
+    },
+    {
+      "claimId": "C-007",
+      "statement": "External sources are immutable, provenance-bound, qualified, and rollback-capable.",
+      "verifierIds": [
+        "V-007"
+      ]
+    },
+    {
+      "claimId": "C-008",
+      "statement": "Selected skills materialize completely across installed hosts while unselected candidates remain links.",
+      "verifierIds": [
+        "V-008"
+      ]
+    },
+    {
+      "claimId": "C-009",
+      "statement": "All named provider classes have claim-specific adapters and bounded lifecycle proof.",
+      "verifierIds": [
+        "V-009"
+      ]
+    },
+    {
+      "claimId": "C-010",
+      "statement": "Verification is claim-complete, pragmatic, and behavior-oriented where appropriate.",
+      "verifierIds": [
+        "V-010"
+      ]
+    },
+    {
+      "claimId": "C-011",
+      "statement": "Local browser, mobile, and Pencil sessions are foreground-observable.",
+      "verifierIds": [
+        "V-011"
+      ]
+    },
+    {
+      "claimId": "C-012",
+      "statement": "Pencil discovery rejects persisted ephemeral mounts and follows safe install fallback.",
+      "verifierIds": [
+        "V-012"
+      ]
+    },
+    {
+      "claimId": "C-013",
+      "statement": "Routing uses deterministic facts, impact, claim class, availability, and risk.",
+      "verifierIds": [
+        "V-013"
+      ]
+    },
+    {
+      "claimId": "C-014",
+      "statement": "Context concepts have one canonical owner and proven behavior remains until parity.",
+      "verifierIds": [
+        "V-014"
+      ]
+    },
+    {
+      "claimId": "C-015",
+      "statement": "CI processes and waits are bounded and unavailable native runners cannot block required checks forever.",
+      "verifierIds": [
+        "V-015"
+      ]
+    },
+    {
+      "claimId": "C-016",
+      "statement": "The phase dogfoods its own bundles, reconciliation, routing, and evidence.",
+      "verifierIds": [
+        "V-016"
+      ]
+    },
+    {
+      "claimId": "C-017",
+      "statement": "Plan compaction preserves authority and terminal evidence while reducing active artifacts.",
+      "verifierIds": [
+        "V-017"
+      ]
+    },
+    {
+      "claimId": "C-018",
+      "statement": "Closeout is exact-receipt owner-gated and leaves final main/runtime/CI state reconciled.",
+      "verifierIds": [
+        "V-018"
+      ]
+    },
+    {
+      "claimId": "C-019",
+      "statement": "Typed feedforward and feedback sensors, runtime clamps, failure-to-eval conversion, and workaround retirement produce a mechanically auditable convergence loop.",
+      "verifierIds": [
+        "V-019"
+      ]
+    },
+    {
+      "claimId": "C-020",
+      "statement": "The high-impact workflow graph has no unresolved semantic contradictions and full-catalog structural fixtures still pass.",
+      "verifierIds": [
+        "V-020"
+      ]
+    },
+    {
+      "claimId": "C-021",
+      "statement": "The Control Plane final-phase gate denies all early activation and emits the successor only after complete harness parity, proof, installation, CI, and closeout.",
+      "verifierIds": [
+        "V-021"
+      ]
+    },
+    {
+      "claimId": "C-022",
+      "statement": "A normal review prompt can classify and repair a finding by selectively reopening affected claims with fresh proof while preserving unaffected terminal claims and historical PASS evidence.",
+      "verifierIds": [
+        "V-022"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "taskId": "S1",
+      "goal": "Unify the canonical plan/support-pack contract and compile ordinary conversation, optional slash commands, CLI/API calls, and native host actions into the same WorkRequest.",
+      "requirementIds": [
+        "REQ-001",
+        "REQ-002",
+        "REQ-003"
+      ],
+      "claimIds": [
+        "C-001",
+        "C-002",
+        "C-003"
+      ],
+      "dependencies": [],
+      "ownedPaths": [
+        "packages/kernel/src/northstar/support-pack.ts",
+        "packages/kernel/src/northstar/protocol.ts",
+        "packages/cli/src/services/plan-compiler.ts",
+        "packages/cli/src/services/intent-compiler.ts",
+        "packages/cli/src/commands/ingest.ts",
+        "packages/cli/src/commands/plan.ts",
+        "packages/cli/src/commands/goal.ts",
+        "schemas/plan.schema.json",
+        "schemas/worker-task-recipe.schema.json"
+      ],
+      "forbiddenPaths": [
+        ".env",
+        ".git/objects",
+        "generated",
+        ".agent/current.json"
+      ],
+      "sourceAnchors": [
+        {
+          "path": ".agent/plans/harness-universal-reconciliation-v1/original.md",
+          "section": "Observable outcome and plan handoff",
+          "lineStart": 27,
+          "lineEnd": 50,
+          "contentSha256": "0339412095b765d277109b8f755cd52ae33fd3c49c288926aa194a5a17b3c894",
+          "requirementId": "REQ-001"
+        },
+        {
+          "path": ".agent/plans/harness-universal-reconciliation-v1/amendments/AM-0003-prompt-first-pair-repair.md",
+          "section": "Entrypoint contract",
+          "lineStart": 14,
+          "lineEnd": 27,
+          "contentSha256": "ecd6dfff2e85eb071ccbddc6b59229907b1cc8b831caeae97ff300f5e6721ba1",
+          "requirementId": "REQ-002"
+        }
+      ],
+      "decisions": [
+        "DEC-001",
+        "DEC-006",
+        "DEC-011",
+        "DEC-014",
+        "DEC-018",
+        "DEC-021"
+      ],
+      "context": [
+        "Existing support-pack compiler is deterministic but library-only.",
+        "Ordinary conversation must be sufficient on every host and bind to durable artifact authority.",
+        "Slash commands and native host actions are optional ergonomic adapters over the same WorkRequest.",
+        "Current pointer stays on completed V3.1 until S8 activation."
+      ],
+      "microsteps": [
+        "Align v1 readers and define the new portable contract without breaking legacy artifacts.",
+        "Connect intent, plan, support-pack, checkpoints, and selective regeneration to the canonical WorkRequest ingestion path.",
+        "Compile normal prompts, optional slash commands, CLI/API requests, and native host actions into semantically equivalent WorkRequests while recording adapter identity.",
+        "Preserve optional OpenCode /goal as an emulated convenience and add no-command, invalid coverage, unresolved decision, scope, resume, and portability fixtures."
+      ],
+      "invariants": [
+        "Raw intent and owner decisions remain immutable source authority.",
+        "Workers cannot author PASS or mutate before an intent receipt.",
+        "Legacy readers remain until behavioral parity is proven."
+      ],
+      "edgeCases": [
+        "Material ambiguity remains at compile time.",
+        "An optional host adapter is absent or unavailable.",
+        "An amendment changes only one recipe."
+      ],
+      "proof": [
+        {
+          "claimId": "C-001",
+          "verifierId": "V-001",
+          "command": {
+            "executable": "npm",
+            "args": [
+              "run",
+              "build"
+            ],
+            "timeoutMs": 600000
+          }
+        },
+        {
+          "claimId": "C-002",
+          "verifierId": "V-002",
+          "command": {
+            "executable": "npm",
+            "args": [
+              "run",
+              "test:package-smoke",
+              "-w",
+              "packages/cli"
+            ],
+            "timeoutMs": 600000
+          }
+        },
+        {
+          "claimId": "C-003",
+          "verifierId": "V-003",
+          "command": {
+            "executable": "npx",
+            "args": [
+              "vitest",
+              "run",
+              "test/support-pack.test.ts"
+            ],
+            "cwd": "packages/engine",
+            "timeoutMs": 300000
+          }
+        }
+      ],
+      "rollback": [
+        "Keep v1 readers active.",
+        "Disable an optional adapter without deleting compiled artifacts or breaking ordinary prompts."
+      ],
+      "failurePlaybook": [
+        "Fix contract drift before downstream work.",
+        "If an optional adapter is unavailable, retain prompt-first execution and record the adapter state honestly."
+      ],
+      "stopIf": [
+        "A required owner decision is missing.",
+        "The implementation would hand-edit .agent/current.json."
+      ],
+      "tokenBudget": 12000,
+      "decisionSurfaceBudget": 24,
+      "modelTier": "expert",
+      "riskTier": "high"
+    },
+    {
+      "taskId": "S2",
+      "goal": "Implement immutable external source governance and complete selected-skill parity.",
+      "requirementIds": [
+        "REQ-007",
+        "REQ-008"
+      ],
+      "claimIds": [
+        "C-007",
+        "C-008"
+      ],
+      "dependencies": [
+        "S1"
+      ],
+      "ownedPaths": [
+        "skills/catalog.json",
+        "skills/candidate-fabric.json",
+        "automation/validate-external-sources.mjs",
+        "automation/validate-agent-skills.py",
+        "automation/validate-skill-catalog.py",
+        "schemas/skill-catalog.schema.json",
+        "schemas/skill-fabric-candidate.schema.json"
+      ],
+      "forbiddenPaths": [
+        ".env",
+        ".git/objects",
+        "generated"
+      ],
+      "sourceAnchors": [
+        {
+          "path": ".agent/plans/harness-universal-reconciliation-v1/original.md",
+          "section": "Skills and external sources",
+          "lineStart": 78,
+          "lineEnd": 90,
+          "contentSha256": "0339412095b765d277109b8f755cd52ae33fd3c49c288926aa194a5a17b3c894",
+          "requirementId": "REQ-007"
+        }
+      ],
+      "decisions": [
+        "DEC-004",
+        "DEC-007"
+      ],
+      "context": [
+        "SKILL.md is the portable source and ROUTE.json owns harness routing.",
+        "No-skill is a valid qualification result.",
+        "Selected skills must be complete on every detected host."
+      ],
+      "microsteps": [
+        "Define immutable source lock and qualification receipts for skills/tools/MCP/apps.",
+        "Implement hard gates and weighted qualification against no-skill/local composition.",
+        "Project the selected set to every detected host and compare hashes.",
+        "Reject unpinned, unsafe, unlicensed, conflicting, or negative-value candidates."
+      ],
+      "invariants": [
+        "Unselected candidates are never materialized.",
+        "External source content never becomes always-loaded merely because it is available."
+      ],
+      "edgeCases": [
+        "A repository moves its default branch.",
+        "One host ignores optional skill metadata.",
+        "A selected skill conflicts with a local canonical skill."
+      ],
+      "proof": [
+        {
+          "claimId": "C-007",
+          "verifierId": "V-007",
+          "command": {
+            "executable": "node",
+            "args": [
+              "automation/validate-external-sources.mjs"
+            ],
+            "timeoutMs": 600000
+          }
+        },
+        {
+          "claimId": "C-008",
+          "verifierId": "V-008",
+          "command": {
+            "executable": "python3",
+            "args": [
+              "automation/validate-agent-skills.py"
+            ],
+            "timeoutMs": 600000
+          }
+        }
+      ],
+      "rollback": [
+        "Downgrade new candidates to catalog-only.",
+        "Restore the previous selected-set manifest from its receipt."
+      ],
+      "failurePlaybook": [
+        "Quarantine a failed source lock.",
+        "Report host-specific projection drift without weakening other host receipts."
+      ],
+      "stopIf": [
+        "A license or immutable revision cannot be established.",
+        "Qualification requires owner business preference not in the contract."
+      ],
+      "tokenBudget": 10000,
+      "decisionSurfaceBudget": 20,
+      "modelTier": "expert",
+      "riskTier": "high"
+    },
+    {
+      "taskId": "S3",
+      "goal": "Implement provider-neutral adapters for the named verification capabilities.",
+      "requirementIds": [
+        "REQ-009"
+      ],
+      "claimIds": [
+        "C-009"
+      ],
+      "dependencies": [
+        "S1"
+      ],
+      "ownedPaths": [
+        "integrations/providers",
+        "automation/verification-profiles.json",
+        "automation/evidence-profiles.json",
+        "automation/select-verification.py",
+        "schemas/verification-profile.schema.json"
+      ],
+      "forbiddenPaths": [
+        ".env",
+        ".git/objects",
+        "generated"
+      ],
+      "sourceAnchors": [
+        {
+          "path": ".agent/plans/harness-universal-reconciliation-v1/original.md",
+          "section": "Capability and provider system",
+          "lineStart": 91,
+          "lineEnd": 112,
+          "contentSha256": "0339412095b765d277109b8f755cd52ae33fd3c49c288926aa194a5a17b3c894",
+          "requirementId": "REQ-009"
+        }
+      ],
+      "decisions": [
+        "DEC-008"
+      ],
+      "context": [
+        "Providers are replaceable capability edges, not kernel authority.",
+        "All providers are implemented in this phase but activated only by applicable facts and claims."
+      ],
+      "microsteps": [
+        "Define lifecycle adapters for Testcontainers, Pact, Schemathesis, Storybook, Maestro, Semgrep/CodeQL, k6, and OpenTelemetry.",
+        "Bind each provider to effects, prerequisites, health, timeout, rollback, evidence, and host support.",
+        "Add one positive, important negative, and unavailable/recovery fixture per provider.",
+        "Keep existing browser/search providers compatible."
+      ],
+      "invariants": [
+        "A missing optional provider cannot become PASS.",
+        "Performance checks require explicit thresholds.",
+        "Telemetry evidence cannot replace product acceptance."
+      ],
+      "edgeCases": [
+        "Docker or a device is unavailable.",
+        "A schema/provider is present but no applicable claim exists.",
+        "A provider process times out and leaves children."
+      ],
+      "proof": [
+        {
+          "claimId": "C-009",
+          "verifierId": "V-009",
+          "command": {
+            "executable": "node",
+            "args": [
+              "automation/validate-tool-registry.mjs"
+            ],
+            "timeoutMs": 600000
+          }
+        }
+      ],
+      "rollback": [
+        "Disable new provider IDs.",
+        "Retain prior provider registry and verification profiles."
+      ],
+      "failurePlaybook": [
+        "Return explicit unavailable evidence.",
+        "Terminate timed-out child processes and retain bounded logs."
+      ],
+      "stopIf": [
+        "Installation requires uncontrolled production credentials.",
+        "A provider cannot be made reversible or bounded."
+      ],
+      "tokenBudget": 12000,
+      "decisionSurfaceBudget": 24,
+      "modelTier": "expert",
+      "riskTier": "high"
+    },
+    {
+      "taskId": "S4",
+      "goal": "Implement seven-host inventory, projection, parity, and transactional repair.",
+      "requirementIds": [
+        "REQ-004",
+        "REQ-005",
+        "REQ-006"
+      ],
+      "claimIds": [
+        "C-004",
+        "C-005",
+        "C-006"
+      ],
+      "dependencies": [
+        "S1"
+      ],
+      "ownedPaths": [
+        "platforms",
+        "packages/cli/src/runtime",
+        "packages/cli/src/automation/verify-runtime-state.ts",
+        "packages/cli/test/runtime-reconcile.test.ts"
+      ],
+      "forbiddenPaths": [
+        ".env",
+        ".git/objects",
+        "generated"
+      ],
+      "sourceAnchors": [
+        {
+          "path": ".agent/plans/harness-universal-reconciliation-v1/original.md",
+          "section": "Reconciliation and host parity",
+          "lineStart": 51,
+          "lineEnd": 77,
+          "contentSha256": "0339412095b765d277109b8f755cd52ae33fd3c49c288926aa194a5a17b3c894",
+          "requirementId": "REQ-004"
+        }
+      ],
+      "decisions": [
+        "DEC-009",
+        "DEC-012"
+      ],
+      "context": [
+        "Current runtime verification covers only four hosts while contracts list seven.",
+        "Desktop apps may be installed without a PATH binary.",
+        "A stale config directory is not an installed host."
+      ],
+      "microsteps": [
+        "Introduce the common HostAdapter detect/inventory/project/probe/repair/rollback contract.",
+        "Implement fixture projections for all seven registered hosts and explicit unknown-host rejection.",
+        "Compute desired versus actual selected skills/providers/runtime state.",
+        "Repair safe drift transactionally and emit per-host receipts.",
+        "Verify live installed-only inventory without mutating absent hosts."
+      ],
+      "invariants": [
+        "Unknown hosts are UNSUPPORTED.",
+        "Availability never grants task authority.",
+        "Repair never overwrites unmanaged user configuration blindly."
+      ],
+      "edgeCases": [
+        "Desktop process exists without CLI binary.",
+        "A host has stale harness receipts but no application.",
+        "Repair fails after backup but before swap."
+      ],
+      "proof": [
+        {
+          "claimId": "C-004",
+          "verifierId": "V-004",
+          "command": {
+            "executable": "npx",
+            "args": [
+              "vitest",
+              "run",
+              "test/runtime-reconcile.test.ts"
+            ],
+            "cwd": "packages/cli",
+            "timeoutMs": 300000
+          }
+        },
+        {
+          "claimId": "C-005",
+          "verifierId": "V-005",
+          "command": {
+            "executable": "python3",
+            "args": [
+              "automation/test-platform-contracts.py"
+            ],
+            "timeoutMs": 600000
+          }
+        },
+        {
+          "claimId": "C-006",
+          "verifierId": "V-006",
+          "command": {
+            "executable": "node",
+            "args": [
+              "packages/cli/dist/index.js",
+              "--json",
+              "runtime",
+              "reconcile",
+              "all",
+              "--installed-only"
+            ],
+            "timeoutMs": 600000
+          }
+        }
+      ],
+      "rollback": [
+        "Restore every host from its transaction receipt.",
+        "Keep new inventory in report-only mode if repair parity fails."
+      ],
+      "failurePlaybook": [
+        "Mark only the affected host PARTIAL.",
+        "Do not count stale config as an application."
+      ],
+      "stopIf": [
+        "A host root cannot be resolved safely.",
+        "Repair would modify an unmanaged credential or destructive external state."
+      ],
+      "tokenBudget": 12000,
+      "decisionSurfaceBudget": 24,
+      "modelTier": "expert",
+      "riskTier": "critical"
+    },
+    {
+      "taskId": "S5",
+      "goal": "Complete visible browser/mobile/Pencil behavior using the proven detached candidate.",
+      "requirementIds": [
+        "REQ-011",
+        "REQ-012"
+      ],
+      "claimIds": [
+        "C-011",
+        "C-012"
+      ],
+      "dependencies": [
+        "S4"
+      ],
+      "ownedPaths": [
+        "packages/kernel/src/runner/mcp-config.ts",
+        "packages/kernel/src/runner/pencil-native.ts",
+        "packages/kernel/src/northstar/pencil-routing.ts",
+        "integrations/manual/pencil-mcp",
+        "integrations/optional/pencil-mcp",
+        "packages/cli/src/automation/merge-mcp-adapters.ts"
+      ],
+      "forbiddenPaths": [
+        ".env",
+        ".git/objects",
+        "generated"
+      ],
+      "sourceAnchors": [
+        {
+          "path": ".agent/plans/harness-universal-reconciliation-v1/original.md",
+          "section": "Visible application policy",
+          "lineStart": 113,
+          "lineEnd": 125,
+          "contentSha256": "0339412095b765d277109b8f755cd52ae33fd3c49c288926aa194a5a17b3c894",
+          "requirementId": "REQ-011"
+        }
+      ],
+      "decisions": [
+        "DEC-003",
+        "DEC-010"
+      ],
+      "context": [
+        "Detached candidate d23b12a/b5231f7 passes focused build and tests.",
+        "Its advertised host set exceeds actual materialization coverage.",
+        "Live Pencil AppImage paths are ephemeral."
+      ],
+      "microsteps": [
+        "Diff and migrate proven candidate behavior without blind cherry-pick.",
+        "Complete Pencil and foreground projection across all registered host adapters.",
+        "Discover stable/live Pencil launch data and reject persisted temporary mounts.",
+        "Require foreground local app observation and explicit CI headless receipts.",
+        "Implement safe user-space install and official-link fallback."
+      ],
+      "invariants": [
+        "Pencil remains explicit task capability.",
+        "Design evidence never replaces browser/runtime acceptance.",
+        "Local visible-app claims need observed foreground evidence."
+      ],
+      "edgeCases": [
+        "Pencil AppImage remounts under a new path.",
+        "Pencil is open but MCP is disconnected.",
+        "The environment has no display or requires elevation."
+      ],
+      "proof": [
+        {
+          "claimId": "C-011",
+          "verifierId": "V-011",
+          "command": {
+            "executable": "node",
+            "args": [
+              "automation/pencil-dogfood.mjs"
+            ],
+            "timeoutMs": 600000
+          }
+        },
+        {
+          "claimId": "C-012",
+          "verifierId": "V-012",
+          "command": {
+            "executable": "npx",
+            "args": [
+              "vitest",
+              "run",
+              "test/runner-mcp-config.test.ts"
+            ],
+            "cwd": "packages/engine",
+            "timeoutMs": 300000
+          }
+        }
+      ],
+      "rollback": [
+        "Restore manual explicit-only Pencil provider.",
+        "Retain foreground browser policy independently."
+      ],
+      "failurePlaybook": [
+        "Open the official install link and return NEEDS_USER for manual GUI/elevation.",
+        "Record MCP unavailable separately from app installed."
+      ],
+      "stopIf": [
+        "No visible display exists for a required local acceptance claim.",
+        "The only discovered command is an expired temporary mount."
+      ],
+      "tokenBudget": 10000,
+      "decisionSurfaceBudget": 18,
+      "modelTier": "expert",
+      "riskTier": "high"
+    },
+    {
+      "taskId": "S6",
+      "goal": "Implement typed closed-loop routing, evidence sensing, convergence clamps, and cheapest-sufficient claim verification.",
+      "requirementIds": [
+        "REQ-010",
+        "REQ-013",
+        "REQ-019"
+      ],
+      "claimIds": [
+        "C-010",
+        "C-013",
+        "C-019"
+      ],
+      "dependencies": [
+        "S2",
+        "S3",
+        "S4",
+        "S5"
+      ],
+      "ownedPaths": [
+        "packages/kernel/src/northstar/decision-fabric.ts",
+        "packages/kernel/src/northstar/routing.ts",
+        "packages/kernel/src/northstar/runtime.ts",
+        "packages/kernel/src/northstar/verification-graph.ts",
+        "packages/kernel/src/northstar/convergence.ts",
+        "packages/kernel/src/northstar/context-feedback.ts",
+        "schemas/sensor-policy.schema.json",
+        "schemas/failure-eval.schema.json",
+        "automation/route-parity-cases.json",
+        "automation/context-route-cases.json",
+        "automation/test-select-verification.py",
+        "automation/validate-feedback-flywheel.mjs",
+        "evals/harness"
+      ],
+      "forbiddenPaths": [
+        ".env",
+        ".git/objects",
+        "generated"
+      ],
+      "sourceAnchors": [
+        {
+          "path": ".agent/plans/harness-universal-reconciliation-v1/original.md",
+          "section": "Verification policy",
+          "lineStart": 126,
+          "lineEnd": 138,
+          "contentSha256": "0339412095b765d277109b8f755cd52ae33fd3c49c288926aa194a5a17b3c894",
+          "requirementId": "REQ-010"
+        },
+        {
+          "path": ".agent/plans/harness-universal-reconciliation-v1/amendments/AM-0001-control-loop-semantic-convergence.md",
+          "section": "Effective additions — closed-loop control",
+          "lineStart": 18,
+          "lineEnd": 32,
+          "contentSha256": "6f133d18e28d998f7aa3fdf84cce692e42a5183c7d82b3d7894bcc932ff4c968",
+          "requirementId": "REQ-019"
+        }
+      ],
+      "decisions": [
+        "DEC-005",
+        "DEC-013",
+        "DEC-015",
+        "DEC-017"
+      ],
+      "context": [
+        "Legacy routing still contains phrase-based skill and capability inference.",
+        "Decision Fabric facts exist but shadow mode retains legacy routing.",
+        "Existing evidence metadata does not type direction, oracle, freshness, independence, or workaround retirement.",
+        "The owner wants complete but pragmatic behavior proof."
+      ],
+      "microsteps": [
+        "Route from RepoFacts, ChangeFacts, TaskFacts, impact, claim class, provider health, and risk.",
+        "Type feedforward/feedback sensors with oracle class, lifecycle timing, applicability, cost, independence, freshness, confidence, and escalation.",
+        "Add testability audit, deterministic fallback/denial states, runtime authority/delegation/proof clamps, and two-attempt repair.",
+        "Convert repeated classified failures into reviewed eval candidates and require model workaround owner, trigger, expiry, revalidation, and retirement evidence.",
+        "Select real browser/device interaction for applicable business flows and scripts for contracts.",
+        "Add seeded route precision, unnecessary activation, failure-to-eval, stale/correlated evidence, workaround retirement, and bounded repair cases."
+      ],
+      "invariants": [
+        "Prompt keywords alone cannot activate a heavy provider.",
+        "Build-only proof cannot establish runtime behavior.",
+        "A worker cannot weaken verification after a failure."
+      ],
+      "edgeCases": [
+        "Several providers can prove the same claim.",
+        "A cheap provider is present but lacks required capability.",
+        "Two repair attempts fail."
+      ],
+      "proof": [
+        {
+          "claimId": "C-010",
+          "verifierId": "V-010",
+          "command": {
+            "executable": "python3",
+            "args": [
+              "automation/test-select-verification.py"
+            ],
+            "timeoutMs": 600000
+          }
+        },
+        {
+          "claimId": "C-013",
+          "verifierId": "V-013",
+          "command": {
+            "executable": "python3",
+            "args": [
+              "automation/validate-route-parity.py"
+            ],
+            "timeoutMs": 600000
+          }
+        },
+        {
+          "claimId": "C-019",
+          "verifierId": "V-019",
+          "command": {
+            "executable": "node",
+            "args": [
+              "automation/validate-feedback-flywheel.mjs"
+            ],
+            "timeoutMs": 600000
+          }
+        }
+      ],
+      "rollback": [
+        "Return Decision Fabric to shadow selection.",
+        "Retain emitted facts and route diagnostics."
+      ],
+      "failurePlaybook": [
+        "Escalate one logical capability class when allowed.",
+        "Return explicit blocker instead of silent fallback."
+      ],
+      "stopIf": [
+        "A required capability has no trusted provider.",
+        "Routing would infer business requirements from a reference implementation."
+      ],
+      "tokenBudget": 12000,
+      "decisionSurfaceBudget": 24,
+      "modelTier": "expert",
+      "riskTier": "critical"
+    },
+    {
+      "taskId": "S7",
+      "goal": "Converge lifecycle compaction and bounded CI.",
+      "requirementIds": [
+        "REQ-015",
+        "REQ-017"
+      ],
+      "claimIds": [
+        "C-015",
+        "C-017"
+      ],
+      "dependencies": [
+        "S1",
+        "S6"
+      ],
+      "ownedPaths": [
+        "packages/cli/src/cleanup/lifecycle.ts",
+        "packages/cli/src/commands/cleanup.ts",
+        "automation/verify-all.mjs",
+        ".github/workflows/quality.yml",
+        ".github/workflows/certification.yml",
+        "automation/validate-ci-timeouts.mjs"
+      ],
+      "forbiddenPaths": [
+        ".env",
+        ".git/objects",
+        "generated",
+        ".agent/plans/control-plane-v2",
+        "docs/handoffs"
+      ],
+      "sourceAnchors": [
+        {
+          "path": ".agent/plans/harness-universal-reconciliation-v1/original.md",
+          "section": ".agent compaction",
+          "lineStart": 180,
+          "lineEnd": 186,
+          "contentSha256": "0339412095b765d277109b8f755cd52ae33fd3c49c288926aa194a5a17b3c894",
+          "requirementId": "REQ-017"
+        }
+      ],
+      "decisions": [
+        "DEC-012"
+      ],
+      "context": [
+        "Current verify-all hard-codes completed V3/V3.1 closures.",
+        "Lifecycle cleanup only purges .agent/tmp while preserving other history uncompressed.",
+        "Self-hosted certification can wait in the GitHub queue outside job timeout."
+      ],
+      "microsteps": [
+        "Replace phase-specific active gates with generic pointer-driven validation while preserving historical checks.",
+        "Implement evidence-preserving content-addressed compaction and round-trip verification.",
+        "Add per-step/process/wait timeouts and detach unavailable self-hosted certification from required checks."
+      ],
+      "invariants": [
+        "Raw owner evidence never becomes always-loaded rules.",
+        "Historical terminal proof is never deleted.",
+        "Required CI cannot depend on an unavailable runner queue."
+      ],
+      "edgeCases": [
+        "An archive is interrupted before tombstone creation.",
+        "A historical validator is still referenced by documentation.",
+        "A CI service starts but wait-on never succeeds."
+      ],
+      "proof": [
+        {
+          "claimId": "C-015",
+          "verifierId": "V-015",
+          "command": {
+            "executable": "node",
+            "args": [
+              "automation/validate-ci-timeouts.mjs"
+            ],
+            "timeoutMs": 600000
+          }
+        },
+        {
+          "claimId": "C-017",
+          "verifierId": "V-017",
+          "command": {
+            "executable": "node",
+            "args": [
+              "packages/cli/dist/index.js",
+              "--json",
+              "cleanup",
+              "lifecycle",
+              "--dry-run"
+            ],
+            "timeoutMs": 600000
+          }
+        }
+      ],
+      "rollback": [
+        "Keep compaction in dry-run mode.",
+        "Restore phase validators as compatibility checks without making them current authority."
+      ],
+      "failurePlaybook": [
+        "Recover archives from content hashes and tombstones.",
+        "Fail CI timeout audit with the exact unbounded step."
+      ],
+      "stopIf": [
+        "Compaction would remove evidence needed for PASS.",
+        "A context change creates unresolved canonical/mirror ownership."
+      ],
+      "tokenBudget": 12000,
+      "decisionSurfaceBudget": 22,
+      "modelTier": "expert",
+      "riskTier": "critical"
+    },
+    {
+      "taskId": "S7A",
+      "goal": "Converge the high-impact rule and skill graph semantically across lifecycle, planning, completion, context, delegation, research, QA, quality, and UI precedence.",
+      "requirementIds": [
+        "REQ-014",
+        "REQ-020"
+      ],
+      "claimIds": [
+        "C-014",
+        "C-020"
+      ],
+      "dependencies": [
+        "S2",
+        "S3",
+        "S6",
+        "S7"
+      ],
+      "ownedPaths": [
+        "rules/25-task-lifecycle.md",
+        "rules/50-context-budget.md",
+        "skills/plan-and-handoff",
+        "skills/finish-to-completion",
+        "skills/context-evolution-protocol",
+        "skills/verification-router",
+        "skills/browser-qa",
+        "skills/quality",
+        "skills/researcher",
+        "skills/best-of-n",
+        "skills/ui-taste",
+        "skills/frontend-architect",
+        "automation/validate-workflow-semantics.mjs",
+        "automation/workflow-semantic-cases.json"
+      ],
+      "forbiddenPaths": [
+        ".env",
+        ".git/objects",
+        "generated",
+        ".agent/plans/control-plane-v2",
+        "docs/handoffs"
+      ],
+      "sourceAnchors": [
+        {
+          "path": ".agent/plans/harness-universal-reconciliation-v1/amendments/AM-0001-control-loop-semantic-convergence.md",
+          "section": "Effective additions — semantic workflow convergence",
+          "lineStart": 33,
+          "lineEnd": 41,
+          "contentSha256": "6f133d18e28d998f7aa3fdf84cce692e42a5183c7d82b3d7894bcc932ff4c968",
+          "requirementId": "REQ-020"
+        }
+      ],
+      "decisions": [
+        "DEC-014",
+        "DEC-016",
+        "DEC-019"
+      ],
+      "context": [
+        "Current structural validators pass despite known cross-file semantic contradictions.",
+        "Repository invariants cap workers at two with no recursion regardless of skill-local defaults.",
+        "Control Plane visual precedence belongs to its approved brief; generic UI advice is subordinate.",
+        "Full-catalog validation remains required after focused high-impact convergence."
+      ],
+      "microsteps": [
+        "Encode the known contradiction corpus before changing policy owners.",
+        "Resolve delegation receipt shape, context work sizing, repository worker clamps, browser support loading, legacy PAF references, and Control Plane UI precedence.",
+        "Declare one canonical owner and explicit precedence for each corrected concept without duplicating prose across layers.",
+        "Run focused semantic fixtures plus full rule, skill-catalog, route, link, and mirror validation."
+      ],
+      "invariants": [
+        "Runtime clamps override skill-local widening.",
+        "No prompt keyword alone activates capability or authority.",
+        "Proven legacy behavior remains until behavioral/eval parity."
+      ],
+      "edgeCases": [
+        "A standalone skill advertises more workers than the repository permits.",
+        "A browser task needs QA reasoning but not the full QA skill.",
+        "Generic frontend guidance conflicts with an approved Control Plane brief."
+      ],
+      "proof": [
+        {
+          "claimId": "C-014",
+          "verifierId": "V-014",
+          "command": {
+            "executable": "python3",
+            "args": [
+              "automation/validate-rule-contracts.py"
+            ],
+            "timeoutMs": 600000
+          }
+        },
+        {
+          "claimId": "C-020",
+          "verifierId": "V-020",
+          "command": {
+            "executable": "node",
+            "args": [
+              "automation/validate-workflow-semantics.mjs"
+            ],
+            "timeoutMs": 600000
+          }
+        }
+      ],
+      "rollback": [
+        "Revert only semantic changes that fail the contradiction corpus.",
+        "Retain audit evidence and structural validators."
+      ],
+      "failurePlaybook": [
+        "Report the exact owner/precedence conflict instead of merging contradictory rules.",
+        "Keep unresolved policy fail-closed and local to the affected workflow."
+      ],
+      "stopIf": [
+        "Resolving a contradiction requires a new owner business preference.",
+        "A change would widen authority or weaken proof."
+      ],
+      "tokenBudget": 10000,
+      "decisionSurfaceBudget": 20,
+      "modelTier": "expert",
+      "riskTier": "high"
+    },
+    {
+      "taskId": "S7B",
+      "goal": "Implement prompt-first conversational pair repair with finding classification, claim-impact analysis, selective reopen, bounded repair packets, and fresh evidence epochs.",
+      "requirementIds": [
+        "REQ-022"
+      ],
+      "claimIds": [
+        "C-022"
+      ],
+      "dependencies": [
+        "S1",
+        "S6",
+        "S7",
+        "S7A"
+      ],
+      "ownedPaths": [
+        "packages/kernel/src/northstar/pair-repair.ts",
+        "packages/kernel/src/northstar/claim-impact.ts",
+        "packages/cli/src/commands/repair.ts",
+        "schemas/repair-finding.schema.json",
+        "schemas/repair-packet.schema.json",
+        "automation/validate-pair-repair.mjs",
+        "evals/harness/pair-repair"
+      ],
+      "forbiddenPaths": [
+        ".env",
+        ".git/objects",
+        "generated",
+        ".agent/current.json",
+        ".agent/plans/control-plane-v2",
+        "docs/handoffs"
+      ],
+      "sourceAnchors": [
+        {
+          "path": ".agent/plans/harness-universal-reconciliation-v1/amendments/AM-0003-prompt-first-pair-repair.md",
+          "section": "Pair-repair lifecycle",
+          "lineStart": 29,
+          "lineEnd": 51,
+          "contentSha256": "ecd6dfff2e85eb071ccbddc6b59229907b1cc8b831caeae97ff300f5e6721ba1",
+          "requirementId": "REQ-022"
+        }
+      ],
+      "decisions": [
+        "DEC-021",
+        "DEC-022"
+      ],
+      "context": [
+        "Long-plan execution state lives in artifacts rather than a specific chat session.",
+        "Owner review findings may arrive through ordinary conversation during execution or after apparent PASS.",
+        "Historical evidence is append-only; only affected claims become non-terminal for a new candidate epoch."
+      ],
+      "microsteps": [
+        "Define repair finding, classification, candidate epoch, impact set, stale-evidence, and repair-packet contracts.",
+        "Bind raw review text to the exact plan, repository state, candidate, and observed surface before mutation.",
+        "Classify defects, requirement changes, evidence defects, environment/provider issues, and unrelated observations with fail-closed ambiguity handling.",
+        "Compute requirement, claim, task, file, provider, and evidence impact; reopen only affected claims and preserve historical PASS records.",
+        "Generate the smallest bounded repair packet, resume through ordinary conversation, and require claim-matched fresh proof plus risk-triggered regression."
+      ],
+      "invariants": [
+        "Prompt wording alone cannot choose plan authority or impact scope.",
+        "Unaffected accepted claims remain terminal.",
+        "A changed owner requirement becomes an amendment, not a disguised defect.",
+        "Historical PASS evidence is never rewritten or deleted."
+      ],
+      "edgeCases": [
+        "Several active plans could own the same finding.",
+        "A finding is reproducible only on an unavailable provider or device.",
+        "A small defect changes a shared contract and expands regression impact.",
+        "The owner finding actually changes approved intent."
+      ],
+      "proof": [
+        {
+          "claimId": "C-022",
+          "verifierId": "V-022",
+          "command": {
+            "executable": "node",
+            "args": [
+              "automation/validate-pair-repair.mjs"
+            ],
+            "timeoutMs": 600000
+          }
+        }
+      ],
+      "rollback": [
+        "Disable pair-repair mutations while retaining report-only classification and impact analysis.",
+        "Restore the prior candidate epoch from append-only ledger and evidence records."
+      ],
+      "failurePlaybook": [
+        "Return NEEDS_USER when plan authority or changed owner intent cannot be determined.",
+        "Return BLOCKED/PARTIAL with exact missing provider or evidence facts after bounded attempts."
+      ],
+      "stopIf": [
+        "Repair would silently widen scope or alter an approved requirement.",
+        "Impact cannot be bounded from repository, ledger, diff, candidate, and evidence facts.",
+        "Repair would rewrite historical PASS evidence."
+      ],
+      "tokenBudget": 10000,
+      "decisionSurfaceBudget": 18,
+      "modelTier": "expert",
+      "riskTier": "high"
+    },
+    {
+      "taskId": "S8",
+      "goal": "Integrate, CAS-activate, dogfood, reinstall detected hosts, prepare closeout, and emit Control Plane V2 only after its final-phase eligibility gate passes.",
+      "requirementIds": [
+        "REQ-016",
+        "REQ-018",
+        "REQ-021"
+      ],
+      "claimIds": [
+        "C-016",
+        "C-018",
+        "C-021"
+      ],
+      "dependencies": [
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7",
+        "S7A",
+        "S7B"
+      ],
+      "ownedPaths": [
+        "integrations/registry.json",
+        "packages/cli/src/index.ts",
+        "packages/cli/src/commands/closeout.ts",
+        "packages/cli/src/integration/installer-registry.ts",
+        ".agent/current.json",
+        ".agent/ledger/harness-universal-reconciliation-v1.json",
+        ".agent/artifacts/harness-universal-reconciliation-v1",
+        "automation/validate-control-plane-final-gate.mjs",
+        "automation/validate-entrypoint-parity.mjs"
+      ],
+      "forbiddenPaths": [
+        ".env",
+        ".git/objects",
+        "generated",
+        ".agent/plans/control-plane-v2",
+        "docs/handoffs"
+      ],
+      "sourceAnchors": [
+        {
+          "path": ".agent/plans/harness-universal-reconciliation-v1/original.md",
+          "section": "Dogfood, closeout, compaction, and completion",
+          "lineStart": 162,
+          "lineEnd": 204,
+          "contentSha256": "0339412095b765d277109b8f755cd52ae33fd3c49c288926aa194a5a17b3c894",
+          "requirementId": "REQ-016"
+        },
+        {
+          "path": ".agent/plans/harness-universal-reconciliation-v1/amendments/AM-0002-control-plane-final-phase-gate.md",
+          "section": "Eligibility gate",
+          "lineStart": 12,
+          "lineEnd": 33,
+          "contentSha256": "78fd0258f385b87a0751a6c75137af81c0e985c8dddb13bd94063f1f862211ee",
+          "requirementId": "REQ-021"
+        },
+        {
+          "path": ".agent/plans/harness-universal-reconciliation-v1/amendments/AM-0003-prompt-first-pair-repair.md",
+          "section": "Impact allocation",
+          "lineStart": 61,
+          "lineEnd": 67,
+          "contentSha256": "ecd6dfff2e85eb071ccbddc6b59229907b1cc8b831caeae97ff300f5e6721ba1",
+          "requirementId": "REQ-016"
+        }
+      ],
+      "decisions": [
+        "DEC-001",
+        "DEC-002",
+        "DEC-011",
+        "DEC-012",
+        "DEC-014",
+        "DEC-019",
+        "DEC-020",
+        "DEC-021",
+        "DEC-022"
+      ],
+      "context": [
+        "Current pointer generation is 6 and points to completed V3.1.",
+        "Git closeout mutations require an exact approved receipt.",
+        "Final main and candidate SHAs both require hosted CI evidence.",
+        "Ordinary prompts are the primary portable entrypoint and optional adapters must produce semantic-parity receipts.",
+        "S7B provides conversational pair repair with selective claim reopening and fresh evidence epochs.",
+        "Control Plane V2 is the final phase and remains ineligible until complete skill/provider/tool/MCP/rule/command/host/runtime parity, terminal proof, required CI, fresh install receipts, and owner-approved harness closeout."
+      ],
+      "microsteps": [
+        "Integrate shared registries and resolve all cross-slice contract drift.",
+        "Run full local verification and dogfood ordinary-prompt start, resume, review, and pair-repair paths.",
+        "Prove optional slash/CLI/native adapters compile to the same WorkRequest semantics and that adapter absence does not fail readiness.",
+        "Create the planned canonical ledger and CAS-supersede current authority after generic gates pass.",
+        "Reinstall and reconcile every detected host against the exact candidate.",
+        "Compile evidence, CI expectations, branch/worktree targets, and runtime receipts into CloseoutReceipt.",
+        "Run the negative Control Plane final-gate fixture, prove every prerequisite against exact candidate receipts, and emit the final successor handoff only after owner-approved closeout.",
+        "Stop for owner approval before any authorized Git closeout mutation."
+      ],
+      "invariants": [
+        "Current pointer is never hand-edited.",
+        "Only verifier evidence can produce PASS.",
+        "No commit, push, main update, branch deletion, worktree removal, or deploy occurs before receipt approval.",
+        "Control Plane design, source edits, Docker packaging, and activation are denied before the final-phase gate passes."
+      ],
+      "edgeCases": [
+        "Remote main changes after receipt preparation.",
+        "Candidate CI passes but final main CI fails.",
+        "A detected host becomes unavailable during reinstall.",
+        "Every implementation claim passes but one detected host has stale skill or runtime receipts.",
+        "An optional slash command is unavailable while ordinary-prompt execution remains healthy."
+      ],
+      "proof": [
+        {
+          "claimId": "C-016",
+          "verifierId": "V-016",
+          "command": {
+            "executable": "node",
+            "args": [
+              "automation/validate-entrypoint-parity.mjs"
+            ],
+            "timeoutMs": 600000
+          }
+        },
+        {
+          "claimId": "C-018",
+          "verifierId": "V-018",
+          "command": {
+            "executable": "node",
+            "args": [
+              "packages/cli/dist/index.js",
+              "--json",
+              "closeout",
+              "prepare"
+            ],
+            "timeoutMs": 600000
+          }
+        },
+        {
+          "claimId": "C-021",
+          "verifierId": "V-021",
+          "command": {
+            "executable": "node",
+            "args": [
+              "automation/validate-control-plane-final-gate.mjs"
+            ],
+            "timeoutMs": 600000
+          }
+        }
+      ],
+      "rollback": [
+        "Use runtime transaction receipts.",
+        "Invalidate stale CloseoutReceipt and prepare a new one.",
+        "Use a new owner-approved supersession rather than rewriting current authority."
+      ],
+      "failurePlaybook": [
+        "Repair integration failures within claim budgets.",
+        "Return PARTIAL/BLOCKED with exact CI, host, or authority evidence."
+      ],
+      "stopIf": [
+        "Any acceptance claim lacks evidence.",
+        "Owner approval for exact closeout actions is absent.",
+        "Remote or local target identity differs from the approved receipt.",
+        "Any Control Plane final-phase prerequisite is missing or stale."
+      ],
+      "tokenBudget": 12000,
+      "decisionSurfaceBudget": 28,
+      "modelTier": "expert",
+      "riskTier": "critical"
+    }
+  ]
+}

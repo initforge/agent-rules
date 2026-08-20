@@ -95,6 +95,7 @@ export function detectStackFacts(workspace) {
   const workspaceRoot = path.resolve(workspace);
   const facts = [];
   const files = walk(workspaceRoot);
+  const hierarchy = { root: '.', package_scopes: [], source_scopes: [], test_scopes: [] };
   const manifest = packageData(workspaceRoot);
   const packageSource = manifest?.source ? [manifest.source] : [];
   if (manifest?.data && typeof manifest.data === 'object') {
@@ -125,6 +126,7 @@ export function detectStackFacts(workspace) {
       .map((relative) => ({ relative, package: readPackageAt(workspaceRoot, relative) }))
       .filter((entry) => entry.package);
     if (workspacePackages.length) {
+      hierarchy.package_scopes = workspacePackages.map((entry) => entry.relative.replace(/\/package\.json$/, '')).sort();
       addFact(facts, workspaceRoot, 'workspace.package', workspacePackages.map((entry) => entry.relative.replace(/\/package\.json$/, '')), 'package-manifest', 1, workspacePackages.map((entry) => entry.package?.source).filter(Boolean));
       const workspaceFrameworks = [];
       const workspaceTestRunners = [];
@@ -149,6 +151,8 @@ export function detectStackFacts(workspace) {
     if (language) byLanguage.set(language, (byLanguage.get(language) || []).concat(file));
   }
   for (const [language, paths] of [...byLanguage.entries()].sort()) addFact(facts, workspaceRoot, 'language', language, 'language-files', 0.95, paths.slice(0, 20).map((file) => source(workspaceRoot, file)).filter(Boolean));
+  hierarchy.source_scopes = [...new Set(files.filter((file) => /^(src|packages)\//.test(file)).map((file) => file.split('/')[0]))].sort();
+  hierarchy.test_scopes = [...new Set(files.filter((file) => /(^|\/)(test|tests|__tests__)\//.test(file)).map((file) => file.split('/').slice(0, 2).join('/')))].sort();
   const terraform = files.filter((file) => file.endsWith('.tf') || file.endsWith('.tfvars'));
   if (terraform.length) addFact(facts, workspaceRoot, 'infra.terraform', 'terraform', 'terraform', 1, terraform.map((file) => source(workspaceRoot, file)).filter(Boolean));
   const containers = files.filter((file) => ['Dockerfile', 'docker-compose.yml', 'docker-compose.yaml'].includes(path.basename(file)));
@@ -160,7 +164,7 @@ export function detectStackFacts(workspace) {
   if (dbSources.length) addFact(facts, workspaceRoot, 'database.schema', dbSources.map((item) => item.path.includes('prisma') ? 'prisma' : item.path.includes('drizzle') ? 'drizzle' : 'supabase'), 'database-schema', 1, dbSources);
   const ci = files.filter((file) => file.startsWith('.github/workflows/') || ['.gitlab-ci.yml', 'azure-pipelines.yml', '.circleci/config.yml'].includes(file));
   if (ci.length) addFact(facts, workspaceRoot, 'ci.provider', ci.map((file) => file.startsWith('.github/') ? 'github-actions' : file.startsWith('.circleci/') ? 'circleci' : file.startsWith('.gitlab') ? 'gitlab' : 'azure-pipelines'), 'ci-config', 1, ci.map((file) => source(workspaceRoot, file)).filter(Boolean));
-  return { schema: 'harness/repo-facts/v1', version: 1, workspace_root: workspaceRoot, facts: facts.sort((a, b) => a.fact_id.localeCompare(b.fact_id) || JSON.stringify(a.value).localeCompare(JSON.stringify(b.value))) };
+  return { schema: 'harness/repo-facts/v1', version: 1, workspace_root: workspaceRoot, hierarchy, facts: facts.sort((a, b) => a.fact_id.localeCompare(b.fact_id) || JSON.stringify(a.value).localeCompare(JSON.stringify(b.value))) };
 }
 
 function selfTest() {
@@ -181,6 +185,7 @@ function selfTest() {
     const values = new Set(result.facts.map((fact) => `${fact.fact_id}:${Array.isArray(fact.value) ? fact.value.join(',') : fact.value}`));
     for (const expected of ['runtime.node:node', 'platform.mobile:mobile', 'framework.mobile:expo', 'test.runner:vitest', 'workspace.package:packages/web', 'infra.container:container', 'infra.terraform:terraform', 'ci.provider:github-actions']) if (!values.has(expected)) throw new Error(`missing self-test fact ${expected}`);
     if (result.facts.some((fact) => fact.fact_id.startsWith('domain'))) throw new Error('detector must not infer business domain');
+    if (!result.hierarchy || !Array.isArray(result.hierarchy.package_scopes)) throw new Error('missing hierarchical RepoFacts');
     console.log(JSON.stringify({ status: 'PASS', detectors: registry.detectors.length, facts: result.facts.length }));
   } finally { fs.rmSync(fixture, { recursive: true, force: true }); }
 }

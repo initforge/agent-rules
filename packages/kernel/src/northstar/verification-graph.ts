@@ -1,6 +1,22 @@
 import type { EvidenceKind, TaskPacket } from './protocol.js';
 import type { TraceabilityManifest } from './compiler.js';
 
+/** Closed-loop sensor typing (AM-0001 / REQ-019). */
+export type SensorDirection = 'feedforward' | 'feedback';
+export type OracleClass = 'computational' | 'inferential' | 'human';
+
+export interface SensorPolicy {
+  direction: SensorDirection;
+  oracle: OracleClass;
+  lifecycle: string;
+  applicability: string;
+  cost: 'cheap' | 'normal' | 'deep';
+  independence: string;
+  freshness_ms: number;
+  confidence: number;
+  escalation: { on_fail: string; retry_budget?: number };
+}
+
 export interface VerificationNode {
   /** Unique executable proof-node identity; claim_id alone is not unique with multi-oracle verification. */
   node_id: string;
@@ -14,10 +30,32 @@ export interface VerificationNode {
   /** Expanded executable dependencies used by the runtime DAG. */
   depends_on_nodes: string[];
   oracle_group?: string;
+  /** Typed closed-loop sensor metadata (REQ-019). */
+  sensor?: SensorPolicy;
 }
 
 const DEEP = new Set<EvidenceKind>(['browser', 'visual', 'mobile', 'semantic', 'security']);
 const ORDER = { cheap: 0, normal: 1, deep: 2 } as const;
+
+/** Default typed sensor policy derived from the claim/verifier facts. */
+export function sensorPolicyFor(claim: { class: string; required_kinds?: EvidenceKind[] }, node: { kinds: EvidenceKind[]; cost: 'cheap' | 'normal' | 'deep' }): SensorPolicy {
+  const deep = node.kinds.some((kind) => DEEP.has(kind));
+  const oracle: OracleClass = node.kinds.includes('semantic') || node.kinds.includes('visual') ? 'inferential' : 'computational';
+  return {
+    direction: 'feedback',
+    oracle,
+    lifecycle: 'post-execution',
+    applicability: `claim class ${claim.class}; kinds ${node.kinds.join('+') || 'test'}`,
+    cost: node.cost,
+    independence: `oracle-group:${node.kinds.sort().join('-') || 'test'}`,
+    freshness_ms: deep ? 0 : 600_000,
+    confidence: oracle === 'inferential' ? 0.6 : 0.9,
+    escalation: {
+      on_fail: oracle === 'inferential' ? 'NEEDS_USER review with the exact unresolved item' : 're-run claim-matched proof once before escalation',
+      retry_budget: 2,
+    },
+  };
+}
 
 function proofNodeId(taskId: string, claimId: string, verifierId: string): string {
   return `${taskId}::${claimId}::${verifierId}`;
@@ -45,7 +83,7 @@ export function buildVerificationGraph(
       const node_id = proofNodeId(packet.task_id, acceptance.claim_id, acceptance.verifier_id);
       if (nodes.some((node) => node.node_id === node_id)) throw new Error(`duplicate verification node ${node_id}`);
       const oracle = oracleGroups[acceptance.verifier_id] ?? claim.oracle_group;
-      nodes.push({
+      const node: VerificationNode = {
         node_id,
         claim_id: acceptance.claim_id,
         task_id: packet.task_id,
@@ -55,7 +93,9 @@ export function buildVerificationGraph(
         depends_on: explicit,
         depends_on_nodes: [],
         ...(oracle ? { oracle_group: oracle } : {}),
-      });
+      };
+      node.sensor = sensorPolicyFor(claim, node);
+      nodes.push(node);
     }
   }
 

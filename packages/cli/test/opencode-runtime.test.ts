@@ -21,6 +21,15 @@ async function fixture() {
 }
 
 describe("native OpenCode artifact identity", () => {
+  it("materializes the global AGENTS entrypoint referenced by transactional activation", async () => {
+    const root = await fixture();
+    const project = path.join(root, "project");
+    await installOpenCodeArtifact(root, project);
+    const agents = await fs.readFile(path.join(project, ".opencode/AGENTS.md"), "utf8");
+    expect(agents).toContain(`Canonical source: \`${root.replace(/\\/g, "/")}\``);
+    expect(agents).toContain("rules/manifest.yaml");
+  });
+
   it("rejects a tampered manifest", async () => {
     const root = await fixture();
     const manifest = path.join(root, "generated/runtime-build/opencode/manifest.json");

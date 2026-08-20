@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-rules/proof-trigger/v1",
+  "title": "Proof Trigger / Activation Contract",
+  "description": "Scope/claim/risk-based activation of adaptive-minimal-proof-testing. Never keyword-only.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["changed_files", "activated", "surfaces", "reasons", "candidate_categories", "required_fidelity"],
+  "properties": {
+    "changed_files": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "affected_claims": { "type": "array", "items": { "type": "string" } },
+    "affected_dependencies": { "type": "array", "items": { "type": "string" } },
+    "risk_hint": { "enum": ["S0", "S1", "S2", "S3"] },
+    "runtime_surfaces": { "type": "array", "items": { "type": "string" } },
+    "user_wording": { "type": "string" },
+    "activated": { "const": true },
+    "surfaces": {
+      "type": "array",
+      "items": { "enum": ["feature", "bugfix", "refactor", "source", "dependency", "schema", "migration", "api", "backend", "frontend", "browser", "accessibility", "mcp", "desktop", "process", "session", "workspace", "security", "performance", "concurrency", "build", "package", "install", "release", "qa", "verification", "parity", "regression", "test", "claim-evidence", "other"] }
+    },
+    "reasons": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "candidate_categories": {
+      "type": "array",
+      "items": { "enum": ["static", "unit", "contract", "integration", "api", "browser", "live", "security", "performance", "data", "packaging", "other"] }
+    },
+    "required_fidelity": { "enum": ["static", "deterministic", "live"] }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "schema_name": "proof-trigger",
+  "valid": false,
+  "data": {
+    "activated": true,
+    "surfaces": ["browser"],
+    "reasons": ["user said test it"],
+    "candidate_categories": ["browser"],
+    "required_fidelity": "live"
+  }
+}

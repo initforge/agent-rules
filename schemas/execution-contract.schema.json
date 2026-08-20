@@ -57,7 +57,7 @@
             "sha256": { "$ref": "#/$defs/sha256" },
             "observed_revision": { "type": "integer", "minimum": 0 },
             "observed_effective_sha256": { "$ref": "#/$defs/sha256" },
-            "plan_status": { "enum": ["DRAFT", "APPROVED", "ADOPTED", "COMPLETED", "SUPERSEDED"] },
+            "plan_status": { "enum": ["ACTIVE", "PLANNED", "DRAFT", "APPROVED", "ADOPTED", "COMPLETED", "SUPERSEDED", "PARTIAL", "BLOCKED", "needs-remediation"] },
             "execution_state": { "type": "string", "minLength": 1 }
           }
         },
@@ -123,6 +123,18 @@
               "enum": ["BOOTSTRAP_POINTER", "CANONICALLY_ACTIVATED"]
             },
             "updated_at": { "type": "string", "format": "date-time" }
+          }
+        },
+        "supersession": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["transaction_id", "previous_work_id", "previous_plan_id", "reason", "changed_at"],
+          "properties": {
+            "transaction_id": { "type": "string", "minLength": 1 },
+            "previous_work_id": { "type": "string", "minLength": 1 },
+            "previous_plan_id": { "type": "string", "minLength": 1 },
+            "reason": { "type": "string", "minLength": 1 },
+            "changed_at": { "type": "string", "format": "date-time" }
           }
         }
       }

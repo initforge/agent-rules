@@ -1,0 +1,24 @@
+{
+ "activation_class": "EXPLICIT",
+ "signals": [
+  "trail of bits",
+  "security specialist review",
+  "security specialist skill"
+ ],
+ "intent_signals": [
+  "trail_of_bits_security"
+ ],
+ "excludes": [
+  "prose-only"
+ ],
+ "priority": 30,
+ "loads": [
+  "skill:trail-of-bits-security"
+ ],
+ "requires": [],
+ "supports": [],
+ "project_scope": "",
+ "platform_scope": "all",
+ "max_route_tokens": 2500,
+ "default": false
+}

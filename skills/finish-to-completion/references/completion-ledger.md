@@ -18,10 +18,10 @@ Rules:
 
 - Allocate every source requirement and later injection proportionally. Capsules have semantic, not mechanical, budgets: include only what the recipient needs to act and prove; never dump the transcript or a repository inventory.
 - Record the assignment transition from `pending` to `acknowledged` before a delegated slice starts. Treat `NEEDS_CONTEXT`, `CONFLICT`, and `BLOCKED` as recovery signals; add the minimum fact, reconcile boundaries, reassign narrowly, then declare unavailable orchestration for sequential recovery.
-- Record delegation lifecycle receipts: `subagent_requested`, `subagent_resolved`, `subagent_started`, `subagent_completed`, `result_consumed`/`result_rejected`, or `delegation_skipped`. Every slice must have a completed lifecycle or an explicit skip reason.
+- Record the two delegation facts from [`rules/25-task-lifecycle.md`](../../../rules/25-task-lifecycle.md): `delegated` (what went out, to whom, and why) and `outcome` (`consumed`/`rejected` with reason, or `skipped` with reason). The former seven-event receipt chain is retired; every delegated slice must have a recorded `outcome` or an explicit skip reason.
 - Evidence is a fresh command, query, hashed artifact or observed interaction. Self-reported PASS and build-only proof for unrelated behavior are rejected.
 - Keep the ledger current enough to resume. Do not demand it for a clear small change.
 - Inspect a receipt only for its acceptance claim, negative invariant, scope boundary, and review triggers. The coordinator owns integrated final review and terminal status; the architect/integrator owns technical consistency.
 - Keep delivery status (`PASS`/`PARTIAL`/`BLOCKED`) separate from control state such as acknowledgment, orchestration availability, and host observation.
 
-For the delegated/resume receipt sequence, see [`slice-gate-protocol.md`](slice-gate-protocol.md).
+For the delegated/resume receipt sequence (the two-fact `delegated`/`outcome` contract), see [`slice-gate-protocol.md`](slice-gate-protocol.md) and its canonical owner [`rules/25-task-lifecycle.md`](../../../rules/25-task-lifecycle.md).

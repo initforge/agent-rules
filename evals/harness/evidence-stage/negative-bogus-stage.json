@@ -1,0 +1,25 @@
+{
+  "schema": "harness/claim-evidence",
+  "version": 1,
+  "plan_id": "evidence-stage-boundary-fixture",
+  "task_id": "T-LIVE-BOGUS-001",
+  "candidate_epoch": 2,
+  "observed_at": "2026-08-13T10:30:00Z",
+  "head_commit": "6e9a554a164e3a7d26df3cdb296392284c8c3166",
+  "claims": [
+    {
+      "claim_id": "C-LIVE-001",
+      "verifier_id": "V-BOGUS-001",
+      "command": [
+        "echo",
+        "fake live"
+      ],
+      "status": "pass",
+      "evidence_stage": "FAKE_LIVE_OBSERVED",
+      "summary": "Bogus stage must be rejected by the schema; a command label or prose can never mint an evidence stage."
+    }
+  ],
+  "required_evidence_stage": "LIVE_OBSERVED",
+  "expected_outcome": "SCHEMA_REJECTED",
+  "note": "AM-0005 negative fixture: an unknown stage value fails schema validation; stage is set only by what was executed and observed."
+}

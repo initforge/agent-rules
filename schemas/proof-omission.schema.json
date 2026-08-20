@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-rules/proof-omission/v1",
+  "title": "Proof Omission Reason",
+  "description": "Every omitted proof records category, reason, why the omission is safe, and the condition that requires escalation (owner §6).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["category", "reason", "why_safe", "escalation_condition"],
+  "properties": {
+    "category": { "enum": ["static", "unit", "contract", "integration", "api", "browser", "live", "security", "performance", "data", "packaging", "other"] },
+    "reason": { "type": "string", "minLength": 1 },
+    "why_safe": { "type": "string", "minLength": 1 },
+    "escalation_condition": { "type": "string", "minLength": 1 }
+  }
+}

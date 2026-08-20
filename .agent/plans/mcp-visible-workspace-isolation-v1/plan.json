@@ -1,0 +1,91 @@
+{
+  "schema": "artifact/plan",
+  "version": 1,
+  "schema_version": "mcp-visible-workspace-isolation-v1",
+  "repository_baseline": "6e9a554a164e3a7d26df3cdb296392284c8c3166",
+  "intent_reference": ".agent/plans/mcp-visible-workspace-isolation-v1/original.md",
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "statement": "Create a new owner-authorized phase and supersede the previous pointer; never silently amend the old plan.",
+      "rationale": "Owner brief; AGENTS.md next-phase steering."
+    },
+    {
+      "id": "DEC-002",
+      "statement": "Visible/headed remains the default; headless stays explicit CI/owner mode and is never a silent fallback.",
+      "rationale": "Owner brief requirement 2."
+    },
+    {
+      "id": "DEC-003",
+      "statement": "The guardian performs non-activating placement only and fails closed on provider self-activation (race guard).",
+      "rationale": "Owner brief requirements 7-8; AM-0006 continuity."
+    },
+    {
+      "id": "DEC-004",
+      "statement": "No live GUI launch is attempted while the host is actively used by the owner; live acceptance is BLOCKED/NEEDS_USER with manual commands when evidence cannot be isolated.",
+      "rationale": "Owner brief requirement 12; evidence honesty."
+    },
+    {
+      "id": "DEC-005",
+      "statement": "No process kill, no global user config edit, no global install, no commit/push/deploy.",
+      "rationale": "Owner brief; invariants."
+    }
+  ],
+  "requirements": [
+    "REQ-001",
+    "REQ-002",
+    "REQ-003",
+    "REQ-004",
+    "REQ-005",
+    "REQ-006",
+    "REQ-007",
+    "REQ-008",
+    "REQ-009",
+    "REQ-010",
+    "REQ-011",
+    "REQ-012",
+    "REQ-013",
+    "REQ-014",
+    "REQ-015",
+    "REQ-016",
+    "REQ-017",
+    "REQ-018",
+    "REQ-019",
+    "REQ-020"
+  ],
+  "claims": [
+    "CLM-001",
+    "CLM-002",
+    "CLM-003",
+    "CLM-004",
+    "CLM-005",
+    "CLM-006",
+    "CLM-007",
+    "CLM-008",
+    "CLM-009",
+    "CLM-010",
+    "CLM-011",
+    "CLM-012",
+    "CLM-013",
+    "CLM-014",
+    "CLM-015",
+    "CLM-016",
+    "CLM-017",
+    "CLM-018",
+    "CLM-019",
+    "CLM-020"
+  ],
+  "tasks": [
+    "TASK-001",
+    "TASK-002",
+    "TASK-003",
+    "TASK-004",
+    "TASK-005",
+    "TASK-006",
+    "TASK-007",
+    "TASK-008",
+    "TASK-009",
+    "TASK-010",
+    "TASK-011"
+  ]
+}

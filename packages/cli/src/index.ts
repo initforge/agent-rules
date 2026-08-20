@@ -14,6 +14,10 @@ import { evalCmd } from "./commands/eval.js";
 import { dashboard } from "./commands/dashboard.js";
 import { contextGraphCmd } from "./commands/context-graph.js";
 import { planCmd } from "./commands/plan.js";
+import { ingestCmd } from "./commands/ingest.js";
+import { goalCmd } from "./commands/goal.js";
+import { repairCmd } from "./commands/repair.js";
+import { closeoutCmd } from "./commands/closeout.js";
 import { cleanupCmd } from "./commands/cleanup.js";
 import { verifyCmd } from "./commands/verify.js";
 import { parityCmd } from "./commands/parity.js";
@@ -27,7 +31,9 @@ import { runnerCmd } from "./commands/runner.js";
 import { topologyCmd } from "./commands/topology.js";
 import { adversarialCmd } from "./commands/adversarial.js";
 import { certifyCmd } from "./commands/certify.js";
-import { initNorthStar, northStarDrain, northStarIngest, northStarReference, northStarReferenceSearch, northStarRun, northStarStatus, NORTHSTAR_AGENTS, NORTHSTAR_EVIDENCE_KINDS } from "./commands/northstar-ux.js";
+import { mcpSessionCmd } from "./commands/mcp-session.js";
+import { proofPlanCmd } from "./commands/proof-plan.js";
+import { initNorthStar, northStarDrain, northStarReference, northStarReferenceSearch, northStarRun, northStarStatus, NORTHSTAR_AGENTS, NORTHSTAR_EVIDENCE_KINDS } from "./commands/northstar-ux.js";
 import { createOpencodeClient } from "@opencode-ai/sdk/v2/client";
 import { OpenCodeNativeSessionAdapter } from "@initforge/agent-rules-engine/native-session-adapter";
 
@@ -67,22 +73,6 @@ program
 
 
 // ── North-Star public UX ───────────────────────────────────────────
-
-program
-  .command("ingest")
-  .description("Normalize a provider-neutral issue/PR/CI/webhook/schedule/plan trigger into WorkRequest")
-  .argument("<path>", "TriggerEnvelope JSON file")
-  .action(async (triggerPath: string) => {
-    try {
-      const fs = await import('node:fs');
-      const path = await import('node:path');
-      const raw = JSON.parse(fs.default.readFileSync(path.default.resolve(process.cwd(), triggerPath), 'utf8')) as unknown;
-      const result = northStarIngest(process.cwd(), raw);
-      formatOutput({ exitCode: ExitCode.Success, message: "Trigger normalized", data: result as unknown as Record<string, unknown> }, program.optsWithGlobals() as CliOptions);
-    } catch (error) {
-      formatOutput({ exitCode: ExitCode.GeneralError, message: error instanceof Error ? error.message : String(error) }, program.optsWithGlobals() as CliOptions);
-    }
-  });
 
 program
   .command("drain")
@@ -424,6 +414,56 @@ Subcommands:
     formatOutput(result, opts);
   });
 
+// ── ingest ──────────────────────────────────────────────────────────
+program
+  .command("ingest")
+  .description("Compile an ordinary prompt or trigger envelope into the canonical WorkRequest with adapter identity")
+  .argument("[args...]", "[adapter] <prompt text> | <trigger-envelope.json> [--plan <plan-id>]")
+  .allowUnknownOption(true)
+  .allowExcessArguments(true)
+  .action(async (args: string[]) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const result = await ingestCmd(args, opts);
+    formatOutput(result, opts);
+  });
+
+// ── goal ────────────────────────────────────────────────────────────
+program
+  .command("goal")
+  .description("Validate a plan support bundle and compile the invocation into the canonical WorkRequest (EMULATED adapter)")
+  .argument("[args...]", "[plan-id] [--intent <text>]")
+  .allowUnknownOption(true)
+  .allowExcessArguments(true)
+  .action(async (args: string[]) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const result = await goalCmd(args, opts);
+    formatOutput(result, opts);
+  });
+
+// ── repair ──────────────────────────────────────────────────────────
+program
+  .command("repair")
+  .description("Prompt-first pair repair: bind a finding, classify, reopen only impacted claims, emit a bounded repair packet")
+  .argument("[args...]", "<finding.json> [--plan <plan-id>]")
+  .allowUnknownOption(true)
+  .allowExcessArguments(true)
+  .action(async (args: string[]) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const result = await repairCmd(args, opts);
+    formatOutput(result, opts);
+  });
+
+// ── closeout ────────────────────────────────────────────────────────
+program
+  .command("closeout")
+  .description("Prepare the exact owner-gated CloseoutReceipt (no git mutation)")
+  .argument("[plan-id]", "Plan id", "harness-universal-reconciliation-v1")
+  .action(async (planId: string) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const result = await closeoutCmd([planId], opts);
+    formatOutput(result, opts);
+  });
+
 // ── certify ───────────────────────────────────────────────────────
 program
   .command("certify")
@@ -433,6 +473,32 @@ program
   .action(async (args: string[]) => {
     const opts = program.optsWithGlobals() as CliOptions;
     const result = await certifyCmd(args, opts);
+    formatOutput(result, opts);
+  });
+
+
+// ── proof-plan ──────────────────────────────────────────────────────
+program
+  .command("proof-plan")
+  .description("Adaptive minimal-proof-testing router (global behavior): plan the smallest sufficient proof set for a task (trigger -> profile -> selection -> receipt)")
+  .argument("[args...]", "--repo <root> --task <id> [--files a,b] [--claims c1;c2] [--risks r1] [--live] [--full-suite] [--full-suite-reason <text>]")
+  .allowUnknownOption(true)
+  .action(async (args: string[]) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const result = await proofPlanCmd(args, opts);
+    formatOutput(result, opts);
+  });
+
+
+// ── mcp-session ─────────────────────────────────────────────────────
+program
+  .command("mcp-session")
+  .description("Persistent MCP session control (owner §6): list/inspect/reconnect/stop/close-stale; explicit owner actions only, no TTL, no auto-expiry")
+  .argument("[args...]", "Subcommand: list | inspect <lease> | reconnect <lease> | stop <lease> | close-stale")
+  .allowUnknownOption(true)
+  .action(async (args: string[]) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const result = await mcpSessionCmd(args, opts);
     formatOutput(result, opts);
   });
 
@@ -447,6 +513,7 @@ program
     "after",
     `
 Subcommands:
+  lifecycle|gc         Graph-safe lifecycle inventory (default; dry-run)
   inventory <path...>   Classify exact paths (delete/rescue/keep)
   rescue <path...>      Move exact paths into quarantine; receipt = rollback
                         (flags: --root <repo> --quarantine <dir> --dry-run)
@@ -455,6 +522,7 @@ Subcommands:
                         Guard: exact names only, no globs; protected segments
                         (.git, src, packages, generated, .agent, dist, ...)
                         fail closed; irreversibility + rollback receipt emitted
+  --apply                Apply only unreferenced ignored scratch purge
     `
   )
   .action(async (args: string[]) => {
@@ -562,10 +630,12 @@ program
 program
   .command("runtime")
   .description("Manage harness runtime installations")
-  .argument("[subcommand]", "Subcommand: install, update, rollback, reinstall, uninstall, recover")
+  .argument("[subcommand]", "Subcommand: install, update, rollback, reinstall, uninstall, recover, reconcile")
   .argument("[platform]", "Platform: codex, grok, antigravity, cursor, all", "all")
   .option("--root <absolute>", "Override the selected platform root (single platform only)")
   .option("--migrate-legacy", "Explicitly migrate a manifest-owned legacy runtime (single platform only)")
+  .allowUnknownOption(true)
+  .allowExcessArguments(true)
   .addHelpText(
     "after",
     `
@@ -611,12 +681,17 @@ Subcommands:
 program
   .command("skills")
   .description("Manage skill capabilities")
-  .argument("[subcommand]", "Subcommand: doctor")
+  .argument("[subcommand]", "Subcommand: doctor, resolve, search, preview, install, update")
   .addHelpText(
     "after",
     `
 Subcommands:
   doctor          Audit skill manifests and references
+  resolve         Show external candidates without installing them
+  search <query>  Thin binding to gh skill search
+  preview <spec>  Thin binding to gh skill preview
+  install <spec>  Explicit thin binding to gh skill install
+  update [spec]   Thin binding to gh skill update
     `
   )
   .action(async (subcommand: string | undefined) => {

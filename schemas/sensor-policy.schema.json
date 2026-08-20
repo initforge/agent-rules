@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/sensor-policy.schema.json",
+  "title": "Typed Sensor Policy",
+  "description": "Closed-loop verification metadata: every sensor/evidence entry is typed with direction, oracle class, lifecycle timing, applicability, cost, independence, freshness, confidence, and escalation (AM-0001, REQ-019).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "sensors"],
+  "properties": {
+    "schema": { "const": "harness/sensor-policy" },
+    "version": { "const": 1 },
+    "sensors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sensor_id", "direction", "oracle", "lifecycle", "applicability", "cost", "independence", "freshness_ms", "confidence", "escalation"],
+        "properties": {
+          "sensor_id": { "type": "string", "minLength": 1 },
+          "direction": { "enum": ["feedforward", "feedback"] },
+          "oracle": { "enum": ["computational", "inferential", "human"] },
+          "lifecycle": {
+            "enum": ["intake", "compile", "plan", "pre-execution", "in-execution", "post-execution", "resume", "pre-completion", "installation", "repair", "review"]
+          },
+          "applicability": { "type": "string", "minLength": 1 },
+          "cost": { "enum": ["cheap", "normal", "deep"] },
+          "independence": { "type": "string", "minLength": 1 },
+          "freshness_ms": { "type": "integer", "minimum": 0 },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "escalation": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["on_fail"],
+            "properties": {
+              "on_fail": { "type": "string", "minLength": 1 },
+              "retry_budget": { "type": "integer", "minimum": 0, "maximum": 2 },
+              "fallback_class": { "type": "string", "minLength": 1 }
+            }
+          },
+          "oracle_group": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

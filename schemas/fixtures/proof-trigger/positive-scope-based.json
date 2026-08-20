@@ -1,0 +1,13 @@
+{
+  "schema_name": "proof-trigger",
+  "valid": true,
+  "data": {
+    "changed_files": ["src/api/auth.ts"],
+    "risk_hint": "S3",
+    "activated": true,
+    "surfaces": ["api", "security"],
+    "reasons": ["changed scope: 1 file(s)", "risk class S3 requires security/isolation proof"],
+    "candidate_categories": ["contract", "api", "security"],
+    "required_fidelity": "deterministic"
+  }
+}

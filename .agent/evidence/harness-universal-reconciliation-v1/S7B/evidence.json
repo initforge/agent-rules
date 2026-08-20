@@ -1,0 +1,38 @@
+{
+  "schema": "harness/claim-evidence",
+  "version": 1,
+  "plan_id": "harness-universal-reconciliation-v1",
+  "task_id": "S7B",
+  "candidate_epoch": 1,
+  "observed_at": "2026-08-12T15:38:44.479Z",
+  "head_commit": "6e9a554a164e3a7d26df3cdb296392284c8c3166",
+  "coordinator_verification": "Coordinator implemented S7B; recipe proof + CLI end-to-end + kernel unit tests run independently",
+  "claims": [
+    {
+      "claim_id": "C-022",
+      "verifier_id": "V-022",
+      "command": [
+        "node",
+        "automation/validate-pair-repair.mjs"
+      ],
+      "status": "pass",
+      "summary": "PASS: raw-finding verbatim binding (plan/head/epoch/ledger/diff), 6-class classification, selective reopen in new epoch, stale evidence marking, bounded packet, NEEDS_USER on changed-intent and multi-plan ambiguity, unrelated/environment never reopen",
+      "freshness": "fresh"
+    }
+  ],
+  "implementation": {
+    "kernel": "pair-repair.ts (openPairRepair, classifyFinding) + claim-impact.ts (computeClaimImpact)",
+    "cli": "commands/repair.ts prompt-first repair command (finding.json + --plan)",
+    "schemas": "repair-finding.schema.json + repair-packet.schema.json + 2 positive/2 negative fixtures",
+    "automation": "validate-pair-repair.mjs (V-022)",
+    "evals": "evals/harness/pair-repair/ 3 fixtures (impl defect finding, owner-intent change finding, selective-reopen packet)",
+    "tests": "kernel pair-repair.test.ts 6 tests"
+  },
+  "regression": {
+    "build": "exit 0",
+    "kernel": "49 PASS",
+    "cli": "486 PASS",
+    "root_fast": "14 files/240 PASS",
+    "schemas": "30 positive / 29 negative PASS"
+  }
+}

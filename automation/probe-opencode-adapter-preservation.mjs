@@ -38,6 +38,14 @@ try {
   if (!after.equals(originalBytes)) throw new Error('OpenCode adapter rewrote user-owned opencode.json');
   const owned = JSON.parse(await fs.readFile(path.join(project, '.opencode', 'agent-rules-owned.json'), 'utf8'));
   if (owned.some((entry) => path.basename(entry) === 'opencode.json')) throw new Error('OpenCode ownership manifest claims user-owned opencode.json');
+  if (!owned.includes('commands/goal.md')) throw new Error('OpenCode adapter did not install the emulated /goal command');
+  if (!owned.includes('skills/finish-to-completion/SKILL.md')) throw new Error('OpenCode adapter did not install harness skills');
+  const goal = await fs.readFile(path.join(project, '.opencode', 'commands', 'goal.md'), 'utf8');
+  if (!goal.includes('EMULATED')) throw new Error('OpenCode /goal command lacks honest emulation attestation');
+  const implementer = await fs.readFile(path.join(project, '.opencode', 'agents', 'initforge-implementer.md'), 'utf8');
+  if (implementer.includes('__OPENCODE_MODEL_CLASS__') || /^model:/m.test(implementer)) {
+    throw new Error('OpenCode adapter leaked a template model instead of inheriting user/session configuration');
+  }
   console.log('PASS: OpenCode adapter source preserves provider/model config and does not claim opencode.json');
 } finally {
   await fs.rm(temp, { recursive: true, force: true });

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import type { EvidenceStage } from './claim-registry.js';
 
 export type TelemetryEvent =
   | { kind: 'run_start'; runId: string; planId: string; host: string; model: string; effort: string }
@@ -7,7 +8,7 @@ export type TelemetryEvent =
   | { kind: 'task_start'; taskId: string; assignmentId: string }
   | { kind: 'tool_call'; tool: string; durationMs: number; success: boolean }
   | { kind: 'model_turn'; model: string; tokens: number; latencyMs: number; cost: number }
-  | { kind: 'verification'; assignmentId: string; result: 'PASS' | 'FAIL' | 'PARTIAL' }
+  | { kind: 'verification'; assignmentId: string; result: 'PASS' | 'FAIL' | 'PARTIAL'; evidenceStage?: EvidenceStage; evidenceRefs?: string[] }
   | { kind: 'review'; reviewId: string; outcome: string }
   | { kind: 'handoff'; from: string; to: string; bundleHash: string }
   | { kind: 'attestation_collected'; host: string; commitSha: string; attestationType: 'native' | 'functional'; evidenceHash: string; verified: boolean }
@@ -19,7 +20,7 @@ export type TelemetryEvent =
    * dashboard surfaces them so an operator can click through to a
    * screenshot or console log without leaving the run timeline.
    */
-  | { kind: 'live_verify'; taskId: string; profileKind: string; result: 'PASS' | 'FAIL'; evidence: string[]; durationMs: number };
+  | { kind: 'live_verify'; taskId: string; profileKind: string; result: 'PASS' | 'FAIL'; evidence: string[]; durationMs: number; evidenceStage?: EvidenceStage; evidenceRefs?: string[] };
 
 export interface TelemetryConfig {
   metadataRetentionDays: number;

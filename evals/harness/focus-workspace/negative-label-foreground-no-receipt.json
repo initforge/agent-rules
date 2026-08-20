@@ -1,0 +1,18 @@
+{
+ "schema": "harness/focus-workspace-fixture",
+ "version": 1,
+ "kind": "receipt-shape",
+ "receipt": {
+  "schema": "agent-rules/mcp-focus-receipt",
+  "version": 1,
+  "targetWorkspace": 4,
+  "placement": "prevented_and_verified",
+  "visibility": "visible",
+  "focusPolicy": "preserve",
+  "isolated": true,
+  "errors": [],
+  "created_at": "2026-08-13T00:00:00Z"
+ },
+ "expect": "schema-reject",
+ "note": "A 'foreground' label without before/after focus facts cannot prove focus safety."
+}

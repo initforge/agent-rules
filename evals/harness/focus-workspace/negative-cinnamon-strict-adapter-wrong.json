@@ -1,0 +1,29 @@
+{
+ "schema": "harness/focus-workspace-fixture",
+ "version": 1,
+ "kind": "placement",
+ "before": {
+  "currentWorkspace": 0,
+  "activeWindowId": "0x06000004"
+ },
+ "after": {
+  "currentWorkspace": 0,
+  "activeWindowId": "0x06000004"
+ },
+ "sourceWindowId": "0x04c00006",
+ "targetWorkspace": 4,
+ "providerWindow": {
+  "windowId": "0x1f000001",
+  "pid": "9876",
+  "workspace": 3
+ },
+ "expect": "prevented_and_verified",
+ "note": "Cinnamon strict is a host condition, not a substitute for correct adapter placement.",
+ "windows": [
+  {
+   "windowId": "0x04c00006",
+   "pid": "7243",
+   "workspace": 4
+  }
+ ]
+}

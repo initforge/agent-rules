@@ -1,0 +1,63 @@
+{
+  "schema": "harness/claim-evidence",
+  "version": 1,
+  "plan_id": "harness-universal-reconciliation-v1",
+  "task_id": "S4",
+  "candidate_epoch": 1,
+  "observed_at": "2026-08-12T14:06:20.416Z",
+  "head_commit": "6e9a554a164e3a7d26df3cdb296392284c8c3166",
+  "coordinator_verification": "Coordinator completed S4 after worker interruption; all recipe proofs re-run independently",
+  "claims": [
+    {
+      "claim_id": "C-004",
+      "verifier_id": "V-004",
+      "command": [
+        "npx",
+        "vitest",
+        "run",
+        "test/runtime-reconcile.test.ts"
+      ],
+      "cwd": "packages/cli",
+      "status": "pass",
+      "summary": "11/11 tests: live detect, config-dir-alone=stale, desktop-without-binary, stale receipts, UNSUPPORTED unknown, 7 registered hosts, drift projection, transactional repair+rollback, crash-after-backup recovery, installed-only reconcile",
+      "freshness": "fresh"
+    },
+    {
+      "claim_id": "C-005",
+      "verifier_id": "V-005",
+      "command": [
+        "python3",
+        "automation/test-platform-contracts.py"
+      ],
+      "status": "pass",
+      "summary": "PASS: platform contracts (7 registered hosts + invariants)",
+      "freshness": "fresh"
+    },
+    {
+      "claim_id": "C-006",
+      "verifier_id": "V-006",
+      "command": [
+        "node",
+        "packages/cli/dist/index.js",
+        "--json",
+        "runtime",
+        "reconcile",
+        "all",
+        "--installed-only"
+      ],
+      "status": "pass",
+      "summary": "exit 0: 3 installed (codex, antigravity, opencode) detected live, 4 absent skipped, 0 unsupported; no mutation of absent hosts or real config dirs",
+      "freshness": "fresh"
+    }
+  ],
+  "regression": {
+    "cli_tests": "27 files / 461 tests PASS",
+    "build": "exit 0",
+    "test_fast": "14 files / 240 tests PASS"
+  },
+  "interface_notes": [
+    "packages/cli/src/commands/runtime.ts: added reconcile dispatch (unowned by other slices; required by V-006 proof)",
+    "packages/cli/src/commands/automation.ts: mechanical r.platform -> r.host call-site fix for the S4-owned verifyRuntimeState API",
+    "packages/cli/src/index.ts: runtime command added allowUnknownOption/allowExcessArguments so reconcile flags reach runtimeCmd (V-006 proof)"
+  ]
+}

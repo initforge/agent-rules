@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-rules/test-refactor-matrix/v1",
+  "title": "Test Refactor Matrix",
+  "description": "Coverage-mapped test refactor plan: every removed/merged/rewritten test recorded; protected tests preserved (owner §9).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "repository", "audited_at", "baseline", "after", "entries", "protected_count", "coverage_preserved", "coverage_evidence", "post_refactor_proof_run"],
+  "properties": {
+    "schema": { "const": "agent-rules/test-refactor-matrix/v1" },
+    "version": { "const": 1 },
+    "repository": { "type": "string", "minLength": 1 },
+    "audited_at": { "type": "string", "format": "date-time" },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["files", "tests"],
+      "properties": {
+        "files": { "type": "integer", "minimum": 0 },
+        "tests": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "after": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["files", "tests"],
+      "properties": {
+        "files": { "type": "integer", "minimum": 0 },
+        "tests": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["test_id", "file", "category", "covers_claims", "action", "action_reason"],
+        "properties": {
+          "test_id": { "type": "string" },
+          "file": { "type": "string" },
+          "category": { "enum": ["static", "unit", "contract", "integration", "api", "browser", "live", "security", "performance", "data", "packaging", "other"] },
+          "covers_claims": { "type": "array", "items": { "type": "string" } },
+          "protected": { "type": "boolean" },
+          "live": { "type": "boolean" },
+          "duplicate_of": { "type": "string" },
+          "obsolete_reason": { "type": "string" },
+          "over_broad_reason": { "type": "string" },
+          "action": { "enum": ["keep", "merge", "rewrite", "remove", "move"] },
+          "action_reason": { "type": "string" }
+        }
+      }
+    },
+    "protected_count": { "type": "integer", "minimum": 0 },
+    "coverage_preserved": { "type": "boolean" },
+    "coverage_evidence": { "type": "string" },
+    "post_refactor_proof_run": { "type": "string" }
+  }
+}

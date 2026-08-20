@@ -1,0 +1,12 @@
+{
+ "schema": "harness/focus-workspace-fixture",
+ "version": 1,
+ "kind": "drift-check",
+ "command": [
+  "npx",
+  "-y",
+  "@playwright/mcp@0.0.78"
+ ],
+ "expect": "drift",
+ "note": "Local interactive browser must always be --isolated."
+}

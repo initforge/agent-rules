@@ -1,0 +1,65 @@
+version: 1
+plan_id: skill-mcp-fabric-v1
+mode: DELIVER
+relation:
+  previous_plan_id: harness-universal-reconciliation-v1
+  previous_generation: 14
+  kind: supersession
+  note: "Owner-authorized phase; previous plan remains durable history, not claimed terminal; no concurrent goals."
+requirements:
+  - id: REQ-001
+    statement: "Distinguish capability, provider, transport, middleware, skill and policy; document the taxonomy and keep one canonical owner per registry."
+    criteria: [C-001, C-002]
+    verification: ["node automation/validate-tool-registry.mjs", "node automation/validate-skill-fabric.py"]
+  - id: REQ-002
+    statement: "Add additive capability aliases (docs.library, shell.output.reduce, code.graph, code.symbol, design.pen) that resolve to legacy canonical capability names without renaming or breaking existing providers."
+    criteria: [C-003, C-004]
+    verification: ["npm run build -w packages/kernel", "npm test -w packages/kernel"]
+  - id: REQ-003
+    statement: "Keep the full inventory of local skills, external domain sources and integration providers; no source may silently disappear."
+    criteria: [C-005]
+    verification: ["git diff --stat", "python automation/validate-skill-catalog.py"]
+  - id: REQ-004
+    statement: "Reconcile candidate fabric: add impeccable, vercel-react-best-practices, vercel-web-design-guidelines, callstack-react-native-best-practices, trail-of-bits-security with lock envelopes; keep selected set empty until hard gates pass; reclassify providers."
+    criteria: [C-006, C-007]
+    verification: ["python automation/validate-skill-fabric.py"]
+  - id: REQ-005
+    statement: "Fix requires semantics: remove semantic requires (browser-qa -> qa-skills); rebuild the generated context graph via the canonical builder; update route fixtures and engine tests."
+    criteria: [C-008, C-009]
+    verification: ["pwsh automation/build-context-graph.ps1", "python automation/validate-route-parity.py", "npm test -w packages/engine"]
+  - id: REQ-006
+    statement: "Browser provider lifecycle: Playwright CLI default for deterministic verification; Playwright MCP exploratory; Chrome DevTools debug-only; remove keyword-only activation triggers."
+    criteria: [C-010]
+    verification: ["node automation/validate-tool-registry.mjs"]
+  - id: REQ-007
+    statement: "Code intelligence lifecycle: codebase-memory stays advisory (coverage/freshness contract) with native fallback; Serena stays explicit-only experimental without promotion evidence."
+    criteria: [C-011]
+    verification: ["node automation/validate-tool-registry.mjs", "npm test -w packages/kernel"]
+  - id: REQ-008
+    statement: "Context7 is a docs provider on-demand: remove from the default core profile, keep pinned MCP entry under research profile, remove the generic research trigger."
+    criteria: [C-012]
+    verification: ["node automation/validate-tool-registry.mjs"]
+  - id: REQ-009
+    statement: "RTK is shell middleware with host-specific enforcement metadata and harness-measured reduction; it never mutates evidence or hides failure."
+    criteria: [C-013]
+    verification: ["node automation/validate-tool-registry.mjs"]
+  - id: REQ-010
+    statement: "Pencil remains explicit-only through the stable launcher with bounded startup and real MCP handshake; unavailable is BLOCKED/NEEDS_USER."
+    criteria: [C-014]
+    verification: ["ls integrations/optional/pencil-mcp/launch.mjs", "node integration graph checks"]
+  - id: REQ-011
+    statement: "Every external source record carries provenance, immutable revision, content/tree hash, license, security review, permission review, route precision, benchmark, rollback; no materialization without hard gates."
+    criteria: [C-015, C-016]
+    verification: ["python automation/validate-skill-fabric.py", "node automation/validate-external-sources.mjs"]
+  - id: REQ-012
+    statement: "Registry/schema compatibility is additive only; no second registry; validators and fixtures stay green."
+    criteria: [C-017]
+    verification: ["node automation/validate-tool-registry.mjs", "python automation/test-artifact-schemas.py"]
+  - id: REQ-013
+    statement: "Migration is parity-bounded: no mass deletion, no destructive capability rename, generated artifacts only via canonical builders, legacy behavior preserved until parity."
+    criteria: [C-018]
+    verification: ["git diff --stat", "npm run verify:all"]
+  - id: REQ-014
+    statement: "Evaluation model, rollback records and acceptance evidence mapping are recorded; unavailable items are UNAVAILABLE/BLOCKED, never fabricated."
+    criteria: [C-019, C-020]
+    verification: ["npm run build", "npm test", "ledger finalization"]

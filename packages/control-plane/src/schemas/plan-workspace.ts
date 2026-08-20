@@ -404,14 +404,17 @@ export function listPlans(root: string, seamOverride?: Partial<FsSeamReaders>): 
 
 type CanonicalRequirement = {
   id: string
-  status: 'MATCH' | 'PARTIAL' | 'GAP' | 'BLOCKED'
-  proofStatus?: 'MATCH' | 'PARTIAL' | 'GAP' | 'BLOCKED'
+  // V3.1-era canonical ledgers use MATCH/PARTIAL/GAP/BLOCKED; universal
+  // reconciliation v5 ledgers use COMPLETED/PENDING/VERIFIED. Accept both.
+  status: 'MATCH' | 'PARTIAL' | 'GAP' | 'BLOCKED' | 'COMPLETED' | 'PENDING' | 'VERIFIED'
+  proofStatus?: 'MATCH' | 'PARTIAL' | 'GAP' | 'BLOCKED' | 'COMPLETED' | 'PENDING' | 'VERIFIED'
   statement: string
   evidenceRefs?: unknown[]
 }
 
 const NORTH_STAR_STATUS_MAP: Record<CanonicalRequirement['status'], ReconciliationStatus> = {
   MATCH: 'MATCH', PARTIAL: 'PARTIAL', GAP: 'MISSING', BLOCKED: 'MISSING',
+  COMPLETED: 'MATCH', PENDING: 'PARTIAL', VERIFIED: 'MATCH',
 }
 
 const WORK_LEDGER_STATUSES: readonly WorkLedgerStatus[] = [
@@ -424,9 +427,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isCanonicalNorthStarCandidate(obj: Record<string, unknown>): boolean {
-  // schema_version is the authoritative discriminator. The extra shape check
-  // keeps older malformed/legacy fixtures on the legacy rejection path.
-  return obj.schema_version === 4 || (
+  // schema_version is the authoritative discriminator. v4 is the V3.1-era
+  // canonical shape; v5 is the universal-reconciliation canonical shape.
+  // The extra shape check keeps older malformed/legacy fixtures on the legacy
+  // rejection path.
+  return (obj.schema_version === 4 || obj.schema_version === 5) || (
     typeof obj.plan_id === 'string' && 'milestones' in obj && 'original_plan' in obj
   )
 }
@@ -441,7 +446,7 @@ function readCanonicalNorthStarWorkspace(
   seamOverride?: Partial<FsSeamReaders>,
 ): PlanWorkspace {
   const findings: IntegrityFinding[] = []
-  if (obj.schema_version !== 4) findings.push({ kind: 'MANIFEST', detail: 'North-Star ledger schema_version must be 4' })
+  if (obj.schema_version !== 4 && obj.schema_version !== 5) findings.push({ kind: 'MANIFEST', detail: `North-Star ledger schema_version must be 4 or 5` })
   if (obj.plan_id !== planId) findings.push({ kind: 'PLANID_MISMATCH', detail: `Ledger plan_id (${String(obj.plan_id)}) != requested (${planId})` })
 
   const rawStatus = obj.status
@@ -497,27 +502,36 @@ function readCanonicalNorthStarWorkspace(
     if (typeof identity.sha256 !== 'string' || !isSha256(identity.sha256)) {
       findings.push({ kind: 'MANIFEST', detail: 'North-Star effective_plan_identity.sha256 is invalid' })
     }
-    if (typeof identity.canonical_json_utf8 !== 'string') {
-      findings.push({ kind: 'MANIFEST', detail: 'North-Star effective_plan_identity.canonical_json_utf8 is required' })
-    } else {
-      const canonicalBytes = Buffer.from(identity.canonical_json_utf8, 'utf-8')
-      if (typeof identity.sha256 === 'string' && isSha256(identity.sha256) && sha256Bytes(new Uint8Array(canonicalBytes)) !== identity.sha256) {
-        findings.push({ kind: 'MANIFEST', detail: 'North-Star effective identity hash does not match canonical_json_utf8' })
-      }
-      let canonicalIdentity: unknown
-      try { canonicalIdentity = JSON.parse(identity.canonical_json_utf8) } catch (e: unknown) {
-        findings.push({ kind: 'MANIFEST', detail: `North-Star canonical_json_utf8 is not valid JSON: ${e instanceof Error ? e.message : String(e)}` })
-      }
-      if (isRecord(canonicalIdentity)) {
-        const originalInIdentity = canonicalIdentity.original_plan_sha256
-        if (originalSha256 && originalInIdentity !== originalSha256) findings.push({ kind: 'MANIFEST', detail: 'North-Star effective identity original plan hash mismatch' })
-        if (canonicalIdentity.approved_amendments !== undefined) {
-          if (!Array.isArray(canonicalIdentity.approved_amendments) || !canonicalIdentity.approved_amendments.every(x => typeof x === 'string')) {
-            findings.push({ kind: 'MANIFEST', detail: 'North-Star approved_amendments must be an array of strings' })
-          } else approvedAmendmentIds = [...canonicalIdentity.approved_amendments]
+      if (typeof identity.canonical_json_utf8 !== 'string') {
+        findings.push({ kind: 'MANIFEST', detail: 'North-Star effective_plan_identity.canonical_json_utf8 is required' })
+      } else {
+        const canonicalBytes = Buffer.from(identity.canonical_json_utf8, 'utf-8')
+        if (typeof identity.sha256 === 'string' && isSha256(identity.sha256) && sha256Bytes(new Uint8Array(canonicalBytes)) !== identity.sha256) {
+          findings.push({ kind: 'MANIFEST', detail: 'North-Star effective identity hash does not match canonical_json_utf8' })
+        }
+        let canonicalIdentity: unknown
+        try { canonicalIdentity = JSON.parse(identity.canonical_json_utf8) } catch (e: unknown) {
+          findings.push({ kind: 'MANIFEST', detail: `North-Star canonical_json_utf8 is not valid JSON: ${e instanceof Error ? e.message : String(e)}` })
+        }
+        if (isRecord(canonicalIdentity)) {
+          const originalInIdentity = canonicalIdentity.original_plan_sha256
+          if (originalSha256 && originalInIdentity !== originalSha256) findings.push({ kind: 'MANIFEST', detail: 'North-Star effective identity original plan hash mismatch' })
+          if (canonicalIdentity.approved_amendments !== undefined) {
+            // v4 ledgers store amendment ids as strings; canonical v5 ledgers
+            // store {amendment_id, sha256} records. Accept both.
+            const amendments = canonicalIdentity.approved_amendments
+            const validStrings = Array.isArray(amendments) && amendments.every(x => typeof x === 'string')
+            const validRecords = Array.isArray(amendments) && amendments.every(x => isRecord(x) && typeof x.amendment_id === 'string' && typeof x.sha256 === 'string')
+            if (!validStrings && !validRecords) {
+              findings.push({ kind: 'MANIFEST', detail: 'North-Star approved_amendments must be an array of strings or {amendment_id, sha256} records' })
+            } else if (validStrings) {
+              approvedAmendmentIds = [...amendments as string[]]
+            } else {
+              approvedAmendmentIds = (amendments as Array<Record<string, unknown>>).map(x => String(x.amendment_id))
+            }
+          }
         }
       }
-    }
   }
 
   const milestones = isRecord(obj.milestones) ? obj.milestones : undefined
@@ -535,7 +549,9 @@ function readCanonicalNorthStarWorkspace(
       if (requirementIds.has(row.id)) findings.push({ kind: 'MANIFEST', detail: `Duplicate North-Star requirement id: ${row.id}` })
       requirementIds.add(row.id)
       const status = row.status
-      if (status !== 'MATCH' && status !== 'PARTIAL' && status !== 'GAP' && status !== 'BLOCKED') {
+      if (status !== 'MATCH' && status !== 'PARTIAL' && status !== 'GAP' && status !== 'BLOCKED'
+          // Canonical v5 ledgers use COMPLETED/PENDING requirement statuses.
+          && status !== 'COMPLETED' && status !== 'PENDING' && status !== 'VERIFIED') {
         findings.push({ kind: 'MANIFEST', detail: `North-Star requirement ${row.id} has invalid status: ${String(status)}` }); continue
       }
       if (typeof row.statement !== 'string') findings.push({ kind: 'MANIFEST', detail: `North-Star requirement ${row.id} statement is not a string` })

@@ -1,0 +1,35 @@
+{
+  "schema": "harness/worker-evidence",
+  "version": 1,
+  "plan_id": "harness-universal-reconciliation-v1",
+  "task_id": "S3",
+  "head_commit": "6e9a554a164e3a7d26df3cdb296392284c8c3166",
+  "receipt_sha256": "6041adb2d998a6d4b38d8047226111132fc76118f3cc7a487dbe3288a09482d9",
+  "status_note": "Worker does not author PASS; coordinator verifies claims. All recipe proof and sanity checks exited 0.",
+  "changed": {
+    "integrations/providers/": "NEW — lifecycle adapter manifests for testcontainers, pact, schemathesis, storybook, maestro, semgrep, codeql, k6, opentelemetry (integrations/providers/<id>/manifest.json) + README.md. Each binds capabilityClass (provider-neutral logical capability), effect contract (effect_level/environment/approval/reversible/network/credentials/timeout_ms/provider_evidence per schemas/integration-effect.schema.json), prerequisites, health command + expectedExitCodes, rollback, evidence_kinds, host support (local host ids; codeql ci_only), claim_classes, thresholds_required (k6), telemetry_only (opentelemetry). No hard-coded model IDs.",
+    "automation/verification-profiles.json": "NEW top-level provider_adapters section (9 adapters x 3 fixtures = 27 fixtures: one positive, one important negative, one unavailable/recovery per provider) with claim_classes, thresholds_required, telemetry_only, missing_runtime_reason, and a schema-shaped verification_profile (provider step kinds + evidence + activation + unavailable_status + timeoutMs) per adapter. Existing domain_profiles untouched.",
+    "automation/evidence-profiles.json": "Extended machine_evidence_kinds (+container-runtime, contract-verification, schema-behavior, story-state, device-run, security-scan, performance-threshold, telemetry-diagnosis, unavailable-evidence) and added 9 evidence profiles incl. performance-threshold (requires_explicit_thresholds), telemetry-diagnosis (substitutes_product_acceptance=false), unavailable-evidence (fail_closed, never_acceptance).",
+    "automation/select-verification.py": "Claim-driven provider activation (select_providers): activated only when a claim matches claim_classes; file patterns alone never activate; k6 requires explicit thresholds/SLO keywords; missing activated provider yields explicit UNAVAILABLE (never PASS); present-but-no-claim yields NOT_SELECTED. UNAVAILABLE + NOT_SELECTED statuses wired through select/run output, summarize, and reduce_run_results (UNAVAILABLE never counts as PASS; has_blocked_required_tool covers UNAVAILABLE). Telemetry substitution guard in reducer (telemetry-only PASS never green; telemetry_substitution_blocked + telemetry_only_evidence emitted). Bounded process execution: Popen start_new_session + terminate_process_group (SIGTERM then SIGKILL, non-POSIX fallback) on TimeoutExpired, cleanup note retained, MAX_OUTPUT-bounded logs. Always-on profile coherence validation (evidence_profile references must exist; every adapter must have a manifest; thresholds_required/telemetry_only must match manifest) — fail closed. New subcommands: 'fixtures' (deterministic 27-fixture exercise with injected availability) and 'validate' (jsonschema validation of adapter verification_profiles).",
+    "schemas/verification-profile.schema.json": "Extended steps oneOf with TestcontainersStep, PactStep, SchemathesisStep, StorybookStep, MaestroStep, SemgrepStep, CodeqlStep, K6Step (thresholds REQUIRED — mechanical explicit-threshold enforcement), OpenTelemetryStep; evidence enum extended (container-log, contract-verification, schema-report, story-state, device-run, scan-report, threshold-report, telemetry-trace, unavailable-evidence); new optional top-level properties activation (claim-driven/explicit/automatic), provider, unavailable_status, thresholds_required, telemetry_only. All existing step kinds and constraints preserved (engine schema test 12/12 green)."
+  },
+  "proof": [
+    {"command": "node automation/validate-tool-registry.mjs", "exit_code": 0, "last_line": "PASS: tool registry v2 (7 integrations, 8 total identifiers)"},
+    {"command": "python3 automation/test-select-verification.py", "exit_code": 0, "last_line": "PASS: context selection, profile matching, check filtering, skip reasons, risk mandates, blocked tools, evidence integration, summary structure, multi-profile, no false pass, extensibility, run execution"},
+    {"command": "python3 automation/test-artifact-schemas.py", "exit_code": 0, "last_line": "PASS: all artifact schema validations"},
+    {"command": "python3 automation/select-verification.py fixtures", "exit_code": 0, "last_line": "PROVIDER_FIXTURES ran: 27 failed: 0"},
+    {"command": "python3 automation/select-verification.py validate", "exit_code": 0, "last_line": "SCHEMA_VALIDATION validated: 9 invalid: 0"},
+    {"command": "npx vitest run test/verification-profile-schema.test.ts --config packages/engine/vitest.config.ts", "exit_code": 0, "last_line": "Tests 12 passed (12)"},
+    {"command": "python3 automation/run-python-tests.py", "exit_code": 0, "last_line": "All Python tests PASS"},
+    {"command": "timeout cleanup probe (run_check timeout=2, 'sleep 60 & sleep 60')", "result": "status FAIL, cleanup note 'process group terminated after timeout', leaked children: none, log bounded"},
+    {"command": "claim-driven activation probes", "result": "docker present + Testcontainers claim -> RUNNABLE; no applicable claim -> 0 activations; telemetry claim -> only opentelemetry activated (UNAVAILABLE, otelcol absent); telemetry-only PASS -> all_automated_pass False"}
+  ],
+  "repair_attempts": [
+    "None required. One pre-proof design refinement (not a repair): k6 negative fixture claim changed from 'Improve the checkout endpoint performance' (did not match k6 claim classes) to 'Run a k6 load test on the checkout endpoint' so it exercises the explicit-threshold guard — the important negative for performance providers."
+  ],
+  "deviations": [
+    "schemas/verification-profile.schema.json is documented in packages/kernel/src/runner/profile.ts as generated from that file; this slice extends the schema with provider step kinds the legacy kernel runner parsers do not yet handle (they fail closed with an explicit 'unknown kind' error). Additive and backward compatible; engine-level provider step execution is outside S3 owned scope.",
+    "integrations/providers/ manifests follow the integrations/manual/<name>/manifest.json shape but are not scanned by automation/validate-tool-registry.mjs (read-only proof scans registry.json + integrations/manual only); coherence with manifests is enforced by select-verification.py's always-on validation."
+  ],
+  "checked_at": "2026-08-12T20:52:00Z"
+}

@@ -13,11 +13,17 @@
       "route": "skills/best-of-n/ROUTE.json",
       "scope": "core",
       "owner": "harness-maintainer",
-      "consumers": ["context-graph", "runtime-build"],
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
       "duplicate_semantics": [],
       "target_catalog": "core/strategy",
       "disposition": "retain",
-      "compatibility_period": { "status": "active", "until": null },
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
       "removal_gate": "Owner-approved replacement plus isolated behavioral/evaluation parity."
     },
     {
@@ -26,13 +32,26 @@
       "route": "skills/browser-qa/ROUTE.json",
       "scope": "core",
       "owner": "harness-maintainer",
-      "consumers": ["context-graph", "runtime-build", "verification-router"],
+      "consumers": [
+        "context-graph",
+        "runtime-build",
+        "verification-router"
+      ],
       "duplicate_semantics": [
-        { "with": "qa-skills", "signals": ["exploratory"], "resolution": "browser-qa owns browser execution; qa-skills owns bounded test-design procedure." }
+        {
+          "with": "qa-skills",
+          "signals": [
+            "exploratory"
+          ],
+          "resolution": "browser-qa owns browser execution; qa-skills owns bounded test-design procedure."
+        }
       ],
       "target_catalog": "core/procedure/browser-proof",
       "disposition": "retain",
-      "compatibility_period": { "status": "active", "until": null },
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
       "removal_gate": "Claim-adequate browser verifier policy and headed/manual evidence parity."
     },
     {
@@ -41,11 +60,17 @@
       "route": "skills/context-evolution-protocol/ROUTE.json",
       "scope": "core",
       "owner": "harness-maintainer",
-      "consumers": ["context-graph", "runtime-build"],
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
       "duplicate_semantics": [],
       "target_catalog": "core/governance-facade",
       "disposition": "compatibility-facade",
-      "compatibility_period": { "status": "compatibility", "until": null },
+      "compatibility_period": {
+        "status": "compatibility",
+        "until": null
+      },
       "removal_gate": "Canonical context-evolution policy owner, consumer cutover, and regression evaluation."
     },
     {
@@ -54,11 +79,17 @@
       "route": "skills/docs-style/ROUTE.json",
       "scope": "core",
       "owner": "harness-maintainer",
-      "consumers": ["context-graph", "runtime-build"],
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
       "duplicate_semantics": [],
       "target_catalog": "core/documentation",
       "disposition": "retain",
-      "compatibility_period": { "status": "active", "until": null },
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
       "removal_gate": "Owner-approved documentation policy replacement with fact-parity checks."
     },
     {
@@ -67,11 +98,18 @@
       "route": "skills/finish-to-completion/ROUTE.json",
       "scope": "core",
       "owner": "harness-maintainer",
-      "consumers": ["context-graph", "runtime-build", "plan-and-handoff"],
+      "consumers": [
+        "context-graph",
+        "runtime-build",
+        "plan-and-handoff"
+      ],
       "duplicate_semantics": [],
       "target_catalog": "core/execution-facade",
       "disposition": "compatibility-facade",
-      "compatibility_period": { "status": "compatibility", "until": null },
+      "compatibility_period": {
+        "status": "compatibility",
+        "until": null
+      },
       "removal_gate": "Durable execution semantics fully owned by kernel/runtime and consumer parity proven."
     },
     {
@@ -80,13 +118,28 @@
       "route": "skills/frontend-architect/ROUTE.json",
       "scope": "core",
       "owner": "harness-maintainer",
-      "consumers": ["context-graph", "runtime-build", "ui-taste"],
+      "consumers": [
+        "context-graph",
+        "runtime-build",
+        "ui-taste"
+      ],
       "duplicate_semantics": [
-        { "with": "ui-taste", "signals": ["landing", "redesign", "giao diện đẹp"], "resolution": "frontend-architect owns implementation architecture; ui-taste is an explicit brief-led review lens." }
+        {
+          "with": "ui-taste",
+          "signals": [
+            "landing",
+            "redesign",
+            "giao diện đẹp"
+          ],
+          "resolution": "frontend-architect owns implementation architecture; ui-taste is an explicit brief-led review lens."
+        }
       ],
       "target_catalog": "core/frontend-implementation",
       "disposition": "retain",
-      "compatibility_period": { "status": "active", "until": null },
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
       "removal_gate": "Project design-contract routing and frontend implementation eval parity."
     },
     {
@@ -95,11 +148,17 @@
       "route": "skills/master-image-generation/ROUTE.json",
       "scope": "core",
       "owner": "harness-maintainer",
-      "consumers": ["context-graph", "runtime-build"],
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
       "duplicate_semantics": [],
       "target_catalog": "core/visual-asset-capability",
       "disposition": "retain",
-      "compatibility_period": { "status": "active", "until": null },
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
       "removal_gate": "Explicit asset capability contract and provider-independent output evaluation."
     },
     {
@@ -108,11 +167,18 @@
       "route": "skills/parity-verification/ROUTE.json",
       "scope": "core",
       "owner": "harness-maintainer",
-      "consumers": ["context-graph", "runtime-build", "verification-router"],
+      "consumers": [
+        "context-graph",
+        "runtime-build",
+        "verification-router"
+      ],
       "duplicate_semantics": [],
       "target_catalog": "core/verifier-policy/parity",
       "disposition": "migrate-to-policy",
-      "compatibility_period": { "status": "compatibility", "until": null },
+      "compatibility_period": {
+        "status": "compatibility",
+        "until": null
+      },
       "removal_gate": "Claim-first parity dimensions owned by verifier policy with exploratory procedure parity."
     },
     {
@@ -121,11 +187,18 @@
       "route": "skills/plan-and-handoff/ROUTE.json",
       "scope": "core",
       "owner": "harness-maintainer",
-      "consumers": ["context-graph", "runtime-build", "plan-compiler"],
+      "consumers": [
+        "context-graph",
+        "runtime-build",
+        "plan-compiler"
+      ],
       "duplicate_semantics": [],
       "target_catalog": "core/human-plan-and-handoff",
       "disposition": "compatibility-facade",
-      "compatibility_period": { "status": "compatibility", "until": null },
+      "compatibility_period": {
+        "status": "compatibility",
+        "until": null
+      },
       "removal_gate": "Human plan skill separated from compiler/checkpoint semantics and all consumers mapped."
     },
     {
@@ -134,13 +207,26 @@
       "route": "skills/qa-skills/ROUTE.json",
       "scope": "core",
       "owner": "harness-maintainer",
-      "consumers": ["context-graph", "runtime-build", "verification-router"],
+      "consumers": [
+        "context-graph",
+        "runtime-build",
+        "verification-router"
+      ],
       "duplicate_semantics": [
-        { "with": "browser-qa", "signals": ["exploratory"], "resolution": "qa-skills owns test-design procedure; browser-qa owns browser execution and runtime evidence." }
+        {
+          "with": "browser-qa",
+          "signals": [
+            "exploratory"
+          ],
+          "resolution": "qa-skills owns test-design procedure; browser-qa owns browser execution and runtime evidence."
+        }
       ],
       "target_catalog": "core/procedure/qa",
       "disposition": "migrate-to-policy",
-      "compatibility_period": { "status": "compatibility", "until": null },
+      "compatibility_period": {
+        "status": "compatibility",
+        "until": null
+      },
       "removal_gate": "Claim/risk verification policy replaces generic QA brain without losing bounded exploratory value."
     },
     {
@@ -149,11 +235,18 @@
       "route": "skills/quality/ROUTE.json",
       "scope": "core",
       "owner": "harness-maintainer",
-      "consumers": ["context-graph", "runtime-build", "verification-router"],
+      "consumers": [
+        "context-graph",
+        "runtime-build",
+        "verification-router"
+      ],
       "duplicate_semantics": [],
       "target_catalog": "core/quality-policy",
       "disposition": "retain",
-      "compatibility_period": { "status": "active", "until": null },
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
       "removal_gate": "Deterministic checks, project conventions, independent review, and style preference have separate owners."
     },
     {
@@ -162,11 +255,18 @@
       "route": "skills/researcher/ROUTE.json",
       "scope": "core",
       "owner": "harness-maintainer",
-      "consumers": ["context-graph", "runtime-build", "capability-broker"],
+      "consumers": [
+        "context-graph",
+        "runtime-build",
+        "capability-broker"
+      ],
       "duplicate_semantics": [],
       "target_catalog": "core/research-procedure",
       "disposition": "retain",
-      "compatibility_period": { "status": "active", "until": null },
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
       "removal_gate": "Provider-neutral lookup capability contract and broker routing evaluation."
     },
     {
@@ -175,13 +275,28 @@
       "route": "skills/ui-taste/ROUTE.json",
       "scope": "core",
       "owner": "harness-maintainer",
-      "consumers": ["context-graph", "runtime-build", "frontend-architect"],
+      "consumers": [
+        "context-graph",
+        "runtime-build",
+        "frontend-architect"
+      ],
       "duplicate_semantics": [
-        { "with": "frontend-architect", "signals": ["landing", "redesign", "giao diện đẹp"], "resolution": "ui-taste is never a universal product default; it is a brief-led anti-slop/review lens." }
+        {
+          "with": "frontend-architect",
+          "signals": [
+            "landing",
+            "redesign",
+            "giao diện đẹp"
+          ],
+          "resolution": "ui-taste is never a universal product default; it is a brief-led anti-slop/review lens."
+        }
       ],
       "target_catalog": "core/design-review-lens",
       "disposition": "profile-explicit",
-      "compatibility_period": { "status": "active", "until": null },
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
       "removal_gate": "Project design-contract routing and explicit brief/evaluation evidence."
     },
     {
@@ -190,11 +305,18 @@
       "route": "skills/verification-router/ROUTE.json",
       "scope": "core",
       "owner": "harness-maintainer",
-      "consumers": ["context-graph", "runtime-build", "kernel-verifier"],
+      "consumers": [
+        "context-graph",
+        "runtime-build",
+        "kernel-verifier"
+      ],
       "duplicate_semantics": [],
       "target_catalog": "core/verifier-selection-policy",
       "disposition": "retain",
-      "compatibility_period": { "status": "active", "until": null },
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
       "removal_gate": "Typed claim/risk verifier selection is canonical and all provider routes are evidence-bound."
     },
     {
@@ -203,13 +325,26 @@
       "route": "profiles/5fedu/skills/5fedu-module-parity/ROUTE.json",
       "scope": "profile",
       "owner": "profile-owner",
-      "consumers": ["context-graph", "runtime-build", "5fedu-profile-activation"],
+      "consumers": [
+        "context-graph",
+        "runtime-build",
+        "5fedu-profile-activation"
+      ],
       "duplicate_semantics": [
-        { "with": "5fedu-project", "signals": ["5fedu"], "resolution": "Shared explicit profile activation signal; project context is the dependency, module parity is the domain procedure." }
+        {
+          "with": "5fedu-project",
+          "signals": [
+            "5fedu"
+          ],
+          "resolution": "Shared explicit profile activation signal; project context is the dependency, module parity is the domain procedure."
+        }
       ],
       "target_catalog": "profile/5fedu/parity",
       "disposition": "profile-explicit",
-      "compatibility_period": { "status": "active", "until": null },
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
       "removal_gate": "5fedu profile replacement with manifest-bound semantic, visual, behavioral, and architectural parity."
     },
     {
@@ -218,14 +353,407 @@
       "route": "profiles/5fedu/skills/5fedu-project/ROUTE.json",
       "scope": "profile",
       "owner": "profile-owner",
-      "consumers": ["context-graph", "runtime-build", "5fedu-profile-activation"],
+      "consumers": [
+        "context-graph",
+        "runtime-build",
+        "5fedu-profile-activation"
+      ],
       "duplicate_semantics": [
-        { "with": "5fedu-module-parity", "signals": ["5fedu"], "resolution": "Project context is loaded as the required profile dependency; module parity remains the task-specific procedure." }
+        {
+          "with": "5fedu-module-parity",
+          "signals": [
+            "5fedu"
+          ],
+          "resolution": "Project context is loaded as the required profile dependency; module parity remains the task-specific procedure."
+        }
       ],
       "target_catalog": "profile/5fedu/context",
       "disposition": "profile-explicit",
-      "compatibility_period": { "status": "active", "until": null },
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
       "removal_gate": "Manifest-bound 5fedu project context replacement with source and permission parity."
+    },
+    {
+      "id": "frontend-design-contract",
+      "source": "skills/frontend-design-contract/SKILL.md",
+      "route": "skills/frontend-design-contract/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "core/frontend-design-contract",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
+    },
+    {
+      "id": "mobile-composition",
+      "source": "skills/mobile-composition/SKILL.md",
+      "route": "skills/mobile-composition/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "core/mobile-composition",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
+    },
+    {
+      "id": "backend-composition",
+      "source": "skills/backend-composition/SKILL.md",
+      "route": "skills/backend-composition/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "core/backend-composition",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
+    },
+    {
+      "id": "database-stack",
+      "source": "skills/database-stack/SKILL.md",
+      "route": "skills/database-stack/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "core/database-stack",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
+    },
+    {
+      "id": "schema-migration",
+      "source": "skills/schema-migration/SKILL.md",
+      "route": "skills/schema-migration/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "core/schema-migration",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
+    },
+    {
+      "id": "infra-devops-composition",
+      "source": "skills/infra-devops-composition/SKILL.md",
+      "route": "skills/infra-devops-composition/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "core/infra-devops-composition",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
+    },
+    {
+      "id": "security-review",
+      "source": "skills/security-review/SKILL.md",
+      "route": "skills/security-review/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "core/security-review",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
+    },
+    {
+      "id": "claim-test-strategy",
+      "source": "skills/claim-test-strategy/SKILL.md",
+      "route": "skills/claim-test-strategy/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "core/claim-test-strategy",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
+    },
+    {
+      "id": "external-skill-governance",
+      "source": "skills/external-skill-governance/SKILL.md",
+      "route": "skills/external-skill-governance/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "core/external-skill-governance",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
+    },
+    {
+      "id": "anthropic-frontend-design",
+      "source": "skills/anthropic-frontend-design/SKILL.md",
+      "route": "skills/anthropic-frontend-design/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "external/anthropic-frontend-design",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
+    },
+    {
+      "id": "vercel-agent-skills",
+      "source": "skills/vercel-agent-skills/SKILL.md",
+      "route": "skills/vercel-agent-skills/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "external/vercel-agent-skills",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
+    },
+    {
+      "id": "expo-skills",
+      "source": "skills/expo-skills/SKILL.md",
+      "route": "skills/expo-skills/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "external/expo-skills",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
+    },
+    {
+      "id": "prisma-skills",
+      "source": "skills/prisma-skills/SKILL.md",
+      "route": "skills/prisma-skills/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "external/prisma-skills",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
+    },
+    {
+      "id": "supabase-agent-skills",
+      "source": "skills/supabase-agent-skills/SKILL.md",
+      "route": "skills/supabase-agent-skills/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "external/supabase-agent-skills",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
+    },
+    {
+      "id": "hashicorp-agent-skills",
+      "source": "skills/hashicorp-agent-skills/SKILL.md",
+      "route": "skills/hashicorp-agent-skills/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "external/hashicorp-agent-skills",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
+    },
+    {
+      "id": "impeccable",
+      "source": "skills/impeccable/SKILL.md",
+      "route": "skills/impeccable/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "external/impeccable",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
+    },
+    {
+      "id": "vercel-react-best-practices",
+      "source": "skills/vercel-react-best-practices/SKILL.md",
+      "route": "skills/vercel-react-best-practices/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "external/vercel-react-best-practices",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
+    },
+    {
+      "id": "vercel-web-design-guidelines",
+      "source": "skills/vercel-web-design-guidelines/SKILL.md",
+      "route": "skills/vercel-web-design-guidelines/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "external/vercel-web-design-guidelines",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
+    },
+    {
+      "id": "callstack-react-native-best-practices",
+      "source": "skills/callstack-react-native-best-practices/SKILL.md",
+      "route": "skills/callstack-react-native-best-practices/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "external/callstack-react-native-best-practices",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
+    },
+    {
+      "id": "trail-of-bits-security",
+      "source": "skills/trail-of-bits-security/SKILL.md",
+      "route": "skills/trail-of-bits-security/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": [
+        "context-graph",
+        "runtime-build"
+      ],
+      "duplicate_semantics": [],
+      "target_catalog": "external/trail-of-bits-security",
+      "disposition": "retain",
+      "compatibility_period": {
+        "status": "active",
+        "until": null
+      },
+      "removal_gate": "Owner-approved replacement plus route/behavioral parity evidence; AM-0002 materialized projection must keep a rollback receipt."
     }
   ]
 }

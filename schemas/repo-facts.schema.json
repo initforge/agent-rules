@@ -10,6 +10,17 @@
     "schema": { "const": "harness/repo-facts/v1" },
     "version": { "const": 1 },
     "workspace_root": { "type": "string", "minLength": 1 },
+    "hierarchy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "package_scopes", "source_scopes", "test_scopes"],
+      "properties": {
+        "root": { "const": "." },
+        "package_scopes": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "source_scopes": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "test_scopes": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      }
+    },
     "facts": {
       "type": "array",
       "items": {

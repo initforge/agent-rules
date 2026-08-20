@@ -493,15 +493,42 @@ def _parse_time(value: str) -> datetime | None:
 
 
 def collect_effective_plan_binding(root: Path) -> dict[str, Any]:
-    """Read one canonical ledger and verify its serialized effective-plan identity."""
+    """Read the ledger named by the current pointer and verify its identity.
+
+    Historical ledgers are intentionally retained, so cardinality is not an
+    authority rule.  The current pointer is the authority for selecting the
+    active ledger; its path and byte hash must both verify before evidence is
+    considered bound.  A one-ledger fallback remains for legacy fixtures that
+    predate the current-pointer protocol.
+    """
     ledgers = sorted((root / ".agent" / "ledger").glob("*.json"))
     unavailable = {
         "sha256": "", "ledger_uri": "", "ledger_hash": "", "verified": False,
-        "reason": "expected exactly one readable canonical ledger",
+        "reason": "current pointer does not select one readable canonical ledger",
     }
-    if len(ledgers) != 1:
+    ledger_path: Path | None = None
+    pointer_path = root / ".agent" / "current.json"
+    try:
+        pointer = json.loads(_read_regular_nofollow(pointer_path).decode("utf-8"))
+        canonical = dict(pointer.get("canonical_ledger") or {})
+        selected = str(canonical.get("path") or "").replace("\\", "/")
+        candidate = Path(selected)
+        if (
+            selected.startswith(".agent/ledger/")
+            and selected.endswith(".json")
+            and not candidate.is_absolute()
+            and ".." not in candidate.parts
+        ):
+            resolved = (root / candidate).resolve()
+            resolved.relative_to(root.resolve())
+            if resolved in [p.resolve() for p in ledgers] and file_hash(resolved) == f"sha256:{str(canonical.get('sha256') or '')}":
+                ledger_path = resolved
+    except (OSError, ValueError, json.JSONDecodeError):
+        ledger_path = None
+    if ledger_path is None and len(ledgers) == 1:
+        ledger_path = ledgers[0]
+    if ledger_path is None:
         return unavailable
-    ledger_path = ledgers[0]
     try:
         ledger = json.loads(_read_regular_nofollow(ledger_path).decode("utf-8"))
         identity = dict(ledger.get("effective_plan_identity") or {})
@@ -509,12 +536,19 @@ def collect_effective_plan_binding(root: Path) -> dict[str, Any]:
         canonical = str(identity.get("canonical_json_utf8") or "")
         if not _SHA256_RE.fullmatch(plan_sha) or not canonical or sha256_text(canonical) != plan_sha:
             return {**unavailable, "ledger_uri": str(ledger_path.relative_to(root))}
+        pointer_effective = ""
+        try:
+            pointer_effective = str(dict(json.loads(_read_regular_nofollow(pointer_path).decode("utf-8")).get("canonical_ledger") or {}).get("observed_effective_sha256") or "")
+        except (OSError, ValueError, json.JSONDecodeError):
+            pass
+        if pointer_effective and pointer_effective != plan_sha:
+            return {**unavailable, "ledger_uri": str(ledger_path.relative_to(root)), "reason": "current pointer effective-plan SHA does not match ledger"}
         return {
             "sha256": plan_sha,
             "ledger_uri": str(ledger_path.relative_to(root)),
             "ledger_hash": file_hash(ledger_path),
             "verified": True,
-            "reason": "effective plan SHA-256 matches its canonical identity payload",
+            "reason": "current pointer selects a hash-bound ledger whose effective-plan SHA-256 verifies",
         }
     except (OSError, ValueError, json.JSONDecodeError):
         return unavailable

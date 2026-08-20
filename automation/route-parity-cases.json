@@ -1,150 +1,417 @@
 {
-  "$schema": "../schemas/route-parity-case.schema.json",
-  "version": 1,
-  "description": "Fixed typed shadow corpus for canonical TypeScript skill routing and Python host-adapter parity. Expected capability/provider/verifier fields are audit metadata; runtime selection remains owned by the broker and verification policy.",
-  "cases": [
-    {
-      "id": "simple-explanation",
-      "phase": "discussion",
-      "claim": "A simple explanation does not activate implementation skills.",
-      "risk": "S0",
-      "domain": "generic",
-      "stack": "none",
-      "prompt": "Giải thích cách xử lý đơn giản",
-      "workspace": { "activation": "generic" },
-      "expected": { "primary": null, "stack": [], "capability": "none", "provider": "none", "verifier": "none", "confidence": 1, "context_cost": 0, "fallback": "no-skill" }
-    },
-    {
-      "id": "generic-execution",
-      "phase": "implementation",
-      "claim": "A generic implementation request selects the execution facade only.",
-      "risk": "S1",
-      "domain": "generic",
-      "stack": "node",
-      "prompt": "Refactor module thanh toán Node.js",
-      "workspace": { "activation": "generic" },
-      "expected": { "primary": "finish-to-completion", "stack": ["finish-to-completion"], "capability": "filesystem.write", "provider": "builtin", "verifier": "unit", "confidence": 1, "context_cost": 1500, "fallback": "generic-execution" }
-    },
-    {
-      "id": "browser-parity",
-      "phase": "verification",
-      "claim": "Visual browser parity loads parity procedure with browser and QA support.",
-      "risk": "S2",
-      "domain": "frontend",
-      "stack": "web",
-      "prompt": "Verify visual parity in the browser",
-      "workspace": { "activation": "generic" },
-      "expected": { "primary": "parity-verification", "stack": ["parity-verification", "browser-qa", "qa-skills"], "capability": "browser.verify", "provider": "playwright-cli", "verifier": "browser", "confidence": 1, "context_cost": 5000, "fallback": "browser-proof-unavailable" }
-    },
-    {
-      "id": "research-docs",
-      "phase": "discussion",
-      "claim": "External documentation research selects lookup procedure without implementation skills.",
-      "risk": "S1",
-      "domain": "research",
-      "stack": "unknown",
-      "prompt": "Research latest API documentation",
-      "workspace": { "activation": "generic" },
-      "expected": { "primary": "researcher", "stack": ["researcher"], "capability": "docs.lookup", "provider": "context7", "verifier": "source-receipt", "confidence": 0.95, "context_cost": 3000, "fallback": "manual-lookup" }
-    },
-    {
-      "id": "plan-handoff",
-      "phase": "plan",
-      "claim": "A multi-phase handoff request selects plan authoring procedure.",
-      "risk": "S2",
-      "domain": "generic",
-      "stack": "unknown",
-      "prompt": "Lập plan dài nhiều phase và handoff",
-      "workspace": { "activation": "generic" },
-      "expected": { "primary": "plan-and-handoff", "stack": ["plan-and-handoff"], "capability": "filesystem.read", "provider": "builtin", "verifier": "plan-contract", "confidence": 1, "context_cost": 2200, "fallback": "needs-user" }
-    },
-    {
-      "id": "frontend-brief",
-      "phase": "implementation",
-      "claim": "A landing-page brief selects frontend implementation plus an explicit taste modifier.",
-      "risk": "S1",
-      "domain": "frontend",
-      "stack": "web",
-      "prompt": "Redesign landing page giao diện đẹp",
-      "workspace": { "activation": "generic" },
-      "expected": { "primary": "frontend-architect", "stack": ["frontend-architect", "ui-taste"], "capability": "browser.verify", "provider": "playwright-cli", "verifier": "browser", "confidence": 1, "context_cost": 3500, "fallback": "browser-proof-unavailable" }
-    },
-    {
-      "id": "qa-procedure",
-      "phase": "verification",
-      "claim": "A QA planning request selects bounded QA procedure.",
-      "risk": "S1",
-      "domain": "generic",
-      "stack": "unknown",
-      "prompt": "QA checklist edge-case manual cases",
-      "workspace": { "activation": "generic" },
-      "expected": { "primary": "qa-skills", "stack": ["qa-skills"], "capability": "filesystem.read", "provider": "builtin", "verifier": "test-strategy", "confidence": 1, "context_cost": 3000, "fallback": "needs-user" }
-    },
-    {
-      "id": "quality-review",
-      "phase": "review",
-      "claim": "A code-quality audit selects quality policy and execution compatibility support.",
-      "risk": "S2",
-      "domain": "generic",
-      "stack": "unknown",
-      "prompt": "deep code quality audit refactor code",
-      "workspace": { "activation": "generic" },
-      "expected": { "primary": "quality", "stack": ["quality", "finish-to-completion"], "capability": "code.search", "provider": "builtin", "verifier": "review", "confidence": 1, "context_cost": 4000, "fallback": "needs-user" }
-    },
-    {
-      "id": "docs-update",
-      "phase": "implementation",
-      "claim": "A documentation change selects documentation procedure only.",
-      "risk": "S0",
-      "domain": "docs",
-      "stack": "markdown",
-      "prompt": "Update README documentation",
-      "workspace": { "activation": "generic" },
-      "expected": { "primary": "docs-style", "stack": ["docs-style"], "capability": "filesystem.write", "provider": "builtin", "verifier": "links", "confidence": 1, "context_cost": 4500, "fallback": "generic-execution" }
-    },
-    {
-      "id": "claim-verification",
-      "phase": "verification",
-      "claim": "A claim/evidence request selects verification routing.",
-      "risk": "S2",
-      "domain": "generic",
-      "stack": "unknown",
-      "prompt": "verify claim evidence acceptance risk",
-      "workspace": { "activation": "generic" },
-      "expected": { "primary": "verification-router", "stack": ["verification-router"], "capability": "filesystem.read", "provider": "builtin", "verifier": "claim-audit", "confidence": 1, "context_cost": 3200, "fallback": "needs-user" }
-    },
-    {
-      "id": "visual-asset",
-      "phase": "implementation",
-      "claim": "An asset request selects image-generation procedure without ordinary CSS guidance.",
-      "risk": "S1",
-      "domain": "frontend",
-      "stack": "web",
-      "prompt": "Create mockup brand visuals",
-      "workspace": { "activation": "generic" },
-      "expected": { "primary": "master-image-generation", "stack": ["master-image-generation"], "capability": "design.render", "provider": "explicit", "verifier": "asset-review", "confidence": 1, "context_cost": 3500, "fallback": "needs-user" }
-    },
-    {
-      "id": "harness-context",
-      "phase": "review",
-      "claim": "A harness-context change selects context evolution procedure.",
-      "risk": "S2",
-      "domain": "harness",
-      "stack": "agent-rules",
-      "prompt": "bổ sung context agent-rules",
-      "workspace": { "activation": "generic" },
-      "expected": { "primary": "context-evolution-protocol", "stack": ["context-evolution-protocol"], "capability": "filesystem.write", "provider": "builtin", "verifier": "rule-contract", "confidence": 1, "context_cost": 2800, "fallback": "needs-user" }
-    },
-    {
-      "id": "5fedu-domain-parity",
-      "phase": "verification",
-      "claim": "An explicitly active 5fedu profile wins over generic browser wording.",
-      "risk": "S2",
-      "domain": "5fedu",
-      "stack": "web-erp",
-      "prompt": "Sửa module 5fedu lệch pattern drawer và click-through browser",
-      "workspace": { "activation": "5fedu-marker" },
-      "expected": { "primary": "5fedu-module-parity", "stack": ["5fedu-module-parity", "5fedu-project", "browser-qa"], "capability": "browser.verify", "provider": "playwright-cli", "verifier": "parity", "confidence": 1, "context_cost": 8000, "fallback": "browser-proof-unavailable" }
-    }
-  ]
+ "$schema": "../schemas/route-parity-case.schema.json",
+ "version": 1,
+ "description": "Fixed typed shadow corpus for canonical TypeScript skill routing and Python host-adapter parity. Expected capability/provider/verifier fields are audit metadata; runtime selection remains owned by the broker and verification policy.",
+ "cases": [
+  {
+   "id": "simple-explanation",
+   "phase": "discussion",
+   "claim": "A simple explanation does not activate implementation skills.",
+   "risk": "S0",
+   "domain": "generic",
+   "stack": "none",
+   "prompt": "Giải thích cách xử lý đơn giản",
+   "workspace": {
+    "activation": "generic"
+   },
+   "expected": {
+    "primary": null,
+    "stack": [],
+    "capability": "none",
+    "provider": "none",
+    "verifier": "none",
+    "confidence": 1,
+    "context_cost": 0,
+    "fallback": "no-skill"
+   }
+  },
+  {
+   "id": "generic-execution",
+   "phase": "implementation",
+   "claim": "A generic implementation request selects the execution facade only.",
+   "risk": "S1",
+   "domain": "generic",
+   "stack": "node",
+   "prompt": "Refactor module thanh toán Node.js",
+   "workspace": {
+    "activation": "generic"
+   },
+   "expected": {
+    "primary": "finish-to-completion",
+    "stack": [
+     "finish-to-completion"
+    ],
+    "capability": "filesystem.write",
+    "provider": "builtin",
+    "verifier": "unit",
+    "confidence": 1,
+    "context_cost": 1500,
+    "fallback": "generic-execution"
+   }
+  },
+  {
+   "id": "browser-parity",
+   "phase": "verification",
+   "claim": "Visual browser parity loads parity procedure with browser and QA support.",
+   "risk": "S2",
+   "domain": "frontend",
+   "stack": "web",
+   "prompt": "Verify visual parity in the browser",
+   "workspace": {
+    "activation": "generic"
+   },
+   "expected": {
+    "primary": "parity-verification",
+    "stack": [
+     "parity-verification",
+     "browser-qa",
+     "qa-skills"
+    ],
+    "capability": "browser.verify",
+    "provider": "playwright-cli",
+    "verifier": "browser",
+    "confidence": 1,
+    "context_cost": 5000,
+    "fallback": "browser-proof-unavailable"
+   }
+  },
+  {
+   "id": "research-docs",
+   "phase": "discussion",
+   "claim": "External documentation research selects lookup procedure without implementation skills.",
+   "risk": "S1",
+   "domain": "research",
+   "stack": "unknown",
+   "prompt": "Research latest API documentation",
+   "workspace": {
+    "activation": "generic"
+   },
+   "expected": {
+    "primary": "researcher",
+    "stack": [
+     "researcher"
+    ],
+    "capability": "docs.lookup",
+    "provider": "context7",
+    "verifier": "source-receipt",
+    "confidence": 0.95,
+    "context_cost": 3000,
+    "fallback": "manual-lookup"
+   }
+  },
+  {
+   "id": "plan-handoff",
+   "phase": "plan",
+   "claim": "A multi-phase handoff request selects plan authoring procedure.",
+   "risk": "S2",
+   "domain": "generic",
+   "stack": "unknown",
+   "prompt": "Lập plan dài nhiều phase và handoff",
+   "workspace": {
+    "activation": "generic"
+   },
+   "expected": {
+    "primary": "plan-and-handoff",
+    "stack": [
+     "plan-and-handoff"
+    ],
+    "capability": "filesystem.read",
+    "provider": "builtin",
+    "verifier": "plan-contract",
+    "confidence": 1,
+    "context_cost": 2200,
+    "fallback": "needs-user"
+   }
+  },
+  {
+   "id": "frontend-brief",
+   "phase": "implementation",
+   "claim": "A landing-page brief selects frontend implementation plus an explicit taste modifier.",
+   "risk": "S1",
+   "domain": "frontend",
+   "stack": "web",
+   "prompt": "Redesign landing page giao diện đẹp",
+   "workspace": {
+    "activation": "generic"
+   },
+   "expected": {
+    "primary": "frontend-architect",
+    "stack": [
+     "frontend-architect",
+     "ui-taste"
+    ],
+    "capability": "browser.verify",
+    "provider": "playwright-cli",
+    "verifier": "browser",
+    "confidence": 1,
+    "context_cost": 3500,
+    "fallback": "browser-proof-unavailable"
+   }
+  },
+  {
+   "id": "qa-procedure",
+   "phase": "verification",
+   "claim": "A QA planning request selects bounded QA procedure.",
+   "risk": "S1",
+   "domain": "generic",
+   "stack": "unknown",
+   "prompt": "QA checklist edge-case manual cases",
+   "workspace": {
+    "activation": "generic"
+   },
+   "expected": {
+    "primary": "qa-skills",
+    "stack": [
+     "qa-skills"
+    ],
+    "capability": "filesystem.read",
+    "provider": "builtin",
+    "verifier": "test-strategy",
+    "confidence": 1,
+    "context_cost": 3000,
+    "fallback": "needs-user"
+   }
+  },
+  {
+   "id": "quality-review",
+   "phase": "review",
+   "claim": "A code-quality audit selects quality policy and execution compatibility support.",
+   "risk": "S2",
+   "domain": "generic",
+   "stack": "unknown",
+   "prompt": "deep code quality audit refactor code",
+   "workspace": {
+    "activation": "generic"
+   },
+   "expected": {
+    "primary": "quality",
+    "stack": [
+     "quality",
+     "finish-to-completion"
+    ],
+    "capability": "code.search",
+    "provider": "builtin",
+    "verifier": "review",
+    "confidence": 1,
+    "context_cost": 4000,
+    "fallback": "needs-user"
+   }
+  },
+  {
+   "id": "docs-update",
+   "phase": "implementation",
+   "claim": "A documentation change selects documentation procedure only.",
+   "risk": "S0",
+   "domain": "docs",
+   "stack": "markdown",
+   "prompt": "Update README documentation",
+   "workspace": {
+    "activation": "generic"
+   },
+   "expected": {
+    "primary": "docs-style",
+    "stack": [
+     "docs-style"
+    ],
+    "capability": "filesystem.write",
+    "provider": "builtin",
+    "verifier": "links",
+    "confidence": 1,
+    "context_cost": 4500,
+    "fallback": "generic-execution"
+   }
+  },
+  {
+   "id": "claim-verification",
+   "phase": "verification",
+   "claim": "A claim/evidence request selects verification routing.",
+   "risk": "S2",
+   "domain": "generic",
+   "stack": "unknown",
+   "prompt": "verify claim evidence acceptance risk",
+   "workspace": {
+    "activation": "generic"
+   },
+   "expected": {
+    "primary": "verification-router",
+    "stack": [
+     "verification-router"
+    ],
+    "capability": "filesystem.read",
+    "provider": "builtin",
+    "verifier": "claim-audit",
+    "confidence": 1,
+    "context_cost": 3200,
+    "fallback": "needs-user"
+   }
+  },
+  {
+   "id": "visual-asset",
+   "phase": "implementation",
+   "claim": "An asset request selects image-generation procedure without ordinary CSS guidance.",
+   "risk": "S1",
+   "domain": "frontend",
+   "stack": "web",
+   "prompt": "Create mockup brand visuals",
+   "workspace": {
+    "activation": "generic"
+   },
+   "expected": {
+    "primary": "master-image-generation",
+    "stack": [
+     "master-image-generation"
+    ],
+    "capability": "design.render",
+    "provider": "explicit",
+    "verifier": "asset-review",
+    "confidence": 1,
+    "context_cost": 3500,
+    "fallback": "needs-user"
+   }
+  },
+  {
+   "id": "harness-context",
+   "phase": "review",
+   "claim": "A harness-context change selects context evolution procedure.",
+   "risk": "S2",
+   "domain": "harness",
+   "stack": "agent-rules",
+   "prompt": "bổ sung context agent-rules",
+   "workspace": {
+    "activation": "generic"
+   },
+   "expected": {
+    "primary": "context-evolution-protocol",
+    "stack": [
+     "context-evolution-protocol"
+    ],
+    "capability": "filesystem.write",
+    "provider": "builtin",
+    "verifier": "rule-contract",
+    "confidence": 1,
+    "context_cost": 2800,
+    "fallback": "needs-user"
+   }
+  },
+  {
+   "id": "5fedu-domain-parity",
+   "phase": "verification",
+   "claim": "An explicitly active 5fedu profile wins over generic browser wording.",
+   "risk": "S2",
+   "domain": "5fedu",
+   "stack": "web-erp",
+   "prompt": "Sửa module 5fedu lệch pattern drawer và click-through browser",
+   "workspace": {
+    "activation": "5fedu-marker"
+   },
+   "expected": {
+    "primary": "5fedu-module-parity",
+    "stack": [
+     "5fedu-module-parity",
+     "5fedu-project",
+     "browser-qa"
+    ],
+    "capability": "browser.verify",
+    "provider": "playwright-cli",
+    "verifier": "parity",
+    "confidence": 1,
+    "context_cost": 8000,
+    "fallback": "browser-proof-unavailable"
+   }
+  },
+  {
+   "id": "keyword-alone-no-heavy-provider",
+   "phase": "implementation",
+   "claim": "Prompt keywords alone cannot activate a heavy browser provider.",
+   "risk": "S1",
+   "domain": "generic",
+   "stack": "none",
+   "prompt": "Browser e2e testing with playwright for this task",
+   "workspace": {
+    "activation": "generic"
+   },
+   "expected": {
+    "primary": "browser-qa",
+    "stack": [
+     "browser-qa"
+    ],
+    "capability": "browser.verify",
+    "provider": "cheapest-sufficient",
+    "verifier": "deterministic-first",
+    "confidence": 0.8,
+    "context_cost": 2000,
+    "fallback": "script-proof"
+   }
+  },
+  {
+   "id": "cheap-provider-lacks-capability",
+   "phase": "verification",
+   "claim": "A cheap provider present but lacking the required capability is not selected; explicit blocker instead.",
+   "risk": "S2",
+   "domain": "generic",
+   "stack": "node",
+   "prompt": "Verify the API contract with a disposable database migration",
+   "workspace": {
+    "activation": "generic"
+   },
+   "expected": {
+    "primary": "verification-router",
+    "stack": [
+     "verification-router"
+    ],
+    "capability": "database.disposable",
+    "provider": "unavailable",
+    "verifier": "blocked",
+    "confidence": 0.9,
+    "context_cost": 1000,
+    "fallback": "explicit-blocker"
+   }
+  },
+  {
+   "id": "several-providers-cheapest-sufficient",
+   "phase": "verification",
+   "claim": "Several providers can prove the same claim; cheapest sufficient wins.",
+   "risk": "S1",
+   "domain": "generic",
+   "stack": "node",
+   "prompt": "Check the unit test suite passes for the bounded change",
+   "workspace": {
+    "activation": "generic"
+   },
+   "expected": {
+    "primary": null,
+    "stack": [],
+    "capability": "none",
+    "provider": "none",
+    "verifier": "none",
+    "confidence": 1,
+    "context_cost": 0,
+    "fallback": "no-route"
+   }
+  },
+  {
+   "id": "unnecessary-activation-denied",
+   "phase": "implementation",
+   "claim": "Unnecessary provider activation is denied when no claim needs it.",
+   "risk": "S1",
+   "domain": "generic",
+   "stack": "none",
+   "prompt": "Fix the typo in the README",
+   "workspace": {
+    "activation": "generic"
+   },
+   "expected": {
+    "primary": "docs-style",
+    "stack": [
+     "docs-style"
+    ],
+    "capability": "filesystem.write",
+    "provider": "builtin",
+    "verifier": "none",
+    "confidence": 0.9,
+    "context_cost": 1000,
+    "fallback": "builtin-only"
+   }
+  }
+ ]
 }

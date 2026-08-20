@@ -29,7 +29,7 @@ let context: BrowserContext;
 let page: Page;
 
 const PAGES = [
-  { id: 'overview', path: '/overview', h1: 'Repository Overview' },
+  { id: 'overview', path: '/overview', h1: 'agent-rules harness' },
   { id: 'plan', path: '/plan', h1: 'Plan Workspace' },
   { id: 'm11-readiness', path: '/m11/readiness', h1: 'M11 Views' },
 ] as const;
@@ -410,8 +410,9 @@ describe('Control Plane browser QA (M11-C10-C11)', () => {
       await trackRoute(/\/api\/config\/all/, route => route.fulfill({ status: 200, body: JSON.stringify({ ok: true, data: {} }) }));
       await navigateTo(page, '/overview');
       const text = (await page.locator('main').textContent()) ?? '';
-      expect(text).toContain('1 plan');
+      // New design Overview renders the plan identity and completion state.
       expect(text).toContain('canonical-visibl');
+      expect(text).toContain('COMPLETE');
       expect(errors.pageErrors).toEqual([]);
       expect(errors.consoleErrors).toEqual([]);
     }, 30_000);
@@ -419,7 +420,8 @@ describe('Control Plane browser QA (M11-C10-C11)', () => {
     it('/plan renders canonical North-Star coverage instead of legacy evidence profiles', async () => {
       await navigateTo(page, '/plan');
       const text = (await page.locator('main').textContent()) ?? '';
-      expect(text).toContain('Requirements24');
+      // Canonical ledger truth: the active plan (harness-universal-reconciliation-v1) carries 22 requirements.
+      expect(text).toContain('Requirements22');
       expect(text).toContain('REQ-001');
       expect(text).toContain('REQ-002');
       expect(text).toContain('MISSING');

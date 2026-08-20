@@ -18,6 +18,15 @@
 | `parity-verification` | Visual, responsive, behavioral parity across dimensions; claim-based proof loop | active |
 | `browser-qa` | Mắt+tay coding agent (Playwright CLI default; MCP/DevTools on demand) | active |
 
+Routing note (REQ-005 / skill-mcp-fabric-v1): `browser-qa` no longer declares
+a `requires` dependency on `qa-skills`. qa-skills loads only when QA reasoning
+is actually needed (test-design matrix, exploratory/edge-case planning);
+a deterministic browser verification loads only the Playwright Agent CLI
+(smallest sufficient proof). Generic keywords such as "browser" or "e2e"
+alone do not activate the skill — intent-bearing signals
+(`click-through`, `exploratory`, `console/network`, `playwright`,
+`chrome-devtools`, ...) do.
+
 | `verification-router` | Claim/risk-based verifier selection, evidence profiles, and deterministic replay | active |
 
 Archived/deprecated skills live under `docs/history/skills/` and are not routable.

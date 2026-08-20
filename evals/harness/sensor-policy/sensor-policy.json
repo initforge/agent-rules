@@ -1,0 +1,42 @@
+{
+  "schema": "harness/sensor-policy",
+  "version": 1,
+  "sensors": [
+    {
+      "sensor_id": "SENS-ROUTE-PRECISION",
+      "direction": "feedforward",
+      "oracle": "computational",
+      "lifecycle": "pre-execution",
+      "applicability": "skill/provider routing precision; prompt keywords alone cannot activate a heavy provider",
+      "cost": "cheap",
+      "independence": "oracle-group-route",
+      "freshness_ms": 0,
+      "confidence": 0.95,
+      "escalation": { "on_fail": "deny heavy provider activation", "retry_budget": 0 }
+    },
+    {
+      "sensor_id": "SENS-EVIDENCE-FRESHNESS",
+      "direction": "feedback",
+      "oracle": "computational",
+      "lifecycle": "post-execution",
+      "applicability": "reject stale/correlated evidence in acceptance reduction",
+      "cost": "cheap",
+      "independence": "oracle-group-evidence",
+      "freshness_ms": 600000,
+      "confidence": 0.9,
+      "escalation": { "on_fail": "mark evidence stale; re-run claim-matched proof", "retry_budget": 2 }
+    },
+    {
+      "sensor_id": "SENS-SEMANTIC-RESIDUAL",
+      "direction": "feedback",
+      "oracle": "human",
+      "lifecycle": "review",
+      "applicability": "semantic claims whose cheapest sufficient proof is human review",
+      "cost": "deep",
+      "independence": "oracle-group-human",
+      "freshness_ms": 0,
+      "confidence": 0.6,
+      "escalation": { "on_fail": "NEEDS_USER with the exact unresolved item", "retry_budget": 1 }
+    }
+  ]
+}

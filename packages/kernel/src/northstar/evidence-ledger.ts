@@ -14,6 +14,7 @@ import {
   type WorkSpec,
 } from './protocol.js';
 import type { TraceabilityManifest } from './compiler.js';
+import { STAGE_RANK, bestStage, normalizeStages, type EvidenceStage } from '../claim-registry.js';
 
 export type EvidenceOrigin = 'runtime' | 'verifier' | 'auditor';
 
@@ -29,6 +30,8 @@ export interface ClaimAcceptancePolicy {
   claim_id: string;
   required_kinds?: EvidenceKind[];
   minimum_channels?: number;
+  /** AM-0005: minimum evidence stage. When set, below-stage evidence never accepts the claim. */
+  required_stage?: EvidenceStage;
 }
 
 export interface EvidenceBinding {
@@ -177,6 +180,24 @@ export function deriveAcceptance(input: {
     const requiredKinds = policy?.required_kinds ?? claimDef.required_kinds ?? [];
     const missingKinds = requiredKinds.filter((kind) => !latestRecords.some((record) => record.kind === kind && record.status === 'pass'));
     if (missingKinds.length) { unresolved.push(claimId); reasons.push(`claim ${claimId} lacks required evidence kind(s): ${missingKinds.join(', ')}`); continue; }
+    // AM-0005: evidence stage gate. Test-only evidence never satisfies a
+    // live/dogfood/operational claim; below-stage acceptance fails closed.
+    // Records without an explicit stage default to the TEST_VERIFIED floor.
+    const requiredStage = policy?.required_stage ?? claimDef.required_stage;
+    if (requiredStage) {
+      const passingStages = normalizeStages(
+        latestRecords
+          .filter((record) => record.status === 'pass')
+          .map((record) => record.evidence_stage as EvidenceStage | undefined)
+          .filter((stage): stage is EvidenceStage => stage !== undefined),
+      );
+      const best = bestStage(passingStages);
+      if (best === undefined || STAGE_RANK[best] < STAGE_RANK[requiredStage] || requiredStage === 'LIVE_UNPROVEN') {
+        unresolved.push(claimId);
+        reasons.push(`claim ${claimId} evidence stage ${best ?? 'none'} below required stage ${requiredStage} (AM-0005: test-only evidence cannot prove a live/dogfood/operational claim)`);
+        continue;
+      }
+    }
     const passingChannels = new Set(latestRecords.filter((record) => record.status === 'pass').map(channelKey));
     const minimum = policy?.minimum_channels ?? defaultMinimumChannels(input.spec.risk_class);
     if (passingChannels.size < minimum) { unresolved.push(claimId); reasons.push(`claim ${claimId} has ${passingChannels.size}/${minimum} required independent oracle channel(s)`); continue; }

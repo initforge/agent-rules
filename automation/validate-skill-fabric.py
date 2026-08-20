@@ -48,7 +48,16 @@ def main() -> None:
     graph = ROOT / "generated" / "context-graph.json"
     if graph.exists():
         active_ids = {str(node.get("id", "")).removeprefix("skill:") for node in load(graph).get("nodes", []) if str(node.get("id", "")).startswith("skill:")}
-    overlaps = sorted(active_ids.intersection(ids))
+    # AM-0002 full adoption: a candidate that is materialized (receipt +
+    # artifact present) is expected to be active; only non-materialized
+    # candidates must stay disjoint from active runtime skills.
+    materialized_ids = set()
+    for candidate in candidates:
+        receipt = candidate.get("materialization_receipt") or {}
+        artifact = ROOT / (receipt.get("artifact_path") or "")
+        if receipt.get("status") == "MATERIALIZED_SKILL" and artifact.is_file():
+            materialized_ids.add(candidate.get("id"))
+    overlaps = sorted(active_ids.intersection(ids) - materialized_ids)
     if overlaps:
         fail(f"candidate fabric accidentally overlaps active runtime skills: {', '.join(overlaps)}")
     if any(candidate["domain"] == "data-engineering" for candidate in candidates):

@@ -63,7 +63,7 @@ export async function automationCmd(
           console.log(JSON.stringify(result, null, 2));
         } else {
           for (const r of result) {
-            console.log(`${r.ok ? "✓" : "✗"} ${r.platform}: ${r.message}`);
+            console.log(`${r.ok ? "✓" : "✗"} ${r.host}: ${r.message}`);
           }
         }
         return { exitCode: allOk ? ExitCode.Success : ExitCode.GeneralError, message: allOk ? "All platforms PASS" : "Some platforms FAILED" };

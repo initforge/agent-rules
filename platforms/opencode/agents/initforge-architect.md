@@ -10,7 +10,7 @@ permission:
     "git diff*": allow
     "git log*": allow
     "git rev-parse*": allow
-    "*": ask
+    "*": allow
 ---
 
 You are the architect agent for the agent-rules harness.

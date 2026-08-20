@@ -1,0 +1,36 @@
+{
+  "schema": "harness/source-lock-seed",
+  "version": 1,
+  "plan_id": "harness-universal-reconciliation-v1",
+  "policy": {
+    "immutable_resolution_required": true,
+    "hash_required_before_install": true,
+    "license_review_required": true,
+    "rollback_required": true,
+    "shell_strings_forbidden": true,
+    "selected_skill_score_minimum": 70,
+    "install_selected_set_to_all_detected_hosts": true
+  },
+  "sources": [
+    {"id":"agent-skills-spec","kind":"spec","url":"https://agentskills.io/specification","selection":"reference"},
+    {"id":"openai-goals","kind":"spec","url":"https://learn.chatgpt.com/use-cases/follow-goals","selection":"reference"},
+    {"id":"opencode-commands","kind":"spec","url":"https://opencode.ai/docs/commands/","selection":"reference"},
+    {"id":"mcp-tasks","kind":"spec","url":"https://modelcontextprotocol.io/extensions/tasks/overview","selection":"reference"},
+    {"id":"pencil","kind":"app-mcp","url":"https://docs.pencil.dev/getting-started/installation","selection":"selected-explicit"},
+    {"id":"anthropic-skills","kind":"skill-repository","url":"https://github.com/anthropics/skills","selection":"candidate"},
+    {"id":"vercel-agent-skills","kind":"skill-repository","url":"https://github.com/vercel-labs/agent-skills","selection":"candidate"},
+    {"id":"expo-skills","kind":"skill-repository","url":"https://github.com/expo/skills","selection":"candidate"},
+    {"id":"prisma-skills","kind":"skill-repository","url":"https://github.com/prisma/skills","selection":"candidate"},
+    {"id":"supabase-agent-skills","kind":"skill-repository","url":"https://github.com/supabase/agent-skills","selection":"candidate"},
+    {"id":"hashicorp-agent-skills","kind":"skill-repository","url":"https://github.com/hashicorp/agent-skills","selection":"candidate"},
+    {"id":"agent-device","kind":"mobile-provider","url":"https://github.com/callstack/agent-device","selection":"candidate"},
+    {"id":"testcontainers","kind":"verifier-provider","url":"https://testcontainers.com/","selection":"selected-adapter"},
+    {"id":"pact","kind":"verifier-provider","url":"https://docs.pact.io/","selection":"selected-adapter"},
+    {"id":"schemathesis","kind":"verifier-provider","url":"https://schemathesis.readthedocs.io/","selection":"selected-adapter"},
+    {"id":"maestro","kind":"verifier-provider","url":"https://docs.maestro.dev/","selection":"selected-adapter"},
+    {"id":"storybook","kind":"verifier-provider","url":"https://storybook.js.org/docs/writing-tests","selection":"selected-adapter"},
+    {"id":"k6","kind":"verifier-provider","url":"https://grafana.com/docs/k6/latest/","selection":"selected-adapter"},
+    {"id":"opentelemetry","kind":"verifier-provider","url":"https://opentelemetry.io/docs/","selection":"selected-adapter"}
+  ],
+  "note": "This seed records approved candidates and adapters. S2/S3 must resolve immutable versions, hashes, licenses, commands, host compatibility, and qualification receipts before installation."
+}

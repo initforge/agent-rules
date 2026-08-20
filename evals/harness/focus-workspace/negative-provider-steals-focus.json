@@ -1,0 +1,31 @@
+{
+ "schema": "harness/focus-workspace-fixture",
+ "version": 1,
+ "kind": "placement",
+ "before": {
+  "currentWorkspace": 0,
+  "activeWindowId": "0x06000004"
+ },
+ "after": {
+  "currentWorkspace": 0,
+  "activeWindowId": "0x06000004"
+ },
+ "sourceWindowId": "0x04c00006",
+ "targetWorkspace": 4,
+ "windows": [
+  {
+   "windowId": "0x04c00006",
+   "pid": "7243",
+   "workspace": 4
+  }
+ ],
+ "providerWindow": {
+  "windowId": "0x1f000001",
+  "pid": "9876",
+  "workspace": 0
+ },
+ "activeWindowAfterMove": "0x1f000001",
+ "moveApplies": true,
+ "expect": "not-placed",
+ "note": "Race guard: the headed provider window self-activated on map and stole the owner's active window. Must fail closed (verification_failed), never silently switch to headless/minimize to make the run green."
+}

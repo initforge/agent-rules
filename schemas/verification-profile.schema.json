@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://agent-rules.local/schemas/verification-profile.schema.json",
   "title": "Verification Profile",
-  "description": "DoD §37 / SS-13 / R-025 verification contract for a harness task. The profile is the bridge between the runner's historical `verification: string[]` and the richer evidence surface (Playwright / browser-script / mcp-tool-call / visual-diff) required by browser-based verification.",
+  "description": "DoD §37 / SS-13 / R-025 verification contract for a harness task. The profile is the bridge between the runner's historical `verification: string[]` and the richer evidence surface (Playwright / browser-script / mcp-tool-call / visual-diff) required by browser-based verification. Provider step kinds (testcontainers, pact, schemathesis, storybook, maestro, semgrep, codeql, k6, opentelemetry) are claim-driven lifecycle adapters: activation is never global, a missing optional provider yields explicit UNAVAILABLE evidence (never PASS), k6 requires explicit thresholds, and telemetry evidence never substitutes product acceptance.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -29,6 +29,33 @@
           },
           {
             "$ref": "#/$defs/VisualDiffStep"
+          },
+          {
+            "$ref": "#/$defs/TestcontainersStep"
+          },
+          {
+            "$ref": "#/$defs/PactStep"
+          },
+          {
+            "$ref": "#/$defs/SchemathesisStep"
+          },
+          {
+            "$ref": "#/$defs/StorybookStep"
+          },
+          {
+            "$ref": "#/$defs/MaestroStep"
+          },
+          {
+            "$ref": "#/$defs/SemgrepStep"
+          },
+          {
+            "$ref": "#/$defs/CodeqlStep"
+          },
+          {
+            "$ref": "#/$defs/K6Step"
+          },
+          {
+            "$ref": "#/$defs/OpenTelemetryStep"
           }
         ]
       }
@@ -42,7 +69,16 @@
           "console",
           "network",
           "a11y",
-          "mcp-response"
+          "mcp-response",
+          "container-log",
+          "contract-verification",
+          "schema-report",
+          "story-state",
+          "device-run",
+          "scan-report",
+          "threshold-report",
+          "telemetry-trace",
+          "unavailable-evidence"
         ]
       },
       "default": []
@@ -56,6 +92,29 @@
       "type": "boolean",
       "default": false,
       "description": "When true, stop evaluation after the first failing ordered step. North-Star uses this after cheap-to-deep graph ordering; legacy profiles default false."
+    },
+    "activation": {
+      "type": "string",
+      "enum": ["claim-driven", "explicit", "automatic"],
+      "description": "Provider activation mode. Provider adapters are claim-driven: they activate only when an actual claim needs them, never globally."
+    },
+    "provider": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Provider adapter id (matches integrations/providers/<id>/manifest.json)."
+    },
+    "unavailable_status": {
+      "type": "string",
+      "enum": ["UNAVAILABLE", "BLOCKED"],
+      "description": "Fail-closed status when the provider/runtime is unavailable. Never PASS."
+    },
+    "thresholds_required": {
+      "type": "boolean",
+      "description": "When true, the profile activates only against explicit thresholds/SLO claims (k6)."
+    },
+    "telemetry_only": {
+      "type": "boolean",
+      "description": "When true, evidence from this profile can never substitute product acceptance."
     }
   },
   "$defs": {
@@ -188,6 +247,188 @@
           "maximum": 1,
           "default": 0.01,
           "description": "Allowed pixel-difference ratio."
+        }
+      }
+    },
+    "TestcontainersStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "spec"
+      ],
+      "properties": {
+        "kind": {
+          "const": "testcontainers"
+        },
+        "spec": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Testcontainers spec/test file that starts disposable real dependencies."
+        }
+      }
+    },
+    "PactStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "spec"
+      ],
+      "properties": {
+        "kind": {
+          "const": "pact"
+        },
+        "spec": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Pact contract file or consumer/provider verification target."
+        }
+      }
+    },
+    "SchemathesisStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "spec"
+      ],
+      "properties": {
+        "kind": {
+          "const": "schemathesis"
+        },
+        "spec": {
+          "type": "string",
+          "minLength": 1,
+          "description": "OpenAPI/GraphQL schema path or URL."
+        },
+        "baseUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "Disposable test API base URL the schema behavior runner targets."
+        }
+      }
+    },
+    "StorybookStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "stories"
+      ],
+      "properties": {
+        "kind": {
+          "const": "storybook"
+        },
+        "stories": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Story glob/location for the component states to verify."
+        },
+        "baseUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "Running Storybook server URL; defaults to a harness-started instance."
+        }
+      }
+    },
+    "MaestroStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "flow"
+      ],
+      "properties": {
+        "kind": {
+          "const": "maestro"
+        },
+        "flow": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Maestro flow YAML for the device interaction."
+        },
+        "device": {
+          "type": "string",
+          "description": "Target device/emulator id; defaults to the connected device."
+        }
+      }
+    },
+    "SemgrepStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "target"
+      ],
+      "properties": {
+        "kind": {
+          "const": "semgrep"
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Local path scanned for security patterns."
+        }
+      }
+    },
+    "CodeqlStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "language"
+      ],
+      "properties": {
+        "kind": {
+          "const": "codeql"
+        },
+        "language": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Language under analysis; CodeQL runs in CI only."
+        }
+      }
+    },
+    "K6Step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "script",
+        "thresholds"
+      ],
+      "properties": {
+        "kind": {
+          "const": "k6"
+        },
+        "script": {
+          "type": "string",
+          "minLength": 1,
+          "description": "k6 load script path."
+        },
+        "thresholds": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "Explicit thresholds/SLO (e.g. p95 latency ms, error rate %). Performance checks require explicit thresholds."
+        }
+      }
+    },
+    "OpenTelemetryStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "collector"
+      ],
+      "properties": {
+        "kind": {
+          "const": "opentelemetry"
+        },
+        "collector": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Collector config for the local distributed-diagnosis session. Telemetry evidence never substitutes product acceptance."
         }
       }
     }

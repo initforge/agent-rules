@@ -5,7 +5,6 @@
       "args": [
         "-y",
         "chrome-devtools-mcp@1.7.0",
-        "--headless",
         "--isolated"
       ],
       "env": {

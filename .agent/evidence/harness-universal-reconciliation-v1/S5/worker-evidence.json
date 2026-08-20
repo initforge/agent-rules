@@ -1,0 +1,163 @@
+{
+  "task_id": "S5",
+  "plan_id": "harness-universal-reconciliation-v1",
+  "plan_revision": 4,
+  "recipe_sha256": "6245406d173b26c0bc36e6d199f192a927333a906943369876ced305c5536823",
+  "implementation_intent_receipt_sha256": "90444c928a073c54905954cb92c4b46e2eeddb43789e7a0a321e1d2448175ff1",
+  "candidate_commits": ["d23b12a", "b5231f7"],
+  "status": "IMPLEMENTED-WITH-C012-INTERFACE-CONFLICT",
+  "summary": "Migrated the proven detached Pencil candidate (d23b12a) into all six S5-owned paths byte-identically where the candidate had content; b5231f7 only touches automation/source-integrity.json (out of scope, not owned by S5). V-011 (dogfood) passes exit 0. V-012 fails exactly one assertion in the pre-candidate engine test file (expects --headless in foreground opencode config); the migrated kernel implements the recipe-mandated foreground policy that contradicts that stale expectation. Per recipe instructions the engine test file was NOT edited; the exact conflict and its resolution (adopt candidate engine test) are recorded below.",
+  "migrated_vs_dropped_inventory": {
+    "integrations/manual/pencil-mcp/README.md": {
+      "action": "migrated",
+      "notes": "Byte-identical to d23b12a: registry-recognized host-managed explicit-only provider, native entry discovery contract, 7-host adapter surface, fail-closed launcher, operator-visible design contract, CI headless-only renderer policy."
+    },
+    "integrations/manual/pencil-mcp/manifest.json": {
+      "action": "migrated",
+      "notes": "Byte-identical to d23b12a: supportedHosts extended to all 7 registered hosts (codex, claude, grok, antigravity, cursor, opencode, mimocode); notes updated to explicit-marker activation."
+    },
+    "integrations/optional/pencil-mcp/manifest.json": {
+      "action": "created",
+      "notes": "Byte-identical to d23b12a: host-managed optional explicit-only provider manifest, mcpServerKey pencil, design.* capabilities, 7 supported hosts."
+    },
+    "integrations/optional/pencil-mcp/launch.mjs": {
+      "action": "created",
+      "notes": "Byte-identical to d23b12a: dynamic native entry discovery (PENCIL_MCP_NATIVE_CONFIG override, per-host override env, host-config env location, per-user host config), JSONC+TOML parsing, self-reference recursion guard, dry-run diagnostic that never prints env values, fail-closed exit 1. Verified live: discovers the machine's real native entry (current AppImage mount read from ~/.codex/config.toml at launch time); no mount path persisted anywhere."
+    },
+    "integrations/optional/pencil-mcp/launch.sh": {
+      "action": "created",
+      "notes": "Byte-identical to d23b12a: node launcher wrapper."
+    },
+    "integrations/optional/pencil-mcp/install.sh": {
+      "action": "created",
+      "notes": "Byte-identical to d23b12a (mode 755): host-managed registration only; no desktop app install; Pencil remains explicit-only."
+    },
+    "integrations/optional/pencil-mcp/uninstall.sh": {
+      "action": "created",
+      "notes": "Byte-identical to d23b12a (mode 755): registry entry retained; no desktop app removed."
+    },
+    "integrations/optional/pencil-mcp/verify.sh": {
+      "action": "created",
+      "notes": "Byte-identical to d23b12a (mode 755): MCP connected + existing .pen file required; records MCP-unavailable separately from app-installed by design."
+    },
+    "integrations/optional/pencil-mcp/adapters/{antigravity,claude,cursor,grok,mimocode,opencode}.json": {
+      "action": "created",
+      "notes": "Byte-identical to d23b12a: per-host launcher adapters with __AGENT_RULES_PENCIL_LAUNCHER__ placeholder and PENCIL_MCP_HOST/PENCIL_MCP_AGENT env; no /tmp/.mount_* path and no vendor args guessed."
+    },
+    "integrations/optional/pencil-mcp/adapters/codex.toml": {
+      "action": "created",
+      "notes": "Byte-identical to d23b12a: TOML dialect with startup_timeout_sec=120 and env table."
+    },
+    "packages/cli/src/automation/merge-mcp-adapters.ts": {
+      "action": "migrated",
+      "notes": "Diff byte-identical to d23b12a: added pencilLauncherForAdapter (launcher resolved beside the integration, forward-slash on win32) and __AGENT_RULES_PENCIL_LAUNCHER__ expansion in both JSON and TOML merge paths."
+    },
+    "packages/kernel/src/northstar/pencil-routing.ts": {
+      "action": "created",
+      "notes": "Byte-identical to d23b12a: PENCIL_PROVIDER_ID/PENCIL_CAPABILITIES, explicit-marker regex (pencil|pen.dev), negation fail-closed (incl. Vietnamese negative), pencilCapabilitiesFor adds design.* surface only when explicit intent present; no generic design/UI vocabulary."
+    },
+    "packages/kernel/src/runner/mcp-config.ts": {
+      "action": "migrated",
+      "notes": "Byte-identical to d23b12a: visibilityMode foreground default / headless CI-only with mcp-visibility-preflight.json receipt (0600), checkVisibleMcpHost (CI headless by policy, AGENT_RULES_VISIBLE_MCP=0 off switch, DISPLAY/WAYLAND check, Windows service session check), interactive-integration detection via registry.json policy (browser.*/design.* capabilities) with KNOWN_INTERACTIVE_MCP_IDS fallback, --headless stripped in foreground and injected only in explicit CI headless mode, mimocode materialization (MIMOCODE_CONFIG_DIR + mimocode.jsonc), pencil-mcp read via native discovery (never static adapter), per-task outDir isolation preserved."
+    },
+    "packages/kernel/src/runner/pencil-native.ts": {
+      "action": "created",
+      "notes": "Byte-identical to d23b12a: discoverPencilNativeServer reads the operator's own pencil entry verbatim (JSON/JSONC/TOML) from stable config locations per host (codex/claude/opencode/mimocode), checkPencilDesktopApp conservative process observation with PENCIL_MCP_TEST_ASSUME_APP test override, pencilServerAsAdapter projects the native command/args/env without guessing; no /tmp/.mount_* persistence."
+    },
+    "automation/source-integrity.json (b5231f7)": {
+      "action": "dropped",
+      "notes": "b5231f7 only refreshes this manifest for candidate installer scripts; it is outside S5-owned paths (automation/ forbidden) and S5 does not modify installer scripts, so no content needs carrying over."
+    },
+    "candidate changes outside S5 owned paths (AGENTS.md, README*, docs, integrations/registry.json, integrations/recommended/*, integrations/optional/serena, packages/cli/src/commands/*, packages/cli/src/index.ts, packages/cli/src/integration/*, packages/engine/test/*, packages/kernel/src/northstar/{decision-fabric,routing,runtime}.ts, packages/kernel/src/runner/{headless-executor,loop}.ts, automation/*)": {
+      "action": "dropped (out of scope)",
+      "notes": "Owned by other slices (S6/S8) or forbidden scope per recipe. Notably: integrations/registry.json pencil-mcp policy record is S8's; the manual README references that future record. The engine test rewrite is owned by nobody in the task graph and is the subject of the V-012 interface conflict."
+    }
+  },
+  "changed_files": [
+    "integrations/manual/pencil-mcp/README.md",
+    "integrations/manual/pencil-mcp/manifest.json",
+    "integrations/optional/pencil-mcp/manifest.json",
+    "integrations/optional/pencil-mcp/launch.mjs",
+    "integrations/optional/pencil-mcp/launch.sh",
+    "integrations/optional/pencil-mcp/install.sh",
+    "integrations/optional/pencil-mcp/uninstall.sh",
+    "integrations/optional/pencil-mcp/verify.sh",
+    "integrations/optional/pencil-mcp/adapters/antigravity.json",
+    "integrations/optional/pencil-mcp/adapters/claude.json",
+    "integrations/optional/pencil-mcp/adapters/codex.toml",
+    "integrations/optional/pencil-mcp/adapters/cursor.json",
+    "integrations/optional/pencil-mcp/adapters/grok.json",
+    "integrations/optional/pencil-mcp/adapters/mimocode.json",
+    "integrations/optional/pencil-mcp/adapters/opencode.json",
+    "packages/cli/src/automation/merge-mcp-adapters.ts",
+    "packages/kernel/src/northstar/pencil-routing.ts",
+    "packages/kernel/src/runner/mcp-config.ts",
+    "packages/kernel/src/runner/pencil-native.ts"
+  ],
+  "proof_results": [
+    {
+      "claim": "C-011",
+      "verifier": "V-011",
+      "command": "node automation/pencil-dogfood.mjs",
+      "exit_code": 0,
+      "last_line": "{\"status\":\"BLOCKED\",\"provider\":\"pencil-mcp\",\"reason\":\"Pencil desktop/editor or connected MCP/.pen file is unavailable\",\"fallback\":\"continue with existing Control Plane and deterministic browser proof\",\"activation\":\"none\"}",
+      "result": "PASS (dogfood requires only explicit-only manifest verification; BLOCKED payload is the script's expected honest output)"
+    },
+    {
+      "claim": "C-012",
+      "verifier": "V-012",
+      "command": "npx vitest run test/runner-mcp-config.test.ts (cwd packages/engine)",
+      "exit_code": 1,
+      "last_line": "Test Files  1 failed (1)      Tests  1 failed | 8 passed (9)",
+      "result": "INTERFACE CONFLICT (8/9 pass). Failing assertion: 'writes an opencode.json that the opencode binary reads at startup' expects ['npx','-y','@playwright/mcp@0.0.78','--headless','--isolated']; migrated kernel (recipe-mandated foreground policy from the proven candidate) produces ['npx','-y','@playwright/mcp@0.0.78','--isolated'] because foreground mode strips --headless so the operator can watch the browser. The working-tree engine test file is the PRE-candidate version (byte-identical to 6e9a554, md5 a0856a14dd81a609b4bc51bb3d598763). Resolution requires replacing packages/engine/test/runner-mcp-config.test.ts with the candidate version (d23b12a) which asserts the new contract (no --headless in foreground, --headless only in explicit CI headless profile, visibility receipts, pencil native discovery). That file is not in S5's owned scope (nor any slice's write paths), so per recipe the worker reports the conflict instead of editing it.",
+      "kernel_contract_probe": "8/8 direct behavioral probes against built kernel PASS: foreground default strips --headless + writes receipt; headless CI-only with receipt; non-CI headless throws CI-only; no DISPLAY blocks foreground preflight; pencil native discovery/projection for codex/claude/opencode/mimocode with exact command/args/env; desktop check fail-closed; missing integration -> missing list; checkVisibleMcpHost matrix."
+    },
+    {
+      "command": "npm run build",
+      "exit_code": 0,
+      "result": "PASS (all packages, incl. control-plane runtime build)"
+    },
+    {
+      "command": "npx vitest run (cwd packages/kernel)",
+      "exit_code": 0,
+      "last_line": "Test Files  5 passed (5)      Tests  43 passed (43)",
+      "result": "PASS"
+    },
+    {
+      "command": "npx vitest run (cwd packages/cli)",
+      "exit_code": 0,
+      "last_line": "Test Files  27 passed (27)      Tests  461 passed (461)",
+      "result": "PASS"
+    },
+    {
+      "command": "node automation/validate-tool-registry.mjs",
+      "exit_code": 0,
+      "last_line": "PASS: tool registry v2 (7 integrations, 8 total identifiers)",
+      "result": "PASS"
+    }
+  ],
+  "repair_attempts": [
+    {
+      "attempt": 1,
+      "target": "C-012 / V-012 — keep existing engine test green by matching its expectations",
+      "outcome": "Impossible without violating the recipe. The failing assertion requires --headless to survive foreground materialization, i.e. a headless browser in a claimed foreground session, which contradicts REQ-011 (AC-011 visibility/interaction dimensions), microstep 4, and the proven candidate's tested behavior (candidate kernel strips --headless in foreground; candidate engine test asserts its absence). Matching the stale expectation would weaken verification to make a run green (forbidden by invariants). Alternative (editing packages/engine/test/) is forbidden by the recipe. Reported as interface conflict per recipe text."
+    },
+    {
+      "attempt": 2,
+      "target": "C-012 / V-012 — verify the conflict is purely the test-file version and not the kernel",
+      "outcome": "Diagnostic, not a code repair: 8/8 direct behavioral probes against the built kernel reproduce the candidate contract (see proof_results); the candidate engine test (d23b12a) asserts exactly what the kernel now does. The single failing assertion is the stale pre-candidate expectation. Engine full suite: 21 additional failures in test/browser-qa.test.ts (control-plane live-browser axe/console assertions) proven independent of S5: the file imports only playwright/axe/node builtins, identical 21 failures reproduce with S5's tracked changes stashed, and the pristine 6e9a554 baseline worktree passes 31/31; those failures stem from other slices' uncommitted control-plane changes."
+    }
+  ],
+  "edge_case_verification": {
+    "pencil_appimage_remount": "Launch-time dynamic read of the operator's host config yields the CURRENT live mount (verified: ~/.codex/config.toml -> /tmp/.mount_Pen.ApaCb8T8/.../mcp-server-linux-x64 resolved at dry-run time). Nothing persists or caches mount paths; grep confirms zero '/tmp/.mount_' occurrences across all migrated files.",
+    "pencil_open_mcp_disconnected": "verify.sh requires PENCIL_MCP_CONNECTED=true separately from any app check; materializer preflight separates checkPencilDesktopApp (app) from discoverPencilNativeServer (MCP entry) and records 'reason' in the visibility receipt.",
+    "no_display_or_elevation": "checkVisibleMcpHost returns unavailable with reason (no DISPLAY/WAYLAND, CI headless-by-policy, Windows services session); foreground materialization throws 'visible MCP preflight blocked' with the reason. Official-link fallback: manual README/manifest carry docs URLs (https://docs.pencil.dev/getting-started/installation|ai-integration); install.sh performs no elevation and leaves desktop attachment to the operator at task time (NEEDS_USER surface per host contract)."
+  },
+  "deviations_and_risks": [
+    "integrations/registry.json has no pencil-mcp policy record yet (S8-owned per task-graph); the migrated manual README claims the record exists. Kernel behavior is unaffected (KNOWN_INTERACTIVE_MCP_IDS fallback covers pencil-mcp). S8 must add the record to make the doc claim true.",
+    "packages/engine/test/runner-mcp-config.test.ts must be replaced with the candidate version for V-012 to pass; the coordinator owns that file.",
+    "The engine full-suite has 21 pre-existing (relative to S5) failures in browser-qa.test.ts caused by other slices' uncommitted control-plane changes; not introduced by S5 (see repair_attempt 2).",
+    "b5231f7 (automation/source-integrity.json) intentionally dropped: outside S5 scope.",
+    "No commit/push performed; .agent/current.json and ledger untouched."
+  ]
+}

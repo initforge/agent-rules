@@ -6,6 +6,7 @@ import { promisify } from "node:util";
 import { assertDirectoryNotLinked, exists, fsyncDirectory, fsyncRegularFile, hash, readRegularFileNoFollow, removeIfExists, writeJsonDurable } from "./filesystem.js";
 import { RUNTIME_PLATFORMS, type ActivationRecord, type RuntimeFile, type RuntimeInstallerOptions, type RuntimeLifecycleResult, type RuntimePlatform, type RuntimeReceipt, type SourceManifest } from "./contracts.js";
 import { resolveOpenCodeModel } from "./opencode.js";
+import { readCurrentPointer } from "@initforge/agent-rules-kernel/state/current-pointer.js";
 import { previewRecovery as previewTransactionRecovery, recover as recoverTransaction, writeJournal as writeTransactionJournal, type TransactionJournal } from "./recovery.js";
 
 export { fsyncDirectory, fsyncRegularFile } from "./filesystem.js";
@@ -133,10 +134,18 @@ async function readEffectivePlanBinding(repositoryRoot: string): Promise<{
     if ((error as Error).message.startsWith("Refusing linked")) throw error;
     throw new Error("Runtime installation requires exactly one canonical .agent/ledger/*.json effective-plan identity");
   }
-  if (ledgerNames.length !== 1) {
-    throw new Error("Runtime installation requires exactly one canonical .agent/ledger/*.json effective-plan identity");
+  const pointer = readCurrentPointer(repositoryRoot);
+  const pointerLedger = pointer?.canonical_ledger?.path;
+  const ledgerName = pointerLedger && pointerLedger.startsWith(".agent/ledger/")
+    ? path.basename(pointerLedger)
+    : ledgerNames.length === 1 ? ledgerNames[0] : null;
+  if (!ledgerName || !ledgerNames.includes(ledgerName)) {
+    throw new Error("Runtime installation requires the current pointer to bind exactly one canonical .agent/ledger/*.json effective-plan identity");
   }
-  const ledgerPath = path.join(ledgerRoot, ledgerNames[0]);
+  const ledgerPath = path.join(ledgerRoot, ledgerName);
+  if (pointer?.canonical_ledger?.sha256 && hash(await readRegularFileNoFollow(ledgerPath)) !== pointer.canonical_ledger.sha256) {
+    throw new Error(`Current pointer ledger hash mismatch: ${pointerLedger}`);
+  }
   const body = await readRegularFileNoFollow(ledgerPath);
   let parsed: Record<string, unknown>;
   try {

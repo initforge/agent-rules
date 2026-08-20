@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-rules/proof-profile/v1",
+  "title": "Proof Profile",
+  "description": "Reusable default proof profiles: minimal sufficient proof steps with escalation and no silent downgrade (owner §7).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "applies_to", "steps", "escalation_to", "min_fidelity"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "applies_to": {
+      "type": "array",
+      "items": { "enum": ["feature", "bugfix", "refactor", "source", "dependency", "schema", "migration", "api", "backend", "frontend", "browser", "accessibility", "mcp", "desktop", "process", "session", "workspace", "security", "performance", "concurrency", "build", "package", "install", "release", "qa", "verification", "parity", "regression", "test", "claim-evidence", "other"] }
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["category", "description"],
+        "properties": {
+          "category": { "enum": ["static", "unit", "contract", "integration", "api", "browser", "live", "security", "performance", "data", "packaging", "other"] },
+          "description": { "type": "string" },
+          "conditional": { "type": "boolean" }
+        }
+      }
+    },
+    "escalation_to": { "type": "array", "items": { "type": "string" } },
+    "min_fidelity": { "enum": ["static", "deterministic", "live"] }
+  }
+}

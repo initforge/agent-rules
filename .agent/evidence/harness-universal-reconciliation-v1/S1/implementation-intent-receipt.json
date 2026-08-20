@@ -1,0 +1,43 @@
+{
+  "schema": "harness/implementation-intent-receipt",
+  "version": 1,
+  "planId": "harness-universal-reconciliation-v1",
+  "planRevision": 4,
+  "taskId": "S1",
+  "requirementIds": [
+    "REQ-001",
+    "REQ-002",
+    "REQ-003"
+  ],
+  "claimIds": [
+    "C-001",
+    "C-002",
+    "C-003"
+  ],
+  "goal": "Unify the canonical plan/support-pack contract and compile ordinary conversation, optional slash commands, CLI/API calls, and native host actions into the same WorkRequest.",
+  "ownedPaths": [
+    "packages/cli/src/commands/goal.ts",
+    "packages/cli/src/commands/ingest.ts",
+    "packages/cli/src/commands/plan.ts",
+    "packages/cli/src/services/intent-compiler.ts",
+    "packages/cli/src/services/plan-compiler.ts",
+    "packages/kernel/src/northstar/protocol.ts",
+    "packages/kernel/src/northstar/support-pack.ts",
+    "schemas/plan.schema.json",
+    "schemas/worker-task-recipe.schema.json"
+  ],
+  "forbiddenPaths": [
+    ".agent/current.json",
+    ".env",
+    ".git/objects",
+    "generated"
+  ],
+  "expectedChange": "Unify canonical plan/support-pack contract and compile conversation, optional slash commands, CLI/API, and native host actions into one canonical WorkRequest with adapter identity recorded; keep OpenCode /goal emulated-only; add no-command, invalid-coverage, unresolved-decision, scope, resume, and portability fixtures; prove C-001/C-002/C-003 with the exact recipe proof commands.",
+  "proofPlan": [
+    "C-001:V-001",
+    "C-002:V-002",
+    "C-003:V-003"
+  ],
+  "understood": true,
+  "receiptSha256": "595d040582ef678d3ac9992702c0ab0008fa65a0dadb09ed13d833ebffb35a4c"
+}

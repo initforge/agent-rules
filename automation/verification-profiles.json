@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "description": "Domain verification profiles that select checks from claims, changed surfaces, and risk. Each profile lists available checks; the selection algorithm chooses which to run based on context.",
+  "description": "Domain verification profiles that select checks from claims, changed surfaces, and risk. Each profile lists available checks; the selection algorithm chooses which to run based on context. Provider adapters (provider_adapters) are claim-driven lifecycle adapters for the named verification capabilities; they are never globally exposed and never PASS when unavailable.",
   "profile_contract": {
     "applicability": "Boundary covered by this profile.",
     "risk_triggers": "Signals that promote an otherwise optional check to required.",
@@ -14,6 +14,217 @@
     "freshness_binding": "Identity fields that make evidence stale when changed.",
     "invalidation_conditions": "Changes that invalidate an accepted result.",
     "human_residuals": "Semantic questions intentionally left for final human review."
+  },
+  "provider_adapters": {
+    "testcontainers": {
+      "id": "testcontainers",
+      "display_name": "Testcontainers (disposable real dependencies)",
+      "capability_class": "dependencies.ephemeral",
+      "evidence_profile": "container-runtime",
+      "claim_classes": ["testcontainer", "ephemeral dependency", "disposable database", "real dependency", "containerized dependency", "docker-based integration"],
+      "thresholds_required": false,
+      "telemetry_only": false,
+      "missing_runtime_reason": "Testcontainers activated by claim but Docker daemon/CLI unavailable; disposable-dependency proof cannot run (explicit UNAVAILABLE, never PASS).",
+      "fixtures": [
+        {"kind": "positive", "claim": "Prove the migration against a real disposable Postgres via Testcontainers", "changed_files": ["src/repository.ts"], "availability": {"testcontainers": true}, "expected": "RUNNABLE"},
+        {"kind": "negative", "claim": "Add unit tests for the repository helper", "changed_files": ["src/repository.ts"], "availability": {"testcontainers": true}, "expected": "NOT_SELECTED", "reason": "No claim actually needs a disposable real dependency"},
+        {"kind": "unavailable", "claim": "Verify the migration on a real disposable Postgres with Testcontainers", "changed_files": ["migrations/001.sql"], "availability": {"testcontainers": false}, "expected": "UNAVAILABLE", "reason": "Docker unavailable: explicit UNAVAILABLE evidence, not silent skip"}
+      ],
+      "verification_profile": {
+        "steps": [{"kind": "testcontainers", "spec": "testcontainers/migration-check.spec.ts"}],
+        "evidence": ["container-log", "unavailable-evidence"],
+        "activation": "claim-driven",
+        "provider": "testcontainers",
+        "unavailable_status": "UNAVAILABLE",
+        "timeoutMs": 300000
+      }
+    },
+    "pact": {
+      "id": "pact",
+      "display_name": "Pact (consumer/provider contracts)",
+      "capability_class": "contracts.consumer-provider",
+      "evidence_profile": "contract-verification",
+      "claim_classes": ["pact", "consumer contract", "provider contract", "contract verification", "contract test", "consumer-driven contract"],
+      "thresholds_required": false,
+      "telemetry_only": false,
+      "missing_runtime_reason": "Pact activated by claim but pact CLI unavailable; consumer/provider contract verification cannot run (explicit UNAVAILABLE, never PASS).",
+      "fixtures": [
+        {"kind": "positive", "claim": "Verify the consumer contract against the provider with Pact", "changed_files": ["contracts/order.pact.json"], "availability": {"pact": true}, "expected": "RUNNABLE"},
+        {"kind": "negative", "claim": "Keep the API schema file up to date", "changed_files": ["contracts/order.pact.json"], "availability": {"pact": true}, "expected": "NOT_SELECTED", "reason": "Claim does not require contract verification"},
+        {"kind": "unavailable", "claim": "Run Pact provider verification for the billing contract", "changed_files": ["contracts/billing.pact.json"], "availability": {"pact": false}, "expected": "UNAVAILABLE", "reason": "pact CLI unavailable: explicit UNAVAILABLE evidence"}
+      ],
+      "verification_profile": {
+        "steps": [{"kind": "pact", "spec": "contracts/order.pact.json"}],
+        "evidence": ["contract-verification", "unavailable-evidence"],
+        "activation": "claim-driven",
+        "provider": "pact",
+        "unavailable_status": "UNAVAILABLE",
+        "timeoutMs": 180000
+      }
+    },
+    "schemathesis": {
+      "id": "schemathesis",
+      "display_name": "Schemathesis (OpenAPI/GraphQL behavior)",
+      "capability_class": "schema.behavior",
+      "evidence_profile": "schema-behavior",
+      "claim_classes": ["schemathesis", "openapi behavior", "graphql behavior", "schema testing", "api schema fuzz", "spec-based api test"],
+      "thresholds_required": false,
+      "telemetry_only": false,
+      "missing_runtime_reason": "Schemathesis activated by claim but CLI unavailable; schema behavior testing cannot run (explicit UNAVAILABLE, never PASS).",
+      "fixtures": [
+        {"kind": "positive", "claim": "Exercise OpenAPI behavior with Schemathesis against the disposable test API", "changed_files": ["openapi.yaml"], "availability": {"schemathesis": true}, "expected": "RUNNABLE"},
+        {"kind": "negative", "claim": "Document the OpenAPI file for consumers", "changed_files": ["openapi.yaml"], "availability": {"schemathesis": true}, "expected": "NOT_SELECTED", "reason": "Claim is documentation, not schema behavior testing"},
+        {"kind": "unavailable", "claim": "Run Schemathesis against the GraphQL schema for negative payloads", "changed_files": ["schema.graphql"], "availability": {"schemathesis": false}, "expected": "UNAVAILABLE", "reason": "schemathesis CLI unavailable: explicit UNAVAILABLE evidence"}
+      ],
+      "verification_profile": {
+        "steps": [{"kind": "schemathesis", "spec": "openapi.yaml", "baseUrl": "http://localhost:8080"}],
+        "evidence": ["schema-report", "unavailable-evidence"],
+        "activation": "claim-driven",
+        "provider": "schemathesis",
+        "unavailable_status": "UNAVAILABLE",
+        "timeoutMs": 300000
+      }
+    },
+    "storybook": {
+      "id": "storybook",
+      "display_name": "Storybook (component states)",
+      "capability_class": "ui.story-states",
+      "evidence_profile": "story-states",
+      "claim_classes": ["storybook", "component state", "story states", "story rendering", "story interaction test"],
+      "thresholds_required": false,
+      "telemetry_only": false,
+      "missing_runtime_reason": "Storybook activated by claim but storybook CLI unavailable or no stories exist; component-state proof cannot run (explicit UNAVAILABLE, never PASS).",
+      "fixtures": [
+        {"kind": "positive", "claim": "Render all Button story states in Storybook and verify each state", "changed_files": ["src/components/Button.stories.tsx"], "availability": {"storybook": true}, "expected": "RUNNABLE"},
+        {"kind": "negative", "claim": "Style the Button component for the new theme", "changed_files": ["src/components/Button.tsx"], "availability": {"storybook": true}, "expected": "NOT_SELECTED", "reason": "Claim does not require Storybook state proof"},
+        {"kind": "unavailable", "claim": "Verify the Card component states via Storybook", "changed_files": ["src/components/Card.stories.tsx"], "availability": {"storybook": false}, "expected": "UNAVAILABLE", "reason": "storybook unavailable: explicit UNAVAILABLE evidence"}
+      ],
+      "verification_profile": {
+        "steps": [{"kind": "storybook", "stories": "src/components/**/*.stories.tsx"}],
+        "evidence": ["story-state", "unavailable-evidence"],
+        "activation": "claim-driven",
+        "provider": "storybook",
+        "unavailable_status": "UNAVAILABLE",
+        "timeoutMs": 180000
+      }
+    },
+    "maestro": {
+      "id": "maestro",
+      "display_name": "Maestro (mobile/device flows)",
+      "capability_class": "mobile.device-flow",
+      "evidence_profile": "mobile-device",
+      "claim_classes": ["maestro", "mobile flow", "device flow", "mobile e2e", "device test", "emulator flow", "mobile interaction"],
+      "thresholds_required": false,
+      "telemetry_only": false,
+      "missing_runtime_reason": "Maestro activated by claim but device/emulator or adb unavailable; mobile device flow cannot run (explicit UNAVAILABLE, never PASS).",
+      "fixtures": [
+        {"kind": "positive", "claim": "Run the checkout mobile flow with Maestro on the emulator", "changed_files": ["e2e/checkout.yaml"], "availability": {"maestro": true}, "expected": "RUNNABLE"},
+        {"kind": "negative", "claim": "Refactor the checkout screen layout", "changed_files": ["src/screens/Checkout.tsx"], "availability": {"maestro": true}, "expected": "NOT_SELECTED", "reason": "Claim does not require device flow proof"},
+        {"kind": "unavailable", "claim": "Verify the login device flow with Maestro on the connected device", "changed_files": ["e2e/login.yaml"], "availability": {"maestro": false}, "expected": "UNAVAILABLE", "reason": "device/adb unavailable: explicit UNAVAILABLE evidence"}
+      ],
+      "verification_profile": {
+        "steps": [{"kind": "maestro", "flow": "e2e/checkout.yaml"}],
+        "evidence": ["device-run", "unavailable-evidence"],
+        "activation": "claim-driven",
+        "provider": "maestro",
+        "unavailable_status": "UNAVAILABLE",
+        "timeoutMs": 300000
+      }
+    },
+    "semgrep": {
+      "id": "semgrep",
+      "display_name": "Semgrep (local SAST)",
+      "capability_class": "security.static-scan",
+      "evidence_profile": "security-scan",
+      "claim_classes": ["semgrep", "sast", "static security scan", "security pattern", "injection scan", "vulnerability pattern"],
+      "thresholds_required": false,
+      "telemetry_only": false,
+      "missing_runtime_reason": "Semgrep activated by claim but CLI unavailable; local static security scan cannot run (explicit UNAVAILABLE, never PASS).",
+      "fixtures": [
+        {"kind": "positive", "claim": "Scan the new input handlers with Semgrep for injection patterns", "changed_files": ["src/handlers/input.ts"], "availability": {"semgrep": true}, "expected": "RUNNABLE"},
+        {"kind": "negative", "claim": "Add request validation middleware", "changed_files": ["src/handlers/input.ts"], "availability": {"semgrep": true}, "expected": "NOT_SELECTED", "reason": "Claim does not name a static security scan"},
+        {"kind": "unavailable", "claim": "Run Semgrep over the auth module for credential patterns", "changed_files": ["src/auth.ts"], "availability": {"semgrep": false}, "expected": "UNAVAILABLE", "reason": "semgrep unavailable: explicit UNAVAILABLE evidence"}
+      ],
+      "verification_profile": {
+        "steps": [{"kind": "semgrep", "target": "src"}],
+        "evidence": ["scan-report", "unavailable-evidence"],
+        "activation": "claim-driven",
+        "provider": "semgrep",
+        "unavailable_status": "UNAVAILABLE",
+        "timeoutMs": 300000
+      }
+    },
+    "codeql": {
+      "id": "codeql",
+      "display_name": "CodeQL (CI security queries)",
+      "capability_class": "security.codeql-ci",
+      "evidence_profile": "security-scan",
+      "claim_classes": ["codeql", "ci security query", "codeql analysis", "security query", "code scanning"],
+      "thresholds_required": false,
+      "telemetry_only": false,
+      "missing_runtime_reason": "CodeQL is CI-only; no CI CodeQL runner is available in this environment, so CodeQL analysis cannot run here (explicit UNAVAILABLE, never PASS; never emulated locally as parity).",
+      "fixtures": [
+        {"kind": "positive", "claim": "Add a CodeQL security query job to CI for the new scanner", "changed_files": [".github/workflows/codeql.yml"], "availability": {"codeql": true}, "expected": "RUNNABLE"},
+        {"kind": "negative", "claim": "Run semgrep locally on the scanner module", "changed_files": ["src/scanner.ts"], "availability": {"codeql": true}, "expected": "NOT_SELECTED", "reason": "Claim names semgrep, not CodeQL"},
+        {"kind": "unavailable", "claim": "Run the CodeQL analysis for the payment module", "changed_files": [".github/workflows/codeql.yml"], "availability": {"codeql": false}, "expected": "UNAVAILABLE", "reason": "CI-only provider not available locally: explicit UNAVAILABLE evidence"}
+      ],
+      "verification_profile": {
+        "steps": [{"kind": "codeql", "language": "javascript"}],
+        "evidence": ["scan-report", "unavailable-evidence"],
+        "activation": "claim-driven",
+        "provider": "codeql",
+        "unavailable_status": "UNAVAILABLE",
+        "timeoutMs": 600000
+      }
+    },
+    "k6": {
+      "id": "k6",
+      "display_name": "k6 (load/performance with explicit thresholds)",
+      "capability_class": "performance.load-threshold",
+      "evidence_profile": "performance-threshold",
+      "claim_classes": ["k6", "load test", "performance threshold", "slo", "latency budget", "throughput", "performance budget", "stress test"],
+      "thresholds_required": true,
+      "telemetry_only": false,
+      "missing_runtime_reason": "k6 activated by an explicit threshold/SLO claim but k6 CLI unavailable; load proof cannot run (explicit UNAVAILABLE, never PASS).",
+      "fixtures": [
+        {"kind": "positive", "claim": "Verify p95 latency stays under 500ms and error rate under 1% with a k6 load test", "changed_files": ["load/checkout.js"], "availability": {"k6": true}, "expected": "RUNNABLE"},
+        {"kind": "negative", "claim": "Run a k6 load test on the checkout endpoint", "changed_files": ["load/checkout.js"], "availability": {"k6": true}, "expected": "NOT_SELECTED", "reason": "No explicit threshold/SLO claim: k6 requires explicit thresholds"},
+        {"kind": "unavailable", "claim": "Run the k6 load test to prove the p99 latency SLO", "changed_files": ["load/checkout.js"], "availability": {"k6": false}, "expected": "UNAVAILABLE", "reason": "k6 unavailable: explicit UNAVAILABLE evidence"}
+      ],
+      "verification_profile": {
+        "steps": [{"kind": "k6", "script": "load/checkout.js", "thresholds": {"p95_latency": 500, "error_rate": 1}}],
+        "evidence": ["threshold-report", "unavailable-evidence"],
+        "activation": "claim-driven",
+        "provider": "k6",
+        "unavailable_status": "UNAVAILABLE",
+        "thresholds_required": true,
+        "timeoutMs": 600000
+      }
+    },
+    "opentelemetry": {
+      "id": "opentelemetry",
+      "display_name": "OpenTelemetry / Collector",
+      "capability_class": "telemetry.distributed-diagnosis",
+      "evidence_profile": "telemetry-diagnosis",
+      "claim_classes": ["opentelemetry", "open telemetry", "collector", "trace", "distributed diagnosis", "telemetry", "span"],
+      "thresholds_required": false,
+      "telemetry_only": true,
+      "missing_runtime_reason": "OpenTelemetry activated by claim but collector binary unavailable; distributed diagnosis cannot run (explicit UNAVAILABLE, never PASS).",
+      "fixtures": [
+        {"kind": "positive", "claim": "Capture traces through the OpenTelemetry collector for the checkout flow", "changed_files": ["otel/collector.yaml"], "availability": {"opentelemetry": true}, "expected": "RUNNABLE"},
+        {"kind": "negative", "claim": "Verify the checkout UI in the browser", "changed_files": ["src/screens/Checkout.tsx"], "availability": {"opentelemetry": true}, "expected": "NOT_SELECTED", "reason": "Browser claim activates browser providers, never telemetry"},
+        {"kind": "unavailable", "claim": "Export distributed traces via the OpenTelemetry collector", "changed_files": ["otel/collector.yaml"], "availability": {"opentelemetry": false}, "expected": "UNAVAILABLE", "reason": "collector unavailable: explicit UNAVAILABLE evidence"}
+      ],
+      "verification_profile": {
+        "steps": [{"kind": "opentelemetry", "collector": "otel/collector.yaml"}],
+        "evidence": ["telemetry-trace", "unavailable-evidence"],
+        "activation": "claim-driven",
+        "provider": "opentelemetry",
+        "unavailable_status": "UNAVAILABLE",
+        "telemetry_only": true,
+        "timeoutMs": 180000
+      }
+    }
   },
   "domain_profiles": {
     "frontend": {

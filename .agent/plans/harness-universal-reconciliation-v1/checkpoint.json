@@ -1,0 +1,25 @@
+{
+  "schema": "harness/checkpoint",
+  "version": 1,
+  "plan_id": "harness-universal-reconciliation-v1",
+  "checkpoint_id": "CK-0004",
+  "state": "PROMPT_FIRST_PAIR_REPAIR_SUPPORT_PREPARED",
+  "completed": [
+    "Owner intent distilled",
+    "Decisions locked",
+    "Requirements and acceptance mapped",
+    "Task ownership and dependencies defined",
+    "Source qualification seed prepared",
+    "Support pack revision 4 selectively regenerated into ten hash-bound recipes",
+    "Unaffected recipes preserved logically and prompt-first, pair-repair, and final-integration recipes regenerated with an amendment receipt",
+    "Typed closed-loop control and high-impact semantic convergence added as REQ-019 and REQ-020",
+    "Ordinary prompts made the primary portable entrypoint while /goal remains optional host ergonomics",
+    "Pair-repair classification, selective claim reopening, fresh evidence epochs, and historical PASS preservation added as REQ-022",
+    "Control Plane V2 gated as the final phase after complete harness parity and closeout",
+    "OpenCode native AGENTS, skills, agents, and emulated /goal dogfood patch prepared",
+    "Plan readiness remains BOUNDED_READY with 22 intentional implementation gaps"
+  ],
+  "next_action": "Paste implementation-prompt.md as an ordinary prompt, validate revision-4 hashes, then execute S1 without activating the current pointer; use normal review prompts for S7B repair.",
+  "blocked_by": [],
+  "created_at": "2026-08-12T22:15:00+07:00"
+}

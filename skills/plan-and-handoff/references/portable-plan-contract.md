@@ -14,6 +14,12 @@ complete contract; ceremony beyond the level adds no enforcement value.
 | Multi-file, bounded work with known interfaces and a single decision maker | **standard** |
 | Multi-session, multi-owner, interruptible, or externally dependent | **resumable** |
 
+> **Runtime clamps override plan examples.** The repository caps delegation at
+> at most two workers with no recursion and disjoint writes (AGENTS.md invariant
+> 7; plan decision DEC-014). The `execution_contract` examples below show the
+> schema shape; a compiler or runtime must clamp `max_agents` to ≤ 2 and
+> `max_depth` to 0 no matter what a plan example or skill-local default says.
+
 ## Small
 
 A small plan is the minimum executable contract:
@@ -99,7 +105,7 @@ workers can map results back to requirements and decisions cannot be silently ov
   },
   "execution_contract": {
     "mode": "automatic", "shape": "medium", "strategy": "delegated",
-    "max_agents": 3, "max_depth": 1, "effort_cap": "medium",
+    "max_agents": 2, "max_depth": 0, "effort_cap": "medium",
     "authorized_final_actions": ["edit", "commit"]
   }
 }
@@ -173,7 +179,7 @@ ledger. It survives handoff and session loss.
   ],
   "execution_contract": {
     "mode": "automatic", "shape": "resumable", "ledger": "required",
-    "strategy": "parallel", "max_agents": 5, "max_depth": 2,
+    "strategy": "parallel", "max_agents": 2, "max_depth": 0,
     "effort_cap": "high", "authorized_final_actions": ["edit", "commit"]
   }
 }

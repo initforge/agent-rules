@@ -1,0 +1,32 @@
+{
+  "schema": "artifact/plan-decisions",
+  "version": 1,
+  "plan_id": "mcp-visible-workspace-isolation-v1",
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "statement": "Create a new owner-authorized phase and supersede the previous pointer; never silently amend the old plan.",
+      "rationale": "Owner brief; AGENTS.md next-phase steering."
+    },
+    {
+      "id": "DEC-002",
+      "statement": "Visible/headed remains the default; headless stays explicit CI/owner mode and is never a silent fallback.",
+      "rationale": "Owner brief requirement 2."
+    },
+    {
+      "id": "DEC-003",
+      "statement": "The guardian performs non-activating placement only and fails closed on provider self-activation (race guard).",
+      "rationale": "Owner brief requirements 7-8; AM-0006 continuity."
+    },
+    {
+      "id": "DEC-004",
+      "statement": "No live GUI launch is attempted while the host is actively used by the owner; live acceptance is BLOCKED/NEEDS_USER with manual commands when evidence cannot be isolated.",
+      "rationale": "Owner brief requirement 12; evidence honesty."
+    },
+    {
+      "id": "DEC-005",
+      "statement": "No process kill, no global user config edit, no global install, no commit/push/deploy.",
+      "rationale": "Owner brief; invariants."
+    }
+  ]
+}

@@ -1,4 +1,10 @@
 import { createHash } from "node:crypto";
+import {
+  compileWorkRequestEntrypoint,
+  assertEntrypointParityReceipt,
+  type EntrypointParityReceipt,
+  type WorkAdapter,
+} from "@initforge/agent-rules-engine/northstar/index";
 
 export interface IntentRequirement {
   id: string;
@@ -47,6 +53,44 @@ function parseLabel(line: string): { kind: IntentRequirement["kind"]; body: stri
 
 function hashRequest(request: string): string {
   return createHash("sha256").update(request, "utf-8").digest("hex");
+}
+
+export interface WorkRequestEntrypointInput {
+  adapter: WorkAdapter;
+  intent: string;
+  planId?: string;
+  constraints?: string[];
+  nonGoals?: string[];
+  references?: string[];
+  riskHint?: "S0" | "S1" | "S2" | "S3";
+  sourceId?: string;
+}
+
+/**
+ * Compile a prompt-first entrypoint (ordinary conversation, optional slash
+ * command, CLI/API request, or native host action) into the canonical
+ * WorkRequest. The semantic fingerprint is adapter-neutral: equivalent inputs
+ * from different adapters produce identical `semanticSha256` and `workId`.
+ */
+export function compileWorkRequest(input: WorkRequestEntrypointInput): EntrypointParityReceipt {
+  const receipt = compileWorkRequestEntrypoint({
+    adapter: input.adapter,
+    intent: input.intent,
+    ...(input.planId ? { plan_id: input.planId } : {}),
+    ...(input.constraints?.length ? { explicit_constraints: input.constraints } : {}),
+    ...(input.nonGoals?.length ? { explicit_non_goals: input.nonGoals } : {}),
+    ...(input.references?.length ? { reference_inputs: input.references } : {}),
+    ...(input.riskHint ? { risk_hint: input.riskHint } : {}),
+    ...(input.sourceId ? { source_id: input.sourceId } : {}),
+  });
+  assertEntrypointParityReceipt(receipt);
+  return receipt;
+}
+
+/** Prove semantic equivalence of two receipts from any adapter surfaces. */
+export function assertSemanticParity(left: EntrypointParityReceipt, right: EntrypointParityReceipt): void {
+  if (left.semantic_sha256 !== right.semantic_sha256) throw new Error(`semantic parity mismatch: ${left.adapter} vs ${right.adapter}`);
+  if (left.work_id !== right.work_id) throw new Error(`semantic parity work_id mismatch: ${left.work_id} vs ${right.work_id}`);
 }
 
 export function compileIntent(

@@ -1,9 +1,7 @@
 {
   "signals": [
-    "browser",
     "live/manual",
     "click-through",
-    "e2e",
     "smoke",
     "exploratory",
     "screenshot",
@@ -23,9 +21,7 @@
   "loads": [
     "skill:browser-qa"
   ],
-  "requires": [
-    "qa-skills"
-  ],
+  "requires": [],
   "supports": [
     "5fedu-module-parity"
   ],

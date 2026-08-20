@@ -1,0 +1,12 @@
+{
+ "schema": "harness/focus-workspace-fixture",
+ "version": 1,
+ "kind": "drift-check",
+ "command": [
+  "/tmp/.mount_Pen.ApAaTc9W/resources/app.asar.unpacked/out/mcp-server-linux-x64",
+  "--app",
+  "desktop"
+ ],
+ "expect": "drift",
+ "note": "Persisted /tmp/.mount_Pen.* paths are prohibited; the stable launcher resolves mounts at runtime."
+}

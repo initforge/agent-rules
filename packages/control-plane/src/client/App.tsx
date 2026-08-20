@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Layout from './components/Layout';
 import Overview from './pages/Overview';
+import Plans from './pages/Plans';
+import PlanDetail from './pages/PlanDetail';
 import PlanWorkspace from './PlanWorkspace';
 import Runs from './pages/Runs';
+import Evidence from './pages/Evidence';
+import Hosts from './pages/Hosts';
 import Evaluations from './pages/Evaluations';
 import Architecture from './pages/Architecture';
 import Configuration from './pages/Configuration';
@@ -56,10 +60,18 @@ export default function App() {
     switch (base) {
       case 'overview':
         return <Overview navigate={navigate} />;
+      case 'plans':
+        return segments.length > 1
+          ? <ErrorBoundary><PlanDetail planId={segments[1]} navigate={navigate} /></ErrorBoundary>
+          : <Plans navigate={navigate} />;
       case 'plan':
         return <ErrorBoundary><PlanWorkspace navigate={navigate} /></ErrorBoundary>;
       case 'runs':
         return <Runs segments={segments} navigate={navigate} />;
+      case 'evidence':
+        return <Evidence navigate={navigate} />;
+      case 'hosts':
+        return <Hosts navigate={navigate} />;
       case 'evaluations':
         return <Evaluations navigate={navigate} />;
       case 'architecture':

@@ -1,0 +1,21 @@
+{
+  "schema": "harness/sensor-policy",
+  "version": 1,
+  "sensors": [
+    {
+      "sensor_id": "S-1",
+      "direction": "feedforward",
+      "oracle": "computational",
+      "lifecycle": "pre-execution",
+      "applicability": "mechanical claims",
+      "cost": "cheap",
+      "independence": "g-a",
+      "freshness_ms": 300000,
+      "confidence": 0.9,
+      "escalation": {
+        "on_fail": "escalate",
+        "retry_budget": 2
+      }
+    }
+  ]
+}

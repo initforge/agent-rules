@@ -8,6 +8,7 @@ import { sha256Bytes, isSha256 } from './contracts.js';
 
 export type TrustClass = 'UNTRUSTED' | 'QUARANTINED' | 'TRUSTED' | 'VERIFIED';
 export type RedactionState = 'RAW' | 'REDACTED' | 'BOUNDED_EXCERPT' | 'POINTER_ONLY';
+export type ArtifactLifecycle = 'ACTIVE' | 'SUPERSEDED' | 'RETIRED' | 'PURGE_ELIGIBLE' | 'PURGED' | 'HISTORICAL';
 
 export interface ArtifactPointer {
   readonly artifactId: string;
@@ -20,6 +21,8 @@ export interface ArtifactPointer {
   readonly chunkIndex: number | null;
   readonly trustClass: TrustClass;
   readonly redactionState: RedactionState;
+  /** Optional lifecycle projection. Missing means legacy/unclassified and is never active when activeOnly is requested. */
+  readonly lifecycleState?: ArtifactLifecycle;
 }
 
 export interface ArtifactQuery {
@@ -30,6 +33,8 @@ export interface ArtifactQuery {
   readonly redactionState?: RedactionState;
   readonly candidateEpoch?: number;
   readonly chunkIndex?: number;
+  readonly lifecycleState?: ArtifactLifecycle;
+  readonly activeOnly?: boolean;
 }
 
 export interface DrilldownReceipt {
@@ -87,6 +92,7 @@ export function createArtifactPointer(
     trustClass?: TrustClass;
     redactionState?: RedactionState;
     chunkIndex?: number | null;
+    lifecycleState?: ArtifactLifecycle;
     artifactId?: string;
   } = {},
 ): ArtifactPointer {
@@ -105,6 +111,7 @@ export function createArtifactPointer(
     chunkIndex: opts.chunkIndex ?? null,
     trustClass: opts.trustClass ?? 'UNTRUSTED',
     redactionState: opts.redactionState ?? 'RAW',
+    lifecycleState: opts.lifecycleState ?? 'ACTIVE',
   });
 }
 
@@ -171,6 +178,8 @@ export function queryArtifacts(
     if (query.redactionState !== undefined && pointer.redactionState !== query.redactionState) return false;
     if (query.candidateEpoch !== undefined && pointer.candidateEpoch !== query.candidateEpoch) return false;
     if (query.chunkIndex !== undefined && pointer.chunkIndex !== query.chunkIndex) return false;
+    if (query.lifecycleState !== undefined && pointer.lifecycleState !== query.lifecycleState) return false;
+    if (query.activeOnly === true && pointer.lifecycleState !== 'ACTIVE') return false;
     if (query.claimScope && query.claimScope.length > 0) {
       const hasOverlap = query.claimScope.some((s) => pointer.claimScope.includes(s));
       if (!hasOverlap) return false;

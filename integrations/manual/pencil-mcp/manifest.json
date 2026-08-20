@@ -21,15 +21,15 @@
     "type": "local-app",
     "docs": "https://docs.pencil.dev/getting-started/ai-integration"
   },
-  "supportedHosts": ["claude", "codex", "cursor", "antigravity", "opencode"],
+  "supportedHosts": ["codex", "claude", "grok", "antigravity", "cursor", "opencode", "mimocode"],
   "requirements": [
     "pen.dev desktop app or IDE extension is running",
     "a .pen file is open when the host integration requires it",
     "the host reports the pencil MCP server as connected"
   ],
   "notes": [
-    "Never activate from keyword routing.",
-    "Only attach when the user explicitly requests Pencil/pen.dev design tooling or the TaskPacket explicitly names a design.* capability and pencil-mcp as provider.",
+    "Never activate from generic design/UI keyword routing.",
+    "Attach when the raw owner prompt or approved plan explicitly names Pencil/pen.dev/pencil-mcp; explicit design.* capabilities are then added for the bounded task.",
     "Production UI acceptance still uses browser/runtime evidence; a .pen render is design evidence, not proof that shipped code behaves correctly."
   ]
 }

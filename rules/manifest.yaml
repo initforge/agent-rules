@@ -7,6 +7,8 @@ load_order:
   - 20-quality-and-safety.md
   - 25-task-lifecycle.md
   - 30-context-routing.md
+  - 45-adaptive-minimal-proof-testing.md
+  - 50-context-budget.md
 budgets:
   bootstrap_tokens: 300
   core_total_tokens: 3000
@@ -129,4 +131,14 @@ rule_contracts:
     evidence: [rules/manifest.yaml, automation/validate-rule-contracts.py]
     precedence: 110
     failure: NEEDS_USER
+    fixture: automation/validate-rule-contracts.py
+  45-adaptive-minimal-proof-testing.md:
+    kind: invariant
+    trigger: always-load
+    normative: "Select the smallest sufficient proof set for every task from scope, claims, risks and runtime surface; enforce six-status semantics; live claims require live proof; refactors require coverage mapping."
+    owner: harness-maintainer
+    enforcement: proof-router-and-proof-selection
+    evidence: [rules/manifest.yaml, packages/kernel/src/northstar/proof-testing.ts, packages/kernel/src/northstar/proof-router.ts, schemas/proof-receipt.schema.json, automation/validate-rule-contracts.py]
+    precedence: 45
+    failure: BLOCKED
     fixture: automation/validate-rule-contracts.py

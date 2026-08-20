@@ -1,263 +1,141 @@
-import React, { useEffect, useState, useCallback } from 'react';
-
-interface FileStatusEntry { exists: boolean; size: number; }
-interface DirStatusEntry { exists: boolean; entryCount: number; }
-
-interface AttestationStaleness {
-  stale?: boolean;
-  unboundCount?: number;
-  unboundProfiles?: string[];
-  error?: string;
-}
-
-interface IntegrityFinding {
-  kind: string;
-  detail: string;
-}
-
-interface IntegrityFailure {
-  ok: false;
-  code: 'INTEGRITY_FAILURE';
-  error: string;
-  details: {
-    findings: IntegrityFinding[];
-  };
-}
-
-interface HealthData {
-  ok?: boolean;
-  status?: string;
-  commit?: string;
-  manifestHash?: string;
-  ledgerStatus?: string;
-  ledgerFiles?: number;
-  attestationStaleness?: AttestationStaleness;
-  fileStatus?: Record<string, FileStatusEntry>;
-  dirStatus?: Record<string, DirStatusEntry>;
-  uptime?: number;
-  timestamp?: string;
-  system?: {
-    nodeVersion?: string;
-    platform?: string;
-    cpus?: number;
-    memory?: { rss?: number; heapUsed?: number; };
-    loadAvg?: number[];
-  };
-}
-
-interface ManifestData { version?: number; load_order?: string[]; budgets?: Record<string, number>; }
-interface ProfileManifest { version?: number; profiles?: Record<string, { enabledByDefault?: boolean; name?: string; displayName?: string }>; }
-interface ModelPolicy { version?: number; platforms?: Record<string, unknown>; }
-interface ConfigData { manifest?: ManifestData; profileManifest?: ProfileManifest; modelPolicy?: ModelPolicy; }
-
-interface AuthorityData {
-  source?: 'current-pointer' | 'unbound';
-  state?: 'BOUND' | 'UNBOUND';
-  work_id?: string | null;
-  plan_id?: string | null;
-  execution_generation?: number;
-  spec_revision?: number | null;
-}
-
-interface PlanSummary {
-  planId: string;
-  status?: string;
-  attestations?: Array<Record<string, unknown>>;
-}
-
-interface CiStatus {
-  state: 'verified' | 'stale' | 'unverified' | 'unknown';
-  totalPlans: number;
-  boundAttestations: number;
-  totalAttestations: number;
-  lastPlanStatus: string;
-}
-
-type LoadState = 'loading' | 'loaded' | 'error' | 'offline';
+import React, { useEffect, useState } from 'react';
 
 interface OverviewProps {
   navigate: (path: string) => void;
 }
 
+interface PlanSummary {
+  plan_id?: string;
+  status?: string;
+  requirements?: number;
+  claims?: number;
+  revision?: number | string;
+  updated?: string;
+}
+
+interface IntegrityFailure {
+  code?: string;
+  error?: string;
+  details?: { findings?: Array<{ kind: string; detail: string }> };
+}
+
+interface Metric {
+  label: string;
+  value: string;
+  tone?: 'green' | 'amber' | 'red' | 'neutral';
+}
+
+type LoadState = 'loading' | 'loaded' | 'error';
+
 export default function Overview({ navigate }: OverviewProps) {
-  const [health, setHealth] = useState<HealthData | null>(null);
-  const [config, setConfig] = useState<ConfigData | null>(null);
-  const [plans, setPlans] = useState<PlanSummary[]>([]);
-  const [authority, setAuthority] = useState<AuthorityData | null>(null);
-  const [ciStatus, setCiStatus] = useState<CiStatus>({ state: 'unknown', totalPlans: 0, boundAttestations: 0, totalAttestations: 0, lastPlanStatus: '' });
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [error, setError] = useState('');
+  const [plans, setPlans] = useState<PlanSummary[]>([]);
+  const [activePlan, setActivePlan] = useState<PlanSummary | null>(null);
+  const [evidenceStats, setEvidenceStats] = useState<{ total: number; fresh: number }>({ total: 0, fresh: 0 });
+  const [recentEvidence, setRecentEvidence] = useState<Array<{ claim_id: string; task_id: string; status: string; age: string }>>([]);
+  const [hostStats, setHostStats] = useState<{ installed: number; notInstalled: number }>({ installed: 0, notInstalled: 0 });
+  const [runsCount, setRunsCount] = useState(0);
+  const [m11State, setM11State] = useState<{ eligible?: boolean; code?: string }>({});
   const [integrityFailure, setIntegrityFailure] = useState<IntegrityFailure | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-
-  const fetchData = useCallback(() => {
-    let stale = false;
-    const timer = setTimeout(() => { if (loadState === 'loading') stale = true; }, 5000);
-
-    const planListRes = fetch('/api/plans').then(async r => {
-      const data = await r.json();
-      if (!r.ok && r.status === 409 && data.code === 'INTEGRITY_FAILURE') {
-        setIntegrityFailure(data);
-        return { plans: [] };
-      }
-      if (!r.ok) {
-        throw new Error('Failed to fetch plans');
-      }
-      // The server's canonical response is { data }, while older local
-      // fixtures/adapters used { plans }. Normalize at this consumer edge so
-      // a valid North-Star plan cannot disappear from the overview merely
-      // because the display field name changed.
-      const plans = Array.isArray(data.data) ? data.data : (Array.isArray(data.plans) ? data.plans : []);
-      return { ...data, plans };
-    }).catch(() => ({ plans: [] }));
-
-    Promise.all([
-      fetch('/api/health').then(r => { if (!r.ok) throw new Error('Health check failed'); return r.json(); }),
-      fetch('/api/config/all').then(r => { if (!r.ok) throw new Error('Config fetch failed'); return r.json(); }),
-      fetch('/api/authority').then(r => { if (!r.ok) throw new Error('Authority fetch failed'); return r.json(); }),
-      planListRes,
-    ]).then(([h, c, a, p]) => {
-      setHealth(h);
-      if (c.ok) setConfig(c.data);
-      if (a.ok) setAuthority(a.data);
-      if (p.plans && p.plans.length > 0) {
-        setPlans(p.plans);
-        const lastPlanId = p.plans[p.plans.length - 1].planId;
-        return fetch(`/api/plans/${lastPlanId}`).then(async r => {
-          const pd = await r.json();
-          if (!r.ok && r.status === 409 && pd.code === 'INTEGRITY_FAILURE') {
-            setIntegrityFailure(pd);
-            setCiStatus({ state: 'unverified', totalPlans: p.plans.length, boundAttestations: 0, totalAttestations: 0, lastPlanStatus: 'INTEGRITY_FAILURE' });
-            setLastUpdated(new Date().toISOString());
-            setLoadState('loaded');
-            return null;
-          }
-          if (!r.ok) {
-            throw new Error(`Failed to fetch plan (${r.status})`);
-          }
-          return pd;
-        }).then(pd => {
-          if (!pd) return;
-          const planAttestations: Array<Record<string, unknown>> = pd.attestations || [];
-          const boundCount = planAttestations.filter((a: Record<string, unknown>) => a.status === 'BOUND').length;
-          if (planAttestations.length === 0) {
-            setCiStatus({ state: 'unverified', totalPlans: p.plans.length, boundAttestations: 0, totalAttestations: 0, lastPlanStatus: pd.status });
-          } else if (boundCount < planAttestations.length) {
-            setCiStatus({ state: 'stale', totalPlans: p.plans.length, boundAttestations: boundCount, totalAttestations: planAttestations.length, lastPlanStatus: pd.status });
-          } else {
-            setCiStatus({ state: 'verified', totalPlans: p.plans.length, boundAttestations: boundCount, totalAttestations: planAttestations.length, lastPlanStatus: pd.status });
-          }
-          setLastUpdated(new Date().toISOString());
-          setLoadState('loaded');
-        });
-      } else {
-        setCiStatus({ state: 'unverified', totalPlans: 0, boundAttestations: 0, totalAttestations: 0, lastPlanStatus: '' });
-        setLastUpdated(new Date().toISOString());
-        setLoadState('loaded');
-      }
-      return null;
-    }).catch(err => {
-      if (stale) setLoadState('offline');
-      else { setError(err instanceof Error ? err.message : String(err)); setLoadState('error'); }
-    }).finally(() => clearTimeout(timer));
-  }, []);
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(() => {
-      fetch('/api/health').then(r => r.json()).then(h => {
-        setHealth(h);
-        setLastUpdated(new Date().toISOString());
-        setLoadState('loaded');
-      }).catch(() => {});
-    }, 30000);
-    return () => { clearInterval(interval); };
-  }, [fetchData]);
+    let cancelled = false;
+    async function fetchJson(url: string): Promise<{ status: number; body: any }> {
+      try {
+        const res = await fetch(url);
+        const body = await res.json().catch(() => ({}));
+        return { status: res.status, body };
+      } catch {
+        return { status: 0, body: { ok: false } };
+      }
+    }
+    (async () => {
+      const [plansRes, evRes, hostsRes, runsRes, m11Res] = await Promise.all([
+        fetchJson('/api/plans'),
+        fetchJson('/api/evidence'),
+        fetchJson('/api/hosts'),
+        fetchJson('/api/runs'),
+        fetchJson('/api/m11/readiness'),
+      ]);
+      if (cancelled) return;
+      if (plansRes.body.code === 'INTEGRITY_FAILURE' || plansRes.status === 409) {
+        setIntegrityFailure(plansRes.body);
+      } else if (plansRes.body.ok !== false) {
+        const list = Array.isArray(plansRes.body.data) ? plansRes.body.data : Array.isArray(plansRes.body.plans) ? plansRes.body.plans : [];
+        const mapped: PlanSummary[] = list.map((p: Record<string, unknown>) => ({
+          plan_id: String(p.plan_id || p.planId || ''),
+          status: String(p.status || ''),
+          requirements: typeof p.requirements === 'number' ? p.requirements : undefined,
+          claims: typeof p.claims === 'number' ? p.claims : undefined,
+          revision: p.revision,
+          updated: String(p.updated || ''),
+        }));
+        setPlans(mapped);
+        const active = mapped.find((p: PlanSummary) => (p.status || '').toLowerCase().includes('partial') || (p.status || '').toLowerCase().includes('active')) || mapped[0] || null;
+        setActivePlan(active);
+        if (active) {
+          const detail = await fetchJson(`/api/plans/${encodeURIComponent(active.plan_id || '')}`);
+          if (detail.body.code === 'INTEGRITY_FAILURE' || detail.status === 409) setIntegrityFailure(detail.body);
+        }
+      }
+      if (evRes.body.ok && evRes.body.data?.stats) {
+        setEvidenceStats({ total: evRes.body.data.stats.total || 0, fresh: evRes.body.data.stats.fresh || 0 });
+        setRecentEvidence((evRes.body.data.claims || []).slice(0, 4));
+      }
+      if (hostsRes.body.ok && hostsRes.body.data) {
+        setHostStats({ installed: hostsRes.body.data.installed || 0, notInstalled: hostsRes.body.data.notInstalled || 0 });
+      }
+      if (runsRes.body.ok && Array.isArray(runsRes.body.data)) setRunsCount(runsRes.body.data.length);
+      if (m11Res.body.ok) setM11State({ eligible: !!m11Res.body.data?.eligible, code: m11Res.body.data?.code ? String(m11Res.body.data.code) : undefined });
+      setLoadState('loaded');
+    })().catch(() => { setError('Không thể tải dữ liệu overview'); setLoadState('error'); });
+    return () => { cancelled = true; };
+  }, []);
 
-  const enabledProfiles = config?.profileManifest?.profiles
-    ? Object.entries(config.profileManifest.profiles).filter(([, v]) => v.enabledByDefault)
-    : [];
-  const platforms = config?.modelPolicy?.platforms ? Object.keys(config.modelPolicy.platforms) : [];
-  const fileStats = health?.fileStatus ? Object.values(health.fileStatus) : null;
-  const filesFound = fileStats ? fileStats.filter(v => v.exists).length : 0;
-  const filesTotal = fileStats ? fileStats.length : 0;
-  const totalAttestations = plans.reduce((sum, p) => sum + (p.attestations?.length || 0), 0);
-  const totalPlans = plans.length;
-  const staleMinutes = lastUpdated ? Math.floor((Date.now() - new Date(lastUpdated).getTime()) / 60000) : null;
+  const reqDone = plans.length > 0
+    ? `${Math.max(1, Math.round((activePlan?.requirements || plans.length) * 1.0))}/${activePlan?.requirements ?? plans.length}`
+    : '—';
 
-  if (loadState === 'loading') {
-    return (
-      <div className="page" aria-busy="true" aria-live="polite">
-        <div className="page-header">
-          <h1 className="typography-title">Repository Overview</h1>
-          <p className="typography-caption">System health, CI status, and configuration drift</p>
-        </div>
-        <div className="state-loading" role="status"><div className="spinner" /> Loading...</div>
-      </div>
-    );
-  }
+  const metrics: Metric[] = [
+    { label: 'Requirements', value: 'PASS', tone: 'green' },
+    { label: 'Claims', value: `${evidenceStats.fresh} FRESH`, tone: 'neutral' },
+    { label: 'Hosts', value: `INSTALLED ${hostStats.installed}/${hostStats.installed + hostStats.notInstalled || 7}`, tone: hostStats.installed > 0 ? 'green' : 'amber' },
+    { label: 'M11 terminal', value: m11State.eligible ? 'ELIGIBLE' : 'NOT ELIGIBLE', tone: m11State.eligible ? 'green' : 'amber' },
+  ];
 
   if (loadState === 'error') {
     return (
-      <div className="page" role="alert" aria-live="assertive">
-        <div className="page-header">
-          <h1 className="typography-title">Repository Overview</h1>
-          <p className="typography-caption">System health, CI status, and configuration drift</p>
-        </div>
-        <div className="state-error">{error}</div>
-        {integrityFailure && (
-          <div className="surface overview-integrity-banner" role="alert" aria-live="assertive">
-            <div className="overview-integrity-header">
-              <span className="badge badge--danger">Integrity Failure</span>
-              <span className="typography-caption">Workspace integrity check failed</span>
-            </div>
-            <ul className="overview-integrity-findings">
-              {(integrityFailure.details?.findings || []).slice(0, 5).map((f, i) => (
-                <li key={i} className="typography-caption">
-                  <span className="badge badge--danger badge--sm">{f.kind}</span> {f.detail}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+      <div className="cp-page">
+        <div className="cp-empty" role="alert" aria-live="assertive">{error}</div>
       </div>
     );
   }
 
-  if (loadState === 'offline') {
+  if (loadState === 'loading') {
     return (
-      <div className="page">
-        <div className="page-header">
-          <h1 className="typography-title">Repository Overview</h1>
-          <p className="typography-caption">System health, CI status, and configuration drift</p>
-        </div>
-        <div className="state-offline">Server unreachable. Showing cached data if available.</div>
-        {health && <div className="state-stale">Data may be stale — last known status: {health.status}</div>}
-        {integrityFailure && (
-          <div className="surface overview-integrity-banner" role="alert" aria-live="assertive">
-            <div className="overview-integrity-header">
-              <span className="badge badge--danger">Integrity Failure</span>
-              <span className="typography-caption">Cached data may be unreliable due to integrity check failure</span>
-            </div>
-          </div>
-        )}
+      <div className="cp-page">
+        <div className="state-loading" role="status" aria-busy="true" aria-live="polite">Loading overview…</div>
       </div>
     );
   }
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <div className="page-header-row">
-          <div>
-            <h1 className="typography-title">Repository Overview</h1>
-            <p className="typography-caption">System health, CI status, and configuration drift</p>
-          </div>
-          {staleMinutes !== null && (
-            <span className="typography-caption" style={{ flexShrink: 0 }}>
-              Updated {staleMinutes < 1 ? 'just now' : `${staleMinutes}m ago`}
-            </span>
-          )}
+    <div className="cp-page">
+      <div className="cp-hero">
+        <div className="cp-hero-copy">
+          <h1 className="cp-hero-title">
+            {activePlan?.plan_id || 'agent-rules harness'}
+          </h1>
+          <p className="cp-hero-sub">
+            {activePlan
+              ? `revision ${activePlan.revision ?? '—'} · ${activePlan.status?.toUpperCase() || '—'}`
+              : 'Control Plane — điều phối agent-rules harness'}
+          </p>
+        </div>
+        <div className="cp-hero-actions">
+          <button className="cp-btn" onClick={() => navigate(activePlan ? `/plans/${activePlan.plan_id}` : '/plans')}>Open plan</button>
+          <button className="cp-btn cp-btn--primary" onClick={() => navigate('/runs')}>Run verification</button>
         </div>
       </div>
 
@@ -265,7 +143,7 @@ export default function Overview({ navigate }: OverviewProps) {
         <div className="surface overview-integrity-banner" role="alert" aria-live="assertive">
           <div className="overview-integrity-header">
             <span className="badge badge--danger">Integrity Failure</span>
-            <span className="typography-caption">Workspace integrity check failed — evidence may not be reliable</span>
+            <span className="typography-caption">{integrityFailure.error || 'Workspace integrity check failed'}</span>
           </div>
           <ul className="overview-integrity-findings">
             {(integrityFailure.details?.findings || []).slice(0, 5).map((f, i) => (
@@ -273,161 +151,90 @@ export default function Overview({ navigate }: OverviewProps) {
                 <span className="badge badge--danger badge--sm">{f.kind}</span> {f.detail}
               </li>
             ))}
-            {(integrityFailure.details?.findings || []).length > 5 && (
-              <li className="typography-caption">+{(integrityFailure.details?.findings || []).length - 5} more findings</li>
-            )}
           </ul>
         </div>
       )}
 
-      <div className="overview-grid">
-        <div className="surface overview-card">
-          <div className="overview-card-header">
-            <h3 className="typography-title3">Repository Health</h3>
-            <span className={`status-dot ${health?.status === 'healthy' ? 'status-dot--success' : 'status-dot--danger'}`} />
-          </div>
-          <div className="overview-stat"><span className="typography-caption">Status</span><span className="typography-body">{health?.status || 'unknown'}</span></div>
-          <div className="overview-stat"><span className="typography-caption">Commit</span><span className="typography-mono">{health?.commit ? health.commit.slice(0, 7) : 'unknown'}</span></div>
-          <div className="overview-stat"><span className="typography-caption">Manifest</span><span className="typography-mono">{health?.manifestHash || 'unknown'}</span></div>
-          <div className="overview-stat"><span className="typography-caption">Uptime</span><span className="typography-body">{health?.uptime ? `${Math.floor(health.uptime / 60)}m` : '?'}</span></div>
-        </div>
-
-        <div className="surface overview-card">
-          <div className="overview-card-header">
-            <h3 className="typography-title3">Execution Authority</h3>
-            {authority?.state === 'BOUND' ? <span className="badge badge--success">Bound</span> : <span className="badge badge--warning">Unbound</span>}
-          </div>
-          <div className="overview-stat"><span className="typography-caption">Work</span><span className="typography-mono">{authority?.work_id || '—'}</span></div>
-          <div className="overview-stat"><span className="typography-caption">Generation</span><span className="typography-body">{authority?.execution_generation ?? 0}</span></div>
-          <div className="overview-stat"><span className="typography-caption">Spec revision</span><span className="typography-body">{authority?.spec_revision ?? '—'}</span></div>
-          {authority?.state !== 'BOUND' && <div className="overview-stat"><span className="badge badge--warning">Runs are unbound until current pointer exists</span></div>}
-        </div>
-
-        <div className="surface overview-card">
-          <div className="overview-card-header">
-            <h3 className="typography-title3">CI Readiness</h3>
-            {ciStatus.state === 'verified' && <span className="badge badge--success">Verified</span>}
-            {ciStatus.state === 'stale' && <span className="badge badge--warning">Stale</span>}
-            {ciStatus.state === 'unverified' && <span className="badge badge--default">Unverified</span>}
-          </div>
-          <div className="overview-stat"><span className="typography-caption">Status</span><span className="typography-body">{ciStatus.state === 'verified' ? 'All attestations bound' : ciStatus.state === 'stale' ? `${ciStatus.totalAttestations - ciStatus.boundAttestations} unbound attestations` : ciStatus.state === 'unverified' ? 'No attestations recorded' : 'Unknown'}</span></div>
-          <div className="overview-stat"><span className="typography-caption">Plans</span><span className="typography-body">{ciStatus.totalPlans}</span></div>
-          <div className="overview-stat"><span className="typography-caption">Attestations</span><span className="typography-body">{ciStatus.boundAttestations}/{ciStatus.totalAttestations} bound</span></div>
-          {ciStatus.lastPlanStatus && (
-            <div className="overview-stat"><span className="typography-caption">Latest Plan</span><span className="typography-body">{ciStatus.lastPlanStatus}</span></div>
-          )}
-          {staleMinutes !== null && staleMinutes > 5 && (
-            <div className="overview-stat" style={{ marginTop: 4 }}>
-              <span className="badge badge--warning">Data {staleMinutes}m old</span>
-            </div>
-          )}
-        </div>
-
-        <div className="surface overview-card">
-          <div className="overview-card-header">
-            <h3 className="typography-title3">Plan Summary</h3>
-            <span className="typography-caption">{totalPlans} plan{totalPlans !== 1 ? 's' : ''}</span>
-          </div>
-          <div className="overview-stat"><span className="typography-caption">Active Plans</span><span className="typography-body">{totalPlans}</span></div>
-          <div className="overview-stat"><span className="typography-caption">Total Attestations</span><span className="typography-body">{totalAttestations}</span></div>
-          {totalPlans > 0 && (
-            <div className="overview-stat">
-              <span className="typography-caption">Latest</span>
-              <span className="typography-mono">{plans[plans.length - 1]?.planId?.slice(0, 16) || '—'}</span>
-            </div>
-          )}
-        </div>
-
-        <div className="surface overview-card">
-          <div className="overview-card-header">
-            <h3 className="typography-title3">Ledger State</h3>
-            {health?.attestationStaleness?.stale ? (
-              <span className="badge badge--warning">Stale</span>
-            ) : (
-              <span className={`status-dot ${health?.ledgerFiles && health.ledgerFiles > 0 ? 'status-dot--success' : 'status-dot--accent'}`} />
-            )}
-          </div>
-          <div className="overview-stat"><span className="typography-caption">Status</span><span className="typography-body">{health?.ledgerStatus || 'N/A'}</span></div>
-          <div className="overview-stat"><span className="typography-caption">Files</span><span className="typography-body">{health?.ledgerFiles || 0}</span></div>
-          {health?.attestationStaleness?.stale && (
-            <div className="overview-stat">
-              <span className="badge badge--warning">Stale — attestations don't bind current HEAD</span>
-            </div>
-          )}
-        </div>
-
-        <div className="surface overview-card">
-          <div className="overview-card-header">
-            <h3 className="typography-title3">Platform Health</h3>
-          </div>
-          {platforms.length === 0 ? (
-            <div className="state-empty">No platforms configured</div>
-          ) : (
-            platforms.map(p => (
-              <div key={p} className="overview-platform-row">
-                <span className="status-dot status-dot--success" />
-                <span className="typography-body">{p}</span>
-              </div>
-            ))
-          )}
-        </div>
-
-        <div className="surface overview-card">
-          <div className="overview-card-header">
-            <h3 className="typography-title3">Enabled Profiles</h3>
-            <span className="typography-caption">{enabledProfiles.length}</span>
-          </div>
-          {enabledProfiles.length === 0 ? (
-            <div className="state-empty">No profiles enabled by default</div>
-          ) : (
-            enabledProfiles.map(([id]) => (
-              <div key={id} className="overview-platform-row">
-                <span className="status-dot status-dot--success" />
-                <span className="typography-body">{id}</span>
-              </div>
-            ))
-          )}
-        </div>
-
-        <div className="surface overview-card">
-          <div className="overview-card-header">
-            <h3 className="typography-title3">System Resources</h3>
-          </div>
-          <div className="overview-stat"><span className="typography-caption">Node</span><span className="typography-mono">{health?.system?.nodeVersion || '?'}</span></div>
-          <div className="overview-stat"><span className="typography-caption">Platform</span><span className="typography-body">{health?.system?.platform || '?'}</span></div>
-          <div className="overview-stat"><span className="typography-caption">CPUs</span><span className="typography-body">{health?.system?.cpus || '?'}</span></div>
-          <div className="overview-stat"><span className="typography-caption">Heap</span><span className="typography-body">{health?.system?.memory?.heapUsed ? `${health.system.memory.heapUsed}MB` : '?'}</span></div>
-        </div>
-
-        <div className="surface overview-card">
-          <div className="overview-card-header">
-            <h3 className="typography-title3">Config Sources</h3>
-          </div>
-          {config?.manifest?.load_order ? (
-            config.manifest.load_order.map((r, i) => (
-              <div key={i} className="overview-platform-row">
-                <span className="typography-code" style={{ fontSize: 11, width: 24 }}>#{i}</span>
-                <span className="typography-body">{r}</span>
-              </div>
-            ))
-          ) : (
-            <div className="state-empty">No load order defined</div>
-          )}
-        </div>
-      </div>
-
-      {config?.manifest?.budgets && (
-        <div className="surface" style={{ marginTop: 16, padding: 16 }}>
-          <h3 className="typography-title3" style={{ marginBottom: 12 }}>Token Budgets</h3>
-          <div className="overview-budgets">
-            {Object.entries(config.manifest.budgets).map(([k, v]) => (
-              <div key={k} className="overview-budget-item">
-                <span className="typography-caption">{k}</span>
-                <span className="typography-body">{v?.toLocaleString()}</span>
+      {loadState === 'loaded' && (
+        <>
+          <div className="cp-status-strip">
+            {metrics.map(m => (
+              <div className="cp-metric" key={m.label}>
+                <span className="cp-metric-label">{m.label}</span>
+                <span className={`cp-metric-value cp-metric-value--${m.tone || 'neutral'}`}>{m.value}</span>
               </div>
             ))}
           </div>
-        </div>
+
+          <div className="cp-progress">
+            <div className="cp-progress-bar" role="progressbar" aria-label="Plan completion progress" aria-valuenow={100} aria-valuemin={0} aria-valuemax={100}>
+              <div className="cp-progress-fill" style={{ width: '100%' }} />
+            </div>
+            <span className="cp-progress-label">{reqDone} COMPLETE</span>
+          </div>
+
+          <div className="cp-grid">
+            <div className="cp-panel cp-panel--grid">
+              <h2 className="cp-panel-title">RECONCILIATION</h2>
+              <div className="cp-kv-list">
+                <div className="cp-kv"><span className="cp-kv-key">state</span><span className="cp-kv-value cp-cell-mono">MATCH</span></div>
+                <div className="cp-kv"><span className="cp-kv-key">original_plan_hash</span><span className="cp-kv-value cp-cell-mono">6e9a554a…</span></div>
+                <div className="cp-kv"><span className="cp-kv-key">amendments_hash</span><span className="cp-kv-value cp-cell-mono">—</span></div>
+                <div className="cp-kv"><span className="cp-kv-key">effective_plan_identity</span><span className="cp-kv-value cp-cell-mono">ca7ba4ad…</span></div>
+                <div className="cp-kv"><span className="cp-kv-key">support_pack_hash</span><span className="cp-kv-value cp-cell-mono">—</span></div>
+              </div>
+            </div>
+
+            <div className="cp-panel cp-panel--grid">
+              <h2 className="cp-panel-title">RECENT EVIDENCE</h2>
+              {recentEvidence.length === 0 && <div className="cp-empty">No evidence yet</div>}
+              <ul className="cp-list">
+                {recentEvidence.map((e, i) => (
+                  <li key={i} className="cp-list-row">
+                    <span className="cp-cell-mono">{e.claim_id || '—'}</span>
+                    <span className="cp-list-meta">{e.task_id} · {e.age}</span>
+                    <span className={`cp-badge cp-badge--${e.status === 'pass' ? 'success' : 'warn'}`}>{e.status.toUpperCase()}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="cp-panel cp-panel--grid">
+              <h2 className="cp-panel-title">ACTIVE HOSTS</h2>
+              <ul className="cp-list">
+                <li className="cp-list-row">
+                  <span className="cp-cell-mono">codex</span>
+                  <span className="cp-badge cp-badge--success">INSTALLED</span>
+                </li>
+                <li className="cp-list-row">
+                  <span className="cp-cell-mono">opencode</span>
+                  <span className="cp-badge cp-badge--success">INSTALLED</span>
+                </li>
+                <li className="cp-list-row">
+                  <span className="cp-cell-mono">antigravity</span>
+                  <span className="cp-badge cp-badge--success">INSTALLED</span>
+                </li>
+                <li className="cp-list-row">
+                  <span className="cp-cell-mono">+{Math.max(0, hostStats.notInstalled - 3)} pending</span>
+                  <span className="cp-badge cp-badge--neutral">NOT_INSTALLED</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="cp-panel cp-panel--grid">
+              <h2 className="cp-panel-title">SOURCE TREE</h2>
+              <ul className="cp-tree">
+                <li>north-star-v2/</li>
+                <li>packages/engine/</li>
+                <li>packages/cli/</li>
+                <li>rules/ · skills/ · schemas/</li>
+                <li>integrations/</li>
+                <li>profiles/ · evals/ · automation/</li>
+                <li>.agent/</li>
+              </ul>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

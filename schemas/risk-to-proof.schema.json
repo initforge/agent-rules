@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-rules/risk-to-proof/v1",
+  "title": "Risk-to-Proof Escalation Mapping",
+  "description": "Risk class and risk descriptors escalate the candidate proof set; never silently downgrade (owner §3/§7).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["risk_class", "escalates_categories", "notes"],
+  "properties": {
+    "risk_class": { "enum": ["S0", "S1", "S2", "S3"] },
+    "escalates_categories": {
+      "type": "array",
+      "items": { "enum": ["static", "unit", "contract", "integration", "api", "browser", "live", "security", "performance", "data", "packaging", "other"] }
+    },
+    "notes": { "type": "string" }
+  }
+}

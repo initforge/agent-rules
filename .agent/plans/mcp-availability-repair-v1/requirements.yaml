@@ -1,0 +1,33 @@
+version: 1
+plan_id: mcp-availability-repair-v1
+mode: DELIVER
+relation:
+  previous_plan_id: mcp-visible-workspace-isolation-v1
+  previous_generation: 20
+  kind: supersession
+  note: "Owner-authorized availability repair; prior phase remains history; no concurrent goals."
+requirements:
+  - id: REQ-001
+    statement: "Candidate resolution groups windows by OpenCode session identity and excludes non-OC windows (browser/MCP/desktop/owner apps); child windows are never separate candidates."
+    criteria: [C-001, C-002]
+    verification: ["npm test -w packages/kernel", "node automation/session-binding.mjs"]
+  - id: REQ-002
+    statement: "Identity resolution order: env binding -> explicit window -> OC-only grouping -> process ancestry + project root/CWD title match; current desktop never used as target."
+    criteria: [C-003]
+    verification: ["npm test -w packages/kernel"]
+  - id: REQ-003
+    statement: "Geniune multi-session ambiguity returns NEEDS_USER with candidates grouped per session and exactly one concrete bind command; never picks randomly."
+    criteria: [C-004]
+    verification: ["npm test -w packages/kernel"]
+  - id: REQ-004
+    statement: "Direct-bypass project configs (playwright/chrome-devtools MCP without the guardian wrapper) are detected and rejected by the reconcile check."
+    criteria: [C-005]
+    verification: ["node automation/reconcile-opencode-mcp.mjs --check", "node automation/test-reconcile-bypass.mjs"]
+  - id: REQ-005
+    statement: "MCP tools appear again through the guardian with a real initialize/tools-list handshake; receipt carries the full live evidence set."
+    criteria: [C-006]
+    verification: ["node automation/live-focus-probe.mjs (live, host-gated)"]
+  - id: REQ-006
+    statement: "Regression tests cover: 9 windows with one source session; multiple projects on multiple desktops; browser child windows excluded; real 2-session ambiguity; provider visible on correct desktop; focus/active unchanged; direct bypass rejected."
+    criteria: [C-007]
+    verification: ["npm run build", "npm run test:fast", "node automation/validate-focus-workspace.mjs"]

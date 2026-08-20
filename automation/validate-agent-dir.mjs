@@ -36,6 +36,11 @@ export const LIMITS = {
     'ledger',
     'current.json',
     'cleanup-policy.json',
+    // Created by the harness's own northstar run path: the CLI's durable
+    // per-repo northstar config and the planner receipt/log dir. Protocol
+    // artifacts, not scratch (scratch still belongs in .agent/tmp/).
+    'northstar.json',
+    'planner',
   ]),
   requiredPlanFiles: ['plan.md', 'requirements.yaml'],
   validStatuses: new Set(['active', 'superseded', 'dropped', 'blocked']),

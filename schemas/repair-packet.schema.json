@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/repair-packet.schema.json",
+  "title": "Bounded Repair Packet",
+  "description": "The smallest bounded repair packet emitted by prompt-first pair repair: selective claim reopen in a new candidate epoch, stale historical evidence, fresh proof requirements, and risk-triggered regression scope (AM-0003, REQ-022).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "version", "packet_id", "plan_id", "finding_id", "candidate_epoch",
+    "reopened_claims", "unaffected_claims", "stale_evidence", "repair_steps", "proof_requirements"
+  ],
+  "properties": {
+    "schema": { "const": "harness/repair-packet" },
+    "version": { "const": 1 },
+    "packet_id": { "type": "string", "minLength": 1 },
+    "plan_id": { "type": "string", "minLength": 1 },
+    "finding_id": { "type": "string", "minLength": 1 },
+    "candidate_epoch": { "type": "integer", "minimum": 0 },
+    "reopened_claims": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "pattern": "^C-[0-9]+$" }
+    },
+    "unaffected_claims": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^C-[0-9]+$" }
+    },
+    "stale_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["evidence_id", "claim_id", "epoch", "status"],
+        "properties": {
+          "evidence_id": { "type": "string", "minLength": 1 },
+          "claim_id": { "type": "string", "minLength": 1 },
+          "epoch": { "type": "integer", "minimum": 0 },
+          "status": { "const": "stale" }
+        }
+      }
+    },
+    "repair_steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "proof_requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fresh_proof_required", "regression_scope", "historical_pass_preserved"],
+      "properties": {
+        "fresh_proof_required": { "const": true },
+        "regression_scope": { "type": "string", "minLength": 1 },
+        "historical_pass_preserved": { "const": true }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

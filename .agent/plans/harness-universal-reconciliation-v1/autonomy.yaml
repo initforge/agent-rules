@@ -1,0 +1,50 @@
+schema_version: 1
+readiness_state: BOUNDED_READY
+readiness_reasons:
+  - 22 requirement(s) GAP (no implementation/evidence)
+  - "missing host tool(s): claude, grok"
+  - no external CI checks recorded
+  - "bounded: reversible defaults recorded; owner-only authority retained; independent work may proceed"
+authority_envelope:
+  allowed:
+    - inspect
+    - install
+    - worktree
+    - build
+    - test
+    - Compose
+    - browser
+    - commit
+    - local-merge
+  owner_only:
+    - push
+    - deploy
+    - credential
+    - destructive
+  source: AM-0019 §3 AuthorityEnvelope; §1 owner-authorized Git boundary
+decision_matrix:
+  reversible_defaults:
+    - action: install
+      default: allow
+      rollback: runtime update --rollback
+    - action: worktree-create
+      default: allow
+      rollback: remove abandoned worktree after completion/crash
+    - action: dependency-install
+      default: allow within lockfile
+      rollback: restore package-lock.json from git
+    - action: local-merge
+      default: integration-owner only
+      rollback: revert merge commit
+    - action: test-rerun
+      default: allow
+      rollback: none (read-only)
+  rollback_policy: reversible ambiguity receives a recorded default; rollback restores the pre-action snapshot
+  source: AM-0019 §3 DecisionMatrix
+host_capability:
+  tools:
+    - codex
+    - opencode
+  cpu_count: 20
+  total_mem_mb: 15661
+  external_ci_green: false

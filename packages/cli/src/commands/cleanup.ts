@@ -1,6 +1,7 @@
 import path from "node:path";
 import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
 import { deletePaths, inventoryPaths, rescuePaths } from "../cleanup/index.js";
+import { runLifecycleCleanup } from "../cleanup/lifecycle.js";
 
 /**
  * `agent-rules cleanup` — SS-24 (R-042) cleanup, migration and garbage collection.
@@ -45,12 +46,28 @@ export async function cleanupCmd(args: string[], opts: CliOptions): Promise<Comm
   const { positionals, options } = parseArgs(args.slice(1));
   const root = path.resolve(typeof options.root === "string" ? options.root : process.cwd());
   const dryRun =
-    options["dry-run"] === true || options["dry-run"] === "true" || opts.dryRun;
+    options["apply"] !== true && options["apply"] !== "true" &&
+    (options["dry-run"] === true || options["dry-run"] === "true" || opts.dryRun || subcommand === undefined || subcommand === "lifecycle" || subcommand === "gc");
+  // Compaction stays planned-only (dry-run) unless the run is explicitly
+  // non-dry-run AND --compact is requested: `cleanup lifecycle --apply --compact`.
+  const compact = options.compact === true || options.compact === "true";
   const optionPath = (name: string): string | undefined =>
     typeof options[name] === "string" && options[name] !== "" ? options[name] : undefined;
 
   try {
     switch (subcommand) {
+      case undefined:
+      case "lifecycle":
+      case "gc": {
+        const report = runLifecycleCleanup(root, { dryRun, compact });
+        const action = dryRun ? "planned" : "applied";
+        const compactionNote = compact ? `, compaction ${report.compaction.dryRun ? "planned" : `applied ${report.compaction.applied.length}/${report.compaction.entries.length}`}` : ", compaction planned (dry-run; use --apply --compact)";
+        return {
+          exitCode: ExitCode.Success,
+          message: `lifecycle ${action}: ${report.items.length} artifact(s), ${report.eligible.length} purge-eligible${compactionNote}`,
+          data: { report },
+        };
+      }
       case "inventory": {
         if (positionals.length === 0) {
           return usage("inventory <path...> [--root <repo>]");
@@ -104,6 +121,6 @@ export async function cleanupCmd(args: string[], opts: CliOptions): Promise<Comm
 function usage(sub: string): CommandResult {
   return {
     exitCode: ExitCode.InvalidArgument,
-    message: `Usage: cleanup ${sub}\n  --root <repo>      repo root (default: cwd)\n  --dry-run          classify/plan without mutating\n  --quarantine <dir> rescue destination (default: <root>/.cleanup-quarantine)\n  --receipts <dir>   delete receipt dir (default: <root>/.cleanup-receipts)`,
+  message: `Usage: cleanup ${sub}\n  lifecycle|gc       graph-safe lifecycle inventory (default)\n  --root <repo>      repo root (default: cwd)\n  --dry-run          classify/plan without mutating\n  --apply            apply only unreferenced ignored scratch purge\n  --compact          apply content-addressed compaction of raw runs/checkpoints\n                     (requires non-dry-run: cleanup lifecycle --apply --compact)\n  --quarantine <dir> rescue destination (default: <root>/.cleanup-quarantine)\n  --receipts <dir>   delete receipt dir (default: <root>/.cleanup-receipts)`,
   };
 }

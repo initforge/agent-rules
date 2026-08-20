@@ -25,19 +25,25 @@ and apply the best one.
 
 `/best-of-n [N] <task>`
 
-- If the first token is a number 2-10, it sets the candidate count; the rest is the task.
-- If omitted, N defaults to 3.
+- If the first token is a number 2, it sets the candidate count; the rest is the task.
+- If omitted, N defaults to 2.
+- The repository runtime clamp caps workers at **at most two** with **no recursion**
+  (AGENTS.md invariant 7; plan decision DEC-014). This skill cannot widen the
+  clamp: N is never more than two, candidates run in parallel at depth zero, and
+  the winning candidate is integrated by the main agent without nested delegation.
+  Runtime clamps override skill-local defaults.
 
 Examples:
-- `/best-of-n implement the login page` (3 candidates)
-- `/best-of-n 5 refactor the auth module` (5 candidates)
+- `/best-of-n implement the login page` (2 candidates)
+- `/best-of-n 2 refactor the auth module` (2 candidates)
 
 ## Steps
 
-1. Parse the user's message to extract **N** (candidate count, default 3) and
-   the **task description**.
+1. Parse the user's message to extract **N** (candidate count, default 2, clamped
+   to at most two) and the **task description**.
 
-2. Spawn **N** subagents in a single message (parallel tool calls). Use the
+2. Spawn **N** subagents in a single message (parallel tool calls, depth zero, no
+   recursion). Use the
    `task` tool for each with:
    - `subagent_type`: `"general-purpose"`
    - `isolation`: `"worktree"`
@@ -54,7 +60,7 @@ Examples:
 5. Apply the winner's changes from its worktree to the main workspace.
    Review the changes in context and fix any remaining issues.
 
-6. End your response with `WINNER: <number>` (1-N).
+6. End your response with `WINNER: <number>` (1-N, N ≤ 2).
 
 ## Evaluation Criteria
 

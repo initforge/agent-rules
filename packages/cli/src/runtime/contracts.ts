@@ -1,6 +1,166 @@
 export const RUNTIME_PLATFORMS = ["codex", "grok", "antigravity", "cursor", "opencode", "mimocode", "claude"] as const;
 export type RuntimePlatform = (typeof RUNTIME_PLATFORMS)[number];
 
+// ── Host reconciliation contract (REQ-004/REQ-005/REQ-006) ──────────
+// The canonical registered host set is Codex, Claude, Grok, OpenCode,
+// Antigravity, Cursor, MiMoCode. HostId aliases RuntimePlatform so the
+// transactional runtime installer and the reconciler share one identity set.
+
+export type HostId = RuntimePlatform;
+export const REGISTERED_HOSTS: readonly HostId[] = RUNTIME_PLATFORMS;
+
+export type HostStatus = "installed" | "absent" | "unsupported";
+
+export type HostSignalKind =
+  | "binary-on-path"
+  | "desktop-process"
+  | "known-install-root"
+  | "config-dir"
+  | "install-receipt"
+  | "live-probe";
+
+/** One detection observation. `live` marks signals that prove an application
+ *  is actually present. A config directory or a stale harness receipt alone
+ *  is NOT proof of installation and is therefore never `live`. */
+export interface HostSignal {
+  kind: HostSignalKind;
+  detail: string;
+  live: boolean;
+}
+
+export interface HostDetection {
+  host: string;
+  status: HostStatus;
+  installed: boolean;
+  signals: HostSignal[];
+  installRoot?: string;
+  configDir?: string;
+  /** Stale evidence found but no live application signal. */
+  staleEvidence: boolean;
+  reason?: string;
+  /** Availability never grants task authority. Always false by contract. */
+  readonly taskAuthority: false;
+}
+
+export interface HostInventoryEntry {
+  host: string;
+  status: HostStatus;
+  installed: boolean;
+  signals: HostSignal[];
+  installRoot?: string;
+  configDir?: string;
+  staleEvidence: boolean;
+  runtimeReceipt?: { present: boolean; effectivePlanSha256?: string };
+  readonly taskAuthority: false;
+}
+
+export interface DesiredSkill {
+  id: string;
+  source: string;
+}
+
+export interface DesiredProvider {
+  id: string;
+  mode: "required" | "optional";
+}
+
+export interface DesiredRuntime {
+  skills: DesiredSkill[];
+  providers: DesiredProvider[];
+  /** e.g. `agent-rules-runtime@<effective-plan-sha256>` */
+  runtimeState: string;
+  source: string;
+}
+
+export interface RuntimeProjection {
+  host: string;
+  status: HostStatus;
+  desired: DesiredRuntime;
+  actual: {
+    skills: DesiredSkill[];
+    providers: DesiredProvider[];
+    runtimeState: string;
+  };
+  drift: {
+    skills: string[];
+    providers: string[];
+    runtimeState: boolean;
+  };
+  /** True when every drifted item is harness-owned and safely repairable. */
+  safeToRepair: boolean;
+}
+
+export type RepairActionKind = "report-only" | "swap-managed-file" | "restore-backup" | "noop";
+
+export interface RepairAction {
+  kind: RepairActionKind;
+  target?: string;
+  reason: string;
+}
+
+export interface HostRepairReceipt {
+  schema: "agent-rules/host-reconcile-receipt";
+  version: 1;
+  host: string;
+  status: "in-sync" | "drifted" | "repaired" | "partial" | "absent" | "unsupported";
+  projectedAt: string;
+  repairedAt?: string;
+  desired: DesiredRuntime;
+  drift: { skills: string[]; providers: string[]; runtimeState: boolean };
+  actions: RepairAction[];
+  transaction?: {
+    journal: string;
+    backup: string;
+    phase: "prepared" | "backed-up" | "committed";
+  };
+  mutated: boolean;
+  readonly taskAuthority: false;
+}
+
+/** Injectable live facts so detection is deterministic and testable. */
+export interface HostProbes {
+  pathEntries: () => string[];
+  processList: (pattern: string) => Promise<string[]>;
+  runProbe: (binary: string, args: string[]) => Promise<{ ok: boolean; stdout: string }>;
+  fileExists: (filePath: string) => Promise<boolean>;
+  readFileText: (filePath: string) => Promise<string | undefined>;
+}
+
+export interface RepairOptions {
+  reportOnly: boolean;
+  /** Resolver for harness-owned desired managed content; only entries listed
+   *  in the host ownership manifest may be swapped. Absent entries are
+   *  reported report-only and never written (invariant: repair never
+   *  overwrites unmanaged user configuration blindly). */
+  desiredManagedFiles?: (root: string, detection: HostDetection) => Promise<ManagedContent[]>;
+  failpoint?: "crash-after-backup-before-swap";
+}
+
+export interface ManagedContent {
+  relativePath: string;
+  sha256: string;
+  content: Buffer;
+  source: string;
+}
+
+export interface ProbeResult {
+  live: boolean;
+  detail: string;
+}
+
+/** The common HostAdapter contract shared by all registered hosts:
+ *  detect / inventory / project / probe / repair / rollback. Unknown hosts
+ *  have no adapter and must return UNSUPPORTED (never a false parity PASS). */
+export interface HostAdapter {
+  readonly id: HostId;
+  detect(probes?: Partial<HostProbes>): Promise<HostDetection>;
+  inventory(detection: HostDetection): Promise<HostInventoryEntry>;
+  project(desired: DesiredRuntime, detection: HostDetection): Promise<RuntimeProjection>;
+  probe(projection: RuntimeProjection): Promise<ProbeResult>;
+  repair(projection: RuntimeProjection, options: RepairOptions): Promise<HostRepairReceipt>;
+  rollback(receipt: HostRepairReceipt): Promise<void>;
+}
+
 export interface RuntimeFile { path: string; sha256: string }
 export interface SourceManifest { version: number; platform: RuntimePlatform; files: RuntimeFile[] }
 export interface ActivationRecord {

@@ -419,6 +419,7 @@ export function compileOMClaims(entries: OMCrosswalkEntry[]): ClaimDefinition[] 
       ],
       allowed_deviations: ['approved SUPERSEDED requirement'],
       terminal_weight: tier === 'T-Global' ? 6 : tier === 'T3' ? 5 : tier === 'T2' ? 4 : 3,
+      required_stage: 'TEST_VERIFIED',
     };
   });
 }

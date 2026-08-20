@@ -9,7 +9,16 @@
     "security-test",
     "pipeline-run",
     "production-smoke",
-    "custom-runtime"
+    "custom-runtime",
+    "container-runtime",
+    "contract-verification",
+    "schema-behavior",
+    "story-state",
+    "device-run",
+    "security-scan",
+    "performance-threshold",
+    "telemetry-diagnosis",
+    "unavailable-evidence"
   ],
   "profiles": {
     "static-change": {
@@ -146,6 +155,73 @@
       "required_dimensions": ["outcome", "failure", "regression"],
       "allowed_kinds": ["custom-runtime"],
       "signals": []
+    },
+    "container-runtime": {
+      "required_dimensions": ["positive", "cleanup", "failure-path"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
+      "allowed_kinds": ["container-runtime", "integration-test", "custom-runtime"],
+      "signals": ["testcontainer", "ephemeral dependency", "disposable database", "docker-based integration"]
+    },
+    "contract-verification": {
+      "required_dimensions": ["consumer", "provider", "invalid-error"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
+      "allowed_kinds": ["contract-verification", "integration-test", "custom-runtime"],
+      "signals": ["pact", "consumer contract", "provider contract", "contract verify"]
+    },
+    "schema-behavior": {
+      "required_dimensions": ["positive", "invalid-error", "regression"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
+      "allowed_kinds": ["schema-behavior", "integration-test", "custom-runtime"],
+      "signals": ["schemathesis", "openapi behavior", "graphql behavior", "schema testing"]
+    },
+    "story-states": {
+      "required_dimensions": ["interaction", "state", "regression"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
+      "allowed_kinds": ["story-state", "component-test", "browser-test", "custom-runtime"],
+      "signals": ["storybook", "component state", "story states", "story rendering"]
+    },
+    "mobile-device": {
+      "required_dimensions": ["interaction", "device-state", "regression"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
+      "allowed_kinds": ["device-run", "browser-test", "custom-runtime"],
+      "signals": ["maestro", "mobile flow", "device flow", "emulator", "device test"]
+    },
+    "security-scan": {
+      "required_dimensions": ["positive", "negative", "leakage-sanitization"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
+      "allowed_kinds": ["security-scan", "security-test", "custom-runtime"],
+      "signals": ["semgrep", "codeql", "sast", "static security scan", "code scanning"]
+    },
+    "performance-threshold": {
+      "required_dimensions": ["threshold", "slo", "regression"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
+      "requires_explicit_thresholds": true,
+      "allowed_kinds": ["performance-threshold", "custom-runtime"],
+      "signals": ["k6", "load test", "performance threshold", "slo", "latency budget"]
+    },
+    "telemetry-diagnosis": {
+      "required_dimensions": ["trace", "span", "diagnosis"],
+      "runtime_evidence_required": true,
+      "build_only_forbidden": true,
+      "substitutes_product_acceptance": false,
+      "allowed_kinds": ["telemetry-diagnosis", "custom-runtime"],
+      "signals": ["opentelemetry", "trace", "distributed diagnosis", "collector"]
+    },
+    "unavailable-evidence": {
+      "required_dimensions": ["failure", "reason"],
+      "runtime_evidence_required": false,
+      "build_only_forbidden": false,
+      "fail_closed": true,
+      "never_acceptance": true,
+      "allowed_kinds": ["unavailable-evidence", "artifact-audit"],
+      "signals": ["unavailable", "missing provider", "device unavailable", "docker unavailable"]
     }
   }
 }

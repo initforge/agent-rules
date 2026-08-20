@@ -1,0 +1,10 @@
+source: expo-skills
+pinned_commit: dcff9e7
+scanned_at: 2026-08-14T16:24:02+07:00
+files_total: 217
+exec_bit_files: 24
+script_files: 16
+opaque_binaries_elf: 0
+archive_files: 0
+network_pattern_hits: 65
+verdict: scan-level; execution authority NONE; content not executed

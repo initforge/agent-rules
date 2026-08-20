@@ -22,7 +22,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "node ../../node_modules/typescript/bin/tsc",
+    "build": "node ../../node_modules/typescript/bin/tsc && node ../../automation/copy-mcp-guardian.mjs",
     "typecheck": "node ../../node_modules/typescript/bin/tsc --noEmit",
     "test": "node ../../automation/run-governed-vitest.mjs --project-root ../.. --cwd . --mode full -- run"
   },

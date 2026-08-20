@@ -1,0 +1,13 @@
+{
+ "schema": "harness/focus-workspace-fixture",
+ "version": 1,
+ "kind": "pencil-conflict",
+ "sessionId": "session-B",
+ "lock": {
+  "session_id": "session-A",
+  "workspace": 2,
+  "windowIdHash": "aaaaaaaaaaaaaaaa"
+ },
+ "expect": "conflict",
+ "note": "A Pencil singleton owned by another OpenCode session must return CONFLICT/NEEDS_USER, never be dragged between desktops."
+}

@@ -1,0 +1,48 @@
+schema_version: 1
+domains:
+  path/glob:
+    conflicts:
+      - same owned/forbidden path claimed by two clusters
+    leases:
+      - assignment owned_paths
+  public-api-schema:
+    conflicts:
+      - contract change invalidates affected dependants only
+    leases:
+      - packages/engine/src/contracts.ts
+      - schemas/
+  migration:
+    conflicts:
+      - two writers on same migration revision
+    leases:
+      - packages/engine/src/ledger-migration.ts
+  lockfile:
+    conflicts:
+      - package-lock.json concurrent mutation
+    leases:
+      - package-lock.json
+  generated-manifest:
+    conflicts:
+      - generated/ hand-edit or concurrent regeneration
+    leases:
+      - generated/
+  port/container/fixture:
+    conflicts:
+      - temporary port / compose fixture collision
+    leases:
+      - temporary ports, compose topology
+  shared-data:
+    conflicts:
+      - browser/MCP context pooled vs per-agent
+    leases:
+      - browser pool, context cache
+  browser-page-lease:
+    conflicts:
+      - REF/TGT pair page lease collision
+    leases:
+      - REF:<pair-id>
+      - TGT:<pair-id>
+ownership: []
+notes:
+  - any post-review commit makes prior review stale
+  - contract frozen by integration epoch; change invalidates only affected dependants

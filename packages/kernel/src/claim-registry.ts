@@ -11,6 +11,84 @@ export const EVIDENCE_MATURITIES = [
 ] as const;
 export type EvidenceMaturity = (typeof EVIDENCE_MATURITIES)[number];
 
+/**
+ * Evidence stage (AM-0005): what was actually executed, orthogonal to the
+ * maturity/integrity ladder above. A valid, fresh, independently reproduced
+ * test run is still only TEST_VERIFIED; it never proves live usage. No stage
+ * auto-promotes to a higher one.
+ *
+ * One canonical owner: this file. Schemas mirror the enum; they do not extend it.
+ */
+export const EVIDENCE_STAGES = [
+  'SOURCE_VERIFIED',
+  'TEST_VERIFIED',
+  'NATIVE_SMOKE_VERIFIED',
+  'LIVE_CANDIDATE',
+  'LIVE_OBSERVED',
+  'OPERATIONALLY_PROVEN',
+  'LIVE_UNPROVEN',
+] as const;
+export type EvidenceStage = (typeof EVIDENCE_STAGES)[number];
+
+/** Stage ladder order; higher index = stronger proof. LIVE_UNPROVEN is terminal-honest, never promotable. */
+export const STAGE_RANK: Readonly<Record<EvidenceStage, number>> = {
+  SOURCE_VERIFIED: 1,
+  TEST_VERIFIED: 2,
+  NATIVE_SMOKE_VERIFIED: 3,
+  LIVE_CANDIDATE: 4,
+  LIVE_OBSERVED: 5,
+  OPERATIONALLY_PROVEN: 6,
+  LIVE_UNPROVEN: -1,
+};
+
+/** Stages that assert real usage. Test-only evidence can never satisfy these. */
+export const LIVE_STAGES: readonly EvidenceStage[] = ['LIVE_CANDIDATE', 'LIVE_OBSERVED', 'OPERATIONALLY_PROVEN'] as const;
+
+export function isLiveStage(stage: EvidenceStage | undefined): boolean {
+  return stage !== undefined && LIVE_STAGES.includes(stage);
+}
+
+/** Highest stage among observed records; undefined when no record declares a stage. */
+export function bestStage(stages: readonly EvidenceStage[] | undefined): EvidenceStage | undefined {
+  if (!stages || stages.length === 0) return undefined;
+  let best: EvidenceStage | undefined;
+  for (const stage of stages) {
+    const rank = STAGE_RANK[stage];
+    if (rank < 0) continue; // LIVE_UNPROVEN never promotes acceptance
+    if (best === undefined || rank > STAGE_RANK[best]) best = stage;
+  }
+  return best;
+}
+
+/** True when at least one observed record reached the claim's required stage. */
+export function stageSatisfies(required: EvidenceStage, stages: readonly EvidenceStage[] | undefined): boolean {
+  const best = bestStage(stages);
+  if (best === undefined) return false;
+  if (required === 'LIVE_UNPROVEN') return false; // never satisfiable as a requirement
+  return STAGE_RANK[best] >= STAGE_RANK[required];
+}
+
+/**
+ * AM-0005 compatibility floor: records written before stages existed (no
+ * explicit evidence_stage) are treated as TEST_VERIFIED — the strongest stage
+ * an unlabeled verifier-observed pass can honestly support. Live stages always
+ * require explicit labeling; nothing unlabeled ever reaches a live stage.
+ */
+export function normalizeStages(stages: readonly EvidenceStage[] | undefined): EvidenceStage[] {
+  if (!stages || stages.length === 0) return ['TEST_VERIFIED'];
+  return [...stages];
+}
+
+/** Derive a claim's minimum evidence stage from requirement wording (AM-0005). */
+export function requiredStageFromText(text: string): EvidenceStage {
+  const t = text.toLowerCase();
+  if (t.includes('dogfood') || t.includes('operationally proven') || t.includes('operational proof')) return 'LIVE_OBSERVED';
+  if (t.includes('live observed') || t.includes('live usage')) return 'LIVE_OBSERVED';
+  if (t.includes('native smoke')) return 'NATIVE_SMOKE_VERIFIED';
+  if (t.includes('live')) return 'LIVE_CANDIDATE';
+  return 'TEST_VERIFIED';
+}
+
 export const CLAIM_FORMULAS = [
   'LOCAL_READY', 'STAGING_READY', 'PRODUCTION_READY', 'HV3_M11_LOCAL_COMPLETE',
 ] as const;
@@ -62,6 +140,8 @@ export interface ClaimDefinition {
   freshness_dependencies: FreshnessDependency[];
   allowed_deviations: string[];
   terminal_weight: number;
+  /** AM-0005: minimum evidence stage this claim may be accepted on. */
+  required_stage: EvidenceStage;
 }
 
 export interface ClaimCompileInput {
@@ -213,6 +293,7 @@ export function compileClaims(input: ClaimCompileInput): ClaimDefinition[] {
       ],
       allowed_deviations: ['approved SUPERSEDED requirement', 'owner-approved design-token deviation'],
       terminal_weight: terminalWeight(tier),
+      required_stage: requiredStageFromText(text),
     };
 
     const t = text.toLowerCase();
@@ -249,6 +330,12 @@ export interface ClaimEvidenceInput {
   superseded?: boolean;
   capabilities?: string[];
   explicit?: EvidenceMaturity;
+  /**
+   * AM-0005: evidence stage(s) actually reached by the observations backing
+   * this claim. The claim's minimum stage (ClaimDefinition.required_stage)
+   * gates acceptance; below-stage evidence blocks regardless of integrity.
+   */
+  evidence_stages?: EvidenceStage[];
 }
 
 export interface ClaimEvaluationResult {
@@ -301,6 +388,10 @@ function evaluateOneClaim(claim: ClaimDefinition, ev: ClaimEvidenceInput): Claim
   if (ev.fresh !== true) return { claim_id: claim.claim_id, requirement_id: claim.requirement_id, maturity: 'VALID', blocked: true, blockReason: 'evidence valid but not fresh' };
   if (ev.independently_reproduced !== true) return { claim_id: claim.claim_id, requirement_id: claim.requirement_id, maturity: 'FRESH', blocked: false, blockReason: null };
   if (ev.terminal_eligible !== true) return { claim_id: claim.claim_id, requirement_id: claim.requirement_id, maturity: 'INDEPENDENTLY_REPRODUCED', blocked: false, blockReason: null };
+  if (!stageSatisfies(claim.required_stage ?? 'TEST_VERIFIED', normalizeStages(ev.evidence_stages))) {
+    const got = bestStage(normalizeStages(ev.evidence_stages));
+    return block('PARTIAL', `evidence stage ${got ?? 'none'} below required stage ${claim.required_stage ?? 'TEST_VERIFIED'} (AM-0005: test-only evidence never satisfies a live/dogfood claim)`);
+  }
   return { claim_id: claim.claim_id, requirement_id: claim.requirement_id, maturity: 'TERMINAL_ELIGIBLE', blocked: false, blockReason: null };
 }
 

@@ -105,8 +105,8 @@ def main() -> int:
     if pure["primary"] is not None:
         raise AssertionError(f"pure Q&A received a skill: {pure}")
     browser = route("Manual browser QA click-through", [], graph)
-    if browser["primary"] != "browser-qa" or "qa-skills" not in browser["required_skills"]:
-        raise AssertionError(f"browser graph contract mismatch: {browser}")
+    if browser["primary"] != "browser-qa" or "qa-skills" in browser["required_skills"]:
+        raise AssertionError(f"browser graph contract mismatch (qa-skills must be conditional, not required): {browser}")
     generic = route("refactor module thanh toán Node.js", [], graph)
     if {"5fedu-project", "5fedu-module-parity"} & set(generic["stack"]):
         raise AssertionError(f"generic module falsely routed to 5fedu: {generic}")
@@ -213,7 +213,9 @@ def main() -> int:
         if captured != [payload_root]:
             raise AssertionError(f"Codex handler ignored payload workspace: {captured}")
     blob = json.dumps(combined, ensure_ascii=False)
-    if "browser-qa" not in blob or "5fedu-module-parity" not in blob:
+    # AM-0002/invariant 16: generic words like "browser" alone no longer load
+    # browser-qa; a 5fedu parity task keeps the profile procedure only.
+    if "5fedu-module-parity" not in blob:
         raise AssertionError(f"combined graph route lost required skills: {combined}")
     if "ui-taste" in combined["stack"]:
         raise AssertionError(f"5fedu parity must not auto-load ui-taste: {combined}")

@@ -1,0 +1,26 @@
+{
+  "schema_name": "test-refactor-matrix",
+  "valid": false,
+  "data": {
+    "schema": "agent-rules/test-refactor-matrix/v1",
+    "version": 1,
+    "repository": "/repo",
+    "audited_at": "2026-08-15T00:00:00.000Z",
+    "baseline": { "files": 10, "tests": 100 },
+    "after": { "files": 9, "tests": 90 },
+    "entries": [
+      {
+        "test_id": "sec-1",
+        "file": "src/sec.test.ts",
+        "category": "security",
+        "covers_claims": ["C-AUTH"],
+        "action": "remove",
+        "action_reason": "make CI green"
+      }
+    ],
+    "protected_count": 0,
+    "coverage_preserved": false,
+    "coverage_evidence": "",
+    "post_refactor_proof_run": ""
+  }
+}

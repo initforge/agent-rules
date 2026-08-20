@@ -22,6 +22,14 @@ and `E2E`; these terms do not change provider selection or proof requirements.
    - Use for console, network, CDP, performance, or browser-runtime diagnosis.
 4. Never require all three providers for ordinary UI work. Capability routing chooses only what the TaskPacket needs.
 
+## Support loading
+
+Load `qa-skills` only when QA reasoning is needed — a test-design matrix,
+exploratory/edge-case planning, permission matrices, or release-readiness smoke
+planning. A simple deterministic browser verification needs only the Playwright
+Agent CLI and does not load `qa-skills`. Smallest sufficient proof: never widen
+the support surface for a task that does not need it.
+
 ## Manual visibility contract
 
 When the task explicitly requests a manual walkthrough, the browser and the

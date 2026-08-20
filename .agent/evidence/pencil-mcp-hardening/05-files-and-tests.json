@@ -1,0 +1,24 @@
+{
+  "work": "pencil-mcp-hardening",
+  "files_changed": [
+    { "path": "integrations/optional/pencil-mcp/launch.mjs", "change": "Rewritten as stable launcher: live-mount resolution from /proc/<pid>/exe, visible AppImage launch when absent, bounded startup timeout (PENCIL_MCP_STARTUP_TIMEOUT_MS), transport-socket wait + broken-transport detection, BLOCKED/NEEDS_USER diagnostics, PENCIL_APPIMAGE precedence, recursion guard, argv/env passthrough, dry-run diag mode. Kept configCandidates(host) + PENCIL_MCP_LAUNCH_DRY_RUN === '1' for engine test contract." },
+    { "path": "integrations/optional/pencil-mcp/handshake-check.mjs", "change": "NEW: real MCP initialize+tools/list handshake through the launcher; optional PENCIL_HANDSHAKE_TOOL tool-call check; exit 0 only on genuine handshake." },
+    { "path": "integrations/optional/pencil-mcp/install-opencode.mjs", "change": "NEW: idempotent OpenCode entry installer; timestamped backup before change; preserves unrelated config; BLOCKED/NEEDS_USER with install URL when Pencil absent; PENCIL_APPIMAGE override." },
+    { "path": "integrations/optional/pencil-mcp/install.sh", "change": "Now performs the real OpenCode install (backup + launcher entry) and prints launcher diagnostics." },
+    { "path": "integrations/optional/pencil-mcp/verify-integration.sh", "change": "NEW: real-handshake integration check (no process/.pen-existence fakes)." },
+    { "path": "integrations/optional/pencil-mcp/README.md", "change": "NEW: durable launcher contract, root cause, stale-path prohibition, bounded timeout, real handshake, BLOCKED/NEEDS_USER, known app behaviors." },
+    { "path": "integrations/manual/pencil-mcp/README.md", "change": "'Native entry discovery' rewritten: stable launcher resolves live mount; persisted /tmp/.mount_Pen.* prohibited; foreground-visible launch; bounded timeout; BLOCKED/NEEDS_USER; app-overwrite note." },
+    { "path": "integrations/optional/pencil-mcp/manifest.json", "change": "notes updated with stable-launcher requirement and stale-path prohibition." },
+    { "path": "AGENTS.md", "change": "Pencil section: attach through stable launcher; never persist /tmp/.mount_Pen.*; foreground-visible; bounded timeout; real handshake; BLOCKED/NEEDS_USER." },
+    { "path": "/home/linhnxdeveloper/.config/opencode/opencode.json", "change": "pencil entry -> node launch.mjs --app desktop --agent openCodeCLI (backup .bak-2026-08-13T12-39-19-pencil-mcp; unrelated config preserved)." }
+  ],
+  "tests_run": [
+    { "suite": "packages/engine runner-mcp-config.test.ts", "result": "15/15 pass" },
+    { "suite": "packages/engine northstar.test.ts", "result": "25/25 pass" },
+    { "suite": "automation/validate-v3-directive.mjs", "result": "PASS (incl. pencil-boundary)" }
+  ],
+  "pre_existing_unrelated_failures": [
+    "automation/validate-v31-directive.mjs raw-intent hash mismatch: .agent/current.json points at harness-universal-reconciliation-v1 (gen 9) from the earlier session; v3.1 pointer hash no longer matches. Unrelated to this task."
+  ],
+  "not_touched": ["Control Plane V2", "generated/", "installed runtime mirrors in ~/Projects/agent-rules"]
+}

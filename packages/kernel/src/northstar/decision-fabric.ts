@@ -5,6 +5,7 @@ import type { TaskPacket, TaskPhase, WorkSpec } from './protocol.js';
 import type { TraceabilityManifest } from './compiler.js';
 
 export type DecisionFabricMode = 'shadow' | 'active';
+export type AutonomyMode = 'EXPLORE' | 'DELIVER';
 export type FactStatus = 'observed' | 'conflict' | 'unknown';
 
 export interface FactSource {
@@ -26,6 +27,12 @@ export interface RepoFacts {
   schema: 'harness/repo-facts/v1';
   version: 1;
   workspace_root: string;
+  hierarchy?: {
+    root: string;
+    package_scopes: string[];
+    source_scopes: string[];
+    test_scopes: string[];
+  };
   facts: RepoFact[];
   /** Stable content revision. It is derived from detector output, not chat state. */
   revision?: string;
@@ -70,6 +77,12 @@ export interface TaskFacts {
 export interface DecisionFabricDecision {
   schema: 'harness/decision-fabric/v1';
   mode: DecisionFabricMode;
+  autonomy_mode: AutonomyMode;
+  promotion_gate: {
+    scratch_allowed: boolean;
+    durable_writes_allowed: boolean;
+    requires_scope_proof: true;
+  };
   phase: TaskPhase;
   skills: string[];
   policies: string[];
@@ -79,6 +92,16 @@ export interface DecisionFabricDecision {
   task_facts: TaskFacts;
   rationale: string[];
   fact_revision: string | null;
+  /** Model/provider workaround retirement evidence (AM-0001 / REQ-019). */
+  workarounds?: Array<{
+    id: string;
+    owner: string;
+    trigger: string;
+    scope: string;
+    expires_at?: string;
+    retired: boolean;
+    retirement_evidence?: string;
+  }>;
   legacy?: {
     skills: string[];
     capabilities: string[];
@@ -92,8 +115,11 @@ export interface DecisionFabricInput {
   manifest?: TraceabilityManifest;
   repoFacts?: RepoFacts | null;
   mode?: DecisionFabricMode;
+  autonomy_mode?: AutonomyMode;
   /** Optional post-change paths; routing remains planned when omitted. */
   observedPaths?: readonly string[];
+  /** Active model/provider workarounds with expiry/retirement evidence. */
+  workarounds?: DecisionFabricDecision['workarounds'];
 }
 
 function asValues(fact: RepoFact | undefined): string[] {
@@ -248,10 +274,17 @@ export function decide(input: DecisionFabricInput): DecisionFabricDecision {
     `skills=${input.packet.skills?.length ? 'explicit' : 'empty-by-default'}`,
     `capabilities=${explicitCapabilities.length ? 'explicit' : 'typed task/repository facts'}`,
     ...(task_facts.impact.schema ? ['schema impact requires disposable database and migration proof; missing providers remain BLOCKED'] : []),
+    ...(input.workarounds?.length ? [`workarounds=${input.workarounds.map((entry) => `${entry.id}${entry.retired ? ':retired' : ''}`).join(',')}`] : []),
   ];
   return {
     schema: 'harness/decision-fabric/v1',
     mode: input.mode ?? 'shadow',
+    autonomy_mode: input.autonomy_mode ?? 'DELIVER',
+    promotion_gate: {
+      scratch_allowed: (input.autonomy_mode ?? 'DELIVER') === 'EXPLORE',
+      durable_writes_allowed: (input.autonomy_mode ?? 'DELIVER') === 'DELIVER',
+      requires_scope_proof: true,
+    },
     phase: task_facts.phase,
     skills: [...input.packet.skills ?? []],
     policies,
@@ -261,6 +294,7 @@ export function decide(input: DecisionFabricInput): DecisionFabricDecision {
     task_facts,
     rationale,
     fact_revision: input.repoFacts ? (input.repoFacts.revision ?? repoFactsRevision(input.repoFacts)) : null,
+    ...(input.workarounds?.length ? { workarounds: input.workarounds.map((entry) => ({ ...entry })) } : {}),
   };
 }
 

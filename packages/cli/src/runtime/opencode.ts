@@ -57,13 +57,16 @@ async function currentEffectiveIdentity(root: string): Promise<Sha256> {
 async function canonicalFiles(root: string, model: string): Promise<FileEntry[]> {
   const source = path.join(root, "platforms", "opencode");
   const files: FileEntry[] = [];
-  for (const name of ["agents", "opencode-overlay.md"]) {
+  for (const name of ["AGENTS.md", "agents", "opencode-overlay.md"]) {
     const sourcePath = path.join(source, name);
     if ((await fs.stat(sourcePath)).isDirectory()) for (const p of await walk(sourcePath, source)) {
       const bytes = await fs.readFile(path.join(source, p));
       files.push({ path: `native/${p}`, sha256: hash(bytes.toString("utf8").replaceAll("__OPENCODE_MODEL_CLASS__", model)) });
     }
-    else files.push({ path: name, sha256: hash(await fs.readFile(sourcePath)) });
+    else {
+      const content = (await fs.readFile(sourcePath, "utf8")).replaceAll("__AGENT_RULES_ROOT__", root.replace(/\\/g, "/"));
+      files.push({ path: name, sha256: hash(content) });
+    }
   }
   return files.sort((a, b) => a.path.localeCompare(b.path, "en"));
 }
@@ -80,6 +83,11 @@ export async function buildOpenCodeArtifact(root: string, buildRoot: string): Pr
   await fs.mkdir(path.join(target, "native", "agents"), { recursive: true });
   await fs.cp(path.join(root, "platforms", "opencode", "agents"), path.join(target, "native", "agents"), { recursive: true });
   for (const file of await walk(path.join(target, "native", "agents"))) { const p = path.join(target, "native", "agents", file); await fs.writeFile(p, (await fs.readFile(p, "utf8")).replaceAll("__OPENCODE_MODEL_CLASS__", model)); }
+  await fs.writeFile(
+    path.join(target, "AGENTS.md"),
+    (await fs.readFile(path.join(root, "platforms", "opencode", "AGENTS.md"), "utf8"))
+      .replaceAll("__AGENT_RULES_ROOT__", root.replace(/\\/g, "/")),
+  );
   await fs.copyFile(path.join(root, "platforms", "opencode", "opencode-overlay.md"), path.join(target, "opencode-overlay.md"));
   const files: FileEntry[] = []; for (const rel of await walk(target)) files.push({ path: rel, sha256: hash(await fs.readFile(path.join(target, rel))) }); files.sort((a, b) => a.path.localeCompare(b.path, "en"));
   const identity = await currentEffectiveIdentity(root);

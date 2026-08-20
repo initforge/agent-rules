@@ -606,6 +606,9 @@ export class Runner {
     // dashboard can render screenshots / console / mcp-response refs as
     // they happen. Pure shell tasks are already covered by the existing
     // `verification` event above.
+    // AM-0005: runner-emitted observations are real executions through the
+    // built runtime and are labeled NATIVE_SMOKE_VERIFIED — never LIVE_OBSERVED.
+    // Live stages require explicit owner/evidence labeling, not runner prose.
     for (const step of outcome.stepResults) {
       if (step.step.kind === 'shell') continue;
       const stepEvidence = step.evidence.map((e) => e.path);
@@ -616,12 +619,16 @@ export class Runner {
         result: step.exitCode === 0 ? 'PASS' : 'FAIL',
         evidence: stepEvidence,
         durationMs: step.durationMs,
+        evidenceStage: 'NATIVE_SMOKE_VERIFIED',
+        evidenceRefs: stepEvidence,
       });
     }
     this.telemetry?.record({
       kind: 'verification',
       assignmentId: task.id,
       result: allPassed ? 'PASS' : 'FAIL',
+      evidenceStage: allPassed ? 'NATIVE_SMOKE_VERIFIED' : 'TEST_VERIFIED',
+      evidenceRefs: evidence.map((e) => e.path),
     });
 
     const base: Omit<TaskReport, 'outcome' | 'reason'> = {

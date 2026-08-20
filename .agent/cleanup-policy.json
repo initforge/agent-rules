@@ -30,5 +30,18 @@
     "delete": "tombstone-or-archive",
     "supersede": "preserve-forward-link",
     "cleanup": "bounded-and-recoverable"
+  },
+  "lifecycle_states": [
+    "ACTIVE",
+    "SUPERSEDED",
+    "RETIRED",
+    "PURGE_ELIGIBLE",
+    "PURGED",
+    "HISTORICAL"
+  ],
+  "retrieval": {
+    "active_pointer": ".agent/current.json",
+    "exclude_states": ["SUPERSEDED", "RETIRED", "PURGE_ELIGIBLE", "PURGED", "HISTORICAL"],
+    "purge_requires": ["graph-unreachable", "not-active-reference", "ignored-or-tombstoned", "dry-run-receipt"]
   }
 }

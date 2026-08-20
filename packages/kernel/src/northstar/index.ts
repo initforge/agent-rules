@@ -15,7 +15,12 @@ export * from './resource-governor.js';
 export * from './eval-lab.js';
 export * from './planner.js';
 export * from './support-pack.js';
+export * from './claim-impact.js';
+export * from './pair-repair.js';
 export * from './decision-fabric.js';
+export * from './proof-testing.js';
+export * from './proof-router.js';
+export * from './project-audit.js';
 
 export * from './planner-runtime.js';
 export * from './execution-lifecycle.js';

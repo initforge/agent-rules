@@ -347,6 +347,19 @@ export async function build(
       } catch { /* ok */ }
     }
 
+    // Copy adaptive-minimal-proof-testing canonical artifacts into every
+    // platform mirror (owner §14: source rule, route, schema, hash, activation
+    // path). The rule file flows via the rules/ copy below; the proof schemas
+    // ride alongside the route contracts so installed runtimes validate proof
+    // receipts with the same contracts as the source workspace.
+    for (const pf of ["proof-trigger.schema.json", "proof-receipt.schema.json", "proof-profile.schema.json", "proof-omission.schema.json", "claim-to-proof.schema.json", "risk-to-proof.schema.json", "test-refactor-matrix.schema.json"]) {
+      const pfPath = path.join(root, "schemas", pf);
+      try {
+        await fs.access(pfPath);
+        await fs.copyFile(pfPath, path.join(target, pf));
+      } catch { /* ok */ }
+    }
+
     // Copy platform AGENTS.md with token replacement
     const platformAgents = path.join(root, "platforms", platform, "AGENTS.md");
     try {

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://initforge.github.io/agent-rules/plan.schema.json",
   "title": "Portable Plan Contract",
-  "description": "A structured plan contract describing the repository baseline, intent reference, owner decisions, task breakdown with ownership and acceptance criteria, verification requirements, evidence requirements, rollback, and portability. Platform-neutral; supports task-level ownership, acceptance, and verification-by-claim traceability.",
+  "description": "A structured plan contract describing the repository baseline, intent reference, optional canonical WorkRequest binding, owner decisions, task breakdown with ownership and acceptance criteria, verification requirements, evidence requirements, rollback, and portability. Legacy string forms of repository_baseline, intent_reference, and completion_policy remain accepted for v1 readers; the object forms express the new portable contract.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -14,12 +14,48 @@
     "version": { "const": 1 },
     "schema_version": { "type": "string", "minLength": 1 },
     "repository_baseline": {
-      "description": "The repository baseline commit or tag at plan time.",
-      "type": "string", "minLength": 1
+      "description": "The repository baseline commit or tag at plan time. Legacy readers accept a plain string; the portable contract binds branch and sha.",
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["branch", "sha"],
+          "properties": {
+            "branch": { "type": "string", "minLength": 1 },
+            "sha": { "type": "string", "pattern": "^[a-f0-9]{40}$" }
+          }
+        }
+      ]
     },
     "intent_reference": {
-      "description": "Reference to the intent contract this plan addresses.",
-      "type": "string", "minLength": 1
+      "description": "Reference to the intent contract this plan addresses. Legacy readers accept a plain string; the portable contract binds the canonical hash and summary.",
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["hash", "summary"],
+          "properties": {
+            "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "summary": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "work_request": {
+      "description": "Canonical WorkRequest binding compiled from conversation, optional slash command, CLI/API request, or native host action.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["work_id", "adapter", "semantic_sha256"],
+      "properties": {
+        "work_id": { "type": "string", "minLength": 1 },
+        "adapter": {
+          "type": "string",
+          "enum": ["conversation", "command", "cli", "api", "native_host"]
+        },
+        "semantic_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
     },
     "decisions": {
       "type": "array",
@@ -107,8 +143,46 @@
       }
     },
     "completion_policy": {
-      "type": "string",
-      "enum": ["all_tasks", "any_accepted", "manual_review", "pipeline_gate"]
+      "description": "Legacy readers accept an enum string; the portable contract binds required task and verification gates.",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["all_tasks", "any_accepted", "manual_review", "pipeline_gate"]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["require_all_tasks", "require_verification"],
+          "properties": {
+            "require_all_tasks": { "type": "boolean" },
+            "require_verification": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "validation": {
+      "description": "Optional machine-checked plan validation result.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["valid", "errors", "warnings", "requirementCoverage"],
+      "properties": {
+        "valid": { "type": "boolean" },
+        "errors": { "type": "array", "items": { "type": "string" } },
+        "warnings": { "type": "array", "items": { "type": "string" } },
+        "requirementCoverage": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "covered"],
+            "properties": {
+              "id": { "type": "string" },
+              "covered": { "type": "boolean" },
+              "taskId": { "type": "string" }
+            }
+          }
+        }
+      }
     }
   }
 }

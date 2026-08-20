@@ -1,0 +1,9 @@
+schema_version: 1
+base_epoch:
+  revision: 4
+  effective_identity: ca7ba4ad0cd144e3e44d5a52a78489638c4fd888ea6d482bc18be006b03ba86a
+  head_commit: 6e9a554a164e3a7d26df3cdb296392284c8c3166
+merge_order: "deterministic: accepted branches ordered by integration receipt sequence; no logical wave barriers"
+receipts: []
+stale_review_policy: any post-review commit makes the prior review stale; reviewers use stable branch snapshots; findings consolidated into one bounded repair pack; a different writer repairs, a different reviewer rechecks
+integration_owner: one integration owner only; engine may fast-forward local main after fresh certification

@@ -1,0 +1,31 @@
+{
+  "schema": "agent-rules/mcp-focus-receipt",
+  "version": 1,
+  "session_id": "live-probe-1786769408177",
+  "targetWorkspace": 4,
+  "before": {
+    "currentWorkspace": 0,
+    "activeWindowIdHash": "2d6b5827f77370f8"
+  },
+  "after": {
+    "currentWorkspace": 0,
+    "activeWindowIdHash": "2d6b5827f77370f8"
+  },
+  "providerWindowIdHash": "3325b36823990bad",
+  "providerWorkspace": 4,
+  "placement": "verification_failed",
+  "visibility": "visible",
+  "focusPolicy": "preserve",
+  "isolated": true,
+  "capability": {
+    "wmctrl": true,
+    "xprop": true,
+    "display": true
+  },
+  "errors": [
+    "provider window 3325b36823990bad is not visible/non-iconic (WM_STATE) on the target workspace"
+  ],
+  "created_at": "2026-08-15T04:50:09.151Z",
+  "providerNonIconic": false,
+  "otherWindowsUnchanged": true
+}

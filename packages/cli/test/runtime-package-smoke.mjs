@@ -56,6 +56,21 @@ const runNpm = (args, cwd = repo, options = {}) => npmExecPath
   ? run(process.execPath, [npmExecPath, ...args], cwd, options)
   : run(npmExecutable, args, cwd, options);
 
+const writeSmokeLedger = async (ledger, identity, canonical) => {
+  await fsp.mkdir(path.dirname(ledger), { recursive: true });
+  const body = `${JSON.stringify({ effective_plan_identity: { sha256: identity, canonical_json_utf8: canonical } }, null, 2)}\n`;
+  await fsp.writeFile(ledger, body);
+  const pointerPath = path.join(repo, ".agent", "current.json");
+  const pointer = JSON.parse(await fsp.readFile(pointerPath, "utf8"));
+  pointer.canonical_ledger = {
+    ...pointer.canonical_ledger,
+    path: ".agent/ledger/smoke.json",
+    sha256: createHash("sha256").update(body).digest("hex"),
+    observed_effective_sha256: identity,
+  };
+  await fsp.writeFile(pointerPath, `${JSON.stringify(pointer, null, 2)}\n`);
+};
+
 const snapshotTree = async (root) => {
   const entries = [];
   const visit = async (directory, prefix = "") => {
@@ -80,8 +95,7 @@ try {
   const canonical = JSON.stringify({ original_plan_sha256: "0".repeat(64), approved_amendments: [] });
   const identity = createHash("sha256").update(canonical).digest("hex");
   const ledger = path.join(repo, ".agent", "ledger", "smoke.json");
-  await fsp.mkdir(path.dirname(ledger), { recursive: true });
-  await fsp.writeFile(ledger, `${JSON.stringify({ effective_plan_identity: { sha256: identity, canonical_json_utf8: canonical } }, null, 2)}\n`);
+  await writeSmokeLedger(ledger, identity, canonical);
   run("git", ["add", "-f", ".agent/ledger/smoke.json"]);
   run("git", ["-c", "user.name=Smoke", "-c", "user.email=smoke@example.invalid", "commit", "-qm", "smoke ledger"]);
 
@@ -120,8 +134,7 @@ try {
     const cli = (...args) => run(bin, ["--json", ...args]);
     cli("build");
     await fsp.rm(path.dirname(ledger), { recursive: true, force: true });
-    await fsp.mkdir(path.dirname(ledger), { recursive: true });
-    await fsp.writeFile(ledger, `${JSON.stringify({ effective_plan_identity: { sha256: identity, canonical_json_utf8: canonical } }, null, 2)}\n`);
+    await writeSmokeLedger(ledger, identity, canonical);
     const installed = spawnSync(bin, ["--json", "runtime", "install", "codex", "--root", target], { cwd: repo, env, encoding: "utf8", shell: cliShell });
     assert.equal(installed.status, 0, `${installed.stdout}\n${installed.stderr}`);
     const checked = spawnSync(bin, ["--json", "doctor", "codex", "--skip-integration-verify"], { cwd: repo, env, encoding: "utf8", shell: cliShell });

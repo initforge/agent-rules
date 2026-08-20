@@ -1,0 +1,49 @@
+version: 2
+plan_id: control-plane-v2
+status: CANDIDATE
+requirements:
+  - id: REQ-001
+    statement: Thiết kế phải được tạo, kiểm tra và render bằng Pencil MCP có editor foreground trước mọi thay đổi implementation.
+    status: active
+    criteria: [C-001, C-002, C-003, C-004, C-005]
+    verification: ["Pencil MCP live operation receipt", "foreground render shown to owner", "owner approval"]
+  - id: REQ-002
+    statement: Control Plane V2 là workspace tiếng Việt theo case vận hành, không phải dashboard KPI hoặc UX cho diagnostic nội bộ.
+    status: active
+    criteria: [C-006, C-007, C-008, C-009]
+    verification: ["Pencil design review", "foreground browser QA"]
+  - id: REQ-003
+    statement: Visual system light-first, tươi sáng, trực quan, có hierarchy và accessibility rõ ràng theo hướng Apple hiện đại.
+    status: active
+    criteria: [C-010, C-011, C-012]
+    verification: ["Pencil token/render receipt", "browser screenshot comparison", "axe and keyboard QA"]
+  - id: REQ-004
+    statement: Toàn bộ ngôn ngữ hiển thị là tiếng Việt, ngoại trừ raw identifier, enum, hash, path và code.
+    status: active
+    criteria: [C-013, C-014]
+    verification: ["visible-copy audit", "browser QA"]
+  - id: REQ-005
+    statement: Authority, generation-CAS, Evidence Ledger và PASS/BLOCKED semantics được giữ nguyên; UI chỉ là projection.
+    status: active
+    criteria: [C-015, C-016, C-017]
+    verification: ["authority/API tests", "evidence-ledger tests", "acceptance audit"]
+  - id: REQ-006
+    statement: Dữ liệu và failure state trung thực, tương thích API hiện có và mutation bị ràng buộc bởi flow canonical có audit/rollback.
+    status: active
+    criteria: [C-018, C-019, C-020, C-021]
+    verification: ["API and security tests", "foreground browser QA"]
+  - id: REQ-007
+    statement: Docker preview cục bộ mặc định đọc repository, cô lập persistence và có healthcheck vận hành được.
+    status: active
+    criteria: [C-022, C-023, C-024]
+    verification: ["docker compose config", "Docker build and health smoke"]
+  - id: REQ-008
+    statement: V2 chỉ cutover khi có accessibility, responsive, visual parity và runtime evidence; legacy không bị xóa sớm.
+    status: active
+    criteria: [C-025, C-026, C-027, C-028]
+    verification: ["foreground browser QA", "screenshot receipt", "lifecycle audit"]
+  - id: REQ-009
+    statement: Mọi thay đổi bảo toàn phạm vi, dirty worktree, traceability và bằng chứng có thể kiểm tra lại.
+    status: active
+    criteria: [C-029, C-030]
+    verification: ["scope audit", "claim-matched receipt audit"]

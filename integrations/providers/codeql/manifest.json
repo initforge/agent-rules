@@ -1,0 +1,43 @@
+{
+  "id": "codeql",
+  "displayName": "CodeQL (CI security queries)",
+  "kind": "adapter",
+  "policy": "optional",
+  "activation": "claim-driven",
+  "capabilityClass": "security.codeql-ci",
+  "providers": ["codeql"],
+  "claim_classes": ["codeql", "ci security query", "codeql analysis", "security query", "code scanning"],
+  "effect": {
+    "effect_level": "read-only",
+    "environment": "local",
+    "approval": "policy",
+    "reversible": true,
+    "network": false,
+    "credentials": "none",
+    "timeout_ms": 600000,
+    "provider_evidence": "live-receipt"
+  },
+  "prerequisites": [
+    "Runs in CI (hosted quality check) with the CodeQL CLI pinned in the workflow",
+    "A database build step for the languages under analysis"
+  ],
+  "health": {
+    "command": "codeql version",
+    "expectedExitCodes": [0]
+  },
+  "rollback": [
+    "Read-only analysis of a CI database; discard the SARIF report after upload"
+  ],
+  "evidence_kinds": ["security-scan", "security-test", "custom-runtime"],
+  "hosts": {
+    "supported": [],
+    "ci_only": true,
+    "notes": "CodeQL is a CI-scoped provider: it is never a local default and must not be emulated locally as a parity substitute."
+  },
+  "thresholds_required": false,
+  "telemetry_only": false,
+  "notes": [
+    "CI-only activation: a local claim that names CodeQL outside CI yields explicit UNAVAILABLE evidence.",
+    "CodeQL evidence is scan evidence; runtime security boundaries still need runtime proof."
+  ]
+}

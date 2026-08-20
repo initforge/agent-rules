@@ -1,0 +1,83 @@
+{
+  "schema": "artifact/execution-contract",
+  "version": 1,
+  "kind": "effective-execution-contract",
+  "contract_id": "persistent-mcp-session-broker:2",
+  "plan_id": "persistent-mcp-session-broker",
+  "status": "EFFECTIVE",
+  "original_sha256": "9bcbc44b3eb7dd6205c8d33f89b5eb075e08e027acca8f942846c31e45096b21",
+  "effective_plan_sha256": "9bcbc44b3eb7dd6205c8d33f89b5eb075e08e027acca8f942846c31e45096b21",
+  "source_chain": [
+    {
+      "artifact_id": "original-plan",
+      "path": ".agent/plans/persistent-mcp-session-broker/plan.md",
+      "sha256": "9bcbc44b3eb7dd6205c8d33f89b5eb075e08e027acca8f942846c31e45096b21",
+      "status": "IMMUTABLE"
+    },
+    {
+      "artifact_id": "requirements",
+      "path": ".agent/plans/persistent-mcp-session-broker/requirements.yaml",
+      "sha256": "0ca5624ba904e59a9c187c99bdf9619bdfe62563f98fc73821e1167a5971e463",
+      "status": "EFFECTIVE"
+    }
+  ],
+  "requirements": [
+    "REQ-001",
+    "REQ-002",
+    "REQ-003",
+    "REQ-004",
+    "REQ-005",
+    "REQ-006",
+    "REQ-007",
+    "REQ-008",
+    "REQ-009",
+    "REQ-010",
+    "REQ-011",
+    "REQ-012",
+    "REQ-013",
+    "REQ-014",
+    "REQ-015",
+    "REQ-016",
+    "REQ-017",
+    "REQ-018"
+  ],
+  "capability_preservation": {
+    "default_disposition": "CARRIED",
+    "unimplemented_backlog": "REMAINS_EFFECTIVE",
+    "entries": [
+      {
+        "concept": "current-pointer CAS protocol",
+        "source_requirement_ids": [
+          "M11-R01"
+        ],
+        "disposition": "CARRIED",
+        "reason": "Generation compare-and-swap pointer protocol remains the repository pointer authority for this plan."
+      },
+      {
+        "concept": "harness verification orchestration",
+        "source_requirement_ids": [
+          "REQ-001",
+          "REQ-002",
+          "REQ-003",
+          "REQ-004",
+          "REQ-005",
+          "REQ-006",
+          "REQ-019"
+        ],
+        "disposition": "CARRIED",
+        "reason": "Shipped by north-star-v2-one-shot-closure; remains effective and is reused by this plan's verification commands."
+      }
+    ]
+  },
+  "execution_policy": {
+    "strategy": "owner-authorized-phase-plan",
+    "main_role": "harness-maintainer",
+    "normal_native_children": 0,
+    "max_native_children": 0,
+    "max_concurrent_children": 0,
+    "resume": "checkpoint"
+  },
+  "generation": 2,
+  "requirements_amended_at": "2026-08-15T15:13:53.303Z",
+  "amendment": "owner §8 test refactor: matrix-30 (30 cases) refactored to behavior-matrix (8 distinct invariants); host-dsh-web merged into host-dsh; verification commands updated to the refactored files"
+}

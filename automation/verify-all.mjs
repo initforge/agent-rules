@@ -31,6 +31,59 @@ function run(label, command, commandArgs = [], options = {}) {
   console.log(`[${label}] OK (${Date.now()-started}ms)`);
   return true;
 }
+/**
+ * Generic pointer-driven plan validation (S7, REQ-015/REQ-017): the set of
+ * authoritative gates is derived at runtime from `.agent/current.json`, never
+ * hard-coded per phase. The current plan's validators run as blocking gates;
+ * validators of completed phases run as non-authoritative compatibility checks
+ * so historical terminal proof stays runnable and is never deleted. A
+ * historical validator still referenced by documentation remains runnable but
+ * is never current authority.
+ */
+const PLAN_VALIDATORS = [
+  { plan: 'v3-decision-fabric', label: 'V3 decision-fabric', scripts: ['automation/validate-v3-directive.mjs', 'automation/validate-v3-closure.mjs'] },
+  { plan: 'v3.1-external-first', label: 'V3.1 external-first', scripts: ['automation/validate-v31-directive.mjs', 'automation/validate-v31-closure.mjs'] },
+];
+
+function runPlanValidators() {
+  let currentPlan = null;
+  try {
+    const pointer = JSON.parse(fs.readFileSync(path.join(root, '.agent', 'current.json'), 'utf8'));
+    currentPlan = pointer.work_id ?? pointer.plan_id ?? null;
+  } catch (error) {
+    console.warn(`[PLAN VALIDATORS] cannot read .agent/current.json: ${error.message}`);
+    return;
+  }
+  console.log(`\n[PLAN VALIDATORS] current authority from pointer: ${currentPlan ?? '<none>'}`);
+  const compatibility = [];
+  for (const { plan, label, scripts } of PLAN_VALIDATORS) {
+    const authoritative = currentPlan === plan;
+    for (const script of scripts) {
+      const checkLabel = `${label} — ${path.basename(script, '.mjs')}`;
+      const started = Date.now();
+      const result = spawnSync('node', [script], { cwd: root, encoding: 'utf8', timeout: 600_000 });
+      if (result.stdout) process.stdout.write(result.stdout);
+      if (result.stderr) process.stderr.write(result.stderr);
+      const ok = !result.error && result.status === 0;
+      if (authoritative) {
+        if (ok) console.log(`[CHECK: ${checkLabel}] OK (${Date.now() - started}ms)`);
+        else {
+          console.error(`[CHECK: ${checkLabel}] FAILED (${result.error?.message || `exit ${result.status}`}, ${Date.now() - started}ms)`);
+          failed = true;
+        }
+      } else {
+        compatibility.push({ plan, script, ok, status: result.status, ms: Date.now() - started });
+        console.log(`[CHECK: ${checkLabel}] ${ok ? 'COMPATIBILITY OK' : `COMPATIBILITY FAILED (${result.error?.message || `exit ${result.status}`}, ${Date.now() - started}ms)`} — historical ${plan} validator retained, non-authoritative`);
+      }
+    }
+  }
+  const notGreen = compatibility.filter((entry) => !entry.ok);
+  if (notGreen.length) {
+    console.warn(`[PLAN VALIDATORS] ${notGreen.length} historical compatibility check(s) not green (reported, run not failed): ${notGreen.map((entry) => entry.script).join(', ')}`);
+  }
+  console.log(`[PLAN VALIDATORS] pointer-driven: current=${currentPlan ?? '<none>'} (authoritative/blocking), completed plans=compatibility (runnable, non-authoritative)`);
+}
+
 function discoverTests(dir) {
   const out = [];
   const visit = (current) => {
@@ -68,13 +121,18 @@ if (selfCheckOnly) process.exit(failed ? 1 : 0);
 if (!skipBuild) run('BUILD', 'npm', ['run','build']); else console.log('[BUILD] skipped');
 run('CHECK: typecheck workspaces', 'npm', ['run','check']);
 run('CHECK: .agent protocol', 'node', ['automation/validate-agent-dir.mjs']);
+run('CHECK: evidence stage boundary', 'node', ['automation/validate-evidence-stage.mjs']);
+run('CHECK: MCP focus/workspace boundary', 'node', ['automation/validate-focus-workspace.mjs']);
 run('CHECK: 5fedu leakage', 'node', ['automation/validate-no-5fedu-leakage.mjs']);
 run('CHECK: tool registry', 'node', ['automation/validate-tool-registry.mjs']);
 run('CHECK: deterministic stack detectors', 'node', ['automation/detect-stack-facts.mjs', '--self-test']);
 run('CHECK: generated RepoFacts provenance', 'node', ['automation/validate-repo-facts.mjs']);
-run('CHECK: Decision Fabric dogfood', 'node', ['automation/validate-decision-fabric.mjs']);
-run('CHECK: V3 directive 101-criteria audit', 'node', ['automation/validate-v3-directive.mjs']);
-run('CHECK: V3 closure ledger and pointer', 'node', ['automation/validate-v3-closure.mjs']);
+run('CHECK: Decision Fabric structural parity', 'node', ['automation/validate-decision-fabric.mjs']);
+// Phase-specific hard-coded V3/V3.1 gates are replaced by pointer-driven
+// validation: current plan = authoritative, completed phases = compatibility.
+runPlanValidators();
+run('CHECK: external source provenance and install policy', 'node', ['automation/validate-external-sources.mjs']);
+run('CHECK: Pencil explicit-only probe', 'node', ['automation/pencil-dogfood.mjs']);
 run('CHECK: 5fedu domain pack', 'node', ['automation/validate-5fedu-domain-pack.mjs','--require-source']);
 
 if (!skipPython) {

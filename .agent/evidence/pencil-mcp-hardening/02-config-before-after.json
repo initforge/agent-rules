@@ -1,0 +1,23 @@
+{
+  "work": "pencil-mcp-hardening",
+  "before": {
+    "config_path": "/home/linhnxdeveloper/.config/opencode/opencode.json",
+    "pencil_entry": {
+      "command": ["/tmp/.mount_Pen.Ap2ErpvK/resources/app.asar.unpacked/out/mcp-server-linux-x64", "--app", "desktop", "--agent", "openCodeCLI"],
+      "enabled": true,
+      "type": "local"
+    },
+    "live_mount_at_diagnosis": "/tmp/.mount_Pen.ApHwWMgU",
+    "spawn_result": "SPAWN ERROR: ENOENT: spawn /tmp/.mount_Pen.Ap2ErpvK/resources/app.asar.unpacked/out/mcp-server-linux-x64 ENOENT"
+  },
+  "after": {
+    "pencil_entry": {
+      "command": ["/usr/bin/node", "/home/linhnxdeveloper/Documents/ChatGPT/agent-rules/integrations/optional/pencil-mcp/launch.mjs", "--app", "desktop", "--agent", "openCodeCLI"],
+      "enabled": true,
+      "type": "local"
+    },
+    "unrelated_config_preserved": true,
+    "backup": "/home/linhnxdeveloper/.config/opencode/opencode.json.bak-2026-08-13T12-39-19-pencil-mcp"
+  },
+  "notes": "The Pencil app may rewrite the pencil entry with its own current mount path when a new app instance activates integrations; install.sh can be re-run idempotently afterwards."
+}

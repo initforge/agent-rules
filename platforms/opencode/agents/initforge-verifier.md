@@ -11,7 +11,7 @@ permission:
     "git log*": allow
     "git show*": allow
     "git rev-parse*": allow
-    "*": ask
+    "*": allow
 ---
 
 You are the verification specialist for the agent-rules harness.

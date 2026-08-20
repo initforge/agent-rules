@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-rules/claim-to-proof/v1",
+  "title": "Claim-to-Proof Mapping",
+  "description": "Maps each claim to required evidence categories and fidelity (owner §6/§12).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["claim_id", "claim", "required_categories", "required_fidelity", "live_surface"],
+  "properties": {
+    "claim_id": { "type": "string" },
+    "claim": { "type": "string" },
+    "required_categories": {
+      "type": "array",
+      "items": { "enum": ["static", "unit", "contract", "integration", "api", "browser", "live", "security", "performance", "data", "packaging", "other"] }
+    },
+    "required_fidelity": { "enum": ["static", "deterministic", "live"] },
+    "live_surface": { "type": "boolean" }
+  }
+}

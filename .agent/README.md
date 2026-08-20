@@ -31,6 +31,8 @@ as history and never reconciled into the current generation.
   research/                    durable findings
   tombstones/                  retired surfaces
   tmp/                         ignored scratch output
+  northstar.json               per-repo north-star runtime config (CLI-created)
+  planner/                     strong-planner receipts/logs (runtime-created)
 ```
 
 Active requirements are testable and live in `requirements.yaml`. Scope changes

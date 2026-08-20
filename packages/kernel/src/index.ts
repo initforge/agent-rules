@@ -3,6 +3,7 @@ export * from './state/live-amendment.js';
 export * from './state/current-pointer.js';
 export * from './state/execution-authority.js';
 export * from './state/semantic-state-validator.js';
+export * from './state/goal-supersession.js';
 
 export * from './secure-fs.js';
 export * from './telemetry.js';

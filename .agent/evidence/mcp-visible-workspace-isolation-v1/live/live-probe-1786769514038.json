@@ -1,0 +1,57 @@
+{
+  "schema": "agent-rules/live-focus-probe",
+  "version": 2,
+  "created_at": "2026-08-15T04:51:54.038Z",
+  "provider": "@playwright/mcp",
+  "provider_version": "0.0.78",
+  "provider_bin": "/home/linhnxdeveloper/.npm/_npx/a5b920f00216d246/node_modules/.bin/playwright-mcp",
+  "source_window_id_hash": "40897907a7d7c7d4",
+  "target_workspace": 4,
+  "before": {
+    "current_workspace": 1,
+    "active_window_id_hash": "a36e65e836e04288"
+  },
+  "after": {
+    "current_workspace": 0,
+    "active_window_id_hash": "2d6b5827f77370f8"
+  },
+  "mcp_handshake": {
+    "initialize": true,
+    "tools_list": true,
+    "tool_call": true
+  },
+  "violations": [
+    "current desktop changed (1 -> 2)",
+    "current desktop changed (1 -> 2)",
+    "current desktop changed (1 -> 2)",
+    "current desktop changed (1 -> 2)",
+    "current desktop changed (1 -> 2)",
+    "current desktop changed (1 -> 2)",
+    "current desktop changed (1 -> 2)",
+    "current desktop changed (1 -> 3)",
+    "current desktop changed (1 -> 3)",
+    "current desktop changed (1 -> 3)",
+    "current desktop changed (1 -> 3)",
+    "current desktop changed (1 -> 3)",
+    "current desktop changed (1 -> 0)",
+    "current desktop changed (1 -> 0)",
+    "current desktop changed (1 -> 0)",
+    "current desktop changed (1 -> 0)",
+    "current desktop changed (1 -> 0)",
+    "current desktop changed (1 -> 0)",
+    "current desktop changed (1 -> 0)",
+    "current desktop changed (1 -> 0)",
+    "current desktop changed (1 -> 0)",
+    "current desktop changed (1 -> 0)",
+    "current desktop changed (1 -> 0)",
+    "current desktop changed (1 -> 0)",
+    "current desktop changed (1 -> 0)",
+    "current desktop changed (1 -> 0)",
+    "current desktop changed (1 -> 0)",
+    "current desktop changed (1 -> 0)",
+    "current desktop changed (1 -> 0)",
+    "current desktop changed (1 -> 0)",
+    "current desktop changed (1 -> 0)"
+  ],
+  "verdict": "unobservable"
+}

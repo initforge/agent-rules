@@ -2,14 +2,18 @@ import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
 import { DurableStore } from "../services/durable-store.js";
 import {
   compilePlan,
+  compilePlanFromWorkRequest,
   validatePlan,
   type CompiledPlan,
 } from "../services/plan-compiler.js";
+import { compileWorkRequest, type WorkRequestEntrypointInput } from "../services/intent-compiler.js";
+import { compileSupportPack, type SupportPackInput } from "@initforge/agent-rules-engine/northstar/index";
 import {
   adoptPlan as engineAdoptPlan,
   finalizePlan as engineFinalizePlan,
   reconcilePlan as engineReconcilePlan,
 } from "@initforge/agent-rules-engine/plan-lifecycle";
+import { reconcileCanonicalLedger } from "@initforge/agent-rules-engine/plan-lifecycle";
 import { compilePlanReadiness } from "@initforge/agent-rules-engine/plan-readiness";
 import { evaluateM11Terminal, finalizeM11, M11_TERMINAL_TOKEN, type M11Checks } from "@initforge/agent-rules-engine/terminal-gate";
 import { loadM11TerminalEvidenceEnvelope } from "@initforge/agent-rules-engine/m11-terminal-evidence";
@@ -224,8 +228,35 @@ export async function planReconcile(
     const ledgerPath = path.join(".agent", "ledger", `${planId}.json`);
     if (fs.existsSync(ledgerPath)) {
       try {
+        const ledger = JSON.parse(fs.readFileSync(ledgerPath, "utf8")) as { schema_version?: number };
+        const head = runHeadCommit(process.cwd());
+        if (!head) {
+          return { exitCode: ExitCode.GeneralError, message: `Reconciliation failed: cannot determine repository HEAD` };
+        }
+        if (ledger.schema_version === 5) {
+          const fullLedger = JSON.parse(fs.readFileSync(ledgerPath, "utf8")) as { shadow_revision?: number };
+          const receipt = reconcileCanonicalLedger(ledgerPath, {
+            repo_root: process.cwd(),
+            plan_id: planId,
+            candidate_head: head,
+            source_tree_digest: sourceTreeDigest(process.cwd()),
+            candidate_epoch: typeof fullLedger.shadow_revision === "number" ? fullLedger.shadow_revision : undefined,
+          });
+          return {
+            exitCode: receipt.status === "MATCH" ? ExitCode.Success : receipt.status === "PARTIAL" ? ExitCode.GeneralError : ExitCode.GeneralError,
+            message: `Reconciliation: ${receipt.status} — ${receipt.verified.length}/${receipt.checks.length} checks verified (${receipt.stale.length} stale, ${receipt.missing.length} missing)`,
+            data: {
+              planId,
+              status: receipt.status,
+              reconciledAgainst: receipt.reconciled_against,
+              checks: receipt.checks,
+              receiptPath: path.join(".agent", "artifacts", planId, "reconciliation"),
+              receiptSha256: receipt.receipt_sha256,
+            },
+          };
+        }
         const originalPath = resolveCanonicalOriginal(process.cwd(), planId, ledgerPath);
-        const diffFingerprint = opts.dryRun ? "dry-run-fingerprint" : `reconcile-${Date.now()}`;
+        const diffFingerprint = opts.dryRun ? "dry-run-fingerprint" : sourceTreeDigest(process.cwd());
         const reconciliation = engineReconcilePlan(ledgerPath, originalPath, diffFingerprint);
         return {
           exitCode: ExitCode.Success,
@@ -477,12 +508,42 @@ function runHeadCommit(root: string): string | undefined {
     const out = execFileSync(
       "git",
       ["rev-parse", "HEAD"],
-      { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
+      { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 15_000 },
     );
     return out.trim();
   } catch {
     return undefined;
   }
+}
+
+function runHeadBranch(root: string): string | undefined {
+  try {
+    const out = execFileSync(
+      "git",
+      ["branch", "--show-current"],
+      { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 15_000 },
+    );
+    return out.trim() || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Deterministic digest over the working-tree diff relative to HEAD. */
+function sourceTreeDigest(root: string): string {
+  const parts: string[] = [];
+  const collect = (args: string[]): void => {
+    try {
+      const out = execFileSync("git", args, { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], timeout: 30_000 });
+      parts.push(out);
+    } catch {
+      /* diff may be empty or git may be unavailable */
+    }
+  };
+  collect(["status", "--porcelain"]);
+  collect(["diff", "--stat"]);
+  collect(["diff", "--cached", "--stat"]);
+  return createHash("sha256").update(parts.join("\n---\n")).digest("hex");
 }
 
 /**
@@ -614,6 +675,95 @@ export async function planM11(
   }
 }
 
+export async function planRequest(
+  args: string[],
+  opts: CliOptions
+): Promise<CommandResult> {
+  const ADAPTERS = ["conversation", "command", "cli", "api", "native_host"];
+  const positional = args.filter((arg) => !arg.startsWith("--"));
+  let adapter: WorkRequestEntrypointInput["adapter"] = "conversation";
+  let prompt: string | undefined;
+  if (positional.length > 1 && ADAPTERS.includes(positional[0])) {
+    adapter = positional[0] as WorkRequestEntrypointInput["adapter"];
+    prompt = positional.slice(1).join(" ");
+  } else {
+    prompt = positional.join(" ");
+  }
+  if (!prompt) {
+    return { exitCode: ExitCode.InvalidArgument, message: "Usage: plan request <prompt> [adapter conversation|command|cli|api|native_host]" };
+  }
+  try {
+    const receipt = compileWorkRequest({ adapter, intent: prompt });
+    const compiled = compilePlanFromWorkRequest(
+      { work_id: receipt.work_id, adapter: receipt.adapter, semantic_sha256: receipt.semantic_sha256, raw_intent: prompt },
+      undefined,
+      { branch: runHeadBranch(process.cwd()), sha: runHeadCommit(process.cwd()) },
+    );
+    const store = makeStore(process.cwd());
+    const run = await store.createRun(receipt.work_id, compiled);
+    return {
+      exitCode: ExitCode.Success,
+      message: `WorkRequest ${receipt.work_id} bound to plan run (${compiled.tasks.length} tasks)`,
+      data: { runId: run.runId, workId: receipt.work_id, adapter, semanticSha256: receipt.semantic_sha256, taskCount: compiled.tasks.length },
+    };
+  } catch (error) {
+    return {
+      exitCode: ExitCode.GeneralError,
+      message: `Plan request failed: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
+}
+
+export async function planCompile(
+  args: string[],
+  opts: CliOptions
+): Promise<CommandResult> {
+  const positional = args.filter((arg) => !arg.startsWith("--"));
+  const inputPath = positional[0];
+  const outDir = positional[1];
+  if (!inputPath) {
+    return { exitCode: ExitCode.InvalidArgument, message: "Usage: plan compile <support-pack-input.json> [outDir]" };
+  }
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const root = process.cwd();
+  const absolute = path.resolve(root, inputPath);
+  if (!fs.existsSync(absolute)) {
+    return { exitCode: ExitCode.InvalidArgument, message: `Support-pack input not found: ${absolute}` };
+  }
+  try {
+    const input = JSON.parse(fs.readFileSync(absolute, "utf8")) as SupportPackInput;
+    const pack = compileSupportPack(input);
+    if (outDir) {
+      const target = path.resolve(root, outDir);
+      fs.mkdirSync(path.join(target, "tasks"), { recursive: true });
+      for (const [file, content] of Object.entries(pack.files)) {
+        fs.writeFileSync(path.join(target, file), content);
+      }
+    }
+    return {
+      exitCode: ExitCode.Success,
+      message: `Support pack compiled for ${pack.planId} @ revision ${pack.planRevision}`,
+      data: {
+        planId: pack.planId,
+        planRevision: pack.planRevision,
+        packSha256: pack.packSha256,
+        manifestSha256: pack.manifest.manifestSha256,
+        planSha256: pack.manifest.planSha256,
+        requirementCount: pack.manifest.requirementIds.length,
+        claimCount: pack.manifest.claimIds.length,
+        taskCount: pack.manifest.taskIds.length,
+        recipes: pack.manifest.recipes.map((recipe) => ({ taskId: recipe.taskId, sha256: recipe.sha256 })),
+      },
+    };
+  } catch (error) {
+    return {
+      exitCode: ExitCode.GeneralError,
+      message: `Support pack compilation failed closed: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
+}
+
 export async function planCmd(
   args: string[],
   opts: CliOptions
@@ -644,10 +794,14 @@ export async function planCmd(
       return planReadiness(rest, opts);
     case "m11":
       return planM11(rest, opts);
+    case "request":
+      return planRequest(rest, opts);
+    case "compile":
+      return planCompile(rest, opts);
     default:
       return {
         exitCode: ExitCode.InvalidArgument,
-        message: `Unknown plan subcommand: ${subcommand}. Available: inventory, adopt, status, checkpoint, lineage, reconcile, repair, export, finalize, readiness, m11`,
+        message: `Unknown plan subcommand: ${subcommand}. Available: inventory, adopt, status, checkpoint, lineage, reconcile, repair, export, finalize, readiness, m11, request, compile`,
       };
   }
 }

@@ -14,6 +14,12 @@ Spec-to-output flow: `packages/kernel/src/northstar/runtime.ts`
 6. Strong planners compile/repair contracts for S2/S3 or real ambiguity, then exit.
 7. Subagents default to zero; max two, no recursion, only independent research/review/diagnosis/non-overlapping work.
 8. Do not delete proven legacy behavior until its replacement has behavioral/eval parity.
+9. Adaptive minimal-proof testing is always-on: every task selects the smallest
+   sufficient proof set from scope, claims, risks and runtime surface; live
+   claims require live proof; results use exactly PASS/PARTIAL/BLOCKED/
+   UNSUPPORTED/PRE-EXISTING/NEEDS_USER; proof receipts record selected AND
+   omitted proof (rule `rules/45-adaptive-minimal-proof-testing.md`, router
+   `packages/kernel/src/northstar/proof-router.ts`, CLI `agent-rules proof-plan`).
 
 ## Quick start
 
@@ -52,6 +58,8 @@ Read `profiles/5fedu/module-mapping/behavior-contract.json` and exact source anc
 ## Pencil
 
 `integrations/manual/pencil-mcp/` is explicit-only. Do not auto-install, auto-route, or trigger it from words such as design/UI. Attach it only after the operator explicitly selects Pencil/pen.dev. `.pen` evidence is design evidence; production acceptance still requires browser/runtime proof.
+
+Pencil MCP must attach through the stable launcher (`integrations/optional/pencil-mcp/launch.mjs`); never persist or exec `/tmp/.mount_Pen.*` paths (they go stale on every app restart — ENOENT). The Pencil desktop must be foreground-visible; startup is bounded by a timeout and verified by a real MCP handshake; unavailability is reported as BLOCKED/NEEDS_USER, never silently masked.
 
 ## Repository map
 

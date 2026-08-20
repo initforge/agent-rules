@@ -26,16 +26,20 @@ function createAjv(): Ajv {
 
 // ── Fixture prefix matching (mirrors test-artifact-schemas.py) ───────
 const KNOWN_PREFIXES = [
-  "agent", "assignment", "capability", "claim-evidence", "context",
+  "agent", "assignment", "capability", "claim-evidence", "claim-evidence-envelope", "context",
   "decision", "delegation", "evidence", "intent", "model-route",
   "model-routing", "plan", "policy-approval", "profile", "requirement",
   "run-state", "scorecard-evidence", "telemetry",
+  "failure-eval", "sensor-policy",
+  "repair-finding", "repair-packet",
+  "mcp-focus-receipt",
 ].sort((a, b) => b.length - a.length);
 
 function fixturePrefixToSchema(prefix: string): string {
   const mapping: Record<string, string> = {
     agent: "agent-result",
     "claim-evidence": "claim-evidence",
+    "claim-evidence-envelope": "claim-evidence-envelope",
     evidence: "evidence",
     "model-route": "model-route",
     "model-routing": "model-routing",

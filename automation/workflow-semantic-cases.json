@@ -1,0 +1,260 @@
+{
+  "schema": "harness/workflow-semantic-corpus",
+  "version": 1,
+  "plan_id": "harness-universal-reconciliation-v1",
+  "requirement_ids": ["REQ-014", "REQ-020"],
+  "acceptance_ids": ["AC-014", "AC-020"],
+  "note": "Machine-checkable contradiction corpus over the high-impact rule/skill graph. Each case names the conflicting documents, the required resolution, and the precedence owner. The checker (automation/validate-workflow-semantics.mjs) fails closed on any unresolved contradiction. Sources: .agent/research/harness-control-loop-skill-audit-20260812.md items 1-6 and AM-0001 item 7.",
+  "cases": [
+    {
+      "id": "WS-001",
+      "concept": "delegation-receipt-shape",
+      "canonical_owner": "rules/25-task-lifecycle.md",
+      "conflicting_documents": [
+        "skills/plan-and-handoff/references/adaptive-work-protocol.md",
+        "skills/finish-to-completion/references/completion-ledger.md",
+        "skills/finish-to-completion/references/slice-gate-protocol.md"
+      ],
+      "resolution": "Delegation tracking converges on the two-fact receipt from rules/25-task-lifecycle.md (delegated, outcome). The retired seven-event receipt chain (subagent_requested/resolved/started/completed, result_consumed/rejected, delegation_skipped) must not be mandated in any skill document.",
+      "precedence_owner": "rules/25-task-lifecycle.md",
+      "edge_case": null,
+      "checks": [
+        {
+          "kind": "file_not_contains",
+          "path": "skills/plan-and-handoff/references/adaptive-work-protocol.md",
+          "patterns": ["subagent_requested", "subagent_resolved", "subagent_started", "subagent_completed", "result_consumed", "result_rejected", "delegation_skipped"],
+          "reason": "adaptive-work-protocol must not mandate the retired seven-event receipt chain"
+        },
+        {
+          "kind": "file_not_contains",
+          "path": "skills/finish-to-completion/references/completion-ledger.md",
+          "patterns": ["subagent_requested", "subagent_resolved", "subagent_started", "subagent_completed", "result_consumed", "result_rejected", "delegation_skipped"],
+          "reason": "completion-ledger must not mandate the retired seven-event receipt chain"
+        },
+        {
+          "kind": "file_not_contains",
+          "path": "skills/finish-to-completion/references/slice-gate-protocol.md",
+          "patterns": ["subagent_requested", "subagent_resolved", "subagent_started", "subagent_completed", "result_consumed", "result_rejected", "delegation_skipped"],
+          "reason": "slice-gate-protocol must not mandate the retired seven-event receipt chain"
+        },
+        {
+          "kind": "file_contains",
+          "path": "skills/plan-and-handoff/references/adaptive-work-protocol.md",
+          "patterns": ["delegated", "outcome", "25-task-lifecycle.md"],
+          "reason": "adaptive-work-protocol must converge on the two-fact receipt owned by rules/25-task-lifecycle.md"
+        },
+        {
+          "kind": "file_contains",
+          "path": "skills/finish-to-completion/references/completion-ledger.md",
+          "patterns": ["delegated", "outcome", "25-task-lifecycle.md"],
+          "reason": "completion-ledger must converge on the two-fact receipt owned by rules/25-task-lifecycle.md"
+        },
+        {
+          "kind": "file_contains",
+          "path": "skills/finish-to-completion/references/slice-gate-protocol.md",
+          "patterns": ["delegated", "outcome", "25-task-lifecycle.md"],
+          "reason": "slice-gate-protocol must converge on the two-fact receipt owned by rules/25-task-lifecycle.md"
+        },
+        {
+          "kind": "file_contains",
+          "path": "rules/25-task-lifecycle.md",
+          "patterns": ["delegated", "outcome"],
+          "reason": "rules/25-task-lifecycle.md remains the canonical owner of the two-fact delegation receipt"
+        }
+      ]
+    },
+    {
+      "id": "WS-002",
+      "concept": "work-sizing-not-file-count",
+      "canonical_owner": "rules/25-task-lifecycle.md",
+      "conflicting_documents": ["rules/50-context-budget.md"],
+      "resolution": "Work shape (small/medium/large/resumable) is classified by risk, dependencies, coordination, rollback, and proof needs; it is never file-count based. rules/50-context-budget.md must defer to rules/25-task-lifecycle.md and must not state a file-count threshold.",
+      "precedence_owner": "rules/25-task-lifecycle.md",
+      "edge_case": null,
+      "checks": [
+        {
+          "kind": "file_not_contains",
+          "path": "rules/50-context-budget.md",
+          "patterns": ["≥2 files", ">= 2 files", ">=2 files", "2 files = shape", "two files"],
+          "reason": "50-context-budget must not classify work shape by file count"
+        },
+        {
+          "kind": "file_contains",
+          "path": "rules/50-context-budget.md",
+          "patterns": ["25-task-lifecycle.md", "risk"],
+          "reason": "50-context-budget must defer work-shape classification to rules/25-task-lifecycle.md"
+        },
+        {
+          "kind": "file_contains",
+          "path": "rules/25-task-lifecycle.md",
+          "patterns": ["not a file-count classification"],
+          "reason": "rules/25-task-lifecycle.md remains the canonical owner of work-shape classification"
+        }
+      ]
+    },
+    {
+      "id": "WS-003",
+      "concept": "repository-worker-cap",
+      "canonical_owner": "AGENTS.md",
+      "conflicting_documents": [
+        "skills/best-of-n/SKILL.md",
+        "skills/best-of-n/ROUTE.json",
+        "skills/plan-and-handoff/references/portable-plan-contract.md"
+      ],
+      "resolution": "The repository runtime clamp (AGENTS.md invariant 7; plan decision DEC-014) caps workers at two with no recursion and disjoint writes. Skill-local defaults must defer to the runtime clamp: best-of-n defaults to at most two candidates and never exceeds two, with no recursion; plan examples must not advertise max_agents above two or recursion depth above zero.",
+      "precedence_owner": "AGENTS.md",
+      "edge_case": "A standalone skill advertises more workers than the repository permits (must fail the corpus)",
+      "checks": [
+        {
+          "kind": "file_contains",
+          "path": "AGENTS.md",
+          "patterns": ["max two, no recursion"],
+          "reason": "AGENTS.md remains the canonical repository worker clamp"
+        },
+        {
+          "kind": "file_not_contains",
+          "path": "skills/best-of-n/SKILL.md",
+          "patterns": ["defaults to 3", "defaults to three", "2-10", "permits ten", "up to ten"],
+          "reason": "best-of-n must not default to or permit more workers than the repository clamp"
+        },
+        {
+          "kind": "file_contains",
+          "path": "skills/best-of-n/SKILL.md",
+          "patterns": ["at most two", "no recursion"],
+          "reason": "best-of-n must state the repository clamp (at most two workers, no recursion)"
+        },
+        {
+          "kind": "file_not_contains",
+          "path": "skills/plan-and-handoff/references/portable-plan-contract.md",
+          "patterns": ["\"max_agents\": 3", "\"max_agents\": 5", "\"max_depth\": 1", "\"max_depth\": 2"],
+          "reason": "plan contract examples must not advertise more workers than the repository clamp"
+        },
+        {
+          "kind": "file_contains",
+          "path": "skills/plan-and-handoff/references/portable-plan-contract.md",
+          "patterns": ["runtime clamps", "max_agents"],
+          "reason": "plan contract must document that repository runtime clamps override plan examples"
+        },
+        {
+          "kind": "all_skills_not_contains",
+          "patterns": ["defaults to 3", "defaults to three", "2-10", "permits ten", "up to ten", "ten subagents", "no more than three", "max of three", "\"max_agents\": 3", "\"max_agents\": 5"],
+          "reason": "no skill in the catalog may advertise more workers than the repository clamp"
+        }
+      ]
+    },
+    {
+      "id": "WS-004",
+      "concept": "browser-qa-support-loading",
+      "canonical_owner": "skills/browser-qa/SKILL.md",
+      "conflicting_documents": [
+        "skills/browser-qa/SKILL.md",
+        "skills/browser-qa/references/runbook.md"
+      ],
+      "resolution": "Smallest sufficient proof: browser-qa loads qa-skills only when QA reasoning (test-design matrix, exploratory/edge-case planning) is needed; a simple deterministic browser verification needs only the Playwright Agent CLI. The skill contract must state this conditional loading rule.",
+      "precedence_owner": "skills/browser-qa/SKILL.md",
+      "edge_case": "A browser task needs QA reasoning but not the full QA skill (smallest sufficient loading)",
+      "checks": [
+        {
+          "kind": "file_contains",
+          "path": "skills/browser-qa/SKILL.md",
+          "patterns": ["qa-skills only when QA reasoning", "deterministic browser verification"],
+          "reason": "browser-qa must document conditional qa-skills loading (smallest sufficient proof)"
+        },
+        {
+          "kind": "file_not_contains",
+          "path": "skills/browser-qa/SKILL.md",
+          "patterns": ["qa-skills for every browser task", "every browser task requires qa-skills"],
+          "reason": "browser-qa must not mandate qa-skills for every browser task"
+        },
+        {
+          "kind": "file_contains",
+          "path": "skills/browser-qa/references/runbook.md",
+          "patterns": ["QA reasoning", "qa-skills"],
+          "reason": "runbook must make the qa-skills matrix conditional on QA reasoning"
+        }
+      ]
+    },
+    {
+      "id": "WS-005",
+      "concept": "legacy-paf-reference",
+      "canonical_owner": "skills/plan-and-handoff/references/portable-plan-contract.md",
+      "conflicting_documents": [
+        "skills/researcher/SKILL.md",
+        "skills/researcher/references/usage.md",
+        "skills/plan-and-handoff/references/plan-artifact-template.md"
+      ],
+      "resolution": "The legacy PAF plan-artifact-template is replaced by the portable plan contract. Research handoff must point to portable-plan-contract.md; the legacy template survives only as an explicitly marked LEGACY compatibility reference.",
+      "precedence_owner": "skills/plan-and-handoff/references/portable-plan-contract.md",
+      "edge_case": null,
+      "checks": [
+        {
+          "kind": "file_not_contains",
+          "path": "skills/researcher/SKILL.md",
+          "patterns": ["plan-artifact-template", "PAF §5"],
+          "reason": "researcher must not hand research to the legacy PAF template"
+        },
+        {
+          "kind": "file_contains",
+          "path": "skills/researcher/SKILL.md",
+          "patterns": ["portable-plan-contract.md"],
+          "reason": "researcher handoff must point to the current portable plan contract"
+        },
+        {
+          "kind": "file_not_contains",
+          "path": "skills/researcher/references/usage.md",
+          "patterns": ["plan-artifact-template", "PAF §5"],
+          "reason": "researcher usage must not hand research to the legacy PAF template"
+        },
+        {
+          "kind": "file_contains",
+          "path": "skills/researcher/references/usage.md",
+          "patterns": ["portable-plan-contract.md"],
+          "reason": "researcher usage handoff must point to the current portable plan contract"
+        },
+        {
+          "kind": "file_contains",
+          "path": "skills/plan-and-handoff/references/plan-artifact-template.md",
+          "patterns": ["LEGACY", "portable-plan-contract.md"],
+          "reason": "the old template may survive only as an explicitly marked LEGACY compatibility reference"
+        },
+        {
+          "kind": "file_contains",
+          "path": "skills/plan-and-handoff/references/portable-plan-contract.md",
+          "patterns": ["replaces it"],
+          "reason": "portable-plan-contract.md remains the canonical owner of the plan template contract"
+        }
+      ]
+    },
+    {
+      "id": "WS-006",
+      "concept": "control-plane-ui-precedence",
+      "canonical_owner": ".agent/plans/control-plane-v2/plan.md",
+      "conflicting_documents": [
+        "skills/frontend-architect/SKILL.md",
+        "skills/ui-taste/SKILL.md"
+      ],
+      "resolution": "The approved Control Plane brief owns visual precedence (AM-0001; plan decision DEC-019). ui-taste is a brief/taste lens only when the brief selects it; frontend-architect's generic font, dark-mode, animation, and markup-only rewrite guidance cannot override an approved Control Plane direction.",
+      "precedence_owner": ".agent/plans/control-plane-v2/plan.md",
+      "edge_case": "Generic frontend guidance conflicts with an approved Control Plane brief (Control Plane brief precedence enforced)",
+      "checks": [
+        {
+          "kind": "owner_exists",
+          "path": ".agent/plans/control-plane-v2/plan.md",
+          "reason": "the approved Control Plane brief exists and remains the precedence owner"
+        },
+        {
+          "kind": "file_contains",
+          "path": "skills/frontend-architect/SKILL.md",
+          "patterns": ["Control Plane", "cannot override"],
+          "reason": "frontend-architect must not override an approved Control Plane direction"
+        },
+        {
+          "kind": "file_contains",
+          "path": "skills/ui-taste/SKILL.md",
+          "patterns": ["Control Plane", "authoritative"],
+          "reason": "ui-taste must keep the Control Plane brief authoritative"
+        }
+      ]
+    }
+  ]
+}

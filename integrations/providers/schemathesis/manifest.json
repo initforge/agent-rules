@@ -1,0 +1,43 @@
+{
+  "id": "schemathesis",
+  "displayName": "Schemathesis",
+  "kind": "adapter",
+  "policy": "optional",
+  "activation": "claim-driven",
+  "capabilityClass": "schema.behavior",
+  "providers": ["schemathesis"],
+  "claim_classes": ["schemathesis", "openapi behavior", "graphql behavior", "schema testing", "api schema fuzz", "spec-based api test"],
+  "effect": {
+    "effect_level": "write",
+    "environment": "network",
+    "approval": "task-scope",
+    "reversible": true,
+    "network": true,
+    "credentials": "optional",
+    "timeout_ms": 300000,
+    "provider_evidence": "live-receipt"
+  },
+  "prerequisites": [
+    "An OpenAPI/GraphQL schema for the API under test",
+    "The target API runs against a disposable test environment (requests include negative payloads)"
+  ],
+  "health": {
+    "command": "schemathesis --version",
+    "expectedExitCodes": [0]
+  },
+  "rollback": [
+    "Target only disposable test environments, never production",
+    "Discard generated request logs after the proof"
+  ],
+  "evidence_kinds": ["schema-behavior", "integration-test", "custom-runtime"],
+  "hosts": {
+    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode", "mimocode"],
+    "notes": "Schema behavior evidence covers the schema contract; a missing schemathesis CLI yields UNAVAILABLE evidence."
+  },
+  "thresholds_required": false,
+  "telemetry_only": false,
+  "notes": [
+    "Negative payloads target disposable environments only.",
+    "Activation requires a claim naming schema/API behavior testing, not mere presence of an OpenAPI file."
+  ]
+}

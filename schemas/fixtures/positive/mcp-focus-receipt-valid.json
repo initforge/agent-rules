@@ -1,0 +1,24 @@
+{
+ "schema": "agent-rules/mcp-focus-receipt",
+ "version": 1,
+ "targetWorkspace": 4,
+ "before": {
+  "currentWorkspace": 0,
+  "activeWindowIdHash": "bbbbbbbbbbbbbbbb"
+ },
+ "after": {
+  "currentWorkspace": 0,
+  "activeWindowIdHash": "bbbbbbbbbbbbbbbb"
+ },
+ "placement": "prevented_and_verified",
+ "visibility": "visible",
+ "focusPolicy": "preserve",
+ "isolated": true,
+ "capability": {
+  "wmctrl": true,
+  "xprop": true,
+  "display": true
+ },
+ "errors": [],
+ "created_at": "2026-08-13T00:00:00Z"
+}

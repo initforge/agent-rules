@@ -1,0 +1,11 @@
+{
+  "work": "pencil-mcp-hardening",
+  "date": "2026-08-13",
+  "root_cause": {
+    "summary": "OpenCode's ~/.config/opencode/opencode.json 'pencil' MCP entry pointed at a persisted ephemeral AppImage mount path (/tmp/.mount_Pen.Ap2ErpvK/resources/app.asar.unpacked/out/mcp-server-linux-x64) that no longer existed -> ENOENT at spawn.",
+    "how_the_stale_path_gets_written": "The Pencil desktop app auto-registers itself into host configs (openCodeCLI integration) by writing APP_FOLDER_PATH = <current mount>/resources/app.asar.unpacked as the server command (out/desktop-mcp-adapter.js + @ha/mcp installer.js getMcpConfiguration). AppImage mounts change on every restart and a second instance that starts+quits leaves the entry pointing at a mount that is already gone. The harness's previous launch.mjs was a config-forwarder that spawned whatever command the host config held, so it faithfully reproduced the stale ENOENT instead of resolving the live mount.",
+    "secondary_finding": "The app's transport socket (~/.pencil/socket/pencil-desktop.sock) is unlinked when a second app instance starts and quits while the first is running; a running app can therefore be unreachable for MCP. The mcp-server binary requires --app desktop --agent <agent> args and connects to that socket; without the socket file the binary exits 'app connection is required'.",
+    "evidence_files": ["repro-stale-path.mjs"],
+    "mcp_tools_exposed": ["browser", "execute", "export_html", "export_nodes", "get_app_state", "get_guidelines", "get_screenshot"]
+  }
+}

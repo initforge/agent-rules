@@ -1,0 +1,42 @@
+{
+  "id": "semgrep",
+  "displayName": "Semgrep (local SAST)",
+  "kind": "adapter",
+  "policy": "optional",
+  "activation": "claim-driven",
+  "capabilityClass": "security.static-scan",
+  "providers": ["semgrep"],
+  "claim_classes": ["semgrep", "sast", "static security scan", "security pattern", "injection scan", "vulnerability pattern"],
+  "effect": {
+    "effect_level": "read-only",
+    "environment": "local",
+    "approval": "policy",
+    "reversible": true,
+    "network": false,
+    "credentials": "none",
+    "timeout_ms": 300000,
+    "provider_evidence": "live-receipt"
+  },
+  "prerequisites": [
+    "Semgrep installed locally (or run via pinned official package)",
+    "Rule pack applicable to the scanned languages"
+  ],
+  "health": {
+    "command": "semgrep --version",
+    "expectedExitCodes": [0]
+  },
+  "rollback": [
+    "Read-only scan; no rollback needed beyond discarding the scan report"
+  ],
+  "evidence_kinds": ["security-scan", "security-test", "custom-runtime"],
+  "hosts": {
+    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode", "mimocode"],
+    "notes": "Local SAST is a static-scan receipt; it does not replace runtime security boundary proof."
+  },
+  "thresholds_required": false,
+  "telemetry_only": false,
+  "notes": [
+    "Semgrep runs locally; CodeQL is the CI counterpart (see integrations/providers/codeql).",
+    "Scan evidence proves the scanned surface only; absence of findings is bounded by the rules applied."
+  ]
+}

@@ -86,6 +86,52 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  certify-watchdog:
+    # REQ-015 (S7): a self-hosted job with no matching runner sits in the GitHub
+    # queue outside job timeout-minutes. This hosted, bounded watchdog cancels
+    # still-queued certify jobs at the deadline and emits explicit advisory
+    # evidence (RUNNERS_UNAVAILABLE, exit 78) instead of blocking forever.
+    # Certification is not a required check (no pull_request/merge_group
+    # trigger), so this advisory failure never blocks merges.
+    if: always()
+    needs: [runner-requirements]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Bound self-hosted certification queue
+        timeout-minutes: 15
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -u
+          RUN_JOBS="repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs"
+          DEADLINE=$(( $(date +%s) + 840 ))
+          while :; do
+            CERTIFY_STATES=$(gh api "$RUN_JOBS" --jq '[.jobs[] | select(.name | startswith("certify (")) | .status] | sort | unique | join(",")' 2>/dev/null || echo "QUERY_ERROR")
+            if [ "$CERTIFY_STATES" = "QUERY_ERROR" ]; then
+              echo "WATCHDOG_ERROR: could not query self-hosted certification job state"
+              exit 1
+            fi
+            case ",$CERTIFY_STATES," in
+              *,in_progress,*|*,completed,*)
+                echo "SELF_HOSTED_RUNNER_PRESENT: certify jobs reached running/terminal state (states: $CERTIFY_STATES); job-level timeouts bound them"
+                exit 0
+                ;;
+            esac
+            if [ "$(date +%s)" -ge "$DEADLINE" ]; then
+              echo "RUNNERS_UNAVAILABLE: self-hosted certify jobs stayed queued beyond the bounded watchdog window; cancelling queued jobs and recording advisory evidence"
+              gh api "$RUN_JOBS" --jq '.jobs[] | select(.name | startswith("certify (")) | select(.status == "queued") | .id' 2>/dev/null | while read -r JOB_ID; do
+                [ -n "$JOB_ID" ] && gh api -X POST "repos/${{ github.repository }}/actions/jobs/${JOB_ID}/cancel" >/dev/null 2>&1 || true
+              done
+              echo "ADVISORY: unavailable self-hosted runners produce explicit advisory evidence (RUNNERS_UNAVAILABLE); certification is not a required check"
+              exit 78
+            fi
+            sleep 20
+          done
+
   certify-aggregate:
     if: always()
     needs: [runner-requirements, certify]
@@ -121,8 +167,8 @@ jobs:
               echo "native attestation matrix succeeded"
               test "$CERTIFY_RESULT" = success
               ;;
-            skipped)
-              echo "RUNNERS_UNAVAILABLE: no self-hosted native runners matched; implementation remains valid."
+            skipped|cancelled)
+              echo "RUNNERS_UNAVAILABLE: no self-hosted native runners matched (or queued jobs were cancelled by the bounded watchdog); implementation remains valid. Advisory evidence only — certification is not a required check."
               exit 78
               ;;
             *)

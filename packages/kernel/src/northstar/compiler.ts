@@ -12,6 +12,7 @@ import {
   type WorkSpec,
   type WorkSpecImpact,
 } from './protocol.js';
+import { requiredStageFromText, type EvidenceStage } from '../claim-registry.js';
 
 export type ClaimClass = 'mechanical' | 'runtime' | 'semantic';
 
@@ -25,6 +26,8 @@ export interface ClaimDefinition {
   depends_on?: string[];
   /** Default oracle lineage when verifier-level metadata is unavailable. */
   oracle_group?: string;
+  /** AM-0005: minimum evidence stage this claim may be accepted on. */
+  required_stage?: EvidenceStage;
 }
 
 export interface TraceabilityManifest {
@@ -153,6 +156,7 @@ export function compileWorkSpec(request: WorkRequest, draft: SpecDraft = {}): Co
         ...(claim.verifier_id !== undefined ? { verifier_id: claim.verifier_id } : {}),
         ...(claim.depends_on?.length ? { depends_on: [...claim.depends_on] } : {}),
         ...(claim.oracle_group ? { oracle_group: claim.oracle_group } : {}),
+        required_stage: claim.required_stage ?? requiredStageFromText(claim.statement),
       });
       return claimId;
     });

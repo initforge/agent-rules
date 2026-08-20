@@ -1,0 +1,39 @@
+{
+  "schema": "harness/claim-evidence",
+  "version": 1,
+  "plan_id": "harness-universal-reconciliation-v1",
+  "task_id": "S2",
+  "candidate_epoch": 1,
+  "observed_at": "2026-08-12T13:51:29.491Z",
+  "head_commit": "6e9a554a164e3a7d26df3cdb296392284c8c3166",
+  "coordinator_verification": "Independent re-run of recipe proofs by coordinator after worker implementation",
+  "claims": [
+    {
+      "claim_id": "C-007",
+      "verifier_id": "V-007",
+      "command": [
+        "node",
+        "automation/validate-external-sources.mjs"
+      ],
+      "status": "pass",
+      "summary": "PASS: 8 candidates, 8 rejected (below 70), no-skill valid outcome; 7 negative fixtures rejected (mutable-ref, hash-mismatch, unlicensed, unsafe, non-rollbackable, conflict-unresolved, below-threshold)",
+      "freshness": "fresh"
+    },
+    {
+      "claim_id": "C-008",
+      "verifier_id": "V-008",
+      "command": [
+        "python3",
+        "automation/validate-agent-skills.py"
+      ],
+      "status": "pass",
+      "summary": "PASS: 16 catalog skills portable; selected-set empty so projection trivially complete; unselected_materialized=0; fixtures include partial-projection and content-hash parity fail-closed",
+      "freshness": "fresh"
+    }
+  ],
+  "regression": {
+    "build": "exit 0",
+    "test_fast": "14 files/240 tests PASS",
+    "python_suites": "validate-skill-catalog, route-parity, test-select-verification, test-artifact-schemas all PASS"
+  }
+}

@@ -1,6 +1,10 @@
 import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
 import fs from "node:fs";
 import path from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 export async function skillsDoctor(
   args: string[],
@@ -58,10 +62,45 @@ export async function skillsCmd(
   switch (subcommand) {
     case "doctor":
       return skillsDoctor(args.slice(1), opts);
+    case "resolve": {
+      const catalogPath = path.join(process.cwd(), "skills", "candidate-fabric.json");
+      try {
+        const catalog = JSON.parse(fs.readFileSync(catalogPath, "utf8")) as Record<string, unknown>;
+        return {
+          exitCode: ExitCode.Success,
+          message: "External skill candidates resolved (reference/on-demand only; nothing installed)",
+          data: { candidates: catalog.external_source_matrix ?? [], installed: false, activation: "explicit-only" },
+        };
+      } catch (error) {
+        return { exitCode: ExitCode.GeneralError, message: `Unable to read candidate fabric: ${(error as Error).message}` };
+      }
+    }
+    case "search":
+    case "preview":
+    case "install":
+    case "update": {
+      // This is deliberately a thin, explicit binding to the official GitHub
+      // CLI surface. agent-rules does not implement a second skill manager.
+      try {
+        const result = await execFileAsync("gh", ["skill", subcommand, ...args.slice(1)], { cwd: process.cwd(), maxBuffer: 2 * 1024 * 1024 });
+        return {
+          exitCode: ExitCode.Success,
+          message: `gh skill ${subcommand} completed${subcommand === "install" ? " (explicit request only)" : ""}`,
+          data: { stdout: result.stdout, stderr: result.stderr, provider: "gh skill", activation: subcommand === "install" ? "explicit-only" : "read-only" },
+        };
+      } catch (error) {
+        const detail = error as { message?: string; stderr?: string };
+        return {
+          exitCode: ExitCode.GeneralError,
+          message: `gh skill ${subcommand} unavailable or failed: ${detail.stderr || detail.message || String(error)}`,
+          data: { provider: "gh skill", status: "BLOCKED", fallback: "no-skill or existing local route", activation: "none" },
+        };
+      }
+    }
     default:
       return {
         exitCode: ExitCode.InvalidArgument,
-        message: `Unknown skills subcommand: ${subcommand}. Available: doctor`,
+        message: `Unknown skills subcommand: ${subcommand}. Available: doctor, resolve, search, preview, install, update`,
       };
   }
 }

@@ -1,0 +1,32 @@
+{
+  "schema": "harness/implementation-intent-receipt",
+  "version": 1,
+  "planId": "harness-universal-reconciliation-v1",
+  "planRevision": 4,
+  "taskId": "S3",
+  "requirementIds": [
+    "REQ-009"
+  ],
+  "claimIds": [
+    "C-009"
+  ],
+  "goal": "Implement provider-neutral adapters for the named verification capabilities.",
+  "ownedPaths": [
+    "automation/evidence-profiles.json",
+    "automation/select-verification.py",
+    "automation/verification-profiles.json",
+    "integrations/providers",
+    "schemas/verification-profile.schema.json"
+  ],
+  "forbiddenPaths": [
+    ".env",
+    ".git/objects",
+    "generated"
+  ],
+  "expectedChange": "Provider-neutral lifecycle adapters for Testcontainers/Pact/Schemathesis/Storybook/Maestro/Semgrep-CodeQL/k6/OpenTelemetry with effects, prerequisites, health, timeout, rollback, evidence, host support, and positive/negative/unavailable fixtures; claim-driven activation only.",
+  "proofPlan": [
+    "C-009:V-009"
+  ],
+  "understood": true,
+  "receiptSha256": "6041adb2d998a6d4b38d8047226111132fc76118f3cc7a487dbe3288a09482d9"
+}

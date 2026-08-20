@@ -1,77 +1,57 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import os from "node:os";
-
-type Platform = "codex" | "grok" | "antigravity" | "cursor";
-
-const PLATFORM_HOMES: Record<Platform, string> = {
-  codex: process.env.CODEX_HOME ?? path.join(os.homedir(), ".codex"),
-  grok: process.env.GROK_HOME ?? path.join(os.homedir(), ".grok"),
-  antigravity: path.join(os.homedir(), ".gemini", "config"),
-  cursor: path.join(os.homedir(), ".cursor"),
-};
-
-const NATIVE_REQUIRED: Record<Platform, string> = {
-  codex: "agents/agent_rules_implementer.toml",
-  cursor: "agents/agent-rules-implementer.md",
-  grok: "agents/agent-rules-implementer.toml",
-  antigravity: "agents/agent-rules-implementer/agent.md",
-};
-
-const TOOLS = ["workctl.py", "workctl.ps1", "workctl.sh", "work-ledger.schema.json"];
+import { createHostAdapters, HOST_SPECS, isRegisteredHost, unsupportedHostDetection } from "../runtime/host-adapters.js";
+import { REGISTERED_HOSTS } from "../runtime/contracts.js";
 
 interface VerifyResult {
-  platform: Platform;
+  host: string;
   ok: boolean;
+  installed: boolean;
   message: string;
 }
 
-export async function verifyRuntimeState(platforms: Platform[] = ["codex", "grok", "antigravity", "cursor"]): Promise<VerifyResult[]> {
+/**
+ * Live installed-only runtime verification for all seven registered hosts.
+ * A config directory or a stale harness receipt alone is never proof of an
+ * installed application (REQ-006); unknown hosts are UNSUPPORTED.
+ */
+export async function verifyRuntimeState(hosts: string[] = [...REGISTERED_HOSTS]): Promise<VerifyResult[]> {
+  const adapters = createHostAdapters();
   const results: VerifyResult[] = [];
 
-  for (const name of platforms) {
-    const runtimeHome = PLATFORM_HOMES[name];
-    const manifest = path.join(runtimeHome, "agent-rules-manifest.json");
-    const state = path.join(runtimeHome, "agent-rules-integrations.json");
-
+  for (const host of hosts) {
+    if (!isRegisteredHost(host)) {
+      const detection = unsupportedHostDetection(host);
+      results.push({ host, ok: false, installed: false, message: `UNSUPPORTED: ${detection.reason}` });
+      continue;
+    }
+    const spec = HOST_SPECS[host];
+    if (!spec) {
+      results.push({ host, ok: false, installed: false, message: "missing host spec" });
+      continue;
+    }
     try {
-      if (!(await fileExists(manifest))) {
-        results.push({ platform: name, ok: false, message: `Missing runtime manifest: ${manifest}` });
+      const detection = await adapters[host].detect();
+      if (!detection.installed) {
+        results.push({
+          host,
+          ok: true,
+          installed: false,
+          message: detection.staleEvidence
+            ? `Absent: stale config evidence without a live application signal (${detection.configDir})`
+            : "Absent: no live application signal",
+        });
         continue;
       }
-      if (!(await fileExists(state))) {
-        results.push({ platform: name, ok: false, message: `Missing integration state: ${state}` });
-        continue;
+      const inventory = await adapters[host].inventory(detection);
+      const receipt = inventory.runtimeReceipt;
+      if (receipt && receipt.present) {
+        results.push({ host, ok: true, installed: true, message: `Installed: runtime receipt present (${receipt.effectivePlanSha256?.slice(0, 12) ?? "unknown"})` });
+      } else {
+        results.push({ host, ok: true, installed: true, message: "Installed: live application signal, no harness runtime receipt yet" });
       }
-
-      const toolsDir = path.join(runtimeHome, "agent-rules-tools");
-      for (const tool of TOOLS) {
-        if (!(await fileExists(path.join(toolsDir, tool)))) {
-          results.push({ platform: name, ok: false, message: `Missing portable workctl tool: ${tool}` });
-          continue;
-        }
-      }
-
-      const nativeRequired = path.join(runtimeHome, NATIVE_REQUIRED[name]);
-      if (!(await fileExists(nativeRequired))) {
-        results.push({ platform: name, ok: false, message: `Missing native definition: ${nativeRequired}` });
-        continue;
-      }
-
-      results.push({ platform: name, ok: true, message: "Runtime state PASS" });
     } catch (error) {
-      results.push({ platform: name, ok: false, message: (error as Error).message });
+      results.push({ host, ok: false, installed: false, message: (error as Error).message });
     }
   }
 
   return results;
-}
-
-async function fileExists(filePath: string): Promise<boolean> {
-  try {
-    await fs.access(filePath);
-    return true;
-  } catch {
-    return false;
-  }
 }

@@ -6,7 +6,7 @@ model: __OPENCODE_MODEL_CLASS__
 permission:
   edit: allow
   bash:
-    "*": ask
+    "*": allow
     "git status*": allow
     "git diff*": allow
     "git log*": allow

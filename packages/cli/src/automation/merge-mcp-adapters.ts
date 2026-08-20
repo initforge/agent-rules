@@ -29,13 +29,22 @@ function getCodebaseMcpBin(): string | null {
   return null;
 }
 
-function expandMcpPlaceholders(text: string): string {
+function pencilLauncherForAdapter(adapterPath: string): string {
+  // Adapters live in `<integration>/adapters`; keep the launcher beside the
+  // host-managed integration so installed host configs never contain a stale
+  // repo-relative placeholder.
+  const launcher = path.resolve(path.dirname(adapterPath), "..", "launch.mjs");
+  return process.platform === "win32" ? launcher.replaceAll("\\", "/") : launcher;
+}
+
+function expandMcpPlaceholders(text: string, adapterPath: string): string {
   const bin = getCodebaseMcpBin();
+  let expanded = text;
   if (bin) {
     const safeBin = bin.replace(/\\/g, "/");
-    return text.replaceAll("${CODEBASE_MEMORY_MCP_BIN}", safeBin);
+    expanded = expanded.replaceAll("${CODEBASE_MEMORY_MCP_BIN}", safeBin);
   }
-  return text;
+  return expanded.replaceAll("__AGENT_RULES_PENCIL_LAUNCHER__", pencilLauncherForAdapter(adapterPath));
 }
 
 export async function mergeJsonMcpAdapters(configPath: string, adapterPaths: string[]): Promise<boolean> {
@@ -55,7 +64,7 @@ export async function mergeJsonMcpAdapters(configPath: string, adapterPaths: str
   let changed = false;
   for (const adapterPath of adapterPaths) {
     if (!(await fileExists(adapterPath))) continue;
-    const raw = expandMcpPlaceholders(await fs.readFile(adapterPath, "utf8"));
+    const raw = expandMcpPlaceholders(await fs.readFile(adapterPath, "utf8"), adapterPath);
     const adapter = JSON.parse(raw);
     if (!adapter.mcpServers) continue;
     for (const [key, value] of Object.entries(adapter.mcpServers)) {
@@ -86,7 +95,7 @@ export async function mergeCodexTomlAdapters(configPath: string, adapterPaths: s
 
   for (const adapterPath of adapterPaths) {
     if (!(await fileExists(adapterPath))) continue;
-    const block = expandMcpPlaceholders((await fs.readFile(adapterPath, "utf8")).trim());
+    const block = expandMcpPlaceholders((await fs.readFile(adapterPath, "utf8")).trim(), adapterPath);
 
     const sectionMatch = block.match(/\[mcp_servers\.([^\]]+)\]/);
     if (sectionMatch) {

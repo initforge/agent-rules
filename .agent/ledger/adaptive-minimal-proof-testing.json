@@ -1,0 +1,30 @@
+{
+  "schema": "artifact/execution-ledger",
+  "version": 1,
+  "plan_id": "adaptive-minimal-proof-testing",
+  "execution_state": "IMPLEMENTATION_DELIVERED_VERIFICATION_PENDING",
+  "created_at": "2026-08-15T23:05:00+07:00",
+  "owner_authorized": true,
+  "supersedes": "persistent-mcp-session-broker",
+  "note": "Owner-authorized new phase: adaptive-minimal-proof-testing as permanent global harness behavior. Previous persistent-MCP/cleanup phase left with its owner-managed residual (Documents/ChatGPT/ZaloAI-Ecommerce) — untouched by this phase.",
+  "tasks": {},
+  "requirements": {
+    "REQ_001": "rule+manifest contract",
+    "REQ_002": "trigger model",
+    "REQ_003": "profiles",
+    "REQ_004": "selection",
+    "REQ_005": "live rules",
+    "REQ_006": "status semantics",
+    "REQ_007": "router receipt",
+    "REQ_008": "refactor policy",
+    "REQ_009": "schemas",
+    "REQ_010": "eval cases",
+    "REQ_011": "project audit",
+    "REQ_012": "mirror parity",
+    "REQ_013": "docs+branch"
+  },
+  "effective_plan_identity": {
+    "sha256": "",
+    "canonical_json_utf8": ""
+  }
+}

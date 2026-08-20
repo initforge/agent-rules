@@ -8,6 +8,15 @@ description: UI/UX polish for marketing/landing and non-ERP surfaces — Tailwin
 
 # Frontend Architect
 
+## Control Plane precedence (mechanical)
+
+- An **approved Control Plane brief** owns visual precedence (AM-0001; plan
+  decision DEC-019). This skill's generic font, dark-mode, animation, and
+  markup-only rewrite guidance **cannot override** an approved Control Plane
+  direction.
+- `ui-taste` is a brief/taste lens only when the brief selects it; it is never a
+  universal default.
+
 ## Hard stop — 5fedu ERP parity
 
 - Repo có `context/5fedu/` **và** task là module ERP (tạo module mới, sửa module, refactor, clone, parity, lệch template) → **dừng skill này**.

@@ -714,10 +714,15 @@ export default function PlanWorkspace({ navigate }: PlanWorkspaceProps) {
       .then(([e, p]) => {
         if (!mountedRef.current) return;
         if (e.ok) setEvidenceProfiles(e.data);
-        const listed = Array.isArray(p.data) ? p.data : [];
+        const listed: Array<{ planId?: string; plan_id?: string }> = Array.isArray(p.data) ? p.data : [];
         if (listed.length > 0) {
-          setPlans(listed);
-          const firstPlanId = listed[listed.length - 1].planId;
+          setPlans(listed.map((item) => ({ planId: String(item.planId ?? item.plan_id ?? '') })));
+          // Prefer the plan named in the URL when present; otherwise select
+          // the first listed plan (canonical/current plans sort first).
+          const urlMatch = typeof window !== 'undefined' ? window.location.pathname.match(/\/plan\/([^/]+)/) : null;
+          const urlPlanId = urlMatch ? decodeURIComponent(urlMatch[1]) : null;
+          const target = listed.find((plan) => plan.planId === urlPlanId) ?? listed[0];
+          const firstPlanId = target.planId;
           return fetch(`/api/plans/${firstPlanId}`)
             .then(async (r) => {
               const data = await r.json();

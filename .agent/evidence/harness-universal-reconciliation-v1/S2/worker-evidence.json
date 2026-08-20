@@ -1,0 +1,72 @@
+{
+  "schema": "harness/worker-evidence",
+  "version": 1,
+  "task_id": "S2",
+  "plan_id": "harness-universal-reconciliation-v1",
+  "plan_revision": 4,
+  "recipe_sha256": "2840b5a491f2c2484ad3169c143dfe640b9107aee4c95670731ff62d643c78d5",
+  "receipt_sha256": "f8b7f21c580869b1274447d02563d6f2242432e32e772e75dece94bd0669cf27",
+  "head_commit": "6e9a554a164e3a7d26df3cdb296392284c8c3166",
+  "working_tree": "dirty (only owned paths by this worker; other slices' uncommitted changes pre-existing)",
+  "implemented_at": "2026-08-12",
+  "summary": "Implemented immutable external-source governance (REQ-007/AC-007/C-007) and selected-skill parity (REQ-008/AC-008/C-008). All 8 external source records now carry pinned commit SHAs (resolved live from GitHub on 2026-08-12), git tree content hashes, license facts read from the pinned-tree LICENSE blobs, trust/security-review/portability/route-precision/benchmark/install/rollback records, and deterministic weighted qualification receipts recomputed by the validator. Hard gates + score>=70 qualification; every candidate fails explicit gates (unlicensed x2, license-unreviewed x6) and is below threshold (43-63), so the selected set is empty and no-skill/local-composition is the valid outcome; rejected candidates are catalog-only, never materialized. Projection manifest (empty selected set, empty detected hosts, no receipts) is enforced by V-008 with fail-closed completeness/hash-parity machinery proven by 6 fixtures.",
+  "changes_per_file": {
+    "schemas/skill-fabric-candidate.schema.json": "Added $defs: sourceLockPolicy (mirror of seed policy), selectionManifest (detected_hosts/selected_external_skills/projection_receipts), externalSource (full immutable lock envelope: immutable_revision, content_hash, license, trust, security_review, portability, route_precision, benchmark, rollback; install mode never-implicit; conflicts; qualification with 7 weighted factors), qualFactor. Root schema keeps candidate-entry requirements unchanged so validate-skill-fabric.py still validates entries.",
+    "skills/candidate-fabric.json": "Added source_lock_policy (parity with .agent/plans/harness-universal-reconciliation-v1/source-lock.seed.json), selection_manifest (detected_hosts [], selected_external_skills [], projection_receipts {}, basis note), and enriched all 8 external_source_matrix records with real pins: anthropics/skills@f17010c9 (unlicensed: no root LICENSE), vercel-labs/agent-skills@b8caa260 (unlicensed), expo/skills@dcff9e7c (MIT), prisma/skills@808913c1 (MIT), supabase/agent-skills@8331f910 (MIT), hashicorp/agent-skills@4451ceca (MPL-2.0), callstack/agent-device@c7565cb1 (MIT), ChromeDevTools/chrome-devtools-mcp@b58c613f (Apache-2.0); git-tree-sha1 content hashes, trust, security pending, benchmark pending, rollback plans, qualification receipts (scores 43-63, all rejected with explicit reasons), conflicts referencing canonical catalog ids. All 9 candidates preserved verbatim.",
+    "automation/validate-external-sources.mjs": "Rewritten: policy parity vs source-lock seed; schema-lockstep (record keys must equal schema $defs required); per-record immutable-pin/hash/license/security/portability/route/benchmark/rollback/install structural gates (mutable refs like branch 'main' fail closed); deterministic weighted qualification recomputation (integrity 25/license 15/security 15/verified-success 15/portability 10/route-precision 10/maintenance 10, threshold 70) compared exactly against recorded receipts; selection gates (no record selectable while any hard gate fails or score<70); manifest consistency (no projection receipts for unselected sources; rejected => materialization none); 7 negative fixtures (mutable-ref, hash-mismatch vs real file sha256, unlicensed, unsafe, non-rollbackable, conflict-unresolved, below-threshold) all rejected with expected reasons.",
+    "automation/validate-agent-skills.py": "Extended (existing portability checks unchanged, 16 skills): selected-set manifest consistency; complete-on-every-detected-host projection with sha256 content-hash parity (fail closed on missing host/hash mismatch, content-hash based so hosts ignoring optional metadata still get parity); scope scan (metadata.source marker or skills/external/<id> path => unselected candidates never materialized, selected ones must hash-match a receipt); conflict detection vs canonical catalog route signals (fail closed unless explicit resolution); 6 fixtures: complete-projection-hash-parity, partial-projection-fails-closed, hash-mismatch-fails-closed, metadata-ignored-host-content-hash-parity, conflict-unresolved, conflict-resolved.",
+    "skills/catalog.json": "Unchanged (no change required: all 16 existing valid entries preserved; selected-set manifest lives in candidate-fabric.json).",
+    "schemas/skill-catalog.schema.json": "Unchanged (no change required; catalog shape intact).",
+    "automation/validate-skill-catalog.py": "Unchanged (remains green: 16 skills, 3 declared material overlaps)."
+  },
+  "proof_results": {
+    "C-007": {
+      "verifier": "V-007",
+      "command": "node automation/validate-external-sources.mjs",
+      "exit_code": 0,
+      "key_output": "{\"status\":\"PASS\",\"candidates\":8,\"selected\":[],\"rejected\":8,...,\"no_skill_outcome\":true,\"bundle_installation\":\"forbidden\",\"install_mode\":\"never-implicit\",\"fixtures\":[7 fixtures all rejected with expected reasons]}",
+      "last_line": "  ]"
+    },
+    "C-008": {
+      "verifier": "V-008",
+      "command": "python3 automation/validate-agent-skills.py",
+      "exit_code": 0,
+      "key_output": "PASS: Agent Skills portability (16 skills; standard frontmatter + ROUTE.json sidecars)",
+      "receipt_line": "{\"status\":\"PASS\",\"catalog_skills\":16,\"external_candidates\":8,\"selected_external_skills\":[],\"detected_hosts\":[],\"projection_completeness\":\"trivially satisfied (no selected external skill)\",\"unselected_materialized\":0,\"global_loading\":\"none (unselected sources stay catalog links)\",\"fixtures\":[6 fixtures ok]}"
+    },
+    "regression": {
+      "validate-skill-catalog.py": {"exit_code": 0, "key_output": "{\"status\":\"PASS\",\"skills\":16,\"core\":14,\"profile\":2,\"declared_material_overlaps\":3,\"observed_route_overlaps\":3}"},
+      "validate-skill-fabric.py": {"exit_code": 0, "key_output": "{\"status\":\"PASS\",\"candidates\":9,\"active_overlap\":0,\"runtime_activation\":\"none\"}"},
+      "validate-v31-directive.mjs": {"exit_code": 0, "key_output": "\"external-first\":\"PASS\" (external_source_matrix still present; no data-engineering)"},
+      "test-artifact-schemas.py": {"exit_code": 0, "key_output": "PASS: all artifact schema validations"},
+      "validate-tool-registry.mjs": {"exit_code": 0},
+      "validate-route-parity.py": {"exit_code": 0},
+      "cli skills resolve": {"exit_code": 0, "key_output": "message: External skill candidates resolved (reference/on-demand only; nothing installed), data.installed=false, data.activation=explicit-only"}
+    }
+  },
+  "repair_attempts": [
+    {
+      "attempt": 1,
+      "issue": "candidate-fabric.json reasons for anthropic-frontend-design and vercel-agent-skills omitted 'security-review-pending: not approved' that the deterministic reason computation produces",
+      "action": "Added the missing reason to both records so recorded receipts exactly equal recomputed reasons (validator compares exact sorted sets)",
+      "outcome": "Resolved before any proof run; no proof command ever exited non-zero"
+    }
+  ],
+  "edge_cases_covered": {
+    "repository-moves-default-branch": "All pins are 40-hex commit SHAs resolved from the current default branch; mutable branch names are rejected by pattern (fixture mutable-ref-rejected). A default-branch movement cannot change what a record pins.",
+    "host-ignores-optional-skill-metadata": "Projection completeness is proven from materialized file bytes (sha256), never metadata; fixture metadata-ignored-host-content-hash-parity passes on hash match, hash-mismatch fails closed.",
+    "selected-skill-conflicts-with-local-canonical-skill": "V-008 detects route-signal overlap with canonical catalog skills and fails closed unless an explicit resolution is recorded; fixtures conflict-unresolved (rejected) and conflict-resolved (accepted)."
+  },
+  "invariants_held": {
+    "unselected-candidates-never-materialized": "V-007 rejects all 8 candidates (status rejected, materialization none, install never-implicit); V-008 scans for materialized unselected markers (0 found); CLI reports installed=false, activation=explicit-only.",
+    "availability-never-grants-authority": "No external record is selected or loadable; selection requires hard gates + score>=70 + explicit status selected, none satisfied."
+  },
+  "deviations": [
+    "skills/catalog.json, schemas/skill-catalog.schema.json, automation/validate-skill-catalog.py required no change: the full-catalog structural checks remain green and all 16 proven entries are preserved verbatim.",
+    "detected_hosts is empty in the selection manifest: live host detection belongs to the runtime installer/reconciler (S4/REQ-006 scope) which writes this field; S2 records the empty-state receipt and proves the fail-closed mechanism via fixtures.",
+    "Pinned revisions were resolved live from the GitHub API on 2026-08-12 (default-branch HEAD commits) and license SPDX facts were read from the LICENSE blob at each pinned tree; content hashes are git tree OIDs (git-tree-sha1), the only hash class recomputable offline for full-repo sources is sha256 of repo-local materialized files, exercised by the hash-mismatch fixture and the C-008 projection checks.",
+    "automation/verification-profiles.json, automation/select-verification.py, automation/evidence-profiles.json, schemas/verification-profile.schema.json, integrations/providers/ were modified by another slice worker during this session; not touched by S2."
+  ],
+  "requirements_not_completed": [],
+  "status": "IMPLEMENTED"
+}

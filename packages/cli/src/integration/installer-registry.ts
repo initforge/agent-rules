@@ -55,6 +55,13 @@ const HANDLERS: Record<string, IntegrationHandler> = {
   "chrome-devtools-mcp": npmHandler("chrome-devtools-mcp"),
   "context7": npmHandler("@upstash/context7-mcp"),
   "rtk": shellHandler("rtk --version", "rtk --version", "https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh"),
+  // Pencil is explicit-only: safe user-space install with official-link
+  // fallback; never persist /tmp/.mount_* paths (REQ-012 / AC-012).
+  "pencil-mcp": shellHandler(
+    "bash integrations/optional/pencil-mcp/install.sh",
+    "bash integrations/optional/pencil-mcp/verify.sh",
+    "https://docs.pencil.dev/getting-started/installation",
+  ),
 };
 
 export function getHandler(integrationId: string): IntegrationHandler | undefined {

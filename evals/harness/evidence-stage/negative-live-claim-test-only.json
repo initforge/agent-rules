@@ -1,0 +1,25 @@
+{
+  "schema": "harness/claim-evidence",
+  "version": 1,
+  "plan_id": "evidence-stage-boundary-fixture",
+  "task_id": "T-LIVE-NEG-001",
+  "candidate_epoch": 2,
+  "observed_at": "2026-08-13T10:00:00Z",
+  "head_commit": "6e9a554a164e3a7d26df3cdb296392284c8c3166",
+  "claims": [
+    {
+      "claim_id": "C-LIVE-001",
+      "verifier_id": "V-UNIT-001",
+      "command": [
+        "node",
+        "automation/validate-dogfood-unit.mjs"
+      ],
+      "status": "pass",
+      "evidence_stage": "TEST_VERIFIED",
+      "summary": "Unit tests pass for the recipe compiler; this is test-only evidence and must never satisfy a live/dogfood claim."
+    }
+  ],
+  "required_evidence_stage": "LIVE_OBSERVED",
+  "expected_outcome": "PARTIAL",
+  "note": "AM-0005 negative fixture: claim requires LIVE_OBSERVED, only TEST_VERIFIED evidence is present. The acceptance reducer must NOT grant live completion."
+}

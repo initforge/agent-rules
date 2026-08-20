@@ -99,7 +99,7 @@ function currentPlan(basePath: string): { planId: string; planRoot: string; requ
 }
 
 function headRevision(basePath: string): string {
-  const res = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: basePath, encoding: 'utf8' });
+  const res = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: basePath, encoding: 'utf8', timeout: 15_000 });
   return res.status === 0 ? res.stdout.trim() : 'unknown';
 }
 

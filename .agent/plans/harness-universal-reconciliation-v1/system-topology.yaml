@@ -1,0 +1,90 @@
+schema_version: 1
+services:
+  - id: engine
+    kind: node
+    status: EXISTS
+    path: packages/engine
+    note: canonical contracts, controller, verifier, terminal gate
+  - id: cli
+    kind: node
+    status: EXISTS
+    path: packages/cli
+    note: thin commander CLI
+  - id: control-plane
+    kind: web
+    status: EXISTS
+    path: packages/control-plane
+    note: local-only observe/configure; no run control
+  - id: autopilot-supervisor
+    kind: process
+    status: EXISTS
+    path: packages/engine/src/autopilot-m11.ts [DELETED S5] + supervisor.ts
+    note: host-neutral durable supervisor (M11-C5)
+  - id: integration-train
+    kind: process
+    status: EXISTS
+    path: packages/engine/src/worktree-train.ts [DELETED S5] + CLI train/worktree
+    note: rolling train merge owner (M11-C3)
+ports:
+  - service: control-plane
+    port: 8787
+    host: 127.0.0.1
+    note: local-only; origin/host checks enforced
+  - service: engine-broker
+    port: TBD
+    host: 127.0.0.1
+    note: resource broker is engine-internal; no external port bound
+ingress:
+  public_ingress: GAP
+  note: no public deployment; harness is local-first
+databases:
+  - id: ledger
+    kind: json-file
+    status: EXISTS
+    path: .agent/ledger/<plan-id>.json
+    note: canonical runtime state
+queues:
+  - id: ready-queue
+    status: EXISTS
+    path: packages/engine/src/dispatch-ready-set.ts [DELETED S5]
+    note: cross-stage typed ready queue from AM-0019 §4 (M11-C2)
+migrations:
+  - id: ledger-revision
+    status: EXISTS
+    note: shadow revision sequence (r57 current)
+  - id: db-migrations
+    status: GAP
+    note: no service DB yet
+health:
+  probe: agent-rules doctor
+  status: EXISTS
+journeys:
+  - id: plan-lifecycle
+    steps:
+      - inventory
+      - adopt
+      - reconcile
+      - repair
+      - finalize
+    status: EXISTS
+  - id: runtime-lifecycle
+    steps:
+      - install
+      - update
+      - rollback
+      - uninstall
+    status: EXISTS
+  - id: run-execution
+    steps:
+      - run
+      - status
+      - resume
+      - cancel
+    status: EXISTS
+  - id: full-stack-public-ingress
+    status: GAP
+    note: requires exact deployed topology (AM-0019 §8); verifyLayers gate implemented in topology-compiler.ts
+rollback:
+  installer: runtime update --rollback
+  ledger: activation generation backup restore
+  local_branch: revert merge commit / keep worktrees until owner review

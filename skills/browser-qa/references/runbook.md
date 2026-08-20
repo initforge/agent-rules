@@ -4,7 +4,9 @@
 
 1. URL local/staging.
 2. MCP: `playwright` + `chrome-devtools` (sau install agent-rules).
-3. Matrix từ `qa-skills`.
+3. Matrix từ `qa-skills` — **chỉ khi cần QA reasoning** (test-design matrix,
+   exploratory/edge-case planning); browser verification đơn giản không load
+   `qa-skills` (xem `SKILL.md` → Support loading).
 
 ## Session
 

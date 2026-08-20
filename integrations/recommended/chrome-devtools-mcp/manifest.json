@@ -1,15 +1,30 @@
 {
-  "name": "chrome-devtools-mcp",
-  "policy": "recommended",
-  "upstream": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
-  "npmPackage": "chrome-devtools-mcp",
-  "commandName": "chrome-devtools-mcp",
-  "mcpServerKey": "chrome-devtools",
-  "installDirs": {
-    "windows": "%LOCALAPPDATA%\\npm",
-    "linux": "$HOME/.npm-global",
-    "darwin": "$HOME/.npm-global"
-  },
-  "version": "1.7.0",
-  "versionPolicy": "pinned"
+ "name": "chrome-devtools-mcp",
+ "policy": "recommended",
+ "upstream": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+ "npmPackage": "chrome-devtools-mcp",
+ "commandName": "chrome-devtools-mcp",
+ "mcpServerKey": "chrome-devtools",
+ "installDirs": {
+  "windows": "%LOCALAPPDATA%\\npm",
+  "linux": "$HOME/.npm-global",
+  "darwin": "$HOME/.npm-global"
+ },
+ "version": "1.7.0",
+ "versionPolicy": "pinned",
+ "capabilities": [
+  "browser.debug"
+ ],
+ "activation": "automatic",
+ "classification": "mcp-provider",
+ "effect": {
+  "effect_level": "interactive",
+  "environment": "browser",
+  "approval": "task-scope",
+  "reversible": true,
+  "network": true,
+  "credentials": "optional",
+  "timeout_ms": 120000,
+  "provider_evidence": "health-probe"
+ }
 }

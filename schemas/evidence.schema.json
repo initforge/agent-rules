@@ -18,6 +18,18 @@
     "claim_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
     "contract_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
     "status": { "enum": ["PASS", "FAIL", "BLOCKED", "UNVERIFIED"] },
+    "evidence_stage": {
+      "type": "string",
+      "enum": [
+        "SOURCE_VERIFIED",
+        "TEST_VERIFIED",
+        "NATIVE_SMOKE_VERIFIED",
+        "LIVE_CANDIDATE",
+        "LIVE_OBSERVED",
+        "OPERATIONALLY_PROVEN",
+        "LIVE_UNPROVEN"
+      ]
+    },
     "provenance": {
       "type": "string",
       "enum": ["runner", "external-verifier", "manual", "unverified"]

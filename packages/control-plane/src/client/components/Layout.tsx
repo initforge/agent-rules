@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 interface NavItem {
   id: string;
   label: string;
-  icon: string;
+  badge?: string;
   path: string;
 }
 
@@ -23,37 +23,57 @@ interface LayoutProps {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'overview', label: 'Overview', icon: '⊞', path: '/overview' },
-  { id: 'plan', label: 'Plan Workspace', icon: '⊟', path: '/plan' },
-  { id: 'runs', label: 'Runs', icon: '⊡', path: '/runs' },
-  { id: 'evaluations', label: 'Evaluations', icon: '⊠', path: '/evaluations' },
-  { id: 'architecture', label: 'Architecture', icon: '⊡', path: '/architecture/dag' },
-  { id: 'configuration', label: 'Configuration', icon: '⊞', path: '/configuration/general' },
-  { id: 'profiles', label: 'Profiles', icon: '⊡', path: '/profiles' },
-  { id: 'audit', label: 'Audit Log', icon: '⊡', path: '/audit' },
-  { id: 'c4', label: 'C4 Architecture', icon: '⊞', path: '/c4' },
-  { id: 'm11', label: 'M11 Views', icon: '⊠', path: '/m11/readiness' },
+  { id: 'overview', label: 'Overview', path: '/overview' },
+  { id: 'plans', label: 'Plans', badge: '3', path: '/plans' },
+  { id: 'runs', label: 'Runs', badge: '8', path: '/runs' },
+  { id: 'evidence', label: 'Evidence', badge: '47', path: '/evidence' },
+  { id: 'hosts', label: 'Hosts', badge: '7', path: '/hosts' },
+  { id: 'm11', label: 'M11', path: '/m11/readiness' },
+  { id: 'audit', label: 'Audit', badge: '2', path: '/audit' },
+  { id: 'architecture', label: 'Architecture', path: '/architecture/dag' },
+  { id: 'configuration', label: 'Configuration', path: '/configuration/general' },
+  { id: 'settings', label: 'Settings', path: '/configuration/general' },
 ];
+
+const NAV_IDS = new Set(['overview', 'plans', 'runs', 'evidence', 'hosts', 'm11', 'audit', 'architecture', 'configuration', 'settings']);
 
 function matchNavItem(path: string): string {
   const segments = path.split('/').filter(Boolean);
   const base = segments[0] || 'overview';
-  if (base === 'overview' || base === 'plan' || base === 'audit' || base === 'evaluations') return base;
-  if (base === 'runs') return 'runs';
-  if (base === 'architecture') return 'architecture';
+  if (base === 'plan' || base === 'plans') return 'plans';
+  if (base === 'evaluations' || base === 'profiles' || base === 'c4') return base;
   if (base === 'configuration') return 'configuration';
-  if (base === 'profiles') return 'profiles';
-  if (base === 'c4') return 'c4';
-  if (base === 'm11') return 'm11';
-  return 'overview';
+  return NAV_IDS.has(base) ? base : 'overview';
+}
+
+function crumbFor(path: string): string {
+  const segments = path.split('/').filter(Boolean);
+  const map: Record<string, string> = {
+    overview: 'Overview',
+    plans: 'Plans',
+    plan: 'Plans',
+    runs: 'Runs',
+    evidence: 'Evidence',
+    hosts: 'Hosts',
+    m11: 'M11',
+    audit: 'Audit',
+    architecture: 'Architecture',
+    configuration: 'Configuration',
+    evaluations: 'Evaluations',
+    profiles: 'Profiles',
+    c4: 'Architecture',
+    settings: 'Settings',
+  };
+  const base = segments[0] || 'overview';
+  return map[base] || 'Overview';
 }
 
 export default function Layout({ currentPath, onNavigate, health, healthError, children, inspector }: LayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dark, setDark] = useState(() => document.documentElement.getAttribute('data-theme') === 'dark');
   const sidebarRef = useRef<HTMLElement>(null);
-  const toggleRef = useRef<HTMLAnchorElement>(null);
-  const hamburgerRef = useRef<HTMLAnchorElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const hamburgerRef = useRef<HTMLButtonElement>(null);
   const activeId = matchNavItem(currentPath);
 
   useEffect(() => {
@@ -80,7 +100,6 @@ export default function Layout({ currentPath, onNavigate, health, healthError, c
 
   return (
     <div className="layout-root">
-      {/* ponytail: skip link — minimal, add focus-visible style when upgrading */}
       <a href="#main-content" className="skip-link">Skip to main content</a>
 
       <nav
@@ -90,81 +109,69 @@ export default function Layout({ currentPath, onNavigate, health, healthError, c
         role="navigation"
         aria-label="Main navigation"
       >
-        <div className="layout-sidebar-header">
-          <div className="layout-sidebar-brand">
-            <span className="layout-sidebar-icon" aria-hidden="true">⊡</span>
-            <span className="layout-sidebar-title">Control Plane</span>
-          </div>
-          <div className="layout-sidebar-status">
-            {healthError ? (
-              <span className="status-indicator status-indicator--offline">
-                <span className="status-dot status-dot--danger" /> offline
-              </span>
-            ) : (
-              <span className={`status-indicator ${health.status === 'healthy' ? '' : 'status-indicator--warn'}`}>
-                <span className={`status-dot ${health.status === 'healthy' ? 'status-dot--success' : 'status-dot--warning'}`} />
-                {health.status || '?'}
-                {health.commit ? <span className="status-commit" style={{color: dark ? '#e6edf3' : '#585860'}}>#{health.commit.slice(0, 7)}</span> : null}
-              </span>
-            )}
-          </div>
+        <div className="cp-sidebar-brand">
+          <span className="cp-brand-mark" aria-hidden="true">⊡</span>
+          <span className="cp-brand-text">
+            <span className="cp-brand-name">agent-rules</span>
+            <span className="cp-brand-sub">CONTROL PLANE</span>
+          </span>
         </div>
 
-        <div className="layout-sidebar-nav" tabIndex={0}>
+        <div className="cp-sidebar-nav" tabIndex={0}>
           {NAV_ITEMS.map(item => (
             <a
               key={item.id}
               href={item.path}
               onClick={(e) => { e.preventDefault(); onNavigate(item.path); }}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onNavigate(item.path); } }}
-              className={`layout-nav-item ${activeId === item.id ? 'layout-nav-item--active' : ''}`}
+              className={`cp-nav-item ${activeId === item.id ? 'cp-nav-item--active' : ''}`}
               aria-current={activeId === item.id ? 'page' : undefined}
             >
-              <span className="layout-nav-icon" aria-hidden="true">{item.icon}</span>
-              <span className="layout-nav-label">{item.label}</span>
+              <span className="cp-nav-label">{item.label}</span>
+              {item.badge && <span className="cp-nav-badge">{item.badge}</span>}
             </a>
           ))}
         </div>
 
-        <div className="layout-sidebar-footer">
-          <span className="layout-sidebar-version">v0.1.0</span>
-          <a
-            ref={toggleRef}
-            onClick={toggleTheme}
-            className="theme-toggle-btn"
-            title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-            aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {dark ? '\u2600' : '\uD83C\uDF19'}
-          </a>
+        <div className="cp-sidebar-foot">
+          <div className="cp-m11-mini" role="status" aria-label="M11 status">
+            <span className="cp-m11-dot" aria-hidden="true" />
+            <span className="cp-m11-copy">
+              <span className="cp-m11-title">M11 pending</span>
+              <span className="cp-m11-sub">awaiting hosted CI</span>
+            </span>
+          </div>
+          <div className="cp-user-card">
+            <span className="cp-avatar" aria-hidden="true">LX</span>
+            <span className="cp-user-copy">
+              <span className="cp-user-name">Linh Nguyen</span>
+              <span className="cp-user-role">operator</span>
+            </span>
+          </div>
         </div>
       </nav>
 
       <div className="layout-mobile-header">
-        <a
+        <button
           ref={hamburgerRef}
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="layout-mobile-toggle"
           aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
           aria-expanded={mobileMenuOpen}
           aria-controls="sidebar-navigation"
-          tabIndex={0}
-          role="button"
         >
           <span className={`layout-hamburger ${mobileMenuOpen ? 'layout-hamburger--open' : ''}`}>
             <span /><span /><span />
           </span>
-        </a>
+        </button>
         <span className="layout-mobile-title">Control Plane</span>
-        <a
+        <button
           onClick={toggleTheme}
           className="theme-toggle-btn theme-toggle-btn--mobile"
           aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-          tabIndex={0}
-          role="button"
         >
-          {dark ? '\u2600' : '\uD83C\uDF19'}
-        </a>
+          {dark ? '☀' : '☾'}
+        </button>
       </div>
 
       {mobileMenuOpen && (
@@ -176,6 +183,23 @@ export default function Layout({ currentPath, onNavigate, health, healthError, c
       )}
 
       <main id="main-content" className="layout-content" role="main" tabIndex={0}>
+        <div className="cp-topbar">
+          <span className="cp-crumb">Control Plane / {crumbFor(currentPath)}</span>
+          <span className="cp-actions">
+            <span className={`cp-badge cp-badge--warn ${healthError ? 'cp-badge--danger' : ''}`}>
+              {healthError ? 'OFFLINE' : 'HARNESS · PARTIAL'}
+            </span>
+            <button
+              ref={toggleRef}
+              onClick={toggleTheme}
+              className="theme-toggle-btn"
+              title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {dark ? '☀' : '☾'}
+            </button>
+          </span>
+        </div>
         {children}
       </main>
 

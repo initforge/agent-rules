@@ -1,0 +1,63 @@
+{
+  "id": "agent-device",
+  "displayName": "agent-device",
+  "kind": "cli-tool",
+  "policy": "optional",
+  "profiles": [],
+  "source": {
+    "type": "github",
+    "url": "https://github.com/callstack/agent-device",
+    "version": "0.20.8",
+    "versionPolicy": "pinned"
+  },
+  "integrity": {
+    "pinned": true
+  },
+  "trust": "advisory-only",
+  "classification": "provider",
+  "capabilities": [
+    "mobile.device"
+  ],
+  "triggers": [
+    "mobile-device",
+    "real-device-proof",
+    "simulator-proof"
+  ],
+  "sideEffects": "interactive-device",
+  "tokenClass": "medium",
+  "permissions": [
+    "device-control"
+  ],
+  "environment": [],
+  "install": {
+    "type": "npm-global",
+    "handler": "agent-device",
+    "script": "integrations/recommended/agent-device/install.sh",
+    "verify": "integrations/recommended/agent-device/verify.sh",
+    "uninstall": "integrations/recommended/agent-device/uninstall.sh"
+  },
+  "health": {
+    "command": "agent-device --version",
+    "expectedExitCodes": [
+      0
+    ]
+  },
+  "schema": {
+    "source": "integrations/recommended/agent-device/"
+  },
+  "nativeHosts": [],
+  "fallback": "emulator/device tooling unavailable -> report BLOCKED/NEEDS_USER; never fabricate device evidence",
+  "deprecatedAliases": [],
+  "priority": 40,
+  "activation": "explicit-only",
+  "effect": {
+    "effect_level": "interactive",
+    "environment": "host",
+    "approval": "explicit-provider",
+    "reversible": true,
+    "network": false,
+    "credentials": "optional",
+    "timeout_ms": 300000,
+    "provider_evidence": "health-probe"
+  }
+}

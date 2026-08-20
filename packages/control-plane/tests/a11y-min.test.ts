@@ -36,13 +36,14 @@ describe('C6 minimum a11y source-level', () => {
     });
   });
 
-  describe('aria-hidden decorative nav icons', () => {
-    it('nav icons have aria-hidden="true" (rendered via map)', () => {
-      // Nav icons rendered via .map() — verify single source pattern exists
-      const hasPattern = /<span[^>]+className="layout-nav-icon"[^>]+aria-hidden="true"[^>]*>/.test(LAYOUT_SRC);
-      expect(hasPattern).toBe(true);
-      // NAV_ITEMS array defines 9 icon entries rendered via map
-      expect(LAYOUT_SRC).toMatch(/NAV_ITEMS.*icon:/s);
+  describe('aria-hidden decorative shell elements', () => {
+    it('decorative brand mark is aria-hidden (rendered via map)', () => {
+      // The design shell renders the brand mark decoratively; it must be hidden
+      // from assistive tech while the nav list stays semantic.
+      const hasBrandPattern = /<span\s+className="cp-brand-mark"[^>]+aria-hidden="true"/.test(LAYOUT_SRC);
+      expect(hasBrandPattern).toBe(true);
+      // NAV_ITEMS array defines the nav entries rendered via map
+      expect(LAYOUT_SRC).toMatch(/NAV_ITEMS\.map/);
     });
   });
 

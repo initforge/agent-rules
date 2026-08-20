@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/mcp-focus-receipt.schema.json",
+  "title": "MCP Focus/Workspace Receipt",
+  "description": "Privacy-safe receipt for focus-safe interactive GUI MCP launches (AM-0006). Window ids and active-window identities are persisted hashed; raw window titles are never stored. Required before/after facts prove the owner's current workspace and active window were preserved and that the provider window was placed on the originating OpenCode session's workspace without activating or switching desktops.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "version", "targetWorkspace", "before", "after",
+    "placement", "visibility", "focusPolicy", "isolated", "errors", "created_at"
+  ],
+  "properties": {
+    "schema": { "const": "agent-rules/mcp-focus-receipt" },
+    "version": { "const": 1 },
+    "session_id": { "type": "string", "minLength": 1 },
+    "sourceWindowIdHash": { "type": "string", "pattern": "^[a-f0-9]{16}$" },
+    "targetWorkspace": { "type": "integer", "minimum": 0 },
+    "before": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currentWorkspace", "activeWindowIdHash"],
+      "properties": {
+        "currentWorkspace": { "type": ["integer", "null"] },
+        "activeWindowIdHash": { "type": ["string", "null"], "pattern": "^[a-f0-9]{16}$" }
+      }
+    },
+    "after": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currentWorkspace", "activeWindowIdHash"],
+      "properties": {
+        "currentWorkspace": { "type": ["integer", "null"] },
+        "activeWindowIdHash": { "type": ["string", "null"], "pattern": "^[a-f0-9]{16}$" }
+      }
+    },
+    "providerWindowIdHash": { "type": "string", "pattern": "^[a-f0-9]{16}$" },
+    "providerWorkspace": { "type": ["integer", "null"], "minimum": 0 },
+    "providerNonIconic": {
+      "type": ["boolean", "null"],
+      "description": "Post-move proof that the provider window is visible and not iconic (WM_STATE). Null when the provider window was never attributed."
+    },
+    "otherWindowsUnchanged": {
+      "type": ["boolean", "null"],
+      "description": "Post-move proof that no other window changed workspace during the launch/move. Null when not verifiable."
+    },
+    "placement": {
+      "description": "prevented_and_verified: no race-window violation and all post-move proofs hold. detected_after_violation: the provider (or an unattributable actor) changed the current desktop or stole the active window during the launch race window; the run exits non-zero. blocked_before_launch: headed placement safety was not established, so the provider was never launched. verification_failed: launched but post-move proof failed (wrong workspace, iconic, other windows moved). no-new-window-detected / needs-user / blocked / unobservable: honest fallbacks.",
+      "enum": ["prevented_and_verified", "detected_after_violation", "blocked_before_launch", "verification_failed", "no-new-window-detected", "needs-user", "blocked", "unobservable"]
+    },
+    "visibility": { "enum": ["visible", "headless"] },
+    "focusPolicy": { "enum": ["preserve", "allow-activate"] },
+    "isolated": { "type": "boolean" },
+    "capability": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["wmctrl", "xprop", "display"],
+      "properties": {
+        "wmctrl": { "type": "boolean" },
+        "xprop": { "type": "boolean" },
+        "display": { "type": "boolean" }
+      }
+    },
+    "errors": { "type": "array", "items": { "type": "string" } },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

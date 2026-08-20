@@ -1,0 +1,7 @@
+{
+  "protocol_version": "2.0",
+  "default_agent": "claude",
+  "default_planner": "claude",
+  "explicit_capability_providers": [],
+  "domain_pack": null
+}

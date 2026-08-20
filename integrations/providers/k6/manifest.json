@@ -1,0 +1,44 @@
+{
+  "id": "k6",
+  "displayName": "k6 (load/performance)",
+  "kind": "adapter",
+  "policy": "optional",
+  "activation": "claim-driven",
+  "capabilityClass": "performance.load-threshold",
+  "providers": ["k6"],
+  "claim_classes": ["k6", "load test", "performance threshold", "slo", "latency budget", "throughput", "performance budget", "stress test"],
+  "effect": {
+    "effect_level": "interactive",
+    "environment": "network",
+    "approval": "task-scope",
+    "reversible": true,
+    "network": true,
+    "credentials": "optional",
+    "timeout_ms": 600000,
+    "provider_evidence": "live-receipt"
+  },
+  "prerequisites": [
+    "An explicit thresholds/SLO claim (e.g. p95 latency < 500ms, error rate < 1%) in the requirement or claim text",
+    "The target under load is a disposable test environment",
+    "Load duration and virtual-user count are bounded by the thresholds claim"
+  ],
+  "health": {
+    "command": "k6 version",
+    "expectedExitCodes": [0]
+  },
+  "rollback": [
+    "Load generation stops on timeout; the process group is terminated",
+    "Targets are disposable test environments only; results discarded after the receipt"
+  ],
+  "evidence_kinds": ["performance-threshold", "custom-runtime"],
+  "hosts": {
+    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode", "mimocode"],
+    "notes": "Performance evidence requires explicit thresholds; a performance claim without thresholds never activates k6."
+  },
+  "thresholds_required": true,
+  "telemetry_only": false,
+  "notes": [
+    "k6 activation requires explicit thresholds/SLO claims; generic 'performance' wording is not enough.",
+    "Threshold evidence proves the stated SLO only; it cannot replace functional acceptance."
+  ]
+}

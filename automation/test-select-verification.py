@@ -382,6 +382,78 @@ def test_acceptance_reducer_fail_closed_for_incomplete_actual_evidence() -> None
     print("  reducer negative fixtures: missing/blocked/skipped/empty/failed remain non-green")
 
 
+def test_route_precision_keywords_cannot_activate_heavy_provider() -> None:
+    """Prompt keywords alone cannot activate a heavy provider (REQ-013/REQ-019)."""
+    selector = load_selector_module()
+    profiles = json.loads((ROOT / "automation" / "verification-profiles.json").read_text(encoding="utf-8"))
+    provider_selection = selector.select_providers(
+        profiles,
+        claims=["unit test suite passes"],
+        availability={"playwright-mcp": True, "chrome-devtools-mcp": True, "maestro": True, "pencil-mcp": True},
+    )
+    for entry in provider_selection or []:
+        if entry.get("provider_id") in ("playwright-mcp", "chrome-devtools-mcp", "maestro", "pencil-mcp"):
+            if entry.get("activated"):
+                raise AssertionError(f"keywords alone activated heavy provider: {entry}")
+    print("  route precision: no heavy provider activated by a mechanical claim alone")
+
+
+def test_unnecessary_activation_denied() -> None:
+    """A provider present with no applicable claim is not activated (REQ-019)."""
+    selector = load_selector_module()
+    profiles = json.loads((ROOT / "automation" / "verification-profiles.json").read_text(encoding="utf-8"))
+    provider_selection = selector.select_providers(
+        profiles,
+        claims=["static schema lint"],
+        availability={"playwright-mcp": True, "chrome-devtools-mcp": True},
+    )
+    heavy = [entry for entry in provider_selection or [] if entry.get("provider_id") in ("playwright-mcp", "chrome-devtools-mcp") and entry.get("activated")]
+    if heavy:
+        raise AssertionError(f"provider activated without an applicable claim: {heavy}")
+    print("  unnecessary activation denied: provider present but no applicable claim")
+
+
+def test_bounded_two_attempt_repair() -> None:
+    """Repair is bounded to two attempts per claim; a third failure is terminal (REQ-019)."""
+    selector = load_selector_module()
+    for attempt in (0, 1):
+        result = selector.repair_gate(attempts=attempt, max_attempts=2)
+        if not result["may_repair"]:
+            raise AssertionError(f"attempt {attempt} must still be repairable: {result}")
+    terminal = selector.repair_gate(attempts=2, max_attempts=2)
+    if terminal["may_repair"]:
+        raise AssertionError(f"third attempt must be terminal: {terminal}")
+    if not terminal["terminal"]:
+        raise AssertionError(f"third attempt must be terminal: {terminal}")
+    if not terminal["proof_weakening_forbidden"]:
+        raise AssertionError(f"proof weakening must be forbidden: {terminal}")
+    print("  bounded repair: attempts 0-1 repairable, attempt 2 terminal")
+
+
+def test_stale_evidence_rejected() -> None:
+    """Stale evidence cannot satisfy acceptance (freshness, REQ-019)."""
+    selector = load_selector_module()
+    verdict = selector.freshness_verdict(observed_ms_ago=10_000_000, freshness_ms=600_000)
+    if verdict != "stale":
+        raise AssertionError(f"10M ms old evidence must be stale: {verdict}")
+    fresh = selector.freshness_verdict(observed_ms_ago=60_000, freshness_ms=600_000)
+    if fresh != "fresh":
+        raise AssertionError(f"60s evidence within 600s window must be fresh: {fresh}")
+    print("  stale evidence rejected, fresh evidence accepted")
+
+
+def test_workaround_retirement_evidence_required() -> None:
+    """Model/provider workarounds need retirement evidence (REQ-019)."""
+    selector = load_selector_module()
+    active = selector.workaround_status(expires_at=None, retired=True, retirement_evidence=None)
+    if active != "retired":
+        raise AssertionError(f"retired workaround must be terminal: {active}")
+    live = selector.workaround_status(expires_at="2099-01-01T00:00:00Z", retired=False, retirement_evidence=None)
+    if live != "active":
+        raise AssertionError(f"unexpired workaround must be active: {live}")
+    print("  workaround retirement: retired workaround is terminal, unexpired is active")
+
+
 def report_diagnostics() -> None:
     """Report tool availability explaining why checks are blocked/skipped."""
     profiles_raw = json.loads((ROOT / "automation" / "verification-profiles.json").read_text(encoding="utf-8"))
@@ -431,6 +503,11 @@ def main() -> None:
     test_profile_extensible()
     test_run_selects_without_error()
     test_acceptance_reducer_fail_closed_for_incomplete_actual_evidence()
+    test_route_precision_keywords_cannot_activate_heavy_provider()
+    test_unnecessary_activation_denied()
+    test_bounded_two_attempt_repair()
+    test_stale_evidence_rejected()
+    test_workaround_retirement_evidence_required()
 
     report_diagnostics()
 

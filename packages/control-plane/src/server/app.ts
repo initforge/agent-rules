@@ -13,6 +13,8 @@ import plansRouter from '../routes/plans.js';
 import c4Router from '../routes/c4.js';
 import m11Router from '../routes/m11.js';
 import authorityRouter from '../routes/authority.js';
+import evidenceRouter from '../routes/evidence.js';
+import hostsRouter from '../routes/hosts.js';
 import { authMiddleware } from '../middleware/auth.js';
 
 const app = express();
@@ -68,6 +70,8 @@ app.use('/api/plans', plansRouter);
 app.use('/api/c4', c4Router);
 app.use('/api/m11', m11Router);
 app.use('/api/authority', authorityRouter);
+app.use('/api/evidence', evidenceRouter);
+app.use('/api/hosts', hostsRouter);
 
 app.use(express.static(path.join(__dirname, '..', '..', 'client')));
 

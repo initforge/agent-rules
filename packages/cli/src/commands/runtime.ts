@@ -6,6 +6,7 @@ import {
   isRuntimePlatform,
   type RuntimePlatform,
 } from "../runtime/installer.js";
+import { reconcileAll } from "../runtime/reconcile.js";
 
 interface RuntimeArguments {
   platforms: RuntimePlatform[];
@@ -99,6 +100,49 @@ export async function runtimeUninstall(
   return runLifecycle("uninstall", args, opts);
 }
 
+export async function runtimeReconcile(
+  args: string[],
+  opts: CliOptions
+): Promise<CommandResult> {
+  const installedOnly = args.includes("--installed-only");
+  const reportOnly = args.includes("--report-only") || opts.dryRun;
+  const positional = args.filter((arg) => !arg.startsWith("--"));
+  const target = positional[0] ?? "all";
+  if (target !== "all" && !isRuntimePlatform(target)) {
+    return { exitCode: ExitCode.InvalidArgument, message: `Invalid host: ${target}. Valid: all, ${RUNTIME_PLATFORMS.join(", ")}` };
+  }
+  try {
+    const hosts = target === "all" ? [...RUNTIME_PLATFORMS] : [target as RuntimePlatform];
+    const result = await reconcileAll({ installedOnly, reportOnly });
+    const requested = result.reconciled.filter((item) => hosts.includes(item.host as RuntimePlatform));
+    return {
+      exitCode: ExitCode.Success,
+      message: `Runtime reconcile: ${requested.filter((item) => item.installed).length} installed, ${requested.filter((item) => item.status === "unsupported").length} unsupported, ${requested.filter((item) => item.skipped).length} skipped (${reportOnly ? "report-only" : "repair-enabled"})`,
+      data: {
+        installedOnly,
+        reportOnly,
+        hosts: requested.map((item) => ({
+          host: item.host,
+          status: item.status,
+          installed: item.installed,
+          staleEvidence: item.detection.staleEvidence,
+          signals: item.detection.signals.map((signal) => ({ kind: signal.kind, live: signal.live })),
+          runtimeReceipt: item.inventory?.runtimeReceipt ?? null,
+          drift: item.projection?.drift ?? null,
+          receiptStatus: item.receipt?.status ?? null,
+          mutated: item.receipt?.mutated ?? false,
+        })),
+        receipts: result.receipts.filter((receipt) => hosts.includes(receipt.host as RuntimePlatform)),
+      },
+    };
+  } catch (error) {
+    return {
+      exitCode: ExitCode.GeneralError,
+      message: `Runtime reconcile failed: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
+}
+
 export async function runtimeCmd(
   args: string[],
   opts: CliOptions
@@ -119,10 +163,12 @@ export async function runtimeCmd(
       return runLifecycle("recover", rest, opts);
     case "uninstall":
       return runtimeUninstall(rest, opts);
+    case "reconcile":
+      return runtimeReconcile(rest, opts);
     default:
       return {
         exitCode: ExitCode.InvalidArgument,
-        message: `Unknown runtime subcommand: ${subcommand}. Available: install, update, rollback, reinstall, uninstall, recover`,
+        message: `Unknown runtime subcommand: ${subcommand}. Available: install, update, rollback, reinstall, uninstall, recover, reconcile`,
       };
   }
 }

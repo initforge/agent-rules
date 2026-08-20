@@ -59,19 +59,17 @@ Keep capsules compact: include only source IDs and facts needed for that slice; 
 
 Every ready assignment begins `pending`; its owner must acknowledge it before the slice starts, transitioning the assignment to `acknowledged`. `NEEDS_CONTEXT`, `CONFLICT`, and `BLOCKED` are recovery signals, not acknowledgment states: use them respectively for a bounded missing fact, ownership/interface overlap, or a decisive external dependency. Recover in order: supply the minimum missing context, reconcile ownership/interface boundaries, reassign a narrow slice, then use sequential execution only when native subagents are unavailable. Preserve acceptance, proof, checkpoints, and context boundaries; never silently fall back or weaken the outcome. Record this as orchestration `UNAVAILABLE`, not task `PARTIAL`; task outcome may still `PASS` when behavior is proven.
 
-Required delegation receipts:
+Delegation receipts are exactly two facts, owned by [`rules/25-task-lifecycle.md`](../../../rules/25-task-lifecycle.md):
 
-| Receipt | When recorded | Required fields |
-|---|---|---|
-| `subagent_requested` | Delegator decided to delegate | slice_id, reason, capability_class |
-| `subagent_resolved` | Model/effort resolved | slice_id, resolved_model, resolved_effort |
-| `subagent_started` | Subagent acknowledged | slice_id, actor_session |
-| `subagent_completed` | Result returned | slice_id, status, receipt_ids, usage |
-| `result_consumed` | Result integrated | slice_id, integration_ref |
-| `result_rejected` | Result rejected | slice_id, rejection_reason |
-| `delegation_skipped` | Delegation not used | slice_id, reason |
+| Fact | Meaning |
+|---|---|
+| `delegated` | what went out, to whom, and why |
+| `outcome` | `consumed` \| `rejected` (with reason) \| `skipped` (with reason) |
 
-Missing receipts are detectable: the coordinator must account for every slice's delegation outcome.
+The former seven-event receipt chain is retired. For a single operator it cost
+more to emit than it ever paid back in traceability; skill documents do not
+reintroduce it. Missing delegation facts are still detectable: every delegated
+slice records both facts, and an absent `outcome` is a review finding.
 
 ### Risk-triggered review
 

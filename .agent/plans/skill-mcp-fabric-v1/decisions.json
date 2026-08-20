@@ -1,0 +1,47 @@
+{
+  "schema": "artifact/plan-decisions",
+  "version": 1,
+  "plan_id": "skill-mcp-fabric-v1",
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "statement": "Create a new owner-authorized phase; supersede the previous pointer; never silently amend the old plan.",
+      "rationale": "Owner brief section 0; AGENTS.md next-phase steering."
+    },
+    {
+      "id": "DEC-002",
+      "statement": "Serena remains explicit-only experimental until lifecycle, permission, fallback, ablation and host evidence justify owner-approved promotion.",
+      "rationale": "Owner default decision 2."
+    },
+    {
+      "id": "DEC-003",
+      "statement": "RTK is shell middleware with per-host enforcement; codex is best-effort until a hard hook exists; reduction is harness-measured.",
+      "rationale": "Owner default decision 3."
+    },
+    {
+      "id": "DEC-004",
+      "statement": "Routing uses deterministic Task Facts + graph-bound routing; semantic matching is optional discovery only.",
+      "rationale": "Owner default decision 4."
+    },
+    {
+      "id": "DEC-005",
+      "statement": "External candidate selected set stays empty until hard gates pass.",
+      "rationale": "Owner default decision 5."
+    },
+    {
+      "id": "DEC-006",
+      "statement": "Capability aliases use additive migration; legacy aliases stay until parity evidence.",
+      "rationale": "Owner default decision 6."
+    },
+    {
+      "id": "DEC-007",
+      "statement": "No external source is installed or materialized in this phase; recipes are reference only.",
+      "rationale": "Supply-chain governance; install authority not granted."
+    },
+    {
+      "id": "DEC-008",
+      "statement": "No commit, push or deploy during this phase.",
+      "rationale": "Owner brief; invariant 10."
+    }
+  ]
+}

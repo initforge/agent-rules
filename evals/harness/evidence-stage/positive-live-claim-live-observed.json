@@ -1,0 +1,57 @@
+{
+  "schema": "harness/claim-evidence",
+  "version": 1,
+  "plan_id": "evidence-stage-boundary-fixture",
+  "task_id": "T-LIVE-POS-001",
+  "candidate_epoch": 2,
+  "observed_at": "2026-08-13T11:00:00Z",
+  "head_commit": "6e9a554a164e3a7d26df3cdb296392284c8c3166",
+  "claims": [
+    {
+      "claim_id": "C-LIVE-001",
+      "verifier_id": "V-NATIVE-001",
+      "command": [
+        "node",
+        "packages/cli/dist/index.js",
+        "--json",
+        "run",
+        "add",
+        "compile a recipe",
+        "--verify",
+        "node automation/validate-recipe-smoke.mjs"
+      ],
+      "status": "pass",
+      "evidence_stage": "NATIVE_SMOKE_VERIFIED",
+      "artifact_path": "packages/cli/dist/index.js",
+      "artifact_sha256": "6e9a554a164e3a7d26df3cdb296392284c8c3166",
+      "host": "linux-x86_64",
+      "summary": "One real execution through the built CLI on the current host; native smoke, not owner usage."
+    },
+    {
+      "claim_id": "C-LIVE-001",
+      "verifier_id": "V-LIVE-001",
+      "command": [
+        "node",
+        "packages/cli/dist/index.js",
+        "--json",
+        "run",
+        "start",
+        "--agent",
+        "opencode"
+      ],
+      "status": "pass",
+      "evidence_stage": "LIVE_OBSERVED",
+      "run_id": "run-20260813-001",
+      "session_id": "session-20260813-001",
+      "artifact_path": "packages/cli/dist/index.js",
+      "artifact_sha256": "6e9a554a164e3a7d26df3cdb296392284c8c3166",
+      "host": "linux-x86_64",
+      "candidate_epoch": 2,
+      "freshness": "fresh",
+      "summary": "Representative real task executed through the durable runner with session identity, exact artifact binding, host, and outcome; live observation."
+    }
+  ],
+  "required_evidence_stage": "LIVE_OBSERVED",
+  "expected_outcome": "PASS",
+  "note": "AM-0005 positive fixture: live claim satisfied by live-stage evidence bound to exact artifact, host, candidate epoch, and fresh timestamps."
+}

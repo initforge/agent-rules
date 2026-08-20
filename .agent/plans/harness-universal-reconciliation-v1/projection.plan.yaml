@@ -1,0 +1,25 @@
+schema_version: 2
+plan_id: harness-universal-reconciliation-v1
+revision: 4
+milestone: M11
+original:
+  path: original.md
+  sha256: 0339412095b765d277109b8f755cd52ae33fd3c49c288926aa194a5a17b3c894
+effective_plan_identity:
+  sha256: ca7ba4ad0cd144e3e44d5a52a78489638c4fd888ea6d482bc18be006b03ba86a
+  algorithm: SHA-256 over canonical ordered approved amendments
+head_commit: 6e9a554a164e3a7d26df3cdb296392284c8c3166
+amendments:
+  - amendment_id: AM-0001
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: 6f133d18e28d998f7aa3fdf84cce692e42a5183c7d82b3d7894bcc932ff4c968
+  - amendment_id: AM-0002
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: 78fd0258f385b87a0751a6c75137af81c0e985c8dddb13bd94063f1f862211ee
+  - amendment_id: AM-0003
+    status: OWNER_APPROVED_EFFECTIVE
+    sha256: ecd6dfff2e85eb071ccbddc6b59229907b1cc8b831caeae97ff300f5e6721ba1
+lifecycle:
+  status: PLANNED
+  execution_state: ALL_CLAIMS_VERIFIED_AWAITING_OWNER_CLOSEOUT_APPROVAL
+requirements_compiled: dynamic from ledger milestones.M8.requirements + AM-0019 §14; see verification-graph.yaml

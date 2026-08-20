@@ -12,5 +12,6 @@
 | `04-maintenance-and-risks.md` | Bảo trì, rủi ro sync |
 | `05-maturity.md` | Maturity ladder M0–M3 (structural + advisory) |
 | `06-platform-capability.md` | Platform capability matrix — explicit depth/status |
+| `adaptive-minimal-proof-testing.md` | Global always-on proof-selection behavior (trigger, profiles, live rules, status semantics, refactor policy) |
 
 Token budget canonical: `rules/manifest.yaml` (không nhân bản ở đây).

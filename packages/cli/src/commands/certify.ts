@@ -77,7 +77,7 @@ function rootFromArgs(args: string[]): { root: string; planId?: string; evidence
 
 function headCommit(root: string): string | null {
   try {
-    return execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim() || null;
+    return execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8', timeout: 15_000 }).trim() || null;
   } catch {
     return null;
   }

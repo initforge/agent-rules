@@ -1,8 +1,12 @@
 import { createHash, randomUUID } from 'node:crypto';
+import { EVIDENCE_STAGES, type EvidenceStage } from '../claim-registry.js';
+
+const EVIDENCE_STAGES_VALUES: readonly string[] = EVIDENCE_STAGES;
 
 export const NORTH_STAR_PROTOCOL_VERSION = '2.0' as const;
 
 export type WorkSource = 'cli' | 'issue' | 'pr' | 'ci' | 'webhook' | 'schedule' | 'plan' | 'other';
+export type WorkAdapter = 'conversation' | 'command' | 'cli' | 'api' | 'native_host';
 export type RiskClass = 'S0' | 'S1' | 'S2' | 'S3';
 export type RunStatus = 'ready' | 'running' | 'blocked' | 'failed' | 'passed' | 'partial';
 export type TaskStatus = 'ready' | 'active' | 'done' | 'failed' | 'blocked' | 'superseded';
@@ -31,10 +35,41 @@ export interface WorkRequest {
   work_id: string;
   raw_intent: string;
   source: WorkSource;
+  /** Optional host adapter identity that compiled this request (S1 entrypoint contract). */
+  adapter?: WorkAdapter;
   explicit_constraints?: string[];
   explicit_non_goals?: string[];
   reference_inputs?: string[];
   risk_hint?: RiskClass;
+}
+
+/**
+ * Provider-neutral entrypoint that normal prompts, optional slash commands,
+ * CLI/API calls, and native host actions compile into. The semantic payload
+ * (intent + constraints + non-goals + references + risk) is adapter-neutral;
+ * only `adapter` records which host surface produced it.
+ */
+export interface WorkRequestEntrypoint {
+  adapter: WorkAdapter;
+  intent: string;
+  plan_id?: string;
+  explicit_constraints?: string[];
+  explicit_non_goals?: string[];
+  reference_inputs?: string[];
+  risk_hint?: RiskClass;
+  source_id?: string;
+}
+
+export interface EntrypointParityReceipt {
+  schema: 'harness/entrypoint-parity-receipt';
+  version: 1;
+  adapter: WorkAdapter;
+  work_id: string;
+  plan_id?: string;
+  /** Adapter-neutral semantic fingerprint of the compiled payload. */
+  semantic_sha256: string;
+  request: WorkRequest;
+  receipt_sha256: string;
 }
 
 export interface WorkSpecRequirement {
@@ -153,6 +188,8 @@ export interface EvidenceRecord {
   verifier_id?: string;
   /** Independent oracle lineage. Multiple verifiers in the same group count as one channel. */
   oracle_group?: string;
+  /** AM-0005: evidence stage this observation actually reached. Test-only observations are TEST_VERIFIED and never satisfy live/dogfood claims. */
+  evidence_stage?: EvidenceStage;
 }
 
 export interface TraceabilityProblem {
@@ -228,13 +265,16 @@ export function assertCapabilityManifest(value: unknown): asserts value is Capab
 export function assertWorkRequest(value: unknown): asserts value is WorkRequest {
   if (!isObject(value)) throw new Error('WorkRequest must be an object');
   assertNoExtraKeys(value, [
-    'protocol_version', 'work_id', 'raw_intent', 'source', 'explicit_constraints', 'explicit_non_goals', 'reference_inputs', 'risk_hint',
+    'protocol_version', 'work_id', 'raw_intent', 'source', 'adapter', 'explicit_constraints', 'explicit_non_goals', 'reference_inputs', 'risk_hint',
   ], 'WorkRequest');
   asString(value.protocol_version, 'WorkRequest.protocol_version');
   asString(value.work_id, 'WorkRequest.work_id');
   asString(value.raw_intent, 'WorkRequest.raw_intent');
   if (!['cli', 'issue', 'pr', 'ci', 'webhook', 'schedule', 'plan', 'other'].includes(String(value.source))) {
     throw new Error(`WorkRequest.source is invalid: ${String(value.source)}`);
+  }
+  if (value.adapter !== undefined && !['conversation', 'command', 'cli', 'api', 'native_host'].includes(String(value.adapter))) {
+    throw new Error(`WorkRequest.adapter is invalid: ${String(value.adapter)}`);
   }
   if (value.explicit_constraints !== undefined) assertStringArray(value.explicit_constraints, 'WorkRequest.explicit_constraints');
   if (value.explicit_non_goals !== undefined) assertStringArray(value.explicit_non_goals, 'WorkRequest.explicit_non_goals');
@@ -360,7 +400,7 @@ export function assertRunState(value: unknown): asserts value is RunState {
 
 export function assertEvidenceRecord(value: unknown): asserts value is EvidenceRecord {
   if (!isObject(value)) throw new Error('EvidenceRecord must be an object');
-  assertNoExtraKeys(value, ['protocol_version', 'evidence_id', 'claim_id', 'task_id', 'kind', 'status', 'command', 'summary', 'artifact_path', 'sha256', 'observed_at', 'work_id', 'execution_generation', 'spec_id', 'spec_revision', 'candidate_epoch', 'platform', 'verifier_id', 'oracle_group'], 'EvidenceRecord');
+  assertNoExtraKeys(value, ['protocol_version', 'evidence_id', 'claim_id', 'task_id', 'kind', 'status', 'command', 'summary', 'artifact_path', 'sha256', 'observed_at', 'work_id', 'execution_generation', 'spec_id', 'spec_revision', 'candidate_epoch', 'platform', 'verifier_id', 'oracle_group', 'evidence_stage'], 'EvidenceRecord');
   asString(value.protocol_version, 'EvidenceRecord.protocol_version');
   const evidenceId = asString(value.evidence_id, 'EvidenceRecord.evidence_id');
   const claimId = asString(value.claim_id, 'EvidenceRecord.claim_id');
@@ -393,6 +433,79 @@ export function assertEvidenceRecord(value: unknown): asserts value is EvidenceR
   if (value.platform !== undefined) asString(value.platform, 'EvidenceRecord.platform');
   if (value.verifier_id !== undefined) asString(value.verifier_id, 'EvidenceRecord.verifier_id');
   if (value.oracle_group !== undefined) asString(value.oracle_group, 'EvidenceRecord.oracle_group');
+  if (value.evidence_stage !== undefined && !EVIDENCE_STAGES_VALUES.includes(String(value.evidence_stage))) {
+    throw new Error(`EvidenceRecord.evidence_stage is invalid: ${String(value.evidence_stage)}`);
+  }
+}
+
+function semanticPayload(entrypoint: WorkRequestEntrypoint): unknown {
+  const payload: Record<string, unknown> = {
+    intent: entrypoint.intent.trim(),
+  };
+  for (const key of ['explicit_constraints', 'explicit_non_goals', 'reference_inputs'] as const) {
+    if (entrypoint[key] && entrypoint[key].length > 0) payload[key] = [...entrypoint[key]];
+  }
+  if (entrypoint.risk_hint) payload.risk_hint = entrypoint.risk_hint;
+  return payload;
+}
+
+/**
+ * Compile any entrypoint surface (normal prompt, optional slash command,
+ * CLI/API call, native host action) into one canonical WorkRequest. The
+ * semantic fingerprint is adapter-neutral: equivalent inputs produce the same
+ * `semantic_sha256` and `work_id`, while `adapter` records only the host
+ * surface that delivered the intent.
+ */
+export function compileWorkRequestEntrypoint(entrypoint: WorkRequestEntrypoint): EntrypointParityReceipt {
+  if (!isObject(entrypoint)) throw new Error('entrypoint must be an object');
+  if (!['conversation', 'command', 'cli', 'api', 'native_host'].includes(String(entrypoint.adapter))) {
+    throw new Error(`entrypoint adapter is invalid: ${String(entrypoint.adapter)}`);
+  }
+  const raw = entrypoint.intent;
+  if (typeof raw !== 'string' || raw.trim().length === 0) throw new Error('entrypoint intent must be a non-empty string');
+  const semantic = semanticPayload(entrypoint);
+  const semantic_sha256 = sha256Canonical(semantic);
+  const work_id = entrypoint.source_id
+    ? newId('W', `${entrypoint.source_id}:${semantic_sha256}`)
+    : newId('W', semantic_sha256);
+  const request: WorkRequest = {
+    protocol_version: NORTH_STAR_PROTOCOL_VERSION,
+    work_id,
+    raw_intent: raw,
+    source: 'other',
+    adapter: entrypoint.adapter,
+    ...(entrypoint.explicit_constraints?.length ? { explicit_constraints: [...entrypoint.explicit_constraints] } : {}),
+    ...(entrypoint.explicit_non_goals?.length ? { explicit_non_goals: [...entrypoint.explicit_non_goals] } : {}),
+    ...(entrypoint.reference_inputs?.length ? { reference_inputs: [...entrypoint.reference_inputs] } : {}),
+    ...(entrypoint.risk_hint ? { risk_hint: entrypoint.risk_hint } : {}),
+  };
+  assertWorkRequest(request);
+  const body = {
+    schema: 'harness/entrypoint-parity-receipt' as const,
+    version: 1 as const,
+    adapter: entrypoint.adapter,
+    work_id,
+    ...(entrypoint.plan_id ? { plan_id: entrypoint.plan_id } : {}),
+    semantic_sha256,
+    request,
+  };
+  return { ...body, receipt_sha256: sha256Canonical(body) };
+}
+
+export function assertEntrypointParityReceipt(value: unknown): asserts value is EntrypointParityReceipt {
+  if (!isObject(value)) throw new Error('EntrypointParityReceipt must be an object');
+  assertNoExtraKeys(value, ['schema', 'version', 'adapter', 'work_id', 'plan_id', 'semantic_sha256', 'request', 'receipt_sha256'], 'EntrypointParityReceipt');
+  if (value.schema !== 'harness/entrypoint-parity-receipt' || value.version !== 1) throw new Error('invalid entrypoint parity receipt schema');
+  if (!['conversation', 'command', 'cli', 'api', 'native_host'].includes(String(value.adapter))) throw new Error('entrypoint parity receipt adapter is invalid');
+  asString(value.work_id, 'EntrypointParityReceipt.work_id');
+  if (value.plan_id !== undefined) asString(value.plan_id, 'EntrypointParityReceipt.plan_id');
+  if (!/^[a-f0-9]{64}$/.test(String(value.semantic_sha256))) throw new Error('EntrypointParityReceipt.semantic_sha256 must be a lowercase SHA-256');
+  if (!/^[a-f0-9]{64}$/.test(String(value.receipt_sha256))) throw new Error('EntrypointParityReceipt.receipt_sha256 must be a lowercase SHA-256');
+  assertWorkRequest(value.request);
+  if (value.request.adapter !== value.adapter) throw new Error('entrypoint parity receipt adapter drift');
+  const body = { ...value } as Record<string, unknown>;
+  delete body.receipt_sha256;
+  if (sha256Canonical(body) !== value.receipt_sha256) throw new Error('entrypoint parity receipt hash mismatch');
 }
 
 export function stableStringify(value: unknown): string {

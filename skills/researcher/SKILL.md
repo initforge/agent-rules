@@ -40,7 +40,7 @@ Write `<working-repo>/.agent/research/<topic>.md` (gitignored):
 - Recommendation
 - Unknowns
 
-End with **Hand to Plan Architect** — list items for PAF §5 (Assumptions / Known-unknowns). Research does **not** set execute tier — Architect assigns per phase.
+End with **Hand to Plan Architect** — list items for the portable plan contract (assumptions / known-unknowns; see `plan-and-handoff/references/portable-plan-contract.md`). Research does **not** set execute tier — Architect assigns per phase.
 
 ## Do NOT load
 

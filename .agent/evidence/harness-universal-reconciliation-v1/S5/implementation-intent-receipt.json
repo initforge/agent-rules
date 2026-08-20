@@ -1,0 +1,36 @@
+{
+  "schema": "harness/implementation-intent-receipt",
+  "version": 1,
+  "planId": "harness-universal-reconciliation-v1",
+  "planRevision": 4,
+  "taskId": "S5",
+  "requirementIds": [
+    "REQ-011",
+    "REQ-012"
+  ],
+  "claimIds": [
+    "C-011",
+    "C-012"
+  ],
+  "goal": "Complete visible browser/mobile/Pencil behavior using the proven detached candidate.",
+  "ownedPaths": [
+    "integrations/manual/pencil-mcp",
+    "integrations/optional/pencil-mcp",
+    "packages/cli/src/automation/merge-mcp-adapters.ts",
+    "packages/kernel/src/northstar/pencil-routing.ts",
+    "packages/kernel/src/runner/mcp-config.ts",
+    "packages/kernel/src/runner/pencil-native.ts"
+  ],
+  "forbiddenPaths": [
+    ".env",
+    ".git/objects",
+    "generated"
+  ],
+  "expectedChange": "Migrate the proven detached Pencil candidate into S5-owned paths: foreground-observable browser/mobile/Pencil projection across registered hosts, dynamic stable Pencil discovery rejecting /tmp/.mount_* persisted paths, explicit CI headless receipts, and safe user-space install with official-link fallback.",
+  "proofPlan": [
+    "C-011:V-011",
+    "C-012:V-012"
+  ],
+  "understood": true,
+  "receiptSha256": "90444c928a073c54905954cb92c4b46e2eeddb43789e7a0a321e1d2448175ff1"
+}

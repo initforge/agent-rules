@@ -1,0 +1,48 @@
+{
+  "schema": "harness/claim-evidence",
+  "version": 1,
+  "plan_id": "harness-universal-reconciliation-v1",
+  "task_id": "S7",
+  "candidate_epoch": 1,
+  "observed_at": "2026-08-12T15:05:55.085Z",
+  "head_commit": "6e9a554a164e3a7d26df3cdb296392284c8c3166",
+  "coordinator_verification": "Independent re-run of recipe proofs after worker implementation",
+  "claims": [
+    {
+      "claim_id": "C-015",
+      "verifier_id": "V-015",
+      "command": [
+        "node",
+        "automation/validate-ci-timeouts.mjs"
+      ],
+      "status": "pass",
+      "summary": "PASS: 24 checks — job timeouts, wait-on --timeout, step timeouts, quality required-capable, self-hosted certification detached from required checks, watchdog advisory",
+      "freshness": "fresh"
+    },
+    {
+      "claim_id": "C-017",
+      "verifier_id": "V-017",
+      "command": [
+        "node",
+        "packages/cli/dist/index.js",
+        "--json",
+        "cleanup",
+        "lifecycle",
+        "--dry-run"
+      ],
+      "status": "pass",
+      "summary": "exit 0: artifact/cleanup-lifecycle-report v1, 102 items, 6 purge-eligible, 0 applied (dry-run), active refs preserved, evidence/intent never candidates; 9 lifecycle tests incl. content-addressed archive + tombstone + round-trip + recovery",
+      "freshness": "fresh"
+    }
+  ],
+  "implementation": {
+    "compaction": "content-addressed archive under .agent/archive/objects/<sha256>; tombstone before archive; byte-equal round-trip verify; recovery from hashes; double-gated --apply --compact",
+    "pointer_validation": "verify-all.mjs derives authority from .agent/current.json; completed-phase validators run as non-authoritative compatibility checks, never deleted",
+    "ci": "quality.yml bounded installs/waits/cleanup; certification.yml watchdog cancels queued self-hosted at 15min and exits 78 advisory"
+  },
+  "regression": {
+    "build": "exit 0",
+    "cli": "478 PASS",
+    "root_fast": "14 files/240 PASS"
+  }
+}

@@ -13,6 +13,35 @@ export interface ConvergenceResult {
   oscillation_fingerprint?: string;
 }
 
+/** Runtime clamps (AM-0001 / REQ-019): a skill/provider cannot widen active
+ *  authority, worker count above two, recursion depth above zero, owned
+ *  scope, effect level, repair budget, or weaken required proof. */
+export interface RuntimeClamps {
+  max_workers: number;
+  max_recursion_depth: number;
+  max_repair_attempts: number;
+  scope_fail_closed: boolean;
+  proof_weakening_forbidden: boolean;
+}
+
+export const DEFAULT_RUNTIME_CLAMPS: RuntimeClamps = {
+  max_workers: 2,
+  max_recursion_depth: 0,
+  max_repair_attempts: 2,
+  scope_fail_closed: true,
+  proof_weakening_forbidden: true,
+};
+
+export function assertClampsWithinPolicy(proposed: Partial<RuntimeClamps>, baseline: RuntimeClamps = DEFAULT_RUNTIME_CLAMPS): RuntimeClamps {
+  const next: RuntimeClamps = { ...baseline, ...proposed };
+  if (next.max_workers > baseline.max_workers) throw new Error(`runtime clamp violation: worker count ${next.max_workers} exceeds policy ${baseline.max_workers}`);
+  if (next.max_recursion_depth > baseline.max_recursion_depth) throw new Error(`runtime clamp violation: recursion depth ${next.max_recursion_depth} exceeds policy ${baseline.max_recursion_depth}`);
+  if (next.max_repair_attempts > baseline.max_repair_attempts) throw new Error(`runtime clamp violation: repair budget ${next.max_repair_attempts} exceeds policy ${baseline.max_repair_attempts}`);
+  if (next.scope_fail_closed !== true) throw new Error('runtime clamp violation: scope must fail closed');
+  if (next.proof_weakening_forbidden !== true) throw new Error('runtime clamp violation: proof weakening is forbidden');
+  return next;
+}
+
 export interface ConvergenceDeltaCompilation {
   packets: TaskPacket[];
   skipped: Array<{ gap_id: string; reason: string }>;

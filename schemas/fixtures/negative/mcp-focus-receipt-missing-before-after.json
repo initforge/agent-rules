@@ -1,0 +1,11 @@
+{
+ "schema": "agent-rules/mcp-focus-receipt",
+ "version": 1,
+ "targetWorkspace": 4,
+ "placement": "verification_failed",
+ "visibility": "visible",
+ "focusPolicy": "preserve",
+ "isolated": true,
+ "errors": [],
+ "created_at": "2026-08-13T00:00:00Z"
+}

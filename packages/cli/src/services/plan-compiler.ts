@@ -20,6 +20,7 @@ export interface CompiledPlan {
   version: 1;
   repository_baseline: { branch: string; sha: string };
   intent_reference: { hash: string; summary: string };
+  work_request?: { work_id: string; adapter: string; semantic_sha256: string };
   tasks: PlanTask[];
   completion_policy: { require_all_tasks: boolean; require_verification: boolean };
   validation: PlanValidation;
@@ -187,6 +188,35 @@ export function compilePlan(
     },
   };
 
+  plan.validation = validatePlan(plan);
+  return plan;
+}
+
+/**
+ * Bind a canonical WorkRequest (compiled from conversation, command, CLI/API,
+ * or native-host entrypoints) to a plan. Preserves raw intent and records the
+ * adapter-neutral semantic fingerprint plus the adapter identity that
+ * delivered the request.
+ */
+export function compilePlanFromWorkRequest(
+  request: { work_id: string; adapter: string; semantic_sha256: string; raw_intent: string },
+  tasks?: Partial<PlanTask>[],
+  options?: { branch?: string; sha?: string },
+): CompiledPlan {
+  const plan = compilePlan(
+    { requestHash: request.semantic_sha256, requirements: [{ id: 'R-001' }] },
+    tasks,
+    options,
+  );
+  plan.intent_reference = {
+    hash: request.semantic_sha256,
+    summary: request.raw_intent.length > 80 ? `${request.raw_intent.slice(0, 80)}...` : request.raw_intent,
+  };
+  plan.work_request = {
+    work_id: request.work_id,
+    adapter: request.adapter,
+    semantic_sha256: request.semantic_sha256,
+  };
   plan.validation = validatePlan(plan);
   return plan;
 }

@@ -1,0 +1,44 @@
+{
+  "id": "maestro",
+  "displayName": "Maestro",
+  "kind": "adapter",
+  "policy": "optional",
+  "activation": "claim-driven",
+  "capabilityClass": "mobile.device-flow",
+  "providers": ["maestro", "adb"],
+  "claim_classes": ["maestro", "mobile flow", "device flow", "mobile e2e", "device test", "emulator flow", "mobile interaction"],
+  "effect": {
+    "effect_level": "interactive",
+    "environment": "host",
+    "approval": "task-scope",
+    "reversible": true,
+    "network": true,
+    "credentials": "optional",
+    "timeout_ms": 300000,
+    "provider_evidence": "live-receipt"
+  },
+  "prerequisites": [
+    "A connected device or running emulator (adb devices shows one)",
+    "The mobile app under test is installed on the device/emulator",
+    "Local mobile sessions run visibly in the foreground; headless only in explicit CI profiles"
+  ],
+  "health": {
+    "command": "maestro --version",
+    "expectedExitCodes": [0]
+  },
+  "rollback": [
+    "Reset app state on the device after the flow",
+    "Terminate the app and restore device to pre-test state"
+  ],
+  "evidence_kinds": ["device-run", "browser-test", "custom-runtime"],
+  "hosts": {
+    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode", "mimocode"],
+    "notes": "Device-run evidence is real device behavior; an unavailable device or adb yields explicit UNAVAILABLE evidence, never a silent skip."
+  },
+  "thresholds_required": false,
+  "telemetry_only": false,
+  "notes": [
+    "Requires a real device/emulator: absence of adb/device is UNAVAILABLE, not PASS.",
+    "Visible-application policy: local mobile interaction opens the real app in the foreground."
+  ]
+}

@@ -63,6 +63,14 @@ export interface PointerAtomicity {
   readonly updated_at: string;
 }
 
+export interface PointerSupersession {
+  readonly transaction_id: string;
+  readonly previous_work_id: string;
+  readonly previous_plan_id: string;
+  readonly reason: string;
+  readonly changed_at: string;
+}
+
 export interface CurrentPointer {
   readonly schema: string;
   readonly version: number;
@@ -77,6 +85,8 @@ export interface CurrentPointer {
   readonly effective_chain_tip: ChainTip;
   readonly candidate_chain_tip: CandidateChainTip;
   readonly contract: ContractRef;
+  /** Present when this pointer was activated by a canonical goal switch. */
+  readonly supersession?: PointerSupersession;
   readonly atomicity: PointerAtomicity;
 }
 

@@ -44,6 +44,7 @@ jobs:
       - run: npm ci
       - name: Playwright preflight check (Linux)
         if: matrix.host == 'linux'
+        timeout-minutes: 20
         run: |
           npx playwright install chromium --with-deps
           echo "PLAYWRIGHT_READY=true" >> $GITHUB_ENV
@@ -52,29 +53,36 @@ jobs:
       - name: Playwright preflight check (Windows)
         if: matrix.host == 'windows'
         shell: pwsh
+        timeout-minutes: 15
         run: npx playwright install chromium
         env:
           PLAYWRIGHT_BROWSERS_PATH: '0'
       - name: Playwright preflight check (macOS)
         if: matrix.host == 'macos'
+        timeout-minutes: 15
         run: npx playwright install chromium
         env:
           PLAYWRIGHT_BROWSERS_PATH: '0'
       - run: npm run build
       - run: npm run check
+      - name: Validate active V3.1 plan and external-first policy
+        run: node automation/validate-v31-directive.mjs
       - run: npm run test
       - name: Packaged runtime lifecycle smoke
         run: npm run test:package-smoke -w packages/cli
       - name: Start Control Plane
+        timeout-minutes: 5
         run: node automation/control-plane-ci.mjs start
       - name: Wait for Control Plane
-        run: npx wait-on http://127.0.0.1:3099/api/health
+        timeout-minutes: 5
+        run: npx wait-on --timeout 120000 http://127.0.0.1:3099/api/health
       - name: Run C4 integration tests
         run: node automation/run-governed-vitest.mjs --project-root . --cwd packages/control-plane --mode focused -- run tests/c4.test.ts
         env:
           CI: 'true'
       - name: Cleanup Control Plane
         if: always()
+        timeout-minutes: 5
         run: node automation/control-plane-ci.mjs stop
 
   python-tests:
@@ -128,13 +136,16 @@ jobs:
           node-version: lts/*
       - run: npm ci
       - name: npm audit
+        timeout-minutes: 15
         run: npm audit --audit-level=high
       - name: Semgrep SAST
         uses: semgrep/semgrep-action@713efdd345f3035192eaa63f56867b88e63e4e5d
+        timeout-minutes: 15
         with:
           config: p/default
       - name: Secret scanning
         uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7
+        timeout-minutes: 15
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
@@ -142,11 +153,13 @@ jobs:
     if: always()
     needs: [quality, python-tests, security]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - run: |
           echo 'Quality: ${{ toJSON(needs.quality.result) }}'
           echo 'Security: ${{ toJSON(needs.security.result) }}'
+          echo 'Attestation: hosted quality is external evidence for ${{ github.sha }}'
           if [ "${{ needs.quality.result }}" != "success" ]; then
             echo "Quality check failed on one or more matrix jobs"
             exit 1
@@ -159,3 +172,15 @@ jobs:
             echo "Security checks failed"
             exit 1
           fi
+      - name: Write external hosted-CI attestation
+        env:
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          PYTHON_RESULT: ${{ needs.python-tests.result }}
+          SECURITY_RESULT: ${{ needs.security.result }}
+        run: node automation/record-ci-attestation.mjs "$RUNNER_TEMP/quality-attestation.json"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: quality-external-attestation
+          path: ${{ runner.temp }}/quality-attestation.json
+          if-no-files-found: error
+          retention-days: 7

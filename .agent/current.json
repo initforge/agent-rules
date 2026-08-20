@@ -2,36 +2,36 @@
   "schema": "artifact/execution-contract",
   "version": 1,
   "kind": "current-pointer",
-  "generation": 3,
-  "work_id": "v3-decision-fabric",
-  "plan_id": "v3-decision-fabric",
-  "plan_root": ".agent/plans/v3-decision-fabric",
+  "generation": 25,
+  "work_id": "adaptive-minimal-proof-testing",
+  "plan_id": "adaptive-minimal-proof-testing",
+  "plan_root": ".agent/plans/adaptive-minimal-proof-testing",
   "original": {
-    "path": ".agent/plans/v3-decision-fabric/original.md",
-    "sha256": "bf6894b7435dc534e5ecd074effb027d9bee2dc5411c4df9c6cdc889080514b0"
+    "path": ".agent/plans/adaptive-minimal-proof-testing/plan.md",
+    "sha256": "c9dc86a2e802205c69f943bc785200600d1d8e5e1e62192c35d30a0a49152d58"
   },
   "canonical_ledger": {
-    "path": ".agent/ledger/v3-decision-fabric.json",
-    "sha256": "4b4b9c978c245ce7baa2a0358aeb0cdcfa56d90ed0380cbf87b9f4a3b912f08a",
+    "path": ".agent/ledger/adaptive-minimal-proof-testing.json",
+    "sha256": "dfcccea0da0fc4e48de0e997e0b70241285f65ecec2a7d75ac579547eff31516",
     "observed_revision": 1,
-    "observed_effective_sha256": "8af2e455fed0d147982044d3e1f4da75cc11de52be7bcbbf75758967d6438b40",
-    "plan_status": "COMPLETED",
-    "execution_state": "COMPLETED"
+    "observed_effective_sha256": "dfcccea0da0fc4e48de0e997e0b70241285f65ecec2a7d75ac579547eff31516",
+    "plan_status": "ADOPTED",
+    "execution_state": "IN_PROGRESS"
   },
   "effective_chain_tip": {
-    "amendment_id": "AM-0001",
-    "path": ".agent/plans/v3-decision-fabric/original.md",
-    "sha256": "bf6894b7435dc534e5ecd074effb027d9bee2dc5411c4df9c6cdc889080514b0"
+    "amendment_id": "AM-0000",
+    "path": ".agent/plans/adaptive-minimal-proof-testing/plan.md",
+    "sha256": "c9dc86a2e802205c69f943bc785200600d1d8e5e1e62192c35d30a0a49152d58"
   },
   "candidate_chain_tip": {
-    "amendment_id": "AM-0001",
-    "status": "OWNER_APPROVED_EFFECTIVE",
-    "path": ".agent/plans/v3-decision-fabric/original.md",
-    "sha256": "bf6894b7435dc534e5ecd074effb027d9bee2dc5411c4df9c6cdc889080514b0"
+    "amendment_id": "AM-0000",
+    "status": "OWNER_APPROVED_PENDING_CANONICAL_ACTIVATION",
+    "path": ".agent/plans/adaptive-minimal-proof-testing/plan.md",
+    "sha256": "c9dc86a2e802205c69f943bc785200600d1d8e5e1e62192c35d30a0a49152d58"
   },
   "contract": {
-    "path": ".agent/plans/v3-decision-fabric/requirements.yaml",
-    "sha256": "6a8f30a965d977c65ecf2b19bbb98f34796528d0eb0d797dcbc6d3ff647b5529",
+    "path": ".agent/plans/adaptive-minimal-proof-testing/generations/1/effective-contract.json",
+    "sha256": "de82d01d4eba09daf1741ec8b5874b589467b34d6645822022c92dca6a113743",
     "schema_path": "schemas/execution-contract.schema.json",
     "requirement_ids": [
       "REQ-001",
@@ -46,26 +46,22 @@
       "REQ-010",
       "REQ-011",
       "REQ-012",
-      "REQ-013",
-      "REQ-014",
-      "REQ-015",
-      "REQ-016",
-      "REQ-017",
-      "REQ-018",
-      "REQ-019",
-      "REQ-020",
-      "REQ-021",
-      "REQ-022",
-      "REQ-023",
-      "REQ-024"
+      "REQ-013"
     ],
     "status": "EFFECTIVE"
   },
+  "supersession": {
+    "transaction_id": "CAS-b6d53258bd",
+    "previous_work_id": "persistent-mcp-session-broker",
+    "previous_plan_id": "persistent-mcp-session-broker",
+    "reason": "owner-authorized re-adoption: canonical pointer moves to adaptive-minimal-proof-testing",
+    "changed_at": "2026-08-15T16:14:21.914Z"
+  },
   "atomicity": {
     "protocol": "generation-compare-and-swap",
-    "expected_previous_generation": 2,
+    "expected_previous_generation": 24,
     "commit_target": ".agent/current.json",
     "activation_state": "CANONICALLY_ACTIVATED",
-    "updated_at": "2026-08-11T22:40:12.035Z"
+    "updated_at": "2026-08-15T16:14:21.914Z"
   }
 }
