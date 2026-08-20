@@ -50,6 +50,15 @@ interface ProfileManifest { version?: number; profiles?: Record<string, { enable
 interface ModelPolicy { version?: number; platforms?: Record<string, unknown>; }
 interface ConfigData { manifest?: ManifestData; profileManifest?: ProfileManifest; modelPolicy?: ModelPolicy; }
 
+interface AuthorityData {
+  source?: 'current-pointer' | 'unbound';
+  state?: 'BOUND' | 'UNBOUND';
+  work_id?: string | null;
+  plan_id?: string | null;
+  execution_generation?: number;
+  spec_revision?: number | null;
+}
+
 interface PlanSummary {
   planId: string;
   status?: string;
@@ -74,6 +83,7 @@ export default function Overview({ navigate }: OverviewProps) {
   const [health, setHealth] = useState<HealthData | null>(null);
   const [config, setConfig] = useState<ConfigData | null>(null);
   const [plans, setPlans] = useState<PlanSummary[]>([]);
+  const [authority, setAuthority] = useState<AuthorityData | null>(null);
   const [ciStatus, setCiStatus] = useState<CiStatus>({ state: 'unknown', totalPlans: 0, boundAttestations: 0, totalAttestations: 0, lastPlanStatus: '' });
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [error, setError] = useState('');
@@ -93,16 +103,23 @@ export default function Overview({ navigate }: OverviewProps) {
       if (!r.ok) {
         throw new Error('Failed to fetch plans');
       }
-      return data;
+      // The server's canonical response is { data }, while older local
+      // fixtures/adapters used { plans }. Normalize at this consumer edge so
+      // a valid North-Star plan cannot disappear from the overview merely
+      // because the display field name changed.
+      const plans = Array.isArray(data.data) ? data.data : (Array.isArray(data.plans) ? data.plans : []);
+      return { ...data, plans };
     }).catch(() => ({ plans: [] }));
 
     Promise.all([
       fetch('/api/health').then(r => { if (!r.ok) throw new Error('Health check failed'); return r.json(); }),
       fetch('/api/config/all').then(r => { if (!r.ok) throw new Error('Config fetch failed'); return r.json(); }),
+      fetch('/api/authority').then(r => { if (!r.ok) throw new Error('Authority fetch failed'); return r.json(); }),
       planListRes,
-    ]).then(([h, c, p]) => {
+    ]).then(([h, c, a, p]) => {
       setHealth(h);
       if (c.ok) setConfig(c.data);
+      if (a.ok) setAuthority(a.data);
       if (p.plans && p.plans.length > 0) {
         setPlans(p.plans);
         const lastPlanId = p.plans[p.plans.length - 1].planId;
@@ -273,6 +290,17 @@ export default function Overview({ navigate }: OverviewProps) {
           <div className="overview-stat"><span className="typography-caption">Commit</span><span className="typography-mono">{health?.commit ? health.commit.slice(0, 7) : 'unknown'}</span></div>
           <div className="overview-stat"><span className="typography-caption">Manifest</span><span className="typography-mono">{health?.manifestHash || 'unknown'}</span></div>
           <div className="overview-stat"><span className="typography-caption">Uptime</span><span className="typography-body">{health?.uptime ? `${Math.floor(health.uptime / 60)}m` : '?'}</span></div>
+        </div>
+
+        <div className="surface overview-card">
+          <div className="overview-card-header">
+            <h3 className="typography-title3">Execution Authority</h3>
+            {authority?.state === 'BOUND' ? <span className="badge badge--success">Bound</span> : <span className="badge badge--warning">Unbound</span>}
+          </div>
+          <div className="overview-stat"><span className="typography-caption">Work</span><span className="typography-mono">{authority?.work_id || '—'}</span></div>
+          <div className="overview-stat"><span className="typography-caption">Generation</span><span className="typography-body">{authority?.execution_generation ?? 0}</span></div>
+          <div className="overview-stat"><span className="typography-caption">Spec revision</span><span className="typography-body">{authority?.spec_revision ?? '—'}</span></div>
+          {authority?.state !== 'BOUND' && <div className="overview-stat"><span className="badge badge--warning">Runs are unbound until current pointer exists</span></div>}
         </div>
 
         <div className="surface overview-card">

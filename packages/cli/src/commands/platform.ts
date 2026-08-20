@@ -1,5 +1,5 @@
 import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
-import { getAutomationDir, getRepoRoot } from "../adapters/powershell.js";
+import { getAutomationDir, getRepoRoot } from "../adapters/repo.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -11,7 +11,16 @@ interface PlatformInfo {
   agentsExist: boolean;
   overlay: string;
   overlayExists: boolean;
+  agentMaterialization: "managed_directory" | "host_native";
+  managedSurfaceExpected: boolean;
+  managedSurfaceStatus: "PRESENT" | "PARTIAL" | "MISSING" | "HOST_NATIVE_DEFERRED";
 }
+
+type PlatformContract = {
+  orchestration?: {
+    agent_materialization?: "managed_directory" | "host_native";
+  };
+};
 
 /**
  * Platform: inspect platform contracts and overlays.
@@ -29,7 +38,23 @@ export async function platformCmd(
   const subcommand = args[0] || "list";
   const root = getRepoRoot();
   const platformsDir = path.join(root, "platforms");
-  const platformNames = ["codex", "grok", "antigravity", "cursor", "opencode"];
+  const contractPath = path.join(platformsDir, "platform-contracts.json");
+  let contracts: { platforms?: Record<string, unknown> } = {};
+  try {
+    contracts = JSON.parse(await fs.readFile(contractPath, "utf-8"));
+  } catch {
+    return {
+      exitCode: ExitCode.GeneralError,
+      message: `Unable to read canonical platform contracts: ${contractPath}`,
+    };
+  }
+  const platformNames = Object.keys(contracts.platforms ?? {}).sort();
+  if (platformNames.length === 0) {
+    return {
+      exitCode: ExitCode.GeneralError,
+      message: `Canonical platform contracts contain no platforms: ${contractPath}`,
+    };
+  }
 
   if (options.dryRun) {
     console.log(`[dry-run] Would run platform ${subcommand}`);
@@ -58,37 +83,42 @@ export async function platformCmd(
           agentsExist = true;
         } catch { /* empty */ }
 
+        const contract = contracts.platforms?.[name] as PlatformContract | undefined;
+        const agentMaterialization = contract?.orchestration?.agent_materialization ?? "managed_directory";
+        const managedSurfaceExpected = agentMaterialization === "managed_directory";
+        const managedSurfaceStatus = !managedSurfaceExpected
+          ? "HOST_NATIVE_DEFERRED"
+          : agentsExist && overlayExists
+            ? "PRESENT"
+            : agentsExist || overlayExists
+              ? "PARTIAL"
+              : "MISSING";
+
         platforms.push({
           name,
-          contractPath: path.join(pDir, `platform-contracts.json`),
-          contractExists: false,
+          contractPath,
+          contractExists: true,
           agentsDir: agents,
           agentsExist,
           overlay,
           overlayExists,
+          agentMaterialization,
+          managedSurfaceExpected,
+          managedSurfaceStatus,
         });
       }
-
-      // Read shared platform contracts
-      const contractPath = path.join(root, "platforms", "platform-contracts.json");
-      let contractData: Record<string, unknown> = {};
-      try {
-        contractData = JSON.parse(
-          await fs.readFile(contractPath, "utf-8")
-        );
-      } catch { /* empty */ }
 
       if (!options.json) {
         console.log("Configured platforms:");
         for (const p of platforms) {
-          console.log(`  ${p.name}: overlay=${p.overlayExists}, agents=${p.agentsExist}`);
+          console.log(`  ${p.name}: materialization=${p.agentMaterialization}, managed-surface=${p.managedSurfaceStatus}`);
         }
       }
 
       return {
         exitCode: ExitCode.Success,
         message: `Found ${platforms.length} platform(s)`,
-        data: { platforms, contractsPath: contractPath },
+        data: { platforms, contractsPath: contractPath, contracts },
       };
     }
 
@@ -120,7 +150,7 @@ export async function platformCmd(
       return {
         exitCode: ExitCode.Success,
         message: `Platform ${name} details`,
-        data: { name, overlay: overlayContent },
+        data: { name, overlay: overlayContent, contract: contracts.platforms?.[name] ?? null },
       };
     }
 

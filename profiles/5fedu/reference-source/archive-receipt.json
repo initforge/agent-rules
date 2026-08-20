@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "verified_at_utc": "2026-08-08T03:48:14.574709+00:00",
+  "archive": {
+    "name": "5f-template-ket-noi-supabase-main(1).rar",
+    "sha256": "d0c004b0181f609050630520210914e45e8a966687e3c158c190cb1690647d8b",
+    "file_entries": 41115,
+    "uncompressed_bytes": 383885735
+  },
+  "rar_root_prefix": "5f-template-ket-noi-supabase-main/",
+  "non_node_modules_files": 470,
+  "crc32_compared_files": 470,
+  "crc32_matches": 470,
+  "crc32_mismatches": [],
+  "missing_from_extracted_comparison": [],
+  "embedded_snapshot": {
+    "file_count": 446,
+    "tree_sha256": "1e5ca0259db84c129b1d041ff6e34c997db18b2e0e871bcc08c318ae662df3e4",
+    "uncompressed_bytes": 2227010
+  },
+  "excluded_non_dependency_files": [
+    ".cursor/rules/01-core-stack.mdc",
+    ".cursor/rules/02-state-data.mdc",
+    ".cursor/rules/03-forms-validation.mdc",
+    ".cursor/rules/04-supabase.mdc",
+    ".cursor/rules/05-architecture.mdc",
+    ".cursor/rules/06-project-5f.mdc",
+    ".cursor/rules/07-imports-lint.mdc",
+    ".cursor/rules/08-permissions.mdc",
+    ".cursor/skills/claude-api/SKILL.md",
+    ".cursor/skills/doc-coauthoring/SKILL.md",
+    ".cursor/skills/docx/SKILL.md",
+    ".cursor/skills/frontend-design/SKILL.md",
+    ".cursor/skills/import-lint/SKILL.md",
+    ".cursor/skills/internal-comms/SKILL.md",
+    ".cursor/skills/mcp-builder/SKILL.md",
+    ".cursor/skills/pdf/SKILL.md",
+    ".cursor/skills/pptx/SKILL.md",
+    ".cursor/skills/skill-creator/SKILL.md",
+    ".cursor/skills/supabase-egress/SKILL.md",
+    ".cursor/skills/theme-factory/SKILL.md",
+    ".cursor/skills/webapp-testing/SKILL.md",
+    ".cursor/skills/xlsx/SKILL.md",
+    ".husky/pre-commit",
+    "AGENTS.md"
+  ],
+  "embedded_files_missing_from_archive": [],
+  "policy": "node_modules and assistant/editor instruction metadata are not embedded. Product source is manifest-bound once in the harness and never copied wholesale into target projects."
+}

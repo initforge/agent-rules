@@ -24,7 +24,7 @@ import {
   type EvidenceRecord,
 } from '../src/evidence-dag.js';
 import { candidateEpochHash, type CandidateEpoch } from '../src/candidate-epoch.js';
-import { evaluateClaimFormulas, type ClaimDefinition } from '../src/claim-registry.js';
+import { evaluateClaimFormulas, type ClaimDefinition } from '../src/plan-readiness.js';
 
 const EPOCH_AT = '2026-08-01T00:00:00.000Z';
 const EPOCH_MS = Date.parse(EPOCH_AT);

@@ -87,7 +87,7 @@ agent-rules/
 | `docs-style` | SKILL.md, 1 reference, agents/openai.yaml | — |
 | `finish-to-completion` | SKILL.md, 2 references | — |
 | `frontend-architect` | SKILL.md | — |
-| `implementation-discovery` | SKILL.md | — |
+| `implementation-discovery` | archived under `docs/history/skills/` | superseded by engine discovery |
 | `master-image-generation` | SKILL.md | — |
 | `plan-and-handoff` | SKILL.md, 6 references | Largest skill |
 | `qa-skills` | SKILL.md, 1 reference | Upstream: petrkindlmann/qa-skills |
@@ -226,7 +226,7 @@ Written mostly in Vietnamese. Not rules — documentation for human maintainers.
 
 | Severity | Finding | Recommendation |
 |----------|---------|----------------|
-| **Medium** **RESOLVED** | `integrations/required/codebase-memory-mcp/` conflicted with an older `mcps/codebase_memory/` duplicate | Removed `mcps/codebase_memory/`; canonical identity is `integrations/required/codebase-memory-mcp/` |
+| **Medium** **RESOLVED** | `integrations/recommended/codebase-memory-mcp/` conflicted with an older `mcps/codebase_memory/` duplicate | Removed `mcps/codebase_memory/`; canonical identity is `integrations/recommended/codebase-memory-mcp/` |
 | Low **RESOLVED** | Three scripts shared `10-` prefix in `automation/` | Renumbered: `10-export-5fedu-writeback` → `14-`, `10-sync-project-agents` → `15-` |
 
 ### 3.2 Stale Path References
@@ -247,7 +247,7 @@ Written mostly in Vietnamese. Not rules — documentation for human maintainers.
 
 | Severity | Finding | Paths |
 |----------|---------|-------|
-| Low | `__pycache__/` directories contain compiled bytecode; source files exist for most but `plan_guard` has no `.py` source | `platforms/*/scripts/__pycache__/`, `platforms/shared/scripts/__pycache__/` |
+| Resolved | Runtime `__pycache__/` artifacts removed; bytecode is not shipped as source | — |
 
 ### 3.5 Script Numbering Anomalies
 
@@ -260,9 +260,8 @@ Written mostly in Vietnamese. Not rules — documentation for human maintainers.
 
 | Script | Status | Recommendation |
 |--------|--------|----------------|
-| `automation/migrate-nostime-project-local.ps1` | Deprecated (one-time) | Archive or remove |
-| `automation/migrate-tahapp-project-local.ps1` | Deprecated (one-time) | Archive or remove |
-| `automation/fixtures/` | Empty directory | Remove or populate |
+| old nostime project-local migration | Removed | One-time migration no longer shipped |
+| old tahapp project-local migration | Removed | One-time migration no longer shipped |
 
 ### 3.7 Orphan Files (No Manifest/Build Reference)
 
@@ -325,9 +324,7 @@ Written mostly in Vietnamese. Not rules — documentation for human maintainers.
 
 ## 7. Recommended Cleanup Order
 
-1. **Archive migration scripts**: Remove or archive the two one-time migration scripts
-2. **Remove or populate `automation/fixtures/`**: Empty directory cleanup
-3. **Add sync mechanism for `qa-skills`**: If upstream changes need tracking
-4. **Investigate `plan_guard` orphan**: Find or remove the orphaned compiled cache
+1. **Track upstream provenance for vendored/adapted skills** where refreshes are expected.
+2. **Keep generated/cache artifacts out of source releases** and regenerate them through canonical tooling.
 
-**Resolved:** `mcps/` consolidated into `integrations/`, `10-` script renumbering, stale `runtime.yaml` references in READMEs.
+**Resolved:** `mcps/` consolidated into policy-scoped integrations, one-time migrations and empty fixtures removed, bytecode caches removed, `10-` script renumbering completed, and stale `runtime.yaml` references removed.

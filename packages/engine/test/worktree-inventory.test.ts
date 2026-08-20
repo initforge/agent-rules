@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Ajv2020 from 'ajv/dist/2020.js';
+import { SYMLINK_CAPABLE } from './helpers/symlink-capability.js';
 
 const SCRIPT = fileURLToPath(new URL('../../../automation/inventory-worktree-candidates.mjs', import.meta.url));
 const SCHEMA = JSON.parse(readFileSync(fileURLToPath(new URL('../../../schemas/worktree-inventory.schema.json', import.meta.url)), 'utf8')) as object;
@@ -140,7 +141,7 @@ describe('worktree candidate inventory', () => {
     expect(() => runInventory(repo, path.join(repo, 'inventory.json'))).toThrow(/outside every inventoried worktree/);
   });
 
-  it('canonicalizes repository, worktree, and output aliases deterministically', () => {
+  it.skipIf(!SYMLINK_CAPABLE)('canonicalizes repository, worktree, and output aliases deterministically', () => {
     const { repo, worktree } = createRepository();
     const repoAlias = path.join(temporaryRoot, 'repository-alias');
     const outputParentAlias = path.join(temporaryRoot, 'output-parent-alias');

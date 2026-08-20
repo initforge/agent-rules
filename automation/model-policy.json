@@ -264,6 +264,41 @@
         "observed"
       ],
       "denial_behavior": "fail_closed"
+    },
+    "mimocode": {
+      "economy": {
+        "family": "user-configured",
+        "selector": "__host_selected__",
+        "note": "MiMoCode supports MiMo Auto, Xiaomi MiMo and custom/mainstream providers; resolve from the host rather than hardcoding."
+      },
+      "standard": {
+        "family": "user-configured",
+        "selector": "__host_selected__",
+        "note": "Use the model selected/configured in MiMoCode and record observed resolution."
+      },
+      "expert": {
+        "family": "user-configured",
+        "selector": "__host_selected__",
+        "note": "Escalation selects a logical class; exact model remains a host/user decision unless explicitly pinned."
+      },
+      "mapping_contract": {
+        "classes": [
+          "economy",
+          "standard",
+          "expert"
+        ],
+        "user_config_location": ".mimocode/mimocode.jsonc or global MiMoCode config / model picker",
+        "missing_mapping_behavior": "visible: keep requested logical class and mark resolved/observed model UNVERIFIED",
+        "resolve_chain": "TaskPacket logical class -> MiMoCode configured/provider model -> observed session model"
+      },
+      "recorded_evidence": [
+        "requested",
+        "resolved",
+        "observed"
+      ],
+      "denial_behavior": "fail_closed",
+      "subagent_model_override": "host_configured",
+      "model_attestation": "host_declared"
     }
   }
 }

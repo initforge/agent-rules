@@ -73,7 +73,8 @@ Dual MCP execution model:
 
 | Tool | Role |
 |---|---|
-| Playwright MCP | Navigate, click, fill, assert, snapshot a11y, screenshot |
+| Playwright Agent CLI | Default deterministic navigate/click/fill/assert/snapshot/screenshot proof for coding tasks |
+| Playwright MCP | Exploratory persistent browser interaction when a CLI flow is not yet known |
 | Chrome DevTools MCP | Console read, network read, performance, CDP |
 
 Matrix order:

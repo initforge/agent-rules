@@ -1,0 +1,65 @@
+{
+  "schema": "harness/v3-decision-fabric-closure/v1",
+  "plan_id": "v3-decision-fabric",
+  "status": "PASS",
+  "criteria_audit": {
+    "path": "automation/validate-v3-directive.mjs",
+    "command": "node automation/validate-v3-directive.mjs",
+    "criteria": 101,
+    "checks": 22,
+    "result": "PASS"
+  },
+  "hard_truth_audit": {
+    "directive_section": 94,
+    "gate_count": 20,
+    "result": "PASS",
+    "behavioral_sources": [
+      "packages/engine/test/northstar-governance.test.ts",
+      "packages/cli/test/current-pointer.test.ts",
+      "packages/engine/test/live-amendment.test.ts",
+      "packages/kernel/test/live-amendment-adversarial.test.ts"
+    ]
+  },
+  "local_verification": {
+    "command": "npm run verify:all",
+    "result": "PASS",
+    "suites": 107,
+    "tests": 2425,
+    "passed": 2424,
+    "failed": 0,
+    "approved_skips": 1,
+    "missing_or_unreported_suites": 0
+  },
+  "quality_verification": {
+    "command": "npm run ci:quality",
+    "result": "PASS",
+    "build": "PASS",
+    "typecheck": "PASS",
+    "workspace_tests": "PASS"
+  },
+  "implementation_commit": {
+    "sha": "67cb2f111b0a2fa2dbe1c0b01c3cf3e45da179a0",
+    "branch": "codex/v3-decision-fabric"
+  },
+  "remote_ci": {
+    "provider": "github-actions",
+    "run_id": 31542501316,
+    "url": "https://github.com/initforge/agent-rules/actions/runs/31542501316",
+    "head_sha": "67cb2f111b0a2fa2dbe1c0b01c3cf3e45da179a0",
+    "result": "PASS",
+    "required_jobs": [
+      "python-tests",
+      "security",
+      "quality (linux, ubuntu-latest)",
+      "quality (macos, macos-latest)",
+      "quality (windows, windows-latest)",
+      "quality-aggregate"
+    ]
+  },
+  "requirements": [
+    "REQ-001", "REQ-002", "REQ-003", "REQ-004", "REQ-005", "REQ-006",
+    "REQ-007", "REQ-008", "REQ-009", "REQ-010", "REQ-011", "REQ-012",
+    "REQ-013", "REQ-014", "REQ-015", "REQ-016", "REQ-017", "REQ-018",
+    "REQ-019", "REQ-020", "REQ-021", "REQ-022", "REQ-023", "REQ-024"
+  ]
+}

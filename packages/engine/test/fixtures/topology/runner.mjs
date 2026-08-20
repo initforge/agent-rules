@@ -10,7 +10,7 @@
  *
  * stdout contract: `READY {"ingressUrl":"...","stateDir":"..."}` on successful start.
  */
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import net from 'node:net';
@@ -20,6 +20,7 @@ const FIXTURE = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixture
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const sleepSync = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+const windows = process.platform === 'win32';
 
 function freePort() {
   return new Promise((resolve, reject) => {
@@ -32,6 +33,22 @@ function freePort() {
   });
 }
 
+function isAlive(pid) {
+  try { process.kill(pid, 0); return true; } catch { return false; }
+}
+
+function requestStop(pid) {
+  try { process.kill(pid, 'SIGTERM'); } catch { /* already gone */ }
+}
+
+function forceStop(pid) {
+  if (windows) {
+    spawnSync('taskkill', ['/PID', String(pid), '/T', '/F'], { stdio: 'ignore', windowsHide: true });
+    return;
+  }
+  try { process.kill(pid, 'SIGKILL'); } catch { /* already gone */ }
+}
+
 async function start(stateDir) {
   fs.mkdirSync(stateDir, { recursive: true });
   const publicPort = await freePort();
@@ -39,7 +56,7 @@ async function start(stateDir) {
   const pids = [];
   const procs = [];
   const spawnOne = (mode) => {
-    const p = spawn(process.execPath, [FIXTURE, mode, '--state', stateDir, '--public-port', String(publicPort), '--api-port', String(apiPort)], { stdio: 'ignore', detached: true });
+    const p = spawn(process.execPath, [FIXTURE, mode, '--state', stateDir, '--public-port', String(publicPort), '--api-port', String(apiPort), '--owner-pid', String(process.ppid)], { stdio: 'ignore', detached: true });
     p.unref(); // release handle so parent exit doesn't kill child
     pids.push(p.pid);
     procs.push(p);
@@ -74,13 +91,17 @@ function stop(stateDir) {
   const p = path.join(stateDir, 'pids.json');
   if (fs.existsSync(p)) {
     const { pids } = JSON.parse(fs.readFileSync(p, 'utf8'));
-    for (const pid of pids) { try { process.kill(pid, 'SIGTERM'); } catch { /* already gone */ } }
-    const deadline = Date.now() + 5000;
+    for (const pid of pids) requestStop(pid);
+    const deadline = Date.now() + (windows ? 1500 : 5000);
     while (Date.now() < deadline) {
-      const alive = pids.some((pid) => { try { process.kill(pid, 0); return true; } catch { return false; } });
+      const alive = pids.some(isAlive);
       if (!alive) break;
       sleepSync(50);
     }
+    const remaining = pids.filter(isAlive);
+    for (const pid of remaining) forceStop(pid);
+    const forceDeadline = Date.now() + 2000;
+    while (Date.now() < forceDeadline && pids.some(isAlive)) sleepSync(50);
     fs.rmSync(p, { force: true });
   }
   console.log('STOPPED');
@@ -93,7 +114,15 @@ async function main() {
     case 'start': return await start(stateDir);
     case 'stop': return stop(stateDir);
     case 'restart': stop(stateDir); return await start(stateDir);
-    case 'cleanup': fs.rmSync(stateDir, { recursive: true, force: true }); console.log('CLEANED'); return;
+    case 'cleanup':
+      // Cleanup is a lifecycle boundary, not just filesystem deletion. Stop the
+      // detached fixture processes while pids.json still exists, then remove
+      // state. Deleting state first loses the only process ownership record and
+      // leaks orphan API/worker/ingress processes across verifier runs.
+      stop(stateDir);
+      fs.rmSync(stateDir, { recursive: true, force: true });
+      console.log('CLEANED');
+      return;
     case 'status': {
       const ep = path.join(stateDir, 'endpoints.json');
       const pk = path.join(stateDir, 'pids.json');

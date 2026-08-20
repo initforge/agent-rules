@@ -1,56 +1,57 @@
 ---
 name: 5fedu-module-parity
-description: "Use for a 5fedu ERP module UI change. Resolve an authoritative local, source-locked template; preserve its shared shell; map project variables; and prove parity. Never use it for branding or non-ERP redesign."
-routing: {"signals":["5fedu","ERP module","làm module","sửa module","refactor module","drawer","listview","toolbar","parity"],"intent_signals":["5fedu_ui"],"excludes":["branding","landing","non-ERP redesign"],"priority":80,"loads":["profile:5fedu:module-mapping","profile:5fedu:ui-contracts","skills/5fedu-module-parity/references/index.md"],"requires":["5fedu-project"],"supports":["qa-skills","browser-qa"],"project_scope":"5fedu","platform_scope":"all","max_route_tokens":8000,"default":false}
+description: Use only for an explicitly activated 5fedu ERP domain pack. Read the verified central reference snapshot by pointer,
+  preserve its shared shell, map project variables, and prove parity. Never auto-activate from prompt wording or use it for
+  branding/non-ERP redesign.
 ---
 
 # 5fedu module parity
 
-Use only when the active repository has installed `context/5fedu/` and the
-task changes an ERP module surface. Do not use a branding/design capability as
-the primary source for this work. The canonical mapping pack is
-`context/5fedu/module-mapping/`.
+Use only when the runtime/project configuration **explicitly activates** the
+`5fedu` domain pack (for example `agent-rules init --domain-pack 5fedu` or a
+validated activation marker). Prompt words such as `5fedu`, `ERP`, `drawer`, or
+`listview` never activate this skill by themselves. The authoritative template
+is stored once in the harness; target projects do not install or vendor it.
 
-Trigger: **làm module mới**, clone module, **sửa module**, refactor module,
-thêm chức năng, drawer/listview/toolbar lệch, or audit parity. Build a
-`shell parity` map separately from the `variable map`; do not use
-`frontend-architect` as the ERP pattern authority.
+Do not use a branding/design capability as the primary source for ERP parity.
+Pencil is manual/explicit-only and may assist a user-requested design task, but
+production behavior and parity remain source/browser-evidence driven.
 
-Select **Nhân viên** or the mapped reference role before implementation, and
-use the profile's `pattern-inventory` and `ui-delivery` contracts for
-delivery gates.
+Typical activated work includes creating a new module ("làm module mới"), cloning
+the Nhân viên baseline ("clone"), sửa module cũ after an audit, thêm chức năng
+vào module, or adapting another explicitly mapped ERP role. Route module-mapping
+and ui-delivery evidence through this skill when the domain pack is active.
 
-1. Load `modules.yaml`, select the reference role, then load
-   `ui-contracts.md` and this skill's reference index.
-2. Resolve the selected project source receipt before planning or code. It must
-   pin repository identity, a full commit, integrity, and the needed module
-   graph; never use a floating branch or implicit network access.
-3. Locate the matching template in the open workspace using the selected
-   role's anchors. No candidate, multiple candidates, unclear package identity,
-   or an unconfirmed fork is a hard stop for the parity slice. Ask the owner;
-   never select by directory name, file age, memory, a screenshot, remote URL,
-   or a vendored harness tree.
-4. Only an authoritative local checkout with a matching receipt may be opened.
-   Record its commit, or deterministic anchor hashes when Git is unavailable.
-   Missing, stale, ambiguous, or `BLOCKED` source state blocks implementation
-   and every parity claim.
-5. Complete or update the module parity packet before code. Preserve the
-   selected shell; take fields, labels, filters, columns, KPIs, business actions,
-   and data rules only from the active project schema/spec.
-6. Verify structural, visual, behavioral, and architectural proof. A parity
-   PASS requires browser interaction and trace evidence; desktop and touch
-   flows; reduced-motion and responsive checks; keyboard/focus and a non-admin
-   permission path; mutation refresh; console/network evidence; and an
-   independent verifier bound to the exact source revision. The packet
-   validator rejects a missing packet, incomplete evidence, or worker-declared
-   proof.
+1. Load the central `module-mapping/modules.yaml`, `ui-contracts.md`,
+   `behavior-contract.json`, and `source-evidence.json`; select a reference role
+   from the active project schema/spec and requested surface, not from visual
+   resemblance.
+2. Require a verified domain-pack source receipt before implementation. Read
+   exact source through `agent-rules reference 5fedu <path>` and search it with
+   `agent-rules reference-search 5fedu <query>`. Do not copy the whole template
+   into the target workspace.
+3. Bind each owner requirement to the manifest-bound pointers in
+   `source-evidence.json`, then inspect the referenced code before editing. If a
+   required behavior is not evidenced there, search the verified source and add
+   an explicit pointer rather than inventing behavior.
+4. Build a shell-parity map separately from the variable map. Fields, labels,
+   filters, columns, KPIs, business actions, routes and data rules are owned by
+   the active project schema/spec; reference code supplies reusable patterns,
+   not a mandatory feature inventory.
+5. Complete/update the parity packet before code. Preserve target-native
+   architecture and record `must_not_copy` plus approved deviations.
+6. Verify structural, visual, behavioral and architectural proof. Visual PASS
+   requires browser/runtime evidence; desktop/touch, responsive, keyboard/focus,
+   reduced-motion, non-admin permission, mutation refresh and console/network
+   evidence remain independent verification concerns. A worker cannot self-PASS.
 
-Every handoff or completion report must state, in this order: `Status`,
-`Template reference`, `Shell parity`, `Variable map`, `Pattern
-fidelity`, and `Verification`. A worker without vision follows the
-no-vision contract in this skill's references; unresolved mapping remains
-planner-owned and must block implementation rather than be invented.
+For the canonical roles: Nhân viên is the internal-entity CRUD/list/detail/form/
+stats baseline; Phòng ban is the hierarchy + embedded subordinate/related-data
+baseline; Phân quyền must reconcile its module registry with the active project
+routes/modules. The exact behavior is always read from the pinned pointers, not
+from this prose.
 
-Tah-app and Nostime decisions are lazy project overlays. They can specialize
-variable slots but cannot rewrite the shared shell contract. For non-ERP UI,
-route to the appropriate design capability instead.
+Every handoff/completion report states, in order: `Status`, `Template reference`,
+`Shell parity`, `Variable map`, `Pattern fidelity`, and `Verification`. Missing
+source/evidence or unresolved mapping yields `BLOCKED`/`PARTIAL`, never parity
+`PASS`.

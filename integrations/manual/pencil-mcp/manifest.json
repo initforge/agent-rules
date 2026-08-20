@@ -1,0 +1,35 @@
+{
+  "id": "pencil-mcp",
+  "displayName": "pen.dev / Pencil MCP",
+  "kind": "mcp",
+  "policy": "optional",
+  "activation": "explicit-only",
+  "autoRoute": false,
+  "capabilities": ["design.inspect", "design.compose", "design.render", "design.tokens"],
+  "serverKey": "pencil",
+  "effect": {
+    "effect_level": "interactive",
+    "environment": "host",
+    "approval": "explicit-provider",
+    "reversible": true,
+    "network": false,
+    "credentials": "optional",
+    "timeout_ms": 120000,
+    "provider_evidence": "live-receipt"
+  },
+  "source": {
+    "type": "local-app",
+    "docs": "https://docs.pencil.dev/getting-started/ai-integration"
+  },
+  "supportedHosts": ["claude", "codex", "cursor", "antigravity", "opencode"],
+  "requirements": [
+    "pen.dev desktop app or IDE extension is running",
+    "a .pen file is open when the host integration requires it",
+    "the host reports the pencil MCP server as connected"
+  ],
+  "notes": [
+    "Never activate from keyword routing.",
+    "Only attach when the user explicitly requests Pencil/pen.dev design tooling or the TaskPacket explicitly names a design.* capability and pencil-mcp as provider.",
+    "Production UI acceptance still uses browser/runtime evidence; a .pen render is design evidence, not proof that shipped code behaves correctly."
+  ]
+}

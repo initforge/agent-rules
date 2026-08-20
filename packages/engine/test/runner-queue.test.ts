@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { TaskQueue, type QueuedTask } from '../src/runner/queue.js';
+import { baselineGateFromManifest } from '../src/runner/baseline-gate.js';
 
 const task = (over: Partial<QueuedTask> = {}) => ({
   prompt: 'do the thing',
@@ -139,5 +140,78 @@ describe('TaskQueue', () => {
     // No leftover temp files: the rename either happened or it did not.
     expect(files.every((f) => f.endsWith('.json') && !f.startsWith('.'))).toBe(true);
     expect(() => JSON.parse(fs.readFileSync(path.join(dir, 'ready', files[0]), 'utf8'))).not.toThrow();
+  });
+});
+
+describe('TaskQueue dependency-aware claiming', () => {
+  let dir: string;
+  let queue: TaskQueue;
+  beforeEach(() => { dir = fs.mkdtempSync(path.join(os.tmpdir(), 'queue-deps-')); queue = new TaskQueue(dir); });
+  afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('skips pending dependents and claims their prerequisite even when it sorts later', () => {
+    queue.add(task({ id:'task-001', contractTaskId:'T-002', dependsOnContractTaskIds:['T-001'], prompt:'dependent' }));
+    queue.add(task({ id:'task-999', contractTaskId:'T-001', prompt:'prerequisite' }));
+    expect(queue.claim()?.contractTaskId).toBe('T-001');
+  });
+
+  it('unblocks a dependent when any successful repair closes the prerequisite contract task', () => {
+    queue.add(task({ id:'base-attempt', contractTaskId:'T-001' }));
+    const base = queue.claim()!;
+    queue.settle(base, 'failed', 'first attempt failed');
+    queue.add(task({ id:'repair', contractTaskId:'T-001', parentId:base.id, repairDepth:1 }));
+    queue.add(task({ id:'dependent', contractTaskId:'T-002', dependsOnContractTaskIds:['T-001'] }));
+    const repair = queue.claim()!;
+    expect(repair.id).toBe('repair');
+    queue.settle(repair, 'done');
+    expect(queue.claim()?.id).toBe('dependent');
+  });
+
+  it('makes terminal dependency blockers claimable so the runner can settle downstream work needs-user', () => {
+    queue.add(task({ id:'base', contractTaskId:'T-001' }));
+    const base = queue.claim()!;
+    queue.settle(base, 'needs-user', 'repair exhausted');
+    queue.add(task({ id:'dependent', contractTaskId:'T-002', dependsOnContractTaskIds:['T-001'] }));
+    const dependent = queue.claim()!;
+    expect(queue.dependencyState(dependent).blocked).toEqual(['T-001']);
+  });
+
+  it('exposes a baseline-blocked task for durable settlement while leaving an independent scope claimable', () => {
+    const gate = {
+      status: 'NEEDS_RECONCILIATION' as const,
+      affectedPaths: ['src/affected'],
+      reason: 'unknown baseline path',
+    };
+    const affected = queue.add(task({ id: 'task-001', ownedPaths: ['src/affected'], baselineGate: gate }));
+    queue.add(task({ id: 'task-002', ownedPaths: ['src/independent'], baselineGate: gate }));
+
+    const first = queue.claim()!;
+    expect(first.id).toBe(affected.id);
+    expect(queue.dependencyState(first).baselineBlocked).toMatch(/NEEDS_RECONCILIATION/);
+    queue.settle(first, 'needs-user', 'baseline blocked');
+
+    const independent = queue.claim()!;
+    expect(independent.id).toBe('task-002');
+    expect(queue.dependencyState(independent).baselineBlocked).toBeNull();
+  });
+});
+
+describe('baseline manifest adapter', () => {
+  it('keeps clean manifests non-blocking and extracts only unresolved paths', () => {
+    expect(baselineGateFromManifest({ status: 'BASELINE_CLEAN', findings: [] })).toMatchObject({
+      status: 'BASELINE_CLEAN', affectedPaths: [],
+    });
+    expect(baselineGateFromManifest({
+      status: 'NEEDS_RECONCILIATION',
+      findings: [
+        { path: 'src/unknown.ts', classification: 'unknown' },
+        { path: 'docs/owned.md', classification: 'accepted-dirty' },
+      ],
+      sha256: 'a'.repeat(64),
+    })).toMatchObject({
+      status: 'NEEDS_RECONCILIATION',
+      affectedPaths: ['src/unknown.ts'],
+      manifestSha256: 'a'.repeat(64),
+    });
   });
 });

@@ -151,7 +151,17 @@ def test_opencode_provider_config_preservation() -> None:
     """OpenCode adapter installation must not own or rewrite opencode.json."""
     shell = shutil.which("pwsh") or shutil.which("powershell")
     if not shell:
-        fail("PowerShell unavailable for OpenCode adapter preservation test")
+        # Cross-platform certification path: execute the canonical TypeScript
+        # adapter source through a one-file transpile probe. This tests behavior
+        # without weakening the gate when PowerShell is absent.
+        result = subprocess.run(
+            ["node", str(ROOT / "automation" / "probe-opencode-adapter-preservation.mjs")],
+            cwd=ROOT, capture_output=True, text=True, timeout=60,
+        )
+        if result.returncode != 0:
+            fail(f"OpenCode adapter source probe failed: {result.stderr.strip() or result.stdout.strip()}")
+        else:
+            ok("OpenCode installer preserves provider/model config and does not claim it (Node source probe)")
         return
 
     with tempfile.TemporaryDirectory(prefix="agent-rules-opencode-") as temp_dir:
@@ -285,10 +295,14 @@ def test_install_script_manifest_loading() -> None:
         
         content = install_path.read_text(encoding="utf-8")
         
-        # Check for ErrorActionPreference
-        if 'ErrorActionPreference' not in content:
-            fail(f"{integ_id}: install.ps1 missing ErrorActionPreference")
-        
+        # Check language-appropriate fail-fast behavior.
+        if install_path.suffix.lower() == '.ps1':
+            if 'ErrorActionPreference' not in content:
+                fail(f"{integ_id}: PowerShell installer missing ErrorActionPreference")
+        elif install_path.suffix.lower() == '.sh':
+            if not re.search(r'(?m)^set\s+-[^\n]*e', content):
+                fail(f"{integ_id}: shell installer missing fail-fast set -e")
+
         # Check for manifest loading (skip for npx-github type)
         source_type = integ.get("source", {}).get("type", "")
         version_policy = integ.get("source", {}).get("versionPolicy", "")
@@ -315,10 +329,12 @@ def test_uninstall_script_safety() -> None:
         
         content = uninstall_path.read_text(encoding="utf-8")
         
-        # Check for ErrorActionPreference (npx-based uninstalls are simple stubs)
+        # Check language-appropriate fail-fast behavior when the uninstaller deletes files.
         has_rm = 'Remove-Item' in content or re.search(r'\brm\s+-[rf]', content)
-        if 'ErrorActionPreference' not in content and has_rm:
-            fail(f"{integ_id}: uninstall.ps1 missing ErrorActionPreference")
+        if has_rm and uninstall_path.suffix.lower() == '.ps1' and 'ErrorActionPreference' not in content:
+            fail(f"{integ_id}: PowerShell uninstaller missing ErrorActionPreference")
+        if has_rm and uninstall_path.suffix.lower() == '.sh' and not re.search(r'(?m)^set\s+-[^\n]*e', content):
+            fail(f"{integ_id}: shell uninstaller missing fail-fast set -e")
 
 
 def main() -> int:

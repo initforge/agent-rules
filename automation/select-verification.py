@@ -147,6 +147,7 @@ def select_profiles(
         selected.append({
             "profile_id": profile_id,
             "description": profile.get("description", ""),
+            "verification_contract": profile.get("verification_contract", {}),
             "matched_by": {
                 "files": file_hit,
                 "claims": claim_hit,
@@ -392,6 +393,94 @@ def summarize(selection: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def reduce_run_results(
+    selection: list[dict[str, Any]],
+    run_results: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Reduce executed evidence, never the pre-run plan, into acceptance state.
+
+    A selection status such as RUNNABLE only means that a check *could* run.
+    It is not evidence and must not appear as a passing acceptance result.  The
+    reducer joins each planned check to its actual result and fails closed when
+    a required result is missing, blocked, skipped, or failed.
+    """
+    result_by_key = {
+        (result.get("profile_id", ""), result.get("check_id", "")): result
+        for result in run_results
+    }
+    total_checks = 0
+    by_status: dict[str, int] = {}
+    by_profile: dict[str, dict[str, int]] = {}
+    skipped_reasons: list[dict[str, str]] = []
+    manual_checks: list[dict[str, str]] = []
+    required_failures: list[dict[str, str]] = []
+    human_residuals: list[dict[str, str]] = []
+    all_pass = bool(selection)
+
+    for profile_result in selection:
+        pid = profile_result["profile_id"]
+        profile_counts: dict[str, int] = {}
+        contract = profile_result.get("verification_contract", {})
+        for residual in contract.get("human_residuals", []):
+            human_residuals.append({"profile": pid, "residual": str(residual)})
+        for check in profile_result.get("checks", []):
+            total_checks += 1
+            key = (pid, check["check_id"])
+            result = result_by_key.get(key)
+            actual_status = result.get("status") if result else "MISSING"
+            profile_counts[actual_status] = profile_counts.get(actual_status, 0) + 1
+            by_status[actual_status] = by_status.get(actual_status, 0) + 1
+
+            if actual_status != "PASS":
+                if check.get("mandatory"):
+                    all_pass = False
+                    reason = (
+                        result.get("skip_reason", "") if result else "No execution result recorded"
+                    ) or f"Executed check status: {actual_status}"
+                    required_failures.append({
+                        "check_id": check["check_id"],
+                        "profile": pid,
+                        "status": actual_status,
+                        "reason": reason,
+                    })
+                elif actual_status == "FAIL":
+                    all_pass = False
+
+            if actual_status in ("SKIPPED", "BLOCKED", "MISSING"):
+                reason = (
+                    result.get("skip_reason", "") if result else "No execution result recorded"
+                ) or f"Executed check status: {actual_status}"
+                skipped_reasons.append({
+                    "check_id": check["check_id"],
+                    "profile": pid,
+                    "reason": reason,
+                })
+                if check.get("mandatory"):
+                    manual_checks.append({
+                        "check_id": check["check_id"],
+                        "profile": pid,
+                        "name": check.get("name", ""),
+                        "reason": "Mandatory check has no passing execution evidence",
+                    })
+
+        by_profile[pid] = profile_counts
+
+    return {
+        "total_checks": total_checks,
+        "by_status": by_status,
+        "by_profile": by_profile,
+        "all_automated_pass": all_pass and not required_failures,
+        "skipped_checks": skipped_reasons,
+        "manual_checks_remaining": manual_checks,
+        "has_blocked_required_tool": any(
+            failure["status"] == "BLOCKED" for failure in required_failures
+        ),
+        "required_failures": required_failures,
+        "human_residuals": human_residuals,
+        "phase": "ACCEPTANCE_REDUCTION",
+    }
+
+
 def command_select(args: argparse.Namespace) -> dict[str, Any]:
     """Select verification profiles from context and produce verification plan."""
     data = json.loads(args.payload) if args.payload else {}
@@ -446,12 +535,15 @@ def command_run(args: argparse.Namespace) -> dict[str, Any]:
                 "skip_reason": result.get("skip_reason", ""),
             })
 
-    summary = summarize(selection)
+    plan_summary = summarize(selection)
+    summary = reduce_run_results(selection, run_results)
 
     return {
         "status": "VERIFICATION_RUN",
+        "phase": "ACCEPTANCE_REDUCTION",
         "results_count": len(run_results),
         "results": run_results,
+        "plan_summary": plan_summary,
         "summary": summary,
     }
 

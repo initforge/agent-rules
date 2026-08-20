@@ -33,6 +33,11 @@ interface PlanData {
   findings: Array<Record<string, unknown>>;
   auditEvents: Array<Record<string, unknown>>;
   shadowRevision: string | null;
+  canonicalSource?: {
+    schema?: string;
+    requirementCount?: number;
+    requirementStatusCounts?: Record<string, number>;
+  };
   integrityFailure?: IntegrityFailure;
 }
 
@@ -52,6 +57,7 @@ function normalizePlan(raw: Record<string, unknown>): PlanData {
     findings: Array.isArray(raw.orphanFindings) ? raw.orphanFindings as Array<Record<string, unknown>> : [],
     auditEvents: Array.isArray(raw.auditEvents) ? raw.auditEvents as Array<Record<string, unknown>> : [],
     shadowRevision: identity.shadowRevision == null ? null : String(identity.shadowRevision),
+    canonicalSource: raw.canonicalSource as PlanData['canonicalSource'],
     integrityFailure: raw.integrityFailure as IntegrityFailure | undefined,
   };
 }
@@ -86,6 +92,13 @@ function coverageForProfile(
   name: string,
   planData: PlanData | null,
 ): CoverageFilter {
+  if (planData?.canonicalSource?.schema === 'harness/north-star-ledger') {
+    const row = planData.reconciliations.find((candidate) => String(candidate.requirementId || '') === name);
+    const status = String(row?.canonicalStatus || row?.status || 'MISSING');
+    if (status === 'MATCH') return 'MATCH';
+    if (status === 'PARTIAL') return 'PARTIAL';
+    return 'MISSING';
+  }
   if (!planData?.attestations) return 'MISSING';
   const bound = planData.attestations.some(
     (a: Record<string, unknown>) => a.profile === name && a.status === 'BOUND',
@@ -577,8 +590,9 @@ const IntegrityBanner: React.FC<{ failure: IntegrityFailure | null; planData: Pl
 const EvidenceInspector: React.FC<{
   selectedProfile: string | null;
   evidenceProfiles: EvidenceProfile | null;
+  profileEntries: [string, NonNullable<EvidenceProfile['profiles']>[string]][];
   planData: PlanData | null;
-}> = ({ selectedProfile, evidenceProfiles, planData }) => {
+}> = ({ selectedProfile, evidenceProfiles, profileEntries, planData }) => {
   if (!selectedProfile) {
     return (
       <div className="cpw-inspector-empty">
@@ -589,7 +603,7 @@ const EvidenceInspector: React.FC<{
     );
   }
 
-  const profile = evidenceProfiles?.profiles?.[selectedProfile];
+  const profile = evidenceProfiles?.profiles?.[selectedProfile] || profileEntries.find(([name]) => name === selectedProfile)?.[1];
   if (!profile) {
     return (
       <div className="cpw-inspector-empty">
@@ -915,6 +929,17 @@ const _WorkspaceBody: React.FC<WorkspaceBodyProps> = ({
   const paneClasses = (pane: PaneId) =>
     `cpw-pane cpw-pane--${pane} ${activePane === pane ? 'cpw-pane--active' : ''}`;
 
+  const effectiveProfileEntries = useMemo(() => {
+    if (planData.canonicalSource?.schema !== 'harness/north-star-ledger') return profileEntries;
+    return planData.reconciliations
+      .filter((row) => typeof row.requirementId === 'string')
+      .map((row) => [String(row.requirementId), {
+        required_dimensions: [String(row.statement || '')],
+        allowed_kinds: [],
+      }] as [string, NonNullable<EvidenceProfile['profiles']>[string]]);
+  }, [planData, profileEntries]);
+  const canonicalMissingCount = planData.reconciliations.filter((row) => String(row.canonicalStatus || row.status || '') === 'MISSING').length;
+
   return (
     <>
       <div className="cpw-mobile-tabs" role="tablist" aria-label="Workspace panes">
@@ -935,7 +960,7 @@ const _WorkspaceBody: React.FC<WorkspaceBodyProps> = ({
         <div className={paneClasses('navigator')} role="region" aria-label="Requirement navigator">
           <div className="cpw-pane-header">
             <span className="typography-title3">Requirements</span>
-            <span className="typography-caption">{profileEntries.length}</span>
+            <span className="typography-caption">{effectiveProfileEntries.length}</span>
           </div>
 
           <ArtifactLineage planData={planData} />
@@ -953,10 +978,13 @@ const _WorkspaceBody: React.FC<WorkspaceBodyProps> = ({
                 </button>
               ))}
             </div>
+            <span className="typography-caption" aria-label="Canonical coverage summary">
+              MISSING {canonicalMissingCount}
+            </span>
           </div>
 
           <ProfileTree
-            profiles={profileEntries}
+            profiles={effectiveProfileEntries}
             coverageFilter={coverageFilter}
             selectedProfile={selectedProfile}
             onSelect={onSelectProfile}
@@ -968,7 +996,7 @@ const _WorkspaceBody: React.FC<WorkspaceBodyProps> = ({
 
         <div className={paneClasses('canvas')} role="region" aria-label="Execution canvas">
           <ReconciliationMatrix
-            profiles={profileEntries}
+            profiles={effectiveProfileEntries}
             planData={planData}
             onSelect={onSelectProfile}
           />
@@ -993,6 +1021,7 @@ const _WorkspaceBody: React.FC<WorkspaceBodyProps> = ({
             <EvidenceInspector
               selectedProfile={selectedProfile}
               evidenceProfiles={evidenceProfiles}
+              profileEntries={effectiveProfileEntries}
               planData={planData}
             />
           </div>

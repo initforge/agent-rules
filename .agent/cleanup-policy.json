@@ -1,0 +1,34 @@
+{
+  "schema": "harness/plan-cleanup-policy",
+  "version": 1,
+  "lifecycle": {
+    "authority": "committed",
+    "generated_support": "regenerable",
+    "ephemeral_helper_or_test": "ignored",
+    "historical_archive": "retained"
+  },
+  "artifact_classes": {
+    "intent_and_contract": { "retention": "plan-lifetime", "authority": true },
+    "requirements_claims_tasks": { "retention": "plan-lifetime", "authority": true },
+    "durable_evidence": { "retention": "release-and-audit", "authority": false },
+    "generated_support": { "retention": "regenerate", "authority": false },
+    "ephemeral_helper_or_test": { "retention": "run", "authority": false },
+    "shared_artifact": { "retention": "owner-policy", "authority": false },
+    "historical_archive": { "retention": "audit", "authority": false }
+  },
+  "ownership": {
+    "current_pointer": "owner",
+    "canonical_ledger": "owner",
+    "worker_output": "worker-and-verifier",
+    "generated_output": "machine"
+  },
+  "history_receipt": {
+    "required_for_delete": true,
+    "path": ".agent/tombstones/"
+  },
+  "operations": {
+    "delete": "tombstone-or-archive",
+    "supersede": "preserve-forward-link",
+    "cleanup": "bounded-and-recoverable"
+  }
+}

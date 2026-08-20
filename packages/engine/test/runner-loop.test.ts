@@ -35,6 +35,21 @@ function makeRunner(
   });
 }
 
+/**
+ * Build a path for embedding inside an inline `node -e` script body. POSIX
+ * slashes mean the resulting JS string contains no backslashes, so Windows
+ * tmpdir paths like `...\Temp\runner-...` cannot collide with JS escape
+ * sequences (`\n`, `\r`, `\t`…).
+ *
+ * `path.posix.join` does not normalise separators inherited from the input
+ * (on Windows `os.tmpdir()` returns a path with `\`, which would otherwise
+ * survive into the joined result and break JS string parsing); an explicit
+ * replace is therefore required.
+ */
+function agentPath(...parts: string[]): string {
+  return path.posix.join(...parts).replace(/\\/g, '/');
+}
+
 describe('parseCommand', () => {
   it('splits a command into argv without a shell', () => {
     expect(parseCommand('npx vitest run foo.test.ts', '/repo')).toEqual({
@@ -46,6 +61,46 @@ describe('parseCommand', () => {
 
   it('rejects an empty command', () => {
     expect(() => parseCommand('   ', '/repo')).toThrow(/empty verification command/);
+  });
+});
+
+describe('Runner baseline scheduling', () => {
+  it('blocks affected dependency closure while executing an independent task', async () => {
+    const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'runner-baseline-'));
+    try {
+      fs.mkdirSync(path.join(repo, 'src'), { recursive: true });
+      fs.writeFileSync(path.join(repo, 'baseline.txt'), 'baseline\n');
+      spawnSync('git', ['init', '-q', '-b', 'main'], { cwd: repo, check: true });
+      spawnSync('git', ['add', '.'], { cwd: repo, check: true });
+      spawnSync('git', ['-c', 'user.name=Harness Test', '-c', 'user.email=harness@example.invalid', 'commit', '-qm', 'baseline'], { cwd: repo, check: true });
+      const runner = makeRunner(repo, `require('fs').writeFileSync(${JSON.stringify(agentPath(repo, 'src', 'independent.ts'))}, 'independent\\n')`);
+      const gate = {
+        status: 'NEEDS_RECONCILIATION' as const,
+        affectedPaths: ['src/affected.ts'],
+        reason: 'baseline owner truth is missing',
+      };
+      runner.tasks.add({
+        id: 'task-001', contractTaskId: 'T-AFFECTED', prompt: 'blocked affected task', verification: ['node -e process.exit(0)'],
+        ownedPaths: ['src/affected.ts'], repairDepth: 0, baselineGate: gate,
+      });
+      runner.tasks.add({
+        id: 'task-002', contractTaskId: 'T-INDEPENDENT', prompt: 'independent task', verification: ['node -e process.exit(0)'],
+        ownedPaths: ['src/independent.ts'], repairDepth: 0, baselineGate: gate,
+      });
+      runner.tasks.add({
+        id: 'task-003', contractTaskId: 'T-DOWNSTREAM', prompt: 'dependent task', verification: ['node -e process.exit(0)'],
+        ownedPaths: ['src/downstream.ts'], repairDepth: 0, dependsOnContractTaskIds: ['T-AFFECTED'], baselineGate: gate,
+      });
+
+      const summary = await runner.run();
+      expect(summary).toMatchObject({ tasksProcessed: 3, done: 1, failed: 0, needsUser: 2 });
+      expect(runner.tasks.list('done').map((item) => item.contractTaskId)).toEqual(['T-INDEPENDENT']);
+      expect(runner.tasks.list('needs-user').map((item) => item.contractTaskId)).toEqual(['T-AFFECTED', 'T-DOWNSTREAM']);
+      expect(fs.readFileSync(path.join(repo, 'src', 'independent.ts'), 'utf8')).toBe('independent\n');
+      expect(new Journal(path.join(repo, '.journal.jsonl'), IDENTITY).ofType('BASELINE_BLOCKED')).toHaveLength(1);
+    } finally {
+      fs.rmSync(repo, { recursive: true, force: true });
+    }
   });
 });
 
@@ -99,8 +154,6 @@ describe('Runner', () => {
     fs.writeFileSync(path.join(repo, 'seed.ts'), 'export const seed = 1;\n');
     git('add', '-A');
     git('commit', '-q', '-m', 'initial');
-    // Clean untracked files from previous test runs to ensure clean snapshot baseline
-    git('clean', '-fd');
   });
   afterEach(() => fs.rmSync(repo, { recursive: true, force: true }));
 
@@ -126,10 +179,10 @@ describe('Runner', () => {
   // R-002 + R-006: a task passes only when the agent produced a real diff AND every
   // verification command exited 0.
   it('marks a task done when the agent changes a file and verification passes', async () => {
-    const runner = makeRunner(repo, `require('fs').writeFileSync('${path.join(repo, 'out.ts')}', 'export const x = 1;\\n')`);
+    const runner = makeRunner(repo, `require('fs').writeFileSync('${agentPath(repo, 'out.ts')}', 'export const x = 1;\\n')`);
     runner.tasks.add({
       prompt: 'write out.ts',
-      verification: [`${process.execPath} -e process.exit(0)`],
+      verification: [`node -e process.exit(0)`],
       ownedPaths: [],
       repairDepth: 0,
     });
@@ -142,12 +195,29 @@ describe('Runner', () => {
     expect(runner.tasks.counts()).toMatchObject({ done: 1, ready: 0, active: 0 });
   });
 
+  it('does not treat runner heartbeats as a worker scope violation', async () => {
+    fs.mkdirSync(path.join(repo, 'src'));
+    const runner = makeRunner(repo, `require('fs').writeFileSync('${agentPath(repo, 'src', 'out.ts')}', 'export const x = 1;\\n')`);
+    runner.tasks.add({
+      prompt: 'write src/out.ts',
+      verification: [`node -e process.exit(0)`],
+      ownedPaths: ['src'],
+      repairDepth: 0,
+    });
+
+    const summary = await runner.run();
+
+    expect(summary).toMatchObject({ tasksProcessed: 1, done: 1, failed: 0, needsUser: 0 });
+    expect(summary.reports[0].scopeViolations ?? []).toEqual([]);
+    expect(summary.reports[0].filesChanged).toEqual(['src/out.ts']);
+  });
+
   // The failure the old receipt path was built to catch, kept catchable here.
   it('fails a task whose verification passes but which changed nothing', async () => {
     const runner = makeRunner(repo, 'process.exit(0)');
     runner.tasks.add({
       prompt: 'do nothing',
-      verification: [`${process.execPath} -e process.exit(0)`],
+      verification: [`node -e process.exit(0)`],
       ownedPaths: [],
       repairDepth: DEFAULT_MAX_REPAIR_DEPTH,
     });
@@ -159,10 +229,10 @@ describe('Runner', () => {
   });
 
   it('fails a task that changed only documentation', async () => {
-    const runner = makeRunner(repo, `require('fs').writeFileSync('${path.join(repo, 'NOTES.md')}', '# notes\\n')`);
+    const runner = makeRunner(repo, `require('fs').writeFileSync('${agentPath(repo, 'NOTES.md')}', '# notes\\n')`);
     runner.tasks.add({
       prompt: 'write docs',
-      verification: [`${process.execPath} -e process.exit(0)`],
+      verification: [`node -e process.exit(0)`],
       ownedPaths: [],
       repairDepth: DEFAULT_MAX_REPAIR_DEPTH,
     });
@@ -176,12 +246,12 @@ describe('Runner', () => {
   // R-004 — the core fix. Without this bound, every failure minted a child task that
   // itself required review, producing chains that could never terminate.
   it('stops at the repair-depth limit and asks a human instead of minting a child', async () => {
-    const runner = makeRunner(repo, `require('fs').writeFileSync('${path.join(repo, 'a.ts')}', 'export const a = 2;\\n')`, {
+    const runner = makeRunner(repo, `require('fs').appendFileSync('${agentPath(repo, 'a.ts')}', 'export const a = 2;\\n')`, {
       maxRepairDepth: 2,
     });
     runner.tasks.add({
       prompt: 'fix it',
-      verification: [`${process.execPath} -e process.exit(1)`],
+      verification: [`node -e process.exit(1)`],
       ownedPaths: [],
       repairDepth: 0,
     });
@@ -198,13 +268,54 @@ describe('Runner', () => {
     expect(terminal.reason).toMatch(/repair depth 2 reached limit 2/);
   });
 
+  it('stops repeated unchanged failure states before the repair-depth limit', async () => {
+    const runner = makeRunner(repo, `require('fs').writeFileSync('${agentPath(repo, 'repeat.ts')}', 'export const repeat = true;\\n')`, {
+      maxRepairDepth: 5,
+    });
+    runner.tasks.add({
+      prompt: 'repeat the same failed repair',
+      verification: [`node -e process.exit(1)`],
+      ownedPaths: [],
+      repairDepth: 0,
+    });
+
+    const summary = await runner.run();
+
+    expect(summary.tasksProcessed).toBe(2);
+    expect(summary.needsUser).toBe(1);
+    expect(runner.tasks.list('needs-user')[0].reason).toMatch(/repeated unchanged failure state/);
+    expect(runner.tasks.list('ready')).toHaveLength(0);
+    expect(new Journal(path.join(repo, '.journal.jsonl'), IDENTITY).ofType('REPAIR_STOPPED')).toHaveLength(1);
+  });
+
+  it('stops an oscillating A -> B -> A repair loop', async () => {
+    const statePath = agentPath(repo, 'oscillate.ts');
+    const runner = makeRunner(repo, `const fs=require('fs'); const p='${statePath}'; const prior=fs.existsSync(p)?fs.readFileSync(p,'utf8'):''; fs.writeFileSync(p, prior.includes('A')?'B\\n':'A\\n')`, {
+      maxRepairDepth: 5,
+    });
+    runner.tasks.add({
+      prompt: 'oscillate the failed repair',
+      verification: [`node -e process.exit(1)`],
+      ownedPaths: [],
+      repairDepth: 0,
+    });
+
+    const summary = await runner.run();
+
+    expect(summary.tasksProcessed).toBe(3);
+    expect(summary.needsUser).toBe(1);
+    expect(runner.tasks.list('needs-user')[0].reason).toMatch(/oscillating failure state/);
+    expect(new Journal(path.join(repo, '.journal.jsonl'), IDENTITY).ofType('REPAIR_STOPPED')).toHaveLength(1);
+    expect(new Journal(path.join(repo, '.journal.jsonl'), IDENTITY).ofType('FAILURE_FINGERPRINT').at(-1)?.data).toMatchObject({ oscillating: true });
+  });
+
   it('honours maxRepairDepth 0 by never generating a repair', async () => {
-    const runner = makeRunner(repo, `require('fs').writeFileSync('${path.join(repo, 'a.ts')}', 'export const a = 3;\\n')`, {
+    const runner = makeRunner(repo, `require('fs').writeFileSync('${agentPath(repo, 'a.ts')}', 'export const a = 3;\\n')`, {
       maxRepairDepth: 0,
     });
     runner.tasks.add({
       prompt: 'fix it',
-      verification: [`${process.execPath} -e process.exit(1)`],
+      verification: [`node -e process.exit(1)`],
       ownedPaths: [],
       repairDepth: 0,
     });
@@ -216,12 +327,12 @@ describe('Runner', () => {
   });
 
   it('carries the requirement id through a repair chain', async () => {
-    const runner = makeRunner(repo, `require('fs').writeFileSync('${path.join(repo, 'a.ts')}', 'export const a = 4;\\n')`, {
+    const runner = makeRunner(repo, `require('fs').writeFileSync('${agentPath(repo, 'a.ts')}', 'export const a = 4;\\n')`, {
       maxRepairDepth: 1,
     });
     runner.tasks.add({
       prompt: 'fix it',
-      verification: [`${process.execPath} -e process.exit(1)`],
+      verification: [`node -e process.exit(1)`],
       ownedPaths: [],
       repairDepth: 0,
       requirementId: 'R-042',
@@ -233,12 +344,12 @@ describe('Runner', () => {
   });
 
   it('tells the repair attempt which commands failed, and not to weaken them', async () => {
-    const runner = makeRunner(repo, `require('fs').writeFileSync('${path.join(repo, 'a.ts')}', 'export const a = 5;\\n')`, {
+    const runner = makeRunner(repo, `require('fs').writeFileSync('${agentPath(repo, 'a.ts')}', 'export const a = 5;\\n')`, {
       maxRepairDepth: 1,
     });
     runner.tasks.add({
       prompt: 'original instruction',
-      verification: [`${process.execPath} -e process.exit(1)`],
+      verification: [`node -e process.exit(1)`],
       ownedPaths: [],
       repairDepth: 0,
     });
@@ -252,7 +363,7 @@ describe('Runner', () => {
   });
 
   it('rejects a verification command containing shell metacharacters', async () => {
-    const runner = makeRunner(repo, `require('fs').writeFileSync('${path.join(repo, 'a.ts')}', 'export const a = 6;\\n')`, {
+    const runner = makeRunner(repo, `require('fs').writeFileSync('${agentPath(repo, 'a.ts')}', 'export const a = 6;\\n')`, {
       maxRepairDepth: 0,
     });
     runner.tasks.add({
@@ -270,7 +381,7 @@ describe('Runner', () => {
   });
 
   it('reports 127 for a verification command that does not exist', async () => {
-    const runner = makeRunner(repo, `require('fs').writeFileSync('${path.join(repo, 'a.ts')}', 'export const a = 7;\\n')`, {
+    const runner = makeRunner(repo, `require('fs').writeFileSync('${agentPath(repo, 'a.ts')}', 'export const a = 7;\\n')`, {
       maxRepairDepth: 0,
     });
     runner.tasks.add({
@@ -286,10 +397,10 @@ describe('Runner', () => {
 
   // R-003/R-012: the journal is the durable record. The runner keeps nothing in memory.
   it('writes a verifiable journal covering the whole run', async () => {
-    const runner = makeRunner(repo, `require('fs').writeFileSync('${path.join(repo, 'out.ts')}', 'export const x = 1;\\n')`);
+    const runner = makeRunner(repo, `require('fs').writeFileSync('${agentPath(repo, 'out.ts')}', 'export const x = 1;\\n')`);
     runner.tasks.add({
       prompt: 'write out.ts',
-      verification: [`${process.execPath} -e process.exit(0)`],
+      verification: [`node -e process.exit(0)`],
       ownedPaths: [],
       repairDepth: 0,
     });
@@ -303,6 +414,7 @@ describe('Runner', () => {
     expect(types).toEqual([
       'RUN_START',
       'TASK_START',
+      'AGENT_DRIVER_RECEIPT',
       'AGENT_EXIT',
       'VERIFICATION',
       'TASK_END',
@@ -321,10 +433,10 @@ describe('Runner', () => {
   // existed before and neither was ever written to — .agent/trace.jsonl held 3 records
   // for the project's entire history.
   it('writes telemetry events alongside the journal', async () => {
-    const runner = makeRunner(repo, `require('fs').writeFileSync('${path.join(repo, 'out.ts')}', 'export const x = 1;\\n')`);
+    const runner = makeRunner(repo, `require('fs').writeFileSync('${agentPath(repo, 'out.ts')}', 'export const x = 1;\\n')`);
     runner.tasks.add({
       prompt: 'x',
-      verification: [`${process.execPath} -e process.exit(0)`],
+      verification: [`node -e process.exit(0)`],
       ownedPaths: [],
       repairDepth: 0,
     });
@@ -346,12 +458,12 @@ describe('Runner', () => {
   });
 
   it('can be disabled with telemetry: false', async () => {
-    const runner = makeRunner(repo, `require('fs').writeFileSync('${path.join(repo, 'out.ts')}', 'export const x = 1;\\n')`, {
+    const runner = makeRunner(repo, `require('fs').writeFileSync('${agentPath(repo, 'out.ts')}', 'export const x = 1;\\n')`, {
       telemetry: false,
     });
     runner.tasks.add({
       prompt: 'x',
-      verification: [`${process.execPath} -e process.exit(0)`],
+      verification: [`node -e process.exit(0)`],
       ownedPaths: [],
       repairDepth: 0,
     });
@@ -361,11 +473,11 @@ describe('Runner', () => {
   });
 
   it('checkpoints after each settled task and exposes a resume context', async () => {
-    const runner = makeRunner(repo, `require('fs').appendFileSync('${path.join(repo, 'log.ts')}', '// step\\n')`);
+    const runner = makeRunner(repo, `require('fs').appendFileSync('${agentPath(repo, 'log.ts')}', '// step\\n')`);
     for (let i = 0; i < 2; i += 1) {
       runner.tasks.add({
         prompt: `step ${i}`,
-        verification: [`${process.execPath} -e process.exit(0)`],
+        verification: [`node -e process.exit(0)`],
         ownedPaths: [],
         repairDepth: 0,
       });
@@ -384,12 +496,12 @@ describe('Runner', () => {
   });
 
   it('records the repair chain in the journal', async () => {
-    const runner = makeRunner(repo, `require('fs').writeFileSync('${path.join(repo, 'a.ts')}', 'export const a = 8;\\n')`, {
+    const runner = makeRunner(repo, `require('fs').appendFileSync('${agentPath(repo, 'a.ts')}', 'export const a = 8;\\n')`, {
       maxRepairDepth: 1,
     });
     runner.tasks.add({
       prompt: 'fix it',
-      verification: [`${process.execPath} -e process.exit(1)`],
+      verification: [`node -e process.exit(1)`],
       ownedPaths: [],
       repairDepth: 0,
     });
@@ -407,7 +519,7 @@ describe('Runner', () => {
     const first = makeRunner(repo, 'process.exit(0)');
     first.tasks.add({
       prompt: 'interrupted work',
-      verification: [`${process.execPath} -e process.exit(0)`],
+      verification: [`node -e process.exit(0)`],
       ownedPaths: [],
       repairDepth: 0,
     });
@@ -415,14 +527,7 @@ describe('Runner', () => {
     first.tasks.claim();
     expect(first.tasks.counts()).toMatchObject({ active: 1 });
 
-    // Backdate claimedAt so the stale threshold triggers recovery
-    const activeTask = first.tasks.list('active')[0];
-    const taskPath = path.join(repo, '.queue', 'active', `${activeTask.id}.json`);
-    const taskData = JSON.parse(fs.readFileSync(taskPath, 'utf8'));
-    taskData.claimedAt = new Date(Date.now() - 31 * 60 * 1000).toISOString(); // 31 minutes ago
-    fs.writeFileSync(taskPath, JSON.stringify(taskData, null, 2));
-
-    const second = makeRunner(repo, `require('fs').writeFileSync('${path.join(repo, 'out.ts')}', 'export const x = 1;\\n')`);
+    const second = makeRunner(repo, `require('fs').writeFileSync('${agentPath(repo, 'out.ts')}', 'export const x = 1;\\n')`);
     const summary = await second.run();
 
     expect(summary.recovered).toBe(1);
@@ -436,11 +541,11 @@ describe('Runner', () => {
     // 12 sequential headless-agent spawns plus verification under load have
     // occasionally exceeded the 10s global timeout on cold CI; give the suite
     // a longer budget to keep the assertion about non-accumulation deterministic.
-    const runner = makeRunner(repo, `require('fs').appendFileSync('${path.join(repo, 'log.ts')}', '// step\\n')`);
+    const runner = makeRunner(repo, `require('fs').appendFileSync('${agentPath(repo, 'log.ts')}', '// step\\n')`);
     for (let i = 0; i < 12; i += 1) {
       runner.tasks.add({
         prompt: `step ${i}`,
-        verification: [`${process.execPath} -e process.exit(0)`],
+        verification: [`node -e process.exit(0)`],
         ownedPaths: [],
         repairDepth: 0,
       });
@@ -456,13 +561,13 @@ describe('Runner', () => {
   it('stops after maxTasks and leaves the rest queued', async () => {
     const runner = makeRunner(
       repo,
-      `require('fs').appendFileSync('${path.join(repo, 'log.ts')}', '// step\\n')`,
+      `require('fs').appendFileSync('${agentPath(repo, 'log.ts')}', '// step\\n')`,
       { maxTasks: 2 }
     );
     for (let i = 0; i < 5; i += 1) {
       runner.tasks.add({
         prompt: `step ${i}`,
-        verification: [`${process.execPath} -e process.exit(0)`],
+        verification: [`node -e process.exit(0)`],
         ownedPaths: [],
         repairDepth: 0,
       });
@@ -477,12 +582,12 @@ describe('Runner', () => {
   it('records run context in RUN_START rather than in the journal identity', async () => {
     // Regression: keying identity on the git HEAD made the journal unopenable after
     // the runner's first commit. Per-run facts belong in RUN_START data.
-    const runner = makeRunner(repo, `require('fs').writeFileSync('${path.join(repo, 'out.ts')}', 'export const x = 1;\\n')`, {
+    const runner = makeRunner(repo, `require('fs').writeFileSync('${agentPath(repo, 'out.ts')}', 'export const x = 1;\\n')`, {
       runContext: { gitHead: 'abc123' },
     });
     runner.tasks.add({
       prompt: 'x',
-      verification: [`${process.execPath} -e process.exit(0)`],
+      verification: [`node -e process.exit(0)`],
       ownedPaths: [],
       repairDepth: 0,
     });
@@ -495,11 +600,11 @@ describe('Runner', () => {
   });
 
   it('appends across separate runs even after the repo is committed', async () => {
-    const script = `require('fs').appendFileSync('${path.join(repo, 'log.ts')}', '// step\\n')`;
+    const script = `require('fs').appendFileSync('${agentPath(repo, 'log.ts')}', '// step\\n')`;
     const first = makeRunner(repo, script);
     first.tasks.add({
       prompt: 'step 1',
-      verification: [`${process.execPath} -e process.exit(0)`],
+      verification: [`node -e process.exit(0)`],
       ownedPaths: [],
       repairDepth: 0,
     });
@@ -511,7 +616,7 @@ describe('Runner', () => {
     const second = makeRunner(repo, script);
     second.tasks.add({
       prompt: 'step 2',
-      verification: [`${process.execPath} -e process.exit(0)`],
+      verification: [`node -e process.exit(0)`],
       ownedPaths: [],
       repairDepth: 0,
     });
@@ -524,11 +629,11 @@ describe('Runner', () => {
   });
 
   it('requestStop() ends the run after the current task', async () => {
-    const runner = makeRunner(repo, `require('fs').appendFileSync('${path.join(repo, 'log.ts')}', '// step\\n')`);
+    const runner = makeRunner(repo, `require('fs').appendFileSync('${agentPath(repo, 'log.ts')}', '// step\\n')`);
     for (let i = 0; i < 3; i += 1) {
       runner.tasks.add({
         prompt: `step ${i}`,
-        verification: [`${process.execPath} -e process.exit(0)`],
+        verification: [`node -e process.exit(0)`],
         ownedPaths: [],
         repairDepth: 0,
       });

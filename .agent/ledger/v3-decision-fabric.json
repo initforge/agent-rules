@@ -1,0 +1,62 @@
+{
+  "schema_version": 4,
+  "plan_id": "v3-decision-fabric",
+  "status": "COMPLETED",
+  "execution_state": "COMPLETED",
+  "effective_plan_identity": {
+    "sha256": "8af2e455fed0d147982044d3e1f4da75cc11de52be7bcbbf75758967d6438b40",
+    "canonical_json_utf8": "{\"algorithm\":\"SHA-256\",\"approved_amendments\":[],\"composition\":\"original-plus-ordered-approved-amendment-sha256\",\"original_plan_sha256\":\"bf6894b7435dc534e5ecd074effb027d9bee2dc5411c4df9c6cdc889080514b0\",\"version\":1}",
+    "bytes": 214
+  },
+  "created_at": "2026-08-12T00:00:00.000Z",
+  "updated_at": "2026-08-12T05:14:48+07:00",
+  "shadow_revision": 1,
+  "original_plan": {
+    "path": ".agent/plans/v3-decision-fabric/original.md",
+    "sha256": "bf6894b7435dc534e5ecd074effb027d9bee2dc5411c4df9c6cdc889080514b0",
+    "bytes": 584,
+    "encoding": "utf-8"
+  },
+  "milestones": {
+    "M8": {
+      "requirements": [
+        { "id": "REQ-001", "status": "MATCH", "proofStatus": "MATCH", "statement": "Preserve raw intent and traceability.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-002", "status": "MATCH", "proofStatus": "MATCH", "statement": "Reject stale execution generations.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-003", "status": "MATCH", "proofStatus": "MATCH", "statement": "Derive PASS from evidence.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-004", "status": "MATCH", "proofStatus": "MATCH", "statement": "Validate semantic state.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-005", "status": "MATCH", "proofStatus": "MATCH", "statement": "Bound reconciliation.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-006", "status": "MATCH", "proofStatus": "MATCH", "statement": "Use structured WorkSpec inputs.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-007", "status": "MATCH", "proofStatus": "MATCH", "statement": "Resolve phase before skills.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-008", "status": "MATCH", "proofStatus": "MATCH", "statement": "Separate decision dimensions.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-009", "status": "MATCH", "proofStatus": "MATCH", "statement": "Keep domain packs removable.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-010", "status": "MATCH", "proofStatus": "MATCH", "statement": "Declare provider effects and health.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-011", "status": "MATCH", "proofStatus": "MATCH", "statement": "Do not activate installed tools implicitly.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-012", "status": "MATCH", "proofStatus": "MATCH", "statement": "Compile bounded hybrid context.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-013", "status": "MATCH", "proofStatus": "MATCH", "statement": "Bind repository facts to provenance.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-014", "status": "MATCH", "proofStatus": "MATCH", "statement": "Detect monorepo and test facts.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-015", "status": "MATCH", "proofStatus": "MATCH", "statement": "Use a portable AgentDriver seam.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-016", "status": "MATCH", "proofStatus": "MATCH", "statement": "Share authority with Control Plane.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-017", "status": "MATCH", "proofStatus": "MATCH", "statement": "Keep Pencil explicit-only.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-018", "status": "MATCH", "proofStatus": "MATCH", "statement": "Separate artifact lifecycles.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-019", "status": "MATCH", "proofStatus": "MATCH", "statement": "Migrate legacy with parity.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-020", "status": "MATCH", "proofStatus": "MATCH", "statement": "Treat external data as untrusted.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-021", "status": "MATCH", "proofStatus": "MATCH", "statement": "Require independent verification.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-022", "status": "MATCH", "proofStatus": "MATCH", "statement": "Dogfood gates during implementation.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-023", "status": "MATCH", "proofStatus": "MATCH", "statement": "Keep operator state derived and concise.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] },
+        { "id": "REQ-024", "status": "MATCH", "proofStatus": "MATCH", "statement": "Close only with green local and remote evidence.", "evidenceRefs": [{ "path": ".agent/evidence/v3-decision-fabric-closure.json", "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f" }] }
+      ]
+    }
+  },
+  "canonical_scope": {
+    "plan_id": "v3-decision-fabric",
+    "reviewed_contract": {
+      "requirement_ids": ["REQ-001", "REQ-002", "REQ-003", "REQ-004", "REQ-005", "REQ-006", "REQ-007", "REQ-008", "REQ-009", "REQ-010", "REQ-011", "REQ-012", "REQ-013", "REQ-014", "REQ-015", "REQ-016", "REQ-017", "REQ-018", "REQ-019", "REQ-020", "REQ-021", "REQ-022", "REQ-023", "REQ-024"]
+    }
+  },
+  "closure_evidence": {
+    "path": ".agent/evidence/v3-decision-fabric-closure.json",
+    "sha256": "53205a75f5f50c61ee23bc8148f5bc008e680dbec96d4f48162495dc3ad50f0f",
+    "status": "PASS"
+  },
+  "reconciliations": []
+}

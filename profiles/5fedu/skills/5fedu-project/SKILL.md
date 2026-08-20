@@ -1,57 +1,35 @@
 ---
 name: 5fedu-project
-description: Install or maintain the lean 5fedu context pack in an active project. Use for 5fedu setup, context/5fedu, tah-app, nostime, owner decisions, and Supabase conventions. During project implementation, use the installed project context. Do not use without 5fedu context in the active repository.
-routing: {"signals":["5fedu","context/5fedu","tah-app","nostime","thiết lập 5fedu","cài context dự án","owner decisions","supabase"],"intent_signals":["5fedu_setup","5fedu_context"],"excludes":["generic module without 5fedu"],"priority":70,"loads":["profile:5fedu:readme"],"supports":["5fedu-module-parity"],"project_scope":"5fedu","platform_scope":"all","max_route_tokens":1800,"default":false}
+description: Use only after explicit 5fedu project/domain-pack activation. Route reusable 5fedu knowledge from the harness,
+  keep project-specific truth in the active repository, and use the central manifest-bound ERP reference through the reference
+  broker. Never activate from prompt wording and never require copying the template into the project.
 ---
 
-# 5fedu project context
+# 5fedu project routing
 
-## Mục đích
+## Activation
 
-Cài và duy trì pack lean tại `<active-repo>/context/5fedu/`. Khi triển khai
-ứng dụng, đây là nguồn context đang sống; profile trong harness chỉ là nguồn
-phát hành canonical.
+This skill is eligible only when the host/runtime has already activated the 5fedu project scope, for example `domain_pack: 5fedu`, `--domain-pack 5fedu`, or the explicit compatibility marker. Words such as `drawer`, `ERP`, `listview`, or `5fedu` in a prompt are not sufficient activation by themselves.
 
-## Pack được cài
+## Canonical source access
 
-| Path | Nội dung |
-|---|---|
-| `README.md` | Điểm vào và định tuyến ngắn |
-| `rules/` | Business, data/auth và permission invariants |
-| `behaviors/` | Activation và lifecycle policy |
-| `module-mapping/` | Module roles, UI contracts và source verification |
-| `project-local/` | Facts, quyết định và evidence do repo dự án sở hữu; được giữ nguyên khi cập nhật |
+Do not install or copy the ERP template into the active repository.
 
-## Setup
-
-```powershell
-pwsh skills/5fedu-project/scripts/install-5fedu-context.ps1 `
-  -ProjectRoot <repo> -Profile tah-app -SkipPrompts
+```text
+agent-rules reference 5fedu <manifest-bound-path>
+agent-rules reference-search 5fedu <literal-query>
 ```
 
-- `-Profile default|tah-app|nostime` chỉ chọn định danh project cho routing.
-- `-Force` cập nhật atomically phần managed và giữ `project-local/`.
-- `-UpdatePointersOnly` chỉ sửa pointer sau khi pack hiện tại được xác minh.
-- Các tham số ngoài API trên bị từ chối; không còn remote/template override.
+The central source receipt, source manifest, and behavior evidence are authoritative for template behavior. The active project remains authoritative for its own schema, routes, business facts and decisions.
 
-## G-09 — Registry truth
+## Implementation boundary
 
-Registry hiện có đúng hai project ID:
+- Use `5fedu-module-parity` for module/UI parity work.
+- Inspect exact source pointers before copying/adapting behavior.
+- Never infer a target requirement merely because the reference template implements it.
+- Never weaken verification or claim parity without runtime/browser evidence when visual behavior matters.
+- Pencil is manual/explicit-only; do not activate it from task wording.
 
-- `tah-app`
-- `nostime`
+## Legacy compatibility
 
-Đây là tập hiện tại, không phải giới hạn vĩnh viễn. Chỉ owner mới được duyệt
-thêm project; registry giữ ID, vai trò, repository URL và verified commit, và
-không giữ đường dẫn tuyệt đối trên máy phát triển.
-
-## G-04 — Decision truth and routing
-
-- Quyết định project-local có trạng thái `DA_CHOT` là cơ sở thực thi và không
-  được hỏi lại.
-- Dữ kiện chưa được quyết định, mâu thuẫn hoặc rủi ro phải hỏi owner hoặc chặn
-  phần việc chịu ảnh hưởng; không được phát minh fact.
-- Công việc UI/module parity được giao cho `5fedu-module-parity`; skill này
-  không định nghĩa lại workflow parity.
-- Lesson áp dụng cho nhiều project chỉ được promote qua
-  `context-evolution-protocol`.
+The installer script under this skill remains only for repositories that intentionally retain the historical `context/5fedu/` layout. North-Star projects do not need that installation step.

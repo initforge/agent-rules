@@ -1,0 +1,123 @@
+version: 1
+plan_id: v3-decision-fabric
+requirements:
+  - id: REQ-001
+    statement: Preserve raw intent, WorkSpec, TaskPacket, traceability, and claim identity through execution.
+    status: active
+    verification: ["npm run check"]
+    added_by: plan
+  - id: REQ-002
+    statement: Bind every dispatchable task and result to the current work generation and reject stale landing.
+    status: active
+    verification: ["node_modules/.bin/vitest run --config packages/engine/vitest.config.ts packages/engine/test/northstar-governance.test.ts"]
+    added_by: plan
+  - id: REQ-003
+    statement: Derive PASS from verifier evidence and acceptance audit rather than worker self-report.
+    status: active
+    verification: ["npm run test:fast"]
+    added_by: plan
+  - id: REQ-004
+    statement: Validate semantic state across pointer, generation, tasks, runs, evidence, and acceptance.
+    status: active
+    verification: ["node automation/validate-agent-dir.mjs"]
+    added_by: plan
+  - id: REQ-005
+    statement: Keep reconciliation bounded by failure signature, attempt count, strategy, and generation.
+    status: active
+    verification: ["npm run check"]
+    added_by: plan
+  - id: REQ-006
+    statement: Make WorkSpec impact and TaskPacket structure the primary decision inputs.
+    status: active
+    verification: ["node automation/validate-decision-fabric.mjs"]
+    added_by: plan
+  - id: REQ-007
+    statement: Make explicit phase resolution precede skill priority and allow a normal zero-skill result.
+    status: active
+    verification: ["node automation/validate-decision-fabric.mjs"]
+    added_by: plan
+  - id: REQ-008
+    statement: Separate skills, policies, capabilities, providers, verifiers, and reviewers as typed decisions.
+    status: active
+    verification: ["node automation/validate-tool-registry.mjs"]
+    added_by: plan
+  - id: REQ-009
+    statement: Keep domain packs removable and prevent phrase matching from granting domain authority.
+    status: active
+    verification: ["npm run check"]
+    added_by: plan
+  - id: REQ-010
+    statement: Require effect, permission, health, fallback, and activation metadata for providers.
+    status: active
+    verification: ["node automation/validate-decision-fabric.mjs"]
+    added_by: plan
+  - id: REQ-011
+    statement: Treat installed tools and explicit-only integrations as non-activated until selected by policy.
+    status: active
+    verification: ["node automation/validate-tool-registry.mjs"]
+    added_by: plan
+  - id: REQ-012
+    statement: Compile bounded context with entrypoints, symbols, decisions, localization, and retrieval mode.
+    status: active
+    verification: ["npm run check"]
+    added_by: plan
+  - id: REQ-013
+    statement: Derive repository and change facts with source paths, hashes, provenance, and no invented domain truth.
+    status: active
+    verification: ["node automation/validate-repo-facts.mjs"]
+    added_by: plan
+  - id: REQ-014
+    statement: Detect monorepo workspaces, framework, test runner, source ownership, and impact boundaries.
+    status: active
+    verification: ["node automation/detect-stack-facts.mjs --self-test"]
+    added_by: plan
+  - id: REQ-015
+    statement: Keep provider and worker execution portable behind an AgentDriver receipt seam.
+    status: active
+    verification: ["npm run check"]
+    added_by: plan
+  - id: REQ-016
+    statement: Expose the same execution authority to dispatcher, runtime, and Control Plane.
+    status: active
+    verification: ["npm run check"]
+    added_by: plan
+  - id: REQ-017
+    statement: Preserve explicit Pencil/manual integration policy and never trigger it from generic design language.
+    status: active
+    verification: ["node automation/validate-tool-registry.mjs"]
+    added_by: plan
+  - id: REQ-018
+    statement: Keep generated output, evidence, runtime artifacts, and source code on distinct lifecycle boundaries.
+    status: active
+    verification: ["node automation/validate-agent-dir.mjs"]
+    added_by: plan
+  - id: REQ-019
+    statement: Migrate legacy surfaces only with parity, tombstones, and explicit supersession traceability.
+    status: active
+    verification: ["npm run check"]
+    added_by: plan
+  - id: REQ-020
+    statement: Keep external data untrusted and prevent it from becoming permission metadata or execution authority.
+    status: active
+    verification: ["npm run check"]
+    added_by: plan
+  - id: REQ-021
+    statement: Require independent verification, review, and acceptance evidence for release claims.
+    status: active
+    verification: ["npm run test:fast"]
+    added_by: plan
+  - id: REQ-022
+    statement: Apply dogfood gates during implementation so future harness behavior is exercised immediately.
+    status: active
+    verification: ["node automation/verify-all.mjs"]
+    added_by: plan
+  - id: REQ-023
+    statement: Keep operator state concise, explainable, and derived from canonical projections.
+    status: active
+    verification: ["npm run check"]
+    added_by: plan
+  - id: REQ-024
+    statement: Close the migration only after full local verification and green remote CI evidence.
+    status: active
+    verification: ["npm run ci:quality"]
+    added_by: plan

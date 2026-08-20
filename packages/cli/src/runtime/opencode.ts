@@ -70,7 +70,13 @@ async function canonicalFiles(root: string, model: string): Promise<FileEntry[]>
 
 export async function buildOpenCodeArtifact(root: string, buildRoot: string): Promise<OpenCodeArtifact> {
   const model = await resolveOpenCodeModel(root);
-  const target = path.join(buildRoot, "opencode"); await fs.rm(target, { recursive: true, force: true }); await fs.mkdir(target, { recursive: true });
+  const target = path.join(buildRoot, "opencode");
+  // The generic runtime builder materializes a canonical runtime-contract.json
+  // before the OpenCode-specific native artifact is sealed. Preserve that
+  // evidence across the artifact rebuild without adding it to the host-owned
+  // OpenCode payload. Standalone artifact builds remain backward-compatible.
+  const runtimeContract = await fs.readFile(path.join(target, "runtime-contract.json")).catch(() => null);
+  await fs.rm(target, { recursive: true, force: true }); await fs.mkdir(target, { recursive: true });
   await fs.mkdir(path.join(target, "native", "agents"), { recursive: true });
   await fs.cp(path.join(root, "platforms", "opencode", "agents"), path.join(target, "native", "agents"), { recursive: true });
   for (const file of await walk(path.join(target, "native", "agents"))) { const p = path.join(target, "native", "agents", file); await fs.writeFile(p, (await fs.readFile(p, "utf8")).replaceAll("__OPENCODE_MODEL_CLASS__", model)); }
@@ -78,7 +84,9 @@ export async function buildOpenCodeArtifact(root: string, buildRoot: string): Pr
   const files: FileEntry[] = []; for (const rel of await walk(target)) files.push({ path: rel, sha256: hash(await fs.readFile(path.join(target, rel))) }); files.sort((a, b) => a.path.localeCompare(b.path, "en"));
   const identity = await currentEffectiveIdentity(root);
   const artifact: OpenCodeArtifact = { version: 1, platform: "opencode", requested_model: model, resolved_model: model, observed_model: null, effective_identity: identity, attestation_status: "UNVERIFIED", native_capability: "UNAVAILABLE", files };
-  await fs.writeFile(path.join(target, "manifest.json"), JSON.stringify(artifact, null, 2) + "\n"); return artifact;
+  await fs.writeFile(path.join(target, "manifest.json"), JSON.stringify(artifact, null, 2) + "\n");
+  if (runtimeContract) await fs.writeFile(path.join(target, "runtime-contract.json"), runtimeContract);
+  return artifact;
 }
 
 // F2: refuse any symlink along a destination path component (lstat walk from the

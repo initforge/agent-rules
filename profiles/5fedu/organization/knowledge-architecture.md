@@ -1,78 +1,34 @@
 # 5fedu Knowledge Architecture
 
-**Purpose:** Explain the new information hierarchy. This document answers:
-- What is canonical vs generated?
-- What is evidence for?
-- What is project context for?
-- When is reverse sync allowed?
-- Why archive is not runtime context?
+## Canonical layers
 
-## What is canonical?
-
-The following directories in agent-rules are the single source of truth:
-
-| Directory | Canonical for | Owner |
+| Layer | Authority | Runtime role |
 |---|---|---|
-| `organization/` | Org-wide conventions | 5fedu org maintainer |
-| `domains/` | Reusable domain patterns | Domain experts |
-| `rules/`, `guides/` | Agent-rules core | Harness maintainer |
+| `organization/`, `domains/`, `rules/` | agent-rules | Reusable 5fedu knowledge, explicit-only |
+| `reference-source/template/` | owner-supplied, manifest-bound source | Read-only behavioral/visual reference |
+| `module-mapping/source-evidence.json` | agent-rules + verified source | Behavior → exact code pointer binding |
+| active project | target repository | Project schema, routes, decisions, data and implementation |
+| `evidence/`, `archive/` | historical | Never automatic decision authority |
 
-## What is generated?
+## Reference access
 
-`generated/` contains machine-generated context packages. They:
-- Are never hand-edited
-- Identify their source files and version
-- Can be detected as stale
-- Are safe to delete and regenerate
+Target projects do not vendor the template. Workers use the harness broker:
 
-## What is evidence for?
+```text
+agent-rules reference 5fedu <manifest-bound-path>
+agent-rules reference-search 5fedu <literal-query>
+```
 
-`evidence/` holds historical reference material:
-- Audit results (coverage checks, migration checklists)
-- Raw owner feedback before it's distilled into patterns
-- Source code examples from screenshots/chats
-- Implementation verification records
+Every emitted reference is checked against the bundled source manifest. A changed/missing/extra source file or a stale behavior pointer fails closed.
 
-Evidence is NEVER:
-- A rule source (never use as decision authority)
-- Auto-loaded into context
-- Synced to project repos
+## Project-local knowledge
 
-## What is project context for?
+Project-specific information stays in the active repository. It can live in that project's normal specs/configuration or, for an older repository, its legacy `context/5fedu/project-local/` area. The harness must not require that legacy folder.
 
-`projects/<name>/` holds facts specific to one project:
-- Project-specific decisions and open questions
-- Database schemas that deviate from domain conventions
-- Route maps unique to the project
-- Module tables that only exist in this project
+## Promotion/write-back
 
-## What is archive for?
+Only reusable patterns may be promoted from a project into the shared 5fedu domain knowledge, after review. Project-local decisions, credentials, live evidence, and app-specific schema are never automatically synced into the harness.
 
-`archive/` preserves historical project data:
-- Completed project overlays
-- Stale or superseded content retained for traceability
+## Legacy installer
 
-Archive is NOT runtime context because it:
-- Contains superseded facts
-- Has project-specific names that no longer apply
-- Has not been validated against current state
-
-## When is reverse sync allowed?
-
-| Direction | Allowed? | Conditions |
-|---|---|---|
-| agent-rules → project repos | Yes | Via `08-install-5fedu-context.ps1` |
-| project repos → agent-rules | Limited | Only domain patterns via `10-export-5fedu-writeback.ps1` |
-| project-local → agent-rules | Never | Project-local is never synced up |
-| evidence → domains | After review | Must validate as cross-project pattern first |
-| archive → runtime | Never | Archive is final; patterns extracted separately |
-
-## Sync ownership
-
-| Layer | Source of truth | Sync direction |
-|---|---|---|
-| `organization/` | agent-rules | One-way to projects |
-| `domains/` | agent-rules | One-way to projects |
-| `projects/<name>/` | agent-rules (shared) + repo (project-local) | Two-tier: template overwrites shared, never project-local |
-| `evidence/` | agent-rules | Static |
-| `archive/` | agent-rules | Static |
+The old `08-install-5fedu-context.ps1` flow remains for backward compatibility. It is not the canonical North-Star activation or reference mechanism and must never be used to copy the bundled ERP source into target repositories.

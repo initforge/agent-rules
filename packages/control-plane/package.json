@@ -6,11 +6,11 @@
   "description": "Local read-first harness control plane for agent-rules",
   "scripts": {
     "dev": "concurrently \"tsx watch src/server/index.ts\" \"vite\"",
-    "build": "tsc -p tsconfig.server.json && vite build",
+    "build": "node ../../node_modules/typescript/bin/tsc -p tsconfig.server.json && node ../../node_modules/vite/bin/vite.js build",
     "start": "node dist/server/server/index.js",
     "test": "node ../../automation/run-governed-vitest.mjs --project-root ../.. --cwd . --mode focused -- run",
     "test:watch": "node ../../automation/run-governed-vitest.mjs --project-root ../.. --cwd . --mode focused -- --watch",
-    "typecheck": "tsc --noEmit -p tsconfig.server.json && tsc --noEmit -p tsconfig.client.json"
+    "typecheck": "node ../../node_modules/typescript/bin/tsc --noEmit -p tsconfig.server.json && node ../../node_modules/typescript/bin/tsc --noEmit -p tsconfig.client.json"
   },
   "dependencies": {
     "@initforge/agent-rules-engine": "0.1.0",

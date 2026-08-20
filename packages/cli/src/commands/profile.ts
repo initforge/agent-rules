@@ -1,17 +1,24 @@
 import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
-import { runScript, getAutomationDir, getRepoRoot } from "../adapters/powershell.js";
+import { getRepoRoot, getAutomationDir } from "../adapters/repo.js";
+import { installProfile } from "../automation/install-profile.js";
+import { doctorProfile } from "../automation/doctor-profile.js";
+import { discoverProfiles } from "../automation/discover-profiles.js";
+import { removeProfile } from "../automation/remove-profile.js";
+import { updateProfile } from "../automation/update-profile.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 
 /**
- * Profile: view or apply installation profiles.
+ * Profile: view or manage installation profiles.
  *
  * Subcommands:
  *   list       — list available profiles
  *   show <name> — show profile details
- *   apply <name> [project-root] — apply a profile (via 10-sync-project-agents or 08-install-5fedu-context)
- *
- * Not yet migrated: displays profile metadata from automation/profiles/ if available.
+ *   apply <name> [project-root] — apply a profile
+ *   doctor [name] — check profile health
+ *   discover  — discover available profiles
+ *   remove <name> — remove a profile
+ *   update <name> — update a profile
  */
 export async function profileCmd(
   args: string[],
@@ -19,7 +26,8 @@ export async function profileCmd(
 ): Promise<CommandResult> {
   const subcommand = args[0] || "list";
   const root = getRepoRoot();
-  const profilesDir = path.join(root, "automation", "profiles");
+  const profilesDir = getAutomationDir();
+  const automationProfilesDir = path.join(profilesDir, "profiles");
 
   if (options.dryRun) {
     console.log(`[dry-run] Would run profile ${subcommand}`);
@@ -32,7 +40,7 @@ export async function profileCmd(
   switch (subcommand) {
     case "list": {
       try {
-        const dir = await fs.readdir(profilesDir);
+        const dir = await fs.readdir(automationProfilesDir);
         const profiles = dir
           .filter((f) => f.endsWith(".json"))
           .map((f) => f.replace(/\.json$/, ""));
@@ -57,11 +65,10 @@ export async function profileCmd(
           console.log(JSON.stringify({ profiles: [], note: "profiles directory not found" }));
         } else {
           console.log("No profiles directory found at automation/profiles/");
-          console.log("Profile management is not yet migrated from legacy scripts.");
         }
         return {
-          exitCode: ExitCode.NotImplemented,
-          message: "Profile system not yet migrated",
+          exitCode: ExitCode.Success,
+          message: "No profiles found",
           data: { profiles: [] },
         };
       }
@@ -77,7 +84,7 @@ export async function profileCmd(
       }
       try {
         const content = await fs.readFile(
-          path.join(profilesDir, `${name}.json`),
+          path.join(automationProfilesDir, `${name}.json`),
           "utf-8"
         );
         const parsed = JSON.parse(content);
@@ -102,24 +109,100 @@ export async function profileCmd(
       if (!name) {
         return {
           exitCode: ExitCode.InvalidArgument,
-          message: "Usage: agent-rules profile apply <name> [project-root]",
+          message: "Usage: agent-rules profile apply <name>",
         };
       }
-      console.log(
-        `Profile apply is not yet migrated from legacy scripts.`
-      );
-      console.log(`Would apply profile "${name}" via 08-install-5fedu-context.ps1 or 10-sync-project-agents.ps1`);
+      const result = await installProfile({ name, repoRoot: root, force: args.includes("--force") });
+      if (options.json) {
+        console.log(JSON.stringify(result, null, 2));
+      } else {
+        console.log(result.message);
+      }
       return {
-        exitCode: ExitCode.NotImplemented,
-        message: `Profile apply not yet migrated; would apply "${name}" via legacy scripts`,
-        data: { name, projectRoot: args[2] || "" },
+        exitCode: result.ok ? ExitCode.Success : ExitCode.GeneralError,
+        message: result.message,
+      };
+    }
+
+    case "doctor": {
+      const name = args[1];
+      const result = await doctorProfile(root, name || undefined);
+      if (options.json) {
+        console.log(JSON.stringify(result, null, 2));
+      } else {
+        console.log(result.ok ? "Profile health OK" : "Profile health FAILED");
+      }
+      return {
+        exitCode: result.ok ? ExitCode.Success : ExitCode.GeneralError,
+        message: result.ok ? "Profile health OK" : "Profile health FAILED",
+      };
+    }
+
+    case "discover": {
+      const profiles = await discoverProfiles(root);
+      if (profiles.length === 0) {
+        console.log("No profiles available.");
+      } else {
+        console.log("Available profiles:\n");
+        for (const p of profiles) {
+          const flag = p.enabledByDefault ? "[default]" : "[optional]";
+          console.log(`  ${p.name} ${flag}`);
+          if (p.displayName) console.log(`    Name: ${p.displayName}`);
+          if (p.version) console.log(`    Version: ${p.version}`);
+          if (p.description) console.log(`    ${p.description}`);
+          console.log("");
+        }
+      }
+      return {
+        exitCode: ExitCode.Success,
+        message: "Profiles discovered",
+      };
+    }
+
+    case "remove": {
+      const name = args[1];
+      if (!name) {
+        return {
+          exitCode: ExitCode.InvalidArgument,
+          message: "Usage: agent-rules profile remove <name>",
+        };
+      }
+      const result = await removeProfile({ name, repoRoot: root, force: args.includes("--force") });
+      if (options.json) {
+        console.log(JSON.stringify(result, null, 2));
+      } else {
+        console.log(result.message);
+      }
+      return {
+        exitCode: result.ok ? ExitCode.Success : ExitCode.GeneralError,
+        message: result.message,
+      };
+    }
+
+    case "update": {
+      const name = args[1];
+      if (!name) {
+        return {
+          exitCode: ExitCode.InvalidArgument,
+          message: "Usage: agent-rules profile update <name>",
+        };
+      }
+      const result = await updateProfile({ name, repoRoot: root, force: args.includes("--force") });
+      if (options.json) {
+        console.log(JSON.stringify(result, null, 2));
+      } else {
+        console.log(result.message);
+      }
+      return {
+        exitCode: result.ok ? ExitCode.Success : ExitCode.GeneralError,
+        message: result.message,
       };
     }
 
     default:
       return {
         exitCode: ExitCode.InvalidArgument,
-        message: `Unknown profile subcommand: ${subcommand}. Use: list, show <name>, apply <name>`,
+        message: `Unknown profile subcommand: ${subcommand}. Use: list, show, apply, doctor, discover, remove, update`,
       };
   }
 }

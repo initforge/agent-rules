@@ -22,6 +22,7 @@ const mode = args._[0];
 const state = path.resolve(args.state);
 const publicPort = Number(args['public-port']);
 const apiPort = Number(args['api-port']);
+const ownerPid = Number(args['owner-pid'] ?? 0);
 
 fs.mkdirSync(path.join(state, 'logs'), { recursive: true });
 
@@ -266,6 +267,16 @@ function graceful(server, timer) {
   };
   process.on('SIGTERM', shutdown);
   process.on('SIGINT', shutdown);
+  if (Number.isInteger(ownerPid) && ownerPid > 1 && ownerPid !== process.pid) {
+    const ownerWatch = setInterval(() => {
+      try {
+        process.kill(ownerPid, 0);
+      } catch (error) {
+        if (error?.code !== 'EPERM') shutdown();
+      }
+    }, 200);
+    ownerWatch.unref();
+  }
 }
 
 if (mode === 'api') graceful(startApi(), null);

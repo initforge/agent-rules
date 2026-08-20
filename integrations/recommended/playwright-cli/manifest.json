@@ -1,0 +1,10 @@
+{
+  "name": "playwright-cli",
+  "policy": "recommended",
+  "npmPackage": "@playwright/cli",
+  "commandName": "playwright-cli",
+  "version": "0.1.18",
+  "versionPolicy": "pinned",
+  "capability": "browser.verify",
+  "notes": "Default browser provider for coding-agent verification. Use Playwright MCP for exploratory sessions, not as the normal coding path."
+}

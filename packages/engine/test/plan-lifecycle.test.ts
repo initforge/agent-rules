@@ -7,9 +7,11 @@ import {
   lockFile, lockDirectory, sha256Bytes,
   type PlanIdentity, type Reconciliation,
 } from '../src/plan-lifecycle.js';
+import { computeCanonicalEffectivePlanIdentity } from '../src/plan-identity.js';
 import { exportPlanBundle, importPlanBundle } from '../src/export-bundle.js';
 import type { WorkLedger, ReviewReceipt } from '../src/contracts.js';
 import { planAnchorId } from '../src/contracts.js';
+import { SYMLINK_CAPABLE } from './helpers/symlink-capability.js';
 
 const tmpDirs: string[] = [];
 
@@ -102,6 +104,40 @@ describe('adoptPlan', () => {
 
     const reRead = fs.readFileSync(expectedTarget);
     expect(result.originalSha256).toBe(sha256Bytes(new Uint8Array(reRead)));
+    expect(result.identityKind).toBe('canonical');
+  });
+
+  it('uses the shared canonical identity for canonical amendment filenames', () => {
+    const dir = tmpDir();
+    const sourcePath = writeFile(path.join(dir, 'plan.md'), '# Canonical Plan\n');
+    const plansDir = path.join(dir, 'plans');
+    const amendmentDir = path.join(plansDir, 'canonical-plan', 'amendments');
+    fs.mkdirSync(amendmentDir, { recursive: true });
+    writeFile(path.join(amendmentDir, 'AM-0001.md'), '# Approved amendment\n');
+
+    const result = adoptPlan(sourcePath, 'canonical-plan', plansDir);
+    const originalSha = sha256Bytes(new Uint8Array(fs.readFileSync(path.join(plansDir, 'canonical-plan', 'original.md'))));
+    const amendmentSha = sha256Bytes(new Uint8Array(fs.readFileSync(path.join(amendmentDir, 'AM-0001.md'))));
+    const expected = computeCanonicalEffectivePlanIdentity(originalSha, [{ amendment_id: 'AM-0001', sha256: amendmentSha }]);
+
+    expect(result.identityKind).toBe('canonical');
+    expect(result.effectivePlanSha256).toBe(expected.sha256);
+  });
+
+  it('labels arbitrary amendment filenames as legacy compatibility instead of canonical truth', () => {
+    const dir = tmpDir();
+    const sourcePath = writeFile(path.join(dir, 'plan.md'), '# Legacy Plan\n');
+    const plansDir = path.join(dir, 'plans');
+    const amendmentDir = path.join(plansDir, 'legacy-plan', 'amendments');
+    fs.mkdirSync(amendmentDir, { recursive: true });
+    writeFile(path.join(amendmentDir, 'am1.md'), '# Legacy amendment\n');
+
+    const result = adoptPlan(sourcePath, 'legacy-plan', plansDir);
+    const originalBytes = fs.readFileSync(path.join(plansDir, 'legacy-plan', 'original.md'));
+    const amendmentBytes = fs.readFileSync(path.join(amendmentDir, 'am1.md'));
+
+    expect(result.identityKind).toBe('legacy-compatibility');
+    expect(result.effectivePlanSha256).toBe(sha256Bytes(new Uint8Array(Buffer.concat([originalBytes, amendmentBytes]))));
   });
 
   it('rejects non-existent source path', () => {
@@ -254,7 +290,7 @@ describe('lockFile', () => {
     lock2.unlock();
   });
 
-  it('rejects symlink at lock path (O_NOFOLLOW)', () => {
+  it.skipIf(!SYMLINK_CAPABLE)('rejects symlink at lock path (O_NOFOLLOW)', () => {
     const dir = tmpDir();
     const lockTarget = path.join(dir, 'data.json');
     const fakeLock = path.join(dir, 'data.json.lock');
@@ -282,7 +318,7 @@ describe('lockDirectory', () => {
     lock2.unlock();
   });
 
-  it('rejects symlink at lock path (O_NOFOLLOW)', () => {
+  it.skipIf(!SYMLINK_CAPABLE)('rejects symlink at lock path (O_NOFOLLOW)', () => {
     const dir = tmpDir();
     const lockPath = path.join(dir, '.lock');
     const outside = path.join(dir, 'outside');

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/integration-effect.schema.json",
+  "title": "Integration capability effect contract",
+  "description": "Effect and proof metadata for an external provider. Availability never grants authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["effect_level", "environment", "approval", "reversible", "network", "credentials", "timeout_ms", "provider_evidence"],
+  "properties": {
+    "effect_level": { "enum": ["read-only", "interactive", "write", "destructive"] },
+    "environment": { "enum": ["local", "browser", "network", "host"] },
+    "approval": { "enum": ["policy", "task-scope", "explicit-provider", "owner" ] },
+    "reversible": { "type": "boolean" },
+    "network": { "type": "boolean" },
+    "credentials": { "enum": ["none", "optional", "required"] },
+    "timeout_ms": { "type": "integer", "minimum": 1 },
+    "provider_evidence": { "enum": ["static-only", "health-probe", "live-receipt"] }
+  }
+}

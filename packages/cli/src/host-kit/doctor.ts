@@ -124,7 +124,6 @@ export interface HostKitDoctorReport {
 export async function detectLoadedConfig(repoRoot: string): Promise<LoadedConfigInfo> {
   try {
     const currentJson = path.join(repoRoot, ".agent", "current.json");
-    const ledgerDir = path.join(repoRoot, ".agent", "ledger");
     const manifestYaml = path.join(repoRoot, "rules", "manifest.yaml");
     const cfgDir = path.join(repoRoot, "rules");
 
@@ -158,21 +157,8 @@ export async function detectLoadedConfig(repoRoot: string): Promise<LoadedConfig
       configSource = path.relative(repoRoot, cfgDir);
     }
 
-    // Ledger hash if available (exactly one ledger file)
-    if (await exists(ledgerDir)) {
-      const entries = (await fs.readdir(ledgerDir)).filter((n) => n.endsWith(".json"));
-      if (entries.length === 1) {
-        const ledgerPath = path.join(ledgerDir, entries[0]);
-        const body = await fs.readFile(ledgerPath);
-        const lhash = sha256(body);
-        // Prefer ledger hash as the canonical config hash
-        if (lhash) {
-          configHash = lhash;
-          configSource = path.relative(repoRoot, ledgerPath);
-          if (!generation) generation = 1;
-        }
-      }
-    }
+    // Runtime ledgers under .agent/ are evidence, never configuration authority.
+    // They may describe what ran, but must not replace the hash/source of canonical rules.
 
     return { generation, configHash, configSource };
   } catch {

@@ -29,7 +29,7 @@ Repo này được tổ chức để người mới nhìn cây thư mục là bi
 2. `README-vi.md`.
 3. `integrations/README.md`.
 4. `06-platform-capability.md` — capability matrix (explicit depth/status per platform).
-5. Nếu làm việc với 5fedu: bật profile trước (`profiles\install-profile.ps1 -Name 5fedu`) rồi xem `profiles/5fedu/projects/AGENTS.md`.
+5. Nếu project chủ động dùng 5fedu: chọn `--domain-pack 5fedu`, đọc `profiles/5fedu/README.md` và dùng `agent-rules reference 5fedu <path>` để đọc source reference trung tâm; không copy/cài template vào project.
 
 ## Quy tắc đồng bộ
 
@@ -51,7 +51,7 @@ Repo này được tổ chức để người mới nhìn cây thư mục là bi
 ### Public core vs private/optional profiles
 
 - **Core harness** (rules, skills, integrations, platforms, automation) is public — all agents and users load it.
-- **Optional profiles** (`profiles/5fedu/`, etc.) are private until enabled. Each profile has `enabledByDefault: false` and must be explicitly activated via `profiles/install-profile.ps1`. Profiles own their files via `ownedFiles` in `profiles/manifest.yaml`.
+- **Optional profiles/domain packs** (`profiles/5fedu/`, etc.) are inactive until explicitly selected. North-Star projects bind by profile/domain-pack id; the 5fedu reference snapshot stays inside the harness and is not copied into the target project. Legacy profile installers may remain for compatibility but are not the canonical North-Star activation path.
 
 ### Evidence, archive, project context
 

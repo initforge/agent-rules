@@ -98,7 +98,7 @@ Write structured JSON report to `.agent/parity-reports/<run-id>/report.json`.
 
 ## Evidence collection commands
 
-Using Playwright MCP tools (from `integrations/recommended/playwright-mcp/`):
+Default: use Playwright Agent CLI (`browser.verify`) for deterministic navigation/assertion/screenshot evidence. If the flow is genuinely exploratory, use Playwright MCP (`browser.explore`) from `integrations/recommended/playwright-mcp/`:
 
 - `browser_navigate` — navigate to URL
 - `browser_resize` — set viewport

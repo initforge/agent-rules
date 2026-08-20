@@ -1,10 +1,9 @@
 # Tombstones
 
-A tombstone records a rule or skill that was **deliberately deleted**, so that
-`automation/07-import-reviewed-changes.ps1` cannot resurrect it from an installed
-runtime mirror during reverse sync.
+Retired plan/runtime surfaces are recorded here with their former path, owner,
+replacement, reason, and recovery location. A tombstone is lifecycle evidence;
+it is not an execution authority and cannot grant PASS.
 
-Referenced by `rules/41-harness-maintainer.md` §2 and
-`docs/guides/00-system-map.md`.
-
-One file per deletion: `<slug>.md` containing the path removed, the date, and why.
+Deletion policy: prefer archive or tombstone over irreversible removal. Any
+future cleanup must preserve a traceable replacement or an explicit owner
+decision that the behavior is no longer required.

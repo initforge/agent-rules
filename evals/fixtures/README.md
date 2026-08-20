@@ -84,14 +84,14 @@ Tracks multiple dimensions (never a single score):
 
 ```powershell
 python automation/test-agent-quality-benchmark.py
-pwsh automation/build-benchmark-runtime.ps1 -OutputRoot .agent/benchmarks/runtime -Force
+pwsh automation/build-benchmark-runtime.ps1 -OutputRoot .agent/tmp/benchmarks/runtime -Force
 python automation/test-live-agent-adapter.py
-python automation/run-live-benchmark.py --mode native --cases live-advisory-no-mutation --output .agent/benchmarks/results/native-smoke.jsonl
+python automation/run-live-benchmark.py --mode native --cases live-advisory-no-mutation --output .agent/tmp/benchmarks/results/native-smoke.jsonl
 $env:CODEX_API_KEY = '<process-scoped key>'
 python automation/run-live-benchmark.py --mode ablation --cases live-advisory-no-mutation live-tiny-one-file live-plan-no-execute live-pasted-plan-no-pivot live-permission-allowed-denied live-scope-expansion --repeat 2 --reasoning-effort medium
-python automation/test-agent-quality-benchmark.py --routing-only --output .agent/benchmarks/run/routing.json
-python automation/collect-live-results.py <result.jsonl> --output .agent/benchmarks/run/live.jsonl
-python automation/report-agent-quality.py --routing .agent/benchmarks/run/routing.json --live .agent/benchmarks/run/live.jsonl --trace .agent/trace.jsonl --output-dir .agent/benchmarks/run
+python automation/test-agent-quality-benchmark.py --routing-only --output .agent/tmp/benchmarks/run/routing.json
+python automation/collect-live-results.py <result.jsonl> --output .agent/tmp/benchmarks/run/live.jsonl
+python automation/report-agent-quality.py --routing .agent/tmp/benchmarks/run/routing.json --live .agent/tmp/benchmarks/run/live.jsonl --trace .agent/trace.jsonl --output-dir .agent/tmp/benchmarks/run
 ```
 
 ## Compatibility
@@ -113,9 +113,9 @@ new_format = convert_v1_live_record(old_record)
 
 ## Evidence boundary
 
-- Store run artifacts under `.agent/benchmarks/`; they are advisory and gitignored.
+- Store run artifacts under `.agent/tmp/benchmarks/`; they are disposable, advisory, and gitignored.
 - Persistent ablation homes never contain credentials. Ablation execution accepts only `CODEX_API_KEY`; copying `auth.json` is unsupported because refresh-token rotation can invalidate the active local session.
-- `native` uses the current signed-in Codex home without copying it, runs `full` only, keeps the installed harness enabled, and confines artifacts to `.agent/benchmarks/`. It proves current-runtime behavior but is never baseline/core evidence.
+- `native` uses the current signed-in Codex home without copying it, runs `full` only, keeps the installed harness enabled, and confines artifacts to `.agent/tmp/benchmarks/`. It proves current-runtime behavior but is never baseline/core evidence.
 - `ablation` uses credential-free isolated homes and a process-scoped `CODEX_API_KEY` to compare baseline/core/full.
 - The runner checkpoints validated records after every completed variant so an interrupted triplet retains partial evidence without being misreported as comparable.
 - Do not store chain-of-thought, secrets, full tool payloads, or sensitive prompts.

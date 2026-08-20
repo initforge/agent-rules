@@ -1,48 +1,37 @@
-# Tích hợp và đồng bộ
+# Tích hợp và capability routing
 
-**Vai trò:** Policy integrations + hướng sync canonical.  
-**Ý đồ:** Agent biết tool bắt buộc và không merge ngược tự do.
+**Canonical truth:** `integrations/registry.json`.
 
-## Registry (`integrations/registry.json` + `registry.yaml`)
+External tools are not a global bag of MCPs. The North-Star Capability Broker compiles providers from the registry and attaches only capabilities routed for the current TaskPacket.
 
-Một canonical registry duy nhất cho mọi integration và MCP server.
+## Browser split
 
-| Policy | Ý nghĩa |
-|---|---|
-| `required` | Phải cài + verify pass |
-| `recommended` | Auto-check; thiếu thì install |
-| `optional` | Không cài mặc định |
+- `browser.verify` → `playwright-cli` for normal coding/E2E proof.
+- `browser.explore` → `playwright-mcp` only for exploratory live interaction.
+- `browser.debug` → `chrome-devtools-mcp` for console/network/CDP/performance diagnosis.
 
-**Generated full registry** (including profiles, trusts, capabilities):  
-[generated/references/integration-registry.md](../../generated/references/integration-registry.md)  
-Canonical source: `integrations/registry.json`. Regenerate after changes:
+## Code retrieval
 
-```bash
-python automation/generate-doc-references.py
-```
+- `code.search` → builtin `rg`.
+- `code.semantic` → default indexed provider when routed; `serena` remains explicit-only until A/B + process/resource reliability evidence supports promotion.
 
-### Registry fields
+## Output compression
 
-Xem schema tại `integrations/registry.yaml` (header comments liệt kê tất cả 21 fields).  
-**Không duplicate danh sách field ở đây** — nguồn chuẩn là registry.yaml.
+`rtk` provides `output.compress`, but compression is not inferred automatically. Raw stdout/stderr stays in evidence artifacts; promotion is based on tokens/cost per **verified task**, not command-output reduction alone.
 
-### Current integrations (5)
+## Manual providers
 
-| ID | Policy | Kind |
-|---|---|---|
-| `codebase-memory-mcp` | required | mcp |
-| `playwright-mcp` | required | mcp |
-| `chrome-devtools-mcp` | required | mcp |
-| `context7` | required | mcp |
-
-MCP adapter theo platform: `integrations/*/adapters/{codex.toml,grok.json,antigravity.json,cursor.json}`.
-
-MCP tool schemas tại `integrations/<policy>/<id>/`; generated manifest tại `generated/integrations/<id>/schema-manifest.json`.
+`integrations/manual/` is never keyword-routed. Pencil is manual/explicit-only and remains design evidence, not production UI acceptance evidence.
 
 ## Sync
 
-- **Outbound:** `automation/01-build-runtime.ps1` → `02-install-runtime.ps1` (wipe target, merge MCP adapters)
-- **Inbound:** chỉ `automation/07-import-reviewed-changes.ps1` + tombstone `.agent/tombstones/`
-- Rule: [`rules/40-harness-governance.md`](../../rules/40-harness-governance.md)
+- Outbound runtime build/install remains generated from canonical registry/platform contracts.
+- Inbound changes require the reviewed import/tombstone path; runtime copies are not configuration authority.
 
-Chi tiết runtime homes: [`01-runtime-model.md`](01-runtime-model.md).
+
+### Bounded installation and host exposure
+
+- `AGENT_RULES_INTEGRATION_PROFILE=core` is the default installer profile. It installs only the small core recommended set; use `research`, `frontend`, `qa`, `all`, or `none` explicitly when appropriate.
+- Installing a provider does **not** imply exposing its MCP tool schema globally. Governed runs attach only providers selected by the Capability Broker.
+- `AGENT_RULES_GLOBAL_MCP_PROFILE` defaults to `none`. Set it to `core`, `research`, `frontend`, `qa`, or `all` only when you intentionally want always-on MCP servers in an interactive host.
+- Explicit-only providers (for example Serena and Pencil) are never added by a global profile.

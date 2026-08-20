@@ -2,21 +2,13 @@
 
 Load after the skill triggers, in this order:
 
-1. `context/5fedu/module-mapping/modules.yaml` selects role, reference paths,
-   dependencies, and source verification state.
-2. `context/5fedu/module-mapping/ui-contracts.md` owns shared shell,
-   permission, and four-dimensional proof invariants.
-3. The active project's source receipt and schema/spec provide the exact source
-   revision and all variable-slot values.
-4. The task's `parity/<module>/` packet is the worker's only mapping authority.
+1. `profiles/5fedu/module-mapping/modules.yaml` selects the reference role and declared dependencies.
+2. `profiles/5fedu/module-mapping/ui-contracts.md`, `behavior-contract.json`, and `source-evidence.json` own shared shell/behavior invariants and their manifest-bound code pointers.
+3. `profiles/5fedu/projects/source-lock.json` plus `reference-source/source-manifest.json` own the verified central snapshot identity.
+4. The active project's schema/spec owns target-specific fields, routes, variable-slot values, business rules, and approved deviations.
+5. The task's `parity/<module>/` packet is the worker's only target mapping authority.
 
-Do not default-load historical archives, vendored reference source, another
-project overlay, or an entire template checkout. Materialize only the selected
-module and its declared dependencies. Cache/source acquisition must be isolated
-and auditable; a cache miss requires explicit network permission or an explicit
-local-repository override. A missing, stale, ambiguous, or unverified source
-never falls back to a branch, screenshot, documentation, memory, or another
-application.
+Do not default-load historical archives, another project overlay, or an entire template checkout into the target. Read only the selected reference files/dependencies through `agent-rules reference` / `reference-search`; the central template is never materialized into the target merely to use the profile. A missing, stale, ambiguous, or unverified central source never falls back to a branch, screenshot, documentation, memory, or another application.
 
 ## Packet file contract
 
@@ -25,7 +17,7 @@ the target work, not in the harness profile.
 
 | File | Required record |
 |---|---|
-| `source.lock.yaml` | Selected local template identity, source receipt, commit/hash snapshot, and reference paths. |
+| `source.lock.yaml` | Central bundled-snapshot identity, source receipt/tree hash, manifest identity, and exact reference paths. |
 | `target.yaml` | Module key, surfaces, target paths, and variable schema/spec source. |
 | `structural-map.yaml` | Per-item `create`/`adapt`/`reuse` decision, nesting, and a route object keyed exactly by each canonical target route, plus state, data, and events. |
 | `visual-contract.yaml` | A surface object keyed by canonical surface ID, with `shell_must`, alignment/responsive rules, and sourced variable-slot values. |
@@ -119,15 +111,11 @@ self-attestation alias is never enough.
 
 ## Planning, handoff, and repair
 
-1. Discover and snapshot the authoritative source; inspect its complete selected
-   file graph and the target route/feature.
+1. Verify the harness-bundled authoritative snapshot; inspect the complete selected reference file graph through the reference broker and the target route/feature.
 2. Map shell separately from variable slots. Resolve uncertainty from source,
    target, inventory, or owner before handoff; planner-owned uncertainty is not
    implementable by a worker.
-3. For a new module, copy the confirmed structural graph, rename mechanically,
-   then adapt variables and domain logic. For an audit, diff the target against
-   the source and transplant only missing shell fragments without overwriting
-   live target business logic.
+3. For a new module, reproduce the confirmed structural graph from the central source pointers into target-owned files, then adapt variables and domain logic. Do not vendor the template tree. For an audit, diff the target against the referenced source and transplant only missing shell fragments without overwriting live target business logic.
 4. A worker receives the completed packet and must honor its mapping decisions,
    `must_not_copy` entries, target paths, and approved deviations. The worker
    cannot invent visual facts, alter a mapping decision, implement uncertainty,

@@ -1,7 +1,9 @@
 ---
 name: docs-style
-description: Use this skill when creating, reviewing, rewriting, or restructuring high-quality project documentation for README.md, README-vi.md, technical specs, tech stack badges, screenshots, documentation cleanup, or /docs/**. Trigger for source-grounded docs, repo documentation architecture, docs quality complaints, README style, Vietnamese/English README parity, current-vs-legacy tech stack accuracy, or docs that must match or exceed a strong hand-written technical spec.
-routing: {"signals":["README","README-vi","/docs/","documentation","tài liệu","docs cleanup","tech stack"],"excludes":["pure code implementation"],"priority":50,"loads":["skill:docs-style"],"supports":[],"project_scope":"","platform_scope":"all","max_route_tokens":4500,"default":false}
+description: Use this skill when creating, reviewing, rewriting, or restructuring high-quality project documentation for README.md,
+  README-vi.md, technical specs, tech stack badges, screenshots, documentation cleanup, or /docs/**. Trigger for source-grounded
+  docs, repo documentation architecture, docs quality complaints, README style, Vietnamese/English README parity, current-vs-legacy
+  tech stack accuracy, or docs that must match or exceed a strong hand-written technical spec.
 ---
 
 # Docs Style
@@ -209,7 +211,7 @@ outcome you would expect: an empty `docs/assets/` and READMEs with no images at 
 Two ways to get one, in order:
 
 1. **Drive the app and capture it.** Launch the app (see the `run` skill for
-   per-project-type commands), then capture with `playwright-mcp` or
+   per-project-type commands), then capture with `playwright-cli` by default, or
    `chrome-devtools-mcp`. Save to `docs/assets/<surface>.png`.
 2. **Capture production.** When a live URL exists, screenshot the real deployment.
 

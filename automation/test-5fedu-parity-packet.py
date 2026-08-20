@@ -14,7 +14,11 @@ from pathlib import Path
 from typing import Any, Callable
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL = ROOT / "skills" / "5fedu-module-parity"
+# 5fedu parity is profile-owned. Keep legacy fallback only for old checkouts;
+# the active tree must not require duplicating this project-specific skill in core.
+PROFILE_SKILL = ROOT / "profiles" / "5fedu" / "skills" / "5fedu-module-parity"
+LEGACY_SKILL = ROOT / "skills" / "5fedu-module-parity"
+SKILL = PROFILE_SKILL if PROFILE_SKILL.is_dir() else LEGACY_SKILL
 REFERENCES = SKILL / "references"
 VALIDATOR_PATH = REFERENCES / "validate-parity-packet.py"
 EXAMPLE = REFERENCES / "examples" / "nhap-hang"
@@ -1372,6 +1376,7 @@ process.stdout.write(JSON.stringify({
             ensure_ascii=False,
         ),
         text=True,
+        encoding="utf-8",
         capture_output=True,
         check=False,
     )
@@ -1573,6 +1578,7 @@ process.stdout.write(JSON.stringify({
             ensure_ascii=False,
         ),
         text=True,
+        encoding="utf-8",
         capture_output=True,
         check=False,
     )
@@ -1869,6 +1875,7 @@ process.stdout.write(JSON.stringify({
             ensure_ascii=False,
         ),
         text=True,
+        encoding="utf-8",
         capture_output=True,
         check=False,
     )
@@ -2179,6 +2186,7 @@ process.stdout.write(JSON.stringify({
             ensure_ascii=False,
         ),
         text=True,
+        encoding="utf-8",
         capture_output=True,
         check=False,
     )

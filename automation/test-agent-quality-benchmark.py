@@ -217,7 +217,9 @@ def report_only(output_dir: str | None, routing_report: dict | None = None) -> N
     sufficient_report = aggregate_quality_report(corpus, routing_report, sufficient, trace)
     if sufficient_report["recommendation"] != "KEEP":
         raise AssertionError("sufficient clean evidence did not trigger KEEP")
-    target = Path(output_dir or ROOT / ".agent" / "benchmarks" / "self-test")
+    # Self-test output is disposable command output. Keep it below .agent/tmp
+    # so the durable .agent protocol never mistakes a report for plan state.
+    target = Path(output_dir or ROOT / ".agent" / "tmp" / "benchmarks" / "self-test")
     write_json(target / "report.json", report)
     target.mkdir(parents=True, exist_ok=True)
     (target / "REPORT.md").write_text(render_markdown(report), encoding="utf-8")

@@ -1,0 +1,28 @@
+{
+  "signals": [
+    "5fedu",
+    "ERP project",
+    "tah-app",
+    "nostime",
+    "owner decisions",
+    "supabase"
+  ],
+  "intent_signals": [
+    "5fedu_setup",
+    "5fedu_context"
+  ],
+  "excludes": [
+    "generic module without 5fedu"
+  ],
+  "priority": 70,
+  "loads": [
+    "profile:5fedu:readme"
+  ],
+  "supports": [
+    "5fedu-module-parity"
+  ],
+  "project_scope": "5fedu",
+  "platform_scope": "all",
+  "max_route_tokens": 1800,
+  "default": false
+}

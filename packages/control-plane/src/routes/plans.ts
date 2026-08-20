@@ -67,23 +67,10 @@ router.get('/:planId', (req, res: Response) => {
     const planId = req.params.planId || ''
     const workspace = readPlanWorkspace(planId)
 
-    const ledger: WorkLedger = {
-      status: workspace.identity.status,
+    const ledger: Pick<WorkLedger, 'plan' | 'reconciliations' | 'repairSlices'> = {
       plan: workspace.plan,
-      planAnchors: workspace.planAnchors,
-      batches: workspace.batches,
-      amendments: workspace.amendments,
-      assignments: workspace.assignments,
-      receipts: workspace.receipts,
-      verificationClaims: workspace.verificationClaims,
-      attestations: workspace.attestations,
       reconciliations: workspace.reconciliations,
       repairSlices: workspace.repairSlices,
-      sourceAcquisitionReceipts: workspace.sourceAcquisitionReceipts,
-      orphanFindings: workspace.orphanFindings,
-      shadowRevision: workspace.identity.shadowRevision,
-      shadowHashes: workspace.shadowHashes,
-      latestReview: workspace.latestReview,
     }
 
     const verification = computeVerificationSummary(workspace.verificationClaims)
@@ -113,6 +100,7 @@ router.get('/:planId', (req, res: Response) => {
       sourceAcquisitionReceipts: workspace.sourceAcquisitionReceipts,
       latestReview: workspace.latestReview,
       shadowHashes: workspace.shadowHashes,
+      ...(workspace.canonicalSource ? { canonicalSource: workspace.canonicalSource } : {}),
     }
 
     res.json(response)

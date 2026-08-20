@@ -218,7 +218,7 @@ describe('T2/T3 negative-probe gate (AM-0020 §7)', () => {
       scope: 'mathematically closed',
       deterministic_proof: {
         justification: 'invariant is formally verified by exhaustive enum over the finite state space',
-        proof_ref: 'evals/m11/formal-proof.txt',
+        proof_ref: 'runtime-proof/formal-finite-state-proof.txt',
       },
     };
     const gate = assertNegativeProbeOrDeterministicProof(proved, probes);

@@ -1,6 +1,6 @@
 param(
   [string]$Root = (Split-Path -Parent $PSScriptRoot),
-  [string]$OutputRoot = (Join-Path $Root ".agent\benchmarks\runtime"),
+  [string]$OutputRoot = (Join-Path $Root ".agent\tmp\benchmarks\runtime"),
   [switch]$Force
 )
 

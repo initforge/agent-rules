@@ -1,0 +1,231 @@
+{
+  "$schema": "../schemas/skill-catalog.schema.json",
+  "version": 1,
+  "source_of_truth": {
+    "skill": "<skill-root>/SKILL.md",
+    "routing": "<skill-root>/ROUTE.json",
+    "catalog": "skills/catalog.json"
+  },
+  "skills": [
+    {
+      "id": "best-of-n",
+      "source": "skills/best-of-n/SKILL.md",
+      "route": "skills/best-of-n/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": ["context-graph", "runtime-build"],
+      "duplicate_semantics": [],
+      "target_catalog": "core/strategy",
+      "disposition": "retain",
+      "compatibility_period": { "status": "active", "until": null },
+      "removal_gate": "Owner-approved replacement plus isolated behavioral/evaluation parity."
+    },
+    {
+      "id": "browser-qa",
+      "source": "skills/browser-qa/SKILL.md",
+      "route": "skills/browser-qa/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": ["context-graph", "runtime-build", "verification-router"],
+      "duplicate_semantics": [
+        { "with": "qa-skills", "signals": ["exploratory"], "resolution": "browser-qa owns browser execution; qa-skills owns bounded test-design procedure." }
+      ],
+      "target_catalog": "core/procedure/browser-proof",
+      "disposition": "retain",
+      "compatibility_period": { "status": "active", "until": null },
+      "removal_gate": "Claim-adequate browser verifier policy and headed/manual evidence parity."
+    },
+    {
+      "id": "context-evolution-protocol",
+      "source": "skills/context-evolution-protocol/SKILL.md",
+      "route": "skills/context-evolution-protocol/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": ["context-graph", "runtime-build"],
+      "duplicate_semantics": [],
+      "target_catalog": "core/governance-facade",
+      "disposition": "compatibility-facade",
+      "compatibility_period": { "status": "compatibility", "until": null },
+      "removal_gate": "Canonical context-evolution policy owner, consumer cutover, and regression evaluation."
+    },
+    {
+      "id": "docs-style",
+      "source": "skills/docs-style/SKILL.md",
+      "route": "skills/docs-style/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": ["context-graph", "runtime-build"],
+      "duplicate_semantics": [],
+      "target_catalog": "core/documentation",
+      "disposition": "retain",
+      "compatibility_period": { "status": "active", "until": null },
+      "removal_gate": "Owner-approved documentation policy replacement with fact-parity checks."
+    },
+    {
+      "id": "finish-to-completion",
+      "source": "skills/finish-to-completion/SKILL.md",
+      "route": "skills/finish-to-completion/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": ["context-graph", "runtime-build", "plan-and-handoff"],
+      "duplicate_semantics": [],
+      "target_catalog": "core/execution-facade",
+      "disposition": "compatibility-facade",
+      "compatibility_period": { "status": "compatibility", "until": null },
+      "removal_gate": "Durable execution semantics fully owned by kernel/runtime and consumer parity proven."
+    },
+    {
+      "id": "frontend-architect",
+      "source": "skills/frontend-architect/SKILL.md",
+      "route": "skills/frontend-architect/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": ["context-graph", "runtime-build", "ui-taste"],
+      "duplicate_semantics": [
+        { "with": "ui-taste", "signals": ["landing", "redesign", "giao diện đẹp"], "resolution": "frontend-architect owns implementation architecture; ui-taste is an explicit brief-led review lens." }
+      ],
+      "target_catalog": "core/frontend-implementation",
+      "disposition": "retain",
+      "compatibility_period": { "status": "active", "until": null },
+      "removal_gate": "Project design-contract routing and frontend implementation eval parity."
+    },
+    {
+      "id": "master-image-generation",
+      "source": "skills/master-image-generation/SKILL.md",
+      "route": "skills/master-image-generation/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": ["context-graph", "runtime-build"],
+      "duplicate_semantics": [],
+      "target_catalog": "core/visual-asset-capability",
+      "disposition": "retain",
+      "compatibility_period": { "status": "active", "until": null },
+      "removal_gate": "Explicit asset capability contract and provider-independent output evaluation."
+    },
+    {
+      "id": "parity-verification",
+      "source": "skills/parity-verification/SKILL.md",
+      "route": "skills/parity-verification/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": ["context-graph", "runtime-build", "verification-router"],
+      "duplicate_semantics": [],
+      "target_catalog": "core/verifier-policy/parity",
+      "disposition": "migrate-to-policy",
+      "compatibility_period": { "status": "compatibility", "until": null },
+      "removal_gate": "Claim-first parity dimensions owned by verifier policy with exploratory procedure parity."
+    },
+    {
+      "id": "plan-and-handoff",
+      "source": "skills/plan-and-handoff/SKILL.md",
+      "route": "skills/plan-and-handoff/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": ["context-graph", "runtime-build", "plan-compiler"],
+      "duplicate_semantics": [],
+      "target_catalog": "core/human-plan-and-handoff",
+      "disposition": "compatibility-facade",
+      "compatibility_period": { "status": "compatibility", "until": null },
+      "removal_gate": "Human plan skill separated from compiler/checkpoint semantics and all consumers mapped."
+    },
+    {
+      "id": "qa-skills",
+      "source": "skills/qa-skills/SKILL.md",
+      "route": "skills/qa-skills/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": ["context-graph", "runtime-build", "verification-router"],
+      "duplicate_semantics": [
+        { "with": "browser-qa", "signals": ["exploratory"], "resolution": "qa-skills owns test-design procedure; browser-qa owns browser execution and runtime evidence." }
+      ],
+      "target_catalog": "core/procedure/qa",
+      "disposition": "migrate-to-policy",
+      "compatibility_period": { "status": "compatibility", "until": null },
+      "removal_gate": "Claim/risk verification policy replaces generic QA brain without losing bounded exploratory value."
+    },
+    {
+      "id": "quality",
+      "source": "skills/quality/SKILL.md",
+      "route": "skills/quality/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": ["context-graph", "runtime-build", "verification-router"],
+      "duplicate_semantics": [],
+      "target_catalog": "core/quality-policy",
+      "disposition": "retain",
+      "compatibility_period": { "status": "active", "until": null },
+      "removal_gate": "Deterministic checks, project conventions, independent review, and style preference have separate owners."
+    },
+    {
+      "id": "researcher",
+      "source": "skills/researcher/SKILL.md",
+      "route": "skills/researcher/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": ["context-graph", "runtime-build", "capability-broker"],
+      "duplicate_semantics": [],
+      "target_catalog": "core/research-procedure",
+      "disposition": "retain",
+      "compatibility_period": { "status": "active", "until": null },
+      "removal_gate": "Provider-neutral lookup capability contract and broker routing evaluation."
+    },
+    {
+      "id": "ui-taste",
+      "source": "skills/ui-taste/SKILL.md",
+      "route": "skills/ui-taste/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": ["context-graph", "runtime-build", "frontend-architect"],
+      "duplicate_semantics": [
+        { "with": "frontend-architect", "signals": ["landing", "redesign", "giao diện đẹp"], "resolution": "ui-taste is never a universal product default; it is a brief-led anti-slop/review lens." }
+      ],
+      "target_catalog": "core/design-review-lens",
+      "disposition": "profile-explicit",
+      "compatibility_period": { "status": "active", "until": null },
+      "removal_gate": "Project design-contract routing and explicit brief/evaluation evidence."
+    },
+    {
+      "id": "verification-router",
+      "source": "skills/verification-router/SKILL.md",
+      "route": "skills/verification-router/ROUTE.json",
+      "scope": "core",
+      "owner": "harness-maintainer",
+      "consumers": ["context-graph", "runtime-build", "kernel-verifier"],
+      "duplicate_semantics": [],
+      "target_catalog": "core/verifier-selection-policy",
+      "disposition": "retain",
+      "compatibility_period": { "status": "active", "until": null },
+      "removal_gate": "Typed claim/risk verifier selection is canonical and all provider routes are evidence-bound."
+    },
+    {
+      "id": "5fedu-module-parity",
+      "source": "profiles/5fedu/skills/5fedu-module-parity/SKILL.md",
+      "route": "profiles/5fedu/skills/5fedu-module-parity/ROUTE.json",
+      "scope": "profile",
+      "owner": "profile-owner",
+      "consumers": ["context-graph", "runtime-build", "5fedu-profile-activation"],
+      "duplicate_semantics": [
+        { "with": "5fedu-project", "signals": ["5fedu"], "resolution": "Shared explicit profile activation signal; project context is the dependency, module parity is the domain procedure." }
+      ],
+      "target_catalog": "profile/5fedu/parity",
+      "disposition": "profile-explicit",
+      "compatibility_period": { "status": "active", "until": null },
+      "removal_gate": "5fedu profile replacement with manifest-bound semantic, visual, behavioral, and architectural parity."
+    },
+    {
+      "id": "5fedu-project",
+      "source": "profiles/5fedu/skills/5fedu-project/SKILL.md",
+      "route": "profiles/5fedu/skills/5fedu-project/ROUTE.json",
+      "scope": "profile",
+      "owner": "profile-owner",
+      "consumers": ["context-graph", "runtime-build", "5fedu-profile-activation"],
+      "duplicate_semantics": [
+        { "with": "5fedu-module-parity", "signals": ["5fedu"], "resolution": "Project context is loaded as the required profile dependency; module parity remains the task-specific procedure." }
+      ],
+      "target_catalog": "profile/5fedu/context",
+      "disposition": "profile-explicit",
+      "compatibility_period": { "status": "active", "until": null },
+      "removal_gate": "Manifest-bound 5fedu project context replacement with source and permission parity."
+    }
+  ]
+}

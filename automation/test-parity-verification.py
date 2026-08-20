@@ -17,6 +17,9 @@ CLAIM_FORMAT_PATH = ROOT / "skills" / "parity-verification" / "references" / "cl
 RUNBOOK_PATH = ROOT / "skills" / "parity-verification" / "references" / "runbook.md"
 EVIDENCE_PROFILES_PATH = ROOT / "automation" / "evidence-profiles.json"
 REGISTRY_PATH = ROOT / "integrations" / "registry.json"
+BROWSER_QA_PATH = ROOT / "skills" / "browser-qa" / "SKILL.md"
+PENCIL_MCP_PATH = ROOT / "integrations" / "manual" / "pencil-mcp" / "README.md"
+VERIFICATION_ROUTER_PATH = ROOT / "skills" / "verification-router" / "SKILL.md"
 
 
 def fail(case_id: str, message: str) -> None:
@@ -264,17 +267,41 @@ def validate_integration_deps() -> int:
     cases += 1
 
     integration_ids = {i["id"] for i in registry["integrations"]}
-    for dep in ("playwright-mcp", "chrome-devtools-mcp"):
-        assert dep in integration_ids, f"INT-002: Required integration '{dep}' not in registry"
+    for dep in ("playwright-cli", "playwright-mcp", "chrome-devtools-mcp"):
+        assert dep in integration_ids, f"INT-002: Browser integration '{dep}' not in registry"
     cases += 1
 
     profiles = registry.get("profiles", {})
     assert "qa" in profiles, "INT-003: qa profile missing from registry"
-    assert "playwright-mcp" in profiles["qa"].get("required", []), "INT-004: playwright-mcp not in qa profile (canonical is required)"
-    assert "chrome-devtools-mcp" in profiles["qa"].get("required", []), "INT-005: chrome-devtools-mcp not in qa profile (canonical is required)"
+    qa_recommended = profiles["qa"].get("recommended", [])
+    assert "playwright-cli" in qa_recommended, "INT-004: Playwright CLI must be the QA default/recommended browser verifier"
+    assert "playwright-mcp" in qa_recommended, "INT-005: Playwright MCP must remain available for exploratory browser work"
+    assert "chrome-devtools-mcp" in qa_recommended, "INT-006: Chrome DevTools MCP must remain available for browser diagnostics"
+    assert profiles["qa"].get("required", []) == [], "INT-007: browser tools must not be globally mandatory"
     cases += 1
 
     print(f"  integration deps: {cases} checks passed")
+    return 0
+
+
+def validate_process_visibility_and_funnel() -> int:
+    """Keep visible manual work and plan/run/reducer semantics explicit."""
+    cases = 0
+    browser = BROWSER_QA_PATH.read_text(encoding="utf-8")
+    pencil = PENCIL_MCP_PATH.read_text(encoding="utf-8")
+    router = VERIFICATION_ROUTER_PATH.read_text(encoding="utf-8")
+
+    for marker in ("Manual visibility contract", "visible browser/session", "BLOCKED`/`UNAVAILABLE", "headless"):
+        assert marker.lower() in browser.lower(), f"VIS-001: browser skill missing '{marker}'"
+    cases += 1
+    for marker in ("Pencil CLI", "desktop/editor", "foreground", "BLOCKED`/`UNAVAILABLE", "explicit-only"):
+        assert marker.lower() in pencil.lower(), f"VIS-002: Pencil contract missing '{marker}'"
+    cases += 1
+    for marker in ("VERIFICATION_PLAN", "VERIFICATION_RUN", "ACCEPTANCE_REDUCTION", "RUNNABLE` is never run evidence", "human residual packet"):
+        assert marker.lower() in router.lower(), f"FUNNEL-001: router missing '{marker}'"
+    cases += 1
+
+    print(f"  process visibility/funnel: {cases} checks passed")
     return 0
 
 
@@ -289,6 +316,7 @@ def main() -> int:
         ("Evidence profiles", validate_evidence_profiles),
         ("Verify script", validate_verify_script),
         ("Integration deps", validate_integration_deps),
+        ("Process visibility and funnel", validate_process_visibility_and_funnel),
     ]
 
     for name, func in checks:

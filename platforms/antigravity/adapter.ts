@@ -23,8 +23,8 @@ export interface PlatformAdapter {
   rollback(version: string): Promise<{ ok: boolean }>;
 }
 
-const BINARY = 'gemini';
-const ANTIGRAVITY_HOME = path.join(os.homedir(), '.antigravity');
+const BINARIES = ['gemini', 'agy'];
+const ANTIGRAVITY_HOME = process.env.ANTIGRAVITY_HOME || path.join(os.homedir(), '.gemini', 'config');
 const RULES_DIR = path.join(ANTIGRAVITY_HOME, 'rules');
 
 /** M11-C10-C10: the adapter's constrained-surface extensions (AM-0019 §10/§12). */
@@ -55,19 +55,22 @@ export function createAntigravityLeaseGuard(): LeaseGuard {
 }
 
 async function whichAntigravity(): Promise<{ path: string; version?: string } | null> {
-  try {
-    const { stdout } = await execFileAsync('which', [BINARY]);
-    const binaryPath = stdout.trim();
-    if (!binaryPath) return null;
-    let version: string | undefined;
+  for (const binary of BINARIES) {
     try {
-      const { stdout: versionOut } = await execFileAsync(binaryPath, ['--version']);
-      version = versionOut.trim();
-    } catch { /* ignore */ }
-    return { path: binaryPath, version };
-  } catch {
-    return null;
+      const { stdout } = await execFileAsync('which', [binary]);
+      const binaryPath = stdout.trim();
+      if (!binaryPath) continue;
+      let version: string | undefined;
+      try {
+        const { stdout: versionOut } = await execFileAsync(binaryPath, ['--version']);
+        version = versionOut.trim();
+      } catch { /* ignore */ }
+      return { path: binaryPath, version };
+    } catch {
+      continue;
+    }
   }
+  return null;
 }
 
 export const antigravityAdapter: AntigravityAdapter = {
@@ -129,13 +132,15 @@ export const antigravityAdapter: AntigravityAdapter = {
   },
 
   async probe() {
-    try {
-      const { stdout } = await execFileAsync(BINARY, ['--version']);
-      return { ok: true, detail: `gemini ${stdout.trim()}` };
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      return { ok: false, detail: `gemini unreachable: ${message}` };
+    for (const binary of BINARIES) {
+      try {
+        const { stdout } = await execFileAsync(binary, ['--version']);
+        return { ok: true, detail: `${binary} ${stdout.trim()}` };
+      } catch {
+        continue;
+      }
     }
+    return { ok: false, detail: `Neither gemini nor agy found on PATH` };
   },
 
   async update() {

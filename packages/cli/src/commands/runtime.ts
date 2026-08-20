@@ -1,5 +1,5 @@
 import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
-import { getRepoRoot } from "../adapters/powershell.js";
+import { getRepoRoot } from "../adapters/repo.js";
 import {
   RUNTIME_PLATFORMS,
   RuntimeInstaller,

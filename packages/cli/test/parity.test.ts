@@ -131,7 +131,7 @@ describe("CLI help output", () => {
     expect(help).toContain("migrated");
     expect(help).toContain("03-validate-context");
     expect(help).toContain("04-verify-mirrors");
-    expect(help).toContain("09-doctor");
+    expect(help).toContain("health checks");
   });
 });
 

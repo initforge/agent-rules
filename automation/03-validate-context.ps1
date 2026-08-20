@@ -562,6 +562,38 @@ if ($DocDriftPython -and (Test-Path $DocDriftScript)) {
   Write-Warning "Skipping doc drift check (Python or validate-doc-drift.py not found)"
 }
 
+# ─── MiMoCode config validation ─────────────────────────────────────────────
+$MimocodeConfigs = @(
+  "$env:USERPROFILE\.config\mimocode\mimocode.jsonc",
+  "$Root\.mimocode\mimocode.jsonc"
+)
+$ValidMimocodeKeys = @(
+  '$schema', 'logLevel', 'server', 'command', 'skills', 'watcher', 'snapshot',
+  'plugin', 'share', 'autoshare', 'autoupdate', 'disabled_providers',
+  'enabled_providers', 'model', 'small_model', 'model_groups', 'default_agent',
+  'username', 'mode', 'agent', 'instructions', 'permission', 'mcp',
+  'tools', 'tool', 'formatter', 'lsp', 'workflow', 'experimental',
+  'compaction', 'checkpoint', 'memory', 'history', 'dream', 'distill',
+  'voice', 'compose', 'enterprise'
+)
+foreach ($ConfigPath in $MimocodeConfigs) {
+  if (Test-Path -LiteralPath $ConfigPath -PathType Leaf) {
+    try {
+      $Config = Get-Content -Raw -LiteralPath $ConfigPath -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+      $InvalidKeys = $Config.PSObject.Properties.Name | Where-Object { $_ -notin $ValidMimocodeKeys }
+      if ($InvalidKeys) {
+        $Problems.Add("MiMoCode config invalid keys in ${ConfigPath}: $($InvalidKeys -join ', ')")
+      }
+      # Check mcp structure: no 'servers' wrapper allowed
+      if ($Config.mcp -and $Config.mcp.servers) {
+        $Problems.Add("MiMoCode config mcp.servers is invalid in ${ConfigPath} - use mcp.<server-name> directly")
+      }
+    } catch {
+      $Problems.Add("MiMoCode config parse error in ${ConfigPath}: $_")
+    }
+  }
+}
+
 if ($Problems.Count) {
   $Problems | ForEach-Object { Write-Error $_ }
   exit 1

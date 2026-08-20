@@ -1,12 +1,14 @@
 ---
 name: plan-and-handoff
-description: Use for multi-part work, plan mode, handoffs, resumable work, or a request that needs an executable plan before implementation. Do not use for a single clear fix, pure Q&A, or researcher-only work.
-routing: {"signals":["plan","plan dài","nhiều phase","handoff","chia nhỏ","/goal","PAF","plan artifact","Plan Architect","Plan Scribe"],"excludes":["single small fix","pure q&a"],"priority":80,"loads":["skill:plan-and-handoff","adaptive-work-protocol"],"supports":["implementation-discovery"],"project_scope":"","platform_scope":"all","max_route_tokens":2200,"default":false}
+description: Use for multi-part work, plan mode, handoffs, resumable work, or a request that needs an executable plan before
+  implementation. Do not use for a single clear fix, pure Q&A, or researcher-only work.
 ---
 
 # Plan and Handoff
 
 Plan is an executable intent contract, not a ceremony. Use the portable plan contract at three levels: small (outcome + AC), standard (+ requirements, decisions, change graph, verification), or resumable (+ slices, amendments, checkpoints, evidence ledger).
+
+PAF (plan artifact) and Scribe are compatibility terms for the same executable plan handoff.
 
 Scale detail to the work; every plan identifies outcome, scope, acceptance, and execution guardrails. Plans validate against `schemas/plan.schema.json`.
 

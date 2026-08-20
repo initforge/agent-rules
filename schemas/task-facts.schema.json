@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/task-facts.schema.json",
+  "title": "Derived TaskFacts projection",
+  "description": "Typed task classification derived from WorkSpec, TaskPacket, RepoFacts, and traceability; never a replacement source of truth.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["phase", "domains", "stack", "change_kinds", "impact", "risk", "effects", "claims", "fact_ids"],
+  "properties": {
+    "phase": { "enum": ["research", "design", "implement", "verify", "review", "release", "operate"] },
+    "domains": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "stack": { "type": "object", "additionalProperties": { "type": "boolean" } },
+    "change_kinds": { "type": "array", "minItems": 1, "items": { "type": "string" }, "uniqueItems": true },
+    "impact": { "$ref": "change-facts.schema.json#/properties/impact" },
+    "risk": {
+      "type": "object", "additionalProperties": false,
+      "required": ["class", "security_boundary", "destructive"],
+      "properties": { "class": { "type": "string" }, "security_boundary": { "type": "boolean" }, "destructive": { "type": "boolean" } }
+    },
+    "effects": { "$ref": "change-facts.schema.json#/properties/effects" },
+    "claims": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "fact_ids": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+  }
+}

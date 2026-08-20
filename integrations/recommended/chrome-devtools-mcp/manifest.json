@@ -1,0 +1,15 @@
+{
+  "name": "chrome-devtools-mcp",
+  "policy": "recommended",
+  "upstream": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+  "npmPackage": "chrome-devtools-mcp",
+  "commandName": "chrome-devtools-mcp",
+  "mcpServerKey": "chrome-devtools",
+  "installDirs": {
+    "windows": "%LOCALAPPDATA%\\npm",
+    "linux": "$HOME/.npm-global",
+    "darwin": "$HOME/.npm-global"
+  },
+  "version": "1.7.0",
+  "versionPolicy": "pinned"
+}

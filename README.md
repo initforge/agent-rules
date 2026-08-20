@@ -1,126 +1,126 @@
 # Agent Rules
 
-**Thesis:** One canonical harness for AI agents — flat role-based folders, lazy skills, platform deltas, and automation that keeps runtime mirrors in sync without editing generated output by hand.
+**Thesis:** one provider-neutral agent operating environment that turns user intent into bounded work, keeps workers cheap and replaceable, and derives completion from evidence rather than model claims.
 
-## Architecture
+## Canonical architecture
 
-| Subsystem | Status | Path |
-|-----------|--------|------|
-| Intent Compiler (P3) | OPERATIONAL | `packages/cli/src/compiler/` |
-| Canonical Contracts (P4) | VERIFIED | `packages/engine/src/contracts.ts` |
-| Plan Lifecycle (P5) | OPERATIONAL | `packages/engine/src/plan-lifecycle.ts` |
-| Evaluation & Telemetry (P7) | PARTIAL | `packages/engine/src/telemetry.ts` |
-| **Durable Runner** | **OPERATIONAL** | `packages/engine/src/runner/` |
-| Legacy orchestration runtime | SUPERSEDED | `packages/engine/src/controller.ts` |
+The North-Star runtime contract now lives in `packages/engine/src/northstar/` and `packages/kernel/src/northstar/`. New work starts from an owner-authorized phase plan; retired plan projections are not kept in the workspace.
 
-### Durable Runner
+| Subsystem | Status | Canonical implementation |
+|---|---|---|
+| WorkRequest / WorkSpec / TaskPacket / RunState | operational | `packages/engine/src/northstar/protocol.ts`, `compiler.ts` |
+| Traceability + spec revision impact | operational | `packages/engine/src/northstar/compiler.ts` |
+| Durable worker runtime + bounded repair | operational | `packages/engine/src/runner/`, `northstar/runtime.ts` |
+| Evidence-derived acceptance | operational | `northstar/evidence-ledger.ts`, `acceptance-audit.ts` |
+| Context Compiler | operational | `northstar/context.ts` |
+| Skill Fabric | operational | `northstar/routing.ts` + `generated/context-graph.json` |
+| Capability Broker | operational | `northstar/routing.ts` |
+| Verification Graph | operational | `northstar/verification-graph.ts` + runner verifier |
+| Model Governor | operational logical routing; host attestation required | `northstar/model-governor.ts` |
+| Trigger normalization | operational core normalization | `northstar/trigger.ts` |
+| Host adapters | mixed live-certification status | `platforms/`, `northstar/host-adapters.ts` |
+| Domain packs | operational | `northstar/domain-packs.ts`, `profiles/` |
 
-`agent-rules runner {add,seed,start,status,journal}` drives tasks unattended.
+`packages/engine/src/controller.ts` and related legacy orchestration remain only where still imported. Do not delete a proven component until the North-Star replacement wins behavioral/eval parity.
 
-One short-lived headless agent process per task (`claude -p`, `codex exec`, or
-`opencode run`), all state on disk. The coordinating process holds no model context, so
-it has nothing to compact and no window to exhaust — a run is bounded by wall-clock, not
-tokens, and can be killed at any point: anything in flight returns to the queue.
+## Trusted completion
 
-A task passes only when every one of its verification commands exits 0 **and** the agent
-produced a real `git diff`. Repair is bounded (`--max-repair-depth`, default 2); past the
-bound a task becomes `needs-user` and mints no child task. Every run appends to a
-hash-chained journal that refuses to read if a record is altered, reordered, or removed.
+The runtime flow is:
 
-### Legacy orchestration runtime
+```text
+WorkRequest -> WorkSpec -> TaskPacket -> bounded worker
+                                      -> Verification Graph
+                                      -> hash-chained Evidence Ledger
+                                      -> deterministic acceptance
+                                      -> independent acceptance audit
+                                      -> PASS | PARTIAL | BLOCKED | FAILED
+```
 
-`controller.ts` and its neighbours are retained only because `host-kit/runtime` and two
-CLI/control-plane call sites still import them. They never executed autonomous work: the
-worker adapter's `buildWorkerScript()` returned a single `console.log`, cross-host child
-sessions were gated off, and `.agent/trace.jsonl` held 3 records for the project's entire
-history. Do not build on them.
+Workers never own PASS. Verification weakening, forbidden-scope edits, missing mandatory claims, invalid evidence chains, unresolved source locks, and exhausted repair budgets fail closed.
 
-## Shape
+## 5fedu central reference pack
 
-| Folder | Role | Taxonomy |
-|--------|------|---------|
-| `docs/guides/` | Maintainer docs and system map | stable (human-maintained) |
-| `rules/` | Always-loaded global context (numbered = load priority) | stable |
-| `skills/` | Lazy-loaded capabilities (flat slugs) | stable |
-| `integrations/` | Required / recommended / optional tools | stable |
-| `profiles/` | Optional organization profiles (e.g., `5fedu`) | stable |
-| `platforms/` | Per-runtime overlays (Codex, Grok, Antigravity, Cursor) | stable |
-| `automation/` | Build, install, validate, sync, doctor | stable |
-| `generated/` | Build output — do not edit | generated (machine-only) |
-| `.agent/` | Durable plan ledger, progress, journal, research (version-controlled; see [`.agent/README.md`](.agent/README.md)) | protocol-governed |
+`profiles/5fedu/` is explicit-only and inactive for ordinary projects. The owner-supplied ERP template is bundled **once inside the harness** as a manifest-bound, SHA-256 verified reference snapshot. A target project does not install or copy that template.
 
-## Integrations
+```bash
+# Explicitly opt this project into the pack
+agent-rules init --domain-pack 5fedu
 
-Canonical registry: `integrations/registry.json` (v2, 4 entries):
+# Read an authoritative source file from the central harness snapshot
+agent-rules reference 5fedu features/he-thong/nhan-vien/nhan-vien.module.tsx
+```
 
-| Integration | Policy | Capabilities | Trust |
-|-------------|--------|-------------|-------|
-| codebase-memory-mcp | required | codebase-intelligence | adapter-verified |
-| playwright-mcp | required | browser-interaction | adapter-verified |
-| chrome-devtools-mcp | required | browser-diagnostics | adapter-verified |
-| context7 | required | research-context | adapter-verified |
+The employee module is the canonical CRUD shell; department is the hierarchy/related-data shell; permissions derive from the actual module/route/permission sources. The pack stores source pointers and behavior contracts instead of asking a model to recreate ERP conventions from memory.
 
-Profiles: `core` (codebase-memory-mcp + context7), `qa` and `frontend` (playwright-mcp + chrome-devtools-mcp), `research` (context7).
+## Pencil / pen.dev
 
-All four install through `npx`/a pinned binary and are verified by `automation/validate-tool-registry.ps1`.
+Pencil is intentionally **manual-only**. `integrations/manual/pencil-mcp/` is not in the automatic integration registry and has no keyword trigger. It is attached only when the operator explicitly selects Pencil/pen.dev (or explicitly selects its `design.*` provider). Browser/runtime evidence remains the authority for shipped UI behavior.
+
+## Repository shape
+
+| Folder | Role |
+|---|---|
+| `packages/engine/` | proven runtime plus North-Star facade |
+| `packages/kernel/src/northstar/` | runtime contracts, protocol and trust decisions |
+| `packages/cli/` | cross-platform control plane / public UX |
+| `rules/` | tiny always-on invariants |
+| `skills/` | lazy capability workflows |
+| `integrations/` | automatic registry plus `manual/` explicit-only integrations |
+| `profiles/` | explicit domain/project packs such as 5fedu |
+| `platforms/` | host-specific edge adapters/contracts |
+| `automation/` | build/install/validate/certification gates |
+| `generated/` | machine output; never hand-edit |
+| `.agent/` | durable plans, runs, checkpoints, journals and evidence |
 
 ## Quick start
 
 ```bash
-cd packages/cli && npm ci && npm run build
-npm run test
-```
-
-Run engine tests:
-
-```bash
-cd packages/engine && npx vitest run
-```
-
-Run conformance evals:
-
-```bash
-cd evals/conformance && python -m pytest
-```
-
-Verify everything (cross-platform; requires `pwsh`):
-
-```bash
+npm ci
+npm run build
+npm test
 npm run verify:all
 ```
 
-## Running work unattended
+`verify:all` is fail-closed. If a required host dependency such as PowerShell, Playwright/browser binaries, or a native agent CLI is absent, certification must report BLOCKED/FAIL rather than silently skipping it.
+
+## North-Star direct run
+
+For S0/S1 work with explicit scope and verifier:
 
 ```bash
-# Queue one task. At least one --verify command is required: a task with no
-# machine-checkable condition can never be closed.
-agent-rules runner add "Add subtract() to src/math.ts" \
-  --verify "npx vitest run test/math.test.ts" --own src
-
-# Or queue every active requirement from the plan ledger
-agent-rules runner seed --own src
-
-agent-rules runner start --agent claude --max-repair-depth 2
-agent-rules runner status          # queue counts, and anything waiting on you
-agent-rules runner journal --verify   # check the hash chain
+agent-rules init --agent claude
+agent-rules run "Fix parser regression" \
+  --own src/parser \
+  --verify-exec npm \
+  --verify-arg=test \
+  --verify-kind test
+agent-rules status
 ```
 
-Tasks that exhaust their repair budget land in `needs-user` with the reason recorded —
-they do not silently retry forever.
+S2/S3 work cannot be silently reduced to a single raw-intent task. It requires an explicit strong-planner/spec compilation step before TaskPackets are executable.
 
-## CI/CD
+## Durable runner
 
-| Workflow | Trigger | Matrix | Steps |
-|----------|---------|--------|-------|
-| Quality (`quality.yml`) | push, pull_request | ubuntu, windows, macos | build → check → test → ci:quality |
-| Certification (`certification.yml`) | push to main, release | opencode, grok, codex | build → ci:certify --host |
+The production runner remains available for plan-backed unattended work:
+
+```bash
+agent-rules runner add "Add subtract() to src/math.ts" \
+  --verify "npx vitest run test/math.test.ts" --own src
+agent-rules runner start --agent claude --max-repair-depth 2
+agent-rules runner status
+agent-rules runner journal --verify
+```
+
+Each task gets a fresh headless process. State, logs, checkpoint, verification results and journal live on disk; repair is bounded.
+
+## Integrations
+
+Automatic integrations are owned by `integrations/registry.json`. Manual/explicit-only tools live under `integrations/manual/` and are never auto-installed or auto-routed.
 
 ## Read next
 
-1. [System map](docs/guides/00-system-map.md)
-2. [Runtime model](docs/guides/01-runtime-model.md)
-3. [Target operating model](docs/architecture/target-operating-model.md)
-4. [Platform capability matrix](docs/guides/06-platform-capability.md)
-5. Vietnamese overview: [README-vi.md](README-vi.md)
+1. [`packages/engine/src/northstar/`](packages/engine/src/northstar/)
+2. [`packages/kernel/src/northstar/`](packages/kernel/src/northstar/)
+3. [`profiles/5fedu/README.md`](profiles/5fedu/README.md) when the 5fedu pack is explicitly selected
 
-**Governance:** Edit `rules/` and `skills/` here only — not `generated/` or installed mirrors. Reverse sync via `automation/07-import-reviewed-changes.ps1`.
+**Governance:** edit canonical source, not generated/runtime mirrors. Never weaken a gate to make migration green.

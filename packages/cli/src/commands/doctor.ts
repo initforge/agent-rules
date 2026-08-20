@@ -1,10 +1,11 @@
 import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
-import { getRepoRoot } from "../adapters/powershell.js";
+import { getRepoRoot } from "../adapters/repo.js";
 import { execFile } from "node:child_process";
 import * as crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { verifyRuntimeReceipt, type RuntimePlatform } from "../runtime/installer.js";
+import { resolveOpenCodeModel } from "../runtime/opencode.js";
 import { collectHostKitDoctorReport, type HostKitDoctorReport } from "../host-kit/doctor.js";
 
 interface DoctorCheck {
@@ -33,8 +34,18 @@ export async function doctorOpenCode(root: string, home: string): Promise<Doctor
   const installedDir = transactional ? path.join(transactionalRuntime, "native", "agents") : path.join(home, "agents");
   const manifestPath = path.join(home, "agent-rules-manifest.json");
   const files = (await walkDir(sourceDir)).map((file) => path.relative(sourceDir, file).replace(/\\/g, "/")).filter((file) => file !== "README.md").sort();
-  const hashes = async (dir: string) => Object.fromEntries(await Promise.all(files.map(async (file) => [file, await sha256(path.join(dir, file))])));
-  const source = await hashes(sourceDir);
+  const openCodeModel = await resolveOpenCodeModel(repo);
+  const hashes = async (dir: string, renderSource = false) => Object.fromEntries(await Promise.all(files.map(async (file) => {
+    const bytes = await fs.readFile(path.join(dir, file));
+    const rendered = renderSource
+      ? bytes.toString("utf8").replaceAll("__OPENCODE_MODEL_CLASS__", openCodeModel)
+      : bytes;
+    return [file, crypto.createHash("sha256").update(rendered).digest("hex")];
+  })));
+  // OpenCode source is a tokenized provider-neutral template. Compare the
+  // generated/installed artifact against the deterministic rendered source,
+  // not against the unresolved placeholder text.
+  const source = await hashes(sourceDir, true);
   const build = await hashes(buildDir).catch(() => ({}));
   const installed = await hashes(installedDir).catch(() => ({}));
   const same = (a: Record<string, string>, b: Record<string, string>) => JSON.stringify(a) === JSON.stringify(b);
@@ -78,6 +89,46 @@ export function compareRuntimeManifest(installed: ManifestFile[], expected: Mani
   return { missing, extra, hashMismatch };
 }
 
+/**
+ * Resolve the host-owned hook surface independently from the transactional
+ * runtime mirror.  The runtime receipt lives below <platformHome>/agent-rules-runtime,
+ * while hooks are intentionally installed at the host entrypoint so the host
+ * can discover them.  Doctor must inspect the latter; checking the mirror
+ * would report a healthy installed hook as NOT_LIVE.
+ */
+export function hookProbePaths(platform: string, platformHome: string): {
+  configPath: string;
+  scriptPath: string;
+  needle: string;
+} | null {
+  const configName: Record<string, string> = {
+    codex: "hooks.json",
+    grok: "hooks/skill-orchestrator.json",
+    antigravity: "hooks.json",
+    cursor: "hooks.json",
+  };
+  const scriptName: Record<string, string> = {
+    codex: "scripts/skill-gate.py",
+    grok: "hooks/bin/grok-skill-gate.py",
+    antigravity: "scripts/antigravity-skill-gate.py",
+    cursor: "scripts/cursor-hook.py",
+  };
+  const needle: Record<string, string> = {
+    // The matcher is a pipe-delimited list in the installed JSON, so probe
+    // for a stable member rather than a substring that can never occur.
+    codex: "apply_patch",
+    grok: "grok-skill-gate",
+    antigravity: "antigravity-skill-gate",
+    cursor: "cursor-hook.py",
+  };
+  if (!configName[platform] || !scriptName[platform] || !needle[platform]) return null;
+  return {
+    configPath: path.join(platformHome, configName[platform]),
+    scriptPath: path.join(platformHome, scriptName[platform]),
+    needle: needle[platform],
+  };
+}
+
 async function sha256(filePath: string): Promise<string> {
   const content = await fs.readFile(filePath);
   return crypto.createHash("sha256").update(content).digest("hex").toLowerCase();
@@ -103,6 +154,8 @@ function getPlatformHomes(root: string): PlatformHomeMap {
     antigravity: path.join(userHome, ".gemini", "config"),
     cursor: path.join(userHome, ".cursor"),
     opencode: process.env.OPENCODE_HOME || path.join(userHome, ".config", "opencode"),
+    mimocode: process.env.MIMOCODE_CONFIG_DIR || path.join(userHome, ".config", "mimocode"),
+    claude: process.env.CLAUDE_CONFIG_DIR || path.join(userHome, ".claude"),
   };
 }
 
@@ -130,7 +183,7 @@ export async function doctor(
   const root = getRepoRoot();
   const platformArg = args[0] || "all";
   const skipIntegrationVerify = args.includes("--skip-integration-verify");
-  const valid = ["codex", "grok", "antigravity", "cursor", "opencode", "all"];
+  const valid = ["codex", "grok", "antigravity", "cursor", "opencode", "mimocode", "claude", "all"];
   if (!valid.includes(platformArg)) {
     return { exitCode: ExitCode.InvalidArgument, message: `Invalid platform: ${platformArg}` };
   }
@@ -140,7 +193,7 @@ export async function doctor(
     return { exitCode: ExitCode.Success, message: "Dry-run: doctor skipped" };
   }
 
-  const allPlatforms = ["codex", "grok", "antigravity", "cursor", "opencode"] as const;
+  const allPlatforms = ["codex", "grok", "antigravity", "cursor", "opencode", "mimocode", "claude"] as const;
   type PlatformName = typeof allPlatforms[number];
   const platforms: PlatformName[] = platformArg === "all" ? allPlatforms.filter((platform) => platform !== "opencode") : platformArg === "opencode" ? [] : [platformArg as PlatformName];
   const homes = getPlatformHomes(root);
@@ -161,6 +214,8 @@ export async function doctor(
     antigravity: "mcp_config.json",
     cursor: "mcp.json",
     opencode: "opencode.json",
+    mimocode: "mimocode.jsonc",
+    claude: ".claude.json",
   };
   const mcpConfigPaths: { [key in PlatformName]?: string } = {};
   for (const p of platforms) {
@@ -252,7 +307,7 @@ export async function doctor(
     }
 
     // Native activation
-    const nativeCliMap: { [key in PlatformName]: string } = { codex: "codex", cursor: "cursor", grok: "grok", antigravity: "gemini", opencode: "opencode" };
+    const nativeCliMap: { [key in PlatformName]: string } = { codex: "codex", cursor: "cursor", grok: "grok", antigravity: "gemini/agy", opencode: "opencode", mimocode: "mimo", claude: "claude" };
     report.push({
       platform: name, check: "native-activation", status: "NATIVE_UNVERIFIED",
       detail: `${nativeCliMap[name]} CLI availability check; no trusted host-activation receipt exists`,
@@ -304,35 +359,17 @@ export async function doctor(
       } catch { /* skip manifest comparison on error */ }
     }
 
-    // Hook config check
-    const hookConfigPath = path.join(runtimeHome, {
-      codex: "hooks.json", grok: "hooks/skill-orchestrator.json",
-      antigravity: "hooks.json", cursor: "hooks.json", opencode: "",
-    }[name] || "hooks.json");
-
-    const hookNeedle = {
-      codex: "shell_command|apply_patch",
-      grok: "grok-skill-gate",
-      antigravity: "antigravity-skill-gate",
-      cursor: "cursor-hook.py",
-      opencode: "",
-    }[name] || "";
-
-    const hookScript = path.join(runtimeHome, {
-      codex: "scripts/skill-gate.py",
-      grok: "hooks/bin/grok-skill-gate.py",
-      antigravity: "scripts/antigravity-skill-gate.py",
-      cursor: "scripts/cursor-hook.py",
-      opencode: "",
-    }[name] || "");
-
-    if (hookNeedle) {
-      const configExists = await checkFile(hookConfigPath);
-      const scriptExists = await checkFile(hookScript);
+    // Hook config is a host-owned entrypoint, not part of the transactional
+    // runtime mirror.  Inspect platformHome even when runtimeHome points at
+    // <platformHome>/agent-rules-runtime.
+    const hookProbe = hookProbePaths(name, platformHome);
+    if (hookProbe) {
+      const configExists = await checkFile(hookProbe.configPath);
+      const scriptExists = await checkFile(hookProbe.scriptPath);
       let configBody = "";
-      if (configExists) configBody = await fs.readFile(hookConfigPath, "utf-8");
+      if (configExists) configBody = await fs.readFile(hookProbe.configPath, "utf-8");
       const noPlaceholders = !configBody.includes("__CODEX_HOME__") && !configBody.includes("__ANTIGRAVITY_HOME__");
-      const hasNeedle = configBody.includes(hookNeedle);
+      const hasNeedle = configBody.includes(hookProbe.needle);
 
       if (configExists && scriptExists && noPlaceholders && hasNeedle) {
         report.push({ platform: name, check: "hook-config", status: "OK", detail: "hook config and gate script present" });

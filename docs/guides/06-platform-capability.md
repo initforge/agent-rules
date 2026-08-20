@@ -35,7 +35,7 @@ The filesystem path `~/.gemini/config` and env vars like `GEMINI_CONFIG_HOME` ar
 | Dimension | Definition |
 |---|---|
 | instructions | Always-load rules and bootstrap context |
-| skills | Lazy-loaded SKILL.md triggered by routing |
+| skills | Agent Skills-compatible SKILL.md lazy-loaded by canonical ROUTE.json/context-graph routing |
 | subagents | Native subagent/delegation support |
 | model routing | Model/effort selection via policy |
 | plan mode | Native plan-and-execute workflow |

@@ -13,6 +13,8 @@ export interface RoutingNode {
   requires: string[];
   routing: Record<string, unknown>;
   source_hash: string;
+  routing_source?: string;
+  routing_hash?: string;
   token_estimate: number;
 }
 
@@ -61,6 +63,29 @@ function extractRouting(body: string): Record<string, unknown> | null {
     if (r && typeof r === 'object') return r as Record<string, unknown>;
   } catch { return null; }
   return null;
+}
+
+
+function loadSkillRouting(skillPath: string, body: string): Record<string, unknown> | null {
+  const routePath = path.join(path.dirname(skillPath), 'ROUTE.json');
+  if (fs.existsSync(routePath)) {
+    try {
+      const parsed = JSON.parse(fs.readFileSync(routePath, 'utf8')) as Record<string, unknown>;
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+    } catch {
+      throw new Error(`Invalid skill routing sidecar: ${normalizePath(routePath)}`);
+    }
+  }
+  // Compatibility-only fallback for legacy repositories. Canonical agent-rules
+  // skills keep Agent Skills-compliant frontmatter and route from ROUTE.json.
+  return extractRouting(body);
+}
+
+function attachRoutingProvenance(node: RoutingNode, root: string, skillPath: string): void {
+  const routePath = path.join(path.dirname(skillPath), 'ROUTE.json');
+  if (!fs.existsSync(routePath)) return;
+  node.routing_source = normalizePath(path.relative(root, routePath));
+  node.routing_hash = sha256(routePath);
 }
 
 function frontmatterValue(body: string, key: string): string | null {
@@ -314,11 +339,12 @@ export function buildContextGraph(root: string): ContextGraph {
     if (!fs.existsSync(skillPath)) continue;
     const body = fs.readFileSync(skillPath, 'utf-8');
     const skillId = dir.name;
-    const skillRouting = extractRouting(body);
-    if (!skillRouting) throw new Error(`Missing structured routing metadata: skills/${skillId}/SKILL.md`);
+    const skillRouting = loadSkillRouting(skillPath, body);
+    if (!skillRouting) throw new Error(`Missing structured routing metadata: skills/${skillId}/ROUTE.json (legacy SKILL.md routing is compatibility-only)`);
     addNode(nodes, `skill:${skillId}`, 'skills', `skills/${skillId}/SKILL.md`,
       'skill', `skills/${skillId}/SKILL.md`, frontmatterValue(body, 'description') || '',
       [], skillRouting, root);
+    attachRoutingProvenance(nodes[nodes.length - 1]!, root, skillPath);
     const refRoot = path.join(skillsRoot, dir.name, 'references');
     if (fs.existsSync(refRoot)) {
       for (const ref of walkFiles(refRoot)) {
@@ -343,12 +369,13 @@ export function buildContextGraph(root: string): ContextGraph {
         if (!fs.existsSync(skillPath)) continue;
         const body = fs.readFileSync(skillPath, 'utf-8');
         const skillId = skillDir.name;
-        const skillRouting = extractRouting(body);
-        if (!skillRouting) throw new Error(`Missing structured routing metadata: profiles/${profileDir.name}/skills/${skillId}/SKILL.md`);
+        const skillRouting = loadSkillRouting(skillPath, body);
+        if (!skillRouting) throw new Error(`Missing structured routing metadata: profiles/${profileDir.name}/skills/${skillId}/ROUTE.json (legacy SKILL.md routing is compatibility-only)`);
         addNode(nodes, `skill:${skillId}`, 'skills',
           `profiles/${profileDir.name}/skills/${skillId}/SKILL.md`,
           'skill', `profiles/${profileDir.name}/skills/${skillId}/SKILL.md`,
           frontmatterValue(body, 'description') || '', [], skillRouting, root);
+        attachRoutingProvenance(nodes[nodes.length - 1]!, root, skillPath);
         const refRoot2 = path.join(profileSkillsDir, skillDir.name, 'references');
         if (fs.existsSync(refRoot2)) {
           for (const ref of walkFiles(refRoot2)) {
@@ -447,7 +474,7 @@ export function buildContextGraph(root: string): ContextGraph {
   return {
     version: 2,
     generated_from: [
-      'rules/manifest.yaml', 'skills/**/SKILL.md',
+      'rules/manifest.yaml', 'skills/**/SKILL.md', 'skills/**/ROUTE.json',
       'profiles/**/README.md', 'profiles/**/rules/**', 'profiles/**/behaviors/**',
       'profiles/**/module-mapping/**', 'profiles/**/projects/**/AGENTS.md',
       'profiles/**/projects/**/00-context-map.md',
@@ -455,7 +482,7 @@ export function buildContextGraph(root: string): ContextGraph {
     ],
     source_of_truth: {
       rules: 'rules/manifest.yaml',
-      skills: 'SKILL.md frontmatter routing object',
+      skills: 'Agent Skills-compatible SKILL.md + agent-rules ROUTE.json sidecar',
       profiles: 'profile README, rules, behaviors, and module mapping',
       projects: 'project entrypoint and 00-context-map.md (non-5fedu profiles)',
       platforms: 'platform overlay and platform-contracts.json',
@@ -501,6 +528,7 @@ export function validateGraph(graph: ContextGraph): ValidationResult {
     if (node.source_hash === '0'.repeat(64)) {
       missingSources++;
     }
+    if (node.routing_source && (!node.routing_hash || !/^[0-9a-f]{64}$/.test(node.routing_hash))) errors.push(`Node ${node.id} has invalid routing provenance`);
     nodesByLayer[node.layer] = (nodesByLayer[node.layer] || 0) + 1;
     totalTokens += node.token_estimate;
     sources.add(node.source);

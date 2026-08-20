@@ -114,6 +114,11 @@ interface StoreData {
 const MAX_AUDIT = 1000;
 const MAX_RUNS = 500;
 const MAX_TELEMETRY = 2000;
+// Telemetry is aggregate analytics rather than audit/evidence. Keep the
+// durable batch large enough that high-volume imports do not repeatedly
+// rewrite and fsync the full bounded JSON store; closeDb still flushes all
+// pending events.
+const TELEMETRY_FLUSH_BATCH = 256;
 
 let store: StoreData = { _schemaVersion: STORE_SCHEMA_VERSION, audit: [], runs: [], telemetry: [], counters: { audit: 0, runs: 0, telemetry: 0 } };
 let storePath: string = '';
@@ -121,6 +126,7 @@ let dirty = false;
 let saveTimer: ReturnType<typeof setInterval> | null = null;
 let writeLock = false;
 let writeQueue: Array<() => void> = []; // queued writes instead of skip
+let telemetryMutationsSinceSave = 0;
 
 function validateStoreData(data: unknown): data is StoreData {
   if (data === null || typeof data !== 'object') return false;
@@ -237,6 +243,7 @@ function saveStore(): void {
   try {
     doWrite();
     dirty = false;
+    telemetryMutationsSinceSave = 0;
   } catch (e) {
     // Rollback: delete orphan temp file if rename failed
     try { fs.unlinkSync(tmpPath); } catch { /* best-effort */ }
@@ -319,7 +326,10 @@ export function addTelemetry(record: Omit<TelemetryRecord, 'id'>): TelemetryReco
   }
   store.telemetry.unshift(entry);
   dirty = true;
-  saveStore(); // ponytail: immediate sync on mutation for crash safety
+  telemetryMutationsSinceSave++;
+  if (telemetryMutationsSinceSave >= TELEMETRY_FLUSH_BATCH) {
+    saveStore();
+  }
   return entry;
 }
 
@@ -345,9 +355,11 @@ export function resetDb(): void {
   store = { _schemaVersion: STORE_SCHEMA_VERSION, audit: [], runs: [], telemetry: [], counters: { audit: 0, runs: 0, telemetry: 0 } };
   storePath = '';
   dirty = false;
+  telemetryMutationsSinceSave = 0;
   if (saveTimer) { clearInterval(saveTimer); saveTimer = null; }
   writeLock = false;
   writeQueue = [];
+  telemetryMutationsSinceSave = 0;
 }
 
 process.on('exit', () => { try { saveStore(); if (storePath) removeLockfile(getLockfilePath(storePath)); } catch {} });

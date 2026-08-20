@@ -5,6 +5,9 @@ import subprocess, sys, os
 TESTS = [
     ("test-artifact-schemas.py", []),
     ("test-context-router.py", []),
+    ("validate-skill-catalog.py", []),
+    ("validate-route-parity.py", []),
+    ("validate-skill-fabric.py", []),
     ("test-agent-quality-benchmark.py", ["--contracts-only"]),
     ("test-live-agent-adapter.py", ["--contracts-only"]),
     ("test-5fedu-parity-packet.py", []),

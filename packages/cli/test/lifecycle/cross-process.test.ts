@@ -26,7 +26,9 @@ function distUrl(module: string): string {
 }
 
 beforeEach(() => {
-  testDir = fs.mkdtempSync(path.join(os.tmpdir(), "xproc-lifecycle-"));
+  const tmpBase = path.join(process.cwd(), ".agent", "tmp");
+  fs.mkdirSync(tmpBase, { recursive: true });
+  testDir = fs.mkdtempSync(path.join(tmpBase, "xproc-lifecycle-")).replace(/\\/g, "/");
   process.env.TEST_DIR = testDir;
 });
 
@@ -38,13 +40,15 @@ afterEach(() => {
 
 /** Run a snippet of JS in a fresh Node process, return stdout */
 function runChild(code: string, cwd?: string): Promise<string> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     // The child reads `testDir` from the inherited environment so the same
     // snippet string can be shared across tests without template-literal
     // evaluation at module load (when `testDir` is still undefined).
-    const env = { ...process.env, TEST_DIR: cwd ?? testDir };
+    const normalizedTestDir = (cwd ?? testDir).replace(/\\/g, "/");
+    const env = { ...process.env, TEST_DIR: normalizedTestDir };
+    delete env.NODE_OPTIONS;
     const child = spawn(process.execPath, ["--input-type=module", "--eval", code], {
-      cwd: cwd ?? testDir,
+      cwd: normalizedTestDir,
       env,
       stdio: ["pipe", "pipe", "pipe"],
     });
@@ -52,9 +56,12 @@ function runChild(code: string, cwd?: string): Promise<string> {
     let stderr = "";
     child.stdout?.on("data", (d) => { stdout += d.toString(); });
     child.stderr?.on("data", (d) => { stderr += d.toString(); });
-    child.on("close", () => {
-      if (stderr && !stdout) resolve(stderr.trim());
-      else resolve(stdout.trim());
+    child.on("close", (code) => {
+      if (code !== 0 || stderr.trim()) {
+        reject(new Error(`Child process failed with code ${code}. Stderr: ${stderr.trim()}`));
+      } else {
+        resolve(stdout.trim());
+      }
     });
   });
 }

@@ -106,6 +106,7 @@ describe("Configuration", () => {
       "platform",
       "eval",
       "dashboard",
+      "certify",
     ];
     for (const cmd of commands) {
       const file = path.join(root, "packages", "cli", "src", "commands", `${cmd}.ts`);
@@ -121,6 +122,25 @@ describe("Configuration", () => {
   it("main entry point exists", () => {
     const entry = path.join(root, "packages", "cli", "src", "index.ts");
     expect(fs.existsSync(entry)).toBe(true);
+  });
+});
+
+describe("Integration registry", () => {
+  it("registers the recommended browser providers and resolves their manifests", async () => {
+    const registry = await import("../src/integration/installer-registry.js");
+    const root = getRepoRoot();
+
+    expect(registry.listRegistrations()).toEqual(expect.arrayContaining([
+      "playwright-cli",
+      "playwright-mcp",
+      "chrome-devtools-mcp",
+    ]));
+    expect(registry.resolveIntegrationManifestDir(root, "playwright-cli")).toContain(
+      path.join("integrations", "recommended", "playwright-cli"),
+    );
+    expect(registry.resolveIntegrationManifestDir(root, "chrome-devtools-mcp")).toContain(
+      path.join("integrations", "recommended", "chrome-devtools-mcp"),
+    );
   });
 });
 
@@ -174,6 +194,19 @@ describe("Command handler signatures", () => {
   it("exports dashboard handler", async () => {
     const mod = await import("../src/commands/dashboard.js");
     expect(typeof mod.dashboard).toBe("function");
+  });
+
+  it("exports certify handler", async () => {
+    const mod = await import("../src/commands/certify.js");
+    expect(typeof mod.certifyCmd).toBe("function");
+  });
+
+  it("fails closed when the production amendment boundary receives raw prose without a structured impact plan", async () => {
+    const mod = await import("../src/commands/runner.js");
+    await expect(mod.runnerCmd(
+      ["amend", "bổ sung một thay đổi an toàn cho REQ-019"],
+      getRepoRoot(),
+    )).rejects.toThrow(/requires --impact-plan.*fail closed/);
   });
 });
 

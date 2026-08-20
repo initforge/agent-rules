@@ -20,6 +20,11 @@ that the installed policy hash matches canonical source, not that a host selecte
 | `01-build-runtime.ps1` | Build `generated/runtime-build/`, including model policy, native definitions, portable `workctl` bundle, and SHA-256 manifest |
 | `build-context-graph.ps1` | Generate progressive context graph from canonical rules, skills, projects, platforms and integrations |
 | `context-graph.schema.json` | Contract for graph nodes, routing metadata, ownership and source hashes |
+| `validate-skill-catalog.py` | Validate canonical skill ownership/disposition matrix and material route-overlap resolutions |
+| `validate-route-parity.py` | Run the typed shadow corpus against the TypeScript kernel route and Python host adapter |
+| `validate-skill-fabric.py` | Validate non-active composable domain/skill candidates and prevent accidental runtime activation |
+| `detect-stack-facts.mjs --self-test` | Validate host-independent stack detectors and provenance without inferring business domain |
+| `validate-rule-contracts.py` | Validate rule kind, trigger, owner, enforcement, evidence, precedence, failure, and fixture metadata |
 | `02-install-runtime.ps1` | Cài vào ~/.codex, ~/.grok, ~/.gemini/config (Antigravity), ~/.cursor + doctor; hỗ trợ `AGENT_RULES_SKIP_RUNTIME_HOOKS=1`, `AGENT_RULES_SKIP_INTEGRATION_INSTALL=1` và `AGENT_RULES_SKIP_INTEGRATION_VERIFY=1` cho cập nhật cục bộ/parity nhanh |
 | `03-validate-context.ps1` | Layout, budget, mojibake, **route conformance**, trigger audit and maturity checks |
 | `04-verify-mirrors.ps1` | Parity skills/rules giữa platforms |
@@ -32,6 +37,7 @@ that the installed policy hash matches canonical source, not that a host selecte
 | `audit-plan-artifact.ps1` | Executable-plan contract, adaptive routing and optional `-PlanPath` checks |
 | `workctl.py` + wrappers | Automatic size/risk classification, ownership, resumable ledger, proof, review and finalization |
 | `work-ledger.schema.json` | Canonical source/injection, slice, assignment, receipt, review and usage contract |
+| `runner --baseline-manifest <path>` | Scope-aware queue gate: affected dependency closure becomes `needs-user`, independent task scopes remain runnable; baseline truth is never converted into implementation PASS |
 | `evidence-profiles.json` | Generic typed proof profiles and required dimensions for adaptive semantic evidence |
 | `verify-external-receipt.py` | Provider-neutral CI/deployment receipt identity, SHA, terminal, smoke and rollback validation |
 | `test-workctl.py` | Adversarial schema, parallel resume, blocker, proof, independent review, usage and lock regression |
@@ -48,6 +54,7 @@ that the installed policy hash matches canonical source, not that a host selecte
 | `10-sync-project-agents.ps1` | Migrate root `AGENTS.md` + extract hard rules to `project-local/` |
 | `Merge-Mcp-Adapters.ps1` | Helper: merge staged adapters → platform MCP config |
 | `context-route-cases.json` | Versioned route budgets plus executable positive/negative progressive-loading fixtures |
+| `route-parity-cases.json` | Typed phase/claim/risk/domain/stack route-shadow corpus with capability/provider/verifier metadata |
 | `context-route-cases.schema.json` | Contract for workspace facts, expected primary/edges and canonical context nodes |
 | `trigger-audit.json` | Trigger recall fixtures (dùng bởi 03; không phải runtime router) |
 | `audit-ui-routing.ps1` | Audit routing 5fedu UI parity vs frontend-architect |

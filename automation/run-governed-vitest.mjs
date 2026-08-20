@@ -19,7 +19,7 @@ export class VitestLeaseTimeoutError extends Error {
   }
 }
 
-function canonicalPath(input) {
+function resolvePhysicalPath(input) {
   const resolved = path.resolve(input);
   let canonical;
   try {
@@ -27,7 +27,12 @@ function canonicalPath(input) {
   } catch {
     canonical = resolved;
   }
-  return process.platform === 'win32' ? canonical.toLowerCase() : canonical;
+  return canonical;
+}
+
+function canonicalPath(input) {
+  const resolved = resolvePhysicalPath(input);
+  return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
 }
 
 function projectLeaseDirectory(projectRoot, leaseRoot) {
@@ -296,8 +301,8 @@ function parseCli(argv) {
     index += 1;
   }
 
-  options.projectRoot = canonicalPath(options.projectRoot);
-  options.cwd = canonicalPath(options.cwd);
+  options.projectRoot = resolvePhysicalPath(options.projectRoot);
+  options.cwd = resolvePhysicalPath(options.cwd);
   if (!Number.isFinite(options.timeoutMs)) {
     const fromEnvironment = Number(process.env.AGENT_RULES_VITEST_LEASE_TIMEOUT_MS);
     options.timeoutMs = Number.isFinite(fromEnvironment) && fromEnvironment > 0

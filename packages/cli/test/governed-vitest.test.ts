@@ -16,12 +16,27 @@ import { fileURLToPath } from "node:url";
 import { dirname as _pathDirname } from "node:path";
 const __dirname = _pathDirname(fileURLToPath(import.meta.url));
 
+function processIsRunning(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    if (process.platform === 'darwin') {
+      const ps = spawnSync('ps', ['-o', 'state=', '-p', String(pid)], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+      if (ps.status === 0 && /^\s*Z/.test(ps.stdout)) return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 describe('governed-vitest', () => {
   let tempDir: string;
   const repoRoot = path.resolve(__dirname, '../../../');
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'governed-vitest-'));
+    const tmpBase = path.join(repoRoot, ".agent", "tmp");
+    fs.mkdirSync(tmpBase, { recursive: true });
+    tempDir = fs.mkdtempSync(path.join(tmpBase, 'governed-vitest-'));
   });
 
   afterEach(() => {
@@ -124,14 +139,12 @@ setInterval(() => {}, 1000);
       // Poll for grandchild death
       await new Promise<void>((resolve) => {
         const poll = setInterval(() => {
-          try { process.kill(grandchildPid, 0); } catch { clearInterval(poll); resolve(); }
+          if (!processIsRunning(grandchildPid)) { clearInterval(poll); resolve(); }
         }, 10);
         setTimeout(() => { clearInterval(poll); resolve(); }, 3_000);
       });
 
-      let alive = false;
-      try { process.kill(grandchildPid, 0); alive = true; } catch { /* dead */ }
-      expect(alive).toBe(false);
+      expect(processIsRunning(grandchildPid)).toBe(false);
     });
   });
 
@@ -160,7 +173,7 @@ import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 describe('sample', () => {
-  it('works', () => expect(true).toBe(true));
+  it('works', () => expect(1 + 1).toBe(2));
 });
 `);
 

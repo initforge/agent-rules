@@ -10,216 +10,746 @@
     "5fedu_ui_base_tokens": 8000
   },
   "routes": {
-    "normal_execution": ["skills/finish-to-completion/SKILL.md"],
-    "uncertain_execution": ["skills/finish-to-completion/SKILL.md", "skills/implementation-discovery/SKILL.md"],
-    "plan_authoring": ["skills/plan-and-handoff/SKILL.md", "skills/plan-and-handoff/references/plan-artifact-template.md"],
-    "harness_edit": ["skills/context-evolution-protocol/SKILL.md"],
-    "5fedu_ui_base": ["profiles/5fedu/README.md", "profiles/5fedu/skills/5fedu-project/SKILL.md", "profiles/5fedu/skills/5fedu-module-parity/SKILL.md", "profiles/5fedu/skills/5fedu-module-parity/references/index.md", "profiles/5fedu/module-mapping/modules.yaml", "profiles/5fedu/module-mapping/ui-contracts.md"]
+    "normal_execution": [
+      "skills/finish-to-completion/SKILL.md"
+    ],
+    "uncertain_execution": [
+      "skills/finish-to-completion/SKILL.md"
+    ],
+    "plan_authoring": [
+      "skills/plan-and-handoff/SKILL.md",
+      "skills/plan-and-handoff/references/plan-artifact-template.md"
+    ],
+    "harness_edit": [
+      "skills/context-evolution-protocol/SKILL.md"
+    ],
+    "5fedu_ui_base": [
+      "profiles/5fedu/README.md",
+      "profiles/5fedu/skills/5fedu-project/SKILL.md",
+      "profiles/5fedu/skills/5fedu-module-parity/SKILL.md",
+      "profiles/5fedu/skills/5fedu-module-parity/references/index.md",
+      "profiles/5fedu/module-mapping/modules.yaml",
+      "profiles/5fedu/module-mapping/ui-contracts.md"
+    ]
   },
   "cases": [
     {
       "id": "qa-simple",
       "prompt": "Giải thích cách xử lý đơn giản",
-      "workspace": { "kind": "generic", "has_5fedu_context": false },
-      "expect": { "primary": null, "required_skills": [], "forbidden_skills": ["plan-and-handoff", "finish-to-completion", "browser-qa", "context-evolution-protocol"] }
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "plan-and-handoff",
+          "finish-to-completion",
+          "browser-qa",
+          "context-evolution-protocol"
+        ]
+      }
     },
     {
       "id": "generic-module",
       "prompt": "Refactor module thanh toán Node.js",
-      "workspace": { "kind": "generic", "has_5fedu_context": false },
-      "expect": { "primary": "finish-to-completion", "required_skills": [], "forbidden_skills": ["5fedu-project", "5fedu-module-parity"] }
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "finish-to-completion",
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity"
+        ]
+      }
     },
     {
       "id": "5fedu-ui",
       "prompt": "Sửa module 5fedu lệch pattern drawer",
-      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true, "lean_pack": "valid" },
-      "expect": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"], "exact_context_nodes": ["profile:5fedu:module-mapping", "profile:5fedu:readme", "profile:5fedu:ui-contracts", "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"] }
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true,
+        "lean_pack": "valid"
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ],
+        "exact_context_nodes": [
+          "profile:5fedu:module-mapping",
+          "profile:5fedu:readme",
+          "profile:5fedu:ui-contracts",
+          "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"
+        ]
+      }
+    },
+    {
+      "id": "5fedu-ui-domain-precedes-browser",
+      "prompt": "Sửa module 5fedu lệch pattern drawer và click-through browser",
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true,
+        "lean_pack": "valid"
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ]
+      }
     },
     {
       "id": "5fedu-ui-explicit-profile-marker",
       "prompt": "Sửa module 5fedu lệch pattern drawer",
-      "workspace": { "kind": "generic", "has_5fedu_context": false, "profile_marker": true, "lean_pack": "missing" },
-      "expect": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"], "workspace_facts": { "has_enabled_5fedu_profile": true, "has_valid_5fedu_lean_pack": false, "is_5fedu_profile_active": true }, "exact_context_nodes": ["profile:5fedu:module-mapping", "profile:5fedu:readme", "profile:5fedu:ui-contracts", "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"] }
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false,
+        "profile_marker": true,
+        "lean_pack": "missing"
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ],
+        "workspace_facts": {
+          "has_enabled_5fedu_profile": true,
+          "has_valid_5fedu_lean_pack": false,
+          "is_5fedu_profile_active": true
+        },
+        "exact_context_nodes": [
+          "profile:5fedu:module-mapping",
+          "profile:5fedu:readme",
+          "profile:5fedu:ui-contracts",
+          "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"
+        ]
+      }
     },
     {
       "id": "5fedu-ui-valid-installed-lean-pack",
       "prompt": "Sửa module 5fedu lệch pattern drawer",
-      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true, "lean_pack": "valid" },
-      "expect": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"], "workspace_facts": { "has_enabled_5fedu_profile": false, "has_valid_5fedu_lean_pack": true, "is_5fedu_profile_active": true }, "exact_context_nodes": ["profile:5fedu:module-mapping", "profile:5fedu:readme", "profile:5fedu:ui-contracts", "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"] }
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true,
+        "lean_pack": "valid"
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ],
+        "workspace_facts": {
+          "has_enabled_5fedu_profile": false,
+          "has_valid_5fedu_lean_pack": true,
+          "is_5fedu_profile_active": true
+        },
+        "exact_context_nodes": [
+          "profile:5fedu:module-mapping",
+          "profile:5fedu:readme",
+          "profile:5fedu:ui-contracts",
+          "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"
+        ]
+      }
     },
     {
       "id": "5fedu-ui-empty-context-is-inactive",
       "prompt": "Sửa module 5fedu lệch pattern drawer",
-      "workspace": { "kind": "generic", "has_5fedu_context": false, "lean_pack": "empty" },
-      "expect": { "primary": null, "required_skills": [], "forbidden_skills": ["5fedu-project", "5fedu-module-parity"], "workspace_facts": { "has_enabled_5fedu_profile": false, "has_valid_5fedu_lean_pack": false, "is_5fedu_profile_active": false } }
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false,
+        "lean_pack": "empty"
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity"
+        ],
+        "workspace_facts": {
+          "has_enabled_5fedu_profile": false,
+          "has_valid_5fedu_lean_pack": false,
+          "is_5fedu_profile_active": false
+        }
+      }
     },
     {
       "id": "5fedu-ui-junk-context-is-inactive",
       "prompt": "Sửa module 5fedu lệch pattern drawer",
-      "workspace": { "kind": "generic", "has_5fedu_context": false, "lean_pack": "junk-readme-or-legacy-map" },
-      "expect": { "primary": null, "required_skills": [], "forbidden_skills": ["5fedu-project", "5fedu-module-parity"], "workspace_facts": { "has_enabled_5fedu_profile": false, "has_valid_5fedu_lean_pack": false, "is_5fedu_profile_active": false } }
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false,
+        "lean_pack": "junk-readme-or-legacy-map"
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity"
+        ],
+        "workspace_facts": {
+          "has_enabled_5fedu_profile": false,
+          "has_valid_5fedu_lean_pack": false,
+          "is_5fedu_profile_active": false
+        }
+      }
     },
     {
       "id": "5fedu-ui-partial-context-is-inactive",
       "prompt": "Sửa module 5fedu lệch pattern drawer",
-      "workspace": { "kind": "generic", "has_5fedu_context": false, "lean_pack": "partial" },
-      "expect": { "primary": null, "required_skills": [], "forbidden_skills": ["5fedu-project", "5fedu-module-parity"], "workspace_facts": { "has_enabled_5fedu_profile": false, "has_valid_5fedu_lean_pack": false, "is_5fedu_profile_active": false } }
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false,
+        "lean_pack": "partial"
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity"
+        ],
+        "workspace_facts": {
+          "has_enabled_5fedu_profile": false,
+          "has_valid_5fedu_lean_pack": false,
+          "is_5fedu_profile_active": false
+        }
+      }
     },
     {
       "id": "5fedu-ui-hash-tampered-pack-is-inactive",
       "prompt": "Sửa module 5fedu lệch pattern drawer",
-      "workspace": { "kind": "generic", "has_5fedu_context": false, "lean_pack": "hash-tampered" },
-      "expect": { "primary": null, "required_skills": [], "forbidden_skills": ["5fedu-project", "5fedu-module-parity"], "workspace_facts": { "has_enabled_5fedu_profile": false, "has_valid_5fedu_lean_pack": false, "is_5fedu_profile_active": false } }
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false,
+        "lean_pack": "hash-tampered"
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity"
+        ],
+        "workspace_facts": {
+          "has_enabled_5fedu_profile": false,
+          "has_valid_5fedu_lean_pack": false,
+          "is_5fedu_profile_active": false
+        }
+      }
     },
     {
       "id": "5fedu-ui-ancestor-symlink-is-inactive",
       "prompt": "Sửa module 5fedu lệch pattern drawer",
-      "workspace": { "kind": "generic", "has_5fedu_context": false, "lean_pack": "ancestor-symlink" },
-      "expect": { "primary": null, "required_skills": [], "forbidden_skills": ["5fedu-project", "5fedu-module-parity"], "workspace_facts": { "has_enabled_5fedu_profile": false, "has_valid_5fedu_lean_pack": false, "is_5fedu_profile_active": false } }
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false,
+        "lean_pack": "ancestor-symlink"
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity"
+        ],
+        "workspace_facts": {
+          "has_enabled_5fedu_profile": false,
+          "has_valid_5fedu_lean_pack": false,
+          "is_5fedu_profile_active": false
+        }
+      }
     },
     {
       "id": "5fedu-ordinary-ui-has-no-activation-node",
       "prompt": "Sửa module 5fedu lệch pattern drawer",
-      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true, "lean_pack": "valid" },
-      "expect": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "exact_context_nodes": ["profile:5fedu:module-mapping", "profile:5fedu:readme", "profile:5fedu:ui-contracts", "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"] }
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true,
+        "lean_pack": "valid"
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "exact_context_nodes": [
+          "profile:5fedu:module-mapping",
+          "profile:5fedu:readme",
+          "profile:5fedu:ui-contracts",
+          "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"
+        ]
+      }
     },
     {
       "id": "5fedu-setup-loads-activation-only-when-active",
       "prompt": "Thiết lập 5fedu cho dự án",
-      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true, "lean_pack": "valid" },
-      "expect": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_setup"], "exact_context_nodes": ["profile:5fedu:behavior:activation", "profile:5fedu:module-mapping", "profile:5fedu:readme", "profile:5fedu:ui-contracts", "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"] }
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true,
+        "lean_pack": "valid"
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_setup"
+        ],
+        "exact_context_nodes": [
+          "profile:5fedu:behavior:activation",
+          "profile:5fedu:module-mapping",
+          "profile:5fedu:readme",
+          "profile:5fedu:ui-contracts",
+          "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"
+        ]
+      }
     },
     {
       "id": "ordinary-workspace-ui-isolated",
       "prompt": "Sửa drawer theo template",
-      "workspace": { "kind": "generic", "has_5fedu_context": false, "lean_pack": "missing" },
-      "expect": { "primary": null, "required_skills": [], "forbidden_skills": ["5fedu-project", "5fedu-module-parity", "frontend-architect"], "workspace_facts": { "is_5fedu_profile_active": false } }
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false,
+        "lean_pack": "missing"
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity",
+          "frontend-architect"
+        ],
+        "workspace_facts": {
+          "is_5fedu_profile_active": false
+        }
+      }
     },
     {
       "id": "5fedu-ui-missing-context",
       "prompt": "Sửa module 5fedu lệch pattern drawer",
-      "workspace": { "kind": "generic", "has_5fedu_context": false },
-      "expect": { "primary": null, "required_skills": [], "forbidden_skills": ["5fedu-project", "5fedu-module-parity"] }
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity"
+        ]
+      }
     },
     {
       "id": "5fedu-ui-concrete-surfaces",
       "prompt": "Sửa toolbar, listview và drawer chi tiết module 5fedu theo template",
-      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
-      "expect": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] }
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ]
+      }
     },
     {
       "id": "5fedu-ui-missing-template",
       "prompt": "Sửa drawer module 5fedu khi workspace chưa có template tham chiếu",
-      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
-      "expect": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] }
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ]
+      }
     },
     {
       "id": "5fedu-ui-scoped-custom-override",
       "prompt": "Sửa module 5fedu drawer theo custom behavior đã được owner phê duyệt trong spec",
-      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
-      "expect": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] }
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ]
+      }
     },
     {
       "id": "5fedu-ui-breadcrumb-unicode",
       "prompt": "Sửa module 5fedu breadcrumb nhãn tiếng Việt, route registry và không dùng slug fallback",
-      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
-      "expect": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] }
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ]
+      }
     },
     {
       "id": "5fedu-ui-reduced-motion",
       "prompt": "Sửa module 5fedu drawer để motion tôn trọng reduced motion",
-      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
-      "expect": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] }
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ]
+      }
     },
     {
       "id": "5fedu-ui-reduced-motion-per-surface",
       "prompt": "Audit module 5fedu: mọi surface phải khai báo reduced motion trong motion_must",
-      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
-      "expect": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] }
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ]
+      }
     },
     {
       "id": "5fedu-ui-explicit-taste-modifier",
       "prompt": "Sửa drawer module 5fedu và thực hiện taste review theo phong cách minimalist",
-      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
-      "expect": { "primary": "5fedu-module-parity", "required_skills": ["5fedu-project"], "supporting_skills": ["ui-taste"], "forbidden_skills": ["frontend-architect"], "intent_signals": ["5fedu_ui"] }
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "supporting_skills": [
+          "ui-taste"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ]
+      }
     },
     {
       "id": "frontend-explicit-taste-direction",
       "prompt": "Thiết kế landing theo phong cách minimalist",
-      "workspace": { "kind": "generic", "has_5fedu_context": false },
-      "expect": { "primary": "frontend-architect", "required_skills": [], "supporting_skills": ["ui-taste"], "forbidden_skills": ["5fedu-module-parity"] }
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "frontend-architect",
+        "required_skills": [],
+        "supporting_skills": [
+          "ui-taste"
+        ],
+        "forbidden_skills": [
+          "5fedu-module-parity"
+        ]
+      }
     },
     {
       "id": "research",
       "prompt": "Kiểm tra changelog API mới nhất",
-      "workspace": { "kind": "generic", "has_5fedu_context": false },
-      "expect": { "primary": "researcher", "required_skills": [], "forbidden_skills": [] }
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "researcher",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
     },
     {
       "id": "unit-test",
       "prompt": "Chạy unit test cho service",
-      "workspace": { "kind": "generic", "has_5fedu_context": false },
-      "expect": { "primary": null, "required_skills": [], "forbidden_skills": ["browser-qa"] }
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "browser-qa"
+        ]
+      }
+    },
+    {
+      "id": "verification-router",
+      "prompt": "Lập kế hoạch kiểm chứng claim theo impact, risk và evidence; chỉ escalate khi proof chưa đủ",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "verification-router",
+        "required_skills": [],
+        "supporting_skills": [],
+        "forbidden_skills": []
+      }
     },
     {
       "id": "manual-browser",
       "prompt": "Manual browser QA click-through",
-      "workspace": { "kind": "generic", "has_5fedu_context": false },
-      "expect": { "primary": "browser-qa", "required_skills": ["qa-skills"], "forbidden_skills": [] }
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "browser-qa",
+        "required_skills": [
+          "qa-skills"
+        ],
+        "forbidden_skills": []
+      }
     },
     {
       "id": "harness",
       "prompt": "Tinh gọn rules và skills của agent-rules",
-      "workspace": { "kind": "harness", "has_5fedu_context": false },
-      "expect": { "primary": "context-evolution-protocol", "required_skills": [], "forbidden_skills": ["docs-style", "researcher"] }
+      "workspace": {
+        "kind": "harness",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "context-evolution-protocol",
+        "required_skills": [],
+        "forbidden_skills": [
+          "docs-style",
+          "researcher"
+        ]
+      }
     },
     {
       "id": "long-plan",
       "prompt": "Lập kế hoạch nhiều phase cho harness",
-      "workspace": { "kind": "harness", "has_5fedu_context": false },
-      "expect": { "primary": "plan-and-handoff", "required_skills": [], "forbidden_skills": [] }
+      "workspace": {
+        "kind": "harness",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "plan-and-handoff",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
     },
     {
       "id": "project-setup",
       "prompt": "Cài context cho project 5fedu",
-      "workspace": { "kind": "generic", "has_5fedu_context": false },
-      "expect": { "primary": null, "required_skills": [], "forbidden_skills": ["5fedu-project", "5fedu-module-parity", "browser-qa"] }
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity",
+          "browser-qa"
+        ]
+      }
     },
     {
       "id": "5fedu-database",
       "prompt": "Kiểm tra migration RLS và schema int8",
-      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
-      "expect": { "primary": null, "required_skills": [], "context_nodes": ["profile:5fedu:rule:data-auth"], "forbidden_skills": ["5fedu-module-parity", "frontend-architect"] }
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "context_nodes": [
+          "profile:5fedu:rule:data-auth"
+        ],
+        "forbidden_skills": [
+          "5fedu-module-parity",
+          "frontend-architect"
+        ]
+      }
     },
     {
       "id": "5fedu-permission",
       "prompt": "Kiểm tra quyền cap_bac cho module",
-      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
-      "expect": { "primary": null, "required_skills": [], "context_nodes": ["profile:5fedu:rule:permissions"], "forbidden_skills": ["browser-qa"] }
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "context_nodes": [
+          "profile:5fedu:rule:permissions"
+        ],
+        "forbidden_skills": [
+          "browser-qa"
+        ]
+      }
     },
     {
       "id": "docs-reference",
       "prompt": "Viết lại README và tài liệu dự án",
-      "workspace": { "kind": "generic", "has_5fedu_context": false },
-      "expect": { "primary": "docs-style", "required_skills": [], "forbidden_skills": ["5fedu-module-parity"] }
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "docs-style",
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-module-parity"
+        ]
+      }
     },
     {
       "id": "generic-project-domain",
       "prompt": "Sửa quy tắc nghiệp vụ của project không dùng 5fedu",
-      "workspace": { "kind": "generic", "has_5fedu_context": false },
-      "expect": { "primary": null, "required_skills": [], "forbidden_skills": ["5fedu-project", "5fedu-module-parity"] }
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity"
+        ]
+      }
     },
     {
       "id": "export-reference",
       "prompt": "Kiểm tra xuất Excel/PDF tiếng Việt",
-      "workspace": { "kind": "5fedu-app", "has_5fedu_context": true },
-      "expect": { "primary": null, "required_skills": [], "context_nodes": ["profile:5fedu:rule:business"], "forbidden_skills": ["browser-qa", "5fedu-module-parity"] }
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "context_nodes": [
+          "profile:5fedu:rule:business"
+        ],
+        "forbidden_skills": [
+          "browser-qa",
+          "5fedu-module-parity"
+        ]
+      }
     },
     {
       "id": "metadata-output",
       "prompt": "Giải thích tiến độ xử lý cho người dùng",
-      "workspace": { "kind": "generic", "has_5fedu_context": false },
-      "expect": { "primary": null, "required_skills": [], "forbidden_skills": [], "must_not_show": ["Skill scan", "Skill activated", "Classification", "Lane", "Friction: none", "Ledger:"] }
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [],
+        "must_not_show": [
+          "Skill scan",
+          "Skill activated",
+          "Classification",
+          "Lane",
+          "Friction: none",
+          "Ledger:"
+        ]
+      }
     }
   ]
 }

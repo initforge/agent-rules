@@ -4,6 +4,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { exportPlanBundle, importPlanBundle } from '../src/export-bundle.js';
 import type { PlanBundle } from '../src/export-bundle.js';
+import { SYMLINK_CAPABLE } from './helpers/symlink-capability.js';
 
 let tmpBase: string;
 
@@ -48,6 +49,7 @@ describe('exportPlanBundle', () => {
     expect(bundle.effectivePlanSha256).toMatch(/^[a-f0-9]{64}$/);
     expect(bundle.amendments).toHaveLength(1);
     expect(bundle.amendments[0].id).toBe('am1');
+    expect(bundle.identityKind).toBe('legacy-compatibility');
     expect(bundle.lineage).toHaveLength(1);
     expect(bundle.receipts).toHaveLength(1);
     expect(bundle.planId).toBe('plan1');
@@ -72,6 +74,18 @@ describe('exportPlanBundle', () => {
     const bundle = await exportPlanBundle(planDir);
     expect(bundle.amendments).toHaveLength(0);
     expect(bundle.lineage).toHaveLength(0);
+    expect(bundle.identityKind).toBe('canonical');
+  });
+
+  it('uses the shared canonical identity for canonical amendment IDs', async () => {
+    const planDir = path.join(tmpBase, 'canonical');
+    fs.mkdirSync(path.join(planDir, 'amendments'), { recursive: true });
+    write(path.join(planDir, 'original.md'), 'canonical plan');
+    write(path.join(planDir, 'amendments', 'AM-0001.md'), 'approved amendment');
+
+    const bundle = await exportPlanBundle(planDir);
+    expect(bundle.identityKind).toBe('canonical');
+    expect(bundle.effectivePlanSha256).not.toBe(bundle.originalSha256);
   });
 });
 
@@ -217,7 +231,7 @@ describe('importPlanBundle', () => {
 // ─── Adversarial: Symlink / containment ───────────────────────────────────
 
 describe('export-bundle adversarial', () => {
-  it('rejects symlink in plan dir (O_NOFOLLOW via SecureFsRoot)', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('rejects symlink in plan dir (O_NOFOLLOW via SecureFsRoot)', async () => {
     const planDir = path.join(tmpBase, 'symlink-attack');
     fs.mkdirSync(planDir, { recursive: true });
     write(path.join(planDir, 'original.md'), 'plan');
@@ -228,7 +242,7 @@ describe('export-bundle adversarial', () => {
     await expect(exportPlanBundle(planDir)).rejects.toThrow();
   });
 
-  it('rejects symlink in lineage dir (O_NOFOLLOW via SecureFsRoot)', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('rejects symlink in lineage dir (O_NOFOLLOW via SecureFsRoot)', async () => {
     const planDir = path.join(tmpBase, 'symlink-attack2');
     fs.mkdirSync(planDir, { recursive: true });
     write(path.join(planDir, 'original.md'), 'plan');
@@ -238,7 +252,7 @@ describe('export-bundle adversarial', () => {
     await expect(exportPlanBundle(planDir)).rejects.toThrow();
   });
 
-  it('rejects import when original.md is a symlink', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('rejects import when original.md is a symlink', async () => {
     const srcDir = path.join(tmpBase, 'src5');
     const dstDir = path.join(tmpBase, 'dst5');
     fs.mkdirSync(srcDir, { recursive: true });

@@ -6,14 +6,15 @@ both to one verified source receipt.
 
 ## Source and adaptation boundary
 
-The shared shell may be copied or adapted only from the selected authoritative
-local checkout after its source receipt is verified. That receipt pins the
-source identity, full revision, integrity, selected paths, and local snapshot.
-An absent, stale, ambiguous, or blocked receipt stops implementation and parity
-claims; neither a remote URL, screenshot, documentation, memory, nor a
-vendored harness tree is an alternative. The task packet records structural
-mapping, accepted deviations, and `must_not_copy`; target-native business
-architecture remains target-native.
+The shared shell may be adapted only from the selected authoritative source
+after its source receipt is verified. For the canonical 5fedu pack, that source
+is the manifest-bound snapshot stored once in the harness and read through the
+reference broker; target projects do not copy or install the template. The
+receipt pins artifact identity, exact tree integrity, selected paths, and file
+hashes. An absent, stale, ambiguous, or blocked receipt stops implementation
+and parity claims; a remote URL, screenshot, documentation, or memory is not an
+alternative. The task packet records structural mapping, accepted deviations,
+and `must_not_copy`; target-native business architecture remains target-native.
 
 ## Shell versus variable slots
 

@@ -13,7 +13,7 @@
 
 | Mục | Trạng thái | Ghi chú |
 |---|---|---|
-| Context 5fedu theo từng dự án | DA_CHOT | Cài `context/5fedu/` — không phình global |
+| Context 5fedu theo từng dự án | DA_CHOT | North-Star dùng pack trung tâm explicit-only; `context/5fedu/` chỉ legacy compatibility |
 | Clone/adapt `5f-template-ket-noi-supabase` | DA_CHOT | React/Vite + Supabase |
 | Khóa chính app table `id int8` | DA_CHOT | Cấm uuid làm PK |
 | Fake-email auth + sync Supabase Auth | DA_CHOT | Xem `domains/database.md` |
@@ -35,6 +35,6 @@
 
 ## Dự án 5fedu đã đăng ký
 
-Xem các repo đã đăng ký hiện tại tại `profiles/5fedu/known-repos.md`; đây không phải tập đóng vĩnh viễn. Quyết định riêng nằm trong `context/5fedu/` mỗi repo sau cài. Repo mới cần owner đăng ký và chạy installer trước khi dùng context.
+Xem các repo đã đăng ký hiện tại tại `profiles/5fedu/known-repos.md`; đây không phải tập đóng vĩnh viễn. Project mới có thể kích hoạt `domain_pack: 5fedu` mà không cần cài template/context. Quyết định riêng vẫn thuộc repo đích; các repo legacy có thể tiếp tục dùng `context/5fedu/project-local/`.
 
 Nostime retail → `archive/nostime/` (overlay khi cài profile `nostime`) — không auto-load cho tah-app.

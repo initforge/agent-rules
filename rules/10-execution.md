@@ -13,10 +13,11 @@ For mode classification, work shapes, roles, delegation, and task state lifecycl
 3. After execute is authorized, own orchestration: sequence dependencies, delegate independent work, integrate, review, fix, and continue.
 4. Trace consumers before shared changes; verify material assumptions against real interfaces.
 5. Complete all feasible in-scope work. A local blocker does not stop independent work.
-6. Match evidence to the claim: build/lint proves static compatibility, tests prove exercised behavior, and live UI/API/data proof is required when claimed.
+6. Match evidence to the claim: build/lint proves static compatibility; start with the cheapest sufficient verifier and escalate by risk when static/tests cannot prove runtime, UI, API, or data behavior.
 7. Re-run affected proof after fixes and report remaining gaps honestly.
 8. After two failed attempts, change approach, investigate, or escalate; do not repeat blindly.
 9. Risk-triggered review gates fire per the work protocol (see 25-task-lifecycle.md for delegation routing); independent review is required when risk triggers fire.
+10. Complete the full job; do not stop at the literal request when context shows related work is required. If scope is unclear, ask before stopping. Never report completion while partial.
 
 ## When signals conflict
 

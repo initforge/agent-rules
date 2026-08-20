@@ -110,9 +110,9 @@ Every route produces three states: requested (logical class + effort), resolved 
 
 Fallback to the next available class when the requested class is unavailable; record fallback_reason. If no class is available, attestation_status is UNVERIFIED. A denied provider mode/model fails closed. An unavailable allowed choice may use only a policy-allowed fallback and remains `PARTIAL` until resolved and observed.
 
-## 5. Pivot, automatic execution, and proof
+## 5. Pivot, Automatic execution, and proof
 
-Once the owner says execute, the main agent automatically classifies size/risk, chooses tools and agents, implements, reviews, fixes, and continues dependency-ready work. Do not require manual phase relay or default host Stop coercion.
+This is the Automatic execution contract; risk-triggered review remains mandatory when risk signals fire. Once the owner says execute, the main agent automatically classifies size/risk, chooses tools and agents, implements, reviews, fixes, and continues dependency-ready work. Do not require manual phase relay or default host Stop coercion.
 
 Proof must match the claim. A build proves buildability, not UI parity, runtime behavior, authorization, migration safety, or distributed correctness. Inspect only evidence needed to establish the assigned acceptance claim, its negative invariant, scope boundary, and any review trigger; do not preload unrelated repository state or expose raw owner context. Use the least expensive evidence that actually proves the claim; use live UI/device interaction when that claim requires it.
 

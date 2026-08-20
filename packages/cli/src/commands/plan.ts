@@ -83,6 +83,7 @@ export async function planAdopt(
           originalSha256: identity.originalSha256,
           amendmentIds: identity.amendmentIds,
           effectivePlanSha256: identity.effectivePlanSha256,
+          identityKind: identity.identityKind,
         },
       };
     } catch (err) {

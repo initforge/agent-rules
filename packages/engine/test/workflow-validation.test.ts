@@ -192,15 +192,26 @@ describe('Quality workflow validation', () => {
     expect(cleanupStep!.run).toContain('node automation/control-plane-ci.mjs stop');
   });
 
+  it('runs C4 from the control-plane cwd so the governed file path resolves', () => {
+    const wf = loadWorkflow('quality.yml');
+    const c4Step = wf.jobs!.quality!.steps!.find(s => s.name === 'Run C4 integration tests');
+    expect(c4Step?.run).toContain('--cwd packages/control-plane');
+    expect(c4Step?.run).toContain('-- run tests/c4.test.ts');
+    expect(c4Step?.run).not.toContain('-- run packages/control-plane/tests/c4.test.ts');
+  });
+
   it('builds the engine dependency before generating the context graph', () => {
     const wf = loadWorkflow('quality.yml');
     const pythonSteps = wf.jobs!['python-tests']!.steps!;
-    const dependencyBuildIndex = pythonSteps.findIndex(s => s.name === 'Build context graph dependency');
+    const kernelDependencyBuildIndex = pythonSteps.findIndex(s => s.name === 'Build context graph kernel dependency');
+    const engineDependencyBuildIndex = pythonSteps.findIndex(s => s.name === 'Build context graph engine dependency');
     const contextGraphIndex = pythonSteps.findIndex(s => s.name === 'Generate context graph');
 
-    expect(dependencyBuildIndex).toBeGreaterThanOrEqual(0);
-    expect(pythonSteps[dependencyBuildIndex]!.run).toBe('npm run build -w packages/engine');
-    expect(contextGraphIndex).toBeGreaterThan(dependencyBuildIndex);
+    expect(kernelDependencyBuildIndex).toBeGreaterThanOrEqual(0);
+    expect(pythonSteps[kernelDependencyBuildIndex]!.run).toBe('npm run build -w packages/kernel');
+    expect(engineDependencyBuildIndex).toBeGreaterThan(kernelDependencyBuildIndex);
+    expect(pythonSteps[engineDependencyBuildIndex]!.run).toBe('npm run build -w packages/engine');
+    expect(contextGraphIndex).toBeGreaterThan(engineDependencyBuildIndex);
     expect(pythonSteps[contextGraphIndex]!.run).toContain('npx tsx packages/cli/src/index.ts context-graph build');
   });
 

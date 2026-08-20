@@ -11,6 +11,7 @@ import {
   ParityContractError,
   type ParityContractRuntime,
 } from '../src/parity-contracts.js';
+import { SYMLINK_CAPABLE } from './helpers/symlink-capability.js';
 
 const roots: string[] = [];
 const draftHeader = `$schema: "${DRAFT_07_SCHEMA_URI}"\n`;
@@ -433,7 +434,7 @@ describe('Draft-07 parity schema runtime', () => {
     }));
   });
 
-  it('rejects symbolic-link segments inside the allowlisted schema root', () => {
+  it.skipIf(!SYMLINK_CAPABLE)('rejects symbolic-link segments inside the allowlisted schema root', () => {
     const root = schemaRoot({
       'aggregate.schema.yaml': aggregateSchema('linked/target.schema.yaml'),
       'target.schema.yaml': targetSchema(),

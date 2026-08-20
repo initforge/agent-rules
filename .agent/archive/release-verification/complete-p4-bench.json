@@ -1,6 +1,0 @@
-{
-  "status": "done",
-  "observed_model": "gpt-5.6-terra",
-  "observed_effort": "medium",
-  "host_attestation_ref": "codex-collaboration://benchmark_fixture/executable-oracle"
-}

@@ -14,6 +14,8 @@ describe("doctorOpenCode", () => {
     const source = path.join(root, "platforms/opencode/agents");
     const build = path.join(root, "generated/runtime-build/opencode/native/agents");
     const home = path.join(root, "home");
+    await fs.mkdir(path.join(root, "automation"), { recursive: true });
+    await fs.copyFile(path.join(process.cwd(), "../../automation/model-policy.json"), path.join(root, "automation/model-policy.json"));
     await Promise.all([source, build, path.join(home, "agents")].map((dir) => fs.mkdir(dir, { recursive: true })));
     await fs.writeFile(path.join(source, "initforge-implementer.md"), "source\n");
     await fs.copyFile(path.join(source, "initforge-implementer.md"), path.join(build, "initforge-implementer.md"));
@@ -31,6 +33,8 @@ describe("doctorOpenCode", () => {
       await new RuntimeInstaller({ repositoryRoot, platformRoots: { opencode: home } }).install("opencode");
       const report = await doctorOpenCode(repositoryRoot, home);
       expect(report.find((check) => check.check === "runtime-manifest")?.status).toBe("OK");
+      expect(report.find((check) => check.check === "source-build-hashes")?.status).toBe("OK");
+      expect(report.find((check) => check.check === "installed-agent-hashes")?.status).toBe("OK");
       expect(report.find((check) => check.check === "native-activation")?.status).toBe("NATIVE_UNVERIFIED");
       expect(await fs.stat(path.join(home, "agent-rules-runtime", "agent-rules-runtime-receipt.json"))).toBeTruthy();
     } finally {

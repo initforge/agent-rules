@@ -10,8 +10,9 @@ constraints:
 dependencies: []
 context:
   identity: "5fedu ERP/Admin profile"
-  activation: "Only .agent/profiles/5fedu.enabled or a validated installed context/5fedu README/rules/behavior/module-mapping lean pack may route these rules; prompts never activate the profile."
+  activation: "Explicit North-Star domain_pack=5fedu, --domain-pack 5fedu, or .agent/profiles/5fedu.enabled may activate this profile. Legacy context/5fedu is compatibility-only; prompt wording never activates the profile."
   activationMarker: ".agent/profiles/5fedu.enabled"
+  # Legacy installer metadata only; North-Star reads the central pack directly.
   leanPack:
     readme: "context/5fedu/README.md"
     requiredFiles: ["behaviors/activation.md", "rules/business.md", "rules/data-auth.md", "rules/permissions.md", "module-mapping/modules.yaml", "module-mapping/ui-contracts.md"]

@@ -162,15 +162,6 @@
     ]
   },
   {
-    "phrase": "verify trước khi sửa known-unknowns",
-    "skill": "implementation-discovery",
-    "keywords": [
-      "verify",
-      "known-unknowns",
-      "assumptions"
-    ]
-  },
-  {
     "phrase": "giao dien lech sai pattern parity",
     "file": "profiles/5fedu/projects/domains/ui-delivery.md",
     "keywords": [

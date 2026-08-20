@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-07-25T23:45:00Z",
+  "generated_at": "2026-08-08T06:21:41Z",
   "canonical_sha": "bc2dc92dc8648de51e50d92065d85a4b35ddac4b",
   "top_level": [
     {
@@ -301,15 +301,15 @@
       "evidence": "Referenced by AGENTS.md and manifest.yaml routing",
       "entries": [
         {
-          "path": "skills/5fedu-module-parity/SKILL.md",
-          "type": "public core",
+          "path": "profiles/5fedu/skills/5fedu-module-parity/SKILL.md",
+          "type": "profile skill",
           "owner": "5fedu-maintainer",
           "status": "active",
           "skill_slug": "5fedu-module-parity"
         },
         {
-          "path": "skills/5fedu-project/SKILL.md",
-          "type": "public core",
+          "path": "profiles/5fedu/skills/5fedu-project/SKILL.md",
+          "type": "profile skill",
           "owner": "5fedu-maintainer",
           "status": "active",
           "skill_slug": "5fedu-project"
@@ -357,18 +357,18 @@
           "skill_slug": "frontend-architect"
         },
         {
-          "path": "skills/implementation-discovery/SKILL.md",
-          "type": "public core",
-          "owner": "harness-maintainer",
-          "status": "active",
-          "skill_slug": "implementation-discovery"
-        },
-        {
           "path": "skills/master-image-generation/SKILL.md",
           "type": "public core",
           "owner": "harness-maintainer",
           "status": "active",
           "skill_slug": "master-image-generation"
+        },
+        {
+          "path": "skills/parity-verification/SKILL.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "skill_slug": "parity-verification"
         },
         {
           "path": "skills/plan-and-handoff/SKILL.md",
@@ -382,8 +382,14 @@
           "type": "public core",
           "owner": "harness-maintainer",
           "status": "active",
-          "skill_slug": "qa-skills",
-          "upstream": "petrkindlmann/qa-skills"
+          "skill_slug": "qa-skills"
+        },
+        {
+          "path": "skills/quality/SKILL.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "skill_slug": "quality"
         },
         {
           "path": "skills/researcher/SKILL.md",
@@ -391,6 +397,13 @@
           "owner": "harness-maintainer",
           "status": "active",
           "skill_slug": "researcher"
+        },
+        {
+          "path": "skills/ui-taste/SKILL.md",
+          "type": "public core",
+          "owner": "harness-maintainer",
+          "status": "active",
+          "skill_slug": "ui-taste"
         }
       ]
     },
@@ -408,7 +421,7 @@
         "Merge-Mcp-Adapters.ps1"
       ],
       "confidence": "high",
-      "evidence": "Reference by AGENTS.md, consumed by installer",
+      "evidence": "Canonical integrations/registry.json; installer uses bounded profiles and governed runtime attaches task-selected providers",
       "registry": "integrations/registry.json",
       "entries": [
         {
@@ -418,111 +431,132 @@
           "consumers": [
             "02-install-runtime.ps1",
             "09-doctor.ps1",
-            "validate-tool-registry.ps1"
-          ]
-        },
-        {
-          "path": "integrations/required/codebase-memory-mcp/",
-          "type": "installer",
-          "status": "active",
-          "policy": "required",
-          "hosts": [
-            "codex",
-            "grok",
-            "antigravity",
-            "cursor"
-          ]
-        },
-        {
-          "path": "integrations/recommended/context7/",
-          "type": "installer",
-          "status": "active",
-          "policy": "recommended",
-          "hosts": [
-            "codex",
-            "grok",
-            "antigravity",
-            "cursor"
-          ]
-        },
-        {
-          "path": "integrations/recommended/playwright-mcp/",
-          "type": "installer",
-          "status": "active",
-          "policy": "recommended",
-          "hosts": [
-            "codex",
-            "grok",
-            "antigravity",
-            "cursor"
+            "validate-tool-registry.mjs"
           ]
         },
         {
           "path": "integrations/recommended/chrome-devtools-mcp/",
-          "type": "installer",
+          "type": "mcp",
           "status": "active",
           "policy": "recommended",
+          "activation": "automatic",
+          "capabilities": [
+            "browser.debug"
+          ],
           "hosts": [
             "codex",
+            "claude",
             "grok",
             "antigravity",
-            "cursor"
+            "cursor",
+            "opencode",
+            "mimocode"
           ]
-        }
-      ]
-    },
-    {
-      "path": "integrations/",
-      "type": "runtime adapter",
-      "owner": "upstream-vendor",
-      "canonical_source": "vendor MCP server definitions",
-      "public": true,
-      "status": "active",
-      "recommended_future_location": "integrations/",
-      "consumers": [
-        "codex",
-        "cursor",
-        "grok",
-        "antigravity"
-      ],
-      "confidence": "medium",
-      "evidence": "Tool JSON schemas for MCP servers; source unknown",
-      "entries": [
-        {
-          "path": "integrations/codebase-memory/",
-          "type": "runtime adapter",
-          "status": "active",
-          "server": "codebase-memory-mcp",
-          "tool_count": 13,
-          "note": "Canonical identity; underscore variant removed in 4dccb80+2"
         },
         {
-          "path": "integrations/chrome-devtools/",
-          "type": "runtime adapter",
+          "path": "integrations/recommended/codebase-memory-mcp/",
+          "type": "mcp",
           "status": "active",
-          "server": "chrome-devtools-mcp",
-          "tool_count": 29
+          "policy": "recommended",
+          "activation": "automatic",
+          "capabilities": [
+            "code.semantic"
+          ],
+          "hosts": [
+            "codex",
+            "claude",
+            "grok",
+            "antigravity",
+            "cursor",
+            "opencode",
+            "mimocode"
+          ]
         },
         {
-          "path": "integrations/context7/",
-          "type": "runtime adapter",
+          "path": "integrations/recommended/context7/",
+          "type": "mcp",
           "status": "active",
-          "server": "context7-mcp",
-          "tool_count": 2
+          "policy": "recommended",
+          "activation": "automatic",
+          "capabilities": [
+            "docs.lookup"
+          ],
+          "hosts": [
+            "codex",
+            "claude",
+            "grok",
+            "antigravity",
+            "cursor",
+            "opencode",
+            "mimocode"
+          ]
         },
         {
-          "path": "integrations/playwright/",
-          "type": "runtime adapter",
+          "path": "integrations/recommended/playwright-cli/",
+          "type": "cli-tool",
           "status": "active",
-          "server": "playwright-mcp",
-          "tool_count": 27
+          "policy": "recommended",
+          "activation": "automatic",
+          "capabilities": [
+            "browser.verify"
+          ],
+          "hosts": []
         },
         {
-          "path": "integrations/tasks/",
-          "type": "runtime adapter",
+          "path": "integrations/recommended/playwright-mcp/",
+          "type": "mcp",
           "status": "active",
-          "server": "tasks-mcp",
-          "tool_count": 7
+          "policy": "recommended",
+          "activation": "automatic",
+          "capabilities": [
+            "browser.explore"
+          ],
+          "hosts": [
+            "codex",
+            "claude",
+            "grok",
+            "antigravity",
+            "cursor",
+            "opencode",
+            "mimocode"
+          ]
+        },
+        {
+          "path": "integrations/recommended/rtk/",
+          "type": "cli-tool",
+          "status": "active",
+          "policy": "recommended",
+          "activation": "automatic",
+          "capabilities": [
+            "output.compress"
+          ],
+          "hosts": [
+            "codex",
+            "claude",
+            "grok",
+            "antigravity",
+            "cursor",
+            "opencode",
+            "mimocode"
+          ]
+        },
+        {
+          "path": "integrations/optional/serena/",
+          "type": "mcp",
+          "status": "active",
+          "policy": "optional",
+          "activation": "explicit-only",
+          "capabilities": [
+            "code.semantic"
+          ],
+          "hosts": [
+            "codex",
+            "claude",
+            "antigravity",
+            "cursor",
+            "opencode",
+            "mimocode"
+          ]
         }
       ]
     },
@@ -966,24 +1000,9 @@
           "status": "active"
         },
         {
-          "path": "automation/migrate-nostime-project-local.ps1",
-          "type": "migration",
-          "status": "deprecated"
-        },
-        {
-          "path": "automation/migrate-tahapp-project-local.ps1",
-          "type": "migration",
-          "status": "deprecated"
-        },
-        {
           "path": "automation/install-pre-commit-hook.sh",
           "type": "installer",
           "status": "active"
-        },
-        {
-          "path": "automation/fixtures/",
-          "type": "fixture",
-          "status": "empty"
         }
       ]
     },
@@ -1042,13 +1061,7 @@
     }
   ],
   "findings": {
-    "duplicates_resolved": [
-      {
-        "severity": "medium",
-        "finding": "integrations/codebase_memory/ and integrations/codebase-memory/ were identical (13 tool JSONs each)",
-        "resolution": "Removed integrations/codebase_memory/; canonical identity is integrations/codebase-memory/"
-      }
-    ],
+    "duplicates_resolved": [],
     "stale_path_references_resolved": [
       {
         "severity": "low",
@@ -1068,34 +1081,12 @@
     ],
     "unclear_owner": [
       {
-        "severity": "medium",
-        "finding": "integrations/ tool JSONs have unknown upstream source; no manifest or README documents provenance",
-        "paths": [
-          "integrations/codebase-memory/",
-          "integrations/chrome-devtools/",
-          "integrations/context7/",
-          "integrations/playwright/",
-          "integrations/tasks/"
-        ]
-      },
-      {
         "severity": "low",
         "finding": "skills/qa-skills references upstream 'petrkindlmann/qa-skills' but has no sync mechanism",
         "path": "skills/qa-skills/SKILL.md"
       }
     ],
-    "generated_from_unknown_source": [
-      {
-        "severity": "low",
-        "finding": "platforms/codex/scripts/__pycache__/ files are compiled bytecode; source is skill-gate.py",
-        "paths": [
-          "platforms/codex/scripts/__pycache__/",
-          "platforms/antigravity/scripts/__pycache__/",
-          "platforms/cursor/scripts/__pycache__/",
-          "platforms/shared/scripts/__pycache__/"
-        ]
-      }
-    ],
+    "generated_from_unknown_source": [],
     "numbered_scripts_numering_anomalies_resolved": [
       {
         "severity": "low",
@@ -1108,14 +1099,7 @@
         "note": "Numbers are descriptive order hints, not enforced sequence"
       }
     ],
-    "dead_scripts": [
-      {
-        "severity": "low",
-        "finding": "automation/migrate-nostime-project-local.ps1 and migrate-tahapp-project-local.ps1 are one-time migrations",
-        "status": "deprecated",
-        "recommendation": "Archive or remove after confirmation"
-      }
-    ],
+    "dead_scripts": [],
     "budget_and_taxonomy_drift_resolved": [
       {
         "severity": "low",
@@ -1135,18 +1119,7 @@
         "note": "docs/guides are documentation with advisory note not to duplicate budgets"
       }
     ],
-    "orphan_files_no_manifest_ref": [
-      {
-        "severity": "info",
-        "finding": "integrations/ tool JSONs are not referenced by any manifest, build script, or integration registry",
-        "recommendation": "Either add a manifest reference or move to an integration subdirectory"
-      },
-      {
-        "severity": "info",
-        "finding": "automation/fixtures/ is empty",
-        "recommendation": "Remove or populate"
-      }
-    ]
+    "orphan_files_no_manifest_ref": []
   },
   "summary": {
     "total_tracked_files": 521,

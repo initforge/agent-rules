@@ -69,6 +69,21 @@ for rel in "${FILES[@]}"; do
     for rt in "${HOME}/.codex" "${HOME}/.gemini/config" "${HOME}/.grok" "${HOME}/.cursor"; do
       dst="$rt/$rel"
       [ -f "$dst" ] || continue
+
+      # Codex activates the managed bundle through a pointer file at
+      # ~/.codex/AGENTS.md; its content is intentionally not a byte-for-byte
+      # copy of the repository AGENTS.md. Validate the pointer target instead
+      # of reporting a false mirror drift for this installer-owned edge.
+      if [ "$rel" = "AGENTS.md" ] && [ "$(basename "$rt")" = ".codex" ] \
+        && grep -Fqx '# Managed by agent-rules' "$dst" 2>/dev/null \
+        && grep -Fq 'agent-rules-runtime/.activation/AGENTS.md' "$dst" 2>/dev/null; then
+        activation_ref="$(sed -n '2p' "$dst" 2>/dev/null | sed 's/^@//')"
+        if [ -f "$activation_ref" ]; then
+          continue
+        fi
+        warns="${warns}\n  - DEAD ACTIVATION ${rel}: managed Codex pointer target ${activation_ref} không tồn tại"
+      fi
+
       dst_hash="$(sha256sum "$dst" 2>/dev/null | awk '{print $1}')"
       [ -n "$src_hash" ] && [ -n "$dst_hash" ] && [ "$src_hash" != "$dst_hash" ] && \
         warns="${warns}\n  - MIRROR DRIFT ${rel} vs $(basename "$rt") → chạy ./automation/run.sh 02-install-runtime"

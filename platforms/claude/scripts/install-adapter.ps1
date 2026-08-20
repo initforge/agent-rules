@@ -67,16 +67,26 @@ function Get-PythonCommand {
 }
 
 function Get-ClaudeMcpServers {
-  $AdapterPaths = @(
-    "integrations/required/codebase-memory-mcp/adapters/claude.json",
-    "integrations/required/playwright-mcp/adapters/claude.json",
-    "integrations/required/chrome-devtools-mcp/adapters/claude.json",
-    "integrations/recommended/context7/adapters/claude.json"
-  )
+  $Profile = if ($env:AGENT_RULES_GLOBAL_MCP_PROFILE) { [string]$env:AGENT_RULES_GLOBAL_MCP_PROFILE } else { "none" }
+  $Profile = $Profile.Trim().ToLowerInvariant()
+  if ($Profile -eq "none" -or -not $Profile) { return [ordered]@{} }
+  $AllowedProfiles = @("core", "research", "frontend", "qa", "all")
+  if ($AllowedProfiles -notcontains $Profile) { throw "Invalid AGENT_RULES_GLOBAL_MCP_PROFILE '$Profile'. Expected none/core/research/frontend/qa/all." }
+
+  $RegistryPath = Join-Path $Root "integrations\registry.json"
+  if (-not (Test-Path -LiteralPath $RegistryPath -PathType Leaf)) { throw "Integration registry is missing: $RegistryPath" }
+  $Registry = Get-Content -Raw -Encoding UTF8 -LiteralPath $RegistryPath | ConvertFrom-Json
   $Servers = [ordered]@{}
-  foreach ($RelativePath in $AdapterPaths) {
-    $Path = Join-Path $Root ($RelativePath -replace '/', [IO.Path]::DirectorySeparatorChar)
-    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { throw "Claude MCP adapter is missing: $Path" }
+  foreach ($Integration in @($Registry.integrations)) {
+    if ([string]$Integration.kind -ne "mcp") { continue }
+    if ([string]$Integration.policy -eq "optional" -or [string]$Integration.activation -eq "explicit-only") { continue }
+    $Profiles = @($Integration.profiles | ForEach-Object { ([string]$_).ToLowerInvariant() })
+    if ($Profile -ne "all" -and $Profiles -notcontains $Profile) { continue }
+    $InstallScript = [string]$Integration.install.script
+    if (-not $InstallScript) { continue }
+    $IntegrationRoot = Split-Path ($InstallScript -replace '/', '\') -Parent
+    $Path = Join-Path (Join-Path $Root $IntegrationRoot) "adapters\claude.json"
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { continue }
     $Adapter = Get-Content -Raw -Encoding UTF8 -LiteralPath $Path | ConvertFrom-Json
     foreach ($Property in @($Adapter.mcpServers.PSObject.Properties)) {
       $Server = $Property.Value

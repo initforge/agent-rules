@@ -18,7 +18,7 @@ Worker chỉ được implement khi nhận được **tất cả**:
 ### MUST
 
 - Implement theo mapping trong packet (không chọn mapping khác)
-- Tôn trọng `decision` field: create = viết mới theo template; adapt = copy template + modify variable slots; reuse = import shared
+- Tôn trọng `decision` field: create = implement target file theo source-grounded pattern; adapt = port/reproduce cấu trúc được trỏ từ central reference rồi modify variable slots; reuse = import shared target-native component
 - Áp dụng variable slot values từ spec/schema, không copy từ template module
 - Tôn trọng `must_not_copy` — không copy architecture/pattern bị cấm
 - Implement `shell_must` invariants chính xác
@@ -30,7 +30,7 @@ Worker chỉ được implement khi nhận được **tất cả**:
 
 - **Không tự chọn mapping khác.** Planner quyết định, worker ghi nhận.
 - **Không invent missing visual facts.** Nếu visual-contract.yaml không có alignment/color/dimension → block, hỏi planner, không tự suy luận.
-- **Không thay đổi `decision`.** Nếu `decision: adapt`, worker phải copy template → modify, không viết lại từ đầu.
+- **Không thay đổi `decision`.** Nếu `decision: adapt`, worker phải bám exact central source pointers và reproduce/port cấu trúc tương ứng vào target-owned files trước khi adapt; không vendor/copy cả template tree và không rewrite từ memory.
 - **Không copy `must_not_copy` entries.** Worker phải đọc architecture-adaptation.yaml và kiểm tra target không chứa forbidden pattern.
 - **Không thêm behavior ngoài contract.** Nếu behavior phát sinh → block, báo planner.
 - **Không implement uncertain mappings** (`uncertainty: true`) — planner owns those.
@@ -43,7 +43,7 @@ Worker chỉ được implement khi nhận được **tất cả**:
 | Không biết màu sắc của badge | Lấy từ visual-contract.yaml hoặc mở template code reference |
 | Không biết khoảng cách padding | Mở template code reference (tailwind classes) |
 | Cần xem design spec | Yêu cầu planner bổ sung alignment_notes trong visual-contract.yaml |
-| Phát hiện variable slot thiếu | Ghi lại, implement với placeholder, báo planner |
+| Phát hiện variable slot thiếu | Block slice đó và báo planner/spec owner; không invent và không ship placeholder |
 | Source code không match contract | Block, báo planner resolve trước |
 | Need screenshot để verify | Yêu cầu planner; không tự suy luận từ memory |
 

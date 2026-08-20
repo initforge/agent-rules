@@ -1,0 +1,38 @@
+{
+  "name": "@initforge/agent-rules-kernel",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Canonical contracts, protocol, and state management for Agent Rules Kernel",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./contracts.js": {
+      "types": "./dist/contracts.d.ts",
+      "import": "./dist/contracts.js"
+    },
+    "./*.js": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js"
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "node ../../node_modules/typescript/bin/tsc",
+    "typecheck": "node ../../node_modules/typescript/bin/tsc --noEmit",
+    "test": "node ../../automation/run-governed-vitest.mjs --project-root ../.. --cwd . --mode full -- run"
+  },
+  "dependencies": {
+    "ajv": "8.20.0",
+    "yaml": "2.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.1.1"
+  }
+}

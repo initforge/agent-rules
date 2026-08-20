@@ -5,6 +5,7 @@ import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { buildInvocation, HeadlessExecutor, detectAgent } from '../src/runner/headless-executor.js';
 import { captureDiff, isDocOnly } from '../src/runner/diff.js';
+import { findOrphanNodePids, killProcessTree } from './spawn-tree-kill.js';
 
 describe('buildInvocation', () => {
   // R-002: the old adapter's fatal flaw was that nothing asserted what it ran, so
@@ -25,9 +26,10 @@ describe('buildInvocation', () => {
     expect(args[args.indexOf('--permission-mode') + 1]).toBe('bypassPermissions');
   });
 
-  it('builds codex and opencode invocations', () => {
+  it('builds codex, opencode, and mimocode invocations', () => {
     expect(buildInvocation('codex', 'task', {})).toEqual({ executable: 'codex', args: ['exec', 'task'] });
     expect(buildInvocation('opencode', 'task', {})).toEqual({ executable: 'opencode', args: ['run', 'task'] });
+    expect(buildInvocation('mimocode', 'task', {})).toEqual({ executable: 'mimo', args: ['run', '--dangerously-skip-permissions', 'task'] });
   });
 
   it('passes the prompt as one argv entry, never through a shell', () => {
@@ -49,7 +51,22 @@ describe('HeadlessExecutor', () => {
   beforeEach(() => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'executor-test-'));
   });
-  afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
+  afterEach(async () => {
+    // The previous `force: true` hid a real Windows failure: a child that
+    // still holds a file handle makes `rmSync` return EPERM, and force=true
+    // silently swallows it. Enumerate any node children the test left
+    // running and kill them, then retry the rm.
+    const orphans = findOrphanNodePids();
+    for (const pid of orphans) {
+      await killProcessTree(pid);
+    }
+    try {
+      fs.rmSync(dir, { recursive: true, force: true });
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') return;
+      throw err;
+    }
+  });
 
   it('spills stdout and stderr to files instead of returning content', async () => {
     // `node` stands in for an agent CLI: the contract under test is process
@@ -101,6 +118,35 @@ describe('HeadlessExecutor', () => {
     });
 
     expect(result.exitCode).toBe(3);
+  });
+
+  it('injects per-task Codex and OpenCode MCP config through environment variables', async () => {
+    const executor = new HeadlessExecutor({
+      kind: 'opencode',
+      cwd: dir,
+      timeoutMs: 30_000,
+      logDir: path.join(dir, 'logs'),
+      invocationOverride: () => ({
+        executable: process.execPath,
+        args: ['-e', 'console.log(process.env.OPENCODE_CONFIG, process.env.CODEX_HOME)'],
+      }),
+    });
+    const result = await executor.execute({
+      id: 'task-mcp-env',
+      prompt: 'unused',
+      verification: [],
+      ownedPaths: [],
+      repairDepth: 0,
+      createdAt: new Date().toISOString(),
+    }, {
+      dir: path.join(dir, 'mcp'),
+      resolved: ['playwright-mcp'],
+      missing: [],
+      opencode: { configPath: path.join(dir, 'mcp', 'opencode.json') },
+      codex: { configDir: path.join(dir, 'mcp', 'codex'), envVarName: 'CODEX_HOME' },
+    });
+
+    expect(fs.readFileSync(result.stdoutPath, 'utf8').trim()).toBe(`${path.join(dir, 'mcp', 'opencode.json')} ${path.join(dir, 'mcp', 'codex')}`);
   });
 
   it('passes the task id to the child so a transcript can be traced back', async () => {

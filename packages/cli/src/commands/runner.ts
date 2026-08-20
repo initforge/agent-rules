@@ -8,9 +8,31 @@ import {
   type AgentKind,
   type RunSummary,
 } from '@initforge/agent-rules-engine/runner/loop';
+
+// Local shape for the engine modules we dynamic-import at run time. The CLI
+// has no compile-time dependency on the engine package; this avoids the
+// NodeNext path-mapping dance for an opt-in subcommand.
+interface VerifyTaskEvidence { kind: string; path: string; sha256: string; }
+interface VerifyTaskStepResult { step: { kind: string }; exitCode: number; durationMs: number; evidence: VerifyTaskEvidence[]; }
+interface VerifyTaskOutcome { passed: boolean; stepResults: VerifyTaskStepResult[]; evidence: VerifyTaskEvidence[]; totalDurationMs: number; }
+interface VerifierModule {
+  VerificationEngine: new (config: { cwd: string; evidenceDir?: string }) => { evaluate(p: unknown): Promise<VerifyTaskOutcome>; };
+}
+interface ProfileModule {
+  liftVerification: (input: readonly string[]) => { steps: unknown[]; evidence: string[] };
+}
 import { TaskQueue } from '@initforge/agent-rules-engine/runner/queue';
+import { baselineGateFromManifest, type BaselineGate } from '@initforge/agent-rules-engine/runner/baseline-gate';
 import { Journal } from '@initforge/agent-rules-engine/runner/journal';
 import { readCurrentPointer } from '../services/current-pointer.js';
+import {
+  createPortableCheckpoint,
+  verifyAndRestoreCheckpoint,
+  type PortableCheckpoint,
+  createAmendmentRequest,
+  compileRevisionImpactPlanFromStrongPlanner,
+  activateRevisionImpact,
+} from '@initforge/agent-rules-kernel';
 
 /**
  * `agent-rules run` — the durable runner.
@@ -27,7 +49,7 @@ import { readCurrentPointer } from '../services/current-pointer.js';
  *   run journal [--verify]       journal summary, optionally checking the hash chain
  */
 
-const AGENTS: AgentKind[] = ['claude', 'codex', 'opencode'];
+const AGENTS: AgentKind[] = ['claude', 'codex', 'opencode', 'mimocode'];
 
 interface ParsedArgs {
   action: string;
@@ -109,6 +131,20 @@ function paths(basePath: string, planId: string) {
   };
 }
 
+function loadBaselineGate(basePath: string, flags: Map<string, string[]>): BaselineGate | undefined {
+  const supplied = flags.get('baseline-manifest')?.[0];
+  if (!supplied) return undefined;
+  const manifestPath = path.isAbsolute(supplied) ? supplied : path.resolve(basePath, supplied);
+  if (!fs.existsSync(manifestPath)) throw new Error(`baseline manifest not found: ${manifestPath}`);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  } catch (error) {
+    throw new Error(`baseline manifest is not valid JSON: ${manifestPath} (${error instanceof Error ? error.message : String(error)})`);
+  }
+  return baselineGateFromManifest(parsed);
+}
+
 export async function runnerCmd(args: string[], basePath = process.cwd()): Promise<unknown> {
   const { action, positional, flags, bools } = parseArgs(args);
   const plan = currentPlan(basePath);
@@ -154,6 +190,7 @@ export async function runnerCmd(args: string[], basePath = process.cwd()): Promi
       }
       const maxTasksRaw = flags.get('max-tasks')?.[0];
       const timeoutRaw = flags.get('task-timeout-ms')?.[0];
+      const baselineGate = loadBaselineGate(basePath, flags);
 
       const runner = new Runner({
         cwd: basePath,
@@ -168,6 +205,7 @@ export async function runnerCmd(args: string[], basePath = process.cwd()): Promi
         maxTasks: maxTasksRaw === undefined ? undefined : Number(maxTasksRaw),
         taskTimeoutMs: timeoutRaw === undefined ? undefined : Number(timeoutRaw),
         permissionMode: flags.get('permission-mode')?.[0],
+        baselineGate,
       });
 
       // Ctrl-C finishes the task in flight rather than orphaning it, so the journal
@@ -181,6 +219,7 @@ export async function runnerCmd(args: string[], basePath = process.cwd()): Promi
         plan: plan.planId,
         agent,
         maxRepairDepth,
+        ...(baselineGate ? { baseline: baselineGate.status } : {}),
         ...summary,
         // Reports can be long; the journal holds the durable detail.
         reports: summary.reports.map((r) => ({
@@ -226,7 +265,200 @@ export async function runnerCmd(args: string[], basePath = process.cwd()): Promi
       };
     }
 
+    case 'verify-task': {
+      // Re-runs a single task's verification profile from the queue.
+      // Useful for re-driving a Playwright / browser-script / mcp-tool-call
+      // step on the most recent state of the repo, without re-spawning
+      // the agent. Pure shell verification re-runs as well.
+      const taskId = positional[0];
+      if (!taskId) throw new Error('usage: runner verify-task <task-id>');
+      const queue = new TaskQueue(layout.queueRoot);
+      const allTasks = [
+        ...queue.list('ready'),
+        ...queue.list('done'),
+        ...queue.list('failed'),
+        ...queue.list('needs-user'),
+      ];
+      const task = allTasks.find((t) => t.id === taskId);
+      if (!task) {
+        return {
+          plan: plan.planId,
+          taskId,
+          status: 'NOT_FOUND',
+          hint: 'available tasks: ' + allTasks.map((t) => t.id).join(', '),
+        };
+      }
+      // Dynamic imports keep the CLI's TypeScript build from needing the
+      // engine package in its node_modules — NodeNext path-mapping for the
+      // private workspace is fragile, and the verify-task subcommand is
+      // an explicit opt-in path. The shape is duck-typed via the local
+      // interfaces above so the CLI does not need a compile-time reference.
+      // NodeNext path mapping for the private workspace engine package is
+      // fragile; the runtime module is resolved by Node at execution time
+      // (see `node_modules/@initforge/agent-rules-engine/`).
+      const verifierModuleId = '@initforge/agent-rules-engine/runner/verifier.js';
+      const profileModuleId = '@initforge/agent-rules-engine/runner/profile.js';
+      const verifierMod = await import(verifierModuleId) as unknown as VerifierModule;
+      const profileMod = await import(profileModuleId) as unknown as ProfileModule;
+      const profile = profileMod.liftVerification(task.verification);
+      const engine = new verifierMod.VerificationEngine({
+        cwd: basePath,
+        evidenceDir: path.join(layout.logDir, 'verify-task', task.id),
+      });
+      const outcome = await engine.evaluate(profile);
+      return {
+        plan: plan.planId,
+        taskId,
+        status: outcome.passed ? 'PASS' : 'FAIL',
+        stepResults: outcome.stepResults.map((r) => ({
+          kind: r.step.kind,
+          exitCode: r.exitCode,
+          durationMs: r.durationMs,
+        })),
+        evidence: outcome.evidence.map((e) => ({
+          kind: e.kind,
+          path: e.path,
+          sha256: e.sha256,
+        })),
+        totalDurationMs: outcome.totalDurationMs,
+      };
+    }
+
+    case 'checkpoint': {
+      const outFlag = flags.get('out')?.[0];
+      const targetFile = outFlag ? path.resolve(outFlag) : path.join(basePath, '.agent', 'plans', plan.planId, 'portable-checkpoint.json');
+
+      const queue = new TaskQueue(layout.queueRoot);
+
+      const readyTasks = queue.list('ready');
+      const activeTasks = queue.list('active');
+      const doneTasks = queue.list('done');
+      const failedTasks = queue.list('failed');
+      const skippedTasks = queue.list('needs-user');
+
+      let decisions = [];
+      const cpFile = path.join(layout.queueRoot, '..', 'checkpoint.json');
+      if (fs.existsSync(cpFile)) {
+        try {
+          const lastCp = JSON.parse(fs.readFileSync(cpFile, 'utf8'));
+          decisions = lastCp.capsule?.decisions ?? [];
+        } catch { /* ignore */ }
+      }
+
+      const cursor = {
+        planId: plan.planId,
+        runId: journalIdentity(basePath, plan.planId, plan.requirements).revision,
+        epoch: 0,
+        taskId: activeTasks[0]?.id ?? readyTasks[0]?.id ?? 'task-000',
+        attemptCount: 1,
+        completedTaskIds: doneTasks.map(x => x.id),
+        failedTaskIds: failedTasks.map(x => x.id),
+        skippedTaskIds: skippedTasks.map(x => x.id),
+      };
+
+      const capsule = {
+        planId: plan.planId,
+        runId: journalIdentity(basePath, plan.planId, plan.requirements).revision,
+        epoch: 0,
+        decisions,
+        pendingClaims: readyTasks.map(x => x.id),
+        pendingEvidence: [],
+        activeWorkers: [],
+        mode: 'max-repair-depth=3',
+      };
+
+      const owned = flags.get('own') ?? [];
+      const portable = createPortableCheckpoint('manual', cursor, capsule, basePath, owned);
+
+      fs.mkdirSync(path.dirname(targetFile), { recursive: true });
+      fs.writeFileSync(targetFile, JSON.stringify(portable, null, 2) + '\n', { mode: 0o600 });
+      return {
+        plan: plan.planId,
+        checkpointId: portable.checkpointId,
+        untrackedFiles: Object.keys(portable.untrackedFiles).length,
+        savedTo: path.relative(basePath, targetFile),
+      };
+    }
+
+    case 'resume': {
+      const fromPath = flags.get('from')?.[0] || positional[0];
+      if (!fromPath) throw new Error('usage: runner resume --from <checkpoint-file>');
+      const absolute = path.resolve(fromPath);
+      if (!fs.existsSync(absolute)) throw new Error(`Checkpoint file not found: ${absolute}`);
+
+      const checkpoint = JSON.parse(fs.readFileSync(absolute, 'utf8')) as PortableCheckpoint;
+      const restoreResult = verifyAndRestoreCheckpoint(checkpoint, basePath);
+      if (!restoreResult.success) {
+        throw new Error(`Resume failed-closed: ${restoreResult.error}`);
+      }
+
+      return {
+        plan: plan.planId,
+        resumedFrom: checkpoint.checkpointId,
+        interruptedTaskCount: restoreResult.interruptedTaskCount,
+        status: 'READY_TO_START',
+      };
+    }
+
+    case 'amend': {
+      const intent = positional[0];
+      if (!intent) throw new Error('usage: runner amend "<prose-intent>"');
+      const impactPlanPath = flags.get('impact-plan')?.[0];
+      if (!impactPlanPath) {
+        throw new Error('runner amend requires --impact-plan <strong-planner-impact.json>; raw prose is never interpreted as an impact plan (fail closed)');
+      }
+      const resolvedImpactPlanPath = path.resolve(basePath, impactPlanPath);
+      if (!resolvedImpactPlanPath.startsWith(`${path.resolve(basePath)}${path.sep}`)) {
+        throw new Error('runner amend --impact-plan must remain inside the workspace (fail closed)');
+      }
+      if (!fs.existsSync(resolvedImpactPlanPath)) throw new Error(`strong-planner impact plan not found: ${impactPlanPath}`);
+      let rawImpactPlan: unknown;
+      try {
+        rawImpactPlan = JSON.parse(fs.readFileSync(resolvedImpactPlanPath, 'utf8')) as unknown;
+      } catch (error) {
+        throw new Error(`strong-planner impact plan is not valid JSON: ${error instanceof Error ? error.message : String(error)}`);
+      }
+
+      const queue = new TaskQueue(layout.queueRoot);
+      const readyTasks = queue.list('ready').map(x => x.id);
+      const activeTasks = queue.list('active').map(x => x.id);
+      const doneTasks = queue.list('done').map(x => x.id);
+
+      const request = createAmendmentRequest(plan.planId, intent, basePath);
+
+      // Amendment CAS must use the canonical pointer revision.  The legacy
+      // journal identity is intentionally stable and may still be based on the
+      // original document version; using it here would reject a valid amendment
+      // after a reviewed plan migration (or worse, bind to the wrong revision).
+      const pointerRevision = readCurrentPointer(basePath)?.canonical_ledger.observed_revision;
+      const currentRev = pointerRevision
+        ? `ledger-v${pointerRevision}`
+        : journalIdentity(basePath, plan.planId, plan.requirements).revision;
+      const impactPlan = compileRevisionImpactPlanFromStrongPlanner(
+        plan.planId,
+        request,
+        readyTasks,
+        activeTasks,
+        doneTasks,
+        currentRev,
+        rawImpactPlan,
+        basePath
+      );
+
+      const result = activateRevisionImpact(basePath, impactPlan);
+      if (!result.success) throw new Error(result.error ?? 'amendment activation failed closed');
+
+      return {
+        plan: plan.planId,
+        amendmentId: request.amendmentId,
+        targetRevision: result.activatedRevision,
+        invalidatedCount: result.invalidatedCount,
+        addedCount: result.addedCount,
+        drainedTasks: result.drainedTaskIds,
+      };
+    }
+
     default:
-      throw new Error(`unknown run action "${action}"; expected add, seed, start, status, or journal`);
+      throw new Error(`unknown run action "${action}"; expected add, seed, start, status, journal, verify-task, checkpoint, resume, or amend`);
   }
 }

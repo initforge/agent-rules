@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/skill-fabric-candidate.schema.json",
+  "title": "Candidate skill fabric entry",
+  "description": "A non-active, composable skill/domain candidate. Candidate entries are planning inventory and cannot be loaded by the runtime graph.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "domain", "owner", "status", "phases", "trigger", "conflicts", "inputs", "outputs", "required_capabilities", "evaluation", "activation_gate", "removal_path"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "domain": { "type": "string", "minLength": 1 },
+    "owner": { "type": "string", "minLength": 1 },
+    "status": { "const": "candidate" },
+    "phases": { "type": "array", "minItems": 1, "items": { "enum": ["discussion", "plan", "implementation", "verification", "review"] }, "uniqueItems": true },
+    "trigger": { "type": "object", "additionalProperties": false, "required": ["facts", "never_from_keywords_alone"], "properties": { "facts": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }, "never_from_keywords_alone": { "const": true } } },
+    "conflicts": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "inputs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "outputs": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "required_capabilities": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "evaluation": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "activation_gate": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "removal_path": { "type": "string", "minLength": 1 }
+  }
+}

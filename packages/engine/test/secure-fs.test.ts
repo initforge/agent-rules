@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { SecureFsRoot, ActivationLock, LockHeldError } from '../src/secure-fs.js';
+import { SYMLINK_CAPABLE } from './helpers/symlink-capability.js';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -33,7 +34,7 @@ function read(fpath: string): string {
 // ─── Adversarial: symlink-race TOCTOU ─────────────────────────────────────────
 
 describe('adversarial mkdirp', () => {
-  it('rejects symlink at intermediate component (TOCTOU prevention)', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('rejects symlink at intermediate component (TOCTOU prevention)', async () => {
     const root = new SecureFsRoot(tmpBase);
     // Create a symlink trap at 'a' pointing outside
     const trap = fs.mkdtempSync(path.join(os.tmpdir(), 'trap-'));
@@ -44,14 +45,14 @@ describe('adversarial mkdirp', () => {
     fs.rmSync(trap, { recursive: true, force: true });
   });
 
-  it('rejects symlink at leaf component', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('rejects symlink at leaf component', async () => {
     const root = new SecureFsRoot(tmpBase);
     fs.mkdirSync(tmpPath('real'));
     fs.symlinkSync(tmpPath('real'), tmpPath('fake'));
     await expect(root.mkdirp('fake/deep')).rejects.toThrow('symlink');
   });
 
-  it('rejects existing symlink given as relative path', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('rejects existing symlink given as relative path', async () => {
     const root = new SecureFsRoot(tmpBase);
     fs.symlinkSync(os.tmpdir(), tmpPath('escape-link'));
     await expect(root.mkdirp('escape-link/sub')).rejects.toThrow('symlink');
@@ -124,7 +125,7 @@ describe('SecureFsRoot', () => {
       expect(path.relative(root.root, r).startsWith('..')).toBe(false);
     });
 
-    it('rejects symlink chains that escape root', () => {
+    it.skipIf(!SYMLINK_CAPABLE)('rejects symlink chains that escape root', () => {
       const root = new SecureFsRoot(tmpBase);
       const escapeDir = tmpPath('escape');
       fs.mkdirSync(escapeDir);
@@ -145,7 +146,7 @@ describe('SecureFsRoot', () => {
       fs.closeSync(fd);
     });
 
-    it('rejects symlink targets', async () => {
+    it.skipIf(!SYMLINK_CAPABLE)('rejects symlink targets', async () => {
       const root = new SecureFsRoot(tmpBase);
       write(tmpPath('target.txt'), 'real');
       fs.symlinkSync('target.txt', tmpPath('link.txt'));
@@ -302,7 +303,7 @@ describe('SecureFsRoot', () => {
   });
 
   describe('cumulative symlink check', () => {
-    it('detects symlink chain escape on resolve', () => {
+    it.skipIf(!SYMLINK_CAPABLE)('detects symlink chain escape on resolve', () => {
       const root = new SecureFsRoot(tmpBase);
       const sub = tmpPath('sub');
       fs.mkdirSync(sub, { recursive: true });
@@ -312,7 +313,7 @@ describe('SecureFsRoot', () => {
       expect(() => root.resolve(path.relative(tmpBase, path.join(sub, 'link1')))).toThrow();
     });
 
-    it('rejects intermediate symlink escape when final path does not exist (TOCTOU prevention)', () => {
+    it.skipIf(!SYMLINK_CAPABLE)('rejects intermediate symlink escape when final path does not exist (TOCTOU prevention)', () => {
       const root = new SecureFsRoot(tmpBase);
       const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'toctou-'));
       fs.writeFileSync(path.join(outside, 'secret'), 'data');

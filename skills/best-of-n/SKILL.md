@@ -1,13 +1,12 @@
 ---
 name: best-of-n
-description: >
-  Implement a task N ways in parallel and pick the best. Spawns multiple
-  subagents in isolated worktrees, evaluates all candidates, and applies the
-  winner. Use when asked to "best of n", "try multiple approaches", "parallel
-  implementations", "/best-of-n", or "/bon".
-routing: {"signals":["best of n","try multiple approaches","parallel implementations","/best-of-n","/bon"],"excludes":[],"priority":60,"loads":["skill:best-of-n"],"supports":[],"project_scope":"","platform_scope":"all","max_route_tokens":3500,"default":false}
+description: 'Implement a task N ways in parallel and pick the best. Spawns multiple subagents in isolated worktrees, evaluates
+  all candidates, and applies the winner. Use when asked to "best of n", "try multiple approaches", "parallel implementations",
+  "/best-of-n", or "/bon".
+
+  '
 metadata:
-  short-description: "Parallel implementation tournament"
+  short-description: Parallel implementation tournament
 ---
 
 # /best-of-n -- Parallel Implementation Tournament

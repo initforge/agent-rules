@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 
 . (Join-Path $PSScriptRoot "path-compat.ps1")
 
@@ -135,13 +135,26 @@ function Get-RegistryAdapterPaths {
   $File = Get-PlatformAdapterFile $PlatformName
   if (-not $File) { return @() }
 
+  # Keep the global host tool surface empty by default. The governed runtime
+  # attaches MCP providers per task from the capability broker. Interactive
+  # users can opt into a bounded global profile when they explicitly prefer
+  # always-on MCP tools.
+  $Profile = if ($env:AGENT_RULES_GLOBAL_MCP_PROFILE) { [string]$env:AGENT_RULES_GLOBAL_MCP_PROFILE } else { "none" }
+  $Profile = $Profile.Trim().ToLowerInvariant()
+  if ($Profile -eq "none" -or -not $Profile) { return @() }
+  $AllowedProfiles = @("core", "research", "frontend", "qa", "all")
+  if ($AllowedProfiles -notcontains $Profile) { throw "Invalid AGENT_RULES_GLOBAL_MCP_PROFILE '$Profile'. Expected none/core/research/frontend/qa/all." }
+
   $RegistryPath = Join-Path $Root "integrations\registry.json"
   if (-not (Test-Path $RegistryPath)) { return @() }
   $Registry = Get-Content -Raw $RegistryPath | ConvertFrom-Json
   $Paths = @()
   foreach ($Integration in $Registry.integrations) {
-    if ($Integration.policy -eq "optional") { continue }
-    # Resolve integration path: v1 uses .path, v2 derives from install.script
+    if ($Integration.kind -ne "mcp") { continue }
+    if ($Integration.policy -eq "optional" -or $Integration.activation -eq "explicit-only") { continue }
+    $Profiles = @($Integration.profiles | ForEach-Object { ([string]$_).ToLowerInvariant() })
+    if ($Profile -ne "all" -and $Profiles -notcontains $Profile) { continue }
+    # Resolve integration path: v1 uses .path, v2 derives from install.script.
     $IntPath = $null
     if ($null -ne $Integration.PSObject.Properties["path"]) {
       $IntPath = $Integration.path -replace "/", "\"

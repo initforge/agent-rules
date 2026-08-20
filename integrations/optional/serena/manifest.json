@@ -1,0 +1,9 @@
+{
+  "name": "serena",
+  "policy": "optional",
+  "version": "1.6.1",
+  "versionPolicy": "pinned",
+  "capability": "code.semantic",
+  "activation": "explicit-only",
+  "notes": "Experimental semantic provider. Keep explicit until ablation and process-lifecycle evidence justify promotion."
+}

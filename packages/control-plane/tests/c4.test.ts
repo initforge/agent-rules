@@ -305,11 +305,19 @@ describe('C4 accessibility', () => {
 
 describe('C4 data invariants', () => {
   it('does not report healthy from a manifest when canonical ledger remediation is pending', async () => {
-    const { app } = await import('../src/server/app')
-    const request = (await import('supertest')).default
-    const res = await request(app).get('/api/c4/health')
-    expect(res.body.status).toBe('degraded')
-    expect(res.body.operational.ledgers[0].executionState).toBe('NEEDS_REMEDIATION')
+    const root = createTruthHarness()
+    const head = git(root, ['rev-parse', 'HEAD'])
+    fs.writeFileSync(
+      path.join(root, '.agent', 'ledger', 'truth-plan.json'),
+      JSON.stringify(ledger(head, { status: 'NEEDS_REMEDIATION', execution_state: 'NEEDS_REMEDIATION' }))
+    )
+    await withTruthHarness(root, async () => {
+      const { app } = await import('../src/server/app')
+      const request = (await import('supertest')).default
+      const res = await request(app).get('/api/c4/health')
+      expect(res.body.status).toBe('degraded')
+      expect(res.body.operational.ledgers[0].executionState).toBe('NEEDS_REMEDIATION')
+    })
   })
 
   it('context data has valid scope', async () => {

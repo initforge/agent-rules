@@ -1,4 +1,4 @@
-export const RUNTIME_PLATFORMS = ["codex", "grok", "antigravity", "cursor", "opencode"] as const;
+export const RUNTIME_PLATFORMS = ["codex", "grok", "antigravity", "cursor", "opencode", "mimocode", "claude"] as const;
 export type RuntimePlatform = (typeof RUNTIME_PLATFORMS)[number];
 
 export interface RuntimeFile { path: string; sha256: string }

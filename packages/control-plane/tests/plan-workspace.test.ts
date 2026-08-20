@@ -12,6 +12,20 @@ import {
 
 function tmpDir(): string { return fs.mkdtempSync(path.join(os.tmpdir(), 'pw-test-')) }
 
+const SYMLINK_CAPABLE = (() => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'symlink-cap-'));
+  try {
+    const target = path.join(dir, 'target');
+    fs.writeFileSync(target, 'x');
+    fs.symlinkSync(target, path.join(dir, 'link'));
+    return true;
+  } catch {
+    return false;
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+})();
+
 function sha(data: string): string { return crypto.createHash('sha256').update(Buffer.from(data, 'utf-8')).digest('hex') }
 
 function writeFixture(root: string, planId: string, overrides?: {
@@ -221,7 +235,7 @@ describe('validateManifest - extra artifacts', () => {
     writeFixture(root, pid, { extraDir: 'subdir' })
     expect(() => readPlanWorkspace(pid, root)).toThrow(PlanIntegrityError)
   })
-  it('extra symlink fails', () => {
+  it.skipIf(!SYMLINK_CAPABLE)('extra symlink fails', () => {
     const root = tmpDir(); const pid = 'extra-sym'
     writeFixture(root, pid, { extraSymlink: true })
     expect(() => readPlanWorkspace(pid, root)).toThrow(PlanIntegrityError)
@@ -229,7 +243,7 @@ describe('validateManifest - extra artifacts', () => {
 })
 
 describe('validateShadowDir', () => {
-  it('shadow symlink fails', () => {
+  it.skipIf(!SYMLINK_CAPABLE)('shadow symlink fails', () => {
     const root = tmpDir(); const pid = 'sh-sym'
     writeFixture(root, pid, { shadowSymlink: 'tasks.md' })
     expect(() => readPlanWorkspace(pid, root)).toThrow(PlanIntegrityError)
@@ -518,7 +532,7 @@ describe('AM-0004 tombstone rejection', () => {
 })
 
 describe('listPlans - fail closed', () => {
-  it('list rejects symlink in ledger dir', () => {
+  it.skipIf(!SYMLINK_CAPABLE)('list rejects symlink in ledger dir', () => {
     const root = tmpDir(); const ld = path.join(root, '.agent', 'ledger')
     fs.mkdirSync(ld, { recursive: true })
     const tgt = path.join(root, 'bad-target'); fs.writeFileSync(tgt, '{}')
@@ -562,6 +576,64 @@ describe('canceled plan workspace returns PlanNotFoundError', () => {
     fs.mkdirSync(path.join(root, '.agent', 'ledger'), { recursive: true })
     fs.mkdirSync(path.join(root, '.agent', 'plans'), { recursive: true })
     expect(() => readPlanWorkspace('nope', root)).toThrow(PlanNotFoundError)
+  })
+})
+
+describe('North-Star v4 canonical ledger adapter', () => {
+  function writeCanonicalFixture(root: string, planId = 'canonical-plan'): void {
+    const ledgerDir = path.join(root, '.agent', 'ledger')
+    const planDir = path.join(root, '.agent', 'plans', planId)
+    fs.mkdirSync(ledgerDir, { recursive: true }); fs.mkdirSync(planDir, { recursive: true })
+    const original = '# Canonical plan\n\nRequirements remain explicit.\n'
+    fs.writeFileSync(path.join(planDir, 'original.md'), original)
+    const originalSha = sha(original)
+    const canonicalJson = JSON.stringify({ algorithm: 'SHA-256', approved_amendments: ['AM-0001'], composition: 'original-plus-ordered-approved-amendment-sha256', original_plan_sha256: originalSha, version: 1 })
+    const requirementRows = [
+      { id: 'REQ-001', status: 'MATCH', proofStatus: 'MATCH', statement: 'The first requirement is evidenced.', evidenceRefs: [{ path: '.agent/evidence/one.json', sha256: 'a'.repeat(64) }] },
+      { id: 'REQ-002', status: 'GAP', proofStatus: 'GAP', statement: 'The second requirement still needs proof.', evidenceRefs: [] },
+    ]
+    const ledger = {
+      schema_version: 4, plan_id: planId, status: 'ADOPTED', execution_state: 'IN_PROGRESS',
+      created_at: '2026-08-11T00:00:00.000Z', updated_at: '2026-08-11T00:00:00.000Z',
+      effective_plan_identity: { sha256: sha(canonicalJson), canonical_json_utf8: canonicalJson },
+      original_plan: { path: `.agent/plans/${planId}/original.md`, sha256: originalSha, bytes: Buffer.byteLength(original), encoding: 'utf-8' },
+      milestones: { M8: { requirements: requirementRows } },
+      plan_anchors: [{ requirement_id: 'REQ-001', section_heading: 'requirements', line_start: 3, line_end: 3, anchor_text_sha256: 'b'.repeat(64) }],
+      canonical_scope: { plan_id: planId, reviewed_contract: { requirement_ids: ['REQ-001', 'REQ-002'] } }, assignments: [],
+    }
+    fs.writeFileSync(path.join(ledgerDir, `${planId}.json`), JSON.stringify(ledger, null, 2))
+  }
+
+  it('reads canonical v4 without treating it as legacy or inventing evidence', () => {
+    const root = tmpDir(); writeCanonicalFixture(root)
+    const workspace = readPlanWorkspace('canonical-plan', root)
+    expect(workspace.canonicalSource?.schema).toBe('harness/north-star-ledger')
+    expect(workspace.canonicalSource?.displayProjection).toBe(true)
+    expect(workspace.canonicalSource?.requirementStatusCounts).toEqual({ MATCH: 1, GAP: 1 })
+    expect(workspace.plan.requirements).toHaveLength(2)
+    expect(workspace.reconciliations.map(row => [row.requirementId, row.status, (row as Record<string, unknown>).canonicalStatus])).toEqual([
+      ['REQ-001', 'MATCH', 'MATCH'], ['REQ-002', 'MISSING', 'GAP'],
+    ])
+    expect(workspace.verificationClaims).toEqual([])
+    expect(workspace.attestations).toEqual([])
+  })
+
+  it('lists canonical v4 plans alongside portable plans', () => {
+    const root = tmpDir(); writeCanonicalFixture(root)
+    expect(listPlans(root)).toEqual([{ planId: 'canonical-plan' }])
+  })
+
+  it('fails closed when canonical original content is tampered', () => {
+    const root = tmpDir(); writeCanonicalFixture(root)
+    fs.appendFileSync(path.join(root, '.agent', 'plans', 'canonical-plan', 'original.md'), 'tampered\n')
+    expect(() => readPlanWorkspace('canonical-plan', root)).toThrow(PlanIntegrityError)
+  })
+
+  it('fails closed for a malformed schema-v4 record', () => {
+    const root = tmpDir(); const ld = path.join(root, '.agent', 'ledger'); const pd = path.join(root, '.agent', 'plans', 'bad-v4')
+    fs.mkdirSync(ld, { recursive: true }); fs.mkdirSync(pd, { recursive: true }); fs.writeFileSync(path.join(pd, 'original.md'), '# bad\n')
+    fs.writeFileSync(path.join(ld, 'bad-v4.json'), JSON.stringify({ schema_version: 4, plan_id: 'bad-v4' }))
+    expect(() => readPlanWorkspace('bad-v4', root)).toThrow(PlanIntegrityError)
   })
 })
 

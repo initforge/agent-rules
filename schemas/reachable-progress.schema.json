@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/schemas/reachable-progress.schema.json",
+  "title": "Reachable progress snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "sourceIdentity", "planId", "planRevision", "items", "counts", "activeScopeIds", "candidateIds"],
+  "properties": {
+    "schema": { "const": "harness/reachable-progress/v1" },
+    "sourceIdentity": { "type": "string", "minLength": 1 },
+    "planId": { "type": "string", "minLength": 1 },
+    "planRevision": { "type": "integer", "minimum": 0 },
+    "items": { "type": "array", "items": { "$ref": "#/$defs/item" } },
+    "counts": { "$ref": "#/$defs/counts" },
+    "activeScopeIds": { "$ref": "#/$defs/ids" },
+    "candidateIds": { "$ref": "#/$defs/ids" }
+  },
+  "$defs": {
+    "ids": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "activeScope", "implementationState", "verificationState", "evidenceState", "certificationState", "blockerKind", "minimumRequiredLevel", "strongestAvailableLevel", "dependents", "dependencies", "nextLocalAction"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["requirement", "claim", "task", "source-item"] },
+        "activeScope": { "type": "boolean" },
+        "implementationState": { "enum": ["TODO", "IN_PROGRESS", "IMPLEMENTED", "IMPLEMENTED_FAILING", "BLOCKED_AUTHORITY"] },
+        "verificationState": { "enum": ["NOT_RUN", "RUNNING", "PASS", "FAIL", "UNAVAILABLE"] },
+        "evidenceState": { "enum": ["NONE", "LOCAL", "EXTERNAL", "STALE", "COMPLETE"] },
+        "certificationState": { "enum": ["MATCH", "PARTIAL", "GAP"] },
+        "blockerKind": { "type": ["string", "null"], "enum": [null, "DEPENDENCY", "VERIFY_UNAVAILABLE", "AUTHORITY", "SPEC", "CAPABILITY", "ENVIRONMENT", "FAILURE"] },
+        "blockerReason": { "type": "string" },
+        "minimumRequiredLevel": { "enum": ["L0", "L1", "L2", "L3", "L4", "L5"] },
+        "strongestAvailableLevel": { "enum": ["L0", "L1", "L2", "L3", "L4", "L5"] },
+        "dependents": { "$ref": "#/$defs/ids" },
+        "dependencies": { "$ref": "#/$defs/ids" },
+        "nextLocalAction": { "type": "string", "minLength": 1 },
+        "resumeCondition": { "type": "string" }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "implementationTodo", "implementationInProgress", "implemented", "implementedFailing", "blockedAuthority", "verificationPass", "verificationUnavailable", "certificationMatch", "certificationPartial", "certificationGap"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "implementationTodo": { "type": "integer", "minimum": 0 },
+        "implementationInProgress": { "type": "integer", "minimum": 0 },
+        "implemented": { "type": "integer", "minimum": 0 },
+        "implementedFailing": { "type": "integer", "minimum": 0 },
+        "blockedAuthority": { "type": "integer", "minimum": 0 },
+        "verificationPass": { "type": "integer", "minimum": 0 },
+        "verificationUnavailable": { "type": "integer", "minimum": 0 },
+        "certificationMatch": { "type": "integer", "minimum": 0 },
+        "certificationPartial": { "type": "integer", "minimum": 0 },
+        "certificationGap": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

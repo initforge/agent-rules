@@ -1,6 +1,6 @@
 import path from "node:path";
 import { ExitCode, type CliOptions, type CommandResult } from "../types.js";
-import { getRepoRoot } from "../adapters/powershell.js";
+import { getRepoRoot } from "../adapters/repo.js";
 import { writeContextGraph } from "./build.js";
 
 export async function contextGraphCmd(args: string[], _options: CliOptions): Promise<CommandResult> {

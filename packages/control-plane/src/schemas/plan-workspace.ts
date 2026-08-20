@@ -8,7 +8,7 @@ import {
   type WorkLedger, type Sha256, type WorkLedgerStatus, type ReconciliationStatus,
 } from '@initforge/agent-rules-engine/contracts'
 import {
-  computeEffectivePlanSha256, buildManifestJson,
+  computeCanonicalEffectivePlanIdentity, buildManifestJson,
   PlanValidationError, PlanNotFoundError, PlanIntegrityError, LegacyRejectionError,
   validatePlanId, isLegacyShape, validateAmendmentIds, validateSourceRef, validateFileName,
   LEGACY_KEYS, SHADOW_ALLOWLIST, APPROVED_AMENDMENT_IDS,
@@ -23,6 +23,25 @@ const MAX_FILENAME_LENGTH = 255
 export type IntegrityStatus = 'VALID' | 'INVALID' | 'UNVERIFIED'
 
 export interface PlanListItem { planId: string }
+
+/**
+ * The active North-Star ledger is intentionally not a WorkLedger projection.
+ * This metadata lets consumers distinguish a read-only display adapter from
+ * the portable v3 ledger contract, so no adapter field can be mistaken for
+ * verifier evidence or a terminal PASS.
+ */
+export interface CanonicalNorthStarSource {
+  schema: 'harness/north-star-ledger'
+  version: 4
+  ledgerPath: string
+  ledgerSha256: Sha256
+  executionState: string
+  status: WorkLedgerStatus
+  requirementCount: number
+  requirementStatusCounts: Record<string, number>
+  approvedAmendmentIds: string[]
+  displayProjection: true
+}
 
 export type FsSeamReaders = {
   lstatSync: (p: string) => fs.Stats
@@ -383,6 +402,207 @@ export function listPlans(root: string, seamOverride?: Partial<FsSeamReaders>): 
     .map(planId => ({ planId }))
 }
 
+type CanonicalRequirement = {
+  id: string
+  status: 'MATCH' | 'PARTIAL' | 'GAP' | 'BLOCKED'
+  proofStatus?: 'MATCH' | 'PARTIAL' | 'GAP' | 'BLOCKED'
+  statement: string
+  evidenceRefs?: unknown[]
+}
+
+const NORTH_STAR_STATUS_MAP: Record<CanonicalRequirement['status'], ReconciliationStatus> = {
+  MATCH: 'MATCH', PARTIAL: 'PARTIAL', GAP: 'MISSING', BLOCKED: 'MISSING',
+}
+
+const WORK_LEDGER_STATUSES: readonly WorkLedgerStatus[] = [
+  'ADOPTED', 'DISCOVERING', 'PLANNED', 'VALIDATED', 'DISPATCHING', 'EXECUTING', 'VERIFYING', 'REVIEWING',
+  'needs-remediation', 'needs-replan', 'COMPLETED', 'PARTIAL', 'BLOCKED', 'FAILED', 'CANCELLED',
+]
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+function isCanonicalNorthStarCandidate(obj: Record<string, unknown>): boolean {
+  // schema_version is the authoritative discriminator. The extra shape check
+  // keeps older malformed/legacy fixtures on the legacy rejection path.
+  return obj.schema_version === 4 || (
+    typeof obj.plan_id === 'string' && 'milestones' in obj && 'original_plan' in obj
+  )
+}
+
+function readCanonicalNorthStarWorkspace(
+  planId: string,
+  root: string,
+  ledgerBytes: Buffer,
+  obj: Record<string, unknown>,
+  planDir: string,
+  ledgerPath: string,
+  seamOverride?: Partial<FsSeamReaders>,
+): PlanWorkspace {
+  const findings: IntegrityFinding[] = []
+  if (obj.schema_version !== 4) findings.push({ kind: 'MANIFEST', detail: 'North-Star ledger schema_version must be 4' })
+  if (obj.plan_id !== planId) findings.push({ kind: 'PLANID_MISMATCH', detail: `Ledger plan_id (${String(obj.plan_id)}) != requested (${planId})` })
+
+  const rawStatus = obj.status
+  if (typeof rawStatus !== 'string' || !WORK_LEDGER_STATUSES.includes(rawStatus as WorkLedgerStatus)) {
+    findings.push({ kind: 'MANIFEST', detail: `North-Star ledger status is invalid: ${String(rawStatus)}` })
+  }
+  const executionState = obj.execution_state
+  if (typeof executionState !== 'string' || executionState.length === 0) {
+    findings.push({ kind: 'MANIFEST', detail: 'North-Star ledger execution_state must be a non-empty string' })
+  }
+
+  const original = isRecord(obj.original_plan) ? obj.original_plan : undefined
+  const identity = isRecord(obj.effective_plan_identity) ? obj.effective_plan_identity : undefined
+  if (!original) findings.push({ kind: 'MANIFEST', detail: 'North-Star ledger original_plan must be an object' })
+  if (!identity) findings.push({ kind: 'MANIFEST', detail: 'North-Star ledger effective_plan_identity must be an object' })
+
+  let originalSha256: Sha256 | null = null
+  let originalBytes: Uint8Array = new Uint8Array(0)
+  let originalMarkdown = ''
+  if (original) {
+    const expectedOriginalPath = `.agent/plans/${planId}/original.md`
+    const declaredPath = original.path
+    const normalizedDeclaredPath = typeof declaredPath === 'string'
+      ? path.normalize(declaredPath).split(path.sep).join('/')
+      : undefined
+    if (typeof declaredPath !== 'string' || path.isAbsolute(declaredPath) || normalizedDeclaredPath !== expectedOriginalPath) {
+      findings.push({ kind: 'MANIFEST', detail: `North-Star original_plan.path must be ${expectedOriginalPath}` })
+    }
+    if (typeof original.sha256 !== 'string' || !isSha256(original.sha256)) {
+      findings.push({ kind: 'MANIFEST', detail: 'North-Star original_plan.sha256 is invalid' })
+    } else originalSha256 = original.sha256
+    if (typeof original.bytes !== 'number' || !Number.isInteger(original.bytes) || original.bytes < 0) {
+      findings.push({ kind: 'MANIFEST', detail: 'North-Star original_plan.bytes is invalid' })
+    }
+
+    const originalPath = path.join(planDir, 'original.md')
+    try {
+      originalBytes = readRegularFileSync(originalPath, 'original.md', seamOverride)
+      originalMarkdown = new TextDecoder().decode(originalBytes)
+      const physicalSha = sha256Bytes(new Uint8Array(originalBytes))
+      if (originalSha256 && physicalSha !== originalSha256) findings.push({ kind: 'ORIGINAL_TAMPER', detail: 'original.md sha256 mismatch' })
+      if (typeof original.bytes === 'number' && originalBytes.length !== original.bytes) findings.push({ kind: 'ORIGINAL_TAMPER', detail: 'original.md byte length mismatch' })
+    } catch (e: unknown) {
+      if (e instanceof PlanIntegrityError) {
+        if (e.errno === 'ENOENT') findings.push({ kind: 'MISSING_ORIGINAL', detail: 'original.md not found' })
+        else findings.push(...e.findings)
+      } else findings.push({ kind: 'IO_FAULT', detail: `original.md: ${e instanceof Error ? e.message : String(e)}` })
+    }
+  }
+
+  let approvedAmendmentIds: string[] = []
+  if (identity) {
+    if (typeof identity.sha256 !== 'string' || !isSha256(identity.sha256)) {
+      findings.push({ kind: 'MANIFEST', detail: 'North-Star effective_plan_identity.sha256 is invalid' })
+    }
+    if (typeof identity.canonical_json_utf8 !== 'string') {
+      findings.push({ kind: 'MANIFEST', detail: 'North-Star effective_plan_identity.canonical_json_utf8 is required' })
+    } else {
+      const canonicalBytes = Buffer.from(identity.canonical_json_utf8, 'utf-8')
+      if (typeof identity.sha256 === 'string' && isSha256(identity.sha256) && sha256Bytes(new Uint8Array(canonicalBytes)) !== identity.sha256) {
+        findings.push({ kind: 'MANIFEST', detail: 'North-Star effective identity hash does not match canonical_json_utf8' })
+      }
+      let canonicalIdentity: unknown
+      try { canonicalIdentity = JSON.parse(identity.canonical_json_utf8) } catch (e: unknown) {
+        findings.push({ kind: 'MANIFEST', detail: `North-Star canonical_json_utf8 is not valid JSON: ${e instanceof Error ? e.message : String(e)}` })
+      }
+      if (isRecord(canonicalIdentity)) {
+        const originalInIdentity = canonicalIdentity.original_plan_sha256
+        if (originalSha256 && originalInIdentity !== originalSha256) findings.push({ kind: 'MANIFEST', detail: 'North-Star effective identity original plan hash mismatch' })
+        if (canonicalIdentity.approved_amendments !== undefined) {
+          if (!Array.isArray(canonicalIdentity.approved_amendments) || !canonicalIdentity.approved_amendments.every(x => typeof x === 'string')) {
+            findings.push({ kind: 'MANIFEST', detail: 'North-Star approved_amendments must be an array of strings' })
+          } else approvedAmendmentIds = [...canonicalIdentity.approved_amendments]
+        }
+      }
+    }
+  }
+
+  const milestones = isRecord(obj.milestones) ? obj.milestones : undefined
+  const m8 = milestones && isRecord(milestones.M8) ? milestones.M8 : undefined
+  const rawRequirements = m8?.requirements
+  if (!Array.isArray(rawRequirements)) findings.push({ kind: 'MANIFEST', detail: 'North-Star milestones.M8.requirements must be an array' })
+  const requirements: CanonicalRequirement[] = []
+  const requirementIds = new Set<string>()
+  if (Array.isArray(rawRequirements)) {
+    for (let i = 0; i < rawRequirements.length; i++) {
+      const row = rawRequirements[i]
+      if (!isRecord(row) || typeof row.id !== 'string' || row.id.length === 0) {
+        findings.push({ kind: 'MANIFEST', detail: `North-Star M8 requirement ${i} has no valid id` }); continue
+      }
+      if (requirementIds.has(row.id)) findings.push({ kind: 'MANIFEST', detail: `Duplicate North-Star requirement id: ${row.id}` })
+      requirementIds.add(row.id)
+      const status = row.status
+      if (status !== 'MATCH' && status !== 'PARTIAL' && status !== 'GAP' && status !== 'BLOCKED') {
+        findings.push({ kind: 'MANIFEST', detail: `North-Star requirement ${row.id} has invalid status: ${String(status)}` }); continue
+      }
+      if (typeof row.statement !== 'string') findings.push({ kind: 'MANIFEST', detail: `North-Star requirement ${row.id} statement is not a string` })
+      if (row.evidenceRefs !== undefined && !Array.isArray(row.evidenceRefs)) findings.push({ kind: 'MANIFEST', detail: `North-Star requirement ${row.id} evidenceRefs must be an array` })
+      requirements.push({ id: row.id, status, proofStatus: row.proofStatus as CanonicalRequirement['proofStatus'], statement: typeof row.statement === 'string' ? row.statement : '', evidenceRefs: Array.isArray(row.evidenceRefs) ? row.evidenceRefs : [] })
+    }
+  }
+
+  const rawAnchors = obj.plan_anchors
+  const canonicalAnchors: Array<{ requirement_id: string; section_heading: string; line_start: number; line_end: number; anchor_text_sha256: Sha256 }> = []
+  if (rawAnchors !== undefined && !Array.isArray(rawAnchors)) findings.push({ kind: 'MANIFEST', detail: 'North-Star plan_anchors must be an array' })
+  if (Array.isArray(rawAnchors)) {
+    for (let i = 0; i < rawAnchors.length; i++) {
+      const anchor = rawAnchors[i]
+      if (!isRecord(anchor) || typeof anchor.requirement_id !== 'string' || !requirementIds.has(anchor.requirement_id)) {
+        findings.push({ kind: 'MANIFEST', detail: `North-Star plan anchor ${i} references an unknown requirement` }); continue
+      }
+      if (typeof anchor.section_heading !== 'string' || typeof anchor.line_start !== 'number' || !Number.isInteger(anchor.line_start) || typeof anchor.line_end !== 'number' || !Number.isInteger(anchor.line_end) || typeof anchor.anchor_text_sha256 !== 'string' || !isSha256(anchor.anchor_text_sha256)) {
+        findings.push({ kind: 'MANIFEST', detail: `North-Star plan anchor ${i} is malformed` }); continue
+      }
+      canonicalAnchors.push({ requirement_id: anchor.requirement_id, section_heading: anchor.section_heading, line_start: anchor.line_start, line_end: anchor.line_end, anchor_text_sha256: anchor.anchor_text_sha256 })
+    }
+  }
+
+  const scope = obj.canonical_scope
+  if (scope !== undefined && (!isRecord(scope) || (scope.plan_id !== undefined && scope.plan_id !== planId))) findings.push({ kind: 'PLANID_MISMATCH', detail: 'North-Star canonical_scope.plan_id does not match requested plan' })
+  const contract = isRecord(scope) && isRecord(scope.reviewed_contract) ? scope.reviewed_contract : undefined
+  if (contract?.requirement_ids !== undefined && (!Array.isArray(contract.requirement_ids) || !contract.requirement_ids.every(x => typeof x === 'string' && requirementIds.has(x)))) {
+    findings.push({ kind: 'MANIFEST', detail: 'North-Star reviewed_contract requirement_ids must reference known requirements' })
+  }
+
+  if (findings.length > 0) throw new PlanIntegrityError(findings)
+
+  const status = rawStatus as WorkLedgerStatus
+  const canonicalStatusCounts = requirements.reduce<Record<string, number>>((counts, row) => { counts[row.status] = (counts[row.status] ?? 0) + 1; return counts }, {})
+  const planRequirements = requirements.map(row => ({ requirementId: row.id, statement: row.statement, acceptanceCriteria: [] }))
+  const reconciliations = requirements.map(row => ({
+    requirementId: row.id,
+    statement: row.statement,
+    status: NORTH_STAR_STATUS_MAP[row.status],
+    anchorIds: canonicalAnchors.map((_anchor, index) => `canonical-anchor-${index}`).filter((_id, index) => canonicalAnchors[index].requirement_id === row.id),
+    verificationClaimIds: [],
+    canonicalStatus: row.proofStatus ?? row.status,
+  }))
+  const ledgerSha256 = sha256Bytes(new Uint8Array(ledgerBytes))
+  const displayPlan = {
+    schema: 'harness/portable-plan', version: 3, planId,
+    requirements: planRequirements,
+  } as unknown as WorkLedger['plan']
+  return {
+    planId,
+    identity: { originalSha256, effectiveSha256: identity?.sha256 as Sha256, status, shadowRevision: typeof obj.shadow_revision === 'number' ? obj.shadow_revision : 0, integrity: 'VALID', integrityFindings: [] },
+    plan: displayPlan,
+    originalMarkdown,
+    amendments: [],
+    planAnchors: canonicalAnchors.map(anchor => ({ planSha256: originalSha256!, sectionHeading: anchor.section_heading, lineStart: anchor.line_start, lineEnd: anchor.line_end, anchorTextSha256: anchor.anchor_text_sha256, requirementId: anchor.requirement_id, chunkIndex: 0 })),
+    reconciliations: reconciliations as WorkLedger['reconciliations'],
+    batches: [], assignments: [], receipts: [], verificationClaims: [], attestations: [], repairSlices: [], orphanFindings: [], sourceAcquisitionReceipts: [], latestReview: undefined, shadowHashes: {},
+    canonicalSource: {
+      schema: 'harness/north-star-ledger', version: 4,
+      ledgerPath: path.relative(root, ledgerPath).split(path.sep).join('/'), ledgerSha256,
+      executionState: executionState as string, status, requirementCount: requirements.length,
+      requirementStatusCounts: canonicalStatusCounts, approvedAmendmentIds, displayProjection: true,
+    },
+  }
+}
+
 export function readPlanWorkspace(planId: string, rootArg?: string, seamOverride?: Partial<FsSeamReaders>): PlanWorkspace {
   const root = rootArg ? path.resolve(rootArg) : findRoot(undefined, seamOverride)
   validatePlanId(planId)
@@ -408,6 +628,7 @@ export function readPlanWorkspace(planId: string, rootArg?: string, seamOverride
   }
   if (!ledgerJson || typeof ledgerJson !== 'object') throw new PlanIntegrityError([{ kind: 'MANIFEST', detail: 'WorkLedger must be a JSON object' }])
   const obj = ledgerJson as Record<string, unknown>
+  if (isCanonicalNorthStarCandidate(obj)) return readCanonicalNorthStarWorkspace(planId, root, ledgerBytes, obj, planDir, ledgerPath, seamOverride)
   if (isLegacyShape(obj)) throw new LegacyRejectionError(`Found legacy key(s): ${LEGACY_KEYS.filter(k => k in obj).join(', ')}`)
 
   const po = obj.plan as Record<string, unknown> | undefined
@@ -459,7 +680,16 @@ export function readPlanWorkspace(planId: string, rootArg?: string, seamOverride
     throw new PlanIntegrityError([{ kind: 'ENGINE_VALIDATION', detail: `Engine validation: ${e instanceof Error ? e.message : String(e)}` }])
   }
 
-  const eff = computeEffectivePlanSha256(ledger.plan.original.sha256, mResult.hashes)
+  // The legacy NUL-joined hash remains exported only for older external
+  // consumers.  The Control Plane is a canonical producer and must bind its
+  // workspace identity to the versioned amendment manifest instead.
+  const eff = computeCanonicalEffectivePlanIdentity(
+    ledger.plan.original.sha256,
+    ledger.amendments.map((amendment, index) => ({
+      amendment_id: amendment.amendmentId,
+      sha256: mResult.hashes[index],
+    })),
+  ).sha256
   const omd = new TextDecoder().decode(origBytes)
   return {
     planId: ledger.plan.planId,
@@ -481,7 +711,8 @@ export interface PlanWorkspace {
   verificationClaims: WorkLedger['verificationClaims']; attestations: WorkLedger['attestations']
   repairSlices: WorkLedger['repairSlices']; orphanFindings: WorkLedger['orphanFindings']
   sourceAcquisitionReceipts: WorkLedger['sourceAcquisitionReceipts']
-  latestReview: WorkLedger['latestReview']; shadowHashes: WorkLedger['shadowHashes']
+  latestReview: WorkLedger['latestReview'] | undefined; shadowHashes: WorkLedger['shadowHashes']
+  canonicalSource?: CanonicalNorthStarSource
 }
 
 export function computeVerificationSummary(claims: WorkLedger['verificationClaims']): { pass: number; fail: number; blocked: number; unverified: number; total: number } {
@@ -495,7 +726,7 @@ export {
   validatePlanId, isLegacyShape,
 } from '@initforge/agent-rules-engine/plan-identity'
 
-export function computeReconciliationMatrix(ledger: WorkLedger): Array<{ requirementId: string; statement: string; status: ReconciliationStatus; claimCount: number; hasRepairSlice: boolean }> {
+export function computeReconciliationMatrix(ledger: Pick<WorkLedger, 'plan' | 'reconciliations' | 'repairSlices'>): Array<{ requirementId: string; statement: string; status: ReconciliationStatus; claimCount: number; hasRepairSlice: boolean }> {
   const reqs = ledger.plan?.requirements
   if (!reqs) return []
   return reqs.map(q => {

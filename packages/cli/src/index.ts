@@ -17,12 +17,17 @@ import { planCmd } from "./commands/plan.js";
 import { cleanupCmd } from "./commands/cleanup.js";
 import { verifyCmd } from "./commands/verify.js";
 import { parityCmd } from "./commands/parity.js";
+import { verifyParityCmd } from "./commands/verify-parity.js";
 import { runtimeCmd } from "./commands/runtime.js";
 import { modelsCmd } from "./commands/models.js";
 import { skillsCmd } from "./commands/skills.js";
+import { integrationCmd } from "./commands/integration.js";
+import { automationCmd } from "./commands/automation.js";
 import { runnerCmd } from "./commands/runner.js";
 import { topologyCmd } from "./commands/topology.js";
 import { adversarialCmd } from "./commands/adversarial.js";
+import { certifyCmd } from "./commands/certify.js";
+import { initNorthStar, northStarDrain, northStarIngest, northStarReference, northStarReferenceSearch, northStarRun, northStarStatus, NORTHSTAR_AGENTS, NORTHSTAR_EVIDENCE_KINDS } from "./commands/northstar-ux.js";
 import { createOpencodeClient } from "@opencode-ai/sdk/v2/client";
 import { OpenCodeNativeSessionAdapter } from "@initforge/agent-rules-engine/native-session-adapter";
 
@@ -30,7 +35,7 @@ const program = new Command();
 
 program.command("runner")
   .description("Durable runner: one headless agent process per task, all state on disk")
-  .argument("[action]", "add, seed, start, status, journal", "status")
+  .argument("[action]", "add, seed, start, status, journal, checkpoint, resume, amend", "status")
   .allowUnknownOption()
   .allowExcessArguments()
   .action(async (action: string, _opts: unknown, command: Command) => {
@@ -57,6 +62,188 @@ program
   .option("-v, --verbose", "Verbose output")
   .hook("preAction", (thisCommand, actionCommand) => {
     const options = actionCommand.optsWithGlobals();
+  });
+
+
+
+// ── North-Star public UX ───────────────────────────────────────────
+
+program
+  .command("ingest")
+  .description("Normalize a provider-neutral issue/PR/CI/webhook/schedule/plan trigger into WorkRequest")
+  .argument("<path>", "TriggerEnvelope JSON file")
+  .action(async (triggerPath: string) => {
+    try {
+      const fs = await import('node:fs');
+      const path = await import('node:path');
+      const raw = JSON.parse(fs.default.readFileSync(path.default.resolve(process.cwd(), triggerPath), 'utf8')) as unknown;
+      const result = northStarIngest(process.cwd(), raw);
+      formatOutput({ exitCode: ExitCode.Success, message: "Trigger normalized", data: result as unknown as Record<string, unknown> }, program.optsWithGlobals() as CliOptions);
+    } catch (error) {
+      formatOutput({ exitCode: ExitCode.GeneralError, message: error instanceof Error ? error.message : String(error) }, program.optsWithGlobals() as CliOptions);
+    }
+  });
+
+program
+  .command("drain")
+  .description("Process queued READY triggers sequentially with the same fail-closed planner/worker runtime")
+  .option("--max <n>", "Maximum queued requests to process", "1")
+  .option("--agent <agent>", `Headless worker: ${NORTHSTAR_AGENTS.join(", ")}`)
+  .option("--planner <agent>", `Strong planner: ${NORTHSTAR_AGENTS.join(", ")}`)
+  .option("--domain-pack <id>", "Explicit domain pack for queued work; never inferred")
+  .option("--capability-provider <id>", "Explicit-only capability provider to enable (repeatable)", (value: string, previous: string[] = []) => [...previous, value], [])
+  .action(async (cmdOpts: { max: string; agent?: string; planner?: string; domainPack?: string; capabilityProvider: string[] }) => {
+    try {
+      const max = Number(cmdOpts.max);
+      if (cmdOpts.agent && !NORTHSTAR_AGENTS.includes(cmdOpts.agent as (typeof NORTHSTAR_AGENTS)[number])) throw new Error(`unsupported --agent ${cmdOpts.agent}`);
+      if (cmdOpts.planner && !NORTHSTAR_AGENTS.includes(cmdOpts.planner as (typeof NORTHSTAR_AGENTS)[number])) throw new Error(`unsupported --planner ${cmdOpts.planner}`);
+      const result = await northStarDrain(process.cwd(), {
+        max,
+        agent: cmdOpts.agent as (typeof NORTHSTAR_AGENTS)[number] | undefined,
+        planner: cmdOpts.planner as (typeof NORTHSTAR_AGENTS)[number] | undefined,
+        domainPack: cmdOpts.domainPack,
+        capabilityProviders: cmdOpts.capabilityProvider,
+      });
+      const blocked = result.results.some((item) => item.status === 'BLOCKED' || item.status === 'FAILED');
+      formatOutput({ exitCode: blocked ? ExitCode.GeneralError : ExitCode.Success, message: `Processed ${result.processed} queued request(s)`, data: result as unknown as Record<string, unknown> }, program.optsWithGlobals() as CliOptions);
+    } catch (error) {
+      formatOutput({ exitCode: ExitCode.GeneralError, message: error instanceof Error ? error.message : String(error) }, program.optsWithGlobals() as CliOptions);
+    }
+  });
+
+const collectValue = (value: string, previous: string[] = []): string[] => [...previous, value];
+
+program
+  .command("init")
+  .description("Initialize the fail-closed North-Star runtime config")
+  .option("--agent <agent>", `Default headless worker: ${NORTHSTAR_AGENTS.join(", ")}`, "claude")
+  .option("--planner <agent>", `Default strong planner: ${NORTHSTAR_AGENTS.join(", ")}`, "claude")
+  .option("--domain-pack <id>", "Explicit project/domain pack (never auto-routed)")
+  .action(async (cmdOpts: { agent: string; planner: string; domainPack?: string }) => {
+    try {
+      if (!NORTHSTAR_AGENTS.includes(cmdOpts.planner as (typeof NORTHSTAR_AGENTS)[number])) throw new Error(`unsupported --planner ${cmdOpts.planner}`);
+      const result = initNorthStar(process.cwd(), cmdOpts.agent as (typeof NORTHSTAR_AGENTS)[number], cmdOpts.domainPack ?? null, cmdOpts.planner as (typeof NORTHSTAR_AGENTS)[number]);
+      formatOutput({ exitCode: ExitCode.Success, message: result.created ? "North-Star runtime initialized" : "North-Star runtime already initialized", data: result as Record<string, unknown> }, program.optsWithGlobals() as CliOptions);
+    } catch (error) {
+      formatOutput({ exitCode: ExitCode.GeneralError, message: error instanceof Error ? error.message : String(error) }, program.optsWithGlobals() as CliOptions);
+    }
+  });
+
+program
+  .command("reference")
+  .description("Read one verified central domain-pack reference file without copying it into the project")
+  .argument("<pack>", "Explicit domain pack id, for example 5fedu")
+  .argument("<path>", "Manifest-bound reference path inside the bundled source")
+  .action(async (pack: string, relativePath: string) => {
+    try {
+      const result = northStarReference(process.cwd(), pack, relativePath);
+      const opts = program.optsWithGlobals() as CliOptions;
+      if (opts.json) {
+        process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+      } else {
+        process.stdout.write(result.content);
+        if (!result.content.endsWith("\n")) process.stdout.write("\n");
+      }
+    } catch (error) {
+      console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      process.exitCode = ExitCode.GeneralError;
+    }
+  });
+
+program
+  .command("reference-search")
+  .description("Search verified central domain-pack source and return code pointers; nothing is copied into the project")
+  .argument("<pack>", "Explicit domain pack id, for example 5fedu")
+  .argument("<query>", "Literal source text to find")
+  .option("--limit <n>", "Maximum matches (1-100)", "20")
+  .action(async (pack: string, query: string, cmdOpts: { limit: string }) => {
+    try {
+      const limit = Number(cmdOpts.limit);
+      const result = northStarReferenceSearch(process.cwd(), pack, query, limit);
+      const opts = program.optsWithGlobals() as CliOptions;
+      if (opts.json) process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+      else for (const match of result) process.stdout.write(`${match.path}:${match.line} [${match.sha256.slice(0, 12)}] ${match.text}\n`);
+    } catch (error) {
+      console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      process.exitCode = ExitCode.GeneralError;
+    }
+  });
+
+program
+  .command("run")
+  .description("Run one bounded North-Star task; ambiguous/S2/S3 work is compiled by the configured strong planner")
+  .argument("<intent>", "Raw user intent; preserved verbatim in WorkRequest")
+  .option("--agent <agent>", `Headless worker: ${NORTHSTAR_AGENTS.join(", ")}`)
+  .option("--planner <agent>", `Strong planner for ambiguous/S2/S3 work: ${NORTHSTAR_AGENTS.join(", ")}`)
+  .option("--own <path>", "Owned path (repeatable)", collectValue, [])
+  .option("--forbid <path>", "Forbidden path (repeatable)", collectValue, [])
+  .option("--verify-exec <executable>", "Exact verifier executable")
+  .option("--verify-arg <arg>", "Exact verifier argv item (repeatable; use --verify-arg=-x for dash-prefixed args)", collectValue, [])
+  .option("--verify-kind <kind>", "Evidence kind", "test")
+  .option("--capability <name>", "Explicit capability required by this task (repeatable)", collectValue, [])
+  .option("--capability-provider <id>", "Explicit-only capability provider to enable (repeatable)", collectValue, [])
+  .option("--domain-pack <id>", "Explicit domain pack for this run; never inferred from intent")
+  .option("--contract <path>", "Strong-planner contract JSON for S2/S3 or explicit planned execution")
+  .action(async (intent: string, cmdOpts: { agent?: string; planner?: string; own: string[]; forbid: string[]; verifyExec?: string; verifyArg: string[]; verifyKind: string; capability: string[]; capabilityProvider: string[]; domainPack?: string; contract?: string }) => {
+    try {
+      if (cmdOpts.agent && !NORTHSTAR_AGENTS.includes(cmdOpts.agent as (typeof NORTHSTAR_AGENTS)[number])) throw new Error(`unsupported --agent ${cmdOpts.agent}`);
+      if (cmdOpts.planner && !NORTHSTAR_AGENTS.includes(cmdOpts.planner as (typeof NORTHSTAR_AGENTS)[number])) throw new Error(`unsupported --planner ${cmdOpts.planner}`);
+      if (!NORTHSTAR_EVIDENCE_KINDS.includes(cmdOpts.verifyKind as (typeof NORTHSTAR_EVIDENCE_KINDS)[number])) throw new Error(`unsupported --verify-kind ${cmdOpts.verifyKind}`);
+      const plannerContract = cmdOpts.contract
+        ? JSON.parse((await import('node:fs')).default.readFileSync((await import('node:path')).default.resolve(process.cwd(), cmdOpts.contract), 'utf8')) as unknown
+        : undefined;
+      const result = await northStarRun({
+        repoRoot: process.cwd(),
+        intent,
+        agent: cmdOpts.agent as (typeof NORTHSTAR_AGENTS)[number] | undefined,
+        planner: cmdOpts.planner as (typeof NORTHSTAR_AGENTS)[number] | undefined,
+        owned: cmdOpts.own,
+        forbidden: cmdOpts.forbid,
+        verifier: cmdOpts.verifyExec ? { executable: cmdOpts.verifyExec, args: cmdOpts.verifyArg, kind: cmdOpts.verifyKind as (typeof NORTHSTAR_EVIDENCE_KINDS)[number] } : undefined,
+        capabilities: cmdOpts.capability,
+        capabilityProviders: cmdOpts.capabilityProvider,
+        domainPack: cmdOpts.domainPack,
+        plannerContract,
+      });
+      const blocked = typeof result === "object" && result !== null && "outcome" in result && (result as { outcome?: unknown }).outcome === "BLOCKED";
+      formatOutput({ exitCode: blocked ? ExitCode.GeneralError : ExitCode.Success, message: blocked ? "North-Star run blocked" : "North-Star run completed", data: result as Record<string, unknown> }, program.optsWithGlobals() as CliOptions);
+    } catch (error) {
+      formatOutput({ exitCode: ExitCode.GeneralError, message: error instanceof Error ? error.message : String(error) }, program.optsWithGlobals() as CliOptions);
+    }
+  });
+
+program
+  .command("status")
+  .description("Show the latest schema-validated North-Star run state")
+  .action(async () => {
+    try {
+      formatOutput({ exitCode: ExitCode.Success, message: "North-Star status", data: northStarStatus(process.cwd()) as Record<string, unknown> }, program.optsWithGlobals() as CliOptions);
+    } catch (error) {
+      formatOutput({ exitCode: ExitCode.GeneralError, message: error instanceof Error ? error.message : String(error) }, program.optsWithGlobals() as CliOptions);
+    }
+  });
+
+program
+  .command("amend")
+  .description("Apply an owner amendment through a hash-bound strong-planner impact plan")
+  .argument("<intent>", "Raw amendment intent; preserved verbatim")
+  .requiredOption("--impact-plan <path>", "Structured strong-planner impact plan JSON")
+  .action(async (intent: string, cmdOpts: { impactPlan: string }) => {
+    try {
+      const result = await runnerCmd(["amend", intent, "--impact-plan", cmdOpts.impactPlan], process.cwd());
+      formatOutput({ exitCode: ExitCode.Success, message: "Amendment activated", data: result as Record<string, unknown> }, program.optsWithGlobals() as CliOptions);
+    } catch (error) {
+      formatOutput({ exitCode: ExitCode.GeneralError, message: error instanceof Error ? error.message : String(error) }, program.optsWithGlobals() as CliOptions);
+    }
+  });
+
+// ── dashboard ──────────────────────────────────────────────────────
+program
+  .command("dashboard")
+  .description("Print a read-only harness health/eval/platform snapshot")
+  .action(async () => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    formatOutput(await dashboard([], opts), opts);
   });
 
 // ── build ──────────────────────────────────────────────────────────
@@ -108,20 +295,23 @@ program
 program
   .command("install")
   .description(
-    "Install harness to platform runtimes (legacy: 02-install-runtime.ps1)"
+    "Install agent-rules runtime for all platforms (native transactional installer)"
   )
-  .argument("[platform]", "Platform: codex, grok, antigravity, cursor, opencode, all", "all")
-  .action(async (platform: string) => {
+  .argument("[platform]", "Platform: codex, grok, antigravity, cursor, opencode, mimocode, claude, all", "all")
+  .option("--force", "Force reinstall: remove old activation before installing")
+  .action(async (platform: string, cmdOpts: { force?: boolean }) => {
     const opts = program.optsWithGlobals() as CliOptions;
-    const result = await installCmd([platform], opts);
+    const args = [platform];
+    if (cmdOpts.force) args.push("--force");
+    const result = await installCmd(args, opts);
     formatOutput(result, opts);
   });
 
 // ── doctor ─────────────────────────────────────────────────────────
 program
   .command("doctor")
-  .description("Run harness health checks (migrated from 09-doctor.ps1)")
-  .argument("[platform]", "Platform: codex, grok, antigravity, cursor, opencode, all", "all")
+  .description("Run harness health checks for all platforms")
+  .argument("[platform]", "Platform: codex, grok, antigravity, cursor, opencode, mimocode, claude, all", "all")
   .option("--skip-integration-verify", "Skip external MCP integration verification")
   .action(async (platform: string, cmdOpts: { skipIntegrationVerify?: boolean }) => {
     const opts = program.optsWithGlobals() as CliOptions;
@@ -148,7 +338,7 @@ program
 program
   .command("profile")
   .description("Manage installation profiles")
-  .argument("[subcommand]", "Subcommand: list, show <name>, apply <name>")
+  .argument("[args...]", "Subcommand and optional arguments")
   .addHelpText(
     "after",
     `
@@ -158,11 +348,9 @@ Subcommands:
   apply <name>      Apply a profile to a project
     `
   )
-  .action(async (subcommand: string | undefined) => {
+  .action(async (args: string[]) => {
     const opts = program.optsWithGlobals() as CliOptions;
-    const args = program.args;
-    const subArgs = subcommand ? [subcommand, ...args.slice(args.indexOf(subcommand) + 1)] : [];
-    const result = await profileCmd(subArgs, opts);
+    const result = await profileCmd(args, opts);
     formatOutput(result, opts);
   });
 
@@ -170,7 +358,7 @@ Subcommands:
 program
   .command("platform")
   .description("Inspect platform contracts and overlays")
-  .argument("[subcommand]", "Subcommand: list, show <name>")
+  .argument("[args...]", "Subcommand and optional arguments")
   .addHelpText(
     "after",
     `
@@ -179,19 +367,17 @@ Subcommands:
   show <name>       Show platform details
     `
   )
-  .action(async (subcommand: string | undefined) => {
+  .action(async (args: string[]) => {
     const opts = program.optsWithGlobals() as CliOptions;
-    const args = program.args;
-    const subArgs = subcommand ? [subcommand, ...args.slice(args.indexOf(subcommand) + 1)] : [];
-    const result = await platformCmd(subArgs, opts);
+    const result = await platformCmd(args, opts);
     formatOutput(result, opts);
   });
 
 // ── eval ───────────────────────────────────────────────────────────
 program
   .command("eval")
-  .description("Run benchmarks and evaluations (not yet migrated)")
-  .argument("[subcommand]", "Subcommand: list, run [suite], results")
+  .description("Run benchmark/evaluation suites with fail-closed result reporting")
+  .argument("[args...]", "Subcommand and optional suite")
   .addHelpText(
     "after",
     `
@@ -201,11 +387,9 @@ Subcommands:
   results           Show benchmark results
     `
   )
-  .action(async (subcommand: string | undefined) => {
+  .action(async (args: string[]) => {
     const opts = program.optsWithGlobals() as CliOptions;
-    const args = program.args;
-    const subArgs = subcommand ? [subcommand, ...args.slice(args.indexOf(subcommand) + 1)] : [];
-    const result = await evalCmd(subArgs, opts);
+    const result = await evalCmd(args, opts);
     formatOutput(result, opts);
   });
 
@@ -237,6 +421,18 @@ Subcommands:
     const opts = program.optsWithGlobals() as CliOptions;
     if (cmdOpts.finalize) args = [...args, "--finalize"];
     const result = await planCmd(args, opts);
+    formatOutput(result, opts);
+  });
+
+// ── certify ───────────────────────────────────────────────────────
+program
+  .command("certify")
+  .description("Derive SOURCE_COMPLETE and FULLY_CERTIFIED from bound closure evidence; never accepts prose or a force flag")
+  .argument("[args...]", "[planId] [repoRoot] [--evidence path]")
+  .allowUnknownOption(true)
+  .action(async (args: string[]) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const result = await certifyCmd(args, opts);
     formatOutput(result, opts);
   });
 
@@ -346,6 +542,22 @@ program
     formatOutput(result, opts);
   });
 
+// ── verify-parity ──────────────────────────────────────────────────────────
+program
+  .command("verify-parity")
+  .description("Verify 5fedu module parity packet (typecheck, lint, build, interaction)")
+  .argument("<packet-dir>", "Path to parity packet directory")
+  .option("--target-url <url>", "URL of running app for browser interaction tests")
+  .option("--json", "Output JSON report")
+  .action(async (packetDir: string, cmdOpts: { targetUrl?: string; json?: boolean }) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const args = [packetDir];
+    if (cmdOpts.targetUrl) args.push("--target-url", cmdOpts.targetUrl);
+    if (cmdOpts.json) args.push("--json");
+    const result = await verifyParityCmd(args, opts);
+    formatOutput(result, opts);
+  });
+
 // ── runtime ─────────────────────────────────────────────────────────
 program
   .command("runtime")
@@ -412,6 +624,32 @@ Subcommands:
     const args = program.args;
     const subArgs = subcommand ? [subcommand, ...args.slice(args.indexOf(subcommand) + 1)] : [];
     const result = await skillsCmd(subArgs, opts);
+    formatOutput(result, opts);
+  });
+
+// ── integration ──────────────────────────────────────────────────────
+program
+  .command("integration")
+  .description("Install, verify, or uninstall MCP integrations (native Node.js, no pwsh)")
+  .argument("<action>", "Action: install, verify, uninstall")
+  .argument("[integration]", "Integration ID or 'all' (default: all)")
+  .action(async (action: string, integration: string | undefined) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const args = [action, integration ?? "all"];
+    const result = await integrationCmd(args, opts);
+    formatOutput(result, opts);
+  });
+
+// ── automation ──────────────────────────────────────────────────────
+program
+  .command("automation")
+  .description("Run automation scripts (native Node.js, no pwsh)")
+  .argument("<action>", "Action: verify-runtime-state, export-runtime-state, validate-leakage, regression-guards, cutover-routing, sync-project-agents, compose-policy, materialize-template, validate-registry, build-benchmark, install-claude-adapter, install-opencode-adapter, profile-install, profile-doctor, profile-discover, profile-remove, profile-update")
+  .argument("[args...]", "Additional arguments for the action")
+  .action(async (action: string, extraArgs: string[]) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const args = [action, ...extraArgs];
+    const result = await automationCmd(args, opts);
     formatOutput(result, opts);
   });
 

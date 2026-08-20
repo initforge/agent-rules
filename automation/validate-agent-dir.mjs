@@ -23,6 +23,9 @@ export const LIMITS = {
     'plans',
     'archive',
     'research',
+    // Durable, hash-bound certification and audit receipts. This is distinct
+    // from `.agent/tmp`, which is disposable command output and checkpoints.
+    'evidence',
     'tombstones',
     'runs',
     'artifacts',
@@ -32,6 +35,7 @@ export const LIMITS = {
     // per the protocol (harness must boot without manual setup).
     'ledger',
     'current.json',
+    'cleanup-policy.json',
   ]),
   requiredPlanFiles: ['plan.md', 'requirements.yaml'],
   validStatuses: new Set(['active', 'superseded', 'dropped', 'blocked']),
@@ -73,6 +77,44 @@ function checkState() {
     fail(`current.json plan_root does not exist: ${pointer.plan_root}`);
   }
   return pointer;
+}
+
+/** The cleanup lifecycle is durable policy, not an agent-local convention. */
+function checkCleanupPolicy() {
+  const policyPath = path.join(AGENT_DIR, 'cleanup-policy.json');
+  if (!existsSync(policyPath)) {
+    fail('.agent/cleanup-policy.json is missing — cleanup must be policy-bound');
+    return;
+  }
+  let policy;
+  try {
+    policy = JSON.parse(readFileSync(policyPath, 'utf8'));
+  } catch (e) {
+    fail('.agent/cleanup-policy.json is not valid JSON: ' + e.message);
+    return;
+  }
+  if (policy?.schema !== 'harness/plan-cleanup-policy' || policy?.version !== 1) {
+    fail('.agent/cleanup-policy.json has an unsupported schema or version');
+  }
+  for (const key of ['lifecycle', 'artifact_classes', 'ownership', 'history_receipt', 'operations']) {
+    if (!policy?.[key] || typeof policy[key] !== 'object') {
+      fail('.agent/cleanup-policy.json is missing object "' + key + '"');
+    }
+  }
+  const requiredClasses = [
+    'intent_and_contract',
+    'requirements_claims_tasks',
+    'durable_evidence',
+    'generated_support',
+    'ephemeral_helper_or_test',
+    'shared_artifact',
+    'historical_archive',
+  ];
+  for (const key of requiredClasses) {
+    if (!policy?.artifact_classes?.[key]) {
+      fail('.agent/cleanup-policy.json is missing artifact class "' + key + '"');
+    }
+  }
 }
 
 /** Change files: unique strictly-increasing numbers, bounded count and length. */
@@ -193,6 +235,7 @@ function main() {
 
   checkRoot();
   checkState();
+  checkCleanupPolicy();
   checkPlans();
 
   for (const w of warnings) console.log(`WARN  ${w}`);

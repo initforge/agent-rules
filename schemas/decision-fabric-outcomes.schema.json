@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/decision-fabric-outcomes.schema.json",
+  "title": "Decision Fabric shadow outcome receipt",
+  "description": "Measurable old/new routing comparison joined to the verifier result for each task.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "mode", "records"],
+  "properties": {
+    "schema": { "const": "harness/decision-fabric-outcomes/v1" },
+    "mode": { "enum": ["shadow", "active"] },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["task_id", "decision", "verified_outcome", "verification_steps"],
+        "properties": {
+          "task_id": { "type": "string", "minLength": 1 },
+          "decision": { "$ref": "decision-fabric.schema.json" },
+          "verified_outcome": { "type": "string", "minLength": 1 },
+          "verification_steps": { "type": "array" }
+        }
+      }
+    }
+  }
+}

@@ -47,6 +47,7 @@ function candidate(root: string, gen: number, expectedPrev: number, overrides: R
     version: 1,
     kind: "current-pointer",
     generation: gen,
+    work_id: "p1",
     plan_id: "p1",
     plan_root: ".agent/plans/p1",
     original: { path: originalPath, sha256: h(originalPath, root) },
@@ -295,6 +296,14 @@ describe("readCurrentPointer", () => {
     const root = makeRoot();
     fs.writeFileSync(path.join(root, POINTER_FILE), "not-json{");
     expect(() => readCurrentPointer(root)).toThrowError(/not valid JSON/);
+  });
+
+  it("rejects a pointer that omits the explicit work owner binding", () => {
+    const root = makeRoot();
+    const pointer = candidate(root, 1, 0) as any;
+    delete pointer.work_id;
+    fs.writeFileSync(path.join(root, POINTER_FILE), JSON.stringify(pointer) + "\n");
+    expect(() => readCurrentPointer(root)).toThrowError(/requires a non-empty work_id/);
   });
 });
 

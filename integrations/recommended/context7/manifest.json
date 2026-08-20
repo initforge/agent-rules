@@ -1,0 +1,10 @@
+{
+  "name": "context7",
+  "capability": "docs.lookup",
+  "upstream": "https://github.com/upstash/context7-mcp",
+  "package": "@upstash/context7-mcp",
+  "versionPolicy": "pinned",
+  "installType": "npm-npx",
+  "healthCheck": "npx -y @upstash/context7-mcp@3.2.5 --help",
+  "version": "3.2.5"
+}

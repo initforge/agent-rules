@@ -1,0 +1,258 @@
+{
+  "version": 1,
+  "description": "Exact platform-conditional Vitest skips allowed by verify:all. Any other skip, missing expected skip, or title/path drift is a verification failure.",
+  "platforms": {
+    "linux": [
+      {
+        "file": "automation/host-attestation.test.ts",
+        "fullName": "createExecutableSnapshot replaces Windows file and directory DACLs and verifies the exact one-ACE policy",
+        "rationale": "Native Windows DACL attestation can only execute on win32. POSIX snapshot hardening tests execute on Linux instead."
+      }
+    ],
+    "darwin": [
+      {
+        "file": "automation/host-attestation.test.ts",
+        "fullName": "createExecutableSnapshot replaces Windows file and directory DACLs and verifies the exact one-ACE policy",
+        "rationale": "Native Windows DACL attestation can only execute on win32. POSIX snapshot hardening tests execute on macOS instead."
+      }
+    ],
+    "win32": [
+      {
+        "file": "automation/host-attestation.test.ts",
+        "fullName": "createExecutableSnapshot applies and verifies POSIX 0o500 snapshot mode",
+        "rationale": "Windows-incompatible test suite execution boundary."
+      },
+      {
+        "file": "automation/host-attestation.test.ts",
+        "fullName": "createExecutableSnapshot rejects POSIX symlink targets via O_NOFOLLOW",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/cli/test/runtime.test.ts",
+        "fullName": "RuntimeInstaller rejects a symlinked canonical ledger directory",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/cli/test/runtime.test.ts",
+        "fullName": "RuntimeInstaller rejects a symlinked manifest-owned legacy path without mutation",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/cli/test/runtime.test.ts",
+        "fullName": "RuntimeInstaller rejects forged recovery journals with a linked reserved staging path",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/cli/test/runtime.test.ts",
+        "fullName": "RuntimeInstaller rejects symlinked build inputs",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/control-plane/tests/api.test.ts",
+        "fullName": "Adversarial integrity .agent symlink returns 409 SYMLINK",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/control-plane/tests/api.test.ts",
+        "fullName": "Adversarial integrity IO error on original.md returns 409 IO_FAULT",
+        "rationale": "Windows-incompatible test suite execution boundary."
+      },
+      {
+        "file": "packages/control-plane/tests/api.test.ts",
+        "fullName": "Adversarial integrity ledger dir symlink returns 409 SYMLINK",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/control-plane/tests/api.test.ts",
+        "fullName": "Adversarial integrity plans dir symlink returns 409 SYMLINK",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/control-plane/tests/api.test.ts",
+        "fullName": "Adversarial integrity root symlink returns 409 SYMLINK",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/control-plane/tests/api.test.ts",
+        "fullName": "Plan workspace API listPlans fails on symlink in ledger dir returns 409",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/control-plane/tests/api.test.ts",
+        "fullName": "Plan workspace API parent-directory symlink returns 409 SYMLINK",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/control-plane/tests/api.test.ts",
+        "fullName": "Plan workspace API shadow traversal via symlink returns 409 SYMLINK",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/control-plane/tests/api.test.ts",
+        "fullName": "Plan workspace API symlink amendment artifact returns 409",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/control-plane/tests/api.test.ts",
+        "fullName": "Plan workspace API symlink ledger returns 409",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/control-plane/tests/api.test.ts",
+        "fullName": "Plan workspace API symlink manifest returns 409",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/control-plane/tests/api.test.ts",
+        "fullName": "Plan workspace API symlink original returns 409",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/control-plane/tests/plan-workspace.test.ts",
+        "fullName": "listPlans - fail closed list rejects symlink in ledger dir",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/control-plane/tests/plan-workspace.test.ts",
+        "fullName": "validateManifest - extra artifacts extra symlink fails",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/control-plane/tests/plan-workspace.test.ts",
+        "fullName": "validateShadowDir shadow symlink fails",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/engine/test/artifact-handoff.test.ts",
+        "fullName": "adversarial: symlink handoff dir skips symlinked entries in listHandoffArtifacts",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/engine/test/artifact-handoff.test.ts",
+        "fullName": "readHandoffArtifact rejects symlink handoff.json",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/engine/test/export-bundle.test.ts",
+        "fullName": "export-bundle adversarial rejects import when original.md is a symlink",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/engine/test/export-bundle.test.ts",
+        "fullName": "export-bundle adversarial rejects symlink in lineage dir (O_NOFOLLOW via SecureFsRoot)",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/engine/test/export-bundle.test.ts",
+        "fullName": "export-bundle adversarial rejects symlink in plan dir (O_NOFOLLOW via SecureFsRoot)",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/engine/test/m11-terminal-evidence.test.ts",
+        "fullName": "atomicLedgerWrite rejects symlink target",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/engine/test/parity-contracts.test.ts",
+        "fullName": "Draft-07 parity schema runtime rejects symbolic-link segments inside the allowlisted schema root",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/engine/test/plan-lifecycle.test.ts",
+        "fullName": "lockDirectory rejects symlink at lock path (O_NOFOLLOW)",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/engine/test/plan-lifecycle.test.ts",
+        "fullName": "lockFile rejects symlink at lock path (O_NOFOLLOW)",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/engine/test/plan-recognizer.test.ts",
+        "fullName": "detectPlanFromFile rejects symlink within plans dir",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/engine/test/secure-fs.test.ts",
+        "fullName": "adversarial mkdirp rejects existing symlink given as relative path",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/engine/test/secure-fs.test.ts",
+        "fullName": "adversarial mkdirp rejects symlink at intermediate component (TOCTOU prevention)",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/engine/test/secure-fs.test.ts",
+        "fullName": "adversarial mkdirp rejects symlink at leaf component",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/engine/test/secure-fs.test.ts",
+        "fullName": "SecureFsRoot assertTrustedDir rejects unsafe permissions",
+        "rationale": "Windows-incompatible test suite execution boundary."
+      },
+      {
+        "file": "packages/engine/test/secure-fs.test.ts",
+        "fullName": "SecureFsRoot cumulative symlink check detects symlink chain escape on resolve",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/engine/test/secure-fs.test.ts",
+        "fullName": "SecureFsRoot cumulative symlink check rejects intermediate symlink escape when final path does not exist (TOCTOU prevention)",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/engine/test/secure-fs.test.ts",
+        "fullName": "SecureFsRoot openRead rejects symlink targets",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/engine/test/secure-fs.test.ts",
+        "fullName": "SecureFsRoot resolve rejects symlink chains that escape root",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages/engine/test/worktree-inventory.test.ts",
+        "fullName": "worktree candidate inventory canonicalizes repository, worktree, and output aliases deterministically",
+        "rationale": "Windows-incompatible test suite execution boundary."
+      },
+      {
+        "file": "platforms/claude/adapter.test.ts",
+        "fullName": "claude adapter — lifecycle 4. doctor passes on healthy native output and fails on installation issues",
+        "rationale": "Windows-incompatible test suite execution boundary."
+      },
+      {
+        "file": "platforms/claude/adapter.test.ts",
+        "fullName": "claude adapter — model recording 12. requested/resolved/observed recorded from real stream-json output",
+        "rationale": "Windows-incompatible test suite execution boundary."
+      },
+      {
+        "file": "platforms/claude/adapter.test.ts",
+        "fullName": "claude adapter — model recording 15. failed dispatch records ok:false with honest result",
+        "rationale": "Windows-incompatible test suite execution boundary."
+      },
+      {
+        "file": "platforms/claude/adapter.test.ts",
+        "fullName": "claude adapter — receipt and attestation binding exact HEAD 18. nativeAttestation binds the exact HEAD and reflects receipt evidence",
+        "rationale": "Windows-incompatible test suite execution boundary."
+      },
+      {
+        "file": "platforms/claude/adapter.test.ts",
+        "fullName": "claude adapter — stop/checkpoint/resume 22. resume passes --resume with the persisted session id",
+        "rationale": "Windows-incompatible test suite execution boundary."
+      },
+      {
+        "file": "platforms/claude/adapter.test.ts",
+        "fullName": "claude adapter — worktree isolation (fail closed) 11. safe dispatch inside root passes --worktree to the native child",
+        "rationale": "Windows-incompatible test suite execution boundary."
+      },
+      {
+        "file": "platforms/claude/adapter.test.ts",
+        "fullName": "claude adapter — worktree isolation (fail closed) 9. dispatch with symlink escape rejects",
+        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      }
+    ]
+  },
+  "always": []
+}

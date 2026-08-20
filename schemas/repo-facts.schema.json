@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/repo-facts.schema.json",
+  "title": "Deterministic repository facts",
+  "description": "Host-independent repository facts with detector and source provenance. Facts describe observable stack/configuration only; they do not infer business domain or requirements.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "workspace_root", "facts"],
+  "properties": {
+    "schema": { "const": "harness/repo-facts/v1" },
+    "version": { "const": 1 },
+    "workspace_root": { "type": "string", "minLength": 1 },
+    "facts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["fact_id", "value", "detector_id", "confidence", "status", "sources"],
+        "properties": {
+          "fact_id": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]*$" },
+          "value": {
+            "type": ["string", "array"],
+            "items": { "type": "string", "minLength": 1 },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "detector_id": { "type": "string", "minLength": 1 },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "status": { "enum": ["observed", "conflict", "unknown"] },
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["path", "sha256"],
+              "properties": {
+                "path": { "type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+" },
+                "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+              }
+            }
+          },
+          "notes": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+        }
+      }
+    }
+  }
+}

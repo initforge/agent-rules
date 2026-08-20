@@ -95,6 +95,8 @@ function defaultPlatformRoots(): Record<RuntimePlatform, string> {
     antigravity: path.join(home, ".gemini", "config"),
     cursor: path.join(home, ".cursor"),
     opencode: process.env.OPENCODE_HOME || path.join(home, ".config", "opencode"),
+    mimocode: process.env.MIMOCODE_CONFIG_DIR || path.join(home, ".config", "mimocode"),
+    claude: process.env.CLAUDE_CONFIG_DIR || path.join(home, ".claude"),
   };
 }
 
@@ -191,7 +193,8 @@ async function readSourceManifest(repositoryRoot: string, platform: RuntimePlatf
     const sourcePath = await assertSafeSourceFile(sourceRoot, file.path);
     if (hash(await fs.readFile(sourcePath)) !== file.sha256) throw new Error(`Source hash mismatch for ${file.path}`);
   }
-  const observed = (await listRuntimeFiles(sourceRoot)).filter((file) => file !== "manifest.json").sort();
+  const ignoredEvidenceFiles = platform === "opencode" ? new Set(["manifest.json", "runtime-contract.json"]) : new Set(["manifest.json"]);
+  const observed = (await listRuntimeFiles(sourceRoot)).filter((file) => !ignoredEvidenceFiles.has(file)).sort();
   const listed = files.map((file) => file.path).sort();
   if (JSON.stringify(observed) !== JSON.stringify(listed)) throw new Error(`Built runtime manifest missing or extra files: ${manifestPath}`);
   if (platform === "opencode") {

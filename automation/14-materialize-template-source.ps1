@@ -45,7 +45,7 @@ function Resolve-LockData {
   }
 
   # Fallback to harness default
-  $HarnessLock = Join-Path (Split-Path -Parent $PSScriptRoot) "profiles\5fedu\projects\5fedu\source-lock.json"
+  $HarnessLock = Join-Path (Split-Path -Parent $PSScriptRoot) "profiles\5fedu\projects\source-lock.json"
   if (Test-Path $HarnessLock) {
     Write-Step "WARN: Using harness default source-lock.json (no project lock found)"
     return (Get-Content -Raw $HarnessLock | ConvertFrom-Json)
@@ -160,8 +160,49 @@ if ($Lock.version -ne 1) { throw "Unsupported source-lock version: $($Lock.versi
 $LockData = $Lock.sourceLock
 if (-not $LockData) { throw "sourceLock field missing in source-lock" }
 if (-not $LockData.repository) { throw "sourceLock.repository is required" }
+
+# Bundled snapshots live once inside the harness. Target projects bind to the
+# central reference by pointer; this compatibility command must never copy the
+# snapshot into a project-local cache.
+if ($LockData.sourceKind -eq 'bundled-snapshot') {
+  $HarnessRoot = Split-Path -Parent $PSScriptRoot
+  if (-not $LockData.referencePath) { throw "bundled source-lock.referencePath is required" }
+  if (-not $LockData.manifestPath) { throw "bundled source-lock.manifestPath is required" }
+  if ($LockData.verificationState -ne 'verified') { throw "bundled source-lock must be verified before implementation/parity" }
+
+  $ReferenceRoot = Join-Path (Join-Path $HarnessRoot "profiles\5fedu") ($LockData.referencePath -replace '/', '\')
+  if (-not (Test-Path $ReferenceRoot)) { throw "Bundled reference source missing: $ReferenceRoot" }
+
+  $Validator = Join-Path $HarnessRoot "automation\validate-5fedu-domain-pack.mjs"
+  if (-not (Test-Path $Validator)) { throw "5fedu domain-pack validator missing: $Validator" }
+  $Node = Get-Command node -ErrorAction SilentlyContinue
+  if (-not $Node) { throw "Node.js is required to verify the bundled 5fedu reference source" }
+  & $Node.Source $Validator --require-source
+  if ($LASTEXITCODE -ne 0) { throw "Bundled 5fedu source verification FAILED" }
+
+  if ($Clean) {
+    Write-Step "Bundled snapshot is immutable and central; there is no project cache to clean."
+    return
+  }
+  if ($Module) {
+    Write-Step "Module '$Module' remains centrally referenced; no files are copied into the target project."
+  }
+  if ($DryRun) {
+    Write-Step "DRY RUN: Would use central bundled reference: $ReferenceRoot"
+    return
+  }
+  Write-Step "Bundled source VERIFIED. Use central reference: $ReferenceRoot"
+  return $ReferenceRoot
+}
+
+if ($LockData.verificationState -eq 'unverified' -and (-not $LockData.commitSha -or -not $LockData.integrity)) {
+  throw "source-lock is UNVERIFIED and intentionally has no authoritative commit/integrity. Provide a verified project source lock or a local/source repository receipt before parity implementation."
+}
 if (-not $LockData.commitSha -or $LockData.commitSha -notmatch '^[a-f0-9]{40}$') {
   throw "sourceLock.commitSha must be a 40-char hex SHA, got: $($LockData.commitSha)"
+}
+if (-not $LockData.integrity -or -not $LockData.integrity.algorithm -or -not $LockData.integrity.hash) {
+  throw "sourceLock.integrity is required for materialization"
 }
 if (-not $LockData.templatePath) { throw "sourceLock.templatePath is required" }
 

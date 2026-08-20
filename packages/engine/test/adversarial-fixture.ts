@@ -1,12 +1,12 @@
 /**
  * adversarial-fixture.ts — shared fixture plan / topology / claims for the
- * M11-R30 adversarial compiler suite (engine test + evals/m11 aggregation).
+ * Adversarial compiler suite fixture shared by focused engine tests.
  */
 import type { PlanInvariantProfile, ClaimDef } from '../src/adversarial-compiler.js';
 import type { SystemTopology } from '../src/topology-compiler.js';
 
 export const FIXTURE_PLAN: PlanInvariantProfile = {
-  plan_id: 'hv3-m11-r30-fixture',
+  plan_id: 'phase-adversarial-fixture',
   domains_required: ['finance_concurrency', 'authorization_security', 'browser_parity', 'release'],
   finance: {
     tenants: ['acme', 'globex'],

@@ -1,10 +1,10 @@
 {
   "kind": "canonical-plan-bytes",
   "path": "original.md",
-  "sha256": "c8798fa621e56d80d32821858edc94c285d911e27f6156584aa6861b35782a31",
-  "bytes": 31085,
+  "sha256": "5a9551ba1f5c5b98f0bfd28b583d8e3bdeb0ea6bcef9c96342df6a8b09f0b0b3",
+  "bytes": 198,
   "encoding": "UTF-8",
   "line_endings": "LF including final terminator",
-  "runtime_path": ".agent/plans/agent-rules-harness-v3-rearchitecture-20260726-r1/original.md",
+  "runtime_path": "fixture-only/plan-identity/original.md",
   "tracking": "fixture-only; never copy into .agent"
 }

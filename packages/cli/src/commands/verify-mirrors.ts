@@ -1,5 +1,5 @@
 import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
-import { getRepoRoot } from "../adapters/powershell.js";
+import { getRepoRoot } from "../adapters/repo.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { build } from "./build.js";

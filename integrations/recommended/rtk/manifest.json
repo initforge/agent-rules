@@ -1,0 +1,32 @@
+{
+  "id": "rtk",
+  "displayName": "RTK \u2014 Rust Token Killer",
+  "version": "0.28.2",
+  "description": "CLI output compression provider; measure value by tokens/cost per verified task, not per-command compression claims.",
+  "kind": "cli-tool",
+  "capabilities": [
+    "output.compress"
+  ],
+  "profiles": [
+    "core"
+  ],
+  "trust": "adapter-verified",
+  "sideEffects": "read-only",
+  "tokenClass": "low",
+  "nativeHosts": [
+    "codex",
+    "claude",
+    "grok",
+    "antigravity",
+    "cursor",
+    "opencode",
+    "mimocode"
+  ],
+  "install": {
+    "type": "shell",
+    "script": "install.sh",
+    "healthCheck": "rtk --version"
+  },
+  "mcpServerKey": null,
+  "name": "rtk"
+}

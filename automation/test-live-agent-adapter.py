@@ -124,7 +124,7 @@ def native_contract() -> None:
     except ValueError:
         pass
     else:
-        raise AssertionError("native mode accepted an artifact path outside .agent/benchmarks")
+        raise AssertionError("native mode accepted an artifact path outside .agent/tmp/benchmarks")
     print("PASS: native mode is full-only and artifact-confined")
 
 

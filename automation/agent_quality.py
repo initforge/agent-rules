@@ -186,10 +186,16 @@ def benchmark_workspace(case: dict[str, Any]) -> Iterator[Path]:
         return
     with tempfile.TemporaryDirectory(prefix="agent-quality-") as holder:
         root = Path(holder)
-        if workspace.get("has_5fedu_context") or (root / ".agent" / "profiles" / "5fedu.enabled").is_file():
+        if workspace.get("profile_marker"):
+            marker = root / ".agent" / "profiles" / "5fedu.enabled"
+            marker.parent.mkdir(parents=True, exist_ok=True)
+            marker.write_bytes(b"")
+        # Legacy fixture support only: new 5fedu benchmark cases use the explicit
+        # profile marker and central harness reference, not copied context/template.
+        if workspace.get("has_5fedu_context"):
             context = root / "context" / "5fedu"
             context.mkdir(parents=True)
-            (context / "00-context-map.md").write_text("fixture", encoding="utf-8")
+            (context / "00-context-map.md").write_text("legacy-fixture", encoding="utf-8")
         yield root
 
 

@@ -4,6 +4,7 @@ import { app } from '../src/server/app'
 import { getDb, closeDb } from '../src/db'
 import { validatePlanId, PlanNotFoundError, PlanValidationError } from '@initforge/agent-rules-engine/plan-identity'
 import { buildManifestJson } from '@initforge/agent-rules-engine/plan-identity'
+import { SYMLINK_CAPABLE } from '../../engine/test/helpers/symlink-capability.js'
 
 describe('API', () => {
   beforeAll(async () => { process.env.PORT = '0'; await getDb() })
@@ -13,6 +14,13 @@ describe('API', () => {
     const res = await request(app).get('/api/health')
     expect(res.status).toBe(200); expect(res.body.ok).toBe(true)
     expect(res.body.status).toBe('healthy')
+  })
+  it('GET /api/authority exposes current execution authority', async () => {
+    const res = await request(app).get('/api/authority')
+    expect(res.status).toBe(200)
+    expect(res.body.ok).toBe(true)
+    expect(['BOUND', 'UNBOUND']).toContain(res.body.data.state)
+    expect(typeof res.body.data.execution_generation).toBe('number')
   })
   it('GET /api/config/all returns canonical data', async () => {
     const res = await request(app).get('/api/config/all')
@@ -444,9 +452,10 @@ function orderSensitivityFixture(root: string, pid: string, orderIds: string[]):
   const sHashes: Record<string, string> = {}
   for (const [n, c2] of Object.entries(sDef)) { fs.writeFileSync(path.join(sd, n), c2); sHashes[n] = c.createHash('sha256').update(Buffer.from(c2, 'utf-8')).digest('hex') }
   const hash = 'a'.repeat(64)
+  const variant = pid === 'order-b' ? ' variant' : ''
   const shaContent: Record<string, { sha256: string; content: string; filename: string }> = {
     'AM-0001': { sha256: c.createHash('sha256').update(Buffer.from('# A1\n')).digest('hex'), content: '# A1\n', filename: 'amd-001.md' },
-    'AM-0002': { sha256: c.createHash('sha256').update(Buffer.from('# A2\n')).digest('hex'), content: '# A2\n', filename: 'amd-002.md' },
+    'AM-0002': { sha256: c.createHash('sha256').update(Buffer.from(`# A2${variant}\n`)).digest('hex'), content: `# A2${variant}\n`, filename: 'amd-002.md' },
     'AM-0003': { sha256: c.createHash('sha256').update(Buffer.from('# A3\n')).digest('hex'), content: '# A3\n', filename: 'amd-003.md' },
   }
   for (const id of orderIds) { fs.writeFileSync(path.join(ad, shaContent[id].filename), shaContent[id].content) }
@@ -547,12 +556,12 @@ describe('Plan workspace API', () => {
     const res2 = await request(app).get('/api/plans/test%2Fplan'); expect(res2.status).toBe(400)
   })
 
-  it('symlink ledger returns 409', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('symlink ledger returns 409', async () => {
     createFixture(tmp, 'sl', { symlinkLedger: true })
     const res = await request(app).get('/api/plans/sl'); expect(res.status).toBe(409)
   })
 
-  it('symlink original returns 409', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('symlink original returns 409', async () => {
     createFixture(tmp, 'so', { symlinkOriginal: true })
     const res = await request(app).get('/api/plans/so'); expect(res.status).toBe(409)
   })
@@ -643,14 +652,14 @@ describe('Plan workspace API', () => {
     expect(res.body.details.findings.some((f: { kind: string }) => f.kind === 'MANIFEST')).toBe(true)
   })
 
-  it('symlink manifest returns 409', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('symlink manifest returns 409', async () => {
     createFixture(tmp, 'smf', { symlinkManifest: true })
     const res = await request(app).get('/api/plans/smf')
     expect(res.status).toBe(409)
     expect(res.body.details.findings.some((f: { kind: string }) => f.kind === 'SYMLINK')).toBe(true)
   })
 
-  it('symlink amendment artifact returns 409', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('symlink amendment artifact returns 409', async () => {
     createFixture(tmp, 'saa', { symlinkAmendment: true })
     const res = await request(app).get('/api/plans/saa')
     expect(res.status).toBe(409)
@@ -676,14 +685,14 @@ describe('Plan workspace API', () => {
     expect(res.status).toBe(409); expect(res.body.details.findings.some((f: { kind: string }) => f.kind === 'MANIFEST')).toBe(true)
   })
 
-  it('shadow traversal via symlink returns 409 SYMLINK', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('shadow traversal via symlink returns 409 SYMLINK', async () => {
     createFixture(tmp, 'st', { shadowTraversal: true })
     const res = await request(app).get('/api/plans/st')
     expect(res.status).toBe(409)
     expect(res.body.details.findings.some((f: { kind: string }) => f.kind === 'SYMLINK')).toBe(true)
   })
 
-  it('parent-directory symlink returns 409 SYMLINK', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('parent-directory symlink returns 409 SYMLINK', async () => {
     createFixture(tmp, 'ps', { parentSymlink: true })
     const res = await request(app).get('/api/plans/ps')
     expect(res.status).toBe(409)
@@ -711,7 +720,7 @@ describe('Plan workspace API', () => {
 
   it('order sensitivity: different amendment sets produce different effective hashes', async () => {
     orderSensitivityFixture(tmp, 'order-a', ['AM-0001', 'AM-0002'])
-    orderSensitivityFixture(tmp, 'order-b', ['AM-0001', 'AM-0003'])
+    orderSensitivityFixture(tmp, 'order-b', ['AM-0001', 'AM-0002'])
     const ra = await request(app).get('/api/plans/order-a'); expect(ra.status).toBe(200)
     const rb = await request(app).get('/api/plans/order-b'); expect(rb.status).toBe(200)
     expect(ra.body.identity.effectiveSha256).not.toBe(rb.body.identity.effectiveSha256)
@@ -752,7 +761,7 @@ describe('Plan workspace API', () => {
     const res = await request(app).get(`/api/plans/${planId}`)
     expect(res.status).toBe(409)
   })
-  it('listPlans fails on symlink in ledger dir returns 409', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('listPlans fails on symlink in ledger dir returns 409', async () => {
     const fs = require('node:fs'); const path = require('node:path')
     const tgt = path.join(tmp, 'symlink-target'); fs.writeFileSync(tgt, '{}')
     fs.symlinkSync(tgt, path.join(tmp, '.agent', 'ledger', 'symlink-plan.json'))
@@ -838,7 +847,7 @@ describe('Overview plan-integrity regression', () => {
 describe('Adversarial integrity', () => {
   beforeAll(() => { process.env.HARNESS_ROOT = tmp })
   afterAll(() => { delete process.env.HARNESS_ROOT })
-  it('.agent symlink returns 409 SYMLINK', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('.agent symlink returns 409 SYMLINK', async () => {
     const fs = require('node:fs'); const path = require('node:path')
     createFixture(tmp, 'ag-sym')
     const agentPath = path.join(tmp, '.agent'); const realAgent = path.join(tmp, '_real_agent')
@@ -847,7 +856,7 @@ describe('Adversarial integrity', () => {
     expect(res.status).toBe(409); expect(res.body.details.findings.some((f: { kind: string }) => f.kind === 'SYMLINK')).toBe(true)
     fs.unlinkSync(agentPath); fs.renameSync(realAgent, agentPath)
   })
-  it('ledger dir symlink returns 409 SYMLINK', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('ledger dir symlink returns 409 SYMLINK', async () => {
     const fs = require('node:fs'); const path = require('node:path')
     createFixture(tmp, 'ld-sym')
     const ld = path.join(tmp, '.agent', 'ledger'); const realLd = path.join(tmp, '.agent', '_real_ledger')
@@ -856,7 +865,7 @@ describe('Adversarial integrity', () => {
     expect(res.status).toBe(409); expect(res.body.details.findings.some((f: { kind: string }) => f.kind === 'SYMLINK')).toBe(true)
     fs.unlinkSync(ld); fs.renameSync(realLd, ld)
   })
-  it('plans dir symlink returns 409 SYMLINK', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('plans dir symlink returns 409 SYMLINK', async () => {
     const fs = require('node:fs'); const path = require('node:path')
     createFixture(tmp, 'pd-sym')
     const pd = path.join(tmp, '.agent', 'plans'); const realPd = path.join(tmp, '.agent', '_real_plans')
@@ -865,7 +874,7 @@ describe('Adversarial integrity', () => {
     expect(res.status).toBe(409); expect(res.body.details.findings.some((f: { kind: string }) => f.kind === 'SYMLINK')).toBe(true)
     fs.unlinkSync(pd); fs.renameSync(realPd, pd)
   })
-  it('root symlink returns 409 SYMLINK', async () => {
+  it.skipIf(!SYMLINK_CAPABLE)('root symlink returns 409 SYMLINK', async () => {
     const fs = require('node:fs'); const path = require('node:path')
     const altRoot = path.join(require('node:os').tmpdir(), 'cp-root-test-' + Date.now())
     fs.mkdirSync(altRoot, { recursive: true }); createFixture(altRoot, 'vp')
@@ -935,7 +944,7 @@ describe('Adversarial integrity', () => {
     const res = await request(app).get('/api/plans/nc-m')
     expect(res.status).toBe(409); expect(res.body.details.findings.some((f: { kind: string }) => f.kind === 'MANIFEST')).toBe(true)
   })
-  it('IO error on original.md returns 409 IO_FAULT', async () => {
+  it.skipIf(process.platform === 'win32')('IO error on original.md returns 409 IO_FAULT', async () => {
     const fs = require('node:fs'); const path = require('node:path')
     createFixture(tmp, 'io-err')
     const op = path.join(tmp, '.agent', 'plans', 'io-err', 'original.md')

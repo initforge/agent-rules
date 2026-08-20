@@ -69,13 +69,13 @@ approved_deviations:
     status: approved
 verification_evidence:
   - type: typecheck
-    result: pass
+    result: fail
     detail: "All types resolve against generated supabase types"
   - type: lint
     result: pass
     detail: "ESLint pass with project config"
   - type: build
-    result: pass
+    result: fail
     detail: "Vite build succeeds"
   - type: interaction_check
     result: not_run

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import importlib.util
 import os
 import shutil
 import subprocess
@@ -13,6 +14,16 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SELECTOR = ROOT / "automation" / "select-verification.py"
+
+
+def load_selector_module():
+    """Load the selector module so reducer fixtures can inject actual outcomes."""
+    spec = importlib.util.spec_from_file_location("select_verification", SELECTOR)
+    if spec is None or spec.loader is None:
+        raise AssertionError(f"could not load selector module: {SELECTOR}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def run(*args: str, expect: int = 0, root: str | None = None) -> dict:
@@ -255,6 +266,17 @@ def test_profile_extensible() -> None:
     for pid, profile in domain_profiles.items():
         if not profile.get("checks"):
             raise AssertionError(f"profile {pid} has no checks")
+        contract = profile.get("verification_contract", {})
+        contract_fields = {
+            "applicability", "risk_triggers", "cost_class", "fidelity", "replayable",
+            "visible_manual", "required_dimensions", "negative_fixtures", "owner",
+            "freshness_binding", "invalidation_conditions", "human_residuals",
+        }
+        missing_contract = contract_fields - set(contract)
+        if missing_contract:
+            raise AssertionError(f"profile {pid} missing verifier contract fields: {sorted(missing_contract)}")
+        if contract["visible_manual"].get("unavailable_status") != "BLOCKED":
+            raise AssertionError(f"profile {pid} must fail closed when visible capability is unavailable")
         for check in profile["checks"]:
             if not check.get("id"):
                 raise AssertionError(f"profile {pid} has a check without id")
@@ -284,7 +306,80 @@ def test_run_selects_without_error() -> None:
             if r["status"] not in ("PASS", "FAIL", "BLOCKED", "SKIPPED"):
                 raise AssertionError(f"unexpected result status: {r}")
         summary = result["summary"]
+        if "RUNNABLE" in summary["by_status"]:
+            raise AssertionError(
+                f"acceptance summary must use actual statuses, not plan statuses: {summary}"
+            )
+        if result.get("phase") != "ACCEPTANCE_REDUCTION":
+            raise AssertionError(f"run must expose acceptance reduction phase: {result}")
+        if "plan_summary" not in result:
+            raise AssertionError(f"run must preserve the separate verification plan summary: {result}")
+        if summary["total_checks"] != result["results_count"]:
+            raise AssertionError(f"reducer count must match executed results: {result}")
+        if not isinstance(summary.get("human_residuals"), list):
+            raise AssertionError(f"reducer must emit a human residual packet: {summary}")
         print(f"  run results: {summary['total_checks']} checks, statuses={summary['by_status']}")
+
+
+def test_acceptance_reducer_fail_closed_for_incomplete_actual_evidence() -> None:
+    """A plan cannot become green from selection metadata or incomplete execution."""
+    selector = load_selector_module()
+    selection = [{
+        "profile_id": "fixture-profile",
+        "checks": [
+            {"check_id": "pass", "name": "passing proof", "mandatory": True},
+            {"check_id": "missing", "name": "missing proof", "mandatory": True},
+            {"check_id": "blocked", "name": "required tool", "mandatory": True},
+            {"check_id": "skipped", "name": "required manual dimension", "mandatory": True},
+            {"check_id": "empty", "name": "empty command", "mandatory": True},
+            {"check_id": "failed", "name": "failed actual run", "mandatory": True},
+            {"check_id": "optional-failed", "name": "optional regression", "mandatory": False},
+        ],
+    }]
+    actual = [
+        {"profile_id": "fixture-profile", "check_id": "pass", "status": "PASS"},
+        {
+            "profile_id": "fixture-profile", "check_id": "blocked", "status": "BLOCKED",
+            "skip_reason": "Required tool not installed",
+        },
+        {
+            "profile_id": "fixture-profile", "check_id": "skipped", "status": "SKIPPED",
+            "skip_reason": "Visible manual surface unavailable",
+        },
+        {
+            "profile_id": "fixture-profile", "check_id": "empty", "status": "SKIPPED",
+            "skip_reason": "No command defined for this check",
+        },
+        {
+            "profile_id": "fixture-profile", "check_id": "failed", "status": "FAIL",
+            "skip_reason": "exit code 1",
+        },
+        {
+            "profile_id": "fixture-profile", "check_id": "optional-failed", "status": "FAIL",
+            "skip_reason": "optional check still failed",
+        },
+    ]
+
+    reduced = selector.reduce_run_results(selection, actual)
+    statuses = reduced["by_status"]
+    if statuses.get("PASS") != 1:
+        raise AssertionError(f"expected one actual PASS: {reduced}")
+    if statuses.get("MISSING") != 1:
+        raise AssertionError(f"missing planned evidence must be explicit: {reduced}")
+    if statuses.get("BLOCKED") != 1:
+        raise AssertionError(f"required missing tool must remain BLOCKED: {reduced}")
+    if statuses.get("SKIPPED") != 2:
+        raise AssertionError(f"skipped and empty-command evidence must remain SKIPPED: {reduced}")
+    if statuses.get("FAIL") != 2:
+        raise AssertionError(f"actual failures must remain FAIL: {reduced}")
+    if reduced["all_automated_pass"]:
+        raise AssertionError(f"incomplete/failed evidence produced a false green: {reduced}")
+    failure_statuses = {failure["status"] for failure in reduced["required_failures"]}
+    if not {"MISSING", "BLOCKED", "SKIPPED", "FAIL"}.issubset(failure_statuses):
+        raise AssertionError(f"required failure statuses were not all retained: {reduced}")
+    if any(status == "RUNNABLE" for status in statuses):
+        raise AssertionError(f"RUNNABLE is plan metadata, never actual evidence: {reduced}")
+    print("  reducer negative fixtures: missing/blocked/skipped/empty/failed remain non-green")
 
 
 def report_diagnostics() -> None:
@@ -335,6 +430,7 @@ def main() -> None:
     test_no_false_pass_on_missing_tool()
     test_profile_extensible()
     test_run_selects_without_error()
+    test_acceptance_reducer_fail_closed_for_incomplete_actual_evidence()
 
     report_diagnostics()
 

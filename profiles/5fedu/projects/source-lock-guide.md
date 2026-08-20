@@ -1,117 +1,34 @@
-# Source-lock guide
+# 5fedu source-lock guide
 
-**Vai trò:** Hướng dẫn sử dụng source-lock để pin exact template revision.  
-**Ý đồ:** Một task có thể reference một template revision chính xác mà không cần copy toàn bộ template vào harness hoặc load hết vào model context.
+The canonical 5fedu template is stored **once inside the agent-rules installation** at `profiles/5fedu/reference-source/template`. Target projects do not install, copy, or vendor that template.
 
-## Source-lock là gì
+## Default bundled source
 
-Source-lock là một contract nhỏ (JSON) ghi lại:
+`profiles/5fedu/projects/source-lock.json` is a verified `bundled-snapshot` receipt containing the owner-supplied archive digest, a deterministic 446-file tree digest, and the manifest path. Before implementation or parity claims, the runtime recomputes the exact file set, byte sizes, and SHA-256 values. Any drift fails closed.
 
-- **repository**: URL repo template
-- **commitSha**: Git commit SHA chính xác (40 ký tự hex)
-- **templatePath**: đường dẫn tương đối trong repo đến template root
-- **integrity**: hash tree template (sha256/sha512)
-- **profileCompatibility**: danh sách profile tương thích
-- **moduleIndex**: danh sách module có sẵn (optional)
-- **verificationState**: trạng thái verify gần nhất
+A project opts in explicitly with `domain_pack: "5fedu"` (or CLI `--domain-pack 5fedu`). The harness resolves the pack from its own installation via the explicit harness root, `AGENT_RULES_HOME`, or module location. The active project does not need `profiles/5fedu/` or the reference source on disk.
 
-## Khi nào dùng
+## Authority order
 
-Source-lock được dùng khi task yêu cầu template parity:
+1. Active project requirements, schema, API, and runtime behavior decide what the project actually needs.
+2. Owner-authored 5fedu behavior contracts constrain the known ERP patterns.
+3. The bundled template provides source-backed implementation/visual references by exact path.
+4. Reference code is evidence and a pattern library, **not** a feature inventory to copy mechanically.
 
-1. Task chạm UI/module 5fedu → router chỉ vào `5fedu-module-parity`
-2. Skill kiểm tra `source-lock.json` trong `context/5fedu/` (hoặc harness)
-3. Nếu source-lock tồn tại: resolve → materialize → expose module
-4. Nếu chưa có source-lock: chạy `14-materialize-template-source.ps1 -ProjectRoot ... -AllowNetwork -ValidateOnly`
+Visual-parity claims still require browser/runtime evidence from the active project. A verified source snapshot alone cannot prove that the rendered target UI matches.
 
-## Materialization flow
+## Validation
 
-Khi task yêu cầu template parity:
-
-```
-1. Confirm 5fedu profile enabled
-   → Check: context/5fedu/ tồn tại trong workspace
-
-2. Resolve source lock
-   → Đọc source-lock.json (project > harness)
-   → Validate JSON theo schema
-   → Parse repository, commitSha, templatePath
-
-3. Materialize pinned revision
-   → Nếu cache hit (.agent/source-lock-cache/<hash>/):
-       Verify integrity (hash tree)
-   → Nếu cache miss:
-       Cần AllowNetwork hoặc LocalRepoOverride
-       Clone/fetch repo → checkout exact SHA
-       Compute tree hash → so sánh với integrity
-       Copy template path vào cache
-   → Nếu materialize thất bại: dừng parity claims
-
-4. Expose module (optional)
-   → Nếu có chỉ định module:
-       Chỉ copy module path + dependencies
-   → Nếu không: chỉ ghi lại source info, không copy
-
-5. Record in plan/evidence
-   → Ghi source revision, paths, verification state
-   → Evidence file tại .agent/source-lock-cache/<hash>/_metadata.json
-
-6. Detect drift
-   → Nếu HEAD ≠ commitSha: cảnh báo stale
-   → Nếu local template khác cache: cảnh báo drift
-
-7. Clean (optional)
-   → -Clean flag: xoá cache entry
+```text
+node automation/validate-5fedu-domain-pack.mjs --require-source
 ```
 
-## Context-saving behavior
-
-- Source-lock file (JSON) là contract nhỏ (~1KB), check-in được
-- Cache tại `.agent/source-lock-cache/` isolated per-project, gitignored
-- Chỉ module cần thiết và direct dependencies được materialize
-- Không auto-load template vào context window
-- Agent chỉ đọc source-lock.json + materialized module paths
-
-## Security và ownership
-
-- Template source không thể overwrite project files
-- Mọi network operation cần `-AllowNetwork` flag (opt-in)
-- Integrity hash verify tính toàn vẹn của materialized tree
-- Cache ownership: project `.agent/` directory
-- Dependencies (git, network) phải được xác nhận trước
-- Cache invalidation: `-Clean` flag hoặc stale hash
-
-## Commands
+The legacy PowerShell materializer remains for Git-based source-locks. When the lock is `bundled-snapshot`, it only validates and returns the central reference path; it never creates a project-local source cache.
 
 ```powershell
-# Validate source-lock
-automation/14-materialize-template-source.ps1 -ProjectRoot <path> -ValidateOnly
-
-# Materialize (dry run)
-automation/14-materialize-template-source.ps1 -ProjectRoot <path> -DryRun
-
-# Materialize with network fetch
-automation/14-materialize-template-source.ps1 -ProjectRoot <path> -AllowNetwork
-
-# Materialize specific module only
-automation/14-materialize-template-source.ps1 -ProjectRoot <path> -Module nhan-vien -AllowNetwork
-
-# Materialize from local repo (no network)
-automation/14-materialize-template-source.ps1 -ProjectRoot <path> -LocalRepoOverride <path> -Module nhan-vien
-
-# Clean cache
-automation/14-materialize-template-source.ps1 -ProjectRoot <path> -Clean
-
-# Doctor check
-automation/doctor-5fedu-source-lock.ps1 -ProjectRoot <path>
+automation/14-materialize-template-source.ps1 -ProjectRoot <project>
 ```
 
-## Source-lock lifecycle
+## External Git source-locks
 
-| State | Ý nghĩa | Hành động |
-|---|---|---|
-| `unverified` | Chưa verify | Chạy `-ValidateOnly` để compute hash từ cache |
-| `verified` | Cache matches lock | OK để materialize |
-| `stale` | Cache không match lock | Chạy `-AllowNetwork` để re-fetch hoặc `-Clean` |
-
-Source-lock ở trạng thái `stale` hoặc `unverified` → agent không được parity claim.
+Other/private revisions may still use `sourceKind: "git"` with an exact 40-character commit SHA and deterministic integrity digest. Network fetch remains opt-in. Unverified or stale Git receipts may support planning, but implementation/parity remains BLOCKED until verified.

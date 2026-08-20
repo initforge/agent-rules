@@ -28,11 +28,11 @@ $RequiredV2 = @(
   "permissions", "install", "nativeHosts", "fallback", "deprecatedAliases"
 )
 $Policies = @("required", "recommended", "optional")
-$Kinds = @("mcp", "tool", "adapter", "native")
+$Kinds = @("mcp", "tool", "adapter", "native", "cli-tool")
 $TokenClasses = @("low", "medium", "high")
 $TrustStatuses = @("advisory-only", "declared", "adapter-verified", "native-live")
-$SourceTypes = @("github", "npm", "git", "local")
-$InstallTypes = @("binary", "npm-global", "npm-npx", "npx-github", "git", "local")
+$SourceTypes = @("github", "npm", "git", "local", "rust-cargo")
+$InstallTypes = @("binary", "npm-global", "npm-npx", "npx-github", "git", "local", "shell", "cargo")
 # Derived from platform-contracts.json rather than hardcoded: a hardcoded list silently
 # omitted "claude" while both the contracts file and registry.json declared it, so every
 # registry validation failed on a correct registry.

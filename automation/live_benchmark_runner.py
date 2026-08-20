@@ -26,10 +26,13 @@ from live_workspace_verifier import DEFAULT_FIXTURES, initialize_git, verify
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_RUNTIME = ROOT / ".agent" / "benchmarks" / "runtime"
-DEFAULT_RUNS = ROOT / ".agent" / "benchmarks" / "runs"
-DEFAULT_RESULTS = ROOT / ".agent" / "benchmarks" / "results" / "live-results.jsonl"
-BENCHMARK_ARTIFACT_ROOT = ROOT / ".agent" / "benchmarks"
+# Benchmark output is scratch evidence, not an active plan artifact. Keep it
+# below .agent/tmp so the durable .agent protocol cannot mistake a run for a
+# canonical plan/ledger entry.
+DEFAULT_RUNTIME = ROOT / ".agent" / "tmp" / "benchmarks" / "runtime"
+DEFAULT_RUNS = ROOT / ".agent" / "tmp" / "benchmarks" / "runs"
+DEFAULT_RESULTS = ROOT / ".agent" / "tmp" / "benchmarks" / "results" / "live-results.jsonl"
+BENCHMARK_ARTIFACT_ROOT = ROOT / ".agent" / "tmp" / "benchmarks"
 MODEL_POLICY = ROOT / "automation" / "model-policy.json"
 
 

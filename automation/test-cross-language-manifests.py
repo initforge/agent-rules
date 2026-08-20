@@ -58,7 +58,7 @@ def test_integration_manifests_match_registry() -> None:
             continue
         
         # Convert to manifest path
-        manifest_rel = install_path.replace("/install.ps1", "/manifest.json").replace("\\install.ps1", "\\manifest.json")
+        manifest_rel = (install_path.replace('/install.ps1', '/manifest.json').replace('\\install.ps1', '\\manifest.json').replace('/install.sh', '/manifest.json').replace('\\install.sh', '\\manifest.json'))
         manifest_path = ROOT / manifest_rel
         
         if not manifest_path.is_file():
@@ -152,7 +152,27 @@ def test_platform_contracts_schema_compliance() -> None:
     
     contracts = json.loads(contracts_path.read_text(encoding="utf-8"))
     schema = json.loads(schema_path.read_text(encoding="utf-8"))
-    
+
+    # This test used to claim schema compliance while only duplicating a subset
+    # of the schema by hand. Validate the canonical document with the declared
+    # JSON Schema draft first, then keep semantic checks below for clearer
+    # failure messages and cross-language invariants.
+    try:
+        from jsonschema import Draft202012Validator, FormatChecker
+    except ImportError as exc:
+        fail(f"jsonschema is required for platform contract validation: {exc}")
+        return
+
+    validator = Draft202012Validator(schema, format_checker=FormatChecker())
+    schema_errors = sorted(validator.iter_errors(contracts), key=lambda error: list(error.path))
+    if schema_errors:
+        for error in schema_errors[:20]:
+            location = ".".join(str(part) for part in error.absolute_path) or "<root>"
+            fail(f"platform-contracts schema violation at {location}: {error.message}")
+        if len(schema_errors) > 20:
+            fail(f"platform-contracts has {len(schema_errors) - 20} additional schema violations")
+        return
+
     # Check version
     if contracts.get("version") != 1:
         fail(f"platform-contracts version must be 1, got {contracts.get('version')}")
@@ -164,7 +184,7 @@ def test_platform_contracts_schema_compliance() -> None:
         fail(f"platform-contracts missing keys: {required_keys - actual_keys}")
     
     # Check platforms
-    required_platforms = {"codex", "claude", "grok", "opencode", "antigravity", "cursor"}
+    required_platforms = {"codex", "claude", "grok", "opencode", "antigravity", "cursor", "mimocode"}
     actual_platforms = set(contracts.get("platforms", {}).keys())
     if actual_platforms != required_platforms:
         fail(f"platforms mismatch: missing {required_platforms - actual_platforms}, extra {actual_platforms - required_platforms}")
@@ -175,8 +195,27 @@ def test_platform_contracts_schema_compliance() -> None:
         actual_sections = set(platform_data.keys())
         if actual_sections != required_sections:
             fail(f"platform {platform_name} missing sections: {required_sections - actual_sections}")
-    
-    ok("platform contracts comply with schema")
+        orchestration_keys = {"native_spawn_tool", "agent_discovery", "model_attestation", "permission_capability", "isolation_capability", "agent_materialization"}
+        actual_orchestration = set(platform_data.get("orchestration", {}).keys())
+        if actual_orchestration != orchestration_keys:
+            fail(f"platform {platform_name} orchestration keys mismatch: missing {orchestration_keys - actual_orchestration}, extra {actual_orchestration - orchestration_keys}")
+
+        materialization = platform_data.get("orchestration", {}).get("agent_materialization")
+        if materialization == "managed_directory":
+            agents_dir = ROOT / "platforms" / platform_name / "agents"
+            if not agents_dir.is_dir():
+                fail(f"platform {platform_name}: managed_directory requires platforms/{platform_name}/agents")
+            else:
+                agent_files = [
+                    path for path in agents_dir.rglob("*")
+                    if path.is_file() and path.name.lower() != "readme.md"
+                ]
+                if not agent_files:
+                    fail(f"platform {platform_name}: managed_directory contains no agent definitions")
+        elif materialization != "host_native":
+            fail(f"platform {platform_name}: unknown agent_materialization {materialization!r}")
+
+    ok("platform contracts comply with JSON Schema and materialization invariants")
 
 
 def test_source_integrity_completeness() -> None:
@@ -290,7 +329,7 @@ def test_adapter_consistency() -> None:
         if not install_path:
             continue
         
-        integ_dir = ROOT / install_path.replace("/install.ps1", "").replace("\\install.ps1", "")
+        integ_dir = ROOT / install_path.replace('/install.ps1', '').replace('\\install.ps1', '').replace('/install.sh', '').replace('\\install.sh', '')
         adapters_dir = integ_dir / "adapters"
         
         if not adapters_dir.is_dir():
@@ -298,7 +337,7 @@ def test_adapter_consistency() -> None:
             continue
         
         # Check each platform has an adapter
-        expected_adapters = ["codex.toml", "opencode.json", "grok.json", "cursor.json", "antigravity.json"]
+        expected_adapters = ["codex.toml", "claude.json", "opencode.json", "grok.json", "cursor.json", "antigravity.json", "mimocode.json"]
         native_hosts = integ.get("nativeHosts", [])
         
         for adapter in expected_adapters:

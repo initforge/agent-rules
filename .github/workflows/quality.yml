@@ -27,6 +27,17 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Preserve canonical LF bytes (Windows)
+        if: matrix.host == 'windows'
+        shell: pwsh
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+          # Force the index blobs back into the worktree after changing the
+          # conversion policy; a normal checkout can leave already-materialized
+          # CRLF files untouched when Git considers them clean.
+          git checkout-index --force --all
+          git ls-files --eol .agent/current.json .agent/ledger/v3-decision-fabric.json .agent/plans/v3-decision-fabric/original.md
       - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
         with:
           node-version: lts/*
@@ -59,7 +70,7 @@ jobs:
       - name: Wait for Control Plane
         run: npx wait-on http://127.0.0.1:3099/api/health
       - name: Run C4 integration tests
-        run: node automation/run-governed-vitest.mjs --project-root . --cwd packages/control-plane --mode focused -- run packages/control-plane/tests/c4.test.ts
+        run: node automation/run-governed-vitest.mjs --project-root . --cwd packages/control-plane --mode focused -- run tests/c4.test.ts
         env:
           CI: 'true'
       - name: Cleanup Control Plane
@@ -79,9 +90,11 @@ jobs:
           python-version: '3.11'
       - run: npm ci
       # The tsx CLI entrypoint eagerly imports the engine package, whose
-      # workspace export points at packages/engine/dist. Build only that
-      # dependency here instead of repeating the root build from quality.
-      - name: Build context graph dependency
+      # workspace export points at packages/engine/dist. Build its workspace
+      # dependency chain here instead of repeating the root build from quality.
+      - name: Build context graph kernel dependency
+        run: npm run build -w packages/kernel
+      - name: Build context graph engine dependency
         run: npm run build -w packages/engine
       - name: Generate context graph
         run: npx tsx packages/cli/src/index.ts context-graph build

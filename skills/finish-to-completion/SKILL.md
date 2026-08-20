@@ -1,7 +1,8 @@
 ---
 name: finish-to-completion
-description: Use after an explicit execute pivot for a clear task or executable plan. Complete feasible in-scope work, verify claims with fresh evidence, and continue independent work around genuine blockers. Do not use for plan-only, pure Q&A, or an unbounded multi-part request that first needs plan-and-handoff.
-routing: {"signals":["làm đi","implement","fix","refactor","migrate","hoàn thành","execute"],"intent_signals":["execution"],"excludes":["plan-only","pure q&a"],"priority":10,"loads":["skill:finish-to-completion","adaptive-work-protocol"],"supports":["implementation-discovery","quality"],"project_scope":"","platform_scope":"all","max_route_tokens":1500,"default":false}
+description: Use after an explicit execute pivot for a clear task or executable plan. Complete feasible in-scope work, verify
+  claims with fresh evidence, and continue independent work around genuine blockers. Do not use for plan-only, pure Q&A, or
+  an unbounded multi-part request that first needs plan-and-handoff.
 ---
 
 # Finish To Completion

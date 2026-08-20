@@ -29,6 +29,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@initforge/agent-rules-engine': resolve(__dirname, 'packages/engine/dist'),
+      '@initforge/agent-rules-kernel': resolve(__dirname, 'packages/kernel/dist'),
     },
   },
 });

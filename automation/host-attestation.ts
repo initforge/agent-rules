@@ -690,7 +690,7 @@ async function childFiles(directory: string, predicate: (name: string) => boolea
 }
 
 /**
- * Audit-confirmed npm bundle layout from evals/m11/attestation.py.
+ * Audit-confirmed npm bundle layout from the host-attestation contract.
  * Pattern: HOME/.codex-cli-npm/lib/node_modules/@openai/codex/node_modules/@openai/codex-PLATFORM/vendor/TRIPLET/bin/codex
  * Scans for platform-prefixed codex packages, then vendor subdirs, then bin/ executable.
  */

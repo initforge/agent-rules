@@ -6,7 +6,6 @@
 | Slug | Khi nào | Status |
 |---|---|---|
 | `plan-and-handoff` | Executable plan, automatic handoff, adaptive economy/standard/expert routing | active |
-| `implementation-discovery` | Verify gate — read-only in plan-only modes; known-unknowns lúc implement | DEPRECATED |
 | `finish-to-completion` | Execution mode only — implement locked slice | active |
 | `quality` | Code quality gate + maintainability review (merged clean-code + code-review) | active |
 | `researcher` | Cần research trước khi code | active |
@@ -17,12 +16,30 @@
 | `master-image-generation` | Mockup / image-to-code | active |
 | `qa-skills` | Não QA — map `petrkindlmann/qa-skills`; combo với `browser-qa` | active |
 | `parity-verification` | Visual, responsive, behavioral parity across dimensions; claim-based proof loop | active |
-| `browser-qa` | Mắt+tay coding agent (Chrome DevTools / Playwright MCP) | active |
+| `browser-qa` | Mắt+tay coding agent (Playwright CLI default; MCP/DevTools on demand) | active |
 
-Deprecated skills (retained for reference only):
+| `verification-router` | Claim/risk-based verifier selection, evidence profiles, and deterministic replay | active |
+
+Archived/deprecated skills live under `docs/history/skills/` and are not routable.
+
+Deprecated skills retained only as history:
 | `clean-code` | Merged into `quality` | DEPRECATED |
 | `code-review` | Merged into `quality` | DEPRECATED |
 
-Mỗi skill: một thư mục `SKILL.md` + references/scripts tùy nhu cầu.
+Mỗi skill: `SKILL.md` portable theo Agent Skills + `ROUTE.json` dành riêng cho deterministic agent-rules routing; references/scripts chỉ nạp theo nhu cầu.
 
-Profile skills (e.g. `5fedu-project`, `5fedu-module-parity`) live under `profiles/<name>/skills/` and are installed via `profiles\install-profile.ps1 -Name <name>`. They are not listed in the main table above.
+`skills/catalog.json` là ownership/disposition matrix cho 14 core skills và 2
+profile skills. Nó không phải prompt context hay provider registry: nội dung skill
+vẫn canonical ở `SKILL.md`, routing ở `ROUTE.json`, còn catalog chỉ ghi owner,
+consumer, overlap, migration/disposition và removal gate. Catalog phải pass
+`automation/validate-skill-catalog.py` trước khi certification.
+
+`skills/candidate-fabric.json` là inventory planning tách riêng cho chín
+candidate composable của AM-010: frontend design contract, mobile, backend,
+database, migration, infra/DevOps, security, claim-based testing và
+external-skill governance. Mỗi candidate có owner, activation bằng facts,
+inputs/outputs, capability, eval và removal path. Chúng chưa phải skill đã
+cài, không vào generated graph và không được kích hoạt chỉ bởi keyword. Data
+Engineering vẫn nằm ngoài scope đã duyệt.
+
+Profile skills (e.g. `5fedu-project`, `5fedu-module-parity`) live centrally under `profiles/<name>/skills/`. Project/domain packs are explicitly activated; target projects do not need to vendor the skill/template source.

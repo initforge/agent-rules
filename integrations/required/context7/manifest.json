@@ -1,9 +1,0 @@
-{
-  "name": "context7",
-  "capability": "research-context",
-  "upstream": "https://github.com/upstash/context7-mcp",
-  "package": "@upstash/context7-mcp",
-  "versionPolicy": "latest",
-  "installType": "npm-npx",
-  "healthCheck": "npx -y @upstash/context7-mcp --help"
-}

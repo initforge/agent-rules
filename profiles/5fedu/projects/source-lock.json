@@ -1,55 +1,98 @@
 {
   "version": 1,
   "sourceLock": {
+    "sourceKind": "bundled-snapshot",
     "repository": "https://github.com/admin5fedu/5f-template-ket-noi-supabase",
-    "commitSha": "0000000000000000000000000000000000000000",
+    "commitSha": null,
     "templatePath": ".",
+    "referencePath": "reference-source/template",
+    "manifestPath": "reference-source/source-manifest.json",
     "integrity": {
       "algorithm": "sha256",
-      "hash": ""
+      "hash": "1e5ca0259db84c129b1d041ff6e34c997db18b2e0e871bcc08c318ae662df3e4"
     },
-    "profileCompatibility": ["default", "tah-app", "nostime"],
+    "artifactIntegrity": {
+      "algorithm": "sha256",
+      "hash": "d0c004b0181f609050630520210914e45e8a966687e3c158c190cb1690647d8b"
+    },
+    "profileCompatibility": [
+      "default",
+      "tah-app",
+      "nostime"
+    ],
     "moduleIndex": {
       "nhan-vien": {
         "name": "Nhân viên",
         "path": "features/he-thong/nhan-vien/",
-        "dependencies": ["shared-components", "shared-hooks"],
-        "surfaces": ["crud-list", "form-drawer", "detail-drawer", "row-actions", "stats-tab"],
+        "dependencies": [
+          "shared-components",
+          "shared-hooks"
+        ],
+        "surfaces": [
+          "crud-list",
+          "form-drawer",
+          "detail-drawer",
+          "row-actions",
+          "stats-tab"
+        ],
         "type": "module"
       },
       "phong-ban": {
         "name": "Phòng ban",
         "path": "features/he-thong/phong-ban/",
-        "dependencies": ["shared-components", "shared-hooks"],
-        "surfaces": ["hierarchy-list", "embedded-child-grid", "detail-drawer"],
+        "dependencies": [
+          "shared-components",
+          "shared-hooks"
+        ],
+        "surfaces": [
+          "hierarchy-list",
+          "embedded-child-grid",
+          "detail-drawer"
+        ],
         "type": "module"
       },
       "chuc-vu": {
         "name": "Chức vụ",
         "path": "features/he-thong/chuc-vu/",
-        "dependencies": ["shared-components", "shared-hooks"],
-        "surfaces": ["entity-in-tree"],
+        "dependencies": [
+          "shared-components",
+          "shared-hooks"
+        ],
+        "surfaces": [
+          "entity-in-tree"
+        ],
         "type": "module"
       },
       "phan-quyen": {
         "name": "Phân quyền",
         "path": "features/he-thong/phan-quyen/",
-        "dependencies": ["shared-components"],
-        "surfaces": ["permission-matrix"],
+        "dependencies": [
+          "shared-components"
+        ],
+        "surfaces": [
+          "permission-matrix"
+        ],
         "type": "module"
       },
       "thong-tin-cong-ty": {
         "name": "Thông tin công ty",
         "path": "features/he-thong/thong-tin-cong-ty/",
-        "dependencies": ["shared-components"],
-        "surfaces": ["single-record-settings"],
+        "dependencies": [
+          "shared-components"
+        ],
+        "surfaces": [
+          "single-record-settings"
+        ],
         "type": "module"
       },
       "shared-components": {
         "name": "Shared Components",
         "path": "components/shared/",
         "dependencies": [],
-        "surfaces": ["export-dialog", "route-breadcrumb"],
+        "surfaces": [
+          "export-dialog",
+          "route-breadcrumb"
+        ],
         "type": "shared"
       },
       "shared-hooks": {
@@ -62,8 +105,13 @@
       "dashboard": {
         "name": "Dashboard",
         "path": "components/dashboard/",
-        "dependencies": ["shared-components"],
-        "surfaces": ["home-dashboard", "subsystem-dashboard-navigation"],
+        "dependencies": [
+          "shared-components"
+        ],
+        "surfaces": [
+          "home-dashboard",
+          "subsystem-dashboard-navigation"
+        ],
         "type": "shared"
       },
       "lib-utils": {
@@ -74,8 +122,8 @@
         "type": "utility"
       }
     },
-    "lastVerified": "",
-    "verificationState": "unverified",
-    "notes": "Default harness source-lock for 5f-template-ket-noi-supabase. Update commitSha and integrity hash after installing by running: automation/14-materialize-template-source.ps1 -ProjectRoot <project> -AllowNetwork -ValidateOnly"
+    "lastVerified": "2026-08-08T02:06:40Z",
+    "verificationState": "verified",
+    "notes": "Verified from the owner-supplied RAR snapshot embedded once inside agent-rules. Target projects bind to this harness reference; the reference source is not copied into target projects."
   }
 }

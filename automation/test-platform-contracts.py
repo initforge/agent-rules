@@ -9,12 +9,14 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from jsonschema import Draft202012Validator, FormatChecker
+
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "platforms" / "platform-contracts.json"
 SCHEMA = ROOT / "automation" / "platform-contracts.schema.json"
 PLATFORMS = ("codex", "claude", "grok", "opencode", "antigravity")
-DEFERRED = ("cursor",)
+DEFERRED = ("cursor", "mimocode")
 RENDERED_PLATFORMS = PLATFORMS + DEFERRED
 INVARIANTS = {
     "activation", "context_delivery", "orchestration", "role_permissions", "model_effort", "mcp_integration"
@@ -23,7 +25,7 @@ SECTIONS = {
     "runtime": {"home_env", "home_default", "global_entrypoint"},
     "bootstrap": {"strategy", "entrypoint", "restart_action"},
     "routing": {"hook_lifecycle", "context_delivery"},
-    "orchestration": {"native_spawn_tool", "agent_discovery", "model_attestation", "permission_capability", "isolation_capability"},
+    "orchestration": {"native_spawn_tool", "agent_discovery", "model_attestation", "permission_capability", "isolation_capability", "agent_materialization"},
     "mcp": {"config_path", "format", "native_inspect", "live_doctor"},
 }
 
@@ -42,6 +44,16 @@ def exact_mapping(value: object, expected: set[str], label: str) -> dict[str, ob
 def validate(contract: dict[str, object], schema: dict[str, object]) -> None:
     if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
         fail("schema must use JSON Schema draft 2020-12")
+    errors = sorted(
+        Draft202012Validator(schema, format_checker=FormatChecker()).iter_errors(contract),
+        key=lambda error: list(error.path),
+    )
+    if errors:
+        rendered = [];
+        for error in errors[:20]:
+            location = ".".join(str(part) for part in error.absolute_path) or "<root>"
+            rendered.append(f"{location}: {error.message}")
+        fail("JSON Schema validation failed: " + "; ".join(rendered))
     exact_mapping(contract, {"version", "parity_contract", "platforms"}, "contract")
     if contract["version"] != 1:
         fail("contract version must be 1")
@@ -73,6 +85,17 @@ def validate(contract: dict[str, object], schema: dict[str, object]) -> None:
         fail("Antigravity contract must declare PreInvocation context injection")
     if platforms["cursor"]["orchestration"]["model_attestation"] != "deferred_host_attestation":
         fail("Cursor must remain an explicit deferred supported target")
+    expected_materialization = {name: ("host_native" if name == "mimocode" else "managed_directory") for name in RENDERED_PLATFORMS}
+    actual_materialization = {name: platforms[name]["orchestration"]["agent_materialization"] for name in RENDERED_PLATFORMS}
+    if actual_materialization != expected_materialization:
+        fail(f"agent materialization contract drift: {actual_materialization}")
+    for name, materialization in actual_materialization.items():
+        if materialization != "managed_directory":
+            continue
+        agents_dir = ROOT / "platforms" / name / "agents"
+        definitions = [path for path in agents_dir.rglob("*") if path.is_file() and path.name.lower() != "readme.md"] if agents_dir.is_dir() else []
+        if not definitions:
+            fail(f"managed platform {name} has no materializable agent definitions")
 
 
 def verify_negative_cases(contract: dict[str, object], schema: dict[str, object]) -> None:

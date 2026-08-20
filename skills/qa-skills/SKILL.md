@@ -1,13 +1,12 @@
 ---
 name: qa-skills
-description: >
-  QA brain — exploratory matrix, edge/permission/state, severity, bug reports.
-  Upstream map: petrkindlmann/qa-skills. Use when: QA checklist, exploratory, edge-case,
-  test như QA, manual cases, bug triage, ngóc ngách, permission matrix, verify UI plan,
-  release readiness smoke plan, regression plan, test strategy UI. Combo hands: browser-qa
-  (Playwright MCP + Chrome DevTools). Do NOT pure unit/API-only; not 5fedu module build
-  (5fedu-module-parity first).
-routing: {"signals":["QA checklist","exploratory","edge-case","test như QA","manual cases","bug triage","permission matrix","release readiness","regression plan","test strategy UI"],"intent_signals":["qa"],"excludes":["pure unit/api only"],"priority":60,"loads":["skill:qa-skills"],"supports":["browser-qa","5fedu-module-parity"],"project_scope":"","platform_scope":"all","max_route_tokens":3000,"default":false}
+description: 'QA brain — exploratory matrix, edge/permission/state, severity, bug reports. Upstream map: petrkindlmann/qa-skills.
+  Use when: QA checklist, exploratory, edge-case, test như QA, manual cases, bug triage, ngóc ngách, permission matrix, verify
+  UI plan, release readiness smoke plan, regression plan, test strategy UI. Combo hands: browser-qa (Playwright CLI by default;
+  MCP/DevTools only when exploration or diagnostics require them). Do NOT pure unit/API-only; not 5fedu module build (5fedu-module-parity
+  first).
+
+  '
 ---
 
 # QA Skills
@@ -19,7 +18,7 @@ routing: {"signals":["QA checklist","exploratory","edge-case","test như QA","ma
 | Vai | Skill |
 |---|---|
 | **Não** | `qa-skills` (this) |
-| **Mắt + tay** | `browser-qa` → Playwright MCP + Chrome DevTools MCP |
+| **Mắt + tay** | `browser-qa` → Playwright CLI default; MCP/DevTools on demand |
 
 Deep/manual/UI verify → **bắt buộc load cả 2**: `qa-skills` + `browser-qa` (não + mắt/tay). Không chỉ một skill.
 
@@ -34,7 +33,7 @@ Deep/manual/UI verify → **bắt buộc load cả 2**: `qa-skills` + `browser-q
 
 1. Scope flows/roles.
 2. Matrix: [`references/methodology.md`](references/methodology.md).
-3. Run: **`browser-qa`** (dual MCP).
+3. Run: **`browser-qa`** (Playwright CLI default; MCP/DevTools on demand).
 4. Findings + evidence.
 
 ## Phrase bank
@@ -44,4 +43,4 @@ QA checklist, exploratory, edge case, test như QA, manual test, ngóc ngách, v
 ## Related
 
 - `browser-qa`
-- Integrations: `playwright-mcp`, `chrome-devtools-mcp`
+- Providers: `playwright-cli` default; `playwright-mcp` exploratory; `chrome-devtools-mcp` diagnostics

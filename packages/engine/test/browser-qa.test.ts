@@ -22,6 +22,15 @@ let browserErrors: string[] = [];
 const SERVER_STARTUP_TIMEOUT_MS = 30_000;
 const SERVER_SHUTDOWN_TIMEOUT_MS = 5_000;
 
+const isChromiumAvailable = (() => {
+  try {
+    const binPath = chromium.executablePath();
+    return binPath && existsSync(binPath);
+  } catch {
+    return false;
+  }
+})();
+
 async function unusedLoopbackPort(): Promise<number> {
   const socket = createServer();
   await new Promise<void>((resolve, reject) => socket.once('error', reject).listen(0, '127.0.0.1', resolve));
@@ -54,7 +63,11 @@ async function stopServer(): Promise<void> {
 
   const signalProcessGroup = (signal: NodeJS.Signals) => {
     if (process.platform === 'win32' && proc.pid) {
-      execSync(`taskkill /pid ${proc.pid} /T ${signal === 'SIGKILL' ? '/F' : ''}`, { stdio: 'ignore' });
+      try {
+        execSync(`taskkill /pid ${proc.pid} /T ${signal === 'SIGKILL' ? '/F' : ''}`, { stdio: 'ignore' });
+      } catch {
+        // Ignore taskkill errors (e.g. process already exited)
+      }
       return;
     }
     if (proc.pid) {
@@ -194,14 +207,20 @@ function trackBrowserErrors(trackedPage: Page): void {
 
 beforeAll(async () => {
   await ensureServer();
-  browser = await chromium.launch({ headless: true });
-  context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-  context.on('page', trackBrowserErrors);
-  page = await context.newPage();
+  if (isChromiumAvailable) {
+    browser = await chromium.launch({ headless: true });
+    context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    context.on('page', trackBrowserErrors);
+    page = await context.newPage();
+  }
 }, 60000);
 
 beforeEach(async () => {
   browserErrors = [];
+  // Clear route mocks from previous test to prevent accumulation
+  if (isChromiumAvailable && page) {
+    await page.unrouteAll({ behavior: 'ignoreErrors' }).catch(() => {});
+  }
   if (!serverProc || serverProc.exitCode !== null || !(await isServerUp())) {
     throw new Error(`owned control-plane server disappeared before test:\n${serverLog}`);
   }
@@ -213,8 +232,10 @@ afterEach(() => {
 
 afterAll(async () => {
   try {
-    await context?.close();
-    await browser?.close();
+    if (isChromiumAvailable) {
+      await context?.close();
+      await browser?.close();
+    }
   } finally {
     await stopServer();
   }
@@ -260,7 +281,7 @@ describe('owned server lifecycle', () => {
   });
 });
 
-describe('browser error tracking', () => {
+describe.skipIf(!isChromiumAvailable)('browser error tracking', () => {
   it('captures uncaught page errors from every context page', async () => {
     const errorContext = await browser.newContext();
     errorContext.on('page', trackBrowserErrors);
@@ -274,7 +295,7 @@ describe('browser error tracking', () => {
   });
 });
 
-describe('WCAG & Accessibility (Playwright)', () => {
+describe.skipIf(!isChromiumAvailable)('WCAG & Accessibility (Playwright)', () => {
 
   describe('Homepage axe scan', () => {
     it('loads homepage with no critical/serious axe violations', async () => {
@@ -671,7 +692,7 @@ describe('WCAG & Accessibility (Playwright)', () => {
   }
 });
 
-describe('404 handling', () => {
+describe.skipIf(!isChromiumAvailable)('404 handling', () => {
   it('non-existent route shows NotFound content', async () => {
     const consoleErrors: string[] = [];
     page.on('console', msg => { if (msg.type() === 'error') consoleErrors.push(msg.text()); });
@@ -692,7 +713,7 @@ describe('404 handling', () => {
   });
 });
 
-describe('Focus-visible', () => {
+describe.skipIf(!isChromiumAvailable)('Focus-visible', () => {
     it('all interactive elements have visible focus indicator (outline or ring)', async () => {
       await page.setViewportSize({ width: 1280, height: 800 });
       await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });

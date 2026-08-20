@@ -1,10 +1,14 @@
 import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
-import { getRepoRoot } from "../adapters/powershell.js";
+import { getRepoRoot } from "../adapters/repo.js";
 import fs from "node:fs/promises";
 import * as crypto from "node:crypto";
 import path from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { buildContextGraph } from "../services/context-graph.js";
 import { resolveOpenCodeModel, buildOpenCodeArtifact } from "../runtime/opencode.js";
+
+const execFileAsync = promisify(execFile);
 
 interface BuildManifest {
   version: number;
@@ -91,6 +95,17 @@ export async function writeContextGraph(root: string, outputPath: string): Promi
   await fs.writeFile(outputPath, JSON.stringify(graph, null, 2) + "\n", "utf-8");
 }
 
+async function writeRepoFacts(root: string, outputPath: string): Promise<void> {
+  const detector = path.join(root, "automation", "detect-stack-facts.mjs");
+  const { stdout } = await execFileAsync(process.execPath, [detector, "--root", root], { maxBuffer: 16 * 1024 * 1024 });
+  const facts = JSON.parse(stdout) as { schema?: string; version?: number; facts?: unknown[] };
+  if (facts.schema !== "harness/repo-facts/v1" || facts.version !== 1 || !Array.isArray(facts.facts)) {
+    throw new Error("repo facts detector returned an invalid artifact");
+  }
+  await fs.mkdir(path.dirname(outputPath), { recursive: true });
+  await fs.writeFile(outputPath, JSON.stringify(facts, null, 2) + "\n", "utf8");
+}
+
 async function replaceTokensInDir(
   dir: string,
   tokens: Record<string, string>
@@ -114,8 +129,15 @@ export async function build(
 ): Promise<CommandResult> {
   const root = getRepoRoot();
   const buildRoot = path.join(root, "generated", "runtime-build");
-  const platforms = ["codex", "grok", "antigravity", "cursor", "opencode"];
   const errors: string[] = [];
+  const platformContractsPath = path.join(root, "platforms", "platform-contracts.json");
+  let platformContracts: { platforms: Record<string, { orchestration: { agent_materialization: "managed_directory" | "host_native" } }> };
+  try {
+    platformContracts = JSON.parse(await fs.readFile(platformContractsPath, "utf-8"));
+  } catch {
+    return { exitCode: ExitCode.GeneralError, message: "Cannot read platform-contracts.json" };
+  }
+  const platforms = Object.keys(platformContracts.platforms);
 
   if (options.dryRun) {
     console.log(`[dry-run] Would build to ${buildRoot} for platforms: ${platforms.join(", ")}`);
@@ -135,8 +157,9 @@ export async function build(
     await fs.mkdir(graphDir, { recursive: true });
     const graphOutput = path.join(graphDir, "context-graph.json");
     await writeContextGraph(root, graphOutput);
+    await writeRepoFacts(root, path.join(root, "generated", "repo-facts.json"));
     if (options.verbose) {
-      console.log(`Context graph built: ${buildContextGraph(root).nodes.length} nodes`);
+      console.log(`Context graph and RepoFacts built: ${buildContextGraph(root).nodes.length} graph nodes`);
     }
   } catch (e) {
     errors.push(`Context graph build failed: ${e instanceof Error ? e.message : String(e)}`);
@@ -220,16 +243,30 @@ export async function build(
       await fs.copyFile(modelPolicyPath, path.join(target, "model-policy.json"));
     } catch { errors.push("Cannot copy model-policy.json"); }
 
-    // Copy platform native agent definitions
-    const agentsSrc = path.join(root, "platforms", platform, "agents");
-    const agentsDst = path.join(nativeDir, "agents");
-    try {
-      await fs.access(agentsSrc);
-      await copyDir(agentsSrc, agentsDst);
-    } catch { errors.push(`Missing agents for ${platform}`); }
-    // Remove README from native agents
-    const readmePath = path.join(agentsDst, "README.md");
-    try { await fs.rm(readmePath); } catch { /* ok */ }
+    // Materialize native agent definitions only when the canonical platform
+    // contract declares a managed directory. Host-native platforms (for
+    // example MiMoCode) keep their own agent/workflow discovery surface.
+    const materialization = platformContracts.platforms[platform]?.orchestration.agent_materialization;
+    if (materialization === "managed_directory") {
+      const agentsSrc = path.join(root, "platforms", platform, "agents");
+      const agentsDst = path.join(nativeDir, "agents");
+      try {
+        await fs.access(agentsSrc);
+        await copyDir(agentsSrc, agentsDst);
+        const readmePath = path.join(agentsDst, "README.md");
+        try { await fs.rm(readmePath); } catch { /* ok */ }
+      } catch { errors.push(`Missing managed agent definitions for ${platform}`); }
+    } else if (materialization !== "host_native") {
+      errors.push(`Unknown agent materialization policy for ${platform}: ${String(materialization)}`);
+    }
+
+    // Every runtime mirror carries the exact canonical platform contract used
+    // to build it, so Node and PowerShell builders have the same evidence.
+    await fs.writeFile(
+      path.join(target, "runtime-contract.json"),
+      JSON.stringify({ version: 1, platform, source: "platforms/platform-contracts.json", contract: platformContracts.platforms[platform] }, null, 2) + "\n",
+      "utf8"
+    );
 
     // Grok also has personas
     if (platform === "grok") {
@@ -290,6 +327,15 @@ export async function build(
     try {
       await fs.access(cgPath);
       await fs.copyFile(cgPath, path.join(target, "context-graph.json"));
+    } catch { /* ok */ }
+
+    // Copy the deterministic RepoFacts projection next to the graph. It is a
+    // cacheable observation, not a second source of truth, and lets installed
+    // runtimes use the same typed decision fabric as the source workspace.
+    const repoFactsPath = path.join(root, "generated", "repo-facts.json");
+    try {
+      await fs.access(repoFactsPath);
+      await fs.copyFile(repoFactsPath, path.join(target, "repo-facts.json"));
     } catch { /* ok */ }
 
     // Copy route contracts

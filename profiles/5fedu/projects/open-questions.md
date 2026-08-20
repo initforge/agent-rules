@@ -27,7 +27,7 @@
 
 Ngắn, đúng blocker; không hỏi lại `DA_CHOT`; không biến câu hỏi kỹ thuật thành thu hẹp scope.
 
-Blocker phát hiện **giữa implement** (must-not-self-decide) → ghi vào file này theo escape-hatch `implementation-discovery`; không hỏi lại mục đã lock-at-plan.
+Blocker phát hiện **giữa implement** (must-not-self-decide) → ghi vào file này theo engine discovery/stop-if escape hatch; không hỏi lại mục đã lock-at-plan.
 
 ## Dự án Nostime
 

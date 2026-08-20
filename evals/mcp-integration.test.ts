@@ -13,7 +13,6 @@ import path from 'node:path';
 
 const ROOT = path.resolve(__dirname, '..');
 const REGISTRY = path.join(ROOT, 'integrations', 'registry.json');
-const INTEGRATIONS_DIR = path.join(ROOT, 'integrations', 'required');
 
 const TARGET_IDS = ['playwright-mcp', 'chrome-devtools-mcp'] as const;
 type TargetId = typeof TARGET_IDS[number];
@@ -47,10 +46,10 @@ function parseToml(raw: string): Record<string, string | string[]> {
 }
 
 describe('MCP integration candidate 057880a5+a91ceb8 — static tests', () => {
-  let registry: { integrations: Array<{ id: string }> };
+  let registry: { integrations: Array<Record<string, unknown>> };
 
   beforeAll(() => {
-    registry = readJson(REGISTRY) as { integrations: Array<{ id: string }> };
+    registry = readJson(REGISTRY) as { integrations: Array<Record<string, unknown>> };
   });
 
   for (const id of TARGET_IDS) {
@@ -61,13 +60,13 @@ describe('MCP integration candidate 057880a5+a91ceb8 — static tests', () => {
         expect(entries.some((e) => e.id === id)).toBe(true);
       });
 
-      it('has kind "mcp" and policy "required"', () => {
+      it('is a recommended MCP routed from the canonical registry', () => {
         const entry = registry.integrations.find((e) => e.id === id);
         expect(entry).toBeDefined();
-        // cast to access dynamic keys since registry is loosely typed
-        const entryAny = entry as Record<string, unknown>;
-        expect(entryAny.kind).toBe('mcp');
-        expect(entryAny.policy).toBe('required');
+        expect(entry?.kind).toBe('mcp');
+        expect(entry?.policy).toBe('recommended');
+        expect(entry?.activation).toBe('automatic');
+        expect(Array.isArray(entry?.capabilities)).toBe(true);
       });
 
       it('has install/uninstall/verify script paths that resolve to real files', () => {
@@ -85,17 +84,19 @@ describe('MCP integration candidate 057880a5+a91ceb8 — static tests', () => {
     });
 
     describe(`adapter parse: ${id}`, () => {
-      const adapterDir = path.join(INTEGRATIONS_DIR, id, 'adapters');
+      const entry = () => registry.integrations.find((candidate) => candidate.id === id) as Record<string, unknown>;
+      const integrationRoot = () => path.dirname(String((entry().install as Record<string, unknown>).script));
+      const adapterDir = () => path.join(ROOT, integrationRoot(), 'adapters');
 
       it('has adapters directory', () => {
-        expect(fs.existsSync(adapterDir)).toBe(true);
+        expect(fs.existsSync(adapterDir())).toBe(true);
       });
 
       it('every adapter file parses without error', () => {
-        const files = fs.readdirSync(adapterDir);
+        const files = fs.readdirSync(adapterDir());
         expect(files.length).toBeGreaterThan(0);
         for (const file of files) {
-          const fullPath = path.join(adapterDir, file);
+          const fullPath = path.join(adapterDir(), file);
           const content = readText(fullPath);
           if (file.endsWith('.json')) {
             expect(() => JSON.parse(content)).not.toThrow();
@@ -111,10 +112,10 @@ describe('MCP integration candidate 057880a5+a91ceb8 — static tests', () => {
       });
 
       it('all JSON adapters have mcpServers with non-empty args', () => {
-        const files = fs.readdirSync(adapterDir).filter((f) => f.endsWith('.json'));
+        const files = fs.readdirSync(adapterDir()).filter((f) => f.endsWith('.json'));
         for (const file of files) {
           const parsed = readJson<{ mcpServers: Record<string, { command: string; args: string[] }> }>(
-            path.join(adapterDir, file),
+            path.join(adapterDir(), file),
           );
           for (const [, server] of Object.entries(parsed.mcpServers)) {
             expect(server.command).toBeDefined();
@@ -126,19 +127,22 @@ describe('MCP integration candidate 057880a5+a91ceb8 — static tests', () => {
     });
 
     describe(`uninstall no global cache clean: ${id}`, () => {
-      const uninstallPath = path.join(INTEGRATIONS_DIR, id, 'uninstall.ps1');
+      const uninstallPath = () => {
+        const entry = registry.integrations.find((candidate) => candidate.id === id) as Record<string, unknown>;
+        return path.join(ROOT, String((entry.install as Record<string, unknown>).uninstall));
+      };
 
       it('uninstall.ps1 exists', () => {
-        expect(fs.existsSync(uninstallPath)).toBe(true);
+        expect(fs.existsSync(uninstallPath())).toBe(true);
       });
 
       it('uninstall.ps1 does not contain npm cache clean', () => {
-        const content = readText(uninstallPath);
+        const content = readText(uninstallPath());
         expect(content).not.toContain('npm cache clean');
       });
 
       it('uninstall.ps1 does not contain global cache removal', () => {
-        const content = readText(uninstallPath);
+        const content = readText(uninstallPath());
         expect(content).not.toContain('cache clean --force');
       });
     });

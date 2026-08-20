@@ -1,5 +1,21 @@
 # Control Plane Browser QA - Claim Matrix
 
+## Current run — 2026-08-10
+
+The historical Windows snapshot below is superseded for current source status.
+The clean repository `verify:all` run executed the real Playwright suite against
+the exact built control-plane artifact: 19/19 browser-QA tests passed, with no
+failed assertions. This includes landmarks, visual non-blank checks, axe
+accessibility, network/console checks, expected integrity-409 UI states,
+reduced-motion, and 200% zoom. Evidence receipt:
+`packages/control-plane/qa/browser/TEST_RECEIPT.md`.
+
+The full-suite Playwright run is automated/headless evidence. It is not a manual
+visible-browser sign-off; the harness process contract keeps those categories
+separate.
+
+## Historical snapshot — 2026-08-02
+
 **Verifier**: Read-only/browser verifier  
 **Date**: 2026-08-02  
 **Candidate**: packages/control-plane  

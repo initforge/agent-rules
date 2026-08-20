@@ -21,7 +21,7 @@ Core rules và skills **phải cùng hash** giữa Codex, Grok, Antigravity, Cur
 | Cursor | `~/.cursor` | `rules` | JSON `~/.cursor/mcp.json` | `agents/` subdirectory | IDE-native, local plugin |
 | OpenCode | `~/.config/opencode/` | `AGENTS.md` | `opencode.json` (json_mcpServers) | `agents/` subdirectory | standalone adapter, no native hooks |
 
-Adapters: `integrations/required/codebase-memory-mcp/adapters/` (Codex adapter = `codex.toml`).
+Adapters: `integrations/recommended/codebase-memory-mcp/adapters/` (Codex adapter = `codex.toml`).
 
 ## Project pointers
 

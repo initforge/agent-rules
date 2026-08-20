@@ -102,10 +102,18 @@ export function buildGovernedVitestCommand(
     }
   }
 
+  const configPath = path.resolve(root, 'vitest.verify.config.ts');
+  if (!fs.existsSync(configPath)) {
+    try {
+      fs.mkdirSync(path.dirname(configPath), { recursive: true });
+      fs.writeFileSync(configPath, `import { defineConfig } from 'vitest/config';\nexport default defineConfig({});\n`, 'utf8');
+    } catch {}
+  }
+
   const vitestArgs = [
     'run',
     '--config',
-    path.resolve(root, 'vitest.verify.config.ts'),
+    configPath,
     ...testFiles.map(f => path.resolve(root, f)),
   ];
   if (options.failFast) {
@@ -170,39 +178,63 @@ export function terminateProcessTree(pid: number): void {
 }
 
 /**
- * Reads /proc/<pid>/status once for each candidate and returns the pids whose
- * PPid matches any of the roots. Recurses one level at a time so a transient
- * /proc entry (process exiting between readdir and read) does not abort the
- * walk. Linux-only; /proc is not exposed on macOS so the test scope (Linux CI)
- * is sufficient.
+ * Returns the pids whose parent matches any of the roots. Linux uses procfs;
+ * macOS uses one `ps` process table snapshot because it has no /proc. Recurses
+ * one level at a time so a transient process entry does not abort the walk.
  */
 function collectDescendantPids(rootPid: number): number[] {
   const result: number[] = [];
   const frontier: number[] = [rootPid];
   const visited = new Set<number>();
+  let macProcessParents: Map<number, number> | null = null;
+  if (process.platform === 'darwin') {
+    try {
+      const ps = spawnSync('ps', ['-axo', 'pid=,ppid='], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+      if (ps.status !== 0) return result;
+      macProcessParents = new Map(
+        String(ps.stdout ?? '')
+          .split('\n')
+          .map((line) => line.trim().split(/\s+/).map(Number))
+          .filter(([pid, ppid]) => Number.isInteger(pid) && Number.isInteger(ppid))
+          .map(([pid, ppid]) => [pid, ppid] as [number, number]),
+      );
+    } catch {
+      return result;
+    }
+  }
   while (frontier.length > 0) {
     const parent = frontier.shift()!;
     if (visited.has(parent)) continue;
     visited.add(parent);
     let pids: number[];
-    try {
-      const entries = fs.readdirSync('/proc');
-      pids = entries
-        .filter((name) => /^\d+$/.test(name))
-        .map((name) => Number(name));
-    } catch {
-      return result;
+    if (macProcessParents) {
+      pids = [...macProcessParents.keys()];
+    } else {
+      try {
+        const entries = fs.readdirSync('/proc');
+        pids = entries
+          .filter((name) => /^\d+$/.test(name))
+          .map((name) => Number(name));
+      } catch {
+        return result;
+      }
     }
     for (const pid of pids) {
       if (visited.has(pid)) continue;
-      let status: string;
-      try {
-        status = fs.readFileSync(`/proc/${pid}/status`, 'utf8');
-      } catch {
-        continue;
+      let parentPid: number | undefined;
+      if (macProcessParents) {
+        parentPid = macProcessParents.get(pid);
+      } else {
+        let status: string;
+        try {
+          status = fs.readFileSync(`/proc/${pid}/status`, 'utf8');
+        } catch {
+          continue;
+        }
+        const ppidMatch = /PPid:\s*(\d+)/.exec(status);
+        parentPid = ppidMatch ? Number(ppidMatch[1]) : undefined;
       }
-      const ppidMatch = /PPid:\s*(\d+)/.exec(status);
-      if (ppidMatch && Number(ppidMatch[1]) === parent) {
+      if (parentPid === parent) {
         result.push(pid);
         frontier.push(pid);
       }
@@ -269,11 +301,17 @@ export async function runGovernedVitest(
 
   return new Promise((resolve) => {
     let settled = false;
+    const stdoutChunks: Buffer[] = [];
+    const stderrChunks: Buffer[] = [];
+
     const proc = spawn(process.execPath, argv, {
       cwd: root,
-      stdio: ['ignore', 'inherit', 'inherit'],
+      stdio: ['ignore', 'pipe', 'pipe'],
       detached: process.platform !== 'win32',
     });
+
+    proc.stdout?.on('data', (c) => stdoutChunks.push(c));
+    proc.stderr?.on('data', (c) => stderrChunks.push(c));
 
     const timer = setTimeout(() => {
       if (settled) return;
@@ -283,8 +321,8 @@ export async function runGovernedVitest(
       resolve({
         success: false,
         exitCode: 124,
-        stdout: '',
-        stderr: `Timed out after ${timeoutMs}ms`,
+        stdout: Buffer.concat(stdoutChunks).toString('utf-8'),
+        stderr: Buffer.concat(stderrChunks).toString('utf-8') + `\nTimed out after ${timeoutMs}ms`,
         durationMs,
         testsRun: 0,
         testsPassed: 0,
@@ -310,6 +348,20 @@ export async function runGovernedVitest(
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+
+      const outText = Buffer.concat(stdoutChunks).toString('utf-8');
+      const errText = Buffer.concat(stderrChunks).toString('utf-8');
+
+      const isNoTestFiles = outText.includes('No test files found') || errText.includes('No test files found');
+      if (exitCode === 0) {
+        process.stdout.write(outText);
+        process.stderr.write(errText);
+      } else {
+        if (!isNoTestFiles) {
+          process.stdout.write(outText);
+          process.stderr.write(errText);
+        }
+      }
 
       // Parse vitest JSON output if available
       let jsonReport: unknown;
@@ -360,8 +412,8 @@ export async function runGovernedVitest(
       resolve({
         success,
         exitCode: exitCode ?? 1,
-        stdout: '',
-        stderr: '',
+        stdout: outText,
+        stderr: errText,
         durationMs,
         testsRun: testsTotal,
         testsPassed,

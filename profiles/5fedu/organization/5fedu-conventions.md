@@ -1,50 +1,26 @@
 # 5fedu Organization Conventions
 
-**Scope:** All projects built under the 5fedu organization.  
-**Canonical source:** This file. Installer copies to project repos.  
-**Not to be confused with:** Project-specific deviations in `projects/<name>/`.
+**Scope:** Projects that explicitly activate the 5fedu domain pack.
+**Canonical source:** This harness profile plus its manifest-bound reference source.
 
-## Project structure
+## Project boundary
 
-Every 5fedu project inherits:
-- `context/5fedu/` — installed template pack (managed by `08-install-5fedu-context.ps1`)
-- `context/5fedu/project-local/` — NEVER overwritten by installer
-- Template: `5f-template-ket-noi-supabase` (React/Vite/Supabase)
+A 5fedu project does **not** need the ERP template installed in its repository. Reusable 5fedu context and reference code stay in agent-rules. The active repository remains authoritative for project-specific schema, routes, business decisions, credentials, and deviations.
+
+Legacy repositories may still contain `context/5fedu/`; that layout is compatibility-only and is not required by North-Star routing.
 
 ## Technology baseline
 
-| Component | Default | Exception mechanism |
-|---|---|---|
-| Frontend | React (Vite) + TypeScript | `projects/<name>/tech-deviations.md` |
-| UI | Tailwind + `components/ui` (shadcn-style) | Per-project |
-| Data | TanStack Query + Zustand | Per-project |
-| Forms | React Hook Form + Zod | Per-project |
-| Backend | Supabase PostgreSQL | Per-project |
-| Auth | Supabase Auth + fake-email mapping | Per-project |
-| Media | Cloudinary (when declared) | Per-project |
+The bundled reference source currently demonstrates React/Vite + TypeScript, Tailwind/shadcn-style UI, TanStack Query/Zustand, React Hook Form/Zod, and Supabase. Treat this as a source-grounded reference baseline, **not** permission to overwrite an active project's declared stack.
 
 ## Context routing policy
 
-- Organization conventions: never auto-load
-- Domain patterns: auto-load when triggered
-- Project facts: load only for matching project
-- Evidence/archive: never auto-load
-- Generated context: identifies source files + version
+- 5fedu is explicit-only; prompt wording never activates it.
+- Generic core must not import 5fedu behavior.
+- Domain behavior is loaded only for an active 5fedu scope and must point to source evidence when it claims template parity.
+- Project facts are read from the active project, not invented from the template.
+- Evidence/archive are never auto-loaded.
 
-## Sync ownership
+## Source-grounded organization rules
 
-| Layer | Canonical | Sync direction | Installer overwrites |
-|---|---|---|---|
-| Organization | agent-rules | agent-rules → project repos | Yes (template) |
-| Domains | agent-rules | agent-rules → project repos | Yes (template) |
-| Project-local | project repo | Never synced to agent-rules | Never |
-| Evidence | agent-rules | Static (no sync) | N/A |
-| Archive | agent-rules | Static (no sync) | N/A |
-
-## Unchanging org rules
-
-- `id int8` auto-increment for PKs (no UUID in app tables)
-- Fake-email auth (`ten_dang_nhap` → `<ten>@gmail.com`)
-- 6 basic permissions: Xem, Thêm, Sửa, Xóa, Quản trị, Tất cả
-- Audit columns: `id_nguoi_tao`, `tg_tao`, `tg_cap_nhat`
-- `cap_bac` hierarchy: 1=full, 2=department, 3=group, 4=self
+Rules such as identifier strategy, fake-email auth, permission vocabulary, audit columns, and hierarchy levels must be checked against the active project's spec/schema before implementation. The bundled template is an authoritative reference for template behavior, not a substitute for target-project requirements.

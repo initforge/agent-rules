@@ -267,6 +267,42 @@ describe('topology-compiler (C6, AM-0019 §8)', () => {
     const driver = makeDriver(stateDir);
     afterAll(() => { try { driver.cleanup(); } catch { /* already gone */ } });
 
+    it('cleanup terminates detached fixture processes before deleting their pid registry', { timeout: 30_000 }, () => {
+      const isolatedState = path.join(os.tmpdir(), `topology-cleanup-${process.pid}-${Date.now()}`);
+      const out = execFileSync(process.execPath, [RUNNER, 'start', isolatedState], { encoding: 'utf8', timeout: 20_000 });
+      expect(out).toContain('READY ');
+      const pidFile = path.join(isolatedState, 'pids.json');
+      const { pids } = JSON.parse(fs.readFileSync(pidFile, 'utf8')) as { pids: number[] };
+      expect(pids).toHaveLength(3);
+
+      execFileSync(process.execPath, [RUNNER, 'cleanup', isolatedState], { encoding: 'utf8', timeout: 20_000 });
+      expect(fs.existsSync(isolatedState)).toBe(false);
+      const alive = pids.filter((pid) => {
+        try { process.kill(pid, 0); return true; } catch { return false; }
+      });
+      expect(alive).toEqual([]);
+    });
+
+    it('self-terminates detached fixture processes when the owning test process disappears', { timeout: 30_000 }, async () => {
+      const isolatedState = path.join(os.tmpdir(), `topology-owner-exit-${process.pid}-${Date.now()}`);
+      const ownerScript = `const { execFileSync } = require('node:child_process'); execFileSync(process.execPath, [${JSON.stringify(RUNNER)}, 'start', ${JSON.stringify(isolatedState)}], { encoding: 'utf8', timeout: 20000 });`;
+      execFileSync(process.execPath, ['-e', ownerScript], { encoding: 'utf8', timeout: 25_000 });
+      const pidFile = path.join(isolatedState, 'pids.json');
+      const { pids } = JSON.parse(fs.readFileSync(pidFile, 'utf8')) as { pids: number[] };
+      expect(pids).toHaveLength(3);
+
+      const deadline = Date.now() + 5_000;
+      let alive = [...pids];
+      while (alive.length && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        alive = pids.filter((pid) => {
+          try { process.kill(pid, 0); return true; } catch { return false; }
+        });
+      }
+      fs.rmSync(isolatedState, { recursive: true, force: true });
+      expect(alive).toEqual([]);
+    });
+
     it('drives the fixture through the public port: health/migrations/data/async/restart/rollback/cleanup', { timeout: 60_000 }, async () => {
       const sourceSha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: path.join(import.meta.dirname, '..', '..', '..'), encoding: 'utf8' }).trim();
       const evidence = await runIngressJourney({
@@ -274,9 +310,10 @@ describe('topology-compiler (C6, AM-0019 §8)', () => {
         topologyHash: topologyHash(fixtureTopology()),
         sourceSha,
         imageDigest: `sha256:${topologyHash(fixtureTopology())}`,
+        pollTimeoutMs: 20000,
       });
 
-      expect(evidence.passed).toBe(true);
+      expect(evidence.passed, evidence.checkpoints.map((checkpoint) => `${checkpoint.name}=${checkpoint.ok}: ${checkpoint.detail}`).join(' | ')).toBe(true);
       const names = evidence.checkpoints.map((c) => c.name);
       expect(names).toEqual(['ingress-up', 'migrations-applied', 'data-written', 'async-journey', 'restart-persisted', 'rollback-reverted', 'cleanup']);
       for (const c of evidence.checkpoints) {

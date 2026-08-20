@@ -1,61 +1,59 @@
 ---
 name: browser-qa
-description: >
-  Eyes/hands UI QA via dual MCP: Playwright MCP (a11y navigate/click/assert) +
-  Chrome DevTools MCP (console/network/perf/CDP). Use when the owner asks for browser,
-  live/manual, click-through, E2E, smoke, exploratory, screenshot or console/network proof.
-  Static source/UI verification does not trigger this skill. Pair with qa-skills for matrix.
-  Do NOT use for pure unit/API without UI; not 5fedu module build (5fedu-module-parity first);
-  not Codex non-browser default unless owner explicit live/UI verify.
-routing: {"signals":["browser","live/manual","click-through","e2e","smoke","exploratory","screenshot","console/network","playwright","chrome-devtools"],"intent_signals":["browser_qa","e2e"],"excludes":["static source verification","unit/api only"],"priority":80,"loads":["skill:browser-qa"],"requires":["qa-skills"],"supports":["5fedu-module-parity"],"project_scope":"","platform_scope":"all","max_route_tokens":3500,"default":false}
+description: 'Browser QA using the smallest provider that proves the claim: Playwright Agent CLI for normal coding verification,
+  Playwright MCP for exploratory interaction, and Chrome DevTools MCP for console/network/CDP diagnostics. Use for live browser/E2E/visual
+  proof; not for pure unit/API-only work.'
 ---
-
 # Browser QA
 
-**Ý đồ:** Dual MCP — **Playwright** (hands structured) + **Chrome DevTools** (x-ray debug). Não: `qa-skills`.
+Use the smallest browser surface that proves the acceptance claim.
 
-## Combo
+Routing aliases include `qa-skills`, `chrome-devtools`, `console error`, `smoke UI`,
+and `E2E`; these terms do not change provider selection or proof requirements.
 
-| Vai | Skill / MCP |
-|---|---|
-| Não | `qa-skills` |
-| Hands navigate/click/assert | **Playwright MCP** (`playwright`) |
-| Debug network/console/perf | **Chrome DevTools MCP** (`chrome-devtools`) |
+## Provider policy
 
-Deep / exploratory / verify UI / E2E manual → **bắt buộc `qa-skills` + `browser-qa`** (não + dual MCP). Không chạy browser-qa không matrix; không qa-skills không hands.
+1. **Normal coding verification → `browser.verify` → Playwright Agent CLI.**
+   - Prefer `playwright-cli` / `npx -y @playwright/cli@0.1.18` for deterministic navigate/snapshot/click/assert/screenshot proof.
+   - It is the default coding-agent browser path because it avoids attaching a large MCP tool schema to every task.
+2. **Exploratory interaction → `browser.explore` → Playwright MCP.**
+   - Use only when the agent needs a persistent exploratory loop, rich page introspection, or interactive self-healing behavior.
+3. **Browser diagnostics → `browser.debug` → Chrome DevTools MCP.**
+   - Use for console, network, CDP, performance, or browser-runtime diagnosis.
+4. Never require all three providers for ordinary UI work. Capability routing chooses only what the TaskPacket needs.
 
-## Hard gates
+## Manual visibility contract
 
-1. Lazy — không auto unit/lint-only.
-2. Codex: browser chỉ khi owner explicit UI/live hoặc non-browser không đủ.
-3. 5fedu build: primary `5fedu-module-parity`.
-4. Evidence: steps + expect + actual + snapshot/screenshot (+ console/network khi fail).
-5. Mutate local/staging; cấm prod không phép.
+When the task explicitly requests a manual walkthrough, the browser and the
+operator-facing surface must be visible in the foreground:
 
-## Dual-MCP playbook (mạnh nhất)
+- Manual Playwright work opens a visible browser/session. A headless run is
+  automated evidence only and cannot be relabeled as manual verification.
+- Manual Chrome DevTools work opens the visible browser and DevTools surface so
+  console, network, CDP, and performance observations are inspectable by the
+  operator.
+- If the requested visible surface cannot be opened, observed, or kept bound to
+  the evidence receipt, record `BLOCKED`/`UNAVAILABLE`; never silently downgrade
+  to a hidden session and claim manual PASS.
+- CI may use a separate explicitly declared headless profile. Its result must
+  retain the execution mode and cannot satisfy a manual-visible requirement.
 
-| Bước | Playwright MCP | Chrome DevTools |
-|---|---|---|
-| Mở URL / login / click / form | **Primary** | Hỗ trợ nếu cần CDP |
-| Assert UI state / a11y tree | **Primary** | Screenshot phụ |
-| Fail: JS error, failed request | Ghi step fail | **Primary** console + network |
-| Perf / long task | — | **Primary** performance |
-| Permission multi-role | Session/context | Optional second profile |
+This contract applies to projects using the skill; it does not auto-install,
+auto-route, or make any browser provider globally mandatory.
 
-Chi tiết: [`references/runbook.md`](references/runbook.md) · dual: [`references/dual-mcp.md`](references/dual-mcp.md).
+See [`references/playwright-cli.md`](references/playwright-cli.md) for the bounded CLI workflow.
 
-## Procedure
+## Evidence ladder
 
-1. Scope URL/roles/flows.
-2. `qa-skills` → matrix.
-3. Playwright: chạy cases; DevTools: attach khi fail/ nghi ngờ network.
-4. Report findings + evidence.
+- Static/build claim → lint/typecheck/build evidence.
+- UI behavior claim → browser.verify evidence.
+- Unknown live-browser behavior → browser.explore, then convert the discovered flow into deterministic browser.verify proof where feasible.
+- Console/network/performance diagnosis → browser.debug.
+- Visual parity → screenshot/runtime evidence plus the parity verifier; browser availability alone is not parity proof.
 
-## Phrase bank
+## Hard rules
 
-browser QA, click-through, verify UI, E2E, smoke UI, exploratory, Playwright MCP, chrome-devtools, console error, network fail, test như user
-
-## Related
-
-- `qa-skills`
-- Integrations: `playwright-mcp`, `chrome-devtools-mcp`
+- Do not infer PASS from screenshots when the claim is interaction/behavior.
+- Do not use MCP merely because it is installed.
+- Keep raw traces/screenshots/logs as evidence artifacts; return concise summaries to the worker context.
+- For explicitly activated 5fedu ERP tasks, the 5fedu source/behavior map is authoritative and this skill only supplies browser proof.

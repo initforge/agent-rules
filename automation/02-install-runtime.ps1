@@ -58,6 +58,21 @@ $BuildRoot = Join-Path $Root "generated\runtime-build"
 $Registry = Get-Content -Raw (Join-Path $Root "integrations\registry.json") | ConvertFrom-Json
 $IntegrationState = @()
 $SharedIntegrations = @{}
+$IntegrationProfile = if ($env:AGENT_RULES_INTEGRATION_PROFILE) { [string]$env:AGENT_RULES_INTEGRATION_PROFILE } else { "core" }
+$IntegrationProfile = $IntegrationProfile.Trim().ToLowerInvariant()
+$AllowedIntegrationProfiles = @("none", "core", "research", "frontend", "qa", "all")
+if ($AllowedIntegrationProfiles -notcontains $IntegrationProfile) { throw "Invalid AGENT_RULES_INTEGRATION_PROFILE '$IntegrationProfile'. Expected none/core/research/frontend/qa/all." }
+
+function Test-IntegrationSelected {
+  param([pscustomobject]$Integration)
+  if ([string]$Integration.policy -eq "required") { return $true }
+  if ([string]$Integration.policy -eq "optional") { return $false }
+  if ($IntegrationProfile -eq "none") { return $false }
+  if ($IntegrationProfile -eq "all") { return $true }
+  $Profile = $Registry.profiles.$IntegrationProfile
+  if ($null -eq $Profile) { return $false }
+  return @($Profile.recommended) -contains [string]$Integration.id
+}
 
 function Get-IntegrationPath {
   param([pscustomobject]$Integration)
@@ -327,6 +342,8 @@ foreach ($Name in $Selected) {
   }
   $Policy = Join-Path $Source "model-policy.json"
   if (Test-Path -LiteralPath $Policy) { Copy-Item -LiteralPath $Policy -Destination (Join-Path $Dest "model-policy.json") -Force }
+  $RuntimeContract = Join-Path $Source "runtime-contract.json"
+  if (Test-Path -LiteralPath $RuntimeContract) { Copy-Item -LiteralPath $RuntimeContract -Destination (Join-Path $Dest "runtime-contract.json") -Force }
   $Native = Join-Path $Source "native"
   if (Test-Path -LiteralPath $Native) {
     switch ($Name) {
@@ -362,7 +379,7 @@ foreach ($Name in $Selected) {
 
   if (-not $SkipIntegrationInstall) {
     foreach ($Integration in $Registry.integrations) {
-      if ($Integration.policy -eq "optional") { continue }
+      if (-not (Test-IntegrationSelected -Integration $Integration)) { continue }
       $reuse = $SharedIntegrations.ContainsKey([string]$Integration.id)
       $state = Install-Integration -Integration $Integration -PlatformName $Name -RuntimeHome $Dest -SkipInstall:$reuse
       $IntegrationState += $state

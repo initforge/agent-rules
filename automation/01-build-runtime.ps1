@@ -7,13 +7,13 @@ $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "path-compat.ps1")
 if (Test-Path $BuildRoot) { Remove-Item -LiteralPath $BuildRoot -Recurse -Force }
 
-$Platforms = @("codex", "claude", "grok", "opencode", "antigravity", "cursor")
 $Core = Join-Path $Root "rules"
 $SkillsRoot = Join-Path $Root "skills"
 $SystemMap = Join-Path $Root "docs\guides"
 $ManifestText = Get-Content -Raw -Encoding UTF8 (Join-Path $Core "manifest.yaml")
 $ModelPolicy = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "automation\model-policy.json") | ConvertFrom-Json
 $PlatformContracts = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "platforms\platform-contracts.json") | ConvertFrom-Json
+$Platforms = @($PlatformContracts.platforms.PSObject.Properties.Name)
 $ManifestRules = @([regex]::Matches($ManifestText, '(?m)^\s+-\s+(\S+\.md)\s*$') | ForEach-Object { $_.Groups[1].Value })
 $UserHome = if ($env:USERPROFILE) { $env:USERPROFILE } elseif ($env:HOME) { $env:HOME } else { throw "Cannot resolve user home directory" }
 $CodexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $UserHome ".codex" }
@@ -48,25 +48,21 @@ foreach ($Platform in $Platforms) {
   if (-not (Test-Path -LiteralPath $PolicyPath)) { throw "Missing model policy: $PolicyPath" }
   Copy-Item -LiteralPath $PolicyPath -Destination (Join-Path $Target "model-policy.json") -Force
 
-  # Native definitions are source templates. Model selectors deliberately live
-  # only in model-policy.json and are rendered into host-native definitions here.
-  switch ($Platform) {
-    "codex" {
-      Copy-Item -LiteralPath (Join-Path $Root "platforms\codex\agents") -Destination (Join-Path $Native "agents") -Recurse -Force
-      Remove-Item -LiteralPath (Join-Path $Native "agents\README.md") -Force -ErrorAction SilentlyContinue
-    }
-    "cursor" {
-      Copy-Item -LiteralPath (Join-Path $Root "platforms\cursor\agents") -Destination (Join-Path $Native "agents") -Recurse -Force
-      Remove-Item -LiteralPath (Join-Path $Native "agents\README.md") -Force -ErrorAction SilentlyContinue
-    }
-    "grok" {
-      Copy-Item -LiteralPath (Join-Path $Root "platforms\grok\agents") -Destination (Join-Path $Native "agents") -Recurse -Force
-      Copy-Item -LiteralPath (Join-Path $Root "platforms\grok\personas") -Destination (Join-Path $Native "personas") -Recurse -Force
-    }
-    "antigravity" {
-      Copy-Item -LiteralPath (Join-Path $Root "platforms\antigravity\agents") -Destination (Join-Path $Native "agents") -Recurse -Force
-      Remove-Item -LiteralPath (Join-Path $Native "agents\README.md") -Force -ErrorAction SilentlyContinue
-    }
+  # Native definitions are source templates. Whether an agents directory is
+  # materialized is part of the canonical platform contract; host-native
+  # platforms keep their own workflow/agent surface.
+  $AgentMaterialization = [string]$PlatformContracts.platforms.$Platform.orchestration.agent_materialization
+  if ($AgentMaterialization -eq "managed_directory") {
+    $AgentSource = Join-Path $Root "platforms\$Platform\agents"
+    if (-not (Test-Path -LiteralPath $AgentSource)) { throw "Missing managed agent definitions for $Platform" }
+    Copy-Item -LiteralPath $AgentSource -Destination (Join-Path $Native "agents") -Recurse -Force
+    Remove-Item -LiteralPath (Join-Path $Native "agents\README.md") -Force -ErrorAction SilentlyContinue
+  } elseif ($AgentMaterialization -ne "host_native") {
+    throw "Unknown agent materialization policy for ${Platform}: $AgentMaterialization"
+  }
+  if ($Platform -eq "grok") {
+    $Personas = Join-Path $Root "platforms\grok\personas"
+    if (Test-Path -LiteralPath $Personas) { Copy-Item -LiteralPath $Personas -Destination (Join-Path $Native "personas") -Recurse -Force }
   }
 
   $NativeTokens = @{

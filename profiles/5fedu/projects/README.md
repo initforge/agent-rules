@@ -1,32 +1,17 @@
-# Template pack 5fedu (agent-rules)
+# 5fedu project compatibility material
 
-**Vai trò:** Nguồn cài đặt — **KHÔNG** phải context đang chạy trong app.  
-**Ý đồ:** Agent không đọc thư mục này khi code trong `Tah-app` / `nostime`; chỉ dùng khi maintain harness hoặc chạy installer.
+This directory contains project overlays/history retained for older 5fedu installations. It is **not** the canonical source-access path for North-Star execution.
 
-## Quy tắc vàng
+Canonical current behavior:
 
 ```text
-agent-rules/profiles/5fedu/projects/  →  template (copy qua installer)
-<repo>/context/5fedu/        →  context sống (chỉ sau khi cài vào repo)
+agent-rules/profiles/5fedu/                 reusable pack
+agent-rules/profiles/5fedu/reference-source manifest-bound ERP reference
+active project                              project-specific truth
 ```
 
-**Không** coi template là context dự án. **Không** sửa template thay cho `context/5fedu/` trong repo đang làm.
+A target project does not need the template or shared pack copied into it. Activate `domain_pack: 5fedu` (or `--domain-pack 5fedu`) and read template code through the central `reference` / `reference-search` broker.
 
-## Dự án 5fedu thật (duy nhất)
+The historical installer and `context/5fedu/` layout remain compatibility-only for repositories that already use them. Project-local facts are never overwritten or inferred from the bundled template.
 
-| Repo | Profile | Stack |
-|---|---|---|
-| `Tah-app` | `tah-app` | React/Vite + `5f-template-ket-noi-supabase` |
-| `nostime` | `nostime` | Next.js legacy + overlay `archive/nostime/` |
-
-Chi tiết: [`known-repos.md`](../known-repos.md).
-
-## Cài vào repo
-
-```powershell
-./automation/08-install-5fedu-context.ps1 -ProjectRoot /path/to/Tah-app -Profile tah-app
-./automation/08-install-5fedu-context.ps1 -ProjectRoot /path/to/nostime -Profile nostime
-```
-
-`-UpdatePointersOnly` — chỉ sửa `.codex`/`.agents` pointer, giữ context hiện có.  
-`-Force` — thay thế full (ghi đè trực tiếp, không backup).
+Known legacy project metadata lives in `known-repos.md`; it is not an allowlist for future projects.

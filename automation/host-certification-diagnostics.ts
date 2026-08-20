@@ -3,7 +3,7 @@ import { lstat, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { CERTIFICATION_REQUIRED_HOSTS } from '../packages/engine/src/contracts.js';
+import { CERTIFICATION_REQUIRED_HOSTS } from '../packages/kernel/src/contracts.ts';
 
 const execFileAsync = promisify(execFile);
 export const REQUIRED_DIAGNOSTIC_HOSTS = [...CERTIFICATION_REQUIRED_HOSTS] as const;

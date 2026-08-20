@@ -1,12 +1,82 @@
 {
   "version": 2,
   "description": "Canonical integration and MCP registry — single source of truth for all platform build outputs",
+  "effect_schema": "schemas/integration-effect.schema.json",
   "integrations": [
+    {
+      "id": "chrome-devtools-mcp",
+      "displayName": "Chrome DevTools MCP",
+      "kind": "mcp",
+      "policy": "recommended",
+      "profiles": [
+        "qa",
+        "frontend"
+      ],
+      "source": {
+        "type": "npm",
+        "url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+        "package": "chrome-devtools-mcp",
+        "version": "1.7.0",
+        "versionPolicy": "pinned",
+        "commandName": "chrome-devtools-mcp",
+        "mcpServerKey": "chrome-devtools"
+      },
+      "integrity": {
+        "pinned": true
+      },
+      "trust": "adapter-verified",
+      "capabilities": [
+        "browser.debug"
+      ],
+      "triggers": [
+        "browser-qa",
+        "console-debug",
+        "network-debug",
+        "cdp",
+        "chrome-devtools"
+      ],
+      "sideEffects": "browser-read",
+      "tokenClass": "high",
+      "permissions": [
+        "browser-read"
+      ],
+      "environment": [],
+      "install": {
+        "type": "npm-npx",
+        "handler": "chrome-devtools-mcp",
+        "script": "integrations/recommended/chrome-devtools-mcp/install.ps1",
+        "verify": "integrations/recommended/chrome-devtools-mcp/verify.ps1",
+        "uninstall": "integrations/recommended/chrome-devtools-mcp/uninstall.ps1"
+      },
+      "health": {
+        "command": "npx -y chrome-devtools-mcp@1.7.0 --help",
+        "expectedExitCodes": [
+          0
+        ]
+      },
+      "schema": {
+        "source": "integrations/recommended/chrome-devtools-mcp/"
+      },
+      "nativeHosts": [
+        "codex",
+        "claude",
+        "grok",
+        "antigravity",
+        "cursor",
+        "opencode",
+        "mimocode"
+      ],
+      "fallback": "browser console/network evidence when a host-native DevTools session is available",
+      "deprecatedAliases": [],
+      "priority": 30,
+      "activation": "automatic"
+      ,"effect": {"effect_level":"interactive","environment":"browser","approval":"task-scope","reversible":true,"network":true,"credentials":"optional","timeout_ms":120000,"provider_evidence":"health-probe"}
+    },
     {
       "id": "codebase-memory-mcp",
       "displayName": "Codebase Memory MCP",
       "kind": "mcp",
-      "policy": "required",
+      "policy": "recommended",
       "profiles": [
         "core"
       ],
@@ -28,7 +98,7 @@
       },
       "trust": "adapter-verified",
       "capabilities": [
-        "codebase-intelligence"
+        "code.semantic"
       ],
       "triggers": [
         "code-exploration",
@@ -45,9 +115,10 @@
       ],
       "install": {
         "type": "binary",
-        "script": "integrations/required/codebase-memory-mcp/install.ps1",
-        "verify": "integrations/required/codebase-memory-mcp/verify.ps1",
-        "uninstall": "integrations/required/codebase-memory-mcp/uninstall.ps1"
+        "handler": "codebase-memory-mcp",
+        "script": "integrations/recommended/codebase-memory-mcp/install.ps1",
+        "verify": "integrations/recommended/codebase-memory-mcp/verify.ps1",
+        "uninstall": "integrations/recommended/codebase-memory-mcp/uninstall.ps1"
       },
       "health": {
         "command": "{{bin}} --version",
@@ -56,7 +127,7 @@
         ]
       },
       "schema": {
-        "source": "integrations/required/codebase-memory-mcp/tools/",
+        "source": "integrations/recommended/codebase-memory-mcp/tools/",
         "generated": "generated/integrations/codebase-memory/"
       },
       "platform": {
@@ -70,18 +141,147 @@
         "grok",
         "antigravity",
         "cursor",
-        "opencode"
+        "opencode",
+        "mimocode"
       ],
       "fallback": "rg plus targeted reads and native symbol navigation",
       "deprecatedAliases": [
         "codebase_memory"
-      ]
+      ],
+      "priority": 20,
+      "activation": "automatic"
+      ,"effect": {"effect_level":"read-only","environment":"local","approval":"policy","reversible":true,"network":false,"credentials":"optional","timeout_ms":120000,"provider_evidence":"health-probe"}
+    },
+    {
+      "id": "context7",
+      "displayName": "Context7",
+      "kind": "mcp",
+      "policy": "recommended",
+      "profiles": [
+        "core",
+        "research"
+      ],
+      "source": {
+        "type": "npm",
+        "url": "https://github.com/upstash/context7-mcp",
+        "package": "@upstash/context7-mcp",
+        "version": "3.2.5",
+        "versionPolicy": "pinned",
+        "commandName": "context7",
+        "mcpServerKey": "context7"
+      },
+      "integrity": {
+        "pinned": true
+      },
+      "trust": "adapter-verified",
+      "capabilities": [
+        "docs.lookup"
+      ],
+      "triggers": [
+        "research",
+        "context7",
+        "library-docs"
+      ],
+      "sideEffects": "read-only",
+      "tokenClass": "low",
+      "permissions": [
+        "read-only"
+      ],
+      "environment": [],
+      "install": {
+        "type": "npm-npx",
+        "handler": "context7",
+        "script": "integrations/recommended/context7/install.ps1",
+        "verify": "integrations/recommended/context7/verify.ps1",
+        "uninstall": "integrations/recommended/context7/uninstall.ps1"
+      },
+      "health": {
+        "command": "npx -y @upstash/context7-mcp@3.2.5 --help",
+        "expectedExitCodes": [
+          0
+        ]
+      },
+      "schema": {
+        "source": "integrations/recommended/context7/"
+      },
+      "nativeHosts": [
+        "codex",
+        "claude",
+        "grok",
+        "antigravity",
+        "cursor",
+        "opencode",
+        "mimocode"
+      ],
+      "fallback": "upstream docs retrieval via curl or manual lookup",
+      "deprecatedAliases": [],
+      "priority": 20,
+      "activation": "automatic"
+      ,"effect": {"effect_level":"read-only","environment":"network","approval":"task-scope","reversible":true,"network":true,"credentials":"optional","timeout_ms":120000,"provider_evidence":"health-probe"}
+    },
+    {
+      "id": "playwright-cli",
+      "displayName": "Playwright Agent CLI",
+      "kind": "cli-tool",
+      "policy": "recommended",
+      "profiles": [
+        "qa",
+        "frontend"
+      ],
+      "source": {
+        "type": "npm",
+        "url": "https://github.com/microsoft/playwright-cli",
+        "package": "@playwright/cli",
+        "version": "0.1.18",
+        "versionPolicy": "pinned",
+        "commandName": "playwright-cli"
+      },
+      "integrity": {
+        "pinned": true
+      },
+      "trust": "advisory-only",
+      "capabilities": [
+        "browser.verify"
+      ],
+      "priority": 10,
+      "activation": "automatic",
+      "triggers": [
+        "browser-verify",
+        "ui-e2e",
+        "coding-agent-browser-proof"
+      ],
+      "sideEffects": "interactive-browser",
+      "tokenClass": "low",
+      "permissions": [
+        "interactive-browser"
+      ],
+      "environment": [],
+      "install": {
+        "type": "npm-global",
+        "handler": "playwright-cli",
+        "script": "integrations/recommended/playwright-cli/install.ps1",
+        "verify": "integrations/recommended/playwright-cli/verify.ps1",
+        "uninstall": "integrations/recommended/playwright-cli/uninstall.ps1"
+      },
+      "health": {
+        "command": "playwright-cli --help",
+        "expectedExitCodes": [
+          0
+        ]
+      },
+      "schema": {
+        "source": "integrations/recommended/playwright-cli/"
+      },
+      "nativeHosts": [],
+      "fallback": "Playwright MCP only for exploratory sessions; otherwise report browser verification unavailable",
+      "deprecatedAliases": []
+      ,"effect": {"effect_level":"interactive","environment":"browser","approval":"task-scope","reversible":true,"network":true,"credentials":"optional","timeout_ms":120000,"provider_evidence":"health-probe"}
     },
     {
       "id": "playwright-mcp",
       "displayName": "Playwright MCP",
       "kind": "mcp",
-      "policy": "required",
+      "policy": "recommended",
       "profiles": [
         "qa",
         "frontend"
@@ -90,17 +290,17 @@
         "type": "npm",
         "url": "https://github.com/microsoft/playwright-mcp",
         "package": "@playwright/mcp",
-        "version": "latest",
-        "versionPolicy": "latest",
+        "version": "0.0.78",
+        "versionPolicy": "pinned",
         "commandName": "playwright-mcp",
         "mcpServerKey": "playwright"
       },
       "integrity": {
-        "pinned": false
+        "pinned": true
       },
       "trust": "adapter-verified",
       "capabilities": [
-        "browser-interaction"
+        "browser.explore"
       ],
       "triggers": [
         "browser-qa",
@@ -117,18 +317,19 @@
       "environment": [],
       "install": {
         "type": "npm-npx",
-        "script": "integrations/required/playwright-mcp/install.ps1",
-        "verify": "integrations/required/playwright-mcp/verify.ps1",
-        "uninstall": "integrations/required/playwright-mcp/uninstall.ps1"
+        "handler": "playwright-mcp",
+        "script": "integrations/recommended/playwright-mcp/install.ps1",
+        "verify": "integrations/recommended/playwright-mcp/verify.ps1",
+        "uninstall": "integrations/recommended/playwright-mcp/uninstall.ps1"
       },
       "health": {
-        "command": "npx -y @playwright/mcp --help",
+        "command": "npx -y @playwright/mcp@0.0.78 --help",
         "expectedExitCodes": [
           0
         ]
       },
       "schema": {
-        "source": "integrations/required/playwright-mcp/"
+        "source": "integrations/recommended/playwright-mcp/"
       },
       "nativeHosts": [
         "codex",
@@ -136,142 +337,20 @@
         "grok",
         "antigravity",
         "cursor",
-        "opencode"
+        "opencode",
+        "mimocode"
       ],
       "fallback": "report the live-interaction proof gap; do not infer it from build output",
-      "deprecatedAliases": []
-    },
-    {
-      "id": "chrome-devtools-mcp",
-      "displayName": "Chrome DevTools MCP",
-      "kind": "mcp",
-      "policy": "required",
-      "profiles": [
-        "qa",
-        "frontend"
-      ],
-      "source": {
-        "type": "npm",
-        "url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
-        "package": "chrome-devtools-mcp",
-        "version": "latest",
-        "versionPolicy": "latest",
-        "commandName": "chrome-devtools-mcp",
-        "mcpServerKey": "chrome-devtools"
-      },
-      "integrity": {
-        "pinned": false
-      },
-      "trust": "adapter-verified",
-      "capabilities": [
-        "browser-diagnostics"
-      ],
-      "triggers": [
-        "browser-qa",
-        "console-debug",
-        "network-debug",
-        "cdp",
-        "chrome-devtools"
-      ],
-      "sideEffects": "browser-read",
-      "tokenClass": "high",
-      "permissions": [
-        "browser-read"
-      ],
-      "environment": [],
-      "install": {
-        "type": "npm-npx",
-        "script": "integrations/required/chrome-devtools-mcp/install.ps1",
-        "verify": "integrations/required/chrome-devtools-mcp/verify.ps1",
-        "uninstall": "integrations/required/chrome-devtools-mcp/uninstall.ps1"
-      },
-      "health": {
-        "command": "npx -y chrome-devtools-mcp --help",
-        "expectedExitCodes": [
-          0
-        ]
-      },
-      "schema": {
-        "source": "integrations/required/chrome-devtools-mcp/"
-      },
-      "nativeHosts": [
-        "codex",
-        "claude",
-        "grok",
-        "antigravity",
-        "cursor",
-        "opencode"
-      ],
-      "fallback": "browser console/network evidence when a host-native DevTools session is available",
-      "deprecatedAliases": []
-    },
-    {
-      "id": "context7",
-      "displayName": "Context7",
-      "kind": "mcp",
-      "policy": "required",
-      "profiles": [
-        "core",
-        "research"
-      ],
-      "source": {
-        "type": "npm",
-        "url": "https://github.com/upstash/context7-mcp",
-        "package": "@upstash/context7-mcp",
-        "version": "latest",
-        "versionPolicy": "latest",
-        "commandName": "context7",
-        "mcpServerKey": "context7"
-      },
-      "integrity": {
-        "pinned": false
-      },
-      "trust": "adapter-verified",
-      "capabilities": [
-        "research-context"
-      ],
-      "triggers": [
-        "research",
-        "context7",
-        "library-docs"
-      ],
-      "sideEffects": "read-only",
-      "tokenClass": "low",
-      "permissions": [
-        "read-only"
-      ],
-      "environment": [],
-      "install": {
-        "type": "npm-npx",
-        "script": "integrations/required/context7/install.ps1",
-        "verify": "integrations/required/context7/verify.ps1",
-        "uninstall": "integrations/required/context7/uninstall.ps1"
-      },
-      "health": {
-        "command": "npx -y @upstash/context7-mcp --help",
-        "expectedExitCodes": [
-          0
-        ]
-      },
-      "schema": {
-        "source": "integrations/required/context7/"
-      },
-      "nativeHosts": [
-        "codex",
-        "claude",
-        "grok",
-        "antigravity",
-        "cursor",
-        "opencode"
-      ],
-      "fallback": "upstream docs retrieval via curl or manual lookup",
-      "deprecatedAliases": []
+      "deprecatedAliases": [],
+      "priority": 30,
+      "activation": "automatic"
+      ,"effect": {"effect_level":"interactive","environment":"browser","approval":"task-scope","reversible":true,"network":true,"credentials":"optional","timeout_ms":120000,"provider_evidence":"health-probe"}
     },
     {
       "id": "rtk",
       "displayName": "RTK — Rust Token Killer",
       "kind": "cli-tool",
-      "policy": "required",
+      "policy": "recommended",
       "profiles": [
         "core"
       ],
@@ -286,8 +365,7 @@
       },
       "trust": "adapter-verified",
       "capabilities": [
-        "output-compression",
-        "token-saving"
+        "output.compress"
       ],
       "triggers": [
         "token-optimization",
@@ -302,9 +380,10 @@
       "environment": [],
       "install": {
         "type": "shell",
-        "script": "integrations/required/rtk/install.sh",
-        "verify": "integrations/required/rtk/verify.sh",
-        "uninstall": "integrations/required/rtk/uninstall.sh"
+        "handler": "rtk",
+        "script": "integrations/recommended/rtk/install.sh",
+        "verify": "integrations/recommended/rtk/verify.sh",
+        "uninstall": "integrations/recommended/rtk/uninstall.sh"
       },
       "health": {
         "command": "rtk --version",
@@ -318,38 +397,106 @@
         "grok",
         "antigravity",
         "cursor",
-        "opencode"
+        "opencode",
+        "mimocode"
       ],
       "fallback": "manual command rewriting via rtk CLI",
+      "deprecatedAliases": [],
+      "priority": 30,
+      "activation": "automatic"
+      ,"effect": {"effect_level":"read-only","environment":"local","approval":"policy","reversible":true,"network":false,"credentials":"none","timeout_ms":30000,"provider_evidence":"health-probe"}
+    },
+    {
+      "id": "serena",
+      "displayName": "Serena semantic code MCP",
+      "kind": "mcp",
+      "policy": "optional",
+      "profiles": [],
+      "source": {
+        "type": "git",
+        "url": "https://github.com/oraios/serena",
+        "version": "1.6.1",
+        "versionPolicy": "pinned"
+      },
+      "integrity": {
+        "pinned": true
+      },
+      "trust": "advisory-only",
+      "capabilities": [
+        "code.semantic"
+      ],
+      "priority": 40,
+      "activation": "explicit-only",
+      "triggers": [
+        "explicit-code-semantic-eval"
+      ],
+      "sideEffects": "read-only",
+      "tokenClass": "medium",
+      "permissions": [
+        "read-only"
+      ],
+      "environment": [],
+      "install": {
+        "type": "shell",
+        "handler": "serena",
+        "script": "integrations/optional/serena/install.sh",
+        "verify": "integrations/optional/serena/verify.sh",
+        "uninstall": "integrations/optional/serena/uninstall.sh"
+      },
+      "health": {
+        "command": "serena start-mcp-server --help",
+        "expectedExitCodes": [
+          0
+        ]
+      },
+      "schema": {
+        "source": "integrations/optional/serena/"
+      },
+      "nativeHosts": [
+        "codex",
+        "claude",
+        "antigravity",
+        "cursor",
+        "opencode",
+        "mimocode"
+      ],
+      "fallback": "builtin rg plus codebase-memory-mcp; Serena stays explicit until resource/reliability ablations justify promotion",
       "deprecatedAliases": []
+      ,"effect": {"effect_level":"read-only","environment":"local","approval":"explicit-provider","reversible":true,"network":false,"credentials":"optional","timeout_ms":120000,"provider_evidence":"health-probe"}
     }
   ],
   "profiles": {
     "core": {
-      "description": "Essential dependencies for all agent operations",
-      "required": [
+      "description": "Minimal coding surface; optional providers are attached only when routed",
+      "required": [],
+      "recommended": [
         "codebase-memory-mcp",
         "context7",
         "rtk"
       ]
     },
     "qa": {
-      "description": "Browser-based UI quality assurance",
-      "required": [
+      "description": "Browser QA: CLI for normal proof, MCP/DevTools only when exploration/debugging warrants it",
+      "required": [],
+      "recommended": [
+        "playwright-cli",
         "playwright-mcp",
         "chrome-devtools-mcp"
       ]
     },
     "frontend": {
-      "description": "Frontend development support",
-      "required": [
+      "description": "Frontend development support with token-efficient browser verification by default",
+      "required": [],
+      "recommended": [
+        "playwright-cli",
         "playwright-mcp",
         "chrome-devtools-mcp"
       ]
     },
     "research": {
       "description": "Library and API documentation retrieval",
-      "required": [
+      "required": [],
+      "recommended": [
         "context7"
       ]
     }

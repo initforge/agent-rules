@@ -111,14 +111,16 @@ def main():
         content = spath.read_text(encoding="utf-8")
         priority = ""
         tokens = ""
-        # Parse routing JSON from frontmatter
-        m = re.search(r"routing:\s*(\{.*?\})", content, re.DOTALL)
-        if m:
+        # Agent Skills frontmatter stays portable. agent-rules routing lives in
+        # the canonical ROUTE.json sidecar; legacy frontmatter is not a source
+        # of truth for generated references.
+        route_path = sdir / "ROUTE.json"
+        if route_path.exists():
             try:
-                routing = json.loads(m.group(1))
+                routing = json.loads(route_path.read_text(encoding="utf-8"))
                 priority = str(routing.get("priority", ""))
                 tokens = str(routing.get("max_route_tokens", ""))
-            except json.JSONDecodeError:
+            except (json.JSONDecodeError, OSError):
                 pass
         # Find first heading line (after frontmatter)
         desc_line = slug

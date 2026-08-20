@@ -1,41 +1,32 @@
-# 5fedu Sync Policy
+# 5fedu Reference and Sync Policy
 
-**Purpose:** Rules for syncing context between agent-rules (canonical) and project repos.  
-**Routing:** Never auto-loaded. Read when managing context state.
+**Purpose:** Define the canonical ownership boundary for 5fedu knowledge and source references.
+**Routing:** Load only after the 5fedu domain pack is explicitly activated.
 
-## Canonical source
+## Canonical ownership
 
-`P:\agent-rules` is the single source of truth for organization conventions and domain patterns.
+- `profiles/5fedu/` inside the agent-rules installation owns reusable 5fedu rules, behavior contracts, source evidence, and the read-only reference template.
+- The owner-supplied ERP template is stored once at `profiles/5fedu/reference-source/template` and is verified by `source-manifest.json` plus the source lock.
+- A target repository owns its own schema, routes, decisions, credentials, data contracts, and implementation. These project facts stay in the target repository.
 
-## Install to project (one-way)
+## Normal North-Star workflow
 
-`automation/08-install-5fedu-context.ps1` copies from agent-rules to project repos:
+Do **not** install or copy the reference template into a target project.
 
-- `organization/*` → project `<repo>/context/5fedu/organization/`
-- `domains/*` → project `<repo>/context/5fedu/domains/`
-- `schemas/*` → project `<repo>/context/5fedu/schemas/`
-- `projects/<profile>/` overlay → project `<repo>/context/5fedu/`
+1. Explicitly activate `domain_pack: 5fedu` or use `--domain-pack 5fedu`.
+2. Read reusable rules from the harness.
+3. Inspect authoritative template code through `agent-rules reference 5fedu <path>` or `agent-rules reference-search 5fedu <query>`.
+4. Adapt only the behavior that is source-grounded and applicable to the active project's schema/spec.
+5. Keep project-specific facts and decisions in the target repository.
 
-**Never overwrites:** `project-local/` in any project repo.
+The generic harness must remain usable when the 5fedu pack is inactive.
 
-## Write-back to canonical (from project repos)
+## Legacy compatibility
 
-When a domain pattern is fixed in a project repo:
+`automation/08-install-5fedu-context.ps1` and the historical `<repo>/context/5fedu/` layout remain only for older projects/hosts that still depend on that layout. They are **not** prerequisites for North-Star execution and must never copy `reference-source/template` into a project.
 
-1. Determine if the fix is a generic pattern or project-specific.
-2. Generic pattern → write-back `domains/<domain>/` to agent-rules.
-3. Project-specific → keep in `project-local/`.
-4. Run `automation/10-export-5fedu-writeback.ps1` for reviewed changes.
-5. Run `03-validate-context.ps1` after write-back.
+## Write-back
 
-**Forbidden write-back targets:**
-- `project-local/` from any project → agent-rules
-- `evidence/` → promoted directly to `domains/` without review
-- `organization/` → from project repo (org is canonical only)
+A reusable pattern discovered in a project may be promoted into `profiles/5fedu/domains/` only after review and cross-project validation. Project-specific data, credentials, decisions, and evidence are never promoted automatically.
 
-## Archive and evidence
-
-- `archive/` and `evidence/` are never synced to project repos.
-- They exist only in agent-rules for historical reference.
-- Evidence can be promoted to `domains/` after review and validation.
-- Archive content is NOT promoted automatically.
+`evidence/` and `archive/` are historical/reference material and are never automatic runtime context.

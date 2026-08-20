@@ -929,7 +929,8 @@ tr:last-child td {
 
 .cpw-identity-id {
   font-size: var(--font-size-footnote);
-  color: var(--color-text-secondary);
+  /* The default secondary token is too light on the light canvas for WCAG AA. */
+  color: var(--gray-600);
   letter-spacing: var(--letter-spacing-caption);
 }
 
@@ -951,7 +952,7 @@ tr:last-child td {
 
 .cpw-hash-label {
   font-size: var(--font-size-caption);
-  color: var(--color-text-secondary);
+  color: var(--gray-600);
   letter-spacing: var(--letter-spacing-caption);
 }
 
@@ -1137,7 +1138,7 @@ tr:last-child td {
 .cpw-tree-item-dims {
   margin-top: 4px;
   padding-left: 20px;
-  color: var(--color-text-tertiary);
+  color: var(--gray-600);
 }
 
 /* Lineage */
@@ -1193,7 +1194,7 @@ tr:last-child td {
 
 .cpw-lineage-node-hash {
   font-size: var(--font-size-caption);
-  color: var(--color-text-tertiary);
+  color: var(--gray-600);
 }
 
 .cpw-lineage-connector {
@@ -1226,6 +1227,10 @@ tr:last-child td {
   text-align: left;
 }
 
+.cpw-lineage-table th {
+  color: var(--gray-600);
+}
+
 .cpw-lineage-td-label {
   font-weight: var(--font-weight-medium);
 }
@@ -1256,7 +1261,7 @@ tr:last-child td {
   z-index: 1;
   padding: 8px 12px;
   border-bottom: 2px solid var(--color-border);
-  color: var(--color-text-secondary);
+  color: var(--gray-600);
   font-weight: var(--font-weight-medium);
   font-size: var(--font-size-caption);
   letter-spacing: 0.03em;

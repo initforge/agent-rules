@@ -473,7 +473,12 @@ def route(prompt: str, workspace_paths: Iterable[str | Path], graph: dict[str, A
         if hits:
             matched_phrases.extend(hits)
             intent_signals.extend(routing.get("intent_signals") or [slug])
-        candidates.append((int(routing.get("priority", 0)), node, hits))
+        # An activated domain pack wins over a generic skill when both match.
+        # This mirrors the kernel route and prevents a generic browser/QA
+        # phrase from displacing a domain procedure. Generic skills remain
+        # available through explicit supports/requirements.
+        domain_bonus = 500 if scope == "5fedu" and active_5fedu else 0
+        candidates.append((domain_bonus + int(routing.get("priority", 0)), node, hits))
 
     candidates.sort(key=lambda item: (-item[0], str(item[1].get("id"))))
     primary = str(candidates[0][1]["id"]).removeprefix("skill:") if candidates else None

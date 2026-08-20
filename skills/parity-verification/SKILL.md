@@ -1,45 +1,12 @@
 ---
 name: parity-verification
-description: >
-  Claim-based parity verification across visual, responsive, behavioral,
-  accessibility, console, network, and data-state dimensions. Use when owner
-  asks for parity proof, parity verification, parity claim, verify parity,
-  diff template, visual parity, responsive parity, behavioral parity,
-  cross-state parity, or automated verification loop against a reference.
-  Combo: browser-qa (Playwright MCP + Chrome DevTools MCP) for execution,
-  qa-skills for matrix design. Do NOT use for unit/API-only verification;
-  not for static source diff without live browser interaction.
-routing:
-  signals:
-    - parity proof
-    - parity verification
-    - parity claim
-    - verify parity
-    - diff template
-    - visual parity
-    - responsive parity
-    - behavioral parity
-    - cross-state parity
-    - verification loop
-    - claim-based verification
-  intent_signals:
-    - parity_verification
-  excludes:
-    - unit/api-only
-    - static source diff only
-  priority: 85
-  loads:
-    - skill:parity-verification
-    - project:<active-profile>:pattern-inventory
-  requires:
-    - browser-qa
-    - qa-skills
-  supports:
-    - <active-profile>-module-parity
-  project_scope: ""
-  platform_scope: all
-  max_route_tokens: 5000
-  default: false
+description: 'Claim-based parity verification across visual, responsive, behavioral, accessibility, console, network, and
+  data-state dimensions. Use when owner asks for parity proof, parity verification, parity claim, verify parity, diff template,
+  visual parity, responsive parity, behavioral parity, cross-state parity, or automated verification loop against a reference.
+  Combo: browser-qa (Playwright CLI default, MCP/DevTools on demand) for execution, qa-skills for matrix design. Do NOT use
+  for unit/API-only verification; not for static source diff without live browser interaction.
+
+  '
 ---
 
 # Parity verification
@@ -94,7 +61,7 @@ None alone is universal truth. All five are complementary.
 
 ## Related
 
-- `browser-qa` — hands: Playwright MCP + Chrome DevTools MCP
+- `browser-qa` — hands: Playwright CLI default; Playwright MCP/Chrome DevTools only when needed
 - `qa-skills` — brain: matrix design, severity, findings
 - `<active-profile>-module-parity` — upstream: pattern fidelity packets
 - References: `pipeline.md`, `claim-format.md`, `evidence-schema.json`, `runbook.md`

@@ -121,6 +121,9 @@ if (-not $SkipPython) {
     # Parity with run-python-tests.py — deterministic, no generated/ or build deps
     @{ path = "automation/test-installer-trust-boundary.py"; label = "installer-trust-boundary" },
     @{ path = "automation/test-installer-staging.py";     label = "installer-staging" },
+    @{ path = "automation/validate-skill-catalog.py";     label = "skill-ownership-catalog" },
+    @{ path = "automation/validate-skill-fabric.py";       label = "candidate-skill-fabric" },
+    @{ path = "automation/validate-route-parity.py";       label = "typed-route-parity" },
     @{ path = "automation/test-select-verification.py";    label = "select-verification" },
     @{ path = "automation/test-parity-verification.py";    label = "parity-verification" }
   )

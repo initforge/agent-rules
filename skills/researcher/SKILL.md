@@ -1,7 +1,8 @@
 ---
 name: researcher
-description: Use this skill for explicit research, latest/release/changelog documentation, unfamiliar external behavior or a bug stalled after repeated attempts. Do NOT trigger for ordinary comparison, local code reading, obvious fixes or a phased plan; use plan-and-handoff for the latter.
-routing: {"signals":["research","latest","release","changelog","external behavior","stalled","unfamiliar"],"excludes":["ordinary comparison","local code reading","obvious fix","phased plan"],"priority":70,"loads":["skill:researcher"],"supports":[],"project_scope":"","platform_scope":"all","max_route_tokens":3000,"default":false}
+description: Use this skill for explicit research, latest/release/changelog documentation, unfamiliar external behavior or
+  a bug stalled after repeated attempts. Do NOT trigger for ordinary comparison, local code reading, obvious fixes or a phased
+  plan; use plan-and-handoff for the latter.
 ---
 
 # Researcher
@@ -48,7 +49,7 @@ End with **Hand to Plan Architect** — list items for PAF §5 (Assumptions / Kn
 ## Escalation
 
 - Large architecture → `plan-and-handoff` Architect after research
-- Unresolved bug → `implementation-discovery` when implementing
+- Unresolved bug → use engine discovery/diagnosis before repair
 
 ## Related
 

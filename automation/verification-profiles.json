@@ -1,9 +1,37 @@
 {
   "schema_version": 1,
   "description": "Domain verification profiles that select checks from claims, changed surfaces, and risk. Each profile lists available checks; the selection algorithm chooses which to run based on context.",
+  "profile_contract": {
+    "applicability": "Boundary covered by this profile.",
+    "risk_triggers": "Signals that promote an otherwise optional check to required.",
+    "cost_class": "Relative cost: low, medium, or high.",
+    "fidelity": "Evidence fidelity: static, process, runtime, native, or visible-runtime.",
+    "replayable": "Whether a deterministic replay recipe may be emitted.",
+    "visible_manual": "Manual visibility contract; headless CI is a separate automated mode.",
+    "required_dimensions": "Evidence dimensions required for the profile claims.",
+    "negative_fixtures": "Named failure or forbidden-behavior fixtures.",
+    "owner": "Maintainer of the profile contract.",
+    "freshness_binding": "Identity fields that make evidence stale when changed.",
+    "invalidation_conditions": "Changes that invalidate an accepted result.",
+    "human_residuals": "Semantic questions intentionally left for final human review."
+  },
   "domain_profiles": {
     "frontend": {
       "description": "UI components, pages, styles, interactions, and browser behavior",
+      "verification_contract": {
+        "applicability": ["UI source, layout, interaction, visual, accessibility, and browser-runtime claims"],
+        "risk_triggers": ["responsive", "mobile", "parity", "auth boundary", "destructive interaction"],
+        "cost_class": "medium",
+        "fidelity": "visible-runtime",
+        "replayable": true,
+        "visible_manual": {"required_when": ["manual", "exploratory"], "providers": ["playwright", "chrome-devtools"], "headless_ci_profile": "frontend-ci", "unavailable_status": "BLOCKED"},
+        "required_dimensions": ["interaction", "state", "regression"],
+        "negative_fixtures": ["console error", "network failure", "keyboard-only interaction", "viewport overflow", "missing loading/error state"],
+        "owner": "project-owner",
+        "freshness_binding": ["source_hash", "claim_ids", "browser_version", "fixture_hash", "verifier_identity"],
+        "invalidation_conditions": ["changed UI state model", "changed route/API contract", "changed baseline or fixture", "browser/runtime version drift"],
+        "human_residuals": ["visual/product intent", "copy and information hierarchy", "acceptable responsive trade-offs"]
+      },
       "signals": {
         "file_patterns": ["**/*.tsx", "**/*.jsx", "**/*.vue", "**/*.svelte", "**/*.css", "**/*.scss", "**/*.less", "**/*.html", "**/*.stories.*", "**/*.spec.tsx", "**/*.test.tsx"],
         "claim_keywords": ["ui", "frontend", "component", "page", "layout", "style", "responsive", "viewport", "visual", "parity", "shell", "drawer", "toolbar", "listview"],
@@ -119,6 +147,20 @@
     },
     "backend-api": {
       "description": "Server-side APIs, services, business logic, and endpoint behavior",
+      "verification_contract": {
+        "applicability": ["HTTP, RPC, service, validation, authorization, retry, and integration-boundary claims"],
+        "risk_triggers": ["auth", "permission", "tenant isolation", "money", "migration", "idempotency", "external side effect"],
+        "cost_class": "medium",
+        "fidelity": "runtime",
+        "replayable": true,
+        "visible_manual": {"required_when": [], "providers": [], "headless_ci_profile": "backend-ci", "unavailable_status": "BLOCKED"},
+        "required_dimensions": ["positive", "invalid-error", "regression"],
+        "negative_fixtures": ["invalid input", "unauthorized access", "cross-tenant read", "timeout/retry", "duplicate request"],
+        "owner": "project-owner",
+        "freshness_binding": ["source_hash", "claim_ids", "contract_hash", "fixture_hash", "verifier_identity"],
+        "invalidation_conditions": ["endpoint/schema change", "auth policy change", "dependency upgrade", "fixture or seed change"],
+        "human_residuals": ["business meaning of edge-case errors", "external integration ownership", "acceptable backward compatibility"]
+      },
       "signals": {
         "file_patterns": ["**/*.controller.*", "**/*.service.*", "**/*.handler.*", "**/*.route.*", "**/*.middleware.*", "**/*.dto.*", "**/*.validat*.*", "**/api/**", "**/routes/**", "**/controllers/**", "**/*.graphql*", "**/*.proto"],
         "claim_keywords": ["api", "endpoint", "backend", "service", "dto", "contract", "integration", "http", "rest", "grpc", "graphql"],
@@ -233,6 +275,20 @@
     },
     "database": {
       "description": "Schema changes, migrations, queries, and data integrity",
+      "verification_contract": {
+        "applicability": ["Schema, migration, query, index, seed, and persistence-integrity claims"],
+        "risk_triggers": ["migration", "destructive", "existing data", "high volume", "tenant isolation", "rollback"],
+        "cost_class": "high",
+        "fidelity": "runtime",
+        "replayable": true,
+        "visible_manual": {"required_when": [], "providers": [], "headless_ci_profile": "database-ci", "unavailable_status": "BLOCKED"},
+        "required_dimensions": ["blank", "existing-clone", "reconciliation", "failure-path"],
+        "negative_fixtures": ["existing-data migration", "rollback/failure", "duplicate/constraint violation", "query-plan regression", "stale cache/read"],
+        "owner": "project-owner",
+        "freshness_binding": ["source_hash", "migration_hash", "schema_hash", "fixture_hash", "database_engine_version"],
+        "invalidation_conditions": ["migration order change", "schema or index change", "engine/version drift", "seed or fixture change"],
+        "human_residuals": ["business data retention", "acceptable downtime", "rollback authority and production sequencing"]
+      },
       "signals": {
         "file_patterns": ["**/migrations/**", "**/*.migration.*", "**/*.sql", "**/*.prisma", "**/schema.*", "**/*.entity.*", "**/*.model.*", "**/*.repository.*", "**/*.dao.*", "**/seed*"],
         "claim_keywords": ["migration", "schema", "database", "query", "data", "entity", "model", "repository", "index", "constraint"],
@@ -347,6 +403,20 @@
     },
     "infrastructure": {
       "description": "Infrastructure as code, deployments, and environment configuration",
+      "verification_contract": {
+        "applicability": ["Infrastructure, deployment, packaging, environment, permission, and rollback claims"],
+        "risk_triggers": ["production", "network boundary", "secret", "permission", "rollback", "destructive"],
+        "cost_class": "high",
+        "fidelity": "native",
+        "replayable": true,
+        "visible_manual": {"required_when": ["manual rollout"], "providers": [], "headless_ci_profile": "infrastructure-ci", "unavailable_status": "BLOCKED"},
+        "required_dimensions": ["target-identity", "terminal-run", "smoke"],
+        "negative_fixtures": ["wrong target", "missing secret", "denied permission", "failed rollout", "rollback/restore"],
+        "owner": "platform-owner",
+        "freshness_binding": ["source_hash", "target_identity", "provider_version", "environment_hash", "verifier_identity"],
+        "invalidation_conditions": ["target/config change", "provider/runtime drift", "permission or secret rotation", "rollback artifact change"],
+        "human_residuals": ["release authorization", "operational risk acceptance", "production change window"]
+      },
       "signals": {
         "file_patterns": ["**/*.tf", "**/*.tfvars", "**/terraform/**", "**/*.yaml", "**/*.yml", "**/deploy*", "**/infra*", "**/Dockerfile*", "**/*.k8s.*", "**/*.helm/**", "**/*.nix"],
         "claim_keywords": ["infra", "terraform", "deploy", "kubernetes", "docker", "helm", "infrastructure", "cloud", "environment"],
@@ -461,6 +531,20 @@
     },
     "security": {
       "description": "Security boundaries, vulnerability scanning, secrets, and access control",
+      "verification_contract": {
+        "applicability": ["Authentication, authorization, secrets, dependency, sanitization, and security-boundary claims"],
+        "risk_triggers": ["security", "credential", "secret", "permission", "tenant isolation", "data export"],
+        "cost_class": "high",
+        "fidelity": "runtime",
+        "replayable": true,
+        "visible_manual": {"required_when": [], "providers": [], "headless_ci_profile": "security-ci", "unavailable_status": "BLOCKED"},
+        "required_dimensions": ["positive", "negative", "leakage-sanitization"],
+        "negative_fixtures": ["unauthorized request", "secret leakage", "injection payload", "cross-tenant access", "dependency vulnerability"],
+        "owner": "security-owner",
+        "freshness_binding": ["source_hash", "dependency_lock_hash", "policy_hash", "fixture_hash", "verifier_identity"],
+        "invalidation_conditions": ["auth/policy change", "dependency upgrade", "secret/config change", "new public boundary"],
+        "human_residuals": ["threat-model completeness", "risk acceptance", "privacy and regulatory interpretation"]
+      },
       "signals": {
         "file_patterns": ["**/security/**", "**/auth*/*", "**/*.auth.*", "**/permission*/*", "**/*.secret*", "**/*.credential*", "**/*.token*", "**/crypto*", "**/*.csp.*"],
         "claim_keywords": ["security", "auth", "permission", "rbac", "credential", "secret", "token", "encrypt", "sanitize", "csp", "cors"],
@@ -523,6 +607,20 @@
     },
     "documentation-configuration": {
       "description": "Documentation, configuration files, and project metadata",
+      "verification_contract": {
+        "applicability": ["Documentation, manifests, configuration, links, and operator-contract claims"],
+        "risk_triggers": ["public contract", "install/upgrade", "security policy", "runbook", "migration"],
+        "cost_class": "low",
+        "fidelity": "process",
+        "replayable": true,
+        "visible_manual": {"required_when": [], "providers": [], "headless_ci_profile": "documentation-ci", "unavailable_status": "BLOCKED"},
+        "required_dimensions": ["outcome", "scope", "regression"],
+        "negative_fixtures": ["broken internal link", "stale command", "invalid manifest", "missing operator step"],
+        "owner": "project-owner",
+        "freshness_binding": ["source_hash", "linked_target_hash", "manifest_hash", "verifier_identity"],
+        "invalidation_conditions": ["renamed target", "CLI/schema change", "dependency or install change", "policy change"],
+        "human_residuals": ["clarity for intended operator", "business wording", "documentation completeness beyond machine checks"]
+      },
       "signals": {
         "file_patterns": ["**/*.md", "**/*.mdx", "**/docs/**", "**/*.yaml", "**/*.yml", "**/*.json", "**/*.toml", "**/*.cfg", "**/*.ini", "**/README*", "**/AGENTS*", "**/CHANGELOG*", "**/CONTRIBUTING*"],
         "claim_keywords": ["doc", "readme", "changelog", "config", "configuration", "settings", "yml", "yaml"],
@@ -572,6 +670,20 @@
     },
     "harness-runtime": {
       "description": "Agent harness, runtime configuration, context routing, and tool registry",
+      "verification_contract": {
+        "applicability": ["Harness protocol, rules, automation, skills, generated contracts, and runtime behavior"],
+        "risk_triggers": ["trust", "verification", "scope", "process cleanup", "amendment", "certification", "generated output"],
+        "cost_class": "high",
+        "fidelity": "process",
+        "replayable": true,
+        "visible_manual": {"required_when": ["manual browser/design verification"], "providers": ["playwright", "chrome-devtools", "pencil"], "headless_ci_profile": "harness-ci", "unavailable_status": "BLOCKED"},
+        "required_dimensions": ["outcome", "scope", "regression", "negative-constraint"],
+        "negative_fixtures": ["false PASS", "scope violation", "stale evidence", "orphan process", "unresolved plan claim", "forbidden generated edit"],
+        "owner": "harness-maintainer",
+        "freshness_binding": ["source_hash", "plan_revision", "artifact_hash", "verifier_identity", "environment_class"],
+        "invalidation_conditions": ["plan/amendment change", "runtime build change", "rule/profile change", "host capability drift"],
+        "human_residuals": ["architecture trade-off", "operator ergonomics", "whether evidence proves the intended product outcome"]
+      },
       "signals": {
         "file_patterns": ["automation/**", "rules/**", "skills/**/SKILL.md", "integrations/**", "platforms/**", "AGENTS.md", "opencode.json", "opencode.jsonc", ".opencode/**"],
         "claim_keywords": ["harness", "runtime", "context", "routing", "tool", "registry", "manifest", "schema", "workflow", "agent", "mcp"],

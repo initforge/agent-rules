@@ -21,7 +21,7 @@ import {
   EVIDENCE_MATURITIES,
   CLAIM_FORMULAS,
 } from '../src/om-deterministic-compiler.js';
-import { evaluateClaimFormulas } from '../src/claim-registry.js';
+import { evaluateClaimFormulas } from '../src/plan-readiness.js';
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '..', '..', '..');
 const OM_PATH = path.join(REPO_ROOT, 'docs', 'architecture', 'target-operating-model.md');

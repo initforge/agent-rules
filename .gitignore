@@ -22,16 +22,26 @@ codex.bak*/
 # Python cache
 __pycache__/
 *.pyc
+*.pyo
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
+.tox/
+.venv/
+venv/
 
 # OS files
 .DS_Store
 Thumbs.db
 
-# IDE
+# IDE / agent local configs
 .vscode/
 .idea/
+.claude/
+.cursor/
+
+# MiMoCode local config
+.mimocode/
 
 # MCP local configs
 *mcp_config*.json
@@ -45,10 +55,16 @@ Thumbs.db
 
 # Node packages
 node_modules/
+*.tsbuildinfo
+.eslintcache
 
 # Runtime/test artifacts
 dist/
 generated/
+.cache/
+.vite/
+.next/
+.turbo/
 profiles/5fedu/projects/.template-managed.json
 coverage/
 test-results/

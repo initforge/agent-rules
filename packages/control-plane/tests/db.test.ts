@@ -1,10 +1,15 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
 import { getDb, closeDb, resetDb, getStore, addAudit, addRun, addTelemetry, STORE_SCHEMA_VERSION } from '../src/db/index.ts'
 
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'cp-db-test-'))
+// These cases intentionally fsync every mutation to exercise crash-safe
+// durability. They run alongside browser QA in the full workspace suite, so
+// retain a bounded budget that covers legitimate disk contention without
+// weakening any assertion or turning the case into a skip.
+const DURABLE_RETENTION_TIMEOUT_MS = 60_000
 
 // Reset module state before each test to prevent storePath leakage across tests
 beforeEach(async () => {
@@ -165,7 +170,7 @@ describe('db/index.ts durability', () => {
       await closeDb()
       const content = JSON.parse(fs.readFileSync(storePath, 'utf-8'))
       expect(content.audit.length).toBeLessThanOrEqual(1000)
-    })
+    }, DURABLE_RETENTION_TIMEOUT_MS)
 
     it('trims runs to MAX_RUNS on save', async () => {
       const dir = tmp()
@@ -177,7 +182,7 @@ describe('db/index.ts durability', () => {
       await closeDb()
       const content = JSON.parse(fs.readFileSync(storePath, 'utf-8'))
       expect(content.runs.length).toBeLessThanOrEqual(500)
-    })
+    }, DURABLE_RETENTION_TIMEOUT_MS)
 
     it('trims telemetry to MAX_TELEMETRY on save', async () => {
       const dir = tmp()
@@ -189,7 +194,7 @@ describe('db/index.ts durability', () => {
       await closeDb()
       const content = JSON.parse(fs.readFileSync(storePath, 'utf-8'))
       expect(content.telemetry.length).toBeLessThanOrEqual(2000)
-    })
+    }, DURABLE_RETENTION_TIMEOUT_MS)
 
     it('store retains _schemaVersion after trimming', async () => {
       const dir = tmp()
@@ -202,7 +207,7 @@ describe('db/index.ts durability', () => {
       const content = JSON.parse(fs.readFileSync(storePath, 'utf-8'))
       expect(content._schemaVersion).toBe(1)
       expect(content.counters.audit).toBe(1100)
-    })
+    }, DURABLE_RETENTION_TIMEOUT_MS)
   })
 
   describe('preserve dirty changes', () => {
