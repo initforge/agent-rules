@@ -1,4 +1,5 @@
-import { getHandler, listRegistrations, resolveIntegrationManifestDir } from "../integration/installer-registry.js";
+import { handlerForRegistryEntry, resolveIntegrationManifestDir } from "../integration/installer-registry.js";
+import { loadIntegrationInventory } from "../integration/inventory.js";
 import { getRepoRoot } from "../adapters/repo.js";
 import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
 
@@ -19,17 +20,24 @@ export async function integrationCmd(
   }
 
   const repoRoot = getRepoRoot();
+  const inventory = await loadIntegrationInventory(repoRoot);
+  const entries = inventory.entries;
 
   const ids = integrationId === "all" || !integrationId
-    ? listRegistrations()
+    ? entries.map((entry) => entry.id)
     : [integrationId];
 
   const results: Record<string, { ok: boolean; message: string }> = {};
 
   for (const id of ids) {
-    const handler = getHandler(id);
+    const entry = entries.find((candidate) => candidate.id === id);
+    if (!entry) {
+      results[id] = { ok: false, message: `Unknown integration: ${id} (not present in the canonical registry)` };
+      continue;
+    }
+    const handler = handlerForRegistryEntry(repoRoot, entry);
     if (!handler) {
-      results[id] = { ok: false, message: `Unknown integration: ${id}` };
+      results[id] = { ok: false, message: `No install handler for ${id} (install.type=${String(entry.install?.type)})` };
       continue;
     }
 

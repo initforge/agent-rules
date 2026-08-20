@@ -2,8 +2,9 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = path.resolve(new URL('..', import.meta.url).pathname);
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const file = path.join(root, 'generated', 'repo-facts.json');
 if (!fs.existsSync(file)) throw new Error('generated/repo-facts.json is missing; run npm run build');
 const artifact = JSON.parse(fs.readFileSync(file, 'utf8'));

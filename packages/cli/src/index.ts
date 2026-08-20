@@ -31,7 +31,6 @@ import { runnerCmd } from "./commands/runner.js";
 import { topologyCmd } from "./commands/topology.js";
 import { adversarialCmd } from "./commands/adversarial.js";
 import { certifyCmd } from "./commands/certify.js";
-import { mcpSessionCmd } from "./commands/mcp-session.js";
 import { proofPlanCmd } from "./commands/proof-plan.js";
 import { initNorthStar, northStarDrain, northStarReference, northStarReferenceSearch, northStarRun, northStarStatus, NORTHSTAR_AGENTS, NORTHSTAR_EVIDENCE_KINDS } from "./commands/northstar-ux.js";
 import { createOpencodeClient } from "@opencode-ai/sdk/v2/client";
@@ -486,19 +485,6 @@ program
   .action(async (args: string[]) => {
     const opts = program.optsWithGlobals() as CliOptions;
     const result = await proofPlanCmd(args, opts);
-    formatOutput(result, opts);
-  });
-
-
-// ── mcp-session ─────────────────────────────────────────────────────
-program
-  .command("mcp-session")
-  .description("Persistent MCP session control (owner §6): list/inspect/reconnect/stop/close-stale; explicit owner actions only, no TTL, no auto-expiry")
-  .argument("[args...]", "Subcommand: list | inspect <lease> | reconnect <lease> | stop <lease> | close-stale")
-  .allowUnknownOption(true)
-  .action(async (args: string[]) => {
-    const opts = program.optsWithGlobals() as CliOptions;
-    const result = await mcpSessionCmd(args, opts);
     formatOutput(result, opts);
   });
 

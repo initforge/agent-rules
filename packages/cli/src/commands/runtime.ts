@@ -113,11 +113,11 @@ export async function runtimeReconcile(
   }
   try {
     const hosts = target === "all" ? [...RUNTIME_PLATFORMS] : [target as RuntimePlatform];
-    const result = await reconcileAll({ installedOnly, reportOnly });
+    const result = await reconcileAll({ installedOnly, reportOnly, root: getRepoRoot() });
     const requested = result.reconciled.filter((item) => hosts.includes(item.host as RuntimePlatform));
     return {
       exitCode: ExitCode.Success,
-      message: `Runtime reconcile: ${requested.filter((item) => item.installed).length} installed, ${requested.filter((item) => item.status === "unsupported").length} unsupported, ${requested.filter((item) => item.skipped).length} skipped (${reportOnly ? "report-only" : "repair-enabled"})`,
+      message: `Runtime reconcile: ${requested.filter((item) => item.installed).length} installed, ${requested.filter((item) => item.status === "unsupported").length} unsupported, ${requested.filter((item) => item.skipped).length} skipped (${reportOnly ? "report-only" : "repair-enabled"}); MCP provisioning ${result.providerProvisioning.status}`,
       data: {
         installedOnly,
         reportOnly,
@@ -133,6 +133,7 @@ export async function runtimeReconcile(
           mutated: item.receipt?.mutated ?? false,
         })),
         receipts: result.receipts.filter((receipt) => hosts.includes(receipt.host as RuntimePlatform)),
+        mcps: result.providerProvisioning,
       },
     };
   } catch (error) {

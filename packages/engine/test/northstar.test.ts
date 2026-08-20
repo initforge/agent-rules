@@ -99,13 +99,16 @@ describe('North-Star routing/context', () => {
   });
   afterEach(() => fs.rmSync(repo, { recursive: true, force: true }));
 
-  it('publishes a provider-neutral CapabilityManifest with Pencil manual-only', () => {
+  it('publishes a provider-neutral CapabilityManifest with Pencil canonical explicit-only MCP', () => {
     const broker = createStandardCapabilityBroker();
     const manifest = broker.manifest();
     expect(() => assertCapabilityManifest(manifest)).not.toThrow();
     const pencil = manifest.providers.filter((provider) => provider.id === 'pencil-mcp');
     expect(pencil).toHaveLength(4);
-    expect(pencil.every((provider) => provider.explicit_only === true && provider.mode === 'host')).toBe(true);
+    // Pencil is a canonical registry MCP entry (kind mcp) that stays
+    // explicit-only: never auto-activated, never keyword-triggered. The
+    // manual mirror is skipped because the registry already registered it.
+    expect(pencil.every((provider) => provider.explicit_only === true && provider.mode === 'mcp')).toBe(true);
     expect(pencil.every((provider) => Boolean((provider.metadata as Record<string, unknown>)?.effect))).toBe(true);
   });
 

@@ -5,7 +5,8 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import ts from '../node_modules/typescript/lib/typescript.js';
 
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+import { fileURLToPath } from 'node:url';
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const sourcePath = path.join(root, 'packages/cli/src/automation/install-opencode-adapter.ts');
 const source = await fs.readFile(sourcePath, 'utf8');
 const transpiled = ts.transpileModule(source, {

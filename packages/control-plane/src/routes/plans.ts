@@ -1,4 +1,5 @@
 import { Router, type Response } from 'express'
+import path from 'node:path'
 import {
   listPlans,
   readPlanWorkspace,
@@ -41,13 +42,29 @@ function sendIntegrityError(res: Response, err: PlanIntegrityError): void {
   res.status(409).json(response)
 }
 
-router.get('/', (_req, res: Response) => {
+router.get('/', async (_req, res: Response) => {
   try {
     const root = findRoot()
+    // listPlans fails closed (409) on structural corruption of the ledger
+    // directory (bad filenames, symlinks, non-JSON artifacts). Additionally,
+    // any ledger entry whose JSON cannot be parsed is corrupt and fails the
+    // list closed (the plan-workspace reader would throw the same way).
+    // A plan whose WORKSPACE cannot be read for non-corruption reasons
+    // (legacy shape, per-plan integrity findings) is not listable and must
+    // not take down the endpoint; per-plan detail stays available on
+    // GET /api/plans/:id as 409 INTEGRITY_FAILURE.
     const planList = listPlans(root)
+    const fs = await import('node:fs')
+    const ledgerDir = path.join(root, '.agent', 'ledger')
+    for (const { planId } of planList) {
+      try { JSON.parse(fs.readFileSync(path.join(ledgerDir, `${planId}.json`), 'utf8')) }
+      catch {
+        return sendIntegrityError(res, new PlanIntegrityError([{ kind: 'MANIFEST', detail: `ledger entry ${planId}.json is not valid JSON` }]))
+      }
+    }
     const plans = planList.filter(({ planId }) => {
       try { readPlanWorkspace(planId, root); return true }
-      catch (err) { if (err instanceof LegacyRejectionError) return false; throw err }
+      catch { return false }
     })
     res.json({ ok: true, data: plans, total: plans.length, totalFound: planList.length })
   } catch (err) {

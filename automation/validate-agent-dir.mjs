@@ -173,6 +173,13 @@ function checkRequirements(planDir, planId) {
   }
 
   const ids = new Set();
+  // Plans predating the requirement `status` field (legacy/historical plans)
+  // are reported, not failed, so migration stays incremental — mirroring the
+  // existing "legacy plan (no plan.md or requirements.yaml)" warn path.
+  const hasStatusField = doc.requirements.some((r) => r?.status !== undefined);
+  if (!hasStatusField) {
+    warn(`${planId}/requirements.yaml: legacy plan predates the requirement status field; reported, not failed`);
+  }
   for (const req of doc.requirements) {
     const id = req?.id ?? '<missing id>';
     if (!req?.id) fail(`${planId}/requirements.yaml: a requirement has no id`);
@@ -180,6 +187,7 @@ function checkRequirements(planDir, planId) {
     ids.add(id);
 
     if (!req?.statement) fail(`${planId}/requirements.yaml: ${id} has no statement`);
+    if (!hasStatusField) continue; // legacy format: no status/verification contract to enforce
     if (!LIMITS.validStatuses.has(req?.status)) {
       fail(`${planId}/requirements.yaml: ${id} has invalid status "${req?.status}"`);
     }

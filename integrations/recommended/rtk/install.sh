@@ -9,7 +9,7 @@ if [ ! -f "$MANIFEST" ]; then
   exit 1
 fi
 
-VERSION=$(node -e 'const fs=require("fs"); const p=process.argv[1]; const m=JSON.parse(fs.readFileSync(p,"utf8")); if(!/^\\d+\\.\\d+\\.\\d+$/.test(m.version||"")) process.exit(2); process.stdout.write(m.version)' "$MANIFEST")
+VERSION=$(node -e 'const fs=require("fs"); const p=process.argv[1]; const m=JSON.parse(fs.readFileSync(p,"utf8")); if(!/^\d+\.\d+\.\d+$/.test(m.version||"")) process.exit(2); process.stdout.write(m.version)' "$MANIFEST")
 EXPECTED="rtk $VERSION"
 if command -v rtk >/dev/null 2>&1; then
   INSTALLED=$(rtk --version 2>/dev/null || true)
@@ -20,9 +20,21 @@ if command -v rtk >/dev/null 2>&1; then
 fi
 
 TAG="v$VERSION"
-URL="https://raw.githubusercontent.com/rtk-ai/rtk/refs/tags/$TAG/install.sh"
-echo "Installing RTK $VERSION from pinned tag $TAG..."
-curl -fsSL "$URL" | sh
+ARCH=$(uname -m)
+case "$ARCH" in
+  x86_64) ASSET="rtk-x86_64-unknown-linux-musl.tar.gz" ;;
+  aarch64) ASSET="rtk-aarch64-unknown-linux-gnu.tar.gz" ;;
+  *) echo "FAIL: unsupported architecture $ARCH" >&2; exit 1 ;;
+esac
+URL="https://github.com/rtk-ai/rtk/releases/download/$TAG/$ASSET"
+echo "Installing RTK $VERSION from pinned release asset $ASSET..."
+TMPDIR_TAR="$(mktemp -d)"
+trap 'rm -rf "$TMPDIR_TAR"' EXIT
+curl -fsSL -o "$TMPDIR_TAR/rtk.tar.gz" "$URL"
+tar -xzf "$TMPDIR_TAR/rtk.tar.gz" -C "$TMPDIR_TAR" rtk
+BINDIR="${RTK_BIN_DIR:-$HOME/.local/bin}"
+mkdir -p "$BINDIR"
+install -m 0755 "$TMPDIR_TAR/rtk" "$BINDIR/rtk"
 
 if ! command -v rtk >/dev/null 2>&1; then
   echo "FAIL: RTK installer completed but rtk is not on PATH" >&2

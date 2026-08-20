@@ -1,41 +1,96 @@
 import { execFile } from "node:child_process";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { promisify } from "node:util";
+import type { HandlerResult } from "../installer-registry.js";
 
 const execFileAsync = promisify(execFile);
 
 export interface NpmInstallOptions {
   packageName: string;
   version?: string;
-  extraArgs?: string[];
+  commandName?: string;
+  installDir?: string;
 }
 
-export async function npmInstall(options: NpmInstallOptions): Promise<{ ok: boolean; message: string }> {
-  const { packageName, version, extraArgs = [] } = options;
-  const spec = version ? `${packageName}@${version}` : `${packageName}@latest`;
+/**
+ * npm/npx policy:
+ *
+ * `npx -y pkg@ver` only populates a transient npx cache and can never count
+ * as a full install. A full install requires:
+ *   - a pinned version (never `@latest`);
+ *   - a durable, managed, user-level installation surface;
+ *   - a verifiable binary at that surface;
+ *   - an argv-safe spawn (no shell interpolation, no global shell=true).
+ *
+ * We satisfy this by `npm install --prefix <managed-dir> <pkg>@<pin>` into the
+ * integration manifest's declared install directory, then verifying the pinned
+ * binary. Re-running is idempotent and independent of MCP activation.
+ */
 
+function binFile(commandName: string): string {
+  return process.platform === "win32" ? `${commandName}.cmd` : commandName;
+}
+
+async function binaryPath(installDir: string, commandName: string): Promise<string | undefined> {
+  const candidates = [
+    path.join(installDir, "node_modules", ".bin", binFile(commandName)),
+    path.join(installDir, "node_modules", ".bin", commandName),
+    path.join(installDir, commandName),
+  ];
+  for (const candidate of candidates) {
+    if (await fs.stat(candidate).then(() => true).catch(() => false)) return candidate;
+  }
+  return undefined;
+}
+
+export async function npmInstall(options: NpmInstallOptions): Promise<HandlerResult> {
+  const { packageName, version, installDir } = options;
+  if (!packageName) return { ok: false, status: "BLOCKED", message: "npm install requires a package name" };
+  if (!version) return { ok: false, status: "BLOCKED", message: `npm install requires a pinned version for ${packageName}; @latest is never a full install` };
+  if (!installDir) return { ok: false, status: "BLOCKED", message: `npm install requires a managed install directory for ${packageName}` };
+  const spec = `${packageName}@${version}`;
   try {
-    await execFileAsync("npx", ["-y", spec, ...extraArgs, "--help"], {
-      timeout: 120_000,
-    });
-    return { ok: true, message: `Installed ${spec} via npx` };
+    await fs.mkdir(installDir, { recursive: true });
+    await execFileAsync("npm", ["install", "--prefix", installDir, "--no-save", "--no-package-lock", "--no-audit", "--no-fund", spec], { timeout: 300_000 });
+    if (options.commandName && !(await binaryPath(installDir, options.commandName))) {
+      return { ok: false, status: "PARTIAL", message: `npm install of ${spec} completed but managed binary for ${options.commandName} was not found`, location: installDir, version };
+    }
+    return { ok: true, message: `installed ${spec} at managed surface ${installDir}`, location: installDir, version };
   } catch (error) {
-    return { ok: false, message: `npx install failed for ${spec}: ${(error as Error).message}` };
+    return { ok: false, status: "BLOCKED", message: `npm install failed for ${spec}: ${(error as Error).message}` };
   }
 }
 
-export async function npmVerify(packageName: string, version?: string): Promise<{ ok: boolean; message: string }> {
-  const spec = version ? `${packageName}@${version}` : `${packageName}@latest`;
+export async function npmVerify(options: NpmInstallOptions): Promise<HandlerResult> {
+  const { packageName, version, commandName, installDir } = options;
+  if (!commandName || !installDir) {
+    return { ok: false, status: "BLOCKED", message: "npm verify requires commandName and installDir" };
+  }
+  const bin = await binaryPath(installDir, commandName);
+  if (!bin) return { ok: false, message: `missing managed binary ${commandName} at ${installDir}` };
   try {
-    await execFileAsync("npx", ["-y", spec, "--help"], {
-      timeout: 30_000,
-    });
-    return { ok: true, message: `${spec} PASS` };
+    const { stdout } = await execFileAsync(bin, ["--version"], { timeout: 30_000 });
+    const actual = stdout.trim();
+    if (version && !actual.includes(version)) {
+      return { ok: false, status: "PARTIAL", message: `version mismatch: expected ${packageName}@${version}, got ${actual}`, location: installDir, version: actual };
+    }
+    return { ok: true, message: `${packageName} PASS ${actual}`, location: installDir, version: actual };
   } catch (error) {
-    return { ok: false, message: `${spec} verify failed: ${(error as Error).message}` };
+    return { ok: false, status: "PARTIAL", message: `${packageName} verify failed: ${(error as Error).message}`, location: installDir };
   }
 }
 
-export async function npmUninstall(_packageName: string): Promise<{ ok: true; message: string }> {
-  // npx-based packages don't need explicit uninstall
-  return { ok: true, message: "npx-based package; no uninstall needed" };
+export async function npmUninstall(options: NpmInstallOptions): Promise<HandlerResult> {
+  const { packageName, installDir } = options;
+  if (!packageName || !installDir) return { ok: false, status: "BLOCKED", message: "npm uninstall requires packageName and installDir" };
+  if (!(await fs.stat(installDir).then(() => true).catch(() => false))) {
+    return { ok: true, message: `not installed: ${installDir}` };
+  }
+  try {
+    await execFileAsync("npm", ["uninstall", "--prefix", installDir, "--no-save", packageName], { timeout: 120_000 });
+    return { ok: true, message: `uninstalled ${packageName} from ${installDir}` };
+  } catch (error) {
+    return { ok: false, status: "NEEDS_USER", message: `npm uninstall failed for ${packageName}: ${(error as Error).message}` };
+  }
 }

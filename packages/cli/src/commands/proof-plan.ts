@@ -10,13 +10,14 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
 
 const REPO_ROOT = path.resolve(__dirnameSafe(), "..", "..", "..", "..");
 
 function __dirnameSafe(): string {
-  return path.dirname(new URL(import.meta.url).pathname);
+  return path.dirname(fileURLToPath(import.meta.url));
 }
 
 async function loadRouter() {

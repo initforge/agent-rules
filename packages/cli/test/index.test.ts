@@ -128,13 +128,21 @@ describe("Configuration", () => {
 describe("Integration registry", () => {
   it("registers the recommended browser providers and resolves their manifests", async () => {
     const registry = await import("../src/integration/installer-registry.js");
+    const inventory = await import("../src/integration/inventory.js");
     const root = getRepoRoot();
+    const { entries } = await inventory.loadIntegrationInventory(root);
 
-    expect(registry.listRegistrations()).toEqual(expect.arrayContaining([
+    expect(entries.map((entry) => entry.id)).toEqual(expect.arrayContaining([
       "playwright-cli",
       "playwright-mcp",
       "chrome-devtools-mcp",
+      "serena",
+      "pencil-mcp",
     ]));
+    // Every canonical registry entry resolves to a real install handler.
+    for (const entry of entries) {
+      expect(registry.handlerForRegistryEntry(root, entry)).toBeDefined();
+    }
     expect(registry.resolveIntegrationManifestDir(root, "playwright-cli")).toContain(
       path.join("integrations", "recommended", "playwright-cli"),
     );

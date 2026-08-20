@@ -389,19 +389,19 @@
    "deprecatedAliases": [],
    "priority": 30,
    "activation": "automatic",
-   "effect": {
-    "effect_level": "interactive",
-    "environment": "browser",
-    "approval": "task-scope",
-    "reversible": true,
-    "network": true,
-    "credentials": "optional",
-    "timeout_ms": 120000,
-    "provider_evidence": "health-probe"
-   }
-  },
-  {
-   "id": "rtk",
+    "effect": {
+     "effect_level": "interactive",
+     "environment": "browser",
+     "approval": "task-scope",
+     "reversible": true,
+     "network": true,
+     "credentials": "optional",
+     "timeout_ms": 120000,
+     "provider_evidence": "health-probe"
+    }
+   },
+   {
+    "id": "rtk",
    "displayName": "RTK — Rust Token Killer",
    "kind": "cli-tool",
    "policy": "recommended",
@@ -550,10 +550,12 @@
    "policy": "optional",
    "profiles": [],
    "source": {
-    "type": "github",
+    "type": "npm",
     "url": "https://github.com/callstack/agent-device",
     "version": "0.20.8",
-    "versionPolicy": "pinned"
+    "versionPolicy": "pinned",
+    "package": "agent-device",
+    "commandName": "agent-device"
    },
    "integrity": {
     "pinned": true
@@ -591,22 +593,93 @@
     "source": "integrations/recommended/agent-device/"
    },
    "nativeHosts": [],
-   "fallback": "emulator/device tooling unavailable -> report BLOCKED/NEEDS_USER; never fabricate device evidence",
-   "deprecatedAliases": [],
-   "priority": 40,
-   "activation": "explicit-only",
-   "effect": {
-    "effect_level": "interactive",
-    "environment": "host",
-    "approval": "explicit-provider",
-    "reversible": true,
-    "network": false,
-    "credentials": "optional",
-    "timeout_ms": 300000,
-    "provider_evidence": "health-probe"
+"fallback": "emulator/device tooling unavailable -> report BLOCKED/NEEDS_USER; never fabricate device evidence",
+    "deprecatedAliases": [],
+    "priority": 40,
+    "activation": "explicit-only",
+    "effect": {
+     "effect_level": "interactive",
+     "environment": "host",
+     "approval": "explicit-provider",
+     "reversible": true,
+     "network": false,
+     "credentials": "optional",
+     "timeout_ms": 300000,
+     "provider_evidence": "health-probe"
+    }
+   },
+   {
+    "id": "pencil-mcp",
+    "displayName": "Pencil (pen.dev) MCP",
+    "kind": "mcp",
+    "policy": "optional",
+    "profiles": [],
+    "source": {
+     "type": "local",
+     "url": "https://docs.pencil.dev/getting-started/ai-integration",
+     "version": "host-managed",
+     "versionPolicy": "host-managed"
+    },
+    "integrity": {
+     "pinned": false
+    },
+    "trust": "advisory-only",
+    "capabilities": [
+     "design.inspect",
+     "design.compose",
+     "design.render",
+     "design.tokens"
+    ],
+    "triggers": [
+     "explicit-pencil-selection"
+    ],
+    "sideEffects": "interactive-desktop",
+    "tokenClass": "medium",
+    "permissions": [
+     "desktop-visible"
+    ],
+    "environment": [],
+    "install": {
+     "type": "shell",
+     "handler": "pencil-mcp",
+     "script": "integrations/optional/pencil-mcp/install.sh",
+     "verify": "integrations/optional/pencil-mcp/verify-install.sh",
+     "uninstall": "integrations/optional/pencil-mcp/uninstall.sh"
+    },
+    "health": {
+     "command": "PENCIL_MCP_LAUNCH_DRY_RUN=1 node integrations/optional/pencil-mcp/launch.mjs",
+     "expectedExitCodes": [
+      0
+     ]
+    },
+    "schema": {
+     "source": "integrations/optional/pencil-mcp/"
+    },
+    "nativeHosts": [
+     "codex",
+     "claude",
+     "grok",
+     "antigravity",
+     "cursor",
+     "opencode",
+     "mimocode"
+    ],
+    "fallback": "browser/design evidence via real tooling when Pencil is not explicitly selected; Pencil stays explicit-only",
+    "deprecatedAliases": [],
+    "priority": 40,
+    "activation": "explicit-only",
+    "effect": {
+     "effect_level": "interactive",
+     "environment": "host",
+     "approval": "explicit-provider",
+     "reversible": true,
+     "network": false,
+     "credentials": "optional",
+     "timeout_ms": 120000,
+     "provider_evidence": "live-receipt"
+    }
    }
-  }
- ],
+  ],
  "profiles": {
   "core": {
    "description": "Minimal coding surface; optional providers are attached only when routed. Context7 is intentionally not part of the default core set: library docs are fetched on-demand (CLI first, MCP escalation) instead of being loaded into every coding session.",

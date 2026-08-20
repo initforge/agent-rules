@@ -3,33 +3,53 @@ import path from "node:path";
 import { binaryInstall, binaryUninstall, binaryVerify } from "./handlers/binary.js";
 import { npmInstall, npmUninstall, npmVerify } from "./handlers/npm.js";
 import { shellInstall, shellUninstall, shellVerify } from "./handlers/shell.js";
+import { detectPlatform, defaultNpmInstallDir, resolveInstallDir } from "./platform-detect.js";
+import type { RegistryEntry } from "./inventory.js";
 
-export interface IntegrationHandler {
-  install(manifestDir: string): Promise<{ ok: boolean; message: string }>;
-  verify(manifestDir: string): Promise<{ ok: boolean; message: string }>;
-  uninstall(manifestDir: string): Promise<{ ok: boolean; message: string }>;
+/** Result every platform-specific handler produces. `status` classifies a
+ *  failure (UNSUPPORTED when the host cannot provide the seam, NEEDS_USER
+ *  when owner action is required); absence of `status` means BLOCKED. */
+export interface HandlerResult {
+  ok: boolean;
+  message: string;
+  status?: "BLOCKED" | "UNSUPPORTED" | "NEEDS_USER" | "PARTIAL";
+  version?: string;
+  location?: string;
 }
 
-function npmHandler(packageName: string, extraArgs?: string[]): IntegrationHandler {
-  return {
-    install: async (dir) => {
-      const manifest = await readManifest(dir);
-      const pkg = (manifest as Record<string, unknown>).npmPackage ?? (manifest as Record<string, unknown>).package ?? packageName;
-      const version = (manifest as Record<string, unknown>).version;
-      return npmInstall({
-        packageName: pkg as string,
-        version: typeof version === "string" ? version : undefined,
-        extraArgs,
-      });
-    },
-    verify: async (dir) => {
-      const manifest = await readManifest(dir);
-      const pkg = (manifest as Record<string, unknown>).npmPackage ?? (manifest as Record<string, unknown>).package ?? packageName;
-      const version = (manifest as Record<string, unknown>).version;
-      return npmVerify(pkg as string, typeof version === "string" ? version : undefined);
-    },
-    uninstall: () => npmUninstall(packageName),
-  };
+export interface IntegrationHandler {
+  install(manifestDir: string): Promise<HandlerResult>;
+  verify(manifestDir: string): Promise<HandlerResult>;
+  uninstall(manifestDir: string): Promise<HandlerResult>;
+}
+
+async function readManifest(dir: string): Promise<Record<string, unknown>> {
+  const manifestPath = path.join(dir, "manifest.json");
+  const raw = await import("node:fs/promises").then((fs) => fs.readFile(manifestPath, "utf8"));
+  return JSON.parse(raw);
+}
+
+/**
+ * The registry is the only source of integration ids; handlers are derived
+ * from each registry entry's `install.type` plus its per-integration manifest.
+ * No module may append hard-coded provider ids outside `integrations/registry.json`.
+ */
+export function handlerForRegistryEntry(repoRoot: string, entry: RegistryEntry): IntegrationHandler | undefined {
+  const override = HANDLER_OVERRIDES.get(entry.id);
+  if (override) return override;
+  const type = entry.install?.type;
+  switch (type) {
+    case "binary":
+      return binaryHandler();
+    case "npm-npx":
+    case "npm-global":
+      return npmHandler(entry);
+    case "shell":
+      return shellHandler(repoRoot, entry);
+    default:
+      // Unknown/missing install type fails closed upstream (never silently skipped).
+      return undefined;
+  }
 }
 
 function binaryHandler(): IntegrationHandler {
@@ -40,40 +60,77 @@ function binaryHandler(): IntegrationHandler {
   };
 }
 
-function shellHandler(command: string, verifyCommand: string, installUrl?: string): IntegrationHandler {
+function npmHandler(entry: RegistryEntry): IntegrationHandler {
+  const fallback = {
+    commandName: entry.source?.commandName,
+    version: entry.source?.version,
+    packageName: entry.source?.package,
+  };
   return {
-    install: () => shellInstall({ command, verifyCommand, installUrl }),
-    verify: () => shellVerify(verifyCommand),
-    uninstall: () => shellUninstall(command),
+    install: async (dir) => {
+      const manifest = await readManifest(dir);
+      const info = detectPlatform();
+      const installDir = resolveInstallDir(manifest.installDirs as Record<string, string> | undefined, info)
+        ?? defaultNpmInstallDir(entry.id, info);
+      return npmInstall({
+        packageName: (manifest.npmPackage ?? manifest.package ?? fallback.packageName) as string,
+        version: typeof manifest.version === "string" ? manifest.version : fallback.version,
+        commandName: typeof manifest.commandName === "string" ? manifest.commandName : fallback.commandName,
+        installDir,
+      });
+    },
+    verify: async (dir) => {
+      const manifest = await readManifest(dir);
+      const info = detectPlatform();
+      const installDir = resolveInstallDir(manifest.installDirs as Record<string, string> | undefined, info)
+        ?? defaultNpmInstallDir(entry.id, info);
+      return npmVerify({
+        packageName: (manifest.npmPackage ?? manifest.package ?? fallback.packageName) as string,
+        version: typeof manifest.version === "string" ? manifest.version : fallback.version,
+        commandName: typeof manifest.commandName === "string" ? manifest.commandName : fallback.commandName,
+        installDir,
+      });
+    },
+    uninstall: async (dir) => {
+      const manifest = await readManifest(dir);
+      const info = detectPlatform();
+      const installDir = resolveInstallDir(manifest.installDirs as Record<string, string> | undefined, info)
+        ?? defaultNpmInstallDir(entry.id, info);
+      return npmUninstall({
+        packageName: (manifest.npmPackage ?? manifest.package ?? fallback.packageName) as string,
+        installDir,
+      });
+    },
   };
 }
 
-const HANDLERS: Record<string, IntegrationHandler> = {
-  "codebase-memory-mcp": binaryHandler(),
-  "playwright-cli": npmHandler("@playwright/cli"),
-  "playwright-mcp": npmHandler("@playwright/mcp"),
-  "chrome-devtools-mcp": npmHandler("chrome-devtools-mcp"),
-  "context7": npmHandler("@upstash/context7-mcp"),
-  "rtk": shellHandler("rtk --version", "rtk --version", "https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh"),
-  // Pencil is explicit-only: safe user-space install with official-link
-  // fallback; never persist /tmp/.mount_* paths (REQ-012 / AC-012).
-  "pencil-mcp": shellHandler(
-    "bash integrations/optional/pencil-mcp/install.sh",
-    "bash integrations/optional/pencil-mcp/verify.sh",
-    "https://docs.pencil.dev/getting-started/installation",
-  ),
-};
-
-export function getHandler(integrationId: string): IntegrationHandler | undefined {
-  return HANDLERS[integrationId];
+/** Pick the interpreter by script extension so scripts run through argv. */
+function scriptArgv(repoRoot: string, repoRelativePath: string): string[] {
+  const abs = path.resolve(repoRoot, repoRelativePath);
+  if (repoRelativePath.endsWith(".sh")) return ["bash", abs];
+  if (repoRelativePath.endsWith(".mjs") || repoRelativePath.endsWith(".js")) return ["node", abs];
+  if (repoRelativePath.endsWith(".ps1")) return process.platform === "win32" ? ["powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", abs] : ["pwsh", "-NoProfile", "-File", abs];
+  return ["bash", abs];
 }
 
-export function registerHandler(integrationId: string, handler: IntegrationHandler): void {
-  HANDLERS[integrationId] = handler;
-}
-
-export function listRegistrations(): string[] {
-  return Object.keys(HANDLERS);
+function shellHandler(repoRoot: string, entry: RegistryEntry): IntegrationHandler {
+  const script = entry.install?.script;
+  const verify = entry.install?.verify;
+  const uninstall = entry.install?.uninstall;
+  return {
+    install: async () => {
+      if (!script) return { ok: false, status: "UNSUPPORTED", message: `${entry.id}: registry install has no script` };
+      return shellInstall({ command: scriptArgv(repoRoot, script), verifyCommand: [], uninstallCommand: [] });
+    },
+    verify: async () => {
+      if (!verify) return { ok: false, status: "UNSUPPORTED", message: `${entry.id}: registry install has no verify script` };
+      return shellVerify(scriptArgv(repoRoot, verify));
+    },
+    uninstall: async () => {
+      if (!uninstall) return { ok: false, status: "UNSUPPORTED", message: `${entry.id}: registry install has no uninstall script` };
+      return shellUninstall(scriptArgv(repoRoot, uninstall));
+    },
+  };
 }
 
 /**
@@ -89,9 +146,19 @@ export function resolveIntegrationManifestDir(repoRoot: string, integrationId: s
   return path.join(repoRoot, "integrations", "recommended", integrationId);
 }
 
-async function readManifest(dir: string): Promise<Record<string, unknown>> {
-  const fs = await import("node:fs/promises");
-  const manifestPath = path.join(dir, "manifest.json");
-  const raw = await fs.readFile(manifestPath, "utf8");
-  return JSON.parse(raw);
+/** Extension point for host-specific handler overrides (test fixtures,
+ *  platform-specific host adapters). Overrides never add new provider ids to
+ *  the canonical inventory; provisioning iterates the registry entries only. */
+const HANDLER_OVERRIDES = new Map<string, IntegrationHandler>();
+
+export function registerHandler(integrationId: string, handler: IntegrationHandler): void {
+  HANDLER_OVERRIDES.set(integrationId, handler);
+}
+
+export function getHandlerOverride(integrationId: string): IntegrationHandler | undefined {
+  return HANDLER_OVERRIDES.get(integrationId);
+}
+
+export function clearHandlerOverrides(): void {
+  HANDLER_OVERRIDES.clear();
 }

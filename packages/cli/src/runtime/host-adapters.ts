@@ -80,7 +80,7 @@ export const HOST_SPECS: Record<string, HostSpec> = {
   },
   antigravity: {
     id: "antigravity",
-    binaries: ["antigravity", "gemini"],
+    binaries: ["antigravity", "gemini", "agy"],
     desktopProcessPatterns: ["antigravity", "gemini"],
     installRoots: [path.join(os.homedir(), ".gemini")],
     configDir: path.join(os.homedir(), ".gemini"),

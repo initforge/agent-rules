@@ -11,11 +11,10 @@
     "packages/cli",
     "packages/control-plane",
     "packages/engine",
-    "packages/kernel",
-    "packages/mcp-guardian"
+    "packages/kernel"
   ],
   "scripts": {
-    "build": "npm run build -w packages/kernel && npm run build -w packages/engine && npm run build -w packages/cli && npm run build -w packages/control-plane && npm run build -w packages/mcp-guardian && node packages/cli/dist/index.js build",
+    "build": "npm run build -w packages/kernel && npm run build -w packages/engine && npm run build -w packages/cli && npm run build -w packages/control-plane && node packages/cli/dist/index.js build",
     "test": "node automation/run-governed-vitest.mjs --project-root . --cwd . --mode full --timeout-ms 600000 -- run --config vitest.config.ts && npm run test --workspaces --if-present",
     "test:fast": "node automation/run-governed-vitest.mjs --project-root . --cwd . --mode full -- run --config vitest.config.ts --testNamePattern=\"^(?!.*\\\\[(e2e|browser)\\\\]).*$\"",
     "test:e2e": "node automation/run-governed-vitest.mjs --project-root . --cwd . --mode full -- run --config vitest.config.ts --testNamePattern=\\\"\\\\[e2e\\\\]\\\"",
@@ -25,7 +24,9 @@
     "ci:quality": "npm run build && npm run check && npm run test",
     "ci:certify": "bash automation/ci-certify.sh",
     "verify:all": "node automation/verify-all.mjs",
-    "verify:all:pwsh": "node automation/run-pwsh.mjs automation/verify-all.ps1"
+    "verify:all:pwsh": "node automation/run-pwsh.mjs automation/verify-all.ps1",
+    "verify:ci": "node automation/verify-all.mjs",
+    "verify:windows-hosts": "node automation/verify-windows-hosts.mjs"
   },
   "devDependencies": {
     "@opencode-ai/sdk": "^1.18.10"

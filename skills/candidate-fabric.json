@@ -1503,8 +1503,8 @@
         "status": "MATERIALIZED_PROVIDER",
         "artifact_path": "integrations/recommended/agent-device/manifest.json",
         "route_path": "integrations/recommended/agent-device/manifest.json",
-        "sha256": "d397e192a25a52703416afa308881119831ddbbdbe4fa07c6c1ab09ed010035c",
-        "materialized_at": "2026-08-14"
+        "sha256": "4a0a6266f8685fd861bb8bb106d162e1656a16e86984531051fd6fba2d7923fa",
+        "materialized_at": "2026-08-16"
       },
       "route_receipt": {
         "route_path": "integrations/recommended/agent-device/manifest.json",

@@ -1,0 +1,201 @@
+{
+  "schema_version": 4,
+  "plan_id": "northstar-on-demand-portable-harness",
+  "status": "ADOPTED",
+  "execution_state": "IN_PROGRESS",
+  "created_at": "2026-08-19T00:00:00+07:00",
+  "updated_at": "2026-08-19T00:00:00+07:00",
+  "shadow_revision": 0,
+  "canonical_scope": {
+    "allow_mutation": true,
+    "owners": [
+      "harness-maintainer"
+    ]
+  },
+  "original_plan": {
+    "path": ".agent/plans/northstar-on-demand-portable-harness/original.md",
+    "sha256": "e7460747e304f2e1d5108611ca6dfbcbf1c6253e5b4dd58a7f9562652ef1199f",
+    "bytes": 13828,
+    "encoding": "utf-8"
+  },
+  "effective_plan_identity": {
+    "sha256": "fd86eceb8884e4c07ca4c941b5589aa39d463bfa9d34af83aa442557832f2582",
+    "canonical_json_utf8": "{\"algorithm\":\"SHA-256\",\"approved_amendments\":[],\"composition\":\"original-plus-ordered-approved-amendment-sha256\",\"original_plan_sha256\":\"e7460747e304f2e1d5108611ca6dfbcbf1c6253e5b4dd58a7f9562652ef1199f\",\"version\":1}",
+    "bytes": 214
+  },
+  "milestones": {
+    "M1": {
+      "requirements": [
+        {
+          "id": "REQ-001",
+          "status": "PENDING",
+          "statement": "Effective intent: WorkRequest gains append-only intent_events (ADD/CORRECT/CONFIRM/REJECT/SUPERSEDE) with id, subject, provenance, rationale, reference and replaces; legacy requests remain readable.",
+          "evidenceRefs": []
+        },
+        {
+          "id": "REQ-002",
+          "status": "PENDING",
+          "statement": "WorkSpec becomes the effective state with per-item status ACTIVE/REJECTED/SUPERSEDED/UNRESOLVED; no reverse Markdown parsing; legacy fields remain readable.",
+          "evidenceRefs": []
+        },
+        {
+          "id": "REQ-003",
+          "status": "PENDING",
+          "statement": "PortablePlan upgraded to frozen execution contract with frozen intent hash, tasks/deps, traceability, scope, effect policy, capabilities, budgets, concurrency, recovery, stop conditions and references; plan/prompt are renderers of one contract; no generation before explicit request.",
+          "evidenceRefs": []
+        },
+        {
+          "id": "REQ-004",
+          "status": "PENDING",
+          "statement": "`agent-rules handoff plan|prompt --output - --persist auto|never|always` emits one self-contained artifact; plan compile stays a compatibility alias; receivers with and without runtime are both supported in one copy.",
+          "evidenceRefs": []
+        },
+        {
+          "id": "REQ-005",
+          "status": "PENDING",
+          "statement": "Pre-handoff audit returns PASS/BLOCKED/NEEDS_USER over ten checkpoints with three independent gates and full effective-intent convergence.",
+          "evidenceRefs": []
+        },
+        {
+          "id": "REQ-006",
+          "status": "PENDING",
+          "statement": "TaskPacket gains machine-checkable execution policy: phases DISCOVER/PLAN/IMPLEMENT/VERIFY/REPAIR/CLOSE, scope, effects, capabilities, budgets, concurrency, proof, recovery, stop conditions.",
+          "evidenceRefs": []
+        },
+        {
+          "id": "REQ-007",
+          "status": "PENDING",
+          "statement": "Operator always selects host/model; selectProviderByEvidence removed from execution authority; approvedModels/approvedRouting migrated with compatibility reader; strong-planner/reviewer capability unverifiable returns NEEDS_USER.",
+          "evidenceRefs": []
+        }
+      ]
+    },
+    "M2": {
+      "requirements": [
+        {
+          "id": "REQ-008",
+          "status": "PENDING",
+          "statement": "MCP install profile gating with default none and convergent removal/disable/migrate/NEEDS_USER entry handling.",
+          "evidenceRefs": []
+        },
+        {
+          "id": "REQ-009",
+          "status": "PENDING",
+          "statement": "Host config never contains enabled agent-rules MCP entries by default; disabled descriptors or removal plus task-local overlay.",
+          "evidenceRefs": []
+        },
+        {
+          "id": "REQ-010",
+          "status": "PENDING",
+          "statement": "Task-scoped MCP activation with PID/process-tree receipts and full teardown; idle-zero guarantee (0 managed process/CPU/RAM/network without a task).",
+          "evidenceRefs": []
+        },
+        {
+          "id": "REQ-011",
+          "status": "PENDING",
+          "statement": "install/sync/verify/reconcile lifecycle fixes: install profile-scoped, sync once, verify read-only, reconcile exit codes reflect BLOCKED/NEEDS_USER, no out-of-task MCP network.",
+          "evidenceRefs": []
+        }
+      ]
+    },
+    "M3": {
+      "requirements": [
+        {
+          "id": "REQ-012",
+          "status": "PENDING",
+          "statement": "5fedu activates only via explicit domain_pack=5fedu marker; router telemetry stays internal.",
+          "evidenceRefs": []
+        },
+        {
+          "id": "REQ-013",
+          "status": "PENDING",
+          "statement": "Reference broker receipt drives the only 5fedu footer; no banner/template-checked/footer without a consumed receipt; BLOCKED/NEEDS_USER on inaccessible mandatory source; stale projection tests.",
+          "evidenceRefs": []
+        }
+      ]
+    },
+    "M4": {
+      "requirements": [
+        {
+          "id": "REQ-014",
+          "status": "PENDING",
+          "statement": "Versioned host-capability attestation and enforcement order native -> broker -> workspace transaction -> BLOCKED.",
+          "evidenceRefs": []
+        },
+        {
+          "id": "REQ-015",
+          "status": "PENDING",
+          "statement": "Mutating workers run in disposable worktree transactions; read-only direct only with proven sandbox.",
+          "evidenceRefs": []
+        },
+        {
+          "id": "REQ-016",
+          "status": "PENDING",
+          "statement": "Trajectory supervisor over heartbeat/resource governor with bounded reason receipts and serialized shared mutation.",
+          "evidenceRefs": []
+        },
+        {
+          "id": "REQ-017",
+          "status": "PENDING",
+          "statement": "No hard-coded Gemini/provider routing; PreToolUse deny/ask/force_ask; adapters probe host versions.",
+          "evidenceRefs": []
+        }
+      ]
+    },
+    "M5": {
+      "requirements": [
+        {
+          "id": "REQ-018",
+          "status": "PENDING",
+          "statement": "Artifact admission EPHEMERAL/CHECKPOINTED/COORDINATED/AUDITED; support pack optional; bounded worker context; temp helper lifecycle.",
+          "evidenceRefs": []
+        },
+        {
+          "id": "REQ-019",
+          "status": "PENDING",
+          "statement": "Compaction capability UNSUPPORTED when host lacks it; single active revision pointer.",
+          "evidenceRefs": []
+        },
+        {
+          "id": "REQ-020",
+          "status": "PENDING",
+          "statement": "agent-rules close with closure transaction, residue extraction, promotion, retirement, purge eligibility and cold archive.",
+          "evidenceRefs": []
+        }
+      ]
+    },
+    "M6": {
+      "requirements": [
+        {
+          "id": "REQ-021",
+          "status": "PENDING",
+          "statement": "All ten workflow cases pass.",
+          "evidenceRefs": []
+        },
+        {
+          "id": "REQ-022",
+          "status": "PENDING",
+          "statement": "Eval suites (handoff, artifact lifecycle, MCP, 5fedu, enforcement, schema migration) pass.",
+          "evidenceRefs": []
+        },
+        {
+          "id": "REQ-023",
+          "status": "PENDING",
+          "statement": "Verification gates pass without weakening verification.",
+          "evidenceRefs": []
+        },
+        {
+          "id": "REQ-024",
+          "status": "PENDING",
+          "statement": "Reinstall, release and branch/worktree cleanup per plan section 5 with receipts.",
+          "evidenceRefs": []
+        }
+      ]
+    }
+  },
+  "reconciliations": [],
+  "closure_evidence": null,
+  "tasks": {},
+  "requirements": {},
+  "note": "Owner-authorized new phase: North-Star vNext (on-demand MCP, deterministic 5fedu, portable one-copy harness). Supersedes adaptive-minimal-proof-testing pointer (baseline merged in main, acceptance COMPLETE). Single frozen contract is this plan; no default support directory."
+}

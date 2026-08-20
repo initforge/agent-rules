@@ -9,8 +9,11 @@ import { buildOpenCodeArtifact, installOpenCodeArtifact } from "../src/runtime/o
 
 const repo = path.resolve(__dirname, "../../..");
 
+let REAL_TMP = os.tmpdir();
+
 async function fixture() {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "opencode-artifact-"));
+  REAL_TMP = await fs.realpath(REAL_TMP);
+  const root = await fs.mkdtemp(path.join(REAL_TMP, "opencode-artifact-"));
   await fs.cp(path.join(repo, "platforms", "opencode"), path.join(root, "platforms", "opencode"), { recursive: true });
   await fs.cp(path.join(repo, "packages/engine/test/fixtures/plan-identity"), path.join(root, "packages/engine/test/fixtures/plan-identity"), { recursive: true });
   // buildOpenCodeArtifact resolves the model from the root's policy lazily.
@@ -62,7 +65,7 @@ describe("native OpenCode artifact identity", () => {
   });
 
   it("does not substitute fixture paths for canonical plan files", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "opencode-missing-plan-"));
+    const root = await fs.mkdtemp(path.join(REAL_TMP, "opencode-missing-plan-"));
     await fs.cp(path.join(repo, "platforms", "opencode"), path.join(root, "platforms", "opencode"), { recursive: true });
     await fs.cp(path.join(repo, "packages/engine/test/fixtures/plan-identity"), path.join(root, "packages/engine/test/fixtures/plan-identity"), { recursive: true });
     await fs.mkdir(path.join(root, "automation"), { recursive: true });

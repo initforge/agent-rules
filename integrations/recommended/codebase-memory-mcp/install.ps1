@@ -1,5 +1,6 @@
 param([switch]$Force)
 $ErrorActionPreference = "Stop"
+$ProgressPreference = "SilentlyContinue"
 $Manifest = Get-Content -Raw (Join-Path $PSScriptRoot "manifest.json") | ConvertFrom-Json
 
 $Os = if ([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows)) {
@@ -49,6 +50,9 @@ if ($Asset.archive.EndsWith(".zip")) {
 $Exe = Get-ChildItem $Extract -Recurse -File | Where-Object { $_.Name -eq $BinaryName } | Select-Object -First 1
 if (-not $Exe) { throw "Binary not found in verified archive" }
 New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
+if ($Os -eq "windows") {
+  Get-Process -Name "codebase-memory-mcp" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+}
 Copy-Item -LiteralPath $Exe.FullName -Destination $Target -Force
 if ($Os -ne "windows") { & chmod +x $Target }
 Remove-Item -LiteralPath $Temp -Force

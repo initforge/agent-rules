@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { handlerForRegistryEntry } from "../integration/installer-registry.js";
 
 interface RegistryValidationResult {
   ok: boolean;
@@ -123,6 +124,13 @@ export async function validateToolRegistry(repoRoot: string): Promise<RegistryVa
       if (!hosts.includes(host)) {
         errors.push(`Unknown native host '${host}' for '${id}'`);
       }
+    }
+
+    // Every registry entry must resolve to a real install handler through the
+    // shared registry-driven builder. An unknown/missing install.type fails
+    // closed instead of being silently skipped at provision time.
+    if (handlerForRegistryEntry(repoRoot, tool as import("../integration/inventory.js").RegistryEntry) === undefined) {
+      errors.push(`No resolvable install handler for '${id}' (install.type=${String((tool.install as Record<string, unknown> | undefined)?.type)})`);
     }
   }
 

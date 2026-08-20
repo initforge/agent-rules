@@ -84,7 +84,8 @@ function postLaunchSnapshot(exec: ReturnType<typeof fakeExec>) {
   return snapshotDesktop(exec);
 }
 
-describe('AM-0006 focus/workspace backend', () => {
+// descendantPids/process-tree helpers are Linux /proc-based.
+describe.skipIf(process.platform !== 'linux')('AM-0006 focus/workspace backend', () => {
   it('snapshots current desktop, active window, and window facts (hashed titles)', () => {
     const exec = fakeExec(WINDOW_LINES);
     const snapshot = snapshotDesktop(exec);

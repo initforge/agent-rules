@@ -29,7 +29,10 @@ function probesWith(opts: {
     processList: async (pattern: string) => (opts.desktopProcess ? [`/proc/1/ ${pattern}`] : []),
     runProbe: async () => ({ ok: opts.probeOk ?? true, stdout: "test v1.0.0" }),
     fileExists: async (filePath: string) => {
-      if (opts.binaryOnPath && /\/usr\/local\/bin\/(codex|claude|grok|opencode|antigravity|gemini|cursor|cursor-agent|mimocode|mi-mo)$/.test(filePath)) return true;
+      // Normalize separators: on Windows path.join produces backslash paths
+      // (e.g. \usr\local\bin\codex) that must match the same binary set.
+      const norm = filePath.replace(/\\/g, '/');
+      if (opts.binaryOnPath && /(?:\/usr\/local\/bin\/|\/usr\/bin\/|C:\/Program Files\/|C:\/Users\/)(codex|claude|grok|opencode|antigravity|gemini|cursor|cursor-agent|mimocode|mi-mo)(?:\.exe)?$/.test(norm)) return true;
       if (opts.configDir && filePath === opts.configDir) return true;
       if (opts.receiptSha && /agent-rules-runtime\/receipt\.json$/.test(filePath)) return true;
       return false;
@@ -99,7 +102,7 @@ describe("host inventory, projection, and transactional repair (S4)", () => {
   });
 
   it("covers exactly the seven registered hosts with specs", () => {
-    expect(REGISTERED_HOSTS).toEqual(["codex", "grok", "antigravity", "cursor", "opencode", "mimocode", "claude"]);
+    expect(REGISTERED_HOSTS).toEqual(["opencode", "codex", "claude", "grok", "antigravity", "mimocode", "cursor"]);
     for (const host of REGISTERED_HOSTS) {
       expect(HOST_SPECS[host]).toBeDefined();
       expect(HOST_SPECS[host].binaries.length).toBeGreaterThan(0);

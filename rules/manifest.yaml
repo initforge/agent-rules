@@ -7,6 +7,7 @@ load_order:
   - 20-quality-and-safety.md
   - 25-task-lifecycle.md
   - 30-context-routing.md
+  - 42-installation-global-first.md
   - 45-adaptive-minimal-proof-testing.md
   - 50-context-budget.md
 budgets:
@@ -140,5 +141,15 @@ rule_contracts:
     enforcement: proof-router-and-proof-selection
     evidence: [rules/manifest.yaml, packages/kernel/src/northstar/proof-testing.ts, packages/kernel/src/northstar/proof-router.ts, schemas/proof-receipt.schema.json, automation/validate-rule-contracts.py]
     precedence: 45
+    failure: BLOCKED
+    fixture: automation/validate-rule-contracts.py
+  42-installation-global-first.md:
+    kind: invariant
+    trigger: install-or-provision
+    normative: "Every provider, CLI tool, runtime, and host-config install is global user-level; per-project installs are forbidden unless the project deviates from global AND the owner explicitly requested that deviation."
+    owner: harness-maintainer
+    enforcement: install-target-audit
+    evidence: [rules/manifest.yaml, integrations/registry.json, automation/validate-rule-contracts.py]
+    precedence: 115
     failure: BLOCKED
     fixture: automation/validate-rule-contracts.py

@@ -1,10 +1,12 @@
-export const RUNTIME_PLATFORMS = ["codex", "grok", "antigravity", "cursor", "opencode", "mimocode", "claude"] as const;
+export const RUNTIME_PLATFORMS = ["opencode", "codex", "claude", "grok", "antigravity", "mimocode", "cursor"] as const;
 export type RuntimePlatform = (typeof RUNTIME_PLATFORMS)[number];
 
 // ── Host reconciliation contract (REQ-004/REQ-005/REQ-006) ──────────
 // The canonical registered host set is Codex, Claude, Grok, OpenCode,
 // Antigravity, Cursor, MiMoCode. HostId aliases RuntimePlatform so the
 // transactional runtime installer and the reconciler share one identity set.
+// Reconciliation/install priority: OpenCode first, then the remaining hosts,
+// Cursor last (owner-defined order).
 
 export type HostId = RuntimePlatform;
 export const REGISTERED_HOSTS: readonly HostId[] = RUNTIME_PLATFORMS;

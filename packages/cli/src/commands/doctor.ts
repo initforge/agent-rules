@@ -7,6 +7,8 @@ import path from "node:path";
 import { verifyRuntimeReceipt, type RuntimePlatform } from "../runtime/installer.js";
 import { resolveOpenCodeModel } from "../runtime/opencode.js";
 import { collectHostKitDoctorReport, type HostKitDoctorReport } from "../host-kit/doctor.js";
+import { loadIntegrationInventory } from "../integration/inventory.js";
+import { verifyMcps } from "../integration/provisioning.js";
 
 interface DoctorCheck {
   platform: string;
@@ -560,6 +562,35 @@ export async function doctor(
     report.push({ platform: "rtk", check: "rtk-install", status: "WARN", detail: "RTK not available on PATH" });
   }
 
+  // ── Canonical MCP provisioning health ────────────────────────────────
+  // Installation health is checked independently of activation. An MCP that is
+  // not fully installed/verified is reported as a blocking failure, never
+  // downgraded to WARN. `--skip-integration-verify` explicitly skips the
+  // verification (never a PASS claim) as a documented escape hatch.
+  try {
+    const inventory = await loadIntegrationInventory(root);
+    if (skipIntegrationVerify) {
+      for (const entry of inventory.mcps) {
+        report.push({ platform: "mcp", check: `mcp-install-${entry.id}`, status: "MCP_SKIPPED", detail: "verification skipped via --skip-integration-verify; no PASS claim" });
+      }
+    } else {
+      const provisioning = await verifyMcps(root);
+      for (const result of provisioning.results) {
+        const status = result.installation.status;
+        report.push({
+          platform: "mcp",
+          check: `mcp-install-${result.id}`,
+          status: status === "PRE-EXISTING" || status === "PASS" ? "MCP_OK" : `MCP_${status}`,
+          detail: result.installation.status === "PRE-EXISTING" || result.installation.status === "PASS"
+            ? `installed=${result.installation.status} version=${result.installation.version ?? "?"} location=${result.installation.location ?? "?"} activation=${result.activation.policy}`
+            : `installation ${result.installation.status}: ${result.installation.reason ?? "no evidence"}`,
+        });
+      }
+    }
+  } catch (error) {
+    report.push({ platform: "mcp", check: "mcp-registry", status: "MCP_BLOCKED", detail: (error as Error).message });
+  }
+
   // Output
   const table = report
     .map((r) => `${r.platform}\t${r.check}\t${r.status}\t${r.detail}`)
@@ -572,7 +603,8 @@ export async function doctor(
   }
 
   const bad = report.filter((r) =>
-    ["MISSING", "NOT_LIVE", "MODEL_POLICY_DRIFT", "MODEL_POLICY_MISSING", "NATIVE_PARTIAL", "ORPHANS", "ERROR"].includes(r.status)
+    ["MISSING", "NOT_LIVE", "MODEL_POLICY_DRIFT", "MODEL_POLICY_MISSING", "NATIVE_PARTIAL", "ORPHANS", "ERROR",
+      "MCP_BLOCKED", "MCP_UNSUPPORTED", "MCP_NEEDS_USER", "MCP_PARTIAL"].includes(r.status)
   );
   const nativeObserved = report.filter((r) => r.status === "NATIVE_OBSERVED").length;
   const nativeUnverified = report.filter((r) => r.status === "NATIVE_UNVERIFIED").length;

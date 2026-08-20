@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import { detectPlatform, expandInstallDir, type PlatformInfo } from "../platform-detect.js";
+import type { HandlerResult } from "../installer-registry.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -29,12 +30,12 @@ function installRoot(manifest: BinaryManifest, info: PlatformInfo): string {
   return expandInstallDir(template, info.home);
 }
 
-export async function binaryInstall(manifestPath: string): Promise<{ ok: boolean; message: string }> {
+export async function binaryInstall(manifestPath: string): Promise<HandlerResult> {
   const raw = await fs.readFile(manifestPath, "utf8");
   const manifest: BinaryManifest = JSON.parse(raw);
   const info = detectPlatform();
   const asset = manifest.assets[info.key];
-  if (!asset) return { ok: false, message: `Unsupported platform: ${info.key}` };
+  if (!asset) return { ok: false, status: "UNSUPPORTED", message: `Unsupported platform: ${info.key}` };
 
   const root = installRoot(manifest, info);
   const binary = binaryName(manifest, info);
@@ -87,7 +88,7 @@ export async function binaryInstall(manifestPath: string): Promise<{ ok: boolean
   }
 }
 
-export async function binaryVerify(manifestPath: string): Promise<{ ok: boolean; message: string }> {
+export async function binaryVerify(manifestPath: string): Promise<HandlerResult> {
   const raw = await fs.readFile(manifestPath, "utf8");
   const manifest: BinaryManifest = JSON.parse(raw);
   const info = detectPlatform();
@@ -101,13 +102,17 @@ export async function binaryVerify(manifestPath: string): Promise<{ ok: boolean;
 
   try {
     const { stdout } = await execFileAsync(target, ["--version"], { timeout: 10_000 });
-    return { ok: true, message: `${manifest.name} PASS: ${stdout.trim()}` };
+    const actual = stdout.trim();
+    if (manifest.version && !actual.includes(manifest.version)) {
+      return { ok: false, status: "PARTIAL", message: `${manifest.name} version mismatch: expected ${manifest.version}, got ${actual}`, location: root, version: actual };
+    }
+    return { ok: true, message: `${manifest.name} PASS: ${actual}`, location: root, version: actual };
   } catch (error) {
-    return { ok: false, message: `${manifest.name} verify failed: ${(error as Error).message}` };
+    return { ok: false, status: "PARTIAL", message: `${manifest.name} verify failed: ${(error as Error).message}`, location: root };
   }
 }
 
-export async function binaryUninstall(manifestPath: string): Promise<{ ok: boolean; message: string }> {
+export async function binaryUninstall(manifestPath: string): Promise<HandlerResult> {
   const raw = await fs.readFile(manifestPath, "utf8");
   const manifest: BinaryManifest = JSON.parse(raw);
   const info = detectPlatform();

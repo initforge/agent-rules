@@ -79,6 +79,35 @@ Generated human-readable registry output lives at `generated/references/integrat
 - `AGENT_RULES_GLOBAL_MCP_PROFILE` defaults to `none`. Set it to `core`, `research`, `frontend`, `qa`, or `all` only when you intentionally want always-on MCP servers in an interactive host.
 - Explicit-only providers (for example Serena and Pencil) are never added by a global profile.
 
+## Simplified MCP architecture (broker removal)
+
+The persistent MCP broker package (`packages/mcp-guardian` — SQLite/WAL state,
+durable leases, token ACL, HTTP multiplexing, X11 bridge, reconnect state
+machine, projection) has been **removed**. It had no production caller outside
+its own tests; standard MCP must never depend on a broker/session layer.
+
+Canonical paths now:
+
+- **Standard MCP (read-only / stateless providers** — codebase-memory-mcp,
+  context7, …**)** — host native MCP → pinned provider command → stdio,
+  directly. No broker, no lease, no HTTP, no guardian wrap, no X11.
+  Pinned versions come from `integrations/registry.json` only (`@latest` is
+  forbidden), and every registry-driven output carries a pinned version.
+- **Interactive GUI MCP (playwright-mcp, chrome-devtools-mcp, pencil-mcp)** —
+  guardian-wrapped by `packages/kernel/src/runner/mcp-config.ts` at
+  materialization time; the focus guardian
+  (`packages/kernel/src/runner/mcp-guardian.mjs` + `focus-workspace.ts`) is the
+  **single canonical guardian**.
+- **Shared HTTP is explicit opt-in only** — the registry defines **no default
+  `httpEndpoint`** (previously `http://127.0.0.1:4712/mcp` for Playwright; the
+  separate `dsh-browser-server.mjs` daemon is gone). A provider only uses
+  streamable HTTP when the operator explicitly selects an HTTP endpoint.
+
+`automation/mcp-no-bypass-audit.mjs` enforces: registry-only provider sources,
+pinned versions everywhere, no plaintext tokens, no default httpEndpoint, no
+production `allowUnbound`. Live host verification is Windows-local:
+`npm run verify:windows-hosts` (never part of CI; CI uses `verify:ci`).
+
 ## Visible workspace isolation (mcp-visible-workspace-isolation-v1)
 
 Distinct concepts — never conflated:

@@ -1,0 +1,174 @@
+version: 1
+plan_id: northstar-on-demand-portable-harness
+
+requirements:
+  - id: REQ-001
+    statement: "Effective intent: WorkRequest remains the raw intent source and gains an append-only intent_events array with event kinds ADD, CORRECT, CONFIRM, REJECT, SUPERSEDE; every event carries id, subject, provenance, rationale, reference source and replaces; legacy WorkRequest without intent_events remains readable."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-002
+    statement: "WorkSpec becomes the current effective state: requirements, constraints, non-goals, decisions, assumptions, unresolved items and references each carry an item status ACTIVE, REJECTED, SUPERSEDED or UNRESOLVED; no Markdown/projection is parsed back into canonical truth; legacy WorkSpec fields remain readable."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-003
+    statement: "PortablePlan is upgraded into a frozen execution contract containing frozen effective-intent hash, tasks and dependencies, traceability requirement-to-task-to-acceptance-to-proof, scope, effect policy, capabilities, budget, concurrency, recovery and stop conditions, and references sufficient for a worker; plan and prompt are two renderers of the same frozen contract with the same semantic hash per revision; no plan/prompt is generated before an explicit request such as 'lập plan' or 'xuất prompt'."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-004
+    statement: "A new command `agent-rules handoff plan|prompt --output - --persist auto|never|always` defaults to emitting one self-contained artifact to stdout; `plan compile` becomes a compatibility alias; a receiver with full runtime verifies the hash and executes the contract, a receiver without runtime still receives scope, tasks, proof, failure rules and closure criteria in one copy."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-005
+    statement: "Mandatory pre-handoff audit returns PASS, BLOCKED or NEEDS_USER (never a default BLOCKED) and checks all ten points: requirement coverage, intact constraints/non-goals, settled decisions encoded, rejected/superseded decisions absent, no unauthorized assumptions, unresolved questions not turned into facts, implementation responsibility per requirement, acceptance/proof per requirement, sufficient references, and no drift from the final effective intent; three independent gates (intent completeness, plan/spec completeness, implementation completeness); convergence compares candidate against the full effective intent including requirements without claims."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-006
+    statement: "TaskPacket is extended with a machine-checkable execution policy: phases DISCOVER, PLAN, IMPLEMENT, VERIFY, REPAIR, CLOSE; owned/forbidden scope; effects (read, filesystem mutation, command execution, network, MCP, external write, destructive action); allowed capabilities and resources; wall-clock, step, tool-call, retry and repair budgets; concurrency and ownership; required proof, recovery and stop conditions."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-007
+    statement: "The operator always selects host/model: harness only records requested/resolved/observed model when the host provides it; selectProviderByEvidence is removed from execution authority (ranking may remain as telemetry/report); legacy approvedModels/approvedRouting artifacts are migrated to a capability/observation contract with a compatibility reader; when policy requires a strong planner/reviewer whose capability cannot be verified, the result is NEEDS_USER and never an automatic re-route to another model; deterministic proof runs first and strong semantic review runs only when risk/policy requires it."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-008
+    statement: "MCP subsystem separates installed package, host exposure and process activation; the installer provisions only integrations inside the selected install profile and explicit-only integrations (e.g. Pencil) only when the operator selects them; the default global MCP profile is none and converges: agent-rules-owned entries (by ownership/fingerprint) are removed or disabled, legacy entries with an exact known fingerprint are backed up then migrated, and user-modified entries without determinable ownership surface NEEDS_USER instead of blind deletion."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-009
+    statement: "Host config never contains an enabled agent-rules MCP entry by default: hosts with a disabled descriptor store it disabled; hosts that cannot guarantee a disabled entry does not spawn have the entry removed and use a task-local overlay instead."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-010
+    statement: "When the router selects MCPs for a task, the runtime materializes exactly that set, starts them within the task lease and writes a PID/process-tree receipt; a task that routes no MCP has no managed MCP process; end, timeout, crash and cancellation all teardown the whole process tree; no persistent broker or HTTP daemon is left behind; guarantee: 0 managed MCP process, CPU, RAM and network when no task is active (binaries/cache may remain on disk)."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-011
+    statement: "Installer/verifier lifecycle bugs are fixed: install does not provision the whole registry; sync reconciles exactly once; verify is strictly read-only; reconcile exit code reflects MCP BLOCKED/NEEDS_USER; remote MCPs never connect or use the network outside a routed task."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-012
+    statement: "5fedu activates only when a project/profile/CLI marker confirms domain_pack=5fedu; keywords in prompts never activate it; router telemetry such as intent_signals, matched phrases or 'intent detected' remains internal data and never enters ordinary answers."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-013
+    statement: "The reference broker returns a receipt with manifest ID, source path, anchors, hash and the component/behavior actually used; only when that receipt is consumed does the renderer append the short footer `5fedu reference used: <component/behavior> — <manifest-bound path/anchor>, sha256:<short>`; when 5fedu is inactive or active without a used reference there is no banner, no 'template checked' and no footer; a mandatory source that is not accessible is BLOCKED/NEEDS_USER and never reported as checked; tests cover both the canonical source and the installed runtime to catch stale projections."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-014
+    statement: "A versioned host-capability attestation is added covering native pre-effect enforcement, sandbox, path permissions, MCP lifecycle, worktree support, telemetry and compaction; enforcement order is native sandbox/hook/permission with proof, then Capability Broker when the tool/effect is broker-managed, then isolated workspace transaction, then BLOCKED when mutation cannot be controlled."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-015
+    statement: "Every mutating worker runs by default inside a disposable worktree transaction; only the diff is promoted into the canonical branch after scope audit, verification and acceptance; read-only work may run directly only when a sandbox proves no mutation."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-016
+    statement: "The heartbeat/resource governor is extended into a trajectory supervisor detecting repeated tool/read sequences, no-progress, retry storms, budget exhaustion and orphan processes, with pause/repair/stop decisions carrying a bounded reason receipt; shared mutations are serialized and concurrency is only allowed for read-only or non-overlapping-scope transactions."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-017
+    statement: "Hard-coded Gemini/provider routing is removed from agent templates; PreToolUse returns deny/ask/force_ask according to execution policy instead of always allow; no core branch is named after Gemini 3.7 Flash or Antigravity; adapters probe host version because host schemas change, and capability baselines (Codex sandbox + MCP enabled=false, Claude/Antigravity pre-tool deny, OpenCode V2 disabled=true) are never assumed when a live probe fails."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-018
+    statement: "Artifact admission is enforced before any persistence with classes EPHEMERAL, CHECKPOINTED, COORDINATED and AUDITED; persistence is admitted only when required for restart/resume, coordination, audit/replay, evidence, external filesystem input or owner policy; the support pack becomes an optional projection that goal/reconcile/runner do not require when TaskPacket/contract is sufficient; workers receive bounded context and minimal policy without manual artifact management; temporary helpers carry owner, purpose, TTL, regeneration rule and cleanup state."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-019
+    statement: "Host-native compaction is never treated as a guarantee: when the host does not support it the runtime uses a minimal checkpoint and records the capability as UNSUPPORTED; the current pointer references exactly one active revision and stale projections are never read by active retrieval."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-020
+    statement: "`agent-rules close` (compatibility alias of closeout) succeeds only after evidence-derived PASS, intent/spec/implementation reconciliation, and scope/verification integrity PASS; the closure transaction extracts durable semantic residue (purpose, outcome, durable decisions/invariants, changed surfaces, final baseline, proof result, remaining issues, historical pointer), promotes long-lived requirements into project contracts/rules/tests/docs, retires implementation-local requirements, moves the pointer ACTIVE to RETIRED, archives history to a cold content-addressed store, and marks regenerable/temp artifacts PURGE_ELIGIBLE for reachability/retention-based purge without purging required evidence, referenced artifacts or unresolved work; explicit close phrases trigger the terminal audit and never bypass PASS; historical plans leave hot retrieval while remaining auditable."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-021
+    statement: "All ten mandatory workflow cases pass: one-file fix without durable support files, one-shot refactor with a single self-contained contract, strong-planner to OpenCode one-copy handoff, 4-hour/restart task with minimal checkpoint and resume, multi-agent with minimal coordination state and non-overlapping ownership, high-risk/auditable retention with closure that never purges proof, external intermediate file with lifecycle and cleanup, long-completed plan leaving active retrieval with searchable residue, long-lived requirement promotion before retirement, and implementation-local requirement retirement/archival after closure."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-022
+    statement: "Eval suites pass for one-copy handoff and cheap-model implementation, artifact minimization and adaptive persistence, no support-file invention, kill/restart/resume, projection consistency after amendment, closure and durable residue, requirement promotion, safe cleanup and reachability GC, cross-host/model portability without a model catalog, MCP idle-zero/route-only/teardown/reinstall-null cases, 5fedu inactive/no-footer/receipt-footer/no-leakage cases, enforcement (out-of-scope mutation blocked or quarantined, fallback transaction/BLOCKED, workers cannot author PASS, operator model selection never overridden), and schema migration (legacy WorkRequest/WorkSpec/PortablePlan/support pack readable, renderer round-trip never turns Markdown into truth, legacy compiler removed only after behavioral/eval parity)."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"
+
+  - id: REQ-023
+    statement: "All verification gates pass without weakening, skipping or hard-disabling verification: npm ci, npm run build, npm run check, npm test, npm run verify:all, package lifecycle smoke, Windows live-host verification with reinstall, and installed-runtime parity for Codex, Claude, Grok, OpenCode, Antigravity, Cursor and Mimocode when the host is present; results use exactly PASS/PARTIAL/BLOCKED/UNSUPPORTED/PRE-EXISTING/NEEDS_USER."
+    status: active
+    verification:
+      - command: "npm ci"
+      - command: "npm run build"
+      - command: "npm run check"
+      - command: "npm test"
+      - command: "npm run verify:all"
+
+  - id: REQ-024
+    statement: "Release and cleanup per plan section 5 complete only with receipt PASS for each step: host-config inventory and backup before clean reinstall; owned-runtime uninstall with legacy MCP entry cleanup and managed process-tree termination; `agent-rules runtime reinstall all` with default global MCP profile none, doctor and live-host verification; fresh host session confirming 0 managed MCP processes with no task, 5fedu inactive outside its project, and installed projection hash matching canonical source; verified merge to local main and push to origin/main; all workflows green on the final main SHA (native-unsupported runs record UNSUPPORTED, never fake PASS, real native failures stay red); on CI failure fixes stay on the isolated branch; post-green backup bundle at P:\agent-rules-branch-backups\pre-cleanup-<final-sha>.bundle with SHA-256 recorded; deletion of all remote branches except main (including adaptive-minimal-proof-testing, integration/persistent-mcp-session-broker and this task branch), all local branches except main, auxiliary worktrees and ref pruning; final inventory of exactly one worktree, one local main, one origin/main with local HEAD at the final green SHA; closure transaction retiring the active plan, compacting residue and cleaning support artifacts."
+    status: active
+    verification:
+      - command: "npm run build"
+      - command: "npm test --workspaces --if-present"

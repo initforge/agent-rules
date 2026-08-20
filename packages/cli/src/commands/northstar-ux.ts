@@ -60,7 +60,7 @@ function normalizeConfig(raw: Partial<NorthStarCliConfig>): NorthStarCliConfig {
   };
 }
 
-export function initNorthStar(repoRoot: string, agent: AgentKind = 'claude', domainPack: string | null = null, planner: AgentKind = 'claude'): { created: boolean; path: string; config: NorthStarCliConfig } {
+export function initNorthStar(repoRoot: string, agent: AgentKind = 'claude', domainPack: string | null = null, planner: AgentKind = 'claude'): { created: boolean; path: string; config: NorthStarCliConfig; provisioning: { status: 'PENDING'; install_command: string; note: string } } {
   if (!NORTHSTAR_AGENTS.includes(agent)) throw new Error(`unsupported agent: ${agent}`);
   if (!NORTHSTAR_AGENTS.includes(planner)) throw new Error(`unsupported planner: ${planner}`);
   const file = path.join(repoRoot, '.agent', 'northstar.json');
@@ -69,7 +69,7 @@ export function initNorthStar(repoRoot: string, agent: AgentKind = 'claude', dom
     const config = normalizeConfig(raw);
     // Persist defaulted fields so all hosts observe the same canonical config.
     if (JSON.stringify(raw) !== JSON.stringify(config)) atomicJson(file, config);
-    return { created: false, path: file, config };
+    return { created: false, path: file, config, provisioning: PROVISIONING_PENDING };
   }
   const config: NorthStarCliConfig = {
     protocol_version: NORTH_STAR_PROTOCOL_VERSION,
@@ -79,8 +79,16 @@ export function initNorthStar(repoRoot: string, agent: AgentKind = 'claude', dom
     domain_pack: domainPack,
   };
   atomicJson(file, config);
-  return { created: true, path: file, config };
+  return { created: true, path: file, config, provisioning: PROVISIONING_PENDING };
 }
+
+// init creates project config only; it never claims MCPs are ready. Canonical
+// MCP provisioning is owned by the install/sync/reconcile lifecycles.
+const PROVISIONING_PENDING = {
+  status: 'PENDING',
+  install_command: 'agent-rules install',
+  note: 'init creates project config only; canonical MCP provisioning is performed by the install/sync/reconcile lifecycle',
+} as const;
 
 function readConfig(repoRoot: string): NorthStarCliConfig {
   const file = path.join(repoRoot, '.agent', 'northstar.json');

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Canonical SHA256 hashes for all scripts the installer may execute. Scripts are verified against this manifest before execution.",
-  "generated_at": "2026-08-11T03:09:02+00:00",
+  "generated_at": "2026-08-17T00:47:06+00:00",
   "files": {
     "automation/02-install-runtime.ps1": "21862ba08b4fed9ad0f3c30174248f9090805ab7a9e7727fe77cc26cb5be45fe",
     "automation/11-install-runtime-hooks.sh": "0b7ec19e30100165dee8eca04582146df2333aa0f4701176fb7cb9f9b8a59be2",
@@ -9,7 +9,7 @@
     "automation/09-doctor.ps1": "01c43030dddaefcc3c05abee185e166d6888d4ad7013e62f25f23c96b3d165a7",
     "automation/path-compat.ps1": "681621fc0603537829f5b7b944411658b90b8e72acfe4e5195242101070d3e85",
     "automation/01-build-runtime.ps1": "120c2172b46017aa4e166f4ccc437f3b9de5a1a58bb9df77ef251917e8966b30",
-    "integrations/recommended/codebase-memory-mcp/install.ps1": "6ccfb1ab4dde49d0935aea85e1e4c34265937ea24c17387a8a1536bcfa722188",
+    "integrations/recommended/codebase-memory-mcp/install.ps1": "fce433af1f05e53a4215f6a190eb68726f4cc2038b37090887db3c6208ebc746",
     "integrations/recommended/codebase-memory-mcp/verify.ps1": "a2bb174033efdb5641ffc16627acdb0574555cdef15bbb963f5a00a55b32e4ca",
     "integrations/recommended/codebase-memory-mcp/uninstall.ps1": "f5d3235fdd333ad367079f5a5261861fac30cbe9bfbb6bdd42186f18c3eee2fc",
     "automation/03-validate-context.ps1": "bedd7700ee0b0f2706d9afe859a8c2ec077d843e3d2d76716f06b9c0cc074e8d",
@@ -25,7 +25,7 @@
     "automation/audit-ui-routing.ps1": "de224c97c9fbe424033ac4722db484575b88689572b079198148a16acfc92c11",
     "automation/audit-plan-artifact.ps1": "94b46b1007a644b29db16d4bc9858841eaa16b3aaef7bfde8ee977edcded6997",
     "automation/test-workctl.py": "0ddcea2fb53c4013cb14a0e658ec7718f35a2ee4caba145a08329fdd00068944",
-    "automation/test-skill-gate-stack.py": "3fb0190513559d969f4455e2c1d35405020dd452444b6dab5fcf3c21855fd80f",
+    "automation/test-skill-gate-stack.py": "fec179a51860bea271cd752e7f6e996723598edacba06384d3d475384857c35b",
     "automation/test-external-receipt.py": "a06043c654f7fa7c46e5dd5db49c00abfff0dc82de30462d067c9ee4ca89e294",
     "automation/audit-workflow-clarity.ps1": "34d1888594b71e4acc7dc02512d6629fd06fe14876c594ba5ff629c4aa66c395",
     "automation/validate-tool-registry.ps1": "7e9d77df3344d5fd86c1bbb05e13a203f128ad10616049abbb0f31b401a3713a",

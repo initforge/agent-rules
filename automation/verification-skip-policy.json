@@ -14,6 +14,161 @@
         "file": "automation/host-attestation.test.ts",
         "fullName": "createExecutableSnapshot replaces Windows file and directory DACLs and verifies the exact one-ACE policy",
         "rationale": "Native Windows DACL attestation can only execute on win32. POSIX snapshot hardening tests execute on macOS instead."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend snapshots current desktop, active window, and window facts (hashed titles)",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend resolves the target workspace from an explicit source window binding",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend honors an explicit owner-provided workspace override",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend fails closed when the source window is not on this display",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend fails closed (needs-user) with multiple candidate windows and no binding",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend never calls activating/switch commands during placement",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend verifies the owner desktop and active window are preserved after launch",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend attributes the provider window by exact _NET_WM_PID",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend never claims an unattributed new window (no first-window fallback)",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend attributes a window owned by a descendant of the provider process tree",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend parses decimal and hex window ids",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend grants placed only with post-move proof (providerWorkspace === targetWorkspace)",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend fails verification (never placed) when the window did not actually move",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend records the post-move owner state in the receipt after",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend proves the provider window is visible and non-iconic (WM_STATE) when placed",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend fails verification when the provider window is iconic on the target workspace",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend fails verification when another window changed workspace during the move",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend fails verification when the provider window steals the active window (race guard)",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend groups 9 mixed windows into a single OpenCode source session (no child-window miscounting)",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend narrows multiple OC sessions by project root (title contains project basename)",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend never counts browser/MCP child windows as OpenCode source windows",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend returns grouped NEEDS_USER (not a guess) for two real indistinguishable OC sessions",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend never infers the current desktop as the target (race-safe default)",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend classifies a desktop change observed in the race window as detected_after_violation (never a warning)",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend classifies a provider active-window steal observed in the race window as detected_after_violation",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend classifies suspected owner interaction in the race window as unobservable",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend classifies an unresolvable binding as blocked_before_launch",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend issues the EWMH _NET_WM_DESKTOP client message (wmctrl -t) and never activates",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend fails closed (blocked, never prevented) when the EWMH move command is rejected",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend terminates the full descendant process tree without touching the caller group",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend detects a lifecycle focus violation only when the provider steals focus from another workspace",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
       }
     ],
     "win32": [
@@ -148,11 +303,6 @@
         "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
       },
       {
-        "file": "packages/engine/test/m11-terminal-evidence.test.ts",
-        "fullName": "atomicLedgerWrite rejects symlink target",
-        "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
-      },
-      {
         "file": "packages/engine/test/parity-contracts.test.ts",
         "fullName": "Draft-07 parity schema runtime rejects symbolic-link segments inside the allowlisted schema root",
         "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
@@ -251,6 +401,161 @@
         "file": "platforms/claude/adapter.test.ts",
         "fullName": "claude adapter — worktree isolation (fail closed) 9. dispatch with symlink escape rejects",
         "rationale": "Inapplicable on Windows without native symlink support or developer mode permissions."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend snapshots current desktop, active window, and window facts (hashed titles)",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend resolves the target workspace from an explicit source window binding",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend honors an explicit owner-provided workspace override",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend fails closed when the source window is not on this display",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend fails closed (needs-user) with multiple candidate windows and no binding",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend never calls activating/switch commands during placement",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend verifies the owner desktop and active window are preserved after launch",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend attributes the provider window by exact _NET_WM_PID",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend never claims an unattributed new window (no first-window fallback)",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend attributes a window owned by a descendant of the provider process tree",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend parses decimal and hex window ids",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend grants placed only with post-move proof (providerWorkspace === targetWorkspace)",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend fails verification (never placed) when the window did not actually move",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend records the post-move owner state in the receipt after",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend proves the provider window is visible and non-iconic (WM_STATE) when placed",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend fails verification when the provider window is iconic on the target workspace",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend fails verification when another window changed workspace during the move",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend fails verification when the provider window steals the active window (race guard)",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend groups 9 mixed windows into a single OpenCode source session (no child-window miscounting)",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend narrows multiple OC sessions by project root (title contains project basename)",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend never counts browser/MCP child windows as OpenCode source windows",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend returns grouped NEEDS_USER (not a guess) for two real indistinguishable OC sessions",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend never infers the current desktop as the target (race-safe default)",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend classifies a desktop change observed in the race window as detected_after_violation (never a warning)",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend classifies a provider active-window steal observed in the race window as detected_after_violation",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend classifies suspected owner interaction in the race window as unobservable",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend classifies an unresolvable binding as blocked_before_launch",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend issues the EWMH _NET_WM_DESKTOP client message (wmctrl -t) and never activates",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend fails closed (blocked, never prevented) when the EWMH move command is rejected",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend terminates the full descendant process tree without touching the caller group",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
+      },
+      {
+        "file": "packages\\kernel\\test\\focus-workspace.test.ts",
+        "fullName": "AM-0006 focus/workspace backend detects a lifecycle focus violation only when the provider steals focus from another workspace",
+        "rationale": "Linux EWMH/X11 window management and /proc process tree inspection is inapplicable on non-Linux platforms."
       }
     ]
   },

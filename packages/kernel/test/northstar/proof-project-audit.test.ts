@@ -9,11 +9,17 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { auditProject, type ProjectAudit } from '../../src/northstar/project-audit.js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const HOME = os.homedir();
+// The agent-rules target must be the CURRENT repository (CI checkouts land
+// under $HOME/work/... not $HOME/Projects/...). Resolve from this test file:
+// test/northstar -> test -> kernel -> packages -> repo root.
+const CURRENT_REPO = path.resolve(__dirname, '..', '..', '..', '..');
 const TARGETS = [
-  { name: 'agent-rules', root: path.join(HOME, 'Projects', 'agent-rules') },
+  { name: 'agent-rules', root: CURRENT_REPO },
   { name: 'ZaloAI-Ecommerce', root: path.join(HOME, 'Projects', 'ZaloAI-Ecommerce') },
   { name: 'pos-ops', root: path.join(HOME, 'Projects', 'pos-ops') },
 ];

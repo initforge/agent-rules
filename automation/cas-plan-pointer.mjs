@@ -54,6 +54,16 @@ function sha256(p) {
   return createHash("sha256").update(fs.readFileSync(p)).digest("hex");
 }
 
+/** Read effective_plan_identity.sha256 from a ledger file (AM0015 binding). */
+function readLedgerEffectiveIdentitySha256(ledgerPath) {
+  try {
+    const ledger = JSON.parse(fs.readFileSync(ledgerPath, "utf8"));
+    const id = ledger.effective_plan_identity;
+    if (id && typeof id.sha256 === "string" && /^[a-f0-9]{64}$/.test(id.sha256)) return id.sha256;
+  } catch { /* fall through */ }
+  return sha256(ledgerPath);
+}
+
 const planId = process.argv[2];
 if (!planId) {
   console.error("usage: node automation/cas-plan-pointer.mjs <plan-id> [expected-generation]");
@@ -122,7 +132,11 @@ const candidate = {
     path: ledgerRel,
     sha256: sha256(ledger),
     observed_revision: 1,
-    observed_effective_sha256: sha256(ledger),
+    // observed_effective_sha256 is the ledger's effective_plan_identity.sha256
+    // (hash of the canonical plan JSON), NOT the ledger file hash — the AM0015
+    // scorecard binding and gather-scorecard-evidence.py require this
+    // equality to consider evidence bound.
+    observed_effective_sha256: readLedgerEffectiveIdentitySha256(ledger),
     plan_status: "ADOPTED",
     execution_state: "IN_PROGRESS",
   },

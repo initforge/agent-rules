@@ -2,6 +2,7 @@ import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
 import { getRepoRoot } from "../adapters/repo.js";
 import { RuntimeInstaller, RUNTIME_PLATFORMS } from "../runtime/installer.js";
 import type { RuntimePlatform } from "../runtime/contracts.js";
+import { provisionMcps } from "../integration/provisioning.js";
 
 /**
  * Install agent-rules runtime for one or all platforms.
@@ -54,6 +55,15 @@ export async function installCmd(
     }
   }
 
+  // MCP provisioning is a canonical part of the install lifecycle: every
+  // `kind: mcp` entry is provisioned fully, independent of activation policy.
+  let provisioning;
+  try {
+    provisioning = await provisionMcps(repoRoot, { dryRun: options.dryRun });
+  } catch (error) {
+    provisioning = { kind: "mcp", source: "integrations/registry.json", total: 0, status: "BLOCKED", success: false, results: [], error: (error as Error).message };
+  }
+
   if (platform === "all") {
     const results: Record<string, { ok: boolean; action: string; error?: string }> = {};
     for (const p of RUNTIME_PLATFORMS) {
@@ -62,9 +72,11 @@ export async function installCmd(
 
     const allOk = Object.values(results).every((r) => r.ok);
     const failed = Object.entries(results).filter(([, r]) => !r.ok);
+    const mcpsOk = provisioning.success;
+    const overallOk = allOk && mcpsOk;
 
     if (options.json) {
-      console.log(JSON.stringify(results, null, 2));
+      console.log(JSON.stringify({ ...results, mcps: provisioning }, null, 2));
     } else {
       console.log(`Install results:`);
       for (const [p, r] of Object.entries(results)) {
@@ -72,24 +84,26 @@ export async function installCmd(
         const detail = r.ok ? r.action : r.error;
         console.log(`  ${icon} ${p}: ${detail}`);
       }
+      console.log(`MCP provisioning (${provisioning.total} canonical MCP entries): ${provisioning.status}${provisioning.success ? "" : " — not all MCPs are fully installed"}`);
     }
 
     return {
-      exitCode: allOk ? ExitCode.Success : ExitCode.LegacyFailed,
-      message: allOk
-        ? `All ${RUNTIME_PLATFORMS.length} platforms ready`
-        : `${failed.length} platform(s) failed: ${failed.map(([p]) => p).join(", ")}`,
-      data: results,
+      exitCode: overallOk ? ExitCode.Success : ExitCode.LegacyFailed,
+      message: overallOk
+        ? `All ${RUNTIME_PLATFORMS.length} platforms ready and ${provisioning.total} canonical MCP entries provisioned`
+        : `${failed.length} platform(s) failed and/or MCP provisioning ${provisioning.status}: ${[failed.map(([p]) => p).join(", "), provisioning.status === "PASS" ? "" : `mcp=${provisioning.status}`].filter(Boolean).join("; ")}`,
+      data: { results, mcps: provisioning },
     };
   }
 
   // Single platform
   const result = await installOrUpdate(platform);
+  const overallOk = result.ok && provisioning.success;
   return {
-    exitCode: result.ok ? ExitCode.Success : ExitCode.GeneralError,
-    message: result.ok
-      ? `${platform}: ${result.action}`
-      : `${platform} failed: ${result.error}`,
-    data: { platform, ...result },
+    exitCode: overallOk ? ExitCode.Success : ExitCode.GeneralError,
+    message: overallOk
+      ? `${platform}: ${result.action}; MCP provisioning ${provisioning.status}`
+      : `${platform} failed: ${result.error ?? `MCP provisioning ${provisioning.status}`}`,
+    data: { platform, ...result, mcps: provisioning },
   };
 }

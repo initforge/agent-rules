@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { detectPlatform, expandInstallDir } from "../../src/integration/platform-detect.js";
-import { getHandler, listRegistrations } from "../../src/integration/installer-registry.js";
-import { npmVerify, npmUninstall } from "../../src/integration/handlers/npm.js";
+import { detectPlatform, expandInstallDir, resolveInstallDir } from "../../src/integration/platform-detect.js";
+import { handlerForRegistryEntry } from "../../src/integration/installer-registry.js";
+import { loadIntegrationInventory } from "../../src/integration/inventory.js";
+import { npmUninstall } from "../../src/integration/handlers/npm.js";
+import { getRepoRoot } from "../../src/adapters/repo.js";
 
 describe("platform-detect", () => {
   it("detects current platform", () => {
@@ -21,36 +23,37 @@ describe("platform-detect", () => {
     const result = expandInstallDir("%LOCALAPPDATA%\\Programs\\test", "/home/user");
     expect(result).toContain("Programs\\test");
   });
+
+  it("resolves a durable install dir from a manifest installDirs map", () => {
+    const info = { platform: "linux", arch: "amd64", key: "linux-amd64", home: "/home/user" };
+    expect(resolveInstallDir({ linux: "$HOME/.local/share/x", windows: "%LOCALAPPDATA%\\x" }, info)).toBe("/home/user/.local/share/x");
+    expect(resolveInstallDir({ windows: "%LOCALAPPDATA%\\x" }, info)).toBeUndefined();
+  });
 });
 
-describe("installer-registry", () => {
-  it("lists registered integrations", () => {
-    const registrations = listRegistrations();
-    expect(registrations).toContain("codebase-memory-mcp");
-    expect(registrations).toContain("playwright-mcp");
-    expect(registrations).toContain("chrome-devtools-mcp");
-    expect(registrations).toContain("context7");
-    expect(registrations).toContain("rtk");
+describe("registry-driven installer-registry", () => {
+  it("resolves a handler for every canonical registry entry (single source of truth)", async () => {
+    const root = getRepoRoot();
+    const inventory = await loadIntegrationInventory(root);
+    expect(inventory.entries.length).toBeGreaterThan(0);
+    for (const entry of inventory.entries) {
+      expect(handlerForRegistryEntry(root, entry), `handler for ${entry.id}`).toBeDefined();
+    }
   });
 
-  it("returns handler for known integration", () => {
-    const handler = getHandler("playwright-mcp");
-    expect(handler).toBeDefined();
-    expect(handler!.install).toBeInstanceOf(Function);
-    expect(handler!.verify).toBeInstanceOf(Function);
-    expect(handler!.uninstall).toBeInstanceOf(Function);
-  });
-
-  it("returns undefined for unknown integration", () => {
-    const handler = getHandler("nonexistent-integration");
-    expect(handler).toBeUndefined();
+  it("returns undefined for an unknown install type (fails closed, never silent)", async () => {
+    const root = getRepoRoot();
+    const inventory = await loadIntegrationInventory(root);
+    const entry = { ...inventory.entries[0], id: "unresolvable", install: { type: "unknown-type" } };
+    expect(handlerForRegistryEntry(root, entry)).toBeUndefined();
   });
 });
 
 describe("npm handler", () => {
-  it("uninstall is a no-op for npx packages", async () => {
-    const result = await npmUninstall("@playwright/mcp");
-    expect(result.ok).toBe(true);
-    expect(result.message).toContain("no uninstall needed");
+  it("uninstall without a managed install dir is an honest failure, not a pretend no-op", async () => {
+    const result = await npmUninstall({ packageName: "@playwright/mcp" });
+    expect(result.ok).toBe(false);
+    expect(result.status).toBe("BLOCKED");
+    expect(result.message).toContain("installDir");
   });
 });

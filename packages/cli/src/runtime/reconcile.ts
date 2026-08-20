@@ -10,12 +10,15 @@ import {
   type RuntimeProjection,
 } from "./contracts.js";
 import { createHostAdapters, isRegisteredHost, unsupportedHostDetection } from "./host-adapters.js";
+import { verifyMcps, type ProvisionSummary } from "../integration/provisioning.js";
 
 export interface ReconcileOptions {
   /** Only hosts that are actually installed are reconciled. */
   installedOnly: boolean;
   /** Never mutate; emit report-only drift receipts. */
   reportOnly: boolean;
+  /** Repository root used to load the desired runtime + canonical MCP state. */
+  root?: string;
   desired?: DesiredRuntime;
   repairOptions?: Omit<RepairOptions, "reportOnly">;
 }
@@ -39,6 +42,12 @@ export interface ReconcileResult {
   installedCount: number;
   unknownCount: number;
   receipts: HostRepairReceipt[];
+  /**
+   * Canonical MCP provisioning state (verify-only, never mutated during
+   * reconcile). Installation and activation are reported as independent
+   * states; this is distinct from the projected host runtime above.
+   */
+  providerProvisioning: ProvisionSummary;
   readonly taskAuthority: false;
 }
 
@@ -68,7 +77,10 @@ export async function loadDesiredRuntime(root: string): Promise<DesiredRuntime> 
 
 export async function reconcileHosts(hosts: string[], options: ReconcileOptions): Promise<ReconcileResult> {
   const adapters = createHostAdapters();
-  const desired = options.desired ?? emptyDesired();
+  // The desired runtime is loaded from the canonical selection manifest on the
+  // real execution path; an explicitly supplied desired set wins for tests.
+  const root = options.root ?? process.cwd();
+  const desired = options.desired ?? await loadDesiredRuntime(root);
   const results: ReconcileHostResult[] = [];
   const receipts: HostRepairReceipt[] = [];
   let installedCount = 0;
@@ -110,12 +122,25 @@ export async function reconcileHosts(hosts: string[], options: ReconcileOptions)
     results.push({ host, status: "installed", installed: true, detection, inventory, projection, receipt, skipped: false, taskAuthority: false });
   }
 
+  // Canonical MCP provisioning is a separate, independent surface: reconcile
+  // reads current installation/activation state and never mutates it.
+  let providerProvisioning: ProvisionSummary;
+  try {
+    providerProvisioning = await verifyMcps(root);
+  } catch (error) {
+    providerProvisioning = {
+      kind: "mcp", source: "integrations/registry.json", total: 0,
+      status: "BLOCKED", success: false, results: [], error: (error as Error).message,
+    };
+  }
+
   return {
     requestedHosts: hosts,
     reconciled: results,
     installedCount,
     unknownCount,
     receipts,
+    providerProvisioning,
     taskAuthority: false,
   };
 }
