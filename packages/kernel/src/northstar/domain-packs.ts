@@ -243,9 +243,24 @@ export function assertDomainPackDescriptor(value: unknown): asserts value is Dom
 }
 
 function looksLikeHarnessRoot(candidate: string): boolean {
-  return fs.existsSync(path.join(candidate, 'package.json'))
-    && fs.existsSync(path.join(candidate, 'profiles'))
-    && fs.existsSync(path.join(candidate, 'packages', 'engine'));
+  if (!fs.existsSync(candidate)) return false;
+  if (fs.existsSync(path.join(candidate, 'packages', 'kernel')) || fs.existsSync(path.join(candidate, 'packages', 'engine'))) {
+    return true;
+  }
+  if (fs.existsSync(path.join(candidate, 'package.json'))) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(path.join(candidate, 'package.json'), 'utf8'));
+      if (typeof pkg.name === 'string' && (pkg.name.includes('agent-rules') || pkg.name.includes('@initforge/agent-rules'))) {
+        return true;
+      }
+    } catch {
+      // ignore JSON parse errors
+    }
+  }
+  if (fs.existsSync(path.join(candidate, 'rules', 'manifest.yaml')) || fs.existsSync(path.join(candidate, 'skills', 'catalog.json'))) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -254,13 +269,21 @@ function looksLikeHarnessRoot(candidate: string): boolean {
  * its authoritative reference source into their repository.
  */
 export function resolveHarnessRoot(workspaceRoot: string, explicitRoot?: string): string {
-  const moduleRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../..');
-  const candidates = [explicitRoot, process.env.AGENT_RULES_HOME, workspaceRoot, moduleRoot]
-    .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
-    .map((value) => path.resolve(value));
-  for (const candidate of [...new Set(candidates)]) {
-    if (looksLikeHarnessRoot(candidate)) return candidate;
+  if (explicitRoot !== undefined && explicitRoot !== null && explicitRoot.trim().length > 0) {
+    if (looksLikeHarnessRoot(explicitRoot)) return path.resolve(explicitRoot);
+    throw new Error(`explicit harnessRoot is not a valid harness installation: ${explicitRoot}`);
   }
+  if (process.env.AGENT_RULES_HOME && looksLikeHarnessRoot(process.env.AGENT_RULES_HOME)) {
+    return path.resolve(process.env.AGENT_RULES_HOME);
+  }
+  const moduleRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../..');
+  if (looksLikeHarnessRoot(moduleRoot)) return moduleRoot;
+  const moduleRoot2 = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+  if (looksLikeHarnessRoot(moduleRoot2)) return moduleRoot2;
+  const moduleRoot3 = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+  if (looksLikeHarnessRoot(moduleRoot3)) return moduleRoot3;
+  if (looksLikeHarnessRoot(workspaceRoot)) return path.resolve(workspaceRoot);
+
   throw new Error('agent-rules harness root not found; set AGENT_RULES_HOME or pass harnessRoot');
 }
 
