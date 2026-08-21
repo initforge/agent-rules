@@ -24,6 +24,7 @@ import {
   classifyIntake,
   weakWorkerMayExecute,
   requiresPlannerButNone,
+  planProofRoute,
 } from '@initforge/agent-rules-engine/northstar/index';
 import type { AgentKind } from '@initforge/agent-rules-engine/runner/headless-executor';
 
@@ -210,6 +211,7 @@ export async function northStarRun(input: {
         repoRoot: input.repoRoot, request, spec: planned.compiled.compiled.spec, manifest: planned.compiled.compiled.manifest,
         packets, verifiers: planned.compiled.verifiers, claimPolicies: planned.compiled.claimPolicies,
         agent: input.agent ?? config.default_agent,
+        proofRouter: planProofRoute,
         explicitCapabilityProviders: [...config.explicit_capability_providers, ...(input.capabilityProviders ?? [])],
         ...(input.workerInvocationOverride ? { invocationOverride: input.workerInvocationOverride } : {}),
         ...(input.skipAgentDetection ? { skipAgentDetection: true } : {}),
@@ -249,6 +251,7 @@ export async function northStarRun(input: {
     packets,
     verifiers: [verifier],
     agent: input.agent ?? config.default_agent,
+    proofRouter: planProofRoute,
     explicitCapabilityProviders: [...config.explicit_capability_providers, ...(input.capabilityProviders ?? [])],
     ...(input.workerInvocationOverride ? { invocationOverride: input.workerInvocationOverride } : {}),
     ...(input.skipAgentDetection ? { skipAgentDetection: true } : {}),
