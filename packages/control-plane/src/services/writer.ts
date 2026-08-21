@@ -42,7 +42,7 @@ export function atomicWrite(filePath: string, newContent: string): WriteResult {
   }
 
   ensureBackupDir();
-  const backupName = `${filePath.replace(/[\/\\]/g, '_')}_${oldHash.slice(0, 12)}.bak`;
+  const backupName = `${filePath.replace(/[:/\\]/g, '_')}_${oldHash.slice(0, 12)}.bak`;
   const backupPath = path.join(BACKUP_DIR, backupName);
   fs.copyFileSync(fullPath, backupPath);
 
