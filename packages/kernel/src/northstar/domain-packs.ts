@@ -263,6 +263,19 @@ function looksLikeHarnessRoot(candidate: string): boolean {
   return false;
 }
 
+function findMonorepoRoot(candidate: string): string {
+  let curr = path.resolve(candidate);
+  for (let i = 0; i < 4; i++) {
+    if (fs.existsSync(path.join(curr, 'rules', 'manifest.yaml')) && fs.existsSync(path.join(curr, 'packages', 'kernel'))) {
+      return curr;
+    }
+    const parent = path.dirname(curr);
+    if (parent === curr) break;
+    curr = parent;
+  }
+  return path.resolve(candidate);
+}
+
 /**
  * Resolve the immutable harness installation independently from the active
  * workspace. Projects may opt into a domain pack without copying the pack or
@@ -270,19 +283,19 @@ function looksLikeHarnessRoot(candidate: string): boolean {
  */
 export function resolveHarnessRoot(workspaceRoot: string, explicitRoot?: string): string {
   if (explicitRoot !== undefined && explicitRoot !== null && explicitRoot.trim().length > 0) {
-    if (looksLikeHarnessRoot(explicitRoot)) return path.resolve(explicitRoot);
+    if (looksLikeHarnessRoot(explicitRoot)) return findMonorepoRoot(explicitRoot);
     throw new Error(`explicit harnessRoot is not a valid harness installation: ${explicitRoot}`);
   }
   if (process.env.AGENT_RULES_HOME && looksLikeHarnessRoot(process.env.AGENT_RULES_HOME)) {
-    return path.resolve(process.env.AGENT_RULES_HOME);
+    return findMonorepoRoot(process.env.AGENT_RULES_HOME);
   }
   const moduleRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../..');
-  if (looksLikeHarnessRoot(moduleRoot)) return moduleRoot;
+  if (looksLikeHarnessRoot(moduleRoot)) return findMonorepoRoot(moduleRoot);
   const moduleRoot2 = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
-  if (looksLikeHarnessRoot(moduleRoot2)) return moduleRoot2;
+  if (looksLikeHarnessRoot(moduleRoot2)) return findMonorepoRoot(moduleRoot2);
   const moduleRoot3 = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-  if (looksLikeHarnessRoot(moduleRoot3)) return moduleRoot3;
-  if (looksLikeHarnessRoot(workspaceRoot)) return path.resolve(workspaceRoot);
+  if (looksLikeHarnessRoot(moduleRoot3)) return findMonorepoRoot(moduleRoot3);
+  if (looksLikeHarnessRoot(workspaceRoot)) return findMonorepoRoot(workspaceRoot);
 
   throw new Error('agent-rules harness root not found; set AGENT_RULES_HOME or pass harnessRoot');
 }
