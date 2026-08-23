@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Canonical SHA256 hashes for all scripts the installer may execute. Scripts are verified against this manifest before execution.",
-  "generated_at": "2026-08-20T18:08:54+00:00",
+  "generated_at": "2026-08-22T13:35:13+00:00",
   "files": {
     "automation/02-install-runtime.ps1": "21862ba08b4fed9ad0f3c30174248f9090805ab7a9e7727fe77cc26cb5be45fe",
     "automation/11-install-runtime-hooks.sh": "0b7ec19e30100165dee8eca04582146df2333aa0f4701176fb7cb9f9b8a59be2",
@@ -12,7 +12,7 @@
     "integrations/recommended/codebase-memory-mcp/install.ps1": "fce433af1f05e53a4215f6a190eb68726f4cc2038b37090887db3c6208ebc746",
     "integrations/recommended/codebase-memory-mcp/verify.ps1": "a2bb174033efdb5641ffc16627acdb0574555cdef15bbb963f5a00a55b32e4ca",
     "integrations/recommended/codebase-memory-mcp/uninstall.ps1": "f5d3235fdd333ad367079f5a5261861fac30cbe9bfbb6bdd42186f18c3eee2fc",
-    "automation/03-validate-context.ps1": "bedd7700ee0b0f2706d9afe859a8c2ec077d843e3d2d76716f06b9c0cc074e8d",
+    "automation/03-validate-context.ps1": "780cf761548d4c6e8fe197a9a944b517c394531255fe78a4ef2e5e9a32ea8ba5",
     "automation/Merge-Mcp-Adapters.ps1": "b6b02f97239b5bc3ac0f063d29fd33f5d05f530b32b28865b2a59fc4808d38ce",
     "integrations/recommended/playwright-mcp/install.ps1": "61b67c8f64adf4bf05899a50eb849e30c47abce2c269a9d9bbe31926d2313713",
     "integrations/recommended/playwright-mcp/verify.ps1": "c2da8de2e17ad55950c4966c79bedc9effa9e7c9cce0805a4c43dbf267d01ee5",

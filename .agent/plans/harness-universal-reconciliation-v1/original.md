@@ -67,7 +67,7 @@ missing authority, unsupported hosts, and unavailable business truth fail closed
 ## 6. Host and runtime parity
 
 The canonical host set is Codex, Claude, Grok, OpenCode, Antigravity, Cursor, and
-MiMoCode. Detect installation from multiple signals: binary, desktop process,
+retired-platform. Detect installation from multiple signals: binary, desktop process,
 known install roots, config, receipt, and live probe. A config directory alone is
 not proof that the application is installed.
 

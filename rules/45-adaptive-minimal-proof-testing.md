@@ -11,8 +11,9 @@ not an MCP-specific policy, not a single-project convention.
 
 For every task the harness selects the smallest proof set that can actually
 prove the task's claims. It never runs every test mechanically; a full-suite
-run is required only when changed scope, dependency impact, architecture
-impact, release risk or regression risk justifies it.
+run or repository-wide audit is never demanded merely because it is possible.
+A broader run is required only when changed scope, dependency impact,
+architecture impact, release risk or regression risk justifies it.
 
 ## 2. Trigger (scope/claim/risk based — never keyword-only)
 Adaptive-minimal-proof-testing activates for every task, and its proof set is
@@ -30,7 +31,7 @@ derived from:
 User wording is a hint only and can never be the sole basis for activation or
 for choosing proof.
 
-## 3. Proof selection
+## 3. Proof selection & omitted proof
 1. Preserve raw user intent.
 2. Identify changed files and affected components.
 3. Compile explicit requirements, claims and risks.
@@ -42,9 +43,10 @@ for choosing proof.
 9. Escalate fidelity only when the claim requires it.
 10. Record selected proof.
 11. Record omitted proof and the reason it was omitted.
-12. Never silently skip required proof.
-13. Never claim PASS from weaker evidence than the claim requires.
-14. Report limitations and environmental boundaries honestly.
+12. **Omitted-proof blocker rule**: an omitted proof dimension is a release blocker ONLY if the explicit acceptance claim requires evidence in that dimension. Omitted proof outside the claim scope is logged as non-blocking follow-up debt.
+13. Never silently skip required proof.
+14. Never claim PASS from weaker evidence than the claim requires.
+15. Report limitations and environmental boundaries honestly.
 
 ## 4. Evidence categories (A–K)
 static, unit, contract, integration, api, browser, live, security,

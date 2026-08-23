@@ -37,10 +37,20 @@ import { transitionExecution, truthFromOutcome, type ExecutionLifecycleRecord } 
 import { readExecutionAuthority } from '../state/execution-authority.js';
 import { validateSemanticState } from '../state/semantic-state-validator.js';
 import { type ProofRoutePlan, type ProofRouteRequest } from './proof-router.js';
-import type { HostId } from './host-adapters.js';
+import { type HostId, HOST_CAPABILITIES } from './host-adapters.js';
 import { LaneController, type ResourceLane } from './resource-governor.js';
 import { admitArtifact, classifyArtifact, type ArtifactAdmissionInput } from './artifact-admission.js';
 import { buildContextBudgetReceipt, estimateInstalledGraph, type ContextBudgetInput } from './context-budget.js';
+import {
+  createContextState,
+  evaluateContextState,
+  type ContextState,
+  type WorkspaceFacts,
+  type HostSurfaceContext,
+  type ContextObservation,
+  type VerifierEvidence,
+} from './context-engine.js';
+import { categorizeRepair, type RepairTaxonomyResult } from './pair-repair.js';
 
 export interface VerifierDefinition {
   id: string;
@@ -145,6 +155,7 @@ export interface ProofOfWorkReport {
     checkpoint: string | null;
     resource_decision: string;
     execution_lifecycle: string;
+    context_state?: string;
   };
 }
 
@@ -799,9 +810,31 @@ async function finaliseNorthStarRun(input: {
       acceptance_audit: 'acceptance-audit.json', semantic_review: semanticReview ? 'semantic-review.json' : null, convergence: 'convergence.json', semantic_state: 'semantic-state.json', checkpoint: state.checkpoint ?? null,
       decision_fabric: 'decision-fabric-outcomes.json',
       resource_decision: 'resource-decision.json', execution_lifecycle: 'execution-lifecycle.json',
+      context_state: 'context-state.json',
     },
   };
   writeJsonAtomic(proofOfWorkFile, proofOfWork);
+
+  const contextStateFile = path.join(input.runRoot, 'context-state.json');
+  if (fs.existsSync(contextStateFile)) {
+    try {
+      let ctxState = readJson<ContextState>(contextStateFile);
+      ctxState = evaluateContextState(ctxState, 'RUN_FINALIZED', { nextPhase: 'SETTLEMENT' });
+      writeJsonAtomic(contextStateFile, ctxState);
+    } catch (contextError) {
+      const message = contextError instanceof Error ? contextError.message : String(contextError);
+      trustedOutcome = 'BLOCKED';
+      proofOfWork.outcome = 'BLOCKED';
+      writeJsonAtomic(proofOfWorkFile, proofOfWork);
+      const diagFile = path.join(input.runRoot, 'context-diagnostic.json');
+      try {
+        writeJsonAtomic(diagFile, { error: message, phase: 'RUN_FINALIZED', timestamp: new Date().toISOString() });
+      } catch {
+        /* diagnostic best-effort */
+      }
+    }
+  }
+
   // REQ-013: append the 5fedu reference-disclosure footer only when the
   // reference broker was actually consumed during this run.
   let runtimeConfigForFooter: { domain_pack?: { id: string } | null } | null = null;
@@ -976,6 +1009,71 @@ function makeNorthStarRunner(input: {
     onTaskSettled: (report) => {
       reportLedger.append(report);
       ensureEvidenceForReport(report, input.packets, input.entriesByTask, evidenceLedger, input.repoRoot, input.spec.spec_id, input.spec.revision, 0, process.platform);
+
+      const contextStateFile = path.join(input.runRoot, 'context-state.json');
+      if (fs.existsSync(contextStateFile)) {
+        const contractTaskId = report.contractTaskId ?? report.taskId;
+        try {
+          let ctxState = readJson<ContextState>(contextStateFile);
+          const packet = input.packets.find((p) => p.task_id === contractTaskId);
+          const entries = input.entriesByTask.get(contractTaskId) ?? [];
+          const newVerifierEvidence: VerifierEvidence[] = entries.map((entry, index) => {
+            const code = report.verificationExitCodes[index];
+            const step = report.verificationSteps?.[index];
+            const artifact = step?.evidence?.[0];
+            const sha = artifact?.sha256 || report.diffSha256 || sha256Canonical({ task: report.taskId, verifier: entry.verifier.id, code: code ?? -1 });
+            return {
+              verifierId: entry.verifier.id,
+              claimId: entry.claim_id,
+              status: code === 0 ? ('PASS' as const) : ('FAIL' as const),
+              outputSha256: sha,
+              observedAt: new Date().toISOString(),
+              failureReason: step?.diagnostic,
+            };
+          });
+
+          const newObservations: ContextObservation[] = [
+            ...(report.filesChanged ?? []).map((f) => ({
+              id: `OBS-FILE-${sha256Canonical(f).slice(0, 8)}`,
+              observedAt: new Date().toISOString(),
+              source: 'file_change' as const,
+              content: `Modified workspace file: ${f}`,
+            })),
+          ];
+
+          if (report.outcome === 'failed') {
+            const repairResult = categorizeRepair(report.reason ?? 'verification failed');
+            ctxState = evaluateContextState(ctxState, 'VERIFIER_FAILURE', {
+              nextPhase: 'REPAIR',
+              repairResult,
+              newVerifierEvidence,
+              newObservations,
+              updatedPacket: packet,
+            });
+          } else {
+            ctxState = evaluateContextState(ctxState, 'TASK_SETTLED', {
+              newVerifierEvidence,
+              newObservations,
+              updatedPacket: packet,
+            });
+          }
+          writeJsonAtomic(contextStateFile, ctxState);
+        } catch (contextErr) {
+          const message = contextErr instanceof Error ? contextErr.message : String(contextErr);
+          const diagFile = path.join(input.runRoot, 'context-diagnostic.json');
+          try {
+            writeJsonAtomic(diagFile, {
+              error: message,
+              phase: report.outcome === 'failed' ? 'VERIFIER_FAILURE' : 'TASK_SETTLED',
+              taskId: contractTaskId,
+              timestamp: new Date().toISOString(),
+            });
+          } catch {
+            /* diagnostic best-effort */
+          }
+          throw new Error(`Mandatory context state update failed for task ${contractTaskId}: ${message}`);
+        }
+      }
     },
   });
 }
@@ -1089,6 +1187,33 @@ export async function executeNorthStarRun(input: NorthStarRunInput & { maxTasks?
   writeJsonAtomic(path.join(runRoot, 'context-budget-receipt.json'), contextBudget);
 
   const broker = createStandardCapabilityBroker(harnessRoot, { decisionFabricMode: input.decisionFabricMode ?? 'shadow' });
+
+  const workspaceFacts: WorkspaceFacts = {
+    repoRoot: input.repoRoot,
+    hasFrontend: fs.existsSync(path.join(input.repoRoot, 'src', 'components')) || fs.existsSync(path.join(input.repoRoot, 'src', 'pages')),
+    hasDatabase: fs.existsSync(path.join(input.repoRoot, 'prisma')) || fs.existsSync(path.join(input.repoRoot, 'drizzle')),
+    hasBackend: fs.existsSync(path.join(input.repoRoot, 'src', 'api')) || fs.existsSync(path.join(input.repoRoot, 'src', 'server')),
+  };
+
+  const hostCap = HOST_CAPABILITIES[(input.agent ?? 'opencode') as HostId];
+  const hostSurface: HostSurfaceContext = {
+    host: input.agent,
+    surface: hostCap?.headless ? 'cli' : 'desktop',
+    supportsNativeSkills: hostCap?.native_subagents ?? false,
+    supportsNativeMcp: hostCap?.mcp ?? true,
+  };
+
+  let contextState = createContextState({
+    request: input.request,
+    spec: input.spec,
+    packet: input.packets[0],
+    workspaceFacts,
+    hostSurface,
+    initialPhase: 'INTAKE',
+  });
+  contextState = evaluateContextState(contextState, 'TRANSITION_PLANNING', { nextPhase: 'PLAN' });
+  writeJsonAtomic(path.join(runRoot, 'context-state.json'), contextState);
+
   const workerModelDecision = modelDecisionForSpec(input.spec, 'worker');
   writeJsonAtomic(path.join(runRoot, 'model-decisions.json'), {
     protocol_version: NORTH_STAR_PROTOCOL_VERSION,
@@ -1120,6 +1245,12 @@ export async function executeNorthStarRun(input: NorthStarRunInput & { maxTasks?
   });
 
   const enqueuePacket = (packet: TaskPacket, dependencies: ReadonlyMap<string, string[]>): void => {
+    contextState = evaluateContextState(contextState, 'TRANSITION_IMPLEMENTATION', {
+      nextPhase: 'IMPLEMENT',
+      updatedPacket: packet,
+    });
+    writeJsonAtomic(path.join(runRoot, 'context-state.json'), contextState);
+
     const legacySkills = routeSkills(packet, harnessRoot, { activeProjectScope: domainPack?.descriptor.id ?? null });
     const routed = broker.route(packet, input.explicitCapabilityProviders ?? [], { activeProjectScope: domainPack?.descriptor.id ?? null, repoRoot: input.repoRoot, spec: input.spec });
     const skills = input.decisionFabricMode === 'active' ? routed.skills : legacySkills;
@@ -1233,6 +1364,21 @@ export async function resumeNorthStarRun(input: NorthStarResumeInput): Promise<N
   const state = readJson<RunState>(path.join(runRoot, 'run-state.json'));
   assertRunState(state);
   if (config.run_id !== state.run_id || config.run_id !== (input.runId ?? state.run_id)) throw new Error('resume run identity mismatch');
+
+  const contextStateFile = path.join(runRoot, 'context-state.json');
+  if (!fs.existsSync(contextStateFile)) {
+    throw new Error(`resume blocked: missing context-state.json snapshot in ${runRoot}`);
+  }
+  let contextState: ContextState;
+  try {
+    contextState = readJson<ContextState>(contextStateFile);
+    if (!contextState.stateId || !contextState.stateHash || !Array.isArray(contextState.activeRules)) {
+      throw new Error('context-state.json is malformed');
+    }
+  } catch (err) {
+    throw new Error(`resume blocked: corrupted or invalid context-state.json: ${err instanceof Error ? err.message : String(err)}`);
+  }
+
   const verifierMap = assertRuntimeInputs({
     request, spec, manifest, packets, verifiers,
     ...(config.max_repair_depth !== null ? { maxRepairDepth: config.max_repair_depth } : {}),
@@ -1267,6 +1413,12 @@ export async function resumeNorthStarRun(input: NorthStarResumeInput): Promise<N
     ...(input.driver ? { driver: input.driver } : {}),
   });
   const enqueuePacket = (packet: TaskPacket, dependencies: ReadonlyMap<string, string[]>): void => {
+    contextState = evaluateContextState(contextState, 'TRANSITION_IMPLEMENTATION', {
+      nextPhase: 'IMPLEMENT',
+      updatedPacket: packet,
+    });
+    writeJsonAtomic(path.join(runRoot, 'context-state.json'), contextState);
+
     const legacySkills = routeSkills(packet, harnessRoot, { activeProjectScope: domainPack?.descriptor.id ?? null });
     const routed = broker.route(packet, [], { activeProjectScope: domainPack?.descriptor.id ?? null, repoRoot: input.repoRoot, spec });
     const skills = (config.decision_fabric_mode ?? 'shadow') === 'active' ? routed.skills : legacySkills;

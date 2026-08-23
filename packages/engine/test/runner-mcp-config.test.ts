@@ -252,7 +252,7 @@ describe('buildInvocation with MCP', () => {
       mcpConfigPaths: paths,
     });
     expect(inv.executable).toBe('opencode');
-    expect(inv.args).toEqual(['run', 'hello']);
+    expect(inv.args).toEqual(['run', '--auto', 'hello']);
     expect(inv.args).not.toContain('-c');
   });
 
@@ -260,8 +260,8 @@ describe('buildInvocation with MCP', () => {
     const claude = buildInvocation('claude', 'hello', { permissionMode: 'acceptEdits' });
     expect(claude.args).not.toContain('--mcp-config');
     const codex = buildInvocation('codex', 'hello', { permissionMode: 'acceptEdits' });
-    expect(codex.args).toEqual(['exec', 'hello']);
+    expect(codex.args).toEqual(['exec', '--sandbox', 'workspace-write', '--ask-for-approval', 'never', 'hello']);
     const opencode = buildInvocation('opencode', 'hello', { permissionMode: 'acceptEdits' });
-    expect(opencode.args).toEqual(['run', 'hello']);
+    expect(opencode.args).toEqual(['run', '--auto', 'hello']);
   });
 });

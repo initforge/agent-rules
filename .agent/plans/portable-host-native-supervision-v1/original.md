@@ -74,7 +74,7 @@ Ký hiệu tác động: `T` terminality, `U` UX/toil, `C` context, `S` security
 | F06 | PARTIAL, P1 | G/J/L | `runner/headless-executor.ts` MCP teardown | `idle_zero_attested` đồng nhất với cleanup confirmation và receipt-write error bị nuốt. Mất receipt có thể bị hiểu như teardown thành công. `T/S` |
 | F07 | PARTIAL, P1 | D/G/I/J/L | `artifact-admission.ts`, `resource-governor.ts`, `host-capabilities.ts` | Artifact Admission, LaneController và `decideEnforcement()` gần như không có production callers. Runtime vẫn ghi/chạy trực tiếp, khiến enforcement và resource policy chỉ mang tính mô tả. `U/C/S` |
 | F08 | PARTIAL, P1 | D/H | `portable-plan.ts:39,286` | `compileDoD()` vẫn suy từ disposition/risk/path chứa `release|install`; PLAN_ONLY có thể thiếu depth, EXPORT luôn bị đẩy quá sâu. DoD phải bắt nguồn từ requirement/claim obligations. `T/U` |
-| F09 | CONFIRMED, P0 | I/M | `platform-contracts.json`, CLI/kernel host arrays, automation | Host được hard-code nhiều nơi; certification chỉ có 5 host, runtime có 6; còn stale Mimocode references. Thêm host buộc sửa unrelated logic và dễ lệch source/install/CI. `T/U/S` |
+| F09 | CONFIRMED, P0 | I/M | `platform-contracts.json`, CLI/kernel host arrays, automation | Host được hard-code nhiều nơi; certification chỉ có 5 host, runtime có 6; còn stale retired-platform references. Thêm host buộc sửa unrelated logic và dễ lệch source/install/CI. `T/U/S` |
 | F10 | CONFIRMED, P1 | I/F | `platforms/*/adapter.ts`, `packages/cli/src/runtime/contracts.ts` | Có hai adapter contracts độc lập cộng thêm capability matrix. Sibling adapters bị ép về `detect/render/stage/...` và nhiều host chỉ ghi rules/capsule. `U/S` |
 | F11 | PARTIAL, P0 | I/K/M | `host-capabilities.ts`, `host-adapters.ts` | Capability facts quá coarse/boolean, thiếu exact projection/config/session binding và selective staleness. Host update có thể làm enforcement biến mất nhưng receipt cũ vẫn còn giá trị. `T/S` |
 | F12 | CONFIRMED, P0 | H/J/M | context graph/routing/compiler | Installed graph 160.747 token nhưng không có model-visible budget receipt; tool/MCP/subagent/skill exposure chưa được đo end-to-end. Weak worker dễ bị nhiễu và tốn context. `U/C` |
@@ -271,7 +271,7 @@ Domains D/E/F/G/H/I/J/K/L; PF1/PF3/PF5.
 - Per-capability fingerprint, staleness, TTL và selective canaries.
 - Wire Proof Router, Decision Fabric, Artifact Admission, LaneController, MCP idle-zero và enforcement ladder vào runtime/resume/install.
 - Sửa `compileDoD()` theo claims/obligations.
-- Xóa stale Mimocode references và hard-coded host lists.
+- Xóa stale retired-platform references và hard-coded host lists.
 - Candidate dogfood receipt mỗi phase phải bind source tree, installed projection, consumer/candidate, host/session.
 
 **Vì sao cần:** đây là đường chung nhỏ nhất để tám host không phải tự phát minh terminal/proof/policy semantics.
@@ -461,7 +461,7 @@ Chỉ xóa sau parity:
 - CLI-specific second `HostAdapter` contract.
 - Generic `render/stage activation-capsule` path trên host đã có native projection.
 - Independent host arrays và five-host certification constants.
-- Stale Mimocode branches/assertions ngoài explicit negative tombstone tests.
+- Stale retired-platform branches/assertions ngoài explicit negative tombstone tests.
 - Decision Fabric shadow default và legacy `routeSkills()` authority.
 - Caller-supplied closure terminal outcome.
 - Hard-coded old-plan correction logic.

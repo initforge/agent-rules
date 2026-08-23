@@ -21,7 +21,7 @@
     "type": "local-app",
     "docs": "https://docs.pencil.dev/getting-started/ai-integration"
   },
-  "supportedHosts": ["codex", "claude", "grok", "antigravity", "cursor", "opencode", "mimocode"],
+  "supportedHosts": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
   "requirements": [
     "pen.dev desktop app or IDE extension is running",
     "a .pen file is open when the host integration requires it",

@@ -11,7 +11,7 @@ describe('host certification diagnostics', () => {
       resolveExecutable: async (host) => hosts[host],
       run: async (executable) => ({ exitCode: 0, stdout: `${executable} 1.2.3\n`, stderr: '' }),
     });
-    expect(result).toHaveLength(5);
+    expect(result).toHaveLength(REQUIRED_DIAGNOSTIC_HOSTS.length);
     expect(result.every((item) => item.requestedModel === model)).toBe(true);
     expect(result.every((item) => item.nativeExecution.state === 'UNVERIFIED')).toBe(true);
     expect(result.every((item) => item.artifact.missingCapability === 'MISSING_ARTIFACT')).toBe(true);

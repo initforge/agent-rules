@@ -15,17 +15,15 @@
       "certification_required_hosts": [
         "codex",
         "claude",
-        "grok",
         "opencode",
-        "antigravity"
-      ],
-      "deferred_supported_targets": [
-        "cursor"
-      ],
-      "not_live_verified_targets": [
+        "cursor",
+        "antigravity",
+        "grok",
         "deepseek-harness",
         "command-code"
-      ]
+      ],
+      "deferred_supported_targets": [],
+      "not_live_verified_targets": []
     },
     "capability_to_canary": {
       "instruction_surface": "instruction_delivery_canary",
@@ -59,13 +57,14 @@
     "certification_required_hosts": [
       "codex",
       "claude",
-      "grok",
       "opencode",
-      "antigravity"
+      "cursor",
+      "antigravity",
+      "grok",
+      "deepseek-harness",
+      "command-code"
     ],
-    "deferred_supported_targets": [
-      "cursor"
-    ]
+    "deferred_supported_targets": []
   },
   "platforms": {
     "codex": {

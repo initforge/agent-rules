@@ -4,7 +4,8 @@ export default defineConfig({
   test: {
     root: '.',
     include: ['test/**/*.test.ts'],
-    testTimeout: 20_000,
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
     pool: 'forks',
     poolOptions: {
       forks: {

@@ -920,6 +920,30 @@ const HOST_PROBE_SPECS: Readonly<Record<string, HostProbeSpec>> = {
       { id: 'antigravity:print', kind: 'option', token: '--print' },
     ],
   },
+  cursor: {
+    version: /^(\d+\.\d+\.\d+(?:[-+][\w.-]+)?)$/,
+    capabilities: [
+      { id: 'cursor:model', kind: 'option', token: '--model' },
+      { id: 'cursor:agent', kind: 'option', token: '--agent' },
+      { id: 'cursor:print', kind: 'option', token: '--print' },
+    ],
+  },
+  'deepseek-harness': {
+    version: /^(\d+\.\d+\.\d+(?:[-+][\w.-]+)?)$/,
+    capabilities: [
+      { id: 'deepseek-harness:model', kind: 'option', token: '--model' },
+      { id: 'deepseek-harness:profile', kind: 'option', token: '--profile' },
+      { id: 'deepseek-harness:dump-config', kind: 'option', token: '--dump-config' },
+    ],
+  },
+  'command-code': {
+    version: /^(\d+\.\d+\.\d+(?:[-+][\w.-]+)?)$/,
+    capabilities: [
+      { id: 'command-code:model', kind: 'option', token: '--model' },
+      { id: 'command-code:agent', kind: 'option', token: '--agent' },
+      { id: 'command-code:print', kind: 'option', token: '--print' },
+    ],
+  },
 };
 
 function escapeRegExp(value: string): string {

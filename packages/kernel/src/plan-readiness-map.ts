@@ -166,7 +166,7 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
     modules: ['platforms/grok/adapter.ts', 'platforms/antigravity/adapter.ts', 'platforms/cursor/adapter.ts', 'packages/engine/src/contracts.ts'],
     tests: ['packages/engine/test/workflow-validation.test.ts'],
     acceptanceCriteria: [
-      'CERTIFICATION_REQUIRED_HOSTS = codex/claude/grok/opencode/antigravity enforced by workflow validation',
+      'CERTIFICATION_REQUIRED_HOSTS = 8 canonical hosts enforced by workflow validation',
       'grok/antigravity/cursor adapters define out-of-ownership mutation boundaries (eval-rejected)',
     ],
   },

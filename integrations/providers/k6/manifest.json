@@ -32,7 +32,7 @@
   ],
   "evidence_kinds": ["performance-threshold", "custom-runtime"],
   "hosts": {
-    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode", "mimocode"],
+    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
     "notes": "Performance evidence requires explicit thresholds; a performance claim without thresholds never activates k6."
   },
   "thresholds_required": true,

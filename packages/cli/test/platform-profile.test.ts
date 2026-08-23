@@ -10,7 +10,7 @@ describe("platform/profile command contracts", () => {
     expect(result.exitCode).toBe(0);
     const names = (result.data as { platforms: Array<{ name: string }> }).platforms.map((p) => p.name);
     expect(names).toContain("claude");
-    expect(names).not.toContain("mimocode");
+    expect(names).not.toContain("retired-platform");
     expect(names).toContain("opencode");
   });
 

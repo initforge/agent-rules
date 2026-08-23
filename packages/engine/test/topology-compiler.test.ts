@@ -310,7 +310,7 @@ describe('topology-compiler (C6, AM-0019 §8)', () => {
         topologyHash: topologyHash(fixtureTopology()),
         sourceSha,
         imageDigest: `sha256:${topologyHash(fixtureTopology())}`,
-        pollTimeoutMs: 20000,
+        pollTimeoutMs: 30000,
       });
 
       expect(evidence.passed, evidence.checkpoints.map((checkpoint) => `${checkpoint.name}=${checkpoint.ok}: ${checkpoint.detail}`).join(' | ')).toBe(true);

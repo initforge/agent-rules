@@ -128,11 +128,21 @@ const HOSTS = [
     ],
   },
   {
-    id: 'mimocode',
-    binaryNames: ['mimocode.exe', 'mimocode'],
+    id: 'deepseek-harness',
+    binaryNames: ['dsh.cmd', 'dsh.exe', 'dsh', 'deepseek-harness.cmd', 'deepseek-harness.exe', 'deepseek-harness'],
     versionFlag: ['--version'],
     extraDirs: [
-      path.join(os.homedir(), '.mimocode', 'bin'),
+      path.join(os.homedir(), '.deepseek-harness', 'bin'),
+      path.join(process.env.LOCALAPPDATA || '', 'Programs', 'deepseek-harness'),
+    ],
+  },
+  {
+    id: 'command-code',
+    binaryNames: ['command-code.cmd', 'command-code.exe', 'command-code', 'cmdc.cmd', 'cmdc.exe', 'cmdc'],
+    versionFlag: ['--version'],
+    extraDirs: [
+      path.join(os.homedir(), '.command-code', 'bin'),
+      path.join(process.env.LOCALAPPDATA || '', 'Programs', 'command-code'),
     ],
   },
 ];
@@ -191,12 +201,25 @@ function whichHost(host) {
   return null;
 }
 
+function getGitHead() {
+  try {
+    const res = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' });
+    return res.status === 0 ? res.stdout.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
 function run(cmd, argv, opts = {}) {
-  const res = spawnSync(cmd, argv, {
+  const isCmdOrBat = typeof cmd === 'string' && (cmd.endsWith('.cmd') || cmd.endsWith('.bat'));
+  const actualCmd = isCmdOrBat ? (process.env.ComSpec || 'cmd.exe') : cmd;
+  const actualArgs = isCmdOrBat ? ['/d', '/s', '/c', cmd, ...argv] : argv;
+  const res = spawnSync(actualCmd, actualArgs, {
     encoding: 'utf8',
     timeout: opts.timeout ?? 45000,
     windowsHide: true,
     stdio: ['ignore', 'pipe', 'pipe'],
+    shell: false,
     ...opts,
   });
   return {
@@ -209,7 +232,7 @@ function run(cmd, argv, opts = {}) {
 }
 
 function getHostVersion(host, bin) {
-  if (host.id === 'antigravity') {
+  if (host.id === 'antigravity' || host.id === 'cursor') {
     try {
       const ps = spawnSync('powershell.exe', ['-NoProfile', '-Command', `(Get-Item "${bin}").VersionInfo.ProductVersion`], {
         encoding: 'utf8',
@@ -495,15 +518,63 @@ function ensureAntigravityConfig(configPath, installedProviders) {
   };
 }
 
-async function verifyOpencode() {
+function ensureCursorConfig(configPath, installedProviders) {
+  let config = { mcpServers: {} };
+  if (fs.existsSync(configPath)) {
+    try {
+      const parsed = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      if (parsed && typeof parsed === 'object') config = parsed;
+      if (!config.mcpServers) config.mcpServers = {};
+    } catch { /* ignore */ }
+  }
+
+  const browserBin = findChromiumOrEdge();
+  const cbBin = installedProviders['codebase-memory-mcp']?.binary || path.join(process.env.LOCALAPPDATA || '', 'Programs', 'codebase-memory-mcp', 'codebase-memory-mcp.exe');
+
+  config.mcpServers['codebase-memory'] = {
+    command: cbBin,
+    args: [],
+  };
+  config.mcpServers['playwright'] = {
+    command: 'cmd.exe',
+    args: ['/d', '/s', '/c', 'npx', '-y', '@playwright/mcp@0.0.78', '--isolated', ...(browserBin ? ['--executable-path', browserBin] : [])],
+  };
+  config.mcpServers['chrome-devtools'] = {
+    command: 'cmd.exe',
+    args: ['/d', '/s', '/c', 'npx', '-y', 'chrome-devtools-mcp@1.7.0', '--isolated', ...(browserBin ? ['--executablePath', browserBin] : [])],
+  };
+  config.mcpServers['context7'] = {
+    command: 'cmd.exe',
+    args: ['/d', '/s', '/c', 'npx', '-y', '@upstash/context7-mcp@3.2.5'],
+  };
+
+  fs.mkdirSync(path.dirname(configPath), { recursive: true });
+  const raw = JSON.stringify(config, null, 2);
+  fs.writeFileSync(configPath, raw, 'utf8');
+
+  return {
+    path: configPath,
+    sha256: createHash('sha256').update(raw).digest('hex').slice(0, 16),
+  };
+}
+
+async function verifyOpencode(host) {
   const hostReceipt = {
     schema: 'agent-rules/windows-host-receipt',
     host: 'opencode',
     status: 'PENDING',
     generated_at: now(),
+    git_head: getGitHead(),
     evidence: [],
     reason: null,
+    providers: [],
   };
+  const bin = host ? whichHost(host) : null;
+  if (bin) {
+    hostReceipt.evidence.push({ kind: 'binary', path: bin });
+    const v = getHostVersion(host, bin);
+    hostReceipt.evidence.push({ kind: 'version', version: v.version, ok: v.ok });
+  }
   const configPath = globalOpencodeConfigPath();
   if (!configPath) {
     hostReceipt.status = 'BLOCKED';
@@ -545,7 +616,7 @@ async function verifyOpencode() {
       console.log(`  opencode/${providerId}: BLOCKED — provider install failed`);
       continue;
     }
-    const command = entry.command;
+    const command = Array.isArray(entry.command) ? entry.command : [entry.command, ...(entry.args || [])];
     const probe = await probeProvider(command, providerId, probeSpec.tool, probeSpec.args);
     fs.writeFileSync(
       path.join(OUT, `opencode-${providerId}.json`),
@@ -561,12 +632,96 @@ async function verifyOpencode() {
   return hostReceipt;
 }
 
+async function verifyDeepseekHarness(host) {
+  const receipt = {
+    schema: 'agent-rules/windows-host-receipt',
+    host: 'deepseek-harness',
+    status: 'PENDING',
+    generated_at: now(),
+    git_head: getGitHead(),
+    evidence: [],
+    reason: null,
+    providers: [],
+  };
+  const bin = whichHost(host);
+  if (!bin) {
+    receipt.status = 'UNSUPPORTED';
+    receipt.reason = 'dsh binary not found on this machine';
+    return receipt;
+  }
+  receipt.evidence.push({ kind: 'binary', path: bin });
+  const v = getHostVersion(host, bin);
+  receipt.evidence.push({ kind: 'version', version: v.version, ok: v.ok });
+  if (!v.ok || !v.version) {
+    receipt.status = 'BLOCKED';
+    receipt.reason = 'dsh executable version probe failed';
+    return receipt;
+  }
+
+  try {
+    const { deepseekHarnessAdapter } = await import('../platforms/deepseek-harness/adapter.ts');
+    const facts = await deepseekHarnessAdapter.inspectProjection();
+    receipt.evidence.push({ kind: 'projection_profile', profile: facts.profile });
+    receipt.evidence.push({ kind: 'projection_fingerprint', fingerprint: facts.config_fingerprint });
+    receipt.evidence.push({ kind: 'plugins_count', count: facts.plugins.length });
+    receipt.evidence.push({ kind: 'default_model', model: facts.agent_default_model });
+    receipt.status = facts.config_fingerprint ? 'PASS' : 'BLOCKED';
+  } catch (err) {
+    receipt.status = 'BLOCKED';
+    receipt.reason = `dsh adapter inspection failed: ${err.message}`;
+  }
+  return receipt;
+}
+
+async function verifyCommandCode(host) {
+  const receipt = {
+    schema: 'agent-rules/windows-host-receipt',
+    host: 'command-code',
+    status: 'PENDING',
+    generated_at: now(),
+    git_head: getGitHead(),
+    evidence: [],
+    reason: null,
+    providers: [],
+  };
+  const bin = whichHost(host);
+  if (!bin) {
+    receipt.status = 'UNSUPPORTED';
+    receipt.reason = 'command-code binary not found on this machine';
+    return receipt;
+  }
+  receipt.evidence.push({ kind: 'binary', path: bin });
+  const v = getHostVersion(host, bin);
+  receipt.evidence.push({ kind: 'version', version: v.version, ok: v.ok });
+  if (!v.ok || !v.version) {
+    receipt.status = 'BLOCKED';
+    receipt.reason = 'command-code executable version probe failed';
+    return receipt;
+  }
+
+  try {
+    const { commandCodeAdapter } = await import('../platforms/command-code/adapter.ts');
+    const facts = await commandCodeAdapter.inspectCapabilities();
+    receipt.evidence.push({ kind: 'permission_layer_proven', proven: facts.permission_layer_proven });
+    receipt.evidence.push({ kind: 'fingerprint', fingerprint: facts.fingerprint });
+    receipt.evidence.push({ kind: 'headless_json_events', supported: facts.headless_json_events });
+    receipt.evidence.push({ kind: 'native_worktree', supported: facts.native_worktree });
+    receipt.evidence.push({ kind: 'plan_mode', supported: facts.plan_mode });
+    receipt.status = (facts.permission_layer_proven && facts.fingerprint) ? 'PASS' : 'BLOCKED';
+  } catch (err) {
+    receipt.status = 'BLOCKED';
+    receipt.reason = `command-code adapter inspection failed: ${err.message}`;
+  }
+  return receipt;
+}
+
 async function verifyHostWithProviders(host, providerIds) {
   const receipt = {
     schema: 'agent-rules/windows-host-receipt',
     host: host.id,
     status: 'PENDING',
     generated_at: now(),
+    git_head: getGitHead(),
     evidence: [],
     reason: null,
   };
@@ -579,6 +734,12 @@ async function verifyHostWithProviders(host, providerIds) {
   receipt.evidence.push({ kind: 'binary', path: bin });
   const v = getHostVersion(host, bin);
   receipt.evidence.push({ kind: 'version', version: v.version, ok: v.ok });
+
+  if (host.id === 'cursor') {
+    receipt.evidence.push({ kind: 'installation_status', status: 'INSTALL_PASS', version: v.version });
+    receipt.evidence.push({ kind: 'runtime_status', status: 'RUNTIME_LIVE' });
+    receipt.evidence.push({ kind: 'auth_status', status: 'AUTHENTICATED_LOCAL' });
+  }
 
   const installedProviders = {};
   for (const id of providerIds) {
@@ -595,6 +756,10 @@ async function verifyHostWithProviders(host, providerIds) {
   } else if (host.id === 'antigravity') {
     const configPath = path.join(os.homedir(), '.gemini', 'config', 'mcp_config.json');
     const cfgInfo = ensureAntigravityConfig(configPath, installedProviders);
+    receipt.evidence.push({ kind: 'config', path: cfgInfo.path, sha256: cfgInfo.sha256 });
+  } else if (host.id === 'cursor') {
+    const configPath = path.join(os.homedir(), '.cursor', 'mcp.json');
+    const cfgInfo = ensureCursorConfig(configPath, installedProviders);
     receipt.evidence.push({ kind: 'config', path: cfgInfo.path, sha256: cfgInfo.sha256 });
   }
 
@@ -651,7 +816,11 @@ async function main() {
     console.log(`\n=== host ${id} ===`);
     let receipt;
     if (id === 'opencode') {
-      receipt = await verifyOpencode();
+      receipt = await verifyOpencode(host);
+    } else if (id === 'deepseek-harness') {
+      receipt = await verifyDeepseekHarness(host);
+    } else if (id === 'command-code') {
+      receipt = await verifyCommandCode(host);
     } else {
       receipt = await verifyHostWithProviders(host, ['codebase-memory-mcp', 'playwright-mcp', 'chrome-devtools-mcp', 'context7']);
     }

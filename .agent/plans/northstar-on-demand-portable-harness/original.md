@@ -233,7 +233,7 @@ Operator luôn chọn host/model. Harness chỉ ghi nhận requested/resolved/ob
 - `npm run verify:all`
 - Package lifecycle smoke.
 - Windows live-host verification với reinstall.
-- Installed-runtime parity cho Codex, Claude, Grok, OpenCode, Antigravity, Cursor và Mimocode khi host hiện diện.
+- Installed-runtime parity cho Codex, Claude, Grok, OpenCode, Antigravity, Cursor và retired-platform khi host hiện diện.
 - Không weaken/skip/hard-disable verification. Kết quả dùng đúng `PASS/PARTIAL/BLOCKED/UNSUPPORTED/PRE-EXISTING/NEEDS_USER`.
 
 ## 5. Reinstall, release và cleanup

@@ -27,13 +27,19 @@ describe('buildInvocation', () => {
   });
 
   it('builds codex and opencode invocations', () => {
-    expect(buildInvocation('codex', 'task', {})).toEqual({ executable: 'codex', args: ['exec', 'task'] });
-    expect(buildInvocation('opencode', 'task', {})).toEqual({ executable: 'opencode', args: ['run', 'task'] });
+    expect(buildInvocation('codex', 'task', {})).toEqual({ executable: 'codex', args: ['exec', '--sandbox', 'workspace-write', '--ask-for-approval', 'never', 'task'] });
+    expect(buildInvocation('opencode', 'task', {})).toEqual({ executable: 'opencode', args: ['run', '--auto', 'task'] });
   });
 
   it('passes the prompt as one argv entry, never through a shell', () => {
     const { args } = buildInvocation('claude', 'rm -rf / ; echo pwned', {});
     expect(args).toContain('rm -rf / ; echo pwned');
+  });
+
+  it('preserves quotes, &, |, %, newlines, and Unicode in prompt', () => {
+    const complexPrompt = 'Fix "bug" & handle | pipe with %VAR% \n new line and Tiếng Việt 🚀';
+    const { args } = buildInvocation('claude', complexPrompt, {});
+    expect(args).toContain(complexPrompt);
   });
 });
 

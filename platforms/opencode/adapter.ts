@@ -1,3 +1,7 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+
 export interface OpenCodeV2Config {
   baseUrl: string;
   fetchFn: typeof fetch;
@@ -395,4 +399,221 @@ export class OpenCodeV2Adapter {
       fetchTimer = null;
     }
   }
+}
+
+export function openCodeHome(): string {
+  return process.env.OPENCODE_HOME || path.join(os.homedir(), '.config', 'opencode');
+}
+
+export interface OpenCodeSkillDiscoveryResult {
+  skills: string[];
+  locations: string[];
+  bindings: Record<string, {
+    effectiveRoot: string;
+    precedenceRank: number;
+    path: string;
+  }>;
+}
+
+export function inspectOpenCodeSkills(repoRoot?: string): OpenCodeSkillDiscoveryResult {
+  const home = openCodeHome();
+  // OpenCode V2 registration order (lowest to highest precedence):
+  // 1. Builtin / .claude skill sources
+  // 2. .agents skill sources
+  // 3. ~/.config/opencode/skills (global)
+  // 4. project .opencode/skills (project local)
+  // 5. explicit skills config entries
+  const orderedRoots = [
+    ...(repoRoot ? [path.join(repoRoot, 'skills')] : []),
+    ...(repoRoot ? [path.join(repoRoot, '.claude', 'skills')] : []),
+    ...(repoRoot ? [path.join(repoRoot, '.agents', 'skills')] : []),
+    path.join(home, 'skills'),
+    ...(repoRoot ? [path.join(repoRoot, '.opencode', 'skills')] : []),
+  ];
+
+  const bindings: Record<string, { effectiveRoot: string; precedenceRank: number; path: string }> = {};
+  const locations: string[] = [];
+
+  orderedRoots.forEach((loc, rank) => {
+    if (!fs.existsSync(loc)) return;
+    locations.push(loc);
+    try {
+      const entries = fs.readdirSync(loc, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const skillMd = path.join(loc, entry.name, 'SKILL.md');
+          if (fs.existsSync(skillMd)) {
+            // Later source overrides earlier source with higher precedence
+            bindings[entry.name] = {
+              effectiveRoot: loc,
+              precedenceRank: rank + 1,
+              path: path.join(loc, entry.name),
+            };
+          }
+        }
+      }
+    } catch { /* ignore */ }
+  });
+
+  return {
+    skills: Object.keys(bindings).sort(),
+    locations,
+    bindings,
+  };
+}
+
+export function probeOpenCodePlanning(): { supported: boolean; mode: string; reason?: string } {
+  const binary = whichOpenCode();
+  if (!binary) {
+    return { supported: false, mode: 'opencode-plan-agent', reason: 'OpenCode binary is not found on PATH' };
+  }
+  return { supported: true, mode: 'opencode-plan-agent' };
+}
+
+export type OpenCodeDialect = 'v1' | 'v2';
+
+export interface OpenCodePermissionRule {
+  pattern: string;
+  action: 'allow' | 'deny' | 'ask';
+  tool?: string;
+  description?: string;
+}
+
+export interface OpenCodeRuntimeContract {
+  readonly dialect: OpenCodeDialect;
+  readonly executable: string;
+  readonly configFileName: string;
+  readonly permissionVocabulary: 'tool-map' | 'ordered-rules';
+  readonly mcpKey: 'mcp' | 'mcp.servers';
+  readonly supportedFlags: readonly string[];
+}
+
+export function detectOpenCodeRuntimeContract(configPathOrContent?: string): OpenCodeRuntimeContract {
+  const dialect = detectOpenCodeDialect(configPathOrContent);
+  if (dialect === 'v1') {
+    return {
+      dialect: 'v1',
+      executable: 'opencode',
+      configFileName: 'opencode.json',
+      permissionVocabulary: 'tool-map',
+      mcpKey: 'mcp',
+      supportedFlags: ['run', '--auto', '--agent', '--model', '--session', '--continue'],
+    };
+  }
+  return {
+    dialect: 'v2',
+    executable: 'opencode2',
+    configFileName: 'opencode.json',
+    permissionVocabulary: 'ordered-rules',
+    mcpKey: 'mcp.servers',
+    supportedFlags: ['run', '--agent', '--model', '--session'],
+  };
+}
+
+export function detectOpenCodeDialect(configPathOrContent?: string): OpenCodeDialect {
+  if (!configPathOrContent) return 'v2';
+  try {
+    let content = configPathOrContent;
+    if (fs.existsSync(configPathOrContent)) {
+      content = fs.readFileSync(configPathOrContent, 'utf8');
+    }
+    const parsed = JSON.parse(content);
+    if (Array.isArray(parsed.permissions)) return 'v2';
+    if (parsed.permission !== undefined && !Array.isArray(parsed.permission)) return 'v1';
+    if (parsed.tools?.shell !== undefined || parsed.tools?.subagent !== undefined) return 'v2';
+    if (parsed.tools?.bash !== undefined || parsed.tools?.task !== undefined) return 'v1';
+  } catch {
+    // If not parseable JSON, check version string
+    if (/v1\b/i.test(configPathOrContent)) return 'v1';
+  }
+  return 'v2';
+}
+
+/**
+ * OpenCode V2 ordered permission rule evaluator.
+ * Implements strict last-matching-rule behavior:
+ * Subsequent rules override earlier matching rules; if no rule matches, default is 'ask'.
+ */
+export function evaluateOpenCodeV2Permissions(
+  rules: readonly OpenCodePermissionRule[],
+  target: string,
+  tool?: string
+): 'allow' | 'deny' | 'ask' {
+  let matchedAction: 'allow' | 'deny' | 'ask' | null = null;
+  const normalizedTarget = target.replace(/\\/g, '/');
+
+  for (const rule of rules) {
+    if (rule.tool && tool && rule.tool !== '*' && rule.tool !== tool) {
+      continue;
+    }
+    const pattern = rule.pattern.replace(/\\/g, '/');
+    let matches = false;
+    if (pattern === '*' || pattern === '**' || pattern === normalizedTarget) {
+      matches = true;
+    } else if (pattern.endsWith('/**')) {
+      const prefix = pattern.slice(0, -3);
+      matches = normalizedTarget === prefix || normalizedTarget.startsWith(`${prefix}/`);
+    } else if (pattern.endsWith('/*')) {
+      const prefix = pattern.slice(0, -2);
+      matches = normalizedTarget.startsWith(`${prefix}/`) && !normalizedTarget.slice(prefix.length + 1).includes('/');
+    } else if (pattern.includes('*')) {
+      const regex = new RegExp(`^${pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*')}$`);
+      matches = regex.test(normalizedTarget);
+    }
+    if (matches) {
+      matchedAction = rule.action; // Last matching rule wins!
+    }
+  }
+
+  return matchedAction ?? 'ask';
+}
+
+export function formatOpenCodeV1Config(options: {
+  permissionMap?: Record<string, 'allow' | 'deny' | 'ask' | Record<string, 'allow' | 'deny' | 'ask'>>;
+  mcp?: Record<string, unknown>;
+  plugins?: string[];
+}): Record<string, unknown> {
+  return {
+    $schema: 'https://opencode.ai/config.json',
+    permission: options.permissionMap ?? { '*': 'ask', bash: 'allow' },
+    mcp: options.mcp ?? {},
+    ...(options.plugins ? { plugins: options.plugins } : {}),
+  };
+}
+
+export function formatOpenCodeV2Config(options: {
+  permissions?: OpenCodePermissionRule[];
+  mcpServers?: Record<string, unknown>;
+  plugins?: string[];
+}): Record<string, unknown> {
+  return {
+    $schema: 'https://opencode.ai/config.v2.json',
+    permissions: options.permissions ?? [{ pattern: '*', action: 'ask' }],
+    mcp: {
+      servers: options.mcpServers ?? {},
+    },
+    ...(options.plugins ? { plugins: options.plugins } : {}),
+  };
+}
+
+export function formatOpenCodeConfig(options: {
+  dialect: OpenCodeDialect;
+  permissions?: OpenCodePermissionRule[];
+  permissionMap?: Record<string, 'allow' | 'deny' | 'ask' | Record<string, 'allow' | 'deny' | 'ask'>>;
+  mcp?: Record<string, unknown>;
+  mcpServers?: Record<string, unknown>;
+  plugins?: string[];
+}): Record<string, unknown> {
+  if (options.dialect === 'v1') {
+    return formatOpenCodeV1Config({
+      permissionMap: options.permissionMap ?? (options.permissions?.[0] ? { '*': options.permissions[0].action } : undefined),
+      mcp: options.mcp ?? options.mcpServers,
+      plugins: options.plugins,
+    });
+  }
+  return formatOpenCodeV2Config({
+    permissions: options.permissions,
+    mcpServers: options.mcpServers ?? options.mcp,
+    plugins: options.plugins,
+  });
 }

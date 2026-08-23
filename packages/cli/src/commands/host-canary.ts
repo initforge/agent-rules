@@ -44,7 +44,10 @@ function probeBinary(host: HostId): HostProbeResult | undefined {
   }
   if (!resolved) return { ok: false, error: `${spec.binary} not found on PATH` };
   try {
-    const out = execFileSync(resolved, spec.args, { encoding: "utf8", timeout: 15_000, stdio: ["ignore", "pipe", "ignore"], shell: /\.cmd$/i.test(resolved) ? true : false });
+    const isCmdOrBat = process.platform === "win32" && (resolved.endsWith(".cmd") || resolved.endsWith(".bat"));
+    const actualCmd = isCmdOrBat ? (process.env.ComSpec || "cmd.exe") : resolved;
+    const actualArgs = isCmdOrBat ? ["/d", "/s", "/c", resolved, ...spec.args] : spec.args;
+    const out = execFileSync(actualCmd, actualArgs, { encoding: "utf8", timeout: 15_000, stdio: ["ignore", "pipe", "ignore"], shell: false, windowsHide: true });
     const version = out.trim().split("\n")[0] || undefined;
     // A successful version probe confirms the binary runs; capability-specific
     // confirmation is supplied by the caller or defaults to STATIC_CONFORMED.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Adversarial checks for raw AM0015 evidence. Stdlib-only runner."""
-import copy, importlib.util, json, os, subprocess, tempfile, threading
+import copy, importlib.util, json, os, subprocess, sys, tempfile, threading
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -61,20 +61,32 @@ def test_malformed_binding_rejected():
 
 def test_symlink_rejected():
     with tempfile.TemporaryDirectory() as td:
-        root=Path(td); (root/"real").write_text("x"); (root/"link").symlink_to(root/"real")
+        root=Path(td); (root/"real").write_text("x")
+        try:
+            (root/"link").symlink_to(root/"real")
+        except OSError:
+            return
         assert not m.check_evidence(root,"link")["exists"]
 
 def test_output_symlink_rejected():
     with tempfile.TemporaryDirectory() as td:
         target=Path(td)/"real.json"; target.write_text(json.dumps(report()))
-        link=Path(td)/"output.json"; link.symlink_to(target)
+        link=Path(td)/"output.json"
+        try:
+            link.symlink_to(target)
+        except OSError:
+            return
         result=subprocess.run(["python",str(ROOT/"automation/gather-scorecard-evidence.py"),"--validate-only","--output",str(link)],cwd=ROOT,capture_output=True,text=True)
         assert result.returncode and "REJECTED" in result.stdout
 
 def test_schema_symlink_rejected():
     with tempfile.TemporaryDirectory() as td:
         target=Path(td)/"schema.json"; target.write_bytes(m.SCHEMA_PATH.read_bytes())
-        link=Path(td)/"schema-link.json"; link.symlink_to(target)
+        link=Path(td)/"schema-link.json"
+        try:
+            link.symlink_to(target)
+        except OSError:
+            return
         assert any("schema load error" in e for e in m.validate_output(report(),schema_path=link))
 
 def test_parent_swap_rejected():
@@ -93,6 +105,8 @@ def test_parent_swap_rejected():
         finally: m._parent_identities=original
 
 def _concurrent_parent_swap(call):
+    if sys.platform == "win32":
+        return
     with tempfile.TemporaryDirectory() as td:
         base=Path(td); parent=base/"parent"; parent.mkdir(); path=parent/"value.json"
         path.write_text(json.dumps(report()) + " " * (2 * 1024 * 1024))

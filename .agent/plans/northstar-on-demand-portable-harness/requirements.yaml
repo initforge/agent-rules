@@ -157,7 +157,7 @@ requirements:
       - command: "npm test --workspaces --if-present"
 
   - id: REQ-023
-    statement: "All verification gates pass without weakening, skipping or hard-disabling verification: npm ci, npm run build, npm run check, npm test, npm run verify:all, package lifecycle smoke, Windows live-host verification with reinstall, and installed-runtime parity for Codex, Claude, Grok, OpenCode, Antigravity, Cursor and Mimocode when the host is present; results use exactly PASS/PARTIAL/BLOCKED/UNSUPPORTED/PRE-EXISTING/NEEDS_USER."
+    statement: "All verification gates pass without weakening, skipping or hard-disabling verification: npm ci, npm run build, npm run check, npm test, npm run verify:all, package lifecycle smoke, Windows live-host verification with reinstall, and installed-runtime parity for Codex, Claude, Grok, OpenCode, Antigravity, Cursor and retired-platform when the host is present; results use exactly PASS/PARTIAL/BLOCKED/UNSUPPORTED/PRE-EXISTING/NEEDS_USER."
     status: active
     verification:
       - command: "npm ci"

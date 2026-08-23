@@ -131,8 +131,8 @@ describe('writeHostAttestations', () => {
     expect(ledger.unrelated).toEqual({ preserve: true });
     expect(ledger.nested).toEqual(['untouched']);
     expect(ledger.attestations).toEqual(input.attestations);
-    expect(result.rawEvidencePaths).toHaveLength(15);
-    expect(new Set(result.rawEvidencePaths).size).toBe(15);
+    expect(result.rawEvidencePaths).toHaveLength(CERTIFICATION_REQUIRED_HOSTS.length * 3);
+    expect(new Set(result.rawEvidencePaths).size).toBe(CERTIFICATION_REQUIRED_HOSTS.length * 3);
     for (const evidencePath of result.rawEvidencePaths) {
       const raw = await readFile(evidencePath, 'utf8');
       const stored = JSON.parse(raw);
@@ -204,7 +204,7 @@ describe('writeHostAttestations', () => {
       .rejects.toThrow('does not prove the attested model');
 
     const foreign = await fixture();
-    (foreign.modelEvidence as Record<string, CollectedModelEvidence>).cursor = hostEvidence('cursor');
+    (foreign.modelEvidence as Record<string, CollectedModelEvidence>)['unknown-host'] = hostEvidence('codex');
     await expect(writeHostAttestations({ ...foreign, repositoryRoot: foreign.directory, headCommit, now, getRepositoryState: cleanState() }))
       .rejects.toThrow('foreign host');
   });

@@ -106,6 +106,6 @@ requirements:
     status: pending
   - id: REQ-021
     source_id: M
-    statement: "Retirement: removal graph covers source/generated/package/installed/config/cache/docs/tests; Mimocode is unreachable after fresh install and stale upgrade; unknown user state preserved; stale-upgrade removal proven on generic environments."
+    statement: "Retirement: removal graph covers source/generated/package/installed/config/cache/docs/tests; retired-platform is unreachable after fresh install and stale upgrade; unknown user state preserved; stale-upgrade removal proven on generic environments."
     phases: [P5, P8, P9]
     status: pending

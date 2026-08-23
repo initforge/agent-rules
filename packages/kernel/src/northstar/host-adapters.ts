@@ -32,10 +32,6 @@ export const HOST_CAPABILITIES: Record<HostId, HostCapability> = {
 export function assertHostSurface(repoRoot: string): void {
   const platformsRoot = path.join(repoRoot, 'platforms');
   for (const host of Object.keys(HOST_CAPABILITIES) as HostId[]) {
-    // DeepSeek Harness and Command Code are registered HostIds whose native
-    // projections land in P2/P3; until then there is no platforms/<host> dir
-    // and no surface to assert.
-    if (host === 'deepseek-harness' || host === 'command-code') continue;
     if (!fs.existsSync(path.join(platformsRoot, host))) throw new Error(`host ${host} is declared but platforms/${host} is missing`);
   }
 }

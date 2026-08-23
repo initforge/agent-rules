@@ -49,7 +49,7 @@ import {
  *   run journal [--verify]       journal summary, optionally checking the hash chain
  */
 
-const AGENTS: AgentKind[] = ['claude', 'codex', 'opencode'];
+const AGENTS: AgentKind[] = ['claude', 'codex', 'opencode', 'antigravity', 'cursor', 'grok', 'deepseek-harness', 'command-code'];
 
 interface ParsedArgs {
   action: string;

@@ -5,7 +5,7 @@ This host-managed integration has a policy record in `integrations/registry.json
 Use it when the raw prompt or an approved plan explicitly asks for Pencil/pen.dev. The canonical runtime sees provider-neutral capabilities (`design.inspect`, `design.compose`, `design.render`, `design.tokens`) and automatically attaches `pencil-mcp` for that bounded task. An explicit `--capability-provider pencil-mcp` remains supported.
 
 The canonical adapter surface covers every platform contract: Codex, Claude,
-Grok, Antigravity, Cursor, OpenCode, and MiMoCode. Adapter availability does
+Grok, Antigravity, Cursor, OpenCode, and retired-platform. Adapter availability does
 not claim that the Pencil desktop/editor or a live MCP connection exists on
 that host; the host-specific launcher fails closed until the operator provides
 that live surface.

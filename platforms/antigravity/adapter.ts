@@ -36,6 +36,8 @@ export interface AntigravityAdapter extends PlatformAdapter {
   validateDiff(paths: readonly string[]): DiffBoundaryResult;
   /** Lease state: 'ACTIVE' or 'ADVISORY_READ_ONLY' after a guard rejection. */
   leaseState(): LeaseState;
+  inspectSkills(repoRoot?: string): Promise<{ skills: string[]; locations: string[] }>;
+  probePlanning(): Promise<{ supported: boolean; mode: string; reason?: string }>;
 }
 
 function defaultProjectRoot(): string {
@@ -175,6 +177,57 @@ export const antigravityAdapter: AntigravityAdapter = {
     return { ok: false, detail: `Neither gemini nor agy found on PATH` };
   },
 
+  async inspectSkills(repoRoot?: string): Promise<{
+    skills: string[];
+    locations: string[];
+    surfaces?: { ide: string[]; cli: string[] };
+  }> {
+    const ideRoots = [
+      path.join(ANTIGRAVITY_HOME, 'skills'),
+      path.join(os.homedir(), '.gemini', 'antigravity', 'builtin', 'skills'),
+      ...(repoRoot ? [path.join(repoRoot, '.agents', 'skills'), path.join(repoRoot, '.gemini', 'skills')] : []),
+    ];
+    const cliRoots = [
+      path.join(os.homedir(), '.gemini', 'antigravity-cli', 'skills'),
+      ...(repoRoot ? [path.join(repoRoot, '.agents', 'skills')] : []),
+    ];
+    const locations = [...new Set([...ideRoots, ...cliRoots])];
+
+    const discoverFromRoots = (roots: string[]): string[] => {
+      const discovered = new Set<string>();
+      for (const loc of roots) {
+        if (!fs.existsSync(loc)) continue;
+        try {
+          const entries = fs.readdirSync(loc, { withFileTypes: true });
+          for (const entry of entries) {
+            if (entry.isDirectory() && fs.existsSync(path.join(loc, entry.name, 'SKILL.md'))) {
+              discovered.add(entry.name);
+            }
+          }
+        } catch { /* ignore */ }
+      }
+      return [...discovered].sort();
+    };
+
+    const ideSkills = discoverFromRoots(ideRoots);
+    const cliSkills = discoverFromRoots(cliRoots);
+    const allSkills = [...new Set([...ideSkills, ...cliSkills])].sort();
+
+    return {
+      skills: allSkills,
+      locations: locations.filter((l) => fs.existsSync(l)),
+      surfaces: { ide: ideSkills, cli: cliSkills },
+    };
+  },
+
+  async probePlanning(): Promise<{ supported: boolean; mode: string; reason?: string }> {
+    const probe = await whichAntigravity();
+    if (!probe) {
+      return { supported: false, mode: 'antigravity-planning-mode', reason: 'Antigravity CLI (gemini/agy) is not found on PATH' };
+    }
+    return { supported: true, mode: 'antigravity-planning-mode' };
+  },
+
   async update() {
     return { ok: false };
   },
@@ -187,3 +240,43 @@ export const antigravityAdapter: AntigravityAdapter = {
     return { ok: false };
   },
 };
+
+export interface AntigravityMcpResolution {
+  selectedPath: string | null;
+  surface: 'shared-central' | 'desktop-ide' | 'cli-surface' | 'workspace' | 'none';
+  candidateLocations: readonly string[];
+  provenance: {
+    searched: readonly string[];
+    found: readonly string[];
+  };
+}
+
+export function resolveAntigravityMcpPaths(repoRoot?: string): AntigravityMcpResolution {
+  const candidates = [
+    path.join(os.homedir(), '.gemini', 'config', 'mcp_config.json'),
+    path.join(os.homedir(), '.gemini', 'antigravity', 'mcp_config.json'),
+    path.join(os.homedir(), '.gemini', 'antigravity-cli', 'mcp_config.json'),
+    ...(repoRoot ? [path.join(repoRoot, '.agents', 'mcp_config.json'), path.join(repoRoot, '.gemini', 'mcp_config.json')] : []),
+  ];
+
+  const found = candidates.filter((p) => fs.existsSync(p));
+  const selectedPath = found[0] ?? null;
+
+  let surface: AntigravityMcpResolution['surface'] = 'none';
+  if (selectedPath) {
+    if (selectedPath.includes('antigravity-cli')) surface = 'cli-surface';
+    else if (selectedPath.includes('.agents') || selectedPath.includes(path.join('.gemini', 'mcp_config.json'))) surface = 'workspace';
+    else if (selectedPath.includes('antigravity')) surface = 'desktop-ide';
+    else surface = 'shared-central';
+  }
+
+  return {
+    selectedPath,
+    surface,
+    candidateLocations: candidates,
+    provenance: {
+      searched: candidates,
+      found,
+    },
+  };
+}

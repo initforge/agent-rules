@@ -22,9 +22,11 @@ const GROK_HOME = path.join(os.homedir(), '.grok');
 const RULES_DIR = path.join(GROK_HOME, 'rules');
 
 async function whichGrok(): Promise<{ path: string; version?: string } | null> {
+  const isWin = process.platform === 'win32';
+  const lookupCmd = isWin ? 'where.exe' : 'which';
   try {
-    const { stdout } = await execFileAsync('which', [BINARY]);
-    const binaryPath = stdout.trim();
+    const { stdout } = await execFileAsync(lookupCmd, [BINARY]);
+    const binaryPath = stdout.split(/\r?\n/)[0]?.trim();
     if (!binaryPath) return null;
     let version: string | undefined;
     const versionFile = path.join(GROK_HOME, 'version.json');
@@ -85,6 +87,17 @@ export const grokAdapter: PlatformAdapter = {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       return { ok: false, detail: `grok unreachable: ${message}` };
+    }
+  },
+
+  async probePlanning(): Promise<{ supported: boolean; mode: string; reason?: string }> {
+    const isWin = process.platform === 'win32';
+    const probe = isWin ? 'where' : 'which';
+    try {
+      await execFileAsync(probe, [BINARY]);
+      return { supported: true, mode: 'grok-plan-mode' };
+    } catch {
+      return { supported: false, mode: 'grok-plan-mode', reason: 'grok executable is not found on PATH' };
     }
   },
 

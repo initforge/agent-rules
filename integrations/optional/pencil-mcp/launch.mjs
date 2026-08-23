@@ -163,7 +163,8 @@ export function hostFromAgent(agent) {
   if (normalized.includes('antigravity') || normalized.includes('gemini')) return 'antigravity';
   if (normalized.includes('cursor')) return 'cursor';
   if (normalized.includes('grok')) return 'grok';
-  if (normalized.includes('mimo')) return 'mimocode';
+  if (normalized.includes('deepseek') || normalized.includes('dsh')) return 'deepseek-harness';
+  if (normalized.includes('command') || normalized.includes('cmdc')) return 'command-code';
   return normalized;
 }
 
@@ -205,12 +206,6 @@ export function configCandidates(host) {
       add(process.env.OPENCODE_CONFIG);
       add(process.env.OPENCODE_HOME && path.join(process.env.OPENCODE_HOME, 'opencode.json'));
       add(path.join(home, '.config', 'opencode', 'opencode.json'));
-      break;
-    case 'mimocode':
-      add(process.env.PENCIL_MCP_MIMOCODE_CONFIG);
-      add(process.env.MIMOCODE_CONFIG_DIR && path.join(process.env.MIMOCODE_CONFIG_DIR, 'mimocode.jsonc'));
-      add(path.join(home, '.config', 'mimocode', 'mimocode.jsonc'));
-      add(path.join(home, '.config', 'mimocode', 'mimocode.json'));
       break;
     default:
       break;

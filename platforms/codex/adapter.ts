@@ -100,8 +100,10 @@ export const codexAdapter: PlatformAdapter = {
     if (!homeExists) return { installed: false };
 
     try {
-      const { stdout } = await execFileAsync('which', [CODEX_BINARY]);
-      const binaryPath = stdout.trim();
+      const isWin = process.platform === 'win32';
+      const probeCmd = isWin ? 'where' : 'which';
+      const { stdout } = await execFileAsync(probeCmd, [CODEX_BINARY]);
+      const binaryPath = stdout.trim().split(/\r?\n/)[0]?.trim();
       if (binaryPath) {
         return { installed: true, path: binaryPath, version: 'desktop' };
       }
@@ -176,6 +178,36 @@ export const codexAdapter: PlatformAdapter = {
         ? 'Codex Desktop config.toml present'
         : 'Codex Desktop missing config.toml',
     };
+  },
+
+  async inspectSkills(repoRoot?: string): Promise<{ skills: string[]; locations: string[] }> {
+    const home = codexHome();
+    const locations = [
+      path.join(os.homedir(), '.agents', 'skills'),
+      path.join(home, 'skills'),
+      ...(repoRoot ? [path.join(repoRoot, '.agents', 'skills'), path.join(repoRoot, '.codex', 'skills')] : []),
+    ];
+    const discovered = new Set<string>();
+    for (const loc of locations) {
+      if (!fs.existsSync(loc)) continue;
+      try {
+        const entries = fs.readdirSync(loc, { withFileTypes: true });
+        for (const entry of entries) {
+          if (entry.isDirectory() && fs.existsSync(path.join(loc, entry.name, 'SKILL.md'))) {
+            discovered.add(entry.name);
+          }
+        }
+      } catch { /* ignore */ }
+    }
+    return { skills: [...discovered].sort(), locations: locations.filter(l => fs.existsSync(l)) };
+  },
+
+  async probePlanning(): Promise<{ supported: boolean; mode: string; reason?: string }> {
+    const detection = await this.detect();
+    if (!detection.installed) {
+      return { supported: false, mode: 'codex-read-only', reason: 'Codex host is not installed' };
+    }
+    return { supported: true, mode: 'codex-read-only' };
   },
 
   async update() {

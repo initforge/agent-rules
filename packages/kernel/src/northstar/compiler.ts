@@ -13,6 +13,7 @@ import {
   type WorkSpecImpact,
 } from './protocol.js';
 import { requiredStageFromText, type EvidenceStage } from '../claim-registry.js';
+import { compileDecisionEnvelope } from './decision-closure.js';
 
 export type ClaimClass = 'mechanical' | 'runtime' | 'semantic';
 
@@ -209,9 +210,29 @@ export function compileTaskPackets(compiled: CompiledSpec, drafts: TaskDraft[]):
   return drafts.map((draft, index) => {
     if (draft.requirement_ids.some((id) => !reqIds.has(id))) throw new Error(`task references unknown requirement: ${draft.requirement_ids.find((id) => !reqIds.has(id))}`);
     if (draft.claim_ids.some((id) => !claimIds.has(id))) throw new Error(`task references unknown claim: ${draft.claim_ids.find((id) => !claimIds.has(id))}`);
+    const taskId = `T-${String(index + 1).padStart(3, '0')}`;
+    const envelope = compileDecisionEnvelope({
+      specId: compiled.spec.spec_id,
+      specRevision: compiled.spec.revision,
+      taskId,
+      decisionRequirements: (compiled.spec.decisions ?? []).map((dec, dIdx) => ({
+        decision_id: `DEC-${String(dIdx + 1).padStart(3, '0')}`,
+        consequence_class: 'BEHAVIOR',
+        why_required: dec,
+        source_requirement_ids: [...draft.requirement_ids],
+        affected_domains: ['general'],
+        discoverable_with_evidence: true,
+        closure_state: 'CLOSED',
+        closed_decision: dec,
+        required_authority: 'planner',
+      })),
+      ownedPaths: [...draft.owned],
+      forbiddenPaths: [...(draft.forbidden ?? [])],
+    });
+
     const packet: TaskPacket = {
       protocol_version: NORTH_STAR_PROTOCOL_VERSION,
-      task_id: `T-${String(index + 1).padStart(3, '0')}`,
+      task_id: taskId,
       spec_id: compiled.spec.spec_id,
       spec_revision: compiled.spec.revision,
       work_id: compiled.spec.work_id,
@@ -236,6 +257,7 @@ export function compileTaskPackets(compiled: CompiledSpec, drafts: TaskDraft[]):
       ...(draft.capabilities?.length ? { capabilities: draft.capabilities } : {}),
       ...(draft.stop_if?.length ? { stop_if: draft.stop_if } : {}),
       repair: { attempt: 0, previous_failure: null },
+      decision_envelope: envelope,
     };
     assertTaskPacket(packet);
     return packet;

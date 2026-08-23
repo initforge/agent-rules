@@ -398,13 +398,13 @@
    },
    {
     "id": "rtk",
-   "displayName": "RTK — Rust Token Killer",
-   "kind": "cli-tool",
-   "policy": "recommended",
-   "profiles": [
-    "core"
-   ],
-   "source": {
+    "displayName": "RTK — Rust Token Killer",
+    "kind": "cli-tool",
+    "policy": "optional",
+    "profiles": [
+     "all"
+    ],
+    "source": {
     "type": "rust-cargo",
     "url": "https://github.com/rtk-ai/rtk",
     "version": "0.28.2",
@@ -607,7 +607,10 @@
     "displayName": "Pencil (pen.dev) MCP",
     "kind": "mcp",
     "policy": "optional",
-    "profiles": [],
+    "autoRoute": false,
+    "profiles": [
+     "all"
+    ],
     "source": {
      "type": "local",
      "url": "https://docs.pencil.dev/getting-started/ai-integration",
@@ -678,8 +681,7 @@
    "description": "Minimal coding surface; optional providers are attached only when routed. Context7 is intentionally not part of the default core set: library docs are fetched on-demand (CLI first, MCP escalation) instead of being loaded into every coding session.",
    "required": [],
    "recommended": [
-    "codebase-memory-mcp",
-    "rtk"
+    "codebase-memory-mcp"
    ]
   },
   "qa": {

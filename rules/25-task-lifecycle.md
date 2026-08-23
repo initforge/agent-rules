@@ -1,12 +1,12 @@
 ---
 alwaysApply: true
-description: Workflow classification, proportional work state, and execution ownership.
+description: Workflow classification, proportional work state, review budget, and execution ownership.
 ---
 
 # Task lifecycle
 
-**Domain:** Mode classification, work shapes, role definitions, delegation rules, task state lifecycle, and delegation receipts.
-For execution contract, proof matching, evidence standards, and risk-triggered review, see [10-execution.md](10-execution.md).
+**Domain:** Mode classification, work shapes, role definitions, delegation rules, review budget, plan review behavior, and task state lifecycle.
+For execution contract, proof matching, evidence standards, and stop conditions, see [10-execution.md](10-execution.md).
 
 ## Decide the mode first
 
@@ -18,6 +18,26 @@ For execution contract, proof matching, evidence standards, and risk-triggered r
 
 - A pasted plan is review input, not authority to edit.
 - An explicit execute pivot authorizes execution.
+
+## Plan review behavior
+
+1. **Explicit verdict**: plan reviews must conclude with exactly one verdict: `APPROVE`, `CONDITIONAL`, or `BLOCKED`.
+2. **Bounded blockers**: reviewers return at most **3 high-priority blockers** per round.
+3. **Conditional approval for debt**: if a plan is sufficient to ship core outcomes safely, grant `CONDITIONAL` approval with non-blocking follow-up debt rather than demanding plan perfection.
+4. **Stable criteria**: reviewers must not invent new acceptance criteria after the implementer fixes previously raised blockers.
+5. **No reopening**: closed findings cannot be reopened without new empirical evidence or an explicit scope expansion.
+
+## Bounded review budget
+
+To prevent unbounded audit loops from stalling releases:
+
+1. **Budget limit**: at most **1 primary review** and **1 correction review** per scope.
+2. **Post-correction filter**: after the correction review, do not raise new blockers unless the finding:
+   - Makes a core user journey fail;
+   - Violates a security, safety, scope, or data integrity invariant;
+   - Deprives an agreed acceptance claim of valid verification proof;
+   - Or constitutes an explicit owner-declared release gate.
+3. **Follow-up debt**: any finding failing to meet the above criteria is logged as non-blocking follow-up debt and does not open a new review cycle.
 
 ## Scale the work
 
@@ -45,7 +65,7 @@ For execution contract, proof matching, evidence standards, and risk-triggered r
 
 **Researcher/utility** — read-only exploration, research, inventory, mechanical work.
 
-**Reviewer** — reviews final diff, not summaries. Read-only. Risk-triggered.
+**Reviewer** — reviews final diff, not summaries. Read-only. Risk-triggered. Adheres to review budgets.
 
 **Verifier** — claim-specific checks. Read-only. Cannot make unverified into PASS.
 

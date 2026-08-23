@@ -10,8 +10,17 @@ vi.mock("../src/runtime/installer.js", () => ({
   RUNTIME_PLATFORMS: ["codex", "grok", "antigravity", "cursor", "opencode", "claude"],
 }));
 
-vi.mock("../src/adapters/powershell.js", () => ({
+vi.mock("../src/adapters/repo.js", () => ({
   getRepoRoot: () => "/tmp",
+}));
+
+vi.mock("../src/runtime/composed-installer.js", () => ({
+  projectSkillsToGlobal: vi.fn().mockResolvedValue(undefined),
+  uninstallOwnedGlobalProjections: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("../src/runtime/mcp-convergence.js", () => ({
+  convergeAllHostMcpConfigs: vi.fn().mockResolvedValue([]),
 }));
 
 const mockProvision = vi.fn(async () => ({
@@ -39,10 +48,10 @@ describe("install wrapper", () => {
 
   it("installs for a single platform", async () => {
     const { installCmd } = await import("../src/commands/install.js");
-    const result = await installCmd([], { dryRun: false, verbose: false, json: false });
+    const result = await installCmd(["codex"], { dryRun: false, verbose: false, json: false });
     expect(result.exitCode).toBe(ExitCode.Success);
-    // The mock should have been called at least once
-    expect(mockInstall).toHaveBeenCalled();
+    // The mock should have been called for codex
+    expect(mockInstall).toHaveBeenCalledWith("codex", "install");
   });
 
   it("never reports all-ready when MCP provisioning fails", async () => {

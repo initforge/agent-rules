@@ -84,7 +84,7 @@ try {
 
 // 3. Host installed receipts: real files bound to the exact candidate.
 const hostReceipts = [];
-for (const host of ['codex', 'claude', 'grok', 'opencode', 'antigravity', 'cursor', 'mimocode']) {
+for (const host of ['codex', 'claude', 'grok', 'opencode', 'antigravity', 'cursor', 'retired-platform']) {
   const receiptPath = path.join(ARTIFACTS, 'hosts', `${host}.json`);
   if (!exists(receiptPath)) continue;
   const receipt = readJson(receiptPath);

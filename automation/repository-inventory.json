@@ -449,8 +449,7 @@
             "grok",
             "antigravity",
             "cursor",
-            "opencode",
-            "mimocode"
+            "opencode"
           ]
         },
         {
@@ -468,8 +467,7 @@
             "grok",
             "antigravity",
             "cursor",
-            "opencode",
-            "mimocode"
+            "opencode"
           ]
         },
         {
@@ -487,8 +485,7 @@
             "grok",
             "antigravity",
             "cursor",
-            "opencode",
-            "mimocode"
+            "opencode"
           ]
         },
         {
@@ -517,8 +514,7 @@
             "grok",
             "antigravity",
             "cursor",
-            "opencode",
-            "mimocode"
+            "opencode"
           ]
         },
         {
@@ -536,8 +532,7 @@
             "grok",
             "antigravity",
             "cursor",
-            "opencode",
-            "mimocode"
+            "opencode"
           ]
         },
         {
@@ -554,8 +549,7 @@
             "claude",
             "antigravity",
             "cursor",
-            "opencode",
-            "mimocode"
+            "opencode"
           ]
         }
       ]

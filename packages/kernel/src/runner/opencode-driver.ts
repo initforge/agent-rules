@@ -284,5 +284,16 @@ export function modelForAgent(kind: AgentKind, modelOverride?: string): { provid
       return { providerID: 'openai', modelID: 'codex-mini-latest' };
     case 'opencode':
       return { providerID: 'opencode', modelID: 'big-pickle' };
+    case 'antigravity':
+      return { providerID: 'google', modelID: 'gemini-2.5-pro' };
+    case 'cursor':
+      return { providerID: 'cursor', modelID: 'claude-3.5-sonnet' };
+    case 'deepseek-harness':
+      return { providerID: 'deepseek', modelID: 'deepseek-chat' };
+    case 'grok':
+      return { providerID: 'xai', modelID: 'grok-beta' };
+    case 'command-code':
+    default:
+      return { providerID: 'openai', modelID: 'gpt-4o' };
   }
 }

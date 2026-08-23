@@ -11,7 +11,7 @@ import {
 } from '@initforge/agent-rules-engine/contracts'
 import { M10_TERMINAL_TOKEN, deriveM10ProofHash } from '@initforge/agent-rules-engine/terminal-gate'
 
-const REQUIRED_HOSTS = ['codex', 'claude', 'grok', 'opencode', 'antigravity']
+const REQUIRED_HOSTS = ['codex', 'claude', 'opencode', 'cursor', 'antigravity', 'grok', 'deepseek-harness', 'command-code']
 
 function git(root: string, args: string[]): string {
   return execFileSync('git', args, { cwd: root, encoding: 'utf-8' }).trim()

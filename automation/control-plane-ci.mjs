@@ -86,8 +86,8 @@ function verifyCertificationArtifacts() {
   if (entries.some(entry => !entry.isFile())) throw new Error('certification artifacts must contain files only');
   const expectedBasenames = CERTIFICATION_REQUIRED_HOSTS.flatMap(host => [`attestation-${host}.json`, `manifest-${host}.json`]).sort();
   const basenames = entries.map(entry => entry.name).sort();
-  if (basenames.length !== 10 || basenames.some((name, index) => name !== expectedBasenames[index])) {
-    throw new Error(`certification artifacts must contain exactly ten expected files: ${basenames.join(',')}`);
+  if (basenames.length !== expectedBasenames.length || basenames.some((name, index) => name !== expectedBasenames[index])) {
+    throw new Error(`certification artifacts must contain exactly ${expectedBasenames.length} expected files: ${basenames.join(',')}`);
   }
   const manifests = CERTIFICATION_REQUIRED_HOSTS.map(host => `manifest-${host}.json`);
   const seen = new Set();

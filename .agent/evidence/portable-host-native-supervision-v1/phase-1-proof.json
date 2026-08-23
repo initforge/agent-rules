@@ -12,8 +12,8 @@
   "evidence": [
     {
       "id": "P1-REQ-009-registry",
-      "claim": "platform-contracts.json is registry v2 with eight canonical HostIds; independent host arrays and stale Mimocode removed.",
-      "proof": "platforms/platform-contracts.json version 2 with registry.host_ids (8); automation/platform-contracts.schema.json v2; model-policy.json removed mimocode and added DSH/command-code; kernel HostAttestation.host and HostId include the two new hosts; RUNTIME_PLATFORMS/VALID_HOSTS/CERTIFICATION_REQUIRED_HOSTS updated to the 8-host registry-driven set.",
+      "claim": "platform-contracts.json is registry v2 with eight canonical HostIds; independent host arrays and stale retired-platform removed.",
+      "proof": "platforms/platform-contracts.json version 2 with registry.host_ids (8); automation/platform-contracts.schema.json v2; model-policy.json removed retired-platform and added DSH/command-code; kernel HostAttestation.host and HostId include the two new hosts; RUNTIME_PLATFORMS/VALID_HOSTS/CERTIFICATION_REQUIRED_HOSTS updated to the 8-host registry-driven set.",
       "verifier": "test-platform-contracts.py; test-cross-language-manifests.py; test-platform-lifecycle.py; test-model-policy.py; runtime-reconcile.test.ts (8 hosts); generic-fixtures.test.ts (8 hosts)"
     },
     {

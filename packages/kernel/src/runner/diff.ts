@@ -21,10 +21,12 @@ export interface DiffCapture {
   /** SHA-256 of the diff text, or null when nothing changed. */
   diffSha256: string | null;
   filesChanged: string[];
-  /** Diff text size, for logging. The text itself is never returned upward. */
+  /** Diff text size, for logging. */
   diffBytes: number;
   /** Files changed but outside ownedPaths — ownership violations. */
   ownershipViolations: string[];
+  /** Real unified diff text for changed files. */
+  diffText?: string;
 }
 
 function git(cwd: string, args: string[]): { ok: true; stdout: string } {
@@ -134,6 +136,7 @@ export function captureWorkingTreeDelta(
   after: WorkingTreeSnapshot,
   ownedPaths: readonly string[],
   forbiddenPaths: readonly string[] = [],
+  cwd?: string,
 ): DiffCapture {
   const names = [...new Set([...Object.keys(before), ...Object.keys(after)])].sort();
   const changed = names.filter((file) => before[file] !== after[file]);
@@ -146,14 +149,22 @@ export function captureWorkingTreeDelta(
   const ownershipViolations = changed.filter((file) => !isOwned(file) || isForbidden(file));
   const ownedChanged = changed.filter((file) => isOwned(file) && !isForbidden(file));
   if (ownedChanged.length === 0) {
-    return { diffSha256: null, filesChanged: [], diffBytes: 0, ownershipViolations };
+    return { diffSha256: null, filesChanged: [], diffBytes: 0, ownershipViolations, diffText: '' };
   }
   const proof = ownedChanged.map((file) => `${file}\0${before[file] ?? '<clean>'}\0${after[file] ?? '<clean>'}`).join('\n');
+  let realDiffText = proof;
+  if (cwd) {
+    try {
+      const gitDiff = computeDiffText(cwd, ownedChanged, ownedPaths);
+      if (gitDiff) realDiffText = gitDiff;
+    } catch { /* fallback to proof string */ }
+  }
   return {
     diffSha256: createHash('sha256').update(proof).digest('hex'),
     filesChanged: ownedChanged,
     diffBytes: Buffer.byteLength(proof),
     ownershipViolations,
+    diffText: realDiffText,
   };
 }
 

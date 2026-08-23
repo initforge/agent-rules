@@ -86,6 +86,67 @@ const CLASSIFIERS: Array<{ re: RegExp; classification: RepairClassification }> =
   { re: /\b(bug|defect|lỗi|sai|broken|wrong|fails?|crash|regression)\b/i, classification: 'implementation_defect' },
 ];
 
+export type RepairCategory = 'LOCAL_DEFECT' | 'PLAN_AMENDMENT' | 'STRUCTURAL_REPLAN';
+
+export interface RepairTaxonomyResult {
+  category: RepairCategory;
+  flow: 'bounded_patch' | 'amend_contract' | 'structural_replan';
+  description: string;
+  rationale: string;
+  max_attempts: number;
+}
+
+export function categorizeRepair(
+  rawFinding: string,
+  context: {
+    assumptionFailed?: boolean;
+    securityBoundaryChanged?: boolean;
+    scopeInvalid?: boolean;
+    consecutiveFailures?: number;
+  } = {}
+): RepairTaxonomyResult {
+  const norm = rawFinding.toLowerCase();
+
+  // 1. Structural replan: core premise invalid, security boundary changed, or repeated failures
+  if (
+    context.securityBoundaryChanged ||
+    context.scopeInvalid ||
+    (context.consecutiveFailures !== undefined && context.consecutiveFailures >= 3) ||
+    /\b(core premise (is )?false|fundamental architecture (is )?invalid|security boundary changed|complete redesign required)\b/i.test(norm)
+  ) {
+    return {
+      category: 'STRUCTURAL_REPLAN',
+      flow: 'structural_replan',
+      description: 'Core premise or security boundary invalid; initiate fresh planning cycle for affected scope',
+      rationale: 'Structural assumption failure cannot be resolved with local code patches',
+      max_attempts: 1,
+    };
+  }
+
+  // 2. Plan amendment: assumption proved false, scope adjustment, changed owner intent
+  if (
+    context.assumptionFailed ||
+    /\b(assumption (is )?(false|invalid|broken)|changed owner (requirement|intent|scope)|amend (plan|contract)|different approach required)\b/i.test(norm)
+  ) {
+    return {
+      category: 'PLAN_AMENDMENT',
+      flow: 'amend_contract',
+      description: 'One assumption invalid or scope adjusted; amend contract and resume execution',
+      rationale: 'Architecture remains valid with targeted contract amendment',
+      max_attempts: 2,
+    };
+  }
+
+  // 3. Local defect: localized implementation bug, selector, typo, syntax, test assertion
+  return {
+    category: 'LOCAL_DEFECT',
+    flow: 'bounded_patch',
+    description: 'Localized defect; apply bounded patch and run focused verification',
+    rationale: 'Issue is isolated to local implementation details',
+    max_attempts: 2,
+  };
+}
+
 export function classifyFinding(raw: string): RepairClassification {
   for (const entry of CLASSIFIERS) {
     if (entry.re.test(raw)) return entry.classification;

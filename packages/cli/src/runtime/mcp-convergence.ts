@@ -23,7 +23,7 @@ import { resolveGlobalMcpProfile, type GlobalMcpProfile } from "../integration/m
  * classification is available for doctor.
  */
 
-export type HostName = "codex" | "claude" | "cursor" | "antigravity" | "grok" | "opencode";
+export type HostName = "codex" | "claude" | "cursor" | "antigravity" | "grok" | "opencode" | "deepseek-harness" | "command-code";
 
 export const HOST_CONFIG_FILES: Record<HostName, string> = {
   codex: "config.toml",
@@ -32,6 +32,8 @@ export const HOST_CONFIG_FILES: Record<HostName, string> = {
   cursor: "mcp.json",
   opencode: "opencode.json",
   claude: ".claude.json",
+  "deepseek-harness": "config.json",
+  "command-code": "mcp.json",
 };
 
 export function hostHome(host: HostName, env: NodeJS.ProcessEnv = process.env): string {
@@ -43,6 +45,8 @@ export function hostHome(host: HostName, env: NodeJS.ProcessEnv = process.env): 
     case "cursor": return path.join(userHome, ".cursor");
     case "opencode": return env.OPENCODE_HOME || path.join(userHome, ".config", "opencode");
     case "claude": return env.CLAUDE_CONFIG_DIR || path.join(userHome, ".claude");
+    case "deepseek-harness": return env.DSH_HOME || path.join(userHome, ".deepseek-harness");
+    case "command-code": return env.CMDC_HOME || path.join(userHome, ".command-code");
   }
 }
 
@@ -115,8 +119,10 @@ const ADAPTER_FILES: Record<HostName, string> = {
   grok: "grok.json",
   antigravity: "antigravity.json",
   cursor: "cursor.json",
-    opencode: "opencode.json",
+  opencode: "opencode.json",
   claude: ".claude.json",
+  "deepseek-harness": "deepseek-harness.json",
+  "command-code": "command-code.json",
 };
 
 function sha256(text: string): string {
@@ -352,7 +358,8 @@ function applyConvergence(host: HostName, configPath: string, entries: Array<{ i
       const block = content.slice(start, end);
       const disposition = dispositions.get(target.id);
       if (disposition === "owned-disable") {
-        const disabledBlock = `${block.replace(/\s+$/, "")}\nenabled = false\n`;
+        const cleanBlock = block.replace(/^\s*enabled\s*=.*$/gm, "").replace(/\n{2,}/g, "\n").replace(/\s+$/, "");
+        const disabledBlock = `${cleanBlock}\nenabled = false\n\n`;
         edits.push({ start, end, replacement: disabledBlock });
       } else {
         edits.push({ start, end, replacement: "" });
@@ -509,7 +516,7 @@ export async function convergeHostMcpConfig(repoRoot: string, host: HostName, op
   };
 }
 
-export const ALL_MCP_HOSTS: readonly HostName[] = ["codex", "claude", "cursor", "antigravity", "grok", "opencode"];
+export const ALL_MCP_HOSTS: readonly HostName[] = ["codex", "claude", "cursor", "antigravity", "grok", "opencode", "deepseek-harness", "command-code"];
 
 export async function convergeAllHostMcpConfigs(repoRoot: string, hosts: readonly HostName[] = ALL_MCP_HOSTS, options: ConvergenceOptions = {}): Promise<HostConvergenceResult[]> {
   const results: HostConvergenceResult[] = [];

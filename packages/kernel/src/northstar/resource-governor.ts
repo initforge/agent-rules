@@ -41,7 +41,7 @@ export interface ResourceDecision {
 
 export const DEFAULT_RESOURCE_POLICY: ResourcePolicy = {
   max_repair_attempts: 2,
-  max_active_skills: 3,
+  max_active_skills: 8,
   max_active_capabilities: 8,
   max_task_timeout_ms: 60 * 60 * 1000,
   max_agent_concurrency: 2,

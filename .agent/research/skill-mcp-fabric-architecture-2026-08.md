@@ -122,7 +122,7 @@ security/verification/scope/completion/migration/permissions/acceptance.
   research wants removed; they can only change through the canonical graph
   builder (`automation/build-context-graph.ps1`), never by hand in `generated/`.
 - `platforms/platform-contracts.json`: 7 hosts (codex, claude, grok,
-  antigravity, cursor, opencode, mimocode); certification requires live evidence
+  antigravity, cursor, opencode, retired-platform); certification requires live evidence
   on 5 of them; MCP config paths/formats per host; opencode has no hook
   lifecycle (routing via route capsule injection) — directly relevant to RTK
   middleware enforcement (opencode = plugin mode, codex = instruction mode).
@@ -263,7 +263,7 @@ do not exist in this repository (host/platform-owned; not deletable here).
   reference snapshot, manifest-bound; project skills `5fedu-project` /
   `5fedu-module-parity` with `profile-explicit` disposition — unchanged by this
   research; never vendored into target projects.
-- `platforms/{codex,claude,grok,antigravity,cursor,opencode,mimocode}`:
+- `platforms/{codex,claude,grok,antigravity,cursor,opencode,retired-platform}`:
   host adapters + `platform-contracts.json`; the seam where per-host
   enforcement (RTK), MCP config paths, and session composition land.
 - `platforms/opencode/wrappers/session-launch.mjs`: per-session config builder;

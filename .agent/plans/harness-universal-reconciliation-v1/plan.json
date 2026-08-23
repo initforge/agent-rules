@@ -37,7 +37,7 @@
       "verification":{"proof_kinds":["unit","integration","security","artifact"],"dimensions":["provenance","portability","scope","rollback"]},
       "evidence_requirements":["source lock fixtures","qualification score receipts","cross-host skill manifest diff"],
       "rollback":"Retain new sources as catalog-only and disable external materialization.",
-      "portability":{"platforms":["codex","claude","grok","opencode","antigravity","cursor","mimocode"],"constraints":["SKILL.md remains portable","ROUTE.json remains harness-owned"]}
+      "portability":{"platforms":["codex","claude","grok","opencode","antigravity","cursor"],"constraints":["SKILL.md remains portable","ROUTE.json remains harness-owned"]}
     },
     {
       "id":"S3","objective":"Implement provider-neutral adapters for all named verification capabilities.","requirements":["REQ-009"],
@@ -55,7 +55,7 @@
       "verification":{"proof_kinds":["unit","integration","artifact"],"dimensions":["detection","projection","reconciliation","rollback"]},
       "evidence_requirements":["seven-host fixture matrix","live installed-host inventory","repair and rollback receipts"],
       "rollback":"Keep the transactional v1 installer and expose new reconciliation in report-only mode.",
-      "portability":{"platforms":["codex","claude","grok","opencode","antigravity","cursor","mimocode"],"constraints":["unknown hosts are UNSUPPORTED","config directory alone is not installation proof"]}
+      "portability":{"platforms":["codex","claude","grok","opencode","antigravity","cursor"],"constraints":["unknown hosts are UNSUPPORTED","config directory alone is not installation proof"]}
     },
     {
       "id":"S5","objective":"Migrate and complete foreground browser, mobile, and Pencil behavior.","requirements":["REQ-011","REQ-012"],

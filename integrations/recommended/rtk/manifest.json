@@ -7,8 +7,9 @@
   "capabilities": [
     "output.compress"
   ],
+  "policy": "optional",
   "profiles": [
-    "core"
+    "all"
   ],
   "trust": "adapter-verified",
   "sideEffects": "read-only",
@@ -19,8 +20,7 @@
     "grok",
     "antigravity",
     "cursor",
-    "opencode",
-    "mimocode"
+    "opencode"
   ],
   "install": {
     "type": "shell",

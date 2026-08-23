@@ -20,13 +20,16 @@ describe("host-canary CLI", () => {
   });
 
   it("reports NOT_LIVE_VERIFIED/UNSUPPORTED for an absent host without fabricating live certification", async () => {
-    const result = await hostCanaryCmd(["cursor"], { json: false, dryRun: false, verbose: false });
-    expect(result.exitCode).toBe(ExitCode.Success);
-    // From the CLI package cwd there is no platforms/cursor projection, so the
-    // honest state is UNSUPPORTED; from the repo root with no binary it would
-    // be NOT_LIVE_VERIFIED. Either way it must never be LIVE_CERTIFIED.
-    expect(["NOT_LIVE_VERIFIED", "UNSUPPORTED"]).toContain(result.data?.state);
-    expect(result.data?.probe?.ok).toBe(false);
+    const originalPath = process.env.PATH;
+    process.env.PATH = "";
+    try {
+      const result = await hostCanaryCmd(["cursor"], { json: false, dryRun: false, verbose: false });
+      expect(result.exitCode).toBe(ExitCode.Success);
+      expect(["NOT_LIVE_VERIFIED", "UNSUPPORTED"]).toContain(result.data?.state);
+      expect(result.data?.probe?.ok).toBe(false);
+    } finally {
+      process.env.PATH = originalPath;
+    }
   });
 
   it("emits a capability fingerprint and per-capability certifications", async () => {

@@ -47,7 +47,7 @@
     "ledger_status": "RETIRED",
     "ledger_execution_state": "CLOSED",
     "classification": "SUPERSESSION_PENDING_OWNER_SANCTIONED",
-    "carried_requirements": "unresolved requirements carried forward; Mimocode requirement explicitly superseded",
+    "carried_requirements": "unresolved requirements carried forward; retired-platform requirement explicitly superseded",
     "old_closure": "INVALID_UNTIL_CORRECTED (false closure: verified:true without bound evidence, PRE-EXISTING without comparative proof)"
   },
   "bootstrap_trust_root": {
