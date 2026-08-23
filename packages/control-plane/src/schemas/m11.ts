@@ -329,7 +329,7 @@ export interface AgentHostStatus {
   diagnostics: Record<string, unknown> | null
 }
 
-const REQUIRED_HOSTS = ['codex', 'claude', 'opencode', 'grok', 'antigravity']
+const REQUIRED_HOSTS = ['codex', 'claude', 'opencode', 'cursor', 'antigravity', 'grok', 'deepseek-harness', 'command-code']
 
 export function agentsView(): Record<string, unknown> {
   const root = findRoot()

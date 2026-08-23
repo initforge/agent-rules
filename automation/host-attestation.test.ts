@@ -63,6 +63,9 @@ const allModelEvidence: Record<string, CollectedModelEvidence> = {
   grok: modelEvidence('grok'),
   opencode: modelEvidence('opencode'),
   antigravity: modelEvidence('antigravity'),
+  cursor: modelEvidence('cursor'),
+  'deepseek-harness': modelEvidence('deepseek-harness'),
+  'command-code': modelEvidence('command-code'),
 };
 
 const enc = (s: string) => encoder.encode(s);
@@ -90,6 +93,9 @@ const hostVersionOutput: Record<string, string> = {
   grok: `grok ${version} (abcdef) [stable]\n`,
   opencode: `${version}\n`,
   antigravity: `${version}\n`,
+  cursor: `${version}\n`,
+  'deepseek-harness': `${version}\n`,
+  'command-code': `${version}\n`,
 };
 
 const hostHelpOutput: Record<string, string> = {
@@ -102,6 +108,9 @@ const hostHelpOutput: Record<string, string> = {
   // before positional args) is accepted by the command matcher.
   opencode: 'Commands:\n  opencode run [message..]  run a prompt\n  opencode mcp  manage MCP\nOptions:\n  -m, --model  model to use\n',
   antigravity: 'Usage of agy:\n  --model  Model\n  --agent  Agent\n  -p, --print  Print\n',
+  cursor: 'Usage of cursor:\n  --model  Model\n  --agent  Agent\n  -p, --print  Print\n',
+  'deepseek-harness': 'Options:\n  --model <MODEL>\n  --profile <NAME>\n  --dump-config\n',
+  'command-code': 'Usage of cmdc:\n  --model  Model\n  --agent  Agent\n  -p, --print  Print\n',
 };
 
 const capabilityIds: Record<string, string[]> = {
@@ -110,6 +119,9 @@ const capabilityIds: Record<string, string[]> = {
   grok: ['grok:agent', 'grok:model', 'grok:single-prompt'],
   opencode: ['opencode:mcp', 'opencode:model', 'opencode:run'],
   antigravity: ['antigravity:agent', 'antigravity:model', 'antigravity:print'],
+  cursor: ['cursor:agent', 'cursor:model', 'cursor:print'],
+  'deepseek-harness': ['deepseek-harness:dump-config', 'deepseek-harness:model', 'deepseek-harness:profile'],
+  'command-code': ['command-code:agent', 'command-code:model', 'command-code:print'],
 };
 
 const run: ProbeRunner = async (executable, args) => {
@@ -155,9 +167,9 @@ describe('collectHostAttestations', () => {
       modelEvidence: allModelEvidence,
     });
 
-    expect(NATIVE_HOSTS).toEqual(['codex', 'claude', 'grok', 'opencode', 'antigravity']);
+    expect(NATIVE_HOSTS).toEqual(['codex', 'claude', 'opencode', 'cursor', 'antigravity', 'grok', 'deepseek-harness', 'command-code']);
     expect(result.map((item) => item.host)).toEqual([...NATIVE_HOSTS]);
-    expect(result.map((item) => item.host)).not.toContain('cursor');
+    expect(result.map((item) => item.host)).toContain('cursor');
     for (const item of result) {
       expect(item).toMatchObject({
         hostVersion: version,
@@ -437,7 +449,7 @@ describe('collectHostAttestations', () => {
     });
     for (const item of result) {
       // Format: dev:ino|inputLabel|sha256
-      expect(item.nativeRunnerIdentity).toMatch(/^\d+:\d+\|\/native\/[a-z]+\|[a-f0-9]{64}$/);
+      expect(item.nativeRunnerIdentity).toMatch(/^\d+:\d+\|\/native\/[a-z-]+\|[a-f0-9]{64}$/);
     }
   });
 

@@ -430,3 +430,41 @@ export function capabilityIsLive(cert?: CapabilityCertification, now: Date = new
   if (cert.certification_state !== 'LIVE_CERTIFIED') return false;
   return now.getTime() <= Date.parse(cert.expires_at);
 }
+
+export interface SessionFreshnessCheck {
+  fresh: boolean;
+  status: 'FRESH' | 'STALE_SESSION' | 'RELOAD_REQUIRED';
+  reasons: string[];
+}
+
+export function checkSessionFreshness(input: {
+  sessionStartedAt: string;
+  catalogUpdatedAt: string;
+  installedHash?: string;
+  observedSessionHash?: string;
+}): SessionFreshnessCheck {
+  const sessionTime = Date.parse(input.sessionStartedAt);
+  const catalogTime = Date.parse(input.catalogUpdatedAt);
+  const reasons: string[] = [];
+
+  if (catalogTime > sessionTime) {
+    reasons.push('Host native skill catalog was updated after session start');
+  }
+  if (input.installedHash && input.observedSessionHash && input.installedHash !== input.observedSessionHash) {
+    reasons.push('Active session hash differs from installed manifest projection hash');
+  }
+
+  if (reasons.length > 0) {
+    return {
+      fresh: false,
+      status: 'STALE_SESSION',
+      reasons,
+    };
+  }
+
+  return {
+    fresh: true,
+    status: 'FRESH',
+    reasons: [],
+  };
+}

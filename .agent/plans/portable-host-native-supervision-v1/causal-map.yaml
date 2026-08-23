@@ -75,7 +75,7 @@ maps:
     proof: "compileDoD independence negative tests"
 
   - id: C-F09-REGISTRY
-    symptom: "hosts hard-coded in platform-contracts.json, CLI/kernel host arrays and automation; certification 5 hosts, runtime 6; stale Mimocode references."
+    symptom: "hosts hard-coded in platform-contracts.json, CLI/kernel host arrays and automation; certification 5 hosts, runtime 6; stale retired-platform references."
     canonical_authority: "platform-contracts.json registry v2 with eight canonical HostIds"
     host_neutral: "registry is the single source; automation/schema/doctor/installer/docs/fixtures/CI derive from it"
     host_mapping: "runtime uses validated/branded HostId"

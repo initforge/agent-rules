@@ -4,30 +4,30 @@
   "plan_root": ".agent/plans/portable-host-native-supervision-v1",
   "original": {
     "path": ".agent/plans/portable-host-native-supervision-v1/original.md",
-    "sha256": "f7506714d1a4d3e879c4f2520b20868ee18659f7ebefd28d0798a820641e00ab"
+    "sha256": "3ce80a0f22b9cfd6315b26fcbd498e66d88e7e950d4641863841ecc193f4e3db"
   },
   "canonical_ledger": {
     "path": ".agent/ledger/portable-host-native-supervision-v1.json",
-    "sha256": "761c152ac3e33b77a62d8e1024cbc3a0a939e4d03d44316a2749473e8774e380",
+    "sha256": "392681e19ba12c380eda728e2ad56fce758ae968bbc720df1f299732c7196841",
     "observed_revision": 0,
     "observed_effective_sha256": "801d9589e25eda77f6a5b319445a7ddf946fb6f0b0daaf085a0afbddfc50c854",
-    "plan_status": "ADOPTED",
-    "execution_state": "IN_PROGRESS"
+    "plan_status": "COMPLETED",
+    "execution_state": "COMPLETED"
   },
   "effective_chain_tip": {
     "amendment_id": "AM-0000",
     "path": ".agent/plans/portable-host-native-supervision-v1/original.md",
-    "sha256": "f7506714d1a4d3e879c4f2520b20868ee18659f7ebefd28d0798a820641e00ab"
+    "sha256": "3ce80a0f22b9cfd6315b26fcbd498e66d88e7e950d4641863841ecc193f4e3db"
   },
   "candidate_chain_tip": {
     "amendment_id": "AM-0000",
     "status": "OWNER_APPROVED_EFFECTIVE",
     "path": ".agent/plans/portable-host-native-supervision-v1/original.md",
-    "sha256": "f7506714d1a4d3e879c4f2520b20868ee18659f7ebefd28d0798a820641e00ab"
+    "sha256": "3ce80a0f22b9cfd6315b26fcbd498e66d88e7e950d4641863841ecc193f4e3db"
   },
   "contract": {
     "path": ".agent/plans/portable-host-native-supervision-v1/plan.md",
-    "sha256": "f6816f14d2d5ea7fe729cc9434c78379a4eb8e504b0d7d46d855906e891f9b6e",
+    "sha256": "c1cc46861bf671a52285b498fec066a28f2969d2e805f2c3d2e08b8eed890ec3",
     "schema_path": "schemas/execution-contract.schema.json",
     "requirement_ids": [
       "REQ-001",
@@ -59,7 +59,7 @@
   "schema": "artifact/execution-contract",
   "version": 1,
   "kind": "current-pointer",
-  "generation": 43,
+  "generation": 44,
   "supersession": {
     "transaction_id": "08bdfd50-d68a-457f-87f4-fdf5b4a35a3f",
     "previous_work_id": "portable-host-native-supervision-v1",
@@ -69,9 +69,9 @@
   },
   "atomicity": {
     "protocol": "generation-compare-and-swap",
-    "expected_previous_generation": 42,
+    "expected_previous_generation": 43,
     "commit_target": ".agent/current.json",
-    "activation_state": "BOOTSTRAP_UNCERTIFIED",
-    "updated_at": "2026-08-20T20:57:23.486Z"
+    "activation_state": "CANONICALLY_ACTIVATED",
+    "updated_at": "2026-08-22T17:03:51.343Z"
   }
 }

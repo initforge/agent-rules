@@ -12,7 +12,7 @@
     "automation/dsh-project-profile.mjs",
     "automation/dsh-live-handshake.mjs"
   ],
-  "reason": "DSH is not part of the canonical seven-host set (codex, claude, grok, opencode, antigravity, cursor, mimocode). Its lease-token rotation produced the reported  failures; the canonical hosts were unaffected. DSH-related runtime state remains historical in .agent/research/ (no execution authority).",
+  "reason": "DSH is not part of the canonical seven-host set (codex, claude, grok, opencode, antigravity, cursor, retired-platform). Its lease-token rotation produced the reported  failures; the canonical hosts were unaffected. DSH-related runtime state remains historical in .agent/research/ (no execution authority).",
   "replacement": "Canonical hosts only; shared Playwright MCP browser server automation/dsh-browser-server.mjs retained as browser infrastructure (not a DSH host).",
   "recovery": "git history (commit before this tombstone) restores the adapter and automation if the owner ever re-approves DSH adoption.",
   "retired_evidence": [

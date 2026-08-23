@@ -22,7 +22,7 @@ import type { ExecutionBudget } from './execution-policy.js';
  * at all, so the number of tasks it can drive is bounded by wall-clock, not tokens.
  */
 
-export type AgentKind = 'claude' | 'codex' | 'opencode';
+export type AgentKind = 'claude' | 'codex' | 'opencode' | 'antigravity' | 'cursor' | 'grok' | 'command-code' | 'deepseek-harness';
 
 export interface AgentInvocation {
   executable: string;
@@ -66,8 +66,9 @@ export const DEFAULT_TIMEOUT_MS = 20 * 60 * 1000;
  * Kept as a pure function so the argv is testable without spawning anything — the
  * previous adapter's fatal flaw was that nothing asserted what it actually ran.
  */
-export function buildInvocation(kind: AgentKind, prompt: string, config: Pick<ExecutorConfig, 'permissionMode' | 'mcpConfigPaths'>): AgentInvocation {
-  const base = (() => {
+export function buildAgentInvocation(kind: AgentKind, prompt: string, config: ExecutorConfig): AgentInvocation {
+  if (config.invocationOverride) return config.invocationOverride(prompt);
+  const base: AgentInvocation = (() => {
     switch (kind) {
       case 'claude':
         return {
@@ -83,9 +84,19 @@ export function buildInvocation(kind: AgentKind, prompt: string, config: Pick<Ex
           ],
         };
       case 'codex':
-        return { executable: 'codex', args: ['exec', prompt] };
+        return { executable: 'codex', args: ['exec', '--sandbox', 'workspace-write', '--ask-for-approval', 'never', prompt] };
       case 'opencode':
-        return { executable: 'opencode', args: ['run', prompt] };
+        return { executable: 'opencode', args: ['run', '--auto', prompt] };
+      case 'antigravity':
+        return { executable: 'agy', args: ['-p', prompt] };
+      case 'cursor':
+        return { executable: 'cursor-agent', args: ['-p', prompt, '--force'] };
+      case 'deepseek-harness':
+        return { executable: 'dsh', args: ['--profile', 'headless', prompt] };
+      case 'command-code':
+        return { executable: process.platform === 'win32' ? 'cmdc' : 'cmd', args: ['-p', prompt] };
+      case 'grok':
+        return { executable: 'grok', args: ['-p', prompt] };
     }
   })();
   const mcp = config.mcpConfigPaths;
@@ -101,6 +112,8 @@ export function buildInvocation(kind: AgentKind, prompt: string, config: Pick<Ex
   return base;
 }
 
+export const buildInvocation = buildAgentInvocation;
+
 export interface ExecutionResult {
   exitCode: number;
   timedOut: boolean;
@@ -115,31 +128,51 @@ export interface ExecutionResult {
 }
 
 /** True when the CLI for `kind` is on PATH and responds to `--version`. */
-export async function detectAgent(kind: AgentKind): Promise<{ available: boolean; version?: string }> {
-  const executable = kind;
-  return new Promise((resolve) => {
-    const proc = spawn(executable, ['--version'], { stdio: ['ignore', 'pipe', 'ignore'] });
-    let out = '';
-    proc.stdout?.on('data', (d: Buffer) => {
-      out += d.toString();
-    });
-    const timer = setTimeout(() => {
-      try {
-        proc.kill('SIGKILL');
-      } catch {
-        /* already gone */
-      }
-      resolve({ available: false });
-    }, 15_000);
-    proc.on('close', (code) => {
-      clearTimeout(timer);
-      resolve(code === 0 ? { available: true, version: out.trim() } : { available: false });
-    });
-    proc.on('error', () => {
-      clearTimeout(timer);
-      resolve({ available: false });
-    });
-  });
+export async function detectAgent(kind: AgentKind): Promise<{ available: boolean; version?: string; binary?: string }> {
+  const binaryCandidates = (() => {
+    switch (kind) {
+      case 'antigravity': return ['agy', 'gemini'];
+      case 'deepseek-harness': return ['dsh', 'deepseek-harness'];
+      case 'command-code': return ['cmdc', 'command-code'];
+      default: return [kind];
+    }
+  })();
+
+  for (const executable of binaryCandidates) {
+    const candidates = process.platform === 'win32'
+      ? [executable, `${executable}.cmd`, `${executable}.exe`, `${executable}.bat`]
+      : [executable];
+    for (const cand of candidates) {
+      const isCmdOrBat = process.platform === 'win32' && (cand.endsWith('.cmd') || cand.endsWith('.bat'));
+      const actualCmd = isCmdOrBat ? (process.env.ComSpec || 'cmd.exe') : cand;
+      const actualArgs = isCmdOrBat ? ['/d', '/s', '/c', cand, '--version'] : ['--version'];
+      const res = await new Promise<{ available: boolean; version?: string; binary?: string }>((resolve) => {
+        const proc = spawn(actualCmd, actualArgs, { stdio: ['ignore', 'pipe', 'ignore'], shell: false, windowsHide: true });
+        let out = '';
+        proc.stdout?.on('data', (d: Buffer) => {
+          out += d.toString();
+        });
+        const timer = setTimeout(() => {
+          try {
+            proc.kill('SIGKILL');
+          } catch {
+            /* already gone */
+          }
+          resolve({ available: false });
+        }, 5_000);
+        proc.on('close', (code) => {
+          clearTimeout(timer);
+          resolve(code === 0 ? { available: true, version: out.trim(), binary: cand } : { available: false });
+        });
+        proc.on('error', () => {
+          clearTimeout(timer);
+          resolve({ available: false });
+        });
+      });
+      if (res.available) return res;
+    }
+  }
+  return { available: false };
 }
 
 export class HeadlessExecutor {
@@ -181,10 +214,15 @@ export class HeadlessExecutor {
     let cleanupConfirmed = true;
     let agentPid = -1;
 
+    const isCmdOrBat = process.platform === 'win32' && (executable.endsWith('.cmd') || executable.endsWith('.bat'));
+    const actualCmd = isCmdOrBat ? (process.env.ComSpec || 'cmd.exe') : executable;
+    const actualArgs = isCmdOrBat ? ['/d', '/s', '/c', executable, ...args] : args;
+
     try {
-      const proc = spawn(executable, args, {
+      const proc = spawn(actualCmd, actualArgs, {
         cwd: this.config.cwd,
         stdio: ['ignore', stdoutFd, stderrFd],
+        shell: false,
         env: {
           ...process.env,
           // Marks the child as harness-driven so it can adapt (and so a human reading

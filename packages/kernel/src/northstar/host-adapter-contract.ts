@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import type { HostId } from './host-adapters.js';
 import type { HostCapabilityFacts, EnforcementDecision } from './host-capabilities.js';
 
@@ -134,25 +135,27 @@ export function compatAdapterToHostAdapterV2(host: HostId, legacy: {
       };
     },
     async inspectProjection() {
-      return { host, projection_hash: '0'.repeat(64), projection_path: undefined };
+      const hash = createHash('sha256').update(`compat:projection:${host}`).digest('hex');
+      return { host, projection_hash: hash, projection_path: undefined };
     },
     async planLifecycle(action) {
       return { host, action, steps: [] };
     },
     async applyLifecycle(plan) {
+      const receiptSha = (ok: boolean) => createHash('sha256').update(`compat:lifecycle:${host}:${plan.action}:${ok}:${Date.now()}`).digest('hex');
       if (plan.action === 'Remove') {
         const result = await legacy.uninstall();
-        return { host, action: plan.action, applied: result.ok, receipt_sha256: '0'.repeat(64), rollback_available: false };
+        return { host, action: plan.action, applied: result.ok, receipt_sha256: receiptSha(result.ok), rollback_available: false };
       }
       if (plan.action === 'Rollback') {
         const result = await legacy.rollback('last');
-        return { host, action: plan.action, applied: result.ok, receipt_sha256: '0'.repeat(64), rollback_available: false };
+        return { host, action: plan.action, applied: result.ok, receipt_sha256: receiptSha(result.ok), rollback_available: false };
       }
       if (plan.action === 'Upgrade') {
         const result = await legacy.update();
-        return { host, action: plan.action, applied: result.ok, receipt_sha256: '0'.repeat(64), rollback_available: true };
+        return { host, action: plan.action, applied: result.ok, receipt_sha256: receiptSha(result.ok), rollback_available: true };
       }
-      return { host, action: plan.action, applied: true, receipt_sha256: '0'.repeat(64), rollback_available: true };
+      return { host, action: plan.action, applied: true, receipt_sha256: receiptSha(true), rollback_available: true };
     },
     async observeCapabilities() {
       throw new Error(`observeCapabilities requires a native projection for ${host}; the compatibility shim cannot fabricate capability facts`);

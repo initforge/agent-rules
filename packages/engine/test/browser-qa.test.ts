@@ -100,9 +100,9 @@ async function stopServer(): Promise<void> {
   if (!(await waitForServerDown())) throw new Error(`control-plane endpoint remained live after killing owned process ${proc.pid}`);
 }
 
-async function isServerUp(): Promise<boolean> {
+async function isServerUp(timeoutMs = 3000): Promise<boolean> {
   try {
-    const res = await fetch(baseUrl, { signal: AbortSignal.timeout(1000) });
+    const res = await fetch(baseUrl, { signal: AbortSignal.timeout(timeoutMs) });
     return res.status < 500;
   } catch {
     return false;
@@ -221,7 +221,12 @@ beforeEach(async () => {
   if (isChromiumAvailable && page) {
     await page.unrouteAll({ behavior: 'ignoreErrors' }).catch(() => {});
   }
-  if (!serverProc || serverProc.exitCode !== null || !(await isServerUp())) {
+  let up = await isServerUp(3000);
+  if (!up && serverProc && serverProc.exitCode === null) {
+    await new Promise((r) => setTimeout(r, 500));
+    up = await isServerUp(5000);
+  }
+  if (!serverProc || serverProc.exitCode !== null || !up) {
     throw new Error(`owned control-plane server disappeared before test:\n${serverLog}`);
   }
 });

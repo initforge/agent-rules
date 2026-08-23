@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "codebase-memory": {
-      "command": "/home/linhnx/.local/share/codebase-memory-mcp/codebase-memory-mcp",
-      "args": []
-    }
-  }
-}

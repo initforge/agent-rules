@@ -222,6 +222,10 @@ export interface TaskPacket {
   };
   /** Machine-checkable execution policy (North-Star vNext). */
   policy?: TaskExecutionPolicy;
+  /** Bounded Decision Envelope (Phase 3 Decision Closure & Bounded Worker Autonomy). */
+  decision_envelope?: import('./decision-closure.js').DecisionEnvelope;
+  /** Autonomy profile governing worker execution (LOCAL_ONLY | BOUNDED | PLANNER_CAPABLE). */
+  autonomy_profile?: import('./decision-closure.js').WorkerAutonomyProfile;
 }
 
 /**
@@ -712,7 +716,7 @@ export function assertSpecExecutable(spec: WorkSpec): void {
 export function assertTaskPacket(value: unknown): asserts value is TaskPacket {
   if (!isObject(value)) throw new Error('TaskPacket must be an object');
   assertNoExtraKeys(value, [
-    'protocol_version', 'task_id', 'spec_id', 'spec_revision', 'work_id', 'execution_generation', 'phase', 'goal', 'requirements', 'scope', 'context', 'constraints', 'acceptance', 'skills', 'capabilities', 'stop_if', 'repair', 'policy',
+    'protocol_version', 'task_id', 'spec_id', 'spec_revision', 'work_id', 'execution_generation', 'phase', 'goal', 'requirements', 'scope', 'context', 'constraints', 'acceptance', 'skills', 'capabilities', 'stop_if', 'repair', 'policy', 'decision_envelope', 'autonomy_profile',
   ], 'TaskPacket');
   asString(value.protocol_version, 'TaskPacket.protocol_version');
   const taskId = asString(value.task_id, 'TaskPacket.task_id');

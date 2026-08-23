@@ -64,13 +64,7 @@ function stubLedger(overrides: Record<string, unknown> = {}): Record<string, unk
     reconciliations: reconciliationIds.map((requirementId) => ({ requirementId, status: 'MATCH', headCommit: hash, detail: `HEAD ${hash.slice(0, 12)}` })),
     effective_plan_identity: { sha256: effectivePlanIdentity },
     milestones: { 'M9.5': { identity: effectivePlanIdentity, reviewerIdentity: 'final-reviewer', epoch, observedAt: new Date(epoch).toISOString(), evidence } },
-    attestations: [
-      fullAttestation('codex'),
-      fullAttestation('claude'),
-      fullAttestation('grok'),
-      fullAttestation('opencode'),
-      fullAttestation('antigravity'),
-    ],
+    attestations: REQUIRED_HOSTS.map((host) => fullAttestation(host)),
     plan_anchors: Array.from({ length: 25 }, (_, i) => ({ requirementId: `REQ-${String(i + 1).padStart(3, '0')}` })),
     amendments: [],
     shadowRevision: 1,
@@ -432,10 +426,7 @@ describe('verifyTerminalGate', () => {
   it('rejects non-native host → FAIL', () => {
     const dir = tmpDir();
     const ledger = stubLedger({ attestations: [
-      fullAttestation('codex'),
-      fullAttestation('claude'),
-      fullAttestation('grok'),
-      fullAttestation('opencode'),
+      ...REQUIRED_HOSTS.slice(0, -1).map((host) => fullAttestation(host)),
       fullAttestation('unknown-llm'),
     ] });
     const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
@@ -533,13 +524,13 @@ describe('verifyTerminalGate', () => {
     expect(result.failedGates).toContain('NO_OPEN_FINDINGS');
   });
 
-  it('requires exactly codex, claude, grok, opencode, and antigravity', () => {
-    expect(REQUIRED_HOSTS).toEqual(['codex', 'claude', 'grok', 'opencode', 'antigravity']);
-    expect(REQUIRED_HOSTS).not.toContain('cursor');
+  it('requires exactly the 8 canonical hosts', () => {
+    expect(REQUIRED_HOSTS).toEqual(['codex', 'claude', 'opencode', 'cursor', 'antigravity', 'grok', 'deepseek-harness', 'command-code']);
+    expect(REQUIRED_HOSTS).toContain('cursor');
     expect(REQUIRED_HOSTS).toContain('antigravity');
   });
 
-  it('rejects when attestations < 5', () => {
+  it('rejects when attestations < 8', () => {
     const dir = tmpDir();
     const ledger = stubLedger({ attestations: [fullAttestation('codex')] });
     const ledgerPath = writeFile(path.join(dir, 'ledger.json'), JSON.stringify(ledger));
@@ -817,78 +808,43 @@ describe('assertCertificationAttestation', () => {
   });
 
   it('rejects missing host', () => {
-    const ledger = stubLedger({ attestations: [
-      fullAttestation('codex'),
-      fullAttestation('claude'),
-      fullAttestation('grok'),
-      fullAttestation('antigravity'),
-    ] });
-    expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/expected 5.*got 4/);
+    const ledger = stubLedger({ attestations: REQUIRED_HOSTS.slice(0, -1).map((host) => fullAttestation(host)) });
+    expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/expected 8.*got 7/);
   });
 
   it('rejects empty commitSha', () => {
-    const ledger = stubLedger({ attestations: [
-      fullAttestation('codex'),
-      fullAttestation('claude'),
-      fullAttestation('grok', { commitSha: '' }),
-      fullAttestation('opencode'),
-      fullAttestation('antigravity'),
-    ] });
+    const ledger = stubLedger({ attestations: REQUIRED_HOSTS.map((host) => fullAttestation(host, host === 'grok' ? { commitSha: '' } : {})) });
     expect(() => assertCertificationAttestation(ledger, hash)).toThrow('empty commitSha');
   });
 
-  it('rejects null field in attestation (all 5 hosts present)', () => {
-    const ledger = stubLedger({ attestations: [
-      fullAttestation('codex', { hostVersion: null }),
-      fullAttestation('claude'),
-      fullAttestation('grok'),
-      fullAttestation('opencode'),
-      fullAttestation('antigravity'),
-    ] });
+  it('rejects null field in attestation (all 8 hosts present)', () => {
+    const ledger = stubLedger({ attestations: REQUIRED_HOSTS.map((host) => fullAttestation(host, host === 'codex' ? { hostVersion: null } : {})) });
     expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/null\/empty/);
   });
 
   it('rejects duplicate attestation for same host', () => {
     const ledger = stubLedger({ attestations: [
-      fullAttestation('codex'),
-      fullAttestation('codex'),
-      fullAttestation('claude'),
-      fullAttestation('grok'),
-      fullAttestation('opencode'),
-      fullAttestation('antigravity'),
+      fullAttestation(REQUIRED_HOSTS[0]),
+      ...REQUIRED_HOSTS.map((host) => fullAttestation(host)),
     ] });
     expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/duplicate/);
   });
 
-  it('rejects extra host beyond required five', () => {
+  it('rejects extra host beyond required eight', () => {
     const ledger = stubLedger({ attestations: [
-      fullAttestation('codex'),
-      fullAttestation('claude'),
-      fullAttestation('grok'),
-      fullAttestation('opencode'),
-      fullAttestation('antigravity'),
-      fullAttestation('cursor'),
+      ...REQUIRED_HOSTS.map((host) => fullAttestation(host)),
+      fullAttestation('unknown-host'),
     ] });
-    expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/unexpected.*cursor/);
+    expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/unexpected.*unknown-host/);
   });
 
   it('rejects wrong attestation count', () => {
-    const ledger = stubLedger({ attestations: [
-      fullAttestation('codex'),
-      fullAttestation('claude'),
-      fullAttestation('grok'),
-    ] });
-    expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/expected 5.*got 3/);
+    const ledger = stubLedger({ attestations: REQUIRED_HOSTS.slice(0, 3).map((host) => fullAttestation(host)) });
+    expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/expected 8.*got 3/);
   });
 
   it('rejects wrong HEAD binding', () => {
-    const ledger = stubLedger({ attestations: [
-      fullAttestation('codex'),
-      fullAttestation('claude'),
-      fullAttestation('grok'),
-      fullAttestation('opencode', { commitSha: 'c'.repeat(64) }),
-      fullAttestation('antigravity'),
-    ] });
+    const ledger = stubLedger({ attestations: REQUIRED_HOSTS.map((host) => fullAttestation(host, host === 'opencode' ? { commitSha: 'c'.repeat(64) } : {})) });
     expect(() => assertCertificationAttestation(ledger, hash)).toThrow('HEAD');
   });
 

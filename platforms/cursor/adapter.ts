@@ -22,9 +22,11 @@ const CURSOR_HOME = path.join(os.homedir(), '.cursor');
 const RULES_DIR = path.join(CURSOR_HOME, 'rules');
 
 async function whichCursor(): Promise<{ path: string; version?: string } | null> {
+  const isWin = process.platform === 'win32';
+  const lookupCmd = isWin ? 'where.exe' : 'which';
   try {
-    const { stdout } = await execFileAsync('which', [BINARY]);
-    const binaryPath = stdout.trim();
+    const { stdout } = await execFileAsync(lookupCmd, [BINARY]);
+    const binaryPath = stdout.split(/\r?\n/)[0]?.trim();
     if (!binaryPath) return null;
     let version: string | undefined;
     try {
@@ -88,6 +90,17 @@ export const cursorAdapter: PlatformAdapter = {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       return { ok: false, detail: `cursor unreachable: ${message}` };
+    }
+  },
+
+  async probePlanning(): Promise<{ supported: boolean; mode: string; reason?: string }> {
+    const isWin = process.platform === 'win32';
+    const probe = isWin ? 'where' : 'which';
+    try {
+      await execFileAsync(probe, ['cursor-agent']);
+      return { supported: true, mode: 'cursor-agent-headless-mode' };
+    } catch {
+      return { supported: false, mode: 'cursor-agent-headless-mode', reason: 'cursor-agent executable is not found on PATH' };
     }
   },
 

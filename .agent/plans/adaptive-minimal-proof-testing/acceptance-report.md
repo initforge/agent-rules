@@ -89,7 +89,7 @@ No project test files were modified.
 
 ## 11. Platform mirror status
 validate-proof-mirror-parity: OK — 7 platforms (antigravity, claude, codex,
-cursor, grok, mimocode, opencode), 49 artifacts hash-verified (rule + 7 proof
+cursor, grok, retired-platform, opencode), 49 artifacts hash-verified (rule + 7 proof
 schemas + manifest contract). opencode resolves rules from canonical source
 (AGENTS.md source-bound) — acknowledged by design. Native host activation
 NOT claimed from file presence (NATIVE_UNVERIFIED unless a live receipt).

@@ -32,7 +32,7 @@
   ],
   "evidence_kinds": ["container-runtime", "integration-test", "custom-runtime"],
   "hosts": {
-    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode", "mimocode"],
+    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
     "notes": "Requires local Docker daemon; unavailable Docker yields explicit UNAVAILABLE evidence, never a silent skip."
   },
   "thresholds_required": false,

@@ -18,6 +18,7 @@ codex.bak*/
 *.tmp
 *.temp
 *.log
+.control-plane.pid
 
 # Python cache
 __pycache__/
@@ -40,8 +41,6 @@ Thumbs.db
 .claude/
 .cursor/
 
-# MiMoCode local config
-.mimocode/
 
 # MCP local configs
 *mcp_config*.json

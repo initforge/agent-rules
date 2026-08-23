@@ -31,7 +31,7 @@
   ],
   "evidence_kinds": ["story-state", "component-test", "browser-test", "custom-runtime"],
   "hosts": {
-    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode", "mimocode"],
+    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
     "notes": "Component states in Storybook are design/component evidence; production acceptance still needs browser/runtime proof."
   },
   "thresholds_required": false,

@@ -46,11 +46,19 @@ const env = {
 };
 const run = (file, args, cwd = repo, options = {}) => {
   try {
-    const shell = process.platform === "win32" && /\.(cmd|bat)$/i.test(file);
-    return execFileSync(file, args, { cwd, env, encoding: "utf8", stdio: options.stdio ?? "pipe", shell });
+    const isCmdOrBat = process.platform === "win32" && (file.endsWith(".cmd") || file.endsWith(".bat"));
+    const actualCmd = isCmdOrBat ? (process.env.ComSpec || "cmd.exe") : file;
+    const actualArgs = isCmdOrBat ? ["/d", "/s", "/c", file, ...args] : args;
+    return execFileSync(actualCmd, actualArgs, { cwd, env, encoding: "utf8", stdio: options.stdio ?? "pipe", shell: false, windowsHide: true });
   } catch (error) {
     throw new Error(`${file} ${args.join(" ")} failed (${error.status ?? error.code})\nstdout: ${String(error.stdout ?? "")}\nstderr: ${String(error.stderr ?? "")}`, { cause: error });
   }
+};
+const safeSpawn = (file, args, opts = {}) => {
+  const isCmdOrBat = process.platform === "win32" && (file.endsWith(".cmd") || file.endsWith(".bat"));
+  const actualCmd = isCmdOrBat ? (process.env.ComSpec || "cmd.exe") : file;
+  const actualArgs = isCmdOrBat ? ["/d", "/s", "/c", file, ...args] : args;
+  return spawnSync(actualCmd, actualArgs, { shell: false, windowsHide: true, ...opts });
 };
 const runNpm = (args, cwd = repo, options = {}) => npmExecPath
   ? run(process.execPath, [npmExecPath, ...args], cwd, options)
@@ -76,6 +84,7 @@ const snapshotTree = async (root) => {
   const visit = async (directory, prefix = "") => {
     for (const entry of await fsp.readdir(directory, { withFileTypes: true })) {
       const relative = path.join(prefix, entry.name);
+      if (process.platform === "win32" && (relative.startsWith(path.join("AppData", "Local", "Microsoft")) || relative.startsWith("AppData/Local/Microsoft"))) continue;
       entries.push(relative);
       if (entry.isDirectory()) await visit(path.join(directory, entry.name), relative);
     }
@@ -130,14 +139,13 @@ try {
     runNpm(["install", kernelTar, engineTar, cliTar], app);
     const homeBefore = await snapshotTree(home);
     const bin = path.join(app, "node_modules", ".bin", process.platform === "win32" ? "agent-rules.cmd" : "agent-rules");
-    const cliShell = process.platform === "win32" && /\.(cmd|bat)$/i.test(bin);
     const cli = (...args) => run(bin, ["--json", ...args]);
     cli("build");
     await fsp.rm(path.dirname(ledger), { recursive: true, force: true });
     await writeSmokeLedger(ledger, identity, canonical);
-    const installed = spawnSync(bin, ["--json", "runtime", "install", "codex", "--root", target], { cwd: repo, env, encoding: "utf8", shell: cliShell });
+    const installed = safeSpawn(bin, ["--json", "runtime", "install", "codex", "--root", target], { cwd: repo, env, encoding: "utf8" });
     assert.equal(installed.status, 0, `${installed.stdout}\n${installed.stderr}`);
-    const checked = spawnSync(bin, ["--json", "doctor", "codex", "--skip-integration-verify"], { cwd: repo, env, encoding: "utf8", shell: cliShell });
+    const checked = safeSpawn(bin, ["--json", "doctor", "codex", "--skip-integration-verify"], { cwd: repo, env, encoding: "utf8" });
     const doctor = JSON.parse(checked.stdout.slice(checked.stdout.indexOf("{")));
     assert.ok(doctor.data.report.some((item) => item.check === "install" && item.status === "INSTALL_PASS"));
     cli("runtime", "update", "codex", "--root", target);
@@ -154,11 +162,10 @@ try {
 
     const malicious = path.join(temp, "malicious");
     await fsp.mkdir(malicious);
-    const rejected = spawnSync(bin, ["--json", "runtime", "install", "codex", "--root", path.join(temp, "malicious-target")], {
+    const rejected = safeSpawn(bin, ["--json", "runtime", "install", "codex", "--root", path.join(temp, "malicious-target")], {
       cwd: malicious,
       env: { ...env, NODE_ENV: "production", AGENT_RULES_REPOSITORY_ROOT: malicious },
       encoding: "utf8",
-      shell: cliShell,
     });
     assert.notEqual(rejected.status, 0, "production must reject repository-root injection");
     assert.match(`${rejected.stdout}${rejected.stderr}`, /test-only and unavailable in production/);
@@ -166,7 +173,7 @@ try {
     const manifest = path.join(repo, "generated", "runtime-build", "codex", "manifest.json");
     const original = await fsp.readFile(manifest, "utf8");
     await fsp.writeFile(manifest, "{broken\n");
-    const failed = spawnSync(bin, ["--json", "runtime", "update", "codex", "--root", target], { cwd: repo, env, encoding: "utf8", shell: cliShell });
+    const failed = safeSpawn(bin, ["--json", "runtime", "update", "codex", "--root", target], { cwd: repo, env, encoding: "utf8" });
     assert.notEqual(failed.status, 0, "invalid package input must fail");
     assert.equal(fs.existsSync(path.join(target, ".agent-rules-runtime.transaction.json")), false);
     assert.equal((await fsp.readdir(target)).some((name) => name.startsWith(".agent-rules-runtime.stage-")), false);

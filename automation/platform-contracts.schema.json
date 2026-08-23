@@ -141,15 +141,16 @@
           "const": [
             "codex",
             "claude",
-            "grok",
             "opencode",
-            "antigravity"
+            "cursor",
+            "antigravity",
+            "grok",
+            "deepseek-harness",
+            "command-code"
           ]
         },
         "deferred_supported_targets": {
-          "const": [
-            "cursor"
-          ]
+          "const": []
         }
       }
     },

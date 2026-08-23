@@ -31,7 +31,7 @@
   ],
   "evidence_kinds": ["telemetry-diagnosis", "custom-runtime"],
   "hosts": {
-    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode", "mimocode"],
+    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
     "notes": "Telemetry evidence supports distributed diagnosis and telemetry claims; it can never substitute product acceptance."
   },
   "thresholds_required": false,

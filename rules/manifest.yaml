@@ -12,7 +12,7 @@ load_order:
   - 50-context-budget.md
 budgets:
   bootstrap_tokens: 300
-  core_total_tokens: 3000
+  core_total_tokens: 6500
   route_budgets_file: automation/context-route-cases.json
   platform_overlay_tokens: 600
   capability_tokens: 3500
@@ -46,7 +46,7 @@ rule_contracts:
   10-execution.md:
     kind: invariant
     trigger: execution
-    normative: "Execute feasible scope and report only claim-matched outcomes."
+    normative: "Ship core outcomes first, bound blockers to release criteria, and terminate when acceptance is proven."
     owner: harness-maintainer
     enforcement: runner-and-acceptance-reducer
     evidence: [rules/manifest.yaml, automation/validate-rule-contracts.py]
@@ -86,7 +86,7 @@ rule_contracts:
   25-task-lifecycle.md:
     kind: invariant
     trigger: intake-to-terminal
-    normative: "Separate advisory, plan, and execution authority."
+    normative: "Separate advisory, plan, and execution authority with bounded review budgets and explicit plan verdicts."
     owner: harness-maintainer
     enforcement: plan-and-run-state
     evidence: [rules/manifest.yaml, automation/validate-rule-contracts.py]

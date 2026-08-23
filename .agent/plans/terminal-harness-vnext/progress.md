@@ -27,7 +27,7 @@
 - Phase 2: intent corrections, `ExecutionDisposition`/`CompiledDoD`, target consumer identity.
 - Phase 3: causal map, `semantic_role`/`applicable_phases`, artifact admission.
 - Phase 4: MCP lifecycle `REGISTERED→TEARDOWN`, 7 resource lanes.
-- Phase 5: Mimocode retired (source + `candidate-fabric` + `registry` + `schema` + `platforms/`).
+- Phase 5: retired-platform retired (source + `candidate-fabric` + `registry` + `schema` + `platforms/`).
 - Phase 6: ledger `effective_plan_identity` hash fix.
 - Phase 7: `verify:all` PASSED.
 

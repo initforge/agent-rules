@@ -21,6 +21,7 @@ import { deriveExecutionBudget, type ExecutionBudget } from './execution-policy.
 import { TaskHeartbeat } from './heartbeat.js';
 import { isCurrentExecution, staleExecutionReason, type ExecutionAuthority } from '../state/execution-authority.js';
 import { bindAgentDriverReceipt, type AgentDriver } from './agent-driver.js';
+import { evaluateDecisionPostEffect } from '../northstar/decision-closure.js';
 
 export type { AgentKind };
 
@@ -544,9 +545,12 @@ export class Runner {
     this.journal.append('AGENT_DRIVER_RECEIPT', bindAgentDriverReceipt(task, execution, this.executor.host()));
     heartbeat.finish(execution.timedOut ? 'TIMED_OUT' : execution.exitCode === 0 ? 'COMPLETED' : 'FAILED', execution.timedOut ? `worker exceeded hard deadline ${budget.hardTimeoutMs}ms` : undefined);
     const after = snapshotWorkingTree(this.config.cwd, this.runnerOwnedPaths());
-    const diff = captureWorkingTreeDelta(before, after, task.ownedPaths, task.forbiddenPaths ?? []);
+    const diff = captureWorkingTreeDelta(before, after, task.ownedPaths, task.forbiddenPaths ?? [], this.config.cwd);
     const integrityAfter = integrityBefore ? snapshotVerificationIntegrity(this.config.cwd) : null;
     const policyViolations = integrityBefore && integrityAfter ? verificationIntegrityViolations(integrityBefore, integrityAfter) : [];
+    const decisionCheck = task.decisionEnvelope
+      ? evaluateDecisionPostEffect(task.decisionEnvelope, diff.filesChanged, diff.diffText ?? '')
+      : { passed: true, violations: [] };
 
     this.journal.append('AGENT_EXIT', {
       taskId: task.id,
@@ -568,16 +572,22 @@ export class Runner {
       filesChanged: diff.filesChanged,
       ownershipViolations: diff.ownershipViolations,
       policyViolations,
+      decisionViolations: decisionCheck.violations,
     });
 
-    if (diff.ownershipViolations.length > 0 || policyViolations.length > 0) {
+    if (diff.ownershipViolations.length > 0 || policyViolations.length > 0 || !decisionCheck.passed) {
       if (diff.ownershipViolations.length) this.journal.append('SCOPE_VIOLATION', { taskId: task.id, paths: diff.ownershipViolations });
       if (policyViolations.length) this.journal.append('POLICY_VIOLATION', { taskId: task.id, violations: policyViolations });
+      if (!decisionCheck.passed) this.journal.append('DECISION_VIOLATION', { taskId: task.id, violations: decisionCheck.violations, conflict: decisionCheck.conflict });
       const report: TaskReport = {
         taskId: task.id,
         contractTaskId: task.contractTaskId,
         outcome: 'needs-user',
-        reason: [diff.ownershipViolations.length ? `forbidden scope change(s): ${diff.ownershipViolations.join(', ')}` : '', policyViolations.length ? `verification integrity violation(s): ${policyViolations.join('; ')}` : ''].filter(Boolean).join('; '),
+        reason: [
+          diff.ownershipViolations.length ? `forbidden scope change(s): ${diff.ownershipViolations.join(', ')}` : '',
+          policyViolations.length ? `verification integrity violation(s): ${policyViolations.join('; ')}` : '',
+          !decisionCheck.passed ? `decision envelope violation(s): ${decisionCheck.violations.join('; ')}` : '',
+        ].filter(Boolean).join('; '),
         exitCode: execution.exitCode,
         durationMs: execution.durationMs,
         stdoutPath: path.relative(this.config.cwd, execution.stdoutPath),

@@ -5,6 +5,9 @@ import type { RuntimePlatform } from "../runtime/contracts.js";
 import { provisionMcps } from "../integration/provisioning.js";
 import { convergeAllHostMcpConfigs } from "../runtime/mcp-convergence.js";
 
+import path from "node:path";
+import { projectSkillsToGlobal, uninstallOwnedGlobalProjections } from "../runtime/composed-installer.js";
+
 /**
  * Install agent-rules runtime for one or all platforms.
  *
@@ -32,10 +35,12 @@ export async function installCmd(
   });
 
   const force = args.includes("--force");
+  const skillsSource = path.join(repoRoot, "skills");
 
   async function installOrUpdate(p: string): Promise<{ ok: boolean; action: string; error?: string }> {
     try {
       await installer.install(p as RuntimePlatform, "install");
+      await projectSkillsToGlobal(skillsSource, p as RuntimePlatform);
       return { ok: true, action: "installed" };
     } catch (error) {
       const msg = (error as Error).message;
@@ -45,8 +50,10 @@ export async function installCmd(
         }
         // Force: uninstall then reinstall
         try {
+          await uninstallOwnedGlobalProjections(p as RuntimePlatform);
           await installer.uninstall(p as RuntimePlatform);
           await installer.install(p as RuntimePlatform, "install");
+          await projectSkillsToGlobal(skillsSource, p as RuntimePlatform);
           return { ok: true, action: "reinstalled (forced)" };
         } catch (forceError) {
           return { ok: false, action: "force-failed", error: (forceError as Error).message };

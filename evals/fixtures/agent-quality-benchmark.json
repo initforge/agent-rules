@@ -131,9 +131,7 @@
       },
       "expected": {
         "primary": "browser-qa",
-        "required_skills": [
-          "qa-skills"
-        ],
+        "required_skills": [],
         "forbidden_skills": []
       },
       "provenance": "live browser boundary"

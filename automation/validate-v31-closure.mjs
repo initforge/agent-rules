@@ -23,7 +23,7 @@ const check = (id, ok, detail) => {
 };
 
 const requirements = ledger.milestones?.M8?.requirements ?? [];
-const requiredPlatforms = ['codex', 'grok', 'antigravity', 'cursor', 'opencode', 'mimocode', 'claude'];
+const requiredPlatforms = ['codex', 'grok', 'antigravity', 'cursor', 'opencode', 'retired-platform', 'claude'];
 const requiredJobs = ['quality', 'python_tests', 'security'];
 
 check('receipt-status', receipt.schema === 'harness/v3.1-external-first-closure/v1' && receipt.status === 'PASS', 'closure receipt is PASS');

@@ -256,10 +256,10 @@ The local repository currently has:
 * host/platform registry in packages/cli/src/runtime/contracts.ts,
   packages/cli/src/runtime/host-adapters.ts, and
   platforms/platform-contracts.json;
-* headless agent kind limited to claude, codex, opencode, and mimocode in
+* headless agent kind limited to claude, codex, opencode, and retired-platform in
   packages/kernel/src/runner/headless-executor.ts;
 * per-agent MCP materialization in packages/kernel/src/runner/mcp-config.ts,
-  currently emitting Claude, Codex, OpenCode, and MimoCode dialects;
+  currently emitting Claude, Codex, OpenCode, and retired-platform dialects;
 * integration truth in integrations/registry.json and
   integrations/{required,recommended,optional,manual};
 * governed skills under skills/, each with SKILL.md plus ROUTE.json;

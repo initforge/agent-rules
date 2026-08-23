@@ -5,6 +5,6 @@
   "versionPolicy": "pinned",
   "capability": "code.semantic",
   "activation": "explicit-only",
-  "supportedHosts": ["codex", "claude", "grok", "antigravity", "cursor", "opencode", "mimocode"],
+  "supportedHosts": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
   "notes": "Experimental semantic provider. Keep explicit until ablation and process-lifecycle evidence justify promotion."
 }

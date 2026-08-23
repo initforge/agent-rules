@@ -1,11 +1,42 @@
-import { execFile } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { promisify } from 'node:util';
 
-const execFileAsync = promisify(execFile);
+function runNativeCmdc(
+  binaryPath: string,
+  args: readonly string[],
+  opts: { cwd?: string; timeoutMs?: number; env?: NodeJS.ProcessEnv } = {},
+): Promise<{ exitCode: number; stdout: string; stderr: string }> {
+  const isCmdOrBat = process.platform === 'win32' && (binaryPath.endsWith('.cmd') || binaryPath.endsWith('.bat'));
+  const actualCmd = isCmdOrBat ? (process.env.ComSpec || 'cmd.exe') : binaryPath;
+  const actualArgs = isCmdOrBat ? ['/d', '/s', '/c', binaryPath, ...args] : [...args];
+  const child = spawn(actualCmd, actualArgs, {
+    cwd: opts.cwd,
+    env: opts.env ?? process.env,
+    stdio: ['pipe', 'pipe', 'pipe'],
+    shell: false,
+    windowsHide: true,
+  });
+  return new Promise((resolve, reject) => {
+    let stdout = '';
+    let stderr = '';
+    const timer = setTimeout(() => {
+      child.kill('SIGKILL');
+    }, opts.timeoutMs ?? 120_000);
+    child.stdout.on('data', (chunk: Buffer) => { stdout += chunk; });
+    child.stderr.on('data', (chunk: Buffer) => { stderr += chunk; });
+    child.on('error', (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      resolve({ exitCode: code ?? -1, stdout, stderr });
+    });
+  });
+}
 
 /**
  * P3 — Command Code native platform adapter.
@@ -62,8 +93,10 @@ export interface CommandCodeAdapter {
   }): Promise<CommandCodeSupervisedReceipt>;
 }
 
-/** On Windows, Command Code ships as `cmdc` (and `command-code`); NEVER `cmd.exe`. */
+let cachedBinary: { path: string; binary: string; version?: string } | null | undefined;
+
 async function resolveCommandCodeBinary(): Promise<{ path: string; binary: string; version?: string } | null> {
+  if (cachedBinary !== undefined) return cachedBinary;
   const pathDirs = (process.env.PATH ?? '').split(path.delimiter).filter(Boolean);
   const seen = new Set<string>();
   for (const dir of pathDirs) {
@@ -78,14 +111,17 @@ async function resolveCommandCodeBinary(): Promise<{ path: string; binary: strin
       if (resolved === path.join(process.env.WINDIR ?? 'C:\\Windows', 'system32', 'cmd.exe')) continue;
       if (!fs.existsSync(resolved)) continue;
       try {
-        const { stdout } = await execFileAsync(resolved, ['--version'], { timeout: 5000, shell: process.platform === 'win32' });
-        const version = stdout.trim().split('\n')[0] || undefined;
-        return { path: resolved, binary: alias, ...(version ? { version } : {}) };
+        const { stdout, exitCode } = await runNativeCmdc(resolved, ['--version'], { timeoutMs: 2000 });
+        const version = exitCode === 0 ? stdout.trim().split('\n')[0] || undefined : undefined;
+        cachedBinary = { path: resolved, binary: alias, ...(version ? { version } : {}) };
+        return cachedBinary;
       } catch {
-        return { path: resolved, binary: alias };
+        cachedBinary = { path: resolved, binary: alias };
+        return cachedBinary;
       }
     }
   }
+  cachedBinary = null;
   return null;
 }
 
@@ -108,23 +144,24 @@ export const commandCodeAdapter: CommandCodeAdapter = {
     let planMode = false;
     if (found) {
       try {
-        const { stdout } = await execFileAsync(found.path, ['--help'], {
-          timeout: 10_000,
-          shell: process.platform === 'win32',
+        const { stdout, exitCode } = await runNativeCmdc(found.path, ['--help'], {
+          timeoutMs: 10_000,
           env: { ...process.env, COMMAND_CODE_NO_AUTO_UPDATE: '1' },
         });
-        // Parse the CLI help surface: native permission modes, worktrees,
-        // session-scoped mods, skills and structured headless JSON output.
-        const lower = stdout.toLowerCase();
-        permissionLayerProven = /--permission-mode|--auto-accept|--dont-ask|permission-mode/.test(lower);
-        nativeWorktree = /--worktree|worktree/.test(lower);
-        headlessJsonEvents = /--output-format|--print|headless/.test(lower);
-        planMode = /--plan|plan mode/.test(lower);
-        if (/--mod/.test(lower)) {
-          const modMatch = stdout.match(/--mod\s+<[^>]+>/i);
-          if (modMatch) modsLoaded.push('session-scoped --mod supported');
+        if (exitCode === 0) {
+          // Parse the CLI help surface: native permission modes, worktrees,
+          // session-scoped mods, skills and structured headless JSON output.
+          const lower = stdout.toLowerCase();
+          permissionLayerProven = /--permission-mode|--auto-accept|--dont-ask|permission-mode/.test(lower);
+          nativeWorktree = /--worktree|worktree/.test(lower);
+          headlessJsonEvents = /--output-format|--print|headless/.test(lower);
+          planMode = /--plan|plan mode/.test(lower);
+          if (/--mod/.test(lower)) {
+            const modMatch = stdout.match(/--mod\s+<[^>]+>/i);
+            if (modMatch) modsLoaded.push('session-scoped --mod supported');
+          }
+          if (/--skill/.test(lower)) skillsLoaded.push('progressive --skill supported');
         }
-        if (/--skill/.test(lower)) skillsLoaded.push('progressive --skill supported');
       } catch {
         // help may not be available in a constrained env; detection is binary-only.
       }
@@ -200,12 +237,23 @@ export const commandCodeAdapter: CommandCodeAdapter = {
     // `--yolo` is never used here.
 
     try {
-      const { stdout, stderr } = await execFileAsync(found.path, args, {
-        timeout: params.timeoutMs ?? 120_000,
-        shell: process.platform === 'win32',
+      const { stdout, stderr, exitCode } = await runNativeCmdc(found.path, args, {
+        timeoutMs: params.timeoutMs ?? 120_000,
         cwd: params.cwd,
         env: { ...process.env, COMMAND_CODE_NO_AUTO_UPDATE: '1' },
       });
+      if (exitCode !== 0) {
+        return {
+          ok: false,
+          host: 'command-code',
+          hostVersion,
+          binary,
+          permission_layer_proven: true,
+          sessionId,
+          result: (stderr || stdout).trim() || `command-code exited with code ${exitCode}`,
+          observedAt: new Date().toISOString(),
+        };
+      }
       const result = (stdout + stderr).trim() || 'completed';
       return {
         ok: true,

@@ -7,6 +7,10 @@ import type { AgentKind, AgentInvocation } from '../runner/headless-executor.js'
 import { loadDomainPack, resolveHarnessRoot, summarizeDomainBehavior, assertDomainPackStage, type LoadedDomainPack } from './domain-packs.js';
 import { compilePlannerContract, type CompiledPlannerContract, type PlannerContract } from './planner.js';
 import type { WorkRequest } from './protocol.js';
+import { extractRequirementLedger, freezeRequirementLedger, type RequirementLedger } from './requirement-ledger.js';
+import { evaluateCandidatePlan, buildReplanPrompt, type PlanEvaluationResult } from './plan-evaluator.js';
+import { deliverReferenceInputs, bindReferencesToPrompt, type NativeReferenceDeliveryReceipt } from './reference-input.js';
+import { normalizeNativePlanArtifact } from './plan-normalizer.js';
 
 export interface PlannerSnapshotFile {
   path: string;
@@ -41,6 +45,8 @@ export interface StrongPlannerOptions {
   timeoutMs?: number;
   logDir?: string;
   keepSnapshot?: boolean;
+  maxReplanAttempts?: number;
+  availableSkills?: string[];
   invocationOverride?: (prompt: string, snapshotRoot: string) => PlannerInvocation;
 }
 
@@ -58,6 +64,10 @@ export interface StrongPlannerReceipt {
   stdout_sha256: string;
   stderr_sha256: string;
   domain_reference?: PlannerDomainReference;
+  requirement_ledger?: RequirementLedger;
+  reference_delivery?: NativeReferenceDeliveryReceipt;
+  plan_evaluation?: PlanEvaluationResult;
+  attempts?: number;
   status: 'PASS' | 'BLOCKED';
   reason?: string;
 }
@@ -111,55 +121,54 @@ function shouldOmit(relative: string, stat: fs.Stats): string | null {
  */
 export function materializePlannerSnapshot(repoRoot: string): PlannerSnapshot {
   const sourceRoot = path.resolve(repoRoot);
-  if (!fs.existsSync(sourceRoot) || !fs.statSync(sourceRoot).isDirectory()) throw new Error(`planner source workspace does not exist: ${sourceRoot}`);
-  const snapshotRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-rules-planner-'));
+  const targetRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-rules-planner-'));
   const files: PlannerSnapshotFile[] = [];
   const omitted: string[] = [];
   let totalBytes = 0;
 
-  const walk = (sourceDir: string, destinationDir: string): void => {
-    fs.mkdirSync(destinationDir, { recursive: true, mode: 0o700 });
-    const entries = fs.readdirSync(sourceDir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name));
+  function walk(currentDir: string): void {
+    const entries = fs.readdirSync(currentDir, { withFileTypes: true });
     for (const entry of entries) {
-      const source = path.join(sourceDir, entry.name);
-      const relative = normalizedRelative(sourceRoot, source);
-      const stat = fs.lstatSync(source);
-      const omit = shouldOmit(relative, stat);
-      if (omit) {
-        // Avoid a huge omission list for dependency trees: record only the directory root.
-        if (!relative.includes('/node_modules/') && !relative.includes('/.git/')) omitted.push(`${relative}: ${omit}`);
+      const fullPath = path.join(currentDir, entry.name);
+      const relative = normalizedRelative(sourceRoot, fullPath);
+      let stat: fs.Stats;
+      try {
+        stat = fs.lstatSync(fullPath);
+      } catch {
         continue;
       }
-      const destination = path.join(destinationDir, entry.name);
+      const reason = shouldOmit(relative, stat);
+      if (reason) {
+        omitted.push(`${relative}: ${reason}`);
+        continue;
+      }
       if (stat.isDirectory()) {
-        walk(source, destination);
+        walk(fullPath);
         continue;
       }
-      if (!stat.isFile()) {
-        omitted.push(`${relative}: non-regular file`);
+      if (!stat.isFile()) continue;
+      if (files.length >= MAX_SNAPSHOT_FILES) {
+        omitted.push(`${relative}: max snapshot file limit reached`);
         continue;
       }
-      if (files.length >= MAX_SNAPSHOT_FILES) throw new Error(`planner snapshot exceeds ${MAX_SNAPSHOT_FILES} source files`);
-      if (totalBytes + stat.size > MAX_SNAPSHOT_BYTES) throw new Error(`planner snapshot exceeds ${MAX_SNAPSHOT_BYTES} bytes`);
-      const bytes = fs.readFileSync(source);
-      fs.mkdirSync(path.dirname(destination), { recursive: true, mode: 0o700 });
-      fs.writeFileSync(destination, bytes, { mode: stat.mode & 0o777 });
-      const digest = sha(bytes);
-      files.push({ path: relative, bytes: bytes.length, sha256: digest });
-      totalBytes += bytes.length;
+      if (totalBytes + stat.size > MAX_SNAPSHOT_BYTES) {
+        omitted.push(`${relative}: max snapshot byte budget exceeded`);
+        continue;
+      }
+      const destination = path.join(targetRoot, relative);
+      fs.mkdirSync(path.dirname(destination), { recursive: true });
+      const content = fs.readFileSync(fullPath);
+      fs.writeFileSync(destination, content);
+      const fileSha = sha(content);
+      files.push({ path: relative, bytes: stat.size, sha256: fileSha });
+      totalBytes += stat.size;
     }
-  };
-
-  try {
-    walk(sourceRoot, snapshotRoot);
-    files.sort((a, b) => a.path.localeCompare(b.path));
-    const digest = sha(files.map((entry) => `${entry.path}\0${entry.bytes}\0${entry.sha256}\n`).join(''));
-    fs.writeFileSync(path.join(snapshotRoot, '.agent-rules-planner-snapshot.json'), `${JSON.stringify({ version: 1, sha256: digest, files, omitted }, null, 2)}\n`, { mode: 0o600 });
-    return { root: snapshotRoot, files, omitted, sha256: digest };
-  } catch (error) {
-    fs.rmSync(snapshotRoot, { recursive: true, force: true });
-    throw error;
   }
+
+  walk(sourceRoot);
+  files.sort((a, b) => a.path.localeCompare(b.path));
+  const treeDigest = sha(files.map((f) => `${f.path}:${f.sha256}`).join('\n'));
+  return { root: targetRoot, files, omitted, sha256: treeDigest };
 }
 
 /**
@@ -167,28 +176,26 @@ export function materializePlannerSnapshot(repoRoot: string): PlannerSnapshot {
  * This is intentionally NOT copied into the user's project: the mirror lives
  * only inside the planner snapshot and is removed with that snapshot.
  */
-export function materializePlannerDomainReference(snapshotRoot: string, pack: LoadedDomainPack): PlannerDomainReference {
-  if (!pack.sourceVerified || !pack.sourceRoot || !pack.sourceManifest) {
-    throw new Error(`domain pack ${pack.descriptor.id} has no verified bundled reference source`);
+export function materializePlannerDomainReference(
+  snapshotRoot: string,
+  pack: LoadedDomainPack
+): PlannerDomainReference {
+  if (!pack.sourceManifest || !pack.sourceRoot) {
+    throw new Error(`domain pack ${pack.descriptor.id} has no validated source snapshot`);
   }
-  const relativeRoot = `.agent-reference/${pack.descriptor.id}`;
-  const destinationRoot = path.resolve(snapshotRoot, relativeRoot);
-  const snapshotBoundary = path.resolve(snapshotRoot) + path.sep;
-  if (!destinationRoot.startsWith(snapshotBoundary)) throw new Error('domain reference destination escapes planner snapshot');
+  const relativeRoot = path.posix.join('.agent-reference', pack.descriptor.id);
+  const destinationRoot = path.join(snapshotRoot, ...relativeRoot.split('/'));
   fs.mkdirSync(destinationRoot, { recursive: true, mode: 0o700 });
-
   let totalBytes = 0;
-  for (const entry of pack.sourceManifest.files) {
-    const source = path.resolve(pack.sourceRoot, entry.path);
-    const sourceBoundary = path.resolve(pack.sourceRoot) + path.sep;
-    if (!source.startsWith(sourceBoundary)) throw new Error(`domain reference source path escapes source root: ${entry.path}`);
-    const destination = path.resolve(destinationRoot, entry.path);
-    const destinationBoundary = destinationRoot + path.sep;
-    if (!destination.startsWith(destinationBoundary)) throw new Error(`domain reference path escapes planner mirror: ${entry.path}`);
+  const entries = Array.isArray(pack.sourceManifest.files)
+    ? pack.sourceManifest.files
+    : Object.entries(pack.sourceManifest.files).map(([entryPath, entry]: [string, any]) => ({ path: entryPath, sha256: entry.sha256, bytes: entry.bytes }));
+  for (const manifestEntry of entries) {
+    const source = path.join(pack.sourceRoot, ...manifestEntry.path.split('/'));
+    const destination = path.join(destinationRoot, ...manifestEntry.path.split('/'));
     const bytes = fs.readFileSync(source);
-    const digest = sha(bytes);
-    if (digest !== entry.sha256 || bytes.length !== entry.bytes) {
-      throw new Error(`domain reference integrity drift while materializing: ${entry.path}`);
+    if (sha(bytes) !== manifestEntry.sha256) {
+      throw new Error(`domain reference file corrupted: ${manifestEntry.path}`);
     }
     fs.mkdirSync(path.dirname(destination), { recursive: true, mode: 0o700 });
     fs.writeFileSync(destination, bytes, { mode: 0o600 });
@@ -199,7 +206,7 @@ export function materializePlannerDomainReference(snapshotRoot: string, pack: Lo
     pack_id: pack.descriptor.id,
     relative_root: relativeRoot,
     tree_sha256: pack.sourceManifest.tree_sha256,
-    files: pack.sourceManifest.file_count,
+    files: entries.length,
     bytes: totalBytes,
   };
 }
@@ -218,8 +225,18 @@ function contractShape(): string {
 }`;
 }
 
-export function buildStrongPlannerPrompt(input: { request: WorkRequest; snapshot: PlannerSnapshot; domainSummary?: string; domainPackId?: string | null; domainReference?: PlannerDomainReference }): string {
+export function buildStrongPlannerPrompt(input: {
+  request: WorkRequest;
+  snapshot: PlannerSnapshot;
+  ledger?: RequirementLedger;
+  domainSummary?: string;
+  domainPackId?: string | null;
+  domainReference?: PlannerDomainReference;
+}): string {
   const risk = input.request.risk_hint ?? 'S1';
+  const ledger = input.ledger ?? extractRequirementLedger(input.request.raw_intent);
+  const ledgerLines = ledger.items.map((item) => `- [${item.id}] [${item.obligation}/${item.priority}] [Domain:${item.affected_domain.toUpperCase()}] [Status:${item.epistemic_status}] ${item.text}`);
+
   return [
     '# Agent Rules strong-planner compiler',
     'You are a READ-ONLY planner. Inspect this disposable source snapshot deeply. Do not edit files, install dependencies, commit, or execute destructive commands.',
@@ -230,6 +247,9 @@ export function buildStrongPlannerPrompt(input: { request: WorkRequest; snapshot
     input.domainPackId ? `Explicit domain pack: ${input.domainPackId}. It was selected by the project/user, never inferred from prompt keywords.` : '',
     input.domainReference ? `Verified domain reference mirror: ${input.domainReference.relative_root}/ (tree sha256 ${input.domainReference.tree_sha256}; ${input.domainReference.files} files). This directory is REFERENCE-ONLY and is not part of the target project. Inspect it for authoritative patterns/business behavior, then adapt to the actual target source. Never copy/vendor the template wholesale.` : '',
     input.domainSummary ? `Source-grounded domain constraints (pointers identify authoritative source anchors):\n${input.domainSummary}` : '',
+    'Extracted Requirement & Obligation Ledger (from raw intent):',
+    ...ledgerLines,
+    'MANDATORY: Every MUST-obligation requirement from the ledger must be covered by explicit requirements and tasks in your candidate contract.',
     'Investigate before planning. Distinguish known facts, assumptions, unresolved facts, and decisions that truly require the user. Do not hide ambiguity inside prose.',
     'Impact must cover owning modules, dependency breadth, public API, schema/data, security boundaries, reference dependencies, relevant tests, and active decisions.',
     'Every mandatory claim must map to executable fresh verification. For S2/S3 each mandatory claim needs at least two independent evidence kinds/channels unless an explicit claim policy safely requires more. Prefer cheap deterministic gates before browser/deep gates.',
@@ -245,16 +265,37 @@ export function buildStrongPlannerInvocation(kind: AgentKind, prompt: string): P
     case 'claude':
       return { executable: 'claude', args: ['-p', prompt, '--output-format', 'text', '--permission-mode', 'plan', '--max-turns', '12'] };
     case 'codex':
-      // The disposable snapshot is the hard boundary. Codex read-only sandbox is an
-      // additional host-level guard, not the sole safety mechanism.
       return { executable: 'codex', args: ['exec', '--sandbox', 'read-only', prompt] };
     case 'opencode':
       return {
-        executable: 'opencode', args: ['run', prompt], env: {
+        executable: 'opencode',
+        args: ['run', '--agent', 'plan', prompt],
+        env: {
           OPENCODE_DISABLE_AUTOUPDATE: '1',
-          OPENCODE_CONFIG_CONTENT: JSON.stringify({ permission: { '*': 'deny', read: 'allow', glob: 'allow', grep: 'allow', list: 'allow', lsp: 'allow', webfetch: 'deny', websearch: 'deny', edit: 'deny', bash: 'deny', task: 'deny', external_directory: 'deny' } }),
+          OPENCODE_CONFIG_CONTENT: JSON.stringify({
+            $schema: 'https://opencode.ai/config.v2.json',
+            permissions: [
+              { action: 'skill', resource: '*', effect: 'allow' },
+              { action: 'subagent', resource: '*', effect: 'allow' },
+              { action: 'shell', resource: '*', effect: 'deny' },
+              { action: 'edit', resource: '*', effect: 'deny' },
+            ],
+            mcp: { servers: {} },
+          }),
         },
       };
+    case 'antigravity':
+      return { executable: 'agy', args: ['-p', prompt] };
+    case 'cursor':
+      return { executable: 'cursor-agent', args: ['-p', prompt] };
+    case 'deepseek-harness':
+      return { executable: 'dsh', args: ['--profile', 'headless', prompt] };
+    case 'command-code':
+      return { executable: process.platform === 'win32' ? 'cmdc' : 'cmd', args: ['-p', '--plan', prompt] };
+    case 'grok':
+      return { executable: 'grok', args: ['-p', prompt] };
+    default:
+      return { executable: 'claude', args: ['-p', prompt, '--permission-mode', 'plan'] };
   }
 }
 
@@ -324,8 +365,8 @@ function writeJsonAtomic(file: string, value: unknown): void {
 
 /**
  * Run one fresh strong-planner process against a disposable project snapshot,
- * validate its JSON as an untrusted data contract, and persist a hash-based
- * receipt. A planner failure is BLOCKED; it never falls back to execution.
+ * validate its output, independently evaluate requirement coverage against the pre-frozen ledger,
+ * automatically replan if mandatory items are missing, and persist a hash-based receipt.
  */
 export async function runStrongPlanner(options: StrongPlannerOptions): Promise<StrongPlannerResult> {
   const snapshot = materializePlannerSnapshot(options.repoRoot);
@@ -345,53 +386,148 @@ export async function runStrongPlanner(options: StrongPlannerOptions): Promise<S
         domainReference = materializePlannerDomainReference(snapshot.root, pack);
       }
     }
-    const prompt = buildStrongPlannerPrompt({ request: options.request, snapshot, domainSummary, domainPackId: options.domainPackId, domainReference });
-    const invocation = options.invocationOverride
-      ? options.invocationOverride(prompt, snapshot.root)
-      : buildStrongPlannerInvocation(options.planner, prompt);
-    const result = await runChild(invocation, snapshot.root, options.timeoutMs ?? 10 * 60 * 1000, stdoutPath, stderrPath);
-    const stdout = fs.existsSync(stdoutPath) ? fs.readFileSync(stdoutPath, 'utf8') : '';
-    const stderr = fs.existsSync(stderrPath) ? fs.readFileSync(stderrPath, 'utf8') : '';
-    const baseReceipt = {
-      protocol_version: '2.0' as const,
+
+    const referenceReceipt = await deliverReferenceInputs(options.request, options.planner, snapshot.root);
+    const ledger = freezeRequirementLedger(extractRequirementLedger(options.request.raw_intent));
+    let basePrompt = buildStrongPlannerPrompt({ request: options.request, snapshot, ledger, domainSummary, domainPackId: options.domainPackId, domainReference });
+    let currentPrompt = bindReferencesToPrompt(basePrompt, referenceReceipt);
+    const maxAttempts = options.maxReplanAttempts ?? 2;
+    let attempt = 0;
+    let finalContract: PlannerContract | undefined;
+    let finalCompiled: CompiledPlannerContract | undefined;
+    let finalEvaluation: PlanEvaluationResult | undefined;
+    let lastStdout = '';
+    let lastStderr = '';
+    let lastExitCode = 0;
+    let lastTimedOut = false;
+    let lastExecutable = '';
+
+    while (attempt < maxAttempts) {
+      attempt++;
+      const invocation = options.invocationOverride
+        ? options.invocationOverride(currentPrompt, snapshot.root)
+        : buildStrongPlannerInvocation(options.planner, currentPrompt);
+      lastExecutable = invocation.executable;
+      const result = await runChild(invocation, snapshot.root, options.timeoutMs ?? 10 * 60 * 1000, stdoutPath, stderrPath);
+      lastStdout = fs.existsSync(stdoutPath) ? fs.readFileSync(stdoutPath, 'utf8') : '';
+      lastStderr = fs.existsSync(stderrPath) ? fs.readFileSync(stderrPath, 'utf8') : '';
+      lastExitCode = result.exitCode;
+      lastTimedOut = result.timedOut;
+
+      const baseReceipt = {
+        protocol_version: '2.0' as const,
+        work_id: options.request.work_id,
+        planner: options.planner,
+        snapshot_sha256: snapshot.sha256,
+        snapshot_files: snapshot.files.length,
+        snapshot_bytes: snapshot.files.reduce((sum, entry) => sum + entry.bytes, 0),
+        prompt_sha256: sha(currentPrompt),
+        executable: invocation.executable,
+        exit_code: result.exitCode,
+        timed_out: result.timedOut,
+        stdout_sha256: sha(lastStdout),
+        stderr_sha256: sha(lastStderr),
+        ...(domainReference ? { domain_reference: domainReference } : {}),
+        requirement_ledger: ledger,
+        reference_delivery: referenceReceipt,
+        attempts: attempt,
+      };
+
+      if (result.exitCode !== 0 || result.timedOut) {
+        const receipt: StrongPlannerReceipt = { ...baseReceipt, status: 'BLOCKED', reason: result.timedOut ? 'planner timed out' : `planner process exited ${result.exitCode}` };
+        writeJsonAtomic(receiptPath, receipt);
+        throw new Error(`strong planner BLOCKED: ${receipt.reason}; stderr=${stderrPath}`);
+      }
+
+      let candidateContract: PlannerContract;
+      try {
+        const parsed = parsePlannerStdout(lastStdout);
+        candidateContract = parsed as PlannerContract;
+      } catch {
+        candidateContract = normalizeNativePlanArtifact(
+          {
+            host: options.planner,
+            raw_text: lastStdout,
+            format: 'markdown',
+            captured_at: new Date().toISOString(),
+          },
+          ledger,
+          options.request
+        );
+      }
+
+      let compiled: CompiledPlannerContract;
+      try {
+        compiled = compilePlannerContract(options.request, candidateContract);
+      } catch (error) {
+        const receipt: StrongPlannerReceipt = { ...baseReceipt, status: 'BLOCKED', reason: `planner contract rejected: ${error instanceof Error ? error.message : String(error)}` };
+        writeJsonAtomic(receiptPath, receipt);
+        throw new Error(`strong planner BLOCKED: ${receipt.reason}`);
+      }
+
+      const evaluation = evaluateCandidatePlan({
+        request: options.request,
+        ledger,
+        contract: candidateContract,
+        availableSkills: options.availableSkills,
+      });
+
+      finalEvaluation = evaluation;
+
+      if (evaluation.verdict === 'PASS') {
+        finalContract = candidateContract;
+        finalCompiled = compiled;
+        break;
+      }
+
+      if (attempt < maxAttempts) {
+        currentPrompt = buildReplanPrompt({
+          request: options.request,
+          ledger,
+          evaluation,
+          attempt: attempt + 1,
+        });
+        continue;
+      }
+
+      const failureReason = evaluation.findings.map((f) => `[${f.code}] ${f.message}`).join('; ');
+      const receipt: StrongPlannerReceipt = {
+        ...baseReceipt,
+        plan_evaluation: evaluation,
+        status: 'BLOCKED',
+        reason: `candidate plan rejected by evaluation after ${attempt} attempt(s): ${failureReason}`,
+      };
+      writeJsonAtomic(receiptPath, receipt);
+      throw new Error(`strong planner BLOCKED: ${receipt.reason}`);
+    }
+
+    if (!finalContract || !finalCompiled) {
+      throw new Error('strong planner failed to produce a valid evaluated contract');
+    }
+
+    const receipt: StrongPlannerReceipt = {
+      protocol_version: '2.0',
       work_id: options.request.work_id,
       planner: options.planner,
       snapshot_sha256: snapshot.sha256,
       snapshot_files: snapshot.files.length,
       snapshot_bytes: snapshot.files.reduce((sum, entry) => sum + entry.bytes, 0),
-      prompt_sha256: sha(prompt),
-      executable: invocation.executable,
-      exit_code: result.exitCode,
-      timed_out: result.timedOut,
-      stdout_sha256: sha(stdout),
-      stderr_sha256: sha(stderr),
+      prompt_sha256: sha(currentPrompt),
+      executable: lastExecutable,
+      exit_code: lastExitCode,
+      timed_out: lastTimedOut,
+      stdout_sha256: sha(lastStdout),
+      stderr_sha256: sha(lastStderr),
       ...(domainReference ? { domain_reference: domainReference } : {}),
+      requirement_ledger: ledger,
+      reference_delivery: referenceReceipt,
+      plan_evaluation: finalEvaluation,
+      attempts: attempt,
+      status: 'PASS',
     };
-    if (result.exitCode !== 0 || result.timedOut) {
-      const receipt: StrongPlannerReceipt = { ...baseReceipt, status: 'BLOCKED', reason: result.timedOut ? 'planner timed out' : `planner process exited ${result.exitCode}` };
-      writeJsonAtomic(receiptPath, receipt);
-      throw new Error(`strong planner BLOCKED: ${receipt.reason}; stderr=${stderrPath}`);
-    }
-    let raw: unknown;
-    try {
-      raw = parsePlannerStdout(stdout);
-    } catch (error) {
-      const receipt: StrongPlannerReceipt = { ...baseReceipt, status: 'BLOCKED', reason: `planner output is not valid JSON: ${error instanceof Error ? error.message : String(error)}` };
-      writeJsonAtomic(receiptPath, receipt);
-      throw new Error(`strong planner BLOCKED: ${receipt.reason}`);
-    }
-    let compiled: CompiledPlannerContract;
-    try {
-      compiled = compilePlannerContract(options.request, raw);
-    } catch (error) {
-      const receipt: StrongPlannerReceipt = { ...baseReceipt, status: 'BLOCKED', reason: `planner contract rejected: ${error instanceof Error ? error.message : String(error)}` };
-      writeJsonAtomic(receiptPath, receipt);
-      throw new Error(`strong planner BLOCKED: ${receipt.reason}`);
-    }
-    const receipt: StrongPlannerReceipt = { ...baseReceipt, status: 'PASS' };
     writeJsonAtomic(receiptPath, receipt);
-    writeJsonAtomic(path.join(logDir, `${options.request.work_id}.contract.json`), raw);
-    return { contract: raw as PlannerContract, compiled, receipt, stdoutPath, stderrPath };
+    writeJsonAtomic(path.join(logDir, `${options.request.work_id}.contract.json`), finalContract);
+    return { contract: finalContract, compiled: finalCompiled, receipt, stdoutPath, stderrPath };
   } finally {
     if (!options.keepSnapshot) fs.rmSync(snapshot.root, { recursive: true, force: true });
   }

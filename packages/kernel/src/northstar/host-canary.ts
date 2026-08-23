@@ -120,8 +120,29 @@ function subagentModeFor(host: HostId): SubagentSurfaceMode {
   return 'SHARED_CONTEXT';
 }
 
+function computeDefaultProjectionHash(repoRoot: string, host: HostId): string {
+  const hostDir = path.join(repoRoot, 'platforms', host);
+  if (!fs.existsSync(hostDir)) {
+    return createHash('sha256').update(`missing_platform:${host}`).digest('hex');
+  }
+  const hash = createHash('sha256');
+  try {
+    const files = fs.readdirSync(hostDir).sort();
+    for (const f of files) {
+      const p = path.join(hostDir, f);
+      if (fs.statSync(p).isFile()) {
+        hash.update(f).update(fs.readFileSync(p));
+      }
+    }
+    return hash.digest('hex');
+  } catch {
+    return createHash('sha256').update(`platform:${host}`).digest('hex');
+  }
+}
+
 function buildFacts(input: CanaryRunInput): { facts: HostCapabilityFacts; certifications: CapabilityCertification[] } {
-  const { host, probe, repoRoot, adapter_revision = '0', projection_hash = '0'.repeat(64), now = new Date() } = input;
+  const defaultProjectionHash = computeDefaultProjectionHash(input.repoRoot, input.host);
+  const { host, probe, repoRoot, adapter_revision = '0', projection_hash = defaultProjectionHash, now = new Date() } = input;
   const projectionPresent = hasNativeProjection(repoRoot, host);
   const probed = probe !== undefined;
   const probeOk = probe?.ok;
@@ -175,7 +196,7 @@ function buildFacts(input: CanaryRunInput): { facts: HostCapabilityFacts; certif
     headless_surface: { presence: presence('headless_surface', host !== 'cursor' && host !== 'antigravity'), high_trust_mutation_denied: host === 'command-code' },
     compaction_surface: { presence: presence('compaction_surface', false) },
     structured_event_surface: { presence: presence('structured_event_surface', host === 'command-code' || host === 'claude'), structured_events: host === 'command-code' || host === 'claude' },
-    planning_surface: { presence: presence('planning_surface', host === 'command-code'), write_hooks_in_plan_mode: host === 'command-code' ? false : undefined },
+    planning_surface: { presence: presence('planning_surface', host === 'codex' || host === 'claude' || host === 'opencode' || host === 'antigravity' || host === 'command-code'), write_hooks_in_plan_mode: false },
     model_observability: { observed_models: host === 'claude', attestation: probeOk === true ? 'host-attested' : 'unconfirmed' },
     capability_fingerprint: createHash('sha256')
       .update(JSON.stringify({ host, adapter_revision, projection_hash, probe_version: probe?.version ?? null, probe_ok: probeOk ?? null }))

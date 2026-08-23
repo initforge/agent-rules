@@ -77,6 +77,8 @@ export interface QueuedTask {
   parentId?: string;
   /** Optional scope-aware baseline result supplied by preflight. */
   baselineGate?: BaselineGate;
+  /** Bounded Decision Envelope (Phase 3 Decision Closure). */
+  decisionEnvelope?: import('../northstar/decision-closure.js').DecisionEnvelope;
   createdAt: string;
   /** Set when the task leaves `ready/`. */
   claimedAt?: string;

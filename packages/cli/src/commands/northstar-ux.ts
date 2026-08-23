@@ -7,6 +7,7 @@ import {
   compileTaskPackets,
   compileWorkSpec,
   compilePlannerContract,
+  compileOrReviewPlan,
   runStrongPlanner,
   createWorkRequest,
   executeNorthStarRun,
@@ -24,6 +25,7 @@ import {
   classifyIntake,
   weakWorkerMayExecute,
   requiresPlannerButNone,
+  planProofRoute,
 } from '@initforge/agent-rules-engine/northstar/index';
 import type { AgentKind } from '@initforge/agent-rules-engine/runner/headless-executor';
 
@@ -199,17 +201,37 @@ export async function northStarRun(input: {
     const planner = input.planner ?? config.default_planner;
     const domainPackId = input.domainPack ?? config.domain_pack;
     try {
-      const planned = await runStrongPlanner({
-        repoRoot: input.repoRoot, request, planner, domainPackId,
+      const planResult = await compileOrReviewPlan({
+        repoRoot: input.repoRoot,
+        request,
+        planner,
+        availableSkills: input.capabilities,
+        domainPackId,
         ...(input.plannerInvocationOverride ? { invocationOverride: input.plannerInvocationOverride } : {}),
       });
+
+      if (!planResult.visibilityReceipt.passed) {
+        const failureDetails = Object.values(planResult.visibilityReceipt.checks)
+          .filter((c) => c.status === "FAIL")
+          .map((c) => `${c.code}${c.detail ? ` (${c.detail})` : ''}`)
+          .join('; ');
+        return {
+          outcome: 'BLOCKED',
+          reason: `PlanVisibilityGate rejected plan: ${failureDetails || 'Validation failed'}`,
+          work_id: request.work_id,
+          visibility_receipt: planResult.visibilityReceipt,
+        };
+      }
+
+      const planned = planResult.compiled;
       const packets = input.capabilities?.length
-        ? planned.compiled.packets.map((packet) => ({ ...packet, capabilities: [...new Set([...(packet.capabilities ?? []), ...input.capabilities!])] }))
-        : planned.compiled.packets;
+        ? planned.packets.map((packet) => ({ ...packet, capabilities: [...new Set([...(packet.capabilities ?? []), ...input.capabilities!])] }))
+        : planned.packets;
       return executeNorthStarRun({
-        repoRoot: input.repoRoot, request, spec: planned.compiled.compiled.spec, manifest: planned.compiled.compiled.manifest,
-        packets, verifiers: planned.compiled.verifiers, claimPolicies: planned.compiled.claimPolicies,
+        repoRoot: input.repoRoot, request, spec: planned.compiled.spec, manifest: planned.compiled.manifest,
+        packets, verifiers: planned.verifiers, claimPolicies: planned.claimPolicies,
         agent: input.agent ?? config.default_agent,
+        proofRouter: planProofRoute,
         explicitCapabilityProviders: [...config.explicit_capability_providers, ...(input.capabilityProviders ?? [])],
         ...(input.workerInvocationOverride ? { invocationOverride: input.workerInvocationOverride } : {}),
         ...(input.skipAgentDetection ? { skipAgentDetection: true } : {}),
@@ -249,6 +271,7 @@ export async function northStarRun(input: {
     packets,
     verifiers: [verifier],
     agent: input.agent ?? config.default_agent,
+    proofRouter: planProofRoute,
     explicitCapabilityProviders: [...config.explicit_capability_providers, ...(input.capabilityProviders ?? [])],
     ...(input.workerInvocationOverride ? { invocationOverride: input.workerInvocationOverride } : {}),
     ...(input.skipAgentDetection ? { skipAgentDetection: true } : {}),

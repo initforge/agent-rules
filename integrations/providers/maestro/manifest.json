@@ -32,7 +32,7 @@
   ],
   "evidence_kinds": ["device-run", "browser-test", "custom-runtime"],
   "hosts": {
-    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode", "mimocode"],
+    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
     "notes": "Device-run evidence is real device behavior; an unavailable device or adb yields explicit UNAVAILABLE evidence, never a silent skip."
   },
   "thresholds_required": false,

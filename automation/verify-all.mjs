@@ -20,7 +20,10 @@ function run(label, command, commandArgs = [], options = {}) {
   console.log(`\n=== ${label} ===`);
   const started = Date.now();
   const stdio = options.stdio ?? 'pipe';
-  const result = spawnSync(command, commandArgs, { cwd: root, encoding: stdio === 'pipe' ? 'utf8' : undefined, stdio, env: { ...process.env, ...(options.env || {}) }, timeout: options.timeout ?? 600_000, shell: process.platform === 'win32' });
+  const isCmdOrBat = process.platform === 'win32' && (command.endsWith('.cmd') || command.endsWith('.bat') || command === 'npm' || command === 'npx');
+  const actualCmd = isCmdOrBat ? (process.env.ComSpec || 'cmd.exe') : command;
+  const actualArgs = isCmdOrBat ? ['/d', '/s', '/c', command, ...commandArgs] : commandArgs;
+  const result = spawnSync(actualCmd, actualArgs, { cwd: root, encoding: stdio === 'pipe' ? 'utf8' : undefined, stdio, env: { ...process.env, ...(options.env || {}) }, timeout: options.timeout ?? 600_000, shell: false, windowsHide: true });
   if (stdio === 'pipe' && result.stdout) process.stdout.write(result.stdout);
   if (stdio === 'pipe' && result.stderr) process.stderr.write(result.stderr);
   if (result.error || result.status !== 0) {
@@ -88,7 +91,7 @@ function discoverTests(dir) {
   const out = [];
   const visit = (current) => {
     for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
-      if (['node_modules','dist','generated','.git'].includes(entry.name)) continue;
+      if (['node_modules','dist','generated','.git','.agent'].includes(entry.name)) continue;
       const absolute = path.join(current, entry.name);
       const relative = rel(absolute);
       // The bundled 5fedu snapshot is immutable reference evidence, not a root

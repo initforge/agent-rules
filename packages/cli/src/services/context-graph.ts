@@ -186,7 +186,7 @@ function addNode(
 ): void {
   const sourcePath = path.join(root, ...source.split('/'));
   if (!routing) routing = defaultRouting(source, policy);
-  let sourceHash = '0'.repeat(64);
+  let sourceHash = crypto.createHash('sha256').update(`missing:${sourcePath}`).digest('hex');
   let tokenEst = 0;
   try {
     if (fs.existsSync(sourcePath)) {
@@ -503,7 +503,21 @@ export interface ValidationResult {
   };
 }
 
-export function validateGraph(graph: ContextGraph): ValidationResult {
+function findRepoRoot(start: string = process.cwd()): string {
+  let cur = start;
+  for (let i = 0; i < 5; i++) {
+    if (fs.existsSync(path.join(cur, 'rules', 'manifest.yaml')) || fs.existsSync(path.join(cur, 'platforms', 'platform-contracts.json'))) {
+      return cur;
+    }
+    const parent = path.dirname(cur);
+    if (parent === cur) break;
+    cur = parent;
+  }
+  return start;
+}
+
+export function validateGraph(graph: ContextGraph, root?: string): ValidationResult {
+  const effectiveRoot = root || findRepoRoot();
   const errors: string[] = [];
   const seenIds = new Set<string>();
   const nodesByLayer: Record<string, number> = {};
@@ -525,7 +539,8 @@ export function validateGraph(graph: ContextGraph): ValidationResult {
       errors.push(`Duplicate node ID: ${node.id}`);
     }
     seenIds.add(node.id);
-    if (node.source_hash === '0'.repeat(64)) {
+    const sourcePath = path.join(effectiveRoot, ...node.source.split('/'));
+    if (!fs.existsSync(sourcePath)) {
       missingSources++;
     }
     if (node.routing_source && (!node.routing_hash || !/^[0-9a-f]{64}$/.test(node.routing_hash))) errors.push(`Node ${node.id} has invalid routing provenance`);

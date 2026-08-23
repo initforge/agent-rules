@@ -30,7 +30,7 @@
   ],
   "evidence_kinds": ["security-scan", "security-test", "custom-runtime"],
   "hosts": {
-    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode", "mimocode"],
+    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
     "notes": "Local SAST is a static-scan receipt; it does not replace runtime security boundary proof."
   },
   "thresholds_required": false,

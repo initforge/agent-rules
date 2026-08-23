@@ -59,7 +59,25 @@ export async function doctorOpenCode(root: string, home: string): Promise<Doctor
     } catch (error) {
       report.push({ platform: "opencode", check: "runtime-manifest", status: "NOT_LIVE", detail: (error as Error).message });
     }
-    report.push({ platform: "opencode", check: "native-activation", status: "NATIVE_UNVERIFIED", detail: "OpenCode host activation remains unverified without observed host delivery" });
+    const hostReceiptPath = path.join(process.cwd(), ".agent", "tmp", "host-receipts", "host-opencode.json");
+    const currentGitHead = await getGitHeadSha(root);
+    let observed = false;
+    let receiptDetail = "";
+    if (await checkFile(hostReceiptPath)) {
+      try {
+        const rc = JSON.parse(await fs.readFile(hostReceiptPath, "utf8"));
+        if (rc.status === "PASS" && rc.git_head && (!currentGitHead || rc.git_head === currentGitHead)) {
+          observed = true;
+          receiptDetail = `live host receipt verified (status PASS, git HEAD ${rc.git_head.slice(0, 8)})`;
+        }
+      } catch { /* ignore */ }
+    }
+    report.push({
+      platform: "opencode",
+      check: "native-activation",
+      status: observed ? "NATIVE_OBSERVED" : "NATIVE_UNVERIFIED",
+      detail: observed ? receiptDetail : "OpenCode host activation remains unverified without observed host delivery bound to current HEAD",
+    });
     report.push({ platform: "opencode", check: "source-build-hashes", status: same(source, build) ? "OK" : "NOT_LIVE", detail: "source compared with generated build" });
     report.push({ platform: "opencode", check: "installed-agent-hashes", status: same(build, await hashes(installedDir).catch(() => ({}))) ? "OK" : "NOT_LIVE", detail: "generated build compared with transactional runtime" });
     return report;
@@ -156,9 +174,117 @@ function getPlatformHomes(root: string): PlatformHomeMap {
     antigravity: path.join(userHome, ".gemini", "config"),
     cursor: path.join(userHome, ".cursor"),
     opencode: process.env.OPENCODE_HOME || path.join(userHome, ".config", "opencode"),
-
     claude: process.env.CLAUDE_CONFIG_DIR || path.join(userHome, ".claude"),
+    "deepseek-harness": process.env.DSH_HOME || path.join(userHome, ".config", "deepseek-harness"),
+    "command-code": process.env.COMMAND_CODE_HOME || path.join(userHome, ".command-code"),
   };
+}
+
+async function getGitHeadSha(root: string): Promise<string | null> {
+  try {
+    const gitHeadFile = path.join(root, ".git", "HEAD");
+    if (!await checkFile(gitHeadFile)) return null;
+    const content = (await fs.readFile(gitHeadFile, "utf8")).trim();
+    if (!content.startsWith("ref:")) return content;
+    const refPath = path.join(root, ".git", content.slice(4).trim());
+    if (!await checkFile(refPath)) return null;
+    return (await fs.readFile(refPath, "utf8")).trim();
+  } catch {
+    return null;
+  }
+}
+
+async function loadDynamicModule(filePath: string): Promise<any> {
+  const normalized = filePath.replace(/\\/g, "/");
+  const fileUrl = normalized.startsWith("file://") ? normalized : `file:///${normalized.replace(/^\/+/, "")}`;
+  const dynamicImport = new Function("url", "return import(url)");
+  return dynamicImport(fileUrl);
+}
+
+export async function doctorDeepseekHarness(root: string, home: string): Promise<DoctorCheck[]> {
+  const report: DoctorCheck[] = [];
+  try {
+    const adapterPath = path.join(root, "platforms", "deepseek-harness", "adapter.ts");
+    const { deepseekHarnessAdapter } = await loadDynamicModule(adapterPath);
+    const detection = await deepseekHarnessAdapter.detect();
+    if (!detection.installed || !detection.version) {
+      report.push({ platform: "deepseek-harness", check: "install", status: "NOT_LIVE", detail: "dsh binary not found or version probe failed" });
+      return report;
+    }
+    report.push({ platform: "deepseek-harness", check: "install", status: "INSTALL_PASS", detail: `dsh installed at ${detection.path} (version ${detection.version})` });
+    const facts = await deepseekHarnessAdapter.inspectProjection();
+    report.push({
+      platform: "deepseek-harness",
+      check: "projection-fingerprint",
+      status: facts.config_fingerprint ? "OK" : "NOT_LIVE",
+      detail: `profile=${facts.profile} plugins=${facts.plugins.length} fingerprint=${facts.config_fingerprint ? facts.config_fingerprint.slice(0, 12) : "none"}`,
+    });
+    const receiptPath = path.join(root, ".agent", "tmp", "host-receipts", "host-deepseek-harness.json");
+    const currentGitHead = await getGitHeadSha(root);
+    let observed = false;
+    let detail = "";
+    if (await checkFile(receiptPath)) {
+      try {
+        const rc = JSON.parse(await fs.readFile(receiptPath, "utf8"));
+        if (rc.status === "PASS" && rc.git_head && (!currentGitHead || rc.git_head === currentGitHead)) {
+          observed = true;
+          detail = `live host receipt verified (status PASS, git HEAD ${rc.git_head.slice(0, 8)})`;
+        }
+      } catch { /* ignore */ }
+    }
+    report.push({
+      platform: "deepseek-harness",
+      check: "native-activation",
+      status: observed ? "NATIVE_OBSERVED" : "NATIVE_UNVERIFIED",
+      detail: observed ? detail : "dsh live projection unverified without receipt bound to current HEAD",
+    });
+  } catch (error) {
+    report.push({ platform: "deepseek-harness", check: "install", status: "NOT_LIVE", detail: (error as Error).message });
+  }
+  return report;
+}
+
+export async function doctorCommandCode(root: string, home: string): Promise<DoctorCheck[]> {
+  const report: DoctorCheck[] = [];
+  try {
+    const adapterPath = path.join(root, "platforms", "command-code", "adapter.ts");
+    const { commandCodeAdapter } = await loadDynamicModule(adapterPath);
+    const detection = await commandCodeAdapter.detect();
+    if (!detection.installed || !detection.version) {
+      report.push({ platform: "command-code", check: "install", status: "NOT_LIVE", detail: "command-code binary not found or version probe failed" });
+      return report;
+    }
+    report.push({ platform: "command-code", check: "install", status: "INSTALL_PASS", detail: `command-code installed at ${detection.path} (version ${detection.version})` });
+    const facts = await commandCodeAdapter.inspectCapabilities();
+    report.push({
+      platform: "command-code",
+      check: "permission-layer",
+      status: facts.permission_layer_proven ? "OK" : "NOT_LIVE",
+      detail: `permission_proven=${facts.permission_layer_proven} fingerprint=${facts.fingerprint.slice(0, 12)}`,
+    });
+    const receiptPath = path.join(root, ".agent", "tmp", "host-receipts", "host-command-code.json");
+    const currentGitHead = await getGitHeadSha(root);
+    let observed = false;
+    let detail = "";
+    if (await checkFile(receiptPath)) {
+      try {
+        const rc = JSON.parse(await fs.readFile(receiptPath, "utf8"));
+        if (rc.status === "PASS" && rc.git_head && (!currentGitHead || rc.git_head === currentGitHead)) {
+          observed = true;
+          detail = `live host receipt verified (status PASS, git HEAD ${rc.git_head.slice(0, 8)})`;
+        }
+      } catch { /* ignore */ }
+    }
+    report.push({
+      platform: "command-code",
+      check: "native-activation",
+      status: observed ? "NATIVE_OBSERVED" : "NATIVE_UNVERIFIED",
+      detail: observed ? detail : "command-code live capability unverified without receipt bound to current HEAD",
+    });
+  } catch (error) {
+    report.push({ platform: "command-code", check: "install", status: "NOT_LIVE", detail: (error as Error).message });
+  }
+  return report;
 }
 
 async function runPython(scriptPath: string, args: string[], root: string): Promise<{ ok: boolean; output: string }> {
@@ -195,20 +321,16 @@ export async function doctor(
     return { exitCode: ExitCode.Success, message: "Dry-run: doctor skipped" };
   }
 
-  // New hosts are registered but NOT_LIVE_VERIFIED until their native
-  // projections are installed and probed. Doctor reports them honestly.
-  const notLiveVerified: string[] = ["deepseek-harness", "command-code"];
-  if (notLiveVerified.includes(platformArg)) {
-    const report: DoctorCheck[] = [{ platform: platformArg, check: "install", status: "NOT_LIVE", detail: "registered host with no installed native projection yet" }];
-    return { exitCode: ExitCode.Success, message: `doctor for ${platformArg}: NOT_LIVE_VERIFIED`, data: { report } };
-  }
-
-  const allPlatforms = ["codex", "grok", "antigravity", "cursor", "opencode", "claude"] as const;
+  const allPlatforms = ["codex", "grok", "antigravity", "cursor", "opencode", "claude", "deepseek-harness", "command-code"] as const;
   type PlatformName = typeof allPlatforms[number];
-  const platforms: PlatformName[] = platformArg === "all" ? allPlatforms.filter((platform) => platform !== "opencode") : platformArg === "opencode" ? [] : [platformArg as PlatformName];
+  const platforms: PlatformName[] = platformArg === "all"
+    ? allPlatforms.filter((platform) => platform !== "opencode" && platform !== "deepseek-harness" && platform !== "command-code")
+    : (platformArg === "opencode" || platformArg === "deepseek-harness" || platformArg === "command-code") ? [] : [platformArg as PlatformName];
   const homes = getPlatformHomes(root);
   const report: DoctorCheck[] = [];
   if (platformArg === "all" || platformArg === "opencode") report.push(...await doctorOpenCode(root, homes.opencode));
+  if (platformArg === "all" || platformArg === "deepseek-harness") report.push(...await doctorDeepseekHarness(root, homes["deepseek-harness"]));
+  if (platformArg === "all" || platformArg === "command-code") report.push(...await doctorCommandCode(root, homes["command-code"]));
 
   // Run native contract test
   const nativeTest = path.join(root, "automation", "test-native-agent-policy.py");
@@ -218,14 +340,13 @@ export async function doctor(
     nativeContractOk = r.ok;
   }
 
-  const mcpConfigMap: { [key in PlatformName]: string } = {
+  const mcpConfigMap: Record<string, string> = {
     codex: "config.toml",
     grok: "mcp.json",
     antigravity: "mcp_config.json",
     cursor: "mcp.json",
     opencode: "opencode.json",
-
-    claude: ".claude.json",
+    claude: "mcp.json",
   };
   const mcpConfigPaths: { [key in PlatformName]?: string } = {};
   for (const p of platforms) {
@@ -317,11 +438,43 @@ export async function doctor(
     }
 
     // Native activation
-    const nativeCliMap: { [key in PlatformName]: string } = { codex: "codex", cursor: "cursor", grok: "grok", antigravity: "gemini/agy", opencode: "opencode", claude: "claude" };
+    const nativeCliMap: Record<string, string> = { codex: "codex", cursor: "cursor", grok: "grok", antigravity: "gemini/agy", opencode: "opencode", claude: "claude" };
+    const hostReceiptPath = path.join(root, ".agent", "tmp", "host-receipts", `host-${name}.json`);
+    const currentGitHead = await getGitHeadSha(root);
+    let hostObserved = false;
+    let receiptDetail = "";
+    if (await checkFile(hostReceiptPath)) {
+      try {
+        const rc = JSON.parse(await fs.readFile(hostReceiptPath, "utf8"));
+        if (rc.status === "PASS" && rc.git_head && (!currentGitHead || rc.git_head === currentGitHead)) {
+          hostObserved = true;
+          receiptDetail = `live host receipt verified (status PASS, git HEAD ${rc.git_head.slice(0, 8)})`;
+        }
+      } catch { /* ignore */ }
+    }
     report.push({
-      platform: name, check: "native-activation", status: "NATIVE_UNVERIFIED",
-      detail: `${nativeCliMap[name]} CLI availability check; no trusted host-activation receipt exists`,
+      platform: name,
+      check: "native-activation",
+      status: hostObserved ? "NATIVE_OBSERVED" : "NATIVE_UNVERIFIED",
+      detail: hostObserved ? receiptDetail : `${nativeCliMap[name] || name} CLI availability check; no trusted host-activation receipt exists bound to current HEAD`,
     });
+
+    if (name === "cursor") {
+      let authStatus = "UNAUTHENTICATED";
+      if (await checkFile(hostReceiptPath)) {
+        try {
+          const rc = JSON.parse(await fs.readFile(hostReceiptPath, "utf8"));
+          const authEv = rc.evidence?.find((e: any) => e.kind === "auth_status");
+          if (authEv && authEv.status) authStatus = authEv.status;
+        } catch { /* ignore */ }
+      }
+      report.push({
+        platform: "cursor",
+        check: "auth-status",
+        status: authStatus.startsWith("AUTH") ? "OK" : "NEEDS_USER",
+        detail: `Cursor authentication state: ${authStatus}`,
+      });
+    }
 
     // Tools
     const toolsPath = path.join(runtimeHome, "agent-rules-tools");
@@ -389,7 +542,11 @@ export async function doctor(
     }
 
     // MCP config check
-    const mcpPath = mcpConfigPaths[name as PlatformName] || "";
+    let mcpPath = mcpConfigPaths[name as PlatformName] || "";
+    if (name === "claude" && !(await checkFile(mcpPath))) {
+      const alt = path.join(platformHome, "mcp.json");
+      if (await checkFile(alt)) mcpPath = alt;
+    }
     if (await checkFile(mcpPath)) {
       const mcpContent = await fs.readFile(mcpPath, "utf-8");
       const checks: Record<string, string> = {
@@ -564,10 +721,10 @@ export async function doctor(
     if (rtkResult.ok) {
       report.push({ platform: "rtk", check: "rtk-install", status: "OK", detail: rtkResult.stdout.trim() });
     } else {
-      report.push({ platform: "rtk", check: "rtk-install", status: "WARN", detail: "RTK not installed — run: curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh" });
+      report.push({ platform: "rtk", check: "rtk-install", status: "OPTIONAL_ABSENT", detail: "RTK optional CLI tool not present (install: curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh)" });
     }
   } catch {
-    report.push({ platform: "rtk", check: "rtk-install", status: "WARN", detail: "RTK not available on PATH" });
+    report.push({ platform: "rtk", check: "rtk-install", status: "OPTIONAL_ABSENT", detail: "RTK optional CLI tool not present" });
   }
 
   // ── Canonical MCP provisioning health ────────────────────────────────
@@ -582,15 +739,25 @@ export async function doctor(
         report.push({ platform: "mcp", check: `mcp-install-${entry.id}`, status: "MCP_SKIPPED", detail: "verification skipped via --skip-integration-verify; no PASS claim" });
       }
     } else {
+      const { resolveIntegrationProfile, selectInstallEntries } = await import("../integration/mcp-profile.js");
+      const profile = resolveIntegrationProfile();
+      const profileEntries = selectInstallEntries(inventory, profile).map((e) => e.id);
       const provisioning = await verifyMcps(root);
       for (const result of provisioning.results) {
+        const inProfile = profileEntries.includes(result.id);
+        const isOptional = result.policy === "optional" || !inProfile;
         const status = result.installation.status;
+        const isOk = status === "PRE-EXISTING" || status === "PASS";
         report.push({
           platform: "mcp",
           check: `mcp-install-${result.id}`,
-          status: status === "PRE-EXISTING" || status === "PASS" ? "MCP_OK" : `MCP_${status}`,
-          detail: result.installation.status === "PRE-EXISTING" || result.installation.status === "PASS"
+          status: isOk ? "MCP_OK" : isOptional ? "MCP_OPTIONAL_ABSENT" : `MCP_${status}`,
+          detail: isOk
             ? `installed=${result.installation.status} version=${result.installation.version ?? "?"} location=${result.installation.location ?? "?"} activation=${result.activation.policy}`
+            : !inProfile
+            ? `provider not in active profile '${profile}' (${result.installation.reason ?? "unselected"})`
+            : isOptional
+            ? `optional provider not installed (${result.installation.reason ?? "explicit-only / unselected"})`
             : `installation ${result.installation.status}: ${result.installation.reason ?? "no evidence"}`,
         });
       }

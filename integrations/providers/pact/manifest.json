@@ -31,7 +31,7 @@
   ],
   "evidence_kinds": ["contract-verification", "integration-test", "custom-runtime"],
   "hosts": {
-    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode", "mimocode"],
+    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
     "notes": "Provider verification is a live receipt; a missing pact CLI yields UNAVAILABLE evidence."
   },
   "thresholds_required": false,

@@ -1,9 +1,0 @@
-{
-  "schema": "artifact/platform-retirement",
-  "version": 1,
-  "platform": "mimocode",
-  "retired_at": "2026-08-19T00:00:00+07:00",
-  "reason": "vNext terminal harness: Mimocode retired from HostId/adapter/projection graph. 6-host matrix (codex/claude/opencode/cursor/antigravity/grok) covers all capability surfaces. Canonical source: host-adapters.ts, host-capabilities.ts, mcp-config.ts, headless-executor.ts, platform-contracts.json. Generated projections will be rebuilt without mimocode on next build.",
-  "source_removed": ["platforms/mimocode/adapter.ts", "platforms/mimocode/AGENTS.md", "generated/runtime-build/mimocode/"],
-  "parity_gate": "no generic host behavior lost"
-}

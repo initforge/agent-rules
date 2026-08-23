@@ -14,7 +14,7 @@
     },
     "integrations/manual/pencil-mcp/manifest.json": {
       "action": "migrated",
-      "notes": "Byte-identical to d23b12a: supportedHosts extended to all 7 registered hosts (codex, claude, grok, antigravity, cursor, opencode, mimocode); notes updated to explicit-marker activation."
+      "notes": "Byte-identical to d23b12a: supportedHosts extended to all 7 registered hosts (codex, claude, grok, antigravity, cursor, opencode, retired-platform); notes updated to explicit-marker activation."
     },
     "integrations/optional/pencil-mcp/manifest.json": {
       "action": "created",
@@ -40,7 +40,7 @@
       "action": "created",
       "notes": "Byte-identical to d23b12a (mode 755): MCP connected + existing .pen file required; records MCP-unavailable separately from app-installed by design."
     },
-    "integrations/optional/pencil-mcp/adapters/{antigravity,claude,cursor,grok,mimocode,opencode}.json": {
+    "integrations/optional/pencil-mcp/adapters/{antigravity,claude,cursor,grok,retired-platform,opencode}.json": {
       "action": "created",
       "notes": "Byte-identical to d23b12a: per-host launcher adapters with __AGENT_RULES_PENCIL_LAUNCHER__ placeholder and PENCIL_MCP_HOST/PENCIL_MCP_AGENT env; no /tmp/.mount_* path and no vendor args guessed."
     },
@@ -58,11 +58,11 @@
     },
     "packages/kernel/src/runner/mcp-config.ts": {
       "action": "migrated",
-      "notes": "Byte-identical to d23b12a: visibilityMode foreground default / headless CI-only with mcp-visibility-preflight.json receipt (0600), checkVisibleMcpHost (CI headless by policy, AGENT_RULES_VISIBLE_MCP=0 off switch, DISPLAY/WAYLAND check, Windows service session check), interactive-integration detection via registry.json policy (browser.*/design.* capabilities) with KNOWN_INTERACTIVE_MCP_IDS fallback, --headless stripped in foreground and injected only in explicit CI headless mode, mimocode materialization (MIMOCODE_CONFIG_DIR + mimocode.jsonc), pencil-mcp read via native discovery (never static adapter), per-task outDir isolation preserved."
+      "notes": "Byte-identical to d23b12a: visibilityMode foreground default / headless CI-only with mcp-visibility-preflight.json receipt (0600), checkVisibleMcpHost (CI headless by policy, AGENT_RULES_VISIBLE_MCP=0 off switch, DISPLAY/WAYLAND check, Windows service session check), interactive-integration detection via registry.json policy (browser.*/design.* capabilities) with KNOWN_INTERACTIVE_MCP_IDS fallback, --headless stripped in foreground and injected only in explicit CI headless mode, retired-platform materialization (retired-platform_CONFIG_DIR + retired-platform.jsonc), pencil-mcp read via native discovery (never static adapter), per-task outDir isolation preserved."
     },
     "packages/kernel/src/runner/pencil-native.ts": {
       "action": "created",
-      "notes": "Byte-identical to d23b12a: discoverPencilNativeServer reads the operator's own pencil entry verbatim (JSON/JSONC/TOML) from stable config locations per host (codex/claude/opencode/mimocode), checkPencilDesktopApp conservative process observation with PENCIL_MCP_TEST_ASSUME_APP test override, pencilServerAsAdapter projects the native command/args/env without guessing; no /tmp/.mount_* persistence."
+      "notes": "Byte-identical to d23b12a: discoverPencilNativeServer reads the operator's own pencil entry verbatim (JSON/JSONC/TOML) from stable config locations per host (codex/claude/opencode/retired-platform), checkPencilDesktopApp conservative process observation with PENCIL_MCP_TEST_ASSUME_APP test override, pencilServerAsAdapter projects the native command/args/env without guessing; no /tmp/.mount_* persistence."
     },
     "automation/source-integrity.json (b5231f7)": {
       "action": "dropped",
@@ -87,7 +87,7 @@
     "integrations/optional/pencil-mcp/adapters/codex.toml",
     "integrations/optional/pencil-mcp/adapters/cursor.json",
     "integrations/optional/pencil-mcp/adapters/grok.json",
-    "integrations/optional/pencil-mcp/adapters/mimocode.json",
+    "integrations/optional/pencil-mcp/adapters/retired-platform.json",
     "integrations/optional/pencil-mcp/adapters/opencode.json",
     "packages/cli/src/automation/merge-mcp-adapters.ts",
     "packages/kernel/src/northstar/pencil-routing.ts",
@@ -110,7 +110,7 @@
       "exit_code": 1,
       "last_line": "Test Files  1 failed (1)      Tests  1 failed | 8 passed (9)",
       "result": "INTERFACE CONFLICT (8/9 pass). Failing assertion: 'writes an opencode.json that the opencode binary reads at startup' expects ['npx','-y','@playwright/mcp@0.0.78','--headless','--isolated']; migrated kernel (recipe-mandated foreground policy from the proven candidate) produces ['npx','-y','@playwright/mcp@0.0.78','--isolated'] because foreground mode strips --headless so the operator can watch the browser. The working-tree engine test file is the PRE-candidate version (byte-identical to 6e9a554, md5 a0856a14dd81a609b4bc51bb3d598763). Resolution requires replacing packages/engine/test/runner-mcp-config.test.ts with the candidate version (d23b12a) which asserts the new contract (no --headless in foreground, --headless only in explicit CI headless profile, visibility receipts, pencil native discovery). That file is not in S5's owned scope (nor any slice's write paths), so per recipe the worker reports the conflict instead of editing it.",
-      "kernel_contract_probe": "8/8 direct behavioral probes against built kernel PASS: foreground default strips --headless + writes receipt; headless CI-only with receipt; non-CI headless throws CI-only; no DISPLAY blocks foreground preflight; pencil native discovery/projection for codex/claude/opencode/mimocode with exact command/args/env; desktop check fail-closed; missing integration -> missing list; checkVisibleMcpHost matrix."
+      "kernel_contract_probe": "8/8 direct behavioral probes against built kernel PASS: foreground default strips --headless + writes receipt; headless CI-only with receipt; non-CI headless throws CI-only; no DISPLAY blocks foreground preflight; pencil native discovery/projection for codex/claude/opencode/retired-platform with exact command/args/env; desktop check fail-closed; missing integration -> missing list; checkVisibleMcpHost matrix."
     },
     {
       "command": "npm run build",

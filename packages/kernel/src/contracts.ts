@@ -214,10 +214,19 @@ export interface HostAttestation {
   readonly expiresAt: string;
 }
 
-/** Supported host identity union (all known hosts). Certification requires only the subset below. */
+/** Supported host identity union (all known hosts). */
 export type SupportedHost = HostAttestation['host'];
-/** Hosts that MUST produce attestations for certification. Cursor remains deferred. */
-export const CERTIFICATION_REQUIRED_HOSTS: readonly SupportedHost[] = ['codex', 'claude', 'grok', 'opencode', 'antigravity'];
+/** Hosts that MUST produce attestations for certification. Canonical 8-host set. */
+export const CERTIFICATION_REQUIRED_HOSTS: readonly SupportedHost[] = [
+  'codex',
+  'claude',
+  'opencode',
+  'cursor',
+  'antigravity',
+  'grok',
+  'deepseek-harness',
+  'command-code',
+];
 
 export interface ManifestSubsystem { readonly subsystemId: string; readonly owner: string; readonly capabilities: readonly string[]; }
 export interface ManifestCapability { readonly capabilityId: string; readonly dependencies: readonly string[]; readonly requiredEvidence: readonly string[]; readonly routingMetadata: Readonly<Record<string, string>>; }

@@ -69,12 +69,12 @@ describe("RuntimeInstaller", () => {
     execFileSync("git", ["-C", repositoryRoot, "config", "user.name", "Runtime Test"]);
     execFileSync("git", ["-C", repositoryRoot, "add", "."]);
     execFileSync("git", ["-C", repositoryRoot, "commit", "-qm", "fixture"]);
-  });
+  }, 30_000);
 
   afterEach(async () => {
     vi.restoreAllMocks();
     await fs.rm(temp, { recursive: true, force: true });
-  });
+  }, 30_000);
 
   function installer(options: Pick<RuntimeInstallerOptions, "dryRun" | "failpoint"> = {}): RuntimeInstaller {
     return new RuntimeInstaller({ repositoryRoot, platformRoots: { codex: targetRoot }, ...options });

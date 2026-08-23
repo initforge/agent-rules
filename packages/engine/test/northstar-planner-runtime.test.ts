@@ -55,7 +55,8 @@ describe('North-Star isolated strong planner runtime', () => {
     expect(buildStrongPlannerInvocation('codex', 'x').args).toEqual(expect.arrayContaining(['--sandbox', 'read-only']));
     const opencode = buildStrongPlannerInvocation('opencode', 'x');
     expect(opencode.args).not.toContain('--dangerously-skip-permissions');
-    expect(opencode.env?.OPENCODE_CONFIG_CONTENT).toContain('"edit":"deny"');
+    expect(opencode.env?.OPENCODE_CONFIG_CONTENT).toContain('"action":"edit"');
+    expect(opencode.env?.OPENCODE_CONFIG_CONTENT).toContain('"effect":"deny"');
   });
 
   it('extracts a JSON object but leaves semantic validation to the contract compiler', () => {

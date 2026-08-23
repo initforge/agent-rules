@@ -97,7 +97,7 @@ Không domain hoặc requirement nào bị bỏ. Không architecture/domain mớ
 | Skills | 36 skill; TS router vẫn phrase-driven; nhiều route fields không có consumer |
 | MCP | Task config/process cleanup đã có; live idle-zero attestation chưa đủ |
 | Hosts | Codex/OpenCode có binary; OpenCode `1.18.18`; Antigravity desktop chạy nhưng CLI không trên PATH; Claude/Cursor/Grok absent |
-| Mimocode | Còn trong 57 canonical/non-generated files và generated projections |
+| retired-platform | Còn trong 57 canonical/non-generated files và generated projections |
 | Audit tests | 80 targeted tests PASS, 2 skipped; chỉ chứng minh isolated primitives |
 
 Những findings này là evidence về implementation defects trong harness source. Remediation chỉ được coi harness-wide sau generic acceptance chain.
@@ -127,7 +127,7 @@ Những findings này là evidence về implementation defects trong harness sou
 | 17 | **PARTIAL** | Registry `automatic` mơ hồ dù provisioning đã tách một số lớp |
 | 18 | **CONFIRMED** | Governor đếm entity thay vì actual effect/cost |
 | 19 | **CONFIRMED** | Host contracts stale so với current official docs |
-| 20 | **CONFIRMED** | Mimocode còn reachable xuyên graph |
+| 20 | **CONFIRMED** | retired-platform còn reachable xuyên graph |
 
 Không finding nào được coi solved chỉ bằng sửa reproduction fixture hoặc chạy dogfood trong `agent-rules`.
 
@@ -194,9 +194,9 @@ Không finding nào được coi solved chỉ bằng sửa reproduction fixture 
 ### E. Host Adapters
 
 1. **Ý nghĩa:** core semantics được map sang primitive native của từng supported host cho mọi consumer repo.
-2. **Hiện tại:** adapter boundary tốt nhưng static contracts stale; Mimocode còn sâu trong graph.
+2. **Hiện tại:** adapter boundary tốt nhưng static contracts stale; retired-platform còn sâu trong graph.
 3. **Giữ:** provider-neutral semantics và honest fallback.
-4. **Confirmed:** Grok/OpenCode/Codex mismatches; Mimocode 57 files.
+4. **Confirmed:** Grok/OpenCode/Codex mismatches; retired-platform 57 files.
 5. **Cần eval:** version/reload semantics và local availability.
 6. **Mâu thuẫn:** projection build bị lẫn với live certification.
 7. **Skeptical checks:** adapter có chỉ hoạt động khi cwd là `agent-rules` không; installed global/project entrypoint có resolve arbitrary cwd không?
@@ -308,7 +308,7 @@ Không finding nào được coi solved chỉ bằng sửa reproduction fixture 
 1. **Ý nghĩa:** remove complexity khỏi source, installation và upgraded consumer environments.
 2. **Hiện tại:** dispositions tồn tại nhưng no unified retirement workflow.
 3. **Giữ:** parity-before-delete và migration receipts.
-4. **Confirmed:** Mimocode, three closure paths, dead selector, facades và stale plans.
+4. **Confirmed:** retired-platform, three closure paths, dead selector, facades và stale plans.
 5. **Cần eval:** old configs/projections in real upgrade shapes.
 6. **Mâu thuẫn:** xóa canonical file nhưng installed copy có thể sống.
 7. **Skeptical checks:** fresh install và upgrade đều hết component chưa?
@@ -365,7 +365,7 @@ Dogfood-only evidence
 | **REFINE/WIRE** | Pointer CAS, relation classifier, TaskExecutionPolicy, artifact admission, trajectory supervisor, resource governor, host probes, MCP receipts, proof router |
 | **MERGE** | `close/closeout/certify`; proof status schemas; routing + decision fabric; readiness/acceptance reducers |
 | **PROMOTE** | Finish-to-completion, compiled DoD, parity/QA/quality policy, causal maps, artifact-persistence policy |
-| **RETIRE** | Mimocode, provider selector, phrase-only authority, mandatory researcher notes, hard-coded closure v1, hot old plans |
+| **RETIRE** | retired-platform, provider selector, phrase-only authority, mandatory researcher notes, hard-coded closure v1, hot old plans |
 | **COMPATIBILITY-ONLY** | Context/finish/plan facades until production consumers and generic parity migrate |
 
 ### All 36 skills
@@ -568,7 +568,7 @@ Fixture repositories là test data, không phải fix points. Production source 
 - Reject empty requirements/reconciliation.
 - Derive residue from effective contract/evidence/diff.
 - Correct old closure as invalid; old plan becomes inactive/superseded with terminal partial truth.
-- Carry unresolved requirements; explicitly supersede Mimocode requirement.
+- Carry unresolved requirements; explicitly supersede retired-platform requirement.
 - Activate successor through new CAS transaction.
 - Implement behavioral baseline `B`, allowlisted metadata commit `C`, exact-SHA external terminal attestation.
 
@@ -652,13 +652,13 @@ Fixture repositories là test data, không phải fix points. Production source 
 
 ---
 
-### Phase 5 — Host adapters and Mimocode removal
+### Phase 5 — Host adapters and retired-platform removal
 
-**Problem:** stale contracts and unwanted Mimocode reachability.
+**Problem:** stale contracts and unwanted retired-platform reachability.
 
 **Actions:**
 
-- Remove Mimocode across types/contracts/adapters/installers/nativeHosts/schemas/tests/evals/docs/control-plane/generated outputs.
+- Remove retired-platform across types/contracts/adapters/installers/nativeHosts/schemas/tests/evals/docs/control-plane/generated outputs.
 - Rebuild projections only from canonical source.
 - Keep unknown legacy config unmanaged.
 - Add doc/version provenance and probes for six supported hosts.
@@ -670,7 +670,7 @@ Fixture repositories là test data, không phải fix points. Production source 
 
 **Proof:** canonical/generated absence scan, migration fixtures, static adapter conformance and live generic sessions where binaries exist.
 
-**Terminal gate:** Mimocode unreachable after fresh install and upgrade; no generic host behavior lost.
+**Terminal gate:** retired-platform unreachable after fresh install and upgrade; no generic host behavior lost.
 
 ---
 
@@ -784,7 +784,7 @@ Fixture repositories là test data, không phải fix points. Production source 
 13. Cheap worker with only one copied artifact.
 14. RAW/current/vNext ablation over generic corpus.
 15. Malicious project instructions, MCP output, secret and path escapes.
-16. Mimocode removal after fresh install and stale upgrade.
+16. retired-platform removal after fresh install and stale upgrade.
 17. Evidence from consumer A replayed against consumer B must reject.
 18. Harness package A evidence replayed with package B must reject.
 19. Existing user instructions/config survive upgrade byte-for-byte outside owned blocks.
@@ -941,7 +941,7 @@ Final PASS requires:
 - G2 existing instructions repo PASS;
 - G3 stale upgraded environment PASS;
 - G4 representative host enforcement PASS at honest evidence levels;
-- Mimocode unreachable after fresh install and upgrade;
+- retired-platform unreachable after fresh install and upgrade;
 - MCP idle-zero live-proven where hosts are available;
 - evidence binds harness, installation, consumer and host identities;
 - exact final SHA CI green;
@@ -972,7 +972,7 @@ Final PASS requires:
 ## 18. Frozen assumptions/defaults
 
 - Source baseline must be revalidated from current workspace before work.
-- This plan is the owner-authorized successor and resolves Mimocode removal.
+- This plan is the owner-authorized successor and resolves retired-platform removal.
 - Delivery ends on a non-protected branch with exact-SHA CI; merge/deploy remain outside scope.
 - Codex/OpenCode are expected live host candidates; Antigravity only if native handshake works; absent hosts remain static-only.
 - Generic G1–G4 fixtures are mandatory and disposable.

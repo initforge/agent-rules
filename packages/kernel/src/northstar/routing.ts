@@ -24,14 +24,29 @@ export function canonicalCapability(capability: string): string {
   return CAPABILITY_ALIASES[capability] ?? capability;
 }
 
+export type SkillRole =
+  | 'DOMAIN_JUDGMENT'
+  | 'PLANNING_PROCEDURE'
+  | 'IMPLEMENTATION_GUIDANCE'
+  | 'ARCHITECTURE_LENS'
+  | 'QUALITY_LENS'
+  | 'SECURITY_LENS'
+  | 'VERIFIER'
+  | 'BROWSER_OBSERVATION';
+
+export type RequirementStrength = 'REQUIRED' | 'RECOMMENDED' | 'OPTIONAL';
+
 export interface SkillRoute {
   id: string;
   primary: boolean;
+  role?: SkillRole;
+  requirement_strength?: RequirementStrength;
   reason: string;
   /** Canonical graph-backed source. Context compilation must load this path, not guess it. */
   source?: string;
   source_hash?: string;
   graph_hash?: string;
+  tier?: SkillTier;
 }
 
 export interface CapabilityProvider {
@@ -207,12 +222,81 @@ function packetRoutingText(packet: TaskPacket): string {
   ].join('\n');
 }
 
+export function inferSkillRole(slug: string): SkillRole {
+  if (slug === 'ui-taste' || slug.includes('taste') || slug.includes('compliance') || slug.includes('domain')) {
+    return 'DOMAIN_JUDGMENT';
+  }
+  if (slug === 'browser-qa' || slug.includes('browser') || slug.includes('playwright')) {
+    return 'BROWSER_OBSERVATION';
+  }
+  if (slug === 'security-audit' || slug.includes('security') || slug.includes('auth')) {
+    return 'SECURITY_LENS';
+  }
+  if (slug === 'quality' || slug.includes('test') || slug.includes('audit')) {
+    return 'QUALITY_LENS';
+  }
+  if (slug.includes('architecture') || slug.includes('contract')) {
+    return 'ARCHITECTURE_LENS';
+  }
+  if (slug.includes('planning') || slug.includes('plan')) {
+    return 'PLANNING_PROCEDURE';
+  }
+  if (slug.includes('verifier') || slug.includes('parity')) {
+    return 'VERIFIER';
+  }
+  return 'IMPLEMENTATION_GUIDANCE';
+}
+
+export type SkillTier = 1 | 2 | 3;
+
+export interface SkillCatalogItem {
+  id: string;
+  name: string;
+  description: string;
+  role: SkillRole;
+  project_scope?: string;
+  source: string;
+  source_hash: string;
+  requires?: string[];
+  supports?: string[];
+  tier: SkillTier;
+}
+
+export function describeSkillCatalog(repoRoot: string, options: SkillRouteOptions = {}): SkillCatalogItem[] {
+  const graphInfo = loadContextGraph(repoRoot);
+  if (!graphInfo) return [];
+  const skillNodes = graphInfo.graph.nodes.filter((node) => node.layer === 'skills' && node.id.startsWith('skill:'));
+  return skillNodes
+    .filter((node) => {
+      const scope = String(node.routing?.project_scope ?? '');
+      return !scope || scope === (options.activeProjectScope ?? '');
+    })
+    .map((node) => {
+      const slug = node.id.slice('skill:'.length);
+      const role = inferSkillRole(slug);
+      return {
+        id: slug,
+        name: slug,
+        description: `Specialized expertise for ${role.toLowerCase().replace(/_/g, ' ')} (${slug})`,
+        role,
+        project_scope: node.routing?.project_scope,
+        source: node.source,
+        source_hash: node.source_hash,
+        requires: node.routing?.requires,
+        supports: node.routing?.supports,
+        tier: 1,
+      };
+    });
+}
+
 function routeSkillsFromGraph(packet: TaskPacket, repoRoot: string, graphInfo: { graph: ContextGraph; hash: string }, options: SkillRouteOptions): SkillRoute[] {
   const text = packetRoutingText(packet);
   const requested = new Set(packet.skills ?? []);
   const skillNodes = graphInfo.graph.nodes.filter((node) => node.layer === 'skills' && node.id.startsWith('skill:'));
   const bySlug = new Map(skillNodes.map((node) => [node.id.slice('skill:'.length), node]));
-  const candidates: Array<{ node: GraphNode; priority: number; explicit: boolean; hits: string[] }> = [];
+  const candidates: Array<{ node: GraphNode; priority: number; explicit: boolean; hits: string[]; role: SkillRole }> = [];
+
+  const hasArchitecturalIntent = /\b(redesign|architect(?:ure)?|information architecture|responsive layout|design contract|system design)\b/i.test(text);
 
   for (const node of skillNodes) {
     const slug = node.id.slice('skill:'.length);
@@ -220,57 +304,88 @@ function routeSkillsFromGraph(packet: TaskPacket, repoRoot: string, graphInfo: {
     const scope = String(routing.project_scope ?? '');
     const scopeActive = !scope || scope === (options.activeProjectScope ?? '');
     if (!scopeActive) continue;
-    const excluded = (routing.excludes ?? []).some((phrase) => phraseHit(text, phrase));
+
+    // Explicit requests and architectural intent are never suppressed by weak lexical excludes
     const explicit = requested.has(slug);
+    const excluded = !explicit && !hasArchitecturalIntent && (routing.excludes ?? []).some((phrase) => phraseHit(text, phrase));
     const hits = (routing.signals ?? []).filter((phrase) => phraseHit(text, phrase));
     if (excluded || (!explicit && hits.length === 0 && !routing.default)) continue;
-    // Active domain/profile context is resolved before generic skill priority.
-    // This keeps a 5fedu module task in the profile procedure even when the
-    // same wording also matches generic browser/parity skills. The generic
-    // skill remains available as a support route when declared by the profile.
     const domainBonus = scope && scope === (options.activeProjectScope ?? '') ? 500 : 0;
-    candidates.push({ priority: explicit ? 10_000 + domainBonus + Number(routing.priority ?? 0) : domainBonus + Number(routing.priority ?? 0), node, explicit, hits });
+    const role = inferSkillRole(slug);
+    candidates.push({ priority: explicit ? 10_000 + domainBonus + Number(routing.priority ?? 0) : domainBonus + Number(routing.priority ?? 0), node, explicit, hits, role });
   }
 
   candidates.sort((a, b) => b.priority - a.priority || a.node.id.localeCompare(b.node.id));
   const primary = candidates[0];
   if (!primary) return [];
 
-  const selected: Array<{ node: GraphNode; reason: string }> = [{
+  const selected: Array<{ node: GraphNode; reason: string; role: SkillRole; requirement_strength: RequirementStrength }> = [{
     node: primary.node,
     reason: primary.explicit ? 'explicit TaskPacket request via canonical context graph' : `canonical context-graph signal match: ${primary.hits.join(', ')}`,
+    role: primary.role,
+    requirement_strength: 'REQUIRED',
   }];
-  const primaryRouting = primary.node.routing ?? {};
 
-  // Required dependencies are semantic requirements, not optional keyword matches.
-  for (const dependency of primaryRouting.requires ?? []) {
-    if (selected.length >= 3) break;
-    const node = bySlug.get(dependency);
-    if (!node || selected.some((entry) => entry.node.id === node.id)) continue;
-    const scope = String(node.routing?.project_scope ?? '');
-    if (scope && scope !== (options.activeProjectScope ?? '')) continue;
-    selected.push({ node, reason: `required by ${primary.node.id}` });
+  // 1. Explicitly requested candidates
+  for (const candidate of candidates) {
+    if (candidate.explicit && !selected.some((entry) => entry.node.id === candidate.node.id)) {
+      selected.push({
+        node: candidate.node,
+        reason: 'explicit TaskPacket request via canonical context graph',
+        role: candidate.role,
+        requirement_strength: 'REQUIRED',
+      });
+    }
   }
 
-  // Supports remain lazy: load them only when the support skill also matched or
-  // was explicitly requested. This keeps the active surface at 1 primary + <=2.
-  for (const support of primaryRouting.supports ?? []) {
-    if (selected.length >= 3) break;
-    const candidate = candidates.find((entry) => entry.node.id === `skill:${support}`);
-    if (!candidate || selected.some((entry) => entry.node.id === candidate.node.id)) continue;
-    selected.push({ node: candidate.node, reason: `support for ${primary.node.id}; matched canonical routing metadata` });
+  // 2. Required dependencies
+  for (const entry of [...selected]) {
+    const entryRouting = entry.node.routing ?? {};
+    for (const dependency of entryRouting.requires ?? []) {
+      const node = bySlug.get(dependency);
+      if (!node || selected.some((s) => s.node.id === node.id)) continue;
+      const scope = String(node.routing?.project_scope ?? '');
+      if (scope && scope !== (options.activeProjectScope ?? '')) continue;
+      const depRole = inferSkillRole(dependency);
+      selected.push({ node, reason: `required by ${entry.node.id}`, role: depRole, requirement_strength: 'REQUIRED' });
+    }
   }
 
-  // A design brief is a bounded review modifier, not a universal dependency.
-  // Keep this explicit and candidate-backed so the TypeScript policy mirrors
-  // the host adapter's lock-backed ui-taste behavior without loading taste for
-  // ordinary frontend implementation or domain parity work.
-  const tasteCandidate = candidates.find((entry) => entry.node.id === 'skill:ui-taste');
-  const tasteModifier = tasteCandidate
-    && (primary.node.id === 'skill:frontend-architect' || primary.node.id === 'skill:5fedu-module-parity')
-    && !selected.some((entry) => entry.node.id === 'skill:ui-taste');
-  if (tasteModifier && selected.length < 3) {
-    selected.push({ node: tasteCandidate.node, reason: `explicit design brief modifier for ${primary.node.id}` });
+  // 3. Recommended supports
+  for (const entry of [...selected]) {
+    const entryRouting = entry.node.routing ?? {};
+    for (const support of entryRouting.supports ?? []) {
+      const candidate = candidates.find((c) => c.node.id === `skill:${support}`);
+      if (!candidate || selected.some((s) => s.node.id === candidate.node.id)) continue;
+      selected.push({ node: candidate.node, reason: `support for ${entry.node.id}; matched canonical routing metadata`, role: candidate.role, requirement_strength: 'RECOMMENDED' });
+    }
+  }
+
+  // 4. Taste modifier parity
+  const primarySlug = primary.node.id.slice('skill:'.length);
+  const tasteDirectionPhrases: string[][] = [
+    ['brandkit'],
+    ['brutalist', 'brutalist-skill'],
+    ['minimalist', 'minimalist-skill'],
+    ['redesign', 'redesign-skill'],
+    ['soft-ui', 'soft ui', 'soft-skill'],
+    ['high-end', 'high end', 'taste-skill'],
+  ];
+  const matchedTasteDirections = tasteDirectionPhrases.filter((phrases) => phrases.some((phrase) => phraseHit(text, phrase)));
+  const explicitTasteReview = ['taste review', 'review taste', 'ui-taste review', 'review ui-taste', 'đánh giá taste', 'review thẩm mỹ', 'đánh giá thẩm mỹ', 'rà soát thẩm mỹ'].some((phrase) => phraseHit(text, phrase));
+  const tasteIsModifier = matchedTasteDirections.length === 1 && bySlug.has('ui-taste') && (
+    primarySlug === 'frontend-architect' || (primarySlug === '5fedu-module-parity' && explicitTasteReview)
+  );
+  if (tasteIsModifier && !selected.some((entry) => entry.node.id === 'skill:ui-taste')) {
+    const tasteNode = bySlug.get('ui-taste');
+    if (tasteNode) {
+      selected.push({
+        node: tasteNode,
+        reason: 'brief-led taste modifier for UI design/review intent',
+        role: 'ARCHITECTURE_LENS',
+        requirement_strength: 'RECOMMENDED',
+      });
+    }
   }
 
   return selected.map((entry, index) => {
@@ -278,6 +393,8 @@ function routeSkillsFromGraph(packet: TaskPacket, repoRoot: string, graphInfo: {
     return {
       id: entry.node.id.slice('skill:'.length),
       primary: index === 0,
+      role: entry.role,
+      requirement_strength: entry.requirement_strength,
       reason: entry.reason,
       source: entry.node.source,
       source_hash: entry.node.source_hash,
@@ -286,7 +403,7 @@ function routeSkillsFromGraph(packet: TaskPacket, repoRoot: string, graphInfo: {
   });
 }
 
-/** Deterministic, bounded skill selection: one primary plus at most two support skills. */
+/** Deterministic, bounded skill selection with semantic role composition. */
 export function routeSkills(packet: TaskPacket, repoRoot?: string, options: SkillRouteOptions = {}): SkillRoute[] {
   if (repoRoot) {
     const graph = loadContextGraph(repoRoot);
@@ -304,7 +421,7 @@ export function routeSkills(packet: TaskPacket, repoRoot?: string, options: Skil
       candidates.push({ id, re: /(?:)/, priority: 55 });
     }
   }
-  return candidates.slice(0, 3).map((entry, index) => ({ id: entry.id, primary: index === 0, reason: requested.has(entry.id) ? 'explicit TaskPacket request (compatibility fallback)' : 'compatibility signal match' }));
+  return candidates.slice(0, 8).map((entry, index) => ({ id: entry.id, primary: index === 0, reason: requested.has(entry.id) ? 'explicit TaskPacket request (compatibility fallback)' : 'compatibility signal match' }));
 }
 
 interface IntegrationRegistryRecord {

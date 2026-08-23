@@ -338,14 +338,14 @@ describe('Certification artifact verifier adversarial checks', () => {
   const manifest = (root: string, host = 'codex') => join(root, `manifest-${host}.json`);
   const mutateManifest = (root: string, change: (value: any) => void, host = 'codex') => { const file = manifest(root, host); const value = JSON.parse(readFileSync(file, 'utf8')); change(value); writeFileSync(file, JSON.stringify(value)); };
 
-  it('accepts exactly ten basenames forming five exact host pairs', () => { const root = fixture(); expect(() => verify(root)).not.toThrow(); rmSync(root, { recursive: true }); });
+  it('accepts exact basenames forming exact host pairs', () => { const root = fixture(); expect(() => verify(root)).not.toThrow(); rmSync(root, { recursive: true }); });
   it.each([
     ['extra file', (root: string) => writeFileSync(join(root, 'extra.json'), '{}')],
     ['extra directory', (root: string) => mkdirSync(join(root, 'nested'))],
     ['duplicate nested basename', (root: string) => { mkdirSync(join(root, 'nested')); cpSync(manifest(root), join(root, 'nested', 'manifest-codex.json')); }],
     ['traversal', (root: string) => mutateManifest(root, value => { value.attestationFile = '../attestation-codex.json'; })],
     ['wrong hash', (root: string) => mutateManifest(root, value => { value.attestationSha256 = '0'.repeat(64); })],
-    ['foreign host', (root: string) => mutateManifest(root, value => { value.host = 'cursor'; })],
+    ['foreign host', (root: string) => mutateManifest(root, value => { value.host = 'unknown-host'; })],
     ['wrong commit', (root: string) => mutateManifest(root, value => { value.commitSha = 'c'.repeat(64); })],
     ['stale TTL', (root: string) => { const file = join(root, 'attestation-codex.json'); const value = JSON.parse(readFileSync(file, 'utf8')); value.expiresAt = new Date(Date.now() - 1).toISOString(); const bytes = Buffer.from(JSON.stringify(value)); writeFileSync(file, bytes); mutateManifest(root, manifest => { manifest.attestationSha256 = sha(bytes); }); }],
     ['model mismatch', (root: string) => { const file = join(root, 'attestation-codex.json'); const value = JSON.parse(readFileSync(file, 'utf8')); value.requestedModel = 'synthetic'; const bytes = Buffer.from(JSON.stringify(value)); writeFileSync(file, bytes); mutateManifest(root, manifest => { manifest.attestationSha256 = sha(bytes); }); }],

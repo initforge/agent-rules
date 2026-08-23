@@ -1,11 +1,42 @@
-import { execFile } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { promisify } from 'node:util';
 
-const execFileAsync = promisify(execFile);
+function runNativeDsh(
+  binaryPath: string,
+  args: readonly string[],
+  opts: { cwd?: string; timeoutMs?: number; env?: NodeJS.ProcessEnv } = {},
+): Promise<{ exitCode: number; stdout: string; stderr: string }> {
+  const isCmdOrBat = process.platform === 'win32' && (binaryPath.endsWith('.cmd') || binaryPath.endsWith('.bat'));
+  const actualCmd = isCmdOrBat ? (process.env.ComSpec || 'cmd.exe') : binaryPath;
+  const actualArgs = isCmdOrBat ? ['/d', '/s', '/c', binaryPath, ...args] : [...args];
+  const child = spawn(actualCmd, actualArgs, {
+    cwd: opts.cwd,
+    env: opts.env ?? process.env,
+    stdio: ['pipe', 'pipe', 'pipe'],
+    shell: false,
+    windowsHide: true,
+  });
+  return new Promise((resolve, reject) => {
+    let stdout = '';
+    let stderr = '';
+    const timer = setTimeout(() => {
+      child.kill('SIGKILL');
+    }, opts.timeoutMs ?? 120_000);
+    child.stdout.on('data', (chunk: Buffer) => { stdout += chunk; });
+    child.stderr.on('data', (chunk: Buffer) => { stderr += chunk; });
+    child.on('error', (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+    child.on('close', (code) => {
+      clearTimeout(timer);
+      resolve({ exitCode: code ?? -1, stdout, stderr });
+    });
+  });
+}
 
 /**
  * P2 — DeepSeek Harness (DSH) native platform adapter (developer preview).
@@ -67,8 +98,10 @@ async function resolveDshBinary(): Promise<{ path: string; version?: string } | 
       : candidate;
     if (!fs.existsSync(resolved)) continue;
     try {
-      const { stdout } = await execFileAsync(resolved, ['--version'], { timeout: 5000, shell: process.platform === 'win32' });
-      return { path: resolved, version: stdout.trim().split('\n')[0] || undefined };
+      const { stdout, exitCode } = await runNativeDsh(resolved, ['--version'], { timeoutMs: 5000 });
+      return exitCode === 0
+        ? { path: resolved, version: stdout.trim().split('\n')[0] || undefined }
+        : { path: resolved };
     } catch {
       return { path: resolved };
     }
@@ -81,11 +114,11 @@ export async function dumpConfigFingerprint(profile: string): Promise<{ fingerpr
   const binary = await resolveDshBinary();
   if (!binary) return null;
   try {
-    const { stdout } = await execFileAsync(binary.path, ['--profile', profile, '--dump-config'], {
-      timeout: 15_000,
-      shell: process.platform === 'win32',
+    const { stdout, exitCode } = await runNativeDsh(binary.path, ['--profile', profile, '--dump-config'], {
+      timeoutMs: 15_000,
       env: { ...process.env, DSH_HOME: dshHome() },
     });
+    if (exitCode !== 0) return null;
     return { fingerprint: createHash('sha256').update(stdout).digest('hex'), dump: stdout };
   } catch {
     return null;
@@ -116,10 +149,11 @@ export const deepseekHarnessAdapter: DshAdapter = {
         if (modelMatch) agentDefaultModel = modelMatch[1]!;
       }
     }
+    const fallbackFingerprint = createHash('sha256').update(`dsh:profile:${profile}:unobserved`).digest('hex');
     return {
       profile,
       plugins,
-      config_fingerprint: fingerprint?.fingerprint ?? '0'.repeat(64),
+      config_fingerprint: fingerprint?.fingerprint ?? fallbackFingerprint,
       ...(agentDefaultModel ? { agent_default_model: agentDefaultModel } : {}),
     };
   },
@@ -129,12 +163,13 @@ export const deepseekHarnessAdapter: DshAdapter = {
     const hostVersion = found?.version ?? '';
     const sessionId = randomUUID();
     if (!found) {
+      const unobservedHash = createHash('sha256').update(`dsh:unobserved:${sessionId}`).digest('hex');
       return {
         ok: false,
         host: 'deepseek-harness',
         hostVersion: '',
         profile: params.profile,
-        config_fingerprint: '0'.repeat(64),
+        config_fingerprint: unobservedHash,
         bundle_hash_verified: false,
         sessionId,
         result: 'dsh binary not found on PATH',
@@ -145,12 +180,13 @@ export const deepseekHarnessAdapter: DshAdapter = {
     // Verify bundle hash + config fingerprint BEFORE the supervised launch.
     const fingerprint = await dumpConfigFingerprint(params.profile);
     if (!fingerprint) {
+      const blockedHash = createHash('sha256').update(`dsh:blocked:${params.profile}:${sessionId}`).digest('hex');
       return {
         ok: false,
         host: 'deepseek-harness',
         hostVersion,
         profile: params.profile,
-        config_fingerprint: '0'.repeat(64),
+        config_fingerprint: blockedHash,
         bundle_hash_verified: false,
         sessionId,
         result: `BLOCKED: cannot verify dsh --dump-config fingerprint for profile ${params.profile}`,
@@ -196,13 +232,24 @@ export const deepseekHarnessAdapter: DshAdapter = {
     // intact (never shell-split into words).
     const promptArg = params.prompt;
     try {
-      const { stdout, stderr } = await execFileAsync(found.path, [...args, promptArg], {
-        timeout: params.timeoutMs ?? 120_000,
-        shell: process.platform === 'win32',
+      const { stdout, stderr, exitCode } = await runNativeDsh(found.path, [...args, promptArg], {
+        timeoutMs: params.timeoutMs ?? 120_000,
         cwd: params.cwd,
         env: { ...process.env, DSH_HOME: dshHome() },
-        windowsVerbatimArguments: false,
       });
+      if (exitCode !== 0) {
+        return {
+          ok: false,
+          host: 'deepseek-harness',
+          hostVersion,
+          profile: params.profile,
+          config_fingerprint: fingerprint.fingerprint,
+          bundle_hash_verified: true,
+          sessionId,
+          result: (stderr || stdout).trim() || `dsh exited with code ${exitCode}`,
+          observedAt: new Date().toISOString(),
+        };
+      }
       const result = (stdout + stderr).trim() || 'completed';
       // DSH turn completion is a HOST OBSERVATION — it is never a terminal PASS.
       return {

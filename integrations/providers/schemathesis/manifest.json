@@ -31,7 +31,7 @@
   ],
   "evidence_kinds": ["schema-behavior", "integration-test", "custom-runtime"],
   "hosts": {
-    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode", "mimocode"],
+    "supported": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
     "notes": "Schema behavior evidence covers the schema contract; a missing schemathesis CLI yields UNAVAILABLE evidence."
   },
   "thresholds_required": false,

@@ -50,7 +50,7 @@ PASS.
 
 - `platform-contracts.json` becomes the single canonical host registry v2 with
   eight canonical HostIds; all automation, schemas, doctor, installer, docs,
-  fixtures and CI derive from it. Independent host arrays and stale Mimocode
+  fixtures and CI derive from it. Independent host arrays and stale retired-platform
   references are removed.
 - One `HostAdapter` contract (discover/inspectProjection/planLifecycle/
   applyLifecycle/observeCapabilities/mapRequirement/runCanary) is shared by CLI
