@@ -676,8 +676,10 @@ def validate_output(output: dict[str, Any], schema_path: Path | None = None, roo
         except (json.JSONDecodeError, OSError) as e:
             errors.append(f"schema load error: {e}")
     dims = output.get("dimensions", [])
-    if len(dims) != 18:
-        errors.append(f"expected 18 dimensions, got {len(dims)}")
+    # Track the rubric dynamically: the invariant is output/rubric agreement,
+    # not a frozen count (d14 C4 Visualization retired with the product).
+    if len(dims) != len(CANONICAL_DIMENSIONS):
+        errors.append(f"expected {len(CANONICAL_DIMENSIONS)} dimensions, got {len(dims)}")
     seen_ids: set[str] = set()
     actual_dimensions = tuple((d.get("id"), d.get("label")) for d in dims if isinstance(d, dict))
     if actual_dimensions != CANONICAL_DIMENSIONS:
