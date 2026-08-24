@@ -5,9 +5,24 @@
   "captured_at": "2026-08-24",
   "evidence_classes": {
     "github_ci": {
-      "scope": "behavior reproducible inside GitHub-hosted runners (build, typecheck, governed tests, python validators, certification artifact mechanics)",
-      "status": "PENDING_PUSH",
-      "note": "will be recorded after push; never conflated with owner-machine results"
+      "scope": "behavior reproducible inside GitHub-hosted runners (build, typecheck, governed tests, python validators, secret scanning)",
+      "status": "GREEN",
+      "run_id": 32718706750,
+      "head_sha": "b12e57f19571a813b222977dbcda0671eee0e8c3",
+      "jobs": {
+        "security": "success",
+        "python-tests": "success",
+        "quality-linux": "success",
+        "quality-macos": "success",
+        "quality-windows": "success",
+        "quality-aggregate": "success"
+      },
+      "certification_workflow": {
+        "conclusion": "failure",
+        "reason": "self-hosted runners absent (RUNNERS_UNAVAILABLE advisory); identical failure on baseline 41b69eb; non-required check by workflow design",
+        "note": "native desktop certification belongs to the owner-machine lane and is never reported as CI evidence"
+      },
+      "note": "never conflated with owner-machine results"
     },
     "local_runtime_owner_machine": {
       "scope": "commands executed on the owner Windows machine in this session",
