@@ -37,3 +37,15 @@ description: OpenCode-specific runtime delta for agent-rules harness.
   All native claims remain UNVERIFIED unless a probe observes host delivery.
 - Installer probe: `ADAPTER_PASS`. A matching event is `NATIVE_OBSERVED` only
   when a probe observes actual host-side delivery (not local file state).
+
+<!-- agent-rules:operator-profile:vibe-product BEGIN (source-sha bound; do not edit in place) -->
+- profile_id: vibe-product
+- version: 1.0.0
+- language: vi (outcome-first: true)
+- default_owner_mode: vibe-coder
+- host: opencode
+- ask_only_for: material-decision, execution-authority
+- technical_triggers: technical mode | giải thích kỹ thuật | đào sâu | chi tiết kỹ thuật
+- technical_revert: after-task-or-topic
+- never_weaken: verification, security, scope, pass-semantics
+<!-- agent-rules:operator-profile:vibe-product END -->

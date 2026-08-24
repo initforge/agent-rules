@@ -1,7 +1,7 @@
 ---
 name: ui-taste
 description: Use as a brief-led UI/UX taste and anti-generic-design lens for frontend, product UI, landing pages, portfolios,
-  redesigns, and Control Plane surfaces. Select a design direction from the brief and existing design system; preserve accessibility
+  redesigns, and product control surfaces. Select a design direction from the brief and existing design system; preserve accessibility
   and product constraints. For 5fedu ERP modules, 5fedu-module-parity remains authoritative and ui-taste is only an explicitly
   requested review lens.
 ---
@@ -20,7 +20,8 @@ Use this capability to make a deliberate design read before changing a frontend 
 
 ## Routing precedence
 
-- **Control Plane:** the approved Control Plane brief is authoritative; this skill is a brief/taste lens **only when the brief selects it** (anti-slop and visual review), never a default product direction.
+- **Approved product surfaces:** an approved owner brief is authoritative; this skill is a brief/taste lens **only when the brief selects it** (anti-slop and visual review), never a default
+  product direction.
 - **5fedu ERP:** `5fedu-module-parity`, module mapping, and the project shell are authoritative. Do not replace their information architecture, interaction contract, or reference shell. Load this skill only when an explicit taste review is requested.
 - **Landing, portfolio, or redesign:** infer direction from the brief; use the pinned upstream reference pack selectively.
 - **Image-first deliverables:** route image generation only when the requested output needs a visual asset or reference image.

@@ -76,6 +76,6 @@ if (command === 'certification-validate') {
 } else if (command === 'certification-verify') {
   verifyCertificationArtifacts();
 } else {
-  console.error('Usage: node automation/control-plane-ci.mjs <certification-validate|certification-build|certification-verify>');
+  console.error('Usage: node automation/certification-ci.mjs <certification-validate|certification-build|certification-verify>');
   process.exitCode = 2;
 }

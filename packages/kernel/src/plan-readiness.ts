@@ -251,7 +251,7 @@ const LAYER_KEYWORDS: Array<[VerificationLayer, string[]]> = [
   ['contract', ['contract', 'schema', 'giao diện', 'api', 'public contract']],
   ['service-integration', ['integration', 'tích hợp', 'train', 'integration train']],
   ['deployed-topology', ['topology', 'compose', 'deploy', 'triển khai', 'runtime install']],
-  ['public-ingress-journey', ['ingress', 'journey', 'ui', 'browser', 'control plane', 'dashboard']],
+  ['public-ingress-journey', ['ingress', 'journey', 'ui', 'browser', 'operator dashboard']],
   ['release-rollback', ['rollback', 'release', 'finalize', 'uninstall', 'installer']],
 ];
 
@@ -726,12 +726,10 @@ function buildSystemTopologyYaml(): Record<string, unknown> {
     services: [
       { id: 'engine', kind: 'node', status: 'EXISTS', path: 'packages/engine', note: 'canonical contracts, controller, verifier, terminal gate' },
       { id: 'cli', kind: 'node', status: 'EXISTS', path: 'packages/cli', note: 'thin commander CLI' },
-      { id: 'control-plane', kind: 'web', status: 'EXISTS', path: 'packages/control-plane', note: 'local-only observe/configure; no run control' },
       { id: 'autopilot-supervisor', kind: 'process', status: 'EXISTS', path: 'packages/engine/src/autopilot-m11.ts [DELETED S5] + supervisor.ts', note: 'host-neutral durable supervisor (M11-C5)' },
       { id: 'integration-train', kind: 'process', status: 'EXISTS', path: 'packages/engine/src/worktree-train.ts [DELETED S5] + CLI train/worktree', note: 'rolling train merge owner (M11-C3)' },
     ],
     ports: [
-      { service: 'control-plane', port: 8787, host: '127.0.0.1', note: 'local-only; origin/host checks enforced' },
       { service: 'engine-broker', port: 'TBD', host: '127.0.0.1', note: 'resource broker is engine-internal; no external port bound' },
     ],
     ingress: { public_ingress: 'GAP', note: 'no public deployment; harness is local-first' },

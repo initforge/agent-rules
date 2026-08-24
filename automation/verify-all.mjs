@@ -124,6 +124,7 @@ if (selfCheckOnly) process.exit(failed ? 1 : 0);
 if (!skipBuild) run('BUILD', 'npm', ['run','build']); else console.log('[BUILD] skipped');
 run('CHECK: typecheck workspaces', 'npm', ['run','check']);
 run('CHECK: .agent protocol', 'node', ['automation/validate-agent-dir.mjs']);
+run('CHECK: canonical plan artifacts', 'node', ['automation/validate-canonical-plan.mjs']);
 run('CHECK: evidence stage boundary', 'node', ['automation/validate-evidence-stage.mjs']);
 run('CHECK: MCP focus/workspace boundary', 'node', ['automation/validate-focus-workspace.mjs']);
 run('CHECK: 5fedu leakage', 'node', ['automation/validate-no-5fedu-leakage.mjs']);

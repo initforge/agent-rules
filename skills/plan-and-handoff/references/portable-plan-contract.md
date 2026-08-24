@@ -3,6 +3,12 @@
 This document defines three plan detail levels. Every plan names the outcome and acceptance;
 higher levels add traceable requirements, decisions, change graph, and session-safe recovery.
 
+> **Validation authority.** `schemas/plan.schema.json` is the single machine-readable
+> validation authority for every `artifact/plan` at all three levels. This document is the
+> behavioral specification; any Markdown/native-host plan is only a projection of a
+> schema-valid canonical artifact. Runtime clamps (max_agents ≤ 2, max_depth = 0) are
+> enforced mechanically by the schema.
+
 Scale up only as risk, coordination, or interruption exposure justifies. A small plan is a
 complete contract; ceremony beyond the level adds no enforcement value.
 

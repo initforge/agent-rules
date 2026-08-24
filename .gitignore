@@ -97,3 +97,5 @@ skills-lock.json
 
 # Source distribution archive
 agent-rules-source.zip
+.agent/operator-profile/
+.agent/handoff/packets/

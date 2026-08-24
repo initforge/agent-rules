@@ -214,18 +214,6 @@ RUBRIC: list[dict[str, Any]] = [
         ],
     },
     {
-        "id": "d14",
-        "label": "C4 Visualization Maturity",
-        "description": "Context/container/component/code views with ARIA roles",
-        "severity": "Low",
-        "checks": [
-            {"kind": "source", "path": "packages/control-plane/src/routes/c4.ts", "weight": 0.30},
-            {"kind": "source", "path": "packages/control-plane/src/client/pages/C4.tsx", "weight": 0.25},
-            {"kind": "test", "path": "packages/control-plane/tests/c4.test.ts", "weight": 0.25},
-            {"kind": "gate", "path": "packages/control-plane/vitest.config.ts", "weight": 0.20},
-        ],
-    },
-    {
         "id": "d15",
         "label": "Multi-Platform Support",
         "description": "Platform adapters with runtime.yaml contracts",
@@ -244,9 +232,9 @@ RUBRIC: list[dict[str, Any]] = [
         "description": "Auth fail-closed, timingSafeEqual, rate limiting, CORS",
         "severity": "Critical",
         "checks": [
-            {"kind": "source", "path": "packages/control-plane/src/middleware/", "weight": 0.25},
-            {"kind": "source", "path": "packages/control-plane/src/routes/", "weight": 0.20},
-            {"kind": "test", "path": "packages/control-plane/tests/", "weight": 0.20},
+            {"kind": "source", "path": "packages/kernel/src/secure-fs.ts", "weight": 0.25},
+            {"kind": "source", "path": "packages/kernel/src/contracts.ts", "weight": 0.20},
+            {"kind": "test", "path": "packages/kernel/test/", "weight": 0.20},
             {"kind": "gate", "path": "schemas/policy-approval.schema.json", "weight": 0.20},
             {"kind": "ci", "path": ".github/workflows/quality.yml", "weight": 0.15},
         ],

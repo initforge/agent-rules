@@ -40,8 +40,8 @@ export type { ClaimDefinition, ClaimEvidenceInput, EvidenceMaturity };
 
 export const OM_SOURCE = 'docs/architecture/target-operating-model.md';
 
-/** Operating model prose status (section 12 table column). */
-export type OmProseStatus = 'PLANNED' | 'OPERATIONAL' | 'COMPLETED' | 'PARTIAL' | 'VERIFIED' | 'NOT_STARTED';
+/** Operating model prose status (section 12 table column). RETIRED marks owner-withdrawn scope; it never satisfies evidence. */
+export type OmProseStatus = 'PLANNED' | 'OPERATIONAL' | 'COMPLETED' | 'PARTIAL' | 'VERIFIED' | 'NOT_STARTED' | 'RETIRED';
 
 /** Evidence status derived by the deterministic compiler. */
 export type EvidenceStatus = 'UNOBSERVED' | 'PARTIAL' | 'MATCH' | 'GAP';
@@ -294,6 +294,12 @@ export function compileOMCrosswalk(omText: string, repoRoot: string): OMCrosswal
       evidenceStatus = 'GAP';
     }
 
+    // Owner-retired scope is GAP regardless of any filesystem residue.
+    if (r.status === 'RETIRED') {
+      evidenceStatus = 'GAP';
+      notes.push('requirement status: RETIRED (owner-withdrawn scope)');
+    }
+
     entries.push({
       omId: r.id, kind: 'R', planAnchor: m11Anchor, description: r.description,
       evidenceStatus, proseStatus: r.status, evidenceHashes, modulesPresent, testsPresent, notes,
@@ -338,6 +344,11 @@ export function compileOMCrosswalk(omText: string, repoRoot: string): OMCrosswal
     if (ss.status === 'NOT_STARTED') {
       evidenceStatus = 'GAP';
       notes.push(`subsystem status: NOT_STARTED`);
+    }
+    // Owner-retired subsystem scope stays GAP; removed products never satisfy evidence.
+    if (ss.status === 'RETIRED') {
+      evidenceStatus = 'GAP';
+      notes.push('subsystem status: RETIRED (owner-withdrawn scope)');
     }
 
     entries.push({

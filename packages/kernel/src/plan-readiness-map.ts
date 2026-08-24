@@ -430,7 +430,7 @@ export const M11_IMPLEMENTATIONS: Record<string, M11Implementation> = {
     modules: ['packages/engine/src/telemetry.ts'],
     tests: ['packages/engine/test/telemetry.test.ts'],
     acceptanceCriteria: [
-      'Control Plane exposes real context-economy telemetry: wake timeline, token share, occupancy, duplicate ratio, drill-down history',
+      'Operator dashboard exposes real context-economy telemetry: wake timeline, token share, occupancy, duplicate ratio, drill-down history',
     ],
   },
   'M11-R49': {

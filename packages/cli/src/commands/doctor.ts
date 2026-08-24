@@ -7,6 +7,7 @@ import path from "node:path";
 import { verifyRuntimeReceipt, type RuntimePlatform } from "../runtime/installer.js";
 import { resolveOpenCodeModel } from "../runtime/opencode.js";
 import { collectHostKitDoctorReport, type HostKitDoctorReport } from "../host-kit/doctor.js";
+import { collectOperatorProfileDoctorChecks } from "./operator-profile.js";
 import { loadIntegrationInventory } from "../integration/inventory.js";
 import { verifyMcps } from "../integration/provisioning.js";
 
@@ -794,6 +795,14 @@ export async function doctor(
     report.push({ platform: "mcp", check: "mcp-convergence", status: "MCP_PARTIAL", detail: "host MCP convergence classification unavailable" });
   }
 
+  // Operator Communication Profile projection status (canonical source, hash,
+  // active mode, session override, per-host projection).
+  try {
+    report.push(...collectOperatorProfileDoctorChecks(root));
+  } catch (error) {
+    report.push({ platform: "operator-profile", check: "canonical-source", status: "ERROR", detail: (error as Error).message });
+  }
+
   // Output
   const table = report
     .map((r) => `${r.platform}\t${r.check}\t${r.status}\t${r.detail}`)
@@ -807,7 +816,7 @@ export async function doctor(
 
   const bad = report.filter((r) =>
     ["MISSING", "NOT_LIVE", "MODEL_POLICY_DRIFT", "MODEL_POLICY_MISSING", "NATIVE_PARTIAL", "ORPHANS", "ERROR",
-      "MCP_BLOCKED", "MCP_UNSUPPORTED", "MCP_NEEDS_USER", "MCP_PARTIAL"].includes(r.status)
+      "MCP_BLOCKED", "MCP_UNSUPPORTED", "MCP_NEEDS_USER", "MCP_PARTIAL", "DRIFTED", "UNSUPPORTED", "NEEDS_USER"].includes(r.status)
   );
   const nativeObserved = report.filter((r) => r.status === "NATIVE_OBSERVED").length;
   const nativeUnverified = report.filter((r) => r.status === "NATIVE_UNVERIFIED").length;

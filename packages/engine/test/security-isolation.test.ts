@@ -6,7 +6,6 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ENGINE_SRC = path.resolve(__dirname, '..', 'src');
 const CLI_SRC = path.resolve(__dirname, '..', '..', 'cli', 'src');
-const CP_SRC = path.resolve(__dirname, '..', '..', 'control-plane', 'src');
 
 function collectTsFiles(root: string): string[] {
   if (!fs.existsSync(root)) return [];
@@ -25,7 +24,7 @@ function collectTsFiles(root: string): string[] {
   return results;
 }
 
-const APP_SRC_ROOTS = [ENGINE_SRC, CLI_SRC, CP_SRC];
+const APP_SRC_ROOTS = [ENGINE_SRC, CLI_SRC];
 const APP_FILES = APP_SRC_ROOTS.flatMap(collectTsFiles);
 
 describe('C5-P9 adversarial closure: security / credential isolation', () => {

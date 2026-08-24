@@ -56,7 +56,7 @@ describe('prompt-first pair repair', () => {
 
   it('returns NEEDS_USER for changed owner intent and ambiguous plan authority', () => {
     const intentChange = openPairRepair({
-      raw_finding: 'The owner now requires Control Plane work before closeout',
+      raw_finding: 'The owner now requires operator-profile rollout before closeout',
       candidate_plans: plans, current_epoch: 1, spec, claim_to_requirements, accepted_claims,
     });
     expect(intentChange.needs_user).toBe(true);

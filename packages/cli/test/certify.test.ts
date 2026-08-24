@@ -12,6 +12,7 @@ describe('certify reducer', () => {
 
   it('reduces a complete evidence set without human interpretation', () => {
     const gates = {
+      primary_outcome_achieved: true,
       deterministic_acceptance: true,
       independent_semantic_review: true,
       convergence_audit: true,
@@ -42,6 +43,7 @@ describe('certify reducer', () => {
     const report = evaluateCertificationEvidence({
       schema: 'harness/closure-evidence/v1',
       gates: {
+        primary_outcome_achieved: true,
         deterministic_acceptance: true,
         convergence_audit: true,
         spec_revision_invalidation: true,

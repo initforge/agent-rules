@@ -1,0 +1,46 @@
+# Canonical requirements — Final Integrity Closure v2 (owner-authorized phase plan)
+# Source: owner message 2026-08-24 (authoritative implementation contract).
+# PRIMARY_OUTCOME: ship a verified, residue-free core where operator-profile,
+# canonical cross-host handoff, lifecycle quality, capability routing and the
+# review contract are implemented, tested and certified across the 8 canonical
+# hosts with honest evidence boundaries — in ONE squashed commit on main with
+# green required CI.
+schema: artifact/requirements
+version: 1
+primary_outcome_id: PO-1
+primary_outcome: >-
+  One squashed commit on main implementing operator-profile + canonical handoff +
+  lifecycle quality + capability routing + review contracts with zero active
+  Control Plane residue, full governed verification green, honest per-host
+  evidence separation (GitHub CI vs owner-machine), no second review loop.
+requirements:
+  - { id: REQ-C01, statement: "New operator-profiles/ namespace, distinct from profiles/ domain-pack namespace", phase: F5 }
+  - { id: REQ-C02, statement: "Default profile vibe-product: Vietnamese outcome-first comms, vibe-coder default, technical-mode temporary escalation with auto-revert", phase: F5 }
+  - { id: REQ-C03, statement: "Precedence chain owner-instruction > session-override > installed-operator-profile > host-default", phase: F5 }
+  - { id: REQ-C04, statement: "Dedicated CLI agent-rules operator-profile install|activate|status|sync --all-hosts", phase: F5 }
+  - { id: REQ-C05, statement: "Projection status enum SYNCED|MANUAL_PROJECTION|DRIFTED|UNSUPPORTED|NEEDS_USER", phase: F5 }
+  - { id: REQ-C06, statement: "Single canonical source + source hash projected to every host; no eight independent rule copies", phase: F5 }
+  - { id: REQ-C07, statement: "Profile materialized with version, hash and schema; default-installed but owner-disableable", phase: F5 }
+  - { id: REQ-C08, statement: "Hosts without an official projection surface report MANUAL_PROJECTION", phase: F5 }
+  - { id: REQ-C09, statement: "Canaries: normal comms, technical override, security escalation, profile never weakens verification/PASS/scope semantics", phase: F5 }
+  - { id: REQ-C10, statement: "Doctor shows canonical profile, source hash, active mode, session override, per-host projection status", phase: F5 }
+  - { id: REQ-C11, statement: "Canonical handoff envelope fields: artifact_uri, artifact_sha256, byte_length, primary_outcome, requirement_ids, requirement_count, source_host, target_host, execution_mode, acknowledged_sha256, acknowledged_requirement_count, truncation_detected", phase: F0 }
+  - { id: REQ-C12, statement: "Standard/resumable tasks require materialized artifact packets; clipboard/raw prompt only for short requests", phase: F0 }
+  - { id: REQ-C13, statement: "<truncated> markers, truncated_fields, byte-length/hash mismatch, missing requirements, graph-unavailable all block BEFORE first file edit", phase: F0 }
+  - { id: REQ-C14, statement: "Native plan is a projection of the original: may add code facts; must not drop requirements, change primary outcome, or widen scope", phase: F0 }
+  - { id: REQ-C15, statement: "Reconciliation receipt emitted per requirement (PRESERVED|TECHNICALLY_ADAPTED|BLOCKED)", phase: F0 }
+  - { id: REQ-C16, statement: "AUTO_EXECUTE: valid artifact executes immediately without approval pause when Plan/Review mode is off", phase: F4 }
+  - { id: REQ-C17, statement: "Dogfood: candidate harness plans, hands off, executes, reviews and verifies itself this batch", phase: F0 }
+  - { id: REQ-C18, statement: "Remove ALL active Control Plane residue from dependencies, automation, CI workflows, docs and CLI", phase: F1 }
+  - { id: REQ-C19, statement: "Retain Browser QA, Pencil explicit-only, Candidate Fabric, 5fedu domain pack", phase: F1 }
+  - { id: REQ-C20, statement: "Lifecycle quality INTAKE>RESEARCH>PLAN>IMPLEMENT>VERIFY>REVIEW_A>COMPLETION enforced in code paths", phase: F2 }
+  - { id: REQ-C21, statement: "PRIMARY_OUTCOME non-compensable: secondary PASS never compensates unmet primary outcome", phase: F2 }
+  - { id: REQ-C22, statement: "requirement_coverage counts only requirements backed by valid claim AND evidence; drops when evidence removed/invalidated", phase: F2 }
+  - { id: REQ-C23, statement: "Capability-based routing: provider-agnostic; strong planner owns ambiguity/architecture/final quality; economy workers get bounded slices; escalate after 2 same-cause failures; no single-worker self-closure on large tasks", phase: F3 }
+  - { id: REQ-C24, statement: "Review A: fresh-context post-implementation review, one review + max one correction batch, no infinite loop", phase: F4 }
+  - { id: REQ-C25, statement: "Review B OFF by default in auto execution; only on explicit owner request; ends APPROVE|APPROVE_WITH_NOTES|BLOCKED; max one correction review", phase: F4 }
+  - { id: REQ-C26, statement: "Native usability certification stages per host: install/reconcile, cold startup, runtime interaction, integration/MCP invocation, auth where applicable, restart persistence; fixtures/mocks/file-existence never count as LIVE", phase: F6 }
+  - { id: REQ-C27, statement: "Evidence boundary honesty: GitHub CI proves runner-available behavior only; owner-machine receipts recorded separately; never conflated", phase: F6 }
+  - { id: REQ-C28, statement: "Acceptance tests: oversized-handoff 100% preservation, mutation-detection across 56 host pairs through real encoder/decoder adapters, seeded-defect Review A detection, coverage-drop-on-evidence-removal, zero-active-CP-reference check", phase: "F0-F6" }
+  - { id: REQ-C29, statement: "Full governed verification green: build, typecheck, governed tests, python validators, verify:all, git diff --check", phase: F7 }
+  - { id: REQ-C30, statement: "Delivery: temp branch work integrated as ONE newest squashed commit on main, rebased on latest origin/main, no secrets/personal receipts pushed, local==origin==intended HEAD, required checks green", phase: F7 }

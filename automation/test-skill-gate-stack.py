@@ -160,10 +160,10 @@ def main() -> int:
         or any("upstream" in skill for skill in broad_ui["stack"])
     ):
         raise AssertionError(f"explicit frontend direction did not add one taste lens: {broad_ui}")
-    control_plane = route("Apple-inspired Control Plane UI", [ROOT], graph)
-    if control_plane["primary"] != "ui-taste":
-        raise AssertionError(f"Control Plane taste precedence mismatch: {control_plane}")
-    explicit_taste = route("Minimalist Control Plane UI", [ROOT], graph)
+    operator_dashboard = route("Apple-inspired Operator Dashboard UI", [ROOT], graph)
+    if operator_dashboard["primary"] != "ui-taste":
+        raise AssertionError(f"operator dashboard taste precedence mismatch: {operator_dashboard}")
+    explicit_taste = route("Minimalist Operator Dashboard UI", [ROOT], graph)
     reference = explicit_taste["selected_reference"]
     if (
         explicit_taste["primary"] != "ui-taste"
@@ -174,10 +174,10 @@ def main() -> int:
         or explicit_taste["reference_token_charge"] <= 0
     ):
         raise AssertionError(f"explicit ui-taste reference selection mismatch: {explicit_taste}")
-    ambiguous_taste = route("Minimalist brutalist Control Plane UI", [ROOT], graph)
+    ambiguous_taste = route("Minimalist brutalist Operator Dashboard UI", [ROOT], graph)
     if ambiguous_taste["selected_reference"] is not None or ambiguous_taste["reference_token_charge"] != 0:
         raise AssertionError(f"ambiguous taste directions must not select a reference: {ambiguous_taste}")
-    unknown_taste = route("Art deco Control Plane UI", [ROOT], graph)
+    unknown_taste = route("Art deco Operator Dashboard UI", [ROOT], graph)
     if unknown_taste["selected_reference"] is not None or unknown_taste["reference_token_charge"] != 0:
         raise AssertionError(f"unknown taste direction must not select a reference: {unknown_taste}")
 
@@ -270,7 +270,7 @@ def main() -> int:
         lock.write_text(json.dumps({"content": {"packaged_paths": {
             "minimalist-skill/SKILL.md": "../escape/SKILL.md.source",
         }}}), encoding="utf-8")
-        unsafe = route("Minimalist Control Plane UI", [workspace], graph)
+        unsafe = route("Minimalist Operator Dashboard UI", [workspace], graph)
         if unsafe["selected_reference"] is not None or unsafe["reference_token_charge"] != 0:
             raise AssertionError(f"unsafe taste lock path must not fall through: {unsafe}")
 
@@ -288,7 +288,7 @@ def main() -> int:
                 "minimalist-skill/SKILL.md": "0" * 64,
             },
         }}), encoding="utf-8")
-        tampered = route("Minimalist Control Plane UI", [workspace], graph)
+        tampered = route("Minimalist Operator Dashboard UI", [workspace], graph)
         if tampered["selected_reference"] is not None or tampered["reference_token_charge"] != 0:
             raise AssertionError(f"tampered taste source must fail closed: {tampered}")
 

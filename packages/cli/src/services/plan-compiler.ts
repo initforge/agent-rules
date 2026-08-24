@@ -8,11 +8,25 @@ export interface PlanTask {
   estimatedEffort: 'small' | 'medium' | 'large';
 }
 
+/**
+ * Evidence gate for requirement coverage (owner contract REQ-C22): a
+ * requirement counts toward verified coverage ONLY when it has both a valid
+ * claim and valid evidence. Mere existence or task mapping never counts.
+ */
+export interface RequirementProof {
+  id: string;
+  claim_valid: boolean;
+  evidence_valid: boolean;
+}
+
+export type CoverageBasis = 'structural' | 'claim-evidence';
+
 export interface PlanValidation {
   valid: boolean;
   errors: string[];
   warnings: string[];
   requirementCoverage: { id: string; covered: boolean; taskId?: string }[];
+  coverage_basis?: CoverageBasis;
 }
 
 export interface CompiledPlan {
@@ -23,7 +37,19 @@ export interface CompiledPlan {
   work_request?: { work_id: string; adapter: string; semantic_sha256: string };
   tasks: PlanTask[];
   completion_policy: { require_all_tasks: boolean; require_verification: boolean };
-  validation: PlanValidation;
+  validation: PlanValidation & { coverage_basis?: CoverageBasis };
+}
+
+export function verifiedRequirementCoverage(
+  requirements: { id: string }[],
+  proofs: RequirementProof[] | undefined,
+): { id: string; covered: boolean }[] {
+  if (!proofs) return requirements.map((r) => ({ id: r.id, covered: false }));
+  const byId = new Map(proofs.map((p) => [p.id, p]));
+  return requirements.map((r) => {
+    const proof = byId.get(r.id);
+    return { id: r.id, covered: proof?.claim_valid === true && proof?.evidence_valid === true };
+  });
 }
 
 function detectCycles(tasks: PlanTask[]): string[] {
@@ -74,7 +100,7 @@ function findOverlappingPaths(tasks: PlanTask[]): string[] {
   return errors;
 }
 
-export function validatePlan(plan: CompiledPlan): PlanValidation {
+export function validatePlan(plan: CompiledPlan, requirementProofs?: RequirementProof[]): PlanValidation {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -95,11 +121,17 @@ export function validatePlan(plan: CompiledPlan): PlanValidation {
     }
   }
 
-  const requirementCoverage = [...reqToTask.entries()].map(([id, taskId]) => ({
-    id,
-    covered: true,
-    taskId,
-  }));
+  // REQ-C22: when proofs are supplied, coverage is claim+evidence gated;
+  // without them the basis is honestly structural (never echo a stored label).
+  const requirementCoverage = [...reqToTask.entries()].map(([id, taskId]) => {
+    const proof = requirementProofs?.find(p => p.id === id);
+    const evidenceBacked = proof?.claim_valid === true && proof?.evidence_valid === true;
+    return {
+      id,
+      covered: requirementProofs ? !!taskId && evidenceBacked : !!taskId,
+      taskId,
+    };
+  });
 
   if (plan.tasks.length === 0) {
     errors.push('Plan must contain at least one task');
@@ -110,6 +142,7 @@ export function validatePlan(plan: CompiledPlan): PlanValidation {
     errors,
     warnings,
     requirementCoverage,
+    coverage_basis: requirementProofs ? 'claim-evidence' : 'structural',
   };
 }
 
@@ -122,7 +155,7 @@ function inferEffort(description: string): 'small' | 'medium' | 'large' {
 export function compilePlan(
   intent: { requestHash: string; requirements: { id: string }[] },
   tasks?: Partial<PlanTask>[],
-  options?: { branch?: string; sha?: string },
+  options?: { branch?: string; sha?: string; requirementProofs?: RequirementProof[] },
 ): CompiledPlan {
   const generatedTasks: PlanTask[] = tasks
     ? intent.requirements.map((req, idx) => {
@@ -157,9 +190,13 @@ export function compilePlan(
 
   const coverage = intent.requirements.map(req => {
     const task = generatedTasks.find(t => t.requirementIds.includes(req.id));
+    const proof = options?.requirementProofs?.find(p => p.id === req.id);
+    const evidenceBacked = proof?.claim_valid === true && proof?.evidence_valid === true;
     return {
       id: req.id,
-      covered: !!task,
+      // REQ-C22: with proofs supplied, coverage requires valid claim AND
+      // evidence; structural mapping alone never counts as coverage.
+      covered: options?.requirementProofs ? !!task && evidenceBacked : !!task,
       taskId: task?.id,
     };
   });
@@ -185,10 +222,11 @@ export function compilePlan(
       errors: [],
       warnings: [],
       requirementCoverage: coverage,
+      coverage_basis: options?.requirementProofs ? 'claim-evidence' : 'structural',
     },
   };
 
-  plan.validation = validatePlan(plan);
+  plan.validation = validatePlan(plan, options?.requirementProofs);
   return plan;
 }
 

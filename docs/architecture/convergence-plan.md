@@ -52,11 +52,11 @@
 3. UI/business parity packets
 4. Security hardening
 
-## Stage I: Installer, Control Plane, CI (M18-M22)
+## Stage I: Installer, Runtime UX, CI (M18-M22)
 1. Tool/MCP/skills registry
 2. Knowledge lifecycle
 3. Installer lifecycle convergence
-4. Control plane persisted state
+4. Operator-facing state projections (.agent ledger/runtime)
 5. CI deterministic gate
 
 ## Stage J: Final Review & Report

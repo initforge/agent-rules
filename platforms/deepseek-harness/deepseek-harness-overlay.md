@@ -30,3 +30,15 @@ patches DSH source.
 - Missing/disabled guard -> BLOCKED.
 - Config fingerprint drift -> BLOCKED (re-probe).
 - `dsh` "turn completed" is a host observation, not a terminal PASS.
+
+<!-- agent-rules:operator-profile:vibe-product BEGIN (source-sha bound; do not edit in place) -->
+- profile_id: vibe-product
+- version: 1.0.0
+- language: vi (outcome-first: true)
+- default_owner_mode: vibe-coder
+- host: deepseek-harness
+- ask_only_for: material-decision, execution-authority
+- technical_triggers: technical mode | giải thích kỹ thuật | đào sâu | chi tiết kỹ thuật
+- technical_revert: after-task-or-topic
+- never_weaken: verification, security, scope, pass-semantics
+<!-- agent-rules:operator-profile:vibe-product END -->

@@ -1,0 +1,19 @@
+{
+  "schema": "artifact/operator-profile",
+  "profile_id": "vibe-product",
+  "version": "1.0.0",
+  "language": "vi",
+  "outcome_first": true,
+  "default_owner_mode": "vibe-coder",
+  "communication": {
+    "no_unsolicited_logs_or_architecture": true,
+    "ask_only_for": ["material-decision", "execution-authority"]
+  },
+  "technical_mode": {
+    "trigger_phrases": ["technical mode", "giải thích kỹ thuật", "đào sâu", "chi tiết kỹ thuật"],
+    "revert": "after-task-or-topic"
+  },
+  "security_floor": {
+    "never_weaken": ["verification", "security", "scope", "pass-semantics"]
+  }
+}

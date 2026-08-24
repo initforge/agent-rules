@@ -7,12 +7,248 @@
   "additionalProperties": false,
   "required": [
     "schema", "version", "repository_baseline", "intent_reference",
-    "tasks", "completion_policy"
+    "completion_policy"
+  ],
+  "anyOf": [
+    { "required": ["tasks"] },
+    { "required": ["task_graph"] }
   ],
   "properties": {
     "schema": { "const": "artifact/plan" },
     "version": { "const": 1 },
     "schema_version": { "type": "string", "minLength": 1 },
+    "level": {
+      "description": "Portable plan detail level (portable-plan-contract.md). The schema is the single machine-readable validation authority for all three levels.",
+      "enum": ["small", "standard", "resumable"]
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "created_at", "updated_at"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "created_at": { "type": "string" },
+        "updated_at": { "type": "string" },
+        "source_refs": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "original_request_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "supersedes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["plan_id"],
+      "properties": {
+        "plan_id": { "type": "string", "minLength": 1 },
+        "superseded_at": { "type": "string" },
+        "reason": { "type": "string" }
+      }
+    },
+    "intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outcome"],
+      "properties": {
+        "outcome": { "type": "string", "minLength": 1 },
+        "risk_classification": { "type": "string" },
+        "in_scope": { "type": "array", "items": { "type": "string" } },
+        "non_goals": { "type": "array", "items": { "type": "string" } },
+        "assumptions": { "type": "array", "items": { "type": "object" } },
+        "open_questions": { "type": "array", "items": { "type": "object" } }
+      }
+    },
+    "requirements": {
+      "description": "Traceable requirements with original/injection provenance.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "summary"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "summary": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["original", "injection"] },
+          "statement": { "type": "string" },
+          "phase": { "type": "string" }
+        }
+      }
+    },
+    "repository_facts": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "baseline": { "type": "string" },
+        "architecture": { "type": "array", "items": { "type": "string" } },
+        "reference_map": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["source", "destination"],
+            "properties": {
+              "source": { "type": "string" },
+              "destination": { "type": "string" },
+              "reuse": { "type": "string" },
+              "deviation": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "constraints_and_invariants": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "negative_invariants": { "type": "array", "items": { "type": "string" } },
+        "migration_constraints": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "change_graph": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "area", "exact_change", "category"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "area": { "type": "string", "minLength": 1 },
+          "current_truth": { "type": "string" },
+          "exact_change": { "type": "string", "minLength": 1 },
+          "category": { "enum": ["fact", "assumption", "unknown", "user_decision"] },
+          "files": { "type": "array", "items": { "type": "string" } },
+          "depends_on": { "type": "array", "items": { "type": "string" } },
+          "requirement_ids": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "acceptance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "claim"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "claim": { "type": "string", "minLength": 1 },
+          "proof_profile": { "type": "string" },
+          "required_dimensions": { "type": "array", "items": { "type": "string" } },
+          "requirement_ids": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "verification_matrix": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["requirement_id", "acceptance_ids"],
+        "properties": {
+          "requirement_id": { "type": "string", "minLength": 1 },
+          "acceptance_ids": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+        }
+      }
+    },
+    "path_ownership": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "exclusive_writers": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } } },
+        "read_only_paths": { "type": "array", "items": { "type": "string" } },
+        "forbidden_paths": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "task_graph": {
+      "description": "Dependency-ordered slices; capability_class is evidence-derived, never a host identity.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "name", "work"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "work": { "type": "string", "minLength": 1 },
+          "owner": { "type": "string" },
+          "depends_on": { "type": "array", "items": { "type": "string" } },
+          "capability_class": { "enum": ["economy-worker", "implementation-worker", "planner-researcher"] },
+          "write_paths": { "type": "array", "items": { "type": "string" } },
+          "acceptance_ids": { "type": "array", "items": { "type": "string" } },
+          "requirement_ids": { "type": "array", "items": { "type": "string" } },
+          "review_required": { "type": "boolean" },
+          "rollback_point": { "type": "string" }
+        }
+      }
+    },
+    "amendments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "reason", "changes"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^AMD-[0-9]+$" },
+          "reason": { "type": "string", "minLength": 1 },
+          "changes": { "type": "array", "items": { "type": "object" } },
+          "supersedes_prior": { "type": "boolean" },
+          "applied_at": { "type": "string" },
+          "applied_by": { "type": "string" }
+        }
+      }
+    },
+    "checkpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id", "slice_id", "next_action"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "slice_id": { "type": "string", "minLength": 1 },
+          "commit": { "type": "string" },
+          "summary": { "type": "string" },
+          "next_action": { "type": "string", "minLength": 1 },
+          "created_at": { "type": "string" }
+        }
+      }
+    },
+    "evidence_ledger": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["receipt_id", "acceptance_id", "status"],
+        "properties": {
+          "receipt_id": { "type": "string", "minLength": 1 },
+          "acceptance_id": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["PASS", "FAIL", "BLOCKED", "PARTIAL", "NEEDS_USER", "UNSUPPORTED"] },
+          "proof_kind": { "type": "string" },
+          "dimensions": { "type": "array", "items": { "type": "string" } },
+          "captured_at": { "type": "string" }
+        }
+      }
+    },
+    "unresolved_questions": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true, "required": ["id", "question"], "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "question": { "type": "string", "minLength": 1 },
+        "impact_category": { "type": "string" }
+      } }
+    },
+    "execution_contract": {
+      "description": "Runtime clamps are mechanical: at most two workers, no recursion.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "mode": { "type": "string" },
+        "shape": { "type": "string" },
+        "ledger": { "enum": ["off", "auto", "required"] },
+        "strategy": { "type": "string" },
+        "max_agents": { "type": "integer", "minimum": 1, "maximum": 2 },
+        "max_depth": { "type": "integer", "const": 0 },
+        "effort_cap": { "enum": ["low", "medium", "high"] },
+        "authorized_final_actions": { "type": "array", "items": { "type": "string" } }
+      }
+    },
     "repository_baseline": {
       "description": "The repository baseline commit or tag at plan time. Legacy readers accept a plain string; the portable contract binds branch and sha.",
       "oneOf": [
@@ -76,8 +312,12 @@
       "type": "array",
       "minItems": 1,
       "items": {
-        "type": "object",
-        "additionalProperties": false,
+        "description": "Object form is authoritative; plain-string task descriptions are tolerated for v1/legacy readers.",
+        "oneOf": [
+          { "type": "string", "minLength": 1 },
+          {
+            "type": "object",
+            "additionalProperties": false,
         "required": ["id", "objective", "acceptance_criteria"],
         "properties": {
           "id": { "type": "string", "minLength": 1 },
@@ -139,7 +379,9 @@
               }
             }
           }
+          }
         }
+        ]
       }
     },
     "completion_policy": {
@@ -169,6 +411,10 @@
         "valid": { "type": "boolean" },
         "errors": { "type": "array", "items": { "type": "string" } },
         "warnings": { "type": "array", "items": { "type": "string" } },
+        "coverage_basis": {
+          "description": "REQ-C22: structural mapping alone never counts as coverage; claim-evidence basis requires valid claim AND evidence per requirement.",
+          "enum": ["structural", "claim-evidence"]
+        },
         "requirementCoverage": {
           "type": "array",
           "items": {

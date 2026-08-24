@@ -10,11 +10,6 @@ services:
     status: EXISTS
     path: packages/cli
     note: thin commander CLI
-  - id: control-plane
-    kind: web
-    status: EXISTS
-    path: packages/control-plane
-    note: local-only observe/configure; no run control
   - id: autopilot-supervisor
     kind: process
     status: GAP
@@ -24,10 +19,6 @@ services:
     status: GAP
     note: rolling train merge owner not yet implemented
 ports:
-  - service: control-plane
-    port: 8787
-    host: 127.0.0.1
-    note: local-only; origin/host checks enforced
   - service: engine-mcp
     port: TBD
     host: 127.0.0.1

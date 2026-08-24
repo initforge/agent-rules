@@ -1,0 +1,142 @@
+{
+  "schema": "artifact/plan",
+  "version": 1,
+  "level": "resumable",
+  "meta": {
+    "id": "final-integrity-closure-v2",
+    "created_at": "2026-08-24T00:00:00Z",
+    "updated_at": "2026-08-24T00:00:00Z",
+    "source_refs": [".agent/plans/final-integrity-closure-v2/requirements.yaml"]
+  },
+  "repository_baseline": { "branch": "main", "sha": "41b69eba612b1638e08d130756931d2fa1b3a44b" },
+  "intent_reference": {
+    "hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "summary": "Owner canonical plan message 2026-08-24 (Final Integrity Closure v2) + steering amendments"
+  },
+  "intent": {
+    "outcome": "One squashed verified commit on main: operator-profile, canonical cross-host handoff, lifecycle quality, capability routing and review contracts implemented with zero active Control Plane residue and honest per-host evidence.",
+    "risk_classification": "high",
+    "in_scope": [
+      "operator-profiles namespace + vibe-product + CLI + projections",
+      "canonical handoff envelope with fail-closed pre-edit guards",
+      "requirement coverage evidence gating",
+      "capability routing + host-role symmetry",
+      "review A/B contracts",
+      "Control Plane residue removal"
+    ],
+    "non_goals": [
+      "no successor UI server for the removed Control Plane",
+      "no new domain packs; 5fedu stays explicit-only",
+      "Pencil stays explicit-only",
+      "Review B stays OFF unless owner requests it"
+    ],
+    "open_questions": []
+  },
+  "requirements": [
+    { "id": "REQ-C01", "summary": "operator-profiles namespace distinct from profiles/", "kind": "original" },
+    { "id": "REQ-C02", "summary": "vibe-product default profile with technical-mode auto-revert", "kind": "original" },
+    { "id": "REQ-C03", "summary": "precedence owner > session override > installed > host default", "kind": "original" },
+    { "id": "REQ-C04", "summary": "dedicated operator-profile CLI", "kind": "original" },
+    { "id": "REQ-C05", "summary": "projection status enum incl MANUAL_PROJECTION honesty", "kind": "original" },
+    { "id": "REQ-C06", "summary": "single canonical source hash projected to all hosts", "kind": "original" },
+    { "id": "REQ-C07", "summary": "versioned schema-bound profile, disableable by owner", "kind": "original" },
+    { "id": "REQ-C08", "summary": "hosts without surface report MANUAL_PROJECTION", "kind": "original" },
+    { "id": "REQ-C09", "summary": "canaries never weaken verification/security/scope/pass semantics", "kind": "original" },
+    { "id": "REQ-C10", "summary": "doctor shows profile, hash, mode, override, per-host status", "kind": "original" },
+    { "id": "REQ-C11", "summary": "canonical envelope fields", "kind": "original" },
+    { "id": "REQ-C12", "summary": "materialized artifact packets standard; clipboard not canonical", "kind": "original" },
+    { "id": "REQ-C13", "summary": "truncation/hash/length/count/graph guards block before first edit", "kind": "original" },
+    { "id": "REQ-C14", "summary": "native plan is a faithful projection; no requirement loss", "kind": "original" },
+    { "id": "REQ-C15", "summary": "per-requirement reconciliation receipts", "kind": "original" },
+    { "id": "REQ-C16", "summary": "AUTO_EXECUTE executes without approval pause when valid", "kind": "original" },
+    { "id": "REQ-C17", "summary": "dogfood the harness on itself this batch", "kind": "original" },
+    { "id": "REQ-C18", "summary": "zero active Control Plane residue", "kind": "original" },
+    { "id": "REQ-C19", "summary": "retain Browser QA, Pencil explicit-only, Candidate Fabric, 5fedu", "kind": "original" },
+    { "id": "REQ-C20", "summary": "lifecycle quality gates INTAKE..COMPLETION", "kind": "original" },
+    { "id": "REQ-C21", "summary": "PRIMARY_OUTCOME non-compensable", "kind": "original" },
+    { "id": "REQ-C22", "summary": "requirement_coverage requires claim AND evidence", "kind": "original" },
+    { "id": "REQ-C23", "summary": "capability-based provider-agnostic routing with escalation", "kind": "original" },
+    { "id": "REQ-C24", "summary": "Review A fresh-context, max one correction batch", "kind": "original" },
+    { "id": "REQ-C25", "summary": "Review B OFF by default", "kind": "original" },
+    { "id": "REQ-C26", "summary": "native usability stages; fixtures never count as LIVE", "kind": "original" },
+    { "id": "REQ-C27", "summary": "evidence class separation CI vs owner-machine vs native vs browser", "kind": "original" },
+    { "id": "REQ-C28", "summary": "acceptance tests incl 56-pair mutation matrix", "kind": "original" },
+    { "id": "REQ-C29", "summary": "full governed verification green at closure", "kind": "original" },
+    { "id": "REQ-C30", "summary": "one squashed commit on main, rebased, no secrets, checks green", "kind": "original" },
+    { "id": "REQ-A1", "summary": "bounded context capsule in every canonical handoff (steering amendment)", "kind": "injection" },
+    { "id": "REQ-A2", "summary": "capability+proof projection states LOADED/SELECTED/PROJECTED/APPLIED/PROVEN; ack covers requirements and proof obligations", "kind": "injection" },
+    { "id": "REQ-A3", "summary": "single machine-readable canonical artifact validating against schemas/plan.schema.json; markdown is projection only; drift resolved", "kind": "injection" },
+    { "id": "REQ-A4", "summary": "host-role symmetry: all 8 hosts eligible for planner/researcher/implementor/tester/reviewer/verifier; per-run assignment", "kind": "injection" },
+    { "id": "REQ-A5", "summary": "closure evidence reported in separated classes", "kind": "injection" }
+  ],
+  "decisions": [
+    { "id": "DEC-0001", "statement": "Operator Communication Profile is independent of skills and domain-pack namespaces.", "rationale": "Owner locked default; skill routing must never gate communication behavior." },
+    { "id": "DEC-0002", "statement": "Envelope integrity binds the materialized artifact bytes at artifact_uri; the packet frames metadata only.", "rationale": "Keeps hash/length verification real instead of self-referential." },
+    { "id": "DEC-0003", "statement": "schemas/plan.schema.json is the single validation authority for artifact/plan; portable-plan-contract.md remains behavioral spec.", "rationale": "Resolves dual-authority drift; clamps become mechanical." }
+  ],
+  "change_graph": [
+    { "id": "CG-001", "area": "kernel/handoff", "current_truth": "artifact-handoff.ts lacks canonical envelope fields/guards", "exact_change": "new cross-host-handoff.ts with envelope, guards, dialect adapters, capsule, capability projections", "category": "fact", "files": ["packages/kernel/src/cross-host-handoff.ts"], "depends_on": [], "requirement_ids": ["REQ-C11", "REQ-C12", "REQ-C13", "REQ-A1", "REQ-A2"] },
+    { "id": "CG-002", "area": "cli/operator-profile", "current_truth": "no operator communication profile feature", "exact_change": "canonical source + install/activate/status/sync CLI + 8-host overlay projection engine + doctor wiring", "category": "fact", "files": ["packages/kernel/src/northstar/operator-profile.ts", "packages/cli/src/services/host-projection.ts", "packages/cli/src/commands/operator-profile.ts"], "depends_on": [], "requirement_ids": ["REQ-C01", "REQ-C02", "REQ-C03", "REQ-C04", "REQ-C05", "REQ-C06", "REQ-C08", "REQ-C09", "REQ-C10"] },
+    { "id": "CG-003", "area": "quality/routing/reviews", "current_truth": "coverage counts existence; routing lacks role symmetry; closure lacks non-compensable primary outcome", "exact_change": "evidence-gated coverage; capability-routing with RUN_ROLES; primary_outcome_achieved gate", "category": "fact", "files": ["packages/cli/src/services/plan-compiler.ts", "packages/kernel/src/northstar/capability-routing.ts", "packages/kernel/src/northstar/closure-gates.ts"], "depends_on": ["CG-001"], "requirement_ids": ["REQ-C20", "REQ-C21", "REQ-C22", "REQ-C23", "REQ-A4"] },
+    { "id": "CG-004", "area": "control-plane-residue", "current_truth": "residue across lockfile, automation, CI workflows, docs, skills", "exact_change": "rename certification tooling, delete retired gates, purge references to zero active count", "category": "fact", "files": ["automation/", ".github/workflows/", "docs/", "skills/"], "depends_on": [], "requirement_ids": ["REQ-C18"] }
+  ],
+  "acceptance": [
+    { "id": "AC1", "claim": "56 host pairs round-trip envelopes preserving 100% requirements; any dropped/altered requirement or proof obligation fails closed before edit", "proof_profile": "unit", "required_dimensions": ["outcome"], "requirement_ids": ["REQ-C11", "REQ-C13", "REQ-C28", "REQ-A2"] },
+    { "id": "AC2", "claim": "profile installs/syncs to 8 overlays from one source hash with honest statuses and canary proving no verification weakening", "proof_profile": "unit-integration", "required_dimensions": ["outcome"], "requirement_ids": ["REQ-C06", "REQ-C08", "REQ-C09"] },
+    { "id": "AC3", "claim": "coverage drops when evidence removed/invalidated; PRIMARY_OUTCOME failure blocks release regardless of secondary PASS", "proof_profile": "unit", "required_dimensions": ["outcome"], "requirement_ids": ["REQ-C21", "REQ-C22"] },
+    { "id": "AC4", "claim": "zero active Control Plane references outside dated historical records", "proof_profile": "diff-static", "required_dimensions": ["outcome"], "requirement_ids": ["REQ-C18"] },
+    { "id": "AC5", "claim": "canonical plan artifact validates against schemas/plan.schema.json", "proof_profile": "artifact", "required_dimensions": ["outcome"], "requirement_ids": ["REQ-A3"] },
+    { "id": "AC6", "claim": "build/typecheck/governed tests/python validators/verify:all/git diff --check green on final HEAD", "proof_profile": "pipeline-run", "required_dimensions": ["outcome"], "requirement_ids": ["REQ-C29"] },
+    { "id": "AC7", "claim": "fresh-context Review A finds no material defect after at most one correction batch", "proof_profile": "transcript-review", "required_dimensions": ["outcome"], "requirement_ids": ["REQ-C24"] }
+  ],
+  "verification_matrix": [
+    { "requirement_id": "REQ-C11", "acceptance_ids": ["AC1"] },
+    { "requirement_id": "REQ-C13", "acceptance_ids": ["AC1"] },
+    { "requirement_id": "REQ-C28", "acceptance_ids": ["AC1"] },
+    { "requirement_id": "REQ-A2", "acceptance_ids": ["AC1"] },
+    { "requirement_id": "REQ-C06", "acceptance_ids": ["AC2"] },
+    { "requirement_id": "REQ-C08", "acceptance_ids": ["AC2"] },
+    { "requirement_id": "REQ-C09", "acceptance_ids": ["AC2"] },
+    { "requirement_id": "REQ-C21", "acceptance_ids": ["AC3"] },
+    { "requirement_id": "REQ-C22", "acceptance_ids": ["AC3"] },
+    { "requirement_id": "REQ-C18", "acceptance_ids": ["AC4"] },
+    { "requirement_id": "REQ-A3", "acceptance_ids": ["AC5"] },
+    { "requirement_id": "REQ-C29", "acceptance_ids": ["AC6"] },
+    { "requirement_id": "REQ-C24", "acceptance_ids": ["AC7"] }
+  ],
+  "path_ownership": {
+    "exclusive_writers": {
+      "harness-maintainer": ["packages/", "automation/", "schemas/", "platforms/", "operator-profiles/", ".agent/plans/final-integrity-closure-v2/", "docs/", "skills/", ".github/workflows/"]
+    },
+    "read_only_paths": [".agent/ledger/", ".agent/plans/control-plane-v2/", ".agent/research/"],
+    "forbidden_paths": ["generated/", "profiles/5fedu/reference-source/"]
+  },
+  "task_graph": [
+    { "id": "S1", "name": "foundation modules", "work": "kernel envelope+guards, operator-profile, capability-routing, closure gate, canonical profile", "owner": "harness-maintainer", "depends_on": [], "capability_class": "planner-researcher", "write_paths": ["packages/kernel/src/", "operator-profiles/"], "acceptance_ids": ["AC1", "AC3", "AC5"], "requirement_ids": ["REQ-C11", "REQ-C21", "REQ-C22", "REQ-A4"], "review_required": true, "rollback_point": "main@41b69eb" },
+    { "id": "S2", "name": "primary journey CLI+wiring", "work": "CLI commands, projection engine, doctor integration, certify gate key", "owner": "harness-maintainer", "depends_on": ["S1"], "capability_class": "implementation-worker", "write_paths": ["packages/cli/src/"], "acceptance_ids": ["AC2"], "requirement_ids": ["REQ-C04", "REQ-C10", "REQ-C16"], "review_required": true, "rollback_point": "S1" },
+    { "id": "S3", "name": "quality semantics", "work": "coverage gating + tests", "owner": "harness-maintainer", "depends_on": ["S1"], "capability_class": "implementation-worker", "write_paths": ["packages/cli/src/services/plan-compiler.ts"], "acceptance_ids": ["AC3"], "requirement_ids": ["REQ-C22"], "review_required": false, "rollback_point": "S1" },
+    { "id": "S4", "name": "residue cleanup", "work": "zero active CP references", "owner": "harness-maintainer", "depends_on": [], "capability_class": "implementation-worker", "write_paths": ["automation/", ".github/workflows/", "docs/", "skills/", "package-lock.json"], "acceptance_ids": ["AC4"], "requirement_ids": ["REQ-C18"], "review_required": false, "rollback_point": "main@41b69eb" },
+    { "id": "S5", "name": "proof suite", "work": "56-pair mutation tests, guards, canaries, coverage regression, symmetry", "owner": "harness-maintainer", "depends_on": ["S1", "S2", "S3"], "capability_class": "implementation-worker", "write_paths": ["packages/kernel/test/", "packages/cli/test/"], "acceptance_ids": ["AC1", "AC2", "AC3"], "requirement_ids": ["REQ-C28"], "review_required": true, "rollback_point": "S2" },
+    { "id": "S6", "name": "closure", "work": "full suite, Review A, squash, push, CI watch", "owner": "harness-maintainer", "depends_on": ["S4", "S5"], "capability_class": "planner-researcher", "write_paths": [".git"], "acceptance_ids": ["AC6", "AC7"], "requirement_ids": ["REQ-C24", "REQ-C27", "REQ-C29", "REQ-C30", "REQ-A5"], "review_required": true, "rollback_point": "S5" }
+  ],
+  "completion_policy": { "require_all_tasks": true, "require_verification": true },
+  "validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "coverage_basis": "structural",
+    "requirementCoverage": [
+      { "id": "PO-1", "covered": false }
+    ]
+  },
+  "execution_contract": {
+    "mode": "automatic",
+    "shape": "resumable",
+    "ledger": "auto",
+    "strategy": "delegated",
+    "max_agents": 2,
+    "max_depth": 0,
+    "effort_cap": "high",
+    "authorized_final_actions": ["edit", "commit"]
+  }
+}

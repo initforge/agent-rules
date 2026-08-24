@@ -116,7 +116,7 @@ Record every escalation.
 | SS-16 | Tool, MCP and skill registry | PARTIAL | M15 |
 | SS-17 | UI and business parity | NOT_STARTED | M16 |
 | SS-18 | Installer lifecycle | PARTIAL | M17 |
-| SS-19 | Control plane | PARTIAL | M18 |
+| SS-19 | Control plane | RETIRED | M18 |
 | SS-20 | Knowledge and memory lifecycle | NOT_STARTED | M19 |
 | SS-21 | Safe improvement lifecycle | NOT_STARTED | M20 |
 | SS-22 | CI, packaging and cross-platform verification | VERIFIED | M21 |
@@ -176,7 +176,7 @@ Do not return PASS unless:
 33. Evaluation layers remain separate
 34. Telemetry is canonical
 35. Security gates are enforced
-36. Control-plane state is real
+36. Operator-facing state projections are real
 37. Browser, accessibility, console, network verification exists
 38. Installer lifecycle works
 39. Long-task evaluation passes
@@ -269,7 +269,7 @@ Do not return PASS unless:
 | R-032 | 31-tools-mcp-skills | Unified registry | PARTIAL |
 | R-033 | 32-knowledge | Session, project, org, evidence, policy | NOT_STARTED |
 | R-034 | 33-installer | 8 commands, cross-platform | PARTIAL |
-| R-035 | 34-control-plane | Real persisted state, typed APIs | PARTIAL |
+| R-035 | 34-control-plane | RETIRED — removed by owner decision; state lives in .agent ledger/runtime | RETIRED |
 | R-036 | 35-ci | Required gate, cross-platform lifecycle | VERIFIED |
 | R-037 | 36-final-review | Independent adversarial review | PARTIAL |
 | R-038 | 37-report | Vietnamese report, 37 sections | NOT_STARTED |
@@ -303,7 +303,7 @@ Keep separate:
 - ADRs: `docs/architecture/` (artifact-contracts.md, target-operating-model.md)
 - Fixtures: `schemas/fixtures/` (positive + negative)
 - CLI: `packages/cli/`
-- Control plane: `packages/control-plane/`
+- Operator dashboard: retired (no UI server)
 - Eval fixtures: `evals/fixtures/`
 - CI: `.github/workflows/`
 
@@ -523,8 +523,8 @@ Keep separate:
 |-------|-------|
 | Requirement IDs | R-026 |
 | Owner | harness-maintainer |
-| Canonical implementation path | `packages/control-plane/src/telemetry/`, `evals/` |
-| Runtime consumer | Control plane, CLI |
+| Canonical implementation path | `packages/kernel/src/northstar/telemetry.ts`, `evals/` |
+| Runtime consumer | CLI, doctor |
 | Implementation status | PARTIAL |
 | Evidence status | PARTIALLY_VERIFIED |
 | Unit tests count | 8 |
@@ -571,8 +571,8 @@ Keep separate:
 |-------|-------|
 | Requirement IDs | R-030 |
 | Owner | harness-maintainer |
-| Canonical implementation path | `packages/control-plane/src/ui/` |
-| Runtime consumer | Control plane |
+| Canonical implementation path | RETIRED — removed by owner decision |
+| Runtime consumer | N/A |
 | Implementation status | NOT_STARTED |
 | Evidence status | NOT_APPLICABLE |
 | Unit tests count | 0 |
@@ -597,21 +597,21 @@ Keep separate:
 | Platform coverage | linux, macos, windows |
 | Known limitations | CLI has install, doctor; cross-platform coverage partial |
 
-### SS-19 Control plane
+### SS-19 Control plane (RETIRED)
 
 | Field | Value |
 |-------|-------|
 | Requirement IDs | R-035 |
 | Owner | harness-maintainer |
-| Canonical implementation path | `packages/control-plane/` |
-| Runtime consumer | CLI, Dashboard |
-| Implementation status | PARTIAL |
-| Evidence status | PARTIALLY_VERIFIED |
-| Unit tests count | 56 |
-| Integration tests count | 8 |
-| Controlled evaluation | PASS |
-| Platform coverage | linux, macos, windows |
-| Known limitations | In-memory state, no persistence |
+| Canonical implementation path | RETIRED — removed by owner decision (Final Integrity Closure v2); no successor UI server |
+| Runtime consumer | N/A |
+| Implementation status | RETIRED |
+| Evidence status | NOT_APPLICABLE |
+| Unit tests count | 0 |
+| Integration tests count | 0 |
+| Controlled evaluation | NOT_APPLICABLE |
+| Platform coverage | N/A |
+| Known limitations | Removed product; any reappearance requires a new owner-authorized phase plan |
 
 ### SS-20 Knowledge and memory lifecycle
 

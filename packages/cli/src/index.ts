@@ -36,6 +36,8 @@ import { certifyCmd } from "./commands/certify.js";
 import { proofPlanCmd } from "./commands/proof-plan.js";
 import { hostCanaryCmd } from "./commands/host-canary.js";
 import { handoffCmd } from "./commands/handoff.js";
+import { operatorProfileCmd } from "./commands/operator-profile.js";
+import { crossHostHandoffCmd } from "./commands/cross-host-handoff.js";
 import { initNorthStar, northStarDrain, northStarReference, northStarReferenceSearch, northStarRun, northStarStatus, NORTHSTAR_AGENTS, NORTHSTAR_EVIDENCE_KINDS } from "./commands/northstar-ux.js";
 import { createOpencodeClient } from "@opencode-ai/sdk/v2/client";
 import { OpenCodeNativeSessionAdapter } from "@initforge/agent-rules-engine/native-session-adapter";
@@ -64,7 +66,7 @@ program.command("runner")
 
 program
   .name("agent-rules")
-  .description("Cross-platform CLI control plane for Agent Rules harness")
+  .description("Cross-platform CLI for the Agent Rules harness")
   .version("0.1.0")
   .option("--json", "Output in JSON format")
   .option("--dry-run", "Show what would be done without executing")
@@ -554,6 +556,32 @@ legacy compatibility alias; handoff is the canonical path.
     // commander repeats the declared renderer at command.args[0]; flags follow.
     const extra = (command.args as string[]).slice(1);
     const result = await handoffCmd(renderer ? [renderer, ...extra] : extra, opts);
+    formatOutput(result, opts);
+  });
+
+// ── operator-profile (Operator Communication Profile; distinct from domain `profile`) ──
+program
+  .command("operator-profile")
+  .description("Operator Communication Profile: install | activate | deactivate | override | sync --all-hosts | resolve <owner-text> | status")
+  .argument("[args...]", "subcommand and flags")
+  .allowUnknownOption(true)
+  .allowExcessArguments(true)
+  .action(async (args: string[]) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const result = await operatorProfileCmd(args, opts);
+    formatOutput(result, opts);
+  });
+
+// ── cross-host-handoff (canonical envelope; fail-closed pre-edit gate) ──
+program
+  .command("cross-host-handoff")
+  .description("Canonical cross-host handoff envelope: encode | acknowledge | verify (truncation/hash/length/count/graph guards block before first edit)")
+  .argument("[args...]", "subcommand and flags")
+  .allowUnknownOption(true)
+  .allowExcessArguments(true)
+  .action(async (args: string[]) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    const result = await crossHostHandoffCmd(args, opts);
     formatOutput(result, opts);
   });
 

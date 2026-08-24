@@ -1,7 +1,7 @@
 {
   "name": "@initforge/agent-rules",
   "version": "0.1.0",
-  "description": "Cross-platform CLI control plane for Agent Rules harness",
+  "description": "Cross-platform CLI for the Agent Rules harness",
   "keywords": [
     "agent-rules",
     "harness",

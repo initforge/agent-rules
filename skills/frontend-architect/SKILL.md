@@ -8,12 +8,11 @@ description: UI/UX polish for marketing/landing and non-ERP surfaces — Tailwin
 
 # Frontend Architect
 
-## Control Plane precedence (mechanical)
+## Approved-brief precedence (mechanical)
 
-- An **approved Control Plane brief** owns visual precedence (AM-0001; plan
-  decision DEC-019). This skill's generic font, dark-mode, animation, and
-  markup-only rewrite guidance **cannot override** an approved Control Plane
-  direction.
+- An **approved design brief** from the owner owns visual precedence for its
+  scope. This skill's generic font, dark-mode, animation, and markup-only
+  rewrite guidance **cannot override** an approved brief direction.
 - `ui-taste` is a brief/taste lens only when the brief selects it; it is never a
   universal default.
 

@@ -108,6 +108,7 @@ describe('final fail-closed closure gate', () => {
   it('distinguishes source-complete from fully certified when host/live proof is unavailable', async () => {
     const { evaluateNorthStarClosure } = await import('../src/northstar/closure-gates.js');
     const report = evaluateNorthStarClosure({
+      primary_outcome_achieved: true,
       contract_traceability:true, deterministic_acceptance:true, independent_semantic_review:null, convergence_audit:true,
       spec_revision_invalidation:true, proof_dag:true, context_feedback_loop:true, bounded_skill_capability_surface:true,
       empirical_model_routing:null, crash_resume:true, forbidden_scope_enforcement:true, evidence_integrity:true,
@@ -122,6 +123,7 @@ describe('final fail-closed closure gate', () => {
   it('requires every applicable gate for final certification', async () => {
     const { evaluateNorthStarClosure } = await import('../src/northstar/closure-gates.js');
     const report = evaluateNorthStarClosure({
+      primary_outcome_achieved: true,
       contract_traceability:true, deterministic_acceptance:true, independent_semantic_review:true, convergence_audit:true,
       spec_revision_invalidation:true, proof_dag:true, context_feedback_loop:true, bounded_skill_capability_surface:true,
       empirical_model_routing:true, crash_resume:true, forbidden_scope_enforcement:true, evidence_integrity:true,

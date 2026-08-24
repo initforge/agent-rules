@@ -55,7 +55,7 @@ Include repository creation, entities, migrations, APIs, UI states, tests, clean
 - Work shape: small | medium | large | resumable
 - Ledger: off | auto | required
 - Strategy: small direct | delegated | parallel | sequential recovery after orchestration `UNAVAILABLE`
-- Medium+ default: zero main-agent domain work; any control-plane exception is <bounded routing/integration/proof action only>
+- Medium+ default: zero main-agent domain work; any main-direct exception is <bounded routing/integration/proof action only>
 - Max active agents including main: <n>
 - Max delegation depth: <0..2>
 - Model route: <economy for retrieval/mechanical; standard for bounded implementation/review; expert only for unresolved high-risk reasoning>

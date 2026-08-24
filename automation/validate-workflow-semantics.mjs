@@ -6,7 +6,7 @@
  * agent skills) can pass while the high-impact rule/skill graph still
  * contradicts itself (delegation receipt shape, file-count work sizing,
  * repository worker caps, browser support loading, legacy PAF references,
- * Control Plane UI precedence). This checker replays the encoded corpus from
+ * approved-brief UI precedence). This checker replays the encoded corpus from
  * automation/workflow-semantic-cases.json over the actual documents and fails
  * closed on any unresolved contradiction.
  *

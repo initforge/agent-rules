@@ -53,7 +53,7 @@ REVIEW_RISKS = {
 }
 EXECUTOR_ROLES = {"mechanical-executor", "executor", "specialist", "main"}
 TOOL_CLASSES = {"read", "edit", "test", "shell", "browser", "network", "git", "external-write"}
-CONTROL_PLANE_EXCEPTION = "CONTROL_PLANE_EXCEPTION"
+MAIN_DIRECT_EXCEPTION = "MAIN_DIRECT_EXCEPTION"
 
 
 class WorkError(RuntimeError):
@@ -171,7 +171,7 @@ def upgrade_v3_to_v4(ledger: dict[str, Any]) -> dict[str, Any]:
     upgraded.setdefault("lifecycle_status", legacy_status)
     upgraded.setdefault("task_status", "open" if legacy_status not in {"passed", "partial"} else legacy_status)
     upgraded.setdefault("orchestration_status", "healthy")
-    upgraded.setdefault("control_plane_exceptions", [])
+    upgraded.setdefault("MAIN_DIRECT_EXCEPTIONs", [])
     upgraded.setdefault("proof_cache", [])
     upgraded.setdefault("telemetry_events", [])
     contract = dict(upgraded.get("execution_contract", {}))
@@ -217,7 +217,7 @@ def normalize_v4(ledger: dict[str, Any]) -> dict[str, Any]:
     upgraded.setdefault("model_policy_reasons", [])
     upgraded.setdefault("task_status", "open")
     upgraded.setdefault("orchestration_status", "healthy")
-    upgraded.setdefault("control_plane_exceptions", [])
+    upgraded.setdefault("MAIN_DIRECT_EXCEPTIONs", [])
     upgraded.setdefault("proof_cache", [])
     upgraded.setdefault("telemetry_events", [])
     contract = dict(upgraded.get("execution_contract", {}))
@@ -477,8 +477,8 @@ def validate_ids(ledger: dict[str, Any]) -> None:
         validate_ref(receipt.get("actor_telemetry_ref", ""), f"receipt {receipt['id']}")
     for record in ledger.get("usage", {}).get("records", []):
         validate_ref(record.get("actor_telemetry_ref", ""), "usage")
-    for record in ledger.get("control_plane_exceptions", []):
-        validate_ref(record.get("actor_telemetry_ref", ""), CONTROL_PLANE_EXCEPTION)
+    for record in ledger.get("MAIN_DIRECT_EXCEPTIONs", []):
+        validate_ref(record.get("actor_telemetry_ref", ""), MAIN_DIRECT_EXCEPTION)
 
 
 def validate_portable_schema(
@@ -775,11 +775,11 @@ def validate_receipt_actor(
                 assignment["id"] == record["assignment_id"] and assignment["slice_id"] == item["id"]
                 for assignment in ledger["assignments"]
             ))
-            for record in ledger["control_plane_exceptions"]
+            for record in ledger["MAIN_DIRECT_EXCEPTIONs"]
         )
         main_exception = bool(policy["allowed"] or exception)
         if not main_exception:
-            raise WorkError("main proof requires small/direct policy or scoped CONTROL_PLANE_EXCEPTION")
+            raise WorkError("main proof requires small/direct policy or scoped MAIN_DIRECT_EXCEPTION")
     if not accountable and not main_exception:
         raise WorkError(
             "proof agent is not bound to an eligible executor assignment for this "
@@ -893,7 +893,7 @@ def command_init(args: argparse.Namespace) -> dict[str, Any]:
         }),
         "host_refs": dict(data.get("host_refs") or {"host": "unknown", "task_ref": "", "session_ref": ""}),
         "model_policy_reasons": [],
-        "control_plane_exceptions": [],
+        "MAIN_DIRECT_EXCEPTIONs": [],
         "proof_cache": [],
         "telemetry_events": [],
         "source_history": list(data.get("source_history", [])),
@@ -1021,7 +1021,7 @@ def command_assign(args: argparse.Namespace) -> dict[str, Any]:
         if item["role"] == "main":
             policy = ledger["execution_contract"]["main_direct_policy"]
             if not policy["allowed"]:
-                raise WorkError("main executor assignment requires CONTROL_PLANE_EXCEPTION")
+                raise WorkError("main executor assignment requires MAIN_DIRECT_EXCEPTION")
             if not set(item["allowed_tool_classes"]).issubset(set(policy["allowed_tool_classes"])):
                 raise WorkError("main executor tool classes exceed main-direct policy")
         target_acceptance = {acceptance["id"] for acceptance in target_slice["acceptance"]}
@@ -1186,27 +1186,27 @@ def command_recover_assignment(args: argparse.Namespace) -> dict[str, Any]:
     return mutate(args, apply)
 
 
-def command_record_control_plane_exception(args: argparse.Namespace) -> dict[str, Any]:
+def command_record_MAIN_DIRECT_EXCEPTION(args: argparse.Namespace) -> dict[str, Any]:
     data = payload(args)
     scope = str(data.get("scope", "")).strip()
     reason = str(data.get("reason", "")).strip()
     if scope not in {"orchestration", "main-direct", "host-telemetry"} or not reason:
-        raise WorkError("CONTROL_PLANE_EXCEPTION requires a narrow scope and reason")
+        raise WorkError("MAIN_DIRECT_EXCEPTION requires a narrow scope and reason")
 
     def apply(ledger: dict[str, Any]) -> dict[str, Any]:
         assignment_id = str(data.get("assignment_id", "")).strip()
         if assignment_id and not any(item["id"] == assignment_id for item in ledger["assignments"]):
-            raise WorkError("CONTROL_PLANE_EXCEPTION references an unknown assignment")
-        record = {"kind": CONTROL_PLANE_EXCEPTION, "scope": scope, "reason": reason,
+            raise WorkError("MAIN_DIRECT_EXCEPTION references an unknown assignment")
+        record = {"kind": MAIN_DIRECT_EXCEPTION, "scope": scope, "reason": reason,
                   "recorded_at": now()}
         if assignment_id:
             record["assignment_id"] = assignment_id
         telemetry = str(data.get("actor_telemetry_ref", "")).strip()
         if telemetry:
             record["actor_telemetry_ref"] = telemetry
-        ledger["control_plane_exceptions"].append(record)
+        ledger["MAIN_DIRECT_EXCEPTIONs"].append(record)
         ledger["orchestration_status"] = "exception"
-        return {"status": CONTROL_PLANE_EXCEPTION, "scope": scope}
+        return {"status": MAIN_DIRECT_EXCEPTION, "scope": scope}
     return mutate(args, apply)
 
 
@@ -1888,9 +1888,9 @@ def build_parser() -> argparse.ArgumentParser:
     recover_assignment.add_argument("--assignment", required=True)
     add_payload_options(recover_assignment)
 
-    control_exception = commands.add_parser("record-control-plane-exception")
-    add_target_options(control_exception)
-    add_payload_options(control_exception)
+    main_direct_exception = commands.add_parser("record-main-direct-exception")
+    add_target_options(main_direct_exception)
+    add_payload_options(main_direct_exception)
 
     for name in (
         "start", "close", "checkpoint", "record-proof", "verify",
@@ -1929,7 +1929,7 @@ def main() -> int:
         "ack-assignment": command_ack_assignment,
         "record-telemetry": command_record_telemetry,
         "recover-assignment": command_recover_assignment,
-        "record-control-plane-exception": command_record_control_plane_exception,
+        "record-main-direct-exception": command_record_MAIN_DIRECT_EXCEPTION,
         "start": command_start,
         "record-proof": command_record_proof,
         "verify": command_verify,

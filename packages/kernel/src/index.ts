@@ -14,3 +14,4 @@ export * from './runner/platform.js';
 export * from './runner/baseline-gate.js';
 export * from './runner/agent-driver.js';
 export * from './runner/opencode-config.js';
+export * from './cross-host-handoff.js';

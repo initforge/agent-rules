@@ -62,7 +62,7 @@ Pencil is intentionally **manual-only**. `integrations/manual/pencil-mcp/` is no
 |---|---|
 | `packages/engine/` | proven runtime plus North-Star facade |
 | `packages/kernel/src/northstar/` | runtime contracts, protocol and trust decisions |
-| `packages/cli/` | cross-platform control plane / public UX |
+| `packages/cli/` | cross-platform CLI / public UX |
 | `rules/` | tiny always-on invariants |
 | `skills/` | lazy capability workflows |
 | `integrations/` | automatic registry plus `manual/` explicit-only integrations |

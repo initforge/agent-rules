@@ -7,8 +7,8 @@
  *   R1  every job declares a positive `timeout-minutes`
  *   R2  every `wait-on` step carries an explicit --timeout/-t (a wait that
  *       never succeeds must fail the STEP with the exact step name)
- *   R3  browser-install (`playwright install`) and Control Plane lifecycle
- *       steps declare step-level `timeout-minutes`
+ *   R3  browser-install (`playwright install`) steps declare step-level
+ *       `timeout-minutes`
  *   R4  external check steps (npm audit, semgrep, gitleaks) declare step-level
  *       `timeout-minutes`
  *   R5  hosted quality stays required-capable: quality.yml triggers on
@@ -38,15 +38,11 @@ const check = (id, ok, detail) => {
 
 const WAIT_RE = /\bwait-on\b/;
 const BROWSER_RE = /playwright\s+install/;
-const PLANE_START_RE = /control-plane-ci\.mjs\s+start/;
-const PLANE_STOP_RE = /control-plane-ci\.mjs\s+stop/;
-const PLANE_LIFECYCLE_RE = /control-plane-ci\.mjs\s+(?:start|stop)/;
 const EXTERNAL_RUN_RE = /npm\s+audit/;
 const EXTERNAL_USES_RE = /(?:semgrep|gitleaks)/;
 const UNBOUNDED_SPECIAL_RE = new RegExp([
   WAIT_RE.source,
   BROWSER_RE.source,
-  PLANE_LIFECYCLE_RE.source,
   EXTERNAL_RUN_RE.source,
 ].join('|'));
 
@@ -106,7 +102,7 @@ for (const workflow of readWorkflows()) {
             `unbounded wait in step "${stepName}" (${name}, job "${jobName}"): wait-on must carry an explicit --timeout so the step fails with its own name`
           );
         }
-        if (BROWSER_RE.test(run) || PLANE_LIFECYCLE_RE.test(run)) {
+        if (BROWSER_RE.test(run)) {
           check(
             `explicit-${name}#${jobName}#${stepName}`,
             hasStepTimeout,

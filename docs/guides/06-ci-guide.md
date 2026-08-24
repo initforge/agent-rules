@@ -15,7 +15,7 @@ Add the following required checks. GitHub displays matrix entries as `<job name>
 
 | Status check | Rationale |
 |---|---|
-| `quality (linux) / (ubuntu-latest)` | Build + test + control plane (Linux) |
+| `quality (linux) / (ubuntu-latest)` | Build + test + certification (Linux) |
 | `quality (windows) / (windows-latest)` | Build + test (Windows) |
 | `quality (macos) / (macos-latest)` | Build + test (macOS) |
 | `security / (ubuntu-latest)` | npm audit, Semgrep SAST, secret scanning |

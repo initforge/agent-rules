@@ -24,7 +24,7 @@
     "usage",
     "next_action",
     "active_slices", "model_policy_reasons", "lifecycle_status", "task_status",
-    "orchestration_status", "control_plane_exceptions", "proof_cache", "telemetry_events"
+    "orchestration_status", "main_direct_exceptions", "proof_cache", "telemetry_events"
   ],
   "properties": {
     "schema_version": { "const": 4 },
@@ -148,7 +148,7 @@
     },
     "next_action": { "type": "string" },
     "model_policy_reasons": { "type": "array", "items": { "type": "string", "minLength": 1 } },
-    "control_plane_exceptions": { "type": "array", "items": { "$ref": "#/$defs/controlPlaneException" } },
+    "main_direct_exceptions": { "type": "array", "items": { "$ref": "#/$defs/mainDirectException" } },
     "proof_cache": { "type": "array", "items": { "$ref": "#/$defs/proofCache" } }
     ,"telemetry_events": { "type": "array", "items": { "$ref": "#/$defs/telemetryEvent" } }
   },
@@ -523,9 +523,9 @@
       "type": "object", "additionalProperties": false, "required": ["attempt", "reason", "status", "recorded_at"],
       "properties": { "attempt": { "type": "integer", "minimum": 1 }, "reason": { "type": "string", "minLength": 1 }, "status": { "enum": ["started", "recovered", "failed"] }, "recorded_at": { "type": "string", "format": "date-time" }, "actor_telemetry_ref": { "type": "string" } }
     },
-    "controlPlaneException": {
+    "mainDirectException": {
       "type": "object", "additionalProperties": false, "required": ["kind", "scope", "reason", "recorded_at"],
-      "properties": { "kind": { "const": "CONTROL_PLANE_EXCEPTION" }, "scope": { "enum": ["orchestration", "main-direct", "host-telemetry"] }, "reason": { "type": "string", "minLength": 1 }, "recorded_at": { "type": "string", "format": "date-time" }, "assignment_id": { "type": "string" }, "actor_telemetry_ref": { "type": "string" } }
+      "properties": { "kind": { "const": "MAIN_DIRECT_EXCEPTION" }, "scope": { "enum": ["orchestration", "main-direct", "host-telemetry"] }, "reason": { "type": "string", "minLength": 1 }, "recorded_at": { "type": "string", "format": "date-time" }, "assignment_id": { "type": "string" }, "actor_telemetry_ref": { "type": "string" } }
     },
     "proofCache": {
       "type": "object", "additionalProperties": false, "required": ["cache_key", "run_id", "slice_id", "acceptance_id", "proof_epoch", "full_gate_fingerprint", "receipt_id"],

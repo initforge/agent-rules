@@ -57,7 +57,7 @@ Pencil là **manual-only**. `integrations/manual/pencil-mcp/` không nằm trong
 |---|---|
 | `packages/engine/` | production runtime + North-Star facade |
 | `packages/kernel/src/northstar/` | runtime contracts, protocol và trust decisions |
-| `packages/cli/` | CLI/control plane |
+| `packages/cli/` | CLI |
 | `rules/` | invariants always-on nhỏ |
 | `skills/` | skills lazy-load |
 | `integrations/` | automatic registry + `manual/` explicit-only |

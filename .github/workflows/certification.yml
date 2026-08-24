@@ -92,7 +92,7 @@ jobs:
           CERTIFICATION_CHECK: ${{ github.job }}
           HOST_ATTESTATION_FILE: ${{ runner.temp }}/host-attestation.json
           CERTIFICATION_OUTPUT: ${{ runner.temp }}/certification-artifact
-        run: node automation/control-plane-ci.mjs certification-build
+        run: node automation/certification-ci.mjs certification-build
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: attestation-${{ matrix.host }}
@@ -173,7 +173,7 @@ jobs:
           CERTIFICATION_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
           CERTIFICATION_WORKFLOW: ${{ github.workflow }}
           CERTIFICATION_ARTIFACTS: ${{ runner.temp }}/attestations
-        run: node automation/control-plane-ci.mjs certification-verify
+        run: node automation/certification-ci.mjs certification-verify
       - name: Verify matrix result
         env:
           CERTIFY_RESULT: ${{ needs.certify.result }}

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "description": "Canonical SHA256 hashes for all scripts the installer may execute. Scripts are verified against this manifest before execution.",
-  "generated_at": "2026-08-22T13:35:13+00:00",
+  "generated_at": "2026-08-24T09:25:49.474Z",
   "files": {
     "automation/02-install-runtime.ps1": "21862ba08b4fed9ad0f3c30174248f9090805ab7a9e7727fe77cc26cb5be45fe",
     "automation/11-install-runtime-hooks.sh": "0b7ec19e30100165dee8eca04582146df2333aa0f4701176fb7cb9f9b8a59be2",
@@ -25,7 +25,7 @@
     "automation/audit-ui-routing.ps1": "de224c97c9fbe424033ac4722db484575b88689572b079198148a16acfc92c11",
     "automation/audit-plan-artifact.ps1": "94b46b1007a644b29db16d4bc9858841eaa16b3aaef7bfde8ee977edcded6997",
     "automation/test-workctl.py": "0ddcea2fb53c4013cb14a0e658ec7718f35a2ee4caba145a08329fdd00068944",
-    "automation/test-skill-gate-stack.py": "f1cb68e71896c3af38bf5caa6182a48eab3cd77e8dd1515a84f8ddad7848cf98",
+    "automation/test-skill-gate-stack.py": "0270f60171bf6365026ba141c311efc3528de043861a59e03621e67af60f0a26",
     "automation/test-external-receipt.py": "a06043c654f7fa7c46e5dd5db49c00abfff0dc82de30462d067c9ee4ca89e294",
     "automation/audit-workflow-clarity.ps1": "34d1888594b71e4acc7dc02512d6629fd06fe14876c594ba5ff629c4aa66c395",
     "automation/validate-tool-registry.ps1": "7e9d77df3344d5fd86c1bbb05e13a203f128ad10616049abbb0f31b401a3713a",
@@ -36,7 +36,7 @@
     "automation/validate-no-5fedu-leakage.ps1": "4835469eeb8ca9e57d1fee14a9db4f0ab44e44f2c8b8f557b159501c5cfcc63e",
     "automation/generate-doc-references.py": "bab6f6e202fb06614f93cc67d95fec36174e8261773f2481a5a3666a7a78cbde",
     "automation/validate-doc-drift.py": "238a8c8e794149a75267c52434e1404ab8f595183a51348eee8b78648a5b8e9b",
-    "automation/workctl.py": "6516d4beb4ffeb0bda38f16f7ef8a7e47022f3ea36b4e5da0d1068d30c4ebb5d",
+    "automation/workctl.py": "0161f63ed2bbb4f31d937dbef11328377122436ae9b7f5d9c31a1bae3b4d4aee",
     "automation/test-cross-language-manifests.py": "76f08d56fd5f7504d29655c5d9f3a64e145a8ce28d701163396ac28b2200e587",
     "automation/test-platform-lifecycle.py": "3e34f96ba3af9a2c9a0e3743c44fc790311a1e96bbb1b94159716e6efb317ff9"
   }

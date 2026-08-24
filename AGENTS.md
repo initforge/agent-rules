@@ -67,7 +67,7 @@ Pencil MCP must attach through the stable launcher (`integrations/optional/penci
 |---|---|---|
 | `packages/engine/` | harness-maintainer | production execution and North-Star runtime |
 | `packages/kernel/src/northstar/` | harness-maintainer | canonical runtime contracts and protocol |
-| `packages/cli/` | harness-maintainer | public CLI/control plane |
+| `packages/cli/` | harness-maintainer | public CLI |
 | `rules/` | harness-maintainer | always-on invariants |
 | `skills/` | harness-maintainer | lazy capability workflows |
 | `schemas/` | harness-maintainer | portable artifact schemas |

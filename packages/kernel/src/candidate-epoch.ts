@@ -208,7 +208,7 @@ function fixtureHash(root: string, dirs?: string[]): { hash: string; note: strin
 }
 
 function artifactDigest(root: string, dirs?: string[]): { hash: string; note: string } {
-  const candidates = dirs ?? ['packages/engine/dist', 'packages/cli/dist', 'packages/control-plane/dist'];
+  const candidates = dirs ?? ['packages/engine/dist', 'packages/cli/dist', 'packages/kernel/dist'];
   const found = candidates.filter((d) => fs.existsSync(path.resolve(root, d)));
   if (found.length === 0) return { hash: EMPTY_HASH, note: 'no built dist found' };
   const pairs = found.map((d) => [d, dirTreeHash(path.resolve(root, d))] as [string, string]);

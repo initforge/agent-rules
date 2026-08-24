@@ -11,6 +11,7 @@ import {
 } from '@initforge/agent-rules-engine/northstar/closure-gates';
 
 const GATE_KEYS: Array<keyof NorthStarClosureInput> = [
+  'primary_outcome_achieved',
   'contract_traceability',
   'deterministic_acceptance',
   'independent_semantic_review',
@@ -85,6 +86,7 @@ function headCommit(root: string): string | null {
 
 function emptyClosureInput(): NorthStarClosureInput {
   return {
+    primary_outcome_achieved: null as unknown as boolean,
     contract_traceability: null as unknown as boolean,
     deterministic_acceptance: null as unknown as boolean,
     independent_semantic_review: null,

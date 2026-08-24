@@ -9,5 +9,5 @@ const penFile = process.env.PENCIL_FILE || '';
 const available = connected && penFile.length > 0 && fs.existsSync(penFile);
 const result = available
   ? { status: 'READY', provider: 'pencil-mcp', pen_file: penFile, production_acceptance: 'browser/runtime proof still required' }
-  : { status: 'BLOCKED', provider: 'pencil-mcp', reason: 'Pencil desktop/editor or connected MCP/.pen file is unavailable', fallback: 'continue with existing Control Plane and deterministic browser proof', activation: 'none' };
+  : { status: 'BLOCKED', provider: 'pencil-mcp', reason: 'Pencil desktop/editor or connected MCP/.pen file is unavailable', fallback: 'continue with deterministic browser proof and explicit-only Pencil activation', activation: 'none' };
 console.log(JSON.stringify(result));

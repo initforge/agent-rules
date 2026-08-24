@@ -48,7 +48,7 @@ describe('parseRequirements — R-001..R-042 from section 12', () => {
   it('every requirement has non-empty description and valid status', () => {
     const text = fs.readFileSync(OM_PATH, 'utf8');
     const reqs = parseRequirements(text);
-    const valid = ['PLANNED', 'OPERATIONAL', 'COMPLETED', 'PARTIAL', 'VERIFIED', 'NOT_STARTED'];
+    const valid = ['PLANNED', 'OPERATIONAL', 'COMPLETED', 'PARTIAL', 'VERIFIED', 'NOT_STARTED', 'RETIRED'];
     for (const r of reqs) {
       expect(r.description.length, r.id).toBeGreaterThan(0);
       expect(valid, r.id).toContain(r.status);
@@ -96,7 +96,7 @@ describe('parseSubsystems — SS-01..SS-24 from section 6', () => {
   it('every subsystem has non-empty name and valid status', () => {
     const text = fs.readFileSync(OM_PATH, 'utf8');
     const subs = parseSubsystems(text);
-    const valid = ['OPERATIONAL', 'VERIFIED', 'PARTIAL', 'NOT_STARTED'];
+    const valid = ['OPERATIONAL', 'VERIFIED', 'PARTIAL', 'NOT_STARTED', 'RETIRED'];
     for (const s of subs) {
       expect(s.subsystem.length, s.id).toBeGreaterThan(0);
       expect(valid, s.id).toContain(s.status);

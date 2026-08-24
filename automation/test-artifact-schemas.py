@@ -188,10 +188,13 @@ def main() -> int:
     has_decisions = "decisions" in plan_props
     print(f"  [{'PASS' if has_decisions else 'FAIL'}] Plan supports decisions")
 
-    # 4. Tasks with acceptance criteria
+    # 4. Tasks with acceptance criteria (object form is authoritative inside
+    # the oneOf branch; plain-string tasks are legacy-tolerated only)
     has_tasks = "tasks" in plan_props
     task_items = plan_props.get("tasks", {}).get("items", {})
-    task_props = task_items.get("properties", {})
+    one_of = task_items.get("oneOf", [])
+    object_branch = next((b for b in one_of if isinstance(b, dict) and b.get("type") == "object"), task_items)
+    task_props = object_branch.get("properties", {})
     has_ac = "acceptance_criteria" in task_props
     print(f"  [{'PASS' if has_tasks and has_ac else 'FAIL'}] Plan tasks require acceptance_criteria")
 

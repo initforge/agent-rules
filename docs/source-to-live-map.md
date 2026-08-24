@@ -33,7 +33,6 @@ This document establishes the canonical mapping between the repository source co
 | `packages/kernel/src/northstar/proof-router.ts` | harness-maintainer | Adaptive minimal-proof router | Selects minimal sufficient verifiers, logs omitted proofs | `routeProof()`, `filterVerifiersByProofRoute()` | Optional caller; promoted in P3 |
 | `packages/kernel/src/northstar/context-budget.ts` | harness-maintainer | Model-visible context accounting | Context token estimation across rules, skills, tools, MCP | `buildContextBudgetReceipt()` | Measured token budgets |
 | `packages/kernel/src/northstar/artifact-admission.ts` | harness-maintainer | Artifact class admission & retention | Classifies `EPHEMERAL`, `CHECKPOINTED`, `DURABLE`, `PROJECTION` | `admitArtifact()`, `classifyArtifact()` | Prevents artifact sprawl |
-| `packages/control-plane/` | harness-maintainer | Supervisory control plane & APIs | Workspace management, atomic file backups with Windows sanitization, crash restart recovery | `packages/control-plane/tests/` | Preserved until replacement parity |
 | `platforms/` | harness-maintainer | Host platform adapters | Host-specific hook projections for Codex, Claude, OpenCode, Grok, Antigravity, Cursor, DeepSeek Harness, Command Code | Host launch & hooks | Tier-based verification |
 | `skills/` | harness-maintainer | Domain capabilities | 34 materialized skills + catalog + references | `skills/catalog.json`, `platforms/shared/scripts/context-router.py` | 34 skills preserved (default KEEP) |
 | `rules/` | harness-maintainer | Core harness rules | Always-on invariant rule files | `rules/manifest.yaml` | 13 rules preserved (default KEEP) |
@@ -68,7 +67,7 @@ This document establishes the canonical mapping between the repository source co
 | `H-01` | Collapse 34 skills to 9 | 34 materialized skills in `skills/` | `HYPOTHESIS` | `KEEP` |
 | `H-02` | Collapse 13 rules to 5 | 13 rules in `rules/` | `HYPOTHESIS` | `KEEP` |
 | `H-03` | Single-package unification | 4 packages in `packages/` | `HYPOTHESIS` | `DEFER` |
-| `H-04` | Retire facades & Control Plane | Control Plane tests & engine facades active | `HYPOTHESIS` | `KEEP` |
+| `H-04` | Retire facades & legacy UI server | engine facades active | `HYPOTHESIS` | `KEEP` |
 | `H-05` | Externalize all `.agent` state | `.agent` stored at repo root | `HYPOTHESIS` | `DEFER` |
 | `H-06` | Public CLI needs only 6 commands | 35 CLI command files exist | `HYPOTHESIS` | `KEEP` |
 | `H-07` | Consolidate all runners to one TS runner | Multiple execution adapters exist | `HYPOTHESIS` | `KEEP` |

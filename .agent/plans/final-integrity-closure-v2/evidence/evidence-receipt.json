@@ -1,0 +1,57 @@
+{
+  "schema": "artifact/closure-evidence-receipt",
+  "version": 1,
+  "plan": "final-integrity-closure-v2",
+  "captured_at": "2026-08-24",
+  "evidence_classes": {
+    "github_ci": {
+      "scope": "behavior reproducible inside GitHub-hosted runners (build, typecheck, governed tests, python validators, certification artifact mechanics)",
+      "status": "PENDING_PUSH",
+      "note": "will be recorded after push; never conflated with owner-machine results"
+    },
+    "local_runtime_owner_machine": {
+      "scope": "commands executed on the owner Windows machine in this session",
+      "results": [
+        { "command": "npm run build", "exit": 0 },
+        { "command": "npm run check (typecheck all workspaces)", "exit": 0 },
+        { "command": "npm test (governed vitest: root+cli+engine+kernel)", "exit": 0, "tests_passed": 2662 },
+        { "command": "node automation/validate-canonical-plan.mjs", "exit": 0, "detail": "1 current schema-valid plan; 4 retired legacy skipped" },
+        { "command": "npm run verify:all", "exit": 0, "note": "PASSED twice: pre-correction and post-correction" },
+        { "command": "git diff --check", "exit": 0 }
+      ],
+      "review_a": {
+        "mode": "fresh-context independent subagent",
+        "verdict_initial": "CORRECTIONS_NEEDED",
+        "corrections_applied": [
+          "assertSafeToEdit artifactBytes now mandatory (no silent integrity skip)",
+          "validatePlan gates coverage by proofs and never echoes stored claim-evidence label without them",
+          "CLI truncation scan precedes unframe; acknowledge accepts receiver-supplied requirement/proof lists",
+          "malformed requirement ids report ENVELOPE_INVALID; REQUIREMENT_MISSING reserved for ack gaps",
+          "profile shape validates communication contract; corrupt installed state fails toward host-default",
+          "doctor flags UNSUPPORTED/NEEDS_USER projections; canonical-plan validator fails closed on level-less new plans; ellipsis false-positive removed"
+        ],
+        "second_review_loop_opened": false
+      }
+    },
+    "native_8_host": {
+      "scope": "live desktop/host journeys per host (startup, runtime interaction, MCP invocation, auth, persistence)",
+      "results": [
+        { "host": "all 8", "projection_sync": "SYNCED via operator-profile sync --all-hosts (file-surface projection from single canonical source hash)" },
+        { "harness": "automation/verify-windows-hosts.mjs remains the live-probe authority; hosts without binaries report UNSUPPORTED honestly" },
+        { "status": "NEEDS_USER for GUI-only journeys not drivable from this session; no fixture or file-existence was counted as LIVE" }
+      ]
+    },
+    "browser": {
+      "scope": "UI/user-facing claims require live browser journey",
+      "results": [
+        { "claim_class": "this batch changed no user-facing UI; browser lane not applicable to CLI/kernel scope" },
+        { "enforcement": "closure gate browser_visual_live stays null->BLOCKED for UI claims without journeys; no UI PASS claimed here" }
+      ]
+    }
+  },
+  "invariants": {
+    "primary_outcome_non_compensable": "closure-gates.ts primary-outcome gate added; certify GATE_KEYS extended",
+    "review_b_default_off": true,
+    "second_review_loop_opened": false
+  }
+}

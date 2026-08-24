@@ -314,7 +314,7 @@ describe('Certification artifact verifier adversarial checks', () => {
     }
     return root;
   }
-  const verify = (root: string) => execFileSync(process.execPath, ['automation/control-plane-ci.mjs', 'certification-verify'], { cwd: join(__dirname, '..', '..', '..'), env: { ...env, CERTIFICATION_ARTIFACTS: root }, stdio: 'pipe' });
+  const verify = (root: string) => execFileSync(process.execPath, ['automation/certification-ci.mjs', 'certification-verify'], { cwd: join(__dirname, '..', '..', '..'), env: { ...env, CERTIFICATION_ARTIFACTS: root }, stdio: 'pipe' });
   const manifest = (root: string, host = 'codex') => join(root, `manifest-${host}.json`);
   const mutateManifest = (root: string, change: (value: any) => void, host = 'codex') => { const file = manifest(root, host); const value = JSON.parse(readFileSync(file, 'utf8')); change(value); writeFileSync(file, JSON.stringify(value)); };
 

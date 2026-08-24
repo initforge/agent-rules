@@ -119,7 +119,7 @@ const packetValidate = ajv.compile(JSON.parse(fs.readFileSync(PACKET_SCHEMA, 'ut
 // ── 4. Changed owner intent → amendment, not defect ─────────────────
 {
   const outcome = openPairRepair({
-    raw_finding: 'The owner now requires Control Plane work to begin before closeout.',
+    raw_finding: 'The owner now requires the operator-profile rollout to begin before closeout.',
     candidate_plans: plans,
     current_epoch: 1,
     spec,

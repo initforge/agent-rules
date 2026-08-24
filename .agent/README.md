@@ -8,7 +8,7 @@ output and raw session telemetry are never promoted to authority.
 
 1. `.agent/current.json` is the only active-plan pointer and is CAS-protected.
 2. `.agent/ledger/<plan-id>.json` is the canonical plan projection consumed by
-   the Control Plane and runtime installer.
+   the runtime installer and doctor.
 3. `.agent/plans/<plan-id>/requirements.yaml` is the flat requirement ledger.
 4. `journal.jsonl`, evidence, and progress are projections/receipts and cannot
    grant PASS by themselves.

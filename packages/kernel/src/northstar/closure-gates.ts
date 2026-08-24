@@ -8,6 +8,7 @@ export interface ClosureGateEvidence {
 }
 
 export interface NorthStarClosureInput {
+  primary_outcome_achieved: boolean;
   contract_traceability: boolean;
   deterministic_acceptance: boolean;
   independent_semantic_review: boolean | null;
@@ -43,6 +44,9 @@ export interface NorthStarClosureReport {
  */
 export function evaluateNorthStarClosure(input: NorthStarClosureInput): NorthStarClosureReport {
   const entries: Array<[string, boolean | null | undefined, string]> = [
+    // PRIMARY_OUTCOME is non-compensable (REQ-C21): secondary PASS never
+    // compensates an unmet primary outcome, so it is never in sourceOnly.
+    ['primary-outcome', input.primary_outcome_achieved, 'the single owner primary outcome is achieved; non-compensable by secondary gates'],
     ['contract-traceability', input.contract_traceability, 'intent/spec/task/claim traceability has no orphan truth anchors'],
     ['deterministic-acceptance', input.deterministic_acceptance, 'PASS is derived from verifier evidence, never worker self-report'],
     ['independent-semantic-review', input.independent_semantic_review, 'semantic correctness is independently reviewed for high-risk semantic work'],

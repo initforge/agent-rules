@@ -106,7 +106,7 @@ describe('topology-compiler (C6, AM-0019 §8)', () => {
       expect(compiled.valid).toBe(true);
       expect(compiled.errors).toEqual([]);
       expect(compiled.topology.schema_version).toBe(1);
-      expect(compiled.topology.services.length).toBe(5);
+      expect(compiled.topology.services.length).toBe(4);
       expect(compiled.topology.ingress.public_ingress).toBe('GAP');
       // C1 stub already declares its gaps honestly
       const gaps = compiled.topology.services.filter((s) => s.status === 'GAP');

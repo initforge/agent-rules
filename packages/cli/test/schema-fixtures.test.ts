@@ -183,9 +183,12 @@ describe("artifact schemas", () => {
   describe("acceptance criteria", () => {
     const plan = SCHEMAS.get("plan") as Record<string, unknown> | undefined;
     const planProps = (plan?.properties ?? {}) as Record<string, unknown>;
-    const taskItems = ((planProps.tasks as Record<string, unknown> | undefined)?.items ??
-      {}) as Record<string, unknown>;
-    const taskProps = (taskItems.properties ?? {}) as Record<string, unknown>;
+    const taskItems = ((planProps.tasks as Record<string, unknown> | undefined)?.items ?? {}) as Record<string, unknown>;
+    // Object form is authoritative inside the oneOf branch; string tasks are
+    // legacy-tolerated only.
+    const taskOneOf = (taskItems.oneOf ?? []) as Array<Record<string, unknown>>;
+    const objectBranch = (taskOneOf.find((b) => b.type === "object") ?? {}) as Record<string, unknown>;
+    const taskProps = ((objectBranch.properties ?? taskItems.properties) ?? {}) as Record<string, unknown>;
 
     it("plan has repository_baseline", () => {
       expect(planProps).toHaveProperty("repository_baseline");

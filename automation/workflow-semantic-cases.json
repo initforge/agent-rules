@@ -224,37 +224,6 @@
           "reason": "portable-plan-contract.md remains the canonical owner of the plan template contract"
         }
       ]
-    },
-    {
-      "id": "WS-006",
-      "concept": "control-plane-ui-precedence",
-      "canonical_owner": ".agent/plans/control-plane-v2/plan.md",
-      "conflicting_documents": [
-        "skills/frontend-architect/SKILL.md",
-        "skills/ui-taste/SKILL.md"
-      ],
-      "resolution": "The approved Control Plane brief owns visual precedence (AM-0001; plan decision DEC-019). ui-taste is a brief/taste lens only when the brief selects it; frontend-architect's generic font, dark-mode, animation, and markup-only rewrite guidance cannot override an approved Control Plane direction.",
-      "precedence_owner": ".agent/plans/control-plane-v2/plan.md",
-      "edge_case": "Generic frontend guidance conflicts with an approved Control Plane brief (Control Plane brief precedence enforced)",
-      "checks": [
-        {
-          "kind": "owner_exists",
-          "path": ".agent/plans/control-plane-v2/plan.md",
-          "reason": "the approved Control Plane brief exists and remains the precedence owner"
-        },
-        {
-          "kind": "file_contains",
-          "path": "skills/frontend-architect/SKILL.md",
-          "patterns": ["Control Plane", "cannot override"],
-          "reason": "frontend-architect must not override an approved Control Plane direction"
-        },
-        {
-          "kind": "file_contains",
-          "path": "skills/ui-taste/SKILL.md",
-          "patterns": ["Control Plane", "authoritative"],
-          "reason": "ui-taste must keep the Control Plane brief authoritative"
-        }
-      ]
     }
   ]
 }
