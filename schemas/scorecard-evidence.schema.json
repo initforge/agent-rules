@@ -26,8 +26,8 @@
     "_evidence_sources": {"type": "array", "items": {"$ref": "#/$defs/evidence"}},
     "dimensions": {
       "type": "array", "prefixItems": [
-        {"$ref":"#/$defs/d01"},{"$ref":"#/$defs/d02"},{"$ref":"#/$defs/d03"},{"$ref":"#/$defs/d04"},{"$ref":"#/$defs/d05"},{"$ref":"#/$defs/d06"},{"$ref":"#/$defs/d07"},{"$ref":"#/$defs/d08"},{"$ref":"#/$defs/d09"},{"$ref":"#/$defs/d10"},{"$ref":"#/$defs/d11"},{"$ref":"#/$defs/d12"},{"$ref":"#/$defs/d13"},{"$ref":"#/$defs/d14"},{"$ref":"#/$defs/d15"},{"$ref":"#/$defs/d16"},{"$ref":"#/$defs/d17"},{"$ref":"#/$defs/d18"}
-      ], "items": false, "minItems": 18, "maxItems": 18
+        {"$ref":"#/$defs/d01"},{"$ref":"#/$defs/d02"},{"$ref":"#/$defs/d03"},{"$ref":"#/$defs/d04"},{"$ref":"#/$defs/d05"},{"$ref":"#/$defs/d06"},{"$ref":"#/$defs/d07"},{"$ref":"#/$defs/d08"},{"$ref":"#/$defs/d09"},{"$ref":"#/$defs/d10"},{"$ref":"#/$defs/d11"},{"$ref":"#/$defs/d12"},{"$ref":"#/$defs/d13"},{"$ref":"#/$defs/d15"},{"$ref":"#/$defs/d16"},{"$ref":"#/$defs/d17"},{"$ref":"#/$defs/d18"}
+      ], "items": false, "minItems": 17, "maxItems": 17
     }
   },
   "$defs": {
@@ -48,7 +48,6 @@
     "d11":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d11"},"label":{"const":"Path Traversal Protection"}}}]},
     "d12":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d12"},"label":{"const":"Symlink Protection"}}}]},
     "d13":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d13"},"label":{"const":"Schema Validation Rigor"}}}]},
-    "d14":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d14"},"label":{"const":"C4 Visualization Maturity"}}}]},
     "d15":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d15"},"label":{"const":"Multi-Platform Support"}}}]},
     "d16":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d16"},"label":{"const":"API Security Posture"}}}]},
     "d17":{"allOf":[{"$ref":"#/$defs/dimension"},{"type":"object","properties":{"id":{"const":"d17"},"label":{"const":"Telemetry & Monitoring"}}}]},
