@@ -4,6 +4,7 @@ import path from "node:path";
 import os from "node:os";
 import { RUNTIME_PLATFORMS, type RuntimePlatform, type SourceManifest } from "./contracts.js";
 import { exists, fsyncDirectory, fsyncRegularFile, hash, readRegularFileNoFollow, writeJsonDurable } from "./filesystem.js";
+import { reconcileOpenCodeConfigFile } from "@initforge/agent-rules-kernel";
 
 export interface SkillProjection {
   id: string;
@@ -352,81 +353,16 @@ export async function syncCommandCodeMcpConfig(): Promise<void> {
 
 export async function syncOpenCodeMcpConfig(): Promise<void> {
   const home = os.homedir();
-  const opencodeConfig = path.join(process.env.OPENCODE_HOME ?? path.join(home, ".config", "opencode"), "opencode.json");
+  const opencodeDir = process.env.OPENCODE_HOME ?? path.join(home, ".config", "opencode");
+  const opencodeConfig = path.join(opencodeDir, "opencode.json");
+  const standardMcp = getStandardMcpServers(home);
 
-  let existingParsed: Record<string, unknown> = {};
-  if (await exists(opencodeConfig)) {
-    try {
-      existingParsed = JSON.parse(await fs.readFile(opencodeConfig, "utf8"));
-    } catch { /* ignore */ }
+  reconcileOpenCodeConfigFile(opencodeConfig, standardMcp, { backup: true });
+
+  const opencodeJsonc = path.join(opencodeDir, "opencode.jsonc");
+  if (await exists(opencodeJsonc)) {
+    reconcileOpenCodeConfigFile(opencodeJsonc, standardMcp, { backup: true });
   }
-
-  const standardMcp = {
-    "codebase-memory": {
-      type: "stdio",
-      command: path.join(home, "AppData", "Local", "Programs", "codebase-memory-mcp", "codebase-memory-mcp.exe"),
-      args: [],
-    },
-    playwright: {
-      type: "stdio",
-      command: "cmd.exe",
-      args: [
-        "/d",
-        "/s",
-        "/c",
-        "npx",
-        "-y",
-        "@playwright/mcp@0.0.78",
-        "--isolated",
-        "--executable-path",
-        path.join(home, "AppData", "Local", "ms-playwright", "chromium-1232", "chrome-win64", "chrome.exe"),
-      ],
-    },
-    "chrome-devtools": {
-      type: "stdio",
-      command: "cmd.exe",
-      args: [
-        "/d",
-        "/s",
-        "/c",
-        "npx",
-        "-y",
-        "chrome-devtools-mcp@1.7.0",
-        "--isolated",
-        "--executablePath",
-        path.join(home, "AppData", "Local", "ms-playwright", "chromium-1232", "chrome-win64", "chrome.exe"),
-      ],
-    },
-    context7: {
-      type: "stdio",
-      command: "cmd.exe",
-      args: [
-        "/d",
-        "/s",
-        "/c",
-        "npx",
-        "-y",
-        "@upstash/context7-mcp@3.2.5",
-      ],
-    },
-  };
-
-  const updatedConfig = {
-    $schema: "https://opencode.ai/config.json",
-    permission: existingParsed.permission ?? "allow",
-    ...existingParsed,
-    mcp: {
-      ...(typeof existingParsed.mcp === "object" && existingParsed.mcp !== null ? (existingParsed.mcp as Record<string, unknown>) : {}),
-      ...standardMcp,
-    },
-    mcpServers: {
-      ...(typeof existingParsed.mcpServers === "object" && existingParsed.mcpServers !== null ? (existingParsed.mcpServers as Record<string, unknown>) : {}),
-      ...standardMcp,
-    },
-  };
-
-  await fs.mkdir(path.dirname(opencodeConfig), { recursive: true });
-  await fs.writeFile(opencodeConfig, JSON.stringify(updatedConfig, null, 2) + "\n", "utf8");
 }
 
 export async function syncAntigravityMcpConfig(): Promise<void> {

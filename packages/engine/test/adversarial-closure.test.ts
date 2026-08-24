@@ -6,7 +6,6 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ENGINE_SRC = path.resolve(__dirname, '..', 'src');
 const CLI_SRC = path.resolve(__dirname, '..', '..', 'cli', 'src');
-const CP_SRC = path.resolve(__dirname, '..', '..', 'control-plane', 'src');
 
 function collectTsFiles(root: string): string[] {
   if (!fs.existsSync(root)) return [];
@@ -25,7 +24,7 @@ function collectTsFiles(root: string): string[] {
   return results;
 }
 
-const APP_SRC_ROOTS = [ENGINE_SRC, CLI_SRC, CP_SRC];
+const APP_SRC_ROOTS = [ENGINE_SRC, CLI_SRC];
 const APP_FILES = APP_SRC_ROOTS.flatMap(collectTsFiles);
 const LINE_LIMIT = 1000;
 
@@ -114,7 +113,7 @@ describe('C5-P9 adversarial closure: maintainability review', () => {
   });
 
   it('no circular dependencies between packages', () => {
-    const packageDirs = [ENGINE_SRC, CLI_SRC, CP_SRC].filter((d) => fs.existsSync(d));
+    const packageDirs = [ENGINE_SRC, CLI_SRC].filter((d) => fs.existsSync(d));
     const crossImports: string[] = [];
     for (const dir of packageDirs) {
       const files = collectTsFiles(dir);

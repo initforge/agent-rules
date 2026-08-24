@@ -65,12 +65,24 @@ def from_live_record(record: dict[str, Any], case: dict[str, Any]) -> dict[str, 
     completion_map = {"PASS": "pass", "PARTIAL": "partial", "BLOCKED": "blocked", "FAIL": "failed", "NOT_RUN": "not_run"}
     dims["completion"] = {"value": completion_map.get(outcome, outcome.lower()), "evidence": record.get("notes", "")}
     scores = record.get("scores", {})
-    req_total = len(case.get("required_behavior", []))
-    req_covered = sum(1 for _ in case.get("required_behavior", []))
+    evidence_items = record.get("evidence", [])
+    passing = [e for e in evidence_items if e.get("status") == "PASS"]
+    req_list = case.get("required_behavior", [])
+    req_total = len(req_list)
+
+    if req_total == 0:
+        req_covered = 0
+    elif outcome == "PASS" and passing:
+        req_covered = req_total
+    elif outcome == "PARTIAL":
+        req_covered = max(1, req_total // 2) if passing else 0
+    else:
+        req_covered = 0
+
     dims["requirement_coverage"] = {
         "value": req_covered / req_total if req_total > 0 else None,
         "covered": req_covered, "total": req_total,
-        "evidence": f"scores={scores}" if scores else "",
+        "evidence": f"scores={scores}; passing={len(passing)}/{len(evidence_items)}" if scores else "",
     }
     if record.get("evidence_kind") == "empirical":
         oc = bool(record.get("owner_correction"))

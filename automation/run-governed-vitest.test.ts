@@ -177,10 +177,12 @@ describe('Vitest invocation governance', () => {
     for (const packageFile of [
       'package.json',
       'packages/cli/package.json',
-      'packages/control-plane/package.json',
       'packages/engine/package.json',
+      'packages/kernel/package.json',
     ]) {
-      const scripts = JSON.parse(fs.readFileSync(path.join(root, packageFile), 'utf8')).scripts ?? {};
+      const fullPath = path.join(root, packageFile);
+      if (!fs.existsSync(fullPath)) continue;
+      const scripts = JSON.parse(fs.readFileSync(fullPath, 'utf8')).scripts ?? {};
       for (const [name, command] of Object.entries<string>(scripts)) {
         if (/\bvitest\b/.test(command) && !command.includes('run-governed-vitest.mjs') && !allowedBypasses.includes(name)) {
           bypasses.push(`${packageFile}#${name}`);

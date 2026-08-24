@@ -549,3 +549,135 @@ export function assertValidTruthTransition(
     throw new Error('Unit or canary test PASS cannot mint LIVE_CERTIFIED without live environment execution evidence');
   }
 }
+
+// ── Standard Cross-Host Receipts ─────────────────────────────────────────────
+
+export interface HostProjectionReceipt {
+  schema: 'agent-rules/host-projection-receipt/v1';
+  version: 1;
+  receipt_sha256: string;
+  target_host: HostId;
+  source_plan_sha256: string;
+  requested_action: 'ANSWER' | 'PLAN' | 'REVIEW' | 'EXECUTE';
+  interaction_mode: 'AUTO_EXECUTE' | 'OWNER_REVIEW';
+  requirement_dispositions: Array<{
+    requirement_id: string;
+    status: 'PRESERVED' | 'GROUNDED' | 'ENRICHED' | 'BLOCKED';
+    details?: string;
+  }>;
+  non_goals_preserved: string[];
+  owner_decisions_preserved: string[];
+  acceptance_claims_preserved: string[];
+  unresolved_material_items: string[];
+  evaluated_at: string;
+}
+
+export function createHostProjectionReceipt(input: Omit<HostProjectionReceipt, 'schema' | 'version' | 'receipt_sha256' | 'evaluated_at'>): HostProjectionReceipt {
+  const evaluated_at = new Date().toISOString();
+  const base: Omit<HostProjectionReceipt, 'receipt_sha256'> = {
+    schema: 'agent-rules/host-projection-receipt/v1',
+    version: 1,
+    target_host: input.target_host,
+    source_plan_sha256: input.source_plan_sha256,
+    requested_action: input.requested_action,
+    interaction_mode: input.interaction_mode,
+    requirement_dispositions: input.requirement_dispositions,
+    non_goals_preserved: input.non_goals_preserved,
+    owner_decisions_preserved: input.owner_decisions_preserved,
+    acceptance_claims_preserved: input.acceptance_claims_preserved,
+    unresolved_material_items: input.unresolved_material_items,
+    evaluated_at,
+  };
+  const serialized = JSON.stringify(base, Object.keys(base).sort());
+  const receipt_sha256 = crypto.createHash('sha256').update(serialized).digest('hex');
+  return { ...base, receipt_sha256 };
+}
+
+export interface SelfReviewReceipt {
+  schema: 'agent-rules/self-review-receipt/v1';
+  version: 1;
+  receipt_sha256: string;
+  candidate_tree_sha256: string;
+  candidate_diff_sha256: string;
+  tier: 'Q0' | 'Q1' | 'Q2' | 'Q3';
+  reviewer_session_id: string;
+  findings: Array<{
+    finding_id: string;
+    severity: 'BLOCKER' | 'MAJOR' | 'MINOR' | 'NOTE';
+    claim_ref?: string;
+    description: string;
+    disposition: 'CORRECTED' | 'DEFERRED' | 'ACCEPTED';
+  }>;
+  correction_count: number;
+  review_decision: 'APPROVE' | 'CONDITIONAL' | 'BLOCK';
+  can_author_pass: false;
+  evaluated_at: string;
+}
+
+export function createSelfReviewReceipt(input: Omit<SelfReviewReceipt, 'schema' | 'version' | 'receipt_sha256' | 'can_author_pass' | 'evaluated_at'>): SelfReviewReceipt {
+  const evaluated_at = new Date().toISOString();
+  const base: Omit<SelfReviewReceipt, 'receipt_sha256'> = {
+    schema: 'agent-rules/self-review-receipt/v1',
+    version: 1,
+    candidate_tree_sha256: input.candidate_tree_sha256,
+    candidate_diff_sha256: input.candidate_diff_sha256,
+    tier: input.tier,
+    reviewer_session_id: input.reviewer_session_id,
+    findings: input.findings,
+    correction_count: input.correction_count,
+    review_decision: input.review_decision,
+    can_author_pass: false,
+    evaluated_at,
+  };
+  const serialized = JSON.stringify(base, Object.keys(base).sort());
+  const receipt_sha256 = crypto.createHash('sha256').update(serialized).digest('hex');
+  return { ...base, receipt_sha256 };
+}
+
+export interface HostUsabilityReceipt {
+  schema: 'agent-rules/host-usability-receipt/v1';
+  version: 1;
+  receipt_sha256: string;
+  host: HostId;
+  host_version: string;
+  host_surface: 'cli' | 'ide' | 'app_server' | 'headless';
+  binary_path: string;
+  config_status: 'CONFIG_ACCEPTED' | 'CONFIG_REJECTED';
+  startup_status: 'STARTUP_CLEAN' | 'STARTUP_FAILED';
+  auth_status: 'AUTHENTICATED' | 'UNAUTHENTICATED' | 'NOT_REQUIRED';
+  mcp_status: 'MCP_CONNECTED' | 'MCP_DISCONNECTED';
+  canary_tool_call: {
+    executed: boolean;
+    nonce_matched: boolean;
+    tool_name: string;
+    latency_ms?: number;
+  };
+  restart_persistent: boolean;
+  arbitrary_cwd_verified: boolean;
+  overall_usability: 'HOST_USABLE_PASS' | 'HOST_USABLE_PARTIAL' | 'HOST_UNUSABLE' | 'NEEDS_USER';
+  evaluated_at: string;
+}
+
+export function createHostUsabilityReceipt(input: Omit<HostUsabilityReceipt, 'schema' | 'version' | 'receipt_sha256' | 'evaluated_at'>): HostUsabilityReceipt {
+  const evaluated_at = new Date().toISOString();
+  const base: Omit<HostUsabilityReceipt, 'receipt_sha256'> = {
+    schema: 'agent-rules/host-usability-receipt/v1',
+    version: 1,
+    host: input.host,
+    host_version: input.host_version,
+    host_surface: input.host_surface,
+    binary_path: input.binary_path,
+    config_status: input.config_status,
+    startup_status: input.startup_status,
+    auth_status: input.auth_status,
+    mcp_status: input.mcp_status,
+    canary_tool_call: input.canary_tool_call,
+    restart_persistent: input.restart_persistent,
+    arbitrary_cwd_verified: input.arbitrary_cwd_verified,
+    overall_usability: input.overall_usability,
+    evaluated_at,
+  };
+  const serialized = JSON.stringify(base, Object.keys(base).sort());
+  const receipt_sha256 = crypto.createHash('sha256').update(serialized).digest('hex');
+  return { ...base, receipt_sha256 };
+}

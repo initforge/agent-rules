@@ -141,7 +141,7 @@ jobs:
                 [ -n "$JOB_ID" ] && gh api -X POST "repos/${{ github.repository }}/actions/jobs/${JOB_ID}/cancel" >/dev/null 2>&1 || true
               done
               echo "ADVISORY: unavailable self-hosted runners produce explicit advisory evidence (RUNNERS_UNAVAILABLE); certification is not a required check"
-              exit 0
+              exit 78
             fi
             sleep 20
           done
@@ -185,7 +185,7 @@ jobs:
               ;;
             skipped|cancelled)
               echo "RUNNERS_UNAVAILABLE: no self-hosted native runners matched; implementation remains valid. Advisory evidence only — certification is not a required check."
-              exit 0
+              exit 78
               ;;
             *)
               echo "NATIVE_HOST_FAILED: at least one native host genuinely failed certification."

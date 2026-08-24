@@ -55,3 +55,4 @@ export * from './decision-closure.js';
 export * from './receipts.js';
 export * from './telemetry.js';
 export * from './context-engine.js';
+export * from './cross-host-hub.js';

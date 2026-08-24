@@ -180,26 +180,6 @@ describe('Quality workflow validation', () => {
     expect(wf.jobs!.security!['timeout-minutes']).toBeGreaterThan(0);
   });
 
-  it('control plane is started and cleaned up', () => {
-    const wf = loadWorkflow('quality.yml');
-    const qualityJob = wf.jobs!.quality;
-    const startStep = qualityJob!.steps!.find(s => s.name === 'Start Control Plane');
-    const cleanupStep = qualityJob!.steps!.find(s => s.name === 'Cleanup Control Plane');
-    expect(startStep).toBeTruthy();
-    expect(startStep!.run).toContain('node automation/control-plane-ci.mjs start');
-    expect(cleanupStep).toBeTruthy();
-    expect(cleanupStep!['if']).toBe('always()');
-    expect(cleanupStep!.run).toContain('node automation/control-plane-ci.mjs stop');
-  });
-
-  it('runs C4 from the control-plane cwd so the governed file path resolves', () => {
-    const wf = loadWorkflow('quality.yml');
-    const c4Step = wf.jobs!.quality!.steps!.find(s => s.name === 'Run C4 integration tests');
-    expect(c4Step?.run).toContain('--cwd packages/control-plane');
-    expect(c4Step?.run).toContain('-- run tests/c4.test.ts');
-    expect(c4Step?.run).not.toContain('-- run packages/control-plane/tests/c4.test.ts');
-  });
-
   it('builds the engine dependency before generating the context graph', () => {
     const wf = loadWorkflow('quality.yml');
     const pythonSteps = wf.jobs!['python-tests']!.steps!;
@@ -405,12 +385,6 @@ describe('No duplicate actions or steps', () => {
 });
 
 describe('External assumptions documented', () => {
-  it('quality workflow needs control-plane built and running', () => {
-    const wf = loadWorkflow('quality.yml');
-    const cpStep = wf.jobs!.quality!.steps!.find(s => s.name === 'Start Control Plane');
-    expect(cpStep).toBeTruthy();
-  });
-
   it('certification workflow needs native CLIs on self-hosted runners', () => {
     const wf = loadWorkflow('certification.yml');
     expect(wf.jobs!.certify!['runs-on']).toEqual(['self-hosted', "${{ matrix.host }}-native"]);

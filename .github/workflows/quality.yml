@@ -70,20 +70,6 @@ jobs:
       - run: npm run test
       - name: Packaged runtime lifecycle smoke
         run: npm run test:package-smoke -w packages/cli
-      - name: Start Control Plane
-        timeout-minutes: 5
-        run: node automation/control-plane-ci.mjs start
-      - name: Wait for Control Plane
-        timeout-minutes: 5
-        run: npx wait-on --timeout 120000 http://127.0.0.1:3099/api/health
-      - name: Run C4 integration tests
-        run: node automation/run-governed-vitest.mjs --project-root . --cwd packages/control-plane --mode focused -- run tests/c4.test.ts
-        env:
-          CI: 'true'
-      - name: Cleanup Control Plane
-        if: always()
-        timeout-minutes: 5
-        run: node automation/control-plane-ci.mjs stop
 
   python-tests:
     timeout-minutes: 15

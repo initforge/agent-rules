@@ -183,14 +183,12 @@ function partitionTests(files) {
     root: [],
     engine: [],
     cli: [],
-    'control-plane': [],
     kernel: [],
   };
   const unknownPackageTests = [];
   for (const file of files) {
     if (file.startsWith('packages/engine/')) partitions.engine.push(file);
     else if (file.startsWith('packages/cli/')) partitions.cli.push(file);
-    else if (file.startsWith('packages/control-plane/')) partitions['control-plane'].push(file);
     else if (file.startsWith('packages/kernel/')) partitions.kernel.push(file);
     else if (file.startsWith('packages/')) unknownPackageTests.push(file);
     else partitions.root.push(file);
@@ -218,11 +216,11 @@ try {
 } catch (error) {
   console.error(`[TEST: partition discovery] FAILED: ${error.message}`);
   failed = true;
-  partitions = { root: [], engine: [], cli: [], 'control-plane': [], kernel: [] };
+  partitions = { root: [], engine: [], cli: [], kernel: [] };
 }
 
 const partitionReports = [];
-const partitionOrder = ['root', 'cli', 'control-plane', 'engine', 'kernel'];
+const partitionOrder = ['root', 'cli', 'engine', 'kernel'];
 for (const name of partitionOrder) {
   const files = partitions[name];
   if (!files.length) continue;

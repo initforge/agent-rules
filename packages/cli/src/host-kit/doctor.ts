@@ -548,7 +548,6 @@ export async function enumerateLeases(repoRoot: string): Promise<LeaseEntry[]> {
   const scanDirs = [
     path.join(repoRoot, "packages", "cli"),
     path.join(repoRoot, "packages", "engine"),
-    path.join(repoRoot, "packages", "control-plane"),
     path.join(repoRoot, ".agent", "worktrees"),
   ];
 

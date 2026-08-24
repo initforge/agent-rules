@@ -4,52 +4,6 @@ import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { assertCertificationAttestation, CERTIFICATION_REQUIRED_HOSTS } from '../packages/engine/dist/contracts.js';
 
-const pidFile = '.control-plane.pid';
-const logFile = 'control-plane.log';
-const server = 'packages/control-plane/dist/server/server/index.js';
-
-function stop(pid) {
-  if (!Number.isInteger(pid) || pid <= 0) return;
-  if (process.platform === 'win32') {
-    spawnSync('taskkill', ['/PID', String(pid), '/T', '/F'], { stdio: 'inherit' });
-    return;
-  }
-  try {
-    process.kill(-pid, 'SIGTERM');
-  } catch {
-    try {
-      process.kill(pid, 'SIGTERM');
-    } catch {
-      // The process may already have exited; cleanup remains idempotent.
-    }
-  }
-}
-
-function readPid() {
-  if (!existsSync(pidFile)) return null;
-  const pid = Number.parseInt(readFileSync(pidFile, 'utf8').trim(), 10);
-  return Number.isInteger(pid) && pid > 0 ? pid : null;
-}
-
-function start() {
-  const previous = readPid();
-  if (previous) stop(previous);
-  const log = openSync(logFile, 'a');
-  const child = spawn(process.execPath, [server], {
-    detached: true,
-    stdio: ['ignore', log, log],
-    env: { ...process.env, HOST: '127.0.0.1', PORT: process.env.PORT || '3099' },
-  });
-  writeFileSync(pidFile, `${child.pid}\n`, 'utf8');
-  child.unref();
-}
-
-function cleanup() {
-  const pid = readPid();
-  if (pid) stop(pid);
-  if (existsSync(pidFile)) unlinkSync(pidFile);
-}
-
 const required = name => process.env[name] || (() => { throw new Error(`${name} is required`); })();
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 
@@ -115,17 +69,13 @@ function verifyCertificationArtifacts() {
 }
 
 const command = process.argv[2];
-if (command === 'start') {
-  start();
-} else if (command === 'stop') {
-  cleanup();
-} else if (command === 'certification-validate') {
+if (command === 'certification-validate') {
   validateAttestation();
 } else if (command === 'certification-build') {
   buildCertificationArtifact();
 } else if (command === 'certification-verify') {
   verifyCertificationArtifacts();
 } else {
-  console.error('Usage: node automation/control-plane-ci.mjs <start|stop|certification-validate|certification-build|certification-verify>');
+  console.error('Usage: node automation/control-plane-ci.mjs <certification-validate|certification-build|certification-verify>');
   process.exitCode = 2;
 }
