@@ -4,6 +4,13 @@ description: Mockups, brand visuals, image-to-code. Use when user asks to genera
   image-to-code, thiết kế màn hình từ ảnh. Do NOT use for 5fedu ERP module work (tạo/sửa/refactor module, parity, lệch) —
   use 5fedu-module-parity + ui-delivery + module-mapping. Do NOT use for ordinary CSS tweaks in ERP modules. Reference standards,
   not mandatory pipeline.
+metadata:
+  signals: "mockup, brand visuals, image-to-code, brandkit, sinh ảnh giao diện"
+  excludes: "5fedu ERP module, ordinary CSS"
+  priority: "50"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 
 # Kỹ năng Xử lý Ảnh & Thiết kế Hình ảnh (Master Image Generation Skill)

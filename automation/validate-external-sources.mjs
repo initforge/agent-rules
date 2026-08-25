@@ -166,7 +166,16 @@ function validateRecord(record, index) {
     if (!REGISTERED_HOSTS.has(host)) bad(`portability lists unknown host: ${host}`);
   }
   if (!['high', 'medium', 'low'].includes(lock.route_precision?.precision)) bad(`invalid route_precision.precision: ${lock.route_precision?.precision}`);
-  if (lock.route_precision?.sidecar !== 'ROUTE.json') bad('route sidecar must stay harness-owned ROUTE.json (DEC-007)');
+  // Single-source migration (DEC-007): SKILL.md metadata is the canonical route
+  // source. The legacy ROUTE.json sidecar is accepted only as provenance of an
+  // already-materialized record; a new materialization must route from SKILL.md.
+  const sidecar = lock.route_precision?.sidecar;
+  const legacyProvenance = record.status === 'materialized' || record.selection === 'materialized';
+  if (sidecar !== 'ROUTE.json' && sidecar !== 'SKILL.md') {
+    bad(`route sidecar must be harness-owned ROUTE.json (legacy provenance) or SKILL.md (single-source): ${sidecar}`);
+  } else if (!legacyProvenance && sidecar !== 'SKILL.md') {
+    bad('new materialization must route from SKILL.md metadata (single-source; ROUTE.json is legacy-only)');
+  }
   if (!['pending', 'passed', 'rejected'].includes(lock.benchmark?.state)) bad(`invalid benchmark.state: ${lock.benchmark?.state}`);
   if (!lock.rollback?.plan) bad('rollback plan is required (policy rollback_required)');
   if (install.materialization === 'none' && lock.rollback?.record !== null && lock.rollback?.record !== undefined) bad('rollback record must be null while nothing is materialized');

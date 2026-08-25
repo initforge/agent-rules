@@ -298,18 +298,18 @@ if ($UserHome) {
     $Hits = @($Legacy | Where-Object { Test-Path (Join-Path $Inject $_) })
     if ($Hits.Count -gt 0) {
       Add-Finding "desync" "grok-legacy-inject" "fail" "Legacy dual-tree markers in $Inject : $($Hits -join ', ')" "H12"
-    } elseif (-not (Test-Path (Join-Path $Inject "00-bootstrap.md"))) {
-      Add-Finding "desync" "grok-inject-missing-lean" "fail" "Inject path lacks lean 00-bootstrap.md: $Inject" "H12"
+    } elseif (-not (Test-Path (Join-Path $Inject "00-intent-scope-safety.md"))) {
+      Add-Finding "desync" "grok-inject-missing-lean" "fail" "Inject path lacks lean 00-intent-scope-safety.md: $Inject" "H12"
     }
   }
 }
 
 # H13: intentional oversize documented (must not pressure FAIL on docs-style/plan-and-handoff size alone)
-$BudgetPath = Join-Path $Root "rules\50-context-budget.md"
+$BudgetPath = Join-Path $Root "rules\30-context-skill-mcp.md"
 if (Test-Path $BudgetPath) {
   $Bb = Get-Content -Raw -Encoding UTF8 $BudgetPath
   if ($Bb -notlike "*Intentional oversize*" -or $Bb -notlike "*docs-style*") {
-    Add-Finding "desync" "intentional-oversize-missing" "fail" "50-context-budget missing intentional oversize intent" "H13"
+    Add-Finding "desync" "intentional-oversize-missing" "fail" "30-context-skill-mcp missing intentional oversize intent" "H13"
   }
 }
 

@@ -1,0 +1,12 @@
+{
+  "journey_id": "JOURNEY-007",
+  "description": "MCP-required task leases a provider; 7-point canary aggregate",
+  "observed": {
+    "lease_state": "LEASED",
+    "canary_passed": true,
+    "points": 7
+  },
+  "observed_at": "2026-08-25T14:29:45.129Z",
+  "schema": "agent-rules/journey-observation/v1",
+  "sha256": "a3ce4ea32f34688ac9b6f122f55fdfc7ff9e5e3d16c29cd73845211e5f58fc13"
+}

@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * validate-proof-mirror-parity.mjs — verify adaptive-minimal-proof-testing is
- * projected into every platform mirror (owner §14):
- *   - rule 45-adaptive-minimal-proof-testing.md present in each mirror rules/;
+ * validate-proof-mirror-parity.mjs — verify the adaptive-minimal-proof rule
+ * (20-proof-outcome.md, minimal-proof owner) is projected into every platform
+ * mirror (owner §14):
+ *   - rule 20-proof-outcome.md present in each mirror rules/;
  *   - manifest.yaml rule contract entry present;
  *   - proof-*.schema.json present in each mirror;
  *   - source rule hash === mirror rule hash (no drift).
@@ -18,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
-const RULE = '45-adaptive-minimal-proof-testing.md';
+const RULE = '20-proof-outcome.md';
 const SCHEMAS = [
   'proof-trigger.schema.json', 'proof-receipt.schema.json', 'proof-profile.schema.json',
   'proof-omission.schema.json', 'claim-to-proof.schema.json', 'risk-to-proof.schema.json',
@@ -59,7 +60,7 @@ function main() {
     checked++;
 
     const manifest = path.join(buildRoot, platform, 'rules', 'manifest.yaml');
-    if (fs.existsSync(manifest) && !fs.readFileSync(manifest, 'utf8').includes('45-adaptive-minimal-proof-testing.md')) {
+    if (fs.existsSync(manifest) && !fs.readFileSync(manifest, 'utf8').includes('20-proof-outcome.md')) {
       errors.push(`${platform}: manifest.yaml lacks the proof-testing rule contract`);
     }
     for (const schema of SCHEMAS) {

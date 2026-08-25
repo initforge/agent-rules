@@ -64,7 +64,7 @@ $CoreChars = ($Core | ForEach-Object {
 } | Measure-Object -Sum).Sum
 $CoreTokens = [math]::Ceiling($CoreChars / 3.6)
 if ($CoreTokens -gt $CoreBudget) { $Problems.Add("Core token budget exceeded: $CoreTokens > $CoreBudget") }
-if ($LoadOrderFiles.Count -lt 7) { $Problems.Add("manifest load_order parse incomplete: only $($LoadOrderFiles.Count) rule(s)") }
+if ($LoadOrderFiles.Count -lt 5) { $Problems.Add("manifest load_order parse incomplete: only $($LoadOrderFiles.Count) rule(s)") }
 
 foreach ($Platform in @("codex", "grok", "antigravity", "cursor")) {
   $Overlay = Join-Path $Root "platforms\$Platform\$Platform-overlay.md"
@@ -77,7 +77,7 @@ $SkillFiles = Get-ChildItem (Join-Path $Root "skills") -Directory | ForEach-Obje
   Join-Path $_.FullName "SKILL.md"
 } | Where-Object { Test-Path $_ }
 
-# Owner-intentional oversize packs (cohesion) - do not FAIL size-only (see rules/50-context-budget.md)
+# Owner-intentional oversize packs (cohesion) - do not FAIL size-only (see rules/30-context-skill-mcp.md)
 $IntentionalOversizeSkills = @("docs-style", "plan-and-handoff", "finish-to-completion", "code-review")
 
 $Slugs = @()
@@ -106,9 +106,9 @@ $RequiredPaths = @(
 
 
 
-  "rules\05-critical-thinking.md",
-  "rules\16-context-style.md",
-  "rules\25-task-lifecycle.md",
+  "rules\00-intent-scope-safety.md",
+  "rules\10-execution-planning-delegation.md",
+  "rules\30-context-skill-mcp.md",
   "skills\plan-and-handoff\SKILL.md",
   "skills\plan-and-handoff\references\adaptive-work-protocol.md",
   "skills\plan-and-handoff\references\plan-artifact-template.md",
@@ -326,9 +326,9 @@ foreach ($Legacy in $LegacyAlwaysOn) {
 }
 
 # Intentional oversize declarations remain explicit.
-$BudgetBody = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "rules\50-context-budget.md")
+$BudgetBody = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "rules\30-context-skill-mcp.md")
 if ($BudgetBody -notlike "*Intentional oversize*" -or $BudgetBody -notlike "*docs-style*" -or $BudgetBody -notlike "*plan-and-handoff*") {
-  $Problems.Add("rules/50-context-budget.md missing intentional oversize owner intent for docs-style/plan-and-handoff")
+  $Problems.Add("rules/30-context-skill-mcp.md missing intentional oversize owner intent for docs-style/plan-and-handoff")
 }
 
 $RouteCasesPath = Join-Path $Root "automation\context-route-cases.json"
@@ -563,11 +563,11 @@ if ($DocDriftPython -and (Test-Path $DocDriftScript)) {
 }
 
 # ─── retired-platform config validation ─────────────────────────────────────────────
-$retired-platformConfigs = @(
+$RetiredPlatformConfigs = @(
   "$env:USERPROFILE\.config\retired-platform\retired-platform.jsonc",
   "$Root\.retired-platform\retired-platform.jsonc"
 )
-$Validretired-platformKeys = @(
+$ValidRetiredPlatformKeys = @(
   '$schema', 'logLevel', 'server', 'command', 'skills', 'watcher', 'snapshot',
   'plugin', 'share', 'autoshare', 'autoupdate', 'disabled_providers',
   'enabled_providers', 'model', 'small_model', 'model_groups', 'default_agent',
@@ -576,11 +576,11 @@ $Validretired-platformKeys = @(
   'compaction', 'checkpoint', 'memory', 'history', 'dream', 'distill',
   'voice', 'compose', 'enterprise'
 )
-foreach ($ConfigPath in $retired-platformConfigs) {
+foreach ($ConfigPath in $RetiredPlatformConfigs) {
   if (Test-Path -LiteralPath $ConfigPath -PathType Leaf) {
     try {
       $Config = Get-Content -Raw -LiteralPath $ConfigPath -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
-      $InvalidKeys = $Config.PSObject.Properties.Name | Where-Object { $_ -notin $Validretired-platformKeys }
+      $InvalidKeys = $Config.PSObject.Properties.Name | Where-Object { $_ -notin $ValidRetiredPlatformKeys }
       if ($InvalidKeys) {
         $Problems.Add("retired-platform config invalid keys in ${ConfigPath}: $($InvalidKeys -join ', ')")
       }

@@ -489,16 +489,27 @@ def route(prompt: str, workspace_paths: Iterable[str | Path], graph: dict[str, A
     if primary:
         stack.append(primary)
         primary_routing = candidates[0][1].get("routing") or {}
+        node_by_slug = {str(item.get("id", "")).removeprefix("skill:"): item for item in _skill_nodes(graph)}
         for required in primary_routing.get("requires", []):
             if required in known_skills and required not in required_skills:
                 required_skills.append(str(required))
+        # Declared supports compose regardless of prompt match (REQ-109):
+        # SKILL.md metadata owns the combo; the support node only needs to be
+        # known and in scope, with its own excludes respected.
         for supporting in primary_routing.get("supports", []):
-            if any(str(item[1].get("id")) == f"skill:{supporting}" for item in candidates):
+            node = node_by_slug.get(str(supporting))
+            if node is None:
+                continue
+            routing = node.get("routing") or {}
+            project_scope = routing.get("project_scope") or ""
+            # Mirror the TypeScript router: a support is in scope when its
+            # project_scope is empty or it matches the active 5fedu scope.
+            if project_scope == "5fedu" and not active_5fedu:
+                continue
+            if routing.get("excludes") and any(phrase in text for phrase in routing["excludes"]):
+                continue
+            if supporting not in supporting_skills:
                 supporting_skills.append(str(supporting))
-        for _, node, _ in candidates[1:]:
-            slug = str(node["id"]).removeprefix("skill:")
-            if slug not in stack and slug not in supporting_skills and slug in primary_routing.get("supports", []):
-                supporting_skills.append(slug)
         for dependency in [*required_skills, *supporting_skills]:
             if dependency not in stack:
                 stack.append(dependency)

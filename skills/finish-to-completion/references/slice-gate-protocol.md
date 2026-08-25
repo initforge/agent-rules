@@ -24,7 +24,7 @@ slice_id:
   next_safe_action: "..."
 ```
 
-The coordinator records the two delegation facts from [`rules/25-task-lifecycle.md`](../../../rules/25-task-lifecycle.md): `delegated` and `outcome` (`consumed`/`rejected` with reason, or `skipped` with reason). The former seven-event receipt chain is retired; skill documents do not reintroduce it.
+The coordinator records the two delegation facts from [`rules/10-execution-planning-delegation.md`](../../../rules/10-execution-planning-delegation.md): `delegated` and `outcome` (`consumed`/`rejected` with reason, or `skipped` with reason). The former seven-event receipt chain is retired; skill documents do not reintroduce it.
 
 ## Rules
 

@@ -59,7 +59,7 @@ Keep capsules compact: include only source IDs and facts needed for that slice; 
 
 Every ready assignment begins `pending`; its owner must acknowledge it before the slice starts, transitioning the assignment to `acknowledged`. `NEEDS_CONTEXT`, `CONFLICT`, and `BLOCKED` are recovery signals, not acknowledgment states: use them respectively for a bounded missing fact, ownership/interface overlap, or a decisive external dependency. Recover in order: supply the minimum missing context, reconcile ownership/interface boundaries, reassign a narrow slice, then use sequential execution only when native subagents are unavailable. Preserve acceptance, proof, checkpoints, and context boundaries; never silently fall back or weaken the outcome. Record this as orchestration `UNAVAILABLE`, not task `PARTIAL`; task outcome may still `PASS` when behavior is proven.
 
-Delegation receipts are exactly two facts, owned by [`rules/25-task-lifecycle.md`](../../../rules/25-task-lifecycle.md):
+Delegation receipts are exactly two facts, owned by [`rules/10-execution-planning-delegation.md`](../../../rules/10-execution-planning-delegation.md):
 
 | Fact | Meaning |
 |---|---|

@@ -1,0 +1,12 @@
+{
+  "journey_id": "JOURNEY-008",
+  "description": "Non-MCP task creates zero leases and zero MCP calls",
+  "observed": {
+    "leases_created": 0,
+    "mcp_calls": 0,
+    "lease_required": false
+  },
+  "observed_at": "2026-08-25T14:29:45.129Z",
+  "schema": "agent-rules/journey-observation/v1",
+  "sha256": "2cc22e54724e224c408f79e5883735e33055d8582ebb0cc4050451252a9b772b"
+}

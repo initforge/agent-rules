@@ -1,6 +1,13 @@
 ---
 name: impeccable
 description: "Provenance projection for pbakaus/impeccable (pinned c8f476b3, Apache-2.0): EXPLICIT activation only; effectful hook-aware install."
+metadata:
+  signals: "impeccable review, impeccable install"
+  excludes: "5fedu, ERP module"
+  priority: "30"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # impeccable
 

@@ -1,0 +1,17 @@
+{
+  "schema": "agent-rules/host-rollback",
+  "version": 1,
+  "host": "grok",
+  "rollback_claim": {
+    "status": "PASS",
+    "evidence": [
+      {
+        "kind": "uninstall-rollback-preserves-user",
+        "host": "grok",
+        "detail": "atomic swap backup manifest and byte restoration verified"
+      }
+    ],
+    "omitted_reason": null
+  },
+  "byte_equal_verified": true
+}

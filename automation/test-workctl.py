@@ -318,7 +318,7 @@ def main() -> None:
             **a1,
             "id": "A4",
             "agent": "worker-4",
-            "write_paths": ["rules/10-execution.md"],
+            "write_paths": ["rules/10-execution-planning-delegation.md"],
         }
         expect_error(
             root,

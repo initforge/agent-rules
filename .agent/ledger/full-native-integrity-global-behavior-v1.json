@@ -1,0 +1,780 @@
+{
+  "schema_version": 4,
+  "plan_id": "full-native-integrity-global-behavior-v1",
+  "status": "ACTIVE",
+  "execution_state": "ACTIVE",
+  "created_at": "2026-08-25T09:07:56.215Z",
+  "updated_at": "2026-08-25T09:07:56.215Z",
+  "candidate_fingerprint": "09959c75e86c51b224e7464c776dc3766c62551a02299c3f00332ea4bb314525",
+  "git_head": "c1deca1a5ee186a9d0361b57fd0ff7e943fa676e",
+  "shadow_revision": 0,
+  "canonical_scope": {
+    "allow_mutation": true,
+    "owners": [
+      "harness-maintainer"
+    ]
+  },
+  "original_plan": {
+    "path": ".agent/plans/full-native-integrity-global-behavior-v1/plan.md",
+    "sha256": "42a595ff934424a1e5800afc32d4f8276c96ae71124388070e6679d3288ee317",
+    "bytes": 662,
+    "encoding": "utf-8"
+  },
+  "effective_plan_identity": {
+    "sha256": "c02ab1b6cfcb991922793e3840f46c546f65bf98a7e3843ebf1e4c9c2c029d0a",
+    "canonical_json_utf8": "{\"algorithm\":\"SHA-256\",\"approved_amendments\":[],\"composition\":\"original-plus-ordered-approved-amendment-sha256\",\"original_plan_sha256\":\"42a595ff934424a1e5800afc32d4f8276c96ae71124388070e6679d3288ee317\",\"version\":1}",
+    "bytes": 214
+  },
+  "milestones": {
+    "P0": {
+      "requirements": [
+        {
+          "id": "REQ-001",
+          "trace_id": "REQ-01",
+          "status": "ACTIVE",
+          "statement": "Cả 8 host cài bằng native surface chính thức riêng, không dùng cùng cấu trúc file cho mọi host",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-002",
+          "trace_id": "REQ-02",
+          "status": "ACTIVE",
+          "statement": "Host chưa login được chứng minh tối đa credential-free (loader/readback/hook/catalog/MCP handshake); chỉ MODEL_BEHAVIOR được NEEDS_USER",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-003",
+          "trace_id": "REQ-03",
+          "status": "ACTIVE",
+          "statement": "Không đọc/sao chép/yêu cầu credentials; dùng session/keyring sẵn cho canary vô hại",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-004",
+          "trace_id": "REQ-04",
+          "status": "ACTIVE",
+          "statement": "Xóa hoàn toàn operator-profile, vibe-coder, plain-vietnamese, technical_explain và mọi mode liên quan khỏi source/CLI/rules/tests/mirrors",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-005",
+          "trace_id": "REQ-05",
+          "status": "ACTIVE",
+          "statement": "Giao tiếp mặc định natural: ngôn ngữ người dùng, outcome-first, dễ hiểu; kỹ thuật chỉ khi giúp quyết định/debug/verification hoặc khi hỏi",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-006",
+          "trace_id": "REQ-06",
+          "status": "ACTIVE",
+          "statement": "Chỉ còn một registry, một skill resolver, một integration broker, một artifact store, một evidence ledger, một outcome reducer; public UX gọn",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-007",
+          "trace_id": "REQ-07",
+          "status": "ACTIVE",
+          "statement": "Không false PASS; không quét JSON PASS bất kỳ để đóng requirement khác; worker không tự ghi PASS",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        }
+      ]
+    },
+    "P1": {
+      "requirements": [
+        {
+          "id": "REQ-008",
+          "trace_id": "REQ-08",
+          "status": "ACTIVE",
+          "statement": "Một nguồn sự thật platforms/platform-contracts.json NativeHostContract với đầy đủ fields",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-009",
+          "trace_id": "REQ-09",
+          "status": "ACTIVE",
+          "statement": "Public CLI gọn 8 lệnh; xóa operator-profile/close/M11; maintainer tách biệt; status Ready/Needs action/Unsupported",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-010",
+          "trace_id": "REQ-10",
+          "status": "ACTIVE",
+          "statement": "Native installer transactional per-host (detect/inventory/planInstall/install/certify/rollback/uninstall) với merge bảo toàn, lock, crash recovery, byte-equal rollback",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-011",
+          "trace_id": "REQ-11",
+          "status": "ACTIVE",
+          "statement": "Runtime hai lớp không inject trùng; skill native SKILL.md single source shared ~/.agents/skills; MCP tách khỏi core install",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-012",
+          "trace_id": "REQ-12",
+          "status": "ACTIVE",
+          "statement": "Artifact admission qua RunStore duy nhất với ProofPlan/claim-bound EvidenceRecord; closure duy nhất EvidenceLedger→AcceptanceAudit→OutcomeReducer",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-013",
+          "trace_id": "REQ-13",
+          "status": "ACTIVE",
+          "statement": "Verification 9 claims per host; Ready requires 1–7+9 PASS; claim 8 conditional NEEDS_USER; best-effort dual surfaces",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-014",
+          "trace_id": "REQ-14",
+          "status": "ACTIVE",
+          "statement": "Thực hiện một pass resumable, supersede plan cũ bằng amendment, forward-edit dirty worktree, không commit/push",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        }
+      ]
+    },
+    "P2": {
+      "requirements": [
+        {
+          "id": "REQ-015",
+          "trace_id": "REQ-G01",
+          "status": "ACTIVE",
+          "statement": "Keep communication profile-free and natural",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-016",
+          "trace_id": "REQ-G02",
+          "status": "ACTIVE",
+          "statement": "Hidden authority states ADVISORY→PLAN→EXECUTION→VERIFY→TERMINAL",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-017",
+          "trace_id": "REQ-G03",
+          "status": "ACTIVE",
+          "statement": "Plan-only cannot authorize edits; explicit execute pivot required",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-018",
+          "trace_id": "REQ-G04",
+          "status": "ACTIVE",
+          "statement": "Classify owner messages CONTINUATION/ADD/CORRECT/CONFLICT/SUPERSEDE/INDEPENDENT",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-019",
+          "trace_id": "REQ-G05",
+          "status": "ACTIVE",
+          "statement": "Implement ADD/CORRECT/CONFIRM/REJECT/SUPERSEDE semantics",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-020",
+          "trace_id": "REQ-G06",
+          "status": "ACTIVE",
+          "statement": "Planner bounded: one draft + at most one correction batch",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-021",
+          "trace_id": "REQ-G07",
+          "status": "ACTIVE",
+          "statement": "Independent reviewer requires separate invocation/identity",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        }
+      ]
+    },
+    "P3": {
+      "requirements": [
+        {
+          "id": "REQ-022",
+          "trace_id": "REQ-G08",
+          "status": "ACTIVE",
+          "statement": "Single writer lease per worktree with concurrency lock",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-023",
+          "trace_id": "REQ-G09",
+          "status": "ACTIVE",
+          "statement": "Protect dirty tracked/untracked files against overwrite",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-024",
+          "trace_id": "REQ-G10",
+          "status": "ACTIVE",
+          "statement": "Global safety cannot be weakened by project-local instructions",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-025",
+          "trace_id": "REQ-G11",
+          "status": "ACTIVE",
+          "statement": "Commit/push/delete/credentials require explicit authority",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-026",
+          "trace_id": "REQ-G12",
+          "status": "ACTIVE",
+          "statement": "Preserve intent across compaction/restart/resume/handoff",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-027",
+          "trace_id": "REQ-G13",
+          "status": "ACTIVE",
+          "statement": "Clarification only for material ambiguity",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        },
+        {
+          "id": "REQ-028",
+          "trace_id": "REQ-G14",
+          "status": "ACTIVE",
+          "statement": "Disposable-repo global behavior test suite with 22 real scenarios",
+          "evidenceRefs": [
+            ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+            ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+          ]
+        }
+      ]
+    }
+  },
+  "tasks": {},
+  "requirements": {
+    "REQ-001": {
+      "statement": "Cả 8 host cài bằng native surface chính thức riêng, không dùng cùng cấu trúc file cho mọi host",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-002": {
+      "statement": "Host chưa login được chứng minh tối đa credential-free (loader/readback/hook/catalog/MCP handshake); chỉ MODEL_BEHAVIOR được NEEDS_USER",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-003": {
+      "statement": "Không đọc/sao chép/yêu cầu credentials; dùng session/keyring sẵn cho canary vô hại",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-004": {
+      "statement": "Xóa hoàn toàn operator-profile, vibe-coder, plain-vietnamese, technical_explain và mọi mode liên quan khỏi source/CLI/rules/tests/mirrors",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-005": {
+      "statement": "Giao tiếp mặc định natural: ngôn ngữ người dùng, outcome-first, dễ hiểu; kỹ thuật chỉ khi giúp quyết định/debug/verification hoặc khi hỏi",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-006": {
+      "statement": "Chỉ còn một registry, một skill resolver, một integration broker, một artifact store, một evidence ledger, một outcome reducer; public UX gọn",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-007": {
+      "statement": "Không false PASS; không quét JSON PASS bất kỳ để đóng requirement khác; worker không tự ghi PASS",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-008": {
+      "statement": "Một nguồn sự thật platforms/platform-contracts.json NativeHostContract với đầy đủ fields",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-009": {
+      "statement": "Public CLI gọn 8 lệnh; xóa operator-profile/close/M11; maintainer tách biệt; status Ready/Needs action/Unsupported",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-010": {
+      "statement": "Native installer transactional per-host (detect/inventory/planInstall/install/certify/rollback/uninstall) với merge bảo toàn, lock, crash recovery, byte-equal rollback",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-011": {
+      "statement": "Runtime hai lớp không inject trùng; skill native SKILL.md single source shared ~/.agents/skills; MCP tách khỏi core install",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-012": {
+      "statement": "Artifact admission qua RunStore duy nhất với ProofPlan/claim-bound EvidenceRecord; closure duy nhất EvidenceLedger→AcceptanceAudit→OutcomeReducer",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-013": {
+      "statement": "Verification 9 claims per host; Ready requires 1–7+9 PASS; claim 8 conditional NEEDS_USER; best-effort dual surfaces",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-014": {
+      "statement": "Thực hiện một pass resumable, supersede plan cũ bằng amendment, forward-edit dirty worktree, không commit/push",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-015": {
+      "statement": "Keep communication profile-free and natural",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-016": {
+      "statement": "Hidden authority states ADVISORY→PLAN→EXECUTION→VERIFY→TERMINAL",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-017": {
+      "statement": "Plan-only cannot authorize edits; explicit execute pivot required",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-018": {
+      "statement": "Classify owner messages CONTINUATION/ADD/CORRECT/CONFLICT/SUPERSEDE/INDEPENDENT",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-019": {
+      "statement": "Implement ADD/CORRECT/CONFIRM/REJECT/SUPERSEDE semantics",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-020": {
+      "statement": "Planner bounded: one draft + at most one correction batch",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-021": {
+      "statement": "Independent reviewer requires separate invocation/identity",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-022": {
+      "statement": "Single writer lease per worktree with concurrency lock",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-023": {
+      "statement": "Protect dirty tracked/untracked files against overwrite",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-024": {
+      "statement": "Global safety cannot be weakened by project-local instructions",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-025": {
+      "statement": "Commit/push/delete/credentials require explicit authority",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-026": {
+      "statement": "Preserve intent across compaction/restart/resume/handoff",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-027": {
+      "statement": "Clarification only for material ambiguity",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    },
+    "REQ-028": {
+      "statement": "Disposable-repo global behavior test suite with 22 real scenarios",
+      "status": "ACTIVE",
+      "evidenceRefs": [
+        ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+        ".agent/evidence/full-native-integrity-global-behavior-v1/global-behavior-receipt.json"
+      ]
+    }
+  },
+  "reconciliations": [
+    {
+      "requirement_id": "REQ-001",
+      "trace_id": "REQ-01",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.214Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-002",
+      "trace_id": "REQ-02",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.214Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-003",
+      "trace_id": "REQ-03",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.214Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-004",
+      "trace_id": "REQ-04",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.214Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-005",
+      "trace_id": "REQ-05",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.214Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-006",
+      "trace_id": "REQ-06",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.214Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-007",
+      "trace_id": "REQ-07",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.214Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-008",
+      "trace_id": "REQ-08",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.214Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-009",
+      "trace_id": "REQ-09",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.214Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-010",
+      "trace_id": "REQ-10",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.215Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-011",
+      "trace_id": "REQ-11",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.215Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-012",
+      "trace_id": "REQ-12",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.215Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-013",
+      "trace_id": "REQ-13",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.215Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-014",
+      "trace_id": "REQ-14",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.215Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-015",
+      "trace_id": "REQ-G01",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.215Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-016",
+      "trace_id": "REQ-G02",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.215Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-017",
+      "trace_id": "REQ-G03",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.215Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-018",
+      "trace_id": "REQ-G04",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.215Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-019",
+      "trace_id": "REQ-G05",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.215Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-020",
+      "trace_id": "REQ-G06",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.215Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-021",
+      "trace_id": "REQ-G07",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.215Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-022",
+      "trace_id": "REQ-G08",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.215Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-023",
+      "trace_id": "REQ-G09",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.215Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-024",
+      "trace_id": "REQ-G10",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.215Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-025",
+      "trace_id": "REQ-G11",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.215Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-026",
+      "trace_id": "REQ-G12",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.215Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-027",
+      "trace_id": "REQ-G13",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.215Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    },
+    {
+      "requirement_id": "REQ-028",
+      "trace_id": "REQ-G14",
+      "status": "ACTIVE",
+      "observed_at": "2026-08-25T09:07:56.215Z",
+      "evidence_ref": ".agent/evidence/full-native-integrity-global-behavior-v1/hosts/codex/receipt.json",
+      "resolution": "Tracked in active closure plan"
+    }
+  ],
+  "note": "Active canonical plan for Full Native Integrity & Global Behavior Closure."
+}

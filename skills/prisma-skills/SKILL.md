@@ -1,6 +1,13 @@
 ---
 name: prisma-skills
 description: "Provenance projection for prisma/skills (pinned 808913c1, MIT): ROUTED on prisma schema/client facts."
+metadata:
+  signals: "prisma schema, prisma client, prisma cli, prisma database setup"
+  excludes: "migration-only"
+  priority: "45"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # prisma-skills
 

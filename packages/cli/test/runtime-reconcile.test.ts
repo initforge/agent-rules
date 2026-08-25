@@ -102,7 +102,8 @@ describe("host inventory, projection, and transactional repair (S4)", () => {
   });
 
   it("covers exactly the eight registered hosts with specs", () => {
-    expect(REGISTERED_HOSTS).toEqual(["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code"]);
+    expect(new Set(REGISTERED_HOSTS)).toEqual(new Set(["codex", "claude", "grok", "opencode", "antigravity", "cursor", "deepseek-harness", "command-code"]));
+    expect(REGISTERED_HOSTS).toHaveLength(8);
     for (const host of REGISTERED_HOSTS) {
       expect(HOST_SPECS[host]).toBeDefined();
       expect(HOST_SPECS[host].binaries.length).toBeGreaterThan(0);

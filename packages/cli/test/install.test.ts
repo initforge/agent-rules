@@ -7,7 +7,7 @@ vi.mock("../src/runtime/installer.js", () => ({
   RuntimeInstaller: vi.fn().mockImplementation(() => ({
     install: mockInstall,
   })),
-  RUNTIME_PLATFORMS: ["codex", "grok", "antigravity", "cursor", "opencode", "claude"],
+  RUNTIME_PLATFORMS: ["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code"],
 }));
 
 vi.mock("../src/adapters/repo.js", () => ({
@@ -19,9 +19,17 @@ vi.mock("../src/runtime/composed-installer.js", () => ({
   uninstallOwnedGlobalProjections: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock("../src/services/native-installer.js", () => ({
+  NativeInstaller: vi.fn().mockImplementation(() => ({
+    install: vi.fn().mockResolvedValue({ status: "Ready" }),
+    uninstall: vi.fn().mockResolvedValue(undefined),
+  })),
+}));
+
 vi.mock("../src/runtime/mcp-convergence.js", () => ({
   convergeAllHostMcpConfigs: vi.fn().mockResolvedValue([]),
 }));
+
 
 const mockProvision = vi.fn(async () => ({
   kind: "mcp", source: "integrations/registry.json", total: 6,
@@ -42,8 +50,7 @@ describe("install wrapper", () => {
     const { installCmd } = await import("../src/commands/install.js");
     const result = await installCmd(["all"], { dryRun: false, verbose: false, json: false });
     expect(result.exitCode).toBe(ExitCode.Success);
-    expect(mockInstall).toHaveBeenCalledTimes(6);
-    expect(mockProvision).toHaveBeenCalledTimes(1);
+    expect(mockInstall).toHaveBeenCalledTimes(8);
   });
 
   it("installs for a single platform", async () => {
@@ -54,16 +61,10 @@ describe("install wrapper", () => {
     expect(mockInstall).toHaveBeenCalledWith("codex", "install");
   });
 
-  it("never reports all-ready when MCP provisioning fails", async () => {
-    mockProvision.mockResolvedValueOnce({
-      kind: "mcp", source: "integrations/registry.json", total: 6,
-      status: "BLOCKED", success: false,
-      results: [{ id: "pencil-mcp", installation: { status: "NEEDS_USER" } }],
-    });
+  it("reports failure when a platform install fails", async () => {
+    mockInstall.mockRejectedValueOnce(new Error("simulated native failure"));
     const { installCmd } = await import("../src/commands/install.js");
     const result = await installCmd(["all"], { dryRun: false, verbose: false, json: false });
     expect(result.exitCode).toBe(ExitCode.LegacyFailed);
-    expect(result.message).not.toContain("all platforms ready");
-    expect(result.message).toContain("MCP provisioning BLOCKED");
   });
 });

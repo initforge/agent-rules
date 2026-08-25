@@ -18,8 +18,8 @@ Spec-to-output flow: `packages/kernel/src/northstar/runtime.ts`
    sufficient proof set from scope, claims, risks and runtime surface; live
    claims require live proof; results use exactly PASS/PARTIAL/BLOCKED/
    UNSUPPORTED/PRE-EXISTING/NEEDS_USER; proof receipts record selected AND
-   omitted proof (rule `rules/45-adaptive-minimal-proof-testing.md`, router
-   `packages/kernel/src/northstar/proof-router.ts`, CLI `agent-rules proof-plan`).
+   omitted proof (rule `rules/20-proof-outcome.md`, router
+   `packages/kernel/src/northstar/proof-router.ts`).
 
 ## Quick start
 

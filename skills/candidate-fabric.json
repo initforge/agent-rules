@@ -37,287 +37,287 @@
       "anthropic-frontend-design": {
         "codex": {
           "path": "skills/anthropic-frontend-design/SKILL.md",
-          "sha256": "a2479d19e6f2323c556c5523f54e7548d5994df9bf011dd01b7c8ede7d2ed82b"
+          "sha256": "0f549d2b629ff57d217b1087078524c7e8f1e8d0e89b4af2bb728a7854b60720"
         },
         "claude": {
           "path": "skills/anthropic-frontend-design/SKILL.md",
-          "sha256": "a2479d19e6f2323c556c5523f54e7548d5994df9bf011dd01b7c8ede7d2ed82b"
+          "sha256": "0f549d2b629ff57d217b1087078524c7e8f1e8d0e89b4af2bb728a7854b60720"
         },
         "grok": {
           "path": "skills/anthropic-frontend-design/SKILL.md",
-          "sha256": "a2479d19e6f2323c556c5523f54e7548d5994df9bf011dd01b7c8ede7d2ed82b"
+          "sha256": "0f549d2b629ff57d217b1087078524c7e8f1e8d0e89b4af2bb728a7854b60720"
         },
         "opencode": {
           "path": "skills/anthropic-frontend-design/SKILL.md",
-          "sha256": "a2479d19e6f2323c556c5523f54e7548d5994df9bf011dd01b7c8ede7d2ed82b"
+          "sha256": "0f549d2b629ff57d217b1087078524c7e8f1e8d0e89b4af2bb728a7854b60720"
         },
         "antigravity": {
           "path": "skills/anthropic-frontend-design/SKILL.md",
-          "sha256": "a2479d19e6f2323c556c5523f54e7548d5994df9bf011dd01b7c8ede7d2ed82b"
+          "sha256": "0f549d2b629ff57d217b1087078524c7e8f1e8d0e89b4af2bb728a7854b60720"
         },
         "cursor": {
           "path": "skills/anthropic-frontend-design/SKILL.md",
-          "sha256": "a2479d19e6f2323c556c5523f54e7548d5994df9bf011dd01b7c8ede7d2ed82b"
+          "sha256": "0f549d2b629ff57d217b1087078524c7e8f1e8d0e89b4af2bb728a7854b60720"
         }
       },
       "callstack-react-native-best-practices": {
         "codex": {
           "path": "skills/callstack-react-native-best-practices/SKILL.md",
-          "sha256": "930032795254e014890a2bd0f27ffd68bf8620d061b82018c678e9fc0ada21eb"
+          "sha256": "893c052b743d0ae0df020eda616a8105592f4bb84900fa16e276da37be8d5ad6"
         },
         "claude": {
           "path": "skills/callstack-react-native-best-practices/SKILL.md",
-          "sha256": "930032795254e014890a2bd0f27ffd68bf8620d061b82018c678e9fc0ada21eb"
+          "sha256": "893c052b743d0ae0df020eda616a8105592f4bb84900fa16e276da37be8d5ad6"
         },
         "grok": {
           "path": "skills/callstack-react-native-best-practices/SKILL.md",
-          "sha256": "930032795254e014890a2bd0f27ffd68bf8620d061b82018c678e9fc0ada21eb"
+          "sha256": "893c052b743d0ae0df020eda616a8105592f4bb84900fa16e276da37be8d5ad6"
         },
         "opencode": {
           "path": "skills/callstack-react-native-best-practices/SKILL.md",
-          "sha256": "930032795254e014890a2bd0f27ffd68bf8620d061b82018c678e9fc0ada21eb"
+          "sha256": "893c052b743d0ae0df020eda616a8105592f4bb84900fa16e276da37be8d5ad6"
         },
         "antigravity": {
           "path": "skills/callstack-react-native-best-practices/SKILL.md",
-          "sha256": "930032795254e014890a2bd0f27ffd68bf8620d061b82018c678e9fc0ada21eb"
+          "sha256": "893c052b743d0ae0df020eda616a8105592f4bb84900fa16e276da37be8d5ad6"
         },
         "cursor": {
           "path": "skills/callstack-react-native-best-practices/SKILL.md",
-          "sha256": "930032795254e014890a2bd0f27ffd68bf8620d061b82018c678e9fc0ada21eb"
+          "sha256": "893c052b743d0ae0df020eda616a8105592f4bb84900fa16e276da37be8d5ad6"
         }
       },
       "expo-skills": {
         "codex": {
           "path": "skills/expo-skills/SKILL.md",
-          "sha256": "17731ed5996e62d09867314aab46bf5a8f1053cea3b3edf850306790c401c781"
+          "sha256": "48c428f5584f69a1e4696e0951a2b0a21432dde65d510c74106181203a22138d"
         },
         "claude": {
           "path": "skills/expo-skills/SKILL.md",
-          "sha256": "17731ed5996e62d09867314aab46bf5a8f1053cea3b3edf850306790c401c781"
+          "sha256": "48c428f5584f69a1e4696e0951a2b0a21432dde65d510c74106181203a22138d"
         },
         "grok": {
           "path": "skills/expo-skills/SKILL.md",
-          "sha256": "17731ed5996e62d09867314aab46bf5a8f1053cea3b3edf850306790c401c781"
+          "sha256": "48c428f5584f69a1e4696e0951a2b0a21432dde65d510c74106181203a22138d"
         },
         "opencode": {
           "path": "skills/expo-skills/SKILL.md",
-          "sha256": "17731ed5996e62d09867314aab46bf5a8f1053cea3b3edf850306790c401c781"
+          "sha256": "48c428f5584f69a1e4696e0951a2b0a21432dde65d510c74106181203a22138d"
         },
         "antigravity": {
           "path": "skills/expo-skills/SKILL.md",
-          "sha256": "17731ed5996e62d09867314aab46bf5a8f1053cea3b3edf850306790c401c781"
+          "sha256": "48c428f5584f69a1e4696e0951a2b0a21432dde65d510c74106181203a22138d"
         },
         "cursor": {
           "path": "skills/expo-skills/SKILL.md",
-          "sha256": "17731ed5996e62d09867314aab46bf5a8f1053cea3b3edf850306790c401c781"
+          "sha256": "48c428f5584f69a1e4696e0951a2b0a21432dde65d510c74106181203a22138d"
         }
       },
       "hashicorp-agent-skills": {
         "codex": {
           "path": "skills/hashicorp-agent-skills/SKILL.md",
-          "sha256": "852943d9990ac5e6c43e0047ffecfe9594e9058ad13c9769558c92244e1f120f"
+          "sha256": "b1cb2be96f7e92477cb77e2b4fba58596b79ec86190928888bee84061bc82d2f"
         },
         "claude": {
           "path": "skills/hashicorp-agent-skills/SKILL.md",
-          "sha256": "852943d9990ac5e6c43e0047ffecfe9594e9058ad13c9769558c92244e1f120f"
+          "sha256": "b1cb2be96f7e92477cb77e2b4fba58596b79ec86190928888bee84061bc82d2f"
         },
         "grok": {
           "path": "skills/hashicorp-agent-skills/SKILL.md",
-          "sha256": "852943d9990ac5e6c43e0047ffecfe9594e9058ad13c9769558c92244e1f120f"
+          "sha256": "b1cb2be96f7e92477cb77e2b4fba58596b79ec86190928888bee84061bc82d2f"
         },
         "opencode": {
           "path": "skills/hashicorp-agent-skills/SKILL.md",
-          "sha256": "852943d9990ac5e6c43e0047ffecfe9594e9058ad13c9769558c92244e1f120f"
+          "sha256": "b1cb2be96f7e92477cb77e2b4fba58596b79ec86190928888bee84061bc82d2f"
         },
         "antigravity": {
           "path": "skills/hashicorp-agent-skills/SKILL.md",
-          "sha256": "852943d9990ac5e6c43e0047ffecfe9594e9058ad13c9769558c92244e1f120f"
+          "sha256": "b1cb2be96f7e92477cb77e2b4fba58596b79ec86190928888bee84061bc82d2f"
         },
         "cursor": {
           "path": "skills/hashicorp-agent-skills/SKILL.md",
-          "sha256": "852943d9990ac5e6c43e0047ffecfe9594e9058ad13c9769558c92244e1f120f"
+          "sha256": "b1cb2be96f7e92477cb77e2b4fba58596b79ec86190928888bee84061bc82d2f"
         }
       },
       "impeccable": {
         "codex": {
           "path": "skills/impeccable/SKILL.md",
-          "sha256": "ef64f46d74c5c2ecf69d3f11ef838bfd7856a2840905efa33ce9f0bdb188f94e"
+          "sha256": "0645aa8ae50c9f689fee58da3ca4651a10ee101b652c4408a8285c67eb8d34f3"
         },
         "claude": {
           "path": "skills/impeccable/SKILL.md",
-          "sha256": "ef64f46d74c5c2ecf69d3f11ef838bfd7856a2840905efa33ce9f0bdb188f94e"
+          "sha256": "0645aa8ae50c9f689fee58da3ca4651a10ee101b652c4408a8285c67eb8d34f3"
         },
         "grok": {
           "path": "skills/impeccable/SKILL.md",
-          "sha256": "ef64f46d74c5c2ecf69d3f11ef838bfd7856a2840905efa33ce9f0bdb188f94e"
+          "sha256": "0645aa8ae50c9f689fee58da3ca4651a10ee101b652c4408a8285c67eb8d34f3"
         },
         "opencode": {
           "path": "skills/impeccable/SKILL.md",
-          "sha256": "ef64f46d74c5c2ecf69d3f11ef838bfd7856a2840905efa33ce9f0bdb188f94e"
+          "sha256": "0645aa8ae50c9f689fee58da3ca4651a10ee101b652c4408a8285c67eb8d34f3"
         },
         "antigravity": {
           "path": "skills/impeccable/SKILL.md",
-          "sha256": "ef64f46d74c5c2ecf69d3f11ef838bfd7856a2840905efa33ce9f0bdb188f94e"
+          "sha256": "0645aa8ae50c9f689fee58da3ca4651a10ee101b652c4408a8285c67eb8d34f3"
         },
         "cursor": {
           "path": "skills/impeccable/SKILL.md",
-          "sha256": "ef64f46d74c5c2ecf69d3f11ef838bfd7856a2840905efa33ce9f0bdb188f94e"
+          "sha256": "0645aa8ae50c9f689fee58da3ca4651a10ee101b652c4408a8285c67eb8d34f3"
         }
       },
       "prisma-skills": {
         "codex": {
           "path": "skills/prisma-skills/SKILL.md",
-          "sha256": "4d4625b477debdf91e232444bdd9d329974c40095d18e9e17b30e722f06426f2"
+          "sha256": "38f27167d691ff8f51e4851647054fb13b4375762c003ee8852f983e9c95b918"
         },
         "claude": {
           "path": "skills/prisma-skills/SKILL.md",
-          "sha256": "4d4625b477debdf91e232444bdd9d329974c40095d18e9e17b30e722f06426f2"
+          "sha256": "38f27167d691ff8f51e4851647054fb13b4375762c003ee8852f983e9c95b918"
         },
         "grok": {
           "path": "skills/prisma-skills/SKILL.md",
-          "sha256": "4d4625b477debdf91e232444bdd9d329974c40095d18e9e17b30e722f06426f2"
+          "sha256": "38f27167d691ff8f51e4851647054fb13b4375762c003ee8852f983e9c95b918"
         },
         "opencode": {
           "path": "skills/prisma-skills/SKILL.md",
-          "sha256": "4d4625b477debdf91e232444bdd9d329974c40095d18e9e17b30e722f06426f2"
+          "sha256": "38f27167d691ff8f51e4851647054fb13b4375762c003ee8852f983e9c95b918"
         },
         "antigravity": {
           "path": "skills/prisma-skills/SKILL.md",
-          "sha256": "4d4625b477debdf91e232444bdd9d329974c40095d18e9e17b30e722f06426f2"
+          "sha256": "38f27167d691ff8f51e4851647054fb13b4375762c003ee8852f983e9c95b918"
         },
         "cursor": {
           "path": "skills/prisma-skills/SKILL.md",
-          "sha256": "4d4625b477debdf91e232444bdd9d329974c40095d18e9e17b30e722f06426f2"
+          "sha256": "38f27167d691ff8f51e4851647054fb13b4375762c003ee8852f983e9c95b918"
         }
       },
       "supabase-agent-skills": {
         "codex": {
           "path": "skills/supabase-agent-skills/SKILL.md",
-          "sha256": "fe571085a7edc03deb007fac3db543490f52890ad4de65b8595e838ac2cc5197"
+          "sha256": "bc48c9e557308a52c66d74c0adcc160c52dbcaa8c33039ff9f68f01345650aa3"
         },
         "claude": {
           "path": "skills/supabase-agent-skills/SKILL.md",
-          "sha256": "fe571085a7edc03deb007fac3db543490f52890ad4de65b8595e838ac2cc5197"
+          "sha256": "bc48c9e557308a52c66d74c0adcc160c52dbcaa8c33039ff9f68f01345650aa3"
         },
         "grok": {
           "path": "skills/supabase-agent-skills/SKILL.md",
-          "sha256": "fe571085a7edc03deb007fac3db543490f52890ad4de65b8595e838ac2cc5197"
+          "sha256": "bc48c9e557308a52c66d74c0adcc160c52dbcaa8c33039ff9f68f01345650aa3"
         },
         "opencode": {
           "path": "skills/supabase-agent-skills/SKILL.md",
-          "sha256": "fe571085a7edc03deb007fac3db543490f52890ad4de65b8595e838ac2cc5197"
+          "sha256": "bc48c9e557308a52c66d74c0adcc160c52dbcaa8c33039ff9f68f01345650aa3"
         },
         "antigravity": {
           "path": "skills/supabase-agent-skills/SKILL.md",
-          "sha256": "fe571085a7edc03deb007fac3db543490f52890ad4de65b8595e838ac2cc5197"
+          "sha256": "bc48c9e557308a52c66d74c0adcc160c52dbcaa8c33039ff9f68f01345650aa3"
         },
         "cursor": {
           "path": "skills/supabase-agent-skills/SKILL.md",
-          "sha256": "fe571085a7edc03deb007fac3db543490f52890ad4de65b8595e838ac2cc5197"
+          "sha256": "bc48c9e557308a52c66d74c0adcc160c52dbcaa8c33039ff9f68f01345650aa3"
         }
       },
       "trail-of-bits-security": {
         "codex": {
           "path": "skills/trail-of-bits-security/SKILL.md",
-          "sha256": "e53b4f53da0d2f972eb2bf73748571fab0cd389a426e301077f947523a227634"
+          "sha256": "a002334074cc38b10264e71d5d2ec70c44cee231136d11b00d32fbba6e1f2306"
         },
         "claude": {
           "path": "skills/trail-of-bits-security/SKILL.md",
-          "sha256": "e53b4f53da0d2f972eb2bf73748571fab0cd389a426e301077f947523a227634"
+          "sha256": "a002334074cc38b10264e71d5d2ec70c44cee231136d11b00d32fbba6e1f2306"
         },
         "grok": {
           "path": "skills/trail-of-bits-security/SKILL.md",
-          "sha256": "e53b4f53da0d2f972eb2bf73748571fab0cd389a426e301077f947523a227634"
+          "sha256": "a002334074cc38b10264e71d5d2ec70c44cee231136d11b00d32fbba6e1f2306"
         },
         "opencode": {
           "path": "skills/trail-of-bits-security/SKILL.md",
-          "sha256": "e53b4f53da0d2f972eb2bf73748571fab0cd389a426e301077f947523a227634"
+          "sha256": "a002334074cc38b10264e71d5d2ec70c44cee231136d11b00d32fbba6e1f2306"
         },
         "antigravity": {
           "path": "skills/trail-of-bits-security/SKILL.md",
-          "sha256": "e53b4f53da0d2f972eb2bf73748571fab0cd389a426e301077f947523a227634"
+          "sha256": "a002334074cc38b10264e71d5d2ec70c44cee231136d11b00d32fbba6e1f2306"
         },
         "cursor": {
           "path": "skills/trail-of-bits-security/SKILL.md",
-          "sha256": "e53b4f53da0d2f972eb2bf73748571fab0cd389a426e301077f947523a227634"
+          "sha256": "a002334074cc38b10264e71d5d2ec70c44cee231136d11b00d32fbba6e1f2306"
         }
       },
       "vercel-agent-skills": {
         "codex": {
           "path": "skills/vercel-agent-skills/SKILL.md",
-          "sha256": "3099ae9d1c11dc654ee004b91420798f38764fba43060dea7c7edfe2ba30c04e"
+          "sha256": "d8efc9017c23f6c8d43058e9d6edc59b4ecfa1896c2836b19400c7821fcc648c"
         },
         "claude": {
           "path": "skills/vercel-agent-skills/SKILL.md",
-          "sha256": "3099ae9d1c11dc654ee004b91420798f38764fba43060dea7c7edfe2ba30c04e"
+          "sha256": "d8efc9017c23f6c8d43058e9d6edc59b4ecfa1896c2836b19400c7821fcc648c"
         },
         "grok": {
           "path": "skills/vercel-agent-skills/SKILL.md",
-          "sha256": "3099ae9d1c11dc654ee004b91420798f38764fba43060dea7c7edfe2ba30c04e"
+          "sha256": "d8efc9017c23f6c8d43058e9d6edc59b4ecfa1896c2836b19400c7821fcc648c"
         },
         "opencode": {
           "path": "skills/vercel-agent-skills/SKILL.md",
-          "sha256": "3099ae9d1c11dc654ee004b91420798f38764fba43060dea7c7edfe2ba30c04e"
+          "sha256": "d8efc9017c23f6c8d43058e9d6edc59b4ecfa1896c2836b19400c7821fcc648c"
         },
         "antigravity": {
           "path": "skills/vercel-agent-skills/SKILL.md",
-          "sha256": "3099ae9d1c11dc654ee004b91420798f38764fba43060dea7c7edfe2ba30c04e"
+          "sha256": "d8efc9017c23f6c8d43058e9d6edc59b4ecfa1896c2836b19400c7821fcc648c"
         },
         "cursor": {
           "path": "skills/vercel-agent-skills/SKILL.md",
-          "sha256": "3099ae9d1c11dc654ee004b91420798f38764fba43060dea7c7edfe2ba30c04e"
+          "sha256": "d8efc9017c23f6c8d43058e9d6edc59b4ecfa1896c2836b19400c7821fcc648c"
         }
       },
       "vercel-react-best-practices": {
         "codex": {
           "path": "skills/vercel-react-best-practices/SKILL.md",
-          "sha256": "c914ea58827731821d382bc3822f2483680c5db017933119d27c8d63416ab3d8"
+          "sha256": "fbf007aa3d54fe90afff05ba59756be0afc9ee4c0c257b559b15b260e4ff1a69"
         },
         "claude": {
           "path": "skills/vercel-react-best-practices/SKILL.md",
-          "sha256": "c914ea58827731821d382bc3822f2483680c5db017933119d27c8d63416ab3d8"
+          "sha256": "fbf007aa3d54fe90afff05ba59756be0afc9ee4c0c257b559b15b260e4ff1a69"
         },
         "grok": {
           "path": "skills/vercel-react-best-practices/SKILL.md",
-          "sha256": "c914ea58827731821d382bc3822f2483680c5db017933119d27c8d63416ab3d8"
+          "sha256": "fbf007aa3d54fe90afff05ba59756be0afc9ee4c0c257b559b15b260e4ff1a69"
         },
         "opencode": {
           "path": "skills/vercel-react-best-practices/SKILL.md",
-          "sha256": "c914ea58827731821d382bc3822f2483680c5db017933119d27c8d63416ab3d8"
+          "sha256": "fbf007aa3d54fe90afff05ba59756be0afc9ee4c0c257b559b15b260e4ff1a69"
         },
         "antigravity": {
           "path": "skills/vercel-react-best-practices/SKILL.md",
-          "sha256": "c914ea58827731821d382bc3822f2483680c5db017933119d27c8d63416ab3d8"
+          "sha256": "fbf007aa3d54fe90afff05ba59756be0afc9ee4c0c257b559b15b260e4ff1a69"
         },
         "cursor": {
           "path": "skills/vercel-react-best-practices/SKILL.md",
-          "sha256": "c914ea58827731821d382bc3822f2483680c5db017933119d27c8d63416ab3d8"
+          "sha256": "fbf007aa3d54fe90afff05ba59756be0afc9ee4c0c257b559b15b260e4ff1a69"
         }
       },
       "vercel-web-design-guidelines": {
         "codex": {
           "path": "skills/vercel-web-design-guidelines/SKILL.md",
-          "sha256": "2e1fcd1d4963fdc25faf8b3f0e14cbfd938983b8194b8c03f3c24cf2b129dfe6"
+          "sha256": "0183f6518e656268aae428175d121f5de13be1a95c23c58b1d2de0d7bc7e00fc"
         },
         "claude": {
           "path": "skills/vercel-web-design-guidelines/SKILL.md",
-          "sha256": "2e1fcd1d4963fdc25faf8b3f0e14cbfd938983b8194b8c03f3c24cf2b129dfe6"
+          "sha256": "0183f6518e656268aae428175d121f5de13be1a95c23c58b1d2de0d7bc7e00fc"
         },
         "grok": {
           "path": "skills/vercel-web-design-guidelines/SKILL.md",
-          "sha256": "2e1fcd1d4963fdc25faf8b3f0e14cbfd938983b8194b8c03f3c24cf2b129dfe6"
+          "sha256": "0183f6518e656268aae428175d121f5de13be1a95c23c58b1d2de0d7bc7e00fc"
         },
         "opencode": {
           "path": "skills/vercel-web-design-guidelines/SKILL.md",
-          "sha256": "2e1fcd1d4963fdc25faf8b3f0e14cbfd938983b8194b8c03f3c24cf2b129dfe6"
+          "sha256": "0183f6518e656268aae428175d121f5de13be1a95c23c58b1d2de0d7bc7e00fc"
         },
         "antigravity": {
           "path": "skills/vercel-web-design-guidelines/SKILL.md",
-          "sha256": "2e1fcd1d4963fdc25faf8b3f0e14cbfd938983b8194b8c03f3c24cf2b129dfe6"
+          "sha256": "0183f6518e656268aae428175d121f5de13be1a95c23c58b1d2de0d7bc7e00fc"
         },
         "cursor": {
           "path": "skills/vercel-web-design-guidelines/SKILL.md",
-          "sha256": "2e1fcd1d4963fdc25faf8b3f0e14cbfd938983b8194b8c03f3c24cf2b129dfe6"
+          "sha256": "0183f6518e656268aae428175d121f5de13be1a95c23c58b1d2de0d7bc7e00fc"
         }
       }
     },
@@ -482,7 +482,7 @@
         "status": "MATERIALIZED_SKILL",
         "artifact_path": "skills/anthropic-frontend-design/SKILL.md",
         "route_path": "skills/anthropic-frontend-design/ROUTE.json",
-        "sha256": "a2479d19e6f2323c556c5523f54e7548d5994df9bf011dd01b7c8ede7d2ed82b",
+        "sha256": "0f549d2b629ff57d217b1087078524c7e8f1e8d0e89b4af2bb728a7854b60720",
         "materialized_at": "2026-08-14"
       },
       "route_receipt": {
@@ -647,7 +647,7 @@
         "status": "MATERIALIZED_SKILL",
         "artifact_path": "skills/vercel-agent-skills/SKILL.md",
         "route_path": "skills/vercel-agent-skills/ROUTE.json",
-        "sha256": "3099ae9d1c11dc654ee004b91420798f38764fba43060dea7c7edfe2ba30c04e",
+        "sha256": "d8efc9017c23f6c8d43058e9d6edc59b4ecfa1896c2836b19400c7821fcc648c",
         "materialized_at": "2026-08-14"
       },
       "route_receipt": {
@@ -809,7 +809,7 @@
         "status": "MATERIALIZED_SKILL",
         "artifact_path": "skills/expo-skills/SKILL.md",
         "route_path": "skills/expo-skills/ROUTE.json",
-        "sha256": "17731ed5996e62d09867314aab46bf5a8f1053cea3b3edf850306790c401c781",
+        "sha256": "48c428f5584f69a1e4696e0951a2b0a21432dde65d510c74106181203a22138d",
         "materialized_at": "2026-08-14"
       },
       "route_receipt": {
@@ -971,7 +971,7 @@
         "status": "MATERIALIZED_SKILL",
         "artifact_path": "skills/prisma-skills/SKILL.md",
         "route_path": "skills/prisma-skills/ROUTE.json",
-        "sha256": "4d4625b477debdf91e232444bdd9d329974c40095d18e9e17b30e722f06426f2",
+        "sha256": "38f27167d691ff8f51e4851647054fb13b4375762c003ee8852f983e9c95b918",
         "materialized_at": "2026-08-14"
       },
       "route_receipt": {
@@ -1133,7 +1133,7 @@
         "status": "MATERIALIZED_SKILL",
         "artifact_path": "skills/supabase-agent-skills/SKILL.md",
         "route_path": "skills/supabase-agent-skills/ROUTE.json",
-        "sha256": "fe571085a7edc03deb007fac3db543490f52890ad4de65b8595e838ac2cc5197",
+        "sha256": "bc48c9e557308a52c66d74c0adcc160c52dbcaa8c33039ff9f68f01345650aa3",
         "materialized_at": "2026-08-14"
       },
       "route_receipt": {
@@ -1295,7 +1295,7 @@
         "status": "MATERIALIZED_SKILL",
         "artifact_path": "skills/hashicorp-agent-skills/SKILL.md",
         "route_path": "skills/hashicorp-agent-skills/ROUTE.json",
-        "sha256": "852943d9990ac5e6c43e0047ffecfe9594e9058ad13c9769558c92244e1f120f",
+        "sha256": "b1cb2be96f7e92477cb77e2b4fba58596b79ec86190928888bee84061bc82d2f",
         "materialized_at": "2026-08-14"
       },
       "route_receipt": {
@@ -1776,7 +1776,7 @@
         "status": "MATERIALIZED_SKILL",
         "artifact_path": "skills/impeccable/SKILL.md",
         "route_path": "skills/impeccable/ROUTE.json",
-        "sha256": "ef64f46d74c5c2ecf69d3f11ef838bfd7856a2840905efa33ce9f0bdb188f94e",
+        "sha256": "0645aa8ae50c9f689fee58da3ca4651a10ee101b652c4408a8285c67eb8d34f3",
         "materialized_at": "2026-08-14"
       },
       "route_receipt": {
@@ -1950,7 +1950,7 @@
         "status": "MATERIALIZED_SKILL",
         "artifact_path": "skills/vercel-react-best-practices/SKILL.md",
         "route_path": "skills/vercel-react-best-practices/ROUTE.json",
-        "sha256": "c914ea58827731821d382bc3822f2483680c5db017933119d27c8d63416ab3d8",
+        "sha256": "fbf007aa3d54fe90afff05ba59756be0afc9ee4c0c257b559b15b260e4ff1a69",
         "materialized_at": "2026-08-14"
       },
       "route_receipt": {
@@ -2125,7 +2125,7 @@
         "status": "MATERIALIZED_SKILL",
         "artifact_path": "skills/vercel-web-design-guidelines/SKILL.md",
         "route_path": "skills/vercel-web-design-guidelines/ROUTE.json",
-        "sha256": "2e1fcd1d4963fdc25faf8b3f0e14cbfd938983b8194b8c03f3c24cf2b129dfe6",
+        "sha256": "0183f6518e656268aae428175d121f5de13be1a95c23c58b1d2de0d7bc7e00fc",
         "materialized_at": "2026-08-14"
       },
       "route_receipt": {
@@ -2291,7 +2291,7 @@
         "status": "MATERIALIZED_SKILL",
         "artifact_path": "skills/callstack-react-native-best-practices/SKILL.md",
         "route_path": "skills/callstack-react-native-best-practices/ROUTE.json",
-        "sha256": "930032795254e014890a2bd0f27ffd68bf8620d061b82018c678e9fc0ada21eb",
+        "sha256": "893c052b743d0ae0df020eda616a8105592f4bb84900fa16e276da37be8d5ad6",
         "materialized_at": "2026-08-14"
       },
       "route_receipt": {
@@ -2456,7 +2456,7 @@
         "status": "MATERIALIZED_SKILL",
         "artifact_path": "skills/trail-of-bits-security/SKILL.md",
         "route_path": "skills/trail-of-bits-security/ROUTE.json",
-        "sha256": "e53b4f53da0d2f972eb2bf73748571fab0cd389a426e301077f947523a227634",
+        "sha256": "a002334074cc38b10264e71d5d2ec70c44cee231136d11b00d32fbba6e1f2306",
         "materialized_at": "2026-08-14"
       },
       "route_receipt": {

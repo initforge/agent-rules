@@ -1,0 +1,32 @@
+﻿{
+    "generated_at":  "2026-08-25T00:14:52.5766919+07:00",
+    "coverage_note":  "forward-edit: keep native claim splitting valuable parts, remove operator-profile/mode impl, convert truth-model-negative to false PASS/skill negative tests",
+    "base_sha":  "c1deca1a5ee186a9d0361b57fd0ff7e943fa676e",
+    "dirty_files":  [
+                        "automation/host-attestation.ts",
+                        "automation/verify-windows-hosts.mjs",
+                        "operator-profiles/vibe-product/profile.json",
+                        "packages/cli/src/commands/operator-profile.ts",
+                        "packages/cli/src/services/host-projection.ts",
+                        "packages/cli/test/operator-profile.test.ts",
+                        "packages/kernel/src/northstar/operator-profile.ts",
+                        "packages/kernel/test/operator-profile.test.ts",
+                        "platforms/antigravity/antigravity-overlay.md",
+                        "platforms/claude/claude-overlay.md",
+                        "platforms/codex/codex-overlay.md",
+                        "platforms/command-code/command-code-overlay.md",
+                        "platforms/cursor/cursor-overlay.md",
+                        "platforms/deepseek-harness/deepseek-harness-overlay.md",
+                        "platforms/grok/grok-overlay.md",
+                        "platforms/opencode/opencode-overlay.md"
+                    ],
+    "untracked":  [
+                      ".agent/plans/full-native-8host-single-truth-v1/dirty-worktree-snapshot.diff",
+                      ".agent/plans/full-native-8host-single-truth-v1/dirty-worktree-snapshot.stat",
+                      ".agent/plans/full-native-8host-single-truth-v1/dirty-worktree-staged.stat",
+                      ".agent/plans/full-native-8host-single-truth-v1/dirty-worktree-status.txt",
+                      ".agent/plans/runtime-native-live-closure-v3/original.md",
+                      ".agent/plans/runtime-native-live-closure-v3/plan.json",
+                      "automation/truth-model-negative.test.ts"
+                  ]
+}

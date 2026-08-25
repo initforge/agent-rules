@@ -1,5 +1,6 @@
 {
-  "version": 2,
+  "version": 3,
+  "generated_by": "platforms/platform-contracts.json is the single registry; all adapters/docs/fixtures/certification read from here",
   "registry": {
     "host_ids": [
       "codex",
@@ -65,6 +66,481 @@
       "command-code"
     ],
     "deferred_supported_targets": []
+  },
+  "native_contracts": {
+    "codex": {
+      "id": "codex",
+      "cliSignal": "codex --version",
+      "desktopSignal": null,
+      "homeEnv": "CODEX_HOME",
+      "homeDefault": "~/.codex",
+      "surfaces": {
+        "instruction": "Managed block directly in $CODEX_HOME/AGENTS.md (no @include), skills at ~/.agents/skills",
+        "skill": "~/.agents/skills (shared) via Codex Skills discovery",
+        "agent": "$CODEX_HOME/agents (managed_directory)",
+        "hook": "native hooks in config.toml [hooks] + UserPromptSubmit lifecycle",
+        "mcp": "config.toml [mcp_servers] via `codex mcp list`",
+        "headless": "codex exec --json (headless session)"
+      },
+      "paths": {
+        "instructionPath": "$CODEX_HOME/AGENTS.md",
+        "skillPath": "~/.agents/skills/<skill>/SKILL.md",
+        "agentPath": "$CODEX_HOME/agents/<agent>.md",
+        "hookPath": "$CODEX_HOME/config.toml [hooks]",
+        "mcpPath": "$CODEX_HOME/config.toml [mcp_servers]",
+        "legacyPaths": [
+          "~/.codex/instructions.md (not used)"
+        ]
+      },
+      "precedence": "user content preserved; managed block is isolated comment region, user edits outside block never touched; TOML merge preserves comments via line-patch, not full stringify",
+      "reload": "start_new_task (new task picks up AGENTS.md + hooks without restart)",
+      "mergeStrategy": "marked-block atomic swap: backup → temp → rename; TOML is line-patched to keep comments; never overwrite user content outside block",
+      "capabilities": {
+        "detectsByFeature": true,
+        "features": [
+          "agents-md-block-readback",
+          "skills-discovery",
+          "hook-registration",
+          "toml-mcp-handshake",
+          "headless-exec"
+        ]
+      },
+      "installStrategy": "detect binary `codex` on PATH or $CODEX_HOME; inventory finds owned/managed block vs user block; planInstall computes file deltas; install does backup→atomic swap→native readback `codex mcp list`+ skill inventory; certify binds claim receipt",
+      "readbackStrategy": "native readback: parse AGENTS.md managed block bytes == canonical source; `codex mcp list` output contains bridge; `codex --version` diagnostic only",
+      "canaryStrategy": "credential-free: doctor + config readback + skill inventory + hook dry-run + MCP list/handshake; behavioral if auth: prompt nonce with explicit/implicit skill canary via headless exec",
+      "uninstallStrategy": "remove only managed block/files by ownership hash; preserve user content; verify readback no longer contains managed block",
+      "authBoundary": {
+        "offlineClaims": [
+          "HOST_PRESENT",
+          "NATIVE_INSTALLED",
+          "NATIVE_DISCOVERED",
+          "NATIVE_LIFECYCLE",
+          "NATIVE_POLICY",
+          "NATIVE_SKILLS",
+          "NATIVE_MCP",
+          "ROLLBACK_VERIFIED"
+        ],
+        "requiresAuthClaims": [
+          "MODEL_BEHAVIOR"
+        ]
+      },
+      "limits": [
+        "Codex has no desktop install root signal; config dir alone not proof; hooks require TOML, not JSON"
+      ]
+    },
+    "claude": {
+      "id": "claude",
+      "cliSignal": "claude --version",
+      "desktopSignal": "Claude desktop process (claude.exe) + ~/.claude",
+      "homeEnv": "CLAUDE_CONFIG_DIR",
+      "homeDefault": "~/.claude",
+      "surfaces": {
+        "instruction": "~/.claude/CLAUDE.md (managed block)",
+        "skill": "~/.claude/skills/<skill>/SKILL.md + shared ~/.agents/skills when supported but Claude prefers ~/.claude/skills",
+        "agent": "~/.claude/agents/<agent>.md",
+        "hook": "native hooks in ~/.claude/settings.json [hooks] (UserPromptSubmit)",
+        "mcp": "~/.claude.json [mcpServers] + `claude mcp list`",
+        "headless": "claude --print --model sonnet (harmless print-mode turn)"
+      },
+      "paths": {
+        "instructionPath": "$CLAUDE_CONFIG_DIR/CLAUDE.md",
+        "skillPath": "~/.claude/skills/<skill>/SKILL.md",
+        "agentPath": "$CLAUDE_CONFIG_DIR/agents/<agent>.md",
+        "hookPath": "$CLAUDE_CONFIG_DIR/settings.json [hooks]",
+        "mcpPath": "~/.claude.json [mcpServers]",
+        "legacyPaths": []
+      },
+      "precedence": "user CLAUDE.md content preserved; managed block merged; settings.json JSONC patched (no comment loss via careful patch)",
+      "reload": "start_new_session (or reload window); settings.json hooks hot-reload",
+      "mergeStrategy": "JSONC patch preserves comments; markdown managed block swap; only owned sections touched",
+      "capabilities": {
+        "detectsByFeature": true,
+        "features": [
+          "claude-md-readback",
+          "skills-catalog-no-skip",
+          "hook-settings-parse",
+          "mcp-list-handshake",
+          "print-mode-headless"
+        ]
+      },
+      "installStrategy": "detect `claude` binary + config dir; inventory owned vs unmanaged; atomic swap + native readback (parse settings.json, mcp list, skill count)",
+      "readbackStrategy": "parse CLAUDE.md managed block + settings.json hook registration + `claude mcp list` + skill inventory; version diagnostic only",
+      "canaryStrategy": "credential-free: config/plugin/hook parser + MCP list + owned-file hashes; if auth: one harmless --print turn with skill+ mcp nonce",
+      "uninstallStrategy": "remove managed block from CLAUDE.md + managed hook entries + MCP bridge entry that matches ownership hash only",
+      "authBoundary": {
+        "offlineClaims": [
+          "HOST_PRESENT",
+          "NATIVE_INSTALLED",
+          "NATIVE_DISCOVERED",
+          "NATIVE_LIFECYCLE",
+          "NATIVE_POLICY",
+          "NATIVE_SKILLS",
+          "NATIVE_MCP",
+          "ROLLBACK_VERIFIED"
+        ],
+        "requiresAuthClaims": [
+          "MODEL_BEHAVIOR"
+        ]
+      },
+      "limits": [
+        "Claude settings.json is JSONC with comments; do not stringify whole file; model turn needs session"
+      ]
+    },
+    "grok": {
+      "id": "grok",
+      "cliSignal": "grok --version",
+      "desktopSignal": null,
+      "homeEnv": "GROK_HOME",
+      "homeDefault": "~/.grok",
+      "surfaces": {
+        "instruction": "~/.grok/rules (priority) or compatibility shim via Claude-compatible projection when user unmanaged entries exist",
+        "skill": "~/.grok/skills/<skill>/SKILL.md or shared Claude-compatible path when compatibility kept",
+        "agent": "$GROK_HOME/agents",
+        "hook": "host_native_prompt_hook + config hooks",
+        "mcp": "$GROK_HOME/mcp.json [mcpServers] + `grok mcp list`",
+        "headless": "grok --print (when available)"
+      },
+      "paths": {
+        "instructionPath": "$GROK_HOME/.grok/rules",
+        "skillPath": "$GROK_HOME/skills/<skill>/SKILL.md",
+        "agentPath": "$GROK_HOME/agents/<agent>.md",
+        "hookPath": "$GROK_HOME/hooks.json or settings equivalent",
+        "mcpPath": "$GROK_HOME/mcp.json",
+        "legacyPaths": [
+          "~/.claude/CLAUDE.md fallback when compatibility active"
+        ]
+      },
+      "precedence": "inventory all Claude/Cursor entries Grok reads; if all entries of cell are agent-rules owned → disable compatibility and use .grok direct; if user unmanaged entries exist → keep compatibility and use exactly one Claude-compatible projection; never duplicate .grok + Claude copy",
+      "reload": "restart_or_reload (grok inspect --json must see each rule/skill/hook/MCP exactly once)",
+      "mergeStrategy": "compatibility-aware: only write to winning cell; preserve unmanaged user entries; atomic swap in target cell",
+      "capabilities": {
+        "detectsByFeature": true,
+        "features": [
+          "grok-inspect-json-rules",
+          "skills-once",
+          "hook-registration",
+          "mcp-handshake",
+          "policy-canary-via-native-parser"
+        ]
+      },
+      "installStrategy": "inventory Claude/Cursor entries; decide direct vs compatibility; atomic install to winning surface; verify `grok inspect --json` shows exactly one source per rule/skill/hook/MCP",
+      "readbackStrategy": "`grok inspect --json` + skill/hook/MCP inventory counts; duplicate/malformed detection; version diagnostic",
+      "canaryStrategy": "credential-free: grok inspect --json rules once + skills once no skipped + hooks registered + MCP handshake + policy canary; behavioral only after login (MODEL_BEHAVIOR NEEDS_USER when signed-out)",
+      "uninstallStrategy": "remove from winning cell only (direct or compatibility); restore compatibility flag if it was disabled; preserve unmanaged entries",
+      "authBoundary": {
+        "offlineClaims": [
+          "HOST_PRESENT",
+          "NATIVE_INSTALLED",
+          "NATIVE_DISCOVERED",
+          "NATIVE_LIFECYCLE",
+          "NATIVE_POLICY",
+          "NATIVE_SKILLS",
+          "NATIVE_MCP",
+          "ROLLBACK_VERIFIED"
+        ],
+        "requiresAuthClaims": [
+          "MODEL_BEHAVIOR"
+        ]
+      },
+      "limits": [
+        "Grok may read Claude/Cursor compatibility paths; never assume pure .grok isolation; model turn unavailable when signed-out"
+      ]
+    },
+    "opencode": {
+      "id": "opencode",
+      "cliSignal": "opencode --version",
+      "desktopSignal": null,
+      "homeEnv": "OPENCODE_HOME",
+      "homeDefault": "~/.config/opencode",
+      "surfaces": {
+        "instruction": "~/.config/opencode/AGENTS.md (project also honours ./AGENTS.md but global is $OPENCODE_HOME/AGENTS.md)",
+        "skill": "shared ~/.agents/skills (native plugin/permissions discovery) — avoid host-specific duplicate",
+        "agent": "$OPENCODE_HOME/agents",
+        "hook": "none (opencode has no native hook surface; policy via plugin/permissions)",
+        "mcp": "$OPENCODE_HOME/opencode.json [mcp] + native config/debug readback",
+        "headless": "opencode run --headless (if auth present)"
+      },
+      "paths": {
+        "instructionPath": "$OPENCODE_HOME/AGENTS.md",
+        "skillPath": "~/.agents/skills/<skill>/SKILL.md",
+        "agentPath": "$OPENCODE_HOME/agents/<agent>.md",
+        "hookPath": "n/a — plugin permissions file",
+        "mcpPath": "$OPENCODE_HOME/opencode.json",
+        "legacyPaths": []
+      },
+      "precedence": "AGENTS.md managed block + shared skills; opencode.json JSONC patch; preserve user config",
+      "reload": "restart_or_reload (opencode reloads AGENTS.md on new session)",
+      "mergeStrategy": "marked block for AGENTS.md; JSON preserve for opencode.json; plugin/permissions merge",
+      "capabilities": {
+        "detectsByFeature": true,
+        "features": [
+          "agents-md-readback",
+          "shared-skills-discovery",
+          "plugin-permissions",
+          "mcp-handshake-opencode"
+        ]
+      },
+      "installStrategy": "detect binary `opencode` + $OPENCODE_HOME; install managed AGENTS.md block + shared skills + opencode.json MCP bridge (bridge only, not provider); native readback via config/debug/skill count",
+      "readbackStrategy": "AGENTS.md block == source + opencode debug native config + skill inventory count + mcp handshake capability",
+      "canaryStrategy": "credential-free: native config/debug/skill readback + MCP handshake; if auth: headless prompt nonce",
+      "uninstallStrategy": "remove managed AGENTS.md block + MCP bridge entry owned only; delete plugin shim if created",
+      "authBoundary": {
+        "offlineClaims": [
+          "HOST_PRESENT",
+          "NATIVE_INSTALLED",
+          "NATIVE_DISCOVERED",
+          "NATIVE_LIFECYCLE",
+          "NATIVE_POLICY",
+          "NATIVE_SKILLS",
+          "NATIVE_MCP",
+          "ROLLBACK_VERIFIED"
+        ],
+        "requiresAuthClaims": [
+          "MODEL_BEHAVIOR"
+        ]
+      },
+      "limits": [
+        "No native hook surface; lifecycle via plugin/permissions not hooks"
+      ]
+    },
+    "antigravity": {
+      "id": "antigravity",
+      "cliSignal": "agy --version (Antigravity CLI) via official Windows installer, absolute path when PATH stale",
+      "desktopSignal": "Antigravity IDE (Gemini) process + ~/.gemini",
+      "homeEnv": "ANTIGRAVITY_HOME",
+      "homeDefault": "~/.gemini/config",
+      "surfaces": {
+        "instruction": "~/.gemini/GEMINI.md (managed block)",
+        "skill": "IDE config skills/hooks/MCP + CLI native skills/plugin surface (shared/host-specific per discovery requirement)",
+        "agent": "$ANTIGRAVITY_HOME/agents + CLI plugin surface",
+        "hook": "IDE hooks (PreInvocation) + CLI hooks",
+        "mcp": "$ANTIGRAVITY_HOME/mcp_config.json + IDE UI + CLI `agy mcp list` equivalent",
+        "headless": "agy headless (silent keyring) + IDE model turn"
+      },
+      "paths": {
+        "instructionPath": "~/.gemini/GEMINI.md",
+        "skillPath": "~/.agents/skills/<skill>/SKILL.md",
+        "agentPath": "$ANTIGRAVITY_HOME/agents",
+        "hookPath": "$ANTIGRAVITY_HOME/hooks.json / IDE config",
+        "mcpPath": "$ANTIGRAVITY_HOME/mcp_config.json",
+        "legacyPaths": []
+      },
+      "precedence": "IDE and CLI surfaces separate; IDE GEMINI.md block + IDE config UI; CLI config path separate; user IDE config preserved via marked block/JSON patch",
+      "reload": "restart_or_reload (IDE reload window; CLI agy restart); IDE config/UI/log readback",
+      "mergeStrategy": "IDE GEMINI.md managed block + IDE config JSON patch; CLI config patch; never merge IDE+CLI into one hash",
+      "capabilities": {
+        "detectsByFeature": true,
+        "features": [
+          "gemini-md-readback",
+          "ide-config-ui-log-readback",
+          "hook-handshake",
+          "mcp-handshake-dual",
+          "agy-cli-installed",
+          "silent-keyring"
+        ]
+      },
+      "installStrategy": "detect IDE via ~/.gemini + agy binary via absolute official path; install IDE projection (GEMINI.md block + IDE config skills/hooks/MCP) and CLI projection separately; handle PATH-stale by spawning via absolute path; try silent Windows keyring auth but never open login flow",
+      "readbackStrategy": "IDE config/UI/log readback + CLI `agy` native readback; prove IDE and CLI separately, not via single config hash",
+      "canaryStrategy": "offline: IDE config/UI/log readback + CLI `agy` readback + hook/MCP handshake; if silent keyring usable → agy model canary; if not → IDE desktop session canary; else NEEDS_USER but offline claims still PASS",
+      "uninstallStrategy": "remove managed GEMINI.md block + IDE config managed entries + CLI managed entries by ownership; preserve user IDE settings",
+      "authBoundary": {
+        "offlineClaims": [
+          "HOST_PRESENT",
+          "NATIVE_INSTALLED",
+          "NATIVE_DISCOVERED",
+          "NATIVE_LIFECYCLE",
+          "NATIVE_POLICY",
+          "NATIVE_SKILLS",
+          "NATIVE_MCP",
+          "ROLLBACK_VERIFIED"
+        ],
+        "requiresAuthClaims": [
+          "MODEL_BEHAVIOR"
+        ]
+      },
+      "limits": [
+        "IDE and CLI are dual surfaces with separate configs; do not use one hash for both; agy PATH may be stale on Windows"
+      ]
+    },
+    "cursor": {
+      "id": "cursor",
+      "cliSignal": "cursor --version or cursor.exe + ~/.cursor",
+      "desktopSignal": "Cursor desktop process (Cursor.exe) + local plugin host",
+      "homeEnv": "CURSOR_HOME",
+      "homeDefault": "~/.cursor",
+      "surfaces": {
+        "instruction": "Native local Cursor plugin for rules/agents/hooks (not .cursorrules legacy)",
+        "skill": "shared ~/.agents/skills (Cursor native discovery) — exact count must match",
+        "agent": "$CURSOR_HOME/agents via plugin",
+        "hook": "local plugin hooks (beforeSubmitPrompt)",
+        "mcp": "$CURSOR_HOME/mcp.json [mcpServers] + local server handshake",
+        "headless": "n/a when signed-out (no model when Cursor not logged in)"
+      },
+      "paths": {
+        "instructionPath": "$CURSOR_HOME/rules",
+        "skillPath": "~/.agents/skills/<skill>/SKILL.md",
+        "agentPath": "$CURSOR_HOME/agents (plugin-provisioned)",
+        "hookPath": "$CURSOR_HOME/hooks.json or plugin hooks manifest",
+        "mcpPath": "$CURSOR_HOME/mcp.json",
+        "legacyPaths": [
+          ".cursorrules (deprecated, must be absent)",
+          "~/.cursor/rules raw projection duplicate"
+        ]
+      },
+      "precedence": "plugin manifest owns rules/agents/hooks; user plugin config outside managed section preserved; mcp.json JSON patch",
+      "reload": "reload_window (Cursor command Reload Window); plugin manifest reload log",
+      "mergeStrategy": "plugin manifest JSON merge + mcp.json patch; never write .cursorrules; atomic swap for managed plugin files",
+      "capabilities": {
+        "detectsByFeature": true,
+        "features": [
+          "plugin-manifest-parse",
+          "customize-or-log-readback",
+          "shared-skills-count-match",
+          "mcp-json-handshake",
+          "no-cursorrules"
+        ]
+      },
+      "installStrategy": "detect Cursor install root via registry or default path + plugin host; inventory owned vs unmanaged plugin entries; planInstall computes plugin manifest deltas; install via atomic plugin dir swap + reload window; verify manifest parse no warnings + Customize readback",
+      "readbackStrategy": "plugin manifest parse/load no warning + native rules/agents/hooks in Customize or host load logs + shared skills seen exact count + mcp.json parse + handshake + no .cursorrules + no duplicate raw projections",
+      "canaryStrategy": "credential-free full native proof listed above; MODEL_BEHAVIOR is NEEDS_USER when Cursor not logged in (never fake PASS)",
+      "uninstallStrategy": "remove managed plugin files/entries by ownership hash; preserve user plugin entries; verify manifest still parseable",
+      "authBoundary": {
+        "offlineClaims": [
+          "HOST_PRESENT",
+          "NATIVE_INSTALLED",
+          "NATIVE_DISCOVERED",
+          "NATIVE_LIFECYCLE",
+          "NATIVE_POLICY",
+          "NATIVE_SKILLS",
+          "NATIVE_MCP",
+          "ROLLBACK_VERIFIED"
+        ],
+        "requiresAuthClaims": [
+          "MODEL_BEHAVIOR"
+        ]
+      },
+      "limits": [
+        "Cursor model turn unavailable when signed-out; plugin manifest load log is native readback, not version string"
+      ]
+    },
+    "deepseek-harness": {
+      "id": "deepseek-harness",
+      "cliSignal": "dsh --version (DeepSeek Harness CLI)",
+      "desktopSignal": null,
+      "homeEnv": "DSH_HOME",
+      "homeDefault": "~/.config/deepseek-harness",
+      "surfaces": {
+        "instruction": "Managed profile/bundle via `dsh plugin --profile add` + system_prompt_seam",
+        "skill": "shared skill provider when host supports it + DSH skills subsystem at docs/subsystems/skills.md",
+        "agent": "managed_profile_bundle (host_native materialization)",
+        "hook": "agent.inject_pre_execute_waterfall",
+        "mcp": "$DSH_HOME/mcp.json + `dsh --dump-config` fingerprint",
+        "headless": "dsh --headless (provider auth selects profile)"
+      },
+      "paths": {
+        "instructionPath": "$DSH_HOME/bundle",
+        "skillPath": "~/.agents/skills/<skill>/SKILL.md",
+        "agentPath": "managed_profile_bundle",
+        "hookPath": "dsh hook registration (inject_pre_execute_waterfall)",
+        "mcpPath": "$DSH_HOME/mcp.json",
+        "legacyPaths": []
+      },
+      "precedence": "bundle hash per profile; user profile entries preserved; hook registration merge",
+      "reload": "supervised_launch (dsh supervised launch reloads profile/bundle)",
+      "mergeStrategy": "bundle hash validation + plugin tree merge; preserve unmanaged profiles; handle new profile appearing",
+      "capabilities": {
+        "detectsByFeature": true,
+        "features": [
+          "dsh-dump-config",
+          "plugin-tree-bundle-hash",
+          "hook-registration",
+          "mcp-fingerprint",
+          "multi-profile"
+        ]
+      },
+      "installStrategy": "detect `dsh` binary + DSH_HOME; inventory existing bundles/profiles (headless/web); install native DSH plugin/bundle for valid profiles; verify bundle hash + hook registration + config fingerprint",
+      "readbackStrategy": "`dsh --dump-config` + plugin tree + bundle hash + hook registration; version diagnostic only",
+      "canaryStrategy": "credential-free: dsh dump config + plugin tree + bundle hash + hook registration; if provider auth present → headless canary; else MODEL_BEHAVIOR NEEDS_USER",
+      "uninstallStrategy": "remove plugin/bundle entries by ownership; preserve user profiles/bundles",
+      "authBoundary": {
+        "offlineClaims": [
+          "HOST_PRESENT",
+          "NATIVE_INSTALLED",
+          "NATIVE_DISCOVERED",
+          "NATIVE_LIFECYCLE",
+          "NATIVE_POLICY",
+          "NATIVE_SKILLS",
+          "NATIVE_MCP",
+          "ROLLBACK_VERIFIED"
+        ],
+        "requiresAuthClaims": [
+          "MODEL_BEHAVIOR"
+        ]
+      },
+      "limits": [
+        "Host_native materialization, not managed_directory; new profile must be handled dynamically"
+      ]
+    },
+    "command-code": {
+      "id": "command-code",
+      "cliSignal": "cmdc --version (Command Code CLI) or command-code --version",
+      "desktopSignal": null,
+      "homeEnv": "COMMAND_CODE_HOME",
+      "homeDefault": "~/.commandcode",
+      "surfaces": {
+        "instruction": "~/.commandcode session-scoped --mod agent-rules (not .command-code fake)",
+        "skill": "shared ~/.agents/skills (Command Code shared provider) + user mod native",
+        "agent": "namespaced_custom_agents_on_demand (built_in_isolated_agent)",
+        "hook": "beforeToolCall_preToolUse via mod",
+        "mcp": "$COMMAND_CODE_HOME/mcp.json (host native) + cmdc mcp list",
+        "headless": "cmdc --print (print-mode canary if session present)"
+      },
+      "paths": {
+        "instructionPath": "$COMMAND_CODE_HOME/mods",
+        "skillPath": "~/.agents/skills/<skill>/SKILL.md",
+        "agentPath": "namespaced_custom_agents_on_demand",
+        "hookPath": "$COMMAND_CODE_HOME hooks (mod)",
+        "mcpPath": "$COMMAND_CODE_HOME/mcp.json",
+        "legacyPaths": [
+          ".command-code (legacy, to be migrated to .commandcode)"
+        ]
+      },
+      "precedence": "mod native: user mods preserved; managed mod `agent-rules` isolated; mcp.json patch; legacy .command-code migrated atomically once",
+      "reload": "supervised_session_launch (new session picks up mod)",
+      "mergeStrategy": "mod list owned check + mcp.json patch; duplicate detection; legacy path migration atomic move",
+      "capabilities": {
+        "detectsByFeature": true,
+        "features": [
+          "cmdc-mods-list",
+          "cmdc-skills-list-debug",
+          "hook-readback",
+          "mcp-readback",
+          "print-mode"
+        ]
+      },
+      "installStrategy": "detect cmdc via PATH + COMMAND_CODE_HOME (migrate .command-code → .commandcode if needed); inventory mods/skills/hooks/mcp; planInstall computes deltas; install via mod add + shared skills link; verify `cmdc mods list` + `cmdc skills list --debug` + hook/MCP readback",
+      "readbackStrategy": "`cmdc mods list` contains agent-rules + `cmdc skills list --debug` skill count + hook/MCP readback; no .command-code fake path",
+      "canaryStrategy": "credential-free: cmdc mods list + skills debug readback + hook/MCP readback handshake; if session present → print-mode canary; else MODEL_BEHAVIOR NEEDS_USER",
+      "uninstallStrategy": "remove managed mod + owned mcp/hook entries only; preserve user mods; leave migrated home at ~/.commandcode (do not revert to legacy)",
+      "authBoundary": {
+        "offlineClaims": [
+          "HOST_PRESENT",
+          "NATIVE_INSTALLED",
+          "NATIVE_DISCOVERED",
+          "NATIVE_LIFECYCLE",
+          "NATIVE_POLICY",
+          "NATIVE_SKILLS",
+          "NATIVE_MCP",
+          "ROLLBACK_VERIFIED"
+        ],
+        "requiresAuthClaims": [
+          "MODEL_BEHAVIOR"
+        ]
+      },
+      "limits": [
+        "New home is ~/.commandcode; .command-code is legacy fake; headless requires session"
+      ]
+    }
   },
   "platforms": {
     "codex": {

@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import path from "node:path";
 import fs from "node:fs";
 import { execSync } from "node:child_process";
-import { verifyUiTasteSourcePack } from "../src/commands/build.js";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -51,9 +50,5 @@ describe("Package source archive", () => {
         f.startsWith(".agent/runs/"),
     );
     expect(forbidden).toEqual([]);
-  });
-
-  it("recomputes the ui-taste source-pack lock before packaging", async () => {
-    await expect(verifyUiTasteSourcePack(root)).resolves.toBeUndefined();
   });
 });

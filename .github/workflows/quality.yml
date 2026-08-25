@@ -65,11 +65,19 @@ jobs:
           PLAYWRIGHT_BROWSERS_PATH: '0'
       - run: npm run build
       - run: npm run check
-      - name: Validate active V3.1 plan and external-first policy
-        run: node automation/validate-v31-directive.mjs
+      - name: Validate the ACTIVE plan pointer and its contracts
+        run: |
+          node automation/validate-canonical-plan.mjs
+          node automation/validate-workflow-semantics.mjs
       - run: npm run test
       - name: Packaged runtime lifecycle smoke
         run: npm run test:package-smoke -w packages/cli
+      - name: Process-level integration suite
+        run: node automation/test-process-level-integration.mjs
+      - name: Skill live behavior canaries
+        run: node automation/skill-live-canary.mjs
+      - name: Behavior index integrity
+        run: node automation/build-behavior-index.mjs
 
   python-tests:
     timeout-minutes: 15

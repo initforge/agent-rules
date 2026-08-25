@@ -1,6 +1,13 @@
 ---
 name: hashicorp-agent-skills
 description: "Provenance projection for hashicorp/agent-skills (pinned 4451ceca, MPL-2.0): ROUTED on terraform/kubernetes facts; apply/destroy stay owner-approved."
+metadata:
+  signals: "terraform plan, terraform style guide, kubernetes module, vault policy"
+  excludes: "apply-only"
+  priority: "40"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # hashicorp-agent-skills
 

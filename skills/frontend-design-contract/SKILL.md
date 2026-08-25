@@ -1,6 +1,13 @@
 ---
 name: frontend-design-contract
 description: "Frontend design-contract authoring and adherence: apply an approved project design contract or explicit design brief instead of generic UI defaults. Use when a design contract/brief exists; never from words like design/UI alone."
+metadata:
+  signals: "project design contract, design contract, design brief, brand identity direction, visual identity direction"
+  excludes: "5fedu, ERP module, parity, drawer, listview, toolbar"
+  priority: "35"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # frontend-design-contract
 

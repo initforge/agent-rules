@@ -10,7 +10,7 @@ commits: TBD
 
 ## Report
 
-**What was built** — A unified Node.js installer framework at `packages/cli/src/integration/` that replaces all PowerShell (.ps1) scripts with TypeScript equivalents. The framework provides cross-platform OS/arch detection, npm/binary/shell handlers, and an installer registry. 21 automation modules were converted from PowerShell to Node.js, covering integration installers, platform adapters, profile management, and automation scripts. Two new CLI commands were added: `agent-rules integration` for managing MCP integrations and `agent-rules automation` for running automation scripts.
+**What was built** — A unified Node.js installer framework at `packages/cli/src/integration/` that replaces all PowerShell (.ps1) scripts with TypeScript equivalents. The framework provides cross-platform OS/arch detection, npm/binary/shell handlers, and an installer registry. 21 automation modules were converted from PowerShell to Node.js, covering integration installers, platform adapters, profile management, and automation scripts. A new CLI command was added: `agent-rules integration` for managing MCP integrations (actions: list, enable, disable, doctor).
 
 **Verification** — All 388/389 tests pass (1 pre-existing schema fixture failure unrelated to changes). Type-check clean. The framework supports all 5 MCP integrations (codebase-memory-mcp, playwright-mcp, chrome-devtools-mcp, context7, rtk) and all profile operations (install, update, remove, discover, doctor).
 

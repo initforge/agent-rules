@@ -96,15 +96,9 @@ S2/S3 bắt buộc qua strong-planner/spec compilation rõ ràng trước khi Ta
 
 ## Durable runner
 
-```bash
-agent-rules runner add "Add subtract() to src/math.ts" \
-  --verify "npx vitest run test/math.test.ts" --own src
-agent-rules runner start --agent claude --max-repair-depth 2
-agent-rules runner status
-agent-rules runner journal --verify
-```
-
-Mỗi task là process headless mới; state/log/checkpoint/verification/journal nằm trên disk và repair có giới hạn.
+Được gọi qua `agent-rules run` (xem North-Star runtime ở trên). Public CLI là
+đúng 8 lệnh — `install`, `uninstall`, `doctor`, `status`, `run`, `integration`,
+`init`, `reference` — chi tiết nội bộ nằm sau `--details`/`--json`.
 
 ## Đọc tiếp
 

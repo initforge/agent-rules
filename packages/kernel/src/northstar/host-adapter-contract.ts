@@ -98,6 +98,42 @@ export interface HostAdapter {
 }
 
 /**
+ * NativeHostLifecycle — the single 10-method native install lifecycle contract
+ * (closure REQ-111). Every host adapter implements exactly this surface on its
+ * OWN native instruction/config surface; no shared/fake structure is accepted.
+ *
+ * detect → inventory → planInstall → install → reload → readback →
+ * offlineCanary → authenticatedCanary → rollback → uninstall
+ *
+ * Provenance rule: a surface may only be declared native when it is backed by
+ * official documentation, host CLI help/config schema, or real native readback.
+ * The registry never self-declares native on its own.
+ */
+export interface NativeHostLifecycle {
+  readonly id: HostId;
+  /** Presence/probe signals; never grants authority. */
+  detect(): Promise<HostObservation>;
+  /** Enumerate owned/unmanaged/stale/duplicate/malformed paths under the host. */
+  inventory(detection: HostObservation): Promise<Array<{ host: HostId; kind: string; path: string; owned: boolean; sha256?: string }>>;
+  /** Transactional install plan with backup target. */
+  planInstall(detection: HostObservation, inventory: unknown[]): Promise<{ host: HostId; changes: unknown[]; backupDir: string }>;
+  /** Atomic + idempotent install; second install produces zero diff. */
+  install(host: HostId, opts?: { dryRun?: boolean }): Promise<unknown>;
+  /** Native reload mechanism (host re-reads rules/skills after reload/new session). */
+  reload(host: HostId): Promise<{ ok: boolean; method: string; evidence?: unknown[] }>;
+  /** Real native readback of the installed surface (managed block / config bytes). */
+  readback(host: HostId): Promise<{ ok: boolean; method: string; found: boolean; sha256?: string; detail?: string }>;
+  /** Credential-free offline canary (claims 1–7+9); never requires login. */
+  offlineCanary(host: HostId): Promise<{ ok: boolean; claims: Record<string, { status: string; evidence: unknown[] }> }>;
+  /** Authenticated model-turn canary; logged-out hosts return MODEL_BEHAVIOR=NEEDS_USER. */
+  authenticatedCanary(host: HostId): Promise<{ ok: boolean; modelBehavior: 'PASS' | 'NEEDS_USER' | 'BLOCKED'; evidence: unknown[] }>;
+  /** Byte-equal rollback: pre/post hashes must match. */
+  rollback(host: HostId, backupDir?: string): Promise<{ ok: boolean; byteEqual: boolean }>;
+  /** Uninstall only the content agent-rules owns. */
+  uninstall(host: HostId): Promise<void>;
+}
+
+/**
  * Time-boxed compatibility shim. After this instant the legacy adapter shapes
  * are retired and every surface must implement the single HostAdapter contract.
  */

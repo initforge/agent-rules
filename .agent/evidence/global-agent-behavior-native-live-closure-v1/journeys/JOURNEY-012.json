@@ -1,0 +1,13 @@
+{
+  "journey_id": "JOURNEY-012",
+  "description": "Signed-out Cursor/Grok: MODEL_BEHAVIOR=NEEDS_USER, host OFFLINE_VERIFIED only",
+  "observed": {
+    "cursor_model": "NEEDS_USER",
+    "cursor_status": "Ready",
+    "grok_model": "NEEDS_USER",
+    "grok_status": "Ready"
+  },
+  "observed_at": "2026-08-25T14:29:45.133Z",
+  "schema": "agent-rules/journey-observation/v1",
+  "sha256": "4e0e0f218a221661011ce6962f649b6499317b7ed66b40b36f4e28ec80f67d2c"
+}

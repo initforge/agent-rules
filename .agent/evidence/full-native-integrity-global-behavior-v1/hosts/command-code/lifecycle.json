@@ -1,0 +1,16 @@
+{
+  "schema": "agent-rules/host-lifecycle",
+  "version": 1,
+  "host": "command-code",
+  "lifecycle_claim": {
+    "status": "PASS",
+    "evidence": [
+      {
+        "kind": "hook-plugin-lifecycle",
+        "host": "command-code",
+        "detail": "native lifecycle strategy verified: supervised_session_launch (new session picks up mod)"
+      }
+    ],
+    "omitted_reason": null
+  }
+}

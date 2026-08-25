@@ -7,6 +7,14 @@ description: 'Claim-based parity verification across visual, responsive, behavio
   for unit/API-only verification; not for static source diff without live browser interaction.
 
   '
+metadata:
+  signals: "parity proof, parity verification, parity claim, verify parity, diff template, visual parity, responsive parity, behavioral parity, cross-state parity, verification loop, claim-based verification"
+  excludes: "unit/api-only, static source diff only"
+  supports: "browser-qa, qa-skills"
+  priority: "85"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 
 # Parity verification

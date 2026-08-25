@@ -3,8 +3,7 @@
   "version": 1,
   "source_of_truth": {
     "skill": "<skill-root>/SKILL.md",
-    "routing": "<skill-root>/ROUTE.json",
-    "catalog": "skills/catalog.json"
+    "catalog": "skills/catalog.json (generated read-only)"
   },
   "skills": [
     {

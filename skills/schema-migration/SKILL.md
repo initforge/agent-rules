@@ -1,6 +1,13 @@
 ---
 name: schema-migration
 description: "Bounded schema migration procedure: migration files and schema-change claims trigger upgrade/downgrade and rollback evidence; production migration stays owner-approved."
+metadata:
+  signals: "migration files, schema-change claim, migration plan, upgrade/downgrade, rollback migration"
+  excludes: "query-only, read-only"
+  priority: "50"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # schema-migration
 

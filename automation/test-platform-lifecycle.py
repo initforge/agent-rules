@@ -64,10 +64,10 @@ def test_platform_contracts_version_tracking() -> None:
     contracts = json.loads(contracts_path.read_text(encoding="utf-8"))
     
     version = contracts.get("version")
-    if version != 2:
-        fail(f"platform-contracts version must be 2, got {version}")
+    if version not in (2,3):
+        fail(f"platform-contracts version must be 2 or 3, got {version}")
     else:
-        ok("platform-contracts.json version: 2")
+        ok(f"platform-contracts.json version: {version}")
     
     # Check registry host_ids for the eight canonical hosts
     registry = contracts.get("registry", {})

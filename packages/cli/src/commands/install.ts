@@ -2,8 +2,8 @@ import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
 import { getRepoRoot } from "../adapters/repo.js";
 import { RuntimeInstaller, RUNTIME_PLATFORMS } from "../runtime/installer.js";
 import type { RuntimePlatform } from "../runtime/contracts.js";
-import { provisionMcps } from "../integration/provisioning.js";
-import { convergeAllHostMcpConfigs } from "../runtime/mcp-convergence.js";
+import { NativeInstaller } from "../services/native-installer.js";
+import type { HostId } from "@initforge/agent-rules-kernel/northstar/host-adapters.js";
 
 import path from "node:path";
 import { projectSkillsToGlobal, uninstallOwnedGlobalProjections } from "../runtime/composed-installer.js";
@@ -18,15 +18,22 @@ export async function installCmd(
   args: string[],
   options: CliOptions
 ): Promise<CommandResult> {
-  const platform = args[0] || "all";
+  const targetPlatforms = args.filter((a) => !a.startsWith("-"));
   const validPlatforms = [...RUNTIME_PLATFORMS, "all"] as const;
 
-  if (!(validPlatforms as readonly string[]).includes(platform)) {
-    return {
-      exitCode: ExitCode.InvalidArgument,
-      message: `Invalid platform: ${platform}. Valid: ${[...validPlatforms].join(", ")}`,
-    };
+  for (const p of targetPlatforms) {
+    if (!(validPlatforms as readonly string[]).includes(p)) {
+      return {
+        exitCode: ExitCode.InvalidArgument,
+        message: `Invalid platform: ${p}. Valid: ${[...validPlatforms].join(", ")}`,
+      };
+    }
   }
+
+  const platformsToInstall = targetPlatforms.length === 0 || targetPlatforms.includes("all")
+    ? [...RUNTIME_PLATFORMS]
+    : targetPlatforms;
+
 
   const repoRoot = getRepoRoot();
   const installer = new RuntimeInstaller({
@@ -36,12 +43,15 @@ export async function installCmd(
 
   const force = args.includes("--force");
   const skillsSource = path.join(repoRoot, "skills");
+  const nativeInstaller = new NativeInstaller();
 
   async function installOrUpdate(p: string): Promise<{ ok: boolean; action: string; error?: string }> {
     try {
       await installer.install(p as RuntimePlatform, "install");
       await projectSkillsToGlobal(skillsSource, p as RuntimePlatform);
-      return { ok: true, action: "installed" };
+      // Native per-host transactional install (plan 3.2): backup → atomic swap → reload → readback, per-host lock, Windows handling
+      await nativeInstaller.install(p as HostId, { dryRun: options.dryRun });
+      return { ok: true, action: "installed (native transactional)" };
     } catch (error) {
       const msg = (error as Error).message;
       if (msg.includes("already exists") || msg.includes("activation drift") || msg.includes("not a managed link") || msg.includes("Refusing to overwrite")) {
@@ -52,9 +62,11 @@ export async function installCmd(
         try {
           await uninstallOwnedGlobalProjections(p as RuntimePlatform);
           await installer.uninstall(p as RuntimePlatform);
+          await nativeInstaller.uninstall(p as HostId);
           await installer.install(p as RuntimePlatform, "install");
           await projectSkillsToGlobal(skillsSource, p as RuntimePlatform);
-          return { ok: true, action: "reinstalled (forced)" };
+          await nativeInstaller.install(p as HostId, { dryRun: options.dryRun });
+          return { ok: true, action: "reinstalled (forced, native transactional)" };
         } catch (forceError) {
           return { ok: false, action: "force-failed", error: (forceError as Error).message };
         }
@@ -63,69 +75,43 @@ export async function installCmd(
     }
   }
 
-  // REQ-008: MCP provisioning is part of the install lifecycle, but ONLY for
-  // entries inside the active install profile (AGENT_RULES_INTEGRATION_PROFILE,
-  // default core); explicit-only integrations install only when explicitly
-  // selected. After provisioning, host configs converge to the global MCP
-  // profile (default none): agent-rules-owned entries are removed or disabled.
-  let provisioning;
-  try {
-    provisioning = await provisionMcps(repoRoot, { dryRun: options.dryRun });
-  } catch (error) {
-    provisioning = { kind: "mcp", source: "integrations/registry.json", total: 0, status: "BLOCKED", success: false, results: [], error: (error as Error).message };
-  }
-  let convergence;
-  try {
-    convergence = await convergeAllHostMcpConfigs(repoRoot, undefined, { dryRun: options.dryRun });
-  } catch (error) {
-    convergence = [{ host: "all", config_path: "", exists: false, status: "SKIPPED", entries: [], error: (error as Error).message }];
+  const results: Record<string, { ok: boolean; action: string; error?: string }> = {};
+  for (const p of platformsToInstall) {
+    results[p] = await installOrUpdate(p);
   }
 
-  if (platform === "all") {
-    const results: Record<string, { ok: boolean; action: string; error?: string }> = {};
-    for (const p of RUNTIME_PLATFORMS) {
-      results[p] = await installOrUpdate(p);
+  const allOk = Object.values(results).every((r) => r.ok);
+  const failed = Object.entries(results).filter(([, r]) => !r.ok);
+  const overallOk = allOk;
+
+  if (options.json) {
+    console.log(JSON.stringify(results, null, 2));
+  } else {
+    console.log(`Install results (native per-host, single-host isolation preserved):`);
+    for (const [p, r] of Object.entries(results)) {
+      const icon = r.ok ? "✓" : "✗";
+      const detail = r.ok ? r.action : r.error;
+      console.log(`  ${icon} ${p}: ${detail}`);
     }
+  }
 
-    const allOk = Object.values(results).every((r) => r.ok);
-    const failed = Object.entries(results).filter(([, r]) => !r.ok);
-    const mcpsOk = provisioning.success;
-    const convergenceOk = !convergence.some((result) => result.status === "NEEDS_USER");
-    const overallOk = allOk && mcpsOk && convergenceOk;
-
-    if (options.json) {
-      console.log(JSON.stringify({ ...results, mcps: provisioning, mcp_convergence: convergence }, null, 2));
-    } else {
-      console.log(`Install results:`);
-      for (const [p, r] of Object.entries(results)) {
-        const icon = r.ok ? "✓" : "✗";
-        const detail = r.ok ? r.action : r.error;
-        console.log(`  ${icon} ${p}: ${detail}`);
-      }
-      console.log(`MCP provisioning (${provisioning.total} profile-scoped MCP entries): ${provisioning.status}${provisioning.success ? "" : " — not all MCPs are fully installed"}`);
-      const needsUser = convergence.filter((result) => result.status === "NEEDS_USER");
-      if (needsUser.length > 0) {
-        console.log(`MCP host config convergence NEEDS_USER: ${needsUser.map((result) => `${result.host}: ${result.entries.filter((entry) => entry.disposition === "user-modified").map((entry) => entry.id).join(", ")}`).join("; ")}`);
-      }
-    }
-
+  if (platformsToInstall.length === 1 && !targetPlatforms.includes("all")) {
+    const single = platformsToInstall[0];
+    const res = results[single];
     return {
-      exitCode: overallOk ? ExitCode.Success : ExitCode.LegacyFailed,
-      message: overallOk
-        ? `All ${RUNTIME_PLATFORMS.length} platforms ready and ${provisioning.total} profile-scoped MCP entries provisioned`
-        : `${failed.length} platform(s) failed and/or MCP provisioning ${provisioning.status}${convergenceOk ? "" : " and/or host MCP convergence needs user"}: ${[failed.map(([p]) => p).join(", "), provisioning.status === "PASS" ? "" : `mcp=${provisioning.status}`, convergenceOk ? "" : "mcp-convergence=NEEDS_USER"].filter(Boolean).join("; ")}`,
-      data: { results, mcps: provisioning, mcp_convergence: convergence },
+      exitCode: res.ok ? ExitCode.Success : ExitCode.GeneralError,
+      message: res.ok
+        ? `${single}: ${res.action}`
+        : `${single} failed: ${res.error ?? "installation failed"}`,
+      data: { platform: single, ...res },
     };
   }
 
-  // Single platform
-  const result = await installOrUpdate(platform);
-  const overallOk = result.ok && provisioning.success && !convergence.some((item) => item.status === "NEEDS_USER");
   return {
-    exitCode: overallOk ? ExitCode.Success : ExitCode.GeneralError,
+    exitCode: overallOk ? ExitCode.Success : ExitCode.LegacyFailed,
     message: overallOk
-      ? `${platform}: ${result.action}; MCP provisioning ${provisioning.status}`
-      : `${platform} failed: ${result.error ?? `MCP provisioning ${provisioning.status}`}`,
-    data: { platform, ...result, mcps: provisioning, mcp_convergence: convergence },
+      ? `All ${platformsToInstall.length} platforms ready`
+      : `${failed.length} platform(s) failed: ${failed.map(([p]) => p).join(", ")}`,
+    data: { results },
   };
 }

@@ -1,0 +1,130 @@
+{
+  "schema": "https://agent-rules.org/schemas/global-behavior-receipt.json",
+  "generated_at": "2026-08-25T06:22:03.032Z",
+  "git_head": "c1deca1a5ee1",
+  "total_invariants": 15,
+  "passed_invariants": 15,
+  "failed_invariants": 0,
+  "results": [
+    {
+      "id": 1,
+      "name": "Plan-only mutation denial",
+      "status": "PASS",
+      "detail": "plan-only / inspect did not mutate disposable workspace; no unrequested writes",
+      "error": null,
+      "elapsed_ms": 419
+    },
+    {
+      "id": 2,
+      "name": "Explicit execute pivot",
+      "status": "PASS",
+      "detail": "explicit init executes pivot and initializes fail-closed North-Star config",
+      "error": null,
+      "elapsed_ms": 436
+    },
+    {
+      "id": 3,
+      "name": "Single effective plan pointer",
+      "status": "PASS",
+      "detail": "single effective plan pointer verified: full-native-8host-single-truth-v1 (generation: 49)",
+      "error": null,
+      "elapsed_ms": 0
+    },
+    {
+      "id": 4,
+      "name": "Zero-drift requirement/claim traceability",
+      "status": "PASS",
+      "detail": "all 28 canonical requirements (REQ-001..REQ-028) present with zero drift in ledger milestones",
+      "error": null,
+      "elapsed_ms": 1
+    },
+    {
+      "id": 5,
+      "name": "Explicit-only capabilities",
+      "status": "PASS",
+      "detail": "Pencil, 5fedu reference pack, and external skills gated by explicit invocation; no auto-routing",
+      "error": null,
+      "elapsed_ms": 1
+    },
+    {
+      "id": 6,
+      "name": "Competing writers block & writer lease",
+      "status": "PASS",
+      "detail": "competing writers lease blocks second writer when unexpired lease is present",
+      "error": null,
+      "elapsed_ms": 195
+    },
+    {
+      "id": 7,
+      "name": "Stale writer lease recovery",
+      "status": "PASS",
+      "detail": "stale writer lease safely recovered when lease timestamp is expired",
+      "error": null,
+      "elapsed_ms": 204
+    },
+    {
+      "id": 8,
+      "name": "State snapshot persistence across compaction/resume",
+      "status": "PASS",
+      "detail": "state snapshots and intent persist losslessly across compaction and resume",
+      "error": null,
+      "elapsed_ms": 191
+    },
+    {
+      "id": 9,
+      "name": "Adaptive minimal-proof testing",
+      "status": "PASS",
+      "detail": "adaptive minimal-proof testing dynamically plans smallest sufficient proof and records omitted proof",
+      "error": null,
+      "elapsed_ms": 1
+    },
+    {
+      "id": 10,
+      "name": "RunStore / EvidenceLedger / OutcomeReducer truth chain",
+      "status": "PASS",
+      "detail": "truth chain derives terminal outcome from verified evidence records, never from worker prose",
+      "error": null,
+      "elapsed_ms": 0
+    },
+    {
+      "id": 11,
+      "name": "Readback verifier beats worker claim",
+      "status": "PASS",
+      "detail": "readback verifiers evaluate live surface files and override unverified worker claims",
+      "error": null,
+      "elapsed_ms": 0
+    },
+    {
+      "id": 12,
+      "name": "Rollback byte-equality check",
+      "status": "PASS",
+      "detail": "rollback verified byte-for-byte using SHA-256 equality",
+      "error": null,
+      "elapsed_ms": 199
+    },
+    {
+      "id": 13,
+      "name": "Bounded subagents (<= 2, depth=1)",
+      "status": "PASS",
+      "detail": "subagents bounded to max 2, recursion depth 1, and independent non-overlapping work",
+      "error": null,
+      "elapsed_ms": 1
+    },
+    {
+      "id": 14,
+      "name": "Message reconciliation",
+      "status": "PASS",
+      "detail": "message reconciliation handles ADD, CORRECT, CONFIRM, REJECT, SUPERSEDE without silent data loss",
+      "error": null,
+      "elapsed_ms": 0
+    },
+    {
+      "id": 15,
+      "name": "Unauthorized commit/push/credential/destructive-delete boundary protection",
+      "status": "PASS",
+      "detail": "boundary protections enforce fail-closed checks on unapproved commits, pushes, credentials, and deletes",
+      "error": null,
+      "elapsed_ms": 0
+    }
+  ]
+}

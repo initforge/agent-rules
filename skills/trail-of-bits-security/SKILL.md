@@ -1,6 +1,13 @@
 ---
 name: trail-of-bits-security
 description: "Provenance projection for trailofbits/skills (pinned 304c81a8, CC-BY-SA-4.0): EXPLICIT security route on matching threat surface."
+metadata:
+  signals: "trail of bits, security specialist review, security specialist skill"
+  excludes: "prose-only"
+  priority: "30"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # trail-of-bits-security
 

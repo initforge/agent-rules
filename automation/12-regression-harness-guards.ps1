@@ -1,4 +1,4 @@
-﻿# Regression guards for dual-tree, BOM, glossary, intentional-oversize - drives shipped validate.
+# Regression guards for dual-tree, BOM, glossary, intentional-oversize - drives shipped validate.
 param([string]$Root = (Split-Path -Parent $PSScriptRoot))
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "path-compat.ps1")
@@ -23,8 +23,8 @@ foreach ($L in @("00-index.md","01-agent-workflow-sop.md","07-finish-to-completi
   Assert-True (-not (Test-Path (Join-Path $Root "rules\$L"))) "no legacy $L in rules/"
 }
 
-# 4) Intentional oversize list exists in budget rule
-$Budget = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "rules\50-context-budget.md")
+# 4) Intentional oversize list exists in context/skill rule
+$Budget = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "rules\30-context-skill-mcp.md")
 Assert-True ($Budget -like "*docs-style*" -and $Budget -like "*plan-and-handoff*" -and $Budget -like "*Intentional oversize*") "intentional oversize documented"
 
 # 5) No deprecated lifecycle labels ("lane normal", "lane high-risk") in rules/ or skills/
@@ -80,26 +80,24 @@ try {
   Remove-Item -LiteralPath $MergeTemp -Force -ErrorAction SilentlyContinue
 }
 
-# 12) No stale "zero main-agent domain work" pattern in lifecycle or protocol
-$Lifecycle = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "rules\25-task-lifecycle.md")
-Assert-True ($Lifecycle -notlike "*zero main-agent domain work*") "25-task-lifecycle.md: no 'zero main-agent domain work'"
+# 12) No stale "zero main-agent domain work" pattern in execution rule or protocol
+$Exec = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "rules\10-execution-planning-delegation.md")
+Assert-True ($Exec -notlike "*zero main-agent domain work*") "10-execution-planning-delegation.md: no 'zero main-agent domain work'"
 $Protocol = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "skills\plan-and-handoff\references\adaptive-work-protocol.md")
 Assert-True ($Protocol -notlike "*zero main-agent domain work*") "adaptive-work-protocol.md: no 'zero main-agent domain work'"
 $Ftc = Get-Content -Raw -Encoding UTF8 (Join-Path $Root "skills\finish-to-completion\SKILL.md")
 Assert-True ($Ftc -notlike "*zero main-agent domain work*") "finish-to-completion/SKILL.md: no 'zero main-agent domain work'"
 
-# 13) Required role definitions in lifecycle rule
-Assert-True ($Lifecycle -match "Coordinator") "25-task-lifecycle.md: defines Coordinator role"
-Assert-True ($Lifecycle -match "Architect/integrator") "25-task-lifecycle.md: defines Architect/integrator role"
-Assert-True ($Lifecycle -match "Implementer") "25-task-lifecycle.md: defines Implementer role"
-Assert-True ($Lifecycle -match "Reviewer") "25-task-lifecycle.md: defines Reviewer role"
-Assert-True ($Lifecycle -match "Verifier") "25-task-lifecycle.md: defines Verifier role"
+# 13) Required bounded-delegation semantics in execution rule
+Assert-True ($Exec -match "Subagents default to zero") "10-execution-planning-delegation.md: bounded delegation default"
+Assert-True ($Exec -match "max two") "10-execution-planning-delegation.md: delegation cap"
+Assert-True ($Exec -match "no recursion") "10-execution-planning-delegation.md: no recursion"
 
 # 14) Delegation must still be recorded, but as two facts rather than a
 # seven-event chain: for a single operator the chain cost more to emit than it
 # returned, and a missing event counted as a finding.
-Assert-True ($Lifecycle -match "delegated") "25-task-lifecycle.md: records what was delegated"
-Assert-True ($Lifecycle -match "outcome") "25-task-lifecycle.md: records the delegation outcome"
+Assert-True ($Exec -match "outcome") "10-execution-planning-delegation.md: outcome-first closure"
+Assert-True ($Exec -match "delegate") "10-execution-planning-delegation.md: delegation semantics"
 
 if ($Failed -gt 0) {
   Write-Error "Regression guards failed: $Failed"

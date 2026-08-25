@@ -181,11 +181,11 @@
   },
   {
     "phrase": "context style bullet imperative",
-    "file": "rules/16-context-style.md",
+    "file": "rules/30-context-skill-mcp.md",
     "keywords": [
       "imperative",
-      "bullet",
-      "mâu thuẫn"
+      "cohesive",
+      "context"
     ]
   },
   {

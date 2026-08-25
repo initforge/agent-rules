@@ -40,8 +40,8 @@ Test-Contains "skills\plan-and-handoff\references\adaptive-work-protocol.md" @(
   "expert",
   "acknowledgment",
   "semantic budgets",
-  "subagent_requested",
-  "subagent_completed",
+  "two facts",
+  "retired",
   "Independent review is mandatory"
 )
 Test-Contains "skills\plan-and-handoff\references\portable-plan-contract.md" @(
@@ -90,22 +90,11 @@ Test-Contains "automation\work-ledger.schema.json" @(
   '"artifact_evidence"',
   '"usageRecord"'
 )
-Test-Contains "rules\25-task-lifecycle.md" @(
-  "Assign clear roles",
-  "Coordinator",
-  "Architect/integrator",
-  "Implementer",
-  "Reviewer",
-  "Verifier",
-  "Researcher/utility",
-  "Delegate when it adds value",
-  "stable boundary",
-  "clear ACs",
-  "non-overlapping writes",
-  "sufficient context",
-  "meaningful parallelism",
-  "Record what you delegated",
-  "delegated",
+Test-Contains "rules\10-execution-planning-delegation.md" @(
+  "Subagents default to zero",
+  "max two",
+  "no recursion",
+  "S2/S3",
   "outcome"
 )
 Test-Contains "skills\plan-and-handoff\references\adaptive-work-protocol.md" @(
@@ -118,13 +107,10 @@ Test-Contains "skills\plan-and-handoff\references\adaptive-work-protocol.md" @(
   "stable boundary",
   "non-overlapping write ownership",
   "meaningful benefit",
-  "subagent_requested",
-  "subagent_resolved",
-  "subagent_started",
-  "subagent_completed",
-  "result_consumed",
-  "result_rejected",
-  "delegation_skipped"
+  "two facts",
+  "delegated",
+  "outcome",
+  "retired"
 )
 
 foreach ($Required in @(

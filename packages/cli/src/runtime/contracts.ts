@@ -1,16 +1,24 @@
-export const RUNTIME_PLATFORMS = ["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code"] as const;
+import fs from 'node:fs';
+import path from 'node:path';
+function loadPlatforms(): readonly string[] {
+  try {
+    const candidates = [
+      path.join(process.cwd(), 'platforms', 'platform-contracts.json'),
+      path.resolve(import.meta.dirname ?? '.', '../../../../platforms/platform-contracts.json'),
+    ];
+    for (const p of candidates) if (fs.existsSync(p)) {
+      const j = JSON.parse(fs.readFileSync(p,'utf8')) as { registry?: { host_ids: string[] } };
+      if (j.registry?.host_ids?.length) return j.registry.host_ids;
+    }
+  } catch {}
+  return ["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code"];
+}
+export const RUNTIME_PLATFORMS = loadPlatforms() as unknown as ["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code"];
 export type RuntimePlatform = (typeof RUNTIME_PLATFORMS)[number];
 
-// ── Host reconciliation contract (REQ-004/REQ-005/REQ-006, REQ-009) ──────────
-// The canonical registered host set is derived from platform-contracts.json
-// registry v2: Codex, Claude, Grok, OpenCode, Antigravity, Cursor, plus the two
-// new native projections DeepSeek Harness and Command Code. HostId aliases
-// RuntimePlatform so the transactional runtime installer and the reconciler
-// share one identity set.
-// Reconciliation/install priority: OpenCode first, then the remaining hosts,
-// Cursor last (owner-defined order). DeepSeek Harness and Command Code are
-// registered but NOT_LIVE_VERIFIED until their native projections and binaries
-// are installed.
+// ── Host reconciliation contract — single source is platforms/platform-contracts.json (v3 NativeHostContract)
+// RUNTIME_PLATFORMS is now loaded from the canonical registry at runtime (fallback only when file absent).
+// HostId aliases RuntimePlatform so the transactional runtime installer and the reconciler share one identity set.
 
 export type HostId = RuntimePlatform;
 export const REGISTERED_HOSTS: readonly HostId[] = RUNTIME_PLATFORMS;

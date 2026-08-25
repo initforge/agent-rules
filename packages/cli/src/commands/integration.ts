@@ -3,21 +3,62 @@ import { loadIntegrationInventory } from "../integration/inventory.js";
 import { getRepoRoot } from "../adapters/repo.js";
 import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
 
-type IntegrationAction = "install" | "verify" | "uninstall";
+/**
+ * Public integration actions. Legacy aliases (install/verify/uninstall) were
+ * removed from the public contract and are rejected explicitly below.
+ */
+type IntegrationAction = "list" | "enable" | "disable" | "doctor";
+type IntegrationHandlerAction = "install" | "verify" | "uninstall";
+
+const LEGACY_ALIASES: IntegrationHandlerAction[] = ["install", "verify", "uninstall"];
+const PUBLIC_ACTIONS: IntegrationAction[] = ["list", "enable", "disable", "doctor"];
+
+// Public actions share the install/verify/uninstall implementations:
+// enable -> install, disable -> uninstall, doctor -> verify.
+const ACTION_TO_HANDLER: Record<"enable" | "disable" | "doctor", IntegrationHandlerAction> = {
+  enable: "install",
+  disable: "uninstall",
+  doctor: "verify",
+};
 
 export async function integrationCmd(
   args: string[],
   options: CliOptions
 ): Promise<CommandResult> {
-  const action = args[0] as IntegrationAction | undefined;
+  const rawAction = args[0] as string | undefined;
   const integrationId = args[1];
 
-  if (!action || !["install", "verify", "uninstall"].includes(action)) {
+  // list is handled directly: it prints the canonical registry inventory.
+  if (rawAction === "list") {
+    const repoRoot = getRepoRoot();
+    const inventory = await loadIntegrationInventory(repoRoot);
+    const entries = inventory.entries;
+    if (options.json) console.log(JSON.stringify(entries.map((e) => ({ id: e.id, capability: e.capability, transport: e.transport })), null, 2));
+    else {
+      console.log("Integrations (canonical registry):");
+      for (const e of entries) console.log(`  ${e.id}: capability=${(e as Record<string, unknown>).capability ?? "?"} transport=${(e as Record<string, unknown>).transport ?? "?"}`);
+    }
+    return { exitCode: ExitCode.Success, message: `${entries.length} integrations`, data: { entries } as unknown as Record<string, unknown> };
+  }
+
+  // Legacy aliases install/verify/uninstall are no longer accepted public
+  // actions — reject them instead of mapping them to handlers.
+  if (rawAction && (LEGACY_ALIASES as readonly string[]).includes(rawAction)) {
     return {
       exitCode: ExitCode.InvalidArgument,
-      message: "Usage: integration <install|verify|uninstall> [integration-id|all]",
+      message: `unknown integration action "${rawAction}": legacy alias removed (public actions: list | enable | disable | doctor)`,
     };
   }
+
+  const action = rawAction as Exclude<IntegrationAction, "list">;
+  if (!PUBLIC_ACTIONS.includes(action)) {
+    return {
+      exitCode: ExitCode.InvalidArgument,
+      message: `unknown integration action "${rawAction ?? ""}" — usage: integration <list|enable|disable|doctor> [integration-id|all]`,
+    };
+  }
+
+  const handlerAction = ACTION_TO_HANDLER[action];
 
   const repoRoot = getRepoRoot();
   const inventory = await loadIntegrationInventory(repoRoot);
@@ -43,9 +84,9 @@ export async function integrationCmd(
 
     const dir = resolveIntegrationManifestDir(repoRoot, id);
     try {
-      if (action === "install") {
+      if (handlerAction === "install") {
         results[id] = await handler.install(dir);
-      } else if (action === "verify") {
+      } else if (handlerAction === "verify") {
         results[id] = await handler.verify(dir);
       } else {
         results[id] = await handler.uninstall(dir);

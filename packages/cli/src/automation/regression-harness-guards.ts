@@ -31,14 +31,15 @@ export async function regressionHarnessGuards(repoRoot: string): Promise<{ ok: b
 
   // 3) Intentional oversize documented in budget rule
   try {
-    const budget = await fs.readFile(path.join(repoRoot, "rules/50-context-budget.md"), "utf8");
+    const budget = await fs.readFile(path.join(repoRoot, "rules/manifest.yaml"), "utf8");
     assert(
-      budget.includes("docs-style") && budget.includes("plan-and-handoff") && budget.includes("Intentional oversize"),
-      "intentional oversize documented"
+      budget.includes("budgets:") && budget.includes("core_total_tokens"),
+      "core budget documented in manifest"
     );
   } catch {
-    assert(false, "50-context-budget.md not found");
+    assert(false, "rules/manifest.yaml not found");
   }
+
 
   // 4) No deprecated lifecycle labels
   const rulesDir = path.join(repoRoot, "rules");
@@ -115,10 +116,11 @@ export async function regressionHarnessGuards(repoRoot: string): Promise<{ ok: b
 
   // 10) No stale "zero main-agent domain work" pattern
   const stalePatternFiles = [
-    "rules/25-task-lifecycle.md",
+    "rules/10-execution-planning-delegation.md",
     "skills/plan-and-handoff/references/adaptive-work-protocol.md",
     "skills/finish-to-completion/SKILL.md",
   ];
+
   for (const file of stalePatternFiles) {
     try {
       const content = await fs.readFile(path.join(repoRoot, file), "utf8");
@@ -128,18 +130,15 @@ export async function regressionHarnessGuards(repoRoot: string): Promise<{ ok: b
     }
   }
 
-  // 11) Required role definitions in lifecycle rule
+  // 11) Required bounded-delegation semantics in execution rule
   try {
-    const lifecycle = await fs.readFile(path.join(repoRoot, "rules/25-task-lifecycle.md"), "utf8");
-    assert(lifecycle.includes("Coordinator"), "25-task-lifecycle.md: defines Coordinator role");
-    assert(lifecycle.includes("Architect/integrator"), "25-task-lifecycle.md: defines Architect/integrator role");
-    assert(lifecycle.includes("Implementer"), "25-task-lifecycle.md: defines Implementer role");
-    assert(lifecycle.includes("Reviewer"), "25-task-lifecycle.md: defines Reviewer role");
-    assert(lifecycle.includes("Verifier"), "25-task-lifecycle.md: defines Verifier role");
-    assert(lifecycle.includes("delegated"), "25-task-lifecycle.md: records what was delegated");
-    assert(lifecycle.includes("outcome"), "25-task-lifecycle.md: records the delegation outcome");
+    const execRule = await fs.readFile(path.join(repoRoot, "rules/10-execution-planning-delegation.md"), "utf8");
+    assert(execRule.includes("Subagents default to zero"), "10-execution-planning-delegation.md: bounded delegation default");
+    assert(execRule.includes("max two"), "10-execution-planning-delegation.md: delegation cap");
+    assert(execRule.includes("no recursion"), "10-execution-planning-delegation.md: no recursion");
+    assert(execRule.includes("outcome"), "10-execution-planning-delegation.md: outcome-first closure");
   } catch {
-    assert(false, "25-task-lifecycle.md not found");
+    assert(false, "10-execution-planning-delegation.md not found");
   }
 
   const failed = results.filter((r) => !r.ok).length;

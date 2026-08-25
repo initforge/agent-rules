@@ -1,0 +1,76 @@
+{
+  "schema": "agent-rules/verification-matrix",
+  "version": 1,
+  "gates": [
+    {
+      "name": "plan-schema-admission",
+      "command": "node automation/validate-canonical-plan.mjs .agent/plans/global-agent-behavior-native-live-closure-v1",
+      "target": "new phase plan.json schema-valid"
+    },
+    {
+      "name": "semantic-admission",
+      "command": "node automation/validate-workflow-semantics.mjs + requirement chain audit",
+      "target": "100% requirement chain raw intent→requirement→claim→acceptance→task→owner→output→verifier→evidence→rollback; unresolved=[]"
+    },
+    {
+      "name": "build-workspaces",
+      "command": "npm run build",
+      "target": "kernel, engine, cli, runtime-build"
+    },
+    {
+      "name": "typecheck-workspaces",
+      "command": "npm run check",
+      "target": "TypeScript compile across packages"
+    },
+    {
+      "name": "unit-integration-tests",
+      "command": "npm test",
+      "target": "all workspace vitest tests"
+    },
+    {
+      "name": "verify-all",
+      "command": "npm run verify:all",
+      "target": "all automated quality/security gates; must fail on any failed check"
+    },
+    {
+      "name": "global-behavior-suite",
+      "command": "node automation/test-global-behavior.mjs",
+      "target": "global behavior invariant scenarios"
+    },
+    {
+      "name": "process-level-integration",
+      "command": "node automation/test-process-level-integration.mjs",
+      "target": "12 process-level integration tests"
+    },
+    {
+      "name": "native-8host-install",
+      "command": "node packages/cli/dist/index.js install --all",
+      "target": "8 native hosts certification (temp-home where required)"
+    },
+    {
+      "name": "live-canaries",
+      "command": "antigravity model-turn live; cursor/grok signed-out NEEDS_USER",
+      "target": "JOURNEY-011 PASS; JOURNEY-012 NEEDS_USER"
+    },
+    {
+      "name": "security-review",
+      "command": "security-review skill checklist on host config/session/credential/MCP",
+      "target": "no credential leakage, no insecure host config, MCP boundary"
+    },
+    {
+      "name": "quality-hard-block",
+      "command": "quality skill hard-block review",
+      "target": "clean-code hard-block list pass"
+    },
+    {
+      "name": "independent-acceptance",
+      "command": "independent acceptance audit",
+      "target": "audit of all acceptance criteria with gommed findings, single correction batch max"
+    },
+    {
+      "name": "release-workflows",
+      "command": "git push origin main; GitHub Actions Quality + Certification",
+      "target": "both workflows of exact SHA end success"
+    }
+  ]
+}

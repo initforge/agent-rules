@@ -1,6 +1,13 @@
 ---
 name: vercel-agent-skills
 description: "Provenance projection for vercel-labs/agent-skills (pinned b8caa260): ON_DEMAND guidance pack; content BLOCKED until owner license determination."
+metadata:
+  signals: "vercel agent skills, react-best-practices, web-design-guidelines"
+  excludes: "5fedu"
+  priority: "40"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # vercel-agent-skills
 

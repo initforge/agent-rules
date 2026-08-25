@@ -1,6 +1,13 @@
 ---
 name: backend-composition
 description: "Composable backend procedures for framework/API/auth/payment work: deterministic stack facts select the smallest procedure; auth and transaction boundaries stay claim-gated."
+metadata:
+  signals: "backend framework, api interface, auth provider, stripe, payment provider integration, transaction boundary"
+  excludes: "frontend, design"
+  priority: "45"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # backend-composition
 

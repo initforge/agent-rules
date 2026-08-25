@@ -111,9 +111,41 @@ export function northStarIngest(repoRoot: string, rawTrigger: unknown): { reques
   return { request: queued.record.request, path: queued.path, created: queued.created };
 }
 
-export function northStarStatus(repoRoot: string): unknown {
+export function northStarStatus(repoRoot: string, details = false): unknown {
   const runsRoot = path.join(repoRoot, '.agent', 'runs');
-  if (!fs.existsSync(runsRoot)) return { status: 'idle', runs: 0 };
+  let indexSummary: Record<string, unknown> | null = null;
+  try {
+    const indexFile = path.join(repoRoot, 'generated', 'behavior-index.json');
+    if (fs.existsSync(indexFile)) {
+      const index = JSON.parse(fs.readFileSync(indexFile, 'utf8')) as {
+        active_plan?: string;
+        views?: {
+          lifecycle_stage_owner?: unknown[];
+          host_view?: unknown[];
+          skill_view?: unknown[];
+          state_vocabulary?: unknown;
+          github_jobs?: unknown;
+        };
+        evidence?: unknown[];
+      };
+      indexSummary = {
+        active_plan: index.active_plan ?? null,
+        stages: index.views?.lifecycle_stage_owner?.length ?? 0,
+        hosts: index.views?.host_view?.length ?? 0,
+        skills: index.views?.skill_view?.length ?? 0,
+        evidence: index.evidence?.length ?? 0,
+      };
+      if (details) {
+        indexSummary.host_view = index.views?.host_view ?? [];
+        indexSummary.skill_view = index.views?.skill_view ?? [];
+        indexSummary.state_vocabulary = index.views?.state_vocabulary ?? null;
+        indexSummary.github_jobs = index.views?.github_jobs ?? null;
+      }
+    }
+  } catch { /* behavior index optional */ }
+  if (!fs.existsSync(runsRoot)) {
+    return { status: 'idle', runs: 0, ...(indexSummary ? { index: indexSummary } : {}) };
+  }
   const runs = fs.readdirSync(runsRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => {
@@ -125,7 +157,7 @@ export function northStarStatus(repoRoot: string): unknown {
     })
     .filter((item): item is NonNullable<typeof item> => item !== null)
     .sort((a, b) => b.mtime - a.mtime);
-  return { status: runs[0]?.state.status ?? 'idle', runs: runs.length, latest: runs[0]?.state ?? null };
+  return { status: runs[0]?.state.status ?? 'idle', runs: runs.length, latest: runs[0]?.state ?? null, ...(indexSummary ? { index: indexSummary } : {}) };
 }
 
 export async function northStarRun(input: {

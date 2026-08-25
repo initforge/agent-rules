@@ -4,6 +4,13 @@ description: Use this skill when creating, reviewing, rewriting, or restructurin
   README-vi.md, technical specs, tech stack badges, screenshots, documentation cleanup, or /docs/**. Trigger for source-grounded
   docs, repo documentation architecture, docs quality complaints, README style, Vietnamese/English README parity, current-vs-legacy
   tech stack accuracy, or docs that must match or exceed a strong hand-written technical spec.
+metadata:
+  signals: "README, README-vi, /docs/, documentation, tài liệu, docs cleanup, tech stack"
+  excludes: "pure code implementation"
+  priority: "50"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 
 # Docs Style

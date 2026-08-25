@@ -6,8 +6,7 @@
 
 ```
 agent-rules init          # detect repo, OS, platform, profile
-agent-rules plan          # discover facts, compile intent, validate plan
-agent-rules run           # delegate, implement, verify, review, branch
+agent-rules run "<task>"  # plan: S2/S3 or ambiguous intent is compiled by the configured strong planner, then implement, verify, review
 agent-rules doctor        # health check
 ```
 

@@ -25,7 +25,7 @@ describe("Build parity", () => {
     // Verify build directory exists
     if (!fs.existsSync(path.join(buildRoot, "codex", "manifest.json"))) {
       throw new Error(
-        "Build not found. Run: node packages/cli/dist/index.js build"
+        "Runtime-build artifacts not found. Restore generated/runtime-build from the checked-in baseline."
       );
     }
   });
@@ -112,28 +112,43 @@ describe("CLI help output", () => {
   const root = getRepoRoot();
   const cliEntry = path.join(root, "packages", "cli", "dist", "index.js");
 
-  it("shows all migrated commands in help", () => {
-    // execFileSync imported from "node:child_process"
+  it("shows exact 8 public commands in standard help", () => {
     const help = execFileSync("node", [cliEntry, "--help"], {
       encoding: "utf-8",
     });
-    expect(help).toContain("build");
-    expect(help).toContain("validate");
-    expect(help).toContain("verify-mirrors");
-    expect(help).toContain("doctor");
+    expect(help).toContain("  install ");
+    expect(help).toContain("  uninstall ");
+    expect(help).toContain("  doctor ");
+    expect(help).toContain("  status ");
+    expect(help).toContain("  run ");
+    expect(help).toContain("  integration ");
+    expect(help).toContain("  init ");
+    expect(help).toContain("  reference ");
+    expect(help).not.toContain("  build ");
+    expect(help).not.toContain("  validate ");
+    expect(help).not.toContain("  close ");
+    expect(help).not.toContain("  plan ");
   });
 
-  it("shows migrated descriptions for migrated commands", () => {
-    // execFileSync imported from "node:child_process"
-    const help = execFileSync("node", [cliEntry, "--help"], {
-      encoding: "utf-8",
-    });
-    expect(help).toContain("migrated");
-    expect(help).toContain("03-validate-context");
-    expect(help).toContain("04-verify-mirrors");
-    expect(help).toContain("health checks");
+
+  it("fails when attempting to run unregistered maintainer/legacy commands", () => {
+    const legacyCommands = ["close", "closeout", "build", "validate", "verify", "cleanup", "automation", "profile", "runtime", "plan", "goal", "repair", "dev"];
+    for (const cmd of legacyCommands) {
+      expect(() => {
+        execFileSync("node", [cliEntry, cmd], { stdio: "pipe" });
+      }).toThrow();
+    }
+  });
+
+  it("rejects legacy integration action aliases (install/verify/uninstall)", () => {
+    for (const alias of ["install", "verify", "uninstall"]) {
+      expect(() => {
+        execFileSync("node", [cliEntry, "integration", alias], { stdio: "pipe" });
+      }).toThrow();
+    }
   });
 });
+
 
 describe("Cross-platform path handling", () => {
   const root = getRepoRoot();

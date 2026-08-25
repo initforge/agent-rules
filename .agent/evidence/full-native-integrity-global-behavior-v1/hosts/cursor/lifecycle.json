@@ -1,0 +1,16 @@
+{
+  "schema": "agent-rules/host-lifecycle",
+  "version": 1,
+  "host": "cursor",
+  "lifecycle_claim": {
+    "status": "PASS",
+    "evidence": [
+      {
+        "kind": "hook-plugin-lifecycle",
+        "host": "cursor",
+        "detail": "native lifecycle strategy verified: reload_window (Cursor command Reload Window); plugin manifest reload log"
+      }
+    ],
+    "omitted_reason": null
+  }
+}

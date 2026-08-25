@@ -1,6 +1,6 @@
 # Adaptive Minimal-Proof Testing — Global Harness Behavior
 
-Status: **always-on invariant** (rules/45-adaptive-minimal-proof-testing.md).
+Status: **always-on invariant** (rules/20-proof-outcome.md — adaptive minimal-proof owner).
 Applies to every repository, task, host, MCP provider, integration and
 supported agent-rules platform. Not prompt-only, not batch-local, not optional.
 
@@ -16,14 +16,14 @@ release risk or regression risk justifies it.
 
 | Layer | Path |
 |---|---|
-| Rule (always-on) | `rules/45-adaptive-minimal-proof-testing.md` |
-| Rule contract | `rules/manifest.yaml` (`45-adaptive-minimal-proof-testing.md` entry) |
+| Rule (always-on) | `rules/20-proof-outcome.md` |
+| Rule contract | `rules/manifest.yaml` (`20-proof-outcome.md` entry) |
 | Kernel: trigger, profiles, selection, status, receipts, refactor policy | `packages/kernel/src/northstar/proof-testing.ts` |
 | Kernel: verification router | `packages/kernel/src/northstar/proof-router.ts` |
 | Kernel: read-only project audit | `packages/kernel/src/northstar/project-audit.ts` |
 | Engine facade | `packages/engine/src/northstar/proof-*.ts`, `project-audit.ts` |
 | Schemas | `schemas/proof-trigger.schema.json`, `proof-receipt.schema.json`, `proof-profile.schema.json`, `proof-omission.schema.json`, `claim-to-proof.schema.json`, `risk-to-proof.schema.json`, `test-refactor-matrix.schema.json` |
-| CLI | `agent-rules proof-plan` (`packages/cli/src/commands/proof-plan.ts`) |
+| CLI | `agent-rules run` (minimal-proof selection is embedded in every North-Star run via the kernel proof router; standalone `proof-plan` command removed) |
 | Validators | `automation/validate-proof-receipts.mjs`, `automation/validate-proof-mirror-parity.mjs` |
 | Tests | `packages/kernel/test/northstar/proof-*.test.ts` (10 suites, 93 tests) |
 | Project audit artifact | `.agent/plans/adaptive-minimal-proof-testing/project-audit.json` |
@@ -86,12 +86,11 @@ tests, delete-without-mapping, coverage claims without evidence.
 ## 10. Usage
 
 ```bash
-# Plan the minimal sufficient proof set for a task (read-only; never runs tests)
-agent-rules proof-plan --repo /path/to/repo --task T-1 --files "src/a.ts,src/b.ts" \
-  --claims "checkout totals are correct; authorization rejects unauthorized access" \
-  --risks "auth" --live
-# JSON receipt (schema: agent-rules/proof-receipt/v1)
-agent-rules proof-plan --repo /path/to/repo --task T-1 --json
+# Every North-Star run selects the smallest sufficient proof set and records a
+# receipt with selected AND omitted proof. Selection is embedded in
+# `agent-rules run` (routed by packages/kernel/src/northstar/proof-router.ts);
+# there is no standalone proof-plan command.
+agent-rules run "<task>" --own <path> --verify-exec <exe> --verify-arg <arg>
 # Validate proof receipts + fixtures
 node automation/validate-proof-receipts.mjs
 # Validate platform mirror parity (run after npm run build)

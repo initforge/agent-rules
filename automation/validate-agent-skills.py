@@ -59,14 +59,34 @@ for base in [ROOT/'skills', ROOT/'profiles'/'5fedu'/'skills']:
         allowed=fm.get('allowed-tools')
         if allowed is not None and not isinstance(allowed,str): errors.append(f'{skill_file.relative_to(ROOT)}: allowed-tools must be a space-separated string')
         route=skill_file.with_name('ROUTE.json')
-        if not route.exists(): errors.append(f'{skill_file.relative_to(ROOT)}: missing agent-rules ROUTE.json sidecar'); continue
-        try: r=json.loads(route.read_text(encoding='utf-8'))
-        except Exception as e: errors.append(f'{route.relative_to(ROOT)}: invalid JSON: {e}'); continue
-        if not isinstance(r,dict): errors.append(f'{route.relative_to(ROOT)}: route must be object'); continue
-        for key in ['signals','excludes','loads','requires','supports']:
-            if key in r and (not isinstance(r[key],list) or any(not isinstance(x,str) for x in r[key])):
-                errors.append(f'{route.relative_to(ROOT)}: {key} must be string[]')
-        if 'priority' in r and not isinstance(r['priority'],int): errors.append(f'{route.relative_to(ROOT)}: priority must be integer')
+        # Single-source: SKILL.md metadata is authoritative; ROUTE.json is legacy sidecar. Accept either.
+        has_metadata_signals = metadata is not None and 'signals' in metadata
+        if not route.exists() and not has_metadata:
+            errors.append(f'{skill_file.relative_to(ROOT)}: missing agent-rules ROUTE.json sidecar and no SKILL.md metadata signals'); continue
+        if route.exists():
+            try: r=json.loads(route.read_text(encoding='utf-8'))
+            except Exception as e: errors.append(f'{route.relative_to(ROOT)}: invalid JSON: {e}'); continue
+            if not isinstance(r,dict): errors.append(f'{route.relative_to(ROOT)}: route must be object'); continue
+            for key in ['signals','excludes','loads','requires','supports']:
+                if key in r and (not isinstance(r[key],list) or any(not isinstance(x,str) for x in r[key])):
+                    errors.append(f'{route.relative_to(ROOT)}: {key} must be string[]')
+            if 'priority' in r and not isinstance(r['priority'],int): errors.append(f'{route.relative_to(ROOT)}: priority must be integer')
+        else:
+            # Use SKILL.md metadata as routing source (new single-source)
+            try:
+                sig_str = metadata.get('signals','') or ''
+                exc_str = metadata.get('excludes','') or ''
+                # metadata signals/excludes are comma-separated strings per portability fix
+                r = {
+                    'signals': [s.strip() for s in sig_str.split(',') if s.strip()],
+                    'excludes': [s.strip() for s in exc_str.split(',') if s.strip()],
+                    'loads': [],
+                    'requires': [],
+                    'supports': [],
+                    'priority': int(metadata.get('priority','0') or '0'),
+                }
+            except Exception as e:
+                errors.append(f'{skill_file.relative_to(ROOT)}: invalid metadata routing: {e}'); continue
 
 
 # --------------------------------------------------------------------------
@@ -111,11 +131,27 @@ def canonical_route_signals() -> dict[str, set[str]]:
     if not catalog:
         return signals
     for entry in catalog.get('skills', []):
-        route = ROOT / entry.get('route','')
-        if route.is_file():
+        route = ROOT / entry.get('route','') if entry.get('route') else None
+        if route and route.is_file():
             data = load_json(route)
             if data:
                 signals[entry['id']] = set(data.get('signals', []))
+                continue
+        # Fallback: read SKILL.md metadata (single-source)
+        skill_path = ROOT / entry.get('source','')
+        if skill_path.is_file():
+            try:
+                text = skill_path.read_text(encoding='utf-8')
+                if text.startswith('---\n') and '\n---\n' in text:
+                    raw, _ = text[4:].split('\n---\n',1)
+                    fm = yaml.safe_load(raw) or {}
+                    meta = fm.get('metadata') or {}
+                    sig_str = meta.get('signals','') or ''
+                    sigs = [s.strip() for s in sig_str.split(',') if s.strip()]
+                    if sigs:
+                        signals[entry['id']] = set(sigs)
+            except Exception:
+                pass
     return signals
 
 

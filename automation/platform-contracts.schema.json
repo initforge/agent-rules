@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Agent Rules Platform Contract (registry v2)",
   "type": "object",
-  "additionalProperties": false,
+  "additionalProperties": true,
   "required": [
     "version",
     "registry",
@@ -11,7 +11,10 @@
   ],
   "properties": {
     "version": {
-      "const": 2
+      "enum": [
+        2,
+        3
+      ]
     },
     "registry": {
       "type": "object",
@@ -51,17 +54,23 @@
             "certification_required_hosts": {
               "type": "array",
               "uniqueItems": true,
-              "items": { "type": "string" }
+              "items": {
+                "type": "string"
+              }
             },
             "deferred_supported_targets": {
               "type": "array",
               "uniqueItems": true,
-              "items": { "type": "string" }
+              "items": {
+                "type": "string"
+              }
             },
             "not_live_verified_targets": {
               "type": "array",
               "uniqueItems": true,
-              "items": { "type": "string" }
+              "items": {
+                "type": "string"
+              }
             }
           }
         },
@@ -86,21 +95,51 @@
             "model_observability"
           ],
           "properties": {
-            "instruction_surface": { "type": "string" },
-            "context_injection": { "type": "string" },
-            "skill_surface": { "type": "string" },
-            "hook_surface": { "type": "string" },
-            "permission_surface": { "type": "string" },
-            "sandbox_surface": { "type": "string" },
-            "subagent_surface": { "type": "string" },
-            "session_surface": { "type": "string" },
-            "worktree_surface": { "type": "string" },
-            "mcp_surface": { "type": "string" },
-            "headless_surface": { "type": "string" },
-            "compaction_surface": { "type": "string" },
-            "structured_event_surface": { "type": "string" },
-            "planning_surface": { "type": "string" },
-            "model_observability": { "type": "string" }
+            "instruction_surface": {
+              "type": "string"
+            },
+            "context_injection": {
+              "type": "string"
+            },
+            "skill_surface": {
+              "type": "string"
+            },
+            "hook_surface": {
+              "type": "string"
+            },
+            "permission_surface": {
+              "type": "string"
+            },
+            "sandbox_surface": {
+              "type": "string"
+            },
+            "subagent_surface": {
+              "type": "string"
+            },
+            "session_surface": {
+              "type": "string"
+            },
+            "worktree_surface": {
+              "type": "string"
+            },
+            "mcp_surface": {
+              "type": "string"
+            },
+            "headless_surface": {
+              "type": "string"
+            },
+            "compaction_surface": {
+              "type": "string"
+            },
+            "structured_event_surface": {
+              "type": "string"
+            },
+            "planning_surface": {
+              "type": "string"
+            },
+            "model_observability": {
+              "type": "string"
+            }
           }
         }
       }
@@ -193,6 +232,13 @@
           "$ref": "#/$defs/platform"
         }
       }
+    },
+    "native_contracts": {
+      "type": "object",
+      "description": "NativeHostContract per host (v3)"
+    },
+    "generated_by": {
+      "type": "string"
     }
   },
   "$defs": {

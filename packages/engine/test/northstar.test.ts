@@ -1,4 +1,4 @@
-﻿import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
@@ -36,6 +36,26 @@ const TEST_RESOURCE_SNAPSHOT: HostResourceSnapshot = Object.freeze({
 
 function executeNorthStarTestRun(input: Parameters<typeof executeNorthStarRun>[0]) {
   return executeNorthStarRun({ ...input, resourceSnapshot: TEST_RESOURCE_SNAPSHOT });
+}
+
+/**
+ * Single-resolver path (REQ-109): routeSkills requires the generated context
+ * graph and asserts selected-skill source integrity by hashing the SKILL.md
+ * file at the resolved root. Disposable repos scaffold the canonical generated
+ * graph AND the skills/rules trees exactly like the packaged runtime does,
+ * instead of a second (hard-coded) resolver. repo-facts is intentionally NOT
+ * scaffolded: its provenance hashes the real repo's files, and the decision
+ * fabric handles an absent repo-facts with shadow facts.
+ */
+function scaffoldGenerated(repo: string, realRoot: string): void {
+  const generated = path.join(repo, 'generated');
+  fs.mkdirSync(generated, { recursive: true });
+  const src = path.join(realRoot, 'generated', 'context-graph.json');
+  if (fs.existsSync(src)) fs.copyFileSync(src, path.join(generated, 'context-graph.json'));
+  for (const dir of ['skills', 'rules']) {
+    const srcDir = path.join(realRoot, dir);
+    if (fs.existsSync(srcDir)) fs.cpSync(srcDir, path.join(repo, dir), { recursive: true });
+  }
 }
 
 function explicitCompilation() {
@@ -92,12 +112,17 @@ describe('North-Star protocol/compiler', () => {
 
 describe('North-Star routing/context', () => {
   let repo: string;
+  const realRoot = path.resolve(import.meta.dirname ?? '.', '../../..');
   beforeEach(() => {
     repo = fs.mkdtempSync(path.join(os.tmpdir(), 'northstar-context-'));
     fs.mkdirSync(path.join(repo, 'src'), { recursive: true });
     fs.mkdirSync(path.join(repo, 'skills', 'frontend-architect'), { recursive: true });
     fs.writeFileSync(path.join(repo, 'src', 'entry.tsx'), 'export const Entry = () => null;\n');
     fs.writeFileSync(path.join(repo, 'skills', 'frontend-architect', 'SKILL.md'), '# Frontend\n');
+    // Single-resolver path (REQ-109): routeSkills requires the generated
+    // context graph; scaffold the canonical graph + repo-facts into the
+    // disposable repo like the packaged runtime does.
+    scaffoldGenerated(repo, realRoot);
   });
   afterEach(() => fs.rmSync(repo, { recursive: true, force: true }));
 
@@ -226,6 +251,7 @@ describe('EvidenceLedger / trusted completion', () => {
 
 describe('North-Star runtime on production Runner', () => {
   let repo: string;
+  const realRoot = path.resolve(import.meta.dirname ?? '.', '../../..');
   beforeEach(() => {
     repo = fs.mkdtempSync(path.join(os.tmpdir(), 'northstar-runtime-'));
     spawnSync('git', ['init', '-q'], { cwd: repo });
@@ -235,6 +261,7 @@ describe('North-Star runtime on production Runner', () => {
     fs.writeFileSync(path.join(repo, 'src', 'seed.ts'), 'export const seed = 1;\n');
     spawnSync('git', ['add', '-A'], { cwd: repo });
     spawnSync('git', ['commit', '-q', '-m', 'initial'], { cwd: repo });
+    scaffoldGenerated(repo, realRoot);
   });
   afterEach(() => fs.rmSync(repo, { recursive: true, force: true }));
 

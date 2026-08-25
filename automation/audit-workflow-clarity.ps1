@@ -17,34 +17,20 @@ function Test-Contract {
   }
 }
 
-Test-Contract "rules\00-bootstrap.md" @(
-  "native Plan Mode",
-  "explicit execute pivot",
-  "Ask only a question",
-  "main agent accountable"
+Test-Contract "rules\00-intent-scope-safety.md" @(
+  "Preserve raw user intent",
+  "Challenge material conflicts",
+  "traceability"
 )
-Test-Contract "rules\10-execution.md" @(
-  "observable outcome",
-  "Classify risk before work shape",
-  "own orchestration",
-  "local blocker does not stop independent work",
-  "Match evidence to the claim",
-  "build/lint proves static compatibility"
-)
-Test-Contract "rules\25-task-lifecycle.md" @(
+Test-Contract "rules\10-execution-planning-delegation.md" @(
   "advisory",
   "plan",
   "execution",
-  "small",
-  "medium",
-  "large",
-  "resumable",
-  "not a file-count",
-  "Assign clear roles",
-  "Coordinator",
-  "Architect/integrator",
-  "Delegate when it adds value",
-  "separately from"
+  "outcome",
+  "Subagents default to zero",
+  "max two",
+  "no recursion",
+  "S2/S3"
 )
 Test-Contract "skills\plan-and-handoff\references\adaptive-work-protocol.md" @(
   "Automatic execution",
@@ -76,9 +62,7 @@ Test-Contract "skills\finish-to-completion\SKILL.md" @(
 )
 
 foreach ($RelativePath in @(
-  "rules\00-bootstrap.md",
-  "rules\10-execution.md",
-  "rules\25-task-lifecycle.md",
+  "rules\10-execution-planning-delegation.md",
   "skills\plan-and-handoff\SKILL.md",
   "skills\finish-to-completion\SKILL.md"
 )) {

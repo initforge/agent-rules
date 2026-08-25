@@ -1,0 +1,14 @@
+{
+  "journey_id": "JOURNEY-004",
+  "description": "Plan-only handoff: worker opens from artifact capsule with no conversation",
+  "observed": {
+    "capsule_complete": true,
+    "plan_id": "P-004",
+    "skill_route": [
+      "quality"
+    ]
+  },
+  "observed_at": "2026-08-25T14:29:45.127Z",
+  "schema": "agent-rules/journey-observation/v1",
+  "sha256": "fd2e35c574f957f7e1944f4f12ee6139a17648e29fb39d89181694d3ecfed6cf"
+}

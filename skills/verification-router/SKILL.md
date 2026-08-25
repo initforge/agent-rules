@@ -1,6 +1,13 @@
 ---
 name: verification-router
 description: Use during implementation, review, or planning when proof must be selected by changed scope, claim, risk, affected dependencies, regression impact, evidence, browser, mobile, or runtime behavior. Start with deterministic proof and escalate fidelity only when required. Do not use for pure explanations with no verification decision.
+metadata:
+  signals: "verify, verification, proof, evidence, claim, risk, impact, affected, regression, acceptance"
+  excludes: "pure Q&A, explain testing concept only"
+  priority: "30"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 
 # Verification Router

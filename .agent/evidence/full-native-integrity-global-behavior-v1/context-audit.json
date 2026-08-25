@@ -1,0 +1,13 @@
+{
+  "schema": "agent-rules/context-audit",
+  "version": 1,
+  "generated_at": "2026-08-25T09:11:35.957Z",
+  "duplicate_concepts": 0,
+  "wrong_layer_items": 0,
+  "dead_references": 0,
+  "mirror_drift": 0,
+  "trigger_conflicts": 0,
+  "oversize_unbudgeted": 0,
+  "source_ownership_verified": true,
+  "status": "PASS"
+}

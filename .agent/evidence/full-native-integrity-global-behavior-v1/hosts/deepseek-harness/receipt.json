@@ -1,0 +1,125 @@
+{
+  "schema": "agent-rules/host-certification-receipt",
+  "version": 1,
+  "host": "deepseek-harness",
+  "generated_at": "2026-08-25T09:13:53.537Z",
+  "git_head": "c1deca1a5ee186a9d0361b57fd0ff7e943fa676e",
+  "candidate_fingerprint": "f104736e533aefbcac3b9d77619d07e44ab9c62beedfe6eb3331ef374d6f6ee6",
+  "status": "Ready",
+  "claims": {
+    "HOST_PRESENT": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "binary-or-desktop-signal",
+          "detail": "binary-on-path:C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\dsh;config-dir:C:\\Users\\ADMIN/.config/deepseek-harness"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "NATIVE_INSTALLED": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "managed-block-or-file",
+          "host": "deepseek-harness",
+          "detail": "native platform contract ready for deepseek-harness"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "NATIVE_DISCOVERED": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "native-readback",
+          "host": "deepseek-harness",
+          "method": "`dsh --dump-config` + plugin tree + bundle hash + hook registration; version diagnostic only",
+          "detail": "native readback verified via `dsh --dump-config` + plugin tree + bundle hash + hook registration; version diagnostic only"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "NATIVE_LIFECYCLE": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "hook-plugin-lifecycle",
+          "host": "deepseek-harness",
+          "detail": "native lifecycle strategy verified: supervised_launch (dsh supervised launch reloads profile/bundle)"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "NATIVE_POLICY": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "permission-deny-canary",
+          "host": "deepseek-harness",
+          "detail": "safe-deny and scope invariants verified"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "NATIVE_SKILLS": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "skill-catalog-dynamic",
+          "host": "deepseek-harness",
+          "count": 34,
+          "detail": "enumerated 34 dynamic skills; zero duplicate, zero malformed"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "NATIVE_MCP": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "native-mcp-surface",
+          "host": "deepseek-harness",
+          "detail": "native config intact"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "MODEL_BEHAVIOR": {
+      "status": "NEEDS_USER",
+      "evidence": [
+        {
+          "kind": "model-turn-not-tested",
+          "reason": "host signed out or offline; harmless model turn requires active authenticated session"
+        }
+      ],
+      "omitted_reason": "signed-out: model turn requires auth"
+    },
+    "ROLLBACK_VERIFIED": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "uninstall-rollback-preserves-user",
+          "host": "deepseek-harness",
+          "detail": "atomic swap backup manifest and byte restoration verified"
+        }
+      ],
+      "omitted_reason": null
+    }
+  },
+  "native_readback": {
+    "method": "`dsh --dump-config` + plugin tree + bundle hash + hook registration; version diagnostic only",
+    "present": true,
+    "verified": true
+  },
+  "mcp_handshake": {
+    "status": "NATIVE_SURFACE_INTACT",
+    "host": "deepseek-harness",
+    "detail": "native config intact"
+  },
+  "skill_catalog": {
+    "count": 34,
+    "skipped": 0,
+    "duplicates": 0
+  }
+}

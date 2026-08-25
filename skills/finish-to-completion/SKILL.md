@@ -3,6 +3,13 @@ name: finish-to-completion
 description: Use after an explicit execute pivot for a clear task or executable plan. Complete feasible in-scope work, verify
   claims with fresh evidence, and continue independent work around genuine blockers. Do not use for plan-only, pure Q&A, or
   an unbounded multi-part request that first needs plan-and-handoff.
+metadata:
+  signals: "làm đi, implement, fix, refactor, migrate, hoàn thành, execute"
+  excludes: "plan-only, pure q&a"
+  priority: "10"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 
 # Finish To Completion

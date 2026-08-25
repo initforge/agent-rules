@@ -7,7 +7,6 @@ import path from "node:path";
 import { verifyRuntimeReceipt, type RuntimePlatform } from "../runtime/installer.js";
 import { resolveOpenCodeModel } from "../runtime/opencode.js";
 import { collectHostKitDoctorReport, type HostKitDoctorReport } from "../host-kit/doctor.js";
-import { collectOperatorProfileDoctorChecks } from "./operator-profile.js";
 import { loadIntegrationInventory } from "../integration/inventory.js";
 import { verifyMcps } from "../integration/provisioning.js";
 
@@ -584,14 +583,14 @@ export async function doctor(
         }
         report.push({ platform: "grok", check: "legacy-inject-rules", status: "NOT_LIVE", detail: `Legacy dual-tree still at ${grokInject}: ${found.join(", ")}` });
       } else {
-        const hasBootstrap = await checkFile(path.join(grokInject, "00-bootstrap.md"));
-        const hasExecution = await checkFile(path.join(grokInject, "10-execution.md"));
-        if (!hasBootstrap || !hasExecution) {
+        const hasIntent = await checkFile(path.join(grokInject, "00-intent-scope-safety.md"));
+        const hasExecution = await checkFile(path.join(grokInject, "10-execution-planning-delegation.md"));
+        if (!hasIntent || !hasExecution) {
           report.push({ platform: "grok", check: "inject-rules-lean", status: "MISSING", detail: `Inject path missing lean core: ${grokInject}` });
         } else {
           // Hash sample
-          const injectHash = await sha256(path.join(grokInject, "00-bootstrap.md")).catch(() => "");
-          const rulesHash = await sha256(path.join(grokManifestRules, "00-bootstrap.md")).catch(() => "");
+          const injectHash = await sha256(path.join(grokInject, "00-intent-scope-safety.md")).catch(() => "");
+          const rulesHash = await sha256(path.join(grokManifestRules, "00-intent-scope-safety.md")).catch(() => "");
           if (injectHash && rulesHash && injectHash !== rulesHash) {
             report.push({ platform: "grok", check: "inject-vs-rules-drift", status: "NOT_LIVE", detail: "Inject path drift vs installed rules" });
           } else {
@@ -795,18 +794,28 @@ export async function doctor(
     report.push({ platform: "mcp", check: "mcp-convergence", status: "MCP_PARTIAL", detail: "host MCP convergence classification unavailable" });
   }
 
-  // Operator Communication Profile projection status (canonical source, hash,
-  // active mode, session override, per-host projection).
-  try {
-    report.push(...collectOperatorProfileDoctorChecks(root));
-  } catch (error) {
-    report.push({ platform: "operator-profile", check: "canonical-source", status: "ERROR", detail: (error as Error).message });
-  }
+  // Native host projection status (single registry).
+  // Communication is natural: outcome-first, user language, technical detail only when useful.
+  // Projection health is via native installer readback.
 
   // Output
   const table = report
     .map((r) => `${r.platform}\t${r.check}\t${r.status}\t${r.detail}`)
     .join("\n");
+
+  // REQ-113: doctor all --json returns the machine-readable audit from the
+  // canonical generated behavior index (single generated source, never
+  // hand-edited).
+  const behaviorIndex = await (async () => {
+    try {
+      const indexFile = path.join(root, "generated", "behavior-index.json");
+      await fs.access(indexFile);
+      const parsed = JSON.parse(await fs.readFile(indexFile, "utf8")) as { schema?: string; active_plan?: string; views?: Record<string, unknown>; evidence?: unknown[] };
+      return { schema: parsed.schema ?? null, active_plan: parsed.active_plan ?? null, views: parsed.views ?? null, evidence_count: parsed.evidence?.length ?? 0 };
+    } catch {
+      return null;
+    }
+  })();
 
   if (options.json) {
     // Will be handled by formatOutput
@@ -816,17 +825,21 @@ export async function doctor(
 
   const bad = report.filter((r) =>
     ["MISSING", "NOT_LIVE", "MODEL_POLICY_DRIFT", "MODEL_POLICY_MISSING", "NATIVE_PARTIAL", "ORPHANS", "ERROR",
-      "MCP_BLOCKED", "MCP_UNSUPPORTED", "MCP_NEEDS_USER", "MCP_PARTIAL", "DRIFTED", "UNSUPPORTED", "NEEDS_USER"].includes(r.status)
+      "MCP_BLOCKED", "MCP_PARTIAL", "DRIFTED"].includes(r.status)
   );
+
   const nativeObserved = report.filter((r) => r.status === "NATIVE_OBSERVED").length;
   const nativeUnverified = report.filter((r) => r.status === "NATIVE_UNVERIFIED").length;
+
+  const dataPayload: Record<string, unknown> = { report, nativeObserved, nativeUnverified, hostKit: hostKitReport ?? null };
+  if (behaviorIndex) dataPayload.behavior_index = behaviorIndex;
 
   if (bad.length > 0) {
     console.error(`Doctor PARTIAL: ${bad.length} install/runtime failure(s)`);
     return {
       exitCode: ExitCode.LegacyFailed,
       message: `Doctor found ${bad.length} issue(s)`,
-      data: { report, badCount: bad.length, nativeObserved, nativeUnverified, hostKit: hostKitReport ?? null },
+      data: dataPayload,
     };
   }
 
@@ -834,7 +847,7 @@ export async function doctor(
   return {
     exitCode: ExitCode.Success,
     message: "Doctor health check passed",
-    data: { report, nativeObserved, nativeUnverified, hostKit: hostKitReport ?? null },
+    data: dataPayload,
   };
 }
 

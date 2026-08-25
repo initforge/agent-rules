@@ -1,0 +1,248 @@
+{
+  "schema": "agent-rules/skill-source-report",
+  "version": 1,
+  "generated_at": "2026-08-25T09:11:59.305Z",
+  "total_skills": 34,
+  "authority": "SKILL.md is the single authoritative source for every skill.",
+  "catalog_sha256": "8222fa48434db7ccfe81aa9895c51c59bf7feca2e7672d0e70d052fd7747e52b",
+  "skills": [
+    {
+      "id": "anthropic-frontend-design",
+      "source": "skills\\anthropic-frontend-design\\SKILL.md",
+      "sha256": "0f549d2b629ff57d217b1087078524c7e8f1e8d0e89b4af2bb728a7854b60720",
+      "routing_policy": "EXPLICIT_ONLY",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "backend-composition",
+      "source": "skills\\backend-composition\\SKILL.md",
+      "sha256": "38ec1f3644764caf56c99b1f4b5f2e470d905003796763c9480c6ddac40f52a4",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "best-of-n",
+      "source": "skills\\best-of-n\\SKILL.md",
+      "sha256": "1346bc154db93b4b0f4aedfe8a2f3f044b8948f131f5fac904ccc70704a1ca75",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "browser-qa",
+      "source": "skills\\browser-qa\\SKILL.md",
+      "sha256": "13d2f818ccf09aa02fc803d020c22129569e09d522aeeee82f529c6d2a39eae6",
+      "routing_policy": "EXPLICIT_ONLY",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "callstack-react-native-best-practices",
+      "source": "skills\\callstack-react-native-best-practices\\SKILL.md",
+      "sha256": "893c052b743d0ae0df020eda616a8105592f4bb84900fa16e276da37be8d5ad6",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "claim-test-strategy",
+      "source": "skills\\claim-test-strategy\\SKILL.md",
+      "sha256": "6a0b9ffd3533c713520bec4dcf4a4866e832700bf74a2adeffa5bec837a27e0f",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "context-evolution-protocol",
+      "source": "skills\\context-evolution-protocol\\SKILL.md",
+      "sha256": "64d736119573c22ddc415547a5d20d6f3bbdccd8ffd59178b12db66ceb0d20a5",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "database-stack",
+      "source": "skills\\database-stack\\SKILL.md",
+      "sha256": "00af0be57097baccfdc687bc894fe5f1c144656a387ba5de2ca15174fbe4c12a",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "docs-style",
+      "source": "skills\\docs-style\\SKILL.md",
+      "sha256": "4cf62d5f08e17b770a62e2707ed362410d107a5c5ec733571a2680c475de96e1",
+      "routing_policy": "EXPLICIT_ONLY",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "expo-skills",
+      "source": "skills\\expo-skills\\SKILL.md",
+      "sha256": "48c428f5584f69a1e4696e0951a2b0a21432dde65d510c74106181203a22138d",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "external-skill-governance",
+      "source": "skills\\external-skill-governance\\SKILL.md",
+      "sha256": "2c437a17edcb726af9fc950afa4832324535a9e5c904cd5e6ea56c430542c965",
+      "routing_policy": "EXPLICIT_ONLY",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "finish-to-completion",
+      "source": "skills\\finish-to-completion\\SKILL.md",
+      "sha256": "415ec32b9b427b26b2e22d0f0c6f229bc26a8f85349cae6d7538d8f7741dc9c2",
+      "routing_policy": "EXPLICIT_ONLY",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "frontend-architect",
+      "source": "skills\\frontend-architect\\SKILL.md",
+      "sha256": "1b313e756fde9f596dc7e6db378aac60d9442d5328dddf0f625ce8d5cbe8e9c1",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "frontend-design-contract",
+      "source": "skills\\frontend-design-contract\\SKILL.md",
+      "sha256": "fd7a3d966088a66d76b3379136439a36cb323fc52dccd07fe20398fe1e269c89",
+      "routing_policy": "EXPLICIT_ONLY",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "hashicorp-agent-skills",
+      "source": "skills\\hashicorp-agent-skills\\SKILL.md",
+      "sha256": "b1cb2be96f7e92477cb77e2b4fba58596b79ec86190928888bee84061bc82d2f",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "impeccable",
+      "source": "skills\\impeccable\\SKILL.md",
+      "sha256": "0645aa8ae50c9f689fee58da3ca4651a10ee101b652c4408a8285c67eb8d34f3",
+      "routing_policy": "EXPLICIT_ONLY",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "infra-devops-composition",
+      "source": "skills\\infra-devops-composition\\SKILL.md",
+      "sha256": "e244e826f3572f5d28ec57fe1c79d56a1f7d75722d2ad840c212b998eeab902b",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "master-image-generation",
+      "source": "skills\\master-image-generation\\SKILL.md",
+      "sha256": "2bfc7a91e65bc368bdc35e85b3b7315e0b853b2caa77163bb5dafdecde0fe4e7",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "mobile-composition",
+      "source": "skills\\mobile-composition\\SKILL.md",
+      "sha256": "505257a5339c22bb8cda23cea06a8197b71bd02e6f575757f54d0bbbf0bb397d",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "parity-verification",
+      "source": "skills\\parity-verification\\SKILL.md",
+      "sha256": "d6ea322c981d1d28ed4c268bd809c62319bc74fc596a4f32c4b64a2cae45ed51",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "plan-and-handoff",
+      "source": "skills\\plan-and-handoff\\SKILL.md",
+      "sha256": "16d857a0443088c218ed742c07fa298487e930a93fe1c76d43fbaa4ab5256452",
+      "routing_policy": "EXPLICIT_ONLY",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "prisma-skills",
+      "source": "skills\\prisma-skills\\SKILL.md",
+      "sha256": "38f27167d691ff8f51e4851647054fb13b4375762c003ee8852f983e9c95b918",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "qa-skills",
+      "source": "skills\\qa-skills\\SKILL.md",
+      "sha256": "f365a7d917160b2d0aa234288f762f55e78ef0efac85c5144e6f00feb4b4f570",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "quality",
+      "source": "skills\\quality\\SKILL.md",
+      "sha256": "aeff1584e25f13b46b71ac24f70f7c2f66548026e9ff271f74f9aab80415f15b",
+      "routing_policy": "EXPLICIT_ONLY",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "researcher",
+      "source": "skills\\researcher\\SKILL.md",
+      "sha256": "b5a7b910a560ae9c7e2a8c97cfaeb1d9941e0fd20c14366c62e139899f10686e",
+      "routing_policy": "EXPLICIT_ONLY",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "schema-migration",
+      "source": "skills\\schema-migration\\SKILL.md",
+      "sha256": "ece76950e479c5576a50d6ff7631ddcc0d23be398a4dec278be378a2891ed0fa",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "security-review",
+      "source": "skills\\security-review\\SKILL.md",
+      "sha256": "88d032ae23b3670adf0a1ac80cdb8836b94d3345934fb378ccb2cb57971fe6f3",
+      "routing_policy": "EXPLICIT_ONLY",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "supabase-agent-skills",
+      "source": "skills\\supabase-agent-skills\\SKILL.md",
+      "sha256": "bc48c9e557308a52c66d74c0adcc160c52dbcaa8c33039ff9f68f01345650aa3",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "trail-of-bits-security",
+      "source": "skills\\trail-of-bits-security\\SKILL.md",
+      "sha256": "a002334074cc38b10264e71d5d2ec70c44cee231136d11b00d32fbba6e1f2306",
+      "routing_policy": "EXPLICIT_ONLY",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "ui-taste",
+      "source": "skills\\ui-taste\\SKILL.md",
+      "sha256": "8fcc57b2a648653f86c74fb378b0762086de1437130bb3cfd61d6c8431e12ea4",
+      "routing_policy": "EXPLICIT_ONLY",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "vercel-agent-skills",
+      "source": "skills\\vercel-agent-skills\\SKILL.md",
+      "sha256": "d8efc9017c23f6c8d43058e9d6edc59b4ecfa1896c2836b19400c7821fcc648c",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "vercel-react-best-practices",
+      "source": "skills\\vercel-react-best-practices\\SKILL.md",
+      "sha256": "fbf007aa3d54fe90afff05ba59756be0afc9ee4c0c257b559b15b260e4ff1a69",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "vercel-web-design-guidelines",
+      "source": "skills\\vercel-web-design-guidelines\\SKILL.md",
+      "sha256": "0183f6518e656268aae428175d121f5de13be1a95c23c58b1d2de0d7bc7e00fc",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    },
+    {
+      "id": "verification-router",
+      "source": "skills\\verification-router\\SKILL.md",
+      "sha256": "8c39b29d95c60d23c9e5d1163f147383973011e5d35d7b9e8a16bcebdc4ce4d4",
+      "routing_policy": "AUTO_ROUTED",
+      "status": "AUTHORITATIVE"
+    }
+  ]
+}

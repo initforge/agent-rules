@@ -22,18 +22,29 @@ function runNativeCmdc(
   return new Promise((resolve, reject) => {
     let stdout = '';
     let stderr = '';
+    let settled = false;
     const timer = setTimeout(() => {
-      child.kill('SIGKILL');
+      if (!settled) {
+        settled = true;
+        try { child.kill(); } catch {}
+        resolve({ exitCode: -1, stdout, stderr: 'timeout' });
+      }
     }, opts.timeoutMs ?? 120_000);
     child.stdout.on('data', (chunk: Buffer) => { stdout += chunk; });
     child.stderr.on('data', (chunk: Buffer) => { stderr += chunk; });
     child.on('error', (err) => {
-      clearTimeout(timer);
-      reject(err);
+      if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        reject(err);
+      }
     });
     child.on('close', (code) => {
-      clearTimeout(timer);
-      resolve({ exitCode: code ?? -1, stdout, stderr });
+      if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        resolve({ exitCode: code ?? -1, stdout, stderr });
+      }
     });
   });
 }

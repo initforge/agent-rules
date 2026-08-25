@@ -14,7 +14,7 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const { commitCurrentPointer, readCurrentPointer } = await importTsPointer();
@@ -22,7 +22,7 @@ const { commitCurrentPointer, readCurrentPointer } = await importTsPointer();
 async function importTsPointer() {
   // Prefer compiled dist (built by `npm run build`), fall back to tsx runner.
   const dist = path.join(ROOT, "packages", "cli", "dist", "services", "current-pointer.js");
-  if (fs.existsSync(dist)) return import(dist);
+  if (fs.existsSync(dist)) return import(pathToFileURL(dist).href);
   const src = path.join(ROOT, "packages", "cli", "src", "services", "current-pointer.ts");
   if (fs.existsSync(path.join(ROOT, "node_modules", ".bin", "tsx"))) {
     const { pathToFileURL } = await import("node:url");

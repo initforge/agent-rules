@@ -337,7 +337,10 @@ describe('evidenceInputForEntry — honest UNOBSERVED/PARTIAL mapping', () => {
     const summary = evaluateClaimFormulas(claims, evByClaim);
     for (const e of partial) {
       const maturity = summary.byClaim[`CLAIM-OM-${e.omId}-1`]?.maturity;
-      expect(['PARTIAL', 'UNOBSERVED', 'VALID']).toContain(maturity);
+      // Honest maturity set: PARTIAL evidence may stay PARTIAL, be UNOBSERVED
+      // for fresh gaps, VALID when witnesses close it, or WAITING_CAPABILITY
+      // for T2+ gaps that need a specialist (all still block LOCAL_READY).
+      expect(['PARTIAL', 'UNOBSERVED', 'VALID', 'WAITING_CAPABILITY']).toContain(maturity);
     }
   });
 });

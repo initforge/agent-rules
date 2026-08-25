@@ -1,0 +1,134 @@
+[
+  {
+    "id": "REQ-101",
+    "summary": "Semantic admission 100% requirement chain; unresolved=[]",
+    "trace_id": "REQ-A1",
+    "category": "admission"
+  },
+  {
+    "id": "REQ-102",
+    "summary": "Take over dirty worktree: manifest + legacy→replacement→proof table",
+    "trace_id": "REQ-A2",
+    "category": "process"
+  },
+  {
+    "id": "REQ-103",
+    "summary": "Unified 11-owner runtime with single flow",
+    "trace_id": "REQ-B1",
+    "category": "architecture"
+  },
+  {
+    "id": "REQ-104",
+    "summary": "Remove/merge ambiguous/duplicate modules",
+    "trace_id": "REQ-B2",
+    "category": "architecture"
+  },
+  {
+    "id": "REQ-105",
+    "summary": "Single vocabulary: task_state/claim_outcome/host_state/provider_state",
+    "trace_id": "REQ-B3",
+    "category": "vocabulary"
+  },
+  {
+    "id": "REQ-106",
+    "summary": "5 rules groups + legacy parity matrix + restore invariants",
+    "trace_id": "REQ-C1",
+    "category": "rules"
+  },
+  {
+    "id": "REQ-107",
+    "summary": "Delete modes vibe-coder/plain-vietnamese/technical_explain/operator-profile",
+    "trace_id": "REQ-C2",
+    "category": "governance"
+  },
+  {
+    "id": "REQ-108",
+    "summary": "ContextCapsule + compaction/resume + prompt classification",
+    "trace_id": "REQ-D1",
+    "category": "context"
+  },
+  {
+    "id": "REQ-109",
+    "summary": "Skill lifecycle: SKILL.md canonical, 34 global skills, positive/negative routing, hash parity",
+    "trace_id": "REQ-E1",
+    "category": "skills"
+  },
+  {
+    "id": "REQ-110",
+    "summary": "MCP lifecycle integration-only, remove bridge, 7-point canary",
+    "trace_id": "REQ-F1",
+    "category": "mcp"
+  },
+  {
+    "id": "REQ-111",
+    "summary": "Native 8-host HostAdapter with provenance + auth boundary",
+    "trace_id": "REQ-G1",
+    "category": "native-host"
+  },
+  {
+    "id": "REQ-112",
+    "summary": "RunStore single writer + OutcomeReducer single reducer + evidence source-bound",
+    "trace_id": "REQ-H1",
+    "category": "truth-chain"
+  },
+  {
+    "id": "REQ-113",
+    "summary": "Generated behavior-index.json + .md with 10 views",
+    "trace_id": "REQ-H2",
+    "category": "index"
+  },
+  {
+    "id": "REQ-114",
+    "summary": "Public CLI exactly 8 commands; integration list|enable|disable|doctor",
+    "trace_id": "REQ-I1",
+    "category": "cli"
+  },
+  {
+    "id": "REQ-115",
+    "summary": "Finite coverage matrix",
+    "trace_id": "REQ-B4",
+    "category": "coverage"
+  },
+  {
+    "id": "REQ-116",
+    "summary": "Deterministic tests for all invariants",
+    "trace_id": "REQ-J1",
+    "category": "tests"
+  },
+  {
+    "id": "REQ-117",
+    "summary": "12 process-level integration tests",
+    "trace_id": "REQ-J2",
+    "category": "tests"
+  },
+  {
+    "id": "REQ-118",
+    "summary": "14 live host journeys JOURNEY-001..014",
+    "trace_id": "REQ-J3",
+    "category": "tests"
+  },
+  {
+    "id": "REQ-119",
+    "summary": "Deliver 10 artifacts + result.json via RunStore",
+    "trace_id": "REQ-K1",
+    "category": "deliverables"
+  },
+  {
+    "id": "REQ-120",
+    "summary": "Local release gate 12-step",
+    "trace_id": "REQ-K2",
+    "category": "release"
+  },
+  {
+    "id": "REQ-121",
+    "summary": "Fix CI (tsx devDep, 8-host matrix, runner labels, structured RUNNERS_UNAVAILABLE)",
+    "trace_id": "REQ-K3",
+    "category": "ci"
+  },
+  {
+    "id": "REQ-122",
+    "summary": "Cleanup + commit on main + push + wait workflows success",
+    "trace_id": "REQ-L1",
+    "category": "release"
+  }
+]

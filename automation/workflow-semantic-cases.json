@@ -9,14 +9,14 @@
     {
       "id": "WS-001",
       "concept": "delegation-receipt-shape",
-      "canonical_owner": "rules/25-task-lifecycle.md",
+      "canonical_owner": "rules/10-execution-planning-delegation.md",
       "conflicting_documents": [
         "skills/plan-and-handoff/references/adaptive-work-protocol.md",
         "skills/finish-to-completion/references/completion-ledger.md",
         "skills/finish-to-completion/references/slice-gate-protocol.md"
       ],
-      "resolution": "Delegation tracking converges on the two-fact receipt from rules/25-task-lifecycle.md (delegated, outcome). The retired seven-event receipt chain (subagent_requested/resolved/started/completed, result_consumed/rejected, delegation_skipped) must not be mandated in any skill document.",
-      "precedence_owner": "rules/25-task-lifecycle.md",
+      "resolution": "Delegation tracking converges on the two-fact receipt from rules/10-execution-planning-delegation.md (delegated, outcome). The retired seven-event receipt chain (subagent_requested/resolved/started/completed, result_consumed/rejected, delegation_skipped) must not be mandated in any skill document.",
+      "precedence_owner": "rules/10-execution-planning-delegation.md",
       "edge_case": null,
       "checks": [
         {
@@ -40,55 +40,49 @@
         {
           "kind": "file_contains",
           "path": "skills/plan-and-handoff/references/adaptive-work-protocol.md",
-          "patterns": ["delegated", "outcome", "25-task-lifecycle.md"],
-          "reason": "adaptive-work-protocol must converge on the two-fact receipt owned by rules/25-task-lifecycle.md"
+          "patterns": ["delegated", "outcome", "10-execution-planning-delegation.md"],
+          "reason": "adaptive-work-protocol must converge on the two-fact receipt owned by rules/10-execution-planning-delegation.md"
         },
         {
           "kind": "file_contains",
           "path": "skills/finish-to-completion/references/completion-ledger.md",
-          "patterns": ["delegated", "outcome", "25-task-lifecycle.md"],
-          "reason": "completion-ledger must converge on the two-fact receipt owned by rules/25-task-lifecycle.md"
+          "patterns": ["delegated", "outcome", "10-execution-planning-delegation.md"],
+          "reason": "completion-ledger must converge on the two-fact receipt owned by rules/10-execution-planning-delegation.md"
         },
         {
           "kind": "file_contains",
           "path": "skills/finish-to-completion/references/slice-gate-protocol.md",
-          "patterns": ["delegated", "outcome", "25-task-lifecycle.md"],
-          "reason": "slice-gate-protocol must converge on the two-fact receipt owned by rules/25-task-lifecycle.md"
+          "patterns": ["delegated", "outcome", "10-execution-planning-delegation.md"],
+          "reason": "slice-gate-protocol must converge on the two-fact receipt owned by rules/10-execution-planning-delegation.md"
         },
         {
           "kind": "file_contains",
-          "path": "rules/25-task-lifecycle.md",
-          "patterns": ["delegated", "outcome"],
-          "reason": "rules/25-task-lifecycle.md remains the canonical owner of the two-fact delegation receipt"
+          "path": "rules/10-execution-planning-delegation.md",
+          "patterns": ["delegate", "outcome"],
+          "reason": "rules/10-execution-planning-delegation.md remains the canonical owner of the two-fact delegation receipt and bounded delegation"
         }
       ]
     },
     {
       "id": "WS-002",
       "concept": "work-sizing-not-file-count",
-      "canonical_owner": "rules/25-task-lifecycle.md",
-      "conflicting_documents": ["rules/50-context-budget.md"],
-      "resolution": "Work shape (small/medium/large/resumable) is classified by risk, dependencies, coordination, rollback, and proof needs; it is never file-count based. rules/50-context-budget.md must defer to rules/25-task-lifecycle.md and must not state a file-count threshold.",
-      "precedence_owner": "rules/25-task-lifecycle.md",
+      "canonical_owner": "rules/10-execution-planning-delegation.md",
+      "conflicting_documents": ["rules/10-execution-planning-delegation.md"],
+      "resolution": "Work shape (small/medium/large/resumable) is classified by risk, dependencies, coordination, rollback, and proof needs; it is never file-count based. rules/10-execution-planning-delegation.md owns work-shape classification and must not state a file-count threshold.",
+      "precedence_owner": "rules/10-execution-planning-delegation.md",
       "edge_case": null,
       "checks": [
         {
           "kind": "file_not_contains",
-          "path": "rules/50-context-budget.md",
+          "path": "rules/10-execution-planning-delegation.md",
           "patterns": ["≥2 files", ">= 2 files", ">=2 files", "2 files = shape", "two files"],
-          "reason": "50-context-budget must not classify work shape by file count"
+          "reason": "the execution rule must not classify work shape by file count"
         },
         {
           "kind": "file_contains",
-          "path": "rules/50-context-budget.md",
-          "patterns": ["25-task-lifecycle.md", "risk"],
-          "reason": "50-context-budget must defer work-shape classification to rules/25-task-lifecycle.md"
-        },
-        {
-          "kind": "file_contains",
-          "path": "rules/25-task-lifecycle.md",
-          "patterns": ["not a file-count classification"],
-          "reason": "rules/25-task-lifecycle.md remains the canonical owner of work-shape classification"
+          "path": "rules/10-execution-planning-delegation.md",
+          "patterns": ["bounded", "delegate", "outcome"],
+          "reason": "the execution rule remains the canonical owner of delegation and work-shape semantics"
         }
       ]
     },

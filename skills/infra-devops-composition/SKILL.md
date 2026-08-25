@@ -1,6 +1,13 @@
 ---
 name: infra-devops-composition
 description: "Inspect/diagnose/plan/verify infra procedures for Terraform/Kubernetes/CI: plan-before-apply; destructive effects require owner approval."
+metadata:
+  signals: "terraform, kubernetes, docker compose, ci provider, infra plan"
+  excludes: "apply-only, destroy-only"
+  priority: "40"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # infra-devops-composition
 

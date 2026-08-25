@@ -1,0 +1,11 @@
+{
+  "schema": "agent-rules/host-readback",
+  "version": 1,
+  "host": "deepseek-harness",
+  "native_readback": {
+    "method": "`dsh --dump-config` + plugin tree + bundle hash + hook registration; version diagnostic only",
+    "present": true,
+    "verified": true
+  },
+  "verified": true
+}

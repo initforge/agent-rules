@@ -1,0 +1,116 @@
+{
+  "schema": "artifact/plan",
+  "version": 1,
+  "level": "resumable",
+  "meta": {
+    "id": "runtime-native-live-closure-v3",
+    "created_at": "2026-08-24T12:00:00Z",
+    "updated_at": "2026-08-24T12:00:00Z",
+    "source_refs": [".agent/plans/runtime-native-live-closure-v3/original.md"]
+  },
+  "repository_baseline": { "branch": "main", "sha": "c1deca1a5ee186a9d0361b57fd0ff7e943fa676e" },
+  "intent_reference": {
+    "hash": "ebd5762d22c50aee5fd9bb37459dc2421d803e995f729980de4987528d4f7dcd",
+    "summary": "Runtime Native Live Closure v3 — Explicit Technical Explain & 8-Host End-to-End Proof (owner artifact 2026-08-24)"
+  },
+  "intent": {
+    "outcome": "Source, native installation, profile behavior (technical_explain), context/skills/handoff, review/quality and evidence all bound to one current HEAD with 8/8 native live closure and honest gates.",
+    "risk_classification": "high",
+    "in_scope": [
+      "operator-profiles/vibe-product technical_explain contract and triggers",
+      "kernel resolver and CLI projection for 8 hosts (no persistent mode)",
+      "native materialization chain canonical→install→projection→readback→canary",
+      "8-host live verification receipts bind HEAD",
+      "canonical prompt/context/skills/handoff (56-dim matrix)",
+      "lifecycle quality and Review A/B contracts",
+      "model-neutral dogfood on this batch",
+      "acceptance gates and honest status reporting"
+    ],
+    "non_goals": [
+      "no Review B during default execution",
+      "no Mimocode/Control Plane active residue",
+      "no auto-route for Browser/Pencil/5fedu",
+      "no global MCP or hand-edit of generated/"
+    ],
+    "open_questions": []
+  },
+  "requirements": [
+    { "id": "REQ-V3-01", "summary": "technical-explain naming and v3 contract (field technical_explain, no technical_mode)", "kind": "original" },
+    { "id": "REQ-V3-02", "summary": "default vibe and activation only on explicit owner request with many variants", "kind": "original" },
+    { "id": "REQ-V3-03", "summary": "request-scoped only, no persistent session_override/toggle", "kind": "original" },
+    { "id": "REQ-V3-04", "summary": "canonical profile + kernel + CLI updated to technical_explain, 8 overlays regenerated, no legacy refs", "kind": "original" },
+    { "id": "REQ-V3-05", "summary": "native materialization chain and NATIVE_LIVE definition (8 checks) and deactivate semantics", "kind": "original" },
+    { "id": "REQ-V3-06", "summary": "8-host native live closure receipts bind HEAD with required fields, STALE if old commit", "kind": "original" },
+    { "id": "REQ-V3-07", "summary": "single canonical contract for prompt/context/skills/handoff with 56-dim matrix and 4-layer skill proof", "kind": "original" },
+    { "id": "REQ-V3-08", "summary": "lifecycle quality gates and Review A (bounded) / Review B (OFF) contracts, host-role symmetry", "kind": "original" },
+    { "id": "REQ-V3-09", "summary": "model-neutral dogfood via canonical flow, honest NEEDS_USER/BLOCKED if capability missing", "kind": "original" },
+    { "id": "REQ-V3-10", "summary": "acceptance gates honest PASS/PARTIAL/BLOCKED/UNSUPPORTED/PRE-EXISTING/NEEDS_USER only", "kind": "original" },
+    { "id": "REQ-V3-11", "summary": "implementor executes in one pass without per-step approval, no Review B, max one Review A correction, separated evidence reporting", "kind": "original" }
+  ],
+  "decisions": [
+    { "id": "DEC-0001", "statement": "technical_explain is request-scoped explanation depth, not execution mode.", "rationale": "Prevents persistent mode drift and keeps verification/scope/security unchanged." },
+    { "id": "DEC-0002", "statement": "Single canonical profile source projected to 8 hosts; overlays are SYNCED only when bytes equal source.", "rationale": "Eliminates manual drift and stale readback." },
+    { "id": "DEC-0003", "statement": "Deactivation removes exactly the managed overlay section, preserves user config, and stale overlay fails closed.", "rationale": "Satisfies native surface ownership and readback honesty." }
+  ],
+  "change_graph": [
+    { "id": "CG-01", "area": "operator-profile", "current_truth": "profile uses technical_mode with revert after-task-or-topic and session_override", "exact_change": "replace with technical_explain, expand triggers, remove persistent mode/CLI toggle, regenerate 8 overlays, purge legacy refs", "category": "fact", "files": ["operator-profiles/vibe-product/profile.json", "packages/kernel/src/northstar/operator-profile.ts", "packages/cli/src/commands/operator-profile.ts", "packages/cli/src/services/host-projection.ts"], "depends_on": [], "requirement_ids": ["REQ-V3-01", "REQ-V3-02", "REQ-V3-03", "REQ-V3-04"] },
+    { "id": "CG-02", "area": "native-materialization", "current_truth": "projection SYNCED not distinguished from NATIVE_LIVE; deactivate only flips active flag", "exact_change": "document chain canonical→install→projection→native readback→canary; define NATIVE_LIVE 8 checks; deactivate removes managed section exactly", "category": "fact", "files": ["packages/cli/src/services/host-projection.ts", "packages/kernel/src/northstar/operator-profile.ts"], "depends_on": ["CG-01"], "requirement_ids": ["REQ-V3-05"] },
+    { "id": "CG-03", "area": "verification", "current_truth": "gates run but 8-host live receipts may be stale", "exact_change": "run full gates on final HEAD, verify 8/8 receipts bind current HEAD, canaries for technical-explain/default vibe/handoff/context/skill", "category": "fact", "files": ["automation/verify-windows-hosts.mjs", "automation/validate-canonical-plan.mjs"], "depends_on": ["CG-01", "CG-02"], "requirement_ids": ["REQ-V3-06", "REQ-V3-10"] }
+  ],
+  "acceptance": [
+    { "id": "AC-V3-01", "claim": "canonical profile uses technical_explain with expanded triggers, no legacy fields, and overlay regeneration is from single source", "proof_profile": "unit", "required_dimensions": ["outcome"], "requirement_ids": ["REQ-V3-01", "REQ-V3-04"] },
+    { "id": "AC-V3-02", "claim": "technical_explain only on explicit owner request, default is vibe, request-scoped, no persistent toggle; generic tasks do not escalate", "proof_profile": "unit", "required_dimensions": ["outcome"], "requirement_ids": ["REQ-V3-02", "REQ-V3-03"] },
+    { "id": "AC-V3-03", "claim": "8 host overlays SYNCED, generated builds SYNCED, no legacy refs in active runtime/test/docs/overlay", "proof_profile": "diff-static", "required_dimensions": ["outcome"], "requirement_ids": ["REQ-V3-04"] },
+    { "id": "AC-V3-04", "claim": "native materialization chain honest: SYNCED vs NATIVE_LIVE distinct, deactivate removes only owned section, stale readback not PASS", "proof_profile": "integration", "required_dimensions": ["outcome"], "requirement_ids": ["REQ-V3-05"] },
+    { "id": "AC-V3-05", "claim": "8/8 receipts bind current HEAD with required fields; stale receipts are STALE", "proof_profile": "artifact", "required_dimensions": ["outcome"], "requirement_ids": ["REQ-V3-06"] },
+    { "id": "AC-V3-06", "claim": "single canonical contract holds raw intent/requirements/claims/plan/decisions etc. and 56-dim handoff matrix passes", "proof_profile": "unit", "required_dimensions": ["outcome"], "requirement_ids": ["REQ-V3-07"] },
+    { "id": "AC-V3-07", "claim": "Review A bounded (max one correction), Review B OFF by default, lifecycle quality gates enforced", "proof_profile": "transcript-review", "required_dimensions": ["outcome"], "requirement_ids": ["REQ-V3-08"] },
+    { "id": "AC-V3-08", "claim": "full acceptance gates green on final HEAD with honest six-status reporting (no fixture PASS)", "proof_profile": "pipeline-run", "required_dimensions": ["outcome"], "requirement_ids": ["REQ-V3-10", "REQ-V3-11"] }
+  ],
+  "verification_matrix": [
+    { "requirement_id": "REQ-V3-01", "acceptance_ids": ["AC-V3-01"] },
+    { "requirement_id": "REQ-V3-02", "acceptance_ids": ["AC-V3-02"] },
+    { "requirement_id": "REQ-V3-03", "acceptance_ids": ["AC-V3-02"] },
+    { "requirement_id": "REQ-V3-04", "acceptance_ids": ["AC-V3-01", "AC-V3-03"] },
+    { "requirement_id": "REQ-V3-05", "acceptance_ids": ["AC-V3-04"] },
+    { "requirement_id": "REQ-V3-06", "acceptance_ids": ["AC-V3-05"] },
+    { "requirement_id": "REQ-V3-07", "acceptance_ids": ["AC-V3-06"] },
+    { "requirement_id": "REQ-V3-08", "acceptance_ids": ["AC-V3-07"] },
+    { "requirement_id": "REQ-V3-10", "acceptance_ids": ["AC-V3-08"] },
+    { "requirement_id": "REQ-V3-11", "acceptance_ids": ["AC-V3-08"] }
+  ],
+  "path_ownership": {
+    "exclusive_writers": {
+      "harness-maintainer": ["operator-profiles/", "packages/kernel/src/northstar/operator-profile.ts", "packages/cli/src/commands/operator-profile.ts", "packages/cli/src/services/host-projection.ts", "platforms/", "generated/"]
+    },
+    "read_only_paths": [".agent/ledger/", ".agent/plans/portable-host-native-supervision-v1/"],
+    "forbidden_paths": ["generated/"]
+  },
+  "task_graph": [
+    { "id": "S1", "name": "canonical profile to technical_explain", "work": "update profile.json, expand triggers, purge legacy, regenerate 8 overlays", "owner": "harness-maintainer", "depends_on": [], "capability_class": "implementation-worker", "write_paths": ["operator-profiles/vibe-product/profile.json", "platforms/"], "acceptance_ids": ["AC-V3-01", "AC-V3-03"], "requirement_ids": ["REQ-V3-01", "REQ-V3-04"], "review_required": false, "rollback_point": "main@c1deca1" },
+    { "id": "S2", "name": "kernel and CLI to request-scoped explain", "work": "kernel resolver, CLI without persistent toggle, precedence owner>installed>host-default, host-projection deactivate handling", "owner": "harness-maintainer", "depends_on": ["S1"], "capability_class": "implementation-worker", "write_paths": ["packages/kernel/src/northstar/operator-profile.ts", "packages/cli/src/commands/operator-profile.ts", "packages/cli/src/services/host-projection.ts"], "acceptance_ids": ["AC-V3-02", "AC-V3-04"], "requirement_ids": ["REQ-V3-02", "REQ-V3-03", "REQ-V3-05"], "review_required": false, "rollback_point": "S1" },
+    { "id": "S3", "name": "native live closure and gates", "work": "build, check, tests, verify:all, canaries, 8-host receipts bind HEAD, Review A bounded", "owner": "harness-maintainer", "depends_on": ["S2"], "capability_class": "implementation-worker", "write_paths": [".agent/plans/runtime-native-live-closure-v3/", ".agent/tmp/host-receipts/"], "acceptance_ids": ["AC-V3-05", "AC-V3-08"], "requirement_ids": ["REQ-V3-06", "REQ-V3-10", "REQ-V3-11"], "review_required": true, "rollback_point": "S2" }
+  ],
+  "completion_policy": { "require_all_tasks": true, "require_verification": true },
+  "validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "coverage_basis": "structural",
+    "requirementCoverage": [
+      { "id": "REQ-V3-01", "covered": true },
+      { "id": "REQ-V3-04", "covered": true },
+      { "id": "REQ-V3-06", "covered": true }
+    ]
+  },
+  "execution_contract": {
+    "mode": "automatic",
+    "shape": "resumable",
+    "ledger": "auto",
+    "strategy": "delegated",
+    "max_agents": 2,
+    "max_depth": 0,
+    "effort_cap": "high",
+    "authorized_final_actions": ["edit"]
+  }
+}

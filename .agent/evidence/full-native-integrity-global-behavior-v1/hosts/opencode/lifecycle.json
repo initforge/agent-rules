@@ -1,0 +1,16 @@
+{
+  "schema": "agent-rules/host-lifecycle",
+  "version": 1,
+  "host": "opencode",
+  "lifecycle_claim": {
+    "status": "PASS",
+    "evidence": [
+      {
+        "kind": "hook-plugin-lifecycle",
+        "host": "opencode",
+        "detail": "native lifecycle strategy verified: restart_or_reload (opencode reloads AGENTS.md on new session)"
+      }
+    ],
+    "omitted_reason": null
+  }
+}

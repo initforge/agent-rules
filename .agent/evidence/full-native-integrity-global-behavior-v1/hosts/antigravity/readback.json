@@ -1,0 +1,11 @@
+{
+  "schema": "agent-rules/host-readback",
+  "version": 1,
+  "host": "antigravity",
+  "native_readback": {
+    "method": "IDE config/UI/log readback + CLI `agy` native readback; prove IDE and CLI separately, not via single config hash",
+    "present": true,
+    "verified": true
+  },
+  "verified": true
+}

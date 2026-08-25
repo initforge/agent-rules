@@ -207,81 +207,39 @@
           ]
         },
         {
-          "path": "rules/00-bootstrap.md",
+          "path": "rules/00-intent-scope-safety.md",
           "type": "public core",
           "owner": "harness-maintainer",
           "status": "active",
           "load_order": 1
         },
         {
-          "path": "rules/05-critical-thinking.md",
+          "path": "rules/10-execution-planning-delegation.md",
           "type": "public core",
           "owner": "harness-maintainer",
           "status": "active",
           "load_order": 2
         },
         {
-          "path": "rules/10-execution.md",
+          "path": "rules/20-proof-outcome.md",
           "type": "public core",
           "owner": "harness-maintainer",
           "status": "active",
           "load_order": 3
         },
         {
-          "path": "rules/15-output-economy.md",
+          "path": "rules/30-context-skill-mcp.md",
           "type": "public core",
           "owner": "harness-maintainer",
           "status": "active",
           "load_order": 4
         },
         {
-          "path": "rules/16-context-style.md",
-          "type": "public core",
-          "owner": "harness-maintainer",
-          "status": "active",
-          "load_order": "lazy"
-        },
-        {
-          "path": "rules/20-quality-and-safety.md",
+          "path": "rules/40-maintainer.md",
           "type": "public core",
           "owner": "harness-maintainer",
           "status": "active",
           "load_order": 5
-        },
-        {
-          "path": "rules/25-task-lifecycle.md",
-          "type": "public core",
-          "owner": "harness-maintainer",
-          "status": "active",
-          "load_order": 6
-        },
-        {
-          "path": "rules/30-context-routing.md",
-          "type": "public core",
-          "owner": "harness-maintainer",
-          "status": "active",
-          "load_order": 7
-        },
-        {
-          "path": "rules/40-harness-governance.md",
-          "type": "public core",
-          "owner": "harness-maintainer",
-          "status": "active",
-          "load_order": "lazy"
-        },
-        {
-          "path": "rules/41-harness-maintainer.md",
-          "type": "public core",
-          "owner": "harness-maintainer",
-          "status": "active",
-          "load_order": "lazy"
-        },
-        {
-          "path": "rules/50-context-budget.md",
-          "type": "public core",
-          "owner": "harness-maintainer",
-          "status": "active",
-          "load_order": "lazy"
         }
       ]
     },
@@ -1102,8 +1060,8 @@
       },
       {
         "severity": "low",
-        "finding": "rules/50-context-budget.md and skills/clean-code/SKILL.md used deprecated 'lane normal' and 'lane high-risk' terms",
-        "resolution": "Replaced with canonical shape taxonomy from rules/25-task-lifecycle.md: 'shape medium', 'shape high-risk'"
+        "finding": "skills/clean-code/SKILL.md used deprecated 'lane normal' and 'lane high-risk' terms",
+        "resolution": "Replaced with the canonical work-shape semantics owned by rules/10-execution-planning-delegation.md"
       }
     ],
     "multiple_sources_of_truth_same_contract": [

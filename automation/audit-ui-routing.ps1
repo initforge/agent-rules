@@ -50,8 +50,8 @@ if (Test-Path $PublicModuleMapping) {
   Test-FileContains $PublicModuleMapping @("clone checklist", "audit checklist", "pattern-inventory", "shell", "variable") | Out-Null
 }
 
-$Rules30 = Join-Path $Root "rules\30-context-routing.md"
-Test-FileContains $Rules30 @("project/domain router", "matching leaf context", "capability", "new signal") | Out-Null
+$Rules30 = Join-Path $Root "rules\30-context-skill-mcp.md"
+Test-FileContains $Rules30 @("smallest matching capability", "never infer", "capability") | Out-Null
 
 $PublicUiDelivery = Join-Path $Root "projects\5fedu\domains\ui-delivery.md"
 if (Test-Path $PublicUiDelivery) {

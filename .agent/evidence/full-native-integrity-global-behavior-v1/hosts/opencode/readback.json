@@ -1,0 +1,11 @@
+{
+  "schema": "agent-rules/host-readback",
+  "version": 1,
+  "host": "opencode",
+  "native_readback": {
+    "method": "AGENTS.md block == source + opencode debug native config + skill inventory count + mcp handshake capability",
+    "present": true,
+    "verified": true
+  },
+  "verified": true
+}

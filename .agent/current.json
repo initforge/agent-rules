@@ -1,77 +1,69 @@
 {
-  "work_id": "portable-host-native-supervision-v1",
-  "plan_id": "portable-host-native-supervision-v1",
-  "plan_root": ".agent/plans/portable-host-native-supervision-v1",
-  "original": {
-    "path": ".agent/plans/portable-host-native-supervision-v1/original.md",
-    "sha256": "3ce80a0f22b9cfd6315b26fcbd498e66d88e7e950d4641863841ecc193f4e3db"
-  },
-  "canonical_ledger": {
-    "path": ".agent/ledger/portable-host-native-supervision-v1.json",
-    "sha256": "392681e19ba12c380eda728e2ad56fce758ae968bbc720df1f299732c7196841",
-    "observed_revision": 0,
-    "observed_effective_sha256": "801d9589e25eda77f6a5b319445a7ddf946fb6f0b0daaf085a0afbddfc50c854",
-    "plan_status": "COMPLETED",
-    "execution_state": "COMPLETED"
-  },
-  "effective_chain_tip": {
-    "amendment_id": "AM-0000",
-    "path": ".agent/plans/portable-host-native-supervision-v1/original.md",
-    "sha256": "3ce80a0f22b9cfd6315b26fcbd498e66d88e7e950d4641863841ecc193f4e3db"
-  },
-  "candidate_chain_tip": {
-    "amendment_id": "AM-0000",
-    "status": "OWNER_APPROVED_EFFECTIVE",
-    "path": ".agent/plans/portable-host-native-supervision-v1/original.md",
-    "sha256": "3ce80a0f22b9cfd6315b26fcbd498e66d88e7e950d4641863841ecc193f4e3db"
-  },
-  "contract": {
-    "path": ".agent/plans/portable-host-native-supervision-v1/plan.md",
-    "sha256": "c1cc46861bf671a52285b498fec066a28f2969d2e805f2c3d2e08b8eed890ec3",
-    "schema_path": "schemas/execution-contract.schema.json",
-    "requirement_ids": [
-      "REQ-001",
-      "REQ-002",
-      "REQ-003",
-      "REQ-004",
-      "REQ-005",
-      "REQ-006",
-      "REQ-007",
-      "REQ-008",
-      "REQ-009",
-      "REQ-010",
-      "REQ-011",
-      "REQ-012",
-      "REQ-013",
-      "REQ-014",
-      "REQ-015",
-      "REQ-016",
-      "REQ-017",
-      "REQ-018",
-      "REQ-019",
-      "REQ-020",
-      "REQ-021",
-      "REQ-022",
-      "REQ-023"
-    ],
-    "status": "EFFECTIVE"
-  },
   "schema": "artifact/execution-contract",
   "version": 1,
   "kind": "current-pointer",
-  "generation": 44,
-  "supersession": {
-    "transaction_id": "08bdfd50-d68a-457f-87f4-fdf5b4a35a3f",
-    "previous_work_id": "portable-host-native-supervision-v1",
-    "previous_plan_id": "portable-host-native-supervision-v1",
-    "reason": "Ledger note updated with honest CI state (pre-existing Windows browser-QA flake documented); pointer re-bound at BOOTSTRAP_UNCERTIFIED. BOOTSTRAP_UNCERTIFIED",
-    "changed_at": "2026-08-20T20:57:23.486Z"
+  "generation": 53,
+  "work_id": "global-agent-behavior-native-live-closure-v1",
+  "plan_id": "global-agent-behavior-native-live-closure-v1",
+  "plan_root": ".agent/plans/global-agent-behavior-native-live-closure-v1",
+  "original": {
+    "path": ".agent/plans/global-agent-behavior-native-live-closure-v1/plan.md",
+    "sha256": "ba1d36f4a15c63ba0cf008350f741b34456c025f879a582ff92dcfa95a635d49"
+  },
+  "canonical_ledger": {
+    "path": ".agent/ledger/global-agent-behavior-native-live-closure-v1.json",
+    "sha256": "78e7c41f92948e8a684f4080b2296471354a78e7f5002314e192f045059214a3",
+    "observed_revision": 1,
+    "observed_effective_sha256": "b613db8155144251fc202ac309a5527a4508927007e6d457d39376febcfdeae2",
+    "plan_status": "ADOPTED",
+    "execution_state": "IN_PROGRESS"
+  },
+  "effective_chain_tip": {
+    "amendment_id": "AM-0000",
+    "path": ".agent/plans/global-agent-behavior-native-live-closure-v1/plan.md",
+    "sha256": "ba1d36f4a15c63ba0cf008350f741b34456c025f879a582ff92dcfa95a635d49"
+  },
+  "candidate_chain_tip": {
+    "amendment_id": "AM-0000",
+    "status": "OWNER_APPROVED_PENDING_CANONICAL_ACTIVATION",
+    "path": ".agent/plans/global-agent-behavior-native-live-closure-v1/plan.md",
+    "sha256": "ba1d36f4a15c63ba0cf008350f741b34456c025f879a582ff92dcfa95a635d49"
+  },
+  "contract": {
+    "path": ".agent/plans/global-agent-behavior-native-live-closure-v1/generations/1/effective-contract.json",
+    "sha256": "ef0d1565f2599d40e5d789a3751544046f2631039a9d8c079826ecfdd8a4669c",
+    "schema_path": "schemas/execution-contract.schema.json",
+    "requirement_ids": [
+      "REQ-101",
+      "REQ-102",
+      "REQ-103",
+      "REQ-104",
+      "REQ-105",
+      "REQ-106",
+      "REQ-107",
+      "REQ-108",
+      "REQ-109",
+      "REQ-110",
+      "REQ-111",
+      "REQ-112",
+      "REQ-113",
+      "REQ-114",
+      "REQ-115",
+      "REQ-116",
+      "REQ-117",
+      "REQ-118",
+      "REQ-119",
+      "REQ-120",
+      "REQ-121",
+      "REQ-122"
+    ],
+    "status": "EFFECTIVE"
   },
   "atomicity": {
     "protocol": "generation-compare-and-swap",
-    "expected_previous_generation": 43,
+    "expected_previous_generation": 52,
     "commit_target": ".agent/current.json",
     "activation_state": "CANONICALLY_ACTIVATED",
-    "updated_at": "2026-08-22T17:03:51.343Z"
+    "updated_at": "2026-08-25T14:20:09.319Z"
   }
 }

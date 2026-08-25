@@ -154,3 +154,105 @@ export function assertIdleZeroReceipt(receipt: McpIdleReceipt): void {
     throw new Error('MCP idle-zero FAIL-CLOSED: receipt claims idle with residual resources');
   }
 }
+
+/**
+ * REQ-110 — a task that does not need MCP must prove zero lease and zero MCP
+ * call. This is the fail-closed counter-evidence a non-MCP task records.
+ */
+export interface NoMcpProof {
+  schema: 'agent-rules/no-mcp-proof/v1';
+  version: 1;
+  task_id: string;
+  work_id: string;
+  leases_created: number;
+  mcp_calls: number;
+  mcp_configured: boolean;
+  proof_sha256: string;
+}
+
+export function buildNoMcpProof(input: { task_id: string; work_id: string; leases_created?: number; mcp_calls?: number }): NoMcpProof {
+  const body = {
+    schema: 'agent-rules/no-mcp-proof/v1' as const,
+    version: 1 as const,
+    task_id: input.task_id,
+    work_id: input.work_id,
+    leases_created: input.leases_created ?? 0,
+    mcp_calls: input.mcp_calls ?? 0,
+    mcp_configured: false,
+  };
+  return { ...body, proof_sha256: createHash('sha256').update(JSON.stringify(body)).digest('hex') };
+}
+
+/** External MCP requirement: capability-required tasks MUST have a lease. */
+export type McpRequirement = 'REQUIRED' | 'NOT_REQUIRED';
+
+/**
+ * REQ-110 — an MCP claim PASSes only when ALL seven points hold:
+ *  1. host-native config read back (real bytes, not fabricated)
+ *  2. initialize handshake succeeded
+ *  3. listTools returned the canary tool
+ *  4. real tool call executed with a nonce
+ *  5. observable output/effect matched the nonce
+ *  6. session teardown succeeded
+ *  7. temporary config rolled back byte-for-byte
+ */
+export type McpCanaryPoint =
+  | 'CONFIG_READBACK'
+  | 'INITIALIZE'
+  | 'LIST_TOOLS_CANARY'
+  | 'TOOL_CALL_NONCE'
+  | 'EFFECT_OBSERVED'
+  | 'TEARDOWN'
+  | 'CONFIG_ROLLBACK_BYTE_EQUAL';
+
+export const MCP_CANARY_POINTS: readonly McpCanaryPoint[] = [
+  'CONFIG_READBACK', 'INITIALIZE', 'LIST_TOOLS_CANARY', 'TOOL_CALL_NONCE',
+  'EFFECT_OBSERVED', 'TEARDOWN', 'CONFIG_ROLLBACK_BYTE_EQUAL',
+];
+
+export interface McpCanaryResult {
+  schema: 'agent-rules/mcp-canary/v1';
+  version: 1;
+  integration_id: string;
+  host: string;
+  nonce: string;
+  points: Record<McpCanaryPoint, { status: 'PASS' | 'FAIL' | 'OMITTED'; evidence?: unknown }>;
+  passed: boolean;
+  canary_sha256: string;
+}
+
+export function buildMcpCanaryResult(input: {
+  integration_id: string;
+  host: string;
+  nonce: string;
+  points: Partial<Record<McpCanaryPoint, { status: 'PASS' | 'FAIL' | 'OMITTED'; evidence?: unknown }>>;
+}): McpCanaryResult {
+  const points = {} as Record<McpCanaryPoint, { status: 'PASS' | 'FAIL' | 'OMITTED'; evidence?: unknown }>;
+  for (const point of MCP_CANARY_POINTS) {
+    points[point] = input.points[point] ?? { status: 'OMITTED', evidence: { reason: `point ${point} not executed` } };
+  }
+  const passed = MCP_CANARY_POINTS.every((point) => points[point]!.status === 'PASS');
+  const body = {
+    schema: 'agent-rules/mcp-canary/v1' as const,
+    version: 1 as const,
+    integration_id: input.integration_id,
+    host: input.host,
+    nonce: input.nonce,
+    points,
+    passed,
+  };
+  return { ...body, canary_sha256: createHash('sha256').update(JSON.stringify(body)).digest('hex') };
+}
+
+/**
+ * A lease is REQUIRED exactly when the task declares an MCP capability;
+ * otherwise the broker must create NO lease (REQ-110).
+ */
+export function leasePolicyFor(requiresMcp: boolean, declaredCapabilities: readonly string[], mcpCapabilities: readonly string[]): { required: boolean; reason: string } {
+  if (!requiresMcp) return { required: false, reason: 'task does not require MCP; no lease must be created' };
+  const needsMcp = declaredCapabilities.some((c) => mcpCapabilities.includes(c));
+  return {
+    required: needsMcp,
+    reason: needsMcp ? `task declares MCP capability (${declaredCapabilities.filter((c) => mcpCapabilities.includes(c)).join(', ')})` : 'task requires a capability but none maps to an MCP provider; no lease',
+  };
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # audit-on-edit — Codex PostToolUse backstop for context/harness edits.
 # Fail-open: chỉ CẢNH BÁO, không bao giờ block. Kích khi Write/Edit chạm rule/skill/AGENTS/overlay.
-# Chuẩn: rules/40-harness-governance.md + skills/context-evolution-protocol §Auto-audit on edit.
+# Chuẩn: rules/40-maintainer.md + skills/context-evolution-protocol §Auto-audit on edit.
 set -uo pipefail
 
 payload="$(cat 2>/dev/null || true)"
@@ -21,11 +21,11 @@ for f in $paths; do
   base="$(basename "$f")"
   lines="$(wc -l < "$f" 2>/dev/null || echo 0)"
 
-  # Oversize theo loại — ngưỡng warn = bloat THẬT (target ~40 rule là aspirational ở 16-context-style).
+  # Oversize theo loại — ngưỡng warn = bloat THẬT (target ~40 rule là aspirational ở 30-context-skill-mcp.md).
   if printf '%s' "$f" | grep -q '/rules/'; then
     [ "$lines" -gt 90 ] && warns="${warns}\n  - OVERSIZE rule ${base}: ${lines} dòng (>90) → tách / đẩy chi tiết ra references/"
   elif [ "$base" = "SKILL.md" ]; then
-    [ "$lines" -gt 350 ] && warns="${warns}\n  - OVERSIZE ${f}: ${lines} dòng (>350) → chỉ tách nếu workflow không liền mạch (16-context-style)"
+    [ "$lines" -gt 350 ] && warns="${warns}\n  - OVERSIZE ${f}: ${lines} dòng (>350) → chỉ tách nếu workflow không liền mạch (30-context-skill-mcp.md)"
   fi
 
   # Dead @import / link tới file không tồn tại (chỉ path tuyệt đối cho chắc).

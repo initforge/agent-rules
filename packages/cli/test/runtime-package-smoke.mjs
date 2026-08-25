@@ -107,6 +107,13 @@ try {
   await writeSmokeLedger(ledger, identity, canonical);
   run("git", ["add", "-f", ".agent/ledger/smoke.json"]);
   run("git", ["-c", "user.name=Smoke", "-c", "user.email=smoke@example.invalid", "commit", "-qm", "smoke ledger"]);
+  // generated/ is git-ignored so a fresh clone has no packaged runtime, and the
+  // strict-8-command CLI has no `build` command. The packaged runtime and
+  // context graph are canonical build outputs of the same commit — copy them
+  // into the clone so the packaged RuntimeInstaller works against those exact
+  // artifacts (REQ-120 gate 6: packaged runtime lifecycle smoke).
+  await fsp.cp(path.join(sourceRoot, "generated", "runtime-build"), path.join(repo, "generated", "runtime-build"), { recursive: true });
+  await fsp.cp(path.join(sourceRoot, "generated", "context-graph.json"), path.join(repo, "generated", "context-graph.json"), { force: true });
 
   const pack = (directory) => {
     const result = JSON.parse(runNpm(["pack", "--json"], directory));
@@ -140,29 +147,43 @@ try {
     const homeBefore = await snapshotTree(home);
     const bin = path.join(app, "node_modules", ".bin", process.platform === "win32" ? "agent-rules.cmd" : "agent-rules");
     const cli = (...args) => run(bin, ["--json", ...args]);
-    cli("build");
+    cli("init");
     await fsp.rm(path.dirname(ledger), { recursive: true, force: true });
     await writeSmokeLedger(ledger, identity, canonical);
-    const installed = safeSpawn(bin, ["--json", "runtime", "install", "codex", "--root", target], { cwd: repo, env, encoding: "utf8" });
-    assert.equal(installed.status, 0, `${installed.stdout}\n${installed.stderr}`);
-    const checked = safeSpawn(bin, ["--json", "doctor", "codex", "--skip-integration-verify"], { cwd: repo, env, encoding: "utf8" });
-    const doctor = JSON.parse(checked.stdout.slice(checked.stdout.indexOf("{")));
-    assert.ok(doctor.data.report.some((item) => item.check === "install" && item.status === "INSTALL_PASS"));
-    cli("runtime", "update", "codex", "--root", target);
-    cli("runtime", "rollback", "codex", "--root", target);
-    cli("runtime", "reinstall", "codex", "--root", target);
+    // The packaged CLI is a strict 8-command surface (install/uninstall/doctor/
+    // status/run/integration/init/reference). The runtime lifecycle is driven
+    // through the packaged RuntimeInstaller directly (same artifact the former
+    // `runtime` command wrapped), so the smoke still proves the packaged
+    // runtime lifecycle end-to-end without a non-public command.
     const installerUrl = pathToFileURL(path.join(app, "node_modules", "@initforge", "agent-rules", "dist", "runtime", "installer.js")).href;
-    const injector = `import { RuntimeInstaller } from ${JSON.stringify(installerUrl)};\nconst i=new RuntimeInstaller({repositoryRoot:${JSON.stringify(repo)},platformRoots:{codex:${JSON.stringify(target)}},failpoint:"crash-after-backup"});await i.install("codex","update");`;
-    const crashed = spawnSync(process.execPath, ["--input-type=module", "--eval", injector], { cwd: repo, env, encoding: "utf8" });
+    const installerEval = (body, envOverrides = {}) => {
+      const injector = `import { RuntimeInstaller } from ${JSON.stringify(installerUrl)};\nconst i = new RuntimeInstaller({repositoryRoot:${JSON.stringify(repo)},platformRoots:{codex:${JSON.stringify(target)}}${body.failpoint ? `,failpoint:${JSON.stringify(body.failpoint)}` : ""}});${body.script}`;
+      return spawnSync(process.execPath, ["--input-type=module", "--eval", injector], { cwd: repo, env: { ...env, ...envOverrides }, encoding: "utf8" });
+    };
+    const runtimeCall = (action) => installerEval({ script: `await i.${action};` });
+    const installResult = runtimeCall('install("codex","install")');
+    assert.equal(installResult.status, 0, `${installResult.stdout}\n${installResult.stderr}`);
+    const checked = safeSpawn(bin, ["--json", "doctor", "codex", "--skip-integration-verify"], { cwd: repo, env, encoding: "utf8" });
+    const doctorRaw = checked.stdout.slice(checked.stdout.indexOf("{"));
+    const doctor = JSON.parse(doctorRaw);
+    assert.ok(doctor.data.report.some((item) => item.check === "install" && item.status === "INSTALL_PASS"));
+    assert.equal(runtimeCall('install("codex","update")').status, 0, "packaged runtime update must succeed");
+    const rollbackResult = runtimeCall('rollback("codex")');
+    assert.equal(rollbackResult.status, 0, `${rollbackResult.stdout}\n${rollbackResult.stderr}`);
+    assert.equal(runtimeCall('install("codex","update")').status, 0, "packaged runtime reinstall (recover+update) must succeed");
+    const crashed = installerEval({ failpoint: "crash-after-backup", script: 'await i.install("codex","update");' });
     assert.notEqual(crashed.status, 0, "injected post-journal crash must fail");
     assert.equal(fs.existsSync(path.join(target, ".agent-rules-runtime.transaction.json")), true);
-    cli("runtime", "recover", "codex", "--root", target);
+    assert.equal(runtimeCall('recover("codex")').status, 0, "packaged runtime recover must succeed");
     assert.equal(fs.existsSync(path.join(target, ".agent-rules-runtime.transaction.json")), false);
     assert.equal((await fsp.readdir(target)).some((name) => name.startsWith(".agent-rules-runtime.stage-")), false);
 
     const malicious = path.join(temp, "malicious");
     await fsp.mkdir(malicious);
-    const rejected = safeSpawn(bin, ["--json", "runtime", "install", "codex", "--root", path.join(temp, "malicious-target")], {
+    // Production must reject AGENT_RULES_REPOSITORY_ROOT injection. The
+    // packaged CLI resolves its repository root through adapters/repo.ts which
+    // fails closed in production, so drive the `install` command surface.
+    const rejected = safeSpawn(bin, ["--json", "install", "codex"], {
       cwd: malicious,
       env: { ...env, NODE_ENV: "production", AGENT_RULES_REPOSITORY_ROOT: malicious },
       encoding: "utf8",
@@ -173,12 +194,12 @@ try {
     const manifest = path.join(repo, "generated", "runtime-build", "codex", "manifest.json");
     const original = await fsp.readFile(manifest, "utf8");
     await fsp.writeFile(manifest, "{broken\n");
-    const failed = safeSpawn(bin, ["--json", "runtime", "update", "codex", "--root", target], { cwd: repo, env, encoding: "utf8" });
+    const failed = runtimeCall('install("codex","update")');
     assert.notEqual(failed.status, 0, "invalid package input must fail");
     assert.equal(fs.existsSync(path.join(target, ".agent-rules-runtime.transaction.json")), false);
     assert.equal((await fsp.readdir(target)).some((name) => name.startsWith(".agent-rules-runtime.stage-")), false);
     await fsp.writeFile(manifest, original);
-    cli("runtime", "uninstall", "codex", "--root", target);
+    assert.equal(runtimeCall('uninstall("codex")').status, 0, "packaged runtime uninstall must succeed");
     assert.equal(fs.existsSync(path.join(target, "agent-rules-runtime")), false);
     assert.equal(fs.existsSync(path.join(target, "AGENTS.md")), false);
     assert.deepEqual(await snapshotTree(home), homeBefore, "CLI must not mutate HOME");

@@ -59,7 +59,7 @@ export async function auditUiRouting(root: string, runId: string, logPath: strin
     await testFileContains(publicModuleMapping, ["clone checklist", "audit checklist", "pattern-inventory", "shell", "variable"]);
   }
 
-  await testFileContains(path.join("rules", "30-context-routing.md"), ["project/domain router", "matching leaf context", "capability", "new signal"]);
+  await testFileContains(path.join("rules", "30-context-skill-mcp.md"), ["Skill resolution", "Integration broker", "capability", "SKILL.md"]);
 
   const publicUiDelivery = path.join("projects", "5fedu", "domains", "ui-delivery.md");
   if (await checkFile(path.join(root, publicUiDelivery))) {
@@ -134,11 +134,10 @@ export async function auditPlanArtifact(root: string, planPath?: string): Promis
     '"schema_version"', '"source_history"', '"assignments"', '"reviews"', '"artifact_evidence"', '"usageRecord"'
   ]);
 
-  await testContains(path.join("rules", "25-task-lifecycle.md"), [
-    "Assign clear roles", "Coordinator", "Architect/integrator", "Implementer", "Reviewer", "Verifier",
-    "Researcher/utility", "Delegate when it adds value", "stable boundary", "clear ACs", "non-overlapping writes",
-    "sufficient context", "meaningful parallelism", "Record what you delegated", "delegated", "outcome"
+  await testContains(path.join("rules", "10-execution-planning-delegation.md"), [
+    "Bounded delegation", "observable outcome", "Classify risk", "local blocker does not stop independent work"
   ]);
+
 
   await testContains(path.join("skills", "plan-and-handoff", "references", "adaptive-work-protocol.md"), [
     "Coordinator", "Architect/integrator", "Implementer", "Researcher/utility", "Reviewer", "Verifier",
@@ -194,34 +193,34 @@ export async function auditWorkflowClarity(root: string): Promise<{ ok: boolean;
     }
   }
 
-  await testContract(path.join("rules", "00-bootstrap.md"), [
-    "native Plan Mode", "explicit execute pivot", "Ask only a question", "main agent accountable"
+  await testContract(path.join("rules", "00-intent-scope-safety.md"), [
+    "Plan-only", "explicit execute pivot", "Ask only a meaningful question", "Scope limits"
   ]);
-  await testContract(path.join("rules", "10-execution.md"), [
-    "observable outcome", "Classify risk before work shape", "own orchestration",
-    "local blocker does not stop independent work", "Match evidence to the claim", "build/lint proves static compatibility"
+  await testContract(path.join("rules", "10-execution-planning-delegation.md"), [
+    "observable outcome", "Classify risk", "Bounded delegation",
+    "local blocker does not stop independent work", "Match evidence to the claim"
   ]);
-  await testContract(path.join("rules", "25-task-lifecycle.md"), [
-    "advisory", "plan", "execution", "small", "medium", "large", "resumable", "not a file-count",
-    "Assign clear roles", "Coordinator", "Architect/integrator", "Delegate when it adds value", "separately from"
+  await testContract(path.join("rules", "20-proof-outcome.md"), [
+    "Adaptive minimal-proof", "Worker never authors PASS", "OutcomeReducer"
   ]);
   await testContract(path.join("skills", "plan-and-handoff", "references", "adaptive-work-protocol.md"), [
-    "Automatic execution", "Meaningful questions", "economy", "standard", "expert", "risk-triggered",
-    "ledger", "pending", "acknowledged", "recovery", "Coordinator", "Architect/integrator",
-    "semantic budgets", "Independent review is mandatory", "Inspect only evidence"
+    "Meaningful questions", "standard", "resumable",
+    "pending", "acknowledged", "recovery", "Coordinator", "Architect/integrator",
+    "semantic budgets", "Independent review", "Inspect only evidence"
   ]);
   await testContract(path.join("skills", "finish-to-completion", "SKILL.md"), [
     "execute pivot", "dependency-ready", "coordinator", "architect/integrator", "PARTIAL", "BLOCKED",
-    "Delegate based on the five conditions", "orchestration `UNAVAILABLE`", "assignment acknowledgment"
+    "orchestration `UNAVAILABLE`", "assignment acknowledgment"
   ]);
 
   const filesToCheck = [
-    path.join("rules", "00-bootstrap.md"),
-    path.join("rules", "10-execution.md"),
-    path.join("rules", "25-task-lifecycle.md"),
+    path.join("rules", "00-intent-scope-safety.md"),
+    path.join("rules", "10-execution-planning-delegation.md"),
+    path.join("rules", "20-proof-outcome.md"),
     path.join("skills", "plan-and-handoff", "SKILL.md"),
     path.join("skills", "finish-to-completion", "SKILL.md")
   ];
+
   
   for (const relPath of filesToCheck) {
     const fullPath = path.join(root, relPath);

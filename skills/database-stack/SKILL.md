@@ -1,6 +1,13 @@
 ---
 name: database-stack
 description: "Stack-specific database query guidance for Prisma/Supabase/Postgres/Drizzle: deterministic tool facts, credential isolation, disposable verification."
+metadata:
+  signals: "prisma schema, supabase project, postgres query, drizzle, database tooling"
+  excludes: "migration-only, schema-change-only"
+  priority: "45"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # database-stack
 

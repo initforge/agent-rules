@@ -1,6 +1,13 @@
 ---
 name: supabase-agent-skills
 description: "Provenance projection for supabase/agent-skills (pinned 8331f910, MIT): ROUTED on supabase stack facts."
+metadata:
+  signals: "supabase project, supabase rls policy, supabase stack"
+  excludes: "migration-only"
+  priority: "45"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # supabase-agent-skills
 

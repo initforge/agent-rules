@@ -145,17 +145,6 @@ export function capabilityAuthorizationReason(
   return `approval required: ${effect.approval} for ${effect.effect_level} ${effect.environment} effect`;
 }
 
-// Compatibility fallback only for isolated consumers/tests that do not ship the canonical graph.
-// The production repository always routes through generated/context-graph.json.
-const FALLBACK_SIGNALS: Array<{ id: string; re: RegExp; priority: number }> = [
-  { id: 'parity-verification', re: /\b(parity|pixel|reference implementation|match (?:the )?(?:existing|reference))\b/i, priority: 100 },
-  { id: 'browser-qa', re: /\b(browser|playwright|cdp|chrome|e2e|drawer|modal|listview|ui flow)\b/i, priority: 90 },
-  { id: 'frontend-architect', re: /\b(frontend|tsx|jsx|react|vue|css|ui|ux|component|responsive)\b/i, priority: 80 },
-  { id: 'researcher', re: /\b(research|unknown api|documentation|compare|investigate)\b/i, priority: 70 },
-  { id: 'quality', re: /\b(review|quality|regression|audit|verify)\b/i, priority: 60 },
-  { id: 'docs-style', re: /\b(readme|documentation|docs?\b|markdown)\b/i, priority: 40 },
-];
-
 function normalize(value: string): string {
   return value.toLowerCase().replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
 }
@@ -172,6 +161,22 @@ function phraseHit(text: string, phrase: string): boolean {
 
 function graphPath(repoRoot: string): string {
   return path.join(repoRoot, 'generated', 'context-graph.json');
+}
+
+/**
+ * Resolve the harness/workspace root when a caller does not pass one
+ * explicitly. The resolved root is used only to locate the canonical
+ * generated context graph; it is never a second routing source.
+ */
+function resolveRoutingRoot(start = process.cwd()): string {
+  let current = path.resolve(start);
+  while (true) {
+    if (fs.existsSync(path.join(current, 'generated', 'context-graph.json'))) return current;
+    if (fs.existsSync(path.join(current, 'rules', 'manifest.yaml'))) return current;
+    const parent = path.dirname(current);
+    if (parent === current) return path.resolve(start);
+    current = parent;
+  }
 }
 
 function loadContextGraph(repoRoot: string): { graph: ContextGraph; hash: string } | null {
@@ -203,6 +208,11 @@ function assertSelectedSourceIntegrity(repoRoot: string, node: GraphNode): void 
     throw new Error(`canonical context graph is stale for routed skill ${node.id}: expected ${node.source_hash}, got ${actual}`);
   }
   if (node.routing_source) {
+    // Single-source routing provenance: routing_source names the SKILL.md file
+    // itself (skills/<id>/SKILL.md) and routing_hash is the sha256 of its
+    // bytes. The check below hashes whatever routing_source resolves to, so a
+    // graph built from SKILL.md metadata is verified against the SKILL.md file
+    // bytes. ROUTE.json is legacy-only and never part of canonical routing.
     const routeTarget = path.resolve(repoRoot, node.routing_source);
     if (routeTarget !== root && !routeTarget.startsWith(`${root}${path.sep}`)) throw new Error(`routed skill routing source escapes repository: ${node.routing_source}`);
     if (!node.routing_hash || !fs.existsSync(routeTarget)) throw new Error(`canonical context graph is missing routing provenance for ${node.id}`);
@@ -351,13 +361,19 @@ function routeSkillsFromGraph(packet: TaskPacket, repoRoot: string, graphInfo: {
     }
   }
 
-  // 3. Recommended supports
+  // 3. Recommended supports (declared in SKILL.md metadata)
   for (const entry of [...selected]) {
     const entryRouting = entry.node.routing ?? {};
     for (const support of entryRouting.supports ?? []) {
-      const candidate = candidates.find((c) => c.node.id === `skill:${support}`);
-      if (!candidate || selected.some((s) => s.node.id === candidate.node.id)) continue;
-      selected.push({ node: candidate.node, reason: `support for ${entry.node.id}; matched canonical routing metadata`, role: candidate.role, requirement_strength: 'RECOMMENDED' });
+      const node = bySlug.get(support);
+      if (!node || selected.some((s) => s.node.id === node.id)) continue;
+      const scope = String(node.routing?.project_scope ?? '');
+      if (scope && scope !== (options.activeProjectScope ?? '')) continue;
+      // Explicit requests and excluded skills are never simply auto-composed:
+      // a support whose own excludes match the prompt is skipped.
+      if (!hasArchitecturalIntent && (node.routing?.excludes ?? []).some((phrase) => phraseHit(text, phrase))) continue;
+      const supportRole = inferSkillRole(support);
+      selected.push({ node, reason: `support for ${entry.node.id}; declared in SKILL.md metadata`, role: supportRole, requirement_strength: 'RECOMMENDED' });
     }
   }
 
@@ -405,23 +421,17 @@ function routeSkillsFromGraph(packet: TaskPacket, repoRoot: string, graphInfo: {
 
 /** Deterministic, bounded skill selection with semantic role composition. */
 export function routeSkills(packet: TaskPacket, repoRoot?: string, options: SkillRouteOptions = {}): SkillRoute[] {
-  if (repoRoot) {
-    const graph = loadContextGraph(repoRoot);
-    if (graph) return routeSkillsFromGraph(packet, repoRoot, graph, options);
+  const effectiveRoot = repoRoot ?? resolveRoutingRoot();
+  const graph = loadContextGraph(effectiveRoot);
+  if (!graph) {
+    // Fail closed: there is exactly one resolver path (the generated context
+    // graph). A missing graph is a build/install error, never a reason to
+    // route through hard-coded signal regexes.
+    throw new Error(
+      `Skill routing requires the generated context graph at ${graphPath(effectiveRoot)}; run the build (npm run build) to generate it`,
+    );
   }
-
-  const text = packetRoutingText(packet);
-  const requested = new Set(packet.skills ?? []);
-  const candidates = FALLBACK_SIGNALS
-    .filter((entry) => requested.has(entry.id) || entry.re.test(text))
-    .filter((entry) => !repoRoot || fs.existsSync(path.join(repoRoot, 'skills', entry.id, 'SKILL.md')))
-    .sort((a, b) => (requested.has(b.id) ? 1 : 0) - (requested.has(a.id) ? 1 : 0) || b.priority - a.priority || a.id.localeCompare(b.id));
-  for (const id of requested) {
-    if (!candidates.some((entry) => entry.id === id) && (!repoRoot || fs.existsSync(path.join(repoRoot, 'skills', id, 'SKILL.md')))) {
-      candidates.push({ id, re: /(?:)/, priority: 55 });
-    }
-  }
-  return candidates.slice(0, 8).map((entry, index) => ({ id: entry.id, primary: index === 0, reason: requested.has(entry.id) ? 'explicit TaskPacket request (compatibility fallback)' : 'compatibility signal match' }));
+  return routeSkillsFromGraph(packet, effectiveRoot, graph, options);
 }
 
 interface IntegrationRegistryRecord {

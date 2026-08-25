@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/host-certification-receipt.schema.json",
+  "title": "HostCertificationReceipt — claim-bound evidence per host",
+  "type": "object",
+  "required": ["schema", "host", "generated_at", "git_head", "claims", "status"],
+  "properties": {
+    "schema": { "const": "agent-rules/host-certification-receipt" },
+    "version": { "type": "integer", "const": 1 },
+    "host": { "type": "string" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "git_head": { "type": "string", "pattern": "^[a-f0-9]{7,40}$" },
+    "status": { "enum": ["Ready","Needs action","Unsupported"] },
+    "claims": {
+      "type": "object",
+      "required": ["HOST_PRESENT","NATIVE_INSTALLED","NATIVE_DISCOVERED","NATIVE_LIFECYCLE","NATIVE_POLICY","NATIVE_SKILLS","NATIVE_MCP","MODEL_BEHAVIOR","ROLLBACK_VERIFIED"],
+      "additionalProperties": {
+        "type": "object",
+        "required": ["status","evidence"],
+        "properties": {
+          "status": { "enum": ["PASS","FAIL","NEEDS_USER","BLOCKED","UNSUPPORTED","STALE"] },
+          "evidence": { "type": "array", "items": { "type": "object" } },
+          "omitted_reason": { "type": ["string","null"] }
+        }
+      }
+    },
+    "native_readback": { "type": "object" },
+    "mcp_handshake": { "type": ["object","null"] },
+    "skill_catalog": { "type": "object" }
+  }
+}

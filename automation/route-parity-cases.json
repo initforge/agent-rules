@@ -1,417 +1,1983 @@
 {
- "$schema": "../schemas/route-parity-case.schema.json",
- "version": 1,
- "description": "Fixed typed shadow corpus for canonical TypeScript skill routing and Python host-adapter parity. Expected capability/provider/verifier fields are audit metadata; runtime selection remains owned by the broker and verification policy.",
- "cases": [
-  {
-   "id": "simple-explanation",
-   "phase": "discussion",
-   "claim": "A simple explanation does not activate implementation skills.",
-   "risk": "S0",
-   "domain": "generic",
-   "stack": "none",
-   "prompt": "Giải thích cách xử lý đơn giản",
-   "workspace": {
-    "activation": "generic"
-   },
-   "expected": {
-    "primary": null,
-    "stack": [],
-    "capability": "none",
-    "provider": "none",
-    "verifier": "none",
-    "confidence": 1,
-    "context_cost": 0,
-    "fallback": "no-skill"
-   }
-  },
-  {
-   "id": "generic-execution",
-   "phase": "implementation",
-   "claim": "A generic implementation request selects the execution facade only.",
-   "risk": "S1",
-   "domain": "generic",
-   "stack": "node",
-   "prompt": "Refactor module thanh toán Node.js",
-   "workspace": {
-    "activation": "generic"
-   },
-   "expected": {
-    "primary": "finish-to-completion",
-    "stack": [
-     "finish-to-completion"
-    ],
-    "capability": "filesystem.write",
-    "provider": "builtin",
-    "verifier": "unit",
-    "confidence": 1,
-    "context_cost": 1500,
-    "fallback": "generic-execution"
-   }
-  },
-  {
-   "id": "browser-parity",
-   "phase": "verification",
-   "claim": "Visual browser parity loads parity procedure with browser and QA support.",
-   "risk": "S2",
-   "domain": "frontend",
-   "stack": "web",
-   "prompt": "Verify visual parity in the browser",
-   "workspace": {
-    "activation": "generic"
-   },
-   "expected": {
-    "primary": "parity-verification",
-    "stack": [
-     "parity-verification",
-     "browser-qa",
-     "qa-skills"
-    ],
-    "capability": "browser.verify",
-    "provider": "playwright-cli",
-    "verifier": "browser",
-    "confidence": 1,
-    "context_cost": 5000,
-    "fallback": "browser-proof-unavailable"
-   }
-  },
-  {
-   "id": "research-docs",
-   "phase": "discussion",
-   "claim": "External documentation research selects lookup procedure without implementation skills.",
-   "risk": "S1",
-   "domain": "research",
-   "stack": "unknown",
-   "prompt": "Research latest API documentation",
-   "workspace": {
-    "activation": "generic"
-   },
-   "expected": {
-    "primary": "researcher",
-    "stack": [
-     "researcher"
-    ],
-    "capability": "docs.lookup",
-    "provider": "context7",
-    "verifier": "source-receipt",
-    "confidence": 0.95,
-    "context_cost": 3000,
-    "fallback": "manual-lookup"
-   }
-  },
-  {
-   "id": "plan-handoff",
-   "phase": "plan",
-   "claim": "A multi-phase handoff request selects plan authoring procedure.",
-   "risk": "S2",
-   "domain": "generic",
-   "stack": "unknown",
-   "prompt": "Lập plan dài nhiều phase và handoff",
-   "workspace": {
-    "activation": "generic"
-   },
-   "expected": {
-    "primary": "plan-and-handoff",
-    "stack": [
-     "plan-and-handoff"
-    ],
-    "capability": "filesystem.read",
-    "provider": "builtin",
-    "verifier": "plan-contract",
-    "confidence": 1,
-    "context_cost": 2200,
-    "fallback": "needs-user"
-   }
-  },
-  {
-   "id": "frontend-brief",
-   "phase": "implementation",
-   "claim": "A landing-page brief selects frontend implementation plus an explicit taste modifier.",
-   "risk": "S1",
-   "domain": "frontend",
-   "stack": "web",
-   "prompt": "Redesign landing page giao diện đẹp",
-   "workspace": {
-    "activation": "generic"
-   },
-   "expected": {
-    "primary": "frontend-architect",
-    "stack": [
-     "frontend-architect",
-     "ui-taste"
-    ],
-    "capability": "browser.verify",
-    "provider": "playwright-cli",
-    "verifier": "browser",
-    "confidence": 1,
-    "context_cost": 3500,
-    "fallback": "browser-proof-unavailable"
-   }
-  },
-  {
-   "id": "qa-procedure",
-   "phase": "verification",
-   "claim": "A QA planning request selects bounded QA procedure.",
-   "risk": "S1",
-   "domain": "generic",
-   "stack": "unknown",
-   "prompt": "QA checklist edge-case manual cases",
-   "workspace": {
-    "activation": "generic"
-   },
-   "expected": {
-    "primary": "qa-skills",
-    "stack": [
-     "qa-skills"
-    ],
-    "capability": "filesystem.read",
-    "provider": "builtin",
-    "verifier": "test-strategy",
-    "confidence": 1,
-    "context_cost": 3000,
-    "fallback": "needs-user"
-   }
-  },
-  {
-   "id": "quality-review",
-   "phase": "review",
-   "claim": "A code-quality audit selects quality policy and execution compatibility support.",
-   "risk": "S2",
-   "domain": "generic",
-   "stack": "unknown",
-   "prompt": "deep code quality audit refactor code",
-   "workspace": {
-    "activation": "generic"
-   },
-   "expected": {
-    "primary": "quality",
-    "stack": [
-     "quality",
-     "finish-to-completion"
-    ],
-    "capability": "code.search",
-    "provider": "builtin",
-    "verifier": "review",
-    "confidence": 1,
-    "context_cost": 4000,
-    "fallback": "needs-user"
-   }
-  },
-  {
-   "id": "docs-update",
-   "phase": "implementation",
-   "claim": "A documentation change selects documentation procedure only.",
-   "risk": "S0",
-   "domain": "docs",
-   "stack": "markdown",
-   "prompt": "Update README documentation",
-   "workspace": {
-    "activation": "generic"
-   },
-   "expected": {
-    "primary": "docs-style",
-    "stack": [
-     "docs-style"
-    ],
-    "capability": "filesystem.write",
-    "provider": "builtin",
-    "verifier": "links",
-    "confidence": 1,
-    "context_cost": 4500,
-    "fallback": "generic-execution"
-   }
-  },
-  {
-   "id": "claim-verification",
-   "phase": "verification",
-   "claim": "A claim/evidence request selects verification routing.",
-   "risk": "S2",
-   "domain": "generic",
-   "stack": "unknown",
-   "prompt": "verify claim evidence acceptance risk",
-   "workspace": {
-    "activation": "generic"
-   },
-   "expected": {
-    "primary": "verification-router",
-    "stack": [
-     "verification-router"
-    ],
-    "capability": "filesystem.read",
-    "provider": "builtin",
-    "verifier": "claim-audit",
-    "confidence": 1,
-    "context_cost": 3200,
-    "fallback": "needs-user"
-   }
-  },
-  {
-   "id": "visual-asset",
-   "phase": "implementation",
-   "claim": "An asset request selects image-generation procedure without ordinary CSS guidance.",
-   "risk": "S1",
-   "domain": "frontend",
-   "stack": "web",
-   "prompt": "Create mockup brand visuals",
-   "workspace": {
-    "activation": "generic"
-   },
-   "expected": {
-    "primary": "master-image-generation",
-    "stack": [
-     "master-image-generation"
-    ],
-    "capability": "design.render",
-    "provider": "explicit",
-    "verifier": "asset-review",
-    "confidence": 1,
-    "context_cost": 3500,
-    "fallback": "needs-user"
-   }
-  },
-  {
-   "id": "harness-context",
-   "phase": "review",
-   "claim": "A harness-context change selects context evolution procedure.",
-   "risk": "S2",
-   "domain": "harness",
-   "stack": "agent-rules",
-   "prompt": "bổ sung context agent-rules",
-   "workspace": {
-    "activation": "generic"
-   },
-   "expected": {
-    "primary": "context-evolution-protocol",
-    "stack": [
-     "context-evolution-protocol"
-    ],
-    "capability": "filesystem.write",
-    "provider": "builtin",
-    "verifier": "rule-contract",
-    "confidence": 1,
-    "context_cost": 2800,
-    "fallback": "needs-user"
-   }
-  },
-  {
-   "id": "5fedu-domain-parity",
-   "phase": "verification",
-   "claim": "An explicitly active 5fedu profile wins over generic browser wording.",
-   "risk": "S2",
-   "domain": "5fedu",
-   "stack": "web-erp",
-   "prompt": "Sửa module 5fedu lệch pattern drawer và click-through browser",
-   "workspace": {
-    "activation": "5fedu-marker"
-   },
-   "expected": {
-    "primary": "5fedu-module-parity",
-    "stack": [
-     "5fedu-module-parity",
-     "5fedu-project",
-     "browser-qa"
-    ],
-    "capability": "browser.verify",
-    "provider": "playwright-cli",
-    "verifier": "parity",
-    "confidence": 1,
-    "context_cost": 8000,
-    "fallback": "browser-proof-unavailable"
-   }
-  },
-  {
-   "id": "keyword-alone-no-heavy-provider",
-   "phase": "implementation",
-   "claim": "Prompt keywords alone cannot activate a heavy browser provider.",
-   "risk": "S1",
-   "domain": "generic",
-   "stack": "none",
-   "prompt": "Browser e2e testing with playwright for this task",
-   "workspace": {
-    "activation": "generic"
-   },
-   "expected": {
-    "primary": "browser-qa",
-    "stack": [
-     "browser-qa"
-    ],
-    "capability": "browser.verify",
-    "provider": "cheapest-sufficient",
-    "verifier": "deterministic-first",
-    "confidence": 0.8,
-    "context_cost": 2000,
-    "fallback": "script-proof"
-   }
-  },
-  {
-   "id": "cheap-provider-lacks-capability",
-   "phase": "verification",
-   "claim": "A cheap provider present but lacking the required capability is not selected; explicit blocker instead.",
-   "risk": "S2",
-   "domain": "generic",
-   "stack": "node",
-   "prompt": "Verify the API contract with a disposable database migration",
-   "workspace": {
-    "activation": "generic"
-   },
-   "expected": {
-    "primary": "verification-router",
-    "stack": [
-     "verification-router"
-    ],
-    "capability": "database.disposable",
-    "provider": "unavailable",
-    "verifier": "blocked",
-    "confidence": 0.9,
-    "context_cost": 1000,
-    "fallback": "explicit-blocker"
-   }
-  },
-  {
-   "id": "several-providers-cheapest-sufficient",
-   "phase": "verification",
-   "claim": "Several providers can prove the same claim; cheapest sufficient wins.",
-   "risk": "S1",
-   "domain": "generic",
-   "stack": "node",
-   "prompt": "Check the unit test suite passes for the bounded change",
-   "workspace": {
-    "activation": "generic"
-   },
-   "expected": {
-    "primary": null,
-    "stack": [],
-    "capability": "none",
-    "provider": "none",
-    "verifier": "none",
-    "confidence": 1,
-    "context_cost": 0,
-    "fallback": "no-route"
-   }
-  },
-  {
-   "id": "unnecessary-activation-denied",
-   "phase": "implementation",
-   "claim": "Unnecessary provider activation is denied when no claim needs it.",
-   "risk": "S1",
-   "domain": "generic",
-   "stack": "none",
-   "prompt": "Fix the typo in the README",
-   "workspace": {
-    "activation": "generic"
-   },
-   "expected": {
-    "primary": "docs-style",
-    "stack": [
-     "docs-style"
-    ],
-    "capability": "filesystem.write",
-    "provider": "builtin",
-    "verifier": "none",
-    "confidence": 0.9,
-    "context_cost": 1000,
-    "fallback": "builtin-only"
-   }
-  }
- ]
+  "$schema": "../schemas/route-parity-case.schema.json",
+  "version": 1,
+  "description": "Fixed typed shadow corpus for canonical TypeScript skill routing and Python host-adapter parity. Expected capability/provider/verifier fields are audit metadata; runtime selection remains owned by the broker and verification policy.",
+  "cases": [
+    {
+      "id": "simple-explanation",
+      "phase": "discussion",
+      "claim": "A simple explanation does not activate implementation skills.",
+      "risk": "S0",
+      "domain": "generic",
+      "stack": "none",
+      "prompt": "Giải thích cách xử lý đơn giản",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "generic-execution",
+      "phase": "implementation",
+      "claim": "A generic implementation request selects the execution facade only.",
+      "risk": "S1",
+      "domain": "generic",
+      "stack": "node",
+      "prompt": "Refactor module thanh toán Node.js",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "finish-to-completion",
+        "stack": [
+          "finish-to-completion"
+        ],
+        "capability": "filesystem.write",
+        "provider": "builtin",
+        "verifier": "unit",
+        "confidence": 1,
+        "context_cost": 1500,
+        "fallback": "generic-execution"
+      }
+    },
+    {
+      "id": "browser-parity",
+      "phase": "verification",
+      "claim": "Visual browser parity loads parity procedure with browser and QA support.",
+      "risk": "S2",
+      "domain": "frontend",
+      "stack": "web",
+      "prompt": "Verify visual parity in the browser",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "parity-verification",
+        "stack": [
+          "parity-verification",
+          "browser-qa",
+          "qa-skills"
+        ],
+        "capability": "browser.verify",
+        "provider": "playwright-cli",
+        "verifier": "browser",
+        "confidence": 1,
+        "context_cost": 5000,
+        "fallback": "browser-proof-unavailable"
+      }
+    },
+    {
+      "id": "research-docs",
+      "phase": "discussion",
+      "claim": "External documentation research selects lookup procedure without implementation skills.",
+      "risk": "S1",
+      "domain": "research",
+      "stack": "unknown",
+      "prompt": "Research latest API documentation",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "researcher",
+        "stack": [
+          "researcher"
+        ],
+        "capability": "docs.lookup",
+        "provider": "context7",
+        "verifier": "source-receipt",
+        "confidence": 0.95,
+        "context_cost": 3000,
+        "fallback": "manual-lookup"
+      }
+    },
+    {
+      "id": "plan-handoff",
+      "phase": "plan",
+      "claim": "A multi-phase handoff request selects plan authoring procedure.",
+      "risk": "S2",
+      "domain": "generic",
+      "stack": "unknown",
+      "prompt": "Lập plan dài nhiều phase và handoff",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "plan-and-handoff",
+        "stack": [
+          "plan-and-handoff"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "plan-contract",
+        "confidence": 1,
+        "context_cost": 2200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "frontend-brief",
+      "phase": "implementation",
+      "claim": "A landing-page brief selects frontend implementation plus an explicit taste modifier.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "web",
+      "prompt": "Redesign landing page giao diện đẹp",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "frontend-architect",
+        "stack": [
+          "frontend-architect",
+          "ui-taste"
+        ],
+        "capability": "browser.verify",
+        "provider": "playwright-cli",
+        "verifier": "browser",
+        "confidence": 1,
+        "context_cost": 3500,
+        "fallback": "browser-proof-unavailable"
+      }
+    },
+    {
+      "id": "qa-procedure",
+      "phase": "verification",
+      "claim": "A QA planning request selects bounded QA procedure.",
+      "risk": "S1",
+      "domain": "generic",
+      "stack": "unknown",
+      "prompt": "QA checklist edge-case manual cases",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "qa-skills",
+        "stack": [
+          "qa-skills"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "test-strategy",
+        "confidence": 1,
+        "context_cost": 3000,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "quality-review",
+      "phase": "review",
+      "claim": "A code-quality audit selects quality policy and execution compatibility support.",
+      "risk": "S2",
+      "domain": "generic",
+      "stack": "unknown",
+      "prompt": "deep code quality audit refactor code",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "quality",
+        "stack": [
+          "quality"
+        ],
+        "capability": "code.search",
+        "provider": "builtin",
+        "verifier": "review",
+        "confidence": 1,
+        "context_cost": 4000,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "docs-update",
+      "phase": "implementation",
+      "claim": "A documentation change selects documentation procedure only.",
+      "risk": "S0",
+      "domain": "docs",
+      "stack": "markdown",
+      "prompt": "Update README documentation",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "docs-style",
+        "stack": [
+          "docs-style"
+        ],
+        "capability": "filesystem.write",
+        "provider": "builtin",
+        "verifier": "links",
+        "confidence": 1,
+        "context_cost": 4500,
+        "fallback": "generic-execution"
+      }
+    },
+    {
+      "id": "claim-verification",
+      "phase": "verification",
+      "claim": "A claim/evidence request selects verification routing.",
+      "risk": "S2",
+      "domain": "generic",
+      "stack": "unknown",
+      "prompt": "verify claim evidence acceptance risk",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "verification-router",
+        "stack": [
+          "verification-router"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "claim-audit",
+        "confidence": 1,
+        "context_cost": 3200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "visual-asset",
+      "phase": "implementation",
+      "claim": "An asset request selects image-generation procedure without ordinary CSS guidance.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "web",
+      "prompt": "Create mockup brand visuals",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "master-image-generation",
+        "stack": [
+          "master-image-generation"
+        ],
+        "capability": "design.render",
+        "provider": "explicit",
+        "verifier": "asset-review",
+        "confidence": 1,
+        "context_cost": 3500,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "harness-context",
+      "phase": "review",
+      "claim": "A harness-context change selects context evolution procedure.",
+      "risk": "S2",
+      "domain": "harness",
+      "stack": "agent-rules",
+      "prompt": "bổ sung context agent-rules",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "context-evolution-protocol",
+        "stack": [
+          "context-evolution-protocol"
+        ],
+        "capability": "filesystem.write",
+        "provider": "builtin",
+        "verifier": "rule-contract",
+        "confidence": 1,
+        "context_cost": 2800,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "5fedu-domain-parity",
+      "phase": "verification",
+      "claim": "An explicitly active 5fedu profile wins over generic browser wording.",
+      "risk": "S2",
+      "domain": "5fedu",
+      "stack": "web-erp",
+      "prompt": "Sửa module 5fedu lệch pattern drawer và click-through browser",
+      "workspace": {
+        "activation": "5fedu-marker"
+      },
+      "expected": {
+        "primary": "5fedu-module-parity",
+        "stack": [
+          "5fedu-module-parity",
+          "5fedu-project",
+          "qa-skills",
+          "browser-qa"
+        ],
+        "capability": "browser.verify",
+        "provider": "playwright-cli",
+        "verifier": "parity",
+        "confidence": 1,
+        "context_cost": 8000,
+        "fallback": "browser-proof-unavailable"
+      }
+    },
+    {
+      "id": "keyword-alone-no-heavy-provider",
+      "phase": "implementation",
+      "claim": "Prompt keywords alone cannot activate a heavy browser provider.",
+      "risk": "S1",
+      "domain": "generic",
+      "stack": "none",
+      "prompt": "Browser e2e testing with playwright for this task",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "browser-qa",
+        "stack": [
+          "browser-qa"
+        ],
+        "capability": "browser.verify",
+        "provider": "cheapest-sufficient",
+        "verifier": "deterministic-first",
+        "confidence": 0.8,
+        "context_cost": 2000,
+        "fallback": "script-proof"
+      }
+    },
+    {
+      "id": "cheap-provider-lacks-capability",
+      "phase": "verification",
+      "claim": "A cheap provider present but lacking the required capability is not selected; explicit blocker instead.",
+      "risk": "S2",
+      "domain": "generic",
+      "stack": "node",
+      "prompt": "Verify the API contract with a disposable database migration",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "verification-router",
+        "stack": [
+          "verification-router"
+        ],
+        "capability": "database.disposable",
+        "provider": "unavailable",
+        "verifier": "blocked",
+        "confidence": 0.9,
+        "context_cost": 1000,
+        "fallback": "explicit-blocker"
+      }
+    },
+    {
+      "id": "several-providers-cheapest-sufficient",
+      "phase": "verification",
+      "claim": "Several providers can prove the same claim; cheapest sufficient wins.",
+      "risk": "S1",
+      "domain": "generic",
+      "stack": "node",
+      "prompt": "Check the unit test suite passes for the bounded change",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-route"
+      }
+    },
+    {
+      "id": "unnecessary-activation-denied",
+      "phase": "implementation",
+      "claim": "Unnecessary provider activation is denied when no claim needs it.",
+      "risk": "S1",
+      "domain": "generic",
+      "stack": "none",
+      "prompt": "Fix the typo in the README",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "docs-style",
+        "stack": [
+          "docs-style"
+        ],
+        "capability": "filesystem.write",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 0.9,
+        "context_cost": 1000,
+        "fallback": "builtin-only"
+      }
+    },
+    {
+      "id": "route-parity-anthropic-frontend-design-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of anthropic-frontend-design routes it as primary.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Apply the intentional visual direction from the explicit frontend design contract brief",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "anthropic-frontend-design",
+        "stack": [
+          "anthropic-frontend-design"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-anthropic-frontend-design-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route anthropic-frontend-design.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Order office stationery for the quarterly inventory",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-backend-composition-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of backend-composition routes it as primary.",
+      "risk": "S1",
+      "domain": "backend",
+      "stack": "backend",
+      "prompt": "Implement the payment provider integration with a transaction boundary and auth provider",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "backend-composition",
+        "stack": [
+          "backend-composition"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-backend-composition-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route backend-composition.",
+      "risk": "S1",
+      "domain": "backend",
+      "stack": "backend",
+      "prompt": "Water the houseplants on the kitchen windowsill",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-best-of-n-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of best-of-n routes it as primary.",
+      "risk": "S1",
+      "domain": "generic",
+      "stack": "generic",
+      "prompt": "Run a best of n with parallel implementations of the module",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "best-of-n",
+        "stack": [
+          "best-of-n"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-best-of-n-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route best-of-n.",
+      "risk": "S1",
+      "domain": "generic",
+      "stack": "generic",
+      "prompt": "Fold the laundry and put it away",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-browser-qa-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of browser-qa routes it as primary.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Run a playwright click-through smoke and screenshot the console/network panel",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "browser-qa",
+        "stack": [
+          "browser-qa"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-browser-qa-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route browser-qa.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Swap the desk lamp bulb for a warmer tone",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-callstack-react-native-best-practices-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of callstack-react-native-best-practices routes it as primary.",
+      "risk": "S1",
+      "domain": "mobile",
+      "stack": "mobile",
+      "prompt": "Follow the react native best practices for the react native migration with native module guidance",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "callstack-react-native-best-practices",
+        "stack": [
+          "callstack-react-native-best-practices"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-callstack-react-native-best-practices-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route callstack-react-native-best-practices.",
+      "risk": "S1",
+      "domain": "mobile",
+      "stack": "mobile",
+      "prompt": "Refill the printer paper trays",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-claim-test-strategy-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of claim-test-strategy routes it as primary.",
+      "risk": "S1",
+      "domain": "generic",
+      "stack": "generic",
+      "prompt": "Define the test strategy for this bounded change",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "claim-test-strategy",
+        "stack": [
+          "claim-test-strategy"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-claim-test-strategy-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route claim-test-strategy.",
+      "risk": "S1",
+      "domain": "generic",
+      "stack": "generic",
+      "prompt": "Schedule the quarterly dental check-up",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-context-evolution-protocol-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of context-evolution-protocol routes it as primary.",
+      "risk": "S2",
+      "domain": "harness",
+      "stack": "harness",
+      "prompt": "bổ sung context cho agent-rules và sync rule",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "context-evolution-protocol",
+        "stack": [
+          "context-evolution-protocol"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-context-evolution-protocol-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route context-evolution-protocol.",
+      "risk": "S2",
+      "domain": "harness",
+      "stack": "harness",
+      "prompt": "Prepare the birthday cake recipe for Saturday",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-database-stack-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of database-stack routes it as primary.",
+      "risk": "S1",
+      "domain": "backend",
+      "stack": "backend",
+      "prompt": "Write a postgres query with drizzle database tooling",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "database-stack",
+        "stack": [
+          "database-stack"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-database-stack-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route database-stack.",
+      "risk": "S1",
+      "domain": "backend",
+      "stack": "backend",
+      "prompt": "Sharpen the kitchen knives before dinner",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-docs-style-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of docs-style routes it as primary.",
+      "risk": "S0",
+      "domain": "docs",
+      "stack": "docs",
+      "prompt": "Update the README with the tech stack documentation",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "docs-style",
+        "stack": [
+          "docs-style"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-docs-style-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route docs-style.",
+      "risk": "S0",
+      "domain": "docs",
+      "stack": "docs",
+      "prompt": "Charge the electric scooter in the hallway",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-expo-skills-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of expo-skills routes it as primary.",
+      "risk": "S1",
+      "domain": "mobile",
+      "stack": "mobile",
+      "prompt": "Configure the expo sdk with the expo config plugin",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "expo-skills",
+        "stack": [
+          "expo-skills"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-expo-skills-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route expo-skills.",
+      "risk": "S1",
+      "domain": "mobile",
+      "stack": "mobile",
+      "prompt": "Vacuum the living room carpet",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-external-skill-governance-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of external-skill-governance routes it as primary.",
+      "risk": "S2",
+      "domain": "harness",
+      "stack": "harness",
+      "prompt": "Follow the source governance process for the skill addition request",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "external-skill-governance",
+        "stack": [
+          "external-skill-governance"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-external-skill-governance-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route external-skill-governance.",
+      "risk": "S2",
+      "domain": "harness",
+      "stack": "harness",
+      "prompt": "Label the moving boxes by room name",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-finish-to-completion-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of finish-to-completion routes it as primary.",
+      "risk": "S1",
+      "domain": "generic",
+      "stack": "generic",
+      "prompt": "hãy làm đi và hoàn thành module đã duyệt",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "finish-to-completion",
+        "stack": [
+          "finish-to-completion"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-finish-to-completion-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route finish-to-completion.",
+      "risk": "S1",
+      "domain": "generic",
+      "stack": "generic",
+      "prompt": "Measure the window for new curtains",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-frontend-architect-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of frontend-architect routes it as primary.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Improve the landing page branding with marketing animation",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "frontend-architect",
+        "stack": [
+          "frontend-architect"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-frontend-architect-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route frontend-architect.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Bake a loaf of sourdough bread",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-frontend-design-contract-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of frontend-design-contract routes it as primary.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Apply the brand identity direction from the design contract",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "frontend-design-contract",
+        "stack": [
+          "frontend-design-contract"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-frontend-design-contract-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route frontend-design-contract.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Get the car tires rotated this weekend",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-hashicorp-agent-skills-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of hashicorp-agent-skills routes it as primary.",
+      "risk": "S2",
+      "domain": "infra",
+      "stack": "infra",
+      "prompt": "Review the vault policy and the kubernetes module for the new cluster",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "hashicorp-agent-skills",
+        "stack": [
+          "hashicorp-agent-skills"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-hashicorp-agent-skills-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route hashicorp-agent-skills.",
+      "risk": "S2",
+      "domain": "infra",
+      "stack": "infra",
+      "prompt": "Plant the tulip bulbs before the frost",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-impeccable-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of impeccable routes it as primary.",
+      "risk": "S2",
+      "domain": "generic",
+      "stack": "generic",
+      "prompt": "Run the impeccable review on the proposed change",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "impeccable",
+        "stack": [
+          "impeccable"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-impeccable-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route impeccable.",
+      "risk": "S2",
+      "domain": "generic",
+      "stack": "generic",
+      "prompt": "Print the boarding passes for the trip",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-infra-devops-composition-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of infra-devops-composition routes it as primary.",
+      "risk": "S2",
+      "domain": "infra",
+      "stack": "infra",
+      "prompt": "Configure docker compose and the ci provider for our infra",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "infra-devops-composition",
+        "stack": [
+          "infra-devops-composition"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-infra-devops-composition-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route infra-devops-composition.",
+      "risk": "S2",
+      "domain": "infra",
+      "stack": "infra",
+      "prompt": "Organize the pantry by expiry date",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-master-image-generation-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of master-image-generation routes it as primary.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Create a mockup of the brand visuals with image-to-code",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "master-image-generation",
+        "stack": [
+          "master-image-generation"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-master-image-generation-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route master-image-generation.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Clean the refrigerator shelves",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-mobile-composition-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of mobile-composition routes it as primary.",
+      "risk": "S1",
+      "domain": "mobile",
+      "stack": "mobile",
+      "prompt": "Test the ios/android build for the react native project on the mobile platform matrix",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "mobile-composition",
+        "stack": [
+          "mobile-composition"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-mobile-composition-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route mobile-composition.",
+      "risk": "S1",
+      "domain": "mobile",
+      "stack": "mobile",
+      "prompt": "Wash the car on the driveway",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-parity-verification-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of parity-verification routes it as primary.",
+      "risk": "S2",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Verify the visual parity and behavioral parity of the page with a diff template",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "parity-verification",
+        "stack": [
+          "parity-verification",
+          "browser-qa",
+          "qa-skills"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-parity-verification-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route parity-verification.",
+      "risk": "S2",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Check the mailbox every afternoon",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-plan-and-handoff-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of plan-and-handoff routes it as primary.",
+      "risk": "S2",
+      "domain": "generic",
+      "stack": "generic",
+      "prompt": "Lập plan dài nhiều phase và handoff",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "plan-and-handoff",
+        "stack": [
+          "plan-and-handoff"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-plan-and-handoff-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route plan-and-handoff.",
+      "risk": "S2",
+      "domain": "generic",
+      "stack": "generic",
+      "prompt": "Water the garden vegetables",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-prisma-skills-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of prisma-skills routes it as primary.",
+      "risk": "S1",
+      "domain": "backend",
+      "stack": "backend",
+      "prompt": "Configure the prisma client for the database",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "prisma-skills",
+        "stack": [
+          "prisma-skills"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-prisma-skills-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route prisma-skills.",
+      "risk": "S1",
+      "domain": "backend",
+      "stack": "backend",
+      "prompt": "Empty the dishwasher after breakfast",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-qa-skills-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of qa-skills routes it as primary.",
+      "risk": "S1",
+      "domain": "generic",
+      "stack": "generic",
+      "prompt": "Build the QA checklist with edge-case manual cases and bug triage",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "qa-skills",
+        "stack": [
+          "qa-skills"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-qa-skills-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route qa-skills.",
+      "risk": "S1",
+      "domain": "generic",
+      "stack": "generic",
+      "prompt": "Repair the bicycle chain",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-quality-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of quality routes it as primary.",
+      "risk": "S2",
+      "domain": "generic",
+      "stack": "generic",
+      "prompt": "Run the deep code quality audit with the smell scan and code judo on the spaghetti",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "quality",
+        "stack": [
+          "quality"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-quality-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route quality.",
+      "risk": "S2",
+      "domain": "generic",
+      "stack": "generic",
+      "prompt": "Take out the recycling bins",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-researcher-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of researcher routes it as primary.",
+      "risk": "S1",
+      "domain": "research",
+      "stack": "research",
+      "prompt": "Research the latest changelog for the external behavior",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "researcher",
+        "stack": [
+          "researcher"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-researcher-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route researcher.",
+      "risk": "S1",
+      "domain": "research",
+      "stack": "research",
+      "prompt": "Set the table for dinner guests",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-schema-migration-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of schema-migration routes it as primary.",
+      "risk": "S2",
+      "domain": "backend",
+      "stack": "backend",
+      "prompt": "Check the migration files for a rollback migration with upgrade/downgrade",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "schema-migration",
+        "stack": [
+          "schema-migration"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-schema-migration-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route schema-migration.",
+      "risk": "S2",
+      "domain": "backend",
+      "stack": "backend",
+      "prompt": "Polish the silver cutlery",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-security-review-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of security-review routes it as primary.",
+      "risk": "S2",
+      "domain": "security",
+      "stack": "security",
+      "prompt": "Review the auth boundary analysis with secret scanning and the threat model",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "security-review",
+        "stack": [
+          "security-review"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-security-review-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route security-review.",
+      "risk": "S2",
+      "domain": "security",
+      "stack": "security",
+      "prompt": "Repot the orchid plant",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-supabase-agent-skills-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of supabase-agent-skills routes it as primary.",
+      "risk": "S1",
+      "domain": "backend",
+      "stack": "backend",
+      "prompt": "Write the supabase rls policy for the supabase stack",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "supabase-agent-skills",
+        "stack": [
+          "supabase-agent-skills"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-supabase-agent-skills-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route supabase-agent-skills.",
+      "risk": "S1",
+      "domain": "backend",
+      "stack": "backend",
+      "prompt": "Iron the shirts for Monday",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-trail-of-bits-security-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of trail-of-bits-security routes it as primary.",
+      "risk": "S2",
+      "domain": "security",
+      "stack": "security",
+      "prompt": "Run the trail of bits security specialist review",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "trail-of-bits-security",
+        "stack": [
+          "trail-of-bits-security"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-trail-of-bits-security-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route trail-of-bits-security.",
+      "risk": "S2",
+      "domain": "security",
+      "stack": "security",
+      "prompt": "Dust the bookshelves in the study",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-ui-taste-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of ui-taste routes it as primary.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Review the operator dashboard with an Apple-inspired design system",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "ui-taste",
+        "stack": [
+          "ui-taste"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-ui-taste-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route ui-taste.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Replace the smoke detector battery",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-vercel-agent-skills-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of vercel-agent-skills routes it as primary.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Apply the vercel agent skills guidance pack",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "vercel-agent-skills",
+        "stack": [
+          "vercel-agent-skills"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-vercel-agent-skills-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route vercel-agent-skills.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Feed the goldfish twice a day",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-vercel-react-best-practices-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of vercel-react-best-practices routes it as primary.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Apply the react best practices with react performance guidance",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "vercel-react-best-practices",
+        "stack": [
+          "vercel-react-best-practices"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-vercel-react-best-practices-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route vercel-react-best-practices.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Change the filter in the water jug",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-vercel-web-design-guidelines-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of vercel-web-design-guidelines routes it as primary.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Follow the web design guidelines with accessibility audit guidance",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "vercel-web-design-guidelines",
+        "stack": [
+          "vercel-web-design-guidelines"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-vercel-web-design-guidelines-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route vercel-web-design-guidelines.",
+      "risk": "S1",
+      "domain": "frontend",
+      "stack": "frontend",
+      "prompt": "Sort the socks by color",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    },
+    {
+      "id": "route-parity-verification-router-positive",
+      "phase": "implementation",
+      "claim": "A prompt containing the deterministic trigger facts of verification-router routes it as primary.",
+      "risk": "S2",
+      "domain": "generic",
+      "stack": "generic",
+      "prompt": "Select the smallest evidence set with proper risk and impact escalation",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": "verification-router",
+        "stack": [
+          "verification-router"
+        ],
+        "capability": "filesystem.read",
+        "provider": "builtin",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 1200,
+        "fallback": "needs-user"
+      }
+    },
+    {
+      "id": "route-parity-verification-router-negative",
+      "phase": "discussion",
+      "claim": "An unrelated prompt must not route verification-router.",
+      "risk": "S2",
+      "domain": "generic",
+      "stack": "generic",
+      "prompt": "Sweep the front porch steps",
+      "workspace": {
+        "activation": "generic"
+      },
+      "expected": {
+        "primary": null,
+        "stack": [],
+        "capability": "none",
+        "provider": "none",
+        "verifier": "none",
+        "confidence": 1,
+        "context_cost": 0,
+        "fallback": "no-skill"
+      }
+    }
+  ]
 }

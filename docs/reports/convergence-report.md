@@ -69,9 +69,7 @@ PASS: 5 task slices, dependency chain, parallel pairs, real `LocalWorkerAdapter`
 
 ```
 agent-rules run "<request>"   # intent → plan → execute → complete (real adapter)
-agent-rules status <run-id>   # durable run state
-agent-rules resume <run-id>   # checkpoint-aware resume
-agent-rules cancel <run-id>   # cancellation with consistent state
+agent-rules status --run <run-id>   # durable run state
 agent-rules doctor            # health check
 npm run verify:all            # full deterministic gate
 npm run package:source        # clean source artifact

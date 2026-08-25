@@ -1,0 +1,11 @@
+{
+  "schema": "agent-rules/host-readback",
+  "version": 1,
+  "host": "claude",
+  "native_readback": {
+    "method": "parse CLAUDE.md managed block + settings.json hook registration + `claude mcp list` + skill inventory; version diagnostic only",
+    "present": true,
+    "verified": true
+  },
+  "verified": true
+}

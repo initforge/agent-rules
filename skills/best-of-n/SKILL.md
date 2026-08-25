@@ -7,6 +7,10 @@ description: 'Implement a task N ways in parallel and pick the best. Spawns mult
   '
 metadata:
   short-description: Parallel implementation tournament
+  signals: "best of n, try multiple approaches, parallel implementations, /best-of-n, /bon"
+  excludes: ""
+  priority: "60"
+
 ---
 
 # /best-of-n -- Parallel Implementation Tournament

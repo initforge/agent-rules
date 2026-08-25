@@ -4,6 +4,13 @@ description: Use as a brief-led UI/UX taste and anti-generic-design lens for fro
   redesigns, and product control surfaces. Select a design direction from the brief and existing design system; preserve accessibility
   and product constraints. For 5fedu ERP modules, 5fedu-module-parity remains authoritative and ui-taste is only an explicitly
   requested review lens.
+metadata:
+  signals: "ui/ux, giao diện đẹp, frontend ui, landing, portfolio, redesign, design system, Apple-inspired, operator dashboard"
+  excludes: "5fedu ERP module parity without explicit taste review, pure backend, unit/api only"
+  priority: "55"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 
 # UI Taste

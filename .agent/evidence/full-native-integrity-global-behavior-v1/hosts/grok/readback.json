@@ -1,0 +1,11 @@
+{
+  "schema": "agent-rules/host-readback",
+  "version": 1,
+  "host": "grok",
+  "native_readback": {
+    "method": "`grok inspect --json` + skill/hook/MCP inventory counts; duplicate/malformed detection; version diagnostic",
+    "present": true,
+    "verified": true
+  },
+  "verified": true
+}

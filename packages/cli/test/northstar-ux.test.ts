@@ -28,7 +28,25 @@ function tempRepo(): string {
   fs.writeFileSync(path.join(root, 'README.md'), '# fixture\n');
   spawnSync('git', ['add', '-A'], { cwd: root });
   spawnSync('git', ['commit', '-q', '-m', 'initial'], { cwd: root });
+  scaffoldGenerated(root);
   return root;
+}
+
+/**
+ * Single-resolver path (REQ-109): routeSkills requires the generated context
+ * graph and hashes selected SKILL.md sources. Scaffold the canonical graph +
+ * skills/rules into the disposable repo, exactly like the packaged runtime.
+ */
+function scaffoldGenerated(repo: string): void {
+  const realRoot = path.resolve(import.meta.dirname ?? '.', '../../..');
+  const generated = path.join(repo, 'generated');
+  fs.mkdirSync(generated, { recursive: true });
+  const graphSrc = path.join(realRoot, 'generated', 'context-graph.json');
+  if (fs.existsSync(graphSrc)) fs.copyFileSync(graphSrc, path.join(generated, 'context-graph.json'));
+  for (const dir of ['skills', 'rules']) {
+    const srcDir = path.join(realRoot, dir);
+    if (fs.existsSync(srcDir)) fs.cpSync(srcDir, path.join(repo, dir), { recursive: true });
+  }
 }
 afterEach(() => {
   while (roots.length) fs.rmSync(roots.pop()!, { recursive: true, force: true });

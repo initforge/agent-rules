@@ -173,15 +173,15 @@ def test_platform_contracts_schema_compliance() -> None:
             fail(f"platform-contracts has {len(schema_errors) - 20} additional schema violations")
         return
 
-    # Check version
-    if contracts.get("version") != 2:
-        fail(f"platform-contracts version must be 2, got {contracts.get('version')}")
+    # Check version — v3 adds native_contracts and generated_by for single-source NativeHostContract
+    if contracts.get("version") not in (2, 3):
+        fail(f"platform-contracts version must be 2 or 3, got {contracts.get('version')}")
     
-    # Check required top-level keys
+    # Check required top-level keys — allow extra keys in v3 (native_contracts, generated_by)
     required_keys = {"version", "registry", "parity_contract", "platforms"}
     actual_keys = set(contracts.keys())
-    if actual_keys != required_keys:
-        fail(f"platform-contracts missing keys: {required_keys - actual_keys}")
+    if not required_keys.issubset(actual_keys):
+        fail(f"platform-contracts missing required keys: {required_keys - actual_keys}")
     
     # Check platforms (eight canonical hosts)
     required_platforms = {"codex", "claude", "grok", "opencode", "antigravity", "cursor", "deepseek-harness", "command-code"}

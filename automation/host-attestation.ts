@@ -846,6 +846,26 @@ export async function resolveNativeExecutable(
     case 'antigravity':
       candidates.push(path.join(homeDir, '.local', 'bin', platform === 'win32' ? 'agy.exe' : 'agy'));
       candidates.push(...pathCommandCandidates('agy', platform, env));
+      candidates.push(...pathCommandCandidates('gemini', platform, env));
+      break;
+    case 'cursor':
+      candidates.push(path.join(homeDir, '.cursor', 'bin', platform === 'win32' ? 'cursor.exe' : 'cursor'));
+      candidates.push(...pathCommandCandidates('cursor', platform, env));
+      candidates.push(path.join(homeDir, 'AppData', 'Local', 'Programs', 'cursor', 'Cursor.exe'));
+      break;
+    case 'deepseek-harness':
+      candidates.push(path.join(homeDir, '.deepseek-harness', 'bin', platform === 'win32' ? 'dsh.exe' : 'dsh'));
+      candidates.push(path.join(homeDir, '.deepseek-harness', 'bin', platform === 'win32' ? 'dsh.cmd' : 'dsh'));
+      candidates.push(...pathCommandCandidates('dsh', platform, env));
+      candidates.push(...pathCommandCandidates('deepseek-harness', platform, env));
+      break;
+    case 'command-code':
+      candidates.push(path.join(homeDir, '.command-code', 'bin', platform === 'win32' ? 'command-code.exe' : 'command-code'));
+      candidates.push(path.join(homeDir, '.command-code', 'bin', platform === 'win32' ? 'cmdc.exe' : 'cmdc'));
+      candidates.push(...pathCommandCandidates('command-code', platform, env));
+      candidates.push(...pathCommandCandidates('cmdc', platform, env));
+      candidates.push(path.join(homeDir, 'AppData', 'Roaming', 'npm', platform === 'win32' ? 'command-code.cmd' : 'command-code'));
+      candidates.push(path.join(homeDir, 'AppData', 'Roaming', 'npm', platform === 'win32' ? 'cmdc.cmd' : 'cmdc'));
       break;
     default:
       throw new Error(`${host}: no native CLI resolver is defined`);

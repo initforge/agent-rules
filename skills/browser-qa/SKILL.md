@@ -3,6 +3,13 @@ name: browser-qa
 description: 'Browser QA using the smallest provider that proves the claim: Playwright Agent CLI for normal coding verification,
   Playwright MCP for exploratory interaction, and Chrome DevTools MCP for console/network/CDP diagnostics. Use for live browser/E2E/visual
   proof; not for pure unit/API-only work.'
+metadata:
+  signals: "live/manual, click-through, smoke test, exploratory, screenshot, console/network, playwright, chrome-devtools"
+  excludes: "static source verification, unit/api only, smoke detector, desk lamp"
+  priority: "80"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # Browser QA
 

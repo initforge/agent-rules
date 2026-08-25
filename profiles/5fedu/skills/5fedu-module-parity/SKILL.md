@@ -3,6 +3,10 @@ name: 5fedu-module-parity
 description: Use only for an explicitly activated 5fedu ERP domain pack. Read the verified central reference snapshot by pointer,
   preserve its shared shell, map project variables, and prove parity. Never auto-activate from prompt wording or use it for
   branding/non-ERP redesign.
+metadata:
+  signals: "5fedu, ERP module, làm module, sửa module, refactor module, drawer, listview, toolbar, parity"
+  source: ROUTE.json migrated
+
 ---
 
 # 5fedu module parity

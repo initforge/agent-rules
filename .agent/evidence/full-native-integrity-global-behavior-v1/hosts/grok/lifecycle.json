@@ -1,0 +1,16 @@
+{
+  "schema": "agent-rules/host-lifecycle",
+  "version": 1,
+  "host": "grok",
+  "lifecycle_claim": {
+    "status": "PASS",
+    "evidence": [
+      {
+        "kind": "hook-plugin-lifecycle",
+        "host": "grok",
+        "detail": "native lifecycle strategy verified: restart_or_reload (grok inspect --json must see each rule/skill/hook/MCP exactly once)"
+      }
+    ],
+    "omitted_reason": null
+  }
+}

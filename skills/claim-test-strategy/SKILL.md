@@ -1,6 +1,13 @@
 ---
 name: claim-test-strategy
 description: "Cheapest-sufficient evidence planning: maps claims and risk to verifier capability and escalation; never test-count-as-proof."
+metadata:
+  signals: "claim-based testing, test strategy, verification plan, cheapest-sufficient evidence, proof level"
+  excludes: "test-count-as-proof"
+  priority: "50"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # claim-test-strategy
 

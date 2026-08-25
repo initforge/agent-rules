@@ -196,7 +196,7 @@ new file mode 100644
       protocol_version: '2.0' as const,
       task_id: 'T-UI-001',
       spec_revision: 'rev-1',
-      goal: 'Build modern responsive dashboard component with drawer and polish visual aesthetics',
+      goal: 'Build a modern landing page redesign with giao diện đẹp and run a playwright smoke test on the console/network panel',
       scope: { owned: ['src/components/dashboard.tsx'], forbidden: [] },
       requirements: ['R-001'],
       acceptance: [{ claim_id: 'C-001' }],

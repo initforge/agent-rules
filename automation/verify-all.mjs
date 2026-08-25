@@ -37,15 +37,24 @@ function run(label, command, commandArgs = [], options = {}) {
 /**
  * Generic pointer-driven plan validation (S7, REQ-015/REQ-017): the set of
  * authoritative gates is derived at runtime from `.agent/current.json`, never
- * hard-coded per phase. The current plan's validators run as blocking gates;
- * validators of completed phases run as non-authoritative compatibility checks
- * so historical terminal proof stays runnable and is never deleted. A
- * historical validator still referenced by documentation remains runnable but
- * is never current authority.
+ * hard-coded per phase.
+ *
+ * The current plan's validators must be registered here as blocking gates
+ * (active plan/closure check fails hard). Completed/retired phase validators
+ * are REMOVED from this list once superseded — they are provenance only and
+ * must never be "reported failed then still green" nor hold the gate hostage.
+ * A validator still in this list that is NOT the current plan runs as a strict
+ * compatibility check and a failure fails the run.
  */
 const PLAN_VALIDATORS = [
-  { plan: 'v3-decision-fabric', label: 'V3 decision-fabric', scripts: ['automation/validate-v3-directive.mjs', 'automation/validate-v3-closure.mjs'] },
-  { plan: 'v3.1-external-first', label: 'V3.1 external-first', scripts: ['automation/validate-v31-directive.mjs', 'automation/validate-v31-closure.mjs'] },
+  // Active phase: global-agent-behavior-native-live-closure-v1 — runs as the
+  // authoritative blocking gate for the active plan/closure check (REQ-K3).
+  // validate-canonical-plan.mjs already runs as a generic CHECK; the semantic
+  // workflow corpus is the phase's dedicated active-plan validator.
+  { plan: 'global-agent-behavior-native-live-closure-v1', label: 'Global behavior closure', scripts: ['automation/validate-workflow-semantics.mjs'] },
+  // v3-decision-fabric and v3.1-external-first are retired (superseded by
+  // global-agent-behavior-native-live-closure-v1). Their validator scripts
+  // remain on disk as historical provenance but are NOT registered here.
 ];
 
 function runPlanValidators() {
@@ -82,9 +91,15 @@ function runPlanValidators() {
   }
   const notGreen = compatibility.filter((entry) => !entry.ok);
   if (notGreen.length) {
-    console.warn(`[PLAN VALIDATORS] ${notGreen.length} historical compatibility check(s) not green (reported, run not failed): ${notGreen.map((entry) => entry.script).join(', ')}`);
+    // REQ-K3: never "report failed then still green". A historical validator
+    // that fails while the active pointer is NOT that plan is still a repo
+    // integrity failure — the run must fail so a regression cannot hide.
+    console.error(`[PLAN VALIDATORS] ${notGreen.length} historical compatibility check(s) failed — failing run (no reported-failed-then-green): ${notGreen.map((entry) => `${entry.plan}:${entry.script}`).join(', ')}`);
+    failed = true;
+  } else {
+    console.log(`[PLAN VALIDATORS] all historical compatibility checks green`);
   }
-  console.log(`[PLAN VALIDATORS] pointer-driven: current=${currentPlan ?? '<none>'} (authoritative/blocking), completed plans=compatibility (runnable, non-authoritative)`);
+  console.log(`[PLAN VALIDATORS] pointer-driven: current=${currentPlan ?? '<none>'} (authoritative/blocking), completed plans=compatibility (blocking on failure)`);
 }
 
 function discoverTests(dir) {
@@ -138,6 +153,10 @@ runPlanValidators();
 run('CHECK: external source provenance and install policy', 'node', ['automation/validate-external-sources.mjs']);
 run('CHECK: Pencil explicit-only probe', 'node', ['automation/pencil-dogfood.mjs']);
 run('CHECK: 5fedu domain pack', 'node', ['automation/validate-5fedu-domain-pack.mjs','--require-source']);
+run('CHECK: global behavior invariants (22)', 'node', ['automation/test-global-behavior.mjs']);
+run('CHECK: process-level integration (12)', 'node', ['automation/test-process-level-integration.mjs']);
+run('CHECK: skill live behavior canaries (7)', 'node', ['automation/skill-live-canary.mjs']);
+run('CHECK: behavior index integrity', 'node', ['automation/build-behavior-index.mjs']);
 
 if (!skipPython) {
   if (!python) { console.error('[PYTHON] unavailable - suite is non-PASS'); failed = true; }

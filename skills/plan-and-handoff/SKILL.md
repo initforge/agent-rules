@@ -2,6 +2,13 @@
 name: plan-and-handoff
 description: Use for multi-part work, plan mode, handoffs, resumable work, or a request that needs an executable plan before
   implementation. Do not use for a single clear fix, pure Q&A, or researcher-only work.
+metadata:
+  signals: "plan dài, nhiều phase, handoff, chia nhỏ, /goal, PAF, plan artifact, Plan Architect, Plan Scribe, resumable work, executable plan"
+  excludes: "single small fix, pure q&a, sweep the front porch, water the garden vegetables"
+  priority: "70"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 
 # Plan and Handoff

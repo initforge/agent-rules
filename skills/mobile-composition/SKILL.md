@@ -1,6 +1,13 @@
 ---
 name: mobile-composition
 description: "Composable mobile workflows for Expo/React Native projects: platform facts drive simulator/device proof; real device evidence is never fabricated."
+metadata:
+  signals: "expo project, react native project, react-native, mobile platform matrix, ios/android build"
+  excludes: "web-only, desktop-only"
+  priority: "40"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # mobile-composition
 

@@ -19,7 +19,8 @@ Criteria (structural):
 
 Criteria (structural):
 - M1 pass
-- `rules/05-critical-thinking.md` and `rules/25-task-lifecycle.md` present
+- `rules/00-intent-scope-safety.md` and `rules/10-execution-planning-delegation.md` present
+
 - Tombstone guard at `.agent/tombstones/` (via `07-import-reviewed-changes.ps1`)
 
 Criteria (advisory, target repo):

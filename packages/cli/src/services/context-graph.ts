@@ -67,25 +67,107 @@ function extractRouting(body: string): Record<string, unknown> | null {
 
 
 function loadSkillRouting(skillPath: string, body: string): Record<string, unknown> | null {
+  // Profile-owned (domain-pack) skills keep their pack ROUTE.json as the
+  // routing contract: domain packs are explicit project context, never
+  // prompt-triggered global behavior (their project_scope/priority/requires/
+  // loads gating is pack-owned and not carried in the content SKILL.md).
+  const isProfileSkill = /\/profiles\/[^/]+\/skills\/[^/]+\/SKILL\.md$/.test(normalizePath(skillPath));
   const routePath = path.join(path.dirname(skillPath), 'ROUTE.json');
+  if (isProfileSkill && fs.existsSync(routePath)) {
+    try {
+      const parsed = JSON.parse(fs.readFileSync(routePath, 'utf8')) as Record<string, unknown>;
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+    } catch {
+      throw new Error(`Invalid domain-pack routing sidecar: ${normalizePath(routePath)}`);
+    }
+  }
+  // Global skills: single-source — SKILL.md frontmatter metadata is the
+  // canonical routing authority. ROUTE.json is a legacy sidecar and must never
+  // be preferred over SKILL.md metadata.
+  const metaRouting = extractMetadataRouting(body);
+  if (metaRouting) return metaRouting;
+  // Compatibility-only fallback for legacy repositories that predate the
+  // SKILL.md metadata migration: read the ROUTE.json sidecar only when the
+  // SKILL.md carries no routing metadata.
   if (fs.existsSync(routePath)) {
     try {
       const parsed = JSON.parse(fs.readFileSync(routePath, 'utf8')) as Record<string, unknown>;
       return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
     } catch {
-      throw new Error(`Invalid skill routing sidecar: ${normalizePath(routePath)}`);
+      throw new Error(`Invalid legacy skill routing sidecar: ${normalizePath(routePath)}`);
     }
   }
-  // Compatibility-only fallback for legacy repositories. Canonical agent-rules
-  // skills keep Agent Skills-compliant frontmatter and route from ROUTE.json.
   return extractRouting(body);
 }
 
+function extractMetadataRouting(body: string): Record<string, unknown> | null {
+  const clean = body.replace(/^\uFEFF/, '');
+  const m = clean.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
+  if (!m) return null;
+  const fm = m[1];
+  if (!fm.includes('metadata:')) return null;
+  // Robust regex extraction: handle both array ["a","b"] and string "a, b" for portability (metadata values must be strings per Agent Skills spec)
+  const signalsRawMatch = fm.match(/signals:\s*(?:"([^"]*)"|\[([^\]]*)\])/);
+  const excludesRawMatch = fm.match(/excludes:\s*(?:"([^"]*)"|\[([^\]]*)\])/);
+  const priorityMatch = fm.match(/priority:\s*"?(\d+)"?/);
+  const platformScopeMatch = fm.match(/platform_scope:\s*"?([^"\n]+)"?/);
+  const projectScopeMatch = fm.match(/project_scope:\s*"?([^"\n]+)"?/);
+  const supportsRawMatch = fm.match(/supports:\s*(?:"([^"]*)"|\[([^\]]*)\])/);
+  const requiresRawMatch = fm.match(/requires:\s*(?:"([^"]*)"|\[([^\]]*)\])/);
+  const loadsRawMatch = fm.match(/loads:\s*(?:"([^"]*)"|\[([^\]]*)\])/);
+  const parseArray = (s: string): string[] => {
+    if (!s.trim()) return [];
+    // If it looks like JSON array inner, parse as such; else split by comma
+    if (s.includes('"')) {
+      try { const arr = JSON.parse(`[${s}]`); return Array.isArray(arr) ? arr.map(String) : []; } catch {}
+    }
+    return s.split(',').map(t=>t.trim().replace(/^"|"$/g,'')).filter(Boolean);
+  };
+  const signalsRaw = signalsRawMatch ? (signalsRawMatch[1] ?? signalsRawMatch[2] ?? '') : '';
+  const excludesRaw = excludesRawMatch ? (excludesRawMatch[1] ?? excludesRawMatch[2] ?? '') : '';
+  const signals = parseArray(signalsRaw);
+  const excludes = parseArray(excludesRaw);
+  const priority = priorityMatch ? parseInt(priorityMatch[1],10) : 0;
+  const platformScope = platformScopeMatch ? platformScopeMatch[1].replace(/"/g,'').trim() : 'all';
+  const projectScope = projectScopeMatch ? projectScopeMatch[1].replace(/"/g,'').trim() : '';
+  const supports = supportsRawMatch ? parseArray(supportsRawMatch[1] ?? supportsRawMatch[2] ?? '') : [];
+  const requires = requiresRawMatch ? parseArray(requiresRawMatch[1] ?? requiresRawMatch[2] ?? '') : [];
+  const loads = loadsRawMatch ? parseArray(loadsRawMatch[1] ?? loadsRawMatch[2] ?? '') : [];
+  if (signals.length || excludes.length) {
+    return {
+      signals,
+      excludes,
+      priority,
+      loads,
+      supports,
+      requires,
+      project_scope: projectScope,
+      platform_scope: platformScope,
+      max_route_tokens: 3500,
+      default: false,
+    };
+  }
+  return null;
+}
+
 function attachRoutingProvenance(node: RoutingNode, root: string, skillPath: string): void {
-  const routePath = path.join(path.dirname(skillPath), 'ROUTE.json');
-  if (!fs.existsSync(routePath)) return;
-  node.routing_source = normalizePath(path.relative(root, routePath));
-  node.routing_hash = sha256(routePath);
+  // Single-source provenance for global skills: the SKILL.md file is both the
+  // source artifact and the routing authority, so routing_source names the
+  // SKILL.md itself and routing_hash is the sha256 of its bytes. ROUTE.json is
+  // never canonical for global skills.
+  // Profile-owned (domain-pack) skills keep their pack ROUTE.json sidecar as
+  // routing provenance (domain-pack gating is pack-owned).
+  const isProfileSkill = /\/profiles\/[^/]+\/skills\/[^/]+\/SKILL\.md$/.test(normalizePath(skillPath));
+  if (isProfileSkill) {
+    const routePath = path.join(path.dirname(skillPath), 'ROUTE.json');
+    if (fs.existsSync(routePath)) {
+      node.routing_source = normalizePath(path.relative(root, routePath));
+      node.routing_hash = sha256(routePath);
+      return;
+    }
+  }
+  node.routing_source = normalizePath(path.relative(root, skillPath));
+  node.routing_hash = sha256(skillPath);
 }
 
 function frontmatterValue(body: string, key: string): string | null {
@@ -340,7 +422,7 @@ export function buildContextGraph(root: string): ContextGraph {
     const body = fs.readFileSync(skillPath, 'utf-8');
     const skillId = dir.name;
     const skillRouting = loadSkillRouting(skillPath, body);
-    if (!skillRouting) throw new Error(`Missing structured routing metadata: skills/${skillId}/ROUTE.json (legacy SKILL.md routing is compatibility-only)`);
+    if (!skillRouting) throw new Error(`Missing structured routing metadata: skills/${skillId}/SKILL.md (SKILL.md metadata is the single source; ROUTE.json is legacy compatibility-only)`);
     addNode(nodes, `skill:${skillId}`, 'skills', `skills/${skillId}/SKILL.md`,
       'skill', `skills/${skillId}/SKILL.md`, frontmatterValue(body, 'description') || '',
       [], skillRouting, root);
@@ -370,7 +452,7 @@ export function buildContextGraph(root: string): ContextGraph {
         const body = fs.readFileSync(skillPath, 'utf-8');
         const skillId = skillDir.name;
         const skillRouting = loadSkillRouting(skillPath, body);
-        if (!skillRouting) throw new Error(`Missing structured routing metadata: profiles/${profileDir.name}/skills/${skillId}/ROUTE.json (legacy SKILL.md routing is compatibility-only)`);
+        if (!skillRouting) throw new Error(`Missing structured routing metadata: profiles/${profileDir.name}/skills/${skillId}/SKILL.md (SKILL.md metadata is the single source; ROUTE.json is legacy compatibility-only)`);
         addNode(nodes, `skill:${skillId}`, 'skills',
           `profiles/${profileDir.name}/skills/${skillId}/SKILL.md`,
           'skill', `profiles/${profileDir.name}/skills/${skillId}/SKILL.md`,
@@ -474,7 +556,7 @@ export function buildContextGraph(root: string): ContextGraph {
   return {
     version: 2,
     generated_from: [
-      'rules/manifest.yaml', 'skills/**/SKILL.md', 'skills/**/ROUTE.json',
+      'rules/manifest.yaml', 'skills/**/SKILL.md',
       'profiles/**/README.md', 'profiles/**/rules/**', 'profiles/**/behaviors/**',
       'profiles/**/module-mapping/**', 'profiles/**/projects/**/AGENTS.md',
       'profiles/**/projects/**/00-context-map.md',
@@ -482,7 +564,7 @@ export function buildContextGraph(root: string): ContextGraph {
     ],
     source_of_truth: {
       rules: 'rules/manifest.yaml',
-      skills: 'Agent Skills-compatible SKILL.md + agent-rules ROUTE.json sidecar',
+      skills: 'Agent Skills-compatible SKILL.md metadata (single source; ROUTE.json is legacy sidecar only)',
       profiles: 'profile README, rules, behaviors, and module mapping',
       projects: 'project entrypoint and 00-context-map.md (non-5fedu profiles)',
       platforms: 'platform overlay and platform-contracts.json',

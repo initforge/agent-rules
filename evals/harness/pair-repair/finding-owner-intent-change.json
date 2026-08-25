@@ -2,7 +2,7 @@
   "schema": "harness/repair-finding",
   "version": 1,
   "finding_id": "F-pair-002",
-  "raw_text": "The owner now requires operator-profile rollout before harness closeout.",
+  "raw_text": "The owner now requires the new native-host rollout before harness closeout.",
   "plan_id": "harness-universal-reconciliation-v1",
   "candidate_epoch": 1,
   "repository_state": {

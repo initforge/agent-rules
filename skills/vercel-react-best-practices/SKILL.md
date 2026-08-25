@@ -1,6 +1,13 @@
 ---
 name: vercel-react-best-practices
 description: "Provenance projection for Vercel react-best-practices (pinned b8caa260): ROUTED on react stack facts; content BLOCKED until owner license determination."
+metadata:
+  signals: "react best practices, react performance guidance, react component rules"
+  excludes: "5fedu"
+  priority: "45"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # vercel-react-best-practices
 

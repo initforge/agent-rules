@@ -1,0 +1,18 @@
+{
+  "schema": "agent-rules/mode-residue-scan",
+  "version": 1,
+  "generated_at": "2026-08-25T09:11:46.533Z",
+  "scanned_files_count": 1945,
+  "residue_count": 2,
+  "status": "RESIDUE_DETECTED",
+  "findings": [
+    {
+      "file": "agent-rules-source.zip",
+      "keyword": "operator-profiles/vibe-product"
+    },
+    {
+      "file": "agent-rules-source.zip",
+      "keyword": "operator-profile.ts"
+    }
+  ]
+}

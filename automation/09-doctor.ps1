@@ -385,7 +385,7 @@ if (Test-Path $GrokInject) {
       detail   = "Legacy dual-tree still at $GrokInject : $($LegacyHits -join ', ') - re-run 02-install-runtime"
     }
   } else {
-    $LeanOk = (Test-Path (Join-Path $GrokInject "00-bootstrap.md")) -and (Test-Path (Join-Path $GrokInject "10-execution.md"))
+    $LeanOk = (Test-Path (Join-Path $GrokInject "00-intent-scope-safety.md")) -and (Test-Path (Join-Path $GrokInject "10-execution-planning-delegation.md"))
     if (-not $LeanOk) {
       $Report += [pscustomobject]@{
         platform = "grok"
@@ -395,9 +395,9 @@ if (Test-Path $GrokInject) {
       }
     } else {
       # Hash sample: inject bootstrap must match installed rules/bootstrap when both exist
-      if (Test-Path (Join-Path $GrokManifestRules "00-bootstrap.md")) {
-        $H1 = (Get-FileHash -Algorithm SHA256 (Join-Path $GrokInject "00-bootstrap.md")).Hash
-        $H2 = (Get-FileHash -Algorithm SHA256 (Join-Path $GrokManifestRules "00-bootstrap.md")).Hash
+      if (Test-Path (Join-Path $GrokManifestRules "00-intent-scope-safety.md")) {
+        $H1 = (Get-FileHash -Algorithm SHA256 (Join-Path $GrokInject "00-intent-scope-safety.md")).Hash
+        $H2 = (Get-FileHash -Algorithm SHA256 (Join-Path $GrokManifestRules "00-intent-scope-safety.md")).Hash
         if ($H1 -ne $H2) {
           $Report += [pscustomobject]@{
             platform = "grok"

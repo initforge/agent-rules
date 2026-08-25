@@ -1,0 +1,13 @@
+{
+  "schema": "agent-rules/mcp-ownership-receipt",
+  "version": 1,
+  "generated_at": "2026-08-25T09:14:10.010Z",
+  "bridge_injections_detected": 0,
+  "unowned_entries_modified": 0,
+  "user_mcp_configs_verified_clean": [
+    "C:/Users/ADMIN/.gemini/config/mcp_config.json",
+    "C:/Users/ADMIN/.cursor/mcp.json",
+    "C:/Users/ADMIN/.claude.json"
+  ],
+  "status": "CLEAN"
+}

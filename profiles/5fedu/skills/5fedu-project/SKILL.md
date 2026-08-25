@@ -3,6 +3,10 @@ name: 5fedu-project
 description: Use only after explicit 5fedu project/domain-pack activation. Route reusable 5fedu knowledge from the harness,
   keep project-specific truth in the active repository, and use the central manifest-bound ERP reference through the reference
   broker. Never activate from prompt wording and never require copying the template into the project.
+metadata:
+  signals: "5fedu, ERP project, tah-app, nostime, owner decisions, supabase"
+  source: ROUTE.json migrated
+
 ---
 
 # 5fedu project routing

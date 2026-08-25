@@ -1,0 +1,98 @@
+{
+  "schema": "agent-rules/change-graph",
+  "version": 1,
+  "baseline": "c1deca1a5ee186a9d0361b57fd0ff7e943fa676e",
+  "changes": [
+    {
+      "id": "CG-01",
+      "area": "runtime-unification",
+      "current_truth": "Multiple overlapping northstar modules (decision-fabric, decision-closure, planner-runtime, closure-*, context-*, routing)",
+      "exact_change": "Unify into 11 canonical owner modules with single flow; remove/merge duplicates",
+      "category": "fact"
+    },
+    {
+      "id": "CG-02",
+      "area": "vocabulary",
+      "current_truth": "Many ambiguous status synonyms",
+      "exact_change": "Enforce task_state/claim_outcome/host_state/provider_state fields",
+      "category": "fact"
+    },
+    {
+      "id": "CG-03",
+      "area": "rules-parity",
+      "current_truth": "13 legacy rules archived; 5 active exist; automation still references archived files",
+      "exact_change": "Update automation/docs/skills to stop referencing archived rule files; add parity matrix",
+      "category": "fact"
+    },
+    {
+      "id": "CG-04",
+      "area": "mode-purge",
+      "current_truth": "vibe-coder/plain-vietnamese/technical_explain zero occurrences; operator-profile only in 2 eval fixtures",
+      "exact_change": "Remove fixture references or mark counterfactual; ensure zero live residue",
+      "category": "fact"
+    },
+    {
+      "id": "CG-05",
+      "area": "context-capsule",
+      "current_truth": "Context modules exist but worker capsule/compaction/resume not fully wired",
+      "exact_change": "Implement ContextCapsule + compaction/resume + prompt classification",
+      "category": "fact"
+    },
+    {
+      "id": "CG-06",
+      "area": "skill-lifecycle",
+      "current_truth": "34 skills present; ROUTE.json may still be canonical",
+      "exact_change": "SKILL.md canonical, ROUTE.json non-canonical, positive/negative routing, hash parity",
+      "category": "fact"
+    },
+    {
+      "id": "CG-07",
+      "area": "mcp-lifecycle",
+      "current_truth": "agent-rules-mcp-bridge cleanup exists in native-installer",
+      "exact_change": "Remove bridge from all host configs; integration-only; 7-point canary",
+      "category": "fact"
+    },
+    {
+      "id": "CG-08",
+      "area": "native-8host",
+      "current_truth": "Host registry + adapters exist; per-host provenance and 10-method lifecycle not uniform",
+      "exact_change": "Implement uniform HostAdapter 10-method contract with provenance and auth boundary",
+      "category": "fact"
+    },
+    {
+      "id": "CG-09",
+      "area": "proof-closure",
+      "current_truth": "RunStore + OutcomeReducer exist but parallel derivations may remain",
+      "exact_change": "Enforce RunStore single writer + OutcomeReducer single reducer; remove parallel derivations",
+      "category": "fact"
+    },
+    {
+      "id": "CG-10",
+      "area": "behavior-index",
+      "current_truth": "No canonical generated index",
+      "exact_change": "Generate generated/behavior-index.json + .md with 10 views; CLI reads it",
+      "category": "fact"
+    },
+    {
+      "id": "CG-11",
+      "area": "cli-surface",
+      "current_truth": "8 commands registered; integration accepts legacy aliases; 33 dead command modules on disk",
+      "exact_change": "Restrict integration to list|enable|disable|doctor; remove dead command modules/tests (validated by tests)",
+      "category": "fact"
+    },
+    {
+      "id": "CG-12",
+      "area": "tests",
+      "current_truth": "Existing tests; no 12 process-level integration, no 14 journeys",
+      "exact_change": "Add deterministic + process-level + 14 live journey tests",
+      "category": "fact"
+    },
+    {
+      "id": "CG-13",
+      "area": "release",
+      "current_truth": "Prior phases did not commit/push per non-goal",
+      "exact_change": "Run local gates, fix CI, commit on main, push, wait for workflows success",
+      "category": "fact"
+    }
+  ]
+}

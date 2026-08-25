@@ -160,25 +160,37 @@ function startApi() {
 
 // ── worker (async queue processing) ──────────────────────────────────────────
 function startWorker() {
+  const inFlight = new Set();
   const timer = setInterval(() => {
-    const q = loadQueue();
-    let changed = false;
-    for (const [id, job] of Object.entries(q.jobs)) {
-      if (job.status === 'pending') { job.status = 'processing'; job.workerPid = process.pid; changed = true; }
-    }
-    if (changed) saveQueue(q);
-    for (const [id, job] of Object.entries(q.jobs)) {
-      if (job.status === 'processing') {
-        setTimeout(() => {
-          const q2 = loadQueue();
-          if (q2.jobs[id] && q2.jobs[id].status === 'processing') {
-            q2.jobs[id].status = 'done';
-            q2.jobs[id].processedAt = new Date().toISOString();
-            saveQueue(q2);
-            log(`processed ${id}`);
-          }
-        }, 12);
+    try {
+      const q = loadQueue();
+      let changed = false;
+      for (const [id, job] of Object.entries(q.jobs)) {
+        if (job.status === 'pending' && !inFlight.has(id)) {
+          inFlight.add(id);
+          job.status = 'processing';
+          job.workerPid = process.pid;
+          changed = true;
+          setTimeout(() => {
+            try {
+              const q2 = loadQueue();
+              if (q2.jobs[id]) {
+                q2.jobs[id].status = 'done';
+                q2.jobs[id].processedAt = new Date().toISOString();
+                saveQueue(q2);
+                log(`processed ${id}`);
+              }
+            } catch (err) {
+              log(`worker error processing ${id}: ${err.message}`);
+            } finally {
+              inFlight.delete(id);
+            }
+          }, 15);
+        }
       }
+      if (changed) saveQueue(q);
+    } catch {
+      // file lock/read race in fixture; will retry on next tick
     }
   }, 25);
   log('worker started');

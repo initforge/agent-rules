@@ -1,785 +1,1738 @@
 {
- "version": 4,
- "description": "CI regression fixtures for progressive-context routing; the compiled context graph is the runtime source, and this file is not a second router or trigger source. 5fedu activation is a fail-closed workspace fact: only .agent/profiles/5fedu.enabled or a validated installed README/rules/behavior/module-mapping lean pack is active. Prompt text, empty/junk context directories, and legacy 00-context-map.md alone are not activation evidence.",
- "budgets": {
-  "core_routing_tokens": 4500,
-  "normal_execution_tokens": 1550,
-  "uncertain_execution_tokens": 2700,
-  "plan_authoring_tokens": 4200,
-  "harness_edit_tokens": 2800,
-  "5fedu_ui_base_tokens": 8000
- },
- "routes": {
-  "normal_execution": [
-   "skills/finish-to-completion/SKILL.md"
-  ],
-  "uncertain_execution": [
-   "skills/finish-to-completion/SKILL.md"
-  ],
-  "plan_authoring": [
-   "skills/plan-and-handoff/SKILL.md",
-   "skills/plan-and-handoff/references/plan-artifact-template.md"
-  ],
-  "harness_edit": [
-   "skills/context-evolution-protocol/SKILL.md"
-  ],
-  "5fedu_ui_base": [
-   "profiles/5fedu/README.md",
-   "profiles/5fedu/skills/5fedu-project/SKILL.md",
-   "profiles/5fedu/skills/5fedu-module-parity/SKILL.md",
-   "profiles/5fedu/skills/5fedu-module-parity/references/index.md",
-   "profiles/5fedu/module-mapping/modules.yaml",
-   "profiles/5fedu/module-mapping/ui-contracts.md"
+  "version": 4,
+  "description": "CI regression fixtures for progressive-context routing; the compiled context graph is the runtime source, and this file is not a second router or trigger source. 5fedu activation is a fail-closed workspace fact: only .agent/profiles/5fedu.enabled or a validated installed README/rules/behavior/module-mapping lean pack is active. Prompt text, empty/junk context directories, and legacy 00-context-map.md alone are not activation evidence.",
+  "budgets": {
+    "core_routing_tokens": 4500,
+    "normal_execution_tokens": 1550,
+    "uncertain_execution_tokens": 2700,
+    "plan_authoring_tokens": 4200,
+    "harness_edit_tokens": 2800,
+    "5fedu_ui_base_tokens": 8000
+  },
+  "routes": {
+    "normal_execution": [
+      "skills/finish-to-completion/SKILL.md"
+    ],
+    "uncertain_execution": [
+      "skills/finish-to-completion/SKILL.md"
+    ],
+    "plan_authoring": [
+      "skills/plan-and-handoff/SKILL.md",
+      "skills/plan-and-handoff/references/plan-artifact-template.md"
+    ],
+    "harness_edit": [
+      "skills/context-evolution-protocol/SKILL.md"
+    ],
+    "5fedu_ui_base": [
+      "profiles/5fedu/README.md",
+      "profiles/5fedu/skills/5fedu-project/SKILL.md",
+      "profiles/5fedu/skills/5fedu-module-parity/SKILL.md",
+      "profiles/5fedu/skills/5fedu-module-parity/references/index.md",
+      "profiles/5fedu/module-mapping/modules.yaml",
+      "profiles/5fedu/module-mapping/ui-contracts.md"
+    ]
+  },
+  "cases": [
+    {
+      "id": "qa-simple",
+      "prompt": "Giải thích cách xử lý đơn giản",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "plan-and-handoff",
+          "finish-to-completion",
+          "browser-qa",
+          "context-evolution-protocol"
+        ]
+      }
+    },
+    {
+      "id": "generic-module",
+      "prompt": "Refactor module thanh toán Node.js",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "finish-to-completion",
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity"
+        ]
+      }
+    },
+    {
+      "id": "5fedu-ui",
+      "prompt": "Sửa module 5fedu lệch pattern drawer",
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true,
+        "lean_pack": "valid"
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ],
+        "exact_context_nodes": [
+          "profile:5fedu:module-mapping",
+          "profile:5fedu:readme",
+          "profile:5fedu:ui-contracts",
+          "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"
+        ]
+      }
+    },
+    {
+      "id": "5fedu-ui-domain-precedes-browser",
+      "prompt": "Sửa module 5fedu lệch pattern drawer và click-through browser",
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true,
+        "lean_pack": "valid"
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ]
+      }
+    },
+    {
+      "id": "5fedu-ui-explicit-profile-marker",
+      "prompt": "Sửa module 5fedu lệch pattern drawer",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false,
+        "profile_marker": true,
+        "lean_pack": "missing"
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ],
+        "workspace_facts": {
+          "has_enabled_5fedu_profile": true,
+          "has_valid_5fedu_lean_pack": false,
+          "is_5fedu_profile_active": true
+        },
+        "exact_context_nodes": [
+          "profile:5fedu:module-mapping",
+          "profile:5fedu:readme",
+          "profile:5fedu:ui-contracts",
+          "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"
+        ]
+      }
+    },
+    {
+      "id": "5fedu-ui-valid-installed-lean-pack",
+      "prompt": "Sửa module 5fedu lệch pattern drawer",
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true,
+        "lean_pack": "valid"
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ],
+        "workspace_facts": {
+          "has_enabled_5fedu_profile": false,
+          "has_valid_5fedu_lean_pack": true,
+          "is_5fedu_profile_active": true
+        },
+        "exact_context_nodes": [
+          "profile:5fedu:module-mapping",
+          "profile:5fedu:readme",
+          "profile:5fedu:ui-contracts",
+          "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"
+        ]
+      }
+    },
+    {
+      "id": "5fedu-ui-empty-context-is-inactive",
+      "prompt": "Sửa module 5fedu lệch pattern drawer",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false,
+        "lean_pack": "empty"
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity"
+        ],
+        "workspace_facts": {
+          "has_enabled_5fedu_profile": false,
+          "has_valid_5fedu_lean_pack": false,
+          "is_5fedu_profile_active": false
+        }
+      }
+    },
+    {
+      "id": "5fedu-ui-junk-context-is-inactive",
+      "prompt": "Sửa module 5fedu lệch pattern drawer",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false,
+        "lean_pack": "junk-readme-or-legacy-map"
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity"
+        ],
+        "workspace_facts": {
+          "has_enabled_5fedu_profile": false,
+          "has_valid_5fedu_lean_pack": false,
+          "is_5fedu_profile_active": false
+        }
+      }
+    },
+    {
+      "id": "5fedu-ui-partial-context-is-inactive",
+      "prompt": "Sửa module 5fedu lệch pattern drawer",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false,
+        "lean_pack": "partial"
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity"
+        ],
+        "workspace_facts": {
+          "has_enabled_5fedu_profile": false,
+          "has_valid_5fedu_lean_pack": false,
+          "is_5fedu_profile_active": false
+        }
+      }
+    },
+    {
+      "id": "5fedu-ui-hash-tampered-pack-is-inactive",
+      "prompt": "Sửa module 5fedu lệch pattern drawer",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false,
+        "lean_pack": "hash-tampered"
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity"
+        ],
+        "workspace_facts": {
+          "has_enabled_5fedu_profile": false,
+          "has_valid_5fedu_lean_pack": false,
+          "is_5fedu_profile_active": false
+        }
+      }
+    },
+    {
+      "id": "5fedu-ui-ancestor-symlink-is-inactive",
+      "prompt": "Sửa module 5fedu lệch pattern drawer",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false,
+        "lean_pack": "ancestor-symlink"
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity"
+        ],
+        "workspace_facts": {
+          "has_enabled_5fedu_profile": false,
+          "has_valid_5fedu_lean_pack": false,
+          "is_5fedu_profile_active": false
+        }
+      }
+    },
+    {
+      "id": "5fedu-ordinary-ui-has-no-activation-node",
+      "prompt": "Sửa module 5fedu lệch pattern drawer",
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true,
+        "lean_pack": "valid"
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "exact_context_nodes": [
+          "profile:5fedu:module-mapping",
+          "profile:5fedu:readme",
+          "profile:5fedu:ui-contracts",
+          "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"
+        ]
+      }
+    },
+    {
+      "id": "5fedu-setup-loads-activation-only-when-active",
+      "prompt": "Thiết lập 5fedu cho dự án",
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true,
+        "lean_pack": "valid"
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_setup"
+        ],
+        "exact_context_nodes": [
+          "profile:5fedu:behavior:activation",
+          "profile:5fedu:module-mapping",
+          "profile:5fedu:readme",
+          "profile:5fedu:ui-contracts",
+          "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"
+        ]
+      }
+    },
+    {
+      "id": "ordinary-workspace-ui-isolated",
+      "prompt": "Sửa drawer theo template",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false,
+        "lean_pack": "missing"
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity",
+          "frontend-architect"
+        ],
+        "workspace_facts": {
+          "is_5fedu_profile_active": false
+        }
+      }
+    },
+    {
+      "id": "5fedu-ui-missing-context",
+      "prompt": "Sửa module 5fedu lệch pattern drawer",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity"
+        ]
+      }
+    },
+    {
+      "id": "5fedu-ui-concrete-surfaces",
+      "prompt": "Sửa toolbar, listview và drawer chi tiết module 5fedu theo template",
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ]
+      }
+    },
+    {
+      "id": "5fedu-ui-missing-template",
+      "prompt": "Sửa drawer module 5fedu khi workspace chưa có template tham chiếu",
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ]
+      }
+    },
+    {
+      "id": "5fedu-ui-scoped-custom-override",
+      "prompt": "Sửa module 5fedu drawer theo custom behavior đã được owner phê duyệt trong spec",
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ]
+      }
+    },
+    {
+      "id": "5fedu-ui-breadcrumb-unicode",
+      "prompt": "Sửa module 5fedu breadcrumb nhãn tiếng Việt, route registry và không dùng slug fallback",
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ]
+      }
+    },
+    {
+      "id": "5fedu-ui-reduced-motion",
+      "prompt": "Sửa module 5fedu drawer để motion tôn trọng reduced motion",
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ]
+      }
+    },
+    {
+      "id": "5fedu-ui-reduced-motion-per-surface",
+      "prompt": "Audit module 5fedu: mọi surface phải khai báo reduced motion trong motion_must",
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ]
+      }
+    },
+    {
+      "id": "5fedu-ui-explicit-taste-modifier",
+      "prompt": "Sửa drawer module 5fedu và thực hiện taste review theo phong cách minimalist",
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": "5fedu-module-parity",
+        "required_skills": [
+          "5fedu-project"
+        ],
+        "supporting_skills": [
+          "ui-taste"
+        ],
+        "forbidden_skills": [
+          "frontend-architect"
+        ],
+        "intent_signals": [
+          "5fedu_ui"
+        ]
+      }
+    },
+    {
+      "id": "frontend-explicit-taste-direction",
+      "prompt": "Thiết kế landing theo phong cách minimalist",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "frontend-architect",
+        "required_skills": [],
+        "supporting_skills": [
+          "ui-taste"
+        ],
+        "forbidden_skills": [
+          "5fedu-module-parity"
+        ]
+      }
+    },
+    {
+      "id": "research",
+      "prompt": "Kiểm tra changelog API mới nhất",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "researcher",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "unit-test",
+      "prompt": "Chạy unit test cho service",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "browser-qa"
+        ]
+      }
+    },
+    {
+      "id": "verification-router",
+      "prompt": "Lập kế hoạch kiểm chứng claim theo impact, risk và evidence; chỉ escalate khi proof chưa đủ",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "verification-router",
+        "required_skills": [],
+        "supporting_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "manual-browser",
+      "prompt": "Manual browser QA click-through",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "browser-qa",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "harness",
+      "prompt": "Tinh gọn rules và skills của agent-rules",
+      "workspace": {
+        "kind": "harness",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "docs-style",
+          "researcher",
+          "context-evolution-protocol"
+        ]
+      }
+    },
+    {
+      "id": "long-plan",
+      "prompt": "Lập kế hoạch nhiều phase cho harness",
+      "workspace": {
+        "kind": "harness",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "plan-and-handoff",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "project-setup",
+      "prompt": "Cài context cho project 5fedu",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity",
+          "browser-qa"
+        ]
+      }
+    },
+    {
+      "id": "5fedu-database",
+      "prompt": "Kiểm tra migration RLS và schema int8",
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "context_nodes": [
+          "profile:5fedu:rule:data-auth"
+        ],
+        "forbidden_skills": [
+          "5fedu-module-parity",
+          "frontend-architect"
+        ]
+      }
+    },
+    {
+      "id": "5fedu-permission",
+      "prompt": "Kiểm tra quyền cap_bac cho module",
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "context_nodes": [
+          "profile:5fedu:rule:permissions"
+        ],
+        "forbidden_skills": [
+          "browser-qa"
+        ]
+      }
+    },
+    {
+      "id": "docs-reference",
+      "prompt": "Viết lại README và tài liệu dự án",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "docs-style",
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-module-parity"
+        ]
+      }
+    },
+    {
+      "id": "generic-project-domain",
+      "prompt": "Sửa quy tắc nghiệp vụ của project không dùng 5fedu",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "5fedu-project",
+          "5fedu-module-parity"
+        ]
+      }
+    },
+    {
+      "id": "export-reference",
+      "prompt": "Kiểm tra xuất Excel/PDF tiếng Việt",
+      "workspace": {
+        "kind": "5fedu-app",
+        "has_5fedu_context": true
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "context_nodes": [
+          "profile:5fedu:rule:business"
+        ],
+        "forbidden_skills": [
+          "browser-qa",
+          "5fedu-module-parity"
+        ]
+      }
+    },
+    {
+      "id": "metadata-output",
+      "prompt": "Giải thích tiến độ xử lý cho người dùng",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [],
+        "must_not_show": [
+          "Skill scan",
+          "Skill activated",
+          "Classification",
+          "Lane",
+          "Friction: none",
+          "Ledger:"
+        ]
+      }
+    },
+    {
+      "id": "keyword-only-no-route",
+      "prompt": "Chạy browser test kiểu e2e cho module",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "browser-qa",
+          "frontend-architect"
+        ]
+      }
+    },
+    {
+      "id": "deny-unnecessary-ui-taste",
+      "prompt": "Sửa lỗi backend nhỏ trong service payment",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "ui-taste",
+          "frontend-architect"
+        ]
+      }
+    },
+    {
+      "id": "anthropic-frontend-design-route-positive",
+      "prompt": "Apply the intentional visual direction from the explicit frontend design contract brief",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "anthropic-frontend-design",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "anthropic-frontend-design-route-negative",
+      "prompt": "Order office stationery for the quarterly inventory",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "anthropic-frontend-design"
+        ]
+      }
+    },
+    {
+      "id": "backend-composition-route-positive",
+      "prompt": "Implement the payment provider integration with a transaction boundary and auth provider",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "backend-composition",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "backend-composition-route-negative",
+      "prompt": "Water the houseplants on the kitchen windowsill",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "backend-composition"
+        ]
+      }
+    },
+    {
+      "id": "best-of-n-route-positive",
+      "prompt": "Run a best of n with parallel implementations of the module",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "best-of-n",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "best-of-n-route-negative",
+      "prompt": "Fold the laundry and put it away",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "best-of-n"
+        ]
+      }
+    },
+    {
+      "id": "browser-qa-route-positive",
+      "prompt": "Run a playwright click-through smoke and screenshot the console/network panel",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "browser-qa",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "browser-qa-route-negative",
+      "prompt": "Swap the desk lamp bulb for a warmer tone",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "browser-qa"
+        ]
+      }
+    },
+    {
+      "id": "callstack-react-native-best-practices-route-positive",
+      "prompt": "Follow the react native best practices for the react native migration with native module guidance",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "callstack-react-native-best-practices",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "callstack-react-native-best-practices-route-negative",
+      "prompt": "Refill the printer paper trays",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "callstack-react-native-best-practices"
+        ]
+      }
+    },
+    {
+      "id": "claim-test-strategy-route-positive",
+      "prompt": "Define the test strategy for this bounded change",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "claim-test-strategy",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "claim-test-strategy-route-negative",
+      "prompt": "Schedule the quarterly dental check-up",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "claim-test-strategy"
+        ]
+      }
+    },
+    {
+      "id": "context-evolution-protocol-route-positive",
+      "prompt": "bổ sung context cho agent-rules và sync rule",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "context-evolution-protocol",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "context-evolution-protocol-route-negative",
+      "prompt": "Prepare the birthday cake recipe for Saturday",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "context-evolution-protocol"
+        ]
+      }
+    },
+    {
+      "id": "database-stack-route-positive",
+      "prompt": "Write a postgres query with drizzle database tooling",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "database-stack",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "database-stack-route-negative",
+      "prompt": "Sharpen the kitchen knives before dinner",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "database-stack"
+        ]
+      }
+    },
+    {
+      "id": "docs-style-route-positive",
+      "prompt": "Update the README with the tech stack documentation",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "docs-style",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "docs-style-route-negative",
+      "prompt": "Charge the electric scooter in the hallway",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "docs-style"
+        ]
+      }
+    },
+    {
+      "id": "expo-skills-route-positive",
+      "prompt": "Configure the expo sdk with the expo config plugin",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "expo-skills",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "expo-skills-route-negative",
+      "prompt": "Vacuum the living room carpet",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "expo-skills"
+        ]
+      }
+    },
+    {
+      "id": "external-skill-governance-route-positive",
+      "prompt": "Follow the source governance process for the skill addition request",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "external-skill-governance",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "external-skill-governance-route-negative",
+      "prompt": "Label the moving boxes by room name",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "external-skill-governance"
+        ]
+      }
+    },
+    {
+      "id": "finish-to-completion-route-positive",
+      "prompt": "hãy làm đi và hoàn thành module đã duyệt",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "finish-to-completion",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "finish-to-completion-route-negative",
+      "prompt": "Measure the window for new curtains",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "finish-to-completion"
+        ]
+      }
+    },
+    {
+      "id": "frontend-architect-route-positive",
+      "prompt": "Improve the landing page branding with marketing animation",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "frontend-architect",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "frontend-architect-route-negative",
+      "prompt": "Bake a loaf of sourdough bread",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "frontend-architect"
+        ]
+      }
+    },
+    {
+      "id": "frontend-design-contract-route-positive",
+      "prompt": "Apply the brand identity direction from the design contract",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "frontend-design-contract",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "frontend-design-contract-route-negative",
+      "prompt": "Get the car tires rotated this weekend",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "frontend-design-contract"
+        ]
+      }
+    },
+    {
+      "id": "hashicorp-agent-skills-route-positive",
+      "prompt": "Review the vault policy and the kubernetes module for the new cluster",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "hashicorp-agent-skills",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "hashicorp-agent-skills-route-negative",
+      "prompt": "Plant the tulip bulbs before the frost",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "hashicorp-agent-skills"
+        ]
+      }
+    },
+    {
+      "id": "impeccable-route-positive",
+      "prompt": "Run the impeccable review on the proposed change",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "impeccable",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "impeccable-route-negative",
+      "prompt": "Print the boarding passes for the trip",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "impeccable"
+        ]
+      }
+    },
+    {
+      "id": "infra-devops-composition-route-positive",
+      "prompt": "Configure docker compose and the ci provider for our infra",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "infra-devops-composition",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "infra-devops-composition-route-negative",
+      "prompt": "Organize the pantry by expiry date",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "infra-devops-composition"
+        ]
+      }
+    },
+    {
+      "id": "master-image-generation-route-positive",
+      "prompt": "Create a mockup of the brand visuals with image-to-code",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "master-image-generation",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "master-image-generation-route-negative",
+      "prompt": "Clean the refrigerator shelves",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "master-image-generation"
+        ]
+      }
+    },
+    {
+      "id": "mobile-composition-route-positive",
+      "prompt": "Test the ios/android build for the react native project on the mobile platform matrix",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "mobile-composition",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "mobile-composition-route-negative",
+      "prompt": "Wash the car on the driveway",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "mobile-composition"
+        ]
+      }
+    },
+    {
+      "id": "parity-verification-route-positive",
+      "prompt": "Verify the visual parity and behavioral parity of the page with a diff template",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "parity-verification",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "parity-verification-route-negative",
+      "prompt": "Check the mailbox every afternoon",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "parity-verification"
+        ]
+      }
+    },
+    {
+      "id": "plan-and-handoff-route-positive",
+      "prompt": "Lập plan dài nhiều phase và handoff",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "plan-and-handoff",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "plan-and-handoff-route-negative",
+      "prompt": "Water the garden vegetables",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "plan-and-handoff"
+        ]
+      }
+    },
+    {
+      "id": "prisma-skills-route-positive",
+      "prompt": "Configure the prisma client for the database",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "prisma-skills",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "prisma-skills-route-negative",
+      "prompt": "Empty the dishwasher after breakfast",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "prisma-skills"
+        ]
+      }
+    },
+    {
+      "id": "qa-skills-route-positive",
+      "prompt": "Build the QA checklist with edge-case manual cases and bug triage",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "qa-skills",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "qa-skills-route-negative",
+      "prompt": "Repair the bicycle chain",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "qa-skills"
+        ]
+      }
+    },
+    {
+      "id": "quality-route-positive",
+      "prompt": "Run the deep code quality audit with the smell scan and code judo on the spaghetti",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "quality",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "quality-route-negative",
+      "prompt": "Take out the recycling bins",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "quality"
+        ]
+      }
+    },
+    {
+      "id": "researcher-route-positive",
+      "prompt": "Research the latest changelog for the external behavior",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "researcher",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "researcher-route-negative",
+      "prompt": "Set the table for dinner guests",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "researcher"
+        ]
+      }
+    },
+    {
+      "id": "schema-migration-route-positive",
+      "prompt": "Check the migration files for a rollback migration with upgrade/downgrade",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "schema-migration",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "schema-migration-route-negative",
+      "prompt": "Polish the silver cutlery",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "schema-migration"
+        ]
+      }
+    },
+    {
+      "id": "security-review-route-positive",
+      "prompt": "Review the auth boundary analysis with secret scanning and the threat model",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "security-review",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "security-review-route-negative",
+      "prompt": "Repot the orchid plant",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "security-review"
+        ]
+      }
+    },
+    {
+      "id": "supabase-agent-skills-route-positive",
+      "prompt": "Write the supabase rls policy for the supabase stack",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "supabase-agent-skills",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "supabase-agent-skills-route-negative",
+      "prompt": "Iron the shirts for Monday",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "supabase-agent-skills"
+        ]
+      }
+    },
+    {
+      "id": "trail-of-bits-security-route-positive",
+      "prompt": "Run the trail of bits security specialist review",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "trail-of-bits-security",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "trail-of-bits-security-route-negative",
+      "prompt": "Dust the bookshelves in the study",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "trail-of-bits-security"
+        ]
+      }
+    },
+    {
+      "id": "ui-taste-route-positive",
+      "prompt": "Review the operator dashboard with an Apple-inspired design system",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "ui-taste",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "ui-taste-route-negative",
+      "prompt": "Replace the smoke detector battery",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "ui-taste"
+        ]
+      }
+    },
+    {
+      "id": "vercel-agent-skills-route-positive",
+      "prompt": "Apply the vercel agent skills guidance pack",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "vercel-agent-skills",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "vercel-agent-skills-route-negative",
+      "prompt": "Feed the goldfish twice a day",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "vercel-agent-skills"
+        ]
+      }
+    },
+    {
+      "id": "vercel-react-best-practices-route-positive",
+      "prompt": "Apply the react best practices with react performance guidance",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "vercel-react-best-practices",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "vercel-react-best-practices-route-negative",
+      "prompt": "Change the filter in the water jug",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "vercel-react-best-practices"
+        ]
+      }
+    },
+    {
+      "id": "vercel-web-design-guidelines-route-positive",
+      "prompt": "Follow the web design guidelines with accessibility audit guidance",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "vercel-web-design-guidelines",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "vercel-web-design-guidelines-route-negative",
+      "prompt": "Sort the socks by color",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "vercel-web-design-guidelines"
+        ]
+      }
+    },
+    {
+      "id": "verification-router-route-positive",
+      "prompt": "Select the smallest evidence set with proper risk and impact escalation",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": "verification-router",
+        "required_skills": [],
+        "forbidden_skills": []
+      }
+    },
+    {
+      "id": "verification-router-route-negative",
+      "prompt": "Sweep the front porch steps",
+      "workspace": {
+        "kind": "generic",
+        "has_5fedu_context": false
+      },
+      "expect": {
+        "primary": null,
+        "required_skills": [],
+        "forbidden_skills": [
+          "verification-router"
+        ]
+      }
+    }
   ]
- },
- "cases": [
-  {
-   "id": "qa-simple",
-   "prompt": "Giải thích cách xử lý đơn giản",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false
-   },
-   "expect": {
-    "primary": null,
-    "required_skills": [],
-    "forbidden_skills": [
-     "plan-and-handoff",
-     "finish-to-completion",
-     "browser-qa",
-     "context-evolution-protocol"
-    ]
-   }
-  },
-  {
-   "id": "generic-module",
-   "prompt": "Refactor module thanh toán Node.js",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false
-   },
-   "expect": {
-    "primary": "finish-to-completion",
-    "required_skills": [],
-    "forbidden_skills": [
-     "5fedu-project",
-     "5fedu-module-parity"
-    ]
-   }
-  },
-  {
-   "id": "5fedu-ui",
-   "prompt": "Sửa module 5fedu lệch pattern drawer",
-   "workspace": {
-    "kind": "5fedu-app",
-    "has_5fedu_context": true,
-    "lean_pack": "valid"
-   },
-   "expect": {
-    "primary": "5fedu-module-parity",
-    "required_skills": [
-     "5fedu-project"
-    ],
-    "forbidden_skills": [
-     "frontend-architect"
-    ],
-    "intent_signals": [
-     "5fedu_ui"
-    ],
-    "exact_context_nodes": [
-     "profile:5fedu:module-mapping",
-     "profile:5fedu:readme",
-     "profile:5fedu:ui-contracts",
-     "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"
-    ]
-   }
-  },
-  {
-   "id": "5fedu-ui-domain-precedes-browser",
-   "prompt": "Sửa module 5fedu lệch pattern drawer và click-through browser",
-   "workspace": {
-    "kind": "5fedu-app",
-    "has_5fedu_context": true,
-    "lean_pack": "valid"
-   },
-   "expect": {
-    "primary": "5fedu-module-parity",
-    "required_skills": [
-     "5fedu-project"
-    ],
-    "forbidden_skills": [
-     "frontend-architect"
-    ],
-    "intent_signals": [
-     "5fedu_ui"
-    ]
-   }
-  },
-  {
-   "id": "5fedu-ui-explicit-profile-marker",
-   "prompt": "Sửa module 5fedu lệch pattern drawer",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false,
-    "profile_marker": true,
-    "lean_pack": "missing"
-   },
-   "expect": {
-    "primary": "5fedu-module-parity",
-    "required_skills": [
-     "5fedu-project"
-    ],
-    "forbidden_skills": [
-     "frontend-architect"
-    ],
-    "intent_signals": [
-     "5fedu_ui"
-    ],
-    "workspace_facts": {
-     "has_enabled_5fedu_profile": true,
-     "has_valid_5fedu_lean_pack": false,
-     "is_5fedu_profile_active": true
-    },
-    "exact_context_nodes": [
-     "profile:5fedu:module-mapping",
-     "profile:5fedu:readme",
-     "profile:5fedu:ui-contracts",
-     "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"
-    ]
-   }
-  },
-  {
-   "id": "5fedu-ui-valid-installed-lean-pack",
-   "prompt": "Sửa module 5fedu lệch pattern drawer",
-   "workspace": {
-    "kind": "5fedu-app",
-    "has_5fedu_context": true,
-    "lean_pack": "valid"
-   },
-   "expect": {
-    "primary": "5fedu-module-parity",
-    "required_skills": [
-     "5fedu-project"
-    ],
-    "forbidden_skills": [
-     "frontend-architect"
-    ],
-    "intent_signals": [
-     "5fedu_ui"
-    ],
-    "workspace_facts": {
-     "has_enabled_5fedu_profile": false,
-     "has_valid_5fedu_lean_pack": true,
-     "is_5fedu_profile_active": true
-    },
-    "exact_context_nodes": [
-     "profile:5fedu:module-mapping",
-     "profile:5fedu:readme",
-     "profile:5fedu:ui-contracts",
-     "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"
-    ]
-   }
-  },
-  {
-   "id": "5fedu-ui-empty-context-is-inactive",
-   "prompt": "Sửa module 5fedu lệch pattern drawer",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false,
-    "lean_pack": "empty"
-   },
-   "expect": {
-    "primary": null,
-    "required_skills": [],
-    "forbidden_skills": [
-     "5fedu-project",
-     "5fedu-module-parity"
-    ],
-    "workspace_facts": {
-     "has_enabled_5fedu_profile": false,
-     "has_valid_5fedu_lean_pack": false,
-     "is_5fedu_profile_active": false
-    }
-   }
-  },
-  {
-   "id": "5fedu-ui-junk-context-is-inactive",
-   "prompt": "Sửa module 5fedu lệch pattern drawer",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false,
-    "lean_pack": "junk-readme-or-legacy-map"
-   },
-   "expect": {
-    "primary": null,
-    "required_skills": [],
-    "forbidden_skills": [
-     "5fedu-project",
-     "5fedu-module-parity"
-    ],
-    "workspace_facts": {
-     "has_enabled_5fedu_profile": false,
-     "has_valid_5fedu_lean_pack": false,
-     "is_5fedu_profile_active": false
-    }
-   }
-  },
-  {
-   "id": "5fedu-ui-partial-context-is-inactive",
-   "prompt": "Sửa module 5fedu lệch pattern drawer",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false,
-    "lean_pack": "partial"
-   },
-   "expect": {
-    "primary": null,
-    "required_skills": [],
-    "forbidden_skills": [
-     "5fedu-project",
-     "5fedu-module-parity"
-    ],
-    "workspace_facts": {
-     "has_enabled_5fedu_profile": false,
-     "has_valid_5fedu_lean_pack": false,
-     "is_5fedu_profile_active": false
-    }
-   }
-  },
-  {
-   "id": "5fedu-ui-hash-tampered-pack-is-inactive",
-   "prompt": "Sửa module 5fedu lệch pattern drawer",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false,
-    "lean_pack": "hash-tampered"
-   },
-   "expect": {
-    "primary": null,
-    "required_skills": [],
-    "forbidden_skills": [
-     "5fedu-project",
-     "5fedu-module-parity"
-    ],
-    "workspace_facts": {
-     "has_enabled_5fedu_profile": false,
-     "has_valid_5fedu_lean_pack": false,
-     "is_5fedu_profile_active": false
-    }
-   }
-  },
-  {
-   "id": "5fedu-ui-ancestor-symlink-is-inactive",
-   "prompt": "Sửa module 5fedu lệch pattern drawer",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false,
-    "lean_pack": "ancestor-symlink"
-   },
-   "expect": {
-    "primary": null,
-    "required_skills": [],
-    "forbidden_skills": [
-     "5fedu-project",
-     "5fedu-module-parity"
-    ],
-    "workspace_facts": {
-     "has_enabled_5fedu_profile": false,
-     "has_valid_5fedu_lean_pack": false,
-     "is_5fedu_profile_active": false
-    }
-   }
-  },
-  {
-   "id": "5fedu-ordinary-ui-has-no-activation-node",
-   "prompt": "Sửa module 5fedu lệch pattern drawer",
-   "workspace": {
-    "kind": "5fedu-app",
-    "has_5fedu_context": true,
-    "lean_pack": "valid"
-   },
-   "expect": {
-    "primary": "5fedu-module-parity",
-    "required_skills": [
-     "5fedu-project"
-    ],
-    "forbidden_skills": [
-     "frontend-architect"
-    ],
-    "exact_context_nodes": [
-     "profile:5fedu:module-mapping",
-     "profile:5fedu:readme",
-     "profile:5fedu:ui-contracts",
-     "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"
-    ]
-   }
-  },
-  {
-   "id": "5fedu-setup-loads-activation-only-when-active",
-   "prompt": "Thiết lập 5fedu cho dự án",
-   "workspace": {
-    "kind": "5fedu-app",
-    "has_5fedu_context": true,
-    "lean_pack": "valid"
-   },
-   "expect": {
-    "primary": "5fedu-module-parity",
-    "required_skills": [
-     "5fedu-project"
-    ],
-    "forbidden_skills": [
-     "frontend-architect"
-    ],
-    "intent_signals": [
-     "5fedu_setup"
-    ],
-    "exact_context_nodes": [
-     "profile:5fedu:behavior:activation",
-     "profile:5fedu:module-mapping",
-     "profile:5fedu:readme",
-     "profile:5fedu:ui-contracts",
-     "reference:5fedu-module-parity:profiles:5fedu:skills:5fedu:module:parity:references:index:md"
-    ]
-   }
-  },
-  {
-   "id": "ordinary-workspace-ui-isolated",
-   "prompt": "Sửa drawer theo template",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false,
-    "lean_pack": "missing"
-   },
-   "expect": {
-    "primary": null,
-    "required_skills": [],
-    "forbidden_skills": [
-     "5fedu-project",
-     "5fedu-module-parity",
-     "frontend-architect"
-    ],
-    "workspace_facts": {
-     "is_5fedu_profile_active": false
-    }
-   }
-  },
-  {
-   "id": "5fedu-ui-missing-context",
-   "prompt": "Sửa module 5fedu lệch pattern drawer",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false
-   },
-   "expect": {
-    "primary": null,
-    "required_skills": [],
-    "forbidden_skills": [
-     "5fedu-project",
-     "5fedu-module-parity"
-    ]
-   }
-  },
-  {
-   "id": "5fedu-ui-concrete-surfaces",
-   "prompt": "Sửa toolbar, listview và drawer chi tiết module 5fedu theo template",
-   "workspace": {
-    "kind": "5fedu-app",
-    "has_5fedu_context": true
-   },
-   "expect": {
-    "primary": "5fedu-module-parity",
-    "required_skills": [
-     "5fedu-project"
-    ],
-    "forbidden_skills": [
-     "frontend-architect"
-    ],
-    "intent_signals": [
-     "5fedu_ui"
-    ]
-   }
-  },
-  {
-   "id": "5fedu-ui-missing-template",
-   "prompt": "Sửa drawer module 5fedu khi workspace chưa có template tham chiếu",
-   "workspace": {
-    "kind": "5fedu-app",
-    "has_5fedu_context": true
-   },
-   "expect": {
-    "primary": "5fedu-module-parity",
-    "required_skills": [
-     "5fedu-project"
-    ],
-    "forbidden_skills": [
-     "frontend-architect"
-    ],
-    "intent_signals": [
-     "5fedu_ui"
-    ]
-   }
-  },
-  {
-   "id": "5fedu-ui-scoped-custom-override",
-   "prompt": "Sửa module 5fedu drawer theo custom behavior đã được owner phê duyệt trong spec",
-   "workspace": {
-    "kind": "5fedu-app",
-    "has_5fedu_context": true
-   },
-   "expect": {
-    "primary": "5fedu-module-parity",
-    "required_skills": [
-     "5fedu-project"
-    ],
-    "forbidden_skills": [
-     "frontend-architect"
-    ],
-    "intent_signals": [
-     "5fedu_ui"
-    ]
-   }
-  },
-  {
-   "id": "5fedu-ui-breadcrumb-unicode",
-   "prompt": "Sửa module 5fedu breadcrumb nhãn tiếng Việt, route registry và không dùng slug fallback",
-   "workspace": {
-    "kind": "5fedu-app",
-    "has_5fedu_context": true
-   },
-   "expect": {
-    "primary": "5fedu-module-parity",
-    "required_skills": [
-     "5fedu-project"
-    ],
-    "forbidden_skills": [
-     "frontend-architect"
-    ],
-    "intent_signals": [
-     "5fedu_ui"
-    ]
-   }
-  },
-  {
-   "id": "5fedu-ui-reduced-motion",
-   "prompt": "Sửa module 5fedu drawer để motion tôn trọng reduced motion",
-   "workspace": {
-    "kind": "5fedu-app",
-    "has_5fedu_context": true
-   },
-   "expect": {
-    "primary": "5fedu-module-parity",
-    "required_skills": [
-     "5fedu-project"
-    ],
-    "forbidden_skills": [
-     "frontend-architect"
-    ],
-    "intent_signals": [
-     "5fedu_ui"
-    ]
-   }
-  },
-  {
-   "id": "5fedu-ui-reduced-motion-per-surface",
-   "prompt": "Audit module 5fedu: mọi surface phải khai báo reduced motion trong motion_must",
-   "workspace": {
-    "kind": "5fedu-app",
-    "has_5fedu_context": true
-   },
-   "expect": {
-    "primary": "5fedu-module-parity",
-    "required_skills": [
-     "5fedu-project"
-    ],
-    "forbidden_skills": [
-     "frontend-architect"
-    ],
-    "intent_signals": [
-     "5fedu_ui"
-    ]
-   }
-  },
-  {
-   "id": "5fedu-ui-explicit-taste-modifier",
-   "prompt": "Sửa drawer module 5fedu và thực hiện taste review theo phong cách minimalist",
-   "workspace": {
-    "kind": "5fedu-app",
-    "has_5fedu_context": true
-   },
-   "expect": {
-    "primary": "5fedu-module-parity",
-    "required_skills": [
-     "5fedu-project"
-    ],
-    "supporting_skills": [
-     "ui-taste"
-    ],
-    "forbidden_skills": [
-     "frontend-architect"
-    ],
-    "intent_signals": [
-     "5fedu_ui"
-    ]
-   }
-  },
-  {
-   "id": "frontend-explicit-taste-direction",
-   "prompt": "Thiết kế landing theo phong cách minimalist",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false
-   },
-   "expect": {
-    "primary": "frontend-architect",
-    "required_skills": [],
-    "supporting_skills": [
-     "ui-taste"
-    ],
-    "forbidden_skills": [
-     "5fedu-module-parity"
-    ]
-   }
-  },
-  {
-   "id": "research",
-   "prompt": "Kiểm tra changelog API mới nhất",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false
-   },
-   "expect": {
-    "primary": "researcher",
-    "required_skills": [],
-    "forbidden_skills": []
-   }
-  },
-  {
-   "id": "unit-test",
-   "prompt": "Chạy unit test cho service",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false
-   },
-   "expect": {
-    "primary": null,
-    "required_skills": [],
-    "forbidden_skills": [
-     "browser-qa"
-    ]
-   }
-  },
-  {
-   "id": "verification-router",
-   "prompt": "Lập kế hoạch kiểm chứng claim theo impact, risk và evidence; chỉ escalate khi proof chưa đủ",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false
-   },
-   "expect": {
-    "primary": "verification-router",
-    "required_skills": [],
-    "supporting_skills": [],
-    "forbidden_skills": []
-   }
-  },
-  {
-   "id": "manual-browser",
-   "prompt": "Manual browser QA click-through",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false
-   },
-   "expect": {
-    "primary": "browser-qa",
-    "required_skills": [],
-    "forbidden_skills": []
-   }
-  },
-  {
-   "id": "harness",
-   "prompt": "Tinh gọn rules và skills của agent-rules",
-   "workspace": {
-    "kind": "harness",
-    "has_5fedu_context": false
-   },
-   "expect": {
-    "primary": "context-evolution-protocol",
-    "required_skills": [],
-    "forbidden_skills": [
-     "docs-style",
-     "researcher"
-    ]
-   }
-  },
-  {
-   "id": "long-plan",
-   "prompt": "Lập kế hoạch nhiều phase cho harness",
-   "workspace": {
-    "kind": "harness",
-    "has_5fedu_context": false
-   },
-   "expect": {
-    "primary": "plan-and-handoff",
-    "required_skills": [],
-    "forbidden_skills": []
-   }
-  },
-  {
-   "id": "project-setup",
-   "prompt": "Cài context cho project 5fedu",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false
-   },
-   "expect": {
-    "primary": null,
-    "required_skills": [],
-    "forbidden_skills": [
-     "5fedu-project",
-     "5fedu-module-parity",
-     "browser-qa"
-    ]
-   }
-  },
-  {
-   "id": "5fedu-database",
-   "prompt": "Kiểm tra migration RLS và schema int8",
-   "workspace": {
-    "kind": "5fedu-app",
-    "has_5fedu_context": true
-   },
-   "expect": {
-    "primary": null,
-    "required_skills": [],
-    "context_nodes": [
-     "profile:5fedu:rule:data-auth"
-    ],
-    "forbidden_skills": [
-     "5fedu-module-parity",
-     "frontend-architect"
-    ]
-   }
-  },
-  {
-   "id": "5fedu-permission",
-   "prompt": "Kiểm tra quyền cap_bac cho module",
-   "workspace": {
-    "kind": "5fedu-app",
-    "has_5fedu_context": true
-   },
-   "expect": {
-    "primary": null,
-    "required_skills": [],
-    "context_nodes": [
-     "profile:5fedu:rule:permissions"
-    ],
-    "forbidden_skills": [
-     "browser-qa"
-    ]
-   }
-  },
-  {
-   "id": "docs-reference",
-   "prompt": "Viết lại README và tài liệu dự án",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false
-   },
-   "expect": {
-    "primary": "docs-style",
-    "required_skills": [],
-    "forbidden_skills": [
-     "5fedu-module-parity"
-    ]
-   }
-  },
-  {
-   "id": "generic-project-domain",
-   "prompt": "Sửa quy tắc nghiệp vụ của project không dùng 5fedu",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false
-   },
-   "expect": {
-    "primary": null,
-    "required_skills": [],
-    "forbidden_skills": [
-     "5fedu-project",
-     "5fedu-module-parity"
-    ]
-   }
-  },
-  {
-   "id": "export-reference",
-   "prompt": "Kiểm tra xuất Excel/PDF tiếng Việt",
-   "workspace": {
-    "kind": "5fedu-app",
-    "has_5fedu_context": true
-   },
-   "expect": {
-    "primary": null,
-    "required_skills": [],
-    "context_nodes": [
-     "profile:5fedu:rule:business"
-    ],
-    "forbidden_skills": [
-     "browser-qa",
-     "5fedu-module-parity"
-    ]
-   }
-  },
-  {
-   "id": "metadata-output",
-   "prompt": "Giải thích tiến độ xử lý cho người dùng",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false
-   },
-   "expect": {
-    "primary": null,
-    "required_skills": [],
-    "forbidden_skills": [],
-    "must_not_show": [
-     "Skill scan",
-     "Skill activated",
-     "Classification",
-     "Lane",
-     "Friction: none",
-     "Ledger:"
-    ]
-   }
-  },
-  {
-   "id": "keyword-only-no-route",
-   "prompt": "Chạy browser test kiểu e2e cho module",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false
-   },
-   "expect": {
-    "primary": null,
-    "required_skills": [],
-    "forbidden_skills": [
-     "browser-qa",
-     "frontend-architect"
-    ]
-   }
-  },
-  {
-   "id": "deny-unnecessary-ui-taste",
-   "prompt": "Sửa lỗi backend nhỏ trong service payment",
-   "workspace": {
-    "kind": "generic",
-    "has_5fedu_context": false
-   },
-   "expect": {
-    "primary": null,
-    "required_skills": [],
-    "forbidden_skills": [
-     "ui-taste",
-     "frontend-architect"
-    ]
-   }
-  }
- ]
 }

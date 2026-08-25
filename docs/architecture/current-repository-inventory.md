@@ -53,19 +53,14 @@ agent-rules/
 |------|-----------|------|
 | `manifest.yaml` | — | Config (load order + budgets) |
 | `README.md` | — | Documentation |
-| `00-bootstrap.md` | 1 | Core rule |
-| `05-critical-thinking.md` | 2 | Core rule |
-| `10-execution.md` | 3 | Core rule |
-| `15-output-economy.md` | 4 | Core rule |
-| `16-context-style.md` | Lazy | Core rule (boundary) |
-| `20-quality-and-safety.md` | 5 | Core rule |
-| `25-task-lifecycle.md` | 6 | Core rule |
-| `30-context-routing.md` | 7 | Core rule |
-| `40-harness-governance.md` | Lazy | Core rule (boundary) |
-| `41-harness-maintainer.md` | Lazy | Core rule (boundary) |
-| `50-context-budget.md` | Lazy | Core rule (budget policy) |
+| `00-intent-scope-safety.md` | 1 | Core rule |
+| `10-execution-planning-delegation.md` | 2 | Core rule |
+| `20-proof-outcome.md` | 3 | Core rule |
+| `30-context-skill-mcp.md` | 4 | Core rule |
+| `40-maintainer.md` | 5 | Core rule |
 
-**13 files total, 7 always-load + 4 lazy + 2 metadata.**
+**7 files total: 5 manifest-bound always-load rules + manifest + README.**
+The former 13-rule layout is archived at `.agent/archive/rules-legacy/`.
 
 ---
 

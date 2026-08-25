@@ -31,7 +31,7 @@ Trước khi đổi shared behavior, chạy gate ngắn:
 1. Đọc entrypoint/index + file/interface liên quan (không preload cả repo).
 2. Đối chiếu **Assumptions locked** và **Known-unknowns** từ plan với thực tế:
    - routes, services, schema/migration, template reference, permission hooks
-3. Trace call sites / downstream consumers (`rules/10-execution.md` #3).
+3. Trace call sites / downstream consumers (`rules/10-execution-planning-delegation.md`).
 4. Nếu lệch: **báo lệch + cập nhật plan/handoff** trước khi code — không implement theo plan sai.
 
 Output tối thiểu:

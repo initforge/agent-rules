@@ -1,6 +1,13 @@
 ---
 name: security-review
 description: "Security review procedure from threat/change-surface claims: deterministic scans plus independent review; worker prose never creates a security PASS."
+metadata:
+  signals: "security claim, threat model, security review, vulnerability, auth boundary analysis, secret scanning"
+  excludes: "prose-only, checklist-only"
+  priority: "55"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # security-review
 

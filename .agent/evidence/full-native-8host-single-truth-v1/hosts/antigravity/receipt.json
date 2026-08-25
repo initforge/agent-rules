@@ -1,0 +1,125 @@
+{
+  "schema": "agent-rules/host-certification-receipt",
+  "version": 1,
+  "host": "antigravity",
+  "generated_at": "2026-08-25T06:19:07.514Z",
+  "git_head": "c1deca1a5ee186a9d0361b57fd0ff7e943fa676e",
+  "candidate_fingerprint": "dd89ef8988dbc2f4ecf4e492a776d7ab7eca8105ed8e4b81d324d13a4612b205",
+  "status": "Ready",
+  "claims": {
+    "HOST_PRESENT": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "binary-or-desktop-signal",
+          "detail": "desktop-process:C:\\Users\\ADMIN\\AppData\\Local\\Programs\\Antigravity\\Antigravity.exe;config-dir:C:\\Users\\ADMIN/.gemini/config"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "NATIVE_INSTALLED": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "managed-block-or-file",
+          "host": "antigravity",
+          "detail": "managed native surface bound for antigravity"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "NATIVE_DISCOVERED": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "native-readback",
+          "host": "antigravity",
+          "method": "IDE config/UI/log readback + CLI `agy` native readback; prove IDE and CLI separately, not via single config hash",
+          "detail": "native readback verified via IDE config/UI/log readback + CLI `agy` native readback; prove IDE and CLI separately, not via single config hash"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "NATIVE_LIFECYCLE": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "hook-plugin-lifecycle",
+          "host": "antigravity",
+          "detail": "native lifecycle strategy verified: restart_or_reload (IDE reload window; CLI agy restart); IDE config/UI/log readback"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "NATIVE_POLICY": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "permission-deny-canary",
+          "host": "antigravity",
+          "detail": "safe-deny and scope invariants verified"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "NATIVE_SKILLS": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "skill-catalog-dynamic",
+          "host": "antigravity",
+          "count": 34,
+          "detail": "enumerated 34 dynamic skills; zero duplicate, zero malformed"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "NATIVE_MCP": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "native-mcp-surface",
+          "host": "antigravity",
+          "detail": "native config intact"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "MODEL_BEHAVIOR": {
+      "status": "NEEDS_USER",
+      "evidence": [
+        {
+          "kind": "model-turn-not-tested",
+          "reason": "host signed out or offline; harmless model turn requires active authenticated session"
+        }
+      ],
+      "omitted_reason": "signed-out: model turn requires auth"
+    },
+    "ROLLBACK_VERIFIED": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "uninstall-rollback-preserves-user",
+          "host": "antigravity",
+          "detail": "atomic swap backup manifest and byte restoration verified"
+        }
+      ],
+      "omitted_reason": null
+    }
+  },
+  "native_readback": {
+    "method": "IDE config/UI/log readback + CLI `agy` native readback; prove IDE and CLI separately, not via single config hash",
+    "present": true,
+    "verified": true
+  },
+  "mcp_handshake": {
+    "status": "NATIVE_SURFACE_INTACT",
+    "host": "antigravity",
+    "detail": "native config intact"
+  },
+  "skill_catalog": {
+    "count": 34,
+    "skipped": 0,
+    "duplicates": 0
+  }
+}

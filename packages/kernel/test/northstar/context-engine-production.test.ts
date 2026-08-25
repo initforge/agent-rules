@@ -51,6 +51,17 @@ beforeEach(() => {
   repoRoot = path.join(tempDir, 'repo');
   fs.mkdirSync(repoRoot, { recursive: true });
   initGitRepo(repoRoot);
+  // Single-resolver path (REQ-109): routeSkills requires the generated graph
+  // and hashes selected SKILL.md sources. Scaffold the canonical graph +
+  // skills/rules exactly like the packaged runtime.
+  const realRoot = path.resolve(import.meta.dirname ?? '.', '../../../../');
+  const graphSrc = path.join(realRoot, 'generated', 'context-graph.json');
+  fs.mkdirSync(path.join(repoRoot, 'generated'), { recursive: true });
+  if (fs.existsSync(graphSrc)) fs.copyFileSync(graphSrc, path.join(repoRoot, 'generated', 'context-graph.json'));
+  for (const dir of ['skills', 'rules']) {
+    const srcDir = path.join(realRoot, dir);
+    if (fs.existsSync(srcDir)) fs.cpSync(srcDir, path.join(repoRoot, dir), { recursive: true });
+  }
 });
 
 afterEach(() => {

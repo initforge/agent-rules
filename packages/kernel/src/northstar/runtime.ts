@@ -51,6 +51,8 @@ import {
   type VerifierEvidence,
 } from './context-engine.js';
 import { categorizeRepair, type RepairTaxonomyResult } from './pair-repair.js';
+import { reduceOutcome, outcomeToAcceptanceShape, type ReducedOutcome } from './outcome-reducer.js';
+import { RunStore } from './run-store.js';
 
 export interface VerifierDefinition {
   id: string;
@@ -702,7 +704,21 @@ async function finaliseNorthStarRun(input: {
     ...(semanticReview ? { semanticReview } : {}),
   });
   const convergence = assessConvergence({ spec: input.spec, packets: input.packets, acceptance, audit });
-  let trustedOutcome: AcceptanceResult['outcome'] = acceptance.outcome === 'PASS' && (!audit.accepted || !convergence.converged) ? 'PARTIAL' : acceptance.outcome;
+  // Single outcome reducer (REQ-112): the OutcomeReducer is the only place
+  // that derives final run outcomes from evidence. The orchestrator never
+  // authors PASS independently.
+  let reducedOutcome: ReducedOutcome = reduceOutcome({
+    acceptance,
+    audit,
+    convergence,
+    semanticReview,
+    run_id: input.runId,
+    spec_id: input.spec.spec_id,
+    spec_revision: input.spec.revision,
+    candidate_epoch: 0,
+    platform: process.platform,
+  });
+  let trustedOutcome: AcceptanceResult['outcome'] = outcomeToAcceptanceShape(reducedOutcome.claim_outcome, acceptance);
 
   let state: RunState = {
     protocol_version: NORTH_STAR_PROTOCOL_VERSION,
@@ -766,7 +782,21 @@ async function finaliseNorthStarRun(input: {
   });
   writeJsonAtomic(path.join(input.runRoot, 'semantic-state.json'), semanticState);
   if (!semanticState.valid) {
-    trustedOutcome = 'BLOCKED';
+    // Route the fail-closed block through the single OutcomeReducer so no
+    // orchestrator-side assignment authors an outcome independently (REQ-112).
+    reducedOutcome = reduceOutcome({
+      acceptance,
+      audit,
+      convergence,
+      semanticReview,
+      hardBlockReasons: semanticState.violations.map((violation) => `${violation.code}: ${violation.detail}`),
+      run_id: input.runId,
+      spec_id: input.spec.spec_id,
+      spec_revision: input.spec.revision,
+      candidate_epoch: 0,
+      platform: process.platform,
+    });
+    trustedOutcome = outcomeToAcceptanceShape(reducedOutcome.claim_outcome, acceptance);
     state = {
       ...state,
       status: 'blocked',
@@ -823,8 +853,21 @@ async function finaliseNorthStarRun(input: {
       writeJsonAtomic(contextStateFile, ctxState);
     } catch (contextError) {
       const message = contextError instanceof Error ? contextError.message : String(contextError);
-      trustedOutcome = 'BLOCKED';
-      proofOfWork.outcome = 'BLOCKED';
+      // Route the fail-closed block through the single OutcomeReducer (REQ-112).
+      reducedOutcome = reduceOutcome({
+        acceptance,
+        audit,
+        convergence,
+        semanticReview,
+        hardBlockReasons: [`context settlement failed: ${message}`],
+        run_id: input.runId,
+        spec_id: input.spec.spec_id,
+        spec_revision: input.spec.revision,
+        candidate_epoch: 0,
+        platform: process.platform,
+      });
+      trustedOutcome = outcomeToAcceptanceShape(reducedOutcome.claim_outcome, acceptance);
+      proofOfWork.outcome = trustedOutcome;
       writeJsonAtomic(proofOfWorkFile, proofOfWork);
       const diagFile = path.join(input.runRoot, 'context-diagnostic.json');
       try {
@@ -852,7 +895,76 @@ async function finaliseNorthStarRun(input: {
     const finished = transitionExecution(current, 'SUCCEEDED', { task_truth: truthFromOutcome(trustedOutcome), reason: trustedOutcome === 'PASS' ? 'orchestration completed with trusted PASS' : `orchestration completed; task truth=${trustedOutcome}` });
     writeJsonAtomic(lifecycleFile, finished);
   }
+  persistCanonicalRunArtifacts({
+    runsRoot: path.join(input.repoRoot, '.agent', 'runs'),
+    runId: input.runId,
+    state,
+    outcome: reducedOutcome,
+    spec: input.spec,
+    request: input.request,
+    repoRoot: input.repoRoot,
+  });
   return { run_id: input.runId, work_id: input.request.work_id, execution_generation: input.packets[0]?.execution_generation ?? input.spec.execution_generation ?? 0, state, acceptance, audit, convergence, trusted_outcome: trustedOutcome, runner: runnerSummary, run_root: input.runRoot, evidence_file: evidenceFile, proof_of_work_file: proofOfWorkFile, result_file: resultFile };
+}
+
+/**
+ * Single-writer persistence (REQ-112): the canonical run.json / events.jsonl /
+ * result.json / artifacts/ are written ONLY through RunStore. All other run
+ * diagnostics are derived artifacts of the orchestrator; the canonical truth
+ * chain belongs to RunStore and the OutcomeReducer.
+ */
+function kernelGitHead(repoRoot: string): string {
+  const headFile = path.join(repoRoot, '.git', 'HEAD');
+  try {
+    const raw = fs.readFileSync(headFile, 'utf8').trim();
+    if (!raw.startsWith('ref:')) return raw;
+    const ref = raw.slice(4).trim();
+    const refFile = path.join(repoRoot, '.git', ref);
+    return fs.existsSync(refFile) ? fs.readFileSync(refFile, 'utf8').trim() : raw;
+  } catch {
+    return 'unknown-head';
+  }
+}
+
+function persistCanonicalRunArtifacts(input: {
+  runsRoot: string;
+  runId: string;
+  state: RunState;
+  outcome: ReducedOutcome;
+  spec: WorkSpec;
+  request: WorkRequest;
+  repoRoot: string;
+}): void {
+  const store = new RunStore(input.runsRoot);
+  store.putState(input.runId, {
+    run_id: input.runId,
+    work_id: input.request.work_id,
+    spec_id: input.spec.spec_id,
+    spec_revision: input.spec.revision,
+    task_state: input.state.status,
+    claim_outcome: input.outcome.claim_outcome,
+    derived_from: input.outcome.derived_from,
+    platform: input.outcome.platform,
+    candidate_epoch: input.outcome.candidate_epoch,
+    raw_intent: input.request.raw_intent,
+  });
+  store.appendEvent(input.runId, { event: 'OUTCOME_REDUCED', claim_outcome: input.outcome.claim_outcome, reasons: input.outcome.reasons });
+  // Single finalization: convergence passes re-finalise the SAME runId. The
+  // first pass writes result.json; later passes must never double-finalize
+  // (REQ-112 single writer, single finalization).
+  const resultFile = path.join(input.runsRoot, input.runId, 'result.json');
+  if (fs.existsSync(resultFile)) return;
+  store.finalize(input.runId, {
+    schema: 'agent-rules/outcome-receipt',
+    version: 1,
+    run_id: input.runId,
+    git_head: kernelGitHead(input.repoRoot),
+    outcome: input.outcome.claim_outcome,
+    claims: {},
+    proof_plan: { run_id: input.runId, selected: [], omitted: [], claims: input.spec.requirements.flatMap((r) => r.claims) },
+    evidence_ledger_hash: '0'.repeat(64),
+    created_at: new Date().toISOString(),
+  });
 }
 
 interface ConvergenceContinuationInput {

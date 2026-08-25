@@ -95,18 +95,16 @@ describe("Configuration", () => {
     expect(tsconfig.compilerOptions.module).toBe("NodeNext");
   });
 
-  it("source files exist for all commands", () => {
+  it("source files exist for the 8-command public surface", () => {
+    // The 8 registered commands (install, uninstall, doctor, status, run,
+    // integration, init, reference) are backed by these source modules;
+    // status/run/init/reference live in northstar-ux.ts.
     const commands = [
-      "build",
-      "validate",
       "install",
+      "uninstall",
       "doctor",
-      "sync",
-      "profile",
-      "platform",
-      "eval",
-      "dashboard",
-      "certify",
+      "integration",
+      "northstar-ux",
     ];
     for (const cmd of commands) {
       const file = path.join(root, "packages", "cli", "src", "commands", `${cmd}.ts`);
@@ -154,24 +152,14 @@ describe("Integration registry", () => {
 
 describe("Command handler signatures", () => {
   // Import handlers dynamically to verify they compile and export correctly
-  it("exports build handler", async () => {
-    const mod = await import("../src/commands/build.js");
-    expect(typeof mod.build).toBe("function");
-  });
-
-  it("exports validate handler", async () => {
-    const mod = await import("../src/commands/validate.js");
-    expect(typeof mod.validate).toBe("function");
-  });
-
-  it("exports verifyMirrors handler", async () => {
-    const mod = await import("../src/commands/verify-mirrors.js");
-    expect(typeof mod.verifyMirrors).toBe("function");
-  });
-
   it("exports install handler", async () => {
     const mod = await import("../src/commands/install.js");
     expect(typeof mod.installCmd).toBe("function");
+  });
+
+  it("exports uninstall handler", async () => {
+    const mod = await import("../src/commands/uninstall.js");
+    expect(typeof mod.uninstallCmd).toBe("function");
   });
 
   it("exports doctor handler", async () => {
@@ -179,108 +167,18 @@ describe("Command handler signatures", () => {
     expect(typeof mod.doctor).toBe("function");
   });
 
-  it("exports sync handler", async () => {
-    const mod = await import("../src/commands/sync.js");
-    expect(typeof mod.syncCmd).toBe("function");
+  it("exports integration handler", async () => {
+    const mod = await import("../src/commands/integration.js");
+    expect(typeof mod.integrationCmd).toBe("function");
   });
 
-  it("exports profile handler", async () => {
-    const mod = await import("../src/commands/profile.js");
-    expect(typeof mod.profileCmd).toBe("function");
-  });
-
-  it("exports platform handler", async () => {
-    const mod = await import("../src/commands/platform.js");
-    expect(typeof mod.platformCmd).toBe("function");
-  });
-
-  it("exports eval handler", async () => {
-    const mod = await import("../src/commands/eval.js");
-    expect(typeof mod.evalCmd).toBe("function");
-  });
-
-  it("exports dashboard handler", async () => {
-    const mod = await import("../src/commands/dashboard.js");
-    expect(typeof mod.dashboard).toBe("function");
-  });
-
-  it("exports certify handler", async () => {
-    const mod = await import("../src/commands/certify.js");
-    expect(typeof mod.certifyCmd).toBe("function");
-  });
-
-  it("fails closed when the production amendment boundary receives raw prose without a structured impact plan", async () => {
-    const mod = await import("../src/commands/runner.js");
-    await expect(mod.runnerCmd(
-      ["amend", "bổ sung một thay đổi an toàn cho REQ-019"],
-      getRepoRoot(),
-    )).rejects.toThrow(/requires --impact-plan.*fail closed/);
-  });
-});
-
-describe("Runtime CLI options", () => {
-  const root = getRepoRoot();
-  const cliEntry = path.join(root, "packages", "cli", "dist", "index.js");
-
-  it("accepts the typed runtime root override without mutating it during dry-run", () => {
-    const target = path.join(os.tmpdir(), `agent-rules-runtime-cli-dry-run-${process.pid}`);
-    const output = execFileSync(
-      "node",
-      [cliEntry, "--json", "--dry-run", "runtime", "install", "codex", "--root", target],
-      { encoding: "utf8" },
-    );
-    const result = JSON.parse(output);
-    expect(result.exitCode).toBe(ExitCode.Success);
-    expect(result.data.results[0].targetRoot).toBe(target);
-    expect(fs.existsSync(target)).toBe(false);
-  });
-
-  it("runs the native install and uninstall lifecycle against an explicit temporary root", () => {
-    const target = fs.mkdtempSync(path.join(os.tmpdir(), "agent-rules-runtime-cli-"));
-    const child = { execFileSync: execFileSync };
-    child.execFileSync("node", [cliEntry, "runtime", "install", "codex", "--root", target], { encoding: "utf8" });
-    expect(fs.existsSync(path.join(target, "agent-rules-runtime", "agent-rules-runtime-receipt.json"))).toBe(true);
-
-    child.execFileSync("node", [cliEntry, "runtime", "uninstall", "codex", "--root", target], { encoding: "utf8" });
-    expect(fs.existsSync(path.join(target, "agent-rules-runtime"))).toBe(false);
-  });
-
-  it("requires explicit --migrate-legacy and preserves unrelated files during CLI migration", () => {
-    const target = fs.mkdtempSync(path.join(os.tmpdir(), "agent-rules-runtime-cli-migration-"));
-    const agents = "legacy agents\n";
-    const legacyRule = "legacy rule\n";
-    try {
-      fs.mkdirSync(path.join(target, "rules"), { recursive: true });
-      fs.writeFileSync(path.join(target, "AGENTS.md"), agents);
-      fs.writeFileSync(path.join(target, "rules", "legacy.md"), legacyRule);
-      fs.writeFileSync(path.join(target, "settings.json"), "keep\n");
-      fs.writeFileSync(path.join(target, "agent-rules-manifest.json"), JSON.stringify({
-        version: 1,
-        platform: "codex",
-        files: [
-          { Path: "AGENTS.md", Sha256: createHash("sha256").update(agents).digest("hex") },
-          { Path: "rules/legacy.md", Sha256: createHash("sha256").update(legacyRule).digest("hex") },
-        ],
-      }));
-
-      const child = { execFileSync: execFileSync };
-      expect(() => child.execFileSync(
-        "node",
-        [cliEntry, "runtime", "install", "codex", "--root", target],
-        { encoding: "utf8", stdio: "pipe" },
-      )).toThrow();
-
-      child.execFileSync(
-        "node",
-        [cliEntry, "runtime", "install", "codex", "--root", target, "--migrate-legacy"],
-        { encoding: "utf8" },
-      );
-      expect(fs.readFileSync(path.join(target, "settings.json"), "utf8")).toBe("keep\n");
-      expect(fs.existsSync(path.join(target, "agent-rules-runtime", "agent-rules-runtime-receipt.json"))).toBe(true);
-      expect(fs.existsSync(path.join(target, "agent-rules-legacy-migration-receipt.json"))).toBe(true);
-    } finally {
-      fs.rmSync(target, { recursive: true, force: true });
-    }
+  it("exports northstar-ux handlers", async () => {
+    const mod = await import("../src/commands/northstar-ux.js");
+    expect(typeof mod.northStarRun).toBe("function");
+    expect(typeof mod.northStarStatus).toBe("function");
+    expect(typeof mod.initNorthStar).toBe("function");
+    expect(typeof mod.northStarReference).toBe("function");
+    expect(typeof mod.northStarReferenceSearch).toBe("function");
   });
 });
 

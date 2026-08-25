@@ -1,0 +1,576 @@
+{
+  "captured_at": "2026-08-25T09:07:36.895Z",
+  "git_head": "c1deca1a5ee186a9d0361b57fd0ff7e943fa676e",
+  "dirtyFiles": [
+    {
+      "code": " M",
+      "file": ".agent/current.json",
+      "sha": "5475171dfdedf8c167baa3eb6fa1e69103e0e46829fd0b73daa49acd43a4582d"
+    },
+    {
+      "code": " M",
+      "file": "automation/host-attestation.ts",
+      "sha": "fa6d7c1adea15ac5cc9d1e067b212dad238397165cbc1e25156ac1d43f705b28"
+    },
+    {
+      "code": " M",
+      "file": "automation/platform-contracts.schema.json",
+      "sha": "165b937c0f87df4d6e98fd464f2098346a74b7be198ac1cd3b8766155d751079"
+    },
+    {
+      "code": " M",
+      "file": "automation/source-integrity.json",
+      "sha": "3bc014a3d5e7debf10c91069bafdf308bd95aafb64726f42a876bba685930cde"
+    },
+    {
+      "code": " M",
+      "file": "automation/test-cross-language-manifests.py",
+      "sha": "05763f06cf9396078a797f7e1378f80c36f94d875340e38224aff6accb54ad16"
+    },
+    {
+      "code": " M",
+      "file": "automation/test-platform-contracts.py",
+      "sha": "8fef8699b54cf2fa024c17687ebd52f711529679401d0c494037a9719e94f548"
+    },
+    {
+      "code": " M",
+      "file": "automation/test-platform-lifecycle.py",
+      "sha": "5877d310e240d10e38e174c1e06e9e779d92b4631b3028682b0bb9e3aa8cb463"
+    },
+    {
+      "code": " M",
+      "file": "automation/validate-agent-skills.py",
+      "sha": "bb5e4f4a5390a8fe602fb13c22bc266f01350c17a5f2c0ad1b899110e3a0dda4"
+    },
+    {
+      "code": " M",
+      "file": "automation/validate-skill-catalog.py",
+      "sha": "23b045bd5caadfd553f373e8ec1ca69f8ad22456f3afc46a5c92c9519b1e1669"
+    },
+    {
+      "code": " M",
+      "file": "automation/verify-windows-hosts.mjs",
+      "sha": "49f6ca030624952d6e41e69e5e79da0209ee01297ab131bc9d4adb4e2756d377"
+    },
+    {
+      "code": " D",
+      "file": "operator-profiles/vibe-product/profile.json",
+      "sha": null
+    },
+    {
+      "code": " M",
+      "file": "package.json",
+      "sha": "997f5358abd4b5213de0de28e9a7c74fdf7807ff74862fcd6221ba00c3a827c1"
+    },
+    {
+      "code": " M",
+      "file": "packages/cli/src/commands/doctor.ts",
+      "sha": "f208806b02fc4754f72199f8b995bfe032e1daeca79c106ca007e3d220045980"
+    },
+    {
+      "code": " M",
+      "file": "packages/cli/src/commands/install.ts",
+      "sha": "59c6e2ecaf7a8ad8fb9d50571e85e31bf3c3183fb5db346dd29e6f10140a9e81"
+    },
+    {
+      "code": " M",
+      "file": "packages/cli/src/commands/integration.ts",
+      "sha": "6f643218171cdec48758be8c3d4454485638fc9e9bd895148a460429ea1d7ffb"
+    },
+    {
+      "code": " D",
+      "file": "packages/cli/src/commands/operator-profile.ts",
+      "sha": null
+    },
+    {
+      "code": " M",
+      "file": "packages/cli/src/index.ts",
+      "sha": "3fefd80f739ab719541d0d1c21282052d3dd461a47645ef9098d137da8a3623c"
+    },
+    {
+      "code": " M",
+      "file": "packages/cli/src/runtime/contracts.ts",
+      "sha": "df7e634c694e72b5eda3eb2d3f20f72ee9b640443d8688ad0b14dbae6ccdcb0f"
+    },
+    {
+      "code": " M",
+      "file": "packages/cli/src/services/context-graph.ts",
+      "sha": "3548990e3b1d418a03b79787140d47a933f2255cb2404d6060305b4d0a8ae123"
+    },
+    {
+      "code": " M",
+      "file": "packages/cli/src/services/host-projection.ts",
+      "sha": "d6ba79de362874d406768dd662161d4f00b0a5840f3befa26ee447749533abf8"
+    },
+    {
+      "code": " M",
+      "file": "packages/cli/test/index.test.ts",
+      "sha": "a26643a7fb4b0abcb0ed775ce0a209d689fc8fd8637cb3974f2e9a5f68ea11cc"
+    },
+    {
+      "code": " M",
+      "file": "packages/cli/test/install.test.ts",
+      "sha": "62864aa469e38ec5789a320aabfb7a6143272cbb836dceb18d24862cbb3390fa"
+    },
+    {
+      "code": " D",
+      "file": "packages/cli/test/operator-profile.test.ts",
+      "sha": null
+    },
+    {
+      "code": " M",
+      "file": "packages/cli/test/parity.test.ts",
+      "sha": "3afd8753b5b26a916ad69ba138c0ea7cb4fc045ad378549523c38d3d87e19a19"
+    },
+    {
+      "code": " M",
+      "file": "packages/cli/test/runtime-reconcile.test.ts",
+      "sha": "9022088b5e0a01595724310add0db1ab43a6931c536a4aab99652a60658151ff"
+    },
+    {
+      "code": " M",
+      "file": "packages/engine/test/fixtures/topology/fixture.mjs",
+      "sha": "6f51a0efde6c762cc6a7968fc4368d63854d3a89bca99fc02ce9f6bf0402ff15"
+    },
+    {
+      "code": " M",
+      "file": "packages/kernel/src/northstar/host-adapters.ts",
+      "sha": "88fc83a877c1c60cf3acf18a01b2762d0bab8d0fa4e5572dd7019ee6e37af3e6"
+    },
+    {
+      "code": " M",
+      "file": "packages/kernel/src/northstar/index.ts",
+      "sha": "21b80b63bce8b068764b38b436cbc24a48e60d17e4f90bb6ff6d2720da54d753"
+    },
+    {
+      "code": " D",
+      "file": "packages/kernel/src/northstar/operator-profile.ts",
+      "sha": null
+    },
+    {
+      "code": " D",
+      "file": "packages/kernel/test/operator-profile.test.ts",
+      "sha": null
+    },
+    {
+      "code": " M",
+      "file": "packages/kernel/test/pair-repair.test.ts",
+      "sha": "e3d6f9a31553b1ac0b673e88946bd362db95218af526d4afe63c0aa543d4ddda"
+    },
+    {
+      "code": " M",
+      "file": "platforms/antigravity/antigravity-overlay.md",
+      "sha": "8c42d9bba7e2e11abb5b2b17b984b7cfaae20def7ee5a3ab10113923bafe21a2"
+    },
+    {
+      "code": " M",
+      "file": "platforms/claude/claude-overlay.md",
+      "sha": "29ca303f238f2cfc36516fbfc2b747662e4e52f4817af32397a162d1dad9fe20"
+    },
+    {
+      "code": " M",
+      "file": "platforms/codex/codex-overlay.md",
+      "sha": "96d93de1e327572bcabc5f78adf349fc3fb8300165da5c9fa1a906d51354f641"
+    },
+    {
+      "code": " M",
+      "file": "platforms/command-code/adapter.ts",
+      "sha": "0c5248eda87fb5ead9b35a186450fdc581d36e3431d97c196e43562574f4c120"
+    },
+    {
+      "code": " M",
+      "file": "platforms/command-code/command-code-overlay.md",
+      "sha": "ff6e42da52f3c101fe1e9fd608da7f289b4c9c449b21525fd6993ab8ed74ae85"
+    },
+    {
+      "code": " M",
+      "file": "platforms/cursor/cursor-overlay.md",
+      "sha": "b3bb9e300cbb4bff5cb8df9a01d9a16e372c39f752fcb69a12acd54e5cb00677"
+    },
+    {
+      "code": " M",
+      "file": "platforms/deepseek-harness/adapter.ts",
+      "sha": "271a079787959918db60ad68b846d49c6ce67e40a0c205c5ac8a0a1412aaa915"
+    },
+    {
+      "code": " M",
+      "file": "platforms/deepseek-harness/deepseek-harness-overlay.md",
+      "sha": "070b4683ff051070de5692aa790ce87c587187360dcc23df64ce14ff1e0310aa"
+    },
+    {
+      "code": " M",
+      "file": "platforms/grok/grok-overlay.md",
+      "sha": "7ec52024c54bac5eb817695b41bd7064462745fefc4c8a6eb6c290943df8bf26"
+    },
+    {
+      "code": " M",
+      "file": "platforms/opencode/opencode-overlay.md",
+      "sha": "0377900882d4fdad2b20c4b679403b349e7bfe12f2819a3e11a158f1dcd1c91b"
+    },
+    {
+      "code": " M",
+      "file": "platforms/platform-contracts.json",
+      "sha": "cdc9d5046a9067444e54541db9876ebe65f4a9fe8d5157f6d5f1d06ef83db0f9"
+    },
+    {
+      "code": " M",
+      "file": "profiles/5fedu/skills/5fedu-module-parity/SKILL.md",
+      "sha": "c15acfd16351ea28d7f8254cdc2546857f01462200d087d398b1a00d25cf0904"
+    },
+    {
+      "code": " M",
+      "file": "profiles/5fedu/skills/5fedu-project/SKILL.md",
+      "sha": "468d2f8b936d8239e420a7bcf7c4c286f8ce5e42b7bc703a89723777fc3f58ce"
+    },
+    {
+      "code": " D",
+      "file": "rules/00-bootstrap.md",
+      "sha": null
+    },
+    {
+      "code": " D",
+      "file": "rules/05-critical-thinking.md",
+      "sha": null
+    },
+    {
+      "code": " D",
+      "file": "rules/10-execution.md",
+      "sha": null
+    },
+    {
+      "code": " D",
+      "file": "rules/15-output-economy.md",
+      "sha": null
+    },
+    {
+      "code": " D",
+      "file": "rules/16-context-style.md",
+      "sha": null
+    },
+    {
+      "code": " D",
+      "file": "rules/20-quality-and-safety.md",
+      "sha": null
+    },
+    {
+      "code": " D",
+      "file": "rules/25-task-lifecycle.md",
+      "sha": null
+    },
+    {
+      "code": " D",
+      "file": "rules/30-context-routing.md",
+      "sha": null
+    },
+    {
+      "code": " D",
+      "file": "rules/40-harness-governance.md",
+      "sha": null
+    },
+    {
+      "code": " D",
+      "file": "rules/41-harness-maintainer.md",
+      "sha": null
+    },
+    {
+      "code": " D",
+      "file": "rules/42-installation-global-first.md",
+      "sha": null
+    },
+    {
+      "code": " D",
+      "file": "rules/45-adaptive-minimal-proof-testing.md",
+      "sha": null
+    },
+    {
+      "code": " D",
+      "file": "rules/50-context-budget.md",
+      "sha": null
+    },
+    {
+      "code": " M",
+      "file": "rules/manifest.yaml",
+      "sha": "e9bbe7f1f089ee34ed6cb4ec271a8f5f83bcbe5d69085228b0f3f3d35e102f68"
+    },
+    {
+      "code": " M",
+      "file": "schemas/plan.schema.json",
+      "sha": "8d8c74739a3f85b0bed47b2023998024c368a09e86b17c4f8540d0ddb80e7716"
+    },
+    {
+      "code": " M",
+      "file": "skills/anthropic-frontend-design/SKILL.md",
+      "sha": "0f549d2b629ff57d217b1087078524c7e8f1e8d0e89b4af2bb728a7854b60720"
+    },
+    {
+      "code": " M",
+      "file": "skills/backend-composition/SKILL.md",
+      "sha": "38ec1f3644764caf56c99b1f4b5f2e470d905003796763c9480c6ddac40f52a4"
+    },
+    {
+      "code": " M",
+      "file": "skills/best-of-n/SKILL.md",
+      "sha": "1346bc154db93b4b0f4aedfe8a2f3f044b8948f131f5fac904ccc70704a1ca75"
+    },
+    {
+      "code": " M",
+      "file": "skills/browser-qa/SKILL.md",
+      "sha": "13d2f818ccf09aa02fc803d020c22129569e09d522aeeee82f529c6d2a39eae6"
+    },
+    {
+      "code": " M",
+      "file": "skills/callstack-react-native-best-practices/SKILL.md",
+      "sha": "893c052b743d0ae0df020eda616a8105592f4bb84900fa16e276da37be8d5ad6"
+    },
+    {
+      "code": " M",
+      "file": "skills/candidate-fabric.json",
+      "sha": "d8b6d08984200fcaa27267de56212cb67ec4a98dae313b34f4ff2aac00e2e35b"
+    },
+    {
+      "code": " M",
+      "file": "skills/claim-test-strategy/SKILL.md",
+      "sha": "6a0b9ffd3533c713520bec4dcf4a4866e832700bf74a2adeffa5bec837a27e0f"
+    },
+    {
+      "code": " M",
+      "file": "skills/context-evolution-protocol/SKILL.md",
+      "sha": "6943794c13954c527ad5c0d4a28d63b8ff8f386c826d4ce93b9b09e05fdc504e"
+    },
+    {
+      "code": " M",
+      "file": "skills/database-stack/SKILL.md",
+      "sha": "00af0be57097baccfdc687bc894fe5f1c144656a387ba5de2ca15174fbe4c12a"
+    },
+    {
+      "code": " M",
+      "file": "skills/docs-style/SKILL.md",
+      "sha": "4cf62d5f08e17b770a62e2707ed362410d107a5c5ec733571a2680c475de96e1"
+    },
+    {
+      "code": " M",
+      "file": "skills/expo-skills/SKILL.md",
+      "sha": "48c428f5584f69a1e4696e0951a2b0a21432dde65d510c74106181203a22138d"
+    },
+    {
+      "code": " M",
+      "file": "skills/external-skill-governance/SKILL.md",
+      "sha": "2c437a17edcb726af9fc950afa4832324535a9e5c904cd5e6ea56c430542c965"
+    },
+    {
+      "code": " M",
+      "file": "skills/finish-to-completion/SKILL.md",
+      "sha": "415ec32b9b427b26b2e22d0f0c6f229bc26a8f85349cae6d7538d8f7741dc9c2"
+    },
+    {
+      "code": " M",
+      "file": "skills/frontend-architect/SKILL.md",
+      "sha": "1b313e756fde9f596dc7e6db378aac60d9442d5328dddf0f625ce8d5cbe8e9c1"
+    },
+    {
+      "code": " M",
+      "file": "skills/frontend-design-contract/SKILL.md",
+      "sha": "fd7a3d966088a66d76b3379136439a36cb323fc52dccd07fe20398fe1e269c89"
+    },
+    {
+      "code": " M",
+      "file": "skills/hashicorp-agent-skills/SKILL.md",
+      "sha": "b1cb2be96f7e92477cb77e2b4fba58596b79ec86190928888bee84061bc82d2f"
+    },
+    {
+      "code": " M",
+      "file": "skills/impeccable/SKILL.md",
+      "sha": "0645aa8ae50c9f689fee58da3ca4651a10ee101b652c4408a8285c67eb8d34f3"
+    },
+    {
+      "code": " M",
+      "file": "skills/infra-devops-composition/SKILL.md",
+      "sha": "e244e826f3572f5d28ec57fe1c79d56a1f7d75722d2ad840c212b998eeab902b"
+    },
+    {
+      "code": " M",
+      "file": "skills/master-image-generation/SKILL.md",
+      "sha": "2bfc7a91e65bc368bdc35e85b3b7315e0b853b2caa77163bb5dafdecde0fe4e7"
+    },
+    {
+      "code": " M",
+      "file": "skills/mobile-composition/SKILL.md",
+      "sha": "505257a5339c22bb8cda23cea06a8197b71bd02e6f575757f54d0bbbf0bb397d"
+    },
+    {
+      "code": " M",
+      "file": "skills/parity-verification/SKILL.md",
+      "sha": "d6ea322c981d1d28ed4c268bd809c62319bc74fc596a4f32c4b64a2cae45ed51"
+    },
+    {
+      "code": " M",
+      "file": "skills/plan-and-handoff/SKILL.md",
+      "sha": "16d857a0443088c218ed742c07fa298487e930a93fe1c76d43fbaa4ab5256452"
+    },
+    {
+      "code": " M",
+      "file": "skills/prisma-skills/SKILL.md",
+      "sha": "38f27167d691ff8f51e4851647054fb13b4375762c003ee8852f983e9c95b918"
+    },
+    {
+      "code": " M",
+      "file": "skills/qa-skills/SKILL.md",
+      "sha": "f365a7d917160b2d0aa234288f762f55e78ef0efac85c5144e6f00feb4b4f570"
+    },
+    {
+      "code": " M",
+      "file": "skills/quality/SKILL.md",
+      "sha": "aeff1584e25f13b46b71ac24f70f7c2f66548026e9ff271f74f9aab80415f15b"
+    },
+    {
+      "code": " M",
+      "file": "skills/researcher/SKILL.md",
+      "sha": "b5a7b910a560ae9c7e2a8c97cfaeb1d9941e0fd20c14366c62e139899f10686e"
+    },
+    {
+      "code": " M",
+      "file": "skills/schema-migration/SKILL.md",
+      "sha": "ece76950e479c5576a50d6ff7631ddcc0d23be398a4dec278be378a2891ed0fa"
+    },
+    {
+      "code": " M",
+      "file": "skills/security-review/SKILL.md",
+      "sha": "88d032ae23b3670adf0a1ac80cdb8836b94d3345934fb378ccb2cb57971fe6f3"
+    },
+    {
+      "code": " M",
+      "file": "skills/supabase-agent-skills/SKILL.md",
+      "sha": "bc48c9e557308a52c66d74c0adcc160c52dbcaa8c33039ff9f68f01345650aa3"
+    },
+    {
+      "code": " M",
+      "file": "skills/trail-of-bits-security/SKILL.md",
+      "sha": "a002334074cc38b10264e71d5d2ec70c44cee231136d11b00d32fbba6e1f2306"
+    },
+    {
+      "code": " M",
+      "file": "skills/ui-taste/SKILL.md",
+      "sha": "8fcc57b2a648653f86c74fb378b0762086de1437130bb3cfd61d6c8431e12ea4"
+    },
+    {
+      "code": " M",
+      "file": "skills/vercel-agent-skills/SKILL.md",
+      "sha": "d8efc9017c23f6c8d43058e9d6edc59b4ecfa1896c2836b19400c7821fcc648c"
+    },
+    {
+      "code": " M",
+      "file": "skills/vercel-react-best-practices/SKILL.md",
+      "sha": "fbf007aa3d54fe90afff05ba59756be0afc9ee4c0c257b559b15b260e4ff1a69"
+    },
+    {
+      "code": " M",
+      "file": "skills/vercel-web-design-guidelines/SKILL.md",
+      "sha": "0183f6518e656268aae428175d121f5de13be1a95c23c58b1d2de0d7bc7e00fc"
+    },
+    {
+      "code": " M",
+      "file": "skills/verification-router/SKILL.md",
+      "sha": "8c39b29d95c60d23c9e5d1163f147383973011e5d35d7b9e8a16bcebdc4ce4d4"
+    },
+    {
+      "code": "??",
+      "file": ".agent/archive/full-native-8host-single-truth-v1-result-pre-correction.json",
+      "sha": "95aedf5a8d77f3de047b612cf6589983c59202c057a2438daa41220450409da7"
+    },
+    {
+      "code": "??",
+      "file": ".agent/archive/rules-legacy/",
+      "sha": null
+    },
+    {
+      "code": "??",
+      "file": ".agent/evidence/full-native-8host-single-truth-v1/",
+      "sha": null
+    },
+    {
+      "code": "??",
+      "file": ".agent/ledger/full-native-8host-single-truth-v1.json",
+      "sha": "d3a670d6be9aae953db53faf32f9f0c580eaeab603c316a7a2364125d38567e0"
+    },
+    {
+      "code": "??",
+      "file": ".agent/plans/full-native-8host-single-truth-v1/",
+      "sha": null
+    },
+    {
+      "code": "??",
+      "file": ".agent/plans/portable-host-native-supervision-v1/superseded.json",
+      "sha": "7862a19154fab6955c5f001878ffde191e657d3a5919f8a66abf7d171d8c30bd"
+    },
+    {
+      "code": "??",
+      "file": ".agent/plans/runtime-native-live-closure-v3/",
+      "sha": null
+    },
+    {
+      "code": "??",
+      "file": "automation/build-runtime.mjs",
+      "sha": "8c88fd834967299d9827742397b0517c0c58c988a0a881cd6a2be6076cb890a0"
+    },
+    {
+      "code": "??",
+      "file": "automation/test-global-behavior.mjs",
+      "sha": "539a5c812df6f20d06a7906f97167f5cffb5b9be5d36424e6f70d4513ecd7333"
+    },
+    {
+      "code": "??",
+      "file": "packages/cli/src/commands/uninstall.ts",
+      "sha": "59cc942a056a944c903808f1e84e9f13ed394eb07919c3554dbee8b438a659b3"
+    },
+    {
+      "code": "??",
+      "file": "packages/cli/src/services/native-installer.ts",
+      "sha": "e2196972a456ec203f3dc8c34b9c59d63a7a9da38a0a2e0f8aa57585ad2f71b4"
+    },
+    {
+      "code": "??",
+      "file": "packages/kernel/src/northstar/host-registry.ts",
+      "sha": "74692fe935d8fd7e63f1eb5c8a704fb96762c760cf52850ada7a7566ae8a78a7"
+    },
+    {
+      "code": "??",
+      "file": "packages/kernel/src/northstar/run-store.ts",
+      "sha": "bb26dfaf5b37334a57ba50db2f917c1677e1e874700c7d0a225821772def4b5b"
+    },
+    {
+      "code": "??",
+      "file": "rules/00-intent-scope-safety.md",
+      "sha": "353350bc8b6425cb70bf842ce2ea6ed40a14f13ba91ee46d97bc303c5d7fd066"
+    },
+    {
+      "code": "??",
+      "file": "rules/10-execution-planning-delegation.md",
+      "sha": "c8906928e53e07bbfe85247df28945de7dddc34e2efbe0cd274161d14a98c616"
+    },
+    {
+      "code": "??",
+      "file": "rules/20-proof-outcome.md",
+      "sha": "6589c02a371a36b21d8e14914998a17ecaf666bd5906a9dc424262fb6c35959c"
+    },
+    {
+      "code": "??",
+      "file": "rules/30-context-skill-mcp.md",
+      "sha": "b140c0b5dcf8aebd8490252acd39b9d20102b55c884e20f35e8414b4fe6e8b71"
+    },
+    {
+      "code": "??",
+      "file": "rules/40-maintainer.md",
+      "sha": "740b523d9332d3c18bd323225985d7aec3323ce6f591b889334c355a6a3e46ff"
+    },
+    {
+      "code": "??",
+      "file": "schemas/host-certification-receipt.schema.json",
+      "sha": "2da494130e4d1427c08726cef30789e16e29ae140981d9af22364941b0e75871"
+    },
+    {
+      "code": "??",
+      "file": "schemas/native-host-contract.schema.json",
+      "sha": "d19dccb86001c45a44d6e7f2ff0dfff82b99272a6c3a7d9ea3457ad47a6cfb01"
+    }
+  ]
+}

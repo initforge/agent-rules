@@ -56,9 +56,9 @@ def validate(contract: dict[str, object], schema: dict[str, object]) -> None:
             location = ".".join(str(part) for part in error.absolute_path) or "<root>"
             rendered.append(f"{location}: {error.message}")
         fail("JSON Schema validation failed: " + "; ".join(rendered))
-    exact_mapping(contract, {"version", "registry", "parity_contract", "platforms"}, "contract")
-    if contract["version"] != 2:
-        fail("contract version must be 2")
+    exact_mapping(contract, {"version", "registry", "parity_contract", "platforms", "native_contracts", "generated_by"}, "contract")
+    if contract["version"] not in (2, 3):
+        fail("contract version must be 2 or 3")
     registry = exact_mapping(contract["registry"], {"host_ids", "certification_policy", "capability_to_canary"}, "registry")
     if tuple(registry["host_ids"]) != ALL_HOSTS:
         fail(f"registry host_ids drift: {tuple(registry['host_ids'])} != {ALL_HOSTS}")

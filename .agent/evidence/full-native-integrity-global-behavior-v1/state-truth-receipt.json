@@ -1,0 +1,34 @@
+{
+  "schema": "agent-rules/state-truth-receipt",
+  "version": 1,
+  "generated_at": "2026-08-25T09:43:31.710Z",
+  "truth_chain": [
+    {
+      "component": "RunStore",
+      "role": "Single writer for task runs and state transitions",
+      "status": "VERIFIED"
+    },
+    {
+      "component": "EvidenceLedger",
+      "role": "Append-only hash-chained proof records (worker origin unrepresentable)",
+      "status": "VERIFIED"
+    },
+    {
+      "component": "AcceptanceAudit",
+      "role": "Oracle-bound acceptance evaluations against required channels",
+      "status": "VERIFIED"
+    },
+    {
+      "component": "OutcomeReducer",
+      "role": "Deterministic derivation of PASS/PARTIAL/BLOCKED/FAILED/NEEDS_USER",
+      "status": "VERIFIED"
+    }
+  ],
+  "cas_atomicity": {
+    "protocol": "generation-compare-and-swap",
+    "verified_generation": 50,
+    "commit_target": ".agent/current.json",
+    "activation_state": "CANONICALLY_ACTIVATED"
+  },
+  "status": "PASS"
+}

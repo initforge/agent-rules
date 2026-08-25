@@ -1,15 +1,10 @@
 version: 1
 load_order:
-  - 00-bootstrap.md
-  - 05-critical-thinking.md
-  - 10-execution.md
-  - 15-output-economy.md
-  - 20-quality-and-safety.md
-  - 25-task-lifecycle.md
-  - 30-context-routing.md
-  - 42-installation-global-first.md
-  - 45-adaptive-minimal-proof-testing.md
-  - 50-context-budget.md
+  - 00-intent-scope-safety.md
+  - 10-execution-planning-delegation.md
+  - 20-proof-outcome.md
+  - 30-context-skill-mcp.md
+  - 40-maintainer.md
 budgets:
   bootstrap_tokens: 300
   core_total_tokens: 6500
@@ -19,137 +14,57 @@ budgets:
   project_index_tokens: 1800
   lazy_project_pack_tokens: 8000
 
-# Machine-checkable ownership/evidence contract for every canonical rule. The
-# rule prose remains the behavior source; this registry supplies enforcement,
-# precedence, and failure metadata without duplicating the prose.
+# Single natural communication rule is embedded in 00-intent-scope-safety.md:
+# use user's language, outcome-first, plain words, technical detail only when it helps decision/debug/verification or when asked.
+
 rule_contracts:
-  00-bootstrap.md:
+  00-intent-scope-safety.md:
     kind: invariant
     trigger: always-load
-    normative: "Preserve owner intent, scope, and claim-matched proof."
+    normative: "Preserve intent, scope and safety; natural outcome-first communication."
     owner: harness-maintainer
     enforcement: intake-and-runtime-gates
     evidence: [rules/manifest.yaml, automation/validate-rule-contracts.py]
     precedence: 10
     failure: BLOCKED
     fixture: automation/validate-rule-contracts.py
-  05-critical-thinking.md:
-    kind: policy
-    trigger: advisory-or-decision
-    normative: "Challenge material conflicts with evidence and trade-offs."
-    owner: harness-maintainer
-    enforcement: planning-and-review
-    evidence: [rules/manifest.yaml, automation/validate-rule-contracts.py]
-    precedence: 20
-    failure: NEEDS_USER
-    fixture: automation/validate-rule-contracts.py
-  10-execution.md:
+  10-execution-planning-delegation.md:
     kind: invariant
     trigger: execution
-    normative: "Ship core outcomes first, bound blockers to release criteria, and terminate when acceptance is proven."
+    normative: "Ship outcomes, bounded delegation, strong planners for S2/S3."
     owner: harness-maintainer
     enforcement: runner-and-acceptance-reducer
     evidence: [rules/manifest.yaml, automation/validate-rule-contracts.py]
+    precedence: 20
+    failure: BLOCKED
+    fixture: automation/validate-rule-contracts.py
+  20-proof-outcome.md:
+    kind: invariant
+    trigger: always-load
+    normative: "Minimal proof, no-worker-PASS, single truth closure."
+    owner: harness-maintainer
+    enforcement: proof-router-and-proof-selection
+    evidence: [rules/manifest.yaml, packages/kernel/src/northstar/proof-router.ts, schemas/proof-receipt.schema.json, automation/validate-rule-contracts.py]
     precedence: 30
     failure: BLOCKED
     fixture: automation/validate-rule-contracts.py
-  15-output-economy.md:
-    kind: policy
-    trigger: response
-    normative: "Prefer concise output without removing required evidence."
-    owner: harness-maintainer
-    enforcement: response-policy
-    evidence: [rules/manifest.yaml, automation/validate-rule-contracts.py]
-    precedence: 40
-    failure: NEEDS_USER
-    fixture: automation/validate-rule-contracts.py
-  16-context-style.md:
-    kind: policy
-    trigger: context-edit
-    normative: "Keep living context cohesive, imperative, and within budget."
-    owner: harness-maintainer
-    enforcement: context-audit
-    evidence: [rules/manifest.yaml, automation/validate-rule-contracts.py]
-    precedence: 50
-    failure: BLOCKED
-    fixture: automation/validate-rule-contracts.py
-  20-quality-and-safety.md:
-    kind: invariant
-    trigger: mutation-or-provider-use
-    normative: "Protect scope, data, security, and foreground proof boundaries."
-    owner: harness-maintainer
-    enforcement: verifier-and-scope-gates
-    evidence: [rules/manifest.yaml, automation/validate-rule-contracts.py]
-    precedence: 60
-    failure: BLOCKED
-    fixture: automation/validate-rule-contracts.py
-  25-task-lifecycle.md:
-    kind: invariant
-    trigger: intake-to-terminal
-    normative: "Separate advisory, plan, and execution authority with bounded review budgets and explicit plan verdicts."
-    owner: harness-maintainer
-    enforcement: plan-and-run-state
-    evidence: [rules/manifest.yaml, automation/validate-rule-contracts.py]
-    precedence: 70
-    failure: NEEDS_USER
-    fixture: automation/validate-rule-contracts.py
-  30-context-routing.md:
+  30-context-skill-mcp.md:
     kind: invariant
     trigger: context-selection
-    normative: "Load the smallest matching capability and never infer domain authority from words alone."
+    normative: "Single skill resolver and integration broker per task."
     owner: harness-maintainer
     enforcement: graph-router-and-context-compiler
     evidence: [rules/manifest.yaml, automation/context-route-cases.json, automation/validate-rule-contracts.py]
-    precedence: 80
+    precedence: 40
     failure: BLOCKED
     fixture: automation/validate-rule-contracts.py
-  40-harness-governance.md:
+  40-maintainer.md:
     kind: policy
     trigger: harness-maintenance
-    normative: "Delegate detailed maintenance governance to the canonical maintainer rule."
+    normative: "Maintainer edits canonical source first; no hand-edit of generated."
     owner: harness-maintainer
     enforcement: maintainer-pointer-audit
     evidence: [rules/manifest.yaml, automation/validate-rule-contracts.py]
-    precedence: 90
-    failure: BLOCKED
-    fixture: automation/validate-rule-contracts.py
-  41-harness-maintainer.md:
-    kind: invariant
-    trigger: harness-edit
-    normative: "Edit canonical source first and require context evolution audits."
-    owner: harness-maintainer
-    enforcement: pre-commit-and-certification
-    evidence: [rules/manifest.yaml, automation/audit-context-pre-commit.sh, automation/validate-rule-contracts.py]
-    precedence: 100
-    failure: BLOCKED
-    fixture: automation/validate-rule-contracts.py
-  50-context-budget.md:
-    kind: policy
-    trigger: long-session-or-context-growth
-    normative: "Use progressive disclosure and durable checkpoints without shrinking scope."
-    owner: harness-maintainer
-    enforcement: context-budget-audit
-    evidence: [rules/manifest.yaml, automation/validate-rule-contracts.py]
-    precedence: 110
-    failure: NEEDS_USER
-    fixture: automation/validate-rule-contracts.py
-  45-adaptive-minimal-proof-testing.md:
-    kind: invariant
-    trigger: always-load
-    normative: "Select the smallest sufficient proof set for every task from scope, claims, risks and runtime surface; enforce six-status semantics; live claims require live proof; refactors require coverage mapping."
-    owner: harness-maintainer
-    enforcement: proof-router-and-proof-selection
-    evidence: [rules/manifest.yaml, packages/kernel/src/northstar/proof-testing.ts, packages/kernel/src/northstar/proof-router.ts, schemas/proof-receipt.schema.json, automation/validate-rule-contracts.py]
-    precedence: 45
-    failure: BLOCKED
-    fixture: automation/validate-rule-contracts.py
-  42-installation-global-first.md:
-    kind: invariant
-    trigger: install-or-provision
-    normative: "Every provider, CLI tool, runtime, and host-config install is global user-level; per-project installs are forbidden unless the project deviates from global AND the owner explicitly requested that deviation."
-    owner: harness-maintainer
-    enforcement: install-target-audit
-    evidence: [rules/manifest.yaml, integrations/registry.json, automation/validate-rule-contracts.py]
-    precedence: 115
+    precedence: 50
     failure: BLOCKED
     fixture: automation/validate-rule-contracts.py

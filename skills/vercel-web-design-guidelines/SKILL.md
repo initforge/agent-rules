@@ -1,6 +1,13 @@
 ---
 name: vercel-web-design-guidelines
 description: "Provenance projection for Vercel web-design-guidelines (pinned b8caa260): ROUTED on web-design audit facts; content BLOCKED until owner license determination."
+metadata:
+  signals: "web design guidelines, accessibility audit guidance, web performance audit"
+  excludes: "5fedu"
+  priority: "40"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # vercel-web-design-guidelines
 

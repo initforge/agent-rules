@@ -3,6 +3,13 @@ name: researcher
 description: Use this skill for explicit research, latest/release/changelog documentation, unfamiliar external behavior or
   a bug stalled after repeated attempts. Do NOT trigger for ordinary comparison, local code reading, obvious fixes or a phased
   plan; use plan-and-handoff for the latter.
+metadata:
+  signals: "research, latest, release, changelog, external behavior, stalled, unfamiliar"
+  excludes: "ordinary comparison, local code reading, obvious fix, phased plan"
+  priority: "70"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 
 # Researcher

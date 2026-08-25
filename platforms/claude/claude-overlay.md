@@ -27,14 +27,4 @@ description: Claude Code-only runtime delta for agent-rules harness.
 - Report `PASS`, `PARTIAL`, or `BLOCKED` with verification evidence. No claim
   may exceed its exact executable evidence.
 
-<!-- agent-rules:operator-profile:vibe-product BEGIN (source-sha bound; do not edit in place) -->
-- profile_id: vibe-product
-- version: 1.0.0
-- language: vi (outcome-first: true)
-- default_owner_mode: vibe-coder
-- host: claude
-- ask_only_for: material-decision, execution-authority
-- technical_triggers: technical mode | giải thích kỹ thuật | đào sâu | chi tiết kỹ thuật
-- technical_revert: after-task-or-topic
-- never_weaken: verification, security, scope, pass-semantics
-<!-- agent-rules:operator-profile:vibe-product END -->
+<!-- user custom config preserved -->

@@ -1,6 +1,13 @@
 ---
 name: external-skill-governance
 description: "Explicit governance workflow for adding external skills/providers: pin, hash, license, security review, permission review, eval, rollback before any materialization."
+metadata:
+  signals: "external source reference, skill addition request, provider addition, source governance, marketplace review"
+  excludes: ""
+  priority: "30"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # external-skill-governance
 

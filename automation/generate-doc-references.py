@@ -200,7 +200,8 @@ def main():
                 lines.append(f"| {alias} (alias) | {t['id']} | integration registry |")
     lines += [
         "| plans/ (legacy folder) | .agent/plans/ | validate-context.ps1 |",
-        "| 00-index.md (legacy always-on) | 00-bootstrap.md | validate-context.ps1 |",
+        "| 00-index.md (legacy always-on) | 00-intent-scope-safety.md | validate-context.ps1 |",
+
         "| Gemini CLI (product reference) | Antigravity (runtime binary is gemini) | docs/guides/06-platform-capability.md |",
     ]
     write_ref("deprecation-list.md", "Deprecation List", "\n".join(lines))

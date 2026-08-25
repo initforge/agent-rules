@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/native-host-contract.schema.json",
+  "title": "NativeHostContract — single source of truth per host",
+  "type": "object",
+  "required": ["id", "cliSignal", "homeEnv", "surfaces", "paths", "precedence", "reload", "mergeStrategy", "capabilities", "installStrategy", "readbackStrategy", "canaryStrategy", "uninstallStrategy", "authBoundary", "limits"],
+  "properties": {
+    "id": { "type": "string", "enum": ["codex","claude","grok","opencode","antigravity","cursor","deepseek-harness","command-code"] },
+    "cliSignal": { "type": "string", "description": "Binary or CLI that proves host present (version is diagnostic only)" },
+    "desktopSignal": { "type": ["string","null"], "description": "Desktop process or install root signal, null if CLI-only" },
+    "homeEnv": { "type": "string", "description": "Custom home env var, e.g. CODEX_HOME" },
+    "homeDefault": { "type": "string" },
+    "surfaces": {
+      "type": "object",
+      "required": ["instruction", "skill", "agent", "hook", "mcp", "headless"],
+      "properties": {
+        "instruction": { "type": "string" },
+        "skill": { "type": "string" },
+        "agent": { "type": "string" },
+        "hook": { "type": "string" },
+        "mcp": { "type": "string" },
+        "headless": { "type": ["string","null"] }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "required": ["instructionPath", "skillPath", "agentPath", "hookPath", "mcpPath"],
+      "properties": {
+        "instructionPath": { "type": "string" },
+        "skillPath": { "type": "string" },
+        "agentPath": { "type": "string" },
+        "hookPath": { "type": "string" },
+        "mcpPath": { "type": "string" },
+        "legacyPaths": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "precedence": { "type": "string", "description": "Merge precedence for user vs managed content" },
+    "reload": { "type": "string", "description": "How host reloads config (restart_or_reload, reload_window, etc.)" },
+    "mergeStrategy": { "type": "string", "description": "How to preserve user content (marked block, JSONC patch, TOML merge, etc.)" },
+    "capabilities": {
+      "type": "object",
+      "description": "Feature-based capability detection, not version hardcode",
+      "properties": {
+        "detectsByFeature": { "type": "boolean" },
+        "features": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "installStrategy": { "type": "string" },
+    "readbackStrategy": { "type": "string" },
+    "canaryStrategy": { "type": "string" },
+    "uninstallStrategy": { "type": "string", "description": "Only remove managed block/file by ownership; preserve user content" },
+    "authBoundary": {
+      "type": "object",
+      "required": ["offlineClaims", "requiresAuthClaims"],
+      "properties": {
+        "offlineClaims": { "type": "array", "items": { "type": "string" } },
+        "requiresAuthClaims": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "limits": { "type": "array", "items": { "type": "string" }, "description": "Real host limits; do not emulate missing capability" }
+  }
+}

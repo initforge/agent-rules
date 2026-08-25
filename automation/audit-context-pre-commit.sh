@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # audit-context-pre-commit — git pre-commit backstop for context/harness staged files.
 # Fail-open by default (exit 0 + WARN). Set CONTEXT_AUDIT_STRICT=1 to block commit on findings.
-# Chuẩn: context-evolution-protocol §Auto-audit on edit + rules/40-harness-governance.md
+# Chuẩn: context-evolution-protocol §Auto-audit on edit + rules/40-maintainer.md
 set -uo pipefail
 
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
@@ -49,7 +49,7 @@ for rel in "${FILES[@]}"; do
   if printf '%s' "$rel" | grep -q '^rules/'; then
     [ "$lines" -gt 90 ] && warns="${warns}\n  - OVERSIZE rule ${rel}: ${lines} dòng (>90) → tách references/"
   elif [ "$base" = "SKILL.md" ]; then
-    [ "$lines" -gt 350 ] && warns="${warns}\n  - OVERSIZE ${rel}: ${lines} dòng (>350) → chỉ tách nếu workflow không liền mạch (16-context-style)"
+    [ "$lines" -gt 350 ] && warns="${warns}\n  - OVERSIZE ${rel}: ${lines} dòng (>350) → chỉ tách nếu workflow không liền mạch (30-context-skill-mcp.md)"
   fi
 
   while IFS= read -r imp; do

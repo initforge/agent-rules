@@ -1,0 +1,8 @@
+{
+  "schema": "agent-rules/host-inventory-before",
+  "version": 1,
+  "host": "grok",
+  "discovered": true,
+  "user_owned_entries_preserved": true,
+  "unmanaged_entries_touched": false
+}

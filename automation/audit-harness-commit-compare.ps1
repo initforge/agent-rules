@@ -44,9 +44,9 @@ function Test-ContentMatch {
 }
 
 $files = @(
-  "rules/10-execution.md",
-  "rules/25-task-lifecycle.md",
-  "rules/05-critical-thinking.md",
+  "rules/10-execution-planning-delegation.md",
+  "rules/00-intent-scope-safety.md",
+  "rules/40-maintainer.md",
   "skills/finish-to-completion/SKILL.md",
   "skills/plan-and-handoff/SKILL.md"
 )
@@ -76,13 +76,13 @@ foreach ($name in $checks.Keys) {
   $commitMap = @{ base = $Base; mid = $Mid; new = $New }
   if ($IncludeWorkingTree) { $commitMap["work"] = "WORKING_TREE" }
   foreach ($label in $commitMap.GetEnumerator()) {
-    $path = "rules/10-execution.md"
-    if ($name -match 'normal_|tiny_|lane') { $path = "rules/25-task-lifecycle.md" }
-    if ($name -match 'proactive') { $path = "rules/05-critical-thinking.md" }
+    $path = "rules/10-execution-planning-delegation.md"
+    if ($name -match 'normal_|tiny_|lane') { $path = "rules/10-execution-planning-delegation.md" }
+    if ($name -match 'proactive') { $path = "rules/00-intent-scope-safety.md" }
     if ($name -match 'turn0|banned_ask') { $path = "skills/finish-to-completion/SKILL.md" }
-    if ($name -match 'require_plan' -and $name -eq 'normal_require_plan') { $path = "rules/25-task-lifecycle.md" }
-    if ($name -match 'bounded') { $path = "rules/25-task-lifecycle.md" }
-    if ($name -match 'pipeline|finish_default') { $path = "rules/10-execution.md" }
+    if ($name -match 'require_plan' -and $name -eq 'normal_require_plan') { $path = "rules/10-execution-planning-delegation.md" }
+    if ($name -match 'bounded') { $path = "rules/10-execution-planning-delegation.md" }
+    if ($name -match 'pipeline|finish_default') { $path = "rules/10-execution-planning-delegation.md" }
     if ($label.Key -eq "work") {
       $text = Get-WorkFile -Path $path
     } else {
@@ -114,10 +114,10 @@ foreach ($label in @{ base = $Base; mid = $Mid; new = $New }.GetEnumerator()) {
 }
 
 # New-commit regressions vs base
-$baseExec = Get-GitFile -Commit $Base -Path "rules/10-execution.md"
-$newExec = Get-GitFile -Commit $New -Path "rules/10-execution.md"
-$baseLife = Get-GitFile -Commit $Base -Path "rules/25-task-lifecycle.md"
-$newLife = Get-GitFile -Commit $New -Path "rules/25-task-lifecycle.md"
+$baseExec = Get-GitFile -Commit $Base -Path "rules/10-execution-planning-delegation.md"
+$newExec = Get-GitFile -Commit $New -Path "rules/10-execution-planning-delegation.md"
+$baseLife = Get-GitFile -Commit $Base -Path "rules/10-execution-planning-delegation.md"
+$newLife = Get-GitFile -Commit $New -Path "rules/10-execution-planning-delegation.md"
 
 $regressions = @()
 if ((Test-ContentMatch $baseExec 'Use finish-to-completion for execution tasks') -and (Test-ContentMatch $newExec 'plan-and-handoff \(khi normal/high-risk\)')) {
@@ -126,7 +126,7 @@ if ((Test-ContentMatch $baseExec 'Use finish-to-completion for execution tasks')
 if ((Test-ContentMatch $baseLife 'bounded validation') -and (Test-ContentMatch $newLife 'require plan-and-handoff')) {
   $regressions += "normal_lane_now_requires_plan"
 }
-if ((Test-ContentMatch (Get-GitFile $Base "rules/05-critical-thinking.md") 'Proactively inspect') -and -not (Test-ContentMatch (Get-GitFile $New "rules/05-critical-thinking.md") 'Proactively inspect')) {
+if ((Test-ContentMatch (Get-GitFile $Base "rules/00-intent-scope-safety.md") 'Proactively inspect') -and -not (Test-ContentMatch (Get-GitFile $New "rules/00-intent-scope-safety.md") 'Proactively inspect')) {
   $regressions += "critical_thinking_narrowed"
 }
 Write-AuditLog -HypothesisId "H3" -Location "audit:regressions" -Message "$New regressions vs $Base" -Data @{
@@ -141,8 +141,8 @@ if (Test-Path (Join-Path $Root "profiles/5fedu/automation/audit-5fedu-template-p
 }
 $newSkills = @(git diff --name-only $Base $New -- skills/ 2>$null)
 if ($newSkills -match 'clean-code') { $gains += "clean_code_skill" }
-$govBase = (Get-GitFile $Base "rules/40-harness-governance.md").Length
-$govNew = (Get-GitFile $New "rules/40-harness-governance.md").Length
+$govBase = (Get-GitFile $Base "rules/40-maintainer.md").Length
+$govNew = (Get-GitFile $New "rules/40-maintainer.md").Length
 if ($govNew -lt $govBase) { $gains += "governance_slimmed_chars_saved=$($govBase - $govNew)" }
 
 Write-AuditLog -HypothesisId "H4" -Location "audit:gains" -Message "$New gains vs $Base" -Data @{ items = $gains }

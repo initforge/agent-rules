@@ -20,7 +20,7 @@ This document establishes the canonical mapping between the repository source co
 
 | Path | Owner | Purpose | Proven Baseline Behavior (`FACT`) | Production Callgraph / Live Seam | Status / Notes |
 |---|---|---|---|---|---|
-| `packages/cli/src/commands/northstar-ux.ts` | harness-maintainer | Public North-Star UX & entrypoints | Preserves intent, loads config, compiles S0/S1 direct contracts or invokes strong planner for S2/S3 | CLI `agent-rules run` / `drain` → `northStarRun()` | Authoritative CLI coordinator |
+| `packages/cli/src/commands/northstar-ux.ts` | harness-maintainer | Public North-Star UX & entrypoints | Preserves intent, loads config, compiles S0/S1 direct contracts or invokes strong planner for S2/S3 | CLI `agent-rules run` → `northStarRun()` | Authoritative CLI coordinator |
 | `packages/kernel/src/northstar/runtime.ts` | harness-maintainer | Canonical North-Star runtime engine | Coordinates WorkSpec, invokes Runner, manages ProofRouter, EvidenceLedger, AcceptanceAudit, LaneController, Convergence | `executeNorthStarRun()` → `Runner.run()` in `packages/kernel/src/runner/loop.ts` | Authoritative runtime engine |
 | `packages/engine/src/northstar/` | harness-maintainer | Compatibility facade | Re-exports all kernel northstar modules | Delegating facade | Preserved for backward compatibility |
 | `packages/kernel/src/northstar/evidence-ledger.ts` | harness-maintainer | Append-only evidence ledger & acceptance reducer | Hash-chained envelope validation (`read`, `append`), runtime binding verification, multi-channel oracle deduplication | `deriveAcceptance()`, `EvidenceLedger` | Worker prose cannot author PASS |
@@ -69,7 +69,7 @@ This document establishes the canonical mapping between the repository source co
 | `H-03` | Single-package unification | 4 packages in `packages/` | `HYPOTHESIS` | `DEFER` |
 | `H-04` | Retire facades & legacy UI server | engine facades active | `HYPOTHESIS` | `KEEP` |
 | `H-05` | Externalize all `.agent` state | `.agent` stored at repo root | `HYPOTHESIS` | `DEFER` |
-| `H-06` | Public CLI needs only 6 commands | 35 CLI command files exist | `HYPOTHESIS` | `KEEP` |
+| `H-06` | Public CLI surface is exactly 8 commands | 5 CLI command source modules remain (install, uninstall, doctor, integration, northstar-ux) | `FACT` | `KEEP` |
 | `H-07` | Consolidate all runners to one TS runner | Multiple execution adapters exist | `HYPOTHESIS` | `KEEP` |
 | `H-08` | Immediate deletion of shadow mode | Decision Fabric defaults to shadow | `HYPOTHESIS` | `KEEP` |
 | `H-09` | Exactly 8 hosts supported | 8 hosts declared in registry | `HYPOTHESIS` | `KEEP` |

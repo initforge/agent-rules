@@ -1,6 +1,13 @@
 ---
 name: expo-skills
 description: "Provenance projection for expo/skills (pinned dcff9e7, MIT): ROUTED on Expo project facts; never install all implicitly."
+metadata:
+  signals: "expo project, expo sdk, expo config plugin"
+  excludes: "web-only"
+  priority: "40"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # expo-skills
 

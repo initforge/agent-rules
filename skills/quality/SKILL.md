@@ -5,6 +5,13 @@ description: 'Quality gate combining clean-code lint (pre/post-execution) and de
   code", "viết code đẹp", "tối ưu code" request. Do NOT use for pure Q&A or an obvious one-file fix without a quality concern.
 
   '
+metadata:
+  signals: "clean code, dọn dẹp code, refactor code, viết code đẹp, tối ưu code, smell scan, hard-block, deep code quality audit, strict maintainability review, spaghetti, code judo"
+  excludes: "pure q&a, ordinary comparison, obvious fix"
+  priority: "55"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 
 # Quality — Code Cleanliness & Maintainability Review

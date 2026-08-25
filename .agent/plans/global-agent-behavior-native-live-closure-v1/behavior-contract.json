@@ -1,0 +1,175 @@
+{
+  "schema": "agent-rules/behavior-contract",
+  "version": 1,
+  "plan_id": "global-agent-behavior-native-live-closure-v1",
+  "state_vocabulary": {
+    "task_state": ["DISCUSSING", "PLANNED", "EXECUTING", "VERIFYING", "COMPLETE", "BLOCKED", "NEEDS_USER"],
+    "claim_outcome": ["PASS", "PARTIAL", "BLOCKED", "UNSUPPORTED", "PRE-EXISTING", "NEEDS_USER"],
+    "host_state": ["NOT_DETECTED", "DETECTED", "INSTALLED", "OFFLINE_VERIFIED", "LIVE_VERIFIED", "FAILED"],
+    "provider_state": ["UNAVAILABLE", "AVAILABLE", "AUTHORIZED", "ACTIVE", "FAILED"]
+  },
+  "removed_synonyms": [
+    "Ready", "Completed", "Observed", "Effective", "Live pass", "Host usable pass",
+    "ADVISORY", "PLAN", "EXECUTION", "VERIFY", "TERMINAL"
+  ],
+  "module_ownership": {
+    "BehaviorRuntime": {
+      "canonical": ["runtime.ts"],
+      "absorbs": ["eval-lab.ts", "telemetry.ts"],
+      "responsibility": "Coordinates the entire lifecycle following the single flow; no module writes PASS or its own state."
+    },
+    "RequestIntake": {
+      "canonical": ["trigger.ts", "intake-decision.ts", "reference-input.ts"],
+      "absorbs": [],
+      "responsibility": "Holds raw intent, classifies relation to current task, closes ambiguity."
+    },
+    "PlanCompiler": {
+      "canonical": ["compiler.ts", "plan-compiler.ts", "planner.ts", "plan-evaluator.ts", "plan-normalizer.ts", "plan-patch.ts", "plan-reviewer.ts", "plan-visibility-gate.ts", "requirement-ledger.ts", "portable-plan.ts", "causal-map.ts", "domain-packs.ts"],
+      "absorbs": ["planner-runtime.ts", "decision-closure.ts"],
+      "responsibility": "Creates executable plan and worker packet from raw intent + effective requirements."
+    },
+    "ContextRuntime": {
+      "canonical": ["context.ts", "context-engine.ts", "context-budget.ts", "context-feedback.ts"],
+      "absorbs": [],
+      "responsibility": "Loads, checkpoints, compacts, resumes and evolves context; one ContextCapsule."
+    },
+    "SkillResolver": {
+      "canonical": ["routing.ts (skill half)", "pencil-routing.ts"],
+      "absorbs": [],
+      "responsibility": "Selects skills from deterministic facts, exactly once per context_generation, no second resolver path."
+    },
+    "CapabilityBroker": {
+      "canonical": ["routing.ts (broker half)", "mcp-lifecycle.ts"],
+      "absorbs": ["decision-fabric.ts"],
+      "responsibility": "Selects provider/MCP/tool, manages lease and authorization."
+    },
+    "ExecutionCoordinator": {
+      "canonical": ["model-governor.ts", "delegation.ts", "resource-governor.ts", "support-pack.ts", "pair-repair.ts", "execution-lifecycle.ts", "revision-invalidation.ts", "trajectory-supervisor.ts", "capability-routing.ts", "telemetry.ts"],
+      "absorbs": ["closure-transaction.ts", "closure-service.ts (stage/commit half)"],
+      "responsibility": "Scopes, locks, dispatches workers, reconciles, bounded repair."
+    },
+    "ProofRouter": {
+      "canonical": ["proof-router.ts", "proof-testing.ts", "verification-graph.ts", "project-audit.ts"],
+      "absorbs": [],
+      "responsibility": "Selects proof per claim/risk/runtime surface; workers report observations only."
+    },
+    "RunStore": {
+      "canonical": ["run-store.ts", "artifact-admission.ts"],
+      "absorbs": [],
+      "responsibility": "Single writer of plan/run/evidence/result; atomic updates; direct filesystem writes elsewhere removed."
+    },
+    "OutcomeReducer": {
+      "canonical": ["evidence-ledger.ts", "acceptance-audit.ts", "convergence.ts", "semantic-auditor.ts", "receipts.ts", "reachable-progress.ts", "claim-impact.ts"],
+      "absorbs": ["closure-gates.ts", "closure-service.ts (deriveOutcome half)"],
+      "responsibility": "Single creator of claim outcomes and final result; never worker-authored."
+    },
+    "HostAdapter": {
+      "canonical": ["host-adapters.ts", "host-registry.ts", "host-adapter-contract.ts", "host-canary.ts", "host-capabilities.ts", "cross-host-hub.ts"],
+      "absorbs": [],
+      "responsibility": "detect/inventory/planInstall/install/reload/readback/offlineCanary/authenticatedCanary/rollback/uninstall per host."
+    }
+  },
+  "single_flow": [
+    "RequestIntake",
+    "PlanCompiler",
+    "ContextRuntime",
+    "SkillResolver",
+    "CapabilityBroker",
+    "ExecutionCoordinator",
+    "ProofRouter",
+    "RunStore",
+    "OutcomeReducer"
+  ],
+  "coverage_matrix": {
+    "dimensions": ["lifecycle stage", "invariant", "actor/handoff", "success/failure/resume", "affected host"],
+    "cells": [
+      {
+        "stage": "install",
+        "invariant": "atomic+idempotent install, zero diff on reinstall, ownership preserved",
+        "actor": "HostAdapter",
+        "handoff": "native-installer → host config",
+        "success": "byte-equal reinstall receipts",
+        "failure": "transaction rollback byte-equal",
+        "resume": "journal replay",
+        "hosts": ["codex", "claude", "opencode", "cursor", "antigravity", "grok", "deepseek-harness", "command-code"]
+      },
+      {
+        "stage": "reload",
+        "invariant": "host re-reads rules and skills after reload/new session",
+        "actor": "HostAdapter.reload",
+        "handoff": "install → reload → readback",
+        "success": "readback contains managed blocks",
+        "failure": "readback mismatch → FAILED",
+        "resume": "re-run reload",
+        "hosts": ["codex", "claude", "opencode", "cursor", "antigravity", "grok", "deepseek-harness", "command-code"]
+      },
+      {
+        "stage": "offline canary",
+        "invariant": "offline claims 1-7+9 PASS without login",
+        "actor": "HostAdapter.offlineCanary",
+        "handoff": "readback → offline canary",
+        "success": "OFFLINE_VERIFIED",
+        "failure": "FAILED with evidence",
+        "resume": "re-run offline canary",
+        "hosts": ["codex", "claude", "opencode", "cursor", "antigravity", "grok", "deepseek-harness", "command-code"]
+      },
+      {
+        "stage": "authenticated canary",
+        "invariant": "logged-in host runs model-turn live; signed-out returns NEEDS_USER",
+        "actor": "HostAdapter.authenticatedCanary",
+        "handoff": "offline canary → live model turn",
+        "success": "LIVE_VERIFIED (Antigravity)",
+        "failure": "cursor/grok signed-out → MODEL_BEHAVIOR=NEEDS_USER; host stays OFFLINE_VERIFIED",
+        "resume": "owner logs in then re-run",
+        "hosts": ["antigravity (LIVE_VERIFIED)", "cursor (NEEDS_USER)", "grok (NEEDS_USER)"]
+      },
+      {
+        "stage": "rollback",
+        "invariant": "byte-equal pre/post rollback, uninstall only owned content",
+        "actor": "HostAdapter.rollback",
+        "handoff": "install → rollback → readback",
+        "success": "pre/post sha256 equal",
+        "failure": "rollback mismatch → BLOCKED",
+        "resume": "re-run rollback",
+        "hosts": ["codex", "claude", "opencode", "cursor", "antigravity", "grok", "deepseek-harness", "command-code"]
+      },
+      {
+        "stage": "skill resolution",
+        "invariant": "exactly one resolver, one route per context_generation, positive/negative tests",
+        "actor": "SkillResolver",
+        "handoff": "context → resolver → broker",
+        "success": "selected skills match trigger facts",
+        "failure": "dependency/provider missing → BLOCKED/NEEDS_USER",
+        "resume": "delta receipt on new facts",
+        "hosts": "all"
+      },
+      {
+        "stage": "MCP lifecycle",
+        "invariant": "integration-only; bridge absent; 7-point PASS for needed MCP; no lease when not needed",
+        "actor": "CapabilityBroker",
+        "handoff": "broker → integration → host config",
+        "success": "handshake/listTools/call/effect/teardown/rollback",
+        "failure": "no lease; BLOCKED on missing provider",
+        "resume": "lease re-acquire",
+        "hosts": "all"
+      },
+      {
+        "stage": "closure",
+        "invariant": "single writer RunStore, single reducer OutcomeReducer, evidence source-bound",
+        "actor": "RunStore + OutcomeReducer",
+        "handoff": "proof → evidence → acceptance → outcome",
+        "success": "result.json via OutcomeReducer",
+        "failure": "reject stale/foreign evidence",
+        "resume": "journal resume",
+        "hosts": "all"
+      }
+    ]
+  },
+  "not_applicable_cells": [
+    {"cell": "authenticated canary for codex/claude/opencode/deepseek-harness/command-code", "reason": "not logged-in this host session; offline claims only; live claim deferred per auth boundary"},
+    {"cell": "model-turn live for cursor/grok", "reason": "signed-out; requires owner login → NEEDS_USER"}
+  ],
+  "blocked_cells": [
+    {"cell": "none", "reason": "no missing authority so far; all offline host claims are credential-free and Antigravity session is available"}
+  ]
+}

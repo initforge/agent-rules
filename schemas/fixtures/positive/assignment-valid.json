@@ -8,7 +8,8 @@
   "acceptance_ids": ["AC1"],
   "capability_class": "standard",
   "write_paths": ["schemas/plan.schema.json"],
-  "context_paths": ["rules/25-task-lifecycle.md"],
+  "context_paths": ["rules/10-execution-planning-delegation.md"],
+
   "forbidden_paths": ["automation/"],
   "allowed_tool_classes": ["read", "edit", "test", "shell", "git"],
   "receipt_budget": 10,

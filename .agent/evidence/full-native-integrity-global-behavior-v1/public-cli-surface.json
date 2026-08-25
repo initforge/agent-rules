@@ -1,0 +1,80 @@
+{
+  "schema": "agent-rules/public-cli-surface",
+  "version": 1,
+  "generated_at": "2026-08-25T09:15:59.364Z",
+  "public_commands_count": 8,
+  "commands": [
+    {
+      "name": "install",
+      "description": "Install native instructions and configured integrations into supported hosts",
+      "options": [
+        "--all",
+        "--dry-run",
+        "--force"
+      ]
+    },
+    {
+      "name": "uninstall",
+      "description": "Remove native instructions and managed integrations from supported hosts",
+      "options": [
+        "--all"
+      ]
+    },
+    {
+      "name": "doctor",
+      "description": "Inspect host instruction surfaces, MCP files, and permissions",
+      "options": [
+        "--json",
+        "--all"
+      ]
+    },
+    {
+      "name": "status",
+      "description": "Print status of the current execution plan and active ledger",
+      "options": [
+        "--json"
+      ]
+    },
+    {
+      "name": "run",
+      "description": "Execute bounded S0/S1 tasks with proof verification",
+      "options": [
+        "--own",
+        "--verify-exec",
+        "--verify-arg",
+        "--proof-plan",
+        "--json"
+      ]
+    },
+    {
+      "name": "integration",
+      "description": "List, install, or inspect explicit integrations",
+      "options": [
+        "list",
+        "install",
+        "inspect"
+      ]
+    },
+    {
+      "name": "init",
+      "description": "Initialize North-Star runtime in the target workspace",
+      "options": [
+        "--agent",
+        "--domain-pack"
+      ]
+    },
+    {
+      "name": "reference",
+      "description": "Inspect or query domain-pack source references",
+      "options": [
+        "5fedu"
+      ]
+    }
+  ],
+  "internal_commands_purged": [
+    "close",
+    "tombstone",
+    "import-reviewed-changes"
+  ],
+  "status": "CERTIFIED"
+}

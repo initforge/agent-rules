@@ -99,3 +99,7 @@ skills-lock.json
 agent-rules-source.zip
 .agent/operator-profile/
 .agent/handoff/packets/
+
+# Legacy rule/profile archives are local provenance only; Git history and the
+# parity index are the only shipped history (closure contract 2.1).
+.agent/archive/

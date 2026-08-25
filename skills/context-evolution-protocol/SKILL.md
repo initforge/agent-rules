@@ -5,6 +5,13 @@ description: Trigger-only protocol for learning from user feedback and evolving 
   feedback reveals repeated agent misunderstanding, context drift, over-specific rules, duplicated lessons, or requests like
   "ghi nhớ", "bổ sung context", "đưa vào rule", "đừng lặp lại", "context bị loạn", "dọn context", "sync rule". Do not use
   for ordinary coding tasks.
+metadata:
+  signals: "ghi nhớ, bổ sung context, đừng lặp lại, đưa vào rule, dọn context, sync rule, context bị loạn, agent-rules context, context drift"
+  excludes: "ordinary implementation, cài context, thiết lập 5fedu, apply the vercel agent skills, feed the goldfish, tinh gọn rules"
+  priority: "60"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 
 # Context Evolution Protocol
@@ -99,7 +106,7 @@ Hỏi trước khi split hoặc thêm reference bắt buộc:
 
 1. Các phần có **cùng một workflow** đọc liên tiếp không? → **Giữ 1 file**, gọn câu thay vì tách.
 2. Link chain >1 bước để hiểu hành động? → **Gộp lại** vào file sở hữu.
-3. Tách chỉ vì audit/`wc -l`? → **Cấm** (xem `16-context-style` §Liền mạch).
+3. Tách chỉ vì audit/`wc -l`? → **Cấm** (xem `rules/30-context-skill-mcp.md` — giữ context liền mạch).
 4. Reference mới có thật sự hiếm load? → OK; nếu không → merge upstream.
 
 ## Agent flexibility (behavior — không checklist máy móc)
@@ -112,7 +119,7 @@ Hỏi trước khi split hoặc thêm reference bắt buộc:
 
 Before editing:
 
-- **Benefit–Harm Gate** (`rules/50-context-budget.md`) when slim/rewrite/depth cut: Benefit + Harm + Net → PROCEED | DISCUSS_OWNER | ABORT. **Cấm slim-for-budget.**
+- **Benefit–Harm Gate** (`rules/30-context-skill-mcp.md`) when slim/rewrite/depth cut: Benefit + Harm + Net → PROCEED | DISCUSS_OWNER | ABORT. **Cấm slim-for-budget.**
 - `rg` for existing wording, synonyms, file names, and rule concepts.
 - If `<working-repo>/.agent/trace.jsonl` exists, scan recent `friction` fields for repeated patterns before promoting.
 - Identify canonical source and mirrors.
@@ -132,7 +139,7 @@ After editing:
 Mọi lần sửa `rules/**`, `skills/**`, `AGENTS.md`, `platforms/**`, `projects/**`, overlay, GEMINI.md → **tự động** chạy 2 việc, không chờ owner nhắc:
 
 **1. Chuẩn hoá (correctness):**
-- Áp `16-context-style` (bullet ≤20 từ; cohesion trước số dòng; linh hoạt theo tình huống).
+- Áp `rules/30-context-skill-mcp.md` (giữ context cohesive/imperative; cohesion trước số dòng; linh hoạt theo tình huống).
 - Đúng Placement (bảng trên); một concept một nơi.
 - `rg` tìm wording/synonym trùng → gộp, không để 2 bản mâu thuẫn.
 

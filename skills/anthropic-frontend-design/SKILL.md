@@ -1,6 +1,13 @@
 ---
 name: anthropic-frontend-design
 description: "Provenance projection for Anthropic frontend-design (pinned f17010c9, Apache-2.0): activation on explicit design brief; content materialization license-gated."
+metadata:
+  signals: "frontend design contract, explicit design brief, intentional visual direction"
+  excludes: "5fedu, ERP module, parity"
+  priority: "45"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # anthropic-frontend-design
 

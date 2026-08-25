@@ -7,6 +7,13 @@ description: 'QA brain — exploratory matrix, edge/permission/state, severity, 
   first).
 
   '
+metadata:
+  signals: "QA checklist, exploratory, edge-case, test như QA, manual cases, bug triage, permission matrix, release readiness, regression plan, test strategy UI"
+  excludes: "pure unit/api only"
+  priority: "60"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 
 # QA Skills

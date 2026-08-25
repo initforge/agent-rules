@@ -1,0 +1,19 @@
+﻿ M automation/host-attestation.ts
+ M automation/verify-windows-hosts.mjs
+ M operator-profiles/vibe-product/profile.json
+ M packages/cli/src/commands/operator-profile.ts
+ M packages/cli/src/services/host-projection.ts
+ M packages/cli/test/operator-profile.test.ts
+ M packages/kernel/src/northstar/operator-profile.ts
+ M packages/kernel/test/operator-profile.test.ts
+ M platforms/antigravity/antigravity-overlay.md
+ M platforms/claude/claude-overlay.md
+ M platforms/codex/codex-overlay.md
+ M platforms/command-code/command-code-overlay.md
+ M platforms/cursor/cursor-overlay.md
+ M platforms/deepseek-harness/deepseek-harness-overlay.md
+ M platforms/grok/grok-overlay.md
+ M platforms/opencode/opencode-overlay.md
+?? .agent/plans/full-native-8host-single-truth-v1/
+?? .agent/plans/runtime-native-live-closure-v3/
+?? automation/truth-model-negative.test.ts

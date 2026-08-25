@@ -1,0 +1,12 @@
+{
+  "journey_id": "JOURNEY-001",
+  "description": "Simple prompt: direct S0/S1 without a plan and without unnecessary skills",
+  "observed": {
+    "risk": "S0",
+    "determinacy": "EXPLICIT",
+    "planner_authority": "FORBIDDEN"
+  },
+  "observed_at": "2026-08-25T14:29:45.007Z",
+  "schema": "agent-rules/journey-observation/v1",
+  "sha256": "3da508a0f22ffa626f65fb3d90093fe710d3aec2e1a824a53fbb06592b07d678"
+}

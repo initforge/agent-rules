@@ -1,0 +1,51 @@
+{
+  "schema": "agent-rules/verification-matrix",
+  "version": 1,
+  "gates": [
+    {
+      "name": "build-workspaces",
+      "command": "npm run build",
+      "target": "kernel, engine, cli, runtime-build"
+    },
+    {
+      "name": "typecheck-workspaces",
+      "command": "npm run check",
+      "target": "TypeScript compiler across packages"
+    },
+    {
+      "name": "governed-vitest-kernel",
+      "command": "vitest packages/kernel",
+      "target": "64 test files, 552 tests"
+    },
+    {
+      "name": "governed-vitest-engine",
+      "command": "vitest packages/engine",
+      "target": "54 test files, 1294 tests"
+    },
+    {
+      "name": "governed-vitest-cli",
+      "command": "vitest packages/cli",
+      "target": "39 test files, 574 tests"
+    },
+    {
+      "name": "global-behavior-suite",
+      "command": "node automation/test-global-behavior.mjs",
+      "target": "22 disposable workspace invariant tests"
+    },
+    {
+      "name": "native-8host-install",
+      "command": "node packages/cli/dist/index.js install --all",
+      "target": "8 native hosts certification"
+    },
+    {
+      "name": "doctor-diagnostics",
+      "command": "node packages/cli/dist/index.js doctor all",
+      "target": "all host health checks"
+    },
+    {
+      "name": "full-verify-all",
+      "command": "node automation/verify-all.mjs",
+      "target": "20+ automated quality and security gates"
+    }
+  ]
+}

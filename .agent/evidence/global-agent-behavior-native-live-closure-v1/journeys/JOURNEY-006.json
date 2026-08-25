@@ -1,0 +1,11 @@
+{
+  "journey_id": "JOURNEY-006",
+  "description": "Repeated feedback classifies as refinement/context-evolution, one route per context_generation",
+  "observed": {
+    "relation": "refinement",
+    "context_generation": 1
+  },
+  "observed_at": "2026-08-25T14:29:45.129Z",
+  "schema": "agent-rules/journey-observation/v1",
+  "sha256": "3187896f8a210a0eab2a6d9f0d9f6aefd1974a0a1b245c8faa9bcfb789102bac"
+}

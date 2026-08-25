@@ -1,0 +1,890 @@
+{
+  "schema": "artifact/plan",
+  "version": 1,
+  "level": "resumable",
+  "meta": {
+    "id": "full-native-8host-single-truth-v1",
+    "created_at": "2026-08-25T00:00:00Z",
+    "updated_at": "2026-08-25T00:00:00Z",
+    "source_refs": [
+      ".agent/plans/full-native-8host-single-truth-v1/original.md"
+    ]
+  },
+  "repository_baseline": {
+    "branch": "main",
+    "sha": "c1deca1a5ee186a9d0361b57fd0ff7e943fa676e"
+  },
+  "intent_reference": {
+    "hash": "2f64884840c7bd5e40e0ff4bb9238889df2462acad05bbe5bcf72415158c1050",
+    "summary": "Full Native 8 Host + Runtime gọn + Một nguồn sự thật — one continuous pass, 8 native hosts, single truth path, no operator-profile, no vibe-coder, no technical_explain, single registry/resolver/broker/store/ledger/reducer"
+  },
+  "intent": {
+    "outcome": "Tất cả 8 host cài native chính thức qua một registry duy nhất, runtime gọn hai lớp không inject trùng, một truth path EvidenceLedger→AcceptanceAudit→OutcomeReducer, xóa operator-profile/modes, skill/MCP single-decision, public UX gọn, không false PASS, verified và closed trong một phase liên tục không commit/push.",
+    "risk_classification": "high",
+    "in_scope": [
+      "single host registry platforms/platform-contracts.json NativeHostContract",
+      "8 native adapters Codex/Claude/Grok/OpenCode/Antigravity/Cursor/DeepSeek Harness/Command Code with transactional install",
+      "single RunStore ProofPlan EvidenceLedger OutcomeReducer run.json/events.jsonl/result.json",
+      "skill single resolver SKILL.md source, shared ~/.agents/skills",
+      "MCP separated from core install IntegrationRegistry lease canary",
+      "remove operator-profile vibe-coder plain-vietnamese technical_explain operator-profiles/ kernel/CLI/rules/tests/overlays",
+      "natural communication rule",
+      "public CLI trim to 8 commands, dev hidden",
+      "verification 9 claims per host, credential-free proof, NEEDS_USER only MODEL_BEHAVIOR",
+      "install hosts natively offline proof + live canary where session exists",
+      "quality gates build typecheck tests verify:all host-certification arch checks"
+    ],
+    "non_goals": [
+      "no credentials reading/copying/requesting",
+      "no login flow for Cursor/Grok",
+      "no false PASS scanning arbitrary JSON",
+      "no commit/push/deploy without request",
+      "no prompt-triggered domain pack",
+      "no MCP auto-route for explicit-only providers"
+    ],
+    "open_questions": []
+  },
+  "requirements": [
+    {
+      "id": "REQ-001",
+      "summary": "Cả 8 host cài bằng native surface chính thức riêng, không dùng cùng cấu trúc file cho mọi host",
+      "kind": "original",
+      "trace_id": "REQ-01"
+    },
+    {
+      "id": "REQ-002",
+      "summary": "Host chưa login được chứng minh tối đa credential-free (loader/readback/hook/catalog/MCP handshake); chỉ MODEL_BEHAVIOR được NEEDS_USER",
+      "kind": "original",
+      "trace_id": "REQ-02"
+    },
+    {
+      "id": "REQ-003",
+      "summary": "Không đọc/sao chép/yêu cầu credentials; dùng session/keyring sẵn cho canary vô hại",
+      "kind": "original",
+      "trace_id": "REQ-03"
+    },
+    {
+      "id": "REQ-004",
+      "summary": "Xóa hoàn toàn operator-profile, vibe-coder, plain-vietnamese, technical_explain và mọi mode liên quan khỏi source/CLI/rules/tests/mirrors",
+      "kind": "original",
+      "trace_id": "REQ-04"
+    },
+    {
+      "id": "REQ-005",
+      "summary": "Giao tiếp mặc định natural: ngôn ngữ người dùng, outcome-first, dễ hiểu; kỹ thuật chỉ khi giúp quyết định/debug/verification hoặc khi hỏi",
+      "kind": "original",
+      "trace_id": "REQ-05"
+    },
+    {
+      "id": "REQ-006",
+      "summary": "Chỉ còn một registry, một skill resolver, một integration broker, một artifact store, một evidence ledger, một outcome reducer; public UX gọn, --details/--json cho internals",
+      "kind": "original",
+      "trace_id": "REQ-06"
+    },
+    {
+      "id": "REQ-007",
+      "summary": "Không false PASS; không quét JSON PASS bất kỳ để đóng requirement khác; worker không tự ghi PASS",
+      "kind": "original",
+      "trace_id": "REQ-07"
+    },
+    {
+      "id": "REQ-008",
+      "summary": "Một nguồn sự thật platforms/platform-contracts.json NativeHostContract với đầy đủ fields (home env, surfaces, paths, capability, install/readback/canary/uninstall, auth boundary, limits)",
+      "kind": "original",
+      "trace_id": "REQ-08"
+    },
+    {
+      "id": "REQ-009",
+      "summary": "Public CLI gọn 8 lệnh; xóa operator-profile/close/M11; maintainer → agent-rules dev; status Ready/Needs action/Unsupported và Running/Done/Needs you/Failed",
+      "kind": "original",
+      "trace_id": "REQ-09"
+    },
+    {
+      "id": "REQ-010",
+      "summary": "Native installer transactional per-host (detect/inventory/planInstall/install/certify/rollback/uninstall) với merge bảo toàn, lock, crash recovery, custom home, Windows spaces/casing/junction, không động 7 host còn lại, không gọi convergeAllHostMcpConfigs",
+      "kind": "original",
+      "trace_id": "REQ-10"
+    },
+    {
+      "id": "REQ-011",
+      "summary": "Runtime hai lớp không inject trùng; skill native SKILL.md single source shared ~/.agents/skills; MCP tách khỏi core install lease/cleanup/canary",
+      "kind": "original",
+      "trace_id": "REQ-11"
+    },
+    {
+      "id": "REQ-012",
+      "summary": "Artifact admission qua RunStore duy nhất với ProofPlan/claim-bound EvidenceRecord; closure duy nhất EvidenceLedger→AcceptanceAudit→OutcomeReducer",
+      "kind": "original",
+      "trace_id": "REQ-12"
+    },
+    {
+      "id": "REQ-013",
+      "summary": "Verification 9 claims per host; Ready requires 1–7+9 PASS; claim 8 conditional NEEDS_USER; best-effort Grok/Cursor/Antigravity dual surfaces; automated tests unit/integration/behavior/quality",
+      "kind": "original",
+      "trace_id": "REQ-13"
+    },
+    {
+      "id": "REQ-014",
+      "summary": "Thực hiện một pass 16 bước, supersede v3, forward-edit dirty worktree, không commit/push, parity negative tests trước deletion",
+      "kind": "original",
+      "trace_id": "REQ-14"
+    },
+    {
+      "id": "REQ-015",
+      "summary": "Keep communication profile-free and natural",
+      "kind": "original",
+      "trace_id": "REQ-G01"
+    },
+    {
+      "id": "REQ-016",
+      "summary": "Hidden authority states ADVISORY→PLAN→EXECUTION→VERIFY→TERMINAL",
+      "kind": "original",
+      "trace_id": "REQ-G02"
+    },
+    {
+      "id": "REQ-017",
+      "summary": "Plan-only cannot authorize edits; explicit execute pivot required",
+      "kind": "original",
+      "trace_id": "REQ-G03"
+    },
+    {
+      "id": "REQ-018",
+      "summary": "Classify owner messages CONTINUATION/ADD/CORRECT/CONFLICT/SUPERSEDE/INDEPENDENT",
+      "kind": "original",
+      "trace_id": "REQ-G04"
+    },
+    {
+      "id": "REQ-019",
+      "summary": "Implement ADD/CORRECT/CONFIRM/REJECT/SUPERSEDE semantics",
+      "kind": "original",
+      "trace_id": "REQ-G05"
+    },
+    {
+      "id": "REQ-020",
+      "summary": "Planner bounded: one draft + at most one correction",
+      "kind": "original",
+      "trace_id": "REQ-G06"
+    },
+    {
+      "id": "REQ-021",
+      "summary": "Independent reviewer requires separate invocation",
+      "kind": "original",
+      "trace_id": "REQ-G07"
+    },
+    {
+      "id": "REQ-022",
+      "summary": "Single writer lease per worktree",
+      "kind": "original",
+      "trace_id": "REQ-G08"
+    },
+    {
+      "id": "REQ-023",
+      "summary": "Protect dirty tracked/untracked files",
+      "kind": "original",
+      "trace_id": "REQ-G09"
+    },
+    {
+      "id": "REQ-024",
+      "summary": "Global safety cannot be weakened by project-local",
+      "kind": "original",
+      "trace_id": "REQ-G10"
+    },
+    {
+      "id": "REQ-025",
+      "summary": "Commit/push/delete/credentials require explicit authority",
+      "kind": "original",
+      "trace_id": "REQ-G11"
+    },
+    {
+      "id": "REQ-026",
+      "summary": "Preserve intent across compaction/restart/resume/handoff",
+      "kind": "original",
+      "trace_id": "REQ-G12"
+    },
+    {
+      "id": "REQ-027",
+      "summary": "Clarification only for material ambiguity",
+      "kind": "original",
+      "trace_id": "REQ-G13"
+    },
+    {
+      "id": "REQ-028",
+      "summary": "Disposable-repo global behavior acceptance",
+      "kind": "original",
+      "trace_id": "REQ-G14"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "DEC-01",
+      "statement": "Single registry platforms/platform-contracts.json là nguồn duy nhất; mọi adapter/docs/fixture/certification sinh/đọc từ đây.",
+      "rationale": "Xóa bảng trùng và bảo đảm single source of truth."
+    },
+    {
+      "id": "DEC-02",
+      "statement": "Native projection theo host official surface riêng, không giả lập capability.",
+      "rationale": "Bám docs chính thức Codex/Cursor/OpenCode/Antigravity/Grok/DSH/CommandCode."
+    },
+    {
+      "id": "DEC-03",
+      "statement": "Grok compatibility thuật toán 5 bước cố định.",
+      "rationale": "Bảo đảm một rules/skill/hook/MCP mỗi ID."
+    },
+    {
+      "id": "DEC-04",
+      "statement": "Hard cut xóa operator-profile/modes ngay sau parity, không giữ alias.",
+      "rationale": "User chấp nhận hard cut."
+    },
+    {
+      "id": "DEC-05",
+      "statement": "Communication rule natural duy nhất thay thế vibe-coder/technical_explain.",
+      "rationale": "Đơn giản hóa nhưng vẫn outcome-first."
+    },
+    {
+      "id": "DEC-06",
+      "statement": "RunStore là writer duy nhất cho run artifacts; admitEvidenceWrite claim-bound theo ProofPlan.",
+      "rationale": "Ngăn false PASS và arbitrary JSON scan."
+    },
+    {
+      "id": "DEC-07",
+      "statement": "One truth closure EvidenceLedger→AcceptanceAudit→OutcomeReducer; worker chỉ ghi observation.",
+      "rationale": "Ngăn worker-authored PASS."
+    },
+    {
+      "id": "DEC-08",
+      "statement": "Core install chỉ cài MCP bridge/config capability; provider thật chỉ qua integration enable.",
+      "rationale": "Tách MCP khỏi core."
+    }
+  ],
+  "change_graph": [
+    {
+      "id": "CG-01",
+      "area": "registry",
+      "current_truth": "platform-contracts.json v2 generic bootstrap/routing/orchestration/mcp, chưa NativeHostContract chi tiết",
+      "exact_change": "nâng schema lên NativeHostContract per-host với home env, surfaces, paths, precedence, reload/merge, capability vs version, install/readback/canary/uninstall, auth boundary, limits",
+      "category": "fact",
+      "files": [
+        "platforms/platform-contracts.json",
+        "schemas/native-host-contract.schema.json",
+        "packages/kernel/src/northstar/host-adapter-contract.ts"
+      ],
+      "depends_on": [],
+      "requirement_ids": [
+        "REQ-08",
+        "REQ-01"
+      ]
+    },
+    {
+      "id": "CG-02",
+      "area": "runtime-store",
+      "current_truth": "nhiều writer rải rác, closure-service/terminal-gate legacy, arbitrary JSON PASS scan",
+      "exact_change": "thay bằng RunStore (putState/appendEvent/putArtifact/finalize) + EvidenceLedger + AcceptanceAudit + OutcomeReducer single path",
+      "category": "fact",
+      "files": [
+        "packages/kernel/src/northstar/run-store.ts",
+        "packages/kernel/src/northstar/evidence-ledger.ts",
+        "packages/kernel/src/northstar/acceptance-audit.ts",
+        "packages/kernel/src/northstar/outcome-reducer.ts"
+      ],
+      "depends_on": [
+        "CG-01"
+      ],
+      "requirement_ids": [
+        "REQ-12",
+        "REQ-07"
+      ]
+    },
+    {
+      "id": "CG-03",
+      "area": "installer",
+      "current_truth": "install chưa transactional per-host, chưa lock/crash recovery/merge preserve, có convergeAllHostMcpConfigs",
+      "exact_change": "implement NativeInstaller interface 7 bước transactional, per-host lock, atomic swap/merge JSONC/TOML, Windows casing/symlink/junction tests",
+      "category": "fact",
+      "files": [
+        "packages/cli/src/services/native-installer.ts",
+        "packages/cli/src/adapters/*"
+      ],
+      "depends_on": [
+        "CG-01"
+      ],
+      "requirement_ids": [
+        "REQ-10",
+        "REQ-01",
+        "REQ-02"
+      ]
+    },
+    {
+      "id": "CG-04",
+      "area": "skills",
+      "current_truth": "ROUTE.json + catalog.json dual authority + candidate-fabric.json + ba lần routing",
+      "exact_change": "SKILL.md single source metadata, generated catalog read-only, xóa ROUTE.json/candidate-fabric, TaskPacket gọi SkillResolver 1 lần, Broker nhận selected",
+      "category": "fact",
+      "files": [
+        "skills/*/SKILL.md",
+        "skills/catalog.json",
+        "packages/kernel/src/northstar/skill-resolver.ts"
+      ],
+      "depends_on": [],
+      "requirement_ids": [
+        "REQ-11",
+        "REQ-06"
+      ]
+    },
+    {
+      "id": "CG-05",
+      "area": "mcp",
+      "current_truth": "core install provisionMcps global, auto-route explicit providers",
+      "exact_change": "IntegrationRegistry duy nhất với capability/transport/auth/sideEffects/hosts/probe; core chỉ bridge; provider enable riêng; lease/timeout/cleanup; canary local deterministic",
+      "category": "fact",
+      "files": [
+        "integrations/registry.json",
+        "packages/kernel/src/northstar/integration-broker.ts"
+      ],
+      "depends_on": [
+        "CG-01"
+      ],
+      "requirement_ids": [
+        "REQ-11",
+        "REQ-06"
+      ]
+    },
+    {
+      "id": "CG-06",
+      "area": "communication",
+      "current_truth": "operator-profiles/vibe-product, technical_explain, vibe-coder, plain-vietnamese, trigger lists, session_override",
+      "exact_change": "xóa toàn bộ operator-profile source/CLI/kernel/tests/overlays/mirrors; thêm rule natural communication duy nhất",
+      "category": "fact",
+      "files": [
+        "operator-profiles/",
+        "packages/kernel/src/northstar/operator-profile.ts",
+        "packages/cli/src/commands/operator-profile.ts",
+        "rules/"
+      ],
+      "depends_on": [],
+      "requirement_ids": [
+        "REQ-04",
+        "REQ-05"
+      ]
+    },
+    {
+      "id": "CG-07",
+      "area": "cli",
+      "current_truth": "public CLI còn operator-profile/close/M11/terminal-gate; status phức tạp",
+      "exact_change": "public help chỉ 8 lệnh; xóa legacy; maintainer → agent-rules dev; status Ready/Needs action/Unsupported và Running/Done/Needs you/Failed; details gated",
+      "category": "fact",
+      "files": [
+        "packages/cli/src/index.ts",
+        "packages/cli/src/commands/*"
+      ],
+      "depends_on": [
+        "CG-06"
+      ],
+      "requirement_ids": [
+        "REQ-09",
+        "REQ-06"
+      ]
+    },
+    {
+      "id": "CG-08",
+      "area": "verification",
+      "current_truth": "chưa đủ 9 claims per host, version-based PASS, false PASS risk",
+      "exact_change": "định nghĩa 9 claims, Ready điều kiện, credential-free offline proof, NEEDS_USER chỉ MODEL_BEHAVIOR, Grok/Cursor/Antigravity best-effort, negative false-green suite",
+      "category": "fact",
+      "files": [
+        "automation/verify-windows-hosts.mjs",
+        "automation/host-attestation.ts"
+      ],
+      "depends_on": [
+        "CG-01",
+        "CG-03"
+      ],
+      "requirement_ids": [
+        "REQ-13",
+        "REQ-02",
+        "REQ-03"
+      ]
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "AC-01",
+      "claim": "8/8 host có NativeHostContract đầy đủ fields trong canonical registry và không còn bảng host trùng",
+      "proof_profile": "static",
+      "required_dimensions": [
+        "outcome"
+      ],
+      "requirement_ids": [
+        "REQ-08",
+        "REQ-01"
+      ]
+    },
+    {
+      "id": "AC-02",
+      "claim": "Chỉ còn một registry, một skill resolver, một integration broker, một artifact store, một evidence ledger, một outcome reducer (arch test)",
+      "proof_profile": "static",
+      "required_dimensions": [
+        "outcome"
+      ],
+      "requirement_ids": [
+        "REQ-06"
+      ]
+    },
+    {
+      "id": "AC-03",
+      "claim": "Zero operator-profile/vibe-coder/plain-vietnamese/technical_explain trong active source/CLI/rules/tests/overlays/mirrors",
+      "proof_profile": "static",
+      "required_dimensions": [
+        "outcome"
+      ],
+      "requirement_ids": [
+        "REQ-04"
+      ]
+    },
+    {
+      "id": "AC-04",
+      "claim": "Communication natural rule hoạt động: outcome-first, ngôn ngữ người dùng, kỹ thuật chỉ khi hữu ích (behavior eval)",
+      "proof_profile": "behavior",
+      "required_dimensions": [
+        "outcome"
+      ],
+      "requirement_ids": [
+        "REQ-05"
+      ]
+    },
+    {
+      "id": "AC-05",
+      "claim": "Public CLI chỉ 8 lệnh, status gọn, --details gated; no operator-profile/close/M11 in normal help",
+      "proof_profile": "static",
+      "required_dimensions": [
+        "outcome"
+      ],
+      "requirement_ids": [
+        "REQ-09"
+      ]
+    },
+    {
+      "id": "AC-06",
+      "claim": "Per-host transactional install chứng minh: single-host không chạm 7 host, merge bảo toàn, lock, crash recovery, Windows edge cases, no convergeAllHostMcpConfigs in core",
+      "proof_profile": "integration",
+      "required_dimensions": [
+        "outcome"
+      ],
+      "requirement_ids": [
+        "REQ-10"
+      ]
+    },
+    {
+      "id": "AC-07",
+      "claim": "Skills: zero ROUTE.json hand-authored, zero candidate-fabric.json, zero duplicate IDs, zero missing descriptions (frontend-architect fixed)",
+      "proof_profile": "static",
+      "required_dimensions": [
+        "outcome"
+      ],
+      "requirement_ids": [
+        "REQ-11"
+      ]
+    },
+    {
+      "id": "AC-08",
+      "claim": "MCP separated: core install không provision provider, explicit-only không auto-route, lease/timeout/cleanup, canary handshake",
+      "proof_profile": "integration",
+      "required_dimensions": [
+        "outcome"
+      ],
+      "requirement_ids": [
+        "REQ-11"
+      ]
+    },
+    {
+      "id": "AC-09",
+      "claim": "Artifact admission qua RunStore duy nhất; zero direct writeJsonAtomic ngoài RunStore; evidence bound claim/spec revision/candidate/hash",
+      "proof_profile": "static",
+      "required_dimensions": [
+        "outcome"
+      ],
+      "requirement_ids": [
+        "REQ-12",
+        "REQ-07"
+      ]
+    },
+    {
+      "id": "AC-10",
+      "claim": "8/8 host có current claim-bound receipt với 9 claims; NATIVE_INSTALLED/DISCOVERED/SKILLS/MCP PASS; credential-free proof đầy đủ; MODEL_BEHAVIOR NEEDS_USER khi signed-out, live canary khi signed-in",
+      "proof_profile": "artifact",
+      "required_dimensions": [
+        "outcome"
+      ],
+      "requirement_ids": [
+        "REQ-13",
+        "REQ-02",
+        "REQ-03"
+      ]
+    },
+    {
+      "id": "AC-11",
+      "claim": "Không false PASS: worker không author PASS, req A không PASS nhờ evidence req B, --contract không bỏ proof router (negative suite)",
+      "proof_profile": "unit",
+      "required_dimensions": [
+        "outcome"
+      ],
+      "requirement_ids": [
+        "REQ-07"
+      ]
+    },
+    {
+      "id": "AC-12",
+      "claim": "One continuous pass completed: source-coverage map, snapshot diff, parity/negative tests trước deletion, 8-host native install+rollback+reinstall, full build/typecheck/tests/verify:all green",
+      "proof_profile": "pipeline-run",
+      "required_dimensions": [
+        "outcome"
+      ],
+      "requirement_ids": [
+        "REQ-14"
+      ]
+    }
+  ],
+  "verification_matrix": [
+    {
+      "requirement_id": "REQ-01",
+      "acceptance_ids": [
+        "AC-01",
+        "AC-10"
+      ]
+    },
+    {
+      "requirement_id": "REQ-02",
+      "acceptance_ids": [
+        "AC-10"
+      ]
+    },
+    {
+      "requirement_id": "REQ-03",
+      "acceptance_ids": [
+        "AC-10"
+      ]
+    },
+    {
+      "requirement_id": "REQ-04",
+      "acceptance_ids": [
+        "AC-03"
+      ]
+    },
+    {
+      "requirement_id": "REQ-05",
+      "acceptance_ids": [
+        "AC-04"
+      ]
+    },
+    {
+      "requirement_id": "REQ-06",
+      "acceptance_ids": [
+        "AC-02",
+        "AC-05"
+      ]
+    },
+    {
+      "requirement_id": "REQ-07",
+      "acceptance_ids": [
+        "AC-09",
+        "AC-11"
+      ]
+    },
+    {
+      "requirement_id": "REQ-08",
+      "acceptance_ids": [
+        "AC-01"
+      ]
+    },
+    {
+      "requirement_id": "REQ-09",
+      "acceptance_ids": [
+        "AC-05"
+      ]
+    },
+    {
+      "requirement_id": "REQ-10",
+      "acceptance_ids": [
+        "AC-06"
+      ]
+    },
+    {
+      "requirement_id": "REQ-11",
+      "acceptance_ids": [
+        "AC-07",
+        "AC-08"
+      ]
+    },
+    {
+      "requirement_id": "REQ-12",
+      "acceptance_ids": [
+        "AC-09"
+      ]
+    },
+    {
+      "requirement_id": "REQ-13",
+      "acceptance_ids": [
+        "AC-10"
+      ]
+    },
+    {
+      "requirement_id": "REQ-14",
+      "acceptance_ids": [
+        "AC-12"
+      ]
+    }
+  ],
+  "path_ownership": {
+    "exclusive_writers": {
+      "harness-maintainer": [
+        "platforms/",
+        "schemas/",
+        "packages/kernel/src/northstar/",
+        "packages/engine/src/northstar/",
+        "packages/cli/",
+        "skills/",
+        "integrations/",
+        "rules/",
+        "automation/"
+      ]
+    },
+    "read_only_paths": [
+      ".agent/ledger/",
+      ".agent/plans/portable-host-native-supervision-v1/",
+      ".agent/plans/runtime-native-live-closure-v3/"
+    ],
+    "forbidden_paths": [
+      "generated/"
+    ]
+  },
+  "task_graph": [
+    {
+      "id": "S1",
+      "name": "canonical registry + RunStore + evidence path skeleton",
+      "work": "upgrade platform-contracts.json to NativeHostContract, create schemas, implement RunStore ledger audit reducer",
+      "owner": "harness-maintainer",
+      "depends_on": [],
+      "capability_class": "implementation-worker",
+      "write_paths": [
+        "platforms/platform-contracts.json",
+        "schemas/",
+        "packages/kernel/src/northstar/run-store.ts"
+      ],
+      "acceptance_ids": [
+        "AC-01",
+        "AC-02",
+        "AC-09"
+      ],
+      "requirement_ids": [
+        "REQ-08",
+        "REQ-06",
+        "REQ-12"
+      ],
+      "review_required": false,
+      "rollback_point": "main@c1deca1"
+    },
+    {
+      "id": "S2",
+      "name": "skill/MCP single-decision + communication purge",
+      "work": "fix SKILL.md metadata, remove ROUTE/candidate-fabric, single resolver, separate MCP, delete operator-profile/modes",
+      "owner": "harness-maintainer",
+      "depends_on": [
+        "S1"
+      ],
+      "capability_class": "implementation-worker",
+      "write_paths": [
+        "skills/",
+        "integrations/",
+        "operator-profiles/",
+        "rules/"
+      ],
+      "acceptance_ids": [
+        "AC-03",
+        "AC-07",
+        "AC-08"
+      ],
+      "requirement_ids": [
+        "REQ-04",
+        "REQ-11"
+      ],
+      "review_required": false,
+      "rollback_point": "S1"
+    },
+    {
+      "id": "S3",
+      "name": "8 native transactional adapters + CLI trim",
+      "work": "implement per-host adapters with detect/inventory/install/certify/rollback/uninstall + public CLI 8 commands + status gọn",
+      "owner": "harness-maintainer",
+      "depends_on": [
+        "S2"
+      ],
+      "capability_class": "implementation-worker",
+      "write_paths": [
+        "packages/cli/src/adapters",
+        "packages/cli/src/services/native-installer.ts",
+        "packages/cli/src/index.ts"
+      ],
+      "acceptance_ids": [
+        "AC-05",
+        "AC-06"
+      ],
+      "requirement_ids": [
+        "REQ-10",
+        "REQ-09",
+        "REQ-13"
+      ],
+      "review_required": false,
+      "rollback_point": "S2"
+    },
+    {
+      "id": "S4",
+      "name": "install 8 hosts + verify proof + quality gates",
+      "work": "build generate install 8 hosts offline proof, live canary where auth, run full tests verify:all arch checks",
+      "owner": "harness-maintainer",
+      "depends_on": [
+        "S3"
+      ],
+      "capability_class": "implementation-worker",
+      "write_paths": [
+        ".agent/tmp/host-receipts/",
+        ".agent/evidence/"
+      ],
+      "acceptance_ids": [
+        "AC-10",
+        "AC-11",
+        "AC-12"
+      ],
+      "requirement_ids": [
+        "REQ-02",
+        "REQ-03",
+        "REQ-13",
+        "REQ-14"
+      ],
+      "review_required": false,
+      "rollback_point": "S3"
+    }
+  ],
+  "completion_policy": {
+    "require_all_tasks": true,
+    "require_verification": true
+  },
+  "validation": {
+    "valid": true,
+    "errors": [],
+    "warnings": [],
+    "coverage_basis": "structural",
+    "requirementCoverage": [
+      {
+        "id": "REQ-001",
+        "covered": true
+      },
+      {
+        "id": "REQ-002",
+        "covered": true
+      },
+      {
+        "id": "REQ-003",
+        "covered": true
+      },
+      {
+        "id": "REQ-004",
+        "covered": true
+      },
+      {
+        "id": "REQ-005",
+        "covered": true
+      },
+      {
+        "id": "REQ-006",
+        "covered": true
+      },
+      {
+        "id": "REQ-007",
+        "covered": true
+      },
+      {
+        "id": "REQ-008",
+        "covered": true
+      },
+      {
+        "id": "REQ-009",
+        "covered": true
+      },
+      {
+        "id": "REQ-010",
+        "covered": true
+      },
+      {
+        "id": "REQ-011",
+        "covered": true
+      },
+      {
+        "id": "REQ-012",
+        "covered": true
+      },
+      {
+        "id": "REQ-013",
+        "covered": true
+      },
+      {
+        "id": "REQ-014",
+        "covered": true
+      },
+      {
+        "id": "REQ-015",
+        "covered": true
+      },
+      {
+        "id": "REQ-016",
+        "covered": true
+      },
+      {
+        "id": "REQ-017",
+        "covered": true
+      },
+      {
+        "id": "REQ-018",
+        "covered": true
+      },
+      {
+        "id": "REQ-019",
+        "covered": true
+      },
+      {
+        "id": "REQ-020",
+        "covered": true
+      },
+      {
+        "id": "REQ-021",
+        "covered": true
+      },
+      {
+        "id": "REQ-022",
+        "covered": true
+      },
+      {
+        "id": "REQ-023",
+        "covered": true
+      },
+      {
+        "id": "REQ-024",
+        "covered": true
+      },
+      {
+        "id": "REQ-025",
+        "covered": true
+      },
+      {
+        "id": "REQ-026",
+        "covered": true
+      },
+      {
+        "id": "REQ-027",
+        "covered": true
+      },
+      {
+        "id": "REQ-028",
+        "covered": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "journey_id": "JOURNEY-002",
+  "description": "Ambiguous prompt: grounds first, only material ambiguity becomes a question",
+  "observed": {
+    "risk": "S1",
+    "determinacy": "DISCOVERABLE",
+    "gap": "complete scope/acceptance from repo facts with bounded discovery"
+  },
+  "observed_at": "2026-08-25T14:29:45.008Z",
+  "schema": "agent-rules/journey-observation/v1",
+  "sha256": "d1e6760162a59278f75e111b007f077e5cb497c01692e81c28f41534ef1ecd4b"
+}

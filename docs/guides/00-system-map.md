@@ -85,7 +85,8 @@ Key renames relevant to maintainers:
 
 | Old | New | Reason |
 |---|---|---|
-| `00-index.md` (always-on rule) | `00-bootstrap.md` | Consistent numbered naming |
+| `00-index.md` (always-on rule) | `00-intent-scope-safety.md` | Consistent numbered naming |
+
 | `plans/` (top-level) | `.agent/plans/` | Move out of workspace root |
 | Gemini CLI (product ref) | Antigravity (runtime binary is `gemini`) | Product identity clarification |
 | `codebase_memory` (alias) | `codebase-memory-mcp` | Kebab-case convention |

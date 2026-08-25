@@ -1,0 +1,80 @@
+{
+  "schema": "agent-rules/change-graph",
+  "version": 1,
+  "nodes": [
+    {
+      "id": "rules",
+      "path": "rules/",
+      "description": "5 core rule files + manifest.yaml + README.md"
+    },
+    {
+      "id": "skills",
+      "path": "skills/",
+      "description": "SKILL.md authoritative definitions + catalog generation"
+    },
+    {
+      "id": "platforms",
+      "path": "platforms/",
+      "description": "platform-contracts.json single registry for 8 hosts"
+    },
+    {
+      "id": "cli",
+      "path": "packages/cli/",
+      "description": "8 public commands, NativeInstaller, doctor, status"
+    },
+    {
+      "id": "kernel",
+      "path": "packages/kernel/",
+      "description": "RunStore, EvidenceLedger, DecisionFabric, HostRegistry"
+    },
+    {
+      "id": "engine",
+      "path": "packages/engine/",
+      "description": "Northstar runner and evidence reduction"
+    },
+    {
+      "id": "automation",
+      "path": "automation/",
+      "description": "Validation scripts, global behavior tests, verify-all"
+    },
+    {
+      "id": "agent-protocol",
+      "path": ".agent/",
+      "description": "current.json pointer, ledger, plans, evidence"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "rules",
+      "to": "cli"
+    },
+    {
+      "from": "platforms",
+      "to": "cli"
+    },
+    {
+      "from": "platforms",
+      "to": "kernel"
+    },
+    {
+      "from": "skills",
+      "to": "kernel"
+    },
+    {
+      "from": "kernel",
+      "to": "engine"
+    },
+    {
+      "from": "kernel",
+      "to": "cli"
+    },
+    {
+      "from": "engine",
+      "to": "cli"
+    },
+    {
+      "from": "cli",
+      "to": "automation"
+    }
+  ]
+}

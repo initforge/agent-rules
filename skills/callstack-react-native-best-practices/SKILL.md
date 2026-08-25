@@ -1,6 +1,13 @@
 ---
 name: callstack-react-native-best-practices
 description: "Provenance projection for callstack RN best practices (pinned 2766baa4, MIT): ROUTED on react-native facts."
+metadata:
+  signals: "react native best practices, react native migration, native module guidance"
+  excludes: "web-only"
+  priority: "40"
+  platform_scope: "all"
+  source: ROUTE.json migrated
+
 ---
 # callstack-react-native-best-practices
 

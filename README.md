@@ -101,17 +101,11 @@ S2/S3 work cannot be silently reduced to a single raw-intent task. It requires a
 
 ## Durable runner
 
-The production runner remains available for plan-backed unattended work:
-
-```bash
-agent-rules runner add "Add subtract() to src/math.ts" \
-  --verify "npx vitest run test/math.test.ts" --own src
-agent-rules runner start --agent claude --max-repair-depth 2
-agent-rules runner status
-agent-rules runner journal --verify
-```
-
-Each task gets a fresh headless process. State, logs, checkpoint, verification results and journal live on disk; repair is bounded.
+The production runner (invoked through `agent-rules run`, see the North-Star
+runtime above) remains available for direct verifier-grounded work. The public
+CLI is a strict 8-command surface — `install`, `uninstall`, `doctor`, `status`,
+`run`, `integration`, `init`, `reference` — with internals behind
+`--details`/`--json`.
 
 ## Integrations
 

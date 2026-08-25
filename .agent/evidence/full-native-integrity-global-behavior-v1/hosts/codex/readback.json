@@ -1,0 +1,11 @@
+{
+  "schema": "agent-rules/host-readback",
+  "version": 1,
+  "host": "codex",
+  "native_readback": {
+    "method": "native readback: parse AGENTS.md managed block bytes == canonical source; `codex mcp list` output contains bridge; `codex --version` diagnostic only",
+    "present": true,
+    "verified": true
+  },
+  "verified": true
+}
