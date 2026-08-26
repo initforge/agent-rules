@@ -96,6 +96,8 @@ jobs:
         run: npm run build -w packages/kernel
       - name: Build context graph engine dependency
         run: npm run build -w packages/engine
+      - name: Build context graph CLI dependency
+        run: npm run build -w packages/cli
       - name: Generate context graph
         run: node automation/build-context-graph.mjs
       - run: pip install --require-hashes -r requirements.txt

@@ -180,13 +180,16 @@ describe('Quality workflow validation', () => {
     const pythonSteps = wf.jobs!['python-tests']!.steps!;
     const kernelDependencyBuildIndex = pythonSteps.findIndex(s => s.name === 'Build context graph kernel dependency');
     const engineDependencyBuildIndex = pythonSteps.findIndex(s => s.name === 'Build context graph engine dependency');
+    const cliDependencyBuildIndex = pythonSteps.findIndex(s => s.name === 'Build context graph CLI dependency');
     const contextGraphIndex = pythonSteps.findIndex(s => s.name === 'Generate context graph');
 
     expect(kernelDependencyBuildIndex).toBeGreaterThanOrEqual(0);
     expect(pythonSteps[kernelDependencyBuildIndex]!.run).toBe('npm run build -w packages/kernel');
     expect(engineDependencyBuildIndex).toBeGreaterThan(kernelDependencyBuildIndex);
     expect(pythonSteps[engineDependencyBuildIndex]!.run).toBe('npm run build -w packages/engine');
-    expect(contextGraphIndex).toBeGreaterThan(engineDependencyBuildIndex);
+    expect(cliDependencyBuildIndex).toBeGreaterThan(engineDependencyBuildIndex);
+    expect(pythonSteps[cliDependencyBuildIndex]!.run).toBe('npm run build -w packages/cli');
+    expect(contextGraphIndex).toBeGreaterThan(cliDependencyBuildIndex);
     expect(pythonSteps[contextGraphIndex]!.run).toContain('node automation/build-context-graph.mjs');
   });
 
