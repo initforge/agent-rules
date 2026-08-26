@@ -97,8 +97,8 @@ function defaultPlatformRoots(): Record<RuntimePlatform, string> {
     cursor: path.join(home, ".cursor"),
     opencode: process.env.OPENCODE_HOME || path.join(home, ".config", "opencode"),
     claude: process.env.CLAUDE_CONFIG_DIR || path.join(home, ".claude"),
-    "deepseek-harness": process.env.DSH_HOME || path.join(home, ".config", "deepseek-harness"),
-    "command-code": process.env.COMMAND_CODE_HOME || path.join(home, ".command-code"),
+    "deepseek-harness": process.env.DSH_HOME || path.join(home, ".dsh"),
+    "command-code": process.env.COMMAND_CODE_HOME || path.join(home, ".commandcode"),
   };
 }
 

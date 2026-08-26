@@ -10,8 +10,13 @@ function runNativeDsh(
   opts: { cwd?: string; timeoutMs?: number; env?: NodeJS.ProcessEnv } = {},
 ): Promise<{ exitCode: number; stdout: string; stderr: string }> {
   const isCmdOrBat = process.platform === 'win32' && (binaryPath.endsWith('.cmd') || binaryPath.endsWith('.bat'));
-  const actualCmd = isCmdOrBat ? (process.env.ComSpec || 'cmd.exe') : binaryPath;
-  const actualArgs = isCmdOrBat ? ['/d', '/s', '/c', binaryPath, ...args] : [...args];
+  const isPowerShell = process.platform === 'win32' && binaryPath.endsWith('.ps1');
+  const actualCmd = isCmdOrBat ? (process.env.ComSpec || 'cmd.exe') : isPowerShell ? (process.env.POWERSHELL_EXE || 'powershell.exe') : binaryPath;
+  const actualArgs = isCmdOrBat
+    ? ['/d', '/s', '/c', binaryPath, ...args]
+    : isPowerShell
+      ? ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', binaryPath, ...args]
+      : [...args];
   const child = spawn(actualCmd, actualArgs, {
     cwd: opts.cwd,
     env: opts.env ?? process.env,
@@ -97,7 +102,7 @@ export interface DshAdapter {
 }
 
 function dshHome(): string {
-  return process.env.DSH_HOME || path.join(os.homedir(), '.config', 'deepseek-harness');
+  return process.env.DSH_HOME || path.join(os.homedir(), '.dsh');
 }
 
 async function resolveDshBinary(): Promise<{ path: string; version?: string } | null> {

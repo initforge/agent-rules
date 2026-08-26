@@ -2,36 +2,36 @@
   "schema": "artifact/execution-contract",
   "version": 1,
   "kind": "current-pointer",
-  "generation": 53,
-  "work_id": "global-agent-behavior-native-live-closure-v1",
-  "plan_id": "global-agent-behavior-native-live-closure-v1",
-  "plan_root": ".agent/plans/global-agent-behavior-native-live-closure-v1",
+  "generation": 56,
+  "work_id": "global-agent-behavior-native-operational-readiness-v2",
+  "plan_id": "global-agent-behavior-native-operational-readiness-v2",
+  "plan_root": ".agent/plans/global-agent-behavior-native-operational-readiness-v2",
   "original": {
-    "path": ".agent/plans/global-agent-behavior-native-live-closure-v1/plan.md",
-    "sha256": "ba1d36f4a15c63ba0cf008350f741b34456c025f879a582ff92dcfa95a635d49"
+    "path": ".agent/plans/global-agent-behavior-native-operational-readiness-v2/plan.md",
+    "sha256": "19e940d5030a6b1d74d1f6f211fda09a912e7cb631bf9001b44fb5720d0ba8ad"
   },
   "canonical_ledger": {
-    "path": ".agent/ledger/global-agent-behavior-native-live-closure-v1.json",
-    "sha256": "78e7c41f92948e8a684f4080b2296471354a78e7f5002314e192f045059214a3",
+    "path": ".agent/ledger/global-agent-behavior-native-operational-readiness-v2.json",
+    "sha256": "37d2071d14164a1aa29659e98478bacf830580e460c42c5edd83e1cc3a52445c",
     "observed_revision": 1,
-    "observed_effective_sha256": "b613db8155144251fc202ac309a5527a4508927007e6d457d39376febcfdeae2",
+    "observed_effective_sha256": "9606d0b820efd7523d5094d02b8403d417ac84129c5e801a4ada7453133209b2",
     "plan_status": "ADOPTED",
     "execution_state": "IN_PROGRESS"
   },
   "effective_chain_tip": {
-    "amendment_id": "AM-0000",
-    "path": ".agent/plans/global-agent-behavior-native-live-closure-v1/plan.md",
-    "sha256": "ba1d36f4a15c63ba0cf008350f741b34456c025f879a582ff92dcfa95a635d49"
+    "amendment_id": "AM-0002",
+    "path": ".agent/plans/global-agent-behavior-native-operational-readiness-v2/plan.md",
+    "sha256": "19e940d5030a6b1d74d1f6f211fda09a912e7cb631bf9001b44fb5720d0ba8ad"
   },
   "candidate_chain_tip": {
-    "amendment_id": "AM-0000",
-    "status": "OWNER_APPROVED_PENDING_CANONICAL_ACTIVATION",
-    "path": ".agent/plans/global-agent-behavior-native-live-closure-v1/plan.md",
-    "sha256": "ba1d36f4a15c63ba0cf008350f741b34456c025f879a582ff92dcfa95a635d49"
+    "amendment_id": "AM-0002",
+    "status": "OWNER_APPROVED_EFFECTIVE",
+    "path": ".agent/plans/global-agent-behavior-native-operational-readiness-v2/plan.md",
+    "sha256": "19e940d5030a6b1d74d1f6f211fda09a912e7cb631bf9001b44fb5720d0ba8ad"
   },
   "contract": {
-    "path": ".agent/plans/global-agent-behavior-native-live-closure-v1/generations/1/effective-contract.json",
-    "sha256": "ef0d1565f2599d40e5d789a3751544046f2631039a9d8c079826ecfdd8a4669c",
+    "path": ".agent/plans/global-agent-behavior-native-operational-readiness-v2/generations/1/effective-contract.json",
+    "sha256": "14ee2ed538f41a4192a05a280d555567e8c43d9134b0613035428675d0d5d071",
     "schema_path": "schemas/execution-contract.schema.json",
     "requirement_ids": [
       "REQ-101",
@@ -61,9 +61,9 @@
   },
   "atomicity": {
     "protocol": "generation-compare-and-swap",
-    "expected_previous_generation": 52,
+    "expected_previous_generation": 55,
     "commit_target": ".agent/current.json",
     "activation_state": "CANONICALLY_ACTIVATED",
-    "updated_at": "2026-08-25T14:20:09.319Z"
+    "updated_at": "2026-08-26T18:00:00.000Z"
   }
 }

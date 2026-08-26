@@ -428,40 +428,40 @@
       "cliSignal": "dsh --version (DeepSeek Harness CLI)",
       "desktopSignal": null,
       "homeEnv": "DSH_HOME",
-      "homeDefault": "~/.config/deepseek-harness",
+      "homeDefault": "~/.dsh",
       "surfaces": {
-        "instruction": "Managed profile/bundle via `dsh plugin --profile add` + system_prompt_seam",
-        "skill": "shared skill provider when host supports it + DSH skills subsystem at docs/subsystems/skills.md",
-        "agent": "managed_profile_bundle (host_native materialization)",
+        "instruction": "$DSH_HOME/AGENTS.md through @deepseek-ai/dsh-agent-instructions",
+        "skill": "$DSH_HOME/skills/<skill> through @deepseek-ai/dsh-skill-filesystem",
+        "agent": "managed profile patch + native Cordis plugins (host_native materialization)",
         "hook": "agent.inject_pre_execute_waterfall",
-        "mcp": "$DSH_HOME/mcp.json + `dsh --dump-config` fingerprint",
+        "mcp": "$DSH_HOME/profiles/*/cordis.patch.yml via @deepseek-ai/dsh-mcp-client + `dsh --dump-config`",
         "headless": "dsh --headless (provider auth selects profile)"
       },
       "paths": {
-        "instructionPath": "$DSH_HOME/bundle",
-        "skillPath": "~/.agents/skills/<skill>/SKILL.md",
-        "agentPath": "managed_profile_bundle",
+        "instructionPath": "$DSH_HOME/AGENTS.md",
+        "skillPath": "$DSH_HOME/skills/<skill>/SKILL.md",
+        "agentPath": "$DSH_HOME/profiles/*/cordis.patch.yml",
         "hookPath": "dsh hook registration (inject_pre_execute_waterfall)",
-        "mcpPath": "$DSH_HOME/mcp.json",
+        "mcpPath": "$DSH_HOME/profiles/*/cordis.patch.yml",
         "legacyPaths": []
       },
-      "precedence": "bundle hash per profile; user profile entries preserved; hook registration merge",
+      "precedence": "profile bundles then profile cordis.patch.yml; managed rows are marked and user rows preserved",
       "reload": "supervised_launch (dsh supervised launch reloads profile/bundle)",
-      "mergeStrategy": "bundle hash validation + plugin tree merge; preserve unmanaged profiles; handle new profile appearing",
+      "mergeStrategy": "native plugin add per discovered profile + marked Cordis row patch; preserve unrelated profile/package entries",
       "capabilities": {
         "detectsByFeature": true,
         "features": [
           "dsh-dump-config",
-          "plugin-tree-bundle-hash",
-          "hook-registration",
-          "mcp-fingerprint",
+          "cordis-plugin-readback",
+          "profile-discovery",
+          "mcp-client-config-readback",
           "multi-profile"
         ]
       },
-      "installStrategy": "detect `dsh` binary + DSH_HOME; inventory existing bundles/profiles (headless/web); install native DSH plugin/bundle for valid profiles; verify bundle hash + hook registration + config fingerprint",
-      "readbackStrategy": "`dsh --dump-config` + plugin tree + bundle hash + hook registration; version diagnostic only",
-      "canaryStrategy": "credential-free: dsh dump config + plugin tree + bundle hash + hook registration; if provider auth present → headless canary; else MODEL_BEHAVIOR NEEDS_USER",
-      "uninstallStrategy": "remove plugin/bundle entries by ownership; preserve user profiles/bundles",
+      "installStrategy": "detect `dsh` binary + DSH_HOME; discover every profile directory; install exact @deepseek-ai/dsh-mcp-client through `dsh plugin --profile <name> add`; patch native AGENTS/skills/Cordis rows",
+      "readbackStrategy": "per discovered profile `dsh --profile <name> --dump-config`; require active instructions, skills and four Cordis MCP rows; generic mcp.json is not proof",
+      "canaryStrategy": "credential-free: per-profile dump-config and native file readback; if provider auth present → headless canary; else MODEL_BEHAVIOR NEEDS_USER",
+      "uninstallStrategy": "remove managed Cordis rows and exact plugin dependency by ownership; preserve unrelated profile/package entries",
       "authBoundary": {
         "offlineClaims": [
           "HOST_PRESENT",
@@ -478,7 +478,7 @@
         ]
       },
       "limits": [
-        "Host_native materialization, not managed_directory; new profile must be handled dynamically"
+        "Host_native materialization, not managed_directory; every existing profile is handled dynamically"
       ]
     },
     "command-code": {
@@ -489,7 +489,7 @@
       "homeDefault": "~/.commandcode",
       "surfaces": {
         "instruction": "~/.commandcode session-scoped --mod agent-rules (not .command-code fake)",
-        "skill": "shared ~/.agents/skills (Command Code shared provider) + user mod native",
+        "skill": "~/.commandcode/skills/<skill>/SKILL.md (Command Code native user provider)",
         "agent": "namespaced_custom_agents_on_demand (built_in_isolated_agent)",
         "hook": "beforeToolCall_preToolUse via mod",
         "mcp": "$COMMAND_CODE_HOME/mcp.json (host native) + cmdc mcp list",
@@ -497,7 +497,7 @@
       },
       "paths": {
         "instructionPath": "$COMMAND_CODE_HOME/mods",
-        "skillPath": "~/.agents/skills/<skill>/SKILL.md",
+        "skillPath": "$COMMAND_CODE_HOME/skills/<skill>/SKILL.md",
         "agentPath": "namespaced_custom_agents_on_demand",
         "hookPath": "$COMMAND_CODE_HOME hooks (mod)",
         "mcpPath": "$COMMAND_CODE_HOME/mcp.json",
@@ -518,7 +518,7 @@
           "print-mode"
         ]
       },
-      "installStrategy": "detect cmdc via PATH + COMMAND_CODE_HOME (migrate .command-code → .commandcode if needed); inventory mods/skills/hooks/mcp; planInstall computes deltas; install via mod add + shared skills link; verify `cmdc mods list` + `cmdc skills list --debug` + hook/MCP readback",
+      "installStrategy": "detect cmdc via PATH + COMMAND_CODE_HOME; inventory mods/skills/hooks/mcp; planInstall computes deltas; install managed mod, native skills and MCP config; verify `cmdc mods list` + `cmdc skills list --debug` + hook/MCP readback",
       "readbackStrategy": "`cmdc mods list` contains agent-rules + `cmdc skills list --debug` skill count + hook/MCP readback; no .command-code fake path",
       "canaryStrategy": "credential-free: cmdc mods list + skills debug readback + hook/MCP readback handshake; if session present → print-mode canary; else MODEL_BEHAVIOR NEEDS_USER",
       "uninstallStrategy": "remove managed mod + owned mcp/hook entries only; preserve user mods; leave migrated home at ~/.commandcode (do not revert to legacy)",
@@ -726,7 +726,7 @@
     "deepseek-harness": {
       "runtime": {
         "home_env": "DSH_HOME",
-        "home_default": "~/.config/deepseek-harness",
+        "home_default": "~/.dsh",
         "global_entrypoint": "managed profile/bundle via dsh plugin"
       },
       "bootstrap": {
@@ -747,16 +747,16 @@
         "agent_materialization": "host_native"
       },
       "mcp": {
-        "config_path": "$DSH_HOME/mcp.json",
-        "format": "json_mcpServers",
-        "native_inspect": "dsh --dump-config",
-        "live_doctor": "bundle_hash_and_config_fingerprint"
+        "config_path": "$DSH_HOME/profiles/*/cordis.patch.yml",
+        "format": "cordis_profile_patch",
+        "native_inspect": "dsh --profile <name> --dump-config",
+        "live_doctor": "profile_cordis_and_mcp_client_readback"
       }
     },
     "command-code": {
       "runtime": {
         "home_env": "COMMAND_CODE_HOME",
-        "home_default": "~/.command-code",
+        "home_default": "~/.commandcode",
         "global_entrypoint": "session-scoped --mod"
       },
       "bootstrap": {

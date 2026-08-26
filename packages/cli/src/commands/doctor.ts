@@ -175,8 +175,8 @@ function getPlatformHomes(root: string): PlatformHomeMap {
     cursor: path.join(userHome, ".cursor"),
     opencode: process.env.OPENCODE_HOME || path.join(userHome, ".config", "opencode"),
     claude: process.env.CLAUDE_CONFIG_DIR || path.join(userHome, ".claude"),
-    "deepseek-harness": process.env.DSH_HOME || path.join(userHome, ".config", "deepseek-harness"),
-    "command-code": process.env.COMMAND_CODE_HOME || path.join(userHome, ".command-code"),
+    "deepseek-harness": process.env.DSH_HOME || path.join(userHome, ".dsh"),
+    "command-code": process.env.COMMAND_CODE_HOME || path.join(userHome, ".commandcode"),
   };
 }
 

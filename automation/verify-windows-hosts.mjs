@@ -132,7 +132,7 @@ const HOSTS = [
     binaryNames: ['dsh.cmd', 'dsh.exe', 'dsh', 'deepseek-harness.cmd', 'deepseek-harness.exe', 'deepseek-harness'],
     versionFlag: ['--version'],
     extraDirs: [
-      path.join(os.homedir(), '.deepseek-harness', 'bin'),
+      path.join(os.homedir(), '.dsh', 'bin'),
       path.join(process.env.LOCALAPPDATA || '', 'Programs', 'deepseek-harness'),
     ],
   },
@@ -141,7 +141,7 @@ const HOSTS = [
     binaryNames: ['command-code.cmd', 'command-code.exe', 'command-code', 'cmdc.cmd', 'cmdc.exe', 'cmdc'],
     versionFlag: ['--version'],
     extraDirs: [
-      path.join(os.homedir(), '.command-code', 'bin'),
+      path.join(os.homedir(), '.commandcode', 'bin'),
       path.join(process.env.LOCALAPPDATA || '', 'Programs', 'command-code'),
     ],
   },

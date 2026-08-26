@@ -10,8 +10,13 @@ function runNativeCmdc(
   opts: { cwd?: string; timeoutMs?: number; env?: NodeJS.ProcessEnv } = {},
 ): Promise<{ exitCode: number; stdout: string; stderr: string }> {
   const isCmdOrBat = process.platform === 'win32' && (binaryPath.endsWith('.cmd') || binaryPath.endsWith('.bat'));
-  const actualCmd = isCmdOrBat ? (process.env.ComSpec || 'cmd.exe') : binaryPath;
-  const actualArgs = isCmdOrBat ? ['/d', '/s', '/c', binaryPath, ...args] : [...args];
+  const isPowerShell = process.platform === 'win32' && binaryPath.endsWith('.ps1');
+  const actualCmd = isCmdOrBat ? (process.env.ComSpec || 'cmd.exe') : isPowerShell ? (process.env.POWERSHELL_EXE || 'powershell.exe') : binaryPath;
+  const actualArgs = isCmdOrBat
+    ? ['/d', '/s', '/c', binaryPath, ...args]
+    : isPowerShell
+      ? ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', binaryPath, ...args]
+      : [...args];
   const child = spawn(actualCmd, actualArgs, {
     cwd: opts.cwd,
     env: opts.env ?? process.env,
@@ -65,6 +70,7 @@ function runNativeCmdc(
  */
 
 const COMMAND_CODE_ALIASES = ['command-code', 'cmdc'];
+const DEFAULT_SUPERVISED_TIMEOUT_MS = 10_000;
 
 export interface CommandCodeCapabilityFacts {
   binary: string;
@@ -76,6 +82,10 @@ export interface CommandCodeCapabilityFacts {
   headless_json_events: boolean;
   native_worktree: boolean;
   plan_mode: boolean;
+  mcp_config_path: string;
+  mcp_config_present: boolean;
+  mcp_config_valid: boolean;
+  mcp_server_names: string[];
   fingerprint: string;
 }
 
@@ -153,6 +163,22 @@ export const commandCodeAdapter: CommandCodeAdapter = {
     let headlessJsonEvents = false;
     let nativeWorktree = false;
     let planMode = false;
+    const commandCodeHome = process.env.COMMAND_CODE_HOME || path.join(os.homedir(), '.commandcode');
+    const mcpConfigPath = path.join(commandCodeHome, 'mcp.json');
+    let mcpConfigPresent = fs.existsSync(mcpConfigPath);
+    let mcpConfigValid = false;
+    let mcpServerNames: string[] = [];
+    if (mcpConfigPresent) {
+      try {
+        const parsed = JSON.parse(fs.readFileSync(mcpConfigPath, 'utf8')) as { mcpServers?: Record<string, unknown> };
+        if (parsed.mcpServers && typeof parsed.mcpServers === 'object' && !Array.isArray(parsed.mcpServers)) {
+          mcpConfigValid = true;
+          mcpServerNames = Object.keys(parsed.mcpServers).sort();
+        }
+      } catch {
+        mcpConfigValid = false;
+      }
+    }
     if (found) {
       try {
         const { stdout, exitCode } = await runNativeCmdc(found.path, ['--help'], {
@@ -177,7 +203,7 @@ export const commandCodeAdapter: CommandCodeAdapter = {
         // help may not be available in a constrained env; detection is binary-only.
       }
     }
-    const fingerprintSource = JSON.stringify({ binaryPath, version, modsLoaded, skillsLoaded, permissionLayerProven, headlessJsonEvents, nativeWorktree, planMode });
+    const fingerprintSource = JSON.stringify({ binaryPath, version, modsLoaded, skillsLoaded, permissionLayerProven, headlessJsonEvents, nativeWorktree, planMode, mcpConfigPath, mcpConfigPresent, mcpConfigValid, mcpServerNames });
     return {
       binary: found?.binary ?? 'command-code',
       binary_path: binaryPath,
@@ -188,6 +214,10 @@ export const commandCodeAdapter: CommandCodeAdapter = {
       headless_json_events: headlessJsonEvents,
       native_worktree: nativeWorktree,
       plan_mode: planMode,
+      mcp_config_path: mcpConfigPath,
+      mcp_config_present: mcpConfigPresent,
+      mcp_config_valid: mcpConfigValid,
+      mcp_server_names: mcpServerNames,
       fingerprint: createHash('sha256').update(fingerprintSource).digest('hex'),
     };
   },
@@ -239,21 +269,32 @@ export const commandCodeAdapter: CommandCodeAdapter = {
 
     const args = ['--print', params.prompt];
     if (params.permissionMode && params.permissionMode !== 'default') args.push('--permission-mode', params.permissionMode);
-    // Session-scoped mods/skills only; never a global enable.
-    for (const mod of params.mods ?? []) args.push('--mod', mod);
+    // Session-scoped mods/skills only; never a global enable. The managed
+    // mod is attached automatically when native installation has materialized
+    // it, while caller-provided mods remain additive.
+    const managedMod = path.join(process.env.COMMAND_CODE_HOME || path.join(os.homedir(), '.commandcode'), 'mods', 'agent-rules.ts');
+    const mods = [
+      ...(fs.existsSync(managedMod) ? [managedMod] : []),
+      ...(params.mods ?? []),
+    ].filter((mod, index, all) => all.indexOf(mod) === index);
+    for (const mod of mods) args.push('--mod', mod);
     for (const skill of params.skills ?? []) args.push('--skill', skill);
-    if ((params.mods?.length ?? 0) > 0 || (params.skills?.length ?? 0) > 0) args.push('--no-skills');
+    if ((params.skills?.length ?? 0) > 0) args.push('--no-skills');
     args.push('--output-format', 'json');
     args.push('--skip-onboarding');
     // `--yolo` is never used here.
 
     try {
       const { stdout, stderr, exitCode } = await runNativeCmdc(found.path, args, {
-        timeoutMs: params.timeoutMs ?? 120_000,
+        // A native smoke path must not wait indefinitely on an interactive
+        // login, provider, or network response. Real callers can opt into a
+        // longer bounded session explicitly.
+        timeoutMs: params.timeoutMs ?? DEFAULT_SUPERVISED_TIMEOUT_MS,
         cwd: params.cwd,
         env: { ...process.env, COMMAND_CODE_NO_AUTO_UPDATE: '1' },
       });
       if (exitCode !== 0) {
+        const timedOut = stderr === 'timeout';
         return {
           ok: false,
           host: 'command-code',
@@ -261,7 +302,9 @@ export const commandCodeAdapter: CommandCodeAdapter = {
           binary,
           permission_layer_proven: true,
           sessionId,
-          result: (stderr || stdout).trim() || `command-code exited with code ${exitCode}`,
+          result: timedOut
+            ? 'BLOCKED: Command Code supervised session timed out before an authenticated model result'
+            : (stderr || stdout).trim() || `command-code exited with code ${exitCode}`,
           observedAt: new Date().toISOString(),
         };
       }

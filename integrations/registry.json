@@ -63,7 +63,8 @@
     "grok",
     "antigravity",
     "cursor",
-    "opencode"
+    "opencode",
+    "command-code"
    ],
    "fallback": "browser console/network evidence when a host-native DevTools session is available",
    "deprecatedAliases": [],
@@ -159,7 +160,8 @@
     "grok",
     "antigravity",
     "cursor",
-    "opencode"
+    "opencode",
+    "command-code"
    ],
    "fallback": "rg plus targeted reads and native symbol navigation",
    "deprecatedAliases": [
@@ -236,7 +238,8 @@
     "grok",
     "antigravity",
     "cursor",
-    "opencode"
+    "opencode",
+    "command-code"
    ],
    "fallback": "upstream docs retrieval via curl or manual lookup",
    "deprecatedAliases": [],
@@ -379,7 +382,8 @@
     "grok",
     "antigravity",
     "cursor",
-    "opencode"
+    "opencode",
+    "command-code"
    ],
    "fallback": "report the live-interaction proof gap; do not infer it from build output",
    "deprecatedAliases": [],

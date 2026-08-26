@@ -1,0 +1,138 @@
+{
+  "schema": "agent-rules/host-certification-receipt",
+  "version": 1,
+  "host": "claude",
+  "generated_at": "2026-08-26T17:27:44.630Z",
+  "git_head": "5777d43875693cc6e3311f29bf7598ec4f0495cb",
+  "candidate_fingerprint": "2739b0a2de4b8e429b1ff49a41764719e6468f8db9e96e46b32d8a4258f91e52",
+  "status": "Ready",
+  "claims": {
+    "HOST_PRESENT": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "binary-or-desktop-signal",
+          "detail": "binary-on-path:C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\claude.cmd;config-dir:C:\\Users\\ADMIN/.claude"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "NATIVE_INSTALLED": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "managed-block-or-file",
+          "host": "claude",
+          "detail": "managed block verified in CLAUDE.md"
+        },
+        {
+          "kind": "native-readback",
+          "found": true,
+          "method": "parse CLAUDE.md managed block + settings.json hook registration + `claude mcp list` + skill inventory; version diagnostic only",
+          "detail": "managed block present in CLAUDE.md"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "NATIVE_DISCOVERED": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "host-surface-detected",
+          "host": "claude",
+          "signals": [
+            "binary-on-path:C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\claude.cmd",
+            "config-dir:C:\\Users\\ADMIN/.claude"
+          ],
+          "binaryPath": "C:\\Users\\ADMIN\\AppData\\Roaming\\npm\\claude.cmd",
+          "homeDir": "C:\\Users\\ADMIN/.claude"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "NATIVE_LIFECYCLE": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "native-reload",
+          "host": "claude",
+          "method": "start_new_session (or reload window); settings.json hooks hot-reload",
+          "ok": true
+        }
+      ],
+      "omitted_reason": null
+    },
+    "NATIVE_POLICY": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "permission-deny-canary",
+          "host": "claude",
+          "detail": "safe-deny and scope invariants verified"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "NATIVE_SKILLS": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "skill-catalog-dynamic",
+          "host": "claude",
+          "count": 34,
+          "detail": "enumerated 34 dynamic skills; zero duplicate, zero malformed"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "NATIVE_MCP": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "native-mcp-surface",
+          "host": "claude",
+          "detail": "native config intact"
+        }
+      ],
+      "omitted_reason": null
+    },
+    "MODEL_BEHAVIOR": {
+      "status": "NEEDS_USER",
+      "evidence": [
+        {
+          "kind": "model-turn-not-tested",
+          "reason": "host signed out or offline; harmless model turn requires active authenticated session"
+        }
+      ],
+      "omitted_reason": "signed-out: model turn requires auth"
+    },
+    "ROLLBACK_VERIFIED": {
+      "status": "PASS",
+      "evidence": [
+        {
+          "kind": "uninstall-rollback-preserves-user",
+          "host": "claude",
+          "detail": "atomic swap backup manifest and byte restoration verified"
+        }
+      ],
+      "omitted_reason": null
+    }
+  },
+  "native_readback": {
+    "method": "parse CLAUDE.md managed block + settings.json hook registration + `claude mcp list` + skill inventory; version diagnostic only",
+    "present": true,
+    "verified": true,
+    "found": true,
+    "detail": "managed block present in CLAUDE.md"
+  },
+  "mcp_handshake": {
+    "status": "NATIVE_SURFACE_INTACT",
+    "host": "claude",
+    "detail": "native config intact"
+  },
+  "skill_catalog": {
+    "count": 34,
+    "skipped": 0,
+    "duplicates": 0
+  }
+}

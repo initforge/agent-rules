@@ -80,8 +80,8 @@ export function getGlobalSkillRoots(): Record<RuntimePlatform, string[]> {
     ],
     cursor: [path.join(home, ".cursor", "skills")],
     grok: [path.join(process.env.GROK_HOME ?? path.join(home, ".grok"), "skills")],
-    "deepseek-harness": [path.join(process.env.DSH_HOME ?? path.join(home, ".config", "deepseek-harness"), "skills")],
-    "command-code": [path.join(process.env.COMMAND_CODE_HOME ?? path.join(home, ".command-code"), "skills")],
+    "deepseek-harness": [path.join(process.env.DSH_HOME ?? path.join(home, ".dsh"), "skills")],
+    "command-code": [path.join(process.env.COMMAND_CODE_HOME ?? path.join(home, ".commandcode"), "skills")],
   };
 }
 
@@ -104,7 +104,7 @@ export async function readGlobalOwnershipManifest(): Promise<GlobalOwnershipMani
 export async function projectSkillsToGlobal(
   sourceSkillsRoot: string,
   platform: RuntimePlatform,
-  options: { effectivePlanSha256?: string; targetRoots?: string[]; force?: boolean } = {}
+  options: { effectivePlanSha256?: string; targetRoots?: string[]; force?: boolean; syncMcp?: boolean } = {}
 ): Promise<{ projected: string[]; collisions: string[]; updatedManifest: GlobalOwnershipManifest }> {
   const skillRootsList = getGlobalSkillRoots();
   const targetRoots = options.targetRoots ?? (skillRootsList[platform] ?? []);
@@ -180,7 +180,7 @@ export async function projectSkillsToGlobal(
     }
   }
 
-  await syncPlatformMcpConfig(platform);
+  if (options.syncMcp !== false) await syncPlatformMcpConfig(platform);
 
   existingManifest.updatedAt = new Date().toISOString();
   await writeGlobalOwnershipManifest(existingManifest);
@@ -310,45 +310,63 @@ export async function syncClaudeMcpConfig(): Promise<void> {
 }
 
 export async function syncDeepSeekHarnessMcpConfig(): Promise<void> {
-  const home = os.homedir();
-  const dshConfig = path.join(process.env.DSH_HOME ?? path.join(home, ".config", "deepseek-harness"), "mcp.json");
-  const standardMcp = getStandardMcpServers(home);
-  let existingParsed: Record<string, unknown> = {};
-  if (await exists(dshConfig)) {
-    try {
-      existingParsed = JSON.parse(await fs.readFile(dshConfig, "utf8"));
-    } catch { /* ignore */ }
-  }
-  const updatedConfig = {
-    ...existingParsed,
-    mcpServers: {
-      ...(typeof existingParsed.mcpServers === "object" && existingParsed.mcpServers !== null ? (existingParsed.mcpServers as Record<string, unknown>) : {}),
-      ...standardMcp,
-    },
-  };
-  await fs.mkdir(path.dirname(dshConfig), { recursive: true });
-  await fs.writeFile(dshConfig, JSON.stringify(updatedConfig, null, 2) + "\n", "utf8");
+  // DSH is a Cordis/plugin host. Its generic $DSH_HOME/mcp.json is not an
+  // official active surface, so the core skill projection must never compose
+  // it. DSH MCP is installed and read back through its native plugin/profile
+  // lifecycle (platforms/deepseek-harness/adapter.ts).
 }
 
 export async function syncCommandCodeMcpConfig(): Promise<void> {
   const home = os.homedir();
-  const cmdcConfig = path.join(process.env.COMMAND_CODE_HOME ?? path.join(home, ".command-code"), "mcp.json");
+  const commandCodeHome = process.env.COMMAND_CODE_HOME ?? path.join(home, ".commandcode");
+  const cmdcConfig = path.join(commandCodeHome, "mcp.json");
+  const legacyConfig = path.join(home, ".command-code", "mcp.json");
   const standardMcp = getStandardMcpServers(home);
   let existingParsed: Record<string, unknown> = {};
   if (await exists(cmdcConfig)) {
     try {
       existingParsed = JSON.parse(await fs.readFile(cmdcConfig, "utf8"));
     } catch { /* ignore */ }
+  } else if (await exists(legacyConfig)) {
+    // The previous installer wrote this legacy path. Read it only as a
+    // migration source; never delete or overwrite the legacy file.
+    try {
+      existingParsed = JSON.parse(await fs.readFile(legacyConfig, "utf8"));
+    } catch { /* ignore */ }
+  }
+  const currentServers = existingParsed.mcpServers;
+  if (currentServers !== undefined && (!currentServers || typeof currentServers !== "object" || Array.isArray(currentServers))) {
+    throw new Error(`Command Code MCP config has invalid mcpServers: ${cmdcConfig}`);
+  }
+  const managedMcp = Object.fromEntries(Object.entries(standardMcp).map(([name, server]) => [name, { ...server }]));
+  const nextServers: Record<string, unknown> = { ...((currentServers ?? {}) as Record<string, unknown>) };
+  for (const [name, definition] of Object.entries(managedMcp)) {
+    const current = nextServers[name];
+    if (current !== undefined && (!current || typeof current !== "object" || Array.isArray(current))) {
+      throw new Error(`Refusing to overwrite user-modified Command Code MCP server: ${name}`);
+    }
+    if (current !== undefined) {
+      const candidate = current as Record<string, unknown>;
+      const sameCommand = candidate.command === definition.command
+        && JSON.stringify(candidate.args ?? []) === JSON.stringify(definition.args ?? [])
+        && JSON.stringify(candidate.env ?? {}) === JSON.stringify(definition.env ?? {});
+      if (!sameCommand) throw new Error(`Refusing to overwrite user-modified Command Code MCP server: ${name}`);
+    }
+    nextServers[name] = definition;
   }
   const updatedConfig = {
     ...existingParsed,
-    mcpServers: {
-      ...(typeof existingParsed.mcpServers === "object" && existingParsed.mcpServers !== null ? (existingParsed.mcpServers as Record<string, unknown>) : {}),
-      ...standardMcp,
-    },
+    mcpServers: nextServers,
   };
   await fs.mkdir(path.dirname(cmdcConfig), { recursive: true });
-  await fs.writeFile(cmdcConfig, JSON.stringify(updatedConfig, null, 2) + "\n", "utf8");
+  const temporary = `${cmdcConfig}.tmp-${crypto.randomUUID().slice(0, 8)}`;
+  try {
+    await fs.writeFile(temporary, JSON.stringify(updatedConfig, null, 2) + "\n", "utf8");
+    await fs.rename(temporary, cmdcConfig);
+  } catch (error) {
+    try { await fs.rm(temporary, { force: true }); } catch { /* preserve the mutation error */ }
+    throw error;
+  }
 }
 
 export async function syncOpenCodeMcpConfig(): Promise<void> {

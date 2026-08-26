@@ -45,8 +45,8 @@ export function hostHome(host: HostName, env: NodeJS.ProcessEnv = process.env): 
     case "cursor": return path.join(userHome, ".cursor");
     case "opencode": return env.OPENCODE_HOME || path.join(userHome, ".config", "opencode");
     case "claude": return env.CLAUDE_CONFIG_DIR || path.join(userHome, ".claude");
-    case "deepseek-harness": return env.DSH_HOME || path.join(userHome, ".deepseek-harness");
-    case "command-code": return env.CMDC_HOME || path.join(userHome, ".command-code");
+    case "deepseek-harness": return env.DSH_HOME || path.join(userHome, ".dsh");
+    case "command-code": return env.COMMAND_CODE_HOME || path.join(userHome, ".commandcode");
   }
 }
 
@@ -108,10 +108,20 @@ export function resolveCodebaseMemoryBin(env: NodeJS.ProcessEnv = process.env): 
   return null;
 }
 
-function expandPlaceholders(body: string, env: NodeJS.ProcessEnv): string {
+function expandPlaceholders(host: HostName, body: string, env: NodeJS.ProcessEnv): string {
   const bin = resolveCodebaseMemoryBin(env);
-  if (bin) return body.replaceAll("${CODEBASE_MEMORY_MCP_BIN}", bin.replaceAll("\\", "/"));
-  return body;
+  let expanded = bin
+    ? body.replaceAll("${CODEBASE_MEMORY_MCP_BIN}", host === "codex" ? bin.replaceAll("\\", "/") : bin.replaceAll("\\", "\\\\"))
+    : body;
+  if (host === "command-code") {
+    const userHome = env.USERPROFILE || env.HOME || "";
+    const codebaseBin = env.CODEBASE_MEMORY_MCP_BIN || path.join(userHome, "AppData", "Local", "Programs", "codebase-memory-mcp", "codebase-memory-mcp.exe");
+    const chromeBin = path.join(userHome, "AppData", "Local", "ms-playwright", "chromium-1232", "chrome-win64", "chrome.exe");
+    expanded = expanded
+      .replaceAll("${COMMAND_CODE_CODEBASE_MEMORY_BIN}", codebaseBin.replaceAll("\\", "\\\\"))
+      .replaceAll("${COMMAND_CODE_CHROME_PATH}", chromeBin.replaceAll("\\", "\\\\"));
+  }
+  return expanded;
 }
 
 const ADAPTER_FILES: Record<HostName, string> = {
@@ -201,7 +211,7 @@ export async function buildConvergenceModel(repoRoot: string, host: HostName, en
     const adapter = findAdapterFile(repoRoot, entry.id, host);
     if (!adapter) continue;
     const raw = fs.readFileSync(adapter, "utf8");
-    const expanded = expandPlaceholders(raw, env);
+    const expanded = expandPlaceholders(host, raw, env);
     const definitions = serverDefinitionBodies(host, expanded);
     for (const { name, definition } of definitions) {
       knownNames.add(name);

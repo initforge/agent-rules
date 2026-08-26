@@ -190,4 +190,14 @@ describe("host MCP config convergence", () => {
     expect(model.knownNames.has("context7")).toBe(true);
     expect(model.fingerprints.some((fp) => fp.serverName === "context7" && fp.sha256.length === 64)).toBe(true);
   });
+
+  it("uses the native Command Code home and knows its managed MCP adapters", async () => {
+    expect(hostHome("deepseek-harness", env)).toBe(path.join(env.HOME, ".dsh"));
+    expect(hostHome("command-code", env)).toBe(path.join(env.HOME, ".commandcode"));
+    const workspaceRepo = fs.existsSync(path.join(process.cwd(), "integrations", "registry.json"))
+      ? process.cwd()
+      : path.resolve(process.cwd(), "../..");
+    const model = await buildConvergenceModel(workspaceRepo, "command-code", env);
+    expect(model.knownNames).toEqual(new Set(["chrome-devtools", "codebase-memory", "context7", "playwright"]));
+  });
 });

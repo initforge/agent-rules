@@ -1,0 +1,1138 @@
+{
+  "schema": "artifact/plan",
+  "version": 1,
+  "schema_version": "1",
+  "level": "resumable",
+  "meta": {
+    "id": "global-agent-behavior-native-operational-readiness-v2",
+    "created_at": "2026-08-26T17:30:00.000Z",
+    "updated_at": "2026-08-26T18:00:00.000Z",
+    "source_refs": [
+      "user-attachment:One-shot Correction v2 Revised",
+      ".agent/plans/global-agent-behavior-native-operational-readiness-v2/original.md"
+    ]
+  },
+  "supersedes": {
+    "plan_id": "global-agent-behavior-native-live-closure-v1",
+    "superseded_at": "2026-08-26T17:30:00.000Z",
+    "reason": "Owner-authorized native integration continues from the v2 phase; v1 remains historical and untouched."
+  },
+  "repository_baseline": {
+    "branch": "native-final-integration",
+    "sha": "5777d43875693cc6e3311f29bf7598ec4f0495cb"
+  },
+  "intent_reference": {
+    "hash": "92ee14f3cea9382c8dd1975b1cfc5d1b6c00eb4541a191213257a39c9ec486b6",
+    "summary": "One-shot Correction v2 Revised — Operational Readiness, Native thật, Owner Validation"
+  },
+  "intent": {
+    "outcome": "Complete the native host integration from the current v2 state, prove real installer/readback behavior, merge fast-forward to main, push, observe CI, and clean up only after the remote result is safe.",
+    "risk_classification": "high",
+    "in_scope": [
+      "Current v2 plan pointer, 22-REQ traceability and one compact owner amendment",
+      "Direct native installer changes for Command Code and DeepSeek Harness, plus their actual CLI/adapter/registry consumers",
+      "Native MCP registrations for the supported Command Code integrations; Codex, Grok, Claude, Cursor, OpenCode and Antigravity remain unchanged unless the native path proves a direct defect",
+      "DSH native AGENTS.md, shared skills and official Cordis profile rows with dsh --dump-config readback across discovered profiles",
+      "Affected typecheck, targeted tests, final verify:all/package-smoke gate, and real 8-host install/readback",
+      "Changed-path review, integration commit, fast-forward main, push, CI observation and safe cleanup"
+    ],
+    "non_goals": [
+      "No architecture, framework, vocabulary, proof machinery or compatibility-layer redesign without a direct native execution consumer",
+      "No wholesale geminipro/geminiflash bundle or worker-generated receipt/evidence/snapshot import",
+      "No mutation to stable host implementations that already pass the native contract/readback path",
+      "No new public CLI command, status, mode, profile, verifier, bridge, or synthetic model",
+      "No login flow, credential request, token storage, or ambient user MCP rewrite",
+      "No hand-edit of generated/ or installed runtime mirrors",
+      "No separate build/check/test ceremony when verify:all already covers it; no new cleanup project or CI/test-suite refactor"
+    ],
+    "assumptions": [
+      {
+        "category": "fact",
+        "text": "Integration worktree P:/agent-rules-integration is based on main baseline 5777d43875693cc6e3311f29bf7598ec4f0495cb; luna/geminipro/geminiflash were audited without wholesale import."
+      },
+      {
+        "category": "user_decision",
+        "text": "Owner explicitly authorizes integration commit, fast-forward merge to main, push origin/main, CI observation and cleanup after safe completion."
+      },
+      {
+        "category": "unknown",
+        "text": "GUI/login/model-turn behavior may remain owner-observable after one bounded attempt."
+      }
+    ],
+    "open_questions": []
+  },
+  "completion_policy": {
+    "require_all_tasks": true,
+    "require_verification": true
+  },
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "statement": "v2 is the only active phase pointer and supersedes v1 without modifying v1 history.",
+      "rationale": "Keep one active authority while preserving historical evidence.",
+      "decided_at": "2026-08-26T17:30:00.000Z"
+    },
+    {
+      "id": "DEC-002",
+      "statement": "Use the single production flow RequestIntake → PlanCompiler → ContextRuntime → SkillResolver → CapabilityBroker → ExecutionCoordinator → ProofRouter → RunStore → OutcomeReducer.",
+      "rationale": "Prevent parallel semantic owners.",
+      "decided_at": "2026-08-26T17:30:00.000Z"
+    },
+    {
+      "id": "DEC-003",
+      "statement": "Workers report observations; OutcomeReducer derives claim outcomes and result. No worker or prose can author PASS.",
+      "rationale": "Preserve evidence-ledger trust semantics.",
+      "decided_at": "2026-08-26T17:30:00.000Z"
+    },
+    {
+      "id": "DEC-004",
+      "statement": "Each claim declares agent_verifiable, owner_observable, or omitted with reason and rerun condition; human residuals do not block task_state COMPLETE.",
+      "rationale": "Operational readiness distinguishes agent work from GUI/login observation.",
+      "decided_at": "2026-08-26T17:30:00.000Z"
+    },
+    {
+      "id": "DEC-005",
+      "statement": "HostAdapter uses one detect/inventory/planInstall/install/reload/readback/offlineCanary/authenticatedCanary/rollback/uninstall contract with provenance and transactional rollback.",
+      "rationale": "Native truth is host-specific and must be read back.",
+      "decided_at": "2026-08-26T17:30:00.000Z"
+    },
+    {
+      "id": "DEC-006",
+      "statement": "Core install never configures or enables MCP; CapabilityBroker routes providers and integration enable/disable/doctor owns activation.",
+      "rationale": "Preserve the MCP boundary.",
+      "decided_at": "2026-08-26T17:30:00.000Z"
+    },
+    {
+      "id": "DEC-007",
+      "statement": "DeepSeek Harness native truth is DSH_HOME/AGENTS.md, native skill provider and Cordis profile rows confirmed by dsh --dump-config; generic mcp.json is not proof.",
+      "rationale": "Avoid false native adaptation from files merely present on disk.",
+      "decided_at": "2026-08-26T17:30:00.000Z"
+    },
+    {
+      "id": "DEC-008",
+      "statement": "REQ-118/120/121/122 use bounded residuals, the requested final gate, local workflow validation, and the owner-authorized commit/merge/push/CI/cleanup handoff.",
+      "rationale": "Amend v1 closure expectations without deleting stable requirement IDs.",
+      "decided_at": "2026-08-26T17:30:00.000Z"
+    },
+    {
+      "id": "DEC-009",
+      "statement": "Work continues on native-final-integration; after proof the owner-authorized release sequence is commit, fast-forward main, push origin/main, CI observation and safe cleanup.",
+      "rationale": "Owner's current integration and release authorization supersedes the earlier local-only boundary.",
+      "decided_at": "2026-08-26T17:30:00.000Z"
+    },
+    {
+      "id": "DEC-010",
+      "statement": "At most two non-recursive independent workers are allowed; this run uses the main coordinator when a native subagent capability is unavailable.",
+      "rationale": "Respect repository delegation cap and preserve ownership.",
+      "decided_at": "2026-08-26T17:30:00.000Z"
+    },
+    {
+      "id": "DEC-011",
+      "statement": "Native practical, proof vừa đủ: retain unchanged core/runtime contracts unless a real native execution path consumes the change; keep only direct installer, adapter, registry and mandatory dependency changes.",
+      "rationale": "Prevent a host-install correction from importing unrelated architecture or proof machinery.",
+      "decided_by": "owner",
+      "decided_at": "2026-08-26T18:00:00.000Z"
+    },
+    {
+      "id": "DEC-012",
+      "statement": "The final proof is one npm ci, one verify:all, one CLI package-smoke run and one real eight-host install/readback pass; evidence is generated only by those actual commands.",
+      "rationale": "Use sufficient native proof without repeated full-suite churn or stale worker artifacts.",
+      "decided_by": "owner",
+      "decided_at": "2026-08-26T18:00:00.000Z"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-101",
+      "summary": "Semantic admission: 100% of requirements have full chain raw intent→requirement→claim→acceptance→task→owner→output→verifier→evidence→rollback; unresolved=[] before execution.",
+      "kind": "original",
+      "statement": "Semantic admission: 100% of requirements have full chain raw intent→requirement→claim→acceptance→task→owner→output→verifier→evidence→rollback; unresolved=[] before execution.",
+      "phase": "P0",
+      "trace_id": "REQ-A1"
+    },
+    {
+      "id": "REQ-102",
+      "summary": "Take over the dirty worktree without reset/redo: full manifest of tracked/staged/unstaged/untracked; trace back from the pre-cut commit.",
+      "kind": "original",
+      "statement": "Take over the dirty worktree without reset/redo: full manifest of tracked/staged/unstaged/untracked; trace back from the pre-cut commit.",
+      "phase": "P0",
+      "trace_id": "REQ-A2"
+    },
+    {
+      "id": "REQ-103",
+      "summary": "Unified global-behavior runtime: 11 owner modules with single flow; no module writes PASS or its own state.",
+      "kind": "original",
+      "statement": "Unified global-behavior runtime: 11 owner modules with single flow; no module writes PASS or its own state.",
+      "phase": "P1",
+      "trace_id": "REQ-B1"
+    },
+    {
+      "id": "REQ-104",
+      "summary": "Remove or merge ambiguous/duplicate module names (Decision Fabric, Decision Closure, Planner Runtime, multiple closure-*, context-*, routing paths).",
+      "kind": "original",
+      "statement": "Remove or merge ambiguous/duplicate module names (Decision Fabric, Decision Closure, Planner Runtime, multiple closure-*, context-*, routing paths).",
+      "phase": "P1",
+      "trace_id": "REQ-B2"
+    },
+    {
+      "id": "REQ-105",
+      "summary": "Single vocabulary per domain: task_state DISCUSSING|PLANNED|EXECUTING|VERIFYING|COMPLETE|BLOCKED|NEEDS_USER; claim_outcome PASS|PARTIAL|BLOCKED|UNSUPPORTED|PRE-EXISTING|NEEDS_USER; host_state NOT_DETECTED|DETECTED|INSTALLED|OFFLINE_VERIFIED|LIVE_VERIFIED|FAILED; provider_state UNAVAILABLE|AVAILABLE|AUTHORIZED|ACTIVE|FAILED.",
+      "kind": "original",
+      "statement": "Single vocabulary per domain: task_state DISCUSSING|PLANNED|EXECUTING|VERIFYING|COMPLETE|BLOCKED|NEEDS_USER; claim_outcome PASS|PARTIAL|BLOCKED|UNSUPPORTED|PRE-EXISTING|NEEDS_USER; host_state NOT_DETECTED|DETECTED|INSTALLED|OFFLINE_VERIFIED|LIVE_VERIFIED|FAILED; provider_state UNAVAILABLE|AVAILABLE|AUTHORIZED|ACTIVE|FAILED.",
+      "phase": "P1",
+      "trace_id": "REQ-B3"
+    },
+    {
+      "id": "REQ-106",
+      "summary": "Keep exactly 5 rules groups covering (1) intent/authority/scope/safety, (2) planning/delegation/reconcile/anti-loop, (3) proof/acceptance/outcome, (4) context/skills/tools/communication, (5) maintainer/native/release; restore lost invariants; parity matrix proves old behavior replacements.",
+      "kind": "original",
+      "statement": "Keep exactly 5 rules groups covering (1) intent/authority/scope/safety, (2) planning/delegation/reconcile/anti-loop, (3) proof/acceptance/outcome, (4) context/skills/tools/communication, (5) maintainer/native/release; restore lost invariants; parity matrix proves old behavior replacements.",
+      "phase": "P2",
+      "trace_id": "REQ-C1"
+    },
+    {
+      "id": "REQ-107",
+      "summary": "Delete completely vibe-coder, plain-vietnamese, technical_explain, operator-profile command/runtime/test remnants and all automation/docs referencing these modes; no replacement modes.",
+      "kind": "original",
+      "statement": "Delete completely vibe-coder, plain-vietnamese, technical_explain, operator-profile command/runtime/test remnants and all automation/docs referencing these modes; no replacement modes.",
+      "phase": "P2",
+      "trace_id": "REQ-C2"
+    },
+    {
+      "id": "REQ-108",
+      "summary": "ContextCapsule contains raw request ref, effective requirements/decisions, current plan/task id, owned/forbidden scope, skill route receipt, capability plan/lease, evidence refs, remaining work and next action.",
+      "kind": "original",
+      "statement": "ContextCapsule contains raw request ref, effective requirements/decisions, current plan/task id, owned/forbidden scope, skill route receipt, capability plan/lease, evidence refs, remaining work and next action.",
+      "phase": "P3",
+      "trace_id": "REQ-D1"
+    },
+    {
+      "id": "REQ-109",
+      "summary": "Skill lifecycle: SKILL.md canonical for activation class, deterministic trigger facts, negative triggers, capabilities, dependencies, explicit-only policy, provider requirements, rollback, eval status; ROUTE.json removed from canonical; exactly 34 global skills source/install hash parity; per-skill positive and negative route test; key workflow skills have live behavior canary.",
+      "kind": "original",
+      "statement": "Skill lifecycle: SKILL.md canonical for activation class, deterministic trigger facts, negative triggers, capabilities, dependencies, explicit-only policy, provider requirements, rollback, eval status; ROUTE.json removed from canonical; exactly 34 global skills source/install hash parity; per-skill positive and negative route test; key workflow skills have live behavior canary.",
+      "phase": "P4",
+      "trace_id": "REQ-E1"
+    },
+    {
+      "id": "REQ-110",
+      "summary": "MCP lifecycle: core install never installs/enables MCP; remove agent-rules-mcp-bridge from all host configs; preserve user MCP servers; integration is the only enable/disable path; MCP claim PASS requires 7-point canary; tasks without MCP prove no lease and no MCP call.",
+      "kind": "original",
+      "statement": "MCP lifecycle: core install never installs/enables MCP; remove agent-rules-mcp-bridge from all host configs; preserve user MCP servers; integration is the only enable/disable path; MCP claim PASS requires 7-point canary; tasks without MCP prove no lease and no MCP call.",
+      "phase": "P5",
+      "trace_id": "REQ-F1"
+    },
+    {
+      "id": "REQ-111",
+      "summary": "Native 8-host HostAdapter: detect/inventory/planInstall/install/reload/readback/offlineCanary/authenticatedCanary/rollback/uninstall; registry does not self-declare native; provenance required; UNSUPPORTED/BLOCKED if no official surface; atomic+idempotent, zero-diff reinstall, byte-equal rollback, ownership-hash managed blocks only; candidate digest covers tracked+staged+unstaged+untracked.",
+      "kind": "original",
+      "statement": "Native 8-host HostAdapter: detect/inventory/planInstall/install/reload/readback/offlineCanary/authenticatedCanary/rollback/uninstall; registry does not self-declare native; provenance required; UNSUPPORTED/BLOCKED if no official surface; atomic+idempotent, zero-diff reinstall, byte-equal rollback, ownership-hash managed blocks only; candidate digest covers tracked+staged+unstaged+untracked.",
+      "phase": "P6",
+      "trace_id": "REQ-G1"
+    },
+    {
+      "id": "REQ-112",
+      "summary": "Proof/closure: RunStore single writer; OutcomeReducer single reducer; evidence contains exact command/API/tool call, redacted args, exit code/result, hashes, timestamp, host/native surface, pre/post bytes, source/candidate digest, claim/acceptance refs.",
+      "kind": "original",
+      "statement": "Proof/closure: RunStore single writer; OutcomeReducer single reducer; evidence contains exact command/API/tool call, redacted args, exit code/result, hashes, timestamp, host/native surface, pre/post bytes, source/candidate digest, claim/acceptance refs.",
+      "phase": "P7",
+      "trace_id": "REQ-H1"
+    },
+    {
+      "id": "REQ-113",
+      "summary": "Generated behavior-index: generated/behavior-index.json and generated/behavior-index.md with 10 canonical views; CLI reads the same index (status summary, status --details, doctor all --json).",
+      "kind": "original",
+      "statement": "Generated behavior-index: generated/behavior-index.json and generated/behavior-index.md with 10 canonical views; CLI reads the same index (status summary, status --details, doctor all --json).",
+      "phase": "P7",
+      "trace_id": "REQ-H2"
+    },
+    {
+      "id": "REQ-114",
+      "summary": "Public CLI exactly 8 commands: install, uninstall, doctor, status, run, integration, init, reference; integration list|enable|disable|doctor; remove obsolete command modules/tests/aliases; docs/artifacts match.",
+      "kind": "original",
+      "statement": "Public CLI exactly 8 commands: install, uninstall, doctor, status, run, integration, init, reference; integration list|enable|disable|doctor; remove obsolete command modules/tests/aliases; docs/artifacts match.",
+      "phase": "P8",
+      "trace_id": "REQ-I1"
+    },
+    {
+      "id": "REQ-115",
+      "summary": "Finite coverage matrix: lifecycle stage × invariant × actor/handoff × success/failure/resume × affected host; every cell behavior+proof, not-applicable+reason, or blocked/needs-user+authority.",
+      "kind": "original",
+      "statement": "Finite coverage matrix: lifecycle stage × invariant × actor/handoff × success/failure/resume × affected host; every cell behavior+proof, not-applicable+reason, or blocked/needs-user+authority.",
+      "phase": "P1",
+      "trace_id": "REQ-B4"
+    },
+    {
+      "id": "REQ-116",
+      "summary": "Deterministic tests cover schema/semantic admission, trace chains, state transitions, single writer/atomic update, candidate digest change, stale/foreign evidence rejection, rules legacy parity + zero dead refs, skill hash parity, positive/negative routing, host adapter merge/idempotence/rollback/ownership, MCP lifecycle/teardown, 8-command CLI, and verify:all does not print failed-check then return success.",
+      "kind": "original",
+      "statement": "Deterministic tests cover schema/semantic admission, trace chains, state transitions, single writer/atomic update, candidate digest change, stale/foreign evidence rejection, rules legacy parity + zero dead refs, skill hash parity, positive/negative routing, host adapter merge/idempotence/rollback/ownership, MCP lifecycle/teardown, 8-command CLI, and verify:all does not print failed-check then return success.",
+      "phase": "P9",
+      "trace_id": "REQ-J1"
+    },
+    {
+      "id": "REQ-117",
+      "summary": "Process-level integration tests (12): two competing processes single-writer lock; kill-mid-transaction resume; context checkpoint→restart→capsule; plan-only handoff loads skills; scope conflict blocked; reconcile classified; skill resolver once per context generation; capability lease (MCP yes/no); MCP canary handshake/list/call; native installer on temp home + byte-equal rollback; packaged CLI loads runtime not source; hard-coded PASS verifier fails mutation test.",
+      "kind": "original",
+      "statement": "Process-level integration tests (12): two competing processes single-writer lock; kill-mid-transaction resume; context checkpoint→restart→capsule; plan-only handoff loads skills; scope conflict blocked; reconcile classified; skill resolver once per context generation; capability lease (MCP yes/no); MCP canary handshake/list/call; native installer on temp home + byte-equal rollback; packaged CLI loads runtime not source; hard-coded PASS verifier fails mutation test.",
+      "phase": "P9",
+      "trace_id": "REQ-J2"
+    },
+    {
+      "id": "REQ-118",
+      "summary": "Keep JOURNEY-001..014 in the catalog; GUI/login-dependent journeys use one bounded attempt plus a human residual.",
+      "kind": "injection",
+      "statement": "Keep JOURNEY-001..014 in the catalog; GUI/login-dependent journeys use one bounded attempt plus a human residual.",
+      "phase": "P9",
+      "trace_id": "REQ-J3"
+    },
+    {
+      "id": "REQ-119",
+      "summary": "Deliver 10 artifacts: baseline-and-loss-map, behavior-contract (coverage matrix/state vocab/module ownership), executable-plan (100% mapping + worker packets), behavior-index (json+md), native-host-matrix (8 hosts provenance/offline/live/rollback), skill-matrix (34 skills routing/eval/install hash), capability-matrix (skill/MCP/tool selection + live effects), evidence-ledger (source-bound raw observations), result.json (OutcomeReducer only), release-report (local gates/shas/workflows).",
+      "kind": "original",
+      "statement": "Deliver 10 artifacts: baseline-and-loss-map, behavior-contract (coverage matrix/state vocab/module ownership), executable-plan (100% mapping + worker packets), behavior-index (json+md), native-host-matrix (8 hosts provenance/offline/live/rollback), skill-matrix (34 skills routing/eval/install hash), capability-matrix (skill/MCP/tool selection + live effects), evidence-ledger (source-bound raw observations), result.json (OutcomeReducer only), release-report (local gates/shas/workflows).",
+      "phase": "P10",
+      "trace_id": "REQ-K1"
+    },
+    {
+      "id": "REQ-120",
+      "summary": "Local operational-readiness gate; not an absolute live-release gate.",
+      "kind": "injection",
+      "statement": "Local operational-readiness gate; not an absolute live-release gate.",
+      "phase": "P10",
+      "trace_id": "REQ-K2"
+    },
+    {
+      "id": "REQ-121",
+      "summary": "Fix and validate the workflow definition locally; remote CI remains owner-run after handoff.",
+      "kind": "injection",
+      "statement": "Fix and validate the workflow definition locally; remote CI remains owner-run after handoff.",
+      "phase": "P10",
+      "trace_id": "REQ-K3"
+    },
+    {
+      "id": "REQ-122",
+      "summary": "Commit integration, fast-forward main, push origin/main, observe CI and clean up safely.",
+      "kind": "injection",
+      "statement": "Commit integration, fast-forward main, push origin/main, observe CI and clean up safely.",
+      "phase": "P11",
+      "trace_id": "REQ-L1"
+    }
+  ],
+  "constraints_and_invariants": {
+    "negative_invariants": [
+      "No mutation outside the integration worktree and owned paths until the authorized fast-forward/push/cleanup sequence.",
+      "No deterministic failure may be relabeled NEEDS_USER.",
+      "Workers never author PASS; only verifier evidence plus acceptance audit and OutcomeReducer derive it.",
+      "No parallel production path for skill resolution, run/evidence write, state, or outcome.",
+      "No invented host surface, path, format, bridge, verifier, mode or artifact.",
+      "Core install does not touch MCP; ambient user-owned MCP remains untouched.",
+      "No hand-edit of generated/ or installed runtime mirrors.",
+      "No merge/push/CI/cleanup before the integration commit and final native proof are complete; then only the owner-authorized fast-forward to main, push origin/main, CI observation and cleanup are allowed.",
+      "Human residuals contain bounded attempt, expected visible result, up to three owner steps and failure evidence path."
+    ],
+    "migration_constraints": [
+      "Preserve raw intent and REQ-101..REQ-122; v1 history is read-only.",
+      "Legacy packet format has one-way migrator only; no dual active task source.",
+      "RunStore uses process lock/CAS, atomic replacement, generation check and crash journal.",
+      "Native install snapshots bytes/permissions/hashes and restores owned content byte-for-byte on failure.",
+      "Planner never invents owned paths, native surfaces or generic verifiers when source truth is missing."
+    ]
+  },
+  "path_ownership": {
+    "exclusive_writers": {
+      "harness-maintainer": [
+        "packages/",
+        "rules/",
+        "skills/",
+        "platforms/",
+        "schemas/",
+        "automation/",
+        "docs/",
+        "evals/",
+        ".github/workflows/",
+        ".agent/plans/",
+        ".agent/ledger/"
+      ]
+    },
+    "read_only_paths": [
+      "generated/",
+      "installed runtime mirrors outside this worktree",
+      ".agent/runs/"
+    ],
+    "forbidden_paths": [
+      ".git/",
+      "node_modules/",
+      "other worktrees/branches",
+      "user-owned host config outside agent-rules-owned projection"
+    ]
+  },
+  "change_graph": [
+    {
+      "id": "CG-001",
+      "area": "phase-admission",
+      "current_truth": "v2 is the active pointer; the integration worktree is based on main and the owner has added native-scope steering.",
+      "exact_change": "Keep one v2 pointer, retain the raw request and add one compact amendment for native-practical scope and authorized release actions; do not add a blocker map or generated receipts.",
+      "category": "fact",
+      "files": [
+        ".agent/plans/global-agent-behavior-native-operational-readiness-v2/",
+        ".agent/ledger/global-agent-behavior-native-operational-readiness-v2.json",
+        ".agent/current.json"
+      ],
+      "depends_on": [],
+      "requirement_ids": [
+        "REQ-101",
+        "REQ-102"
+      ]
+    },
+    {
+      "id": "CG-002",
+      "area": "canonical-runtime-dependency-audit",
+      "current_truth": "The canonical North-Star runtime and trust contracts already exist at baseline and have no consumer in the native installer path under correction.",
+      "exact_change": "Audit native consumers and retain the baseline kernel/engine contracts unchanged; do not import WorkerPacket, proof, vocabulary or RunStore architecture for this host-install pass.",
+      "category": "fact",
+      "files": [
+        "packages/kernel/src/northstar/",
+        "packages/engine/src/northstar/"
+      ],
+      "depends_on": [
+        "CG-001"
+      ],
+      "requirement_ids": [
+        "REQ-103",
+        "REQ-104",
+        "REQ-105",
+        "REQ-115"
+      ]
+    },
+    {
+      "id": "CG-003",
+      "area": "shared-surface-consumer-audit",
+      "current_truth": "Stable shared context, skill, capability and proof behavior is already present; the native defect is host surface selection and MCP registration.",
+      "exact_change": "Keep shared behavior unchanged and limit edits to the direct Command Code/DSH installer, host adapter, MCP convergence and registry consumers.",
+      "category": "fact",
+      "files": [
+        "packages/kernel/src/northstar/context-capsule.ts",
+        "packages/kernel/src/northstar/context.ts",
+        "packages/kernel/src/northstar/routing.ts",
+        "packages/kernel/src/northstar/protocol.ts"
+      ],
+      "depends_on": [
+        "CG-002"
+      ],
+      "requirement_ids": [
+        "REQ-108",
+        "REQ-109",
+        "REQ-118"
+      ]
+    },
+    {
+      "id": "CG-004",
+      "area": "proof-scope-boundary",
+      "current_truth": "RunStore, EvidenceLedger and OutcomeReducer are canonical baseline contracts and are not native installer consumers.",
+      "exact_change": "Do not change proof machinery; record only evidence from actual final commands and native readback, without worker receipts, snapshots or duplicate ledgers.",
+      "category": "fact",
+      "files": [
+        "packages/kernel/src/northstar/run-store.ts",
+        "packages/kernel/src/northstar/outcome-reducer.ts",
+        "packages/kernel/src/northstar/evidence-ledger.ts",
+        "packages/kernel/src/northstar/runtime.ts"
+      ],
+      "depends_on": [
+        "CG-002"
+      ],
+      "requirement_ids": [
+        "REQ-112",
+        "REQ-119",
+        "REQ-120"
+      ]
+    },
+    {
+      "id": "CG-005",
+      "area": "native-install-and-mcp-boundary",
+      "current_truth": "Host lifecycle and MCP modules exist; native contract/readback is generic in places and DSH adapter observes profile data without installing native rows.",
+      "exact_change": "Implement transactional host install/readback/provenance, capability lease boundaries and DSH native AGENTS/skills/Cordis path without generic mcp.json proof.",
+      "category": "fact",
+      "files": [
+        "packages/kernel/src/northstar/host-adapter-contract.ts",
+        "packages/kernel/src/northstar/host-adapters.ts",
+        "packages/cli/src/services/native-installer.ts",
+        "platforms/deepseek-harness/adapter.ts",
+        "packages/kernel/src/northstar/mcp-lifecycle.ts"
+      ],
+      "depends_on": [
+        "CG-001"
+      ],
+      "requirement_ids": [
+        "REQ-110",
+        "REQ-111"
+      ]
+    },
+    {
+      "id": "CG-006",
+      "area": "local-gates-and-handoff",
+      "current_truth": "Baseline build/typecheck/global/process proofs require generated outputs and current pointer still names v1; workflow definition and journey artifacts need v2 semantics.",
+      "exact_change": "Add/fix deterministic v2 tests and local evidence/report artifacts, validate workflow definitions locally, keep 14 journeys with bounded owner residuals, commit clean and stop.",
+      "category": "fact",
+      "files": [
+        "packages/kernel/test/",
+        "packages/engine/test/",
+        "packages/cli/test/",
+        "automation/",
+        "generated/",
+        "docs/"
+      ],
+      "depends_on": [
+        "CG-003",
+        "CG-004",
+        "CG-005"
+      ],
+      "requirement_ids": [
+        "REQ-116",
+        "REQ-117",
+        "REQ-118",
+        "REQ-120",
+        "REQ-121",
+        "REQ-122"
+      ]
+    },
+    {
+      "id": "CG-007",
+      "area": "rules-and-cli-preservation",
+      "current_truth": "Baseline already has five manifest rules and eight public CLI commands; correction must not reintroduce modes or commands.",
+      "exact_change": "Add negative regression checks for five rules/eight commands/removed modes and preserve legacy parity evidence.",
+      "category": "fact",
+      "files": [
+        "rules/",
+        "packages/cli/src/index.ts",
+        "automation/"
+      ],
+      "depends_on": [
+        "CG-001"
+      ],
+      "requirement_ids": [
+        "REQ-106",
+        "REQ-107",
+        "REQ-114"
+      ]
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "AC-001",
+      "claim": "v2 plan is schema-valid, v1 is superseded by one CAS pointer, all 22 requirements remain traceable, and blocker map has no invented truth.",
+      "proof_profile": "static-contract",
+      "required_dimensions": [
+        "outcome",
+        "contract"
+      ],
+      "requirement_ids": [
+        "REQ-101",
+        "REQ-102"
+      ]
+    },
+    {
+      "id": "AC-002",
+      "claim": "The existing canonical runtime flow remains unchanged while native installer changes are limited to real host consumers; no WorkerPacket/proof architecture is imported without a native consumer.",
+      "proof_profile": "runtime-contract",
+      "required_dimensions": [
+        "outcome",
+        "runtime",
+        "contract"
+      ],
+      "requirement_ids": [
+        "REQ-103",
+        "REQ-104",
+        "REQ-105",
+        "REQ-115"
+      ]
+    },
+    {
+      "id": "AC-003",
+      "claim": "Context/skill handoff resolves once per generation, fresh workers can resume from the packet/capsule, and claim proof responsibility is explicit.",
+      "proof_profile": "runtime-contract",
+      "required_dimensions": [
+        "outcome",
+        "runtime"
+      ],
+      "requirement_ids": [
+        "REQ-108",
+        "REQ-109"
+      ]
+    },
+    {
+      "id": "AC-004",
+      "claim": "Existing RunStore/evidence/outcome ownership remains intact; this pass adds no parallel proof writer, duplicate ledger or generated worker receipt.",
+      "proof_profile": "concurrency-truth-chain",
+      "required_dimensions": [
+        "outcome",
+        "runtime",
+        "recovery"
+      ],
+      "requirement_ids": [
+        "REQ-112",
+        "REQ-119"
+      ]
+    },
+    {
+      "id": "AC-005",
+      "claim": "Completion semantics allow task_state COMPLETE with owner-observable NEEDS_USER residuals while deterministic failures remain actionable blockers.",
+      "proof_profile": "behavior",
+      "required_dimensions": [
+        "outcome",
+        "semantic"
+      ],
+      "requirement_ids": [
+        "REQ-118",
+        "REQ-120"
+      ]
+    },
+    {
+      "id": "AC-006",
+      "claim": "Core install leaves MCP untouched; integration activation uses leases/ownership markers; no ambient or user-owned config is overwritten.",
+      "proof_profile": "security-boundary",
+      "required_dimensions": [
+        "outcome",
+        "security",
+        "runtime"
+      ],
+      "requirement_ids": [
+        "REQ-110"
+      ]
+    },
+    {
+      "id": "AC-007",
+      "claim": "All eight HostAdapter paths derive installed/native surfaces, produce five-field native results, read back where possible, and roll back owned bytes byte-equally.",
+      "proof_profile": "native-transaction",
+      "required_dimensions": [
+        "outcome",
+        "runtime",
+        "recovery"
+      ],
+      "requirement_ids": [
+        "REQ-111"
+      ]
+    },
+    {
+      "id": "AC-008",
+      "claim": "DeepSeek Harness uses DSH_HOME/AGENTS.md, native skill provider and Cordis MCP rows proven by profile dump-config; generic mcp.json is never native proof.",
+      "proof_profile": "native-dsh",
+      "required_dimensions": [
+        "outcome",
+        "runtime",
+        "security"
+      ],
+      "requirement_ids": [
+        "REQ-111",
+        "REQ-110"
+      ]
+    },
+    {
+      "id": "AC-009",
+      "claim": "Five rules and eight public commands remain stable; removed communication modes/profile residue stay rejected.",
+      "proof_profile": "static-regression",
+      "required_dimensions": [
+        "outcome"
+      ],
+      "requirement_ids": [
+        "REQ-106",
+        "REQ-107",
+        "REQ-114"
+      ]
+    },
+    {
+      "id": "AC-010",
+      "claim": "The final gate runs npm ci, verify:all and CLI package-smoke once, followed by the real eight-host install/readback; no redundant standalone build/check/test is added.",
+      "proof_profile": "local-gate",
+      "required_dimensions": [
+        "outcome",
+        "runtime"
+      ],
+      "requirement_ids": [
+        "REQ-113",
+        "REQ-116",
+        "REQ-117",
+        "REQ-120",
+        "REQ-121"
+      ]
+    },
+    {
+      "id": "AC-011",
+      "claim": "Fourteen journeys remain in the matrix; agent-executable journeys run, GUI/login journeys get one bounded attempt and a compact human residual when unobservable.",
+      "proof_profile": "journey-matrix",
+      "required_dimensions": [
+        "outcome",
+        "runtime",
+        "semantic"
+      ],
+      "requirement_ids": [
+        "REQ-118"
+      ]
+    },
+    {
+      "id": "AC-012",
+      "claim": "Integration has a short KEEP/DROP changed-path manifest, a clean commit, fast-forward merge to main, pushed origin/main, observed CI and cleanup only after safety checks.",
+      "proof_profile": "local-handoff",
+      "required_dimensions": [
+        "outcome",
+        "scope"
+      ],
+      "requirement_ids": [
+        "REQ-122"
+      ]
+    }
+  ],
+  "verification_matrix": [
+    {
+      "requirement_id": "REQ-101",
+      "acceptance_ids": [
+        "AC-001"
+      ]
+    },
+    {
+      "requirement_id": "REQ-102",
+      "acceptance_ids": [
+        "AC-001"
+      ]
+    },
+    {
+      "requirement_id": "REQ-103",
+      "acceptance_ids": [
+        "AC-002"
+      ]
+    },
+    {
+      "requirement_id": "REQ-104",
+      "acceptance_ids": [
+        "AC-002"
+      ]
+    },
+    {
+      "requirement_id": "REQ-105",
+      "acceptance_ids": [
+        "AC-002"
+      ]
+    },
+    {
+      "requirement_id": "REQ-106",
+      "acceptance_ids": [
+        "AC-009"
+      ]
+    },
+    {
+      "requirement_id": "REQ-107",
+      "acceptance_ids": [
+        "AC-009"
+      ]
+    },
+    {
+      "requirement_id": "REQ-108",
+      "acceptance_ids": [
+        "AC-003"
+      ]
+    },
+    {
+      "requirement_id": "REQ-109",
+      "acceptance_ids": [
+        "AC-003"
+      ]
+    },
+    {
+      "requirement_id": "REQ-110",
+      "acceptance_ids": [
+        "AC-006",
+        "AC-008"
+      ]
+    },
+    {
+      "requirement_id": "REQ-111",
+      "acceptance_ids": [
+        "AC-007",
+        "AC-008"
+      ]
+    },
+    {
+      "requirement_id": "REQ-112",
+      "acceptance_ids": [
+        "AC-004"
+      ]
+    },
+    {
+      "requirement_id": "REQ-113",
+      "acceptance_ids": [
+        "AC-010"
+      ]
+    },
+    {
+      "requirement_id": "REQ-114",
+      "acceptance_ids": [
+        "AC-009"
+      ]
+    },
+    {
+      "requirement_id": "REQ-115",
+      "acceptance_ids": [
+        "AC-002"
+      ]
+    },
+    {
+      "requirement_id": "REQ-116",
+      "acceptance_ids": [
+        "AC-010"
+      ]
+    },
+    {
+      "requirement_id": "REQ-117",
+      "acceptance_ids": [
+        "AC-010"
+      ]
+    },
+    {
+      "requirement_id": "REQ-118",
+      "acceptance_ids": [
+        "AC-005",
+        "AC-011"
+      ]
+    },
+    {
+      "requirement_id": "REQ-119",
+      "acceptance_ids": [
+        "AC-004"
+      ]
+    },
+    {
+      "requirement_id": "REQ-120",
+      "acceptance_ids": [
+        "AC-005",
+        "AC-010"
+      ]
+    },
+    {
+      "requirement_id": "REQ-121",
+      "acceptance_ids": [
+        "AC-010"
+      ]
+    },
+    {
+      "requirement_id": "REQ-122",
+      "acceptance_ids": [
+        "AC-012"
+      ]
+    }
+  ],
+  "task_graph": [
+    {
+      "id": "COR-000",
+      "name": "Phase admission and blocker map",
+      "work": "Create v2 plan/original/raw intent, preserve REQ-101..122, import SB-01..SB-32 with classifications and activate the sole pointer.",
+      "owner": "harness-maintainer",
+      "depends_on": [],
+      "capability_class": "planner-researcher",
+      "write_paths": [
+        ".agent/plans/global-agent-behavior-native-operational-readiness-v2/",
+        ".agent/ledger/global-agent-behavior-native-operational-readiness-v2.json",
+        ".agent/current.json"
+      ],
+      "acceptance_ids": [
+        "AC-001"
+      ],
+      "requirement_ids": [
+        "REQ-101",
+        "REQ-102"
+      ],
+      "review_required": true,
+      "rollback_point": "native-final-integration@5777d4387569"
+    },
+    {
+      "id": "COR-001",
+      "name": "Core dependency audit (no architecture import)",
+      "work": "Trace the current native execution consumers; retain the canonical kernel/engine runtime and trust contracts unchanged because they are not consumed by this installer correction.",
+      "owner": "harness-maintainer",
+      "depends_on": [
+        "COR-000"
+      ],
+      "capability_class": "implementation-worker",
+      "write_paths": [
+        "packages/kernel/src/northstar/",
+        "packages/engine/src/northstar/"
+      ],
+      "acceptance_ids": [
+        "AC-002"
+      ],
+      "requirement_ids": [
+        "REQ-103",
+        "REQ-104",
+        "REQ-105",
+        "REQ-115"
+      ],
+      "review_required": true,
+      "rollback_point": "native-final-integration@5777d4387569"
+    },
+    {
+      "id": "COR-002",
+      "name": "Shared surface consumer audit",
+      "work": "Keep stable shared routing/proof behavior; change only direct Command Code/DSH installer and MCP convergence consumers needed for native install/readback.",
+      "owner": "harness-maintainer",
+      "depends_on": [
+        "COR-001"
+      ],
+      "capability_class": "implementation-worker",
+      "write_paths": [
+        "packages/kernel/src/northstar/",
+        "skills/",
+        "automation/"
+      ],
+      "acceptance_ids": [
+        "AC-003",
+        "AC-005"
+      ],
+      "requirement_ids": [
+        "REQ-108",
+        "REQ-109",
+        "REQ-118"
+      ],
+      "review_required": true,
+      "rollback_point": "native-final-integration@5777d4387569"
+    },
+    {
+      "id": "COR-003",
+      "name": "Proof boundary (unchanged)",
+      "work": "Keep RunStore, EvidenceLedger and OutcomeReducer unchanged; generate no worker receipt, snapshot, duplicate ledger or unrelated proof artifact.",
+      "owner": "harness-maintainer",
+      "depends_on": [
+        "COR-001"
+      ],
+      "capability_class": "implementation-worker",
+      "write_paths": [
+        "packages/kernel/src/northstar/",
+        "packages/kernel/test/northstar/"
+      ],
+      "acceptance_ids": [
+        "AC-004",
+        "AC-005"
+      ],
+      "requirement_ids": [
+        "REQ-112",
+        "REQ-119",
+        "REQ-120"
+      ],
+      "review_required": true,
+      "rollback_point": "native-final-integration@5777d4387569"
+    },
+    {
+      "id": "COR-004",
+      "name": "HostAdapter install transaction and MCP boundary",
+      "work": "Unify host contract/provenance transaction, capability lease boundary and native MCP behavior; preserve ambient user config.",
+      "owner": "harness-maintainer",
+      "depends_on": [
+        "COR-000"
+      ],
+      "capability_class": "implementation-worker",
+      "write_paths": [
+        "packages/kernel/src/northstar/",
+        "packages/cli/src/services/",
+        "platforms/",
+        "packages/cli/test/"
+      ],
+      "acceptance_ids": [
+        "AC-006",
+        "AC-007"
+      ],
+      "requirement_ids": [
+        "REQ-110",
+        "REQ-111"
+      ],
+      "review_required": true,
+      "rollback_point": "native-final-integration@5777d4387569"
+    },
+    {
+      "id": "COR-005",
+      "name": "DeepSeek Harness native closure",
+      "work": "Derive DSH_HOME/profile/package resolution from installed dsh, use native AGENTS/skills/Cordis rows and dump-config readback, with owned-only rollback.",
+      "owner": "harness-maintainer",
+      "depends_on": [
+        "COR-004"
+      ],
+      "capability_class": "implementation-worker",
+      "write_paths": [
+        "platforms/deepseek-harness/",
+        "packages/cli/src/services/",
+        "packages/kernel/test/northstar/"
+      ],
+      "acceptance_ids": [
+        "AC-008"
+      ],
+      "requirement_ids": [
+        "REQ-110",
+        "REQ-111"
+      ],
+      "review_required": true,
+      "rollback_point": "native-final-integration@5777d4387569"
+    },
+    {
+      "id": "COR-006",
+      "name": "Final gates and authorized release sequence",
+      "work": "Run the one final npm ci/verify:all/package-smoke sequence, complete the real eight-host install/readback, review the changed-path manifest, commit integration, fast-forward main, push, observe CI and clean up safely.",
+      "owner": "harness-maintainer",
+      "depends_on": [
+        "COR-002",
+        "COR-003",
+        "COR-005"
+      ],
+      "capability_class": "implementation-worker",
+      "write_paths": [
+        "automation/",
+        "packages/*/test/",
+        "docs/",
+        ".agent/current.json",
+        ".agent/ledger/",
+        ".agent/plans/global-agent-behavior-native-operational-readiness-v2/"
+      ],
+      "acceptance_ids": [
+        "AC-009",
+        "AC-010",
+        "AC-011",
+        "AC-012"
+      ],
+      "requirement_ids": [
+        "REQ-106",
+        "REQ-107",
+        "REQ-113",
+        "REQ-114",
+        "REQ-116",
+        "REQ-117",
+        "REQ-118",
+        "REQ-120",
+        "REQ-121",
+        "REQ-122"
+      ],
+      "review_required": true,
+      "rollback_point": "native-final-integration@5777d4387569"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "CK-000",
+      "slice_id": "COR-000",
+      "commit": "5777d43875693cc6e3311f29bf7598ec4f0495cb",
+      "summary": "Baseline admitted from main; current integration continues without restarting baseline or importing sibling bundles.",
+      "next_action": "Finish the direct native consumer audit, validate the current diff, then run the one final gate and eight-host readback.",
+      "created_at": "2026-08-26T17:30:00.000Z"
+    }
+  ],
+  "evidence_ledger": [],
+  "unresolved_questions": [],
+  "execution_contract": {
+    "mode": "execution",
+    "shape": "resumable",
+    "ledger": "required",
+    "strategy": "sequential-with-parallel-analysis",
+    "max_agents": 1,
+    "max_depth": 0,
+    "effort_cap": "high",
+    "authorized_final_actions": [
+      "edit",
+      "npm ci",
+      "verify:all",
+      "test:package-smoke -w packages/cli",
+      "native 8-host install/readback",
+      "commit",
+      "merge --ff-only main",
+      "push origin main",
+      "observe CI",
+      "cleanup worktrees and branches"
+    ]
+  },
+  "original_request_hash": "92ee14f3cea9382c8dd1975b1cfc5d1b6c00eb4541a191213257a39c9ec486b6",
+  "repository_facts": {
+    "baseline": "main@5777d43875693cc6e3311f29bf7598ec4f0495cb",
+    "architecture": [
+      "Canonical source is packages/engine/src/northstar and packages/kernel/src/northstar.",
+      "Kernel currently contains the shared protocol, planner/context/routing/host/run/outcome modules; engine northstar files are compatibility re-exports.",
+      "Public CLI has eight commands: install, uninstall, doctor, status, run, integration, init, reference.",
+      "Existing baseline proof has 22/22 global behavior invariants and 12/12 process-level integration checks after build."
+    ],
+    "reference_map": [
+      {
+        "source": "packages/kernel/src/northstar/runtime.ts",
+        "destination": "core dependency audit",
+        "reuse": "retain the canonical runtime and trust contracts unchanged",
+        "deviation": "none; no native execution consumer was found for the worker/proof architecture"
+      },
+      {
+        "source": "packages/kernel/src/northstar/host-adapter-contract.ts",
+        "destination": "native host installer",
+        "reuse": "retain uniform lifecycle contract",
+        "deviation": "bind native provenance/readback and transaction receipts"
+      },
+      {
+        "source": "platforms/deepseek-harness/adapter.ts",
+        "destination": "COR-005",
+        "reuse": "retain real dsh detection and dump-config",
+        "deviation": "derive discovered profile rows and official dsh-mcp-client dependency from installed DSH"
+      }
+    ]
+  },
+  "amendments": [
+    {
+      "id": "AMD-001",
+      "reason": "Operational-readiness/native-real correction supplied by owner in the v2 plan.",
+      "changes": [
+        {
+          "field": "completion_policy",
+          "action": "superseded",
+          "target_id": "v1-release-policy",
+          "detail": "task_state COMPLETE may coexist with owner-observable claim NEEDS_USER; deterministic failures remain blockers."
+        },
+        {
+          "field": "requirements",
+          "action": "superseded",
+          "target_id": "REQ-118/REQ-120/REQ-121/REQ-122",
+          "detail": "bounded GUI residuals, local gate, local workflow validation, local commit/no push."
+        },
+        {
+          "field": "execution_contract",
+          "action": "superseded",
+          "target_id": "v1-release-actions",
+          "detail": "authorized final actions are edit/commit/rebuild; push/merge/rebase/PR are forbidden."
+        }
+      ],
+      "supersedes_prior": true,
+      "applied_at": "2026-08-26T17:30:00.000Z",
+      "applied_by": "owner"
+    },
+    {
+      "id": "AMD-002",
+      "reason": "Owner steering correction: continue the current integration, keep only direct native consumers, and complete the authorized release sequence.",
+      "changes": [
+        {
+          "field": "scope",
+          "action": "narrowed",
+          "target_id": "COR-001/COR-002/COR-003",
+          "detail": "Core/runtime, vocabulary, framework, proof machinery and compatibility changes without a real native execution consumer are dropped; canonical baseline contracts remain unchanged."
+        },
+        {
+          "field": "native_hosts",
+          "action": "bounded",
+          "target_id": "Command Code/DeepSeek Harness plus existing host paths",
+          "detail": "Keep direct Command Code/DSH installer, adapter, registry and mandatory dependency changes; preserve stable Codex, Grok, Claude, Cursor, OpenCode and Antigravity behavior."
+        },
+        {
+          "field": "proof_and_artifacts",
+          "action": "bounded",
+          "target_id": "final verification",
+          "detail": "Evidence comes only from actual final commands and native readback; do not import worker receipts, snapshots, dummy journeys or duplicate ledgers."
+        },
+        {
+          "field": "release_actions",
+          "action": "authorized",
+          "target_id": "integration-to-main",
+          "detail": "After one final gate and eight-host readback, commit integration, fast-forward main, push origin/main, observe CI, then clean up safely."
+        }
+      ],
+      "supersedes_prior": true,
+      "applied_at": "2026-08-26T18:00:00.000Z",
+      "applied_by": "owner"
+    }
+  ]
+}

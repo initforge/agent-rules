@@ -1,0 +1,92 @@
+schema: artifact/requirements
+version: 1
+plan_id: global-agent-behavior-native-operational-readiness-v2
+requirements:
+  - id: REQ-101
+    status: active
+    statement: Preserve raw intent and complete requirement-to-verifier traceability.
+    verification: [node automation/validate-canonical-plan.mjs]
+  - id: REQ-102
+    status: active
+    statement: Continue from the recorded Git/worktree baseline without reset or redo.
+    verification: [git status --short, git rev-parse HEAD]
+  - id: REQ-103
+    status: active
+    statement: Keep the canonical runtime flow and do not add an unrelated native architecture layer.
+    verification: [git diff -- packages/kernel/src packages/engine/src]
+  - id: REQ-104
+    status: active
+    statement: Do not import duplicate architecture, vocabulary or compatibility modules.
+    verification: [git diff --name-only]
+  - id: REQ-105
+    status: active
+    statement: Preserve the existing task, claim, host and provider vocabulary.
+    verification: [npm run verify:all]
+  - id: REQ-106
+    status: active
+    statement: Keep exactly five rules groups and their existing communication behavior.
+    verification: [npm run verify:all]
+  - id: REQ-107
+    status: active
+    statement: Preserve removal of obsolete modes and their dead references.
+    verification: [npm run verify:all]
+  - id: REQ-108
+    status: active
+    statement: Preserve context capsule and handoff behavior while changing only native consumers.
+    verification: [npm run verify:all]
+  - id: REQ-109
+    status: active
+    statement: Preserve the 34-skill source/catalog behavior and install parity.
+    verification: [npm run verify:all]
+  - id: REQ-110
+    status: active
+    statement: Keep core MCP untouched and use only owned native integration surfaces.
+    verification: [npm run verify:all, native 8-host install/readback]
+  - id: REQ-111
+    status: active
+    statement: Native host install/readback is provenance-bound, atomic, idempotent and rollback-safe.
+    verification: [npm run verify:all, native 8-host install/readback]
+  - id: REQ-112
+    status: active
+    statement: Preserve single-writer proof and outcome ownership; workers never author PASS.
+    verification: [npm run verify:all]
+  - id: REQ-113
+    status: active
+    statement: Preserve generated behavior-index ownership and CLI consumers.
+    verification: [npm run verify:all]
+  - id: REQ-114
+    status: active
+    statement: Preserve the eight public CLI commands and integration subcommands.
+    verification: [npm run verify:all]
+  - id: REQ-115
+    status: active
+    statement: Keep finite behavior coverage and direct native consumer traceability.
+    verification: [npm run verify:all]
+  - id: REQ-116
+    status: active
+    statement: Run targeted correction proof and the single final gate without over-testing.
+    verification: [npm run verify:all, npm run test:package-smoke -w packages/cli]
+  - id: REQ-117
+    status: active
+    statement: Preserve process-level integration behavior and native rollback guarantees.
+    verification: [npm run verify:all]
+  - id: REQ-118
+    status: active
+    statement: Keep GUI/login residuals bounded and honest when native live proof needs the owner.
+    verification: [npm run verify:all]
+  - id: REQ-119
+    status: active
+    statement: Keep .agent compact with one pointer, one ledger and evidence from actual commands only.
+    verification: [git diff --name-only, npm run verify:all]
+  - id: REQ-120
+    status: active
+    statement: Complete the final operational-readiness gate once at the requested scope.
+    verification: [npm ci, npm run verify:all]
+  - id: REQ-121
+    status: active
+    statement: Validate workflow definitions locally and observe remote CI after push.
+    verification: [npm run verify:all]
+  - id: REQ-122
+    status: active
+    statement: Commit integration, fast-forward main, push, observe CI and clean up safely.
+    verification: [git merge --ff-only main, git push origin main]

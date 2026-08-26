@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "cmd.exe",
+      "args": [
+        "/d",
+        "/s",
+        "/c",
+        "npx",
+        "-y",
+        "@playwright/mcp@0.0.78",
+        "--isolated",
+        "--executable-path",
+        "${COMMAND_CODE_CHROME_PATH}"
+      ]
+    }
+  }
+}
