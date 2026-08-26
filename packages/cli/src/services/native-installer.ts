@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import type { HostId } from '@initforge/agent-rules-kernel/northstar/host-adapters.js';
 import { getNativeContract, getHostIds } from '@initforge/agent-rules-kernel/northstar/host-registry.js';
 import { dshSkillParity, discoverDshProfiles, installDeepseekHarnessNative, restoreDshNative, inspectDshNativeReadback, type DshBackupEntry } from './deepseek-native.js';
+import { hashUntrackedCandidateFiles } from './candidate-fingerprint.js';
 import {
   captureCommandCodeBackup,
   commandCodeSkillParity,
@@ -117,34 +118,12 @@ export function computeCandidateFingerprint(): string {
   const head = getGitHead();
   let trackedDiffHash = '0'.repeat(64);
   let stagedDiffHash = '0'.repeat(64);
-  let untrackedHash = '0'.repeat(64);
+  const untrackedHash = hashUntrackedCandidateFiles(process.cwd());
   try {
     const tracked = spawnSync('git', ['diff', 'HEAD'], { encoding: 'utf8', cwd: process.cwd() });
     if (tracked.status === 0) trackedDiffHash = sha256(tracked.stdout || '');
     const staged = spawnSync('git', ['diff', '--cached'], { encoding: 'utf8', cwd: process.cwd() });
     if (staged.status === 0) stagedDiffHash = sha256(staged.stdout || '');
-    const untracked = spawnSync('git', ['ls-files', '--others', '--exclude-standard', '-z'], { encoding: 'utf8', cwd: process.cwd() });
-    if (untracked.status === 0) {
-      const names = untracked.stdout.split('\0').filter(Boolean).filter((name) => {
-        const normalized = name.replace(/\\/g, '/');
-        // Evidence and temporary receipts are outputs of certification, not
-        // candidate source. Excluding them prevents a receipt from hashing
-        // itself and becoming stale immediately after it is written.
-        return !normalized.startsWith('.agent/evidence/') && !normalized.startsWith('.agent/tmp/');
-      }).sort();
-      const hash = createHash('sha256');
-      for (const name of names) {
-        const file = path.resolve(process.cwd(), name);
-        hash.update(name).update('\0');
-        try {
-          const stat = fs.lstatSync(file);
-          hash.update(stat.isSymbolicLink() ? fs.readlinkSync(file) : stat.isFile() ? fs.readFileSync(file) : '<non-file>').update('\0');
-        } catch {
-          hash.update('<unreadable>').update('\0');
-        }
-      }
-      untrackedHash = hash.digest('hex');
-    }
   } catch {}
 
   let lockHash = '0'.repeat(64);
