@@ -20,10 +20,8 @@ function getActivePlanId() {
 }
 
 const ACTIVE_PLAN = getActivePlanId();
-const OUT_PHASE = path.join(ROOT, '.agent', 'evidence', ACTIVE_PLAN);
 const OUT_TMP = path.join(ROOT, '.agent', 'tmp', 'global-behavior');
 
-fs.mkdirSync(OUT_PHASE, { recursive: true });
 fs.mkdirSync(OUT_TMP, { recursive: true });
 
 function sha256(content) {
@@ -424,7 +422,6 @@ const summary = {
   results,
 };
 
-fs.writeFileSync(path.join(OUT_PHASE, 'receipt.json'), JSON.stringify(summary, null, 2), 'utf8');
 fs.writeFileSync(path.join(OUT_TMP, 'global-behavior-receipt.json'), JSON.stringify(summary, null, 2), 'utf8');
 
 console.log(JSON.stringify(summary, null, 2));
