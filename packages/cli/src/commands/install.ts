@@ -38,7 +38,7 @@ export async function installCmd(
     try {
       // NativeInstaller is the only coordinator: plan → snapshot → apply →
       // readback. It projects skills but never globally activates MCP.
-      await nativeInstaller.install(p as HostId, { dryRun: options.dryRun });
+      await nativeInstaller.install(p as HostId, { dryRun: options.dryRun, force });
       return { ok: true, action: "installed (native transactional)" };
     } catch (error) {
       const msg = (error as Error).message;
@@ -49,7 +49,7 @@ export async function installCmd(
         // Force: uninstall then reinstall
         try {
           await nativeInstaller.uninstall(p as HostId);
-          await nativeInstaller.install(p as HostId, { dryRun: options.dryRun });
+          await nativeInstaller.install(p as HostId, { dryRun: options.dryRun, force: true });
           return { ok: true, action: "reinstalled (forced, native transactional)" };
         } catch (forceError) {
           return { ok: false, action: "force-failed", error: (forceError as Error).message };

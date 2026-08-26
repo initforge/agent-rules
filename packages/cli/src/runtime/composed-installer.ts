@@ -140,7 +140,7 @@ export async function projectSkillsToGlobal(
 
       if (await exists(skillMdTarget)) {
         const isOwned = Boolean(existingManifest.projections[manifestKey]);
-        if (!isOwned) {
+        if (!isOwned && !options.force) {
           // Unowned user skill collision: do not overwrite!
           collisions.push(`${skillName} @ ${skillTargetDir}`);
           continue;

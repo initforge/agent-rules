@@ -55,7 +55,7 @@ describe("install wrapper", () => {
     const { installCmd } = await import("../src/commands/install.js");
     const result = await installCmd(["codex"], { dryRun: false, verbose: false, json: false });
     expect(result.exitCode).toBe(ExitCode.Success);
-    expect(mockNativeInstall).toHaveBeenCalledWith("codex", { dryRun: false });
+    expect(mockNativeInstall).toHaveBeenCalledWith("codex", { dryRun: false, force: false });
   });
 
   it("reports failure when a platform install fails", async () => {

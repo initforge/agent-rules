@@ -183,7 +183,7 @@ export class NativeInstaller {
   inventory(detection: Detection): Promise<InventoryEntry[]> { return this.probe.inventory(detection); }
   planInstall(host: HostId, detection: Detection, _inventory: InventoryEntry[]): InstallPlan { return this.probe.planInstall(host, detection); }
 
-  async install(host: HostId, opts?: { dryRun?: boolean }): Promise<CertificationReceipt> {
+  async install(host: HostId, opts?: { dryRun?: boolean; force?: boolean }): Promise<CertificationReceipt> {
     const lease = acquireWorktreeWriterLease(host);
     let backupDir = '';
     try {
@@ -198,7 +198,7 @@ export class NativeInstaller {
 
       // The native coordinator owns the complete host projection. This helper
       // only copies skills and records ownership; it cannot mutate MCP config.
-      await projectSkillsToGlobal(path.join(process.cwd(), 'skills'), host as RuntimePlatform);
+      await projectSkillsToGlobal(path.join(process.cwd(), 'skills'), host as RuntimePlatform, { force: opts?.force });
 
       if (host === 'deepseek-harness') {
         const receipt = await this.installDeepseekHarness(detection, backupDir);

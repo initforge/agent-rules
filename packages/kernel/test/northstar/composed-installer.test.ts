@@ -53,6 +53,23 @@ describe("Composed Installer & Skill Projection", () => {
     expect(await fs.readFile(path.join(targetRoot, "frontend-architect", "SKILL.md"), "utf8")).toContain("frontend-architect");
   });
 
+  it("preserves an unowned skill by default and replaces it only with explicit force", async () => {
+    const sourceRoot = tempDir();
+    const targetRoot = tempDir();
+    const skillDir = path.join(sourceRoot, "quality");
+    await fs.mkdir(skillDir, { recursive: true });
+    await fs.writeFile(path.join(skillDir, "SKILL.md"), "---\nname: quality\n---\nCanonical", "utf8");
+    await fs.mkdir(path.join(targetRoot, "quality"), { recursive: true });
+    await fs.writeFile(path.join(targetRoot, "quality", "SKILL.md"), "user-owned", "utf8");
+
+    const safe = await projectSkillsToGlobal(sourceRoot, "codex", { targetRoots: [targetRoot] });
+    expect(safe.collisions).toHaveLength(1);
+    expect(await fs.readFile(path.join(targetRoot, "quality", "SKILL.md"), "utf8")).toBe("user-owned");
+
+    await projectSkillsToGlobal(sourceRoot, "codex", { targetRoots: [targetRoot], force: true });
+    expect(await fs.readFile(path.join(targetRoot, "quality", "SKILL.md"), "utf8")).toContain("Canonical");
+  });
+
   it("writes global ownership manifest to harness home and workspace manifest to .agent", async () => {
     const fakeRepo = tempDir();
     const globalManifestPath = await writeGlobalOwnershipManifest({
