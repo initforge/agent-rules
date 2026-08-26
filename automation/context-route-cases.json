@@ -603,13 +603,9 @@
         "has_5fedu_context": false
       },
       "expect": {
-        "primary": null,
+        "primary": "context-evolution-protocol",
         "required_skills": [],
-        "forbidden_skills": [
-          "docs-style",
-          "researcher",
-          "context-evolution-protocol"
-        ]
+        "forbidden_skills": ["docs-style", "researcher"]
       }
     },
     {

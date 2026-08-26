@@ -188,8 +188,10 @@ async function main() {
     const home = mktmp('pl-native-');
     const envKey = registry.native_contracts?.[host]?.homeEnv ?? 'CODEX_HOME';
     const saved = process.env[envKey];
+    const savedSkillsDir = process.env.CODEX_SKILLS_DIR;
     process.env[envKey] = home;
     process.env.USERPROFILE = home;
+    process.env.CODEX_SKILLS_DIR = path.join(home, '.agents', 'skills');
     const installer = new left.NativeInstaller();
     try {
       await installer.install(host, { dryRun: false });
@@ -205,6 +207,7 @@ async function main() {
       report('PL-10-native-installer-temp-rollback', false, error instanceof Error ? error.message : String(error));
     } finally {
       if (saved === undefined) delete process.env[envKey]; else process.env[envKey] = saved;
+      if (savedSkillsDir === undefined) delete process.env.CODEX_SKILLS_DIR; else process.env.CODEX_SKILLS_DIR = savedSkillsDir;
       fs.rmSync(home, { recursive: true, force: true });
     }
   }
