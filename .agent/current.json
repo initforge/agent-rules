@@ -12,9 +12,9 @@
   },
   "canonical_ledger": {
     "path": ".agent/ledger/agent-workflow-native-readiness-v3.json",
-    "sha256": "fc055a66d3a3bfae34747cd2db2cd30f6eb1d7c1a71c962b385df060828bf7fa",
+    "sha256": "65b63e5c988ad8f6a248dedd4c033256f2263836f5d27044ce9b9ee6866318bd",
     "observed_revision": 1,
-    "observed_effective_sha256": "96cd4e005a4fbf3bd2202df2e94266e923381dca74a7a12c816aa14353bc16b1",
+    "observed_effective_sha256": "066a7edaa88477f828e7b082bc2a1f29a43558e42744e9481c1ea87b90525c2a",
     "plan_status": "ACTIVE",
     "execution_state": "IN_PROGRESS"
   },

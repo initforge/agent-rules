@@ -6,8 +6,8 @@ description: Trigger-only protocol for learning from user feedback and evolving 
   "ghi nhớ", "bổ sung context", "đưa vào rule", "đừng lặp lại", "context bị loạn", "dọn context", "sync rule". Do not use
   for ordinary coding tasks.
 metadata:
-  signals: "ghi nhớ, bổ sung context, đừng lặp lại, đưa vào rule, dọn context, sync rule, context bị loạn, agent-rules context, context drift"
-  excludes: "ordinary implementation, cài context, thiết lập 5fedu, apply the vercel agent skills, feed the goldfish, tinh gọn rules"
+  signals: "ghi nhớ, bổ sung context, đừng lặp lại, đưa vào rule, dọn context, sync rule, context bị loạn, agent-rules, context drift"
+  excludes: "ordinary implementation, cài context, thiết lập 5fedu, apply the vercel agent skills, feed the goldfish"
   priority: "60"
   platform_scope: "all"
   source: ROUTE.json migrated
@@ -164,5 +164,3 @@ rg -n "<khái niệm vừa thêm>" rules skills     # kỳ vọng 1 nơi sở h�
 ## Output Contract
 
 For context/harness tasks, keep the public report domain-first. Mention classification, changed layer, duplicate audit or status only when it changes a decision, explains a blocker, or is requested. Keep the complete metadata in trace/artifacts.
-
-

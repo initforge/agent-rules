@@ -183,7 +183,7 @@ describe("Plan Compiler / Review-Once Optimization", () => {
     expect(reviewResult2.reviewer_host).toBe("claude");
   });
 
-  it("executes PLAN_REVIEW and achieves 0 user-visible revisions via internal convergence", async () => {
+  it("fails closed when a pasted plan leaves source-backed scope ambiguous", async () => {
     const repo = tempRepo();
     await fs.mkdir(path.join(repo, "src"), { recursive: true });
     await fs.writeFile(path.join(repo, "src", "app.ts"), "export const a = 1;\n", "utf8");
@@ -202,18 +202,13 @@ describe("Plan Compiler / Review-Once Optimization", () => {
       created_at: new Date().toISOString(),
     };
 
-    const compilerResult = await compileOrReviewPlan({
+    await expect(compileOrReviewPlan({
       repoRoot: repo,
       request: req,
       planner: "antigravity",
       reviewer: "codex",
       existingPlan: existingArtifact,
       availableSkills: ["frontend-architect", "frontend-design-contract", "ui-taste", "browser-qa"],
-    });
-
-    expect(compilerResult.intent).toBe("PLAN_REVIEW");
-    expect(compilerResult.userVisibleRevisions).toBe(0); // 0 user-visible revisions target achieved
-    expect(compilerResult.visibilityReceipt.passed).toBe(true);
-    expect(compilerResult.reviewResult.verdict).toBe("APPROVED");
+    })).rejects.toThrow("requires source-backed scope and verifier");
   });
 });
