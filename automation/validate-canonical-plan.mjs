@@ -23,20 +23,11 @@ const schemaPath = path.join(root, 'schemas', 'plan.schema.json');
 
 function collectPlanDirs(args) {
   if (args.length > 0) return args.map((a) => path.resolve(root, a));
-  const plansRoot = path.join(root, '.agent', 'plans');
-  const out = [];
-  // Current-phase plans are those with a machine-readable plan.json. Retired
-  // historical plans without one are not candidates.
-  const walk = (dir) => {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue;
-      const full = path.join(dir, entry.name);
-      if (fs.existsSync(path.join(full, 'plan.json'))) out.push(full);
-      else walk(full);
-    }
-  };
-  if (fs.existsSync(plansRoot)) walk(plansRoot);
-  return out;
+  const currentPath = path.join(root, '.agent', 'current.json');
+  if (!fs.existsSync(currentPath)) return [];
+  const current = JSON.parse(fs.readFileSync(currentPath, 'utf8'));
+  const planRoot = typeof current.plan_root === 'string' ? path.resolve(root, current.plan_root) : '';
+  return planRoot && fs.existsSync(path.join(planRoot, 'plan.json')) ? [planRoot] : [];
 }
 
 const ajv = new Ajv2020({ strict: false, allErrors: true });
@@ -61,25 +52,10 @@ for (const dir of dirs) {
     console.error(`REJECTED ${path.relative(root, file)}: invalid JSON (${error.message})`);
     continue;
   }
-  // Retired historical phases predate the portable contract; they are provenance
-  // records, not active authorities. Any NEW plan artifact (not in the retired
-  // set) must declare `level` — a current-phase plan without one fails closed.
-  const RETIRED_PLAN_DIRS = new Set([
-    'harness-universal-reconciliation-v1',
-    'mcp-availability-repair-v1',
-    'mcp-visible-workspace-isolation-v1',
-    'skill-mcp-fabric-v1',
-  ]);
-  const dirName = path.basename(dir);
   const isCurrentContract = typeof plan.level === 'string';
-  if (!isCurrentContract && !RETIRED_PLAN_DIRS.has(dirName)) {
+  if (!isCurrentContract) {
     failures += 1;
     console.error(`REJECTED ${path.relative(root, file)}: current-contract artifact missing required "level" field`);
-    continue;
-  }
-  if (!isCurrentContract) {
-    legacySkipped += 1;
-    console.log(`LEGACY_SKIP ${path.relative(root, file)} (retired historical artifact; not an active authority)`);
     continue;
   }
   const ok = validate(plan);

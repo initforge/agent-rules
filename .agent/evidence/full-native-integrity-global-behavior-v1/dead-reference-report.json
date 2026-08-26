@@ -1,9 +1,0 @@
-{
-  "schema": "agent-rules/dead-reference-report",
-  "version": 1,
-  "generated_at": "2026-08-25T09:11:35.957Z",
-  "scanned_files_count": 500,
-  "active_source_dead_refs_count": 0,
-  "status": "CLEAN",
-  "details": "All active source references mapped to the 5 canonical rule files."
-}

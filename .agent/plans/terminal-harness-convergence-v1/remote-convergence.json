@@ -1,9 +1,0 @@
-{
-  "plan_id": "terminal-harness-convergence-v1",
-  "EXPECTED_REMOTE_MAIN_SHA": "4594bb94dbb94de234df9a7a2f9f1c01c61b793f",
-  "LOCAL_MAIN_SHA": "4594bb94dbb94de234df9a7a2f9f1c01c61b793f",
-  "recorded_at": "2026-08-20T00:00:00Z",
-  "note": "P0 freeze prior to any mutation. If remote differs at push time, absorb/re-audit and establish a new expected SHA before mutation.",
-  "two_historical_tags_retained": ["harness-v2-rc-20260725T081756Z", "pre-harness-v2-20260725T080716Z"],
-  "history_policy": "deterministic git commit-tree rewrite to default 7 (<=9) commits; final tree == verified tree; two historical tags kept reachable outside refs/heads/main."
-}

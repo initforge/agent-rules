@@ -154,65 +154,14 @@ export async function compileOrReviewPlan(
           }
         }
       }
-      // Reconcile and apply missing items into contract with concrete scope
-      for (const missing of reviewResult.gate_receipt.evaluation.missing_mandatory) {
-        const taskId = `task-auto-${missing.id.toLowerCase()}`;
-        const claimId = `C-${taskId}`;
-        const verifierId = `V-${taskId}`;
-        let req = activeContract.requirements.find((r) => r.id === missing.id);
-        if (!req) {
-          req = {
-            id: missing.id,
-            statement: missing.text,
-            mandatory: true,
-            claims: [{
-              claim_id: claimId,
-              statement: `Fulfill requirement: ${missing.text}`,
-              class: "runtime",
-              required_kinds: ["test"],
-              verifier_id: verifierId,
-            }],
-          };
-          activeContract.requirements.push(req);
-        } else {
-          if (!req.claims) {
-            req.claims = [];
-          }
-          if (!req.claims.some((c) => c.claim_id === claimId)) {
-            req.claims.push({
-              claim_id: claimId,
-              statement: `Fulfill requirement: ${missing.text}`,
-              class: "runtime",
-              required_kinds: ["test"],
-              verifier_id: verifierId,
-            });
-          }
-        }
-        activeContract.verifiers.push({
-          id: verifierId,
-          kind: "test",
-          argv: { executable: "node", args: ["--test"] },
-          description: `Repaired verifier for ${missing.text}`,
-        });
-        const derivedOwned = options.plannedNewFiles && options.plannedNewFiles.length > 0
-          ? options.plannedNewFiles
-          : activeContract.tasks.flatMap((t) => t.owned).filter((o, idx, arr) => arr.indexOf(o) === idx);
-        activeContract.tasks.push({
-          goal: missing.text,
-          requirement_ids: [missing.id],
-          claim_ids: [claimId],
-          owned: derivedOwned.length > 0 ? derivedOwned : ["src/index.ts"],
-          forbidden: [],
-          entrypoints: [],
-          symbols: [],
-          references: [],
-          decisions: [],
-          constraints: [],
-          skills: [],
-          capabilities: [],
-          stop_if: [],
-          verifiers_by_claim: { [claimId]: [verifierId] },
-        });
+      // A planner may repair wording only when it has repository-backed scope
+      // and a verifier.  Inventing `src/index.ts` and `node --test` converts an
+      // unknown into a plausible-looking but unsafe execution contract.
+      if (reviewResult.gate_receipt.evaluation.missing_mandatory.length > 0) {
+        const missing = reviewResult.gate_receipt.evaluation.missing_mandatory
+          .map((item) => `${item.id}: ${item.text}`)
+          .join('; ');
+        throw new Error(`Plan compiler requires source-backed scope and verifier before repair: ${missing}`);
       }
     }
   }

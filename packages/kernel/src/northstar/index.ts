@@ -62,3 +62,8 @@ export * from './host-registry.js';
 export * from './behavior-runtime.js';
 export * from './outcome-reducer.js';
 export * from './context-capsule.js';
+export * from '../workflow/contract.js';
+export * from '../workflow/agent-workflow.js';
+export * from '../workflow/task-context.js';
+export * from '../workflow/result.js';
+export * from '../workflow/gap-registry.js';

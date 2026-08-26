@@ -803,15 +803,14 @@ export async function doctor(
     .map((r) => `${r.platform}\t${r.check}\t${r.status}\t${r.detail}`)
     .join("\n");
 
-  // REQ-113: doctor all --json returns the machine-readable audit from the
-  // canonical generated behavior index (single generated source, never
-  // hand-edited).
-  const behaviorIndex = await (async () => {
+  // The live current pointer is the status source. Generated snapshots may be
+  // useful for offline documentation but must never override an active run.
+  const activePlan = await (async () => {
     try {
-      const indexFile = path.join(root, "generated", "behavior-index.json");
-      await fs.access(indexFile);
-      const parsed = JSON.parse(await fs.readFile(indexFile, "utf8")) as { schema?: string; active_plan?: string; views?: Record<string, unknown>; evidence?: unknown[] };
-      return { schema: parsed.schema ?? null, active_plan: parsed.active_plan ?? null, views: parsed.views ?? null, evidence_count: parsed.evidence?.length ?? 0 };
+      const currentFile = path.join(root, ".agent", "current.json");
+      await fs.access(currentFile);
+      const pointer = JSON.parse(await fs.readFile(currentFile, "utf8")) as Record<string, unknown>;
+      return { work_id: pointer.work_id ?? null, plan_id: pointer.plan_id ?? null, generation: pointer.generation ?? null };
     } catch {
       return null;
     }
@@ -832,7 +831,7 @@ export async function doctor(
   const nativeUnverified = report.filter((r) => r.status === "NATIVE_UNVERIFIED").length;
 
   const dataPayload: Record<string, unknown> = { report, nativeObserved, nativeUnverified, hostKit: hostKitReport ?? null };
-  if (behaviorIndex) dataPayload.behavior_index = behaviorIndex;
+  if (activePlan) dataPayload.active_plan = activePlan;
 
   if (bad.length > 0) {
     console.error(`Doctor PARTIAL: ${bad.length} install/runtime failure(s)`);

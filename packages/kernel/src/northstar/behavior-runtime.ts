@@ -103,7 +103,8 @@ export interface BehaviorRuntimeReceipt {
   schema: 'agent-rules/behavior-runtime/v1';
   flow: readonly FlowStage[];
   owners: readonly OwnerModule[];
-  vocabulary: StateVocabulary | null;
+  /** This validator never derives a claim result.  ResultReducer owns that. */
+  vocabulary: Pick<StateVocabulary, 'task_state'> | null;
   context_generation: number;
   valid: boolean;
   violations: string[];
@@ -127,9 +128,6 @@ export function validateBehaviorRuntimeContract(input: BehaviorRuntimeInput, sta
     owners: OWNER_MODULES,
     vocabulary: state === null ? null : {
       task_state: state.status.toUpperCase() as TaskState,
-      claim_outcome: 'PASS',
-      host_state: 'NOT_DETECTED',
-      provider_state: 'UNAVAILABLE',
     },
     context_generation: input.contextGeneration,
     valid: violations.length === 0,

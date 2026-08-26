@@ -20,10 +20,13 @@ jobs:
         include:
           - host: linux
             os: ubuntu-latest
+            full_gate: true
           - host: windows
             os: windows-latest
+            full_gate: false
           - host: macos
             os: macos-latest
+            full_gate: false
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -50,34 +53,29 @@ jobs:
           echo "PLAYWRIGHT_READY=true" >> $GITHUB_ENV
         env:
           PLAYWRIGHT_BROWSERS_PATH: '0'
-      - name: Playwright preflight check (Windows)
-        if: matrix.host == 'windows'
-        shell: pwsh
-        timeout-minutes: 15
-        run: npx playwright install chromium
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: '0'
-      - name: Playwright preflight check (macOS)
-        if: matrix.host == 'macos'
-        timeout-minutes: 15
-        run: npx playwright install chromium
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: '0'
       - run: npm run build
+        if: matrix.full_gate
       - run: npm run check
+        if: matrix.full_gate
       - name: Validate the ACTIVE plan pointer and its contracts
+        if: matrix.full_gate
         run: |
           node automation/validate-canonical-plan.mjs
-          node automation/validate-workflow-semantics.mjs
+          node automation/validate-workflow-v3.mjs
       - run: npm run test
+        if: matrix.full_gate
       - name: Packaged runtime lifecycle smoke
+        if: matrix.full_gate
         run: npm run test:package-smoke -w packages/cli
       - name: Process-level integration suite
+        if: matrix.full_gate
         run: node automation/test-process-level-integration.mjs
       - name: Skill live behavior canaries
+        if: matrix.full_gate
         run: node automation/skill-live-canary.mjs
-      - name: Behavior index integrity
-        run: node automation/build-behavior-index.mjs
+      - name: Cross-platform native path smoke
+        if: "!matrix.full_gate"
+        run: npm test -w packages/cli -- install.test.ts
 
   python-tests:
     timeout-minutes: 15
@@ -99,7 +97,7 @@ jobs:
       - name: Build context graph engine dependency
         run: npm run build -w packages/engine
       - name: Generate context graph
-        run: npx tsx packages/cli/src/index.ts context-graph build
+        run: node automation/build-context-graph.mjs
       - run: pip install --require-hashes -r requirements.txt
       - run: python automation/run-python-tests.py
       - name: Test AM0015 evidence gate

@@ -13,7 +13,7 @@
     "packages/kernel"
   ],
   "scripts": {
-    "build": "npm run build -w packages/kernel && npm run build -w packages/engine && npm run build -w packages/cli && node automation/build-runtime.mjs && node automation/build-behavior-index.mjs",
+    "build": "npm run build -w packages/kernel && npm run build -w packages/engine && npm run build -w packages/cli && node automation/build-runtime.mjs",
     "test": "node automation/run-governed-vitest.mjs --project-root . --cwd . --mode full --timeout-ms 600000 -- run --config vitest.config.ts && npm run test --workspaces --if-present",
     "test:fast": "node automation/run-governed-vitest.mjs --project-root . --cwd . --mode full -- run --config vitest.config.ts --testNamePattern=\"^(?!.*\\\\[(e2e|browser)\\\\]).*$\"",
     "test:e2e": "node automation/run-governed-vitest.mjs --project-root . --cwd . --mode full -- run --config vitest.config.ts --testNamePattern=\\\"\\\\[e2e\\\\]\\\"",

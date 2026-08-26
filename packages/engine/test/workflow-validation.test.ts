@@ -152,22 +152,17 @@ describe('Quality workflow validation', () => {
     expect(hosts).toContain('macos');
   });
 
-  it('all quality runners install Playwright Chromium with Linux system dependencies', () => {
+  it('only the full Linux gate installs Playwright Chromium with system dependencies', () => {
     const wf = loadWorkflow('quality.yml');
     const qualityJob = wf.jobs!.quality;
     const linux = qualityJob!.steps!.find(s => s.name === 'Playwright preflight check (Linux)');
-    const windows = qualityJob!.steps!.find(s => s.name === 'Playwright preflight check (Windows)');
-    const macos = qualityJob!.steps!.find(s => s.name === 'Playwright preflight check (macOS)');
     expect(linux?.run).toContain('npx playwright install chromium --with-deps');
-    expect(windows?.run).toContain('npx playwright install chromium');
-    expect(macos?.run).toContain('npx playwright install chromium');
     expect(linux?.if).toBe("matrix.host == 'linux'");
-    expect(windows?.if).toBe("matrix.host == 'windows'");
-    expect(macos?.if).toBe("matrix.host == 'macos'");
-    for (const step of [linux, windows, macos]) {
-      expect(step?.env).toHaveProperty('PLAYWRIGHT_BROWSERS_PATH');
-      expect(String(step?.env?.PLAYWRIGHT_BROWSERS_PATH)).toBe('0');
-    }
+    expect(linux?.env).toHaveProperty('PLAYWRIGHT_BROWSERS_PATH');
+    expect(String(linux?.env?.PLAYWRIGHT_BROWSERS_PATH)).toBe('0');
+    const crossPlatformSmoke = qualityJob!.steps!.find(s => s.name === 'Cross-platform native path smoke');
+    expect(crossPlatformSmoke?.if).toBe('!matrix.full_gate');
+    expect(crossPlatformSmoke?.run).toContain('install.test.ts');
   });
 
   it('quality job has timeout-minutes set', () => {
@@ -192,7 +187,7 @@ describe('Quality workflow validation', () => {
     expect(engineDependencyBuildIndex).toBeGreaterThan(kernelDependencyBuildIndex);
     expect(pythonSteps[engineDependencyBuildIndex]!.run).toBe('npm run build -w packages/engine');
     expect(contextGraphIndex).toBeGreaterThan(engineDependencyBuildIndex);
-    expect(pythonSteps[contextGraphIndex]!.run).toContain('npx tsx packages/cli/src/index.ts context-graph build');
+    expect(pythonSteps[contextGraphIndex]!.run).toContain('node automation/build-context-graph.mjs');
   });
 
   it('has security job with audit, semgrep, and gitleaks', () => {

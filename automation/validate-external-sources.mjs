@@ -14,7 +14,7 @@
  *     no-skill/local composition as a valid outcome; rejected or
  *     below-threshold candidates stay catalog-only and are never materialized.
  *
- * The plan-local source-lock seed is the policy authority; the fabric mirror
+ * The compact source-lock policy is the policy authority; the fabric mirror
  * must stay equal. Negative fixtures prove that mutable, hash-mismatched,
  * unlicensed, unsafe, non-rollbackable, conflicting, and below-threshold
  * candidates are rejected with explicit reasons.
@@ -31,7 +31,7 @@ const readJson = (rel) => JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8
 const exists = (rel) => fs.existsSync(path.join(ROOT, rel));
 
 const fabric = readJson('skills/candidate-fabric.json');
-const seed = readJson('.agent/plans/harness-universal-reconciliation-v1/source-lock.seed.json');
+const seed = readJson('skills/source-lock-policy.json');
 const schema = readJson('schemas/skill-fabric-candidate.schema.json');
 const catalog = readJson('skills/catalog.json');
 const platformContracts = readJson('platforms/platform-contracts.json');

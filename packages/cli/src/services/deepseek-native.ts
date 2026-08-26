@@ -183,11 +183,14 @@ export function inspectDshNativeReadback(detection: Pick<Detection, 'homeDir' | 
   const skillParity = dshSkillParity(home);
   const dumps = profiles.map((profile) => readDshDumpConfig(home, detection.binaryPath, profile));
   const inspected = dumps.map((dump) => inspectDshNativeDump(dump.output));
-  const dumpReadback = profiles.length > 0 && dumps.every((dump, index) => dump.ok && inspected[index]!.instructionEnabled && inspected[index]!.skillsEnabled && inspected[index]!.mcpRowsValid);
+  const baseReadback = profiles.length > 0 && dumps.every((dump, index) => dump.ok && inspected[index]!.instructionEnabled && inspected[index]!.skillsEnabled);
+  const dumpReadback = baseReadback && dumps.every((_, index) => inspected[index]!.mcpRowsValid);
   const managed = fs.existsSync(agents)
     && fs.readFileSync(agents, 'utf8').includes('agent-rules:managed:deepseek-harness')
     && profileFiles.every((file) => fs.existsSync(file) && fs.readFileSync(file, 'utf8').includes('agent-rules:managed:deepseek-harness BEGIN'));
-  const nativeFilesPresent = managed && skillParity.ok && dumpReadback;
+  // Base installation proves only instructions and skills. MCP is a separately
+  // leased integration and must not make core installation mutate configuration.
+  const nativeFilesPresent = managed && skillParity.ok && baseReadback;
   const body = files.filter((file) => fs.existsSync(file)).map((file) => sha256(fs.readFileSync(file))).join('');
   return {
     profiles,
@@ -230,7 +233,7 @@ function mcpCordisRows(): string[] {
   ]);
 }
 
-function managedCordisBlock(packageVersion: string): string {
+function managedCordisBlock(packageVersion: string, managedMcpRows: string[] = []): string {
   return [
     '# agent-rules:managed:deepseek-harness BEGIN',
     '- id: agent-instructions',
@@ -247,15 +250,24 @@ function managedCordisBlock(packageVersion: string): string {
     '- id: tool-skill',
     "  name: '@deepseek-ai/dsh-tool-skill'",
     '  disabled: false',
-    '- insert:',
-    ...mcpCordisRows().map((line) => `  ${line}`),
+    ...(managedMcpRows.length > 0 ? ['- insert:', ...managedMcpRows.map((line) => `  ${line}`)] : []),
     `# agent-rules:managed:deepseek-harness END (${DSH_MCP_CLIENT_PACKAGE}@${packageVersion})`,
     '',
   ].join('\n');
 }
 
-function mergeCordisPatch(existing: string, packageVersion: string): string {
-  const block = managedCordisBlock(packageVersion);
+function existingManagedMcpRows(existing: string): string[] {
+  const marker = /# agent-rules:managed:deepseek-harness BEGIN[\s\S]*?# agent-rules:managed:deepseek-harness END[^\r\n]*\s*/m;
+  const managed = existing.match(marker)?.[0] ?? '';
+  const insert = managed.match(/- insert:\s*\n([\s\S]*?)(?=# agent-rules:managed:deepseek-harness END)/m)?.[1] ?? '';
+  return insert.split(/\r?\n/).filter((line) => line.startsWith('  ')).map((line) => line.slice(2));
+}
+
+function mergeCordisPatch(existing: string, packageVersion: string, includeMcp: boolean): string {
+  // A core install preserves an existing managed MCP lease byte-for-byte in
+  // meaning, but never creates or removes one. Only an explicit integration
+  // operation may request fresh MCP rows.
+  const block = managedCordisBlock(packageVersion, includeMcp ? mcpCordisRows() : existingManagedMcpRows(existing));
   const marker = /# agent-rules:managed:deepseek-harness BEGIN[\s\S]*?# agent-rules:managed:deepseek-harness END[^\r\n]*\s*/m;
   if (marker.test(existing)) return existing.replace(marker, block);
   const lines = existing.trimEnd().split(/\r?\n/);
@@ -274,6 +286,7 @@ export async function installDeepseekHarnessNative(
   detection: Detection,
   backupDir: string,
   certify: () => Promise<CertificationReceipt>,
+  options: { enableMcp?: boolean } = {},
 ): Promise<CertificationReceipt> {
   const home = detection.homeDir;
   const profiles = discoverDshProfiles(home);
@@ -327,7 +340,7 @@ export async function installDeepseekHarnessNative(
     atomicWriteNativeFile(agentsPath, agentsMarker.test(existingAgents) ? existingAgents.replace(agentsMarker, managedAgents) : `${existingAgents.trimEnd()}${existingAgents.trim() ? '\n\n' : ''}${managedAgents}`);
     for (const [index, source] of skillSources.entries()) atomicWriteNativeFile(skillTargets[index]!, fs.readFileSync(source));
     for (const profile of profiles) {
-      if (!profileHasInstalledMcp(home, profile)) {
+      if (options.enableMcp && !profileHasInstalledMcp(home, profile)) {
         const result = runDsh(detection.binaryPath ?? 'dsh', ['plugin', '--profile', profile, 'add', packageSpec], home, 120_000);
         pluginInstallStarted = true;
         atomicWriteNativeFile(backupManifest, JSON.stringify({ schema: 'agent-rules/dsh-backup/v1', home, plugin_install_started: true, entries: backupEntries }, null, 2) + '\n');
@@ -335,10 +348,10 @@ export async function installDeepseekHarnessNative(
       }
       const patchPath = path.join(home, 'profiles', profile, 'cordis.patch.yml');
       const existing = fs.existsSync(patchPath) ? fs.readFileSync(patchPath, 'utf8') : '';
-      atomicWriteNativeFile(patchPath, mergeCordisPatch(existing, packageVersion));
+      atomicWriteNativeFile(patchPath, mergeCordisPatch(existing, packageVersion, options.enableMcp === true));
       const dump = readDshDumpConfig(home, detection.binaryPath, profile);
       const inspected = inspectDshNativeDump(dump.output);
-      if (!dump.ok || !inspected.instructionEnabled || !inspected.skillsEnabled || !inspected.mcpRowsValid) {
+      if (!dump.ok || !inspected.instructionEnabled || !inspected.skillsEnabled || (options.enableMcp && !inspected.mcpRowsValid)) {
         throw new Error(`DSH native dump-config readback failed for ${profile}: instruction=${inspected.instructionEnabled}, skills=${inspected.skillsEnabled}, MCP=${inspected.mcpServerNames.join(',')}`);
       }
     }

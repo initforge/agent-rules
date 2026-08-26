@@ -1,12 +1,8 @@
 import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
-import { getRepoRoot } from "../adapters/repo.js";
-import { RuntimeInstaller, RUNTIME_PLATFORMS } from "../runtime/installer.js";
-import type { RuntimePlatform } from "../runtime/contracts.js";
+import { RUNTIME_PLATFORMS } from "../runtime/installer.js";
 import { NativeInstaller } from "../services/native-installer.js";
 import type { HostId } from "@initforge/agent-rules-kernel/northstar/host-adapters.js";
 
-import path from "node:path";
-import { projectSkillsToGlobal, uninstallOwnedGlobalProjections } from "../runtime/composed-installer.js";
 
 /**
  * Install agent-rules runtime for one or all platforms.
@@ -35,21 +31,13 @@ export async function installCmd(
     : targetPlatforms;
 
 
-  const repoRoot = getRepoRoot();
-  const installer = new RuntimeInstaller({
-    repositoryRoot: repoRoot,
-    dryRun: options.dryRun,
-  });
-
   const force = args.includes("--force");
-  const skillsSource = path.join(repoRoot, "skills");
   const nativeInstaller = new NativeInstaller();
 
   async function installOrUpdate(p: string): Promise<{ ok: boolean; action: string; error?: string }> {
     try {
-      await installer.install(p as RuntimePlatform, "install");
-      await projectSkillsToGlobal(skillsSource, p as RuntimePlatform, p === "command-code" ? { syncMcp: false } : {});
-      // Native per-host transactional install (plan 3.2): backup → atomic swap → reload → readback, per-host lock, Windows handling
+      // NativeInstaller is the only coordinator: plan → snapshot → apply →
+      // readback. It projects skills but never globally activates MCP.
       await nativeInstaller.install(p as HostId, { dryRun: options.dryRun });
       return { ok: true, action: "installed (native transactional)" };
     } catch (error) {
@@ -60,14 +48,7 @@ export async function installCmd(
         }
         // Force: uninstall then reinstall
         try {
-          await uninstallOwnedGlobalProjections(p as RuntimePlatform);
-          // Native file surfaces may append their owned block to the generic
-          // activation file. Remove that native block first so the generic
-          // receipt can still prove exact ownership during uninstall.
           await nativeInstaller.uninstall(p as HostId);
-          await installer.uninstall(p as RuntimePlatform);
-          await installer.install(p as RuntimePlatform, "install");
-          await projectSkillsToGlobal(skillsSource, p as RuntimePlatform, p === "command-code" ? { syncMcp: false } : {});
           await nativeInstaller.install(p as HostId, { dryRun: options.dryRun });
           return { ok: true, action: "reinstalled (forced, native transactional)" };
         } catch (forceError) {

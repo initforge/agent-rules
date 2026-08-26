@@ -1,0 +1,64 @@
+{
+  "schema": "artifact/plan",
+  "version": 1,
+  "schema_version": "1",
+  "level": "resumable",
+  "meta": {
+    "id": "agent-workflow-native-readiness-v3",
+    "created_at": "2026-08-27T00:00:00.000Z",
+    "updated_at": "2026-08-27T00:00:00.000Z",
+    "source_refs": ["owner:one-shot-v3"]
+  },
+  "supersedes": {
+    "plan_id": "global-agent-behavior-native-operational-readiness-v2",
+    "superseded_at": "2026-08-27T00:00:00.000Z",
+    "reason": "One enforced workflow, native readback truth, compact durable state and bounded verification."
+  },
+  "repository_baseline": { "branch": "main", "sha": "b6b5efe6a90d7e4e936e319048d70cda929c0a91" },
+  "intent_reference": { "hash": "92ee14f3cea9382c8dd1975b1cfc5d1b6c00eb4541a191213257a39c9ec486b6", "summary": "Owner-authorized one-shot v3 operational readiness" },
+  "intent": {
+    "outcome": "Users prompt once; managed work follows one enforced workflow while native host claims are readback-based and GUI-only checks stay owner-visible.",
+    "in_scope": ["workflow cutover", "native host surfaces", "MCP lifecycle", "status/artifact retention", "affected verification", "CI release"],
+    "non_goals": ["new public CLI commands", "communication modes", "invented host bridges", "fake live-model proof"]
+  },
+  "requirements": [
+    {"id":"REQ-101","summary":"Preserve all prior requirement lineage","kind":"original"},
+    {"id":"REQ-102","summary":"Single active plan pointer","kind":"original"},
+    {"id":"REQ-103","summary":"One production workflow entrypoint","kind":"original"},
+    {"id":"REQ-104","summary":"No planner invention of scope or proof","kind":"original"},
+    {"id":"REQ-105","summary":"Simple canonical result semantics","kind":"original"},
+    {"id":"REQ-106","summary":"Keep five global rules","kind":"original"},
+    {"id":"REQ-107","summary":"Keep eight public CLI commands","kind":"original"},
+    {"id":"REQ-108","summary":"Task context survives handoff","kind":"original"},
+    {"id":"REQ-109","summary":"Skills resolve once per packet generation","kind":"original"},
+    {"id":"REQ-110","summary":"MCP is explicit and task-scoped","kind":"original"},
+    {"id":"REQ-111","summary":"Eight host native install/readback truth","kind":"original"},
+    {"id":"REQ-112","summary":"Result derives only from evidence","kind":"original"},
+    {"id":"REQ-113","summary":"Status reads live state","kind":"original"},
+    {"id":"REQ-114","summary":"No legacy communication profiles","kind":"original"},
+    {"id":"REQ-115","summary":"Clear owner module boundaries","kind":"original"},
+    {"id":"REQ-116","summary":"Affected verification before final full gate","kind":"original"},
+    {"id":"REQ-117","summary":"CI avoids redundant platform work","kind":"original"},
+    {"id":"REQ-118","summary":"GUI-only proof remains owner check","kind":"original"},
+    {"id":"REQ-119","summary":"Durable state has one writer","kind":"original"},
+    {"id":"REQ-120","summary":"Deterministic failures never become owner residuals","kind":"original"},
+    {"id":"REQ-121","summary":"Installed copies bind final candidate","kind":"original"},
+    {"id":"REQ-122","summary":"Release and cleanup are exact-SHA gated","kind":"original"}
+  ],
+  "decisions": [
+    {"id":"DEC-101","statement":"Managed runtime work uses AgentWorkflow with active routing and mandatory proof selection.","rationale":"Direct, planner and pasted plans must not diverge."},
+    {"id":"DEC-102","statement":"Native readback proves install/consumption; GUI model turns are separate owner checks.","rationale":"A configuration file is not a mounted tool registry."},
+    {"id":"DEC-103","statement":"Core install never mutates MCP configuration.","rationale":"Ambient user MCP remains user-owned; integration actions own enablement."},
+    {"id":"DEC-104","statement":"Artifacts are active-run compact; historical detail remains recoverable from Git.","rationale":"Avoid .agent becoming larger than the product code."}
+  ],
+  "tasks": [
+    {"id":"WP-00","objective":"Admit v3 and dogfood its workflow contract.","requirements":["REQ-101","REQ-102","REQ-116"],"file_ownership":[".agent/","packages/kernel/src/workflow/"],"forbidden_files":["generated/"],"acceptance_criteria":["Active pointer names v3","Plan remains schema-valid","Runtime produces its own context/route receipts"],"verification":{"proof_kinds":["static","unit","artifact"]},"rollback":"Leave historical Git commits intact."},
+    {"id":"WP-01","objective":"Cut managed work to one workflow and one proof/skill route.","requirements":["REQ-103","REQ-104","REQ-105","REQ-108","REQ-109","REQ-112","REQ-115","REQ-119","REQ-120"],"file_ownership":["packages/kernel/src/northstar/","packages/kernel/src/workflow/","packages/cli/src/commands/northstar-ux.ts"],"forbidden_files":["rules/"],"acceptance_criteria":["Pasted plans cannot skip proof routing","No fabricated planner fallback","One route receipt per packet generation"],"verification":{"proof_kinds":["unit","integration","production-smoke"]},"rollback":"Revert only the v3 workflow commit if a compatibility regression is proven."},
+    {"id":"WP-02","objective":"Unify native host inspection and fix real host surfaces.","requirements":["REQ-110","REQ-111","REQ-118","REQ-121"],"file_ownership":["packages/cli/src/native/","packages/cli/src/services/","platforms/"],"forbidden_files":["profiles/"],"acceptance_criteria":["Core install has zero MCP mutation","Grok uses $GROK_HOME/rules","DSH and Command Code use native readback","No false success after readback failure"],"verification":{"proof_kinds":["unit","integration","production-smoke"]},"rollback":"Transaction rollback restores agent-rules-owned bytes only."},
+    {"id":"WP-03","objective":"Make status and artifacts live, compact and diagnosable.","requirements":["REQ-113","REQ-114","REQ-115","REQ-119"],"file_ownership":["packages/cli/src/commands/","automation/","architecture/"],"forbidden_files":["skills/"],"acceptance_criteria":["Status does not use stale generated index","Architecture map names owners and checks","No profile/mode reintroduced"],"verification":{"proof_kinds":["static","unit"]},"rollback":"Generated documentation is optional and never status truth."},
+    {"id":"WP-04","objective":"Run scoped gates, release exact candidate, then clean inactive branches and artifacts.","requirements":["REQ-106","REQ-107","REQ-116","REQ-117","REQ-122"],"file_ownership":["automation/",".github/workflows/",".agent/"],"forbidden_files":["profiles/"],"acceptance_criteria":["Affected checks select only changed domains","Full gate runs once at release","CI is green on pushed SHA before cleanup"],"verification":{"proof_kinds":["build","unit","integration","pipeline-run"]},"rollback":"Do not delete branches or historical artifacts until remote CI accepts the final SHA."}
+  ],
+  "completion_policy": { "require_all_tasks": true, "require_verification": true },
+  "execution_contract": { "mode":"execution", "shape":"resumable", "ledger":"required", "strategy":"single-writer", "max_agents":1, "max_depth":0, "effort_cap":"high", "authorized_final_actions":["edit","test","native-install","commit","push-main","delete-stale-branches"] },
+  "unresolved_questions": []
+}

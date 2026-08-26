@@ -24,7 +24,7 @@ import {
 import type { TraceabilityManifest } from './compiler.js';
 import { compileContext, type CompiledContext, type SemanticCodeResolver } from './context.js';
 import { deriveContextFeedback } from './context-feedback.js';
-import { createStandardCapabilityBroker, routeSkills, type DecisionFabricMode } from './routing.js';
+import { createStandardCapabilityBroker, type DecisionFabricMode } from './routing.js';
 import { EvidenceLedger, deriveAcceptance, type AcceptanceResult, type ClaimAcceptancePolicy } from './evidence-ledger.js';
 import { auditAcceptance, type AcceptanceAudit } from './acceptance-audit.js';
 import { type IndependentSemanticAuditor, type SemanticAuditResult } from './semantic-auditor.js';
@@ -51,8 +51,11 @@ import {
   type VerifierEvidence,
 } from './context-engine.js';
 import { categorizeRepair, type RepairTaxonomyResult } from './pair-repair.js';
-import { reduceOutcome, outcomeToAcceptanceShape, type ReducedOutcome } from './outcome-reducer.js';
+import { outcomeToAcceptanceShape, type ReducedOutcome } from './outcome-reducer.js';
 import { RunStore } from './run-store.js';
+import { resolveManagedWorkflow } from '../workflow/agent-workflow.js';
+import { buildTaskContext } from '../workflow/task-context.js';
+import { reduceRunResult } from '../workflow/result.js';
 
 export interface VerifierDefinition {
   id: string;
@@ -91,7 +94,7 @@ export interface NorthStarRunInput {
   /** Force semantic review even when risk/claim policy would not otherwise require it. */
   requireSemanticAudit?: boolean;
   claimPolicies?: ClaimAcceptancePolicy[];
-  /** New typed routing receipt mode. Shadow is the safe default until parity is measured. */
+  /** Kept only to decode historical runs. New execution always uses one active route. */
   decisionFabricMode?: DecisionFabricMode;
   /** Owner generation captured at dispatch time; zero is an unbound local run. */
   executionGeneration?: number;
@@ -101,10 +104,8 @@ export interface NorthStarRunInput {
   resourceSnapshot?: HostResourceSnapshot;
   /** Explicit project/domain profile. Never inferred from prompt text. */
   domainPack?: { id: string; stage?: DomainPackStage };
-  /** F04/REQ-004: when supplied, the Proof Router selects the minimal-sufficient
-   *  proof set BEFORE execution and only the selected verifiers run. Omitted
-   *  proofs are recorded with their reason. When omitted the legacy behavior
-   *  (run all verifier definitions) is preserved for backward compatibility. */
+  /** Optional for callers compiled before v3; execution always supplies the
+   * canonical minimal-proof router when this field is absent. */
   proofRouter?: (request: ProofRouteRequest) => ProofRoutePlan;
   /** F07/REQ-007: when supplied, enforcement is decided before effect execution. */
   enforcement?: (host: HostId) => { layer: string; can_control_mutation: boolean; reason: string };
@@ -707,7 +708,7 @@ async function finaliseNorthStarRun(input: {
   // Single outcome reducer (REQ-112): the OutcomeReducer is the only place
   // that derives final run outcomes from evidence. The orchestrator never
   // authors PASS independently.
-  let reducedOutcome: ReducedOutcome = reduceOutcome({
+  let reducedOutcome: ReducedOutcome = reduceRunResult({
     acceptance,
     audit,
     convergence,
@@ -784,7 +785,7 @@ async function finaliseNorthStarRun(input: {
   if (!semanticState.valid) {
     // Route the fail-closed block through the single OutcomeReducer so no
     // orchestrator-side assignment authors an outcome independently (REQ-112).
-    reducedOutcome = reduceOutcome({
+    reducedOutcome = reduceRunResult({
       acceptance,
       audit,
       convergence,
@@ -854,7 +855,7 @@ async function finaliseNorthStarRun(input: {
     } catch (contextError) {
       const message = contextError instanceof Error ? contextError.message : String(contextError);
       // Route the fail-closed block through the single OutcomeReducer (REQ-112).
-      reducedOutcome = reduceOutcome({
+      reducedOutcome = reduceRunResult({
         acceptance,
         audit,
         convergence,
@@ -1196,6 +1197,8 @@ function makeNorthStarRunner(input: {
  * runner with a second toy engine.
  */
 export async function executeNorthStarRun(input: NorthStarRunInput & { maxTasks?: number }): Promise<NorthStarRunResult> {
+  const workflow = resolveManagedWorkflow({ proofRouter: input.proofRouter });
+  const proofRouter = workflow.proofRouter;
   const executionGeneration = input.executionGeneration ?? input.spec.execution_generation ?? 0;
   // Bind planner/provider output at the execution boundary so durable queue
   // records and evidence cannot lose the owner identity that authorized them.
@@ -1234,7 +1237,7 @@ export async function executeNorthStarRun(input: NorthStarRunInput & { maxTasks?
     domain_pack: input.domainPack ? { id: input.domainPack.id, stage: input.domainPack.stage ?? 'implementation' } : null,
     require_semantic_audit: input.requireSemanticAudit ?? false,
     execution_generation: executionGeneration,
-    decision_fabric_mode: input.decisionFabricMode ?? 'shadow',
+    decision_fabric_mode: workflow.decisionFabricMode,
   };
   writeJsonAtomic(path.join(runRoot, 'runtime-config.json'), runtimeConfig);
 
@@ -1298,7 +1301,7 @@ export async function executeNorthStarRun(input: NorthStarRunInput & { maxTasks?
   });
   writeJsonAtomic(path.join(runRoot, 'context-budget-receipt.json'), contextBudget);
 
-  const broker = createStandardCapabilityBroker(harnessRoot, { decisionFabricMode: input.decisionFabricMode ?? 'shadow' });
+  const broker = createStandardCapabilityBroker(harnessRoot, { decisionFabricMode: workflow.decisionFabricMode });
 
   const workspaceFacts: WorkspaceFacts = {
     repoRoot: input.repoRoot,
@@ -1363,10 +1366,8 @@ export async function executeNorthStarRun(input: NorthStarRunInput & { maxTasks?
     });
     writeJsonAtomic(path.join(runRoot, 'context-state.json'), contextState);
 
-    const legacySkills = routeSkills(packet, harnessRoot, { activeProjectScope: domainPack?.descriptor.id ?? null });
     const routed = broker.route(packet, input.explicitCapabilityProviders ?? [], { activeProjectScope: domainPack?.descriptor.id ?? null, repoRoot: input.repoRoot, spec: input.spec });
-    const skills = input.decisionFabricMode === 'active' ? routed.skills : legacySkills;
-    routed.skills = skills;
+    const skills = routed.skills;
     const mcpIntegrationIds = [...new Set(Object.entries(routed.providers).flatMap(([capability, providerId]) => {
       if (!providerId) return [];
       const provider = broker.provider(providerId, capability);
@@ -1377,7 +1378,11 @@ export async function executeNorthStarRun(input: NorthStarRunInput & { maxTasks?
     if (unresolvedCapability.length) throw new Error(`task ${packet.task_id} lacks capability provider(s): ${unresolvedCapability.join(', ')}`);
     const context = compileContext(packet, input.spec, input.manifest, { repoRoot: input.repoRoot, skillRoot: harnessRoot, skills, previousFailure: packet.repair?.previous_failure, semanticResolver: input.semanticResolver });
     contextByTask.set(packet.task_id, context);
-    writeJsonAtomic(path.join(runRoot, 'context', `${packet.task_id}.json`), { ...context, routes: routed });
+    writeJsonAtomic(path.join(runRoot, 'context', `${packet.task_id}.json`), {
+      ...context,
+      task_context: buildTaskContext({ request: input.request, spec: input.spec, packet, selectedSkills: skills.map((skill) => skill.id), selectedCapabilities: routed.capabilities, nextAction: 'execute selected packet' }),
+      routes: routed,
+    });
     if (routed.decision_fabric) writeJsonAtomic(path.join(runRoot, 'decision-fabric', `${packet.task_id}.json`), routed.decision_fabric);
     const allEntries = verificationEntriesByTask.get(packet.task_id) ?? [];
     // F04/REQ-004: when a proof router is supplied, only the selected verifiers
@@ -1385,8 +1390,8 @@ export async function executeNorthStarRun(input: NorthStarRunInput & { maxTasks?
     // all-verifiers behavior is preserved.
     let verifierDefinitions = allEntries.map((entry) => entry.verifier);
     let proofRoute: ProofRoutePlan | null = null;
-    if (input.proofRouter) {
-      proofRoute = input.proofRouter(proofRouteRequestForPacket(packet, input.spec, input.repoRoot, packet.task_id));
+    if (proofRouter) {
+      proofRoute = proofRouter(proofRouteRequestForPacket(packet, input.spec, input.repoRoot, packet.task_id));
       const filtered = filterVerifiersByProofRoute(packet, input.spec, allEntries, proofRoute);
       verifierDefinitions = filtered.selected.map((entry) => entry.verifier);
       writeJsonAtomic(path.join(runRoot, 'proof-route', `${packet.task_id}.json`), {
@@ -1503,7 +1508,8 @@ export async function resumeNorthStarRun(input: NorthStarResumeInput): Promise<N
   writeJsonAtomic(path.join(runRoot, 'resource-decision.json'), resumeResourceDecision);
   if (!resumeResourceDecision.allow_new_work) throw new Error(`resource governor blocked resume: ${resumeResourceDecision.reasons.join('; ')}`);
   const { graph: verificationGraph, byTask } = verificationEntries(packets, manifest, verifierMap);
-  const broker = createStandardCapabilityBroker(harnessRoot, { decisionFabricMode: config.decision_fabric_mode ?? 'shadow' });
+  const workflow = resolveManagedWorkflow({ proofRouter: input.proofRouter });
+  const broker = createStandardCapabilityBroker(harnessRoot, { decisionFabricMode: workflow.decisionFabricMode });
   const workerModelDecision = modelDecisionForSpec(spec, 'worker');
   const taskDependencies = taskDependenciesFromVerificationGraph(verificationGraph);
   // Restore bounded context snapshots so resumed repairs preserve the same targeted
@@ -1531,10 +1537,8 @@ export async function resumeNorthStarRun(input: NorthStarResumeInput): Promise<N
     });
     writeJsonAtomic(path.join(runRoot, 'context-state.json'), contextState);
 
-    const legacySkills = routeSkills(packet, harnessRoot, { activeProjectScope: domainPack?.descriptor.id ?? null });
     const routed = broker.route(packet, [], { activeProjectScope: domainPack?.descriptor.id ?? null, repoRoot: input.repoRoot, spec });
-    const skills = (config.decision_fabric_mode ?? 'shadow') === 'active' ? routed.skills : legacySkills;
-    routed.skills = skills;
+    const skills = routed.skills;
     const mcpIntegrationIds = [...new Set(Object.entries(routed.providers).flatMap(([capability, providerId]) => {
       if (!providerId) return [];
       const provider = broker.provider(providerId, capability);
@@ -1545,13 +1549,18 @@ export async function resumeNorthStarRun(input: NorthStarResumeInput): Promise<N
     if (unresolvedCapability.length) throw new Error(`task ${packet.task_id} lacks capability provider(s): ${unresolvedCapability.join(', ')}`);
     const context = compileContext(packet, spec, manifest, { repoRoot: input.repoRoot, skillRoot: harnessRoot, skills, previousFailure: packet.repair?.previous_failure, semanticResolver: input.semanticResolver });
     contextByTask.set(packet.task_id, context);
-    writeJsonAtomic(path.join(runRoot, 'context', `${packet.task_id}.json`), { ...context, routes: routed });
+    writeJsonAtomic(path.join(runRoot, 'context', `${packet.task_id}.json`), {
+      ...context,
+      task_context: buildTaskContext({ request, spec, packet, selectedSkills: skills.map((skill) => skill.id), selectedCapabilities: routed.capabilities, nextAction: 'resume selected packet' }),
+      routes: routed,
+    });
     if (routed.decision_fabric) writeJsonAtomic(path.join(runRoot, 'decision-fabric', `${packet.task_id}.json`), routed.decision_fabric);
     const allEntries = byTask.get(packet.task_id) ?? [];
     // F04/REQ-004: same adaptive proof-route selection on resume.
     let verifierDefinitions = allEntries.map((entry) => entry.verifier);
-    if (input.proofRouter) {
-      const proofRoute = input.proofRouter(proofRouteRequestForPacket(packet, spec, input.repoRoot, packet.task_id));
+    const proofRouter = workflow.proofRouter;
+    if (proofRouter) {
+      const proofRoute = proofRouter(proofRouteRequestForPacket(packet, spec, input.repoRoot, packet.task_id));
       const filtered = filterVerifiersByProofRoute(packet, spec, allEntries, proofRoute);
       verifierDefinitions = filtered.selected.map((entry) => entry.verifier);
       writeJsonAtomic(path.join(runRoot, 'proof-route', `${packet.task_id}.json`), {

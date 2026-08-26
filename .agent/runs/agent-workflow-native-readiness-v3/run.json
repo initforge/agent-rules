@@ -1,0 +1,10 @@
+{
+  "run_id": "agent-workflow-native-readiness-v3",
+  "phase": "running",
+  "active": true,
+  "complete": false,
+  "usable": false,
+  "ship_ready": false,
+  "checks": [],
+  "owner_checks": []
+}

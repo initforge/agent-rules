@@ -5,9 +5,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const file = path.join(root, 'generated', 'repo-facts.json');
-if (!fs.existsSync(file)) throw new Error('generated/repo-facts.json is missing; run npm run build');
-const artifact = JSON.parse(fs.readFileSync(file, 'utf8'));
+const { detectStackFacts } = await import('./detect-stack-facts.mjs');
+const artifact = detectStackFacts(root);
 if (artifact.schema !== 'harness/repo-facts/v1' || artifact.version !== 1 || !Array.isArray(artifact.facts)) throw new Error('RepoFacts schema/version mismatch');
 const seen = new Set();
 for (const fact of artifact.facts) {

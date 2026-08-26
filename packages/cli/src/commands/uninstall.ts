@@ -1,7 +1,5 @@
 import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
-import { getRepoRoot } from "../adapters/repo.js";
-import { RuntimeInstaller, RUNTIME_PLATFORMS } from "../runtime/installer.js";
-import type { RuntimePlatform } from "../runtime/contracts.js";
+import { RUNTIME_PLATFORMS } from "../runtime/installer.js";
 import { NativeInstaller } from "../services/native-installer.js";
 import type { HostId } from "@initforge/agent-rules-kernel/northstar/host-adapters.js";
 
@@ -19,18 +17,11 @@ export async function uninstallCmd(args: string[], options: CliOptions): Promise
     ? [...RUNTIME_PLATFORMS]
     : targetPlatforms;
 
-  const repoRoot = getRepoRoot();
-  const installer = new RuntimeInstaller({ repositoryRoot: repoRoot, dryRun: options.dryRun });
   const nativeInstaller = new NativeInstaller();
 
   async function doUninstall(p: string): Promise<{ ok: boolean; error?: string }> {
     try {
-      await installer.uninstall(p as RuntimePlatform);
-      try {
-        const { uninstallOwnedGlobalProjections } = await import("../runtime/composed-installer.js");
-        await uninstallOwnedGlobalProjections(p as RuntimePlatform);
-      } catch { /* ignore */ }
-      // Native uninstall only removes owned managed block/file, preserves user content
+      // Native uninstall removes managed host content and its owned skills only.
       await nativeInstaller.uninstall(p as HostId);
       return { ok: true };
     } catch (e) { return { ok: false, error: (e as Error).message }; }
@@ -56,4 +47,3 @@ export async function uninstallCmd(args: string[], options: CliOptions): Promise
     data: { results }
   };
 }
-

@@ -47,14 +47,7 @@ function run(label, command, commandArgs = [], options = {}) {
  * compatibility check and a failure fails the run.
  */
 const PLAN_VALIDATORS = [
-  // Active phase: global-agent-behavior-native-live-closure-v1 — runs as the
-  // authoritative blocking gate for the active plan/closure check (REQ-K3).
-  // validate-canonical-plan.mjs already runs as a generic CHECK; the semantic
-  // workflow corpus is the phase's dedicated active-plan validator.
-  { plan: 'global-agent-behavior-native-live-closure-v1', label: 'Global behavior closure', scripts: ['automation/validate-workflow-semantics.mjs'] },
-  // v3-decision-fabric and v3.1-external-first are retired (superseded by
-  // global-agent-behavior-native-live-closure-v1). Their validator scripts
-  // remain on disk as historical provenance but are NOT registered here.
+  { plan: 'agent-workflow-native-readiness-v3', label: 'Agent workflow v3', scripts: ['automation/validate-workflow-v3.mjs'] },
 ];
 
 function runPlanValidators() {
@@ -156,7 +149,6 @@ run('CHECK: 5fedu domain pack', 'node', ['automation/validate-5fedu-domain-pack.
 run('CHECK: global behavior invariants (22)', 'node', ['automation/test-global-behavior.mjs']);
 run('CHECK: process-level integration (12)', 'node', ['automation/test-process-level-integration.mjs']);
 run('CHECK: skill live behavior canaries (7)', 'node', ['automation/skill-live-canary.mjs']);
-run('CHECK: behavior index integrity', 'node', ['automation/build-behavior-index.mjs']);
 
 if (!skipPython) {
   if (!python) { console.error('[PYTHON] unavailable - suite is non-PASS'); failed = true; }

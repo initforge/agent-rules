@@ -193,7 +193,7 @@
       "homeEnv": "GROK_HOME",
       "homeDefault": "~/.grok",
       "surfaces": {
-        "instruction": "~/.grok/rules (priority) or compatibility shim via Claude-compatible projection when user unmanaged entries exist",
+        "instruction": "$GROK_HOME/rules",
         "skill": "~/.grok/skills/<skill>/SKILL.md or shared Claude-compatible path when compatibility kept",
         "agent": "$GROK_HOME/agents",
         "hook": "host_native_prompt_hook + config hooks",
@@ -201,7 +201,7 @@
         "headless": "grok --print (when available)"
       },
       "paths": {
-        "instructionPath": "$GROK_HOME/.grok/rules",
+        "instructionPath": "$GROK_HOME/rules",
         "skillPath": "$GROK_HOME/skills/<skill>/SKILL.md",
         "agentPath": "$GROK_HOME/agents/<agent>.md",
         "hookPath": "$GROK_HOME/hooks.json or settings equivalent",
@@ -607,11 +607,11 @@
       "runtime": {
         "home_env": "GROK_HOME",
         "home_default": "~/.grok",
-        "global_entrypoint": "$GROK_HOME/.grok/rules"
+        "global_entrypoint": "$GROK_HOME/rules"
       },
       "bootstrap": {
         "strategy": "managed_directory",
-        "entrypoint": ".grok/rules",
+        "entrypoint": "rules",
         "restart_action": "restart_or_reload"
       },
       "routing": {

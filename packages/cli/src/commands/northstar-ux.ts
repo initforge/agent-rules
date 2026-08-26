@@ -113,38 +113,39 @@ export function northStarIngest(repoRoot: string, rawTrigger: unknown): { reques
 
 export function northStarStatus(repoRoot: string, details = false): unknown {
   const runsRoot = path.join(repoRoot, '.agent', 'runs');
-  let indexSummary: Record<string, unknown> | null = null;
+  let activePlan: Record<string, unknown> | null = null;
   try {
-    const indexFile = path.join(repoRoot, 'generated', 'behavior-index.json');
-    if (fs.existsSync(indexFile)) {
-      const index = JSON.parse(fs.readFileSync(indexFile, 'utf8')) as {
-        active_plan?: string;
-        views?: {
-          lifecycle_stage_owner?: unknown[];
-          host_view?: unknown[];
-          skill_view?: unknown[];
-          state_vocabulary?: unknown;
-          github_jobs?: unknown;
-        };
-        evidence?: unknown[];
+    const currentFile = path.join(repoRoot, '.agent', 'current.json');
+    if (fs.existsSync(currentFile)) {
+      const current = JSON.parse(fs.readFileSync(currentFile, 'utf8')) as Record<string, unknown>;
+      activePlan = {
+        work_id: current.work_id ?? null,
+        plan_id: current.plan_id ?? null,
+        generation: current.generation ?? null,
       };
-      indexSummary = {
-        active_plan: index.active_plan ?? null,
-        stages: index.views?.lifecycle_stage_owner?.length ?? 0,
-        hosts: index.views?.host_view?.length ?? 0,
-        skills: index.views?.skill_view?.length ?? 0,
-        evidence: index.evidence?.length ?? 0,
-      };
-      if (details) {
-        indexSummary.host_view = index.views?.host_view ?? [];
-        indexSummary.skill_view = index.views?.skill_view ?? [];
-        indexSummary.state_vocabulary = index.views?.state_vocabulary ?? null;
-        indexSummary.github_jobs = index.views?.github_jobs ?? null;
-      }
+      if (details) activePlan.pointer = current;
     }
-  } catch { /* behavior index optional */ }
+  } catch { /* current pointer is optional for disposable repos */ }
+  const activeRunFile = activePlan?.work_id
+    ? path.join(runsRoot, String(activePlan.work_id), 'run.json')
+    : '';
+  let summary: Record<string, unknown> | null = null;
+  try {
+    if (activeRunFile && fs.existsSync(activeRunFile)) {
+      const candidate = JSON.parse(fs.readFileSync(activeRunFile, 'utf8')) as Record<string, unknown>;
+      summary = {
+        active: candidate.active === true,
+        complete: candidate.complete === true,
+        usable: candidate.usable === true,
+        ship_ready: candidate.ship_ready === true,
+        current_step: candidate.current_step ?? null,
+        blockers: candidate.blockers ?? [],
+        ...(details ? { checks: candidate.checks ?? [], owner_checks: candidate.owner_checks ?? [] } : {}),
+      };
+    }
+  } catch { /* a corrupt optional summary must not hide active execution */ }
   if (!fs.existsSync(runsRoot)) {
-    return { status: 'idle', runs: 0, ...(indexSummary ? { index: indexSummary } : {}) };
+    return { status: 'idle', runs: 0, ...(activePlan ? { active_plan: activePlan } : {}), ...(summary ? { summary } : {}) };
   }
   const runs = fs.readdirSync(runsRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
@@ -157,7 +158,7 @@ export function northStarStatus(repoRoot: string, details = false): unknown {
     })
     .filter((item): item is NonNullable<typeof item> => item !== null)
     .sort((a, b) => b.mtime - a.mtime);
-  return { status: runs[0]?.state.status ?? 'idle', runs: runs.length, latest: runs[0]?.state ?? null, ...(indexSummary ? { index: indexSummary } : {}) };
+  return { status: runs[0]?.state.status ?? 'idle', runs: runs.length, latest: runs[0]?.state ?? null, ...(activePlan ? { active_plan: activePlan } : {}), ...(summary ? { summary } : {}) };
 }
 
 export async function northStarRun(input: {
@@ -199,6 +200,10 @@ export async function northStarRun(input: {
       packets: planned.packets,
       verifiers: planned.verifiers,
       claimPolicies: planned.claimPolicies,
+      // A pasted plan is still managed work.  It must not fall back to the
+      // legacy "run every verifier" path merely because its plan was supplied
+      // by another host or a previous conversation.
+      proofRouter: planProofRoute,
       agent: input.agent ?? config.default_agent,
       explicitCapabilityProviders: [...config.explicit_capability_providers, ...(input.capabilityProviders ?? [])],
       ...(input.workerInvocationOverride ? { invocationOverride: input.workerInvocationOverride } : {}),

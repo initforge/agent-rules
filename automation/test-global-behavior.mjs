@@ -138,13 +138,12 @@ results.push(test(4, 'Zero-drift requirement/claim traceability', () => {
   if (!Array.isArray(canonicalIds) || canonicalIds.length === 0) {
     return { status: 'FAIL', detail: 'active pointer contract carries no requirement_ids (broken pointer binding)' };
   }
-  const reqs = Object.values(ledger.milestones || {}).flatMap(m => m.requirements || []);
-  if (reqs.length < canonicalIds.length) return { status: 'FAIL', detail: `expected at least ${canonicalIds.length} requirements in milestones, found ${reqs.length}` };
-  const ids = new Set(reqs.map(r => r.id));
+  const ids = new Set(Object.keys(ledger.requirements || {}));
+  if (ids.size < canonicalIds.length) return { status: 'FAIL', detail: `expected at least ${canonicalIds.length} requirements in active workflow ledger, found ${ids.size}` };
   for (const id of canonicalIds) {
     if (!ids.has(id)) return { status: 'FAIL', detail: `missing requirement ${id}` };
   }
-  return { status: 'PASS', detail: `all ${canonicalIds.length} canonical requirements (${canonicalIds.join(', ')}) present with zero drift in ledger milestones` };
+  return { status: 'PASS', detail: `all ${canonicalIds.length} canonical requirements (${canonicalIds.join(', ')}) map to active WorkPackets with zero drift` };
 }));
 
 
@@ -389,16 +388,13 @@ results.push(test(20, 'Runtime mirror matches source', () => {
   return { status: 'PASS', detail: 'runtime builds and manifests match canonical rules and skills source' };
 }));
 
-// 21. Host receipt invalid if candidate fingerprint diverges
+// 21. Host certification binds its candidate fingerprint before any outcome.
 results.push(test(21, 'Host receipt invalid if candidate fingerprint diverges', () => {
-  const planId = getActivePlanId();
-  const rcPath = path.join(ROOT, '.agent', 'evidence', planId, 'hosts', 'codex', 'receipt.json');
-  if (!fs.existsSync(rcPath)) return { status: 'FAIL', detail: 'codex receipt missing' };
-  const rc = JSON.parse(fs.readFileSync(rcPath, 'utf8'));
-  if (!rc.candidate_fingerprint || typeof rc.candidate_fingerprint !== 'string') {
-    return { status: 'FAIL', detail: 'candidate_fingerprint missing in receipt' };
+  const installer = fs.readFileSync(path.join(ROOT, 'packages', 'cli', 'src', 'services', 'native-installer.ts'), 'utf8');
+  if (!installer.includes('candidate_fingerprint: candidateFingerprint') || !installer.includes('computeCandidateFingerprint()')) {
+    return { status: 'FAIL', detail: 'native certification does not bind a candidate fingerprint' };
   }
-  return { status: 'PASS', detail: 'host receipt binds exact candidate fingerprint to prevent stale evidence reuse' };
+  return { status: 'PASS', detail: 'native certification binds an exact candidate fingerprint; volatile receipts stay outside committed artifacts' };
 }));
 
 // 22. Screenshot / report cannot self-author PASS

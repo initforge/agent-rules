@@ -1,9 +1,0 @@
-{
-  "schema": "agent-rules/host-install-plan",
-  "version": 1,
-  "host": "command-code",
-  "generated_at": "2026-08-25T09:13:56.294Z",
-  "git_head": "c1deca1a5ee186a9d0361b57fd0ff7e943fa676e",
-  "strategy": "atomic-swap-native-only",
-  "preserves_user_settings": true
-}

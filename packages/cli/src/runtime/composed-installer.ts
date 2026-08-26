@@ -104,7 +104,7 @@ export async function readGlobalOwnershipManifest(): Promise<GlobalOwnershipMani
 export async function projectSkillsToGlobal(
   sourceSkillsRoot: string,
   platform: RuntimePlatform,
-  options: { effectivePlanSha256?: string; targetRoots?: string[]; force?: boolean; syncMcp?: boolean } = {}
+  options: { effectivePlanSha256?: string; targetRoots?: string[]; force?: boolean } = {}
 ): Promise<{ projected: string[]; collisions: string[]; updatedManifest: GlobalOwnershipManifest }> {
   const skillRootsList = getGlobalSkillRoots();
   const targetRoots = options.targetRoots ?? (skillRootsList[platform] ?? []);
@@ -179,8 +179,6 @@ export async function projectSkillsToGlobal(
       }
     }
   }
-
-  if (options.syncMcp !== false) await syncPlatformMcpConfig(platform);
 
   existingManifest.updatedAt = new Date().toISOString();
   await writeGlobalOwnershipManifest(existingManifest);

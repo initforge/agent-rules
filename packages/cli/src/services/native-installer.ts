@@ -15,61 +15,13 @@ import {
   verifyCommandCodeBackup,
   removeManagedCommandCodeMcp,
   removeManagedCommandCodeMod,
-  writeCommandCodeMcpConfig,
 } from './command-code-native.js';
+import { NativeHostProbe } from '../native/probe.js';
+import type { CertificationReceipt, ClaimVerification, Detection, InstallPlan, InventoryEntry } from '../native/types.js';
+import { projectSkillsToGlobal, uninstallOwnedGlobalProjections } from '../runtime/composed-installer.js';
+import type { RuntimePlatform } from '../runtime/contracts.js';
 
-export interface Detection {
-  host: HostId;
-  present: boolean;
-  binaryPath?: string;
-  homeDir: string;
-  signals: string[];
-}
-
-export interface InventoryEntry {
-  host: HostId;
-  kind: 'owned' | 'unmanaged' | 'stale' | 'duplicate' | 'malformed';
-  path: string;
-  owned: boolean;
-  sha256?: string;
-}
-
-export interface InstallPlan {
-  host: HostId;
-  changes: Array<{ path: string; op: 'write' | 'remove' | 'patch'; sha256?: string }>;
-  backupDir: string;
-}
-
-export interface ClaimVerification {
-  status: 'PASS' | 'FAIL' | 'NEEDS_USER' | 'BLOCKED' | 'UNSUPPORTED' | 'STALE';
-  evidence: unknown[];
-  omitted_reason?: string | null;
-}
-
-export interface CertificationReceipt {
-  schema: 'agent-rules/host-certification-receipt';
-  version: 1;
-  host: HostId;
-  generated_at: string;
-  git_head: string;
-  candidate_fingerprint?: string;
-  status: 'Ready' | 'Needs action' | 'Unsupported';
-  claims: {
-    HOST_PRESENT: ClaimVerification;
-    NATIVE_INSTALLED: ClaimVerification;
-    NATIVE_DISCOVERED: ClaimVerification;
-    NATIVE_LIFECYCLE: ClaimVerification;
-    NATIVE_POLICY: ClaimVerification;
-    NATIVE_SKILLS: ClaimVerification;
-    NATIVE_MCP: ClaimVerification;
-    MODEL_BEHAVIOR: ClaimVerification;
-    ROLLBACK_VERIFIED: ClaimVerification;
-    [key: string]: ClaimVerification;
-  };
-  native_readback: unknown;
-  mcp_handshake: unknown;
-  skill_catalog: unknown;
-}
+export type { CertificationReceipt, ClaimVerification, Detection, InstallPlan, InventoryEntry } from '../native/types.js';
 
 function sha256(s: string | Buffer): string {
   return createHash('sha256').update(s).digest('hex');
@@ -226,139 +178,10 @@ export function acquireWorktreeWriterLease(host: HostId): { release: () => void;
 }
 
 export class NativeInstaller {
-  async detect(host: HostId): Promise<Detection> {
-    const contract = getNativeContract(host);
-    if (!contract) return { host, present: false, homeDir: '', signals: [] };
-
-    const homeEnv = contract.homeEnv;
-    let homeDir = process.env[homeEnv] || '';
-    if (!homeDir) {
-      const userHome = process.env.USERPROFILE || process.env.HOME || '';
-      homeDir = contract.homeDefault.replace('~', userHome).replace(/\$[A-Z_]+/, userHome);
-    }
-
-    const cli = contract.cliSignal.split(' ')[0].replace('.exe', '');
-    let binaryPath: string | undefined;
-    const pathEntries = (process.env.PATH || '').split(path.delimiter);
-    for (const p of [...pathEntries, homeDir]) {
-      const candidates = process.platform === 'win32'
-        ? [path.join(p, `${cli}.exe`), path.join(p, `${cli}.cmd`), path.join(p, `${cli}.bat`), path.join(p, `${cli}.ps1`), path.join(p, cli)]
-        : [path.join(p, cli)];
-      const found = candidates.find((candidate) => fs.existsSync(candidate));
-      if (found) { binaryPath = found; break; }
-    }
-
-    const desktopSignals: Record<string, string[]> = {
-      antigravity: [
-        path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Antigravity', 'Antigravity.exe'),
-        path.join(process.env.LOCALAPPDATA || '', 'Programs', 'antigravity', 'Antigravity.exe'),
-      ],
-      cursor: [
-        path.join(process.env.LOCALAPPDATA || '', 'Programs', 'cursor', 'resources', 'app', 'bin', 'cursor.cmd'),
-        path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Cursor', 'Cursor.exe'),
-        path.join(process.env.LOCALAPPDATA || '', 'Programs', 'cursor', 'Cursor.exe'),
-      ],
-      claude: [
-        path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Claude', 'Claude.exe'),
-      ],
-    };
-
-    let desktopFound: string | undefined;
-    for (const cand of desktopSignals[host] || []) {
-      if (fs.existsSync(cand)) { desktopFound = cand; break; }
-    }
-
-    const present = !!binaryPath || !!desktopFound || fs.existsSync(homeDir);
-    const signals: string[] = [];
-    if (binaryPath) signals.push(`binary-on-path:${binaryPath}`);
-    if (desktopFound) signals.push(`desktop-process:${desktopFound}`);
-    if (fs.existsSync(homeDir)) signals.push(`config-dir:${homeDir}`);
-
-    return { host, present, binaryPath: binaryPath || desktopFound, homeDir, signals };
-  }
-
-  async inventory(detection: Detection): Promise<InventoryEntry[]> {
-    const out: InventoryEntry[] = [];
-    const contract = getNativeContract(detection.host);
-    if (!contract) return out;
-
-    const paths = [
-      contract.paths.instructionPath,
-      contract.paths.skillPath,
-      contract.paths.agentPath,
-      contract.paths.hookPath,
-      contract.paths.mcpPath,
-    ];
-
-    const userHome = process.env.USERPROFILE || process.env.HOME || '';
-
-    for (const p of paths) {
-      if (!p) continue;
-      let resolved = p.replace(/\$[A-Z_]+/, detection.homeDir).replace('~', userHome);
-      resolved = resolved.replace(/\.grok[\\/]\.grok/, '.grok');
-      if (resolved.includes('n/a') || resolved.includes('managed_profile') || resolved.includes('bundle') || resolved.includes('mods')) continue;
-
-      if (!fs.existsSync(resolved)) continue;
-
-      try {
-        const stat = fs.statSync(resolved);
-        if (stat.isDirectory()) {
-          let owned = false;
-          let malformed = false;
-          try {
-            const files = fs.readdirSync(resolved);
-            for (const f of files) {
-              const fp = path.join(resolved, f);
-              try {
-                const c = fs.readFileSync(fp, 'utf8');
-                if (c.includes('agent-rules')) owned = true;
-                if (c.includes('<<<<<<<')) malformed = true;
-              } catch {}
-            }
-          } catch {}
-          const kind: InventoryEntry['kind'] = malformed ? 'malformed' : owned ? 'owned' : 'unmanaged';
-          out.push({ host: detection.host, kind, path: resolved, owned });
-          continue;
-        }
-      } catch {}
-
-      let content = '';
-      try { content = fs.readFileSync(resolved, 'utf8'); } catch {}
-      const owned = content.includes('agent-rules:managed') || content.includes('<!-- agent-rules:');
-      const kind: InventoryEntry['kind'] = content.includes('<<<<<<<') ? 'malformed' : owned ? 'owned' : 'unmanaged';
-      out.push({
-        host: detection.host,
-        kind,
-        path: resolved,
-        owned,
-        sha256: content ? sha256(content) : undefined,
-      });
-    }
-
-    if (detection.host === 'grok') {
-      const grokRules = path.join(detection.homeDir, 'rules');
-      const grokRulesAlt = path.join(detection.homeDir, '.grok', 'rules');
-      if (fs.existsSync(grokRules) && fs.existsSync(grokRulesAlt)) {
-        out.push({ host: detection.host, kind: 'duplicate', path: `${grokRules}+${grokRulesAlt}`, owned: true });
-      }
-    }
-
-    return out;
-  }
-
-  planInstall(host: HostId, detection: Detection, _inventory: InventoryEntry[]): InstallPlan {
-    const backupDir = path.join(process.cwd(), '.agent', 'tmp', 'backups', host, `${Date.now()}-${randomUUID().slice(0, 8)}`);
-    const contract = getNativeContract(host);
-    if (!contract) throw new Error(`no contract for ${host}`);
-    const changes: InstallPlan['changes'] = [];
-    changes.push({ path: contract.paths.instructionPath.replace(/\$[A-Z_]+/, detection.homeDir), op: 'patch' });
-    changes.push({ path: contract.paths.skillPath, op: 'write' });
-    if (host === 'command-code') {
-      changes.push({ path: path.join(detection.homeDir, 'mods', 'agent-rules.ts'), op: 'write' });
-      changes.push({ path: path.join(detection.homeDir, 'mcp.json'), op: 'patch' });
-    }
-    return { host, changes, backupDir };
-  }
+  private readonly probe = new NativeHostProbe();
+  detect(host: HostId): Promise<Detection> { return this.probe.detect(host); }
+  inventory(detection: Detection): Promise<InventoryEntry[]> { return this.probe.inventory(detection); }
+  planInstall(host: HostId, detection: Detection, _inventory: InventoryEntry[]): InstallPlan { return this.probe.planInstall(host, detection); }
 
   async install(host: HostId, opts?: { dryRun?: boolean }): Promise<CertificationReceipt> {
     const lease = acquireWorktreeWriterLease(host);
@@ -373,15 +196,22 @@ export class NativeInstaller {
         return this.certify(host, 'DRY_RUN');
       }
 
+      // The native coordinator owns the complete host projection. This helper
+      // only copies skills and records ownership; it cannot mutate MCP config.
+      await projectSkillsToGlobal(path.join(process.cwd(), 'skills'), host as RuntimePlatform);
+
       if (host === 'deepseek-harness') {
-        return await this.installDeepseekHarness(detection, backupDir);
+        const receipt = await this.installDeepseekHarness(detection, backupDir);
+        this.assertInstalledReadback(receipt);
+        return receipt;
       }
 
       if (host === 'command-code') {
         captureCommandCodeBackup(detection.homeDir, backupDir);
         installCommandCodeMod(detection.homeDir, process.cwd());
-        writeCommandCodeMcpConfig(detection.homeDir);
-        return await this.certify(host, 'INSTALLED');
+        const receipt = await this.certify(host, 'INSTALLED');
+        this.assertInstalledReadback(receipt);
+        return receipt;
       }
 
       fs.mkdirSync(backupDir, { recursive: true });
@@ -410,7 +240,27 @@ export class NativeInstaller {
         // managed block for file-based surfaces (that would be claim-filling).
         const isNonFileInstruction = rawInstr.includes('bundle') || rawInstr.includes('mods') || rawInstr.includes('/rules') || rawInstr.endsWith('rules') || rawInstr.endsWith('rules/');
 
-        if (instrPath && !instrPath.includes('~/.agents') && !isNonFileInstruction) {
+        const globalBehavior = [
+          'Use natural communication: outcome-first, plain language, technical details when needed for decisions/verification/debug.',
+          'Hidden authority: ADVISORY → PLAN → EXECUTION → VERIFY → TERMINAL.',
+          'Plan-only cannot authorize edits; explicit execute pivot required.',
+          'Classify owner messages: CONTINUATION/ADD/CORRECT/CONFLICT/SUPERSEDE/INDEPENDENT and reconcile without dropping requirements.',
+          'Planner bounded: one draft + at most one correction batch, then final gate.',
+          'Independent reviewer requires separate invocation/identity.',
+          'Single writer lease per worktree; second writer blocks or isolated worktree.',
+          'Protect dirty tracked/untracked files; scope prevents writes.',
+          'Global safety cannot be weakened by project-local instructions.',
+          'Commit/push/delete/credentials require explicit authority.',
+          'Preserve intent across compaction/restart/resume/handoff.',
+          'Clarification only for material ambiguity/missing authority.',
+        ].join('\n- ');
+        const managed = `<!-- agent-rules:managed:${host} BEGIN (do not edit manually) -->\n# Agent Rules — ${host} native (global)\nThis block is owned by agent-rules and is bound to git HEAD ${getGitHead().slice(0, 12)}.\nGlobal behavior (applies even in disposable repos with no local files):\n- ${globalBehavior}\nNative layer: base rules + skills + lifecycle adapter. Runtime layer adds task delta only.\n<!-- agent-rules:managed:${host} END -->\n`;
+
+        if ((host === 'grok' || host === 'cursor') && instrPath) {
+          fs.mkdirSync(instrPath, { recursive: true });
+          const target = path.join(instrPath, 'agent-rules.md');
+          fs.writeFileSync(target, managed, 'utf8');
+        } else if (instrPath && !instrPath.includes('~/.agents') && !isNonFileInstruction) {
           let isDir = false;
           try { isDir = fs.existsSync(instrPath) && fs.statSync(instrPath).isDirectory(); } catch {}
           if (!isDir) {
@@ -423,23 +273,6 @@ export class NativeInstaller {
               }
             } catch {}
 
-            const globalBehavior = [
-              'Use natural communication: outcome-first, plain language, technical details when needed for decisions/verification/debug.',
-              'Hidden authority: ADVISORY → PLAN → EXECUTION → VERIFY → TERMINAL.',
-              'Plan-only cannot authorize edits; explicit execute pivot required.',
-              'Classify owner messages: CONTINUATION/ADD/CORRECT/CONFLICT/SUPERSEDE/INDEPENDENT and reconcile without dropping requirements.',
-              'Planner bounded: one draft + at most one correction batch, then final gate.',
-              'Independent reviewer requires separate invocation/identity.',
-              'Single writer lease per worktree; second writer blocks or isolated worktree.',
-              'Protect dirty tracked/untracked files; scope prevents writes.',
-              'Global safety cannot be weakened by project-local instructions.',
-              'Commit/push/delete/credentials require explicit authority.',
-              'Preserve intent across compaction/restart/resume/handoff.',
-              'Clarification only for material ambiguity/missing authority.',
-            ].join('\n- ');
-
-            const managed = `<!-- agent-rules:managed:${host} BEGIN (do not edit manually) -->\n# Agent Rules — ${host} native (global)\nThis block is owned by agent-rules and is bound to git HEAD ${getGitHead().slice(0, 12)}.\nGlobal behavior (applies even in disposable repos with no local files):\n- ${globalBehavior}\nNative layer: base rules + skills + lifecycle adapter. Runtime layer adds task delta only.\n<!-- agent-rules:managed:${host} END -->\n`;
-
             let next: string;
             const re = new RegExp(`<!-- agent-rules:managed:${host} BEGIN.*? END -->\\s*`, 'gs');
             if (re.test(existing)) next = existing.replace(re, managed);
@@ -451,33 +284,15 @@ export class NativeInstaller {
           }
         }
 
-        // Section I: Clean up any old agent-rules-mcp-bridge entry if present
-        const mcpPath = contract.paths.mcpPath.replace(/\$[A-Z_]+/, detection.homeDir).replace('~', userHome);
-        if (mcpPath && fs.existsSync(mcpPath)) {
-          if (mcpPath.endsWith('.json')) {
-            try {
-              const j = JSON.parse(fs.readFileSync(mcpPath, 'utf8'));
-              if (j.mcpServers && j.mcpServers['agent-rules-mcp-bridge'] && j.mcpServers['agent-rules-mcp-bridge']._owner === 'agent-rules') {
-                delete j.mcpServers['agent-rules-mcp-bridge'];
-                fs.writeFileSync(mcpPath, JSON.stringify(j, null, 2) + '\n', 'utf8');
-              }
-            } catch {}
-          } else if (mcpPath.endsWith('.toml')) {
-            try {
-              let body = fs.readFileSync(mcpPath, 'utf8');
-              if (body.includes('agent-rules-mcp-bridge')) {
-                body = body.replace(/\n\[mcp_servers\.agent-rules-mcp-bridge\][\s\S]*?(?=\n\[|$)/, '');
-                fs.writeFileSync(mcpPath, body, 'utf8');
-              }
-            } catch {}
-          }
-        }
+        // Core installation deliberately does not touch MCP configuration.
+        // Legacy bridge cleanup is an explicit integration/uninstall action.
       }
 
       const sharedSkills = path.join(userHome, '.agents', 'skills');
       fs.mkdirSync(sharedSkills, { recursive: true });
 
       const receipt = await this.certify(host, 'INSTALLED');
+      this.assertInstalledReadback(receipt);
       return receipt;
     } catch (e) {
       if (backupDir && fs.existsSync(backupDir)) {
@@ -494,6 +309,12 @@ export class NativeInstaller {
     return installDeepseekHarnessNative(detection, backupDir, () => this.certify('deepseek-harness', 'INSTALLED'));
   }
 
+  private assertInstalledReadback(receipt: CertificationReceipt): void {
+    if (receipt.claims.NATIVE_INSTALLED.status !== 'PASS' || receipt.claims.NATIVE_DISCOVERED.status !== 'PASS' || receipt.claims.NATIVE_SKILLS.status !== 'PASS') {
+      throw new Error(`native install readback rejected ${receipt.host}: installed=${receipt.claims.NATIVE_INSTALLED.status}, discovered=${receipt.claims.NATIVE_DISCOVERED.status}, skills=${receipt.claims.NATIVE_SKILLS.status}`);
+    }
+  }
+
   async certify(host: HostId, mode: 'INSTALLED' | 'DRY_RUN' | 'READBACK' = 'READBACK'): Promise<CertificationReceipt> {
     const detection = await this.detect(host);
     const gitHead = getGitHead();
@@ -501,6 +322,8 @@ export class NativeInstaller {
     const now = new Date().toISOString();
     const contract = getNativeContract(host);
     const userHome = process.env.USERPROFILE || process.env.HOME || '';
+    const readback = await this.readback(host);
+    const reload = await this.reload(host);
 
     // Dynamic skill catalog count
     let skillCount = 36;
@@ -534,9 +357,6 @@ export class NativeInstaller {
         installedDetail = native.modManaged
           ? `managed mod verified at ${native.modPath}`
           : `managed mod missing or unmanaged at ${native.modPath}`;
-      } else if (['codex', 'opencode', 'antigravity'].includes(host)) {
-        installedStatus = 'PASS';
-        installedDetail = `managed native surface bound for ${host}`;
       } else if (contract) {
         const instrPath = contract.paths.instructionPath.replace(/\$[A-Z_]+/, detection.homeDir).replace('~', userHome);
         if (fs.existsSync(instrPath)) {
@@ -552,31 +372,32 @@ export class NativeInstaller {
               installedDetail = `managed block not found in ${path.basename(instrPath)}`;
             }
           } else if (stat?.isDirectory()) {
-            installedStatus = 'PASS';
-            installedDetail = `native rules directory verified at ${path.basename(instrPath)}`;
+            installedStatus = readback.ok ? 'PASS' : 'FAIL';
+            installedDetail = readback.ok ? `native rules directory read back at ${path.basename(instrPath)}` : `native rules directory exists but readback failed: ${readback.detail ?? 'unknown reason'}`;
           } else {
-            installedStatus = 'PASS';
-            installedDetail = `native surface verified for ${host}`;
+            installedStatus = readback.ok ? 'PASS' : 'FAIL';
+            installedDetail = readback.ok ? `native surface read back for ${host}` : `native surface readback failed: ${readback.detail ?? 'unknown reason'}`;
           }
         } else {
-          installedStatus = 'PASS';
-          installedDetail = `native platform contract ready for ${host}`;
+          installedStatus = 'FAIL';
+          installedDetail = `native instruction surface missing: ${instrPath}`;
         }
       }
 
     }
 
     // 5. NATIVE_POLICY
-    let policyStatus: 'PASS' | 'FAIL' | 'UNSUPPORTED' = 'UNSUPPORTED';
-    let policyDetail = 'host not present';
-    if (detection.present) {
-      policyStatus = 'PASS';
-      policyDetail = 'safe-deny and scope invariants verified';
-    }
+    const policyStatus: 'UNSUPPORTED' = 'UNSUPPORTED';
+    const policyDetail = detection.present ? 'no host-native policy inspection was run' : 'host not present';
 
     // 6. NATIVE_SKILLS
-    let skillsStatus: 'PASS' | 'FAIL' = 'PASS';
-    let skillsDetail = `enumerated ${skillCount} dynamic skills; zero duplicate, zero malformed`;
+    const skillPath = contract?.paths.skillPath.replace(/\$[A-Z_]+/, detection.homeDir).replace('~', userHome) ?? '';
+    const skillRoot = skillPath.replace(/[\\/]?<skill>[\\/]?SKILL\.md$/i, '').replace(/[\\/]?<skill>$/i, '');
+    const hostSkills = fs.existsSync(skillRoot)
+      ? fs.readdirSync(skillRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory() && fs.existsSync(path.join(skillRoot, entry.name, 'SKILL.md'))).length
+      : 0;
+    let skillsStatus: 'PASS' | 'FAIL' = hostSkills > 0 ? 'PASS' : 'FAIL';
+    let skillsDetail = hostSkills > 0 ? `native skill readback ${hostSkills} at ${skillRoot}` : `native skill readback found no SKILL.md under ${skillRoot || '<no native skill path>'}`;
     if (duplicateSkills.length > 0) {
       skillsStatus = 'FAIL';
       skillsDetail = `duplicate skills discovered: ${duplicateSkills.map(d => d.path).join(', ')}`;
@@ -602,9 +423,9 @@ export class NativeInstaller {
     }
 
     // 7. NATIVE_MCP
-    let mcpStatus: 'PASS' | 'FAIL' | 'UNSUPPORTED' = 'PASS';
-    let mcpDetail = 'native config intact';
-    let mcpOmission: string | null = null;
+    let mcpStatus: 'PASS' | 'FAIL' | 'UNSUPPORTED' = 'UNSUPPORTED';
+    let mcpDetail = 'no task-local native MCP lease was observed';
+    let mcpOmission: string | null = 'core install does not activate MCP';
     if (host === 'deepseek-harness' && detection.present) {
       const dsh = inspectDshNativeReadback(detection);
       mcpStatus = dsh.nativeMcp ? 'PASS' : 'FAIL';
@@ -650,13 +471,8 @@ export class NativeInstaller {
     const modelBehaviorOmission = 'signed-out: model turn requires auth';
 
     // 9. ROLLBACK_VERIFIED
-    const rollbackStatus: 'PASS' | 'UNSUPPORTED' = detection.present ? 'PASS' : 'UNSUPPORTED';
-    const rollbackDetail = detection.present ? 'atomic swap backup manifest and byte restoration verified' : 'host not present';
-
-    // Real native readback + reload evidence (REQ-111): claims are grounded in
-    // observed host-surface bytes, never contract string pass-through.
-    const readback = await this.readback(host);
-    const reload = await this.reload(host);
+    const rollbackStatus: 'UNSUPPORTED' = 'UNSUPPORTED';
+    const rollbackDetail = detection.present ? 'rollback is only PASS after an executed restore and byte comparison' : 'host not present';
 
     const claims: CertificationReceipt['claims'] = {
       HOST_PRESENT: { status: hostPresentStatus, evidence: [{ kind: 'binary-or-desktop-signal', detail: detection.signals.join(';') }], omitted_reason: null },
@@ -673,7 +489,7 @@ export class NativeInstaller {
         omitted_reason: null,
       },
       NATIVE_LIFECYCLE: {
-        status: reload.ok ? 'PASS' : detection.present ? 'FAIL' : 'UNSUPPORTED',
+        status: reload.ok ? 'PASS' : 'UNSUPPORTED',
         evidence: [{ kind: 'native-reload', host, method: reload.method, ok: reload.ok }],
         omitted_reason: null,
       },
@@ -681,7 +497,7 @@ export class NativeInstaller {
       NATIVE_SKILLS: { status: skillsStatus, evidence: [{ kind: 'skill-catalog-dynamic', host, count: skillCount, detail: skillsDetail }], omitted_reason: null },
       NATIVE_MCP: { status: mcpStatus, evidence: [{ kind: 'native-mcp-surface', host, detail: mcpDetail }], omitted_reason: mcpOmission },
       MODEL_BEHAVIOR: { status: modelBehaviorStatus, evidence: [{ kind: 'model-turn-not-tested', reason: modelBehaviorDetail }], omitted_reason: modelBehaviorOmission },
-      ROLLBACK_VERIFIED: { status: rollbackStatus, evidence: [{ kind: 'uninstall-rollback-preserves-user', host, detail: rollbackDetail }], omitted_reason: null },
+      ROLLBACK_VERIFIED: { status: rollbackStatus, evidence: [{ kind: 'uninstall-rollback-preserves-user', host, detail: rollbackDetail }], omitted_reason: rollbackDetail },
     };
 
     const readyClaims = ['HOST_PRESENT', 'NATIVE_INSTALLED', 'NATIVE_DISCOVERED', 'NATIVE_LIFECYCLE', 'NATIVE_POLICY', 'NATIVE_SKILLS', 'NATIVE_MCP', 'ROLLBACK_VERIFIED'];
@@ -703,14 +519,8 @@ export class NativeInstaller {
     };
 
     if (mode !== 'DRY_RUN') {
-      // 1. Write to canonical evidence directory
-      const activePlan = getActivePlanId();
-      const canonicalHostDir = path.join(process.cwd(), '.agent', 'evidence', activePlan, 'hosts', host);
-      fs.mkdirSync(canonicalHostDir, { recursive: true });
-      fs.writeFileSync(path.join(canonicalHostDir, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n', 'utf8');
-
-      // 2. Also write to scratch .agent/tmp/host-receipts/ for backwards compatibility
-
+      // Host receipts are runtime scratch. A release manifest records only the
+      // selected final evidence hashes; repeated installs must not bloat .agent.
       const tmpPath = path.join(process.cwd(), '.agent', 'tmp', 'host-receipts', `host-${host}.json`);
       fs.mkdirSync(path.dirname(tmpPath), { recursive: true });
       fs.writeFileSync(tmpPath, JSON.stringify(receipt, null, 2) + '\n', 'utf8');
@@ -729,10 +539,13 @@ export class NativeInstaller {
     const method = contract?.reload ?? 'host-reload';
     const detection = await this.detect(host);
     return {
-      ok: detection.present && !!contract?.reload,
+      // Naming a restart mechanism is not the same as making the host reload.
+      // Desktop reload is an owner-visible action unless the adapter actually
+      // invokes and observes it.
+      ok: false,
       method,
       evidence: [
-        { kind: 'native-reload-mechanism', host, method, present: detection.present, contractReload: contract?.reload ?? null },
+        { kind: 'native-reload-mechanism-declared', host, method, present: detection.present, contractReload: contract?.reload ?? null },
       ],
     };
   }
@@ -766,9 +579,8 @@ export class NativeInstaller {
         detail: native.modManaged ? `managed mod present at ${native.modPath}` : `managed mod missing or unmanaged at ${native.modPath}`,
       };
     }
-    const isActivationManaged = ['codex', 'opencode', 'antigravity'].includes(host);
     const isNonFileInstruction = rawInstr.includes('bundle') || rawInstr.includes('mods') || rawInstr.includes('/rules') || rawInstr.endsWith('rules') || rawInstr.endsWith('rules/');
-    if (isActivationManaged || isNonFileInstruction) {
+    if (isNonFileInstruction) {
       // Host uses a projected directory/native surface; fall back to listing the
       // managed paths for real existence evidence.
       const projected = instrPath;
@@ -778,7 +590,11 @@ export class NativeInstaller {
       try {
         if (fs.statSync(projected).isDirectory()) {
           const files = fs.readdirSync(projected).filter((f) => f.endsWith('.md') || f.endsWith('.toml') || f.endsWith('.json')).sort();
-          if (files.length) sha256Hex = sha256(files.map((f) => `${f}:${sha256(fs.readFileSync(path.join(projected, f)))}`).join('|'));
+          const managedFiles = files.filter((file) => {
+            try { return fs.readFileSync(path.join(projected, file), 'utf8').includes(`agent-rules:managed:${host}`); } catch { return false; }
+          });
+          if (managedFiles.length) sha256Hex = sha256(managedFiles.map((f) => `${f}:${sha256(fs.readFileSync(path.join(projected, f)))}`).join('|'));
+          if (managedFiles.length === 0) return { ok: false, method: contract.readbackStrategy ?? 'native-projection', found: false, detail: `no managed ${host} projection in ${projected}` };
         } else {
           sha256Hex = sha256(fs.readFileSync(projected));
         }
@@ -834,13 +650,10 @@ export class NativeInstaller {
     // Hosts with a live host-generated session event may carry a real model
     // turn receipt; otherwise the safe default is NEEDS_USER (never fabricated
     // PASS). No login flow, no credential read, no token capture.
-    const liveObserved = process.env[`AGENT_RULES_${host.toUpperCase().replace(/-/g, '_')}_MODEL_TURN_EVIDENCE`];
-    if (liveObserved && /^[0-9a-f]{64}$/.test(liveObserved)) {
-      evidence.push({ kind: 'host-generated-model-turn-evidence', ref: liveObserved, host });
-    }
-    const modelBehavior: 'PASS' | 'NEEDS_USER' | 'BLOCKED' = liveObserved ? 'PASS' : 'NEEDS_USER';
-    if (modelBehavior !== 'PASS') evidence.push({ kind: 'model-turn-requires-authenticated-session', reason: 'host signed out or offline; harmless model turn requires active authenticated session' });
-    return { ok: modelBehavior === 'PASS', modelBehavior, evidence };
+    const hintedEvidence = process.env[`AGENT_RULES_${host.toUpperCase().replace(/-/g, '_')}_MODEL_TURN_EVIDENCE`];
+    if (hintedEvidence) evidence.push({ kind: 'unverified-model-turn-hint', host });
+    evidence.push({ kind: 'model-turn-requires-authenticated-session', reason: 'a local environment value is not a host-generated nonce-bound turn; observe it in the host UI' });
+    return { ok: false, modelBehavior: 'NEEDS_USER', evidence };
   }
 
   async rollback(host: HostId, backupDir?: string): Promise<{ ok: boolean; byteEqual: boolean }> {
@@ -914,12 +727,8 @@ export class NativeInstaller {
       omitted_reason: null,
     };
 
-    const activePlan = getActivePlanId();
-    const canonicalHostDir = path.join(process.cwd(), '.agent', 'evidence', activePlan, 'hosts', host);
-    fs.mkdirSync(canonicalHostDir, { recursive: true });
-    fs.writeFileSync(path.join(canonicalHostDir, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n', 'utf8');
-
     const tmpPath = path.join(process.cwd(), '.agent', 'tmp', 'host-receipts', `host-${host}.json`);
+    fs.mkdirSync(path.dirname(tmpPath), { recursive: true });
     fs.writeFileSync(tmpPath, JSON.stringify(receipt, null, 2) + '\n', 'utf8');
 
     return { ok: byteEqual, byteEqual };
@@ -938,13 +747,10 @@ export class NativeInstaller {
         removeManagedCommandCodeMcp(detection.homeDir);
         const receipt = await this.certify(host);
         receipt.status = detection.present ? 'Needs action' : 'Unsupported';
-        const activePlanUninstall = getActivePlanId();
-        const canonicalHostDir = path.join(process.cwd(), '.agent', 'evidence', activePlanUninstall, 'hosts', host);
-        fs.mkdirSync(canonicalHostDir, { recursive: true });
-        fs.writeFileSync(path.join(canonicalHostDir, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n', 'utf8');
         const tmpPath = path.join(process.cwd(), '.agent', 'tmp', 'host-receipts', `host-${host}.json`);
         fs.mkdirSync(path.dirname(tmpPath), { recursive: true });
         fs.writeFileSync(tmpPath, JSON.stringify(receipt, null, 2) + '\n', 'utf8');
+        await uninstallOwnedGlobalProjections(host as RuntimePlatform);
         return;
       }
 
@@ -988,13 +794,10 @@ export class NativeInstaller {
       const receipt = await this.certify(host);
       receipt.status = detection.present ? 'Needs action' : 'Unsupported';
 
-      const activePlanUninstall = getActivePlanId();
-      const canonicalHostDir = path.join(process.cwd(), '.agent', 'evidence', activePlanUninstall, 'hosts', host);
-      fs.mkdirSync(canonicalHostDir, { recursive: true });
-      fs.writeFileSync(path.join(canonicalHostDir, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n', 'utf8');
-
       const tmpPath = path.join(process.cwd(), '.agent', 'tmp', 'host-receipts', `host-${host}.json`);
+      fs.mkdirSync(path.dirname(tmpPath), { recursive: true });
       fs.writeFileSync(tmpPath, JSON.stringify(receipt, null, 2) + '\n', 'utf8');
+      await uninstallOwnedGlobalProjections(host as RuntimePlatform);
     } finally {
       lease.release();
     }
