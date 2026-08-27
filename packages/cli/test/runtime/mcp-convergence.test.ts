@@ -249,6 +249,9 @@ describe("host MCP config convergence", () => {
       ? process.cwd()
       : path.resolve(process.cwd(), "../..");
     const configPath = path.join(hostHome("omp", env), HOST_CONFIG_FILES.omp);
+    const managedBinary = path.join(env.HOME, "codebase-memory-mcp");
+    fs.writeFileSync(managedBinary, "fixture");
+    env.CODEBASE_MEMORY_MCP_BIN = managedBinary;
     fs.mkdirSync(path.dirname(configPath), { recursive: true });
     fs.writeFileSync(configPath, JSON.stringify({
       mcpServers: {

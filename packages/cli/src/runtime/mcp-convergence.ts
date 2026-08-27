@@ -148,6 +148,7 @@ export interface ConvergenceModel {
 /** Resolve the codebase-memory-mcp binary path the adapters expand to. */
 export function resolveCodebaseMemoryBin(env: NodeJS.ProcessEnv = process.env): string | null {
   const candidates = [
+    env.CODEBASE_MEMORY_MCP_BIN || null,
     env.LOCALAPPDATA ? path.join(env.LOCALAPPDATA, "Programs", "codebase-memory-mcp", "codebase-memory-mcp.exe") : null,
     env.HOME ? path.join(env.HOME, ".local", "share", "codebase-memory-mcp", "codebase-memory-mcp") : null,
     env.HOME ? path.join(env.HOME, "Library", "Application Support", "codebase-memory-mcp", "codebase-memory-mcp") : null,
