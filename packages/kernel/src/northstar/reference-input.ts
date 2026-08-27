@@ -40,6 +40,7 @@ export function detectHostReferenceTransport(host: string, surface?: "ide" | "cl
     case "grok":
     case "command-code":
     case "deepseek-harness":
+    case "omp":
       return "workspace_materialized_reference";
     default:
       return "workspace_materialized_reference";

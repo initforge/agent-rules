@@ -10,7 +10,8 @@
       "antigravity",
       "cursor",
       "deepseek-harness",
-      "command-code"
+      "command-code",
+      "omp"
     ],
     "certification_policy": {
       "certification_required_hosts": [
@@ -21,7 +22,8 @@
         "antigravity",
         "grok",
         "deepseek-harness",
-        "command-code"
+        "command-code",
+        "omp"
       ],
       "deferred_supported_targets": [],
       "not_live_verified_targets": []
@@ -63,7 +65,8 @@
       "antigravity",
       "grok",
       "deepseek-harness",
-      "command-code"
+      "command-code",
+      "omp"
     ],
     "deferred_supported_targets": []
   },
@@ -540,6 +543,51 @@
       "limits": [
         "New home is ~/.commandcode; .command-code is legacy fake; headless requires session"
       ]
+    },
+    "omp": {
+      "id": "omp",
+      "cliSignal": "omp --version",
+      "desktopSignal": null,
+      "homeEnv": "PI_CODING_AGENT_DIR",
+      "homeDefault": "~/.omp/agent",
+      "surfaces": {
+        "instruction": "$PI_CODING_AGENT_DIR/AGENTS.md; default ~/.omp/agent/AGENTS.md and named profiles under ~/.omp/profiles/<name>/agent",
+        "skill": "$PI_CODING_AGENT_DIR/skills/<skill>/SKILL.md through OMP's native skill provider",
+        "agent": "$PI_CODING_AGENT_DIR/agents/<agent>.md",
+        "hook": "OMP extension/provider lifecycle; no generic hook projection",
+        "mcp": "$PI_CODING_AGENT_DIR/mcp.json with mcpServers (OMP native user provider)",
+        "headless": "omp -p <prompt> when an authenticated provider is available"
+      },
+      "paths": {
+        "instructionPath": "$PI_CODING_AGENT_DIR/AGENTS.md",
+        "skillPath": "$PI_CODING_AGENT_DIR/skills/<skill>/SKILL.md",
+        "agentPath": "$PI_CODING_AGENT_DIR/agents/<agent>.md",
+        "hookPath": "n/a — OMP extension lifecycle",
+        "mcpPath": "$PI_CODING_AGENT_DIR/mcp.json",
+        "legacyPaths": [
+          "~/.agents/AGENTS.md (import-compatible only, not an OMP-native target)"
+        ]
+      },
+      "precedence": "PI_CODING_AGENT_DIR, then named OMP/PI profile, then default profile; preserve user content outside the managed block and preserve user mcpServers",
+      "reload": "new_session_or_/reload (OMP discovers native config at startup; /mcp reload reconnects configured servers)",
+      "mergeStrategy": "marked-block atomic swap for AGENTS.md; project skills by hash; mcp.json is changed only by explicit integration lifecycle",
+      "capabilities": {
+        "detectsByFeature": true,
+        "features": ["omp-version", "native-agents-md-readback", "native-skill-provider", "native-mcp-json", "print-mode"]
+      },
+      "installStrategy": "detect official omp binary and active agent directory; install managed AGENTS.md block and native skills only; never report imported Claude/Codex/Cursor configuration as OMP-native proof",
+      "readbackStrategy": "read active OMP AGENTS.md block and enumerate one-level native skills under that exact active directory; parse mcp.json only when an explicit integration config exists",
+      "canaryStrategy": "credential-free version/config/skill readback; inspect /mcp list or /mcp test only in a live authenticated OMP session when a configured provider requires it",
+      "uninstallStrategy": "remove only OMP's managed AGENTS.md block and owned skill projections; preserve profile, user instructions, user skills and mcpServers",
+      "authBoundary": {
+        "offlineClaims": ["HOST_PRESENT", "NATIVE_INSTALLED", "NATIVE_DISCOVERED", "NATIVE_SKILLS"],
+        "requiresAuthClaims": ["MODEL_BEHAVIOR", "NATIVE_MCP"]
+      },
+      "limits": [
+        "OMP may import other tool configurations, but imported sources are never proof of OMP-native installation",
+        "A named profile changes the active user directory; install and readback resolve the same profile",
+        "Model tool visibility requires an active OMP session and is not inferred from mcp.json"
+      ]
     }
   },
   "platforms": {
@@ -781,6 +829,36 @@
         "format": "json_mcpServers",
         "native_inspect": "command-code mcp list",
         "live_doctor": "native_permission_fingerprint"
+      }
+    },
+    "omp": {
+      "runtime": {
+        "home_env": "PI_CODING_AGENT_DIR",
+        "home_default": "~/.omp/agent",
+        "global_entrypoint": "AGENTS.md"
+      },
+      "bootstrap": {
+        "strategy": "managed_directory",
+        "entrypoint": "AGENTS.md",
+        "restart_action": "new_session_or_reload"
+      },
+      "routing": {
+        "hook_lifecycle": "extension_provider_lifecycle",
+        "context_delivery": "native_agents_md_provider"
+      },
+      "orchestration": {
+        "native_spawn_tool": "none",
+        "agent_discovery": "$PI_CODING_AGENT_DIR/agents",
+        "model_attestation": "host_declared",
+        "permission_capability": "host_declared",
+        "isolation_capability": "host_declared",
+        "agent_materialization": "managed_directory"
+      },
+      "mcp": {
+        "config_path": "$PI_CODING_AGENT_DIR/mcp.json",
+        "format": "json_mcpServers",
+        "native_inspect": "OMP /mcp list",
+        "live_doctor": "OMP /mcp test <name>"
       }
     }
   }

@@ -1,8 +1,9 @@
 {
   "mcpServers": {
     "codebase-memory": {
-      "command": "${CODEBASE_MEMORY_MCP_BIN}",
-      "args": []
+      "type": "local",
+      "command": ["${CODEBASE_MEMORY_MCP_BIN}"],
+      "enabled": true
     }
   }
 }

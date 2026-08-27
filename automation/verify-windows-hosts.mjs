@@ -138,11 +138,20 @@ const HOSTS = [
   },
   {
     id: 'command-code',
-    binaryNames: ['command-code.cmd', 'command-code.exe', 'command-code', 'cmdc.cmd', 'cmdc.exe', 'cmdc'],
+    binaryNames: ['cmdc.cmd', 'cmdc.exe', 'cmdc', 'command-code.cmd', 'command-code.exe', 'command-code'],
     versionFlag: ['--version'],
     extraDirs: [
       path.join(os.homedir(), '.commandcode', 'bin'),
       path.join(process.env.LOCALAPPDATA || '', 'Programs', 'command-code'),
+    ],
+  },
+  {
+    id: 'omp',
+    binaryNames: ['omp.exe', 'omp.cmd', 'omp'],
+    versionFlag: ['--version'],
+    extraDirs: [
+      path.join(process.env.LOCALAPPDATA || '', 'omp'),
+      path.join(os.homedir(), '.omp'),
     ],
   },
 ];
@@ -847,6 +856,89 @@ async function verifyCommandCode(host) {
   return receipt;
 }
 
+/**
+ * OMP's native surface is its active PI agent directory.  Do not call the
+ * generic provider verifier here: core installation intentionally does not
+ * mutate mcp.json, and a local MCP server handshake cannot prove OMP mounted
+ * it into a model session.
+ */
+async function verifyOmp(host) {
+  const gitHead = getGitHead();
+  const receipt = {
+    schema: 'agent-rules/windows-host-receipt',
+    host: 'omp',
+    status: 'PENDING',
+    generated_at: now(),
+    git_head: gitHead,
+    evidence: [],
+    reason: null,
+    claims: {
+      NATIVE_INSTALLED: { status: 'PENDING', evidence: [] },
+      NATIVE_READBACK: { status: 'PENDING', evidence: [] },
+      NATIVE_OBSERVED: { status: 'PENDING', evidence: [] },
+      NATIVE_POLICY_VERIFIED: { status: 'PENDING', evidence: [] },
+      MODEL_BEHAVIOR_VERIFIED: { status: 'PENDING', evidence: [] },
+    },
+    providers: [],
+  };
+  const bin = whichHost(host);
+  if (!bin) {
+    receipt.status = 'UNSUPPORTED';
+    receipt.reason = 'omp binary not found on this machine';
+    for (const claim of Object.values(receipt.claims)) claim.status = 'UNSUPPORTED';
+    return receipt;
+  }
+  const version = getHostVersion(host, bin);
+  if (!version.ok || !version.version) {
+    receipt.status = 'BLOCKED';
+    receipt.reason = 'omp version probe failed';
+    receipt.claims.NATIVE_INSTALLED.status = 'BLOCKED';
+    receipt.claims.NATIVE_INSTALLED.evidence.push({ kind: 'version_probe_failed', error: version.error });
+    for (const key of ['NATIVE_READBACK', 'NATIVE_OBSERVED', 'NATIVE_POLICY_VERIFIED', 'MODEL_BEHAVIOR_VERIFIED']) receipt.claims[key].status = 'BLOCKED';
+    return receipt;
+  }
+  receipt.claims.NATIVE_INSTALLED.status = 'PASS';
+  receipt.claims.NATIVE_INSTALLED.evidence.push({ kind: 'binary', path: bin, version: version.version });
+
+  const agentDir = process.env.PI_CODING_AGENT_DIR
+    ? path.resolve(process.env.PI_CODING_AGENT_DIR)
+    : (process.env.OMP_PROFILE || process.env.PI_PROFILE)
+      ? path.join(os.homedir(), '.omp', 'profiles', process.env.OMP_PROFILE || process.env.PI_PROFILE, 'agent')
+      : path.join(os.homedir(), '.omp', 'agent');
+  const instruction = path.join(agentDir, 'AGENTS.md');
+  const skillsDir = path.join(agentDir, 'skills');
+  const hasManagedInstructions = fs.existsSync(instruction) && fs.readFileSync(instruction, 'utf8').includes('agent-rules:managed:omp');
+  const skillCount = fs.existsSync(skillsDir)
+    ? fs.readdirSync(skillsDir, { withFileTypes: true }).filter((entry) => entry.isDirectory() && fs.existsSync(path.join(skillsDir, entry.name, 'SKILL.md'))).length
+    : 0;
+  const mcpPath = path.join(agentDir, 'mcp.json');
+  let mcpJson = 'absent';
+  if (fs.existsSync(mcpPath)) {
+    try { JSON.parse(fs.readFileSync(mcpPath, 'utf8')); mcpJson = 'valid'; } catch { mcpJson = 'invalid'; }
+  }
+  receipt.evidence.push({ kind: 'active_agent_dir', path: agentDir, profile: process.env.OMP_PROFILE || process.env.PI_PROFILE || null });
+  receipt.evidence.push({ kind: 'native_readback', instruction, managed: hasManagedInstructions, skills: skillCount, mcp: mcpJson });
+  if (hasManagedInstructions && skillCount > 0) {
+    receipt.claims.NATIVE_READBACK.status = 'PASS';
+    receipt.claims.NATIVE_READBACK.evidence.push({ kind: 'managed_projection', instruction, skills: skillCount });
+    receipt.claims.NATIVE_POLICY_VERIFIED.status = 'PASS';
+    receipt.claims.NATIVE_POLICY_VERIFIED.evidence.push({ kind: 'core_install_did_not_mutate_mcp', mcp: mcpJson, path: mcpPath });
+  } else {
+    receipt.claims.NATIVE_READBACK.status = 'BLOCKED';
+    receipt.claims.NATIVE_READBACK.evidence.push({ kind: 'managed_projection_missing', instruction, skills: skillCount });
+    receipt.claims.NATIVE_POLICY_VERIFIED.status = 'BLOCKED';
+  }
+  receipt.claims.NATIVE_OBSERVED.status = 'NEEDS_USER';
+  receipt.claims.NATIVE_OBSERVED.evidence.push({ kind: 'host_session_required', reason: 'OMP model/session observation cannot be fabricated by file readback' });
+  receipt.claims.MODEL_BEHAVIOR_VERIFIED.status = 'NEEDS_USER';
+  receipt.claims.MODEL_BEHAVIOR_VERIFIED.evidence.push({ kind: 'owner_check', steps: ['Open OMP with this active profile.', 'Run /mcp list after explicitly enabling a provider when needed.', 'Ask one bounded model turn to use the visible tool.'] });
+  receipt.status = receipt.claims.NATIVE_READBACK.status === 'PASS' ? 'NEEDS_USER' : 'BLOCKED';
+  receipt.reason = receipt.status === 'NEEDS_USER'
+    ? 'NATIVE_INFRASTRUCTURE PASS — session/model visibility remains an owner check'
+    : 'native OMP projection is missing or unreadable';
+  return receipt;
+}
+
 function computeProjectionHashForHost(hostId) {
   try {
     const overlayPath = path.join(ROOT, 'platforms', hostId, `${hostId}-overlay.md`);
@@ -1110,6 +1202,8 @@ async function main() {
       receipt = await verifyDeepseekHarness(host);
     } else if (id === 'command-code') {
       receipt = await verifyCommandCode(host);
+    } else if (id === 'omp') {
+      receipt = await verifyOmp(host);
     } else {
       receipt = await verifyHostWithProviders(host, ['codebase-memory-mcp', 'playwright-mcp', 'chrome-devtools-mcp', 'context7']);
     }

@@ -11,9 +11,9 @@ function loadPlatforms(): readonly string[] {
       if (j.registry?.host_ids?.length) return j.registry.host_ids;
     }
   } catch {}
-  return ["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code"];
+  return ["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code", "omp"];
 }
-export const RUNTIME_PLATFORMS = loadPlatforms() as unknown as ["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code"];
+export const RUNTIME_PLATFORMS = loadPlatforms() as unknown as ["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code", "omp"];
 export type RuntimePlatform = (typeof RUNTIME_PLATFORMS)[number];
 
 // ── Host reconciliation contract — single source is platforms/platform-contracts.json (v3 NativeHostContract)

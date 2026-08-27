@@ -6,9 +6,8 @@ import type { IntegrationInventory, RegistryEntry } from "./inventory.js";
  *
  * `AGENT_RULES_INTEGRATION_PROFILE` selects which integrations get installed
  * on disk (default `core`). `AGENT_RULES_GLOBAL_MCP_PROFILE` selects which
- * MCP entries may be exposed through global host configs (default `none`:
- * host configs must not contain agent-rules MCP entries by default; exposure
- * happens per-task via task-local overlays instead).
+ * MCP entries are registered with native hosts (default `all`). Registration
+ * is separate from connecting to or using a provider during a task.
  *
  * Explicit-only integrations (activation = explicit-only, e.g. Pencil) are
  * installed only when the operator explicitly selects them and are never
@@ -26,7 +25,7 @@ export const INTEGRATION_PROFILE_ENV = "AGENT_RULES_INTEGRATION_PROFILE";
 
 export function resolveGlobalMcpProfile(env: NodeJS.ProcessEnv = process.env): GlobalMcpProfile {
   const raw = env[GLOBAL_MCP_PROFILE_ENV];
-  if (raw === undefined || raw.trim() === "") return "none";
+  if (raw === undefined || raw.trim() === "") return "all";
   if (!GLOBAL_MCP_PROFILES.includes(raw as GlobalMcpProfile)) {
     throw new Error(`${GLOBAL_MCP_PROFILE_ENV} must be one of ${GLOBAL_MCP_PROFILES.join(", ")}; got ${raw}`);
   }
@@ -69,7 +68,7 @@ export function selectInstallEntries(inventory: IntegrationInventory, profile: I
 
 /**
  * Entries that may be exposed through global host configs for a global MCP
- * profile. The default profile `none` exposes nothing. Explicit-only and
+ * profile. The explicit `none` profile exposes nothing. Explicit-only and
  * optional entries are never globally exposed.
  */
 export function selectGlobalAdapterEntries(inventory: IntegrationInventory, profile: GlobalMcpProfile): RegistryEntry[] {

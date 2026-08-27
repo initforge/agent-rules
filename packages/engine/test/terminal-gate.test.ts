@@ -524,8 +524,8 @@ describe('verifyTerminalGate', () => {
     expect(result.failedGates).toContain('NO_OPEN_FINDINGS');
   });
 
-  it('requires exactly the 8 canonical hosts', () => {
-    expect(REQUIRED_HOSTS).toEqual(['codex', 'claude', 'opencode', 'cursor', 'antigravity', 'grok', 'deepseek-harness', 'command-code']);
+  it('requires exactly the 9 canonical hosts', () => {
+    expect(REQUIRED_HOSTS).toEqual(['codex', 'claude', 'opencode', 'cursor', 'antigravity', 'grok', 'deepseek-harness', 'command-code', 'omp']);
     expect(REQUIRED_HOSTS).toContain('cursor');
     expect(REQUIRED_HOSTS).toContain('antigravity');
   });
@@ -809,7 +809,7 @@ describe('assertCertificationAttestation', () => {
 
   it('rejects missing host', () => {
     const ledger = stubLedger({ attestations: REQUIRED_HOSTS.slice(0, -1).map((host) => fullAttestation(host)) });
-    expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/expected 8.*got 7/);
+    expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/expected 9.*got 8/);
   });
 
   it('rejects empty commitSha', () => {
@@ -817,7 +817,7 @@ describe('assertCertificationAttestation', () => {
     expect(() => assertCertificationAttestation(ledger, hash)).toThrow('empty commitSha');
   });
 
-  it('rejects null field in attestation (all 8 hosts present)', () => {
+  it('rejects null field in attestation (all 9 hosts present)', () => {
     const ledger = stubLedger({ attestations: REQUIRED_HOSTS.map((host) => fullAttestation(host, host === 'codex' ? { hostVersion: null } : {})) });
     expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/null\/empty/);
   });
@@ -830,7 +830,7 @@ describe('assertCertificationAttestation', () => {
     expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/duplicate/);
   });
 
-  it('rejects extra host beyond required eight', () => {
+  it('rejects extra host beyond the required 9', () => {
     const ledger = stubLedger({ attestations: [
       ...REQUIRED_HOSTS.map((host) => fullAttestation(host)),
       fullAttestation('unknown-host'),
@@ -840,7 +840,7 @@ describe('assertCertificationAttestation', () => {
 
   it('rejects wrong attestation count', () => {
     const ledger = stubLedger({ attestations: REQUIRED_HOSTS.slice(0, 3).map((host) => fullAttestation(host)) });
-    expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/expected 8.*got 3/);
+    expect(() => assertCertificationAttestation(ledger, hash)).toThrow(/expected 9.*got 3/);
   });
 
   it('rejects wrong HEAD binding', () => {

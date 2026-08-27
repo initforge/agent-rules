@@ -4,7 +4,7 @@ import { ExitCode } from "../src/types.js";
 const mockNativeInstall = vi.fn(async () => ({ status: "Ready" }));
 
 vi.mock("../src/runtime/installer.js", () => ({
-  RUNTIME_PLATFORMS: ["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code"],
+  RUNTIME_PLATFORMS: ["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code", "omp"],
 }));
 
 vi.mock("../src/adapters/repo.js", () => ({
@@ -12,7 +12,7 @@ vi.mock("../src/adapters/repo.js", () => ({
 }));
 
 vi.mock("../src/runtime/composed-installer.js", () => ({
-  projectSkillsToGlobal: vi.fn().mockResolvedValue(undefined),
+  projectSkillsToGlobal: vi.fn().mockResolvedValue({ projected: [], collisions: [], updatedManifest: {} }),
   uninstallOwnedGlobalProjections: vi.fn().mockResolvedValue(undefined),
 }));
 
@@ -25,6 +25,7 @@ vi.mock("../src/services/native-installer.js", () => ({
 
 vi.mock("../src/runtime/mcp-convergence.js", () => ({
   convergeAllHostMcpConfigs: vi.fn().mockResolvedValue([]),
+  registerHostMcpAdapters: vi.fn().mockResolvedValue({ status: "REGISTERED", conflicts: [] }),
 }));
 
 
@@ -48,14 +49,14 @@ describe("install wrapper", () => {
     const { installCmd } = await import("../src/commands/install.js");
     const result = await installCmd(["all"], { dryRun: false, verbose: false, json: false });
     expect(result.exitCode).toBe(ExitCode.Success);
-    expect(mockNativeInstall).toHaveBeenCalledTimes(8);
+    expect(mockNativeInstall).toHaveBeenCalledTimes(9);
   });
 
   it("installs for a single platform", async () => {
     const { installCmd } = await import("../src/commands/install.js");
     const result = await installCmd(["codex"], { dryRun: false, verbose: false, json: false });
     expect(result.exitCode).toBe(ExitCode.Success);
-    expect(mockNativeInstall).toHaveBeenCalledWith("codex", { dryRun: false, force: false });
+    expect(mockNativeInstall).toHaveBeenCalledWith("codex", { dryRun: false, force: false, enableMcp: true });
   });
 
   it("reports failure when a platform install fails", async () => {

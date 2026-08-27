@@ -3,11 +3,8 @@
 // session-scoped --mod flag by the native adapter.
 
 const AGENT_RULES_PROMPT = [
-  "Agent Rules is active for this session.",
-  "Preserve raw user intent and requirement/claim/task traceability.",
-  "Workers report observations; verifier evidence derives PASS.",
-  "Do not weaken, skip, or disable verification.",
-  "Stay within the owned scope and report missing truth as BLOCKED or NEEDS_USER.",
+  "Agent Rules is active for this session. The complete installed rules follow.",
+  "__AGENT_RULES_RULES__",
 ].join("\n");
 
 export default function agentRules(cmd: { hooks: (hooks: { appendSystemPrompt: () => string }) => void }): void {

@@ -15,7 +15,7 @@ export type RunRole = (typeof RUN_ROLES)[number];
 /** Structural symmetry invariant: every canonical host may fill every role. */
 export function assertHostRoleSymmetry(): void {
   const hosts = Object.keys(HOST_CAPABILITIES) as HostId[];
-  if (hosts.length !== 8) throw new Error(`host-role symmetry expects 8 canonical hosts, found ${hosts.length}`);
+  if (hosts.length !== 9) throw new Error(`host-role symmetry expects 9 canonical hosts, found ${hosts.length}`);
 }
 
 /**

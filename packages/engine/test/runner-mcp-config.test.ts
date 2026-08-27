@@ -69,7 +69,12 @@ describe('materializeMcpConfig', () => {
     };
     expect(parsed.mcp.playwright).toBeDefined();
     expect(parsed.mcp.playwright.type).toBe('local');
-    expect(parsed.mcp.playwright.command).toEqual(['npx', '-y', '@playwright/mcp@0.0.78', '--isolated']);
+    const command = parsed.mcp.playwright.command;
+    const prefix = process.platform === 'win32'
+      ? ['cmd.exe', '/d', '/s', '/c', 'npx']
+      : ['npx'];
+    expect(command.slice(0, prefix.length)).toEqual(prefix);
+    expect(command).toEqual(expect.arrayContaining(['-y', '@playwright/mcp@0.0.78', '--isolated']));
     expect(parsed.mcp.playwright.enabled).toBe(true);
     expect(paths.visibilityMode).toBe('foreground');
     expect(paths.visibilityReceiptPath).toBeDefined();

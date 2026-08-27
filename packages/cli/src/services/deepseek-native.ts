@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import type { CertificationReceipt, Detection } from './native-installer.js';
-import { getStandardMcpServers } from '../runtime/composed-installer.js';
+import { getStandardMcpServers } from '../runtime/mcp-convergence.js';
 
 export interface DshBackupEntry {
   relativePath: string;
@@ -55,9 +55,15 @@ export function dshNativeSkillFiles(repositoryRoot = findRepositoryRoot()): stri
   const files: string[] = [];
   for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
-    for (const fileName of ['SKILL.md', 'ROUTE.json']) {
-      const file = path.join(root, entry.name, fileName);
-      if (fs.existsSync(file) && fs.statSync(file).isFile()) files.push(file);
+    const skillRoot = path.join(root, entry.name);
+    const stack = [skillRoot];
+    while (stack.length > 0) {
+      const directory = stack.pop()!;
+      for (const child of fs.readdirSync(directory, { withFileTypes: true })) {
+        const target = path.join(directory, child.name);
+        if (child.isDirectory()) stack.push(target);
+        else if (child.isFile()) files.push(target);
+      }
     }
   }
   return files.sort();
@@ -137,7 +143,7 @@ function readDshDumpRows(output: string): Map<string, DshDumpRow> {
   return rows;
 }
 
-export function inspectDshNativeDump(output: string, expectedServerNames = Object.keys(getStandardMcpServers(os.homedir())).sort()): {
+export function inspectDshNativeDump(output: string, expectedServerNames: readonly string[] = Object.keys(getStandardMcpServers(os.homedir())).sort()): {
   instructionEnabled: boolean;
   skillsEnabled: boolean;
   mcpServerNames: string[];
@@ -210,8 +216,8 @@ export function dshSkillParity(home: string, repositoryRoot = findRepositoryRoot
   const hashes: string[] = [];
   let count = 0;
   for (const name of sourceDirs) {
-    const sourceFiles = ['SKILL.md', 'ROUTE.json'].map((fileName) => path.join(sourceRoot, name, fileName)).filter((file) => fs.existsSync(file));
-    const targetFiles = sourceFiles.map((file) => path.join(home, 'skills', name, path.basename(file)));
+    const sourceFiles = dshNativeSkillFiles(repositoryRoot).filter((file) => file.startsWith(path.join(sourceRoot, name) + path.sep));
+    const targetFiles = sourceFiles.map((file) => path.join(home, 'skills', path.relative(sourceRoot, file)));
     if (sourceFiles.length === 0 || targetFiles.some((file) => !fs.existsSync(file) || !fs.statSync(file).isFile())) continue;
     if (sourceFiles.some((source, index) => !fs.readFileSync(source).equals(fs.readFileSync(targetFiles[index]!)))) continue;
     count += 1;
@@ -220,8 +226,9 @@ export function dshSkillParity(home: string, repositoryRoot = findRepositoryRoot
   return { ok: sourceDirs.length > 0 && count === sourceDirs.length, count, expected: sourceDirs.length, sha256: sha256(hashes.sort().join('\n')) };
 }
 
-function mcpCordisRows(): string[] {
-  return Object.entries(getStandardMcpServers(os.homedir())).flatMap(([serverName, server]) => [
+function mcpCordisRows(ids?: readonly string[]): string[] {
+  const requested = ids ? new Set(ids) : null;
+  return Object.entries(getStandardMcpServers(os.homedir())).filter(([serverName]) => !requested || requested.has(serverName)).flatMap(([serverName, server]) => [
     `- id: agent-rules-dsh-mcp-${serverName}`,
     `  name: ${JSON.stringify(DSH_MCP_CLIENT_PACKAGE)}`,
     '  config:',
@@ -263,11 +270,30 @@ function existingManagedMcpRows(existing: string): string[] {
   return insert.split(/\r?\n/).filter((line) => line.startsWith('  ')).map((line) => line.slice(2));
 }
 
-function mergeCordisPatch(existing: string, packageVersion: string, includeMcp: boolean): string {
+function mcpRowBlocks(rows: readonly string[]): Array<{ id: string; lines: string[] }> {
+  const blocks: Array<{ id: string; lines: string[] }> = [];
+  let current: string[] = [];
+  for (const line of rows) {
+    if (line.startsWith('- id: agent-rules-dsh-mcp-')) {
+      if (current.length) {
+        const id = current[0]!.slice('- id: agent-rules-dsh-mcp-'.length).trim();
+        blocks.push({ id, lines: current });
+      }
+      current = [line];
+    } else if (current.length) current.push(line);
+  }
+  if (current.length) {
+    const id = current[0]!.slice('- id: agent-rules-dsh-mcp-'.length).trim();
+    blocks.push({ id, lines: current });
+  }
+  return blocks;
+}
+
+function mergeCordisPatch(existing: string, packageVersion: string, managedMcpRows?: string[]): string {
   // A core install preserves an existing managed MCP lease byte-for-byte in
   // meaning, but never creates or removes one. Only an explicit integration
   // operation may request fresh MCP rows.
-  const block = managedCordisBlock(packageVersion, includeMcp ? mcpCordisRows() : existingManagedMcpRows(existing));
+  const block = managedCordisBlock(packageVersion, managedMcpRows ?? existingManagedMcpRows(existing));
   const marker = /# agent-rules:managed:deepseek-harness BEGIN[\s\S]*?# agent-rules:managed:deepseek-harness END[^\r\n]*\s*/m;
   if (marker.test(existing)) return existing.replace(marker, block);
   const lines = existing.trimEnd().split(/\r?\n/);
@@ -276,6 +302,40 @@ function mergeCordisPatch(existing: string, packageVersion: string, includeMcp: 
     return `${prefix}${prefix ? '\n' : ''}${block}`;
   }
   return `${existing.trimEnd()}${existing.trim() ? '\n\n' : ''}${block}`;
+}
+
+/** Change only selected agent-rules MCP rows in native Cordis patches. This
+ * never removes the shared DSH plugin or user-owned rows. */
+export function setDshMcpRegistration(
+  detection: Detection,
+  ids: readonly string[],
+  enabled: boolean,
+): { profiles: string[]; changed: boolean } {
+  const home = detection.homeDir;
+  const profiles = discoverDshProfiles(home);
+  const packageVersion = resolveDshMcpClientVersion(home, detection.binaryPath);
+  if (!packageVersion) throw new Error(`cannot resolve an exact installed ${DSH_MCP_CLIENT_PACKAGE} version for DSH native projection`);
+  const requested = new Set(ids);
+  let changed = false;
+  for (const profile of profiles) {
+    const patchPath = path.join(home, 'profiles', profile, 'cordis.patch.yml');
+    const existing = fs.existsSync(patchPath) ? fs.readFileSync(patchPath, 'utf8') : '';
+    const blocks = mcpRowBlocks(existingManagedMcpRows(existing));
+    const retained = blocks.filter((block) => !requested.has(block.id));
+    const rows = retained.flatMap((block) => block.lines);
+    if (enabled) rows.push(...mcpCordisRows(ids));
+    const next = mergeCordisPatch(existing, packageVersion, rows);
+    if (next !== existing) {
+      atomicWriteNativeFile(patchPath, next);
+      changed = true;
+    }
+    const dump = readDshDumpConfig(home, detection.binaryPath, profile);
+    if (!dump.ok) throw new Error(`DSH dump-config failed for ${profile}`);
+    const observed = inspectDshNativeDump(dump.output, ids).mcpServerNames;
+    if (enabled && observed.length !== ids.length) throw new Error(`DSH MCP readback missing selected registration for ${profile}`);
+    if (!enabled && observed.some((id) => requested.has(id))) throw new Error(`DSH MCP readback retained disabled registration for ${profile}`);
+  }
+  return { profiles, changed };
 }
 
 function profileHasInstalledMcp(home: string, profile: string): boolean {
@@ -323,12 +383,16 @@ export async function installDeepseekHarnessNative(
   const packageVersion = resolveDshMcpClientVersion(home, detection.binaryPath);
   if (!packageVersion) throw new Error(`cannot resolve an exact installed ${DSH_MCP_CLIENT_PACKAGE} version for DSH native projection`);
   const packageSpec = `${DSH_MCP_CLIENT_PACKAGE}@${packageVersion}`;
+  const ruleNames = fs.readFileSync(path.join(repositoryRoot, 'rules', 'manifest.yaml'), 'utf8').split(/\r?\n/)
+    .map((line) => line.match(/^\s*-\s+([\w.-]+\.md)\s*$/)?.[1])
+    .filter((name): name is string => Boolean(name));
+  if (ruleNames.length !== 5) throw new Error(`canonical rules manifest must name exactly five rules; found ${ruleNames.length}`);
+  const canonicalRules = ruleNames.map((name) => fs.readFileSync(path.join(repositoryRoot, 'rules', name), 'utf8').trim()).join('\n\n');
   const managedAgents = [
     '<!-- agent-rules:managed:deepseek-harness BEGIN (native DSH system prompt seam) -->',
     '# Agent Rules — DeepSeek Harness native',
     'The host-native Cordis profile is the authority for this session.',
-    'Workers report observations; verifier evidence derives outcomes.',
-    'Stay within the owned scope; do not weaken verification or invent missing host truth.',
+    canonicalRules,
     '<!-- agent-rules:managed:deepseek-harness END -->',
     '',
   ].join('\n');
@@ -348,7 +412,7 @@ export async function installDeepseekHarnessNative(
       }
       const patchPath = path.join(home, 'profiles', profile, 'cordis.patch.yml');
       const existing = fs.existsSync(patchPath) ? fs.readFileSync(patchPath, 'utf8') : '';
-      atomicWriteNativeFile(patchPath, mergeCordisPatch(existing, packageVersion, options.enableMcp === true));
+      atomicWriteNativeFile(patchPath, mergeCordisPatch(existing, packageVersion, options.enableMcp ? mcpCordisRows() : undefined));
       const dump = readDshDumpConfig(home, detection.binaryPath, profile);
       const inspected = inspectDshNativeDump(dump.output);
       if (!dump.ok || !inspected.instructionEnabled || !inspected.skillsEnabled || (options.enableMcp && !inspected.mcpRowsValid)) {

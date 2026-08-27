@@ -15,16 +15,101 @@ import {
   verifyCommandCodeBackup,
   removeManagedCommandCodeMcp,
   removeManagedCommandCodeMod,
+  writeCommandCodeMcpConfig,
 } from './command-code-native.js';
 import { NativeHostProbe } from '../native/probe.js';
 import type { CertificationReceipt, ClaimVerification, Detection, InstallPlan, InventoryEntry } from '../native/types.js';
 import { projectSkillsToGlobal, uninstallOwnedGlobalProjections } from '../runtime/composed-installer.js';
+import { inspectHostMcpRegistration } from '../runtime/mcp-convergence.js';
 import type { RuntimePlatform } from '../runtime/contracts.js';
 
 export type { CertificationReceipt, ClaimVerification, Detection, InstallPlan, InventoryEntry } from '../native/types.js';
 
 function sha256(s: string | Buffer): string {
   return createHash('sha256').update(s).digest('hex');
+}
+
+/** Render the canonical five rules into a self-contained native projection.
+ * Installed hosts must never depend on a checkout or an abandoned worktree. */
+function renderCanonicalRules(repositoryRoot = process.cwd()): string {
+  const manifest = path.join(repositoryRoot, 'rules', 'manifest.yaml');
+  if (!fs.existsSync(manifest)) throw new Error(`canonical rules manifest missing: ${manifest}`);
+  const names = fs.readFileSync(manifest, 'utf8')
+    .split(/\r?\n/)
+    .map((line) => line.match(/^\s*-\s+([\w.-]+\.md)\s*$/)?.[1])
+    .filter((name): name is string => Boolean(name));
+  if (names.length !== 5) throw new Error(`canonical rules manifest must name exactly five rules; found ${names.length}`);
+  return names.map((name) => {
+    const source = path.join(repositoryRoot, 'rules', name);
+    if (!fs.existsSync(source)) throw new Error(`canonical rule missing: ${name}`);
+    return fs.readFileSync(source, 'utf8').trim();
+  }).join('\n\n');
+}
+
+function installOmpNativeExtension(activeAgentDir: string, repositoryRoot = process.cwd()): string {
+  const source = path.join(repositoryRoot, 'platforms', 'omp', 'agent-rules-extension.ts');
+  const runtime = path.join(repositoryRoot, 'packages', 'kernel', 'dist', 'workflow', 'native-session.js');
+  if (!fs.existsSync(source)) throw new Error(`OMP native extension source missing: ${source}`);
+  if (!fs.existsSync(runtime)) throw new Error(`OMP native extension requires a built kernel runtime: ${runtime}`);
+  const targetDir = path.join(activeAgentDir, 'extensions');
+  fs.mkdirSync(targetDir, { recursive: true });
+  fs.copyFileSync(runtime, path.join(targetDir, 'agent-rules-session.js'));
+  fs.copyFileSync(source, path.join(targetDir, 'agent-rules.ts'));
+  const worker = path.join(repositoryRoot, 'platforms', 'omp', 'agents', 'initforge-worker.md');
+  if (!fs.existsSync(worker)) throw new Error(`OMP worker definition missing: ${worker}`);
+  const agentDir = path.join(activeAgentDir, 'agents');
+  fs.mkdirSync(agentDir, { recursive: true });
+  fs.copyFileSync(worker, path.join(agentDir, 'agent-rules-worker.md'));
+  return path.join(targetDir, 'agent-rules.ts');
+}
+
+interface OmpRuntimeBackupEntry { target: string; backup: string | null; sha256: string | null }
+
+/** OMP extensions and worker definitions are part of the native projection,
+ * so they need the same transaction boundary as AGENTS.md and skills. */
+function backupOmpNativeExtension(activeAgentDir: string, backupDir: string): void {
+  const targets = [
+    path.join(activeAgentDir, 'extensions', 'agent-rules.ts'),
+    path.join(activeAgentDir, 'extensions', 'agent-rules-session.js'),
+    path.join(activeAgentDir, 'agents', 'agent-rules-worker.md'),
+  ];
+  const entries: OmpRuntimeBackupEntry[] = targets.map((target, index) => {
+    if (!fs.existsSync(target)) return { target, backup: null, sha256: null };
+    const bytes = fs.readFileSync(target);
+    const backup = path.join(backupDir, `omp-runtime-${index}-${path.basename(target)}`);
+    fs.copyFileSync(target, backup);
+    return { target, backup: path.basename(backup), sha256: sha256(bytes) };
+  });
+  fs.writeFileSync(path.join(backupDir, 'omp-runtime-backup.json'), JSON.stringify({ entries }, null, 2) + '\n', 'utf8');
+}
+
+function restoreOmpNativeExtension(backupDir: string): boolean {
+  const manifestPath = path.join(backupDir, 'omp-runtime-backup.json');
+  if (!fs.existsSync(manifestPath)) return true;
+  const parsed = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as { entries?: OmpRuntimeBackupEntry[] };
+  for (const entry of parsed.entries ?? []) {
+    if (entry.backup === null) {
+      fs.rmSync(entry.target, { force: true });
+      continue;
+    }
+    const source = path.join(backupDir, entry.backup);
+    if (!fs.existsSync(source)) return false;
+    fs.mkdirSync(path.dirname(entry.target), { recursive: true });
+    fs.copyFileSync(source, entry.target);
+    if (entry.sha256 && sha256(fs.readFileSync(entry.target)) !== entry.sha256) return false;
+  }
+  return true;
+}
+
+/** Resolve the one skill projection surface declared by the native contract. */
+function resolveNativeSkillRoot(host: HostId, detection: Detection): string | null {
+  const contract = getNativeContract(host);
+  const raw = contract?.paths.skillPath;
+  if (!raw) return null;
+  const userHome = process.env.USERPROFILE || process.env.HOME || '';
+  const resolved = raw.replace(/\$[A-Z_]+/, detection.homeDir).replace('~', userHome);
+  const root = resolved.replace(/[\\/]?<skill>[\\/]?SKILL\.md$/i, '').replace(/[\\/]?<skill>$/i, '');
+  return root && !root.includes('n/a') ? root : null;
 }
 
 export function getActivePlanId(): string {
@@ -183,7 +268,7 @@ export class NativeInstaller {
   inventory(detection: Detection): Promise<InventoryEntry[]> { return this.probe.inventory(detection); }
   planInstall(host: HostId, detection: Detection, _inventory: InventoryEntry[]): InstallPlan { return this.probe.planInstall(host, detection); }
 
-  async install(host: HostId, opts?: { dryRun?: boolean; force?: boolean }): Promise<CertificationReceipt> {
+  async install(host: HostId, opts?: { dryRun?: boolean; force?: boolean; enableMcp?: boolean }): Promise<CertificationReceipt> {
     const lease = acquireWorktreeWriterLease(host);
     let backupDir = '';
     try {
@@ -198,10 +283,17 @@ export class NativeInstaller {
 
       // The native coordinator owns the complete host projection. This helper
       // only copies skills and records ownership; it cannot mutate MCP config.
-      await projectSkillsToGlobal(path.join(process.cwd(), 'skills'), host as RuntimePlatform, { force: opts?.force });
+      const skillRoot = resolveNativeSkillRoot(host, detection);
+      const skills = await projectSkillsToGlobal(path.join(process.cwd(), 'skills'), host as RuntimePlatform, {
+        force: opts?.force,
+        ...(skillRoot ? { targetRoots: [skillRoot] } : {}),
+      });
+      if (skills.collisions.length > 0) {
+        throw new Error(`native skill projection needs user resolution: ${skills.collisions.join(', ')}`);
+      }
 
       if (host === 'deepseek-harness') {
-        const receipt = await this.installDeepseekHarness(detection, backupDir);
+        const receipt = await this.installDeepseekHarness(detection, backupDir, opts?.enableMcp === true);
         this.assertInstalledReadback(receipt);
         return receipt;
       }
@@ -209,12 +301,14 @@ export class NativeInstaller {
       if (host === 'command-code') {
         captureCommandCodeBackup(detection.homeDir, backupDir);
         installCommandCodeMod(detection.homeDir, process.cwd());
+        if (opts?.enableMcp === true) writeCommandCodeMcpConfig(detection.homeDir);
         const receipt = await this.certify(host, 'INSTALLED');
         this.assertInstalledReadback(receipt);
         return receipt;
       }
 
       fs.mkdirSync(backupDir, { recursive: true });
+      if (host === 'omp') backupOmpNativeExtension(detection.homeDir, backupDir);
       const userHome = process.env.USERPROFILE || process.env.HOME || '';
 
       // Backup existing files
@@ -240,21 +334,7 @@ export class NativeInstaller {
         // managed block for file-based surfaces (that would be claim-filling).
         const isNonFileInstruction = rawInstr.includes('bundle') || rawInstr.includes('mods') || rawInstr.includes('/rules') || rawInstr.endsWith('rules') || rawInstr.endsWith('rules/');
 
-        const globalBehavior = [
-          'Use natural communication: outcome-first, plain language, technical details when needed for decisions/verification/debug.',
-          'Hidden authority: ADVISORY → PLAN → EXECUTION → VERIFY → TERMINAL.',
-          'Plan-only cannot authorize edits; explicit execute pivot required.',
-          'Classify owner messages: CONTINUATION/ADD/CORRECT/CONFLICT/SUPERSEDE/INDEPENDENT and reconcile without dropping requirements.',
-          'Planner bounded: one draft + at most one correction batch, then final gate.',
-          'Independent reviewer requires separate invocation/identity.',
-          'Single writer lease per worktree; second writer blocks or isolated worktree.',
-          'Protect dirty tracked/untracked files; scope prevents writes.',
-          'Global safety cannot be weakened by project-local instructions.',
-          'Commit/push/delete/credentials require explicit authority.',
-          'Preserve intent across compaction/restart/resume/handoff.',
-          'Clarification only for material ambiguity/missing authority.',
-        ].join('\n- ');
-        const managed = `<!-- agent-rules:managed:${host} BEGIN (do not edit manually) -->\n# Agent Rules — ${host} native (global)\nThis block is owned by agent-rules and is bound to git HEAD ${getGitHead().slice(0, 12)}.\nGlobal behavior (applies even in disposable repos with no local files):\n- ${globalBehavior}\nNative layer: base rules + skills + lifecycle adapter. Runtime layer adds task delta only.\n<!-- agent-rules:managed:${host} END -->\n`;
+        const managed = `<!-- agent-rules:managed:${host} BEGIN (do not edit manually) -->\n# Agent Rules — ${host} native (global)\nThis self-contained projection is owned by agent-rules and is bound to git HEAD ${getGitHead().slice(0, 12)}.\n\n${renderCanonicalRules()}\n\nNative layer: base rules + selected native skills + lifecycle adapter. Runtime layer only adds the task delta.\n<!-- agent-rules:managed:${host} END -->\n`;
 
         if ((host === 'grok' || host === 'cursor') && instrPath) {
           fs.mkdirSync(instrPath, { recursive: true });
@@ -273,6 +353,12 @@ export class NativeInstaller {
               }
             } catch {}
 
+            // A pre-v3 OpenCode projection imported an ephemeral worktree
+            // runtime.  It is only safe to remove when it carries our exact
+            // marker; leaving it first can make OpenCode load stale rules even
+            // after the self-contained managed block below is refreshed.
+            existing = existing.replace(/^# Managed by agent-rules\s*\r?\n@[^\r\n]*agent-rules-runtime[^\r\n]*\r?\n*/i, '');
+
             let next: string;
             const re = new RegExp(`<!-- agent-rules:managed:${host} BEGIN.*? END -->\\s*`, 'gs');
             if (re.test(existing)) next = existing.replace(re, managed);
@@ -284,9 +370,11 @@ export class NativeInstaller {
           }
         }
 
-        // Core installation deliberately does not touch MCP configuration.
-        // Legacy bridge cleanup is an explicit integration/uninstall action.
+        // The core projector never writes MCP config itself.  Setup invokes
+        // the integration registration service as a separate, auditable step.
       }
+
+      if (host === 'omp') installOmpNativeExtension(detection.homeDir);
 
       const sharedSkills = path.join(userHome, '.agents', 'skills');
       fs.mkdirSync(sharedSkills, { recursive: true });
@@ -305,8 +393,8 @@ export class NativeInstaller {
   }
 
   /** DSH uses native Cordis profiles, not the generic mcp.json projection. */
-  private async installDeepseekHarness(detection: Detection, backupDir: string): Promise<CertificationReceipt> {
-    return installDeepseekHarnessNative(detection, backupDir, () => this.certify('deepseek-harness', 'INSTALLED'));
+  private async installDeepseekHarness(detection: Detection, backupDir: string, enableMcp: boolean): Promise<CertificationReceipt> {
+    return installDeepseekHarnessNative(detection, backupDir, () => this.certify('deepseek-harness', 'INSTALLED'), { enableMcp });
   }
 
   private assertInstalledReadback(receipt: CertificationReceipt): void {
@@ -424,19 +512,23 @@ export class NativeInstaller {
 
     // 7. NATIVE_MCP
     let mcpStatus: 'PASS' | 'FAIL' | 'UNSUPPORTED' = 'UNSUPPORTED';
-    let mcpDetail = 'no task-local native MCP lease was observed';
-    let mcpOmission: string | null = 'core install does not activate MCP';
+    let mcpDetail = 'native MCP registration is inspected by the setup coordinator';
+    let mcpOmission: string | null = 'registration/tool visibility is a separate native-host observation';
     if (host === 'deepseek-harness' && detection.present) {
       const dsh = inspectDshNativeReadback(detection);
-      mcpStatus = dsh.nativeMcp ? 'PASS' : 'FAIL';
-      mcpDetail = dsh.nativeMcp ? `Cordis MCP rows for ${dsh.profiles.length} discovered profiles verified by dump-config` : 'DSH Cordis MCP rows are missing from native dump-config';
-      mcpOmission = dsh.nativeMcp ? null : 'generic DSH mcp.json is not native proof; Cordis dump-config row missing';
+      mcpStatus = dsh.nativeMcp ? 'PASS' : 'UNSUPPORTED';
+      mcpDetail = dsh.nativeMcp ? `Cordis MCP rows for ${dsh.profiles.length} discovered profiles verified by dump-config` : 'no native Cordis registration observed';
+      mcpOmission = dsh.nativeMcp ? null : 'generic DSH mcp.json is not native proof';
     } else if (host === 'command-code' && detection.present) {
       const native = readCommandCodeNative(detection.homeDir);
-      if (!native.mcpPresent || !native.mcpValid) {
+      if (!native.mcpPresent) {
+        mcpStatus = 'UNSUPPORTED';
+        mcpDetail = `no native Command Code MCP registration at ${native.mcpPath}`;
+        mcpOmission = 'setup did not register the standard MCPs';
+      } else if (!native.mcpValid) {
         mcpStatus = 'FAIL';
-        mcpDetail = `Command Code MCP config missing or invalid at ${native.mcpPath}`;
-        mcpOmission = 'native mcp config missing or invalid';
+        mcpDetail = `Command Code MCP config is invalid at ${native.mcpPath}`;
+        mcpOmission = 'native mcp config is invalid';
       } else if (!native.mcpComplete) {
         mcpStatus = 'FAIL';
         mcpDetail = `Command Code MCP config is missing one or more managed servers: ${native.expectedMcpServerNames.join(', ')}`;
@@ -452,15 +544,19 @@ export class NativeInstaller {
         mcpDetail = 'host has no official native mcp surface';
         mcpOmission = 'no native mcp surface';
       } else {
-        const mcpPath = rawMcp.replace(/\$[A-Z_]+/, detection.homeDir).replace('~', userHome);
-        if (fs.existsSync(mcpPath)) {
-          try {
-            if (mcpPath.endsWith('.json')) JSON.parse(fs.readFileSync(mcpPath, 'utf8'));
-          } catch {
-            mcpStatus = 'UNSUPPORTED';
-            mcpDetail = 'host native mcp config invalid JSON';
-            mcpOmission = 'mcp config invalid JSON';
-          }
+        const registration = await inspectHostMcpRegistration(process.cwd(), host);
+        if (registration.status === 'REGISTERED') {
+          mcpStatus = 'PASS';
+          mcpDetail = `native MCP registration read back from ${registration.configPath ?? 'host-native lifecycle'}`;
+          mcpOmission = 'native config registration does not by itself prove a model tool call';
+        } else if (registration.status === 'NO_ADAPTER') {
+          mcpStatus = 'UNSUPPORTED';
+          mcpDetail = 'host has no native registration adapter';
+          mcpOmission = 'no host registration adapter';
+        } else {
+          mcpStatus = 'FAIL';
+          mcpDetail = registration.entries.map((entry) => `${entry.id}: ${entry.status}`).join(', ') || `native MCP registration ${registration.status.toLowerCase()}`;
+          mcpOmission = 'a required native MCP registration is missing, disabled, invalid, or user-modified';
         }
       }
     }
@@ -500,9 +596,13 @@ export class NativeInstaller {
       ROLLBACK_VERIFIED: { status: rollbackStatus, evidence: [{ kind: 'uninstall-rollback-preserves-user', host, detail: rollbackDetail }], omitted_reason: rollbackDetail },
     };
 
-    const readyClaims = ['HOST_PRESENT', 'NATIVE_INSTALLED', 'NATIVE_DISCOVERED', 'NATIVE_LIFECYCLE', 'NATIVE_POLICY', 'NATIVE_SKILLS', 'NATIVE_MCP', 'ROLLBACK_VERIFIED'];
-    const ready = readyClaims.every(k => claims[k].status === 'PASS');
-    const status: CertificationReceipt['status'] = !detection.present ? 'Unsupported' : ready ? 'Ready' : 'Needs action';
+    // `Ready` is the practical native-install meaning: config is in the
+    // location the host consumes and it read back correctly. Reload control,
+    // a GUI model turn, and release CI are tracked separately; treating them
+    // as an install failure made a usable host look broken.
+    const usableClaims = ['HOST_PRESENT', 'NATIVE_INSTALLED', 'NATIVE_DISCOVERED', 'NATIVE_SKILLS', 'NATIVE_MCP'];
+    const usable = usableClaims.every(k => claims[k].status === 'PASS');
+    const status: CertificationReceipt['status'] = !detection.present ? 'Unsupported' : usable ? 'Ready' : 'Needs action';
 
     const receipt: CertificationReceipt = {
       schema: 'agent-rules/host-certification-receipt',
@@ -512,6 +612,7 @@ export class NativeInstaller {
       git_head: gitHead,
       candidate_fingerprint: candidateFingerprint,
       status,
+      usable,
       claims,
       native_readback: { method: contract?.readbackStrategy, present: detection.present, verified: readback.ok, found: readback.found, detail: readback.detail ?? null },
       mcp_handshake: { status: mcpStatus === 'PASS' ? 'NATIVE_SURFACE_INTACT' : mcpStatus === 'FAIL' ? 'NATIVE_SURFACE_FAILED' : 'UNSUPPORTED', host, detail: mcpDetail },
@@ -689,6 +790,29 @@ export class NativeInstaller {
       try {
         restoreCommandCodeBackup(backupDir);
         byteEqual = verifyCommandCodeBackup(backupDir);
+      } catch {
+        byteEqual = false;
+      }
+    } else if (host === 'omp') {
+      try {
+        byteEqual = restoreOmpNativeExtension(backupDir);
+        // Continue through the normal instruction-file restore below; OMP's
+        // extension files and its managed AGENTS.md are separate surfaces.
+        const files = fs.readdirSync(backupDir);
+        for (const f of files) {
+          const fp = path.join(backupDir, f);
+          if (!fs.statSync(fp).isFile()) continue;
+          const destName = f.replace(/^[a-f0-9]{8}-/, '');
+          const contract = getNativeContract(host);
+          if (!contract) continue;
+          const instrPath = contract.paths.instructionPath
+            .replace(/\$[A-Z_]+/, detection.homeDir)
+            .replace('~', userHome);
+          if (path.basename(instrPath) === destName) {
+            fs.copyFileSync(fp, instrPath);
+            if (sha256(fs.readFileSync(fp)) !== sha256(fs.readFileSync(instrPath))) byteEqual = false;
+          }
+        }
       } catch {
         byteEqual = false;
       }

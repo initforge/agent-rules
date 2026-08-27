@@ -7,17 +7,17 @@ import type { NativeHostLifecycle } from '../../src/northstar/host-adapter-contr
 
 /**
  * REQ-111 / process-level integration #10: the canonical 10-method native
- * lifecycle contract must be implementable for all 8 registered hosts with
+ * lifecycle contract must be implementable for all 9 registered hosts with
  * per-host native surfaces. This test verifies the CONTRACT surface and the
  * registry provenance (no fake/bridge surfaces), not the live install itself
  * (that is exercised by the real offline canary harness on temp homes).
  */
 
-describe('native 8-host lifecycle contract (REQ-111)', () => {
-  it('registers exactly the canonical 8 hosts with full NativeHostContract fields', () => {
+describe('native 9-host lifecycle contract (REQ-111)', () => {
+  it('registers exactly the canonical 9 hosts with full NativeHostContract fields', () => {
     const ids = getHostIds();
     expect([...ids].sort()).toEqual([
-      'antigravity', 'claude', 'codex', 'command-code', 'cursor', 'deepseek-harness', 'grok', 'opencode',
+      'antigravity', 'claude', 'codex', 'command-code', 'cursor', 'deepseek-harness', 'grok', 'omp', 'opencode',
     ].sort());
     for (const host of ids) {
       const contract = getNativeContract(host);

@@ -180,7 +180,7 @@ async function main() {
     report('PL-09-mcp-canary-seven-points', ok.passed === true && ok.points.TEARDOWN.status === 'PASS', `7-point canary aggregate PASS (${Object.keys(points).length} points)`);
   }
 
-  // 10. Native installer on temp home → byte-equal rollback (offline 8-host proof).
+  // 10. Native installer on temp home → byte-equal rollback (registry-driven host proof).
   {
     const left = await import(pathToFileURL(path.join(root, 'packages', 'cli', 'dist', 'services', 'native-installer.js')).href);
     const registry = JSON.parse(fs.readFileSync(path.join(root, 'platforms', 'platform-contracts.json'), 'utf8'));

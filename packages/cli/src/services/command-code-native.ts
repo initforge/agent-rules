@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import os from "node:os";
-import { getStandardMcpServers } from "../runtime/composed-installer.js";
+import { getStandardMcpServers } from "../runtime/mcp-convergence.js";
 
 const MANAGED_MOD_BEGIN = "// agent-rules:managed:command-code BEGIN";
 const MANAGED_MOD_END = "// agent-rules:managed:command-code END";
@@ -71,9 +71,12 @@ function findRepositoryRoot(start = process.cwd()): string {
   }
 }
 
-function commandCodeMcpServers(_home: string): Record<string, Record<string, unknown>> {
+function commandCodeMcpServers(_home: string, ids?: readonly string[]): Record<string, Record<string, unknown>> {
+  const requested = ids ? new Set(ids) : null;
   return Object.fromEntries(
-    Object.entries(getStandardMcpServers(os.homedir())).map(([name, server]) => [name, { ...server }]),
+    Object.entries(getStandardMcpServers(os.homedir()))
+      .filter(([name]) => !requested || requested.has(name))
+      .map(([name, server]) => [name, { ...server }]),
   );
 }
 
@@ -98,7 +101,7 @@ function loadJson(file: string): Record<string, unknown> {
  * are replaced only when their command identity matches the managed provider;
  * unrelated or user-modified entries fail closed instead of being overwritten.
  */
-export function writeCommandCodeMcpConfig(home = commandCodeHome()): string {
+export function writeCommandCodeMcpConfig(home = commandCodeHome(), ids?: readonly string[]): string {
   const mcpPath = commandCodeMcpPath(home);
   const legacyPath = path.join(path.dirname(home), ".command-code", "mcp.json");
   let existingPath = mcpPath;
@@ -113,7 +116,7 @@ export function writeCommandCodeMcpConfig(home = commandCodeHome()): string {
     throw new Error(`Command Code MCP config has invalid mcpServers: ${existingPath}`);
   }
   const nextServers: Record<string, unknown> = { ...((currentServers ?? {}) as Record<string, unknown>) };
-  const managed = commandCodeMcpServers(home);
+  const managed = commandCodeMcpServers(home, ids);
   for (const [name, definition] of Object.entries(managed)) {
     const current = nextServers[name];
     if (current !== undefined && !sameMcpCommand(current, definition)) {
@@ -208,7 +211,19 @@ export function commandCodeSkillParity(userHome = os.homedir(), repositoryRoot =
   };
 }
 
+function resolveCanonicalRepoRoot(start = process.cwd()): string {
+  let candidate = path.resolve(start);
+  while (true) {
+    if (fs.existsSync(path.join(candidate, "rules", "manifest.yaml"))) return candidate;
+    const parent = path.dirname(candidate);
+    if (parent === candidate) break;
+    candidate = parent;
+  }
+  throw new Error(`canonical rules manifest missing above: ${start}`);
+}
+
 export function installCommandCodeMod(home = commandCodeHome(), repoRoot = process.cwd()): string {
+  repoRoot = resolveCanonicalRepoRoot(repoRoot);
   const source = commandCodeModSourcePath(repoRoot);
   if (!fs.existsSync(source)) throw new Error(`Command Code managed mod source is missing: ${source}`);
   const destination = commandCodeModPath(home);
@@ -216,7 +231,15 @@ export function installCommandCodeMod(home = commandCodeHome(), repoRoot = proce
   if (existing.trim() && (!existing.includes(MANAGED_MOD_BEGIN) || !existing.includes(MANAGED_MOD_END))) {
     throw new Error(`Refusing to overwrite user-owned Command Code mod: ${destination}`);
   }
-  atomicWrite(destination, fs.readFileSync(source));
+  const manifest = path.join(repoRoot, "rules", "manifest.yaml");
+  const names = fs.readFileSync(manifest, "utf8").split(/\r?\n/)
+    .map((line) => line.match(/^\s*-\s+([\w.-]+\.md)\s*$/)?.[1])
+    .filter((name): name is string => Boolean(name));
+  if (names.length !== 5) throw new Error(`canonical rules manifest must name exactly five rules; found ${names.length}`);
+  const rules = names.map((name) => fs.readFileSync(path.join(repoRoot, "rules", name), "utf8").trim()).join("\n\n");
+  const template = fs.readFileSync(source, "utf8");
+  if (!template.includes("__AGENT_RULES_RULES__")) throw new Error(`Command Code mod template lacks canonical rule placeholder: ${source}`);
+  atomicWrite(destination, template.replace("__AGENT_RULES_RULES__", rules));
   return destination;
 }
 
@@ -275,13 +298,13 @@ export function removeManagedCommandCodeMod(home = commandCodeHome()): boolean {
   return true;
 }
 
-export function removeManagedCommandCodeMcp(home = commandCodeHome()): boolean {
+export function removeManagedCommandCodeMcp(home = commandCodeHome(), ids?: readonly string[]): boolean {
   const file = commandCodeMcpPath(home);
   if (!fs.existsSync(file)) return false;
   const parsed = loadJson(file);
   if (!parsed.mcpServers || typeof parsed.mcpServers !== "object" || Array.isArray(parsed.mcpServers)) return false;
   const servers = parsed.mcpServers as Record<string, unknown>;
-  const managed = commandCodeMcpServers(home);
+  const managed = commandCodeMcpServers(home, ids);
   let changed = false;
   for (const [name, definition] of Object.entries(managed)) {
     if (servers[name] !== undefined && sameMcpCommand(servers[name], definition)) {

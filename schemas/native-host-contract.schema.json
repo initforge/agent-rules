@@ -5,7 +5,7 @@
   "type": "object",
   "required": ["id", "cliSignal", "homeEnv", "surfaces", "paths", "precedence", "reload", "mergeStrategy", "capabilities", "installStrategy", "readbackStrategy", "canaryStrategy", "uninstallStrategy", "authBoundary", "limits"],
   "properties": {
-    "id": { "type": "string", "enum": ["codex","claude","grok","opencode","antigravity","cursor","deepseek-harness","command-code"] },
+    "id": { "type": "string", "enum": ["codex","claude","grok","opencode","antigravity","cursor","deepseek-harness","command-code","omp"] },
     "cliSignal": { "type": "string", "description": "Binary or CLI that proves host present (version is diagnostic only)" },
     "desktopSignal": { "type": ["string","null"], "description": "Desktop process or install root signal, null if CLI-only" },
     "homeEnv": { "type": "string", "description": "Custom home env var, e.g. CODEX_HOME" },

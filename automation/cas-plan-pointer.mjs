@@ -4,10 +4,10 @@
  *
  * Usage: node automation/cas-plan-pointer.mjs <plan-id> [expected-generation]
  *
- * Builds a generation-compare-and-swap candidate pointing at the given plan
- * (original = plan.md, ledger = .agent/ledger/<plan-id>.json, chain tip = plan.md,
- * contract = .agent/plans/<plan-id>/generations/1/effective-contract.json when
- * present, otherwise schemas/execution-contract.schema.json) and commits it via
+ * Builds a generation-compare-and-swap candidate pointing at the given plan.
+ * It supports both legacy `.agent/plans/<id>/plan.md` artifacts and the current
+ * resumable `.agent/runs/<id>/plan.json` artifact. The latter is its own contract.
+ * It then commits via
  * commitCurrentPointer (fail-closed CAS: stale generation, path escape, symlink,
  * hash mismatch, occupied stage all abort without touching the live pointer).
  */
@@ -78,13 +78,18 @@ if (!VALID_STATES.includes(activationState)) {
   process.exit(2);
 }
 
-const planRoot = `.agent/plans/${planId}`;
-const planMd = path.join(ROOT, planRoot, "plan.md");
+const legacyPlanRoot = `.agent/plans/${planId}`;
+const runtimePlanRoot = `.agent/runs/${planId}`;
+const legacyPlan = path.join(ROOT, legacyPlanRoot, "plan.md");
+const runtimePlan = path.join(ROOT, runtimePlanRoot, "plan.json");
+const planPath = fs.existsSync(runtimePlan) ? runtimePlan : legacyPlan;
+const planRoot = fs.existsSync(runtimePlan) ? runtimePlanRoot : legacyPlanRoot;
 const ledger = path.join(ROOT, ".agent", "ledger", `${planId}.json`);
-if (!fs.existsSync(planMd)) { console.error(`plan.md missing: ${planMd}`); process.exit(2); }
+if (!fs.existsSync(planPath)) { console.error(`plan artifact missing: ${planPath}`); process.exit(2); }
 if (!fs.existsSync(ledger)) { console.error(`ledger missing: ${ledger}`); process.exit(2); }
 
-// Prefer the NEWEST generation effective-contract, then the schema.
+// Prefer the resumable plan itself, otherwise the newest legacy effective
+// contract, then the schema.
 let genDirs = [];
 try {
   genDirs = fs.readdirSync(path.join(ROOT, planRoot, "generations"))
@@ -93,6 +98,7 @@ try {
     .sort((a, b) => b - a);
 } catch { /* none */ }
 const contractCandidates = [
+  ...(planPath === runtimePlan ? [runtimePlan] : []),
   ...genDirs.map((g) => path.join(ROOT, planRoot, "generations", String(g), "effective-contract.json")),
   path.join(ROOT, "schemas", "execution-contract.schema.json"),
 ];
@@ -105,16 +111,19 @@ const expectedPrev = process.argv[3] !== undefined
   : (current ? current.generation : 0);
 
 const rel = (p) => path.relative(ROOT, p).split(path.sep).join("/");
-const planMdRel = rel(planMd);
+const planRel = rel(planPath);
 const ledgerRel = rel(ledger);
 const contractRel = rel(contractPath);
 
-// Load requirement ids from the effective contract when present, else fall back.
+// Load requirement ids from either contract shape.
 let requirementIds = [];
 try {
   const c = JSON.parse(fs.readFileSync(contractPath, "utf8"));
   if (Array.isArray(c.requirements) && c.requirements.length > 0) requirementIds = c.requirements;
   else if (Array.isArray(c.requirement_ids) && c.requirement_ids.length > 0) requirementIds = c.requirement_ids;
+  if (Array.isArray(c.requirements) && c.requirements.every((item) => item && typeof item === "object" && typeof item.id === "string")) {
+    requirementIds = c.requirements.map((item) => item.id);
+  }
 } catch { /* fall through */ }
 
 const supersession = current && current.work_id && current.work_id !== planId
@@ -135,30 +144,34 @@ const candidate = {
   work_id: planId,
   plan_id: planId,
   plan_root: planRoot,
-  original: { path: planMdRel, sha256: sha256(planMd) },
+  original: { path: planRel, sha256: sha256(planPath) },
   canonical_ledger: {
     path: ledgerRel,
     sha256: sha256(ledger),
-    observed_revision: 1,
+    observed_revision: (() => {
+      try { return Number(JSON.parse(fs.readFileSync(ledger, "utf8")).revision ?? 1); } catch { return 1; }
+    })(),
     // observed_effective_sha256 is the ledger's effective_plan_identity.sha256
     // (hash of the canonical plan JSON), NOT the ledger file hash — the AM0015
     // scorecard binding and gather-scorecard-evidence.py require this
     // equality to consider evidence bound.
     observed_effective_sha256: readLedgerEffectiveIdentitySha256(ledger),
-    plan_status: "ADOPTED",
+    plan_status: "ACTIVE",
     execution_state: "IN_PROGRESS",
   },
-  effective_chain_tip: { amendment_id: "AM-0000", path: planMdRel, sha256: sha256(planMd) },
+  effective_chain_tip: { amendment_id: "AM-0000", path: planRel, sha256: sha256(planPath) },
   candidate_chain_tip: {
     amendment_id: "AM-0000",
-    status: "OWNER_APPROVED_PENDING_CANONICAL_ACTIVATION",
-    path: planMdRel,
-    sha256: sha256(planMd),
+    status: activationState === "CANONICALLY_ACTIVATED"
+      ? "OWNER_APPROVED_EFFECTIVE"
+      : "OWNER_APPROVED_PENDING_CANONICAL_ACTIVATION",
+    path: planRel,
+    sha256: sha256(planPath),
   },
   contract: {
     path: contractRel,
     sha256: sha256(contractPath),
-    schema_path: "schemas/execution-contract.schema.json",
+    schema_path: planPath === runtimePlan ? "schemas/plan.schema.json" : "schemas/execution-contract.schema.json",
     requirement_ids: requirementIds,
     status: "EFFECTIVE",
   },

@@ -298,6 +298,7 @@ const FRAMINGS: Record<string, Framing> = {
   grok: { begin: (h) => `[agent-rules][${h}]\n`, end: (h) => `\n[/agent-rules][${h}]` },
   'deepseek-harness': { begin: (h) => `{"dialect":"dsh","host":"${h}","payload":`, end: () => '}' },
   'command-code': { begin: (h) => `.SYNOPSIS agent-rules handoff ${h}\n#BEGIN#\n`, end: () => '\n#END#' },
+  omp: { begin: (h) => `<!-- agent-rules:handoff:${h} -->\n`, end: (h) => `\n<!-- /agent-rules:handoff:${h} -->` },
 };
 
 function serializePayload(env: CrossHostHandoffEnvelope): string {

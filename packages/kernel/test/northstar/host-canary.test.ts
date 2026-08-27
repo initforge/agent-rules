@@ -11,8 +11,8 @@ import { runHostCanary, REGISTRY_HOSTS, certificationStateFor } from '../../src/
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../../');
 
 describe('REQ-011/REQ-018 — host canary certification', () => {
-  it('covers exactly the eight registry hosts', () => {
-    expect(REGISTRY_HOSTS).toEqual(['codex', 'claude', 'grok', 'opencode', 'antigravity', 'cursor', 'deepseek-harness', 'command-code']);
+  it('covers exactly the nine registry hosts', () => {
+    expect(REGISTRY_HOSTS).toEqual(['codex', 'claude', 'grok', 'opencode', 'antigravity', 'cursor', 'deepseek-harness', 'command-code', 'omp']);
   });
 
   it('a live-probe-confirmed capability is LIVE_CERTIFIED', () => {

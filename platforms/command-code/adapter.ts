@@ -69,7 +69,10 @@ function runNativeCmdc(
  * deleted/disabled/overwritten.
  */
 
-const COMMAND_CODE_ALIASES = ['command-code', 'cmdc'];
+// `cmdc` is the native executable. `command-code` is retained only as a
+// compatibility fallback because some npm shims named that way can start an
+// interactive wrapper and hang a non-interactive version probe.
+const COMMAND_CODE_ALIASES = ['cmdc', 'command-code'];
 const DEFAULT_SUPERVISED_TIMEOUT_MS = 10_000;
 
 export interface CommandCodeCapabilityFacts {

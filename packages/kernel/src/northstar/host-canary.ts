@@ -54,6 +54,7 @@ export const REGISTRY_HOSTS: readonly HostId[] = [
   'cursor',
   'deepseek-harness',
   'command-code',
+  'omp',
 ] as const;
 
 /** Static per-host projection presence: platforms/<host>/adapter.ts exists. */
@@ -102,6 +103,7 @@ function presenceFor(state: CertificationState, present: boolean): SurfacePresen
 function skillModeFor(host: HostId): SkillSurfaceMode {
   if (host === 'opencode') return 'METADATA_THEN_LAZY_BODY';
   if (host === 'command-code') return 'PATH_SCOPED_LAZY';
+  if (host === 'omp') return 'METADATA_THEN_LAZY_BODY';
   return 'EAGER';
 }
 
@@ -185,7 +187,7 @@ function buildFacts(input: CanaryRunInput): { facts: HostCapabilityFacts; certif
     projection: { projection_hash, projection_path: projectionPresent ? `platforms/${host}` : undefined },
     instruction_surface: { presence: presence('instruction_surface', projectionPresent) },
     context_injection: { presence: presence('context_injection', projectionPresent) },
-    skill_surface: { mode: skillModeFor(host), lazy_body: host === 'opencode' || host === 'command-code', path_scoped: host === 'command-code' },
+    skill_surface: { mode: skillModeFor(host), lazy_body: host === 'opencode' || host === 'command-code' || host === 'omp', path_scoped: host === 'command-code' },
     hook_surface: { presence: presence('hook_surface', host !== 'opencode'), failure_semantics: host === 'command-code' ? 'fail_open' : 'fail_closed' },
     permission_surface: { mode: permissionModeFor(host), pre_effect_deny: host === 'codex' || host === 'claude' },
     sandbox_surface: { presence: presence('sandbox_surface', host === 'codex' || host === 'deepseek-harness'), mutation_denied: host === 'codex' },

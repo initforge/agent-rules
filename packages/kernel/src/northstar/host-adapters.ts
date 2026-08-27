@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { getHostIds, getAllNativeContracts } from './host-registry.js';
 
-export type HostId = 'claude' | 'codex' | 'opencode' | 'cursor' | 'antigravity' | 'grok' | 'deepseek-harness' | 'command-code';
+export type HostId = 'claude' | 'codex' | 'opencode' | 'cursor' | 'antigravity' | 'grok' | 'deepseek-harness' | 'command-code' | 'omp';
 export type HostExecutionMode = 'ambient' | 'headless';
 
 export interface HostCapability {
@@ -30,6 +30,7 @@ function loadCapabilities(): Record<HostId, HostCapability> {
     grok: { host: 'grok', ambient: true, headless: false, native_subagents: true, mcp: true, attestation: 'host-attested', notes: ['ambient adapter supported; headless contract not certified here'] },
     'deepseek-harness': { host: 'deepseek-harness', ambient: false, headless: true, native_subagents: true, mcp: true, attestation: 'unconfirmed', notes: ['native Cordis bundle/profile integration via dsh plugin; not installed or live-certified yet'] },
     'command-code': { host: 'command-code', ambient: false, headless: true, native_subagents: true, mcp: true, attestation: 'unconfirmed', notes: ['session-scoped mods/skills/native permissions; mod/hook failures fail closed; not installed or live-certified yet'] },
+    omp: { host: 'omp', ambient: true, headless: true, native_subagents: false, mcp: true, attestation: 'host-attested', notes: ['native .omp/agent profile surface; authenticated model turn remains separately observed'] },
   };
   try {
     const ids = getHostIds() as HostId[];

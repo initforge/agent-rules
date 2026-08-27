@@ -27,11 +27,11 @@ jobs:
       - run: npm ci
       - name: Report external runner requirements
         env:
-          REQUIRED_LABELS: codex-native,claude-native,grok-native,opencode-native,antigravity-native,cursor-native,deepseek-harness-native,command-code-native
+          REQUIRED_LABELS: codex-native,claude-native,grok-native,opencode-native,antigravity-native,cursor-native,deepseek-harness-native,command-code-native,omp-native
         run: |
           echo "Required external self-hosted labels: ${REQUIRED_LABELS}"
           echo "GitHub-hosted CI cannot truthfully assert external runner availability."
-          echo "Certification matrix comes from the canonical 8-host registry (platforms/platform-contracts.json), never a hard-coded 5."
+          echo "Certification matrix comes from the canonical 9-host registry (platforms/platform-contracts.json), never a hard-coded subset."
           set +e
           DIAGNOSTICS_OUTPUT="$RUNNER_TEMP/certification-diagnostics.json" \
             REQUESTED_MODEL="qwencoder/qwen3.7-max" npx --no-install tsx automation/local-certification-diagnostics.ts
@@ -42,7 +42,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           MISSING=""
-          for LABEL in codex-native claude-native grok-native opencode-native antigravity-native cursor-native deepseek-harness-native command-code-native; do
+          for LABEL in codex-native claude-native grok-native opencode-native antigravity-native cursor-native deepseek-harness-native command-code-native omp-native; do
             COUNT=$(gh api "repos/${{ github.repository }}/actions/runners" --jq "[.runners[] | select(.labels[]?.name == \"$LABEL\")] | length" 2>/dev/null || echo "0")
             if [ "$COUNT" -gt 0 ]; then
               echo "$LABEL: present"
@@ -65,7 +65,7 @@ jobs:
           echo "has_runners=$([ -z \"$MISSING\" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
           # Structured RUNNERS_UNAVAILABLE evidence: write the per-label availability
           # as a real artifact the aggregate can consume (never exit 78 as a red workflow).
-          echo "RUNNERS_UNAVAILABLE={\"labels\":{$(for L in codex-native claude-native grok-native opencode-native antigravity-native cursor-native deepseek-harness-native command-code-native; do C=$(gh api "repos/${{ github.repository }}/actions/runners" --jq "[.runners[] | select(.labels[]?.name == \"$L\")] | length" 2>/dev/null || echo 0); echo -n "\"$L\":$C,"; done | sed 's/,$//')},\"workflow\":\"Certification\"}" > "$RUNNER_TEMP/structured-runners-unavailable.env"
+          echo "RUNNERS_UNAVAILABLE={\"labels\":{$(for L in codex-native claude-native grok-native opencode-native antigravity-native cursor-native deepseek-harness-native command-code-native omp-native; do C=$(gh api "repos/${{ github.repository }}/actions/runners" --jq "[.runners[] | select(.labels[]?.name == \"$L\")] | length" 2>/dev/null || echo 0); echo -n "\"$L\":$C,"; done | sed 's/,$//')},\"workflow\":\"Certification\"}" > "$RUNNER_TEMP/structured-runners-unavailable.env"
           cat "$RUNNER_TEMP/structured-runners-unavailable.env"
           echo "structured_runners_evidence<<EOF" >> "$GITHUB_OUTPUT"
           cat "$RUNNER_TEMP/structured-runners-unavailable.env" >> "$GITHUB_OUTPUT"
@@ -84,9 +84,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Canonical 8-host registry (platforms/platform-contracts.json) — the
+        # Canonical 9-host registry (platforms/platform-contracts.json) — the
         # registry is the single truth; this matrix mirrors it exactly.
-        host: [codex, claude, grok, opencode, antigravity, cursor, deepseek-harness, command-code]
+        host: [codex, claude, grok, opencode, antigravity, cursor, deepseek-harness, command-code, omp]
     runs-on: [self-hosted, "${{ matrix.host }}-native"]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -226,4 +226,3 @@ jobs:
               exit 1
               ;;
           esac
-

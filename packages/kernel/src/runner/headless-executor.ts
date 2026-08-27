@@ -22,11 +22,43 @@ import type { ExecutionBudget } from './execution-policy.js';
  * at all, so the number of tasks it can drive is bounded by wall-clock, not tokens.
  */
 
-export type AgentKind = 'claude' | 'codex' | 'opencode' | 'antigravity' | 'cursor' | 'grok' | 'command-code' | 'deepseek-harness';
+export type AgentKind = 'claude' | 'codex' | 'opencode' | 'antigravity' | 'cursor' | 'grok' | 'command-code' | 'deepseek-harness' | 'omp';
 
 export interface AgentInvocation {
   executable: string;
   args: string[];
+}
+
+export interface ResolvedInvocation {
+  executable: string;
+  args: string[];
+  resolvedPath: string | null;
+}
+
+/**
+ * Resolve Windows shims explicitly. Node's spawn does not execute PowerShell
+ * shims from PATH, and `agent.exe` is not a safe Cursor fallback on machines
+ * that also have Grok installed. This stays argv-based: prompts are never
+ * interpolated into a shell command string.
+ */
+export function resolveInvocation(invocation: AgentInvocation, env: NodeJS.ProcessEnv = process.env): ResolvedInvocation {
+  if (process.platform !== 'win32') return { ...invocation, resolvedPath: invocation.executable };
+  const supplied = invocation.executable;
+  const names = path.isAbsolute(supplied) || supplied.includes('\\') || supplied.includes('/')
+    ? [supplied]
+    : (env.PATH ?? '').split(path.delimiter).flatMap((folder) => [
+      path.join(folder, supplied), path.join(folder, `${supplied}.exe`), path.join(folder, `${supplied}.cmd`), path.join(folder, `${supplied}.bat`), path.join(folder, `${supplied}.ps1`),
+    ]);
+  const target = names.find((candidate) => fs.existsSync(candidate)) ?? null;
+  if (!target) return { ...invocation, resolvedPath: null };
+  const extension = path.extname(target).toLowerCase();
+  if (extension === '.ps1') {
+    return { executable: env.SystemRoot ? path.join(env.SystemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe') : 'powershell.exe', args: ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', target, ...invocation.args], resolvedPath: target };
+  }
+  if (extension === '.cmd' || extension === '.bat') {
+    return { executable: env.ComSpec || 'cmd.exe', args: ['/d', '/s', '/c', target, ...invocation.args], resolvedPath: target };
+  }
+  return { executable: target, args: invocation.args, resolvedPath: target };
 }
 
 export interface ExecutorConfig {
@@ -90,6 +122,9 @@ export function buildAgentInvocation(kind: AgentKind, prompt: string, config: Ex
       case 'antigravity':
         return { executable: 'agy', args: ['-p', prompt] };
       case 'cursor':
+        // Cursor's editor launcher is not an agent runner. A host adapter may
+        // supply the official agent CLI via invocationOverride after identity
+        // verification; never substitute a generic `agent.exe`.
         return { executable: 'cursor-agent', args: ['-p', prompt, '--force'] };
       case 'deepseek-harness':
         return { executable: 'dsh', args: ['--profile', 'headless', prompt] };
@@ -97,6 +132,8 @@ export function buildAgentInvocation(kind: AgentKind, prompt: string, config: Ex
         return { executable: process.platform === 'win32' ? 'cmdc' : 'cmd', args: ['-p', prompt] };
       case 'grok':
         return { executable: 'grok', args: ['-p', prompt] };
+      case 'omp':
+        return { executable: 'omp', args: ['-p', prompt] };
     }
   })();
   const mcp = config.mcpConfigPaths;
@@ -131,23 +168,24 @@ export interface ExecutionResult {
 export async function detectAgent(kind: AgentKind): Promise<{ available: boolean; version?: string; binary?: string }> {
   const binaryCandidates = (() => {
     switch (kind) {
-      case 'antigravity': return ['agy', 'gemini'];
+      case 'antigravity': return ['agy'];
+      case 'cursor': return ['cursor-agent'];
       case 'deepseek-harness': return ['dsh', 'deepseek-harness'];
       case 'command-code': return ['cmdc', 'command-code'];
+      case 'omp': return ['omp'];
       default: return [kind];
     }
   })();
 
   for (const executable of binaryCandidates) {
     const candidates = process.platform === 'win32'
-      ? [executable, `${executable}.cmd`, `${executable}.exe`, `${executable}.bat`]
+      ? [executable, `${executable}.cmd`, `${executable}.exe`, `${executable}.bat`, `${executable}.ps1`]
       : [executable];
     for (const cand of candidates) {
-      const isCmdOrBat = process.platform === 'win32' && (cand.endsWith('.cmd') || cand.endsWith('.bat'));
-      const actualCmd = isCmdOrBat ? (process.env.ComSpec || 'cmd.exe') : cand;
-      const actualArgs = isCmdOrBat ? ['/d', '/s', '/c', cand, '--version'] : ['--version'];
+      const resolved = resolveInvocation({ executable: cand, args: ['--version'] });
+      if (process.platform === 'win32' && resolved.resolvedPath === null) continue;
       const res = await new Promise<{ available: boolean; version?: string; binary?: string }>((resolve) => {
-        const proc = spawn(actualCmd, actualArgs, { stdio: ['ignore', 'pipe', 'ignore'], shell: false, windowsHide: true });
+        const proc = spawn(resolved.executable, resolved.args, { stdio: ['ignore', 'pipe', 'ignore'], shell: false, windowsHide: true });
         let out = '';
         proc.stdout?.on('data', (d: Buffer) => {
           out += d.toString();
@@ -162,7 +200,7 @@ export async function detectAgent(kind: AgentKind): Promise<{ available: boolean
         }, 5_000);
         proc.on('close', (code) => {
           clearTimeout(timer);
-          resolve(code === 0 ? { available: true, version: out.trim(), binary: cand } : { available: false });
+          resolve(code === 0 ? { available: true, version: out.trim(), binary: resolved.resolvedPath ?? cand } : { available: false });
         });
         proc.on('error', () => {
           clearTimeout(timer);
@@ -214,9 +252,9 @@ export class HeadlessExecutor {
     let cleanupConfirmed = true;
     let agentPid = -1;
 
-    const isCmdOrBat = process.platform === 'win32' && (executable.endsWith('.cmd') || executable.endsWith('.bat'));
-    const actualCmd = isCmdOrBat ? (process.env.ComSpec || 'cmd.exe') : executable;
-    const actualArgs = isCmdOrBat ? ['/d', '/s', '/c', executable, ...args] : args;
+    const resolvedInvocation = resolveInvocation({ executable, args });
+    const actualCmd = resolvedInvocation.executable;
+    const actualArgs = resolvedInvocation.args;
 
     try {
       const proc = spawn(actualCmd, actualArgs, {

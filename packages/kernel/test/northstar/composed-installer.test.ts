@@ -25,7 +25,7 @@ afterEach(async () => {
 });
 
 describe("Composed Installer & Skill Projection", () => {
-  it("projects skills across all 8 canonical hosts to their respective global roots", async () => {
+  it("projects skills across all 9 canonical hosts to their respective global roots", async () => {
     const roots = getGlobalSkillRoots();
     for (const platform of RUNTIME_PLATFORMS) {
       expect(roots[platform]).toBeDefined();
@@ -39,6 +39,7 @@ describe("Composed Installer & Skill Projection", () => {
     expect(roots.antigravity[1]).toMatch(/\.gemini[\\/]antigravity-cli[\\/]skills$/);
     expect(roots.cursor[0]).toMatch(/\.cursor[\\/]skills$/);
     expect(roots.grok[0]).toMatch(/\.grok[\\/]skills$/);
+    expect(roots.omp[0]).toMatch(/\.omp[\\/]agent[\\/]skills$/);
   });
 
   it("projects generic skills to user global roots with preserved SKILL.md", async () => {

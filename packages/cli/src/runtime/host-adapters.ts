@@ -18,6 +18,7 @@ import {
   type RuntimeProjection,
   type RuntimeReceipt,
 } from "./contracts.js";
+import { resolveOmpAgentHome } from "../native/omp.js";
 
 export interface HostSpec {
   id: string;
@@ -117,6 +118,16 @@ export const HOST_SPECS: Record<string, HostSpec> = {
     receiptRelativePath: "agent-rules-runtime/receipt.json",
     probeArgs: ["--version"],
     managedPaths: [],
+  },
+  omp: {
+    id: "omp",
+    binaries: ["omp"],
+    desktopProcessPatterns: ["omp"],
+    installRoots: [path.join(os.homedir(), ".omp")],
+    configDir: resolveOmpAgentHome(process.env),
+    receiptRelativePath: "agent-rules-runtime/receipt.json",
+    probeArgs: ["--version"],
+    managedPaths: ["AGENTS.md", "skills"],
   },
 };
 

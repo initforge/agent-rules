@@ -860,12 +860,16 @@ export async function resolveNativeExecutable(
       candidates.push(...pathCommandCandidates('deepseek-harness', platform, env));
       break;
     case 'command-code':
-      candidates.push(path.join(homeDir, '.commandcode', 'bin', platform === 'win32' ? 'command-code.exe' : 'command-code'));
       candidates.push(path.join(homeDir, '.commandcode', 'bin', platform === 'win32' ? 'cmdc.exe' : 'cmdc'));
-      candidates.push(...pathCommandCandidates('command-code', platform, env));
       candidates.push(...pathCommandCandidates('cmdc', platform, env));
-      candidates.push(path.join(homeDir, 'AppData', 'Roaming', 'npm', platform === 'win32' ? 'command-code.cmd' : 'command-code'));
       candidates.push(path.join(homeDir, 'AppData', 'Roaming', 'npm', platform === 'win32' ? 'cmdc.cmd' : 'cmdc'));
+      candidates.push(path.join(homeDir, '.commandcode', 'bin', platform === 'win32' ? 'command-code.exe' : 'command-code'));
+      candidates.push(...pathCommandCandidates('command-code', platform, env));
+      candidates.push(path.join(homeDir, 'AppData', 'Roaming', 'npm', platform === 'win32' ? 'command-code.cmd' : 'command-code'));
+      break;
+    case 'omp':
+      candidates.push(path.join(homeDir, 'AppData', 'Local', 'omp', platform === 'win32' ? 'omp.exe' : 'omp'));
+      candidates.push(...pathCommandCandidates('omp', platform, env));
       break;
     default:
       throw new Error(`${host}: no native CLI resolver is defined`);
@@ -964,6 +968,14 @@ const HOST_PROBE_SPECS: Readonly<Record<string, HostProbeSpec>> = {
       { id: 'command-code:print', kind: 'option', token: '--print' },
     ],
   },
+  omp: {
+    version: /^omp\/?v?(\d+\.\d+\.\d+(?:[-+][\w.-]+)?)$/i,
+    capabilities: [
+      { id: 'omp:model', kind: 'option', token: '--model' },
+      { id: 'omp:profile', kind: 'option', token: '--profile' },
+      { id: 'omp:print', kind: 'option', token: '--print' },
+    ],
+  },
 };
 
 function escapeRegExp(value: string): string {
@@ -984,7 +996,11 @@ function tokenPresent(help: string, capability: HelpCapability): boolean {
   const token = escapeRegExp(capability.token);
   const pattern = capability.kind === 'command'
     ? new RegExp(`^\\s*${token}(?:\\s|$)`, 'gm')
-    : new RegExp(`^\\s*(?:-[A-Za-z],\\s*)?${token}(?:\\s|<|\\[|$)`, 'gm');
+    // Some native CLIs (including OMP) render value options as
+    // `--flag=<value>` rather than `--flag <value>`.  Both spellings prove
+    // the same stable option; reject only prose/substrings, not the native
+    // help formatter.
+    : new RegExp(`^\\s*(?:-[A-Za-z],\\s*)?${token}(?:\\s|=|<|\\[|$)`, 'gm');
   return help.match(pattern) !== null;
 }
 

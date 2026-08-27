@@ -196,7 +196,7 @@ export interface HostAttestationEvidenceRef {
 }
 
 export interface HostAttestation {
-  readonly host: 'codex' | 'claude' | 'cursor' | 'antigravity' | 'grok' | 'opencode' | 'deepseek-harness' | 'command-code';
+  readonly host: 'codex' | 'claude' | 'cursor' | 'antigravity' | 'grok' | 'opencode' | 'deepseek-harness' | 'command-code' | 'omp';
   readonly hostVersion: string;
   readonly commitSha: string;
   readonly capabilityStatus: CapabilityStatus;
@@ -216,7 +216,7 @@ export interface HostAttestation {
 
 /** Supported host identity union (all known hosts). */
 export type SupportedHost = HostAttestation['host'];
-/** Hosts that MUST produce attestations for certification. Canonical 8-host set. */
+/** Hosts that MUST produce attestations for certification. Canonical 9-host set. */
 export const CERTIFICATION_REQUIRED_HOSTS: readonly SupportedHost[] = [
   'codex',
   'claude',
@@ -226,6 +226,7 @@ export const CERTIFICATION_REQUIRED_HOSTS: readonly SupportedHost[] = [
   'grok',
   'deepseek-harness',
   'command-code',
+  'omp',
 ];
 
 export interface ManifestSubsystem { readonly subsystemId: string; readonly owner: string; readonly capabilities: readonly string[]; }

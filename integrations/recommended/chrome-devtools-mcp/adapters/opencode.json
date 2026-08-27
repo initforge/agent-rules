@@ -1,13 +1,21 @@
 {
   "mcpServers": {
     "chrome-devtools": {
-      "command": "npx",
-      "args": [
+      "type": "local",
+      "command": [
+        "cmd.exe",
+        "/d",
+        "/s",
+        "/c",
+        "npx",
         "-y",
         "chrome-devtools-mcp@1.7.0",
-        "--isolated"
+        "--isolated",
+        "--executablePath",
+        "${OPENCODE_CHROME_PATH}"
       ],
-      "env": {
+      "enabled": true,
+      "environment": {
         "CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS": "1",
         "CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS": "1"
       }

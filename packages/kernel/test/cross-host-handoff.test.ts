@@ -52,8 +52,8 @@ function makeEnvelope(target = 'claude') {
 }
 
 describe('canonical cross-host handoff envelope', () => {
-  it('round-trips every host pair through real encoder/decoder adapters (8x8=56 pairs)', () => {
-    expect(HOSTS).toHaveLength(8);
+  it('round-trips every host pair through real encoder/decoder adapters (9x9=81 pairs)', () => {
+    expect(HOSTS).toHaveLength(9);
       for (const source of HOSTS) {
         for (const target of HOSTS) {
           const env = makeEnvelope(target);

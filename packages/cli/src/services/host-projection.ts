@@ -17,6 +17,7 @@ export const HOST_OVERLAY_FILES: Record<HostId, string> = {
   grok: "grok-overlay.md",
   "deepseek-harness": "deepseek-harness-overlay.md",
   "command-code": "command-code-overlay.md",
+  omp: "omp-overlay.md",
 };
 
 const MANAGED_RE = /<!-- agent-rules:managed:.*? END -->/gs;

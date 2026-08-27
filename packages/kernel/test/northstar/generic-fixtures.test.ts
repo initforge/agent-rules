@@ -190,11 +190,12 @@ describe('G4 — Representative host enforcement classes', () => {
     expect(HOST_CAPABILITIES.claude.headless).toBe(true);
   });
 
-  it('8 hosts only (retired-platform removed; DSH and Command Code registered, not live-verified)', () => {
+  it('9 hosts only (retired-platform removed; OMP is native and separately live-verified)', () => {
     const hosts = Object.keys(HOST_CAPABILITIES);
-    expect(hosts.length).toBe(8);
+    expect(hosts.length).toBe(9);
     expect(hosts).toContain('deepseek-harness');
     expect(hosts).toContain('command-code');
+    expect(hosts).toContain('omp');
     expect(hosts).not.toContain('retired-platform');
     // New hosts are registered but NOT_LIVE_VERIFIED: headless entries exist but
     // attestation stays unconfirmed until a native projection is installed.

@@ -33,5 +33,5 @@ External tools are not a global bag of MCPs. The North-Star Capability Broker co
 
 - `AGENT_RULES_INTEGRATION_PROFILE=core` is the default installer profile. It installs only the small core recommended set; use `research`, `frontend`, `qa`, `all`, or `none` explicitly when appropriate.
 - Installing a provider does **not** imply exposing its MCP tool schema globally. Governed runs attach only providers selected by the Capability Broker.
-- `AGENT_RULES_GLOBAL_MCP_PROFILE` defaults to `none`. Set it to `core`, `research`, `frontend`, `qa`, or `all` only when you intentionally want always-on MCP servers in an interactive host.
+- `AGENT_RULES_GLOBAL_MCP_PROFILE` defaults to `all`: setup registers the four approved MCPs with each supported native host. Registration is not a tool call; the host connects and the agent calls a tool only when the task needs it. Set it to `none` only when you explicitly want agent-rules to expose no standard MCPs.
 - Explicit-only providers (for example Serena and Pencil) are never added by a global profile.

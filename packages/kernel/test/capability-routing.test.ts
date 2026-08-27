@@ -65,10 +65,10 @@ describe('capability-based routing (provider-agnostic)', () => {
     expect(() => assertClassAtLeast('planner-researcher', 'economy-worker')).not.toThrow();
   });
 
-  it('host-role symmetry: all 8 canonical hosts are eligible for every run role (steering §4)', () => {
+  it('host-role symmetry: all 9 canonical hosts are eligible for every run role (steering §4)', () => {
     assertHostRoleSymmetry();
     const hosts = Object.keys(HOST_CAPABILITIES) as HostId[];
-    expect(hosts).toHaveLength(8);
+    expect(hosts).toHaveLength(9);
     for (const role of RUN_ROLES) {
       const assignment = assignRoleForRun({
         run_id: 'run-1',

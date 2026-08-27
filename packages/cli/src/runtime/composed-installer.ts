@@ -4,7 +4,7 @@ import path from "node:path";
 import os from "node:os";
 import { RUNTIME_PLATFORMS, type RuntimePlatform, type SourceManifest } from "./contracts.js";
 import { exists, fsyncDirectory, fsyncRegularFile, hash, readRegularFileNoFollow, writeJsonDurable } from "./filesystem.js";
-import { reconcileOpenCodeConfigFile } from "@initforge/agent-rules-kernel";
+import { resolveOmpAgentHome } from "../native/omp.js";
 
 export interface SkillProjection {
   id: string;
@@ -82,6 +82,7 @@ export function getGlobalSkillRoots(): Record<RuntimePlatform, string[]> {
     grok: [path.join(process.env.GROK_HOME ?? path.join(home, ".grok"), "skills")],
     "deepseek-harness": [path.join(process.env.DSH_HOME ?? path.join(home, ".dsh"), "skills")],
     "command-code": [path.join(process.env.COMMAND_CODE_HOME ?? path.join(home, ".commandcode"), "skills")],
+    omp: [path.join(resolveOmpAgentHome(process.env, home), "skills")],
   };
 }
 
@@ -101,6 +102,90 @@ export async function readGlobalOwnershipManifest(): Promise<GlobalOwnershipMani
   }
 }
 
+/**
+ * Early releases predate the per-skill ownership manifest but wrote a signed
+ * host-level install receipt.  We can adopt only that exact shape, and only
+ * when it names the same host root.  A directory that merely happens to have
+ * a `SKILL.md` remains user-owned and blocks the projection.
+ */
+async function hasLegacyManagedSkillReceipt(platform: RuntimePlatform, targetRoot: string): Promise<boolean> {
+  const hostRoot = path.dirname(targetRoot);
+  const receiptPath = path.join(hostRoot, "agent-rules-receipt.json");
+  // v3-native hosts created a marked AGENTS block before the ownership
+  // manifest existed. The exact host marker is sufficient to adopt their own
+  // sibling `skills/` directory; it never applies to the shared ~/.agents
+  // root, where a user may legitimately maintain the same skill names.
+  const instructionPath = path.join(hostRoot, "AGENTS.md");
+  if (await exists(instructionPath)) {
+    try {
+      const instruction = await fs.readFile(instructionPath, "utf8");
+      if (instruction.includes(`agent-rules:managed:${platform}`)) return true;
+    } catch { /* receipt check below remains available */ }
+  }
+  if (!(await exists(receiptPath))) return false;
+  try {
+    const parsed = JSON.parse(await fs.readFile(receiptPath, "utf8")) as {
+      schema?: string; host?: string; target_dir?: string;
+    };
+    return parsed.schema === "agent-rules/install-receipt"
+      && parsed.host === platform
+      && typeof parsed.target_dir === "string"
+      && path.resolve(parsed.target_dir) === path.resolve(hostRoot);
+  } catch {
+    return false;
+  }
+}
+
+async function backupLegacySkillRoot(targetRoot: string, platform: RuntimePlatform): Promise<void> {
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const backupRoot = path.join(getHarnessHome(), "legacy-skill-backups", `${platform}-${stamp}`);
+  await fs.mkdir(backupRoot, { recursive: true });
+  for (const entry of await fs.readdir(targetRoot, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const source = path.join(targetRoot, entry.name);
+    await fs.cp(source, path.join(backupRoot, entry.name), { recursive: true, force: false, errorOnExist: true });
+  }
+  await fs.writeFile(path.join(backupRoot, "receipt.json"), JSON.stringify({
+    schema: "agent-rules/legacy-skill-migration-backup/v1",
+    platform,
+    source: targetRoot,
+    created_at: new Date().toISOString(),
+  }, null, 2) + "\n", "utf8");
+}
+
+/** A retired ROUTE.json was emitted only by the old agent-rules skill
+ * projector.  A whole root must carry the expected route record for every
+ * existing canonical skill before it may be adopted; one matching directory
+ * never grants ownership of its neighbours. */
+async function hasLegacyManagedSkillBundle(targetRoot: string, skillNames: readonly string[]): Promise<boolean> {
+  let sawLegacySkill = false;
+  for (const name of skillNames) {
+    const skillRoot = path.join(targetRoot, name);
+    const skillMd = path.join(skillRoot, "SKILL.md");
+    if (!(await exists(skillMd))) continue;
+    sawLegacySkill = true;
+    const routePath = path.join(skillRoot, "ROUTE.json");
+    if (!(await exists(routePath))) {
+      // Some final legacy projections had already folded ROUTE.json into
+      // SKILL.md. Its explicit provenance marker is the only alternate
+      // adoption signal accepted here.
+      try {
+        const skill = await fs.readFile(skillMd, "utf8");
+        if (/source:\s*["']?ROUTE\.json migrated["']?/i.test(skill)
+          && /platform_scope:\s*["']?all["']?/i.test(skill)) continue;
+      } catch { /* fall through to unowned */ }
+      return false;
+    }
+    try {
+      const route = JSON.parse(await fs.readFile(routePath, "utf8")) as { loads?: unknown; platform_scope?: unknown };
+      if (!Array.isArray(route.loads) || !route.loads.includes(`skill:${name}`) || route.platform_scope !== "all") return false;
+    } catch {
+      return false;
+    }
+  }
+  return sawLegacySkill;
+}
+
 export async function projectSkillsToGlobal(
   sourceSkillsRoot: string,
   platform: RuntimePlatform,
@@ -110,6 +195,7 @@ export async function projectSkillsToGlobal(
   const targetRoots = options.targetRoots ?? (skillRootsList[platform] ?? []);
   const projected: string[] = [];
   const collisions: string[] = [];
+  const legacyManagedRoots = new Set<string>();
 
   const existingManifest = (await readGlobalOwnershipManifest()) ?? {
     schema: "agent-rules/global-ownership-manifest/v1",
@@ -118,15 +204,47 @@ export async function projectSkillsToGlobal(
     effectivePlanSha256: options.effectivePlanSha256 ?? "0".repeat(64),
     projections: {},
   };
+  const ownedProjectionKey = (skillTargetDir: string): string | undefined => {
+    const resolved = path.resolve(skillTargetDir);
+    return Object.entries(existingManifest.projections).find(([, projection]) =>
+      projection.kind === "skill" && path.resolve(projection.path) === resolved,
+    )?.[0];
+  };
 
   if (!(await exists(sourceSkillsRoot))) {
     return { projected, collisions, updatedManifest: existingManifest };
   }
 
   const entries = await fs.readdir(sourceSkillsRoot, { withFileTypes: true });
+  const skillNames = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+
+  // Preflight every destination before writing anything.  A partial sync that
+  // silently leaves one user-owned/stale skill alongside fresh copies makes
+  // routing nondeterministic and cannot be certified as a complete bundle.
+  for (const targetRoot of targetRoots) {
+    const legacyAdoptable = await hasLegacyManagedSkillReceipt(platform, targetRoot)
+      || await hasLegacyManagedSkillBundle(targetRoot, skillNames);
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const skillTargetDir = path.join(targetRoot, entry.name);
+      const skillMdTarget = path.join(skillTargetDir, "SKILL.md");
+      const manifestKey = ownedProjectionKey(skillTargetDir) ?? `${platform}:${path.resolve(skillTargetDir)}`;
+      if (await exists(skillMdTarget) && !existingManifest.projections[manifestKey] && !options.force) {
+        if (legacyAdoptable) {
+          legacyManagedRoots.add(path.resolve(targetRoot));
+        } else {
+          collisions.push(`${entry.name} @ ${skillTargetDir}`);
+        }
+      }
+    }
+  }
+  if (collisions.length > 0) return { projected, collisions, updatedManifest: existingManifest };
 
   for (const targetRoot of targetRoots) {
     await fs.mkdir(targetRoot, { recursive: true });
+    if (legacyManagedRoots.has(path.resolve(targetRoot))) {
+      await backupLegacySkillRoot(targetRoot, platform);
+    }
 
     for (const entry of entries) {
       if (!entry.isDirectory()) continue;
@@ -134,17 +252,18 @@ export async function projectSkillsToGlobal(
       const skillSourceDir = path.join(sourceSkillsRoot, skillName);
       const skillTargetDir = path.join(targetRoot, skillName);
 
-      // Check if target directory exists and is unowned
+      // The collision preflight above ensures this write set is either wholly
+      // owned or explicitly forced by the owner.
       const skillMdTarget = path.join(skillTargetDir, "SKILL.md");
-      const manifestKey = `${platform}:${path.resolve(skillTargetDir)}`;
+      const manifestKey = ownedProjectionKey(skillTargetDir) ?? `${platform}:${path.resolve(skillTargetDir)}`;
 
       if (await exists(skillMdTarget)) {
-        const isOwned = Boolean(existingManifest.projections[manifestKey]);
-        if (!isOwned && !options.force) {
-          // Unowned user skill collision: do not overwrite!
-          collisions.push(`${skillName} @ ${skillTargetDir}`);
-          continue;
-        }
+        const isOwned = Boolean(existingManifest.projections[manifestKey]) || legacyManagedRoots.has(path.resolve(targetRoot));
+        // An owned projection is a complete bundle, not a collection of
+        // individual files.  Clear only that owned directory before copying so
+        // removed references/scripts cannot remain as a stale, selectable
+        // skill after an update.  Unowned directories remain protected above.
+        if (isOwned || options.force) await fs.rm(skillTargetDir, { recursive: true, force: true });
       }
 
       await fs.mkdir(skillTargetDir, { recursive: true });
@@ -184,263 +303,6 @@ export async function projectSkillsToGlobal(
   await writeGlobalOwnershipManifest(existingManifest);
 
   return { projected, collisions, updatedManifest: existingManifest };
-}
-
-export function getStandardMcpServers(home: string): Record<string, { command: string; args: string[]; env?: Record<string, string> }> {
-  return {
-    "codebase-memory": {
-      command: path.join(home, "AppData", "Local", "Programs", "codebase-memory-mcp", "codebase-memory-mcp.exe"),
-      args: [],
-    },
-    playwright: {
-      command: "cmd.exe",
-      args: [
-        "/d",
-        "/s",
-        "/c",
-        "npx",
-        "-y",
-        "@playwright/mcp@0.0.78",
-        "--isolated",
-        "--executable-path",
-        path.join(home, "AppData", "Local", "ms-playwright", "chromium-1232", "chrome-win64", "chrome.exe"),
-      ],
-    },
-    "chrome-devtools": {
-      command: "cmd.exe",
-      args: [
-        "/d",
-        "/s",
-        "/c",
-        "npx",
-        "-y",
-        "chrome-devtools-mcp@1.7.0",
-        "--isolated",
-        "--executablePath",
-        path.join(home, "AppData", "Local", "ms-playwright", "chromium-1232", "chrome-win64", "chrome.exe"),
-      ],
-      env: {
-        CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS: "1",
-        CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS: "1",
-      },
-    },
-    context7: {
-      command: "cmd.exe",
-      args: [
-        "/d",
-        "/s",
-        "/c",
-        "npx",
-        "-y",
-        "@upstash/context7-mcp@3.2.5",
-      ],
-    },
-  };
-}
-
-export async function syncCursorMcpConfig(): Promise<void> {
-  const home = os.homedir();
-  const cursorConfig = path.join(home, ".cursor", "mcp.json");
-  const standardMcp = getStandardMcpServers(home);
-  let existingParsed: Record<string, unknown> = {};
-  if (await exists(cursorConfig)) {
-    try {
-      existingParsed = JSON.parse(await fs.readFile(cursorConfig, "utf8"));
-    } catch { /* ignore */ }
-  }
-  const updatedConfig = {
-    ...existingParsed,
-    mcpServers: {
-      ...(typeof existingParsed.mcpServers === "object" && existingParsed.mcpServers !== null ? (existingParsed.mcpServers as Record<string, unknown>) : {}),
-      ...standardMcp,
-    },
-  };
-  await fs.mkdir(path.dirname(cursorConfig), { recursive: true });
-  await fs.writeFile(cursorConfig, JSON.stringify(updatedConfig, null, 2) + "\n", "utf8");
-}
-
-export async function syncGrokMcpConfig(): Promise<void> {
-  const home = os.homedir();
-  const grokConfig = path.join(process.env.GROK_HOME ?? path.join(home, ".grok"), "mcp.json");
-  const standardMcp = getStandardMcpServers(home);
-  let existingParsed: Record<string, unknown> = {};
-  if (await exists(grokConfig)) {
-    try {
-      existingParsed = JSON.parse(await fs.readFile(grokConfig, "utf8"));
-    } catch { /* ignore */ }
-  }
-  const updatedConfig = {
-    ...existingParsed,
-    mcpServers: {
-      ...(typeof existingParsed.mcpServers === "object" && existingParsed.mcpServers !== null ? (existingParsed.mcpServers as Record<string, unknown>) : {}),
-      ...standardMcp,
-    },
-  };
-  await fs.mkdir(path.dirname(grokConfig), { recursive: true });
-  await fs.writeFile(grokConfig, JSON.stringify(updatedConfig, null, 2) + "\n", "utf8");
-}
-
-export async function syncClaudeMcpConfig(): Promise<void> {
-  const home = os.homedir();
-  const standardMcp = getStandardMcpServers(home);
-  const targets = [
-    path.join(home, ".claude.json"),
-    path.join(process.env.CLAUDE_CONFIG_DIR ?? path.join(home, ".claude"), "mcp.json"),
-    path.join(home, "AppData", "Roaming", "Claude", "claude_desktop_config.json"),
-  ];
-  for (const target of targets) {
-    let existingParsed: Record<string, unknown> = {};
-    if (await exists(target)) {
-      try {
-        existingParsed = JSON.parse(await fs.readFile(target, "utf8"));
-      } catch { /* ignore */ }
-    }
-    const updatedConfig = {
-      ...existingParsed,
-      mcpServers: {
-        ...(typeof existingParsed.mcpServers === "object" && existingParsed.mcpServers !== null ? (existingParsed.mcpServers as Record<string, unknown>) : {}),
-        ...standardMcp,
-      },
-    };
-    await fs.mkdir(path.dirname(target), { recursive: true });
-    await fs.writeFile(target, JSON.stringify(updatedConfig, null, 2) + "\n", "utf8");
-  }
-}
-
-export async function syncDeepSeekHarnessMcpConfig(): Promise<void> {
-  // DSH is a Cordis/plugin host. Its generic $DSH_HOME/mcp.json is not an
-  // official active surface, so the core skill projection must never compose
-  // it. DSH MCP is installed and read back through its native plugin/profile
-  // lifecycle (platforms/deepseek-harness/adapter.ts).
-}
-
-export async function syncCommandCodeMcpConfig(): Promise<void> {
-  const home = os.homedir();
-  const commandCodeHome = process.env.COMMAND_CODE_HOME ?? path.join(home, ".commandcode");
-  const cmdcConfig = path.join(commandCodeHome, "mcp.json");
-  const legacyConfig = path.join(home, ".command-code", "mcp.json");
-  const standardMcp = getStandardMcpServers(home);
-  let existingParsed: Record<string, unknown> = {};
-  if (await exists(cmdcConfig)) {
-    try {
-      existingParsed = JSON.parse(await fs.readFile(cmdcConfig, "utf8"));
-    } catch { /* ignore */ }
-  } else if (await exists(legacyConfig)) {
-    // The previous installer wrote this legacy path. Read it only as a
-    // migration source; never delete or overwrite the legacy file.
-    try {
-      existingParsed = JSON.parse(await fs.readFile(legacyConfig, "utf8"));
-    } catch { /* ignore */ }
-  }
-  const currentServers = existingParsed.mcpServers;
-  if (currentServers !== undefined && (!currentServers || typeof currentServers !== "object" || Array.isArray(currentServers))) {
-    throw new Error(`Command Code MCP config has invalid mcpServers: ${cmdcConfig}`);
-  }
-  const managedMcp = Object.fromEntries(Object.entries(standardMcp).map(([name, server]) => [name, { ...server }]));
-  const nextServers: Record<string, unknown> = { ...((currentServers ?? {}) as Record<string, unknown>) };
-  for (const [name, definition] of Object.entries(managedMcp)) {
-    const current = nextServers[name];
-    if (current !== undefined && (!current || typeof current !== "object" || Array.isArray(current))) {
-      throw new Error(`Refusing to overwrite user-modified Command Code MCP server: ${name}`);
-    }
-    if (current !== undefined) {
-      const candidate = current as Record<string, unknown>;
-      const sameCommand = candidate.command === definition.command
-        && JSON.stringify(candidate.args ?? []) === JSON.stringify(definition.args ?? [])
-        && JSON.stringify(candidate.env ?? {}) === JSON.stringify(definition.env ?? {});
-      if (!sameCommand) throw new Error(`Refusing to overwrite user-modified Command Code MCP server: ${name}`);
-    }
-    nextServers[name] = definition;
-  }
-  const updatedConfig = {
-    ...existingParsed,
-    mcpServers: nextServers,
-  };
-  await fs.mkdir(path.dirname(cmdcConfig), { recursive: true });
-  const temporary = `${cmdcConfig}.tmp-${crypto.randomUUID().slice(0, 8)}`;
-  try {
-    await fs.writeFile(temporary, JSON.stringify(updatedConfig, null, 2) + "\n", "utf8");
-    await fs.rename(temporary, cmdcConfig);
-  } catch (error) {
-    try { await fs.rm(temporary, { force: true }); } catch { /* preserve the mutation error */ }
-    throw error;
-  }
-}
-
-export async function syncOpenCodeMcpConfig(): Promise<void> {
-  const home = os.homedir();
-  const opencodeDir = process.env.OPENCODE_HOME ?? path.join(home, ".config", "opencode");
-  const opencodeConfig = path.join(opencodeDir, "opencode.json");
-  const standardMcp = getStandardMcpServers(home);
-
-  reconcileOpenCodeConfigFile(opencodeConfig, standardMcp, { backup: true });
-
-  const opencodeJsonc = path.join(opencodeDir, "opencode.jsonc");
-  if (await exists(opencodeJsonc)) {
-    reconcileOpenCodeConfigFile(opencodeJsonc, standardMcp, { backup: true });
-  }
-}
-
-export async function syncAntigravityMcpConfig(): Promise<void> {
-  const home = os.homedir();
-  const centralConfig = path.join(home, ".gemini", "config", "mcp_config.json");
-  const engineConfig = path.join(home, ".gemini", "antigravity", "mcp_config.json");
-
-  let sourceContent: string | null = null;
-  if (await exists(engineConfig)) {
-    try {
-      const raw = await fs.readFile(engineConfig, "utf8");
-      const parsed = JSON.parse(raw);
-      if (parsed.mcpServers && Object.keys(parsed.mcpServers).length > 0) {
-        sourceContent = raw;
-      }
-    } catch { /* ignore */ }
-  }
-
-  if (sourceContent) {
-    let centralNeedsSync = true;
-    if (await exists(centralConfig)) {
-      try {
-        const parsed = JSON.parse(await fs.readFile(centralConfig, "utf8"));
-        if (parsed.mcpServers && Object.keys(parsed.mcpServers).length > 0) {
-          centralNeedsSync = false;
-        }
-      } catch { centralNeedsSync = true; }
-    }
-    if (centralNeedsSync) {
-      await fs.mkdir(path.dirname(centralConfig), { recursive: true });
-      await fs.writeFile(centralConfig, sourceContent, "utf8");
-    }
-  }
-}
-
-export async function syncPlatformMcpConfig(platform: RuntimePlatform): Promise<void> {
-  switch (platform) {
-    case "antigravity":
-      await syncAntigravityMcpConfig();
-      break;
-    case "opencode":
-      await syncOpenCodeMcpConfig();
-      break;
-    case "cursor":
-      await syncCursorMcpConfig();
-      break;
-    case "grok":
-      await syncGrokMcpConfig();
-      break;
-    case "claude":
-      await syncClaudeMcpConfig();
-      break;
-    case "deepseek-harness":
-      await syncDeepSeekHarnessMcpConfig();
-      break;
-    case "command-code":
-      await syncCommandCodeMcpConfig();
-      break;
-    case "codex":
-      // Codex config.toml managed by mcp-convergence
-      break;
-  }
 }
 
 export async function writeGlobalOwnershipManifest(

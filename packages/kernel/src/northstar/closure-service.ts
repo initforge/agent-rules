@@ -255,7 +255,7 @@ function isSha256(value: string): boolean {
   return /^[a-f0-9]{64}$/i.test(value);
 }
 
-const VALID_HOSTS = new Set(['codex', 'claude', 'opencode', 'cursor', 'antigravity', 'grok', 'deepseek-harness', 'command-code']);
+const VALID_HOSTS = new Set(['codex', 'claude', 'opencode', 'cursor', 'antigravity', 'grok', 'deepseek-harness', 'command-code', 'omp']);
 
 /** Five-identity binding validation. harness ≠ consumer. */
 export function assertEvidenceBinding(binding: EvidenceBindingManifest): void {

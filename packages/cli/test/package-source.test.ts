@@ -20,7 +20,9 @@ describe("Package source archive", () => {
       fs.unlinkSync(archivePath);
     }
 
-    execSync(`git archive --format=zip HEAD -o ${archiveName}`, {
+    // Use the candidate's attributes: the release commit will contain the
+    // same `.gitattributes`, while this test runs before that commit exists.
+    execSync(`git archive --worktree-attributes --format=zip HEAD -o ${archiveName}`, {
       cwd: root,
       encoding: "utf-8",
     });

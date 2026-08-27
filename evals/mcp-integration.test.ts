@@ -111,16 +111,24 @@ describe('MCP integration candidate 057880a5+a91ceb8 — static tests', () => {
         }
       });
 
-      it('all JSON adapters have mcpServers with non-empty args', () => {
+      it('all JSON adapters declare a non-empty native command', () => {
         const files = fs.readdirSync(adapterDir()).filter((f) => f.endsWith('.json'));
         for (const file of files) {
-          const parsed = readJson<{ mcpServers: Record<string, { command: string; args: string[] }> }>(
+          const parsed = readJson<{ mcpServers: Record<string, { command: string | string[]; args?: string[] }> }>(
             path.join(adapterDir(), file),
           );
           for (const [, server] of Object.entries(parsed.mcpServers)) {
             expect(server.command).toBeDefined();
-            expect(Array.isArray(server.args)).toBe(true);
-            expect(server.args.length).toBeGreaterThan(0);
+            if (Array.isArray(server.command)) {
+              // OpenCode 1.x uses a local command array; forcing the generic
+              // command/args shape would make its native config invalid.
+              expect(server.command.length).toBeGreaterThan(0);
+            } else {
+              expect(typeof server.command).toBe('string');
+              expect(server.command.trim().length).toBeGreaterThan(0);
+              expect(Array.isArray(server.args)).toBe(true);
+              expect(server.args?.length).toBeGreaterThan(0);
+            }
           }
         }
       });

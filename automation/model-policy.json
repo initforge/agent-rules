@@ -334,6 +334,41 @@
       "denial_behavior": "fail_closed",
       "subagent_model_override": "host_configured",
       "model_attestation": "host_attested"
+    },
+    "omp": {
+      "economy": {
+        "family": "user-configured",
+        "selector": "__host_selected__",
+        "note": "OMP keeps the user's active profile and model roles; the adapter records the resolved session model."
+      },
+      "standard": {
+        "family": "user-configured",
+        "selector": "__host_selected__",
+        "note": "The logical class is carried in the WorkPacket. OMP resolves the actual model from its active profile or role."
+      },
+      "expert": {
+        "family": "user-configured",
+        "selector": "__host_selected__",
+        "note": "Do not replace the user's OMP role/model mapping. Missing session attestation remains UNVERIFIED."
+      },
+      "mapping_contract": {
+        "classes": [
+          "economy",
+          "standard",
+          "expert"
+        ],
+        "user_config_location": "active OMP profile / modelRoles",
+        "missing_mapping_behavior": "visible: keep requested logical class and mark resolved/observed model UNVERIFIED",
+        "resolve_chain": "WorkPacket logical class -> OMP active profile or role -> observed session model"
+      },
+      "recorded_evidence": [
+        "requested",
+        "resolved",
+        "observed"
+      ],
+      "denial_behavior": "fail_closed",
+      "subagent_model_override": "host_configured",
+      "model_attestation": "host_attested"
     }
   }
 }

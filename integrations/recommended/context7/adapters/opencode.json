@@ -1,11 +1,17 @@
 {
   "mcpServers": {
     "context7": {
-      "command": "npx",
-      "args": [
+      "type": "local",
+      "command": [
+        "cmd.exe",
+        "/d",
+        "/s",
+        "/c",
+        "npx",
         "-y",
         "@upstash/context7-mcp@3.2.5"
-      ]
+      ],
+      "enabled": true
     }
   }
 }

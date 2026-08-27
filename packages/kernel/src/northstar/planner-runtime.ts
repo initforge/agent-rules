@@ -294,6 +294,8 @@ export function buildStrongPlannerInvocation(kind: AgentKind, prompt: string): P
       return { executable: process.platform === 'win32' ? 'cmdc' : 'cmd', args: ['-p', '--plan', prompt] };
     case 'grok':
       return { executable: 'grok', args: ['-p', prompt] };
+    case 'omp':
+      return { executable: 'omp', args: ['-p', prompt] };
     default:
       return { executable: 'claude', args: ['-p', prompt, '--permission-mode', 'plan'] };
   }

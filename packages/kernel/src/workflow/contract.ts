@@ -30,5 +30,19 @@ export interface TaskContext {
   locked_decisions: string[];
   selected_skills: string[];
   selected_capabilities: string[];
+  /** Native client identity is evidence, not an inferred host-wide claim. */
+  host?: string;
+  client?: string;
+  environment?: string;
+  profile?: string;
+  effective_config_path?: string;
+  executable_path?: string;
+  session_id?: string;
+  raw_intent?: string;
+  reference_inputs?: string[];
+  owned_scope?: string[];
+  forbidden_scope?: string[];
+  proof_selection?: string[];
+  last_failure?: string;
   next_action: string;
 }

@@ -1,6 +1,9 @@
 import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
 import { RUNTIME_PLATFORMS } from "../runtime/installer.js";
 import { NativeInstaller } from "../services/native-installer.js";
+import { provisionMcps } from "../integration/provisioning.js";
+import { getRepoRoot } from "../adapters/repo.js";
+import { registerHostMcpAdapters } from "../runtime/mcp-convergence.js";
 import type { HostId } from "@initforge/agent-rules-kernel/northstar/host-adapters.js";
 
 
@@ -32,13 +35,25 @@ export async function installCmd(
 
 
   const force = args.includes("--force");
+  const installIntegrations = !args.includes("--no-integrations");
   const nativeInstaller = new NativeInstaller();
 
   async function installOrUpdate(p: string): Promise<{ ok: boolean; action: string; error?: string }> {
     try {
-      // NativeInstaller is the only coordinator: plan → snapshot → apply →
-      // readback. It projects skills but never globally activates MCP.
-      await nativeInstaller.install(p as HostId, { dryRun: options.dryRun, force });
+      // Core projection and MCP registration have separate ownership: the
+      // installer does not silently reinterpret user MCP choices.
+      await nativeInstaller.install(p as HostId, { dryRun: options.dryRun, force, enableMcp: installIntegrations });
+      if (installIntegrations && !options.dryRun) {
+        const root = getRepoRoot();
+        // Setup is intentionally the four approved MCP providers, not every
+        // optional CLI integration that happens to share a profile label.
+        const providers = await provisionMcps(root, { installProfile: "all" });
+        const failures = providers.results.filter((provider) => provider.installation.status === "BLOCKED" || provider.installation.status === "UNSUPPORTED");
+        if (failures.length > 0) throw new Error(`MCP provider setup failed: ${failures.map((provider) => provider.id).join(", ")}`);
+        const registration = await registerHostMcpAdapters(root, p as HostId);
+        if (registration.status === "NEEDS_USER") throw new Error(`MCP registration needs user resolution: ${registration.conflicts.join(", ")}`);
+        if (registration.status === "FAILED") throw new Error(`MCP registration failed: ${registration.error ?? p}`);
+      }
       return { ok: true, action: "installed (native transactional)" };
     } catch (error) {
       const msg = (error as Error).message;
@@ -49,7 +64,7 @@ export async function installCmd(
         // Force: uninstall then reinstall
         try {
           await nativeInstaller.uninstall(p as HostId);
-          await nativeInstaller.install(p as HostId, { dryRun: options.dryRun, force: true });
+          await nativeInstaller.install(p as HostId, { dryRun: options.dryRun, force: true, enableMcp: installIntegrations });
           return { ok: true, action: "reinstalled (forced, native transactional)" };
         } catch (forceError) {
           return { ok: false, action: "force-failed", error: (forceError as Error).message };

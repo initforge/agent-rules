@@ -103,6 +103,7 @@ export function projectCanonicalToHost(
     case 'grok':
     case 'deepseek-harness':
     case 'command-code':
+    case 'omp':
     default:
       payload = JSON.stringify({
         host: targetHost,

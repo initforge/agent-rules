@@ -67,3 +67,4 @@ export * from '../workflow/agent-workflow.js';
 export * from '../workflow/task-context.js';
 export * from '../workflow/result.js';
 export * from '../workflow/gap-registry.js';
+export * from '../workflow/native-session.js';

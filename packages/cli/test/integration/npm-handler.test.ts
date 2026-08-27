@@ -62,11 +62,13 @@ describe("npm managed-install handler", () => {
     });
     expect(result.ok).toBe(true);
     expect(result.location).toBe("/managed/npm-global");
-    // Windows-safe argv: npm + args array, never a shell-interpolated string.
+    // Windows-safe argv: npm's JS entrypoint under the current Node runtime;
+    // other platforms keep the native npm command. Neither uses a shell.
     const args = mocks.execFile.mock.calls[0];
-    expect(args[0]).toBe("npm");
+    expect(args[0]).toBe(process.platform === "win32" ? process.execPath : "npm");
     expect(Array.isArray(args[1])).toBe(true);
     expect(args[1]).toEqual(expect.arrayContaining(["--prefix", "/managed/npm-global", "@playwright/mcp@0.0.78"]));
+    if (process.platform === "win32") expect(args[1][0]).toMatch(/npm-cli\.js$/i);
     expect(args[1]).not.toContain("sh");
     expect(args[1]).not.toContain("npx");
   });

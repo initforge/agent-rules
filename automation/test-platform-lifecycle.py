@@ -69,10 +69,10 @@ def test_platform_contracts_version_tracking() -> None:
     else:
         ok(f"platform-contracts.json version: {version}")
     
-    # Check registry host_ids for the eight canonical hosts
+    # Check registry host_ids for the nine canonical hosts.
     registry = contracts.get("registry", {})
     host_ids = registry.get("host_ids", [])
-    if host_ids != ["codex", "claude", "grok", "opencode", "antigravity", "cursor", "deepseek-harness", "command-code"]:
+    if host_ids != ["codex", "claude", "grok", "opencode", "antigravity", "cursor", "deepseek-harness", "command-code", "omp"]:
         fail(f"registry host_ids drift: {host_ids}")
     
     # Check parity_contract has aggregate_rule for version tracking

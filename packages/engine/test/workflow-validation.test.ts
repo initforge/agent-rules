@@ -231,13 +231,13 @@ describe('Quality workflow validation', () => {
 });
 
 describe('Certification workflow validation', () => {
-  it('has exact canonical 8-host matrix (codex, claude, grok, opencode, antigravity, cursor, deepseek-harness, command-code)', () => {
+  it('has exact canonical 9-host matrix including OMP', () => {
     const wf = loadWorkflow('certification.yml');
     const certifyJob = wf.jobs!.certify;
     expect(certifyJob).toBeTruthy();
     const matrix = certifyJob!.strategy?.matrix;
     expect(matrix).toBeTruthy();
-    expect(matrix!.host).toEqual(['codex', 'claude', 'grok', 'opencode', 'antigravity', 'cursor', 'deepseek-harness', 'command-code']);
+    expect(matrix!.host).toEqual(['codex', 'claude', 'grok', 'opencode', 'antigravity', 'cursor', 'deepseek-harness', 'command-code', 'omp']);
   });
 
   it('each host has a self-hosted runner label', () => {

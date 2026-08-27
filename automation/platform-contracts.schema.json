@@ -38,7 +38,8 @@
               "antigravity",
               "grok",
               "deepseek-harness",
-              "command-code"
+              "command-code",
+              "omp"
             ]
           }
         },
@@ -185,7 +186,8 @@
             "antigravity",
             "grok",
             "deepseek-harness",
-            "command-code"
+            "command-code",
+            "omp"
           ]
         },
         "deferred_supported_targets": {
@@ -204,7 +206,8 @@
         "antigravity",
         "cursor",
         "deepseek-harness",
-        "command-code"
+        "command-code",
+        "omp"
       ],
       "properties": {
         "codex": {
@@ -229,6 +232,9 @@
           "$ref": "#/$defs/platform"
         },
         "command-code": {
+          "$ref": "#/$defs/platform"
+        },
+        "omp": {
           "$ref": "#/$defs/platform"
         }
       }

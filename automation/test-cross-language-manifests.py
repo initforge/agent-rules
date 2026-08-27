@@ -183,8 +183,8 @@ def test_platform_contracts_schema_compliance() -> None:
     if not required_keys.issubset(actual_keys):
         fail(f"platform-contracts missing required keys: {required_keys - actual_keys}")
     
-    # Check platforms (eight canonical hosts)
-    required_platforms = {"codex", "claude", "grok", "opencode", "antigravity", "cursor", "deepseek-harness", "command-code"}
+    # Check platforms (nine canonical hosts)
+    required_platforms = {"codex", "claude", "grok", "opencode", "antigravity", "cursor", "deepseek-harness", "command-code", "omp"}
     actual_platforms = set(contracts.get("platforms", {}).keys())
     if actual_platforms != required_platforms:
         fail(f"platforms mismatch: missing {required_platforms - actual_platforms}, extra {actual_platforms - required_platforms}")

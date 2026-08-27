@@ -92,6 +92,6 @@ describe("runtime reconcile wiring", () => {
     expect(prov.installation).toBeDefined();
     expect(prov.activation.policy).toBe("explicit-only");
     expect(prov.activation.status).toBe("NOT_ACTIVATED");
-    expect(REGISTERED_HOSTS).toHaveLength(8);
+    expect(REGISTERED_HOSTS).toHaveLength(9);
   });
 });

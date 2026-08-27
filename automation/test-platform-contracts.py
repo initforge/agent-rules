@@ -15,10 +15,10 @@ from jsonschema import Draft202012Validator, FormatChecker
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT = ROOT / "platforms" / "platform-contracts.json"
 SCHEMA = ROOT / "automation" / "platform-contracts.schema.json"
-PLATFORMS = ("codex", "claude", "opencode", "cursor", "antigravity", "grok", "deepseek-harness", "command-code")
+PLATFORMS = ("codex", "claude", "opencode", "cursor", "antigravity", "grok", "deepseek-harness", "command-code", "omp")
 DEFERRED = ()
 NOT_LIVE_VERIFIED = ()
-RENDERED_PLATFORMS = ("codex", "claude", "grok", "opencode", "antigravity", "cursor", "deepseek-harness", "command-code")
+RENDERED_PLATFORMS = ("codex", "claude", "grok", "opencode", "antigravity", "cursor", "deepseek-harness", "command-code", "omp")
 ALL_HOSTS = RENDERED_PLATFORMS
 INVARIANTS = {
     "activation", "context_delivery", "orchestration", "role_permissions", "model_effort", "mcp_integration"
@@ -98,6 +98,7 @@ def validate(contract: dict[str, object], schema: dict[str, object]) -> None:
         "cursor": "Task",
         "deepseek-harness": "dsh_native_subagent",
         "command-code": "built_in_isolated_agent",
+        "omp": "none",
     }
     actual_spawn = {name: platforms[name]["orchestration"]["native_spawn_tool"] for name in RENDERED_PLATFORMS}
     if actual_spawn != expected_spawn:
@@ -113,7 +114,7 @@ def validate(contract: dict[str, object], schema: dict[str, object]) -> None:
         fail("DeepSeek Harness must use the Cordis bundle/profile bootstrap")
     if platforms["command-code"]["bootstrap"]["strategy"] != "managed_session_mod":
         fail("Command Code must use session-scoped mod bootstrap")
-    expected_materialization = {name: "managed_directory" for name in ("codex", "claude", "grok", "opencode", "antigravity", "cursor")}
+    expected_materialization = {name: "managed_directory" for name in ("codex", "claude", "grok", "opencode", "antigravity", "cursor", "omp")}
     expected_materialization.update({"deepseek-harness": "host_native", "command-code": "host_native"})
     actual_materialization = {name: platforms[name]["orchestration"]["agent_materialization"] for name in RENDERED_PLATFORMS}
     if actual_materialization != expected_materialization:

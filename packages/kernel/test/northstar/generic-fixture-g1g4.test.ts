@@ -86,11 +86,11 @@ describe('G4 — representative host enforcement classes', () => {
   });
 });
 
-describe('G4/P7 — registry-driven eight-host evolution (F16)', () => {
+describe('G4/P7 — registry-driven nine-host evolution (F16)', () => {
   const repoRoot = resolveHarnessRoot(process.cwd());
 
-  it('the registry has exactly the eight canonical hosts and every host can be canaried', () => {
-    expect(REGISTRY_HOSTS).toEqual(['codex', 'claude', 'grok', 'opencode', 'antigravity', 'cursor', 'deepseek-harness', 'command-code']);
+  it('the registry has exactly the nine canonical hosts and every host can be canaried', () => {
+    expect(REGISTRY_HOSTS).toEqual(['codex', 'claude', 'grok', 'opencode', 'antigravity', 'cursor', 'deepseek-harness', 'command-code', 'omp']);
     for (const host of REGISTRY_HOSTS) {
       const result = runHostCanary({ repoRoot, host });
       // Every host resolves to a fail-closed state; none can be silently LIVE.

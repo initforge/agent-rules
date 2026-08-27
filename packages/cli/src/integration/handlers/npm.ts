@@ -6,6 +6,28 @@ import type { HandlerResult } from "../installer-registry.js";
 
 const execFileAsync = promisify(execFile);
 
+// Node's execFile neither applies PowerShell command discovery nor reliably
+// launches a .cmd shim. Use npm's JavaScript entrypoint under the running Node
+// installation on Windows; argv stays data, never shell text.
+function npmInvocation(args: string[]): { file: string; args: string[] } {
+  if (process.platform !== "win32") return { file: "npm", args };
+  const cli = path.join(path.dirname(process.execPath), "node_modules", "npm", "bin", "npm-cli.js");
+  return { file: process.execPath, args: [cli, ...args] };
+}
+
+async function runInstalledBinary(file: string, args: string[]): Promise<{ stdout: string }> {
+  if (process.platform !== "win32" || !file.toLowerCase().endsWith(".cmd")) {
+    return execFileAsync(file, args, { timeout: 30_000 });
+  }
+  // `file` is derived from the managed install directory and a registry
+  // commandName. It is not a user prompt; reject anything outside the normal
+  // executable-name vocabulary before passing it to cmd's required /c form.
+  if (!/^[\w .:\\/-]+\.cmd$/i.test(file) || !args.every((arg) => /^[\w.=:@/-]+$/.test(arg))) {
+    throw new Error("unsafe managed npm binary invocation");
+  }
+  return execFileAsync(process.env.ComSpec || "cmd.exe", ["/d", "/c", file, ...args], { timeout: 30_000 });
+}
+
 export interface NpmInstallOptions {
   packageName: string;
   version?: string;
@@ -52,7 +74,8 @@ export async function npmInstall(options: NpmInstallOptions): Promise<HandlerRes
   const spec = `${packageName}@${version}`;
   try {
     await fs.mkdir(installDir, { recursive: true });
-    await execFileAsync("npm", ["install", "--prefix", installDir, "--no-save", "--no-package-lock", "--no-audit", "--no-fund", spec], { timeout: 300_000 });
+    const invocation = npmInvocation(["install", "--prefix", installDir, "--no-save", "--no-package-lock", "--no-audit", "--no-fund", spec]);
+    await execFileAsync(invocation.file, invocation.args, { timeout: 300_000 });
     if (options.commandName && !(await binaryPath(installDir, options.commandName))) {
       return { ok: false, status: "PARTIAL", message: `npm install of ${spec} completed but managed binary for ${options.commandName} was not found`, location: installDir, version };
     }
@@ -70,7 +93,7 @@ export async function npmVerify(options: NpmInstallOptions): Promise<HandlerResu
   const bin = await binaryPath(installDir, commandName);
   if (!bin) return { ok: false, message: `missing managed binary ${commandName} at ${installDir}` };
   try {
-    const { stdout } = await execFileAsync(bin, ["--version"], { timeout: 30_000 });
+    const { stdout } = await runInstalledBinary(bin, ["--version"]);
     const actual = stdout.trim();
     if (version && !actual.includes(version)) {
       return { ok: false, status: "PARTIAL", message: `version mismatch: expected ${packageName}@${version}, got ${actual}`, location: installDir, version: actual };
@@ -88,7 +111,8 @@ export async function npmUninstall(options: NpmInstallOptions): Promise<HandlerR
     return { ok: true, message: `not installed: ${installDir}` };
   }
   try {
-    await execFileAsync("npm", ["uninstall", "--prefix", installDir, "--no-save", packageName], { timeout: 120_000 });
+    const invocation = npmInvocation(["uninstall", "--prefix", installDir, "--no-save", packageName]);
+    await execFileAsync(invocation.file, invocation.args, { timeout: 120_000 });
     return { ok: true, message: `uninstalled ${packageName} from ${installDir}` };
   } catch (error) {
     return { ok: false, status: "NEEDS_USER", message: `npm uninstall failed for ${packageName}: ${(error as Error).message}` };

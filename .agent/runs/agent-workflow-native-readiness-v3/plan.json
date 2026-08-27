@@ -6,8 +6,8 @@
   "meta": {
     "id": "agent-workflow-native-readiness-v3",
     "created_at": "2026-08-27T00:00:00.000Z",
-    "updated_at": "2026-08-27T00:00:00.000Z",
-    "source_refs": ["owner:one-shot-v3"]
+    "updated_at": "2026-08-27T14:15:00.000Z",
+    "source_refs": ["owner:one-shot-v3", "owner:add-omp-native-host", "owner:four-core-nine-host-native-chat", ".agent/research/omp-native-2026-08-27.md"]
   },
   "supersedes": {
     "plan_id": "global-agent-behavior-native-operational-readiness-v2",
@@ -17,7 +17,7 @@
   "repository_baseline": { "branch": "main", "sha": "b6b5efe6a90d7e4e936e319048d70cda929c0a91" },
   "intent_reference": { "hash": "92ee14f3cea9382c8dd1975b1cfc5d1b6c00eb4541a191213257a39c9ec486b6", "summary": "Owner-authorized one-shot v3 operational readiness" },
   "intent": {
-    "outcome": "Users prompt once; managed work follows one enforced workflow while native host claims are readback-based and GUI-only checks stay owner-visible.",
+    "outcome": "Users prompt once; managed work follows one enforced workflow while nine native host claims are readback-based and GUI-only checks stay owner-visible.",
     "in_scope": ["workflow cutover", "native host surfaces", "MCP lifecycle", "status/artifact retention", "affected verification", "CI release"],
     "non_goals": ["new public CLI commands", "communication modes", "invented host bridges", "fake live-model proof"]
   },
@@ -31,8 +31,8 @@
     {"id":"REQ-107","summary":"Keep eight public CLI commands","kind":"original"},
     {"id":"REQ-108","summary":"Task context survives handoff","kind":"original"},
     {"id":"REQ-109","summary":"Skills resolve once per packet generation","kind":"original"},
-    {"id":"REQ-110","summary":"MCP is explicit and task-scoped","kind":"original"},
-    {"id":"REQ-111","summary":"Eight host native install/readback truth","kind":"original"},
+    {"id":"REQ-110","summary":"Approved standard MCPs are registered in each supported native host at setup; each task selects whether to call one","kind":"original","trace_id":"AMD-1:revised-mcp-policy"},
+    {"id":"REQ-111","summary":"Nine host families have client-specific native install/readback truth","kind":"original","trace_id":"AMD-1:nine-host-scope"},
     {"id":"REQ-112","summary":"Result derives only from evidence","kind":"original"},
     {"id":"REQ-113","summary":"Status reads live state","kind":"original"},
     {"id":"REQ-114","summary":"No legacy communication profiles","kind":"original"},
@@ -43,20 +43,32 @@
     {"id":"REQ-119","summary":"Durable state has one writer","kind":"original"},
     {"id":"REQ-120","summary":"Deterministic failures never become owner residuals","kind":"original"},
     {"id":"REQ-121","summary":"Installed copies bind final candidate","kind":"original"},
-    {"id":"REQ-122","summary":"Release and cleanup are exact-SHA gated","kind":"original"}
+    {"id":"REQ-122","summary":"Release and cleanup are exact-SHA gated","kind":"original"},
+    {"id":"REQ-123","summary":"OMP is a ninth native host with active-profile-safe instructions, skills, MCP and extension surface","kind":"injection","trace_id":"owner:add-omp-native-host"}
   ],
   "decisions": [
     {"id":"DEC-101","statement":"Managed runtime work uses AgentWorkflow with active routing and mandatory proof selection.","rationale":"Direct, planner and pasted plans must not diverge."},
     {"id":"DEC-102","statement":"Native readback proves install/consumption; GUI model turns are separate owner checks.","rationale":"A configuration file is not a mounted tool registry."},
-    {"id":"DEC-103","statement":"Core install never mutates MCP configuration.","rationale":"Ambient user MCP remains user-owned; integration actions own enablement."},
-    {"id":"DEC-104","statement":"Artifacts are active-run compact; historical detail remains recoverable from Git.","rationale":"Avoid .agent becoming larger than the product code."}
+    {"id":"DEC-103","statement":"Core projection never writes MCP configuration; normal setup invokes the separate integration registration service for the four approved providers.","rationale":"Registration is explicit, preserves user entries/disable choices, and does not make every task call MCP."},
+    {"id":"DEC-104","statement":"Artifacts are active-run compact; historical detail remains recoverable from Git.","rationale":"Avoid .agent becoming larger than the product code."},
+    {"id":"DEC-105","statement":"Native session extensions adapt official host events into the shared workflow API and never start a nested agent loop.","rationale":"Host permission, cancellation, compaction and tool lifecycle remain authoritative."}
   ],
   "tasks": [
     {"id":"WP-00","objective":"Admit v3 and dogfood its workflow contract.","requirements":["REQ-101","REQ-102","REQ-116"],"file_ownership":[".agent/","packages/kernel/src/workflow/"],"forbidden_files":["generated/"],"acceptance_criteria":["Active pointer names v3","Plan remains schema-valid","Runtime produces its own context/route receipts"],"verification":{"proof_kinds":["static","unit","artifact"]},"rollback":"Leave historical Git commits intact."},
     {"id":"WP-01","objective":"Cut managed work to one workflow and one proof/skill route.","requirements":["REQ-103","REQ-104","REQ-105","REQ-108","REQ-109","REQ-112","REQ-115","REQ-119","REQ-120"],"file_ownership":["packages/kernel/src/northstar/","packages/kernel/src/workflow/","packages/cli/src/commands/northstar-ux.ts"],"forbidden_files":["rules/"],"acceptance_criteria":["Pasted plans cannot skip proof routing","No fabricated planner fallback","One route receipt per packet generation"],"verification":{"proof_kinds":["unit","integration","production-smoke"]},"rollback":"Revert only the v3 workflow commit if a compatibility regression is proven."},
-    {"id":"WP-02","objective":"Unify native host inspection and fix real host surfaces.","requirements":["REQ-110","REQ-111","REQ-118","REQ-121"],"file_ownership":["packages/cli/src/native/","packages/cli/src/services/","platforms/"],"forbidden_files":["profiles/"],"acceptance_criteria":["Core install has zero MCP mutation","Grok uses $GROK_HOME/rules","DSH and Command Code use native readback","No false success after readback failure"],"verification":{"proof_kinds":["unit","integration","production-smoke"]},"rollback":"Transaction rollback restores agent-rules-owned bytes only."},
+    {"id":"WP-02","objective":"Register the four standard MCPs through native host surfaces and fix real host/client readback.","requirements":["REQ-110","REQ-111","REQ-118","REQ-121"],"file_ownership":["packages/cli/src/native/","packages/cli/src/services/","packages/cli/src/runtime/mcp-convergence.ts","platforms/"],"forbidden_files":["profiles/"],"acceptance_criteria":["Core projector has zero direct MCP mutation","Setup registration is backed up and preserves user entries/disable","Grok uses $GROK_HOME/rules","DSH and Command Code use native readback","No false success after readback failure"],"verification":{"proof_kinds":["unit","integration","production-smoke"]},"rollback":"Transaction rollback restores agent-rules-owned bytes only."},
     {"id":"WP-03","objective":"Make status and artifacts live, compact and diagnosable.","requirements":["REQ-113","REQ-114","REQ-115","REQ-119"],"file_ownership":["packages/cli/src/commands/","automation/","architecture/"],"forbidden_files":["skills/"],"acceptance_criteria":["Status does not use stale generated index","Architecture map names owners and checks","No profile/mode reintroduced"],"verification":{"proof_kinds":["static","unit"]},"rollback":"Generated documentation is optional and never status truth."},
-    {"id":"WP-04","objective":"Run scoped gates, release exact candidate, then clean inactive branches and artifacts.","requirements":["REQ-106","REQ-107","REQ-116","REQ-117","REQ-122"],"file_ownership":["automation/",".github/workflows/",".agent/"],"forbidden_files":["profiles/"],"acceptance_criteria":["Affected checks select only changed domains","Full gate runs once at release","CI is green on pushed SHA before cleanup"],"verification":{"proof_kinds":["build","unit","integration","pipeline-run"]},"rollback":"Do not delete branches or historical artifacts until remote CI accepts the final SHA."}
+    {"id":"WP-04","objective":"Run scoped gates, release exact candidate, then clean inactive branches and artifacts.","requirements":["REQ-106","REQ-107","REQ-116","REQ-117","REQ-122"],"file_ownership":["automation/",".github/workflows/",".agent/"],"forbidden_files":["profiles/"],"acceptance_criteria":["Affected checks select only changed domains","Full gate runs once at release","CI is green on pushed SHA before cleanup"],"verification":{"proof_kinds":["build","unit","integration","pipeline-run"]},"rollback":"Do not delete branches or historical artifacts until remote CI accepts the final SHA."},
+    {"id":"WP-05","objective":"Add OMP as the ninth native host without treating imported third-party configuration as OMP proof.","requirements":["REQ-123"],"file_ownership":["platforms/omp/","platforms/platform-contracts.json","packages/cli/src/native/","packages/cli/src/runtime/","automation/",".github/workflows/"],"forbidden_files":["profiles/","rules/"],"acceptance_criteria":["Official OMP binary/version is detected","Active PI_CODING_AGENT_DIR or profile path is used consistently for install and readback","AGENTS.md and one-level skills are installed natively","OMP mcp.json uses mcpServers only through integration registration","Imported external configs never produce OMP PASS","CI matrix and terminal gate include OMP"],"verification":{"proof_kinds":["static","unit","build","production-smoke","pipeline-run"]},"rollback":"Remove only agent-rules managed OMP block and owned skill projections; retain user profile and mcpServers."},
+    {"id":"WP-06","objective":"Bind official native host events to the shared workflow without nested agent execution.","requirements":["REQ-103","REQ-108","REQ-109","REQ-112","REQ-118"],"file_ownership":["packages/kernel/src/workflow/","platforms/","packages/cli/src/services/"],"forbidden_files":["generated/","profiles/"],"acceptance_criteria":["A supported native session emits a deduplicated binding with host, client, session and context generation","Pasted approved plan follows the shared proof route","Unbound Q&A creates no durable run or second agent","Unsupported extension points are reported as configuration-only"],"verification":{"proof_kinds":["unit","integration","production-smoke"]},"rollback":"Remove only agent-rules-owned native extension/mod files."},
+    {"id":"WP-07","objective":"Run focused acceptance, install final candidate and release only exact-SHA evidence.","requirements":["REQ-106","REQ-107","REQ-116","REQ-117","REQ-122"],"file_ownership":["automation/",".github/workflows/",".agent/"],"forbidden_files":["profiles/"],"acceptance_criteria":["Rules, skills, MCP registration and runtime are reported separately per host/client","Required unobserved checks cannot yield usable","Full gate and CI bind exact final SHA","GUI-only tool visibility stays an owner check"],"verification":{"proof_kinds":["build","unit","integration","production-smoke","pipeline-run"]},"rollback":"Do not delete branches or runtime history until the pushed candidate is accepted."}
+  ],
+  "amendments": [
+    {"id":"AMD-1","reason":"Owner changed MCP policy from task-attached configuration to setup-time native registration, and expanded acceptance from eight to nine host families with client-specific runtime integration.","supersedes_prior":false,"applied_at":"2026-08-27T14:15:00.000Z","applied_by":"owner-authorized-execution","changes":[
+      {"requirement":"REQ-110","change":"Setup registers Context7, Codebase Memory, Playwright and Chrome DevTools; runtime selects calls once per packet."},
+      {"requirement":"REQ-111","change":"Claims are separated by actual client, not inferred from a sibling client sharing files."},
+      {"requirement":"REQ-123","change":"OMP requires official active-profile projection, extension load/readback and native MCP lifecycle."}
+    ]}
   ],
   "completion_policy": { "require_all_tasks": true, "require_verification": true },
   "execution_contract": { "mode":"execution", "shape":"resumable", "ledger":"required", "strategy":"single-writer", "max_agents":1, "max_depth":0, "effort_cap":"high", "authorized_final_actions":["edit","test","native-install","commit","push-main","delete-stale-branches"] },

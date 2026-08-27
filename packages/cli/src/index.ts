@@ -44,12 +44,13 @@ function formatOutput(
 program
   .command("install")
   .description("Install agent-rules native runtime for one or all platforms")
-  .argument("[platform]", "Platform name (e.g. codex, claude, grok, opencode, antigravity, cursor, deepseek-harness, command-code, all)")
+  .argument("[platform]", "Platform name (e.g. codex, claude, grok, opencode, antigravity, cursor, deepseek-harness, command-code, omp, all)")
   .option("--host <id>", "Target host (repeatable)", collectValue, [])
-  .option("--all", "Install all 8 supported native hosts")
+  .option("--all", "Install all 9 supported native hosts")
   .option("--force", "Force reinstall")
+  .option("--no-integrations", "Install rules, skills and runtime without registering standard MCP integrations")
   .option("--dry-run", "Show what would be done without executing")
-  .action(async (platformArg: string | undefined, cmdOpts: { host: string[]; all?: boolean; force?: boolean; dryRun?: boolean }) => {
+  .action(async (platformArg: string | undefined, cmdOpts: { host: string[]; all?: boolean; force?: boolean; dryRun?: boolean; integrations?: boolean }) => {
     const opts = program.optsWithGlobals() as CliOptions;
     if (cmdOpts.dryRun) opts.dryRun = true;
     const targets = cmdOpts.all
@@ -59,7 +60,7 @@ program
       : platformArg
       ? [platformArg]
       : ["all"];
-    const args = [...targets, ...(cmdOpts.force ? ["--force"] : [])];
+    const args = [...targets, ...(cmdOpts.force ? ["--force"] : []), ...(cmdOpts.integrations === false ? ["--no-integrations"] : [])];
     const result = await installCmd(args, opts);
     formatOutput(result, opts);
   });
@@ -68,9 +69,9 @@ program
 program
   .command("uninstall")
   .description("Uninstall agent-rules native runtime for one or all platforms")
-  .argument("[platform]", "Platform name (e.g. codex, claude, grok, opencode, antigravity, cursor, deepseek-harness, command-code, all)")
+  .argument("[platform]", "Platform name (e.g. codex, claude, grok, opencode, antigravity, cursor, deepseek-harness, command-code, omp, all)")
   .option("--host <id>", "Target host (repeatable)", collectValue, [])
-  .option("--all", "Uninstall all 8 supported native hosts")
+  .option("--all", "Uninstall all 9 supported native hosts")
   .option("--dry-run", "Show what would be done without executing")
   .action(async (platformArg: string | undefined, cmdOpts: { host: string[]; all?: boolean; dryRun?: boolean }) => {
     const opts = program.optsWithGlobals() as CliOptions;
@@ -90,7 +91,7 @@ program
 program
   .command("doctor")
   .description("Run platform diagnostics and doctor checks")
-  .argument("[platform]", "Platform name (e.g. codex, claude, grok, opencode, antigravity, cursor, deepseek-harness, command-code, all)")
+  .argument("[platform]", "Platform name (e.g. codex, claude, grok, opencode, antigravity, cursor, deepseek-harness, command-code, omp, all)")
   .option("--host <id>", "Target host (repeatable)", collectValue, [])
   .option("--skip-integration-verify", "Skip MCP integration verification (no PASS claim is made for skipped checks)")
   .action(async (platformArg: string | undefined, cmdOpts: { host: string[]; skipIntegrationVerify?: boolean }) => {

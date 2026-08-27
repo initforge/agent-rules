@@ -2,36 +2,36 @@
   "schema": "artifact/execution-contract",
   "version": 1,
   "kind": "current-pointer",
-  "generation": 57,
+  "generation": 60,
   "work_id": "agent-workflow-native-readiness-v3",
   "plan_id": "agent-workflow-native-readiness-v3",
   "plan_root": ".agent/runs/agent-workflow-native-readiness-v3",
   "original": {
     "path": ".agent/runs/agent-workflow-native-readiness-v3/plan.json",
-    "sha256": "96cd4e005a4fbf3bd2202df2e94266e923381dca74a7a12c816aa14353bc16b1"
+    "sha256": "39ce3b7e10ff8be70a5ea4cb3d71feaeb91a84a96790e15c9075aca5b54d3957"
   },
   "canonical_ledger": {
     "path": ".agent/ledger/agent-workflow-native-readiness-v3.json",
-    "sha256": "65b63e5c988ad8f6a248dedd4c033256f2263836f5d27044ce9b9ee6866318bd",
-    "observed_revision": 1,
-    "observed_effective_sha256": "066a7edaa88477f828e7b082bc2a1f29a43558e42744e9481c1ea87b90525c2a",
+    "sha256": "211756591ecef9e9dda1eed9efa6b1aa118b346706d2d6a14435643cfb3c621a",
+    "observed_revision": 3,
+    "observed_effective_sha256": "a39930d557e60c3c7539b958fde082cd48e635b0805400544dbe01aa25c24971",
     "plan_status": "ACTIVE",
     "execution_state": "IN_PROGRESS"
   },
   "effective_chain_tip": {
     "amendment_id": "AM-0000",
     "path": ".agent/runs/agent-workflow-native-readiness-v3/plan.json",
-    "sha256": "96cd4e005a4fbf3bd2202df2e94266e923381dca74a7a12c816aa14353bc16b1"
+    "sha256": "39ce3b7e10ff8be70a5ea4cb3d71feaeb91a84a96790e15c9075aca5b54d3957"
   },
   "candidate_chain_tip": {
     "amendment_id": "AM-0000",
     "status": "OWNER_APPROVED_EFFECTIVE",
     "path": ".agent/runs/agent-workflow-native-readiness-v3/plan.json",
-    "sha256": "96cd4e005a4fbf3bd2202df2e94266e923381dca74a7a12c816aa14353bc16b1"
+    "sha256": "39ce3b7e10ff8be70a5ea4cb3d71feaeb91a84a96790e15c9075aca5b54d3957"
   },
   "contract": {
     "path": ".agent/runs/agent-workflow-native-readiness-v3/plan.json",
-    "sha256": "96cd4e005a4fbf3bd2202df2e94266e923381dca74a7a12c816aa14353bc16b1",
+    "sha256": "39ce3b7e10ff8be70a5ea4cb3d71feaeb91a84a96790e15c9075aca5b54d3957",
     "schema_path": "schemas/plan.schema.json",
     "requirement_ids": [
       "REQ-101",
@@ -55,22 +55,16 @@
       "REQ-119",
       "REQ-120",
       "REQ-121",
-      "REQ-122"
+      "REQ-122",
+      "REQ-123"
     ],
     "status": "EFFECTIVE"
   },
-  "supersession": {
-    "transaction_id": "SUP-V3-0001",
-    "previous_work_id": "global-agent-behavior-native-operational-readiness-v2",
-    "previous_plan_id": "global-agent-behavior-native-operational-readiness-v2",
-    "reason": "Owner-authorized v3 workflow/native readiness cutover.",
-    "changed_at": "2026-08-27T00:00:00.000Z"
-  },
   "atomicity": {
     "protocol": "generation-compare-and-swap",
-    "expected_previous_generation": 56,
+    "expected_previous_generation": 59,
     "commit_target": ".agent/current.json",
     "activation_state": "CANONICALLY_ACTIVATED",
-    "updated_at": "2026-08-27T00:00:00.000Z"
+    "updated_at": "2026-08-27T07:21:13.506Z"
   }
 }

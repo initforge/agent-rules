@@ -29,7 +29,7 @@ This document establishes the canonical mapping between the repository source co
 | `packages/kernel/src/northstar/closure-service.ts` | harness-maintainer | Staged closure workflow | Stage, commit, correction, operational ignores | `stageClosureTransaction()`, `commitClosureTransaction()` | Preserves project-owned instructions |
 | `packages/kernel/src/northstar/host-capabilities.ts` | harness-maintainer | Host capability probing & enforcement | Probes host capabilities, resolves enforcement layer (`native` -> `broker` -> `worktree` -> `blocked`) | `probeHostCapabilities()`, `decideEnforcement()` | Fails closed on unknown hosts |
 | `packages/kernel/src/northstar/host-canary.ts` | harness-maintainer | Host canary & selective invalidation | Canaries 8 registry hosts, invalidates stale projection certs | `runHostCanary()`, `staleCertifications()` | 8 registry hosts canonical |
-| `packages/kernel/src/northstar/mcp-lifecycle.ts` | harness-maintainer | MCP lifecycle & idle-zero enforcement | Leases, state transitions, idle-zero assertion | `transitionMcpState()`, `assertIdleZeroReceipt()` | Rejects orphaned MCP processes |
+| `packages/kernel/src/northstar/mcp-lifecycle.ts` | harness-maintainer | Task-use lifecycle after native MCP registration | Leases, state transitions, cleanup assertion | `transitionMcpState()`, `assertIdleZeroReceipt()` | Rejects orphaned harness-owned task resources; it does not remove a host's normal registered MCP connection |
 | `packages/kernel/src/northstar/proof-router.ts` | harness-maintainer | Adaptive minimal-proof router | Selects minimal sufficient verifiers, logs omitted proofs | `routeProof()`, `filterVerifiersByProofRoute()` | Optional caller; promoted in P3 |
 | `packages/kernel/src/northstar/context-budget.ts` | harness-maintainer | Model-visible context accounting | Context token estimation across rules, skills, tools, MCP | `buildContextBudgetReceipt()` | Measured token budgets |
 | `packages/kernel/src/northstar/artifact-admission.ts` | harness-maintainer | Artifact class admission & retention | Classifies `EPHEMERAL`, `CHECKPOINTED`, `DURABLE`, `PROJECTION` | `admitArtifact()`, `classifyArtifact()` | Prevents artifact sprawl |
@@ -48,7 +48,7 @@ This document establishes the canonical mapping between the repository source co
 4. **`UNCERTAINTY / RESEARCH`**: Strong planner/researcher explores codebase for S2/S3 or material ambiguity; bounds research.
 5. **`FROZEN WORK CONTRACT`**: Compiles immutable `WorkSpec` (requirements, claims, owned/forbidden scope, DoD).
 6. **`PLAN / HANDOFF`**: Generates self-contained, portable, resumable plan artifact (`plan.md` / `current.json`).
-7. **`CONTEXT / SKILL / CAPABILITY`**: Decision Fabric / Router progressively discloses minimal context; keeps MCP idle-zero.
+7. **`CONTEXT / SKILL / CAPABILITY`**: Decision Fabric / Router progressively discloses minimal context; it selects whether a registered MCP is called and cleans up only task-local resources.
 8. **`PRE-EFFECT AUTHORIZATION`**: Native host control first, then broker, isolated worktree, or blocked.
 9. **`HOST EXECUTION`**: Headless host executes within authorized scope; runner monitors process tree and timeouts.
 10. **`OBSERVATION`**: Captures raw attributed command outputs, diffs, and tool events in durable journal.

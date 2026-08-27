@@ -66,6 +66,7 @@ const allModelEvidence: Record<string, CollectedModelEvidence> = {
   cursor: modelEvidence('cursor'),
   'deepseek-harness': modelEvidence('deepseek-harness'),
   'command-code': modelEvidence('command-code'),
+  omp: modelEvidence('omp'),
 };
 
 const enc = (s: string) => encoder.encode(s);
@@ -96,6 +97,7 @@ const hostVersionOutput: Record<string, string> = {
   cursor: `${version}\n`,
   'deepseek-harness': `${version}\n`,
   'command-code': `${version}\n`,
+  omp: `omp/${version}\n`,
 };
 
 const hostHelpOutput: Record<string, string> = {
@@ -111,6 +113,7 @@ const hostHelpOutput: Record<string, string> = {
   cursor: 'Usage of cursor:\n  --model  Model\n  --agent  Agent\n  -p, --print  Print\n',
   'deepseek-harness': 'Options:\n  --model <MODEL>\n  --profile <NAME>\n  --dump-config\n',
   'command-code': 'Usage of cmdc:\n  --model  Model\n  --agent  Agent\n  -p, --print  Print\n',
+  omp: 'FLAGS\n  --model=<value>\n  --profile=<value>\n  -p, --print  Non-interactive mode\n',
 };
 
 const capabilityIds: Record<string, string[]> = {
@@ -122,6 +125,7 @@ const capabilityIds: Record<string, string[]> = {
   cursor: ['cursor:agent', 'cursor:model', 'cursor:print'],
   'deepseek-harness': ['deepseek-harness:dump-config', 'deepseek-harness:model', 'deepseek-harness:profile'],
   'command-code': ['command-code:agent', 'command-code:model', 'command-code:print'],
+  omp: ['omp:model', 'omp:print', 'omp:profile'],
 };
 
 const run: ProbeRunner = async (executable, args) => {
@@ -167,7 +171,7 @@ describe('collectHostAttestations', () => {
       modelEvidence: allModelEvidence,
     });
 
-    expect(NATIVE_HOSTS).toEqual(['codex', 'claude', 'opencode', 'cursor', 'antigravity', 'grok', 'deepseek-harness', 'command-code']);
+    expect(NATIVE_HOSTS).toEqual(['codex', 'claude', 'opencode', 'cursor', 'antigravity', 'grok', 'deepseek-harness', 'command-code', 'omp']);
     expect(result.map((item) => item.host)).toEqual([...NATIVE_HOSTS]);
     expect(result.map((item) => item.host)).toContain('cursor');
     for (const item of result) {

@@ -13,7 +13,10 @@ export function summarizeRunResult(input: {
   ownerChecks?: RunSummary['owner_checks'];
   shipReady: boolean;
 }): RunSummary {
-  const deterministic = input.checks.filter((check) => check.observed);
-  const usable = deterministic.length > 0 && deterministic.every((check) => check.passed === true);
+  // A required check that never ran is not neutral. It must remain visible as
+  // an owner/host limitation rather than being silently ignored by `usable`.
+  const required = input.checks.filter((check) => !check.reason || check.reason === 'blocked');
+  const usable = required.length > 0
+    && required.every((check) => check.ran && check.observed && check.passed === true);
   return { active: input.active, complete: input.outcome === 'PASS', usable, ship_ready: usable && input.shipReady, checks: input.checks, owner_checks: input.ownerChecks ?? [] };
 }

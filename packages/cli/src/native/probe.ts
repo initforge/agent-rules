@@ -3,6 +3,7 @@ import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import type { HostId } from '@initforge/agent-rules-kernel/northstar/host-adapters.js';
 import { getNativeContract } from '@initforge/agent-rules-kernel/northstar/host-registry.js';
+import { ompBinaryCandidates, resolveOmpAgentHome } from './omp.js';
 import type { Detection, InstallPlan, InventoryEntry } from './types.js';
 
 const sha256 = (value: string): string => createHash('sha256').update(value).digest('hex');
@@ -13,7 +14,9 @@ export class NativeHostProbe {
     const contract = getNativeContract(host);
     if (!contract) return { host, present: false, homeDir: '', signals: [] };
     const userHome = process.env.USERPROFILE || process.env.HOME || '';
-    const homeDir = process.env[contract.homeEnv] || contract.homeDefault.replace('~', userHome).replace(/\$[A-Z_]+/, userHome);
+    const homeDir = host === 'omp'
+      ? resolveOmpAgentHome(process.env, userHome)
+      : process.env[contract.homeEnv] || contract.homeDefault.replace('~', userHome).replace(/\$[A-Z_]+/, userHome);
     const cli = contract.cliSignal.split(' ')[0].replace('.exe', '');
     const binaryPath = [...(process.env.PATH || '').split(path.delimiter), homeDir]
       .flatMap((folder) => process.platform === 'win32'
@@ -24,6 +27,7 @@ export class NativeHostProbe {
       antigravity: [path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Antigravity', 'Antigravity.exe'), path.join(process.env.LOCALAPPDATA || '', 'Programs', 'antigravity', 'Antigravity.exe')],
       cursor: [path.join(process.env.LOCALAPPDATA || '', 'Programs', 'cursor', 'resources', 'app', 'bin', 'cursor.cmd'), path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Cursor', 'Cursor.exe'), path.join(process.env.LOCALAPPDATA || '', 'Programs', 'cursor', 'Cursor.exe')],
       claude: [path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Claude', 'Claude.exe')],
+      omp: ompBinaryCandidates(),
     };
     const desktopPath = (desktopCandidates[host] ?? []).find((candidate) => fs.existsSync(candidate));
     const signals = [binaryPath && `binary-on-path:${binaryPath}`, desktopPath && `desktop-process:${desktopPath}`, fs.existsSync(homeDir) && `config-dir:${homeDir}`].filter((value): value is string => Boolean(value));

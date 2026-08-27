@@ -60,7 +60,7 @@ export async function provisionMcps(repoRoot: string, options: ProvisionOptions 
   // the operator never selected cannot poison a reconcile green.
   let entries: RegistryEntry[];
   if (!options.readOnly) {
-    entries = selectInstallEntries(inventory, (options.installProfile ?? resolveIntegrationProfile()) as IntegrationProfile, options.explicitIds ?? []);
+    entries = selectInstallEntries(inventory, (options.installProfile ?? resolveIntegrationProfile()) as IntegrationProfile, options.explicitIds ?? []).filter((entry) => entry.kind === "mcp");
   } else if (options.installProfile !== undefined) {
     entries = selectInstallEntries(inventory, options.installProfile as IntegrationProfile, options.explicitIds ?? []).filter((entry) => entry.kind === "mcp");
   } else {

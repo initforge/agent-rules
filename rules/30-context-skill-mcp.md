@@ -9,9 +9,9 @@ Build generates catalog for check; generated catalog is not a second source.
 TaskPacket calls SkillResolver exactly once; CapabilityBroker receives selected result; context engine only materializes selected skill; host native catalog only receives name/description/path at startup.
 
 Keep one IntegrationRegistry with capability, transport, auth requirement, side effects, approval policy, supported hosts and probe.
-Core install only configures native MCP bridge capability; real provider only via integration enable.
-Each task selects MCP exactly once from explicit capability or deterministic project fact.
-No MCP ID means no task MCP config. Task-local config has lease, timeout, cleanup and never overwrites global user config.
+Normal install registers the approved standard MCP providers in each supported native host. Registration is not a tool call and must preserve user-owned entries and an explicit user disable.
+Each task selects whether to use a registered MCP exactly once from explicit capability or deterministic project fact. A task without MCP need must not call a provider or mutate host config.
+Task-local config is only for genuine isolation, has lease, timeout and cleanup, and never overwrites global user config.
 Explicit-only providers never auto-route. Provider needing login/key reports Needs action, not native host install failure.
 
 Native layer always has base rules, native skills and lifecycle adapter of host.

@@ -102,6 +102,12 @@ export const HOST_CONTRACT_METADATA: Record<HostId, HostContractMetadata> = {
     source_url: 'https://commandcode.ai/docs/mods',
     max_age_days: 14,
   },
+  omp: {
+    doc_version: 'v18.0.6',
+    doc_accessed_at: '2026-08-27',
+    source_url: 'https://omp.sh/docs',
+    max_age_days: 30,
+  },
 };
 
 export interface SecretRedactionPolicy {
@@ -147,6 +153,7 @@ const BASELINE: Record<HostId, HostCapabilityAttestationV2['baseline']> = {
   grok: { native_pre_effect_enforcement: 'UNVERIFIED', sandbox: 'UNVERIFIED', path_permissions: 'UNVERIFIED', mcp_lifecycle: 'UNVERIFIED', worktree_support: 'HOST_NATIVE', telemetry: 'UNVERIFIED', compaction: 'UNVERIFIED' },
   'deepseek-harness': { native_pre_effect_enforcement: 'UNVERIFIED', sandbox: 'UNVERIFIED', path_permissions: 'UNVERIFIED', mcp_lifecycle: 'UNVERIFIED', worktree_support: 'UNVERIFIED', telemetry: 'UNVERIFIED', compaction: 'UNVERIFIED' },
   'command-code': { native_pre_effect_enforcement: 'UNVERIFIED', sandbox: 'UNVERIFIED', path_permissions: 'UNVERIFIED', mcp_lifecycle: 'UNVERIFIED', worktree_support: 'UNVERIFIED', telemetry: 'UNVERIFIED', compaction: 'UNVERIFIED' },
+  omp: { native_pre_effect_enforcement: 'UNVERIFIED', sandbox: 'UNVERIFIED', path_permissions: 'UNVERIFIED', mcp_lifecycle: 'HOST_NATIVE', worktree_support: 'UNVERIFIED', telemetry: 'UNVERIFIED', compaction: 'UNVERIFIED' },
 };
 
 /**

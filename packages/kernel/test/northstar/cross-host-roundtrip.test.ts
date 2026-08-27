@@ -15,6 +15,7 @@ const HOSTS: HostId[] = [
   'grok',
   'deepseek-harness',
   'command-code',
+  'omp',
 ];
 
 function createSampleContract(): FrozenPortableContract {
@@ -115,8 +116,8 @@ describe('Cross-Host Intake & Projection Hub', () => {
     expect(result.receipt.interaction_mode).toBe('OWNER_REVIEW');
   });
 
-  // 56 Pairwise Roundtrip Tests: All 8 hosts -> canonical -> all 8 hosts
-  it('executes 56-directional roundtrip across all 8 hosts preserving all requirements', () => {
+  // 72 Pairwise Roundtrip Tests: all 9 hosts -> canonical -> all 9 hosts.
+  it('executes 72-directional roundtrip across all 9 hosts preserving all requirements', () => {
     const contract = createSampleContract();
     let testedPairs = 0;
 
@@ -149,6 +150,6 @@ describe('Cross-Host Intake & Projection Hub', () => {
       }
     }
 
-    expect(testedPairs).toBe(56);
+    expect(testedPairs).toBe(72);
   });
 });

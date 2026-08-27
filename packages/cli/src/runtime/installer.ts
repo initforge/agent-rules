@@ -6,6 +6,7 @@ import { promisify } from "node:util";
 import { assertDirectoryNotLinked, exists, fsyncDirectory, fsyncRegularFile, hash, readRegularFileNoFollow, removeIfExists, writeJsonDurable } from "./filesystem.js";
 import { RUNTIME_PLATFORMS, type ActivationRecord, type RuntimeFile, type RuntimeInstallerOptions, type RuntimeLifecycleResult, type RuntimePlatform, type RuntimeReceipt, type SourceManifest } from "./contracts.js";
 import { resolveOpenCodeModel } from "./opencode.js";
+import { resolveOmpAgentHome } from "../native/omp.js";
 import { readCurrentPointer } from "@initforge/agent-rules-kernel/state/current-pointer.js";
 import { previewRecovery as previewTransactionRecovery, recover as recoverTransaction, writeJournal as writeTransactionJournal, type TransactionJournal } from "./recovery.js";
 
@@ -99,6 +100,7 @@ function defaultPlatformRoots(): Record<RuntimePlatform, string> {
     claude: process.env.CLAUDE_CONFIG_DIR || path.join(home, ".claude"),
     "deepseek-harness": process.env.DSH_HOME || path.join(home, ".dsh"),
     "command-code": process.env.COMMAND_CODE_HOME || path.join(home, ".commandcode"),
+    omp: resolveOmpAgentHome(process.env, home),
   };
 }
 

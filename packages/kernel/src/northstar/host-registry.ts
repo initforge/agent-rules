@@ -45,7 +45,7 @@ function loadRegistry(repoRoot?: string): { contracts: Record<string, NativeHost
     }
   }
   // fallback to hardcoded list if registry missing (should not happen)
-  const hostIds = ["codex","claude","grok","opencode","antigravity","cursor","deepseek-harness","command-code"];
+  const hostIds = ["codex","claude","grok","opencode","antigravity","cursor","deepseek-harness","command-code","omp"];
   cached = { contracts: {} as Record<string,NativeHostContract>, hostIds };
   return cached;
 }

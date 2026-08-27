@@ -4,6 +4,7 @@ import { execFile } from "node:child_process";
 import * as crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { resolveOmpAgentHome } from "../native/omp.js";
 import { verifyRuntimeReceipt, type RuntimePlatform } from "../runtime/installer.js";
 import { resolveOpenCodeModel } from "../runtime/opencode.js";
 import { collectHostKitDoctorReport, type HostKitDoctorReport } from "../host-kit/doctor.js";
@@ -177,6 +178,7 @@ function getPlatformHomes(root: string): PlatformHomeMap {
     claude: process.env.CLAUDE_CONFIG_DIR || path.join(userHome, ".claude"),
     "deepseek-harness": process.env.DSH_HOME || path.join(userHome, ".dsh"),
     "command-code": process.env.COMMAND_CODE_HOME || path.join(userHome, ".commandcode"),
+    omp: resolveOmpAgentHome(process.env, userHome),
   };
 }
 
@@ -311,7 +313,7 @@ export async function doctor(
   const root = getRepoRoot();
   const platformArg = args[0] || "all";
   const skipIntegrationVerify = args.includes("--skip-integration-verify");
-  const valid = ["codex", "grok", "antigravity", "cursor", "opencode", "claude", "deepseek-harness", "command-code", "all"];
+  const valid = ["codex", "grok", "antigravity", "cursor", "opencode", "claude", "deepseek-harness", "command-code", "omp", "all"];
   if (!valid.includes(platformArg)) {
     return { exitCode: ExitCode.InvalidArgument, message: `Invalid platform: ${platformArg}` };
   }
@@ -321,7 +323,7 @@ export async function doctor(
     return { exitCode: ExitCode.Success, message: "Dry-run: doctor skipped" };
   }
 
-  const allPlatforms = ["codex", "grok", "antigravity", "cursor", "opencode", "claude", "deepseek-harness", "command-code"] as const;
+  const allPlatforms = ["codex", "grok", "antigravity", "cursor", "opencode", "claude", "deepseek-harness", "command-code", "omp"] as const;
   type PlatformName = typeof allPlatforms[number];
   const platforms: PlatformName[] = platformArg === "all"
     ? allPlatforms.filter((platform) => platform !== "opencode" && platform !== "deepseek-harness" && platform !== "command-code")
@@ -347,6 +349,7 @@ export async function doctor(
     cursor: "mcp.json",
     opencode: "opencode.json",
     claude: "mcp.json",
+    omp: "mcp.json",
   };
   const mcpConfigPaths: { [key in PlatformName]?: string } = {};
   for (const p of platforms) {
@@ -766,32 +769,27 @@ export async function doctor(
     report.push({ platform: "mcp", check: "mcp-registry", status: "MCP_BLOCKED", detail: (error as Error).message });
   }
 
-  // ── Host MCP config convergence health (read-only classification) ─────
-  // REQ-008/REQ-009: host configs must not contain enabled agent-rules MCP
-  // entries under the default global MCP profile (none). Classification is
-  // strictly read-only here; convergence (backup + remove/disable) happens
-  // in install/sync/reconcile.
+  // ── Native MCP registration health (read-only inspection) ─────────────
+  // Registration, connection, tool visibility and a tool call are different
+  // facts. Doctor never mutates, and an old disabled managed entry is a real
+  // setup gap rather than a misleading "converged" success.
   try {
-    const { classifyHostMcpConfig, ALL_MCP_HOSTS, HOST_CONFIG_FILES } = await import("../runtime/mcp-convergence.js");
-    const { hostHome } = await import("../runtime/mcp-convergence.js");
+    const { inspectHostMcpRegistration, ALL_MCP_HOSTS } = await import("../runtime/mcp-convergence.js");
     for (const host of ALL_MCP_HOSTS) {
-      const classified = await classifyHostMcpConfig(root, host);
-      if (!classified.exists) continue;
-      const touched = classified.entries.filter((entry) => entry.disposition !== "user-owned");
-      if (touched.length === 0) continue;
-      for (const entry of touched) {
+      const inspection = await inspectHostMcpRegistration(root, host);
+      for (const entry of inspection.entries) {
         report.push({
           platform: "mcp",
-          check: `mcp-convergence-${host}-${entry.id}`,
-          status: entry.disposition === "user-modified" ? "MCP_NEEDS_USER" : "MCP_CONVERGED",
-          detail: `${entry.reason} (${path.join(hostHome(host), HOST_CONFIG_FILES[host])})`,
+          check: `mcp-registration-${host}-${entry.id}`,
+          status: entry.status,
+          detail: entry.detail,
         });
       }
     }
   } catch {
-    // Classification is advisory; a failure here must not fake a pass, so it
+    // Inspection is advisory; a failure here must not fake a pass, so it
     // is surfaced as a warning-level MCP_PARTIAL.
-    report.push({ platform: "mcp", check: "mcp-convergence", status: "MCP_PARTIAL", detail: "host MCP convergence classification unavailable" });
+    report.push({ platform: "mcp", check: "mcp-registration", status: "MCP_PARTIAL", detail: "host MCP registration inspection unavailable" });
   }
 
   // Native host projection status (single registry).
@@ -824,7 +822,7 @@ export async function doctor(
 
   const bad = report.filter((r) =>
     ["MISSING", "NOT_LIVE", "MODEL_POLICY_DRIFT", "MODEL_POLICY_MISSING", "NATIVE_PARTIAL", "ORPHANS", "ERROR",
-      "MCP_BLOCKED", "MCP_PARTIAL", "DRIFTED"].includes(r.status)
+      "MCP_BLOCKED", "MCP_PARTIAL", "MCP_MISSING", "MCP_DISABLED", "MCP_NEEDS_USER", "DRIFTED"].includes(r.status)
   );
 
   const nativeObserved = report.filter((r) => r.status === "NATIVE_OBSERVED").length;

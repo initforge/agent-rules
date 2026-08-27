@@ -163,13 +163,13 @@ async function main() {
     });
   }
 
-  // JOURNEY-010: install/reload/readback/rollback on all 8 hosts (offline proof).
+  // JOURNEY-010: install/reload/readback/rollback on every registered host (offline proof).
   {
     const offline = JSON.parse(fs.readFileSync(path.join(root, '.agent', 'evidence', plan, 'native-8host', 'offline-evidence.json'), 'utf8'));
     const hostsOk = offline.results.every((r) => r.install === 'Ready' && r.offlineCanary !== 'FAIL' && r.rollback === 'PASS');
     journeys.push({
       journey_id: 'JOURNEY-010',
-      description: 'Install/reload/readback/rollback on all 8 hosts',
+      description: 'Install/reload/readback/rollback on every registered host',
       observed: { hosts: offline.results.length, all_ready: hostsOk, byte_equal_rollbacks: offline.results.filter((r) => r.rollback === 'PASS').length },
       source: '.agent/evidence/global-agent-behavior-native-live-closure-v1/native-8host/offline-evidence.json',
       observed_at: now(),
