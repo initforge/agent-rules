@@ -422,7 +422,18 @@ export class NativeInstaller {
             if (fs.existsSync(grokScriptSrc)) {
               const scriptsDir = path.join(detection.homeDir, 'scripts');
               fs.mkdirSync(scriptsDir, { recursive: true });
-              fs.copyFileSync(grokScriptSrc, path.join(scriptsDir, 'skill-gate.py'));
+              const scriptDest = path.join(scriptsDir, 'skill-gate.py');
+              fs.copyFileSync(grokScriptSrc, scriptDest);
+              // Configure Grok hook in ~/.grok/config.json
+              const grokConfigPath = path.join(detection.homeDir, 'config.json');
+              let grokConfig: Record<string, unknown> = {};
+              if (fs.existsSync(grokConfigPath)) {
+                try { grokConfig = JSON.parse(fs.readFileSync(grokConfigPath, 'utf8')); } catch {}
+              }
+              const hooks = (grokConfig.hooks && typeof grokConfig.hooks === 'object') ? (grokConfig.hooks as Record<string, unknown>) : {};
+              hooks['UserPromptSubmit'] = { command: `python "${scriptDest}"` };
+              grokConfig.hooks = hooks;
+              fs.writeFileSync(grokConfigPath, JSON.stringify(grokConfig, null, 2) + '\n', 'utf8');
             }
           }
         } else if (instrPath && !instrPath.includes('~/.agents') && !isNonFileInstruction) {

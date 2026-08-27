@@ -1,6 +1,7 @@
 // Native OMP extension — thin lifecycle adapter for canonical turn router (REQ-006, AC-02).
 // Subscribes to OMP lifecycle hooks (before_agent_start, context, turn_end, session_shutdown)
 // and invokes routeNativeTurn before each model turn.
+import path from 'node:path';
 import {
   routeNativeTurn,
   type NativeTurnRequest,
@@ -65,7 +66,8 @@ export default function agentRulesOmpExtension(pi: OmpApi): void {
     };
 
     try {
-      const { capsule } = routeNativeTurn(request);
+      const runsRoot = path.join(ctx.cwd, '.agent', 'runs');
+      const { capsule } = routeNativeTurn(request, { runsRoot });
       activeSessions.set(sessionId, {
         routeId: capsule.route_id,
         capsule,

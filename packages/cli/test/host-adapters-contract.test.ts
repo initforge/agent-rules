@@ -135,6 +135,39 @@ describe('Host Adapters Contract & Matrix (S4, REQ-008, AC-07)', () => {
       expect(treeAfter).toBe(treeBefore);
     }
   });
+  it('restores clean pre-install state on rollback when host was previously uninstalled', async () => {
+    const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), 'omp-clean-rollback-test-'));
+    try {
+      const installer = new NativeInstaller();
+      const plan = await installer.planInstall('omp');
+      expect(plan.backupDir).toBeTruthy();
+
+      // Ensure clean state before
+      const testRuntime = path.join(tmpHome, 'agent-rules-runtime');
+      expect(fs.existsSync(testRuntime)).toBe(false);
+
+      // Rollback on an empty/uninstalled backup restores empty state
+      const emptyBackup = path.join(tmpHome, 'empty-backup');
+      fs.mkdirSync(emptyBackup, { recursive: true });
+      fs.writeFileSync(
+        path.join(emptyBackup, 'omp-runtime-backup.json'),
+        JSON.stringify({ entries: [{ target: testRuntime, backup: null, sha256: null, is_directory: true }] }),
+        'utf8'
+      );
+
+      // Create dummy runtime
+      fs.mkdirSync(testRuntime, { recursive: true });
+      fs.writeFileSync(path.join(testRuntime, 'dummy.txt'), 'test', 'utf8');
+      expect(fs.existsSync(testRuntime)).toBe(true);
+
+      const res = await installer.rollback('omp', emptyBackup);
+      expect(res.ok).toBe(true);
+      expect(fs.existsSync(testRuntime)).toBe(false);
+    } finally {
+      fs.rmSync(tmpHome, { recursive: true, force: true });
+    }
+  });
+
   it('binds three explicit evaluation axes to every certified receipt', async () => {
     const installer = new NativeInstaller();
     for (const host of ['omp', 'cursor', 'codex', 'claude'] as HostId[]) {
