@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://initforge.github.io/agent-rules/route-capsule.schema.json",
+  "title": "Route Capsule Contract",
+  "description": "Deterministic pre-model routing capsule produced by routeNativeTurn for host lifecycle hooks.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "route_id",
+    "generation",
+    "idempotency_key",
+    "protocol_version",
+    "host",
+    "session_id",
+    "turn_id",
+    "status",
+    "hashes",
+    "skills",
+    "integrations",
+    "context",
+    "proof",
+    "work_packet",
+    "observed"
+  ],
+  "properties": {
+    "schema": { "const": "agent-rules/route-capsule" },
+    "version": { "const": 1 },
+    "route_id": { "type": "string", "pattern": "^RT-[0-9a-f]{24}$" },
+    "generation": { "type": "integer", "minimum": 0 },
+    "idempotency_key": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "protocol_version": { "type": "string" },
+    "host": { "type": "string", "minLength": 1 },
+    "session_id": { "type": "string", "minLength": 1 },
+    "turn_id": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["PASS", "PARTIAL", "BLOCKED", "UNSUPPORTED", "PRE-EXISTING", "NEEDS_USER"] },
+    "hashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prompt", "workspace", "graph", "registry", "context"],
+      "properties": {
+        "prompt": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "workspace": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "graph": { "type": "string" },
+        "registry": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "context": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "primary", "reason"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "role": { "type": "string" },
+          "primary": { "type": "boolean" },
+          "reason": { "type": "string" },
+          "source": { "type": "string" },
+          "source_hash": { "type": "string" },
+          "graph_hash": { "type": "string" }
+        }
+      }
+    },
+    "integrations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["capability"],
+        "properties": {
+          "capability": { "type": "string" },
+          "provider": { "type": ["string", "null"] },
+          "mode": { "type": "string" },
+          "effect_level": { "type": "string" },
+          "suppressed_reason": { "type": "string" }
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["items", "estimated_tokens", "rendered"],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "source", "priority", "sha256"],
+            "properties": {
+              "kind": { "type": "string" },
+              "source": { "type": "string" },
+              "priority": { "type": "integer" },
+              "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+            }
+          }
+        },
+        "estimated_tokens": { "type": "integer", "minimum": 0 },
+        "rendered": { "type": "string" }
+      }
+    },
+    "proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selected", "omitted"],
+      "properties": {
+        "selected": { "type": "array", "items": { "type": "string" } },
+        "omitted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["proof", "reason"],
+            "properties": {
+              "proof": { "type": "string" },
+              "reason": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "work_packet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["work_id", "spec_id", "spec_revision", "task_id", "prompt_sha256"],
+      "properties": {
+        "work_id": { "type": "string" },
+        "spec_id": { "type": "string" },
+        "spec_revision": { "type": "integer", "minimum": 1 },
+        "task_id": { "type": "string" },
+        "prompt_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "observed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["routed_at", "router_version"],
+      "properties": {
+        "routed_at": { "type": "string" },
+        "router_version": { "type": "string" }
+      }
+    }
+  }
+}

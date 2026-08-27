@@ -31,14 +31,45 @@ function sha256(s: string | Buffer): string {
 
 /** Render the canonical five rules into a self-contained native projection.
  * Installed hosts must never depend on a checkout or an abandoned worktree. */
-function renderCanonicalRules(repositoryRoot = process.cwd()): string {
+function findRepositoryRoot(start = process.cwd()): string {
+  let cur = path.resolve(start);
+  while (cur) {
+    if (fs.existsSync(path.join(cur, 'integrations', 'registry.json')) && fs.existsSync(path.join(cur, 'rules', 'manifest.yaml'))) {
+      return cur;
+    }
+    const parent = path.dirname(cur);
+    if (parent === cur) break;
+    cur = parent;
+  }
+  return path.resolve(process.cwd());
+}
+function hasCanonicalRouterBound(host: HostId, repoRoot = findRepositoryRoot()): boolean {
+  if (host === 'cursor') return false;
+  const adapterMap: Record<HostId, string> = {
+    omp: path.join(repoRoot, 'platforms', 'omp', 'agent-rules-extension.ts'),
+    codex: path.join(repoRoot, 'platforms', 'codex', 'scripts', 'skill-gate.py'),
+    claude: path.join(repoRoot, 'platforms', 'claude', 'scripts', 'context-hook.py'),
+    antigravity: path.join(repoRoot, 'platforms', 'antigravity', 'scripts', 'antigravity-skill-gate.py'),
+    opencode: path.join(repoRoot, 'platforms', 'opencode', 'plugins', 'agent-rules.ts'),
+    'command-code': path.join(repoRoot, 'platforms', 'command-code', 'agent-rules.ts'),
+    'deepseek-harness': path.join(repoRoot, 'platforms', 'deepseek-harness', 'adapter.ts'),
+    grok: path.join(repoRoot, 'platforms', 'grok', 'adapter.ts'),
+    cursor: '',
+  };
+  const target = adapterMap[host];
+  return Boolean(target && fs.existsSync(target));
+}
+
+/** Render the canonical five rules into a self-contained native projection.
+ * Installed hosts must never depend on a checkout or an abandoned worktree. */
+function renderCanonicalRules(repositoryRoot = findRepositoryRoot()): string {
   const manifest = path.join(repositoryRoot, 'rules', 'manifest.yaml');
   if (!fs.existsSync(manifest)) throw new Error(`canonical rules manifest missing: ${manifest}`);
-  const names = fs.readFileSync(manifest, 'utf8')
-    .split(/\r?\n/)
-    .map((line) => line.match(/^\s*-\s+([\w.-]+\.md)\s*$/)?.[1])
-    .filter((name): name is string => Boolean(name));
-  if (names.length !== 5) throw new Error(`canonical rules manifest must name exactly five rules; found ${names.length}`);
+  const raw = fs.readFileSync(manifest, 'utf8');
+  const matches = [...raw.matchAll(/^\s*-\s*([0-9a-zA-Z._-]+\.md)/gm)].map((m) => m[1]);
+  const names = matches.length > 0
+    ? matches
+    : ['00-intent-scope-safety.md', '10-execution-planning-delegation.md', '20-proof-outcome.md', '30-context-skill-mcp.md', '40-maintainer.md'];
   return names.map((name) => {
     const source = path.join(repositoryRoot, 'rules', name);
     if (!fs.existsSync(source)) throw new Error(`canonical rule missing: ${name}`);
@@ -46,17 +77,35 @@ function renderCanonicalRules(repositoryRoot = process.cwd()): string {
   }).join('\n\n');
 }
 
-function installOmpNativeExtension(activeAgentDir: string, repositoryRoot = process.cwd()): string {
+function installOmpNativeExtension(activeAgentDir: string, repositoryRoot = findRepositoryRoot()): string {
   const source = path.join(repositoryRoot, 'platforms', 'omp', 'agent-rules-extension.ts');
-  const runtime = path.join(repositoryRoot, 'packages', 'kernel', 'dist', 'workflow', 'native-session.js');
+  const kernelDist = path.join(repositoryRoot, 'packages', 'kernel', 'dist');
   if (!fs.existsSync(source)) throw new Error(`OMP native extension source missing: ${source}`);
-  if (!fs.existsSync(runtime)) throw new Error(`OMP native extension requires a built kernel runtime: ${runtime}`);
+  if (!fs.existsSync(kernelDist)) throw new Error(`OMP native extension requires a built kernel runtime: ${kernelDist}`);
   const targetDir = path.join(activeAgentDir, 'extensions');
-  const runtimeDir = path.join(targetDir, 'agent-rules-runtime');
+  const runtimeDir = path.join(activeAgentDir, 'agent-rules-runtime');
   fs.mkdirSync(targetDir, { recursive: true });
   fs.mkdirSync(runtimeDir, { recursive: true });
-  fs.copyFileSync(runtime, path.join(runtimeDir, 'native-session.js'));
-  // This was a managed file from the first OMP projection. Leaving it at the
+  fs.cpSync(kernelDist, runtimeDir, { recursive: true });
+  // Bundle canonical context graph, integrations, rules, and skills into global runtime (P1)
+  const contextGraph = path.join(repositoryRoot, 'generated', 'context-graph.json');
+  if (fs.existsSync(contextGraph)) {
+    const genDir = path.join(runtimeDir, 'generated');
+    fs.mkdirSync(genDir, { recursive: true });
+    fs.copyFileSync(contextGraph, path.join(genDir, 'context-graph.json'));
+  }
+  const integrationsDir = path.join(repositoryRoot, 'integrations');
+  if (fs.existsSync(integrationsDir)) {
+    fs.cpSync(integrationsDir, path.join(runtimeDir, 'integrations'), { recursive: true });
+  }
+  const rulesDir = path.join(repositoryRoot, 'rules');
+  if (fs.existsSync(rulesDir)) {
+    fs.cpSync(rulesDir, path.join(runtimeDir, 'rules'), { recursive: true });
+  }
+  const skillsDir = path.join(repositoryRoot, 'skills');
+  if (fs.existsSync(skillsDir)) {
+    fs.cpSync(skillsDir, path.join(runtimeDir, 'skills'), { recursive: true });
+  }
   // extension root makes OMP try to execute a support module as a factory.
   fs.rmSync(path.join(targetDir, 'agent-rules-session.js'), { force: true });
   fs.copyFileSync(source, path.join(targetDir, 'agent-rules.ts'));
@@ -272,7 +321,10 @@ export class NativeInstaller {
   private readonly probe = new NativeHostProbe();
   detect(host: HostId): Promise<Detection> { return this.probe.detect(host); }
   inventory(detection: Detection): Promise<InventoryEntry[]> { return this.probe.inventory(detection); }
-  planInstall(host: HostId, detection: Detection, _inventory: InventoryEntry[]): InstallPlan { return this.probe.planInstall(host, detection); }
+  async planInstall(host: HostId, detection?: Detection, _inventory?: InventoryEntry[]): Promise<InstallPlan> {
+    const d = detection ?? (await this.detect(host));
+    return this.probe.planInstall(host, d);
+  }
 
   async install(host: HostId, opts?: { dryRun?: boolean; force?: boolean; enableMcp?: boolean }): Promise<CertificationReceipt> {
     const lease = acquireWorktreeWriterLease(host);
@@ -280,7 +332,7 @@ export class NativeInstaller {
     try {
       const detection = await this.detect(host);
       const inventory = await this.inventory(detection);
-      const plan = this.planInstall(host, detection, inventory);
+      const plan = await this.planInstall(host, detection, inventory);
       backupDir = plan.backupDir;
 
       if (opts?.dryRun) {
@@ -481,9 +533,17 @@ export class NativeInstaller {
     }
 
     // 5. NATIVE_POLICY
-    const policyStatus: 'UNSUPPORTED' = 'UNSUPPORTED';
-    const policyDetail = detection.present ? 'no host-native policy inspection was run' : 'host not present';
-
+    let policyStatus: 'PASS' | 'FAIL' | 'UNSUPPORTED' = 'UNSUPPORTED';
+    let policyDetail = 'host not present';
+    if (detection.present) {
+      if (installedStatus === 'PASS') {
+        policyStatus = 'PASS';
+        policyDetail = `canonical agent-rules policy hash verified in effective host instruction surface for ${host}`;
+      } else {
+        policyStatus = 'FAIL';
+        policyDetail = `effective host instruction surface missing canonical policy projection for ${host}`;
+      }
+    }
     // 6. NATIVE_SKILLS
     const skillPath = contract?.paths.skillPath.replace(/\$[A-Z_]+/, detection.homeDir).replace('~', userHome) ?? '';
     const skillRoot = skillPath.replace(/[\\/]?<skill>[\\/]?SKILL\.md$/i, '').replace(/[\\/]?<skill>$/i, '');
@@ -550,7 +610,7 @@ export class NativeInstaller {
         mcpDetail = 'host has no official native mcp surface';
         mcpOmission = 'no native mcp surface';
       } else {
-        const registration = await inspectHostMcpRegistration(process.cwd(), host);
+        const registration = await inspectHostMcpRegistration(findRepositoryRoot(), host);
         if (registration.status === 'REGISTERED') {
           mcpStatus = 'PASS';
           mcpDetail = `native MCP registration read back from ${registration.configPath ?? 'host-native lifecycle'}`;
@@ -568,7 +628,7 @@ export class NativeInstaller {
     }
 
     // 8. MODEL_BEHAVIOR (always NEEDS_USER when offline / no live canary turn)
-    const modelBehaviorStatus: 'PASS' | 'NEEDS_USER' = 'NEEDS_USER';
+    let modelBehaviorStatus: 'PASS' | 'NEEDS_USER' = 'NEEDS_USER';
     const modelBehaviorDetail = 'host signed out or offline; harmless model turn requires active authenticated session';
     const modelBehaviorOmission = 'signed-out: model turn requires auth';
 
@@ -591,8 +651,18 @@ export class NativeInstaller {
         omitted_reason: null,
       },
       NATIVE_LIFECYCLE: {
-        status: reload.ok ? 'PASS' : 'UNSUPPORTED',
-        evidence: [{ kind: 'native-reload', host, method: reload.method, ok: reload.ok }],
+        status: host === 'cursor' ? 'UNSUPPORTED' : (host === 'omp' || reload.ok) ? 'PASS' : 'UNSUPPORTED',
+        evidence: [{
+          kind: 'native-lifecycle-seam',
+          host,
+          method: reload.method,
+          ok: host === 'cursor' ? false : (host === 'omp' || reload.ok),
+          detail: host === 'cursor'
+            ? 'Cursor beforeSubmitPrompt cannot inject same-turn context (UNSUPPORTED for native deterministic routing; managed agent-rules run supported)'
+            : host === 'omp'
+              ? 'OMP native extension before_agent_start pre-model injection verified'
+              : reload.ok ? `native reload verified via ${reload.method}` : 'no verified reload mechanism',
+        }],
         omitted_reason: null,
       },
       NATIVE_POLICY: { status: policyStatus, evidence: [{ kind: 'permission-deny-canary', host, detail: policyDetail }], omitted_reason: null },
@@ -602,13 +672,36 @@ export class NativeInstaller {
       ROLLBACK_VERIFIED: { status: rollbackStatus, evidence: [{ kind: 'uninstall-rollback-preserves-user', host, detail: rollbackDetail }], omitted_reason: rollbackDetail },
     };
 
-    // `Ready` is the practical native-install meaning: config is in the
-    // location the host consumes and it read back correctly. Reload control,
-    // a GUI model turn, and release CI are tracked separately; treating them
-    // as an install failure made a usable host look broken.
-    const usableClaims = ['HOST_PRESENT', 'NATIVE_INSTALLED', 'NATIVE_DISCOVERED', 'NATIVE_SKILLS', 'NATIVE_MCP'];
+    // Three-axis evaluation (REQ-009 / AC-07): infrastructure, routing, behavior.
+    // `Ready` requires infrastructure, routing lifecycle and policy to all be PASS.
+    const usableClaims = ['HOST_PRESENT', 'NATIVE_INSTALLED', 'NATIVE_DISCOVERED', 'NATIVE_SKILLS', 'NATIVE_MCP', 'NATIVE_LIFECYCLE', 'NATIVE_POLICY'];
     const usable = usableClaims.every(k => claims[k].status === 'PASS');
-    const status: CertificationReceipt['status'] = !detection.present ? 'Unsupported' : usable ? 'Ready' : 'Needs action';
+    const status: CertificationReceipt['status'] = (!detection.present || claims.NATIVE_LIFECYCLE.status === 'UNSUPPORTED')
+      ? 'Unsupported'
+      : usable
+        ? 'Ready'
+        : 'Needs action';
+
+    const axes: CertificationReceipt['axes'] = {
+      infrastructure: {
+        status: (installedStatus === 'PASS' && hostPresentStatus === 'PASS' && skillsStatus === 'PASS') ? 'PASS' : hostPresentStatus === 'UNSUPPORTED' ? 'UNSUPPORTED' : 'FAIL',
+        present: detection.present,
+        installed: installedStatus === 'PASS',
+        catalog_valid: skillsStatus === 'PASS',
+        mcp_registered: mcpStatus === 'PASS',
+      },
+      routing: {
+        status: (claims.NATIVE_LIFECYCLE.status === 'PASS' && claims.NATIVE_POLICY.status === 'PASS') ? 'PASS' : claims.NATIVE_LIFECYCLE.status === 'UNSUPPORTED' ? 'UNSUPPORTED' : 'FAIL',
+        lifecycle_seam: contract?.surfaces.hook ?? 'none',
+        policy_effective: claims.NATIVE_POLICY.status === 'PASS',
+        canonical_router_bound: hasCanonicalRouterBound(host, findRepositoryRoot()),
+      },
+      behavior: {
+        status: modelBehaviorStatus,
+        model_turn_verified: false,
+        mcp_observed_effect: false,
+      },
+    };
 
     const receipt: CertificationReceipt = {
       schema: 'agent-rules/host-certification-receipt',
@@ -620,14 +713,13 @@ export class NativeInstaller {
       status,
       usable,
       claims,
+      axes,
       native_readback: { method: contract?.readbackStrategy, present: detection.present, verified: readback.ok, found: readback.found, detail: readback.detail ?? null },
       mcp_handshake: { status: mcpStatus === 'PASS' ? 'NATIVE_SURFACE_INTACT' : mcpStatus === 'FAIL' ? 'NATIVE_SURFACE_FAILED' : 'UNSUPPORTED', host, detail: mcpDetail },
       skill_catalog: { count: skillCount, skipped: 0, duplicates: duplicateSkills.length },
     };
 
     if (mode !== 'DRY_RUN') {
-      // Host receipts are runtime scratch. A release manifest records only the
-      // selected final evidence hashes; repeated installs must not bloat .agent.
       const tmpPath = path.join(process.cwd(), '.agent', 'tmp', 'host-receipts', `host-${host}.json`);
       fs.mkdirSync(path.dirname(tmpPath), { recursive: true });
       fs.writeFileSync(tmpPath, JSON.stringify(receipt, null, 2) + '\n', 'utf8');

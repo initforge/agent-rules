@@ -34,6 +34,8 @@ export interface HostProbeResult {
   version?: string;
   confirmed?: string[];
   error?: string;
+  /** True only when a real live-host model turn event with nonce was executed/observed (S5). */
+  is_live_host?: boolean;
 }
 
 export interface CanaryRunInput {
@@ -213,16 +215,17 @@ function buildFacts(input: CanaryRunInput): { facts: HostCapabilityFacts; certif
 /** Canonical per-host canary run: returns facts with honest certifications. */
 export function runHostCanary(input: CanaryRunInput): { facts: HostCapabilityFacts; state: CertificationState; certifications: CapabilityCertification[] } {
   const { facts, certifications } = buildFacts(input);
-  // Host-level state: a successful live probe makes the host LIVE_CERTIFIED
-  // even when only some capabilities are individually confirmed; per-capability
-  // certifications remain selective so a broken primitive is never masked.
-  const state = !hasNativeProjection(input.repoRoot, input.host)
+  // Host-level state (S5): resolver-only readback probe maps to STATIC_CONFORMED.
+  // LIVE_CERTIFIED is strictly reserved for live-host model turns with verified nonce.
+  const state: CertificationState = !hasNativeProjection(input.repoRoot, input.host)
     ? 'UNSUPPORTED'
     : input.probe === undefined
       ? 'STATIC_KNOWN'
-      : input.probe.ok === true
+      : input.probe.ok === true && input.probe.is_live_host === true
         ? 'LIVE_CERTIFIED'
-        : 'NOT_LIVE_VERIFIED';
+        : input.probe.ok === true
+          ? 'STATIC_CONFORMED'
+          : 'NOT_LIVE_VERIFIED';
   return { facts, state, certifications };
 }
 

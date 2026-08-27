@@ -28,7 +28,8 @@
     "verify:windows-hosts": "node automation/verify-windows-hosts.mjs",
     "verify:skill-canaries": "node automation/skill-live-canary.mjs",
     "verify:process-level": "node automation/test-process-level-integration.mjs",
-    "verify:offline-native-hosts": "node automation/offline-native-host-lifecycle.mjs"
+    "verify:offline-native-hosts": "node automation/offline-native-host-lifecycle.mjs",
+    "verify:native-routing": "node automation/verify-native-routing.mjs"
   },
   "devDependencies": {
     "@opencode-ai/sdk": "^1.18.10",

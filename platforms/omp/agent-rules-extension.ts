@@ -1,48 +1,113 @@
-// Native OMP extension. It observes the host-owned session rather than
-// starting another agent or scheduler inside OMP.
-// OMP auto-discovers every top-level .js/.ts file in `extensions/` as a
-// factory. Keep this support module below a non-entry directory so only this
-// file is loaded as the native extension factory.
-import { nativeSessionEvent } from './agent-rules-runtime/native-session.js';
+// Native OMP extension — thin lifecycle adapter for canonical turn router (REQ-006, AC-02).
+// Subscribes to OMP lifecycle hooks (before_agent_start, context, turn_end, session_shutdown)
+// and invokes routeNativeTurn before each model turn.
+import {
+  routeNativeTurn,
+  type NativeTurnRequest,
+  type RouteCapsule,
+} from '../agent-rules-runtime/northstar/native-turn-router.js';
 
 type OmpApi = {
   setLabel(label: string): void;
-  on(event: string, handler: (event: Record<string, unknown>, ctx: { cwd: string; sessionManager?: { getSessionId?: () => string } }) => unknown): void;
-  logger?: { debug?: (message: string) => void };
+  on(event: string, handler: (event: Record<string, unknown>, ctx: OmpContext) => unknown): void;
+  logger?: { debug?: (message: string) => void; info?: (message: string) => void; warn?: (message: string) => void };
 };
 
-function binding(ctx: { cwd: string; sessionManager?: { getSessionId?: () => string } }, packetId = 'unbound') {
-  return {
-    host: 'omp',
-    client: process.env.OMP_HEADLESS === '1' ? 'headless' : 'interactive',
-    environment: process.platform,
-    profile: process.env.OMP_PROFILE || process.env.PI_PROFILE,
-    effectiveConfigPath: process.env.PI_CODING_AGENT_DIR,
-    executablePath: process.execPath,
-    sessionId: ctx.sessionManager?.getSessionId?.() ?? `omp:${ctx.cwd}`,
-    packetId,
-    contextGeneration: 0,
+type OmpContext = {
+  cwd: string;
+  sessionManager?: {
+    getSessionId?: () => string;
+    getEntries?: () => Array<{ id?: string; type?: string }>;
   };
+  model?: {
+    id?: string;
+    provider?: string;
+  };
+};
+
+interface ActiveTurnCache {
+  routeId: string;
+  capsule: RouteCapsule;
+  timestamp: number;
 }
+
+const activeSessions = new Map<string, ActiveTurnCache>();
+let turnCounter = 0;
 
 /** OMP auto-loads this default factory from active-agent/extensions. */
 export default function agentRulesOmpExtension(pi: OmpApi): void {
   pi.setLabel('agent-rules');
-  const observed = new Set<string>();
-  const note = (kind: 'input' | 'before_tool' | 'tool_result' | 'checkpoint' | 'completed' | 'cancelled', event: Record<string, unknown>, ctx: { cwd: string; sessionManager?: { getSessionId?: () => string } }) => {
-    const packetId = typeof event.packet_id === 'string' ? event.packet_id : 'unbound';
-    const fact = nativeSessionEvent(binding(ctx, packetId), kind);
-    if (observed.has(fact.id)) return;
-    observed.add(fact.id);
-    // The host logger is intentionally the observation sink for unbound chats.
-    // A managed WorkPacket can consume the same event schema without creating
-    // durable plans or a second model loop for ordinary Q&A.
-    pi.logger?.debug?.(`agent-rules ${fact.kind} ${fact.session_id}`);
-  };
-  pi.on('input', (event, ctx) => note('input', event, ctx));
-  pi.on('tool_call', (event, ctx) => note('before_tool', event, ctx));
-  pi.on('tool_result', (event, ctx) => note('tool_result', event, ctx));
-  pi.on('session_before_compact', (event, ctx) => note('checkpoint', event, ctx));
-  pi.on('turn_end', (event, ctx) => note('completed', event, ctx));
-  pi.on('session_shutdown', (event, ctx) => note('cancelled', event, ctx));
+
+  // 1. before_agent_start: The primary pre-model seam in OMP.
+  // Fired after prompt expansion, before the LLM loop begins.
+  pi.on('before_agent_start', (event, ctx) => {
+    const prompt = typeof event.prompt === 'string' ? event.prompt : '';
+    if (!prompt.trim()) return;
+
+    const sessionId = ctx.sessionManager?.getSessionId?.() ?? `omp:${ctx.cwd}`;
+    const turnId = `turn-${++turnCounter}-${Date.now()}`;
+    const hostFacts = {
+      client: process.env.OMP_HEADLESS === '1' ? 'headless' : 'interactive',
+      environment: process.platform,
+      profile: process.env.OMP_PROFILE || process.env.PI_PROFILE || null,
+      provider: ctx.model?.provider ?? null,
+      model: ctx.model?.id ?? null,
+    };
+
+    const request: NativeTurnRequest = {
+      protocol_version: '2.0',
+      host: 'omp',
+      session_id: sessionId,
+      turn_id: turnId,
+      cwd: ctx.cwd,
+      prompt,
+      host_facts: hostFacts,
+    };
+
+    try {
+      const { capsule } = routeNativeTurn(request);
+      activeSessions.set(sessionId, {
+        routeId: capsule.route_id,
+        capsule,
+        timestamp: Date.now(),
+      });
+
+      const skillList = capsule.skills.map((s) => s.id).join(',');
+      pi.logger?.debug?.(
+        `agent-rules routed turn [${capsule.route_id}] status=${capsule.status} skills=${skillList || 'none'}`
+      );
+
+      // Inject rendered pre-model context into systemPrompt for this turn
+      const currentSystemPrompt = typeof event.systemPrompt === 'string' ? event.systemPrompt : '';
+      const injectedSystemPrompt = currentSystemPrompt
+        ? `${currentSystemPrompt}\n\n${capsule.context.rendered}`
+        : capsule.context.rendered;
+
+      return {
+        systemPrompt: injectedSystemPrompt,
+      };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      pi.logger?.warn?.(`agent-rules routing error: ${msg}`);
+    }
+  });
+
+  // 2. context: Reuse the turn's capsule during context preparation
+  pi.on('context', (_event, ctx) => {
+    const sessionId = ctx.sessionManager?.getSessionId?.() ?? `omp:${ctx.cwd}`;
+    const cached = activeSessions.get(sessionId);
+    if (!cached) return;
+    pi.logger?.debug?.(`agent-rules active context capsule [${cached.routeId}]`);
+  });
+
+  // 3. turn_end & session_shutdown: Lifecycle cleanup
+  pi.on('turn_end', (_event, ctx) => {
+    const sessionId = ctx.sessionManager?.getSessionId?.() ?? `omp:${ctx.cwd}`;
+    pi.logger?.debug?.(`agent-rules turn completed for session ${sessionId}`);
+  });
+
+  pi.on('session_shutdown', (_event, ctx) => {
+    const sessionId = ctx.sessionManager?.getSessionId?.() ?? `omp:${ctx.cwd}`;
+    activeSessions.delete(sessionId);
+  });
 }

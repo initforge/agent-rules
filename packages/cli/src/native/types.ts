@@ -8,9 +8,24 @@ export interface CertificationReceipt {
   schema: 'agent-rules/host-certification-receipt'; version: 1; host: HostId; generated_at: string; git_head: string; candidate_fingerprint?: string;
   status: 'Ready' | 'Needs action' | 'Unsupported';
   /** Config usability: host is present and its native rules/skills/MCP
-   * registrations were actually read back. It deliberately excludes a GUI
-   * model turn and release CI, which belong to owner checks / ship readiness. */
+   * registrations were actually read back. */
   usable: boolean;
-  claims: { HOST_PRESENT: ClaimVerification; NATIVE_INSTALLED: ClaimVerification; NATIVE_DISCOVERED: ClaimVerification; NATIVE_LIFECYCLE: ClaimVerification; NATIVE_POLICY: ClaimVerification; NATIVE_SKILLS: ClaimVerification; NATIVE_MCP: ClaimVerification; MODEL_BEHAVIOR: ClaimVerification; ROLLBACK_VERIFIED: ClaimVerification; [key: string]: ClaimVerification; };
+  claims: {
+    HOST_PRESENT: ClaimVerification;
+    NATIVE_INSTALLED: ClaimVerification;
+    NATIVE_DISCOVERED: ClaimVerification;
+    NATIVE_LIFECYCLE: ClaimVerification;
+    NATIVE_POLICY: ClaimVerification;
+    NATIVE_SKILLS: ClaimVerification;
+    NATIVE_MCP: ClaimVerification;
+    MODEL_BEHAVIOR: ClaimVerification;
+    ROLLBACK_VERIFIED: ClaimVerification;
+    [key: string]: ClaimVerification;
+  };
+  axes?: {
+    infrastructure: { status: 'PASS' | 'FAIL' | 'UNSUPPORTED'; present: boolean; installed: boolean; catalog_valid: boolean; mcp_registered: boolean };
+    routing: { status: 'PASS' | 'FAIL' | 'UNSUPPORTED'; lifecycle_seam: string; policy_effective: boolean; canonical_router_bound: boolean };
+    behavior: { status: 'PASS' | 'NEEDS_USER' | 'UNSUPPORTED'; model_turn_verified: boolean; mcp_observed_effect: boolean };
+  };
   native_readback: unknown; mcp_handshake: unknown; skill_catalog: unknown;
 }

@@ -6,6 +6,7 @@ import { installCmd } from "./commands/install.js";
 import { uninstallCmd } from "./commands/uninstall.js";
 import { doctor } from "./commands/doctor.js";
 import { integrationCmd } from "./commands/integration.js";
+import { handleRouteNativeCommand } from "./commands/route-native.js";
 import {
   initNorthStar,
   northStarReference,
@@ -245,6 +246,16 @@ program
       console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
       process.exitCode = ExitCode.GeneralError;
     }
+  });
+
+// 9. route-native
+program
+  .command("route-native")
+  .description("Route one native model turn via canonical SkillResolver / CapabilityBroker (REQ-005)")
+  .option("--stdin", "Read NativeTurnRequest JSON from stdin")
+  .option("--runs-root <dir>", "RunStore directory to persist route receipts")
+  .action(async (cmdOpts: { stdin?: boolean; runsRoot?: string }) => {
+    await handleRouteNativeCommand(cmdOpts);
   });
 
 await program.parseAsync(process.argv);

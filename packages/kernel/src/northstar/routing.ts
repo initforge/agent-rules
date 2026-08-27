@@ -168,15 +168,43 @@ function graphPath(repoRoot: string): string {
  * explicitly. The resolved root is used only to locate the canonical
  * generated context graph; it is never a second routing source.
  */
+export function findBundledHarnessRoot(): string | null {
+  // 1. Check relative to module location (installed runtime or kernel dist)
+  const metaDir = typeof import.meta !== 'undefined' && import.meta.dirname ? import.meta.dirname : null;
+  if (metaDir) {
+    let cur: string | null = path.resolve(metaDir);
+    while (cur) {
+      if (fs.existsSync(path.join(cur, 'generated', 'context-graph.json')) || fs.existsSync(path.join(cur, 'integrations', 'registry.json'))) {
+        return cur;
+      }
+      const parent = path.dirname(cur);
+      if (parent === cur) break;
+      cur = parent;
+    }
+  }
+  // 2. Check global OMP agent runtime directory
+  const home = process.env.USERPROFILE || process.env.HOME || '';
+  if (home) {
+    const globalRuntime = path.join(home, '.omp', 'agent', 'extensions', 'agent-rules-runtime');
+    if (fs.existsSync(path.join(globalRuntime, 'generated', 'context-graph.json'))) {
+      return globalRuntime;
+    }
+  }
+  return null;
+}
+
 function resolveRoutingRoot(start = process.cwd()): string {
   let current = path.resolve(start);
   while (true) {
     if (fs.existsSync(path.join(current, 'generated', 'context-graph.json'))) return current;
     if (fs.existsSync(path.join(current, 'rules', 'manifest.yaml'))) return current;
     const parent = path.dirname(current);
-    if (parent === current) return path.resolve(start);
+    if (parent === current) break;
     current = parent;
   }
+  const bundled = findBundledHarnessRoot();
+  if (bundled) return bundled;
+  return path.resolve(start);
 }
 
 function loadContextGraph(repoRoot: string): { graph: ContextGraph; hash: string } | null {
@@ -653,9 +681,12 @@ function resolveCapabilityHarnessRoot(start = process.cwd()): string {
   while (true) {
     if (fs.existsSync(path.join(current, 'integrations', 'registry.json'))) return current;
     const parent = path.dirname(current);
-    if (parent === current) return path.resolve(start);
+    if (parent === current) break;
     current = parent;
   }
+  const bundled = findBundledHarnessRoot();
+  if (bundled) return bundled;
+  return path.resolve(start);
 }
 
 /** Backward-compatible alias for the standard broker. */
