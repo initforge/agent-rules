@@ -1,6 +1,9 @@
 // Native OMP extension. It observes the host-owned session rather than
 // starting another agent or scheduler inside OMP.
-import { nativeSessionEvent } from './agent-rules-session.js';
+// OMP auto-discovers every top-level .js/.ts file in `extensions/` as a
+// factory. Keep this support module below a non-entry directory so only this
+// file is loaded as the native extension factory.
+import { nativeSessionEvent } from './agent-rules-runtime/native-session.js';
 
 type OmpApi = {
   setLabel(label: string): void;

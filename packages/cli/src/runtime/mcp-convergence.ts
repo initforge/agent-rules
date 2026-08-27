@@ -99,7 +99,7 @@ function registrationPreferencesPath(env: NodeJS.ProcessEnv): string {
   return path.join(home, ".agent-rules", "mcp-registration-preferences.json");
 }
 
-function disabledRegistrationIds(env: NodeJS.ProcessEnv): Set<string> {
+export function disabledRegistrationIds(env: NodeJS.ProcessEnv): Set<string> {
   const file = registrationPreferencesPath(env);
   try {
     const value = JSON.parse(fs.readFileSync(file, "utf8")) as Partial<RegistrationPreferences>;
@@ -189,7 +189,7 @@ export function getStandardMcpServers(home: string): Record<string, { command: s
   };
 }
 
-function expandPlaceholders(host: HostName, body: string, env: NodeJS.ProcessEnv): string {
+export function expandPlaceholders(host: HostName, body: string, env: NodeJS.ProcessEnv): string {
   const bin = resolveCodebaseMemoryBin(env);
   let expanded = bin
     ? body.replaceAll("${CODEBASE_MEMORY_MCP_BIN}", host === "codex" ? bin.replaceAll("\\", "/") : bin.replaceAll("\\", "\\\\"))
@@ -206,6 +206,30 @@ function expandPlaceholders(host: HostName, body: string, env: NodeJS.ProcessEnv
     expanded = expanded
       .replaceAll("${COMMAND_CODE_CODEBASE_MEMORY_BIN}", codebaseBin.replaceAll("\\", "\\\\"))
       .replaceAll("${COMMAND_CODE_CHROME_PATH}", chromeBin.replaceAll("\\", "\\\\"));
+  }
+  // Canonical adapter files remain portable (`npx …`) so they can be consumed
+  // by Linux/macOS runners and headless task overlays. Windows native clients
+  // need an explicit cmd wrapper because npm shims are not reliably spawnable
+  // from their stdio launchers; apply that dialect only at native projection.
+  if (process.platform === "win32" && host !== "codex") {
+    try {
+      const parsed = JSON.parse(expanded) as { mcpServers?: Record<string, { command?: unknown; args?: unknown[] }>; mcp?: Record<string, { command?: unknown }> };
+      for (const definition of Object.values(parsed.mcpServers ?? {})) {
+        if (definition?.command === "npx") {
+          definition.command = "cmd.exe";
+          definition.args = ["/d", "/s", "/c", "npx", ...(Array.isArray(definition.args) ? definition.args : [])];
+        }
+      }
+      for (const definition of Object.values(parsed.mcp ?? {})) {
+        if (Array.isArray(definition?.command) && definition.command[0] === "npx") {
+          definition.command = ["cmd.exe", "/d", "/s", "/c", ...definition.command];
+        }
+      }
+      expanded = `${JSON.stringify(parsed, null, 2)}\n`;
+    } catch {
+      // A malformed adapter is rejected by its normal parser; do not invent a
+      // Windows projection from an invalid source document.
+    }
   }
   return expanded;
 }
@@ -241,6 +265,10 @@ export function normalizedServerDefinition(host: HostName, value: string): strin
     const parsed = JSON.parse(value) as Record<string, unknown>;
     delete parsed.enabled;
     delete parsed.disabled;
+    // OpenCode's `local` type is implicit in its pre-1.x `command` + `args`
+    // form. It is not a semantic provider difference, so omit it while
+    // comparing an older managed projection with the current native shape.
+    if (host === "opencode" && parsed.type === "local") delete parsed.type;
     // Earlier Windows projections used `cmd.exe /c npx …` because native
     // hosts do not consistently resolve npm shims. That is the same provider
     // invocation as the portable adapter's `npx …`, not a user modification.
@@ -250,6 +278,19 @@ export function normalizedServerDefinition(host: HostName, value: string): strin
         parsed.command = "npx";
         parsed.args = parsed.args.slice(npx + 1);
       }
+    }
+    // OpenCode's current dialect stores the whole argv in `command`, while
+    // older projections used `{ command: 'npx', args: [...] }`. Compare both
+    // to one portable argv form so a Windows cmd wrapper is still owned rather
+    // than misclassified as a user edit.
+    if (Array.isArray(parsed.command)) {
+      const npx = parsed.command.findIndex((arg) => arg === "npx");
+      if (npx >= 0 && parsed.command.slice(0, npx).every((arg) => typeof arg === "string")) {
+        parsed.command = ["npx", ...parsed.command.slice(npx + 1)];
+      }
+    } else if (parsed.command === "npx" && Array.isArray(parsed.args)) {
+      parsed.command = ["npx", ...parsed.args];
+      delete parsed.args;
     }
     // The old Windows projection pinned the bundled Playwright Chromium.
     // Preserve a user-selected browser, but regard that exact managed path as
@@ -273,14 +314,14 @@ export function normalizedServerDefinition(host: HostName, value: string): strin
   }
 }
 
-function sameServerDefinition(host: HostName, left: string, right: string): boolean {
+export function sameServerDefinition(host: HostName, left: string, right: string): boolean {
   return normalizedServerDefinition(host, left) === normalizedServerDefinition(host, right);
 }
 
 /** A user may pin a different version or add harmless host options for the
  * same MCP provider. Keep that entry untouched, but it still counts as a
  * visible native registration; only a different provider is a conflict. */
-function isCompatibleProviderOverride(serverName: string, body: string): boolean {
+export function isCompatibleProviderOverride(serverName: string, body: string): boolean {
   const signatures: Record<string, string> = {
     context7: "@upstash/context7-mcp",
     playwright: "@playwright/mcp",
@@ -295,7 +336,7 @@ function integrationDirs(repoRoot: string): string[] {
   return ["required", "recommended", "optional", "manual"].map((bucket) => path.join(repoRoot, "integrations", bucket));
 }
 
-function findAdapterFile(repoRoot: string, integrationId: string, host: HostName): string | null {
+export function findAdapterFile(repoRoot: string, integrationId: string, host: HostName): string | null {
   for (const dir of integrationDirs(repoRoot)) {
     const candidate = path.join(dir, integrationId, "adapters", ADAPTER_FILES[host]);
     if (fs.existsSync(candidate)) return candidate;
@@ -329,7 +370,7 @@ function tomlServerKeys(body: string): string[] {
  * that is the canonical JSON of the server definition; for codex TOML it is
  * the `[mcp_servers.<name>]` block text.
  */
-function serverDefinitionBodies(host: HostName, body: string): Array<{ name: string; definition: string }> {
+export function serverDefinitionBodies(host: HostName, body: string): Array<{ name: string; definition: string }> {
   const out: Array<{ name: string; definition: string }> = [];
   if (host === "codex") {
     const sections = body.matchAll(/^\s*\[mcp_servers\.([^\]]+)\]\s*$/gm);
@@ -468,7 +509,12 @@ export function parseHostConfig(host: HostName, content: string): ParsedHostConf
 
 function classifyEntry(entry: { id: string; body: string; disabled: boolean }, model: ConvergenceModel): EntryDisposition {
   if (entry.disabled) return "owned-disable";
-  const fingerprint = model.fingerprints.find((known) => known.serverName === entry.id && known.sha256 === sha256(entry.body));
+  // Compare through the host dialect normalizer instead of raw hashes. An
+  // older agent-rules OpenCode projection may use `command` + `args`, while
+  // the current native dialect stores one argv array (and Windows wraps npm
+  // shims). Those are the same owned provider invocation.
+  const fingerprint = model.fingerprints.find((known) => known.serverName === entry.id
+    && sameServerDefinition(known.host as HostName, entry.body, known.body));
   if (fingerprint) return model.profile === "none" ? "owned-remove" : "owned-disable";
   const strongLegacy = model.legacyCommandPatterns.some((pattern) => pattern.test(entry.body));
   if (model.knownNames.has(entry.id)) {
@@ -482,7 +528,7 @@ function classifyEntry(entry: { id: string; body: string; disabled: boolean }, m
   return strongLegacy ? "legacy-migrate" : "user-owned";
 }
 
-function backupConfig(configPath: string, rootDir: string): { backupPath: string; receiptPath: string } {
+export function backupConfig(configPath: string, rootDir: string): { backupPath: string; receiptPath: string } {
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const backupDir = path.join(rootDir, ".agent-rules-convergence", stamp);
   fs.mkdirSync(backupDir, { recursive: true });
@@ -716,278 +762,4 @@ export function hostConvergenceBlocking(results: readonly HostConvergenceResult[
   return results.some((result) => result.status === "NEEDS_USER" || result.error?.startsWith("cannot rewrite"));
 }
 
-/** Result of the normal setup-time registration. It deliberately does not
- * claim that a newly-opened GUI session has already connected or called a
- * tool; those are distinct observations made by the native adapter/doctor. */
-export interface HostMcpRegistrationResult {
-  host: HostName;
-  configPath: string | null;
-  status: "REGISTERED" | "NO_ADAPTER" | "NEEDS_USER" | "FAILED";
-  registered: string[];
-  conflicts: string[];
-  backupPath?: string;
-  backupReceipt?: string;
-  error?: string;
-}
-
-export interface HostMcpRegistrationInspection {
-  id: string;
-  status: "MCP_REGISTERED" | "MCP_MISSING" | "MCP_DISABLED" | "MCP_NEEDS_USER";
-  detail: string;
-}
-
-export interface HostMcpRegistrationInspectionResult {
-  host: HostName;
-  configPath: string | null;
-  status: "REGISTERED" | "MISSING" | "NEEDS_USER" | "NO_ADAPTER" | "INVALID";
-  entries: HostMcpRegistrationInspection[];
-}
-
-/** Names produced by an older projection which do not match the canonical
- * IntegrationRegistry key.  They are removable only when their complete
- * server definition is byte-for-byte our current adapter after normalization.
- * This avoids treating a user's similarly-named server as ours. */
-const LEGACY_SERVER_ALIASES: Partial<Record<HostName, Record<string, string>>> = {
-  codex: { chrome_devtools: "chrome-devtools" },
-};
-
-async function selectedMcpDefinitions(
-  repoRoot: string,
-  host: HostName,
-  env: NodeJS.ProcessEnv,
-  profile: GlobalMcpProfile,
-  integrationIds?: readonly string[],
-  ignoreExplicitDisable = false,
-): Promise<Array<{ id: string; name: string; definition: string }>> {
-  const inventory = await loadIntegrationInventory(repoRoot);
-  const requested = integrationIds ? new Set(integrationIds) : null;
-  const disabled = disabledRegistrationIds(env);
-  const definitions: Array<{ id: string; name: string; definition: string }> = [];
-  for (const entry of selectGlobalAdapterEntries(inventory, profile)) {
-    if ((requested && !requested.has(entry.id)) || (!ignoreExplicitDisable && disabled.has(entry.id))) continue;
-    const adapter = findAdapterFile(repoRoot, entry.id, host);
-    if (!adapter) continue;
-    const raw = expandPlaceholders(host, fs.readFileSync(adapter, "utf8"), env);
-    for (const definition of serverDefinitionBodies(host, raw)) {
-      definitions.push({ id: entry.id, name: definition.name, definition: definition.definition });
-    }
-  }
-  return definitions;
-}
-
-/** Read-only registration inspection.  This deliberately reports config
- * exposure only; connection, registry visibility and a safe tool call remain
- * separate host-session observations. */
-export async function inspectHostMcpRegistration(
-  repoRoot: string,
-  host: HostName,
-  options: { env?: NodeJS.ProcessEnv; profile?: GlobalMcpProfile } = {},
-): Promise<HostMcpRegistrationInspectionResult> {
-  const env = options.env ?? process.env;
-  if (host === "command-code") {
-    const { readCommandCodeNative } = await import("../services/command-code-native.js");
-    const native = readCommandCodeNative(hostHome(host, env));
-    const entries = native.expectedMcpServerNames.map((id) => ({
-      id,
-      status: native.mcpComplete ? "MCP_REGISTERED" as const : "MCP_MISSING" as const,
-      detail: native.mcpComplete
-        ? `native Command Code config read back from ${native.mcpPath}`
-        : `native Command Code registration is missing or incomplete at ${native.mcpPath}`,
-    }));
-    return { host, configPath: native.mcpPath, status: native.mcpComplete ? "REGISTERED" : "MISSING", entries };
-  }
-  if (host === "deepseek-harness") {
-    const { NativeHostProbe } = await import("../native/probe.js");
-    const { inspectDshNativeReadback } = await import("../services/deepseek-native.js");
-    const native = inspectDshNativeReadback(await new NativeHostProbe().detect(host));
-    const names = ["chrome-devtools", "codebase-memory", "context7", "playwright"];
-    const entries = names.map((id) => ({
-      id,
-      status: native.nativeMcp && native.profiles.length > 0 ? "MCP_REGISTERED" as const : "MCP_MISSING" as const,
-      detail: native.nativeMcp
-        ? `native DSH Cordis row read back from ${native.profiles.join(", ")}`
-        : "DSH native Cordis MCP rows are not fully observable from dump-config",
-    }));
-    return {
-      host,
-      configPath: path.join(hostHome(host, env), "profiles"),
-      status: native.nativeMcp ? "REGISTERED" : "MISSING",
-      entries,
-    };
-  }
-  const profile = options.profile ?? resolveGlobalMcpProfile(env);
-  const configPath = hostMcpConfigPath(host, env);
-  if (profile === "none") return { host, configPath, status: "REGISTERED", entries: [] };
-  try {
-    const definitions = await selectedMcpDefinitions(repoRoot, host, env, profile, undefined, true);
-    const explicitlyDisabled = disabledRegistrationIds(env);
-    if (definitions.length === 0) return { host, configPath, status: "NO_ADAPTER", entries: [] };
-    if (!fs.existsSync(configPath)) {
-      return { host, configPath, status: "MISSING", entries: definitions.map((definition) => ({ id: definition.name, status: "MCP_MISSING", detail: `native config is absent: ${configPath}` })) };
-    }
-    const content = fs.readFileSync(configPath, "utf8");
-    const observed = new Map(parseHostConfig(host, content).serverEntries.map((entry) => [entry.id, entry]));
-    const entries = definitions.map((definition): HostMcpRegistrationInspection => {
-      if (explicitlyDisabled.has(definition.id)) {
-        return { id: definition.name, status: "MCP_DISABLED", detail: "disabled explicitly by the user through agent-rules integration settings" };
-      }
-      const entry = observed.get(definition.name);
-      if (!entry) return { id: definition.name, status: "MCP_MISSING", detail: `not registered in ${configPath}` };
-      if (entry.disabled && sameServerDefinition(host, entry.body, definition.definition)) return { id: definition.name, status: "MCP_DISABLED", detail: `registered but disabled in ${configPath}` };
-      if (sameServerDefinition(host, entry.body, definition.definition)) return { id: definition.name, status: "MCP_REGISTERED", detail: `native registration read back from ${configPath}` };
-      if (isCompatibleProviderOverride(definition.name, entry.body)) {
-        return { id: definition.name, status: "MCP_REGISTERED", detail: `compatible user-owned provider override read back from ${configPath}; left unchanged` };
-      }
-      return { id: definition.name, status: "MCP_NEEDS_USER", detail: `same server name has user-modified definition in ${configPath}` };
-    });
-    const status = entries.some((entry) => entry.status === "MCP_NEEDS_USER") ? "NEEDS_USER"
-      : entries.some((entry) => entry.status === "MCP_MISSING" || entry.status === "MCP_DISABLED") ? "MISSING"
-        : "REGISTERED";
-    return { host, configPath, status, entries };
-  } catch {
-    return { host, configPath, status: "INVALID", entries: [] };
-  }
-}
-
-/**
- * Register the selected standard MCPs in the host's *native* configuration.
- * It is additive and fail-closed: a same-name entry that is not byte-equivalent
- * to our adapter is user-owned and is never overwritten. DSH and Command Code
- * use their dedicated native projectors, so this generic JSON/TOML writer does
- * not pretend their different lifecycle is interchangeable.
- */
-export async function registerHostMcpAdapters(
-  repoRoot: string,
-  host: HostName,
-  options: { env?: NodeJS.ProcessEnv; profile?: GlobalMcpProfile; integrationIds?: readonly string[] } = {},
-): Promise<HostMcpRegistrationResult> {
-  const env = options.env ?? process.env;
-  if (host === "deepseek-harness" || host === "command-code") {
-    return { host, configPath: null, status: "NO_ADAPTER", registered: [], conflicts: [] };
-  }
-  const profile = options.profile ?? resolveGlobalMcpProfile(env);
-  if (profile === "none") return { host, configPath: hostMcpConfigPath(host, env), status: "REGISTERED", registered: [], conflicts: [] };
-  try {
-    const model = await buildConvergenceModel(repoRoot, host, env, profile, options.integrationIds);
-    const definitions = await selectedMcpDefinitions(repoRoot, host, env, profile, options.integrationIds);
-    const configPath = hostMcpConfigPath(host, env);
-    if (definitions.length === 0) return { host, configPath, status: "NO_ADAPTER", registered: [], conflicts: [] };
-
-    const content = fs.existsSync(configPath) ? fs.readFileSync(configPath, "utf8") : "";
-    const parsed = content.trim().length === 0
-      ? { serverEntries: [], disabled: false }
-      : parseHostConfig(host, content);
-    const current = new Map(parsed.serverEntries.map((entry) => [entry.id, entry]));
-    const conflicts: string[] = [];
-    const additions: typeof definitions = [];
-    const aliasesToRemove: Array<{ id: string; body: string }> = [];
-    for (const definition of definitions) {
-      const observed = current.get(definition.name);
-      if (!observed) {
-        additions.push(definition);
-      } else if (!sameServerDefinition(host, observed.body, definition.definition)) {
-        // v2's idle-zero migration left agent-rules entries disabled. A
-        // disabled entry that still points at an exact managed root/pkg is
-        // safely recognizable as that migration, not a user replacement.
-        const legacyOwned = observed.disabled
-          && (model.fingerprints.some((known) => known.serverName === definition.name && sameServerDefinition(host, observed.body, known.body))
-            || model.legacyCommandPatterns.some((pattern) => pattern.test(observed.body)));
-        if (!legacyOwned && !isCompatibleProviderOverride(definition.name, observed.body)) conflicts.push(definition.name);
-      }
-    }
-    const aliases = LEGACY_SERVER_ALIASES[host] ?? {};
-    for (const observed of parsed.serverEntries) {
-      const canonicalName = aliases[observed.id];
-      if (!canonicalName) continue;
-      const canonical = definitions.find((definition) => definition.name === canonicalName);
-      // Normalize the legacy table key to the canonical key before the strict
-      // definition comparison.  The key itself is intentionally the one
-      // allowed difference; command, arguments and every other field must
-      // still match exactly after disabled-marker normalization.
-      const aliasAsCanonical = host === "codex"
-        ? observed.body.replace(`[mcp_servers.${observed.id}]`, `[mcp_servers.${canonicalName}]`)
-        : observed.body;
-      if (!canonical || !sameServerDefinition(host, aliasAsCanonical, canonical.definition)) {
-        conflicts.push(observed.id);
-        continue;
-      }
-      aliasesToRemove.push({ id: observed.id, body: observed.body });
-    }
-    const conflictSet = new Set(conflicts);
-    // A conflict blocks only that server.  Other managed servers (and a
-    // provably-owned legacy alias) can still be repaired without overwriting
-    // the user entry that needs a decision.
-    const applicable = definitions.filter((definition) => !conflictSet.has(definition.name));
-    const applicableAdditions = additions.filter((definition) => !conflictSet.has(definition.name));
-    const refreshes = applicable.filter((definition) => current.get(definition.name)?.disabled === true);
-    if (applicableAdditions.length === 0 && refreshes.length === 0 && aliasesToRemove.length === 0) {
-      return {
-        host,
-        configPath,
-        status: conflicts.length > 0 ? "NEEDS_USER" : "REGISTERED",
-        registered: applicable.map((definition) => definition.name),
-        conflicts,
-      };
-    }
-
-    fs.mkdirSync(path.dirname(configPath), { recursive: true });
-    const backup = fs.existsSync(configPath) ? backupConfig(configPath, path.dirname(configPath)) : undefined;
-    if (host === "codex") {
-      let next = content;
-      const starts = [...next.matchAll(/^\s*\[mcp_servers\.([^\]]+)\]\s*$/gm)]
-        .map((match) => ({ name: match[1]!.trim(), index: match.index! }));
-      const allSections = [...next.matchAll(/^\s*\[[^\]]+\]\s*$/gm)].map((match) => match.index!);
-      const edits: Array<{ start: number; end: number; replacement: string }> = [];
-      for (const refresh of refreshes) {
-        const section = starts.find((candidate) => candidate.name === refresh.name);
-        if (!section) continue;
-        const end = allSections.find((index) => index > section.index) ?? next.length;
-        edits.push({ start: section.index, end, replacement: `${refresh.definition}\n\n` });
-      }
-      for (const alias of aliasesToRemove) {
-        const section = starts.find((candidate) => candidate.name === alias.id);
-        if (!section) continue;
-        const end = allSections.find((index) => index > section.index) ?? next.length;
-        edits.push({ start: section.index, end, replacement: "" });
-      }
-      if (edits.length > 0) {
-        let cursor = 0;
-        let rewritten = "";
-        for (const edit of edits.sort((left, right) => left.start - right.start)) {
-          rewritten += next.slice(cursor, edit.start) + edit.replacement;
-          cursor = edit.end;
-        }
-        next = rewritten + next.slice(cursor);
-      }
-      const appended = applicableAdditions.map((definition) => definition.definition).join("\n\n");
-      fs.writeFileSync(configPath, `${next.trimEnd()}${next.trim() && appended ? "\n\n" : ""}${appended}${appended ? "\n" : ""}`, "utf8");
-    } else {
-      let config: Record<string, unknown> = {};
-      if (content.trim()) {
-        const value = JSON.parse(content) as unknown;
-        if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("native MCP config must be a JSON object");
-        config = value as Record<string, unknown>;
-      }
-      const key = host === "opencode" ? "mcp" : "mcpServers";
-      const servers = config[key];
-      if (servers !== undefined && (!servers || typeof servers !== "object" || Array.isArray(servers))) throw new Error(`native ${key} must be an object`);
-      const next = { ...((servers ?? {}) as Record<string, unknown>) };
-      for (const addition of [...applicableAdditions, ...refreshes]) next[addition.name] = JSON.parse(addition.definition);
-      config[key] = next;
-      fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`, "utf8");
-    }
-    const readback = parseHostConfig(host, fs.readFileSync(configPath, "utf8"));
-    const missing = applicable.filter((definition) => !readback.serverEntries.some((entry) => entry.id === definition.name));
-    if (missing.length > 0) return { host, configPath, status: "FAILED", registered: definitions.map((definition) => definition.name), conflicts: [], error: `readback missing ${missing.map((definition) => definition.name).join(", ")}` };
-    return {
-      host,
-      configPath,
-      status: conflicts.length > 0 ? "NEEDS_USER" : "REGISTERED",
-      registered: applicable.map((definition) => definition.name),
-      conflicts,
-      ...(backup ? { backupPath: backup.backupPath, backupReceipt: backup.receiptPath } : {}),
-    };
-  } catch (error) {
-    return { host, configPath: hostMcpConfigPath(host, env), status: "FAILED", registered: [], conflicts: [], error: error instanceof Error ? error.message : String(error) };
-  }
-}
+export { inspectHostMcpRegistration, registerHostMcpAdapters, type HostMcpRegistrationInspection, type HostMcpRegistrationInspectionResult, type HostMcpRegistrationResult } from "./mcp-registration.js";

@@ -244,6 +244,25 @@ describe("host MCP config convergence", () => {
     expect(parsed.serverEntries.map((entry) => entry.id)).toEqual(["context7"]);
   });
 
+  it("repairs only the exact legacy OMP Codebase Memory projection", async () => {
+    const workspaceRepo = fs.existsSync(path.join(process.cwd(), "integrations", "registry.json"))
+      ? process.cwd()
+      : path.resolve(process.cwd(), "../..");
+    const configPath = path.join(hostHome("omp", env), HOST_CONFIG_FILES.omp);
+    fs.mkdirSync(path.dirname(configPath), { recursive: true });
+    fs.writeFileSync(configPath, JSON.stringify({
+      mcpServers: {
+        "codebase-memory": { command: "codebase-memory-mcp", args: [] },
+        mine: { command: "my-memory", args: ["--keep"] },
+      },
+    }));
+    const result = await registerHostMcpAdapters(workspaceRepo, "omp", { env, profile: "all" });
+    expect(result.status).toBe("REGISTERED");
+    const next = JSON.parse(fs.readFileSync(configPath, "utf8")) as { mcpServers: Record<string, { command: string; args: string[] }> };
+    expect(next.mcpServers["codebase-memory"]!.command).toMatch(/codebase-memory-mcp(\.exe)?$/i);
+    expect(next.mcpServers.mine).toEqual({ command: "my-memory", args: ["--keep"] });
+  });
+
   it("registers normal MCP setup with a backup and removes only the known Codex legacy alias", async () => {
     const registryPath = path.join(repo, "integrations", "registry.json");
     const registry = JSON.parse(fs.readFileSync(registryPath, "utf8")) as { integrations: unknown[] };

@@ -52,8 +52,13 @@ function installOmpNativeExtension(activeAgentDir: string, repositoryRoot = proc
   if (!fs.existsSync(source)) throw new Error(`OMP native extension source missing: ${source}`);
   if (!fs.existsSync(runtime)) throw new Error(`OMP native extension requires a built kernel runtime: ${runtime}`);
   const targetDir = path.join(activeAgentDir, 'extensions');
+  const runtimeDir = path.join(targetDir, 'agent-rules-runtime');
   fs.mkdirSync(targetDir, { recursive: true });
-  fs.copyFileSync(runtime, path.join(targetDir, 'agent-rules-session.js'));
+  fs.mkdirSync(runtimeDir, { recursive: true });
+  fs.copyFileSync(runtime, path.join(runtimeDir, 'native-session.js'));
+  // This was a managed file from the first OMP projection. Leaving it at the
+  // extension root makes OMP try to execute a support module as a factory.
+  fs.rmSync(path.join(targetDir, 'agent-rules-session.js'), { force: true });
   fs.copyFileSync(source, path.join(targetDir, 'agent-rules.ts'));
   const worker = path.join(repositoryRoot, 'platforms', 'omp', 'agents', 'initforge-worker.md');
   if (!fs.existsSync(worker)) throw new Error(`OMP worker definition missing: ${worker}`);
@@ -70,6 +75,7 @@ interface OmpRuntimeBackupEntry { target: string; backup: string | null; sha256:
 function backupOmpNativeExtension(activeAgentDir: string, backupDir: string): void {
   const targets = [
     path.join(activeAgentDir, 'extensions', 'agent-rules.ts'),
+    path.join(activeAgentDir, 'extensions', 'agent-rules-runtime', 'native-session.js'),
     path.join(activeAgentDir, 'extensions', 'agent-rules-session.js'),
     path.join(activeAgentDir, 'agents', 'agent-rules-worker.md'),
   ];

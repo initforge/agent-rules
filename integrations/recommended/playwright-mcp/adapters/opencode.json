@@ -3,15 +3,11 @@
     "playwright": {
       "type": "local",
       "command": [
-        "cmd.exe",
-        "/d",
-        "/s",
-        "/c",
         "npx",
         "-y",
         "@playwright/mcp@0.0.78",
-        "--isolated"
-        ,"--executable-path",
+        "--isolated",
+        "--executable-path",
         "${OPENCODE_CHROME_PATH}"
       ],
       "enabled": true

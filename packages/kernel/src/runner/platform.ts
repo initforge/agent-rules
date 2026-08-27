@@ -104,6 +104,8 @@ export function toMcpCommandArgv(command: readonly string[]): string[] {
   if (!isWindows()) return [...command];
   if (command.length === 0) return [];
   const first = command[0] ?? '';
+  // This generic helper only wraps explicit script paths. Host-specific
+  // projectors handle bare npm shims when their native launcher needs it.
   const needsShell = /\.(cmd|bat|ps1)$/i.test(first);
   if (!needsShell) return [...command];
   return ['cmd.exe', '/d', '/s', '/c', ...command];

@@ -3,10 +3,6 @@
     "chrome-devtools": {
       "type": "local",
       "command": [
-        "cmd.exe",
-        "/d",
-        "/s",
-        "/c",
         "npx",
         "-y",
         "chrome-devtools-mcp@1.7.0",

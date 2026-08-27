@@ -576,9 +576,16 @@ export function materializeMcpConfig(outDir: string, opts: MaterializeOptions): 
       const mcpRecord = merged.mcp as Record<string, { command?: unknown }>;
       for (const [name, def] of Object.entries(mcpRecord)) {
         if (Array.isArray(def.command)) {
+          const command = def.command as string[];
           mcpRecord[name] = {
             ...def,
-            command: toMcpCommandArgv(def.command as string[]),
+            // OpenCode spawns task-local MCP commands without a shell on
+            // Windows. Its npm shim therefore needs an explicit cmd wrapper;
+            // this is a projection detail, while the canonical adapter stays
+            // portable as `npx …` for Linux and macOS.
+            command: command[0]?.toLowerCase() === 'npx'
+              ? ['cmd.exe', '/d', '/s', '/c', ...command]
+              : toMcpCommandArgv(command),
           };
         }
       }
