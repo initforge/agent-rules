@@ -53,7 +53,7 @@ function hasCanonicalRouterBound(host: HostId, repoRoot = findRepositoryRoot()):
     opencode: path.join(repoRoot, 'platforms', 'opencode', 'plugins', 'agent-rules.ts'),
     'command-code': path.join(repoRoot, 'platforms', 'command-code', 'agent-rules.ts'),
     'deepseek-harness': path.join(repoRoot, 'platforms', 'deepseek-harness', 'adapter.ts'),
-    grok: path.join(repoRoot, 'platforms', 'grok', 'adapter.ts'),
+    grok: path.join(repoRoot, 'platforms', 'grok', 'scripts', 'skill-gate.py'),
     cursor: '',
   };
   const target = adapterMap[host];
@@ -346,15 +346,14 @@ export class NativeInstaller {
     return this.probe.planInstall(host, d);
   }
 
-  async install(host: HostId, opts?: { dryRun?: boolean; force?: boolean; enableMcp?: boolean }): Promise<CertificationReceipt> {
+  async install(host: HostId, opts?: { dryRun?: boolean; force?: boolean; enableMcp?: boolean; backupDir?: string }): Promise<CertificationReceipt> {
     const lease = acquireWorktreeWriterLease(host);
-    let backupDir = '';
+    let backupDir = opts?.backupDir ?? '';
     try {
       const detection = await this.detect(host);
       const inventory = await this.inventory(detection);
       const plan = await this.planInstall(host, detection, inventory);
-      backupDir = plan.backupDir;
-
+      if (!backupDir) backupDir = plan.backupDir;
       if (opts?.dryRun) {
         return this.certify(host, 'DRY_RUN');
       }
@@ -418,6 +417,14 @@ export class NativeInstaller {
           fs.mkdirSync(instrPath, { recursive: true });
           const target = path.join(instrPath, 'agent-rules.md');
           fs.writeFileSync(target, managed, 'utf8');
+          if (host === 'grok') {
+            const grokScriptSrc = path.join(findRepositoryRoot(), 'platforms', 'grok', 'scripts', 'skill-gate.py');
+            if (fs.existsSync(grokScriptSrc)) {
+              const scriptsDir = path.join(detection.homeDir, 'scripts');
+              fs.mkdirSync(scriptsDir, { recursive: true });
+              fs.copyFileSync(grokScriptSrc, path.join(scriptsDir, 'skill-gate.py'));
+            }
+          }
         } else if (instrPath && !instrPath.includes('~/.agents') && !isNonFileInstruction) {
           let isDir = false;
           try { isDir = fs.existsSync(instrPath) && fs.statSync(instrPath).isDirectory(); } catch {}

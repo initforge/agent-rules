@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -7,6 +8,29 @@ import { getHostIds, getNativeContract, getAllNativeContracts } from '@initforge
 import type { HostId } from '@initforge/agent-rules-kernel/northstar/host-adapters.js';
 
 const repoRoot = path.resolve(process.cwd(), '../..');
+
+function recursiveTreeSha256(dir: string): string {
+  if (!fs.existsSync(dir)) return '0'.repeat(64);
+  const files: Array<{ rel: string; sha256: string }> = [];
+  function walk(current: string, base: string) {
+    const entries = fs.readdirSync(current, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name));
+    for (const e of entries) {
+      const full = path.join(current, e.name);
+      const rel = path.relative(base, full).replace(/\\/g, '/');
+      if (e.isDirectory()) {
+        walk(full, base);
+      } else if (e.isFile()) {
+        const hash = createHash('sha256').update(fs.readFileSync(full)).digest('hex');
+        files.push({ rel, sha256: hash });
+      }
+    }
+  }
+  walk(dir, dir);
+  files.sort((a, b) => a.rel.localeCompare(b.rel));
+  return createHash('sha256').update(JSON.stringify(files)).digest('hex');
+}
+import { getHostIds, getNativeContract, getAllNativeContracts } from '@initforge/agent-rules-kernel/northstar/host-registry.js';
+import type { HostId } from '@initforge/agent-rules-kernel/northstar/host-adapters.js';
 
 describe('Host Adapters Contract & Matrix (S4, REQ-008, AC-07)', () => {
   const allHostIds = getHostIds(repoRoot) as HostId[];
@@ -80,7 +104,7 @@ describe('Host Adapters Contract & Matrix (S4, REQ-008, AC-07)', () => {
     expect(ompContract?.id).not.toBe(antigravityContract?.id);
   });
 
-  it('supports isolated temp-home install, readback, and byte-exact rollback', async () => {
+  it('supports isolated temp-home install, readback, and byte-exact recursive rollback', async () => {
     const installer = new NativeInstaller();
     const detection = await installer.detect('omp');
 
@@ -88,9 +112,29 @@ describe('Host Adapters Contract & Matrix (S4, REQ-008, AC-07)', () => {
       const plan = await installer.planInstall('omp');
       expect(plan.host).toBe('omp');
       expect(plan.backupDir).toBeTruthy();
+
+      // Execute install to ensure runtime exists
+      await installer.install('omp');
+      const runtimeDir = path.join(detection.homeDir, 'agent-rules-runtime');
+      expect(fs.existsSync(runtimeDir)).toBe(true);
+
+      // Compute tree hash before
+      const treeBefore = recursiveTreeSha256(runtimeDir);
+      expect(treeBefore).not.toBe('0'.repeat(64));
+
+      // Install again with secondPlan.backupDir
+      const secondPlan = await installer.planInstall('omp');
+      await installer.install('omp', { backupDir: secondPlan.backupDir });
+
+      // Rollback using the backup
+      const rollbackResult = await installer.rollback('omp', secondPlan.backupDir);
+      expect(rollbackResult.ok).toBe(true);
+
+      // Tree hash after rollback must equal tree hash before
+      const treeAfter = recursiveTreeSha256(runtimeDir);
+      expect(treeAfter).toBe(treeBefore);
     }
   });
-
   it('binds three explicit evaluation axes to every certified receipt', async () => {
     const installer = new NativeInstaller();
     for (const host of ['omp', 'cursor', 'codex', 'claude'] as HostId[]) {

@@ -159,15 +159,14 @@ describe('MCP Canary & Live Certification (S5, REQ-010, AC-05)', () => {
 
     // 3. Called: Execute real JSON-RPC 2.0 stdio tool call to registered local MCP binary
     const localBinary = path.join(process.env.LOCALAPPDATA ?? '', 'Programs', 'codebase-memory-mcp', 'codebase-memory-mcp.exe');
-    if (fs.existsSync(localBinary)) {
-      const response = await executeRealMcpToolCall(localBinary, [], 'list_projects', {});
+    expect(fs.existsSync(localBinary)).toBe(true);
+    const response = await executeRealMcpToolCall(localBinary, [], 'list_projects', {});
 
-      // 4. Success / Effect observed from real server
-      expect(response.initialized).toBe(true);
-      expect(response.toolResult).toBeDefined();
-      expect(typeof response.contentText).toBe('string');
-      expect(response.contentText).toContain('projects');
-    }
+    // 4. Success / Effect observed from real server (AC-05: no synthetic PASS)
+    expect(response.initialized).toBe(true);
+    expect(response.toolResult).toBeDefined();
+    expect(typeof response.contentText).toBe('string');
+    expect(response.contentText).toContain('projects');
   });
 
   it('records honest omitted reason when a second authenticated provider is absent', () => {
