@@ -117,23 +117,34 @@ function installOmpNativeExtension(activeAgentDir: string, repositoryRoot = find
   return path.join(targetDir, 'agent-rules.ts');
 }
 
-interface OmpRuntimeBackupEntry { target: string; backup: string | null; sha256: string | null }
+interface OmpRuntimeBackupEntry {
+  target: string;
+  backup: string | null;
+  sha256: string | null;
+  is_directory?: boolean;
+}
 
 /** OMP extensions and worker definitions are part of the native projection,
  * so they need the same transaction boundary as AGENTS.md and skills. */
 function backupOmpNativeExtension(activeAgentDir: string, backupDir: string): void {
+  const runtimeDir = path.join(activeAgentDir, 'agent-rules-runtime');
   const targets = [
     path.join(activeAgentDir, 'extensions', 'agent-rules.ts'),
-    path.join(activeAgentDir, 'extensions', 'agent-rules-runtime', 'native-session.js'),
-    path.join(activeAgentDir, 'extensions', 'agent-rules-session.js'),
     path.join(activeAgentDir, 'agents', 'agent-rules-worker.md'),
+    runtimeDir,
   ];
   const entries: OmpRuntimeBackupEntry[] = targets.map((target, index) => {
-    if (!fs.existsSync(target)) return { target, backup: null, sha256: null };
+    if (!fs.existsSync(target)) return { target, backup: null, sha256: null, is_directory: false };
+    const stat = fs.statSync(target);
+    if (stat.isDirectory()) {
+      const backup = path.join(backupDir, `omp-runtime-dir-${index}`);
+      fs.cpSync(target, backup, { recursive: true });
+      return { target, backup: path.basename(backup), sha256: null, is_directory: true };
+    }
     const bytes = fs.readFileSync(target);
     const backup = path.join(backupDir, `omp-runtime-${index}-${path.basename(target)}`);
     fs.copyFileSync(target, backup);
-    return { target, backup: path.basename(backup), sha256: sha256(bytes) };
+    return { target, backup: path.basename(backup), sha256: sha256(bytes), is_directory: false };
   });
   fs.writeFileSync(path.join(backupDir, 'omp-runtime-backup.json'), JSON.stringify({ entries }, null, 2) + '\n', 'utf8');
 }
@@ -144,14 +155,23 @@ function restoreOmpNativeExtension(backupDir: string): boolean {
   const parsed = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as { entries?: OmpRuntimeBackupEntry[] };
   for (const entry of parsed.entries ?? []) {
     if (entry.backup === null) {
-      fs.rmSync(entry.target, { force: true });
+      if (entry.is_directory) {
+        fs.rmSync(entry.target, { recursive: true, force: true });
+      } else {
+        fs.rmSync(entry.target, { force: true });
+      }
       continue;
     }
     const source = path.join(backupDir, entry.backup);
     if (!fs.existsSync(source)) return false;
-    fs.mkdirSync(path.dirname(entry.target), { recursive: true });
-    fs.copyFileSync(source, entry.target);
-    if (entry.sha256 && sha256(fs.readFileSync(entry.target)) !== entry.sha256) return false;
+    if (entry.is_directory) {
+      fs.rmSync(entry.target, { recursive: true, force: true });
+      fs.cpSync(source, entry.target, { recursive: true });
+    } else {
+      fs.mkdirSync(path.dirname(entry.target), { recursive: true });
+      fs.copyFileSync(source, entry.target);
+      if (entry.sha256 && sha256(fs.readFileSync(entry.target)) !== entry.sha256) return false;
+    }
   }
   return true;
 }

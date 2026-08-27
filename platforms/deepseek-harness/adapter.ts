@@ -243,15 +243,28 @@ export const deepseekHarnessAdapter: DshAdapter = {
     }
 
     const args = ['--profile', params.profile];
-    // The prompt is a single argument to the booted app. On Windows the shell
-    // path concatenates args, so quote it explicitly to keep the task text
-    // intact (never shell-split into words).
-    const promptArg = params.prompt;
+    // Canonical pre-model turn routing (REQ-008)
+    let routedContext: string | undefined;
+    try {
+      const { routeNativeTurn } = await import('@initforge/agent-rules-kernel/northstar/native-turn-router.js');
+      const { capsule } = routeNativeTurn({
+        protocol_version: '2.0',
+        host: 'deepseek-harness',
+        session_id: sessionId,
+        turn_id: `turn-${Date.now()}`,
+        cwd: params.cwd ?? process.cwd(),
+        prompt: params.prompt,
+        host_facts: { client: 'headless', profile: params.profile },
+      });
+      routedContext = capsule.context.rendered;
+    } catch { /* fail open */ }
+
+    const promptArg = routedContext ? `${params.prompt}\n\n${routedContext}` : params.prompt;
     try {
       const { stdout, stderr, exitCode } = await runNativeDsh(found.path, [...args, promptArg], {
         timeoutMs: params.timeoutMs ?? 120_000,
         cwd: params.cwd,
-        env: { ...process.env, DSH_HOME: dshHome() },
+        env: { ...process.env, DSH_HOME: dshHome(), ...(routedContext ? { AGENT_RULES_ROUTED_CONTEXT: routedContext } : {}) },
       });
       if (exitCode !== 0) {
         return {
