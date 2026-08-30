@@ -2,6 +2,9 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
+    // Several installer tests deliberately override process-wide host and
+    // state-root variables. They must not run in parallel with each other.
+    fileParallelism: false,
     include: [
       'test/host-adapters-contract.test.ts',
       'test/index.test.ts',
