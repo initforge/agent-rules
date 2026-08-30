@@ -35,7 +35,7 @@ function loadCapabilities(): Record<HostId, HostCapability> {
   try {
     const ids = getHostIds() as HostId[];
     // Validate that registry host set matches fallback set for now; future hosts would extend fallback.
-    if (ids.length === 8 && ids.every(id => id in fallback)) return fallback;
+    if (ids.length === 9 && ids.every(id => id in fallback)) return fallback;
     // If registry has different set, synthesize from fallback for known ids
     const out: Record<string, HostCapability> = {};
     for (const id of ids) {

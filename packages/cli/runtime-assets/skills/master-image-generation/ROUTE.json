@@ -1,0 +1,22 @@
+{
+  "signals": [
+    "mockup",
+    "brand visuals",
+    "image-to-code",
+    "brandkit",
+    "sinh ảnh giao diện"
+  ],
+  "excludes": [
+    "5fedu ERP module",
+    "ordinary CSS"
+  ],
+  "priority": 50,
+  "loads": [
+    "skill:master-image-generation"
+  ],
+  "supports": [],
+  "project_scope": "",
+  "platform_scope": "all",
+  "max_route_tokens": 3500,
+  "default": false
+}

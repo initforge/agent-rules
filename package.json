@@ -9,27 +9,16 @@
   "packageManager": "npm@11.13.0",
   "workspaces": [
     "packages/cli",
-    "packages/engine",
     "packages/kernel"
   ],
   "scripts": {
-    "build": "npm run build -w packages/kernel && npm run build -w packages/engine && npm run build -w packages/cli && node automation/build-runtime.mjs",
-    "test": "node automation/run-governed-vitest.mjs --project-root . --cwd . --mode full --timeout-ms 600000 -- run --config vitest.config.ts && npm run test --workspaces --if-present",
-    "test:fast": "node automation/run-governed-vitest.mjs --project-root . --cwd . --mode full -- run --config vitest.config.ts --testNamePattern=\"^(?!.*\\\\[(e2e|browser)\\\\]).*$\"",
-    "test:e2e": "node automation/run-governed-vitest.mjs --project-root . --cwd . --mode full -- run --config vitest.config.ts --testNamePattern=\\\"\\\\[e2e\\\\]\\\"",
-    "test:browser": "node automation/run-governed-vitest.mjs --project-root . --cwd . --mode full -- run --config vitest.config.ts --testNamePattern=\\\"\\\\[browser\\\\]\\\"",
+    "build": "npm run build -w packages/kernel && node automation/build-runtime.mjs && npm run build -w packages/cli",
+    "test": "node node_modules/vitest/vitest.mjs run --config vitest.config.ts && npm run test --workspaces --if-present",
+    "test:fast": "npm test",
     "check": "npm run typecheck --workspaces --if-present",
-    "check:agent-dir": "node automation/validate-agent-dir.mjs",
     "ci:quality": "npm run build && npm run check && npm run test",
-    "ci:certify": "bash automation/ci-certify.sh",
     "verify:all": "node automation/verify-all.mjs",
-    "verify:all:pwsh": "node automation/run-pwsh.mjs automation/verify-all.ps1",
-    "verify:ci": "node automation/verify-all.mjs",
-    "verify:windows-hosts": "node automation/verify-windows-hosts.mjs",
-    "verify:skill-canaries": "node automation/skill-live-canary.mjs",
-    "verify:process-level": "node automation/test-process-level-integration.mjs",
-    "verify:offline-native-hosts": "node automation/offline-native-host-lifecycle.mjs",
-    "verify:native-routing": "node automation/verify-native-routing.mjs"
+    "verify:ci": "node automation/verify-all.mjs"
   },
   "devDependencies": {
     "@opencode-ai/sdk": "^1.18.10",

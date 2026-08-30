@@ -1,0 +1,104 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>5F template</title>
+    <!-- Open Graph (share preview) – dùng logo app -->
+    <meta property="og:title" content="5F template" />
+    <meta property="og:description" content="Ứng dụng mẫu quản lý ERP" />
+    <meta property="og:image" content="https://yt3.googleusercontent.com/X4lA-bA7ZeTZw2SgntOyCmik98-0H_fGzBQEOwW9pEwyYGZBb1TpCsatgsOf3L3viXjt6OzU_A=s160-c-k-c0x00ffffff-no-rj" />
+    <!-- Favicon & logo app (logo trên browser tab) -->
+    <link rel="icon" type="image/png" href="https://yt3.googleusercontent.com/X4lA-bA7ZeTZw2SgntOyCmik98-0H_fGzBQEOwW9pEwyYGZBb1TpCsatgsOf3L3viXjt6OzU_A=s160-c-k-c0x00ffffff-no-rj" />
+    <link rel="apple-touch-icon" href="https://yt3.googleusercontent.com/X4lA-bA7ZeTZw2SgntOyCmik98-0H_fGzBQEOwW9pEwyYGZBb1TpCsatgsOf3L3viXjt6OzU_A=s160-c-k-c0x00ffffff-no-rj" />
+    
+    <!-- Default font (Inter) + Noto Sans fallback – other fonts lazy-loaded on demand -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chế độ tối, cỡ chữ, màu chủ đạo, font — áp từ localStorage trước React (giảm nháy). Font: giữ đồng bộ với lib/theme/fonts.ts -->
+    <script>
+      (function() {
+        var SANS_FALLBACK = "'Noto Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'";
+        /** family= cho Google CSS2; rỗng = đã có trong link mặc định phía trên — đồng bộ GOOGLE_FONT_CSS2_MAP */
+        var GOOGLE_FONT_PARAM = {
+          Inter: '',
+          'Be Vietnam Pro': 'Be+Vietnam+Pro:wght@400;500;600;700',
+          Lexend: 'Lexend:wght@400;500;600;700',
+          Nunito: 'Nunito:wght@400;600;700',
+          'Source Sans 3': 'Source+Sans+3:wght@400;500;600;700',
+          Merriweather: 'Merriweather:wght@400;700'
+        };
+        function quoteFontName(name) {
+          name = (name || '').trim();
+          return name.indexOf(' ') >= 0 ? "'" + name + "'" : name;
+        }
+        function applyFontFromState(state) {
+          var el = document.documentElement;
+          var ff = state && state.fontFamily;
+          if (!ff || !(ff in GOOGLE_FONT_PARAM)) ff = 'Inter';
+          var param = GOOGLE_FONT_PARAM[ff];
+          if (param) {
+            var id = 'gfont-' + ff.replace(/\s+/g, '-');
+            if (!document.getElementById(id)) {
+              var link = document.createElement('link');
+              link.id = id;
+              link.rel = 'stylesheet';
+              link.href = 'https://fonts.googleapis.com/css2?family=' + param + '&display=swap';
+              document.head.appendChild(link);
+            }
+          }
+          el.style.setProperty('--font-sans', quoteFontName(ff) + ', ' + SANS_FALLBACK);
+        }
+        try {
+          var raw = localStorage.getItem('ui-storage');
+          if (!raw) return;
+          var data = JSON.parse(raw);
+          var state = data && data.state;
+          if (!state) return;
+          var el = document.documentElement;
+          // Dark mode
+          var scheme = state.colorScheme;
+          var isDark = scheme === 'dark' || (scheme === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (isDark) {
+            el.classList.add('dark');
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', '#0f172a');
+          } else {
+            el.classList.remove('dark');
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', '#ffffff');
+          }
+          // Text size preference
+          var fontSize = state.fontSize;
+          if (fontSize) el.dataset.textSize = fontSize;
+          // Font — trùng với ThemeSynchronizer / buildSansStackCss (tránh FOUC khi không phải Inter)
+          applyFontFromState(state);
+          // Primary color – prevent flash of default color
+          var colorMap = {
+            blue:'221.2 83.2% 53.3%', violet:'262.1 83.3% 57.8%',
+            emerald:'142.1 76.2% 36.3%', rose:'346.8 77.2% 49.8%',
+            amber:'37.7 92.1% 50.2%', orange:'24.6 95% 53.1%',
+            cyan:'188.7 94.5% 42.7%', slate:'215.4 16.3% 46.9%'
+          };
+          var pc = state.primaryColor;
+          if (pc && colorMap[pc]) {
+            var v = colorMap[pc];
+            el.style.setProperty('--primary', v);
+            el.style.setProperty('--ring', v);
+            el.style.setProperty('--secondary-foreground', v);
+            el.style.setProperty('--accent-foreground', v);
+            el.style.setProperty('--color-primary', 'hsl(' + v + ')');
+            el.style.setProperty('--color-ring', 'hsl(' + v + ' / 0.5)');
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./index.tsx"></script>
+  </body>
+</html>

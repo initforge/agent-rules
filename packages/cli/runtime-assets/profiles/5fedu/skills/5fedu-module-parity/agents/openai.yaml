@@ -1,0 +1,4 @@
+interface:
+  display_name: "5fedu Module Parity"
+  short_description: "Clone and audit ERP module UI against Nhân viên/Phòng ban template."
+  default_prompt: "Use the 5fedu Module Parity skill before creating or editing any ERP module — map to reference module, run clone/audit checklist, and verify pattern fidelity."

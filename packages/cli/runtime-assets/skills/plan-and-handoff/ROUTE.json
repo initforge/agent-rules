@@ -1,0 +1,28 @@
+{
+  "signals": [
+    "plan",
+    "plan dài",
+    "nhiều phase",
+    "handoff",
+    "chia nhỏ",
+    "/goal",
+    "PAF",
+    "plan artifact",
+    "Plan Architect",
+    "Plan Scribe"
+  ],
+  "excludes": [
+    "single small fix",
+    "pure q&a"
+  ],
+  "priority": 80,
+  "loads": [
+    "skill:plan-and-handoff",
+    "adaptive-work-protocol"
+  ],
+  "supports": [],
+  "project_scope": "",
+  "platform_scope": "all",
+  "max_route_tokens": 2200,
+  "default": false
+}

@@ -83,12 +83,6 @@ vitest-verify-*.json
 .playwright-mcp/
 worktrees/
 
-# .agent is version-controlled to preserve progress, EXCEPT regenerable
-# caches and per-run evidence. See .agent/README.md for the protocol.
-.agent/source-lock-cache/
-.agent/runs/
-.agent/artifacts/
-.agent/tmp/
 
 # One-off scratch scripts should live outside tracked runtime scripts.
 scratch/
@@ -97,9 +91,3 @@ skills-lock.json
 
 # Source distribution archive
 agent-rules-source.zip
-.agent/operator-profile/
-.agent/handoff/packets/
-
-# Legacy rule/profile archives are local provenance only; Git history and the
-# parity index are the only shipped history (closure contract 2.1).
-.agent/archive/

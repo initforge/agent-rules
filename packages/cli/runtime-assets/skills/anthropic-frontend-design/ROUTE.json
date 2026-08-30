@@ -1,0 +1,26 @@
+{
+ "activation_class": "ROUTED",
+ "signals": [
+  "frontend design contract",
+  "explicit design brief",
+  "intentional visual direction"
+ ],
+ "intent_signals": [
+  "anthropic_frontend_design"
+ ],
+ "excludes": [
+  "5fedu",
+  "ERP module",
+  "parity"
+ ],
+ "priority": 45,
+ "loads": [
+  "skill:anthropic-frontend-design"
+ ],
+ "requires": [],
+ "supports": [],
+ "project_scope": "",
+ "platform_scope": "all",
+ "max_route_tokens": 2500,
+ "default": false
+}

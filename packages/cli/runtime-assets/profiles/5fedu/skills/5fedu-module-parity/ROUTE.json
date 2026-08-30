@@ -1,0 +1,38 @@
+{
+  "signals": [
+    "5fedu",
+    "ERP module",
+    "làm module",
+    "sửa module",
+    "refactor module",
+    "drawer",
+    "listview",
+    "toolbar",
+    "parity"
+  ],
+  "intent_signals": [
+    "5fedu_ui"
+  ],
+  "excludes": [
+    "branding",
+    "landing",
+    "non-ERP redesign"
+  ],
+  "priority": 80,
+  "loads": [
+    "profile:5fedu:module-mapping",
+    "profile:5fedu:ui-contracts",
+    "skills/5fedu-module-parity/references/index.md"
+  ],
+  "requires": [
+    "5fedu-project"
+  ],
+  "supports": [
+    "qa-skills",
+    "browser-qa"
+  ],
+  "project_scope": "5fedu",
+  "platform_scope": "all",
+  "max_route_tokens": 8000,
+  "default": false
+}

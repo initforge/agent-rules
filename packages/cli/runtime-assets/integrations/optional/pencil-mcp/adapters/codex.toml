@@ -1,0 +1,8 @@
+[mcp_servers.pencil]
+command = 'node'
+args = ['__AGENT_RULES_PENCIL_LAUNCHER__']
+startup_timeout_sec = 120
+
+[mcp_servers.pencil.env]
+PENCIL_MCP_HOST = 'codex'
+PENCIL_MCP_AGENT = 'codexCLI'

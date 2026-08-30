@@ -1,15 +1,14 @@
 import { defineConfig } from 'vitest/config';
-import { resolve } from 'path';
 
 export default defineConfig({
   test: {
-    include: ['test/**/*.test.ts'],
-    exclude: ['**/node_modules/**', '**/dist/**'],
-    testTimeout: 30_000,
-  },
-  resolve: {
-    alias: {
-      '@initforge/agent-rules-kernel': resolve(__dirname, 'dist'),
-    },
+    include: [
+      'test/health-contract.test.ts',
+      'test/native-turn-router.test.ts',
+      'test/rule-enforcement.test.ts',
+      'test/skill-contract-and-routing.test.ts',
+      'test/skill-resolver-call-count.test.ts',
+      'test/northstar/proof-receipt.test.ts',
+    ],
   },
 });

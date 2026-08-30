@@ -1,24 +1,16 @@
 import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
-import { RUNTIME_PLATFORMS } from "../runtime/installer.js";
-import { NativeInstaller } from "../services/native-installer.js";
-import { provisionMcps } from "../integration/provisioning.js";
-import { getRepoRoot } from "../adapters/repo.js";
-import { registerHostMcpAdapters } from "../runtime/mcp-convergence.js";
-import type { HostId } from "@initforge/agent-rules-kernel/northstar/host-adapters.js";
-
+import { COORDINATOR_HOSTS, createInstallationCoordinator } from "../runtime/installation-coordinator.js";
 
 /**
  * Install agent-rules runtime for one or all platforms.
- *
- * All platforms now go through the native transactional installer.
- * If runtime already exists, automatically updates instead of failing.
+ * Main CLI calls InstallationCoordinator only.
  */
 export async function installCmd(
   args: string[],
   options: CliOptions
 ): Promise<CommandResult> {
   const targetPlatforms = args.filter((a) => !a.startsWith("-"));
-  const validPlatforms = [...RUNTIME_PLATFORMS, "all"] as const;
+  const validPlatforms = [...COORDINATOR_HOSTS, "all"] as const;
 
   for (const p of targetPlatforms) {
     if (!(validPlatforms as readonly string[]).includes(p)) {
@@ -30,87 +22,56 @@ export async function installCmd(
   }
 
   const platformsToInstall = targetPlatforms.length === 0 || targetPlatforms.includes("all")
-    ? [...RUNTIME_PLATFORMS]
+    ? [...COORDINATOR_HOSTS]
     : targetPlatforms;
 
-
-  const force = args.includes("--force");
   const installIntegrations = !args.includes("--no-integrations");
-  const nativeInstaller = new NativeInstaller();
+  const coordinator = createInstallationCoordinator({ dryRun: options.dryRun, enableMcp: installIntegrations });
 
-  async function installOrUpdate(p: string): Promise<{ ok: boolean; action: string; error?: string }> {
-    try {
-      // Core projection and MCP registration have separate ownership: the
-      // installer does not silently reinterpret user MCP choices.
-      await nativeInstaller.install(p as HostId, { dryRun: options.dryRun, force, enableMcp: installIntegrations });
-      if (installIntegrations && !options.dryRun) {
-        const root = getRepoRoot();
-        // Setup is intentionally the four approved MCP providers, not every
-        // optional CLI integration that happens to share a profile label.
-        const providers = await provisionMcps(root, { installProfile: "all" });
-        const failures = providers.results.filter((provider) => provider.installation.status === "BLOCKED" || provider.installation.status === "UNSUPPORTED");
-        if (failures.length > 0) throw new Error(`MCP provider setup failed: ${failures.map((provider) => provider.id).join(", ")}`);
-        const registration = await registerHostMcpAdapters(root, p as HostId);
-        if (registration.status === "NEEDS_USER") throw new Error(`MCP registration needs user resolution: ${registration.conflicts.join(", ")}`);
-        if (registration.status === "FAILED") throw new Error(`MCP registration failed: ${registration.error ?? p}`);
-      }
-      return { ok: true, action: "installed (native transactional)" };
-    } catch (error) {
-      const msg = (error as Error).message;
-      if (msg.includes("already exists") || msg.includes("activation drift") || msg.includes("not a managed link") || msg.includes("Refusing to overwrite")) {
-        if (!force) {
-          return { ok: false, action: "skipped", error: `${msg} (use --force to reinstall)` };
-        }
-        // Force: uninstall then reinstall
-        try {
-          await nativeInstaller.uninstall(p as HostId);
-          await nativeInstaller.install(p as HostId, { dryRun: options.dryRun, force: true, enableMcp: installIntegrations });
-          return { ok: true, action: "reinstalled (forced, native transactional)" };
-        } catch (forceError) {
-          return { ok: false, action: "force-failed", error: (forceError as Error).message };
-        }
-      }
-      return { ok: false, action: "install-failed", error: msg };
+  try {
+    const receipt = await coordinator.install(platformsToInstall);
+    const results: Record<string, { ok: boolean; skipped: boolean; action: string; tier: string; candidate_id: string; reason?: string }> = {};
+    for (const host of platformsToInstall) {
+      const readback = receipt.readback?.[host];
+      const skipped = readback?.authority_tier === "UNAVAILABLE" && !receipt.errors?.[host];
+      const nativeMcpClaim = receipt.native?.[host]?.claims.NATIVE_MCP;
+      const nativeMcpDetail = nativeMcpClaim && !["PASS", "UNSUPPORTED"].includes(nativeMcpClaim.status)
+        ? nativeMcpClaim.evidence
+            .map((entry) => entry && typeof entry === "object" ? (entry as { detail?: unknown }).detail : undefined)
+            .find((detail): detail is string => typeof detail === "string" && detail.length > 0)
+        : undefined;
+      const reason = receipt.errors?.[host]
+        ?? nativeMcpDetail
+        ?? readback?.error
+        ?? "fresh native static readback is incomplete";
+      const ok = readback?.native === true && readback.static === true;
+      const tier = readback?.authority_tier ?? "UNAVAILABLE";
+      results[host] = {
+        ok,
+        skipped,
+        action: skipped ? "host not locally available; no files changed" : ok && tier === "NATIVE_ENFORCED" ? "installed and native-enforced" : ok ? "installed with advisory authority" : "verification incomplete",
+        tier,
+        candidate_id: receipt.candidate_id,
+        ...(ok || skipped ? {} : { reason }),
+      };
     }
-  }
-
-  const results: Record<string, { ok: boolean; action: string; error?: string }> = {};
-  for (const p of platformsToInstall) {
-    results[p] = await installOrUpdate(p);
-  }
-
-  const allOk = Object.values(results).every((r) => r.ok);
-  const failed = Object.entries(results).filter(([, r]) => !r.ok);
-  const overallOk = allOk;
-
-  if (options.json) {
-    console.log(JSON.stringify(results, null, 2));
-  } else {
-    console.log(`Install results (native per-host, single-host isolation preserved):`);
-    for (const [p, r] of Object.entries(results)) {
-      const icon = r.ok ? "✓" : "✗";
-      const detail = r.ok ? r.action : r.error;
-      console.log(`  ${icon} ${p}: ${detail}`);
-    }
-  }
-
-  if (platformsToInstall.length === 1 && !targetPlatforms.includes("all")) {
-    const single = platformsToInstall[0];
-    const res = results[single];
+    const failed = Object.values(results).filter((result) => !result.ok && !result.skipped);
+    const skipped = Object.values(results).filter((result) => result.skipped);
+    const advisory = Object.values(results).filter((result) => result.ok && result.tier !== "NATIVE_ENFORCED");
     return {
-      exitCode: res.ok ? ExitCode.Success : ExitCode.GeneralError,
-      message: res.ok
-        ? `${single}: ${res.action}`
-        : `${single} failed: ${res.error ?? "installation failed"}`,
-      data: { platform: single, ...res },
+      exitCode: failed.length > 0 ? ExitCode.LegacyFailed : ExitCode.Success,
+      message: failed.length > 0
+        ? `${failed.length} host(s) installed without complete live verification`
+        : advisory.length > 0 || skipped.length > 0
+          ? `${Object.values(results).filter((result) => result.ok).length} present host(s) installed; ${advisory.length} advisory; ${skipped.length} unavailable skipped`
+          : platformsToInstall.length === 1 ? `${platformsToInstall[0]}: installed and native-enforced` : `All ${platformsToInstall.length} platforms native-enforced`,
+      data: { candidate_id: receipt.candidate_id, hosts: platformsToInstall, results, readback: receipt.readback ?? {}, errors: receipt.errors ?? {} },
+    };
+  } catch (error) {
+    return {
+      exitCode: ExitCode.LegacyFailed,
+      message: (error as Error).message,
+      data: { hosts: platformsToInstall, error: (error as Error).message },
     };
   }
-
-  return {
-    exitCode: overallOk ? ExitCode.Success : ExitCode.LegacyFailed,
-    message: overallOk
-      ? `All ${platformsToInstall.length} platforms ready`
-      : `${failed.length} platform(s) failed: ${failed.map(([p]) => p).join(", ")}`,
-    data: { results },
-  };
 }

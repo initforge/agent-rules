@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "cmd.exe",
+      "args": [
+        "/d",
+        "/s",
+        "/c",
+        "npx",
+        "-y",
+        "@upstash/context7-mcp@3.2.5"
+      ]
+    }
+  }
+}

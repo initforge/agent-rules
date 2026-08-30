@@ -1,101 +1,50 @@
 # agent-rules
 
-Canonical runtime: `packages/engine/src/northstar/` and `packages/kernel/src/northstar/`
-Trust/PASS semantics: `packages/engine/src/contracts.ts` and `packages/kernel/src/northstar/evidence-ledger.ts`
-Spec-to-output flow: `packages/kernel/src/northstar/runtime.ts`
+Canonical behavior comes from `rules/`. Generated builds and installed host
+mirrors are projections; never edit them by hand.
 
-## Non-negotiable invariants
+## Product contract
 
-1. Preserve raw user intent and stable requirement/claim/task traceability.
-2. Workers never author PASS; completion is derived from verifier evidence and acceptance audit.
-3. Never weaken, skip, delete, or hard-disable verification to make a run green.
-4. Stay inside owned scope; forbidden-scope edits fail closed.
-5. Repair is bounded. Missing business/source truth becomes BLOCKED/needs-user, not invention.
-6. Strong planners compile/repair contracts for S2/S3 or real ambiguity, then exit.
-7. Subagents default to zero; max two, no recursion, only independent research/review/diagnosis/non-overlapping work.
-8. Do not delete proven legacy behavior until its replacement has behavioral/eval parity.
-9. Adaptive minimal-proof testing is always-on: every task selects the smallest
-   sufficient proof set from scope, claims, risks and runtime surface; live
-   claims require live proof; results use exactly PASS/PARTIAL/BLOCKED/
-   UNSUPPORTED/PRE-EXISTING/NEEDS_USER; proof receipts record selected AND
-   omitted proof (rule `rules/20-proof-outcome.md`, router
-   `packages/kernel/src/northstar/proof-router.ts`).
-
-## Quick start
-
-```bash
-npm ci
-npm run build
-npm test
-npm run verify:all
-```
-
-## North-Star runtime
-
-Source: `packages/engine/src/northstar/` over the proven durable runner in `packages/engine/src/runner/`.
-
-```bash
-agent-rules init --agent claude
-agent-rules run "<S0/S1 task>" --own <path> --verify-exec <exe> --verify-arg <arg>
-agent-rules status
-```
-
-S2/S3 raw intent must not execute until a strong planner has produced explicit requirements/claims/decisions and unresolved items are empty.
-
-## Domain packs
-
-Domain packs are explicit project context, never prompt-triggered global behavior.
-
-`5fedu` owns a central, manifest-bound reference snapshot at `profiles/5fedu/reference-source/template`. Target projects do **not** install/copy that source. Use:
-
-```bash
-agent-rules init --domain-pack 5fedu
-agent-rules reference 5fedu <manifest-bound-path>
-```
-
-Read `profiles/5fedu/module-mapping/behavior-contract.json` and exact source anchors before adapting ERP behavior. Do not infer target requirements merely because the reference implements something.
-
-## Pencil
-
-`integrations/manual/pencil-mcp/` is explicit-only. Do not auto-install, auto-route, or trigger it from words such as design/UI. Attach it only after the operator explicitly selects Pencil/pen.dev. `.pen` evidence is design evidence; production acceptance still requires browser/runtime proof.
-
-Pencil MCP must attach through the stable launcher (`integrations/optional/pencil-mcp/launch.mjs`); never persist or exec `/tmp/.mount_Pen.*` paths (they go stale on every app restart — ENOENT). The Pencil desktop must be foreground-visible; startup is bounded by a timeout and verified by a real MCP handshake; unavailability is reported as BLOCKED/NEEDS_USER, never silently masked.
+1. The model selected by the user owns planning and implementation end to end.
+   The harness never changes models, invents worker tiers, or requires role
+   handoffs.
+2. Use the host's native plan/progress surface. Do not create shadow plans,
+   tickets, ledgers, PASS grants, or per-step evidence files.
+3. Resolve rules, skills, domain context, and integrations once for the current
+   turn. Explicit-only capabilities remain explicit-only.
+4. Implement first. Run the smallest proof that covers the changed seam; run a
+   broad suite once at the release gate or when material risk requires it.
+5. Completion is derived from proof and live readback, never from model prose.
+6. Installation is transactional, refuses unowned collisions, supports
+   rollback, and reports unsupported or unavailable host surfaces honestly.
+7. Diagnostics must name the broken component and a concrete repair action.
+   A missing optional surface is `NOT_APPLICABLE`, not a fake failure.
+8. Do not commit, push, deploy, create credentials, or install absent third-party
+   hosts unless the user explicitly requests it.
 
 ## Repository map
 
-| Path | Owner | Purpose |
-|---|---|---|
-| `packages/engine/` | harness-maintainer | production execution and North-Star runtime |
-| `packages/kernel/src/northstar/` | harness-maintainer | canonical runtime contracts and protocol |
-| `packages/cli/` | harness-maintainer | public CLI |
-| `rules/` | harness-maintainer | always-on invariants |
-| `skills/` | harness-maintainer | lazy capability workflows |
-| `schemas/` | harness-maintainer | portable artifact schemas |
-| `platforms/` | harness-maintainer | host edges + contracts |
-| `integrations/` | harness-maintainer | automatic and explicit-only tool providers |
-| `profiles/` | profile-owner | optional domain packs |
-| `evals/` | harness-maintainer | conformance/telemetry/evals |
-| `automation/` | harness-maintainer | build/install/validation/certification |
-| `generated/` | machine | generated output; never hand-edit |
-| `.agent/` | protocol | durable plans/runs/evidence/journals |
+| Path | Purpose |
+|---|---|
+| `rules/` | always-on behavior |
+| `skills/` | lazy workflows discovered natively from compiled skill directories |
+| `packages/kernel/src/northstar/native-turn-router.ts` | build-time and explicit diagnostic routing tests only |
+| `packages/kernel/src/harness/evidence/` | focused proof selection and reuse |
+| `packages/kernel/src/northstar/health-contract.ts` | shared health statuses and reduction |
+| `packages/cli/src/runtime/` | static install coordination, ownership cleanup and health |
+| `packages/cli/src/services/native-installer.ts` | host-native projection |
+| `platforms/` | versioned host contracts and adapters |
+| `integrations/` | optional tool providers |
+| `profiles/` | explicitly selected domain packs |
+| `automation/` | build and release verification |
+| `generated/` | generated output |
 
-## Before editing
+## Maintainer loop
 
-Read `rules/manifest.yaml`, the canonical runtime contracts, and the relevant package/profile contract. Never edit `generated/` or installed runtime mirrors by hand. Do not commit/push/deploy unless explicitly requested.
+Read `rules/manifest.yaml` and the changed component contract. Edit canonical
+source, run typecheck plus focused tests for the seam, then run
+`npm run verify:all` once for an integrated release candidate. Build and install
+through the CLI; do not copy files into host homes manually.
 
-## Next-phase steering
-
-The previous closure contract and its plan-local support artifacts have been
-retired. For future work, open a new owner-authorized phase plan and make its
-current pointer the only active plan source. A newer request never silently
-overrides an older one: classify every relation, keep compatible work in one
-effective set, and require owner decision, parity, migration, or an explicit
-blocker for conflicts and supersession. No item may disappear because of
-wording, language, plan format, or compaction.
-Clarification UI is host-capability-gated: ask only for
-material ambiguity during discussion/spec/plan/review; implement from the
-approved contract without preference polling; use `NEEDS_USER`/`BLOCKED` when
-required authority or capability is missing. Do not treat an unstable Codex
-feature flag, AGENTS.md convention, MCP, or skill as a guarantee of native UI
-behavior. Raw session JSONL is telemetry, not an instruction source. Do not
-run concurrent goals against the same worktree.
+Public operator commands are `install`, `uninstall`, `doctor`, `status`,
+`integration`, `reference`, and `route-native`.

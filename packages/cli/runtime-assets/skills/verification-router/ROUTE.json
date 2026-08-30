@@ -1,0 +1,13 @@
+{
+  "signals": ["verify", "verification", "proof", "evidence", "claim", "risk", "impact", "affected", "regression", "acceptance"],
+  "intent_signals": ["verification_router", "claim_verification", "risk_based_testing"],
+  "excludes": ["pure Q&A", "explain testing concept only"],
+  "priority": 79,
+  "loads": ["skill:verification-router"],
+  "requires": [],
+  "supports": ["browser-qa", "qa-skills", "parity-verification"],
+  "project_scope": "",
+  "platform_scope": "all",
+  "max_route_tokens": 3200,
+  "default": false
+}

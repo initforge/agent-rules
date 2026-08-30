@@ -257,7 +257,7 @@ function looksLikeHarnessRoot(candidate: string): boolean {
       // ignore JSON parse errors
     }
   }
-  if (fs.existsSync(path.join(candidate, 'rules', 'manifest.yaml')) || fs.existsSync(path.join(candidate, 'skills', 'catalog.json'))) {
+  if (fs.existsSync(path.join(candidate, 'rules', 'manifest.yaml'))) {
     return true;
   }
   return false;

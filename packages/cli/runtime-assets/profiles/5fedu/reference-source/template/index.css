@@ -1,0 +1,366 @@
+@import "tailwindcss";
+
+@theme {
+  /* Typography — overridden at runtime via `ThemeSynchronizer` (`--font-sans` on <html>); stacks defined in `lib/theme/fonts.ts` */
+  --font-sans:
+    'Inter', 'Noto Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+  --color-primary: hsl(243 75% 59%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-border: hsl(215 16% 91%);
+  --color-input: hsl(215 16% 91%);
+  --color-ring: hsl(243 75% 59% / 0.5);
+  --color-background: hsl(210 40% 98%);
+  --color-foreground: hsl(222 47% 11%);
+  --color-secondary: hsl(210 40% 96.1%);
+  --color-secondary-foreground: hsl(222 47% 11%);
+  --color-destructive: hsl(0 84% 60%);
+  --color-destructive-foreground: hsl(210 40% 98%);
+  --color-muted: hsl(210 40% 96.1%);
+  --color-muted-foreground: hsl(215 16% 47%);
+  --color-accent: hsl(210 40% 96.1%);
+  --color-accent-foreground: hsl(222 47% 11%);
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(222 47% 11%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(222 47% 11%);
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+  --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.03);
+  --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --shadow-ultra: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+}
+
+:root {
+  --background: 210 40% 98%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+
+  --primary: 243 75% 59%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 243 75% 59%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 243 75% 59%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 215 16% 91%;
+  --input: 215 16% 91%;
+  --ring: 243 75% 59%;
+
+  --radius: 1rem;
+}
+
+/* Dark mode palette */
+.dark {
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
+  --card: 222 47% 12%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222 47% 12%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 243 75% 59%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 222 47% 16%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 222 47% 16%;
+  --muted-foreground: 217 20% 68%;
+  --accent: 222 47% 16%;
+  --accent-foreground: 210 40% 98%;
+  --border: 222 47% 20%;
+  --input: 222 47% 20%;
+  --ring: 243 75% 59%;
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 210 40% 98%;
+
+  /* Tailwind v4 @theme variables (--color-*) */
+  --color-background: hsl(222 47% 11%);
+  --color-foreground: hsl(210 40% 98%);
+  --color-card: hsl(222 47% 12%);
+  --color-card-foreground: hsl(210 40% 98%);
+  --color-popover: hsl(222 47% 12%);
+  --color-popover-foreground: hsl(210 40% 98%);
+  --color-primary: hsl(243 75% 59%);
+  --color-secondary: hsl(222 47% 16%);
+  --color-secondary-foreground: hsl(210 40% 98%);
+  --color-muted: hsl(222 47% 16%);
+  --color-muted-foreground: hsl(217 20% 68%);
+  --color-accent: hsl(222 47% 16%);
+  --color-accent-foreground: hsl(210 40% 98%);
+  --color-border: hsl(222 47% 20%);
+  --color-input: hsl(222 47% 20%);
+  --color-ring: hsl(var(--ring));
+  --color-destructive: hsl(0 62% 50%);
+  --color-destructive-foreground: hsl(210 40% 98%);
+
+  /* Shadow overrides – light shadows are invisible on dark backgrounds */
+  --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.03);
+  --shadow-medium: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.35), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  --shadow-ultra: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Safe area insets for notch / home indicator (viewport-fit=cover) */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Cuộn tức thời khi “Reduce motion” — tránh smooth-scroll gây say trên mobile */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/*
+ * h-page: chiều cao nội dung trang (trừ header + bottom nav trên mobile).
+ *   Mobile: 100dvh − header(3.75rem) − bottomNav(4rem) − safeArea
+ *   Desktop (md+): 100dvh − header(4.5rem)
+ */
+.h-page {
+  height: calc(100dvh - 3.75rem - 4rem - env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 768px) {
+  .h-page {
+    height: calc(100dvh - 4.5rem);
+  }
+}
+
+/* text-body-sm: cỡ chữ body nhỏ dùng trong bảng, card, detail (giữa text-xs và text-sm) */
+.text-body-sm {
+  font-size: 0.8125rem; /* 13px */
+  line-height: 1.25rem; /* 20px */
+}
+
+/* text-caption: cỡ chữ caption nhỏ dùng cho badge, tooltip chart, phụ chú */
+.text-caption {
+  font-size: 0.6875rem; /* 11px */
+  line-height: 1rem;    /* 16px */
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth theme transition when switching between dark/light modes.
+   Applied via [data-theme-transition] to avoid flash on initial load.
+   The attribute is added after mount and removed after the transition. */
+[data-theme-transition],
+[data-theme-transition] *,
+[data-theme-transition] *::before,
+[data-theme-transition] *::after {
+  transition: background-color 0.3s ease, color 0.2s ease, border-color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+/* Text size preference – applied via data attribute on <html> */
+html[data-text-size="small"] { font-size: 14px; }
+html[data-text-size="medium"] { font-size: 16px; }
+html[data-text-size="large"] { font-size: 18px; }
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Placeholder / Coming Soon page */
+@keyframes placeholder-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+.placeholder-float {
+  animation: placeholder-float 4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .placeholder-float {
+    animation: none;
+  }
+}
+.placeholder-bg-grid {
+  background-image: radial-gradient(hsl(var(--border)) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Phiếu lương: in chỉ nội dung A4, ẩn toolbar (dùng chung PayslipPreviewPage + PayslipPreviewModal) */
+@page {
+  margin: 12mm;
+  size: A4;
+}
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .payslip-preview-content,
+  .payslip-preview-content * {
+    visibility: visible;
+  }
+  .payslip-preview-backdrop {
+    background: white !important;
+  }
+  .payslip-preview-toolbar {
+    display: none !important;
+  }
+  .payslip-preview-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* Hồ sơ nhân viên: in chỉ nội dung, ẩn toolbar */
+  .employee-profile-preview-content,
+  .employee-profile-preview-content * {
+    visibility: visible;
+  }
+  .employee-profile-preview-backdrop {
+    background: white !important;
+  }
+  .employee-profile-preview-toolbar {
+    display: none !important;
+  }
+  .employee-profile-preview-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm;
+    padding: 0 !important;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* Hồ sơ tài sản: in chỉ nội dung, ẩn toolbar */
+  .ho-so-tai-san-preview-content,
+  .ho-so-tai-san-preview-content * {
+    visibility: visible;
+  }
+  .ho-so-tai-san-preview-backdrop {
+    background: white !important;
+  }
+  .ho-so-tai-san-preview-toolbar {
+    display: none !important;
+  }
+  .ho-so-tai-san-preview-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* Phiếu kiểm kê: in chỉ nội dung, ẩn toolbar */
+  .phieu-kiem-ke-preview-content,
+  .phieu-kiem-ke-preview-content * {
+    visibility: visible;
+  }
+  .phieu-kiem-ke-preview-backdrop {
+    background: white !important;
+  }
+  .phieu-kiem-ke-preview-toolbar {
+    display: none !important;
+  }
+  .phieu-kiem-ke-preview-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Mẫu phản hồi: hiển thị nội dung (detail) – biến được bọc span.template-variable */
+.template-detail-content p {
+  margin: 0 0 0.5em;
+}
+.template-detail-content p:last-child {
+  margin-bottom: 0;
+}
+.template-detail-content ul,
+.template-detail-content ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+.template-detail-content li {
+  margin: 0.25em 0;
+}
+.template-detail-content h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0.75em 0 0.35em;
+}
+.template-detail-content .template-variable {
+  display: inline;
+  padding: 0.125em 0.375em;
+  border-radius: 4px;
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(var(--primary));
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+}
+.template-detail-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5em 0;
+}
+.template-detail-content th,
+.template-detail-content td {
+  border: 1px solid hsl(var(--border));
+  padding: 6px 10px;
+  text-align: left;
+}
+.template-detail-content th {
+  background: hsl(var(--muted));
+  font-weight: 600;
+}

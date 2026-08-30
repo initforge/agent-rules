@@ -1,0 +1,32 @@
+{
+  "signals": [
+    "AGENTS.md",
+    "rules",
+    "skills",
+    "context",
+    "ghi nhớ",
+    "bổ sung context",
+    "dọn context",
+    "sync rule",
+    "agent-rules"
+  ],
+  "intent_signals": [
+    "context_evolution"
+  ],
+  "excludes": [
+    "ordinary implementation",
+    "cài context",
+    "thiết lập 5fedu"
+  ],
+  "priority": 90,
+  "loads": [
+    "skill:context-evolution-protocol"
+  ],
+  "supports": [
+    "quality"
+  ],
+  "project_scope": "",
+  "platform_scope": "all",
+  "max_route_tokens": 2800,
+  "default": false
+}

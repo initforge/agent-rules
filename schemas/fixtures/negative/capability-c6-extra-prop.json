@@ -1,7 +1,0 @@
-{
-  "schema": "artifact/capability",
-  "version": 1,
-  "product_identity": "test-tool",
-  "runtime_identity": "test-v1",
-  "unexpected_prop": "should be rejected"
-}

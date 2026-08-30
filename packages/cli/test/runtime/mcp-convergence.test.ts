@@ -13,6 +13,7 @@ import {
   registerHostMcpAdapters,
   inspectHostMcpRegistration,
   setMcpRegistrationEnabled,
+  restoreHostMcpBackup,
 } from "../../src/runtime/mcp-convergence.js";
 
 /**
@@ -116,6 +117,10 @@ describe("host MCP config convergence", () => {
     expect(fs.existsSync(result.backup_path!)).toBe(true);
     const config = JSON.parse(fs.readFileSync(configPath, "utf8")) as Record<string, unknown>;
     expect(config.mcp).toBeUndefined();
+    expect(result.backup_receipt).toBe(path.join(env.HOME, '.agent-rules', 'rollback', 'opencode', 'mcp', 'receipt.json'));
+    expect(restoreHostMcpBackup('opencode', env)).toBe(true);
+    expect(JSON.parse(fs.readFileSync(configPath, 'utf8'))).toHaveProperty('mcp.context7');
+    expect(fs.existsSync(path.join(env.HOME, '.agent-rules', 'rollback', 'opencode', 'mcp'))).toBe(false);
   });
 
   it("normal registration re-enables a provably managed disabled descriptor", async () => {
@@ -127,6 +132,35 @@ describe("host MCP config convergence", () => {
     const config = JSON.parse(fs.readFileSync(configPath, "utf8")) as { mcp: Record<string, { enabled?: boolean; disabled?: boolean }> };
     expect(config.mcp.context7.disabled).toBeUndefined();
     expect(config.mcp.context7.enabled).toBeUndefined();
+  });
+
+  it("reports an unresolved dependency as NEEDS_USER without registering a dead command", async () => {
+    const adapter = path.join(repo, 'integrations', 'recommended', 'context7', 'adapters', 'opencode.json');
+    fs.writeFileSync(adapter, JSON.stringify({ mcpServers: { context7: { command: '${MISSING_RUNTIME}' } } }));
+    const registration = await registerHostMcpAdapters(repo, 'opencode', { env, profile: 'research' });
+    expect(registration.status).toBe('NEEDS_USER');
+    expect(registration.needsAction).toEqual(['context7: missing MISSING_RUNTIME']);
+    expect(fs.existsSync(opencodeConfigPath())).toBe(false);
+    const inspection = await inspectHostMcpRegistration(repo, 'opencode', { env, profile: 'research' });
+    expect(inspection.status).toBe('NEEDS_USER');
+    expect(inspection.entries).toEqual([expect.objectContaining({ status: 'MCP_NEEDS_USER' })]);
+  });
+
+  it("removes a config created from absent state, but never overwrites later user changes", async () => {
+    const configPath = opencodeConfigPath();
+    const created = await registerHostMcpAdapters(repo, "opencode", { env, profile: "research" });
+    expect(created.status).toBe("REGISTERED");
+    expect(fs.existsSync(configPath)).toBe(true);
+    expect(restoreHostMcpBackup('opencode', env)).toBe(true);
+    expect(fs.existsSync(configPath)).toBe(false);
+
+    const installed = await registerHostMcpAdapters(repo, "opencode", { env, profile: "research" });
+    expect(installed.status).toBe("REGISTERED");
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8')) as { mcp: Record<string, unknown> };
+    config.mcp.mine = { command: 'user-tool' };
+    fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`, 'utf8');
+    expect(() => restoreHostMcpBackup('opencode', env)).toThrow(/refusing to overwrite user changes/i);
+    expect(JSON.parse(fs.readFileSync(configPath, 'utf8'))).toHaveProperty('mcp.mine');
   });
 
   it("preserves an explicit disable across a later normal registration", async () => {

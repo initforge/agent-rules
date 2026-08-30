@@ -1,10 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import type { HostId } from '@initforge/agent-rules-kernel/northstar/host-adapters.js';
 import { getNativeContract } from '@initforge/agent-rules-kernel/northstar/host-registry.js';
 import { ompBinaryCandidates, resolveOmpAgentHome } from './omp.js';
 import type { Detection, InstallPlan, InventoryEntry } from './types.js';
+import { resolveRuntimeStateRoot } from '../runtime/locator.js';
 
 const sha256 = (value: string): string => createHash('sha256').update(value).digest('hex');
 
@@ -31,7 +32,7 @@ export class NativeHostProbe {
     };
     const desktopPath = (desktopCandidates[host] ?? []).find((candidate) => fs.existsSync(candidate));
     const signals = [binaryPath && `binary-on-path:${binaryPath}`, desktopPath && `desktop-process:${desktopPath}`, fs.existsSync(homeDir) && `config-dir:${homeDir}`].filter((value): value is string => Boolean(value));
-    return { host, present: Boolean(binaryPath || desktopPath || fs.existsSync(homeDir)), homeDir, signals, ...(binaryPath || desktopPath ? { binaryPath: binaryPath ?? desktopPath } : {}) };
+    return { host, present: Boolean(binaryPath || desktopPath), homeDir, signals, ...(binaryPath || desktopPath ? { binaryPath: binaryPath ?? desktopPath } : {}) };
   }
 
   async inventory(detection: Detection): Promise<InventoryEntry[]> {
@@ -39,7 +40,7 @@ export class NativeHostProbe {
     if (!contract) return [];
     const userHome = process.env.USERPROFILE || process.env.HOME || '';
     const out: InventoryEntry[] = [];
-    for (const configuredPath of [contract.paths.instructionPath, contract.paths.skillPath, contract.paths.agentPath, contract.paths.hookPath, contract.paths.mcpPath]) {
+    for (const configuredPath of [contract.paths.instructionPath, contract.paths.skillPath, contract.paths.mcpPath]) {
       if (!configuredPath) continue;
       const resolved = configuredPath.replace(/\$[A-Z_]+/, detection.homeDir).replace('~', userHome);
       if (resolved.includes('n/a') || resolved.includes('managed_profile') || resolved.includes('bundle') || resolved.includes('mods') || !fs.existsSync(resolved)) continue;
@@ -71,13 +72,14 @@ export class NativeHostProbe {
   planInstall(host: HostId, detection: Detection): InstallPlan {
     const contract = getNativeContract(host);
     if (!contract) throw new Error(`no contract for ${host}`);
+    const instructionPath = contract.paths.instructionPath.replace(/\$[A-Z_]+/, detection.homeDir);
     const changes: InstallPlan['changes'] = [
-      { path: contract.paths.instructionPath.replace(/\$[A-Z_]+/, detection.homeDir), op: 'patch' },
+      { path: host === 'grok' || host === 'cursor' ? path.join(instructionPath, 'agent-rules.md') : instructionPath, op: 'patch' },
       { path: contract.paths.skillPath, op: 'write' },
     ];
     if (host === 'command-code') {
       changes.push({ path: path.join(detection.homeDir, 'mods', 'agent-rules.ts'), op: 'write' });
     }
-    return { host, changes, backupDir: path.join(process.cwd(), '.agent', 'tmp', 'backups', host, `${Date.now()}-${randomUUID().slice(0, 8)}`) };
+    return { host, changes, backupDir: path.join(resolveRuntimeStateRoot(), 'rollback', host, 'native') };
   }
 }

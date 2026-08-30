@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "pencil": {
+      "command": "node",
+      "args": ["__AGENT_RULES_PENCIL_LAUNCHER__"],
+      "env": {
+        "PENCIL_MCP_HOST": "opencode",
+        "PENCIL_MCP_AGENT": "openCodeCLI"
+      }
+    }
+  }
+}

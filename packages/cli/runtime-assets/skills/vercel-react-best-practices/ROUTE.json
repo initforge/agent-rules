@@ -1,0 +1,24 @@
+{
+ "activation_class": "ROUTED",
+ "signals": [
+  "react best practices",
+  "react performance guidance",
+  "react component rules"
+ ],
+ "intent_signals": [
+  "vercel_react_best_practices"
+ ],
+ "excludes": [
+  "5fedu"
+ ],
+ "priority": 45,
+ "loads": [
+  "skill:vercel-react-best-practices"
+ ],
+ "requires": [],
+ "supports": [],
+ "project_scope": "",
+ "platform_scope": "all",
+ "max_route_tokens": 2500,
+ "default": false
+}

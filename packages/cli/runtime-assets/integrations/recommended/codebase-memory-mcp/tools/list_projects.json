@@ -1,0 +1,8 @@
+{
+  "name": "list_projects",
+  "description": "List all indexed projects",
+  "inputSchema": {
+    "type": "object",
+    "properties": {}
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "pencil-mcp",
+  "displayName": "pen.dev / Pencil MCP",
+  "policy": "optional",
+  "autoRoute": false,
+  "version": "host-managed",
+  "versionPolicy": "host-managed",
+  "activation": "explicit-only",
+  "mcpServerKey": "pencil",
+  "capabilities": ["design.inspect", "design.compose", "design.render", "design.tokens"],
+  "supportedHosts": ["codex", "claude", "grok", "antigravity", "cursor", "opencode"],
+  "notes": "Host-managed, explicit-only (AM-0006). Hosts attach the stable launcher (launch.mjs), which resolves the live AppImage mount from the running desktop process at spawn time. The launcher never auto-launches the AppImage (PENCIL_MCP_ALLOW_LAUNCH=1 required) and never spawns a second instance; it detects cross-session singleton conflicts via an advisory instance lock and returns CONFLICT/NEEDS_USER instead of dragging the window between desktops. When launching, the new window is placed on the originating session workspace with a non-activating move only. Persisted /tmp/.mount_Pen.* paths are prohibited: they go stale on every app restart (ENOENT). Bounded startup timeout, real MCP handshake verification, and honest BLOCKED/NEEDS_USER diagnostics are required. The harness never installs the Pencil desktop application itself."
+}

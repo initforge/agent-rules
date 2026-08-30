@@ -9,9 +9,9 @@ import type { IntegrationInventory, RegistryEntry } from "./inventory.js";
  * MCP entries are registered with native hosts (default `all`). Registration
  * is separate from connecting to or using a provider during a task.
  *
- * Explicit-only integrations (activation = explicit-only, e.g. Pencil) are
- * installed only when the operator explicitly selects them and are never
- * exposed through a global profile.
+ * Explicit-only integrations are never exposed through a global profile.
+ * A package-owned launcher may still be automatically available on disk;
+ * availability never grants permission to connect, launch or call it.
  */
 
 export const GLOBAL_MCP_PROFILES = ["none", "core", "research", "frontend", "qa", "all"] as const;
@@ -59,7 +59,7 @@ export function entryProfiles(entry: RegistryEntry): string[] {
 export function selectInstallEntries(inventory: IntegrationInventory, profile: IntegrationProfile, explicitIds: readonly string[] = []): RegistryEntry[] {
   const explicit = new Set(explicitIds);
   return inventory.entries.filter((entry) => {
-    if (isExplicitOnly(entry)) return explicit.has(entry.id);
+    if (isExplicitOnly(entry)) return explicit.has(entry.id) || entry.availability === 'automatic';
     if (entry.policy === "optional") return false;
     if (profile === "all") return true;
     return entryProfiles(entry).includes(profile);

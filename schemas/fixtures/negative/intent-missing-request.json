@@ -1,5 +1,0 @@
-{
-  "schema": "artifact/intent",
-  "version": 1,
-  "outcomes": ["missing required request field"]
-}

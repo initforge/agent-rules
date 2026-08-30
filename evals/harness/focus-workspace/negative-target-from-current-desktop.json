@@ -1,7 +1,0 @@
-{
- "schema": "harness/focus-workspace-fixture",
- "version": 1,
- "kind": "target-from-current-desktop",
- "expect": "blocked-or-needs-user",
- "note": "Target must come from the source OpenCode window's workspace, never from the owner's current desktop at tool-call time."
-}

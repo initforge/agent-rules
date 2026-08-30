@@ -1,0 +1,65 @@
+# target.schema.yaml — executable-parity Draft-07 contract for target.yaml
+$schema: "http://json-schema.org/draft-07/schema#"
+title: Target
+description: "Describes the verified target module, routes, implementation paths, and variable source."
+type: object
+additionalProperties: false
+required: [module_key, module_name, surfaces, target_paths, schema_source]
+properties:
+  module_key:
+    type: string
+    pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+  module_name:
+    $ref: "common.schema.yaml#/definitions/nonBlank"
+  surfaces:
+    type: array
+    minItems: 1
+    uniqueItems: true
+    items:
+      $ref: "common.schema.yaml#/definitions/nonBlank"
+  target_paths:
+    type: object
+    additionalProperties: false
+    required: [feature_root, routes, components]
+    properties:
+      feature_root:
+        $ref: "common.schema.yaml#/definitions/portableDirectory"
+      routes:
+        type: array
+        minItems: 1
+        uniqueItems: true
+        items:
+          $ref: "common.schema.yaml#/definitions/routePath"
+      components:
+        $ref: "#/definitions/nonEmptyPortablePaths"
+      services:
+        $ref: "#/definitions/portablePaths"
+      hooks:
+        $ref: "#/definitions/portablePaths"
+      stores:
+        $ref: "#/definitions/portablePaths"
+      tests:
+        $ref: "#/definitions/portablePaths"
+  schema_source:
+    type: object
+    additionalProperties: false
+    required: [type, reference, verified]
+    properties:
+      type:
+        type: string
+        enum: [spec, supabase_table, api_endpoint, owner_confirmed]
+      reference:
+        $ref: "common.schema.yaml#/definitions/nonBlank"
+      verified:
+        const: true
+definitions:
+  portablePaths:
+    type: array
+    uniqueItems: true
+    items:
+      $ref: "common.schema.yaml#/definitions/portablePath"
+  nonEmptyPortablePaths:
+    allOf:
+      - $ref: "#/definitions/portablePaths"
+      - type: array
+        minItems: 1

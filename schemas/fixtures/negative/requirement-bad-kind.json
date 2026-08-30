@@ -1,8 +1,0 @@
-{
-  "schema": "artifact/requirement",
-  "version": 1,
-  "id": "USR-001",
-  "kind": "deleted",
-  "summary": "This should fail because kind is not in the enum",
-  "captured_at": "2026-07-25T07:00:00Z"
-}

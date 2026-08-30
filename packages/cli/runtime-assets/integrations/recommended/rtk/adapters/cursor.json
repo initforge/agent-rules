@@ -1,0 +1,4 @@
+{
+  "mcpServers": {},
+  "_rtk_note": "RTK uses preToolUse hook (hooks.json). Run: rtk init -g --agent cursor"
+}

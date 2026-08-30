@@ -14,6 +14,22 @@
     "skipLibCheck": true,
     "types": ["vitest/globals"]
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/index.ts",
+    "src/contracts.ts",
+    "src/northstar/domain-packs.ts",
+    "src/northstar/health-contract.ts",
+    "src/northstar/host-adapters.ts",
+    "src/northstar/host-registry.ts",
+    "src/northstar/index.ts",
+    "src/northstar/native-turn-router.ts",
+    "src/northstar/proof-router.ts",
+    "src/northstar/proof-testing.ts",
+    "src/northstar/routing.ts",
+    "src/northstar/rule-enforcement.ts",
+    "src/harness/evidence/proof-policy.ts",
+    "src/harness/evidence/proof-router.ts",
+    "src/harness/review/materiality.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

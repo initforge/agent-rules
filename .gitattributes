@@ -19,4 +19,3 @@
 # Runtime checkpoints/evidence are local operational state, not distributable
 # source. Keep the active plan in the repository but omit the whole runtime
 # state tree from `git archive` packages.
-.agent/ export-ignore

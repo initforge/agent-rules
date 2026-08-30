@@ -1,0 +1,19 @@
+{
+  "signals": [
+    "best of n",
+    "try multiple approaches",
+    "parallel implementations",
+    "/best-of-n",
+    "/bon"
+  ],
+  "excludes": [],
+  "priority": 60,
+  "loads": [
+    "skill:best-of-n"
+  ],
+  "supports": [],
+  "project_scope": "",
+  "platform_scope": "all",
+  "max_route_tokens": 3500,
+  "default": false
+}

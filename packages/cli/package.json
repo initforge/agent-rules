@@ -1,11 +1,11 @@
 {
   "name": "@initforge/agent-rules",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "Cross-platform CLI for the Agent Rules harness",
   "keywords": [
     "agent-rules",
     "harness",
-    "orchestration"
+    "native-routing"
   ],
   "homepage": "https://github.com/initforge/agent-rules",
   "license": "MIT",
@@ -18,20 +18,21 @@
     "agent-rules": "./dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "runtime-assets"
   ],
   "scripts": {
-    "build": "node ../../node_modules/typescript/bin/tsc && node test/opencode-artifact-smoke.mjs",
+    "build": "node ../../automation/package-runtime-assets.mjs && node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && node ../../node_modules/typescript/bin/tsc",
+    "typecheck": "node ../../node_modules/typescript/bin/tsc --noEmit",
     "start": "node dist/index.js",
     "clean": "rimraf dist",
     "prepack": "npm run build",
-    "test": "node ../../automation/run-governed-vitest.mjs --project-root ../.. --cwd . --mode focused -- run",
-    "test:watch": "node ../../automation/run-governed-vitest.mjs --project-root ../.. --cwd . --mode focused -- --watch",
+    "test": "node ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts",
+    "test:watch": "node ../../node_modules/vitest/vitest.mjs --config vitest.config.ts --watch",
     "test:package-smoke": "node test/runtime-package-smoke.mjs"
   },
   "dependencies": {
-    "@initforge/agent-rules-engine": "0.1.0",
-    "@initforge/agent-rules-kernel": "0.1.0",
+    "@initforge/agent-rules-kernel": "2.0.0",
     "@opencode-ai/sdk": "^1.18.10",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",

@@ -1,0 +1,27 @@
+{
+ "activation_class": "ROUTED",
+ "signals": [
+  "prisma schema",
+  "supabase project",
+  "postgres query",
+  "drizzle",
+  "database tooling"
+ ],
+ "intent_signals": [
+  "database_stack"
+ ],
+ "excludes": [
+  "migration-only",
+  "schema-change-only"
+ ],
+ "priority": 45,
+ "loads": [
+  "skill:database-stack"
+ ],
+ "requires": [],
+ "supports": [],
+ "project_scope": "",
+ "platform_scope": "all",
+ "max_route_tokens": 2500,
+ "default": false
+}

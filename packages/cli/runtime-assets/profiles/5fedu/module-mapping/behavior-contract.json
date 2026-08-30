@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "pack": "5fedu",
+  "authority": {
+    "owner_requirements": "This file records explicit 5fedu product behavior supplied by the owner.",
+    "source_observation": "Exact component structure, styling, routes, fields, permissions and runtime behavior remain source-derived.",
+    "source_verification_required": true,
+    "runtime_observation_required_for_visual_parity": true,
+    "rule": "Owner requirements constrain adaptation; they never replace a verified source receipt or active project schema/spec.",
+    "reference_root": "profiles/5fedu/reference-source/template",
+    "reference_policy": "Read source by pointer from the harness. Do not copy the reference template into target projects and do not treat reference code as target business requirements.",
+    "anti_anchor": "Reference implementation supplies patterns/evidence, not mandatory feature inventory; active project requirements and schema decide what applies."
+  },
+  "canonical_roles": {
+    "employee-crud": {
+      "reference_role": "nhan-vien",
+      "owner_requirements": [
+        {
+          "id": "employee.list.shell",
+          "statement": "Use the Employee module as the canonical internal-entity list/detail/form/statistics shell."
+        },
+        {
+          "id": "employee.list.toolbar",
+          "statement": "List view provides the source-supported Back, filter/search controls, Add, Import and Export actions; do not invent duplicate actions."
+        },
+        {
+          "id": "employee.list.pagination",
+          "statement": "The list has the canonical pagination footer when the source surface is paginated."
+        },
+        {
+          "id": "employee.list.states",
+          "statement": "Status and other categorical list values use the canonical bounded/badge treatment when the source does."
+        },
+        {
+          "id": "employee.row.actions",
+          "statement": "The action column keeps the source-aligned visible Edit action plus overflow menu; Delete lives in overflow and requires confirmation."
+        },
+        {
+          "id": "employee.drawer.structure",
+          "statement": "Detail drawer follows the canonical hero + information sections + related/tab surfaces."
+        },
+        {
+          "id": "employee.drawer.workflow-actions",
+          "statement": "Detail toolbar contains only meaningful business workflow actions such as approve/status changes when supported; do not duplicate ordinary Edit/Delete controls already owned elsewhere."
+        },
+        {
+          "id": "employee.form.structure",
+          "statement": "Create/Edit form mirrors the detail drawer information architecture, adapted only for editable controls and validation."
+        },
+        {
+          "id": "employee.stats",
+          "statement": "Statistics reuse the canonical Employee statistics pattern and are adapted to the target module rather than replaced by an invented dashboard."
+        }
+      ],
+      "source_anchors": [
+        "features/he-thong/nhan-vien/nhan-vien.module.tsx",
+        "features/he-thong/nhan-vien/components/nhan-vien-toolbar.tsx",
+        "features/he-thong/nhan-vien/components/nhan-vien-table.tsx",
+        "features/he-thong/nhan-vien/components/employee-table-row-actions.tsx",
+        "features/he-thong/nhan-vien/components/nhan-vien-detail.tsx",
+        "features/he-thong/nhan-vien/components/nhan-vien-form.tsx",
+        "features/he-thong/nhan-vien/components/nhan-vien-stats.tsx",
+        "components/shared/GenericToolbar.tsx",
+        "components/shared/GenericDrawer.tsx",
+        "components/shared/GenericTable.tsx",
+        "components/shared/TablePaginationFooter.tsx",
+        "components/shared/DetailToolbar.tsx",
+        "components/shared/row-actions/DataTableRowActions.tsx",
+        "components/shared/row-actions/RowActionsOverflowMenu.tsx"
+      ]
+    },
+    "department-hierarchy": {
+      "reference_role": "phong-ban",
+      "owner_requirements": [
+        {
+          "id": "department.axis",
+          "statement": "Department is the organizational parent axis; default depth is two levels unless the active project spec explicitly differs."
+        },
+        {
+          "id": "department.drawer.children",
+          "statement": "Department detail drawer contains subordinate department and related-data tables when those relations exist in the active schema/source."
+        },
+        {
+          "id": "department.child.actions",
+          "statement": "Nested child rows follow the canonical action-column pattern including source-aligned Edit plus overflow/Delete confirmation."
+        },
+        {
+          "id": "department.child.toolbar",
+          "statement": "Nested tables expose a toolbar only for real business actions; do not duplicate generic Edit/Delete controls."
+        },
+        {
+          "id": "department.relationship-semantics",
+          "statement": "Classify subordinate hierarchy separately from related modules/tabs using source/schema relations; never infer relation semantics from visual similarity."
+        }
+      ],
+      "source_anchors": [
+        "features/he-thong/phong-ban/phong-ban.module.tsx",
+        "features/he-thong/phong-ban/components/phong-ban-list.tsx",
+        "features/he-thong/phong-ban/components/phong-ban-detail.tsx",
+        "features/he-thong/phong-ban/components/department-table-row-actions.tsx",
+        "features/he-thong/phong-ban/utils/department-hierarchy.ts",
+        "features/he-thong/chuc-vu/components/position-table-row-actions.tsx",
+        "components/shared/EmbeddedChildDataGrid.tsx",
+        "components/shared/HierarchyListShell.tsx",
+        "components/shared/HierarchyTable.tsx"
+      ]
+    },
+    "permission-matrix": {
+      "reference_role": "phan-quyen",
+      "owner_requirements": [
+        {
+          "id": "permissions.module-coverage",
+          "statement": "Permission coverage must be derived from and reconcile with the active module/route registry; every permission-bearing module must be represented."
+        },
+        {
+          "id": "permissions.no-invention",
+          "statement": "Permission actions and scopes come from active project contracts; do not infer approval from edit or fabricate missing rights."
+        }
+      ],
+      "source_anchors": [
+        "features/he-thong/phan-quyen/index.tsx",
+        "features/he-thong/phan-quyen/components/permission-matrix.tsx",
+        "features/he-thong/phan-quyen/core/permission-modules-config.ts",
+        "features/he-thong/phan-quyen/services/phan-quyen-service.ts",
+        "lib/sidebar-menu.tsx",
+        "App.tsx"
+      ]
+    }
+  },
+  "relationship_rules": [
+    {
+      "id": "relation.position-department",
+      "statement": "Position is related to the Department organizational axis; exact cardinality and UI placement come from the active source/schema."
+    },
+    {
+      "id": "relation.subordinate-vs-related",
+      "statement": "Subordinate hierarchy and related data are different semantic relations and must be represented separately when both exist."
+    }
+  ],
+  "verification": {
+    "required_dimensions": [
+      "structural",
+      "behavioral",
+      "visual",
+      "architectural"
+    ],
+    "source_receipt_must_be_verified": true,
+    "browser_runtime_required_for_visual_claims": true,
+    "mock_mode_may_be_used": true,
+    "worker_may_self_attest": false
+  }
+}

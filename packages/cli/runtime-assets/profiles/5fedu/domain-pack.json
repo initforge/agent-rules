@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "id": "5fedu",
+  "activation": "explicit-project-profile",
+  "core_dependency": false,
+  "behavior_contract": "module-mapping/behavior-contract.json",
+  "module_map": "module-mapping/modules.yaml",
+  "ui_contract": "module-mapping/ui-contracts.md",
+  "source_lock": "projects/source-lock.json",
+  "rules": [
+    "rules/business.md",
+    "rules/permissions.md"
+  ],
+  "source_gate": {
+    "required_for": [
+      "implementation",
+      "parity-pass",
+      "visual-parity"
+    ],
+    "planning_allowed_when_unverified": true
+  },
+  "source_evidence": "module-mapping/source-evidence.json"
+}

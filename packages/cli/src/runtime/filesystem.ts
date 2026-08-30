@@ -15,6 +15,41 @@ export async function exists(filePath: string): Promise<boolean> {
   }
 }
 
+export async function findRepositoryRoot(candidate: string): Promise<string> {
+  let current = path.resolve(candidate);
+  while (true) {
+    if (await exists(path.join(current, ".git"))) return current;
+    const parent = path.dirname(current);
+    if (parent === current) return path.resolve(candidate);
+    current = parent;
+  }
+}
+
+export function isSafeRelativePath(value: unknown): value is string {
+  if (typeof value !== "string" || value.length === 0 || value.includes("\\") || value.startsWith("/")) return false;
+  const parts = value.split("/");
+  return parts.every((part) => part.length > 0 && part !== "." && part !== ".." && !path.isAbsolute(part));
+}
+
+export function isInside(root: string, candidate: string): boolean {
+  const relative = path.relative(root, candidate);
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
+export async function assertSafeSourceFile(sourceRoot: string, relativePath: string): Promise<string> {
+  const candidate = path.resolve(sourceRoot, ...relativePath.split("/"));
+  if (!isInside(sourceRoot, candidate)) throw new Error(`Source path escapes build root: ${relativePath}`);
+  let cursor = sourceRoot;
+  for (const part of relativePath.split("/")) {
+    cursor = path.join(cursor, part);
+    const stat = await fs.lstat(cursor);
+    if (stat.isSymbolicLink()) throw new Error(`Refusing symlinked source path: ${relativePath}`);
+  }
+  const stat = await fs.lstat(candidate);
+  if (!stat.isFile()) throw new Error(`Manifest entry is not a regular file: ${relativePath}`);
+  return candidate;
+}
+
 export async function assertDirectoryNotLinked(directory: string): Promise<void> {
   const stat = await fs.lstat(directory);
   if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error(`Refusing linked or non-directory path: ${directory}`);

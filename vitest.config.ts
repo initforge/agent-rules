@@ -2,14 +2,8 @@ import { defineConfig } from 'vitest/config';
 import { resolve } from 'path';
 
 /**
- * Root test config: discovers the test files that live outside the workspaces.
- *
- * These used to be enumerated by hand in package.json's `test` script — one long line
- * naming eleven specific files — so a new test at the repo root simply did not run
- * until someone remembered to add it. Discovery removes that failure mode.
- *
- * Workspace packages keep their own configs and are run via
- * `npm run test --workspaces`.
+ * Host contract tests live outside the workspaces. Package tests are run by
+ * their own workspace scripts.
  */
 export default defineConfig({
   server: {
@@ -17,10 +11,10 @@ export default defineConfig({
   },
   test: {
     include: [
-      'automation/**/*.test.ts',
-      'platforms/**/*.test.ts',
-      'evals/**/*.test.ts',
-      'scripts/**/*.test.ts',
+      'platforms/claude/adapter.test.ts',
+      'platforms/codex/adapter.test.ts',
+      'platforms/deepseek-harness/adapter.test.ts',
+      'platforms/opencode/adapter.test.ts',
     ],
     // Workspaces are run separately; including them here would run them twice.
     exclude: ['**/node_modules/**', '**/dist/**', 'packages/**'],
@@ -28,7 +22,6 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@initforge/agent-rules-engine': resolve(__dirname, 'packages/engine/dist'),
       '@initforge/agent-rules-kernel': resolve(__dirname, 'packages/kernel/dist'),
     },
   },

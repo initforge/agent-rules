@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-rules://profiles/5fedu/projects/source-lock.schema.json",
+  "title": "5fedu Source Lock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "sourceLock"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "sourceLock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceKind",
+        "repository",
+        "commitSha",
+        "templatePath",
+        "integrity",
+        "verificationState"
+      ],
+      "properties": {
+        "sourceKind": {
+          "type": "string",
+          "enum": [
+            "git",
+            "bundled-snapshot"
+          ]
+        },
+        "repository": {
+          "type": "string",
+          "format": "uri"
+        },
+        "commitSha": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{40}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "templatePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "referencePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manifestPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "integrity": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "algorithm",
+                "hash"
+              ],
+              "properties": {
+                "algorithm": {
+                  "const": "sha256"
+                },
+                "hash": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "artifactIntegrity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "algorithm",
+            "hash"
+          ],
+          "properties": {
+            "algorithm": {
+              "const": "sha256"
+            },
+            "hash": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "profileCompatibility": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "moduleIndex": {
+          "type": "object"
+        },
+        "lastVerified": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "verificationState": {
+          "type": "string",
+          "enum": [
+            "verified",
+            "stale",
+            "unverified"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "sourceKind": {
+                "const": "git"
+              },
+              "verificationState": {
+                "const": "verified"
+              }
+            },
+            "required": [
+              "sourceKind",
+              "verificationState"
+            ]
+          },
+          "then": {
+            "properties": {
+              "commitSha": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{40}$"
+              },
+              "integrity": {
+                "type": "object"
+              },
+              "lastVerified": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "lastVerified"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "sourceKind": {
+                "const": "bundled-snapshot"
+              },
+              "verificationState": {
+                "const": "verified"
+              }
+            },
+            "required": [
+              "sourceKind",
+              "verificationState"
+            ]
+          },
+          "then": {
+            "properties": {
+              "commitSha": {
+                "type": "null"
+              },
+              "integrity": {
+                "type": "object"
+              },
+              "referencePath": {
+                "type": "string",
+                "minLength": 1
+              },
+              "manifestPath": {
+                "type": "string",
+                "minLength": 1
+              },
+              "artifactIntegrity": {
+                "type": "object"
+              },
+              "lastVerified": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "referencePath",
+              "manifestPath",
+              "artifactIntegrity",
+              "lastVerified"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "verificationState": {
+                "const": "unverified"
+              }
+            },
+            "required": [
+              "verificationState"
+            ]
+          },
+          "then": {
+            "not": {
+              "properties": {
+                "lastVerified": {}
+              },
+              "required": [
+                "lastVerified"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

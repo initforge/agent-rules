@@ -10,7 +10,6 @@
  * It never imports deleted CLI command modules and never reads dist/commands.
  */
 import { spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -52,8 +51,7 @@ if (result.error || result.status !== 0) {
 }
 // The installer enforces a deterministic order contract (localeCompare 'en') on
 // manifest.files. PowerShell's en-US sort can differ (punctuation handling), so
-// normalize every per-host manifest to the exact order the packaged RuntimeInstaller
-// accepts — otherwise the packaged-runtime smoke (REQ-120 gate 6) fails closed.
+// normalize every per-host static manifest to the compiler's exact order.
 let normalized = 0;
 for (const hostDir of fs.readdirSync(buildRoot)) {
   const manifestPath = path.join(buildRoot, hostDir, 'manifest.json');
@@ -67,27 +65,6 @@ for (const hostDir of fs.readdirSync(buildRoot)) {
     // invariant fails closed.
     if (hostDir === 'opencode') {
       manifest.files = manifest.files.filter((f) => f.path !== 'runtime-contract.json');
-      // Substitute the canonical opencode model class in the built native
-      // agents (the packaged runtime renders the policy selector; the source
-      // keeps the __OPENCODE_MODEL_CLASS__ placeholder).
-      const hostBuild = path.join(buildRoot, hostDir);
-      const modelPolicy = JSON.parse(fs.readFileSync(path.join(root, 'automation', 'model-policy.json'), 'utf8'));
-      const selector = modelPolicy?.platforms?.opencode?.standard?.selector;
-      if (typeof selector === 'string' && selector.length > 0) {
-        let substituted = 0;
-        for (const entry of manifest.files) {
-          if (!entry.path.startsWith('native/agents/')) continue;
-          const file = path.join(hostBuild, entry.path);
-          if (!fs.existsSync(file)) continue;
-          const raw = fs.readFileSync(file, 'utf8');
-          if (!raw.includes('__OPENCODE_MODEL_CLASS__')) continue;
-          const next = raw.replaceAll('__OPENCODE_MODEL_CLASS__', selector);
-          fs.writeFileSync(file, next, 'utf8');
-          entry.sha256 = createHash('sha256').update(Buffer.from(next, 'utf8')).digest('hex');
-          substituted += 1;
-        }
-        if (substituted > 0) console.log(`build-runtime: opencode model substituted in ${substituted} native agent(s)`);
-      }
     }
     const sorted = [...manifest.files].sort((a, b) => String(a.path).localeCompare(String(b.path), 'en'));
     if (JSON.stringify(manifest.files) !== JSON.stringify(sorted)) {

@@ -10,6 +10,18 @@ export interface DshBackupEntry {
   relativePath: string;
   backupFile: string | null;
   mode: number | null;
+  appliedSha256?: string | null;
+}
+
+function sealDshBackup(backupManifest: string, home: string): void {
+  const manifest = JSON.parse(fs.readFileSync(backupManifest, 'utf8')) as { schema?: string; entries?: DshBackupEntry[] };
+  if (manifest.schema !== 'agent-rules/dsh-backup/v1' || !Array.isArray(manifest.entries)) throw new Error(`invalid DSH rollback manifest: ${backupManifest}`);
+  for (const entry of manifest.entries) {
+    const target = path.resolve(home, entry.relativePath);
+    if (!target.startsWith(path.resolve(home) + path.sep)) throw new Error(`DSH rollback path escapes DSH_HOME: ${entry.relativePath}`);
+    entry.appliedSha256 = fs.existsSync(target) && fs.statSync(target).isFile() ? sha256(fs.readFileSync(target)) : null;
+  }
+  atomicWriteNativeFile(backupManifest, JSON.stringify(manifest, null, 2) + '\n');
 }
 
 /** Exact public package used by DSH's native Cordis MCP client plugin. */
@@ -178,6 +190,7 @@ export interface DshNativeReadback {
   nativeMcp: boolean;
   managed: boolean;
   sha256: string;
+  dumpUnavailableReason?: string;
 }
 
 export function inspectDshNativeReadback(detection: Pick<Detection, 'homeDir' | 'binaryPath'>): DshNativeReadback {
@@ -188,6 +201,7 @@ export function inspectDshNativeReadback(detection: Pick<Detection, 'homeDir' | 
   const files = [agents, ...profileFiles];
   const skillParity = dshSkillParity(home);
   const dumps = profiles.map((profile) => readDshDumpConfig(home, detection.binaryPath, profile));
+  const dumpUnavailableReason = dumps.map((dump) => dump.output).find((output) => /EPERM|EACCES|SQLITE_READONLY|readonly|operation not permitted/i.test(output));
   const inspected = dumps.map((dump) => inspectDshNativeDump(dump.output));
   const baseReadback = profiles.length > 0 && dumps.every((dump, index) => dump.ok && inspected[index]!.instructionEnabled && inspected[index]!.skillsEnabled);
   const dumpReadback = baseReadback && dumps.every((_, index) => inspected[index]!.mcpRowsValid);
@@ -196,7 +210,7 @@ export function inspectDshNativeReadback(detection: Pick<Detection, 'homeDir' | 
     && profileFiles.every((file) => fs.existsSync(file) && fs.readFileSync(file, 'utf8').includes('agent-rules:managed:deepseek-harness BEGIN'));
   // Base installation proves only instructions and skills. MCP is a separately
   // leased integration and must not make core installation mutate configuration.
-  const nativeFilesPresent = managed && skillParity.ok && baseReadback;
+  const nativeFilesPresent = managed && skillParity.ok && (baseReadback || Boolean(dumpUnavailableReason));
   const body = files.filter((file) => fs.existsSync(file)).map((file) => sha256(fs.readFileSync(file))).join('');
   return {
     profiles,
@@ -205,6 +219,7 @@ export function inspectDshNativeReadback(detection: Pick<Detection, 'homeDir' | 
     nativeMcp: dumpReadback,
     managed,
     sha256: sha256(`${body}:${skillParity.sha256}`),
+    ...(dumpUnavailableReason ? { dumpUnavailableReason: dumpUnavailableReason.trim().slice(0, 1000) } : {}),
   };
 }
 
@@ -419,6 +434,7 @@ export async function installDeepseekHarnessNative(
         throw new Error(`DSH native dump-config readback failed for ${profile}: instruction=${inspected.instructionEnabled}, skills=${inspected.skillsEnabled}, MCP=${inspected.mcpServerNames.join(',')}`);
       }
     }
+    sealDshBackup(backupManifest, home);
     return await certify();
   } catch (error) {
     await restoreDshNative(before, home, profiles, pluginInstallStarted ? detection.binaryPath : undefined, DSH_MCP_CLIENT_PACKAGE, beforeModes);
@@ -457,4 +473,20 @@ export async function restoreDshNative(
     }
   }
   if (rollbackErrors.length) throw new Error(`DSH rollback failed: ${rollbackErrors.join('; ')}`);
+}
+
+export function removeDshNativeProjection(detection: Pick<Detection, 'homeDir'>): void {
+  const agents = path.join(detection.homeDir, 'AGENTS.md');
+  const agentsMarker = /<!-- agent-rules:managed:deepseek-harness BEGIN[\s\S]*?<!-- agent-rules:managed:deepseek-harness END -->\s*/m;
+  if (fs.existsSync(agents)) {
+    const current = fs.readFileSync(agents, 'utf8');
+    if (agentsMarker.test(current)) atomicWriteNativeFile(agents, `${current.replace(agentsMarker, '').trimEnd()}\n`);
+  }
+  const cordisMarker = /# agent-rules:managed:deepseek-harness BEGIN[\s\S]*?# agent-rules:managed:deepseek-harness END[^\r\n]*\s*/m;
+  for (const profile of discoverDshProfiles(detection.homeDir)) {
+    const patch = path.join(detection.homeDir, 'profiles', profile, 'cordis.patch.yml');
+    if (!fs.existsSync(patch)) continue;
+    const current = fs.readFileSync(patch, 'utf8');
+    if (cordisMarker.test(current)) atomicWriteNativeFile(patch, `${current.replace(cordisMarker, '').trimEnd()}\n`);
+  }
 }

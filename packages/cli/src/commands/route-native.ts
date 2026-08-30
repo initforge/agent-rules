@@ -3,6 +3,7 @@ import {
   type NativeTurnRequest,
   NativeTurnRouterError,
 } from '@initforge/agent-rules-kernel/northstar/native-turn-router.js';
+import { resolveRuntimeAssetsRoot } from '../runtime/locator.js';
 
 /**
  * CLI transport for routeNativeTurn (REQ-005).
@@ -10,7 +11,7 @@ import {
  * and prints diagnostics to stderr only. Raw prompt is never interpolated into
  * a shell string.
  */
-export async function handleRouteNativeCommand(options: { stdin?: boolean; runsRoot?: string }): Promise<void> {
+export async function handleRouteNativeCommand(options: { stdin?: boolean }): Promise<void> {
   if (!options.stdin) {
     process.stderr.write('agent-rules route-native: currently only --stdin transport is supported\n');
     process.exitCode = 1;
@@ -35,9 +36,7 @@ export async function handleRouteNativeCommand(options: { stdin?: boolean; runsR
   }
 
   try {
-    const { capsule } = routeNativeTurn(request, {
-      ...(options.runsRoot ? { runsRoot: options.runsRoot } : {}),
-    });
+    const { capsule } = routeNativeTurn(request, { harnessRoot: resolveRuntimeAssetsRoot() });
     process.stdout.write(JSON.stringify(capsule) + '\n');
   } catch (err: unknown) {
     const status = err instanceof NativeTurnRouterError ? err.status : 'BLOCKED';

@@ -1,0 +1,15 @@
+{
+  "name": "playwright-mcp",
+  "policy": "recommended",
+  "upstream": "https://github.com/microsoft/playwright-mcp",
+  "npmPackage": "@playwright/mcp",
+  "commandName": "playwright-mcp",
+  "mcpServerKey": "playwright",
+  "installDirs": {
+    "windows": "%LOCALAPPDATA%\\npm",
+    "linux": "$HOME/.npm-global",
+    "darwin": "$HOME/.npm-global"
+  },
+  "version": "0.0.78",
+  "versionPolicy": "pinned"
+}

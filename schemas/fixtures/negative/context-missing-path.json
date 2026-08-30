@@ -1,9 +1,0 @@
-{
-  "schema": "artifact/context",
-  "version": 1,
-  "sources": [
-    {
-      "type": "rule"
-    }
-  ]
-}

@@ -1,0 +1,27 @@
+{
+  "signals": [
+    "branding",
+    "landing",
+    "marketing",
+    "redesign",
+    "animation",
+    "giao diện đẹp"
+  ],
+  "excludes": [
+    "5fedu",
+    "ERP module",
+    "parity",
+    "drawer",
+    "listview",
+    "toolbar"
+  ],
+  "priority": 60,
+  "loads": [
+    "skill:frontend-architect"
+  ],
+  "supports": [],
+  "project_scope": "",
+  "platform_scope": "all",
+  "max_route_tokens": 3500,
+  "default": false
+}

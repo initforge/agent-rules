@@ -4,6 +4,8 @@ import { createHash } from "node:crypto";
 import { loadIntegrationInventory } from "../integration/inventory.js";
 import { resolveGlobalMcpProfile, selectGlobalAdapterEntries, type GlobalMcpProfile } from "../integration/mcp-profile.js";
 import { resolveOmpAgentHome } from "../native/omp.js";
+import { resolveRuntimeStateRoot } from "./locator.js";
+import { resolveDependency } from "./dependency-resolver.js";
 
 /**
  * REQ-008/REQ-009 — native host MCP registration and the legacy migration.
@@ -96,17 +98,25 @@ interface RegistrationPreferences {
 
 function registrationPreferencesPath(env: NodeJS.ProcessEnv): string {
   const home = env.USERPROFILE || env.HOME || "";
+  return path.join(home, ".agent-rules", "current", "mcp-registration-preferences.json");
+}
+
+function legacyRegistrationPreferencesPath(env: NodeJS.ProcessEnv): string {
+  const home = env.USERPROFILE || env.HOME || "";
   return path.join(home, ".agent-rules", "mcp-registration-preferences.json");
 }
 
 export function disabledRegistrationIds(env: NodeJS.ProcessEnv): Set<string> {
-  const file = registrationPreferencesPath(env);
-  try {
-    const value = JSON.parse(fs.readFileSync(file, "utf8")) as Partial<RegistrationPreferences>;
-    return new Set(Array.isArray(value.disabled) ? value.disabled.filter((id): id is string => typeof id === "string") : []);
-  } catch {
-    return new Set();
+  for (const file of [registrationPreferencesPath(env), legacyRegistrationPreferencesPath(env)]) {
+    try {
+      const value = JSON.parse(fs.readFileSync(file, "utf8")) as Partial<RegistrationPreferences>;
+      if (value.schema !== "agent-rules/mcp-registration-preferences/v1") continue;
+      return new Set(Array.isArray(value.disabled) ? value.disabled.filter((id): id is string => typeof id === "string") : []);
+    } catch {
+      // Try the legacy path, then default to no disabled registrations.
+    }
   }
+  return new Set();
 }
 
 /** Persist an explicit user enable/disable choice separately from provider
@@ -124,6 +134,13 @@ export function setMcpRegistrationEnabled(id: string, enabled: boolean, env: Nod
   const temp = `${file}.${process.pid}.tmp`;
   fs.writeFileSync(temp, `${JSON.stringify(next, null, 2)}\n`, "utf8");
   fs.renameSync(temp, file);
+  const legacy = legacyRegistrationPreferencesPath(env);
+  try {
+    const previous = JSON.parse(fs.readFileSync(legacy, "utf8")) as Partial<RegistrationPreferences>;
+    if (previous.schema === "agent-rules/mcp-registration-preferences/v1") fs.rmSync(legacy, { force: true });
+  } catch {
+    // Unknown legacy state is retained rather than guessed away.
+  }
 }
 
 export interface KnownAdapterFingerprint {
@@ -147,16 +164,20 @@ export interface ConvergenceModel {
 
 /** Resolve the codebase-memory-mcp binary path the adapters expand to. */
 export function resolveCodebaseMemoryBin(env: NodeJS.ProcessEnv = process.env): string | null {
-  const candidates = [
-    env.CODEBASE_MEMORY_MCP_BIN || null,
-    env.LOCALAPPDATA ? path.join(env.LOCALAPPDATA, "Programs", "codebase-memory-mcp", "codebase-memory-mcp.exe") : null,
-    env.HOME ? path.join(env.HOME, ".local", "share", "codebase-memory-mcp", "codebase-memory-mcp") : null,
-    env.HOME ? path.join(env.HOME, "Library", "Application Support", "codebase-memory-mcp", "codebase-memory-mcp") : null,
-  ].filter((value): value is string => Boolean(value));
-  for (const candidate of candidates) {
-    if (fs.existsSync(candidate)) return candidate;
+  try {
+    return resolveDependency({
+      name: 'codebase-memory-mcp',
+      env,
+      envVar: 'CODEBASE_MEMORY_MCP_BIN',
+      knownCandidates: [
+        env.LOCALAPPDATA ? path.join(env.LOCALAPPDATA, "Programs", "codebase-memory-mcp", "codebase-memory-mcp.exe") : '',
+        env.HOME ? path.join(env.HOME, ".local", "share", "codebase-memory-mcp", "codebase-memory-mcp") : '',
+        env.HOME ? path.join(env.HOME, "Library", "Application Support", "codebase-memory-mcp", "codebase-memory-mcp") : '',
+      ].filter(Boolean),
+    })?.command ?? null;
+  } catch {
+    return null;
   }
-  return null;
 }
 
 /**
@@ -165,19 +186,21 @@ export function resolveCodebaseMemoryBin(env: NodeJS.ProcessEnv = process.env): 
  * Registration itself remains owned by this module; callers must not write
  * generic MCP config files on their own.
  */
-export function getStandardMcpServers(home: string): Record<string, { command: string; args: string[]; env?: Record<string, string> }> {
+export function getStandardMcpServers(_home: string): Record<string, { command: string; args: string[]; env?: Record<string, string> }> {
+  const codebaseMemory = resolveCodebaseMemoryBin() ?? 'codebase-memory-mcp';
+  const npx = (args: string[]): { command: string; args: string[] } => process.platform === 'win32'
+    ? { command: 'cmd.exe', args: ['/d', '/s', '/c', 'npx', ...args] }
+    : { command: 'npx', args };
   return {
     "codebase-memory": {
-      command: path.join(home, "AppData", "Local", "Programs", "codebase-memory-mcp", "codebase-memory-mcp.exe"),
+      command: codebaseMemory,
       args: [],
     },
     playwright: {
-      command: "cmd.exe",
-      args: ["/d", "/s", "/c", "npx", "-y", "@playwright/mcp@0.0.78", "--isolated", "--executable-path", path.join(home, "AppData", "Local", "ms-playwright", "chromium-1232", "chrome-win64", "chrome.exe")],
+      ...npx(["-y", "@playwright/mcp@0.0.78", "--isolated"]),
     },
     "chrome-devtools": {
-      command: "cmd.exe",
-      args: ["/d", "/s", "/c", "npx", "-y", "chrome-devtools-mcp@1.7.0", "--isolated", "--executablePath", path.join(home, "AppData", "Local", "ms-playwright", "chromium-1232", "chrome-win64", "chrome.exe")],
+      ...npx(["-y", "chrome-devtools-mcp@1.7.0", "--isolated"]),
       env: {
         CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS: "1",
         CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS: "1",
@@ -195,18 +218,10 @@ export function expandPlaceholders(host: HostName, body: string, env: NodeJS.Pro
   let expanded = bin
     ? body.replaceAll("${CODEBASE_MEMORY_MCP_BIN}", host === "codex" ? bin.replaceAll("\\", "/") : bin.replaceAll("\\", "\\\\"))
     : body;
-  if (host === "opencode") {
-    const userHome = env.USERPROFILE || env.HOME || "";
-    const chrome = path.join(userHome, "AppData", "Local", "ms-playwright", "chromium-1232", "chrome-win64", "chrome.exe");
-    expanded = expanded.replaceAll("${OPENCODE_CHROME_PATH}", chrome.replaceAll("\\", "\\\\"));
-  }
   if (host === "command-code") {
-    const userHome = env.USERPROFILE || env.HOME || "";
-    const codebaseBin = env.CODEBASE_MEMORY_MCP_BIN || path.join(userHome, "AppData", "Local", "Programs", "codebase-memory-mcp", "codebase-memory-mcp.exe");
-    const chromeBin = path.join(userHome, "AppData", "Local", "ms-playwright", "chromium-1232", "chrome-win64", "chrome.exe");
+    const codebaseBin = resolveCodebaseMemoryBin(env) ?? 'codebase-memory-mcp';
     expanded = expanded
-      .replaceAll("${COMMAND_CODE_CODEBASE_MEMORY_BIN}", codebaseBin.replaceAll("\\", "\\\\"))
-      .replaceAll("${COMMAND_CODE_CHROME_PATH}", chromeBin.replaceAll("\\", "\\\\"));
+      .replaceAll("${COMMAND_CODE_CODEBASE_MEMORY_BIN}", codebaseBin.replaceAll("\\", "\\\\"));
   }
   // Canonical adapter files remain portable (`npx …`) so they can be consumed
   // by Linux/macOS runners and headless task overlays. Windows native clients
@@ -296,18 +311,19 @@ export function normalizedServerDefinition(host: HostName, value: string): strin
     // The old Windows projection pinned the bundled Playwright Chromium.
     // Preserve a user-selected browser, but regard that exact managed path as
     // equivalent to the portable default so an update does not overwrite it.
-    if (Array.isArray(parsed.args)) {
-      const args = [...parsed.args];
-      for (let index = args.length - 2; index >= 0; index -= 1) {
-        const flag = args[index];
-        const candidate = args[index + 1];
+    for (const key of ["args", "command"] as const) {
+      if (!Array.isArray(parsed[key])) continue;
+      const argv = [...parsed[key] as unknown[]];
+      for (let index = argv.length - 2; index >= 0; index -= 1) {
+        const flag = argv[index];
+        const candidate = argv[index + 1];
         if ((flag === "--executable-path" || flag === "--executablePath")
           && typeof candidate === "string"
           && /ms-playwright[\\/]+chromium-\d+[\\/]+chrome-win64[\\/]+chrome\.exe$/i.test(candidate)) {
-          args.splice(index, 2);
+          argv.splice(index, 2);
         }
       }
-      parsed.args = args;
+      parsed[key] = argv;
     }
     return JSON.stringify(parsed);
   } catch {
@@ -529,25 +545,90 @@ function classifyEntry(entry: { id: string; body: string; disabled: boolean }, m
   return strongLegacy ? "legacy-migrate" : "user-owned";
 }
 
-export function backupConfig(configPath: string, rootDir: string): { backupPath: string; receiptPath: string } {
-  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const backupDir = path.join(rootDir, ".agent-rules-convergence", stamp);
+export function backupConfig(configPath: string, host: HostName, stateRoot = resolveRuntimeStateRoot()): { backupPath: string; receiptPath: string } {
+  const backupDir = path.join(stateRoot, "rollback", host, "mcp");
+  const receiptPath = path.join(backupDir, "receipt.json");
+  if (fs.existsSync(backupDir)) {
+    let owned = false;
+    try {
+      const previous = JSON.parse(fs.readFileSync(receiptPath, "utf8")) as { schema?: unknown; host?: unknown; config_path?: unknown };
+      owned = previous.schema === "agent-rules/mcp-backup/v1" && previous.host === host && path.resolve(String(previous.config_path)) === path.resolve(configPath);
+    } catch {
+      owned = false;
+    }
+    if (!owned) throw new Error(`Refusing to replace unowned MCP rollback state: ${backupDir}`);
+    fs.rmSync(backupDir, { recursive: true, force: true });
+  }
   fs.mkdirSync(backupDir, { recursive: true });
   const backupPath = path.join(backupDir, path.basename(configPath));
-  const bytes = fs.readFileSync(configPath);
-  fs.writeFileSync(backupPath, bytes);
+  const existed = fs.existsSync(configPath);
+  const bytes = existed ? fs.readFileSync(configPath) : null;
+  if (bytes) fs.writeFileSync(backupPath, bytes);
   const receipt = {
-    schema: "agent-rules/mcp-convergence-backup",
+    schema: "agent-rules/mcp-backup/v1",
     version: 1,
+    host,
     backed_up_at: new Date().toISOString(),
     config_path: configPath,
     backup_path: backupPath,
-    sha256: createHash("sha256").update(bytes).digest("hex"),
+    existed,
+    sha256: bytes ? createHash("sha256").update(bytes).digest("hex") : null,
     reason: "pre-convergence backup before agent-rules MCP entry removal/disable",
   };
-  const receiptPath = path.join(backupDir, "receipt.json");
   fs.writeFileSync(receiptPath, JSON.stringify(receipt, null, 2) + "\n", "utf8");
   return { backupPath, receiptPath };
+}
+
+export function sealConfigBackup(receiptPath: string, configPath: string): void {
+  const receipt = JSON.parse(fs.readFileSync(receiptPath, 'utf8')) as Record<string, unknown>;
+  if (receipt.schema !== 'agent-rules/mcp-backup/v1' || path.resolve(String(receipt.config_path)) !== path.resolve(configPath)) {
+    throw new Error(`Invalid MCP rollback receipt while sealing applied bytes: ${receiptPath}`);
+  }
+  if (!fs.existsSync(configPath) || !fs.statSync(configPath).isFile()) throw new Error(`MCP config missing after projection: ${configPath}`);
+  receipt.applied_sha256 = createHash('sha256').update(fs.readFileSync(configPath)).digest('hex');
+  fs.writeFileSync(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, 'utf8');
+}
+
+export function restoreHostMcpBackup(host: HostName, env: NodeJS.ProcessEnv = process.env): boolean {
+  const home = env.USERPROFILE || env.HOME || '';
+  const backupDir = path.join(home || resolveRuntimeStateRoot(), home ? '.agent-rules' : '', 'rollback', host, 'mcp');
+  const receiptPath = path.join(backupDir, 'receipt.json');
+  if (!fs.existsSync(receiptPath)) return false;
+  const receipt = JSON.parse(fs.readFileSync(receiptPath, 'utf8')) as {
+    schema?: unknown;
+    host?: unknown;
+    config_path?: unknown;
+    backup_path?: unknown;
+    existed?: unknown;
+    sha256?: unknown;
+    applied_sha256?: unknown;
+  };
+  if (receipt.schema !== 'agent-rules/mcp-backup/v1' || receipt.host !== host || typeof receipt.config_path !== 'string' || typeof receipt.backup_path !== 'string') {
+    throw new Error(`Invalid MCP rollback ownership receipt: ${receiptPath}`);
+  }
+  const configPath = path.resolve(receipt.config_path);
+  const backupPath = path.resolve(receipt.backup_path);
+  if (!backupPath.startsWith(`${path.resolve(backupDir)}${path.sep}`)) throw new Error(`MCP rollback path escapes owned state: ${backupPath}`);
+  if (typeof receipt.applied_sha256 !== 'string') throw new Error(`MCP rollback receipt does not identify the applied config bytes: ${receiptPath}`);
+  if (!fs.existsSync(configPath) || !fs.statSync(configPath).isFile()) throw new Error(`MCP config changed or disappeared after installation: ${configPath}`);
+  const appliedDigest = createHash('sha256').update(fs.readFileSync(configPath)).digest('hex');
+  if (appliedDigest !== receipt.applied_sha256) throw new Error(`MCP config changed after installation; refusing to overwrite user changes: ${configPath}`);
+  if (receipt.existed === true) {
+    if (!fs.existsSync(backupPath)) throw new Error(`MCP rollback bytes are missing: ${backupPath}`);
+    const bytes = fs.readFileSync(backupPath);
+    const digest = createHash('sha256').update(bytes).digest('hex');
+    if (receipt.sha256 !== digest) throw new Error(`MCP rollback bytes do not match receipt: ${backupPath}`);
+    fs.mkdirSync(path.dirname(configPath), { recursive: true });
+    const temporary = `${configPath}.${process.pid}.rollback`;
+    fs.writeFileSync(temporary, bytes);
+    fs.renameSync(temporary, configPath);
+  } else if (receipt.existed === false) {
+    fs.rmSync(configPath, { force: true });
+  } else {
+    throw new Error(`MCP rollback receipt lacks original existence state: ${receiptPath}`);
+  }
+  fs.rmSync(backupDir, { recursive: true, force: true });
+  return true;
 }
 
 function applyConvergence(host: HostName, configPath: string, entries: Array<{ id: string; body: string; disabled: boolean }>, dispositions: Map<string, EntryDisposition>): { changed: boolean } {
@@ -726,10 +807,12 @@ export async function convergeHostMcpConfig(repoRoot: string, host: HostName, op
   if (needsUser) {
     // Still converge what is safely owned, but never touch user-modified entries.
   }
-  const backup = backupConfig(configPath, path.dirname(configPath));
+  const stateHome = env.USERPROFILE || env.HOME;
+  const backup = backupConfig(configPath, host, stateHome ? path.join(stateHome, '.agent-rules') : resolveRuntimeStateRoot());
   let applied: { changed: boolean };
   try {
     applied = applyConvergence(host, configPath, parsed.serverEntries, dispositions);
+    if (applied.changed) sealConfigBackup(backup.receiptPath, configPath);
   } catch (error) {
     return { ...base, exists: true, status: needsUser ? "NEEDS_USER" : "CONVERGED", entries, backup_path: backup.backupPath, backup_receipt: backup.receiptPath, error: (error as Error).message };
   }

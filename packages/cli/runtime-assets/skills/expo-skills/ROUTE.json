@@ -1,0 +1,24 @@
+{
+ "activation_class": "ROUTED",
+ "signals": [
+  "expo project",
+  "expo sdk",
+  "expo config plugin"
+ ],
+ "intent_signals": [
+  "expo_skills"
+ ],
+ "excludes": [
+  "web-only"
+ ],
+ "priority": 40,
+ "loads": [
+  "skill:expo-skills"
+ ],
+ "requires": [],
+ "supports": [],
+ "project_scope": "",
+ "platform_scope": "all",
+ "max_route_tokens": 2500,
+ "default": false
+}

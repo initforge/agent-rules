@@ -1,11 +1,9 @@
 import { ExitCode, type CommandResult, type CliOptions } from "../types.js";
-import { RUNTIME_PLATFORMS } from "../runtime/installer.js";
-import { NativeInstaller } from "../services/native-installer.js";
-import type { HostId } from "@initforge/agent-rules-kernel/northstar/host-adapters.js";
+import { COORDINATOR_HOSTS, createInstallationCoordinator } from "../runtime/installation-coordinator.js";
 
 export async function uninstallCmd(args: string[], options: CliOptions): Promise<CommandResult> {
   const targetPlatforms = args.filter((a) => !a.startsWith("-"));
-  const validPlatforms = [...RUNTIME_PLATFORMS, "all"] as const;
+  const validPlatforms = [...COORDINATOR_HOSTS, "all"] as const;
 
   for (const p of targetPlatforms) {
     if (!(validPlatforms as readonly string[]).includes(p)) {
@@ -14,36 +12,30 @@ export async function uninstallCmd(args: string[], options: CliOptions): Promise
   }
 
   const platformsToUninstall = targetPlatforms.length === 0 || targetPlatforms.includes("all")
-    ? [...RUNTIME_PLATFORMS]
+    ? [...COORDINATOR_HOSTS]
     : targetPlatforms;
 
-  const nativeInstaller = new NativeInstaller();
-
-  async function doUninstall(p: string): Promise<{ ok: boolean; error?: string }> {
-    try {
-      // Native uninstall removes managed host content and its owned skills only.
-      await nativeInstaller.uninstall(p as HostId);
-      return { ok: true };
-    } catch (e) { return { ok: false, error: (e as Error).message }; }
-  }
-
-  const results: Record<string, { ok: boolean; error?: string }> = {};
-  for (const p of platformsToUninstall) results[p] = await doUninstall(p);
-  const allOk = Object.values(results).every(r => r.ok);
-
-  if (platformsToUninstall.length === 1 && !targetPlatforms.includes("all")) {
-    const single = platformsToUninstall[0];
-    const r = results[single];
+  const coordinator = createInstallationCoordinator({ dryRun: options.dryRun });
+  try {
+    const receipt = await coordinator.uninstall(platformsToUninstall);
+    if (platformsToUninstall.length === 1 && !targetPlatforms.includes("all")) {
+      const single = platformsToUninstall[0];
+      return {
+        exitCode: ExitCode.Success,
+        message: `${single} uninstalled (owned content only)`,
+        data: { platform: single, ok: true, candidate_id: receipt.candidate_id },
+      };
+    }
     return {
-      exitCode: r.ok ? ExitCode.Success : ExitCode.GeneralError,
-      message: r.ok ? `${single} uninstalled (owned content only)` : `${single} uninstall failed: ${r.error}`,
-      data: { platform: single, ...r }
+      exitCode: ExitCode.Success,
+      message: `All ${platformsToUninstall.length} platforms uninstalled (owned content only)`,
+      data: { candidate_id: receipt.candidate_id, hosts: platformsToUninstall },
+    };
+  } catch (error) {
+    return {
+      exitCode: ExitCode.GeneralError,
+      message: (error as Error).message,
+      data: { hosts: platformsToUninstall, error: (error as Error).message },
     };
   }
-
-  return {
-    exitCode: allOk ? ExitCode.Success : ExitCode.GeneralError,
-    message: allOk ? `All ${platformsToUninstall.length} platforms uninstalled (owned content only)` : `Some uninstalls failed`,
-    data: { results }
-  };
 }

@@ -1,0 +1,415 @@
+{
+  "version": 1,
+  "pack": "5fedu",
+  "authority": "Generated from the verified bundled source snapshot. Every pointer is manifest-bound and checked by validate-5fedu-domain-pack.mjs.",
+  "reference_tree_sha256": "1e5ca0259db84c129b1d041ff6e34c997db18b2e0e871bcc08c318ae662df3e4",
+  "requirements": {
+    "employee.list.shell": [
+      {
+        "path": "features/he-thong/nhan-vien/nhan-vien.module.tsx",
+        "line": 133,
+        "contains": "createFeatureModule<Employee, EmployeeFilters>",
+        "label": "NhanVienPage/createFeatureModule",
+        "sha256": "1c2234cef997bd1673f84686b210f9771259bda63dd8a994602cce025922bb87"
+      },
+      {
+        "path": "features/he-thong/nhan-vien/nhan-vien.module.tsx",
+        "line": 138,
+        "contains": "{ id: 'stats'",
+        "label": "list+stats tabs",
+        "sha256": "1c2234cef997bd1673f84686b210f9771259bda63dd8a994602cce025922bb87"
+      }
+    ],
+    "employee.list.toolbar": [
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-toolbar.tsx",
+        "line": 272,
+        "contains": "<ToolbarFilterChipGroup",
+        "label": "filter chips",
+        "sha256": "89ee6eed898f007408f778cd2601cc6f6e4bba2f00e7c6f12206f6f383df0e44"
+      },
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-toolbar.tsx",
+        "line": 289,
+        "contains": "tooltip={txt('employee.toolbar.importData')}",
+        "label": "import",
+        "sha256": "89ee6eed898f007408f778cd2601cc6f6e4bba2f00e7c6f12206f6f383df0e44"
+      },
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-toolbar.tsx",
+        "line": 296,
+        "contains": "tooltip={txt('employee.toolbar.exportData')}",
+        "label": "export",
+        "sha256": "89ee6eed898f007408f778cd2601cc6f6e4bba2f00e7c6f12206f6f383df0e44"
+      },
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-toolbar.tsx",
+        "line": 300,
+        "contains": "<ListToolbarAddButton",
+        "label": "add",
+        "sha256": "89ee6eed898f007408f778cd2601cc6f6e4bba2f00e7c6f12206f6f383df0e44"
+      },
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-toolbar.tsx",
+        "line": 321,
+        "contains": "showBack",
+        "label": "back",
+        "sha256": "89ee6eed898f007408f778cd2601cc6f6e4bba2f00e7c6f12206f6f383df0e44"
+      }
+    ],
+    "employee.list.pagination": [
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-table.tsx",
+        "line": 340,
+        "contains": "serverPaginated={serverPaginated}",
+        "label": "list pagination input",
+        "sha256": "b69b5407440cc47e7580348a47284d2acead3340db5e6350026e941499837ff5"
+      },
+      {
+        "path": "components/shared/GenericTable.tsx",
+        "line": 637,
+        "contains": "{/* Right: Pagination controls */}",
+        "label": "shared table pagination footer",
+        "sha256": "0166c8ae5d53adf7cecb809fba617c0b561d20a45cf8f3cc867e809fb751d8ae"
+      }
+    ],
+    "employee.list.states": [
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-table.tsx",
+        "line": 228,
+        "contains": "<EnumBadge value={item.trang_thai}",
+        "label": "status badge",
+        "sha256": "b69b5407440cc47e7580348a47284d2acead3340db5e6350026e941499837ff5"
+      },
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-table.tsx",
+        "line": 191,
+        "contains": "<EnumBadge value={item.gioi_tinh}",
+        "label": "categorical badge",
+        "sha256": "b69b5407440cc47e7580348a47284d2acead3340db5e6350026e941499837ff5"
+      }
+    ],
+    "employee.row.actions": [
+      {
+        "path": "features/he-thong/nhan-vien/components/employee-table-row-actions.tsx",
+        "line": 93,
+        "contains": "key: 'delete'",
+        "label": "delete in overflow",
+        "sha256": "3bdfb2129f318cebd22d7dcc57aa05ec5d2684d49f7a8c02573521e607702e7d"
+      },
+      {
+        "path": "features/he-thong/nhan-vien/components/employee-table-row-actions.tsx",
+        "line": 110,
+        "contains": "<TableRowIconButton",
+        "label": "visible edit action",
+        "sha256": "3bdfb2129f318cebd22d7dcc57aa05ec5d2684d49f7a8c02573521e607702e7d"
+      },
+      {
+        "path": "features/he-thong/nhan-vien/hooks/use-employee-page-handlers.tsx",
+        "line": 79,
+        "contains": "const handleDelete = useCallback",
+        "label": "delete handler",
+        "sha256": "56effd017988758ad4cb9314941c8148e69908f3fc2ea7183c558d918854d8ef"
+      },
+      {
+        "path": "features/he-thong/nhan-vien/hooks/use-employee-page-handlers.tsx",
+        "line": 87,
+        "contains": "confirmText: CONFIRM_DELETE()",
+        "label": "delete confirmation",
+        "sha256": "56effd017988758ad4cb9314941c8148e69908f3fc2ea7183c558d918854d8ef"
+      }
+    ],
+    "employee.drawer.structure": [
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-detail.tsx",
+        "line": 157,
+        "contains": "<GenericDrawer",
+        "label": "detail drawer",
+        "sha256": "5b559e6ee94e553e0c9624e33c48c23acd1db5191fc66b67caac20f205e3d31f"
+      },
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-detail.tsx",
+        "line": 197,
+        "contains": "<DetailSection",
+        "label": "sectioned information",
+        "sha256": "5b559e6ee94e553e0c9624e33c48c23acd1db5191fc66b67caac20f205e3d31f"
+      }
+    ],
+    "employee.drawer.workflow-actions": [
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-detail.tsx",
+        "line": 78,
+        "contains": "const toolbarActions = useMemo",
+        "label": "workflow toolbar",
+        "sha256": "5b559e6ee94e553e0c9624e33c48c23acd1db5191fc66b67caac20f205e3d31f"
+      },
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-detail.tsx",
+        "line": 195,
+        "contains": "<DetailToolbar actions={toolbarActions}",
+        "label": "toolbar render",
+        "sha256": "5b559e6ee94e553e0c9624e33c48c23acd1db5191fc66b67caac20f205e3d31f"
+      },
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-detail.tsx",
+        "line": 133,
+        "contains": "onClick={() => onEdit(data)}",
+        "label": "ordinary edit lives in footer",
+        "sha256": "5b559e6ee94e553e0c9624e33c48c23acd1db5191fc66b67caac20f205e3d31f"
+      },
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-detail.tsx",
+        "line": 143,
+        "contains": "onClick={() => onDelete(data.id)}",
+        "label": "ordinary delete lives in footer",
+        "sha256": "5b559e6ee94e553e0c9624e33c48c23acd1db5191fc66b67caac20f205e3d31f"
+      }
+    ],
+    "employee.form.structure": [
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-form.tsx",
+        "line": 245,
+        "contains": "<GenericDrawer",
+        "label": "form drawer",
+        "sha256": "43bfb1ba3f42a1c56ff5fa77aed7a500d974d0b8e79ddb4c70bd3dafec1552f5"
+      },
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-form.tsx",
+        "line": 264,
+        "contains": "<FormSection",
+        "label": "form sections",
+        "sha256": "43bfb1ba3f42a1c56ff5fa77aed7a500d974d0b8e79ddb4c70bd3dafec1552f5"
+      },
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-form.tsx",
+        "line": 285,
+        "contains": "<FormGrid cols={2}>",
+        "label": "responsive form grid",
+        "sha256": "43bfb1ba3f42a1c56ff5fa77aed7a500d974d0b8e79ddb4c70bd3dafec1552f5"
+      },
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-form.tsx",
+        "line": 232,
+        "contains": "<FormDrawerFooter",
+        "label": "form footer",
+        "sha256": "43bfb1ba3f42a1c56ff5fa77aed7a500d974d0b8e79ddb4c70bd3dafec1552f5"
+      }
+    ],
+    "employee.stats": [
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-stats.tsx",
+        "line": 526,
+        "contains": "<StatsKpiGrid",
+        "label": "KPI shell",
+        "sha256": "b2f18aa9b9e9c70a498c7a54f75fed230bd705a806cf702058c35f8be797234d"
+      },
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-stats.tsx",
+        "line": 548,
+        "contains": "<StatsDataGrid",
+        "label": "stats data grid",
+        "sha256": "b2f18aa9b9e9c70a498c7a54f75fed230bd705a806cf702058c35f8be797234d"
+      },
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-stats.tsx",
+        "line": 564,
+        "contains": "<StatsDrillDownDialog",
+        "label": "drill-down",
+        "sha256": "b2f18aa9b9e9c70a498c7a54f75fed230bd705a806cf702058c35f8be797234d"
+      },
+      {
+        "path": "features/he-thong/nhan-vien/components/nhan-vien-stats.tsx",
+        "line": 445,
+        "contains": "<StatsExportDropdown",
+        "label": "stats export",
+        "sha256": "b2f18aa9b9e9c70a498c7a54f75fed230bd705a806cf702058c35f8be797234d"
+      }
+    ],
+    "department.axis": [
+      {
+        "path": "features/he-thong/phong-ban/core/constants.ts",
+        "line": 2,
+        "contains": "DEPARTMENT_MAX_LEVEL = 2",
+        "label": "two-level max",
+        "sha256": "373a1027d4570a43677eb03d618370059e67e94e35e1c2a1318319960be208cc"
+      },
+      {
+        "path": "features/he-thong/phong-ban/utils/department-hierarchy.ts",
+        "line": 21,
+        "contains": "dept.cap_do < DEPARTMENT_MAX_LEVEL",
+        "label": "child eligibility",
+        "sha256": "99ca91c64ed9038034451098418d52640030f3ec7ed0fc018d0682e4ee3952b9"
+      }
+    ],
+    "department.drawer.children": [
+      {
+        "path": "features/he-thong/phong-ban/components/phong-ban-detail.tsx",
+        "line": 124,
+        "contains": "const children = useMemo",
+        "label": "subordinate relation",
+        "sha256": "4c003ea21e5b24814c78c28898b34e0890f87c602514469ae2f9c0b18ce1c7ea"
+      },
+      {
+        "path": "features/he-thong/phong-ban/components/phong-ban-detail.tsx",
+        "line": 355,
+        "contains": "<EmbeddedChildDataGrid<Department>",
+        "label": "child department table",
+        "sha256": "4c003ea21e5b24814c78c28898b34e0890f87c602514469ae2f9c0b18ce1c7ea"
+      },
+      {
+        "path": "features/he-thong/phong-ban/components/phong-ban-detail.tsx",
+        "line": 446,
+        "contains": "<EmbeddedChildDataGrid<Position>",
+        "label": "related position table",
+        "sha256": "4c003ea21e5b24814c78c28898b34e0890f87c602514469ae2f9c0b18ce1c7ea"
+      }
+    ],
+    "department.child.actions": [
+      {
+        "path": "features/he-thong/phong-ban/components/phong-ban-detail.tsx",
+        "line": 394,
+        "contains": "<DepartmentTableRowActions",
+        "label": "child action column",
+        "sha256": "4c003ea21e5b24814c78c28898b34e0890f87c602514469ae2f9c0b18ce1c7ea"
+      },
+      {
+        "path": "features/he-thong/phong-ban/components/department-table-row-actions.tsx",
+        "line": 59,
+        "contains": "key: 'delete'",
+        "label": "delete overflow",
+        "sha256": "7d9ff2e4ce9488d23aec9c378acdd35962171681850f777c104a7193c1d65989"
+      },
+      {
+        "path": "lib/factories/create-hierarchy-feature-module.tsx",
+        "line": 278,
+        "contains": "const handleDelete = (id: string) =>",
+        "label": "hierarchy delete handler",
+        "sha256": "b0330b72aa0d54b1481c330b292b0a2000790c96730fbfa4ddf9407fbf9d867f"
+      },
+      {
+        "path": "lib/factories/create-hierarchy-feature-module.tsx",
+        "line": 284,
+        "contains": "confirmText: CONFIRM_DELETE()",
+        "label": "hierarchy delete confirmation",
+        "sha256": "b0330b72aa0d54b1481c330b292b0a2000790c96730fbfa4ddf9407fbf9d867f"
+      }
+    ],
+    "department.child.toolbar": [
+      {
+        "path": "features/he-thong/phong-ban/components/phong-ban-detail.tsx",
+        "line": 334,
+        "contains": "onAddChild && canCreate",
+        "label": "real child add action",
+        "sha256": "4c003ea21e5b24814c78c28898b34e0890f87c602514469ae2f9c0b18ce1c7ea"
+      },
+      {
+        "path": "features/he-thong/phong-ban/components/phong-ban-detail.tsx",
+        "line": 284,
+        "contains": "<DetailToolbar actions={toolbarActions}",
+        "label": "detail workflow toolbar",
+        "sha256": "4c003ea21e5b24814c78c28898b34e0890f87c602514469ae2f9c0b18ce1c7ea"
+      }
+    ],
+    "department.relationship-semantics": [
+      {
+        "path": "features/he-thong/phong-ban/components/phong-ban-detail.tsx",
+        "line": 124,
+        "contains": "const children = useMemo",
+        "label": "subordinate set",
+        "sha256": "4c003ea21e5b24814c78c28898b34e0890f87c602514469ae2f9c0b18ce1c7ea"
+      },
+      {
+        "path": "features/he-thong/phong-ban/components/phong-ban-detail.tsx",
+        "line": 132,
+        "contains": "const departmentPositions = useMemo",
+        "label": "related positions set",
+        "sha256": "4c003ea21e5b24814c78c28898b34e0890f87c602514469ae2f9c0b18ce1c7ea"
+      },
+      {
+        "path": "features/he-thong/phong-ban/utils/department-hierarchy.ts",
+        "line": 1,
+        "contains": "getDescendantIds",
+        "label": "hierarchy semantics",
+        "sha256": "99ca91c64ed9038034451098418d52640030f3ec7ed0fc018d0682e4ee3952b9"
+      }
+    ],
+    "permissions.module-coverage": [
+      {
+        "path": "features/he-thong/phan-quyen/core/permission-modules-config.ts",
+        "line": 26,
+        "contains": "export const PERMISSION_FUNCTIONS",
+        "label": "permission registry",
+        "sha256": "87c59315ad01359516e6fb6c5c9f0ca1ed27db7837d56de6f71a509dd088a7f2"
+      },
+      {
+        "path": "features/he-thong/phan-quyen/core/permission-modules-config.ts",
+        "line": 57,
+        "contains": "export const PERMISSION_MODULE_IDS",
+        "label": "flattened permission module ids",
+        "sha256": "87c59315ad01359516e6fb6c5c9f0ca1ed27db7837d56de6f71a509dd088a7f2"
+      },
+      {
+        "path": "App.tsx",
+        "line": 95,
+        "contains": "path=\"/he-thong/nhan-vien\"",
+        "label": "employee protected route",
+        "sha256": "4730e68747981be7896c8b95ecb808f5701c8c2e1ff104e3c5b661d765e38004"
+      },
+      {
+        "path": "App.tsx",
+        "line": 127,
+        "contains": "path=\"/he-thong/phan-quyen\"",
+        "label": "permission protected route",
+        "sha256": "4730e68747981be7896c8b95ecb808f5701c8c2e1ff104e3c5b661d765e38004"
+      }
+    ],
+    "permissions.no-invention": [
+      {
+        "path": "features/he-thong/phan-quyen/core/permission-modules-config.ts",
+        "line": 22,
+        "contains": "PERMISSION_ACTIONS = ['view', 'create', 'update', 'delete', 'admin', 'all']",
+        "label": "canonical actions",
+        "sha256": "87c59315ad01359516e6fb6c5c9f0ca1ed27db7837d56de6f71a509dd088a7f2"
+      },
+      {
+        "path": "components/auth/ModulePermissionRoute.tsx",
+        "line": 5,
+        "contains": "useCan",
+        "label": "route permission guard",
+        "sha256": "04c77c51f1940d0ff33448b12583c5664610a45acc111f74a9701010b1398c8b"
+      }
+    ],
+    "relation.position-department": [
+      {
+        "path": "features/he-thong/phong-ban/utils/department-positions.ts",
+        "line": 14,
+        "contains": "phong_ban_id",
+        "label": "position-department relation",
+        "sha256": "8b654124a5faa0de57d21ddb52873bd0d1b5b60333f5d6f2a02f3493dab3d1d8"
+      },
+      {
+        "path": "features/he-thong/phong-ban/components/phong-ban-detail.tsx",
+        "line": 132,
+        "contains": "const departmentPositions = useMemo",
+        "label": "related positions in drawer",
+        "sha256": "4c003ea21e5b24814c78c28898b34e0890f87c602514469ae2f9c0b18ce1c7ea"
+      }
+    ],
+    "relation.subordinate-vs-related": [
+      {
+        "path": "features/he-thong/phong-ban/components/phong-ban-detail.tsx",
+        "line": 124,
+        "contains": "const children = useMemo",
+        "label": "subordinates",
+        "sha256": "4c003ea21e5b24814c78c28898b34e0890f87c602514469ae2f9c0b18ce1c7ea"
+      },
+      {
+        "path": "features/he-thong/phong-ban/components/phong-ban-detail.tsx",
+        "line": 132,
+        "contains": "const departmentPositions = useMemo",
+        "label": "related data",
+        "sha256": "4c003ea21e5b24814c78c28898b34e0890f87c602514469ae2f9c0b18ce1c7ea"
+      }
+    ]
+  }
+}

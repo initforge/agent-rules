@@ -1,0 +1,3 @@
+# Supabase CLI — Edge Functions
+[functions.employee-auth]
+verify_jwt = true

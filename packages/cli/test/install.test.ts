@@ -2,9 +2,12 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { ExitCode } from "../src/types.js";
 
 const mockNativeInstall = vi.fn(async () => ({ status: "Ready" }));
+const mockCoordinatorInstall = vi.fn(async () => ({ candidate_id: "c".repeat(64), readback: Object.fromEntries(["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code", "omp"].map((host) => [host, { native: true, static: true, mcp: true, authority_tier: "NATIVE_ADVISORY" }])) }));
+const mockCreateCoordinator = vi.fn(() => ({ install: mockCoordinatorInstall }));
 
-vi.mock("../src/runtime/installer.js", () => ({
-  RUNTIME_PLATFORMS: ["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code", "omp"],
+vi.mock("../src/runtime/installation-coordinator.js", () => ({
+  COORDINATOR_HOSTS: ["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code", "omp"],
+  createInstallationCoordinator: (...args: unknown[]) => mockCreateCoordinator(...args),
 }));
 
 vi.mock("../src/adapters/repo.js", () => ({
@@ -42,6 +45,9 @@ describe("install wrapper", () => {
   beforeEach(() => {
     mockNativeInstall.mockReset();
     mockNativeInstall.mockResolvedValue({ status: "Ready" });
+    mockCoordinatorInstall.mockReset();
+    mockCoordinatorInstall.mockResolvedValue({ candidate_id: "c".repeat(64), readback: Object.fromEntries(["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code", "omp"].map((host) => [host, { native: true, static: true, mcp: true, authority_tier: "NATIVE_ADVISORY" }])) });
+    mockCreateCoordinator.mockClear();
     mockProvision.mockClear();
   });
 
@@ -49,20 +55,32 @@ describe("install wrapper", () => {
     const { installCmd } = await import("../src/commands/install.js");
     const result = await installCmd(["all"], { dryRun: false, verbose: false, json: false });
     expect(result.exitCode).toBe(ExitCode.Success);
-    expect(mockNativeInstall).toHaveBeenCalledTimes(9);
+    expect(mockCoordinatorInstall).toHaveBeenCalledWith(["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code", "omp"]);
   });
 
   it("installs for a single platform", async () => {
     const { installCmd } = await import("../src/commands/install.js");
     const result = await installCmd(["codex"], { dryRun: false, verbose: false, json: false });
     expect(result.exitCode).toBe(ExitCode.Success);
-    expect(mockNativeInstall).toHaveBeenCalledWith("codex", { dryRun: false, force: false, enableMcp: true });
+    expect(mockCreateCoordinator).toHaveBeenCalledWith({ dryRun: false, enableMcp: true });
+    expect(mockCoordinatorInstall).toHaveBeenCalledWith(["codex"]);
   });
 
   it("reports failure when a platform install fails", async () => {
-    mockNativeInstall.mockRejectedValueOnce(new Error("simulated native failure"));
+    mockCoordinatorInstall.mockRejectedValueOnce(new Error("simulated native failure"));
     const { installCmd } = await import("../src/commands/install.js");
     const result = await installCmd(["all"], { dryRun: false, verbose: false, json: false });
     expect(result.exitCode).toBe(ExitCode.LegacyFailed);
+  });
+
+  it("skips an unavailable host without treating absence as an install failure", async () => {
+    mockCoordinatorInstall.mockResolvedValueOnce({
+      candidate_id: "c".repeat(64),
+      readback: { codex: { native: false, static: false, mcp: false, authority_tier: "UNAVAILABLE" } },
+    });
+    const { installCmd } = await import("../src/commands/install.js");
+    const result = await installCmd(["codex"], { dryRun: false, verbose: false, json: false });
+    expect(result.exitCode).toBe(ExitCode.Success);
+    expect(result.data?.results).toHaveProperty("codex.skipped", true);
   });
 });

@@ -1,8 +1,0 @@
-{
- "schema": "harness/focus-workspace-fixture",
- "version": 1,
- "kind": "pencil-reuse",
- "liveMount": true,
- "expect": "reuse",
- "note": "A live Pencil instance is reused; no second instance is spawned."
-}

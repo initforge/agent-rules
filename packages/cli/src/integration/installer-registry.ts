@@ -46,10 +46,29 @@ export function handlerForRegistryEntry(repoRoot: string, entry: RegistryEntry):
       return npmHandler(entry);
     case "shell":
       return shellHandler(repoRoot, entry);
+    case "builtin":
+      return builtinHandler(repoRoot, entry);
     default:
       // Unknown/missing install type fails closed upstream (never silently skipped).
       return undefined;
   }
+}
+
+function builtinHandler(repoRoot: string, entry: RegistryEntry): IntegrationHandler {
+  const relative = entry.install?.script;
+  const verify = async (): Promise<HandlerResult> => {
+    if (!relative) return { ok: false, status: 'BLOCKED', message: `${entry.id}: builtin asset is not declared` };
+    const asset = path.resolve(repoRoot, relative);
+    if (!asset.startsWith(`${path.resolve(repoRoot)}${path.sep}`) || !fs.existsSync(asset) || !fs.statSync(asset).isFile()) {
+      return { ok: false, status: 'BLOCKED', message: `${entry.id}: builtin asset missing: ${asset}` };
+    }
+    return { ok: true, message: `package-owned launcher available`, location: asset, version: entry.source?.version };
+  };
+  return {
+    install: async () => verify(),
+    verify: async () => verify(),
+    uninstall: async () => ({ ok: true, message: 'package-owned launcher remains with the installed agent-rules package' }),
+  };
 }
 
 function binaryHandler(): IntegrationHandler {

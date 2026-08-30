@@ -1,231 +1,67 @@
-import { describe, it, expect, beforeAll } from "vitest";
-import * as path from "node:path";
-import * as fs from "node:fs";
-import * as crypto from "node:crypto";
-import { execFileSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
-import { dirname } from "node:path";
-const __dirname = dirname(fileURLToPath(import.meta.url));
+import { describe, expect, it } from 'vitest';
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
-function getRepoRoot(): string {
-  return path.resolve(__dirname, "..", "..", "..");
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+const buildRoot = path.join(root, 'generated', 'runtime-build');
+const contracts = JSON.parse(fs.readFileSync(path.join(root, 'platforms/platform-contracts.json'), 'utf8'));
+const hosts: string[] = contracts.registry.host_ids;
+
+function manifest(host: string) {
+  return JSON.parse(fs.readFileSync(path.join(buildRoot, host, 'manifest.json'), 'utf8')) as {
+    platform: string;
+    files: Array<{ path: string; sha256: string }>;
+  };
 }
 
-function sha256(filePath: string): string {
-  const content = fs.readFileSync(filePath);
-  return crypto.createHash("sha256").update(content).digest("hex");
-}
-
-describe("Build parity", () => {
-  const root = getRepoRoot();
-  const buildRoot = path.join(root, "generated", "runtime-build");
-  const platforms = ["codex", "grok", "antigravity", "cursor"];
-
-  beforeAll(() => {
-    // Verify build directory exists
-    if (!fs.existsSync(path.join(buildRoot, "codex", "manifest.json"))) {
-      throw new Error(
-        "Runtime-build artifacts not found. Restore generated/runtime-build from the checked-in baseline."
+describe('canonical build projection', () => {
+  it('builds every registered host from the same rules and skills', () => {
+    expect(hosts).toHaveLength(9);
+    const baseline = manifest(hosts[0]);
+    const canonical = baseline.files
+      .filter((file) => /^rules\/(?:00|10|20|30|40)-|^rules\/manifest\.yaml$/.test(file.path))
+      .map((file) => [file.path, file.sha256]);
+    expect(canonical.some(([file]) => file === 'rules/manifest.yaml')).toBe(true);
+    for (const host of hosts) {
+      const built = manifest(host);
+      expect(built.platform).toBe(host);
+      expect(built.files.map((file) => file.path)).toEqual(
+        [...built.files.map((file) => file.path)].sort((a, b) => a.localeCompare(b, 'en')),
       );
+      expect(built.files
+        .filter((file) => /^rules\/(?:00|10|20|30|40)-|^rules\/manifest\.yaml$/.test(file.path))
+        .map((file) => [file.path, file.sha256])).toEqual(canonical);
+      expect(built.files.filter((file) => /-overlay\.md$/.test(file.path))).toHaveLength(1);
     }
   });
 
-  it("produces manifest.json for each platform", () => {
-    for (const p of platforms) {
-      const manifestPath = path.join(buildRoot, p, "manifest.json");
-      expect(fs.existsSync(manifestPath)).toBe(true);
-      const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
-      expect(manifest.version).toBe(1);
-      expect(manifest.platform).toBe(p);
-      expect(Array.isArray(manifest.files)).toBe(true);
-    }
-  });
-
-  it("includes all required paths in each platform manifest", () => {
-    const requiredPaths = [
-      "model-policy.json",
-      "rules/manifest.yaml",
-      "agent-rules-tools/workctl.py",
-    ];
-    for (const p of platforms) {
-      const manifest = JSON.parse(
-        fs.readFileSync(path.join(buildRoot, p, "manifest.json"), "utf-8")
-      );
-      const filePaths = manifest.files.map((f: any) => f.path);
-      for (const rp of requiredPaths) {
-        expect(filePaths).toContain(rp);
+  it('binds every manifest hash to the emitted file', () => {
+    for (const host of hosts) {
+      for (const file of manifest(host).files) {
+        const target = path.join(buildRoot, host, ...file.path.split('/'));
+        expect(fs.existsSync(target)).toBe(true);
+        expect(crypto.createHash('sha256').update(fs.readFileSync(target)).digest('hex')).toBe(file.sha256);
       }
     }
   });
 
-  it("has deterministic file ordering in manifests", () => {
-    for (const p of platforms) {
-      const manifest = JSON.parse(
-        fs.readFileSync(path.join(buildRoot, p, "manifest.json"), "utf-8")
-      );
-      const paths = manifest.files.map((f: any) => f.path);
-      const sorted = [...paths].sort((a: string, b: string) =>
-        a.localeCompare(b, "en")
-      );
-      expect(paths).toEqual(sorted);
-    }
-  });
-
-  it("has valid sha256 hashes in each manifest", () => {
-    for (const p of platforms) {
-      const manifest = JSON.parse(
-        fs.readFileSync(path.join(buildRoot, p, "manifest.json"), "utf-8")
-      );
-      for (const file of manifest.files) {
-        expect(file.sha256).toMatch(/^[a-f0-9]{64}$/);
-        const filePath = path.join(buildRoot, p, ...file.path.split("/"));
-        if (fs.existsSync(filePath)) {
-          const actualHash = sha256(filePath);
-          expect(file.sha256).toBe(actualHash);
-        }
-      }
-    }
-  });
-
-  it("has identical skills across all platforms", () => {
-    const baseManifest = JSON.parse(
-      fs.readFileSync(path.join(buildRoot, "codex", "manifest.json"), "utf-8")
-    );
-    const baseSkills = baseManifest.files
-      .filter((f: any) => f.path.startsWith("skills/"))
-      .map((f: any) => f.path);
-
-    for (const p of platforms.slice(1)) {
-      const otherManifest = JSON.parse(
-        fs.readFileSync(path.join(buildRoot, p, "manifest.json"), "utf-8")
-      );
-      const otherSkills = otherManifest.files
-        .filter((f: any) => f.path.startsWith("skills/"))
-        .map((f: any) => f.path);
-
-      expect(otherSkills.sort()).toEqual(baseSkills.sort());
+  it('does not materialize model policies, worker roles, or ticket tools', () => {
+    for (const host of hosts) {
+      const paths = manifest(host).files.map((file) => file.path);
+      expect(paths.some((file) => /model-policy|workctl|^agents\//i.test(file))).toBe(false);
     }
   });
 });
 
-describe("CLI help output", () => {
-  const root = getRepoRoot();
-  const cliEntry = path.join(root, "packages", "cli", "dist", "index.js");
-
-  it("shows exact 8 public commands in standard help", () => {
-    const help = execFileSync("node", [cliEntry, "--help"], {
-      encoding: "utf-8",
-    });
-    expect(help).toContain("  install ");
-    expect(help).toContain("  uninstall ");
-    expect(help).toContain("  doctor ");
-    expect(help).toContain("  status ");
-    expect(help).toContain("  run ");
-    expect(help).toContain("  integration ");
-    expect(help).toContain("  init ");
-    expect(help).toContain("  reference ");
-    expect(help).not.toContain("  build ");
-    expect(help).not.toContain("  validate ");
-    expect(help).not.toContain("  close ");
-    expect(help).not.toContain("  plan ");
-  });
-
-
-  it("fails when attempting to run unregistered maintainer/legacy commands", () => {
-    const legacyCommands = ["close", "closeout", "build", "validate", "verify", "cleanup", "automation", "profile", "runtime", "plan", "goal", "repair", "dev"];
-    for (const cmd of legacyCommands) {
-      expect(() => {
-        execFileSync("node", [cliEntry, cmd], { stdio: "pipe" });
-      }).toThrow();
+describe('public CLI', () => {
+  it('exposes only the compact operator surface', () => {
+    const help = execFileSync(process.execPath, [path.join(root, 'packages/cli/dist/index.js'), '--help'], { encoding: 'utf8' });
+    for (const command of ['install', 'uninstall', 'doctor', 'status', 'integration', 'reference', 'route-native']) {
+      expect(help).toContain(`  ${command} `);
     }
-  });
-
-  it("rejects legacy integration action aliases (install/verify/uninstall)", () => {
-    for (const alias of ["install", "verify", "uninstall"]) {
-      expect(() => {
-        execFileSync("node", [cliEntry, "integration", alias], { stdio: "pipe" });
-      }).toThrow();
-    }
-  });
-});
-
-
-describe("Cross-platform path handling", () => {
-  const root = getRepoRoot();
-
-  it("builds with forward slashes in manifest paths", () => {
-    const manifestPath = path.join(
-      root,
-      "generated",
-      "runtime-build",
-      "codex",
-      "manifest.json"
-    );
-    if (fs.existsSync(manifestPath)) {
-      const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
-      for (const file of manifest.files) {
-        expect(file.path).not.toContain("\\");
-      }
-    }
-  });
-
-  it("handles Windows-style and POSIX paths in token replacement", () => {
-    // Verify AGENTS.md has proper path replacement
-    const agentsPath = path.join(
-      root,
-      "generated",
-      "runtime-build",
-      "codex",
-      "AGENTS.md"
-    );
-    if (fs.existsSync(agentsPath)) {
-      const body = fs.readFileSync(agentsPath, "utf-8");
-      // Should not contain unsubstituted placeholders
-      expect(body).not.toContain("__AGENT_RULES_ROOT__");
-      expect(body).not.toContain("__CODEX_HOME__");
-    }
-  });
-});
-
-describe("Mirror verification parity", () => {
-  const root = getRepoRoot();
-  const buildRoot = path.join(root, "generated", "runtime-build");
-
-  it("codex and grok have same rule hashes for non-overlay files", () => {
-    const codex = JSON.parse(
-      fs.readFileSync(path.join(buildRoot, "codex", "manifest.json"), "utf-8")
-    );
-    const grok = JSON.parse(
-      fs.readFileSync(path.join(buildRoot, "grok", "manifest.json"), "utf-8")
-    );
-
-    const codexRules = codex.files.filter(
-      (f: any) => f.path.startsWith("rules/") && !f.path.endsWith("-overlay.md")
-    );
-    for (const rule of codexRules) {
-      const match = grok.files.find((f: any) => f.path === rule.path);
-      expect(match).toBeDefined();
-      expect(match.sha256).toBe(rule.sha256);
-    }
-  });
-
-  it("detects hash mismatch in mirror", () => {
-    // This test verifies the logic works by comparing known-equal builds
-    // It should pass if no drift exists
-    const codex = JSON.parse(
-      fs.readFileSync(path.join(buildRoot, "codex", "manifest.json"), "utf-8")
-    );
-    const cursor = JSON.parse(
-      fs.readFileSync(path.join(buildRoot, "cursor", "manifest.json"), "utf-8")
-    );
-
-    const codexSkills = codex.files.filter((f: any) =>
-      f.path.startsWith("skills/")
-    );
-    for (const skill of codexSkills) {
-      const match = cursor.files.find((f: any) => f.path === skill.path);
-      expect(match).toBeDefined();
-      expect(match.sha256).toBe(skill.sha256);
-    }
+    for (const retired of ['run', 'init', 'plan', 'goal', 'close']) expect(help).not.toContain(`  ${retired} `);
   });
 });

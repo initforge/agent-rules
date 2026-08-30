@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import os from "node:os";
-import { getStandardMcpServers } from "../runtime/mcp-convergence.js";
+import { getStandardMcpServers, sameServerDefinition } from "../runtime/mcp-convergence.js";
 
 const MANAGED_MOD_BEGIN = "// agent-rules:managed:command-code BEGIN";
 const MANAGED_MOD_END = "// agent-rules:managed:command-code END";
@@ -11,6 +11,7 @@ export interface CommandCodeNativeReadback {
   modPath: string;
   modPresent: boolean;
   modManaged: boolean;
+  modStatic: boolean;
   mcpPath: string;
   mcpPresent: boolean;
   mcpValid: boolean;
@@ -23,6 +24,7 @@ export interface CommandCodeBackupEntry {
   path: string;
   backupFile: string | null;
   mode: number | null;
+  appliedSha256?: string | null;
 }
 
 function sha256(value: string | Buffer): string {
@@ -82,11 +84,7 @@ function commandCodeMcpServers(_home: string, ids?: readonly string[]): Record<s
 
 function sameMcpCommand(left: unknown, right: unknown): boolean {
   if (!left || typeof left !== "object" || !right || typeof right !== "object") return false;
-  const a = left as Record<string, unknown>;
-  const b = right as Record<string, unknown>;
-  return a.command === b.command
-    && JSON.stringify(a.args ?? []) === JSON.stringify(b.args ?? [])
-    && JSON.stringify(a.env ?? {}) === JSON.stringify(b.env ?? {});
+  return sameServerDefinition("command-code", JSON.stringify(left), JSON.stringify(right));
 }
 
 function loadJson(file: string): Record<string, unknown> {
@@ -119,8 +117,11 @@ export function writeCommandCodeMcpConfig(home = commandCodeHome(), ids?: readon
   const managed = commandCodeMcpServers(home, ids);
   for (const [name, definition] of Object.entries(managed)) {
     const current = nextServers[name];
-    if (current !== undefined && !sameMcpCommand(current, definition)) {
-      throw new Error(`Refusing to overwrite user-modified Command Code MCP server: ${name}`);
+    if (current !== undefined) {
+      if (!sameMcpCommand(current, definition)) {
+        throw new Error(`Refusing to overwrite user-modified Command Code MCP server: ${name}`);
+      }
+      continue;
     }
     nextServers[name] = definition;
   }
@@ -157,10 +158,12 @@ export function readCommandCodeNative(home = commandCodeHome()): CommandCodeNati
   const modPresent = fs.existsSync(modPath);
   const modBody = modPresent ? fs.readFileSync(modPath, "utf8") : "";
   const modManaged = modBody.includes(MANAGED_MOD_BEGIN) && modBody.includes(MANAGED_MOD_END);
+  const modStatic = modManaged && !/NODE_RUNTIME|LIFECYCLE_ENTRYPOINT|spawnSync|lifecycle-hook|agent-rules-lifecycle|route-native/i.test(modBody);
   return {
     modPath,
     modPresent,
     modManaged,
+    modStatic,
     mcpPath,
     mcpPresent: fs.existsSync(mcpPath),
     mcpValid,
@@ -238,8 +241,11 @@ export function installCommandCodeMod(home = commandCodeHome(), repoRoot = proce
   if (names.length !== 5) throw new Error(`canonical rules manifest must name exactly five rules; found ${names.length}`);
   const rules = names.map((name) => fs.readFileSync(path.join(repoRoot, "rules", name), "utf8").trim()).join("\n\n");
   const template = fs.readFileSync(source, "utf8");
-  if (!template.includes("__AGENT_RULES_RULES__")) throw new Error(`Command Code mod template lacks canonical rule placeholder: ${source}`);
-  atomicWrite(destination, template.replace("__AGENT_RULES_RULES__", rules));
+  if (!template.includes("__AGENT_RULES_RULES__")) {
+    throw new Error(`Command Code static mod template lacks canonical rules placeholder: ${source}`);
+  }
+  const rendered = template.replace("__AGENT_RULES_RULES__", rules.replace(/`/g, "\\`").replace(/\$\{/g, "\\${"));
+  atomicWrite(destination, rendered);
   return destination;
 }
 
@@ -258,13 +264,23 @@ export function captureCommandCodeBackup(home = commandCodeHome(), backupDir: st
   return entries;
 }
 
-export function restoreCommandCodeBackup(backupDir: string): boolean {
+export function sealCommandCodeBackup(backupDir: string): void {
+  const manifestPath = path.join(backupDir, ".command-code-backup.json");
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8")) as { schema?: string; entries?: CommandCodeBackupEntry[] };
+  if (manifest.schema !== "agent-rules/command-code-backup/v1" || !Array.isArray(manifest.entries)) throw new Error("invalid Command Code backup manifest");
+  for (const entry of manifest.entries) entry.appliedSha256 = fs.existsSync(entry.path) && fs.statSync(entry.path).isFile() ? sha256(fs.readFileSync(entry.path)) : null;
+  atomicWrite(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
+}
+
+export function restoreCommandCodeBackup(backupDir: string, allowUnsealed = false): boolean {
   const manifestPath = path.join(backupDir, ".command-code-backup.json");
   if (!fs.existsSync(manifestPath)) return false;
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8")) as { entries?: CommandCodeBackupEntry[] };
   if (!Array.isArray(manifest.entries)) throw new Error("invalid Command Code backup manifest");
   for (const entry of manifest.entries) {
     if (!entry.path || !path.isAbsolute(entry.path)) throw new Error("Command Code backup path must be absolute");
+    const currentSha256 = fs.existsSync(entry.path) && fs.statSync(entry.path).isFile() ? sha256(fs.readFileSync(entry.path)) : null;
+    if ((!allowUnsealed && entry.appliedSha256 === undefined) || (entry.appliedSha256 !== undefined && currentSha256 !== entry.appliedSha256)) return false;
     if (entry.backupFile) {
       atomicWrite(entry.path, fs.readFileSync(path.join(backupDir, entry.backupFile)));
       if (entry.mode !== null) fs.chmodSync(entry.path, entry.mode);

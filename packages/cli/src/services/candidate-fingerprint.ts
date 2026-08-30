@@ -7,9 +7,7 @@ import path from 'node:path';
 export function hashUntrackedCandidateFiles(cwd: string): string {
   const result = spawnSync('git', ['ls-files', '--others', '--exclude-standard', '-z'], { encoding: 'utf8', cwd });
   if (result.status !== 0) return '0'.repeat(64);
-  const names = result.stdout.split('\0').filter(Boolean)
-    .filter((name) => !name.replace(/\\/g, '/').startsWith('.agent/evidence/') && !name.replace(/\\/g, '/').startsWith('.agent/tmp/'))
-    .sort();
+  const names = result.stdout.split('\0').filter(Boolean).sort();
   const hash = createHash('sha256');
   for (const name of names) {
     hash.update(name).update('\0');

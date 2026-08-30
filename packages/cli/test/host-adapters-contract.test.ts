@@ -1,184 +1,69 @@
-import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { NativeInstaller } from '../src/services/native-installer.js';
-import { getHostIds, getNativeContract, getAllNativeContracts } from '@initforge/agent-rules-kernel/northstar/host-registry.js';
+import { getHostIds, getNativeContract, getAllNativeContracts, getHostSupport } from '@initforge/agent-rules-kernel/northstar/host-registry.js';
 import type { HostId } from '@initforge/agent-rules-kernel/northstar/host-adapters.js';
 
 const repoRoot = path.resolve(process.cwd(), '../..');
 
-function recursiveTreeSha256(dir: string): string {
-  if (!fs.existsSync(dir)) return '0'.repeat(64);
-  const files: Array<{ rel: string; sha256: string }> = [];
-  function walk(current: string, base: string) {
-    const entries = fs.readdirSync(current, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name));
-    for (const e of entries) {
-      const full = path.join(current, e.name);
-      const rel = path.relative(base, full).replace(/\\/g, '/');
-      if (e.isDirectory()) {
-        walk(full, base);
-      } else if (e.isFile()) {
-        const hash = createHash('sha256').update(fs.readFileSync(full)).digest('hex');
-        files.push({ rel, sha256: hash });
-      }
-    }
-  }
-  walk(dir, dir);
-  files.sort((a, b) => a.rel.localeCompare(b.rel));
-  return createHash('sha256').update(JSON.stringify(files)).digest('hex');
-}
-import { getHostIds, getNativeContract, getAllNativeContracts } from '@initforge/agent-rules-kernel/northstar/host-registry.js';
-import type { HostId } from '@initforge/agent-rules-kernel/northstar/host-adapters.js';
-
-describe('Host Adapters Contract & Matrix (S4, REQ-008, AC-07)', () => {
+describe('static host projector contracts', () => {
   const allHostIds = getHostIds(repoRoot) as HostId[];
 
-  it('audits all 9 platforms in platform-contracts.json', () => {
-    expect(allHostIds.length).toBe(9);
-    expect(allHostIds).toEqual(
-      expect.arrayContaining([
-        'omp',
-        'codex',
-        'claude',
-        'grok',
-        'antigravity',
-        'opencode',
-        'deepseek-harness',
-        'command-code',
-        'cursor',
-      ])
-    );
-
+  it('defines shallow static contracts for all nine hosts', () => {
+    expect(allHostIds).toHaveLength(9);
     const contracts = getAllNativeContracts(repoRoot);
     for (const host of allHostIds) {
       const contract = contracts[host];
-      expect(contract).toBeDefined();
       expect(contract.id).toBe(host);
-      expect(contract.installStrategy).toBeTruthy();
-      expect(contract.canaryStrategy).toBeTruthy();
+      expect(contract.paths.instructionPath).toBeTruthy();
+      expect(contract.paths.skillPath).toBeTruthy();
+      expect(contract.paths.mcpPath).toBeTruthy();
+      expect(contract.mergeStrategy).toBeTruthy();
+      expect(contract.readbackStrategy).toBeTruthy();
+      expect(getHostSupport(host, repoRoot)?.components.lifecycle).toEqual({ surface: 'none', mode: 'unsupported' });
     }
   });
 
-  it('classifies Cursor as UNSUPPORTED for native deterministic routing while keeping static catalog', async () => {
-    const installer = new NativeInstaller();
-    const receipt = await installer.certify('cursor');
-
-    expect(receipt.host).toBe('cursor');
-    expect(receipt.claims.NATIVE_LIFECYCLE.status).toBe('UNSUPPORTED');
-    expect(receipt.claims.NATIVE_LIFECYCLE.evidence[0]).toMatchObject({
-      kind: 'native-lifecycle-seam',
-      ok: false,
-    });
-    expect(receipt.status).toBe('Unsupported');
-    expect(receipt.axes?.routing.status).toBe('UNSUPPORTED');
+  it('keeps host identity separate from the selected model provider', () => {
+    expect(getNativeContract('omp', repoRoot)?.id).toBe('omp');
+    expect(getNativeContract('antigravity', repoRoot)?.id).toBe('antigravity');
   });
 
-  it('classifies OMP with full deterministic lifecycle PASS and Ready status', async () => {
-    const installer = new NativeInstaller();
-    const receipt = await installer.certify('omp');
-
-    expect(receipt.host).toBe('omp');
-    expect(receipt.claims.NATIVE_LIFECYCLE.status).toBe('PASS');
-    expect(receipt.claims.NATIVE_LIFECYCLE.evidence[0]).toMatchObject({
-      kind: 'native-lifecycle-seam',
-      ok: true,
-    });
-    expect(receipt.claims.NATIVE_POLICY.status).toBe('PASS');
-    expect(receipt.status).toBe('Ready');
-    expect(receipt.axes?.routing.status).toBe('PASS');
-    expect(receipt.axes?.infrastructure.status).toBe('PASS');
-  });
-
-  it('enforces provider-to-host separation: google-antigravity inside OMP still uses OMP adapter (AC-03)', () => {
-    const ompContract = getNativeContract('omp', repoRoot);
-    const antigravityContract = getNativeContract('antigravity', repoRoot);
-
-    expect(ompContract).toBeDefined();
-    expect(antigravityContract).toBeDefined();
-
-    // Host identity is driven by the running container (OMP), never the LLM provider
-    expect(ompContract?.id).toBe('omp');
-    expect(antigravityContract?.id).toBe('antigravity');
-    expect(ompContract?.id).not.toBe(antigravityContract?.id);
-  });
-
-  it('supports isolated temp-home install, readback, and byte-exact recursive rollback', async () => {
-    const installer = new NativeInstaller();
-    const detection = await installer.detect('omp');
-
-    if (detection.present) {
-      const plan = await installer.planInstall('omp');
-      expect(plan.host).toBe('omp');
-      expect(plan.backupDir).toBeTruthy();
-
-      // Execute install to ensure runtime exists
-      await installer.install('omp');
-      const runtimeDir = path.join(detection.homeDir, 'agent-rules-runtime');
-      expect(fs.existsSync(runtimeDir)).toBe(true);
-
-      // Compute tree hash before
-      const treeBefore = recursiveTreeSha256(runtimeDir);
-      expect(treeBefore).not.toBe('0'.repeat(64));
-
-      // Install again with secondPlan.backupDir
-      const secondPlan = await installer.planInstall('omp');
-      await installer.install('omp', { backupDir: secondPlan.backupDir });
-
-      // Rollback using the backup
-      const rollbackResult = await installer.rollback('omp', secondPlan.backupDir);
-      expect(rollbackResult.ok).toBe(true);
-
-      // Tree hash after rollback must equal tree hash before
-      const treeAfter = recursiveTreeSha256(runtimeDir);
-      expect(treeAfter).toBe(treeBefore);
-    }
-  });
-  it('restores clean pre-install state on rollback when host was previously uninstalled', async () => {
-    const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), 'omp-clean-rollback-test-'));
+  it('installs OMP static AGENTS and skills without extension or runtime directories and rolls back byte-equally', async () => {
+    const previousAgentDir = process.env.PI_CODING_AGENT_DIR;
+    const previousHarnessHome = process.env.AGENT_RULES_HOME;
+    const agentDir = fs.mkdtempSync(path.join(os.tmpdir(), 'omp-static-install-'));
+    const harnessHome = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-rules-static-home-'));
+    process.env.PI_CODING_AGENT_DIR = agentDir; process.env.AGENT_RULES_HOME = harnessHome;
     try {
       const installer = new NativeInstaller();
-      const plan = await installer.planInstall('omp');
-      expect(plan.backupDir).toBeTruthy();
-
-      // Ensure clean state before
-      const testRuntime = path.join(tmpHome, 'agent-rules-runtime');
-      expect(fs.existsSync(testRuntime)).toBe(false);
-
-      // Rollback on an empty/uninstalled backup restores empty state
-      const emptyBackup = path.join(tmpHome, 'empty-backup');
-      fs.mkdirSync(emptyBackup, { recursive: true });
-      fs.writeFileSync(
-        path.join(emptyBackup, 'omp-runtime-backup.json'),
-        JSON.stringify({ entries: [{ target: testRuntime, backup: null, sha256: null, is_directory: true }] }),
-        'utf8'
-      );
-
-      // Create dummy runtime
-      fs.mkdirSync(testRuntime, { recursive: true });
-      fs.writeFileSync(path.join(testRuntime, 'dummy.txt'), 'test', 'utf8');
-      expect(fs.existsSync(testRuntime)).toBe(true);
-
-      const res = await installer.rollback('omp', emptyBackup);
-      expect(res.ok).toBe(true);
-      expect(fs.existsSync(testRuntime)).toBe(false);
+      const first = await installer.planInstall('omp');
+      await installer.install('omp', { backupDir: first.backupDir });
+      expect(fs.readFileSync(path.join(agentDir, 'AGENTS.md'), 'utf8')).toContain('agent-rules:managed:omp');
+      expect(fs.existsSync(path.join(agentDir, 'skills'))).toBe(true);
+      expect(fs.existsSync(path.join(agentDir, 'extensions', 'agent-rules.ts'))).toBe(false);
+      expect(fs.existsSync(path.join(agentDir, 'agent-rules-runtime'))).toBe(false);
+      const before = fs.readFileSync(path.join(agentDir, 'AGENTS.md'));
+      const second = await installer.planInstall('omp');
+      await installer.install('omp', { backupDir: second.backupDir });
+      expect((await installer.rollback('omp', second.backupDir)).byteEqual).toBe(true);
+      expect(fs.readFileSync(path.join(agentDir, 'AGENTS.md')).equals(before)).toBe(true);
     } finally {
-      fs.rmSync(tmpHome, { recursive: true, force: true });
+      if (previousAgentDir === undefined) delete process.env.PI_CODING_AGENT_DIR; else process.env.PI_CODING_AGENT_DIR = previousAgentDir;
+      if (previousHarnessHome === undefined) delete process.env.AGENT_RULES_HOME; else process.env.AGENT_RULES_HOME = previousHarnessHome;
+      fs.rmSync(agentDir, { recursive: true, force: true }); fs.rmSync(harnessHome, { recursive: true, force: true });
     }
-  });
+  }, 60_000);
 
-  it('binds three explicit evaluation axes to every certified receipt', async () => {
+  it('certifies static infrastructure and model-mediated intake without router binding', async () => {
     const installer = new NativeInstaller();
     for (const host of ['omp', 'cursor', 'codex', 'claude'] as HostId[]) {
       const receipt = await installer.certify(host);
-      expect(receipt.axes).toBeDefined();
-      expect(receipt.axes?.infrastructure).toBeDefined();
-      expect(receipt.axes?.routing).toBeDefined();
-      expect(receipt.axes?.behavior).toBeDefined();
-      expect(['PASS', 'FAIL', 'UNSUPPORTED']).toContain(receipt.axes?.infrastructure.status);
-      expect(['PASS', 'FAIL', 'UNSUPPORTED']).toContain(receipt.axes?.routing.status);
-      expect(['PASS', 'NEEDS_USER', 'UNSUPPORTED']).toContain(receipt.axes?.behavior.status);
+      expect(receipt.axes?.routing.mode).toBe(receipt.claims.HOST_PRESENT.status === 'PASS' ? 'STATIC_NATIVE' : 'UNSUPPORTED');
+      expect(receipt.axes?.routing.intake).toBe(receipt.claims.HOST_PRESENT.status === 'PASS' ? 'MODEL_MEDIATED' : 'NOT_APPLICABLE');
+      expect(receipt.claims).not.toHaveProperty('NATIVE_LIFECYCLE');
     }
-  });
+  }, 30_000);
 });

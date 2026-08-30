@@ -1,211 +1,123 @@
-import assert from "node:assert/strict";
-import { execFileSync, spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import fs from "node:fs";
-import fsp from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import fsp from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const cliRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const sourceRoot = path.resolve(cliRoot, "..", "..");
-const temp = await fsp.mkdtemp(path.join(os.tmpdir(), "agent-rules-package-smoke-"));
-const repo = path.join(temp, "repository");
-const app = path.join(temp, "app");
-const home = path.join(temp, "home");
-const target = path.join(temp, "runtime-root");
-const npmExecutable = process.platform === "win32" ? "npm.cmd" : "npm";
-const npmExecPath = process.env.npm_execpath;
-const isolatedEnvKeys = new Set([
-  "home", "userprofile", "appdata", "localappdata", "homedrive", "homepath", "tmp", "temp",
-  "npm_config_cache", "npm_config_userconfig", "xdg_cache_home", "xdg_data_home", "xdg_config_home",
-]);
-const inheritedEnv = { ...process.env };
-for (const key of Object.keys(inheritedEnv)) {
-  if (isolatedEnvKeys.has(key.toLowerCase())) delete inheritedEnv[key];
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'agent-rules-packed-'));
+const packDir = path.join(temp, 'packs');
+const app = path.join(temp, 'app');
+const home = path.join(temp, 'home');
+const runtimeTarget = path.join(temp, 'codex-home');
+const bin = path.join(temp, 'bin');
+await Promise.all([fsp.mkdir(packDir), fsp.mkdir(app), fsp.mkdir(home), fsp.mkdir(runtimeTarget), fsp.mkdir(bin)]);
+
+function runResult(executable, args, options = {}) {
+  return spawnSync(executable, args, {
+    encoding: 'utf8',
+    windowsHide: true,
+    ...options,
+  });
 }
-const env = {
-  ...inheritedEnv,
-  HOME: home,
-  USERPROFILE: home,
-  CODEX_HOME: target,
-  AGENT_RULES_REPOSITORY_ROOT: repo,
-  NODE_ENV: "test",
-  APPDATA: path.join(temp, "appdata"),
-  LOCALAPPDATA: path.join(temp, "localappdata"),
-  HOMEDRIVE: "",
-  HOMEPATH: "",
-  TMP: path.join(temp, "tmp"),
-  TEMP: path.join(temp, "tmp"),
-  npm_config_cache: path.join(temp, "npm-cache"),
-  npm_config_userconfig: path.join(temp, "npmrc"),
-  XDG_CACHE_HOME: path.join(temp, "cache"),
-  XDG_DATA_HOME: path.join(temp, "data"),
-  XDG_CONFIG_HOME: path.join(temp, "config"),
-  PYTHONPYCACHEPREFIX: path.join(temp, "pycache"),
-};
-const run = (file, args, cwd = repo, options = {}) => {
-  try {
-    const isCmdOrBat = process.platform === "win32" && (file.endsWith(".cmd") || file.endsWith(".bat"));
-    const actualCmd = isCmdOrBat ? (process.env.ComSpec || "cmd.exe") : file;
-    const actualArgs = isCmdOrBat ? ["/d", "/s", "/c", file, ...args] : args;
-    return execFileSync(actualCmd, actualArgs, { cwd, env, encoding: "utf8", stdio: options.stdio ?? "pipe", shell: false, windowsHide: true });
-  } catch (error) {
-    throw new Error(`${file} ${args.join(" ")} failed (${error.status ?? error.code})\nstdout: ${String(error.stdout ?? "")}\nstderr: ${String(error.stderr ?? "")}`, { cause: error });
+
+function run(executable, args, options = {}) {
+  const result = runResult(executable, args, options);
+  if (result.error || result.status !== 0) throw new Error(`${executable} ${args.join(' ')} failed\n${result.stdout ?? ''}\n${result.stderr ?? ''}`);
+  return result.stdout;
+}
+
+function runNpm(args, options = {}) {
+  if (process.env.npm_execpath) {
+    return run(process.execPath, [process.env.npm_execpath, ...args], options);
   }
-};
-const safeSpawn = (file, args, opts = {}) => {
-  const isCmdOrBat = process.platform === "win32" && (file.endsWith(".cmd") || file.endsWith(".bat"));
-  const actualCmd = isCmdOrBat ? (process.env.ComSpec || "cmd.exe") : file;
-  const actualArgs = isCmdOrBat ? ["/d", "/s", "/c", file, ...args] : args;
-  return spawnSync(actualCmd, actualArgs, { shell: false, windowsHide: true, ...opts });
-};
-const runNpm = (args, cwd = repo, options = {}) => npmExecPath
-  ? run(process.execPath, [npmExecPath, ...args], cwd, options)
-  : run(npmExecutable, args, cwd, options);
+  return run(process.platform === 'win32' ? 'npm.cmd' : 'npm', args, {
+    shell: process.platform === 'win32',
+    ...options,
+  });
+}
 
-const writeSmokeLedger = async (ledger, identity, canonical) => {
-  await fsp.mkdir(path.dirname(ledger), { recursive: true });
-  const body = `${JSON.stringify({ effective_plan_identity: { sha256: identity, canonical_json_utf8: canonical } }, null, 2)}\n`;
-  await fsp.writeFile(ledger, body);
-  const pointerPath = path.join(repo, ".agent", "current.json");
-  const pointer = JSON.parse(await fsp.readFile(pointerPath, "utf8"));
-  pointer.canonical_ledger = {
-    ...pointer.canonical_ledger,
-    path: ".agent/ledger/smoke.json",
-    sha256: createHash("sha256").update(body).digest("hex"),
-    observed_effective_sha256: identity,
-  };
-  await fsp.writeFile(pointerPath, `${JSON.stringify(pointer, null, 2)}\n`);
-};
+function pack(workspace) {
+  const before = new Set(fs.readdirSync(packDir));
+  runNpm(['pack', '--silent', '--ignore-scripts', '--pack-destination', packDir], { cwd: path.join(root, workspace) });
+  const created = fs.readdirSync(packDir).find((name) => !before.has(name));
+  if (!created) throw new Error(`npm pack produced no tarball for ${workspace}`);
+  return path.join(packDir, created);
+}
 
-const snapshotTree = async (root) => {
-  const entries = [];
-  const visit = async (directory, prefix = "") => {
-    for (const entry of await fsp.readdir(directory, { withFileTypes: true })) {
-      const relative = path.join(prefix, entry.name);
-      if (process.platform === "win32" && (relative.startsWith(path.join("AppData", "Local", "Microsoft")) || relative.startsWith("AppData/Local/Microsoft"))) continue;
-      entries.push(relative);
-      if (entry.isDirectory()) await visit(path.join(directory, entry.name), relative);
-    }
-  };
-  try { await visit(root); } catch { /* profile root may not exist yet */ }
-  return entries.sort();
-};
+function containsAgentDirectory(root) {
+  if (!fs.existsSync(root)) return false;
+  for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    if (entry.name === '.agent' || containsAgentDirectory(path.join(root, entry.name))) return true;
+  }
+  return false;
+}
 
 try {
-  await fsp.mkdir(app, { recursive: true });
-  if (process.platform === "win32") {
-    await fsp.mkdir(path.join(home, "AppData", "Local"), { recursive: true });
-    await fsp.mkdir(path.join(home, "AppData", "Roaming"), { recursive: true });
-    await fsp.mkdir(path.join(home, "AppData", "Local", "Microsoft", "PowerShell", "StartupProfileData-NonInteractive"), { recursive: true });
-  }
-  run("git", ["clone", "--quiet", "--no-hardlinks", sourceRoot, repo], temp);
-  const canonical = JSON.stringify({ original_plan_sha256: "0".repeat(64), approved_amendments: [] });
-  const identity = createHash("sha256").update(canonical).digest("hex");
-  const ledger = path.join(repo, ".agent", "ledger", "smoke.json");
-  await writeSmokeLedger(ledger, identity, canonical);
-  run("git", ["add", "-f", ".agent/ledger/smoke.json"]);
-  run("git", ["-c", "user.name=Smoke", "-c", "user.email=smoke@example.invalid", "commit", "-qm", "smoke ledger"]);
-  // generated/ is git-ignored so a fresh clone has no packaged runtime, and the
-  // strict-8-command CLI has no `build` command. The packaged runtime and
-  // context graph are canonical build outputs of the same commit — copy them
-  // into the clone so the packaged RuntimeInstaller works against those exact
-  // artifacts (REQ-120 gate 6: packaged runtime lifecycle smoke).
-  await fsp.cp(path.join(sourceRoot, "generated", "runtime-build"), path.join(repo, "generated", "runtime-build"), { recursive: true });
-  await fsp.cp(path.join(sourceRoot, "generated", "context-graph.json"), path.join(repo, "generated", "context-graph.json"), { force: true });
+  const tarballs = ['packages/kernel', 'packages/cli'].map(pack);
+  await fsp.writeFile(path.join(app, 'package.json'), JSON.stringify({ name: 'packed-smoke', private: true }));
+  runNpm(['install', '--prefer-offline', '--ignore-scripts', '--no-audit', '--no-fund', ...tarballs], { cwd: app });
 
-  const pack = (directory) => {
-    const result = JSON.parse(runNpm(["pack", "--json"], directory));
-    return Array.isArray(result) ? result[0] : Object.values(result)[0];
-  };
-  runNpm(["run", "build", "-w", "packages/kernel"], sourceRoot);
-  runNpm(["run", "build", "-w", "packages/engine"], sourceRoot);
-  runNpm(["run", "build", "-w", "packages/cli"], sourceRoot);
-  const kernelPackage = path.join(temp, "kernel-package");
-  const enginePackage = path.join(temp, "engine-package");
-  await fsp.mkdir(kernelPackage);
-  await fsp.mkdir(enginePackage);
-  await fsp.cp(path.join(sourceRoot, "packages", "kernel", "dist"), path.join(kernelPackage, "dist"), { recursive: true });
-  await fsp.copyFile(path.join(sourceRoot, "packages", "kernel", "package.json"), path.join(kernelPackage, "package.json"));
-  await fsp.cp(path.join(sourceRoot, "packages", "engine", "dist"), path.join(enginePackage, "dist"), { recursive: true });
-  await fsp.copyFile(path.join(sourceRoot, "packages", "engine", "package.json"), path.join(enginePackage, "package.json"));
-  const kernelPack = pack(kernelPackage);
-  const kernelTar = path.join(kernelPackage, kernelPack.filename);
-  const enginePack = pack(enginePackage);
-  const engineTar = path.join(enginePackage, enginePack.filename);
-  const cliDirectory = path.join(sourceRoot, "packages", "cli");
-  const cliPack = pack(cliDirectory);
-  const cliTar = path.join(cliDirectory, cliPack.filename);
-  const cliMetadata = JSON.parse(await fsp.readFile(path.join(cliDirectory, "package.json"), "utf8"));
-  assert.equal(cliMetadata.private, true, "installer artifact intentionally remains registry-private");
-  assert.ok(cliPack.files.some((file) => file.path === "dist/index.js"), "package must contain executable build");
-  assert.equal(cliPack.files.some((file) => file.path.startsWith("src/") || file.path.startsWith("test/")), false, "package must exclude source/tests");
-  try {
-    runNpm(["init", "-y"], app);
-    runNpm(["install", kernelTar, engineTar, cliTar], app);
-    const homeBefore = await snapshotTree(home);
-    const bin = path.join(app, "node_modules", ".bin", process.platform === "win32" ? "agent-rules.cmd" : "agent-rules");
-    const cli = (...args) => run(bin, ["--json", ...args]);
-    cli("init");
-    await fsp.rm(path.dirname(ledger), { recursive: true, force: true });
-    await writeSmokeLedger(ledger, identity, canonical);
-    // The packaged CLI is a strict 8-command surface (install/uninstall/doctor/
-    // status/run/integration/init/reference). The runtime lifecycle is driven
-    // through the packaged RuntimeInstaller directly (same artifact the former
-    // `runtime` command wrapped), so the smoke still proves the packaged
-    // runtime lifecycle end-to-end without a non-public command.
-    const installerUrl = pathToFileURL(path.join(app, "node_modules", "@initforge", "agent-rules", "dist", "runtime", "installer.js")).href;
-    const installerEval = (body, envOverrides = {}) => {
-      const injector = `import { RuntimeInstaller } from ${JSON.stringify(installerUrl)};\nconst i = new RuntimeInstaller({repositoryRoot:${JSON.stringify(repo)},platformRoots:{codex:${JSON.stringify(target)}}${body.failpoint ? `,failpoint:${JSON.stringify(body.failpoint)}` : ""}});${body.script}`;
-      return spawnSync(process.execPath, ["--input-type=module", "--eval", injector], { cwd: repo, env: { ...env, ...envOverrides }, encoding: "utf8" });
-    };
-    const runtimeCall = (action) => installerEval({ script: `await i.${action};` });
-    const installResult = runtimeCall('install("codex","install")');
-    assert.equal(installResult.status, 0, `${installResult.stdout}\n${installResult.stderr}`);
-    const checked = safeSpawn(bin, ["--json", "doctor", "codex", "--skip-integration-verify"], { cwd: repo, env, encoding: "utf8" });
-    const doctorRaw = checked.stdout.slice(checked.stdout.indexOf("{"));
-    const doctor = JSON.parse(doctorRaw);
-    assert.ok(doctor.data.report.some((item) => item.check === "install" && item.status === "INSTALL_PASS"));
-    assert.equal(runtimeCall('install("codex","update")').status, 0, "packaged runtime update must succeed");
-    const rollbackResult = runtimeCall('rollback("codex")');
-    assert.equal(rollbackResult.status, 0, `${rollbackResult.stdout}\n${rollbackResult.stderr}`);
-    assert.equal(runtimeCall('install("codex","update")').status, 0, "packaged runtime reinstall (recover+update) must succeed");
-    const crashed = installerEval({ failpoint: "crash-after-backup", script: 'await i.install("codex","update");' });
-    assert.notEqual(crashed.status, 0, "injected post-journal crash must fail");
-    assert.equal(fs.existsSync(path.join(target, ".agent-rules-runtime.transaction.json")), true);
-    assert.equal(runtimeCall('recover("codex")').status, 0, "packaged runtime recover must succeed");
-    assert.equal(fs.existsSync(path.join(target, ".agent-rules-runtime.transaction.json")), false);
-    assert.equal((await fsp.readdir(target)).some((name) => name.startsWith(".agent-rules-runtime.stage-")), false);
+  const cliEntry = path.join(app, 'node_modules/@initforge/agent-rules/dist/index.js');
+  const runCli = (args, options = {}) => run(process.execPath, [cliEntry, ...args], options);
+  const fakeCodex = path.join(bin, process.platform === 'win32' ? 'codex.cmd' : 'codex');
+  await fsp.writeFile(fakeCodex, process.platform === 'win32' ? '@exit /b 0\r\n' : '#!/bin/sh\nexit 0\n');
+  if (process.platform !== 'win32') await fsp.chmod(fakeCodex, 0o755);
+  const env = { ...process.env, HOME: home, USERPROFILE: home, CODEX_HOME: runtimeTarget, PATH: `${bin}${path.delimiter}${process.env.PATH ?? ''}` };
+  const help = runCli(['--help'], { cwd: app, env });
+  for (const command of ['install', 'uninstall', 'doctor', 'status', 'integration', 'reference', 'route-native']) assert.match(help, new RegExp(`\\b${command}\\b`));
+  for (const retired of ['run', 'init', 'plan', 'goal']) assert.doesNotMatch(help, new RegExp(`^\\s+${retired}\\s`, 'm'));
 
-    const malicious = path.join(temp, "malicious");
-    await fsp.mkdir(malicious);
-    // Production must reject AGENT_RULES_REPOSITORY_ROOT injection. The
-    // packaged CLI resolves its repository root through adapters/repo.ts which
-    // fails closed in production, so drive the `install` command surface.
-    const rejected = safeSpawn(bin, ["--json", "install", "codex"], {
-      cwd: malicious,
-      env: { ...env, NODE_ENV: "production", AGENT_RULES_REPOSITORY_ROOT: malicious },
-      encoding: "utf8",
-    });
-    assert.notEqual(rejected.status, 0, "production must reject repository-root injection");
-    assert.match(`${rejected.stdout}${rejected.stderr}`, /test-only and unavailable in production/);
+  const routed = runCli(['route-native', '--stdin'], {
+    cwd: app,
+    env,
+    input: JSON.stringify({
+      protocol_version: '2.0', host: 'codex', session_id: 'packed', turn_id: 'one', cwd: app,
+      prompt: 'Refactor a database query', repo_root: app, host_facts: { model: 'owner/model' },
+    }),
+  });
+  const capsule = JSON.parse(routed);
+  assert.equal(capsule.model.requested, 'owner/model');
 
-    const manifest = path.join(repo, "generated", "runtime-build", "codex", "manifest.json");
-    const original = await fsp.readFile(manifest, "utf8");
-    await fsp.writeFile(manifest, "{broken\n");
-    const failed = runtimeCall('install("codex","update")');
-    assert.notEqual(failed.status, 0, "invalid package input must fail");
-    assert.equal(fs.existsSync(path.join(target, ".agent-rules-runtime.transaction.json")), false);
-    assert.equal((await fsp.readdir(target)).some((name) => name.startsWith(".agent-rules-runtime.stage-")), false);
-    await fsp.writeFile(manifest, original);
-    assert.equal(runtimeCall('uninstall("codex")').status, 0, "packaged runtime uninstall must succeed");
-    assert.equal(fs.existsSync(path.join(target, "agent-rules-runtime")), false);
-    assert.equal(fs.existsSync(path.join(target, "AGENTS.md")), false);
-    assert.deepEqual(await snapshotTree(home), homeBefore, "CLI must not mutate HOME");
-  } finally {
-    await Promise.all([fsp.rm(kernelTar, { force: true }), fsp.rm(engineTar, { force: true }), fsp.rm(cliTar, { force: true })]);
-  }
+  const installedRoot = path.join(app, 'node_modules/@initforge/agent-rules');
+  runCli(['--json', 'install', 'codex', '--no-integrations'], { cwd: app, env });
+  runCli(['--json', 'install', 'codex', '--no-integrations'], { cwd: app, env });
+  const doctor = runResult(process.execPath, [cliEntry, '--json', 'doctor', 'codex'], { cwd: app, env });
+  assert.equal(doctor.error, undefined);
+  const doctorOutput = JSON.parse(doctor.stdout);
+  assert.ok(['HEALTHY', 'DEGRADED', 'NEEDS_USER'].includes(doctorOutput.data.hosts[0].status), JSON.stringify(doctorOutput.data.hosts[0], null, 2));
+  assert.notEqual(doctorOutput.data.hosts[0].components.rules, 'BROKEN');
+  assert.equal(doctorOutput.data.hosts[0].components.hooks, 'NOT_APPLICABLE');
+  const hooksPath = path.join(runtimeTarget, 'hooks.json');
+  if (fs.existsSync(hooksPath)) assert.doesNotMatch(fs.readFileSync(hooksPath, 'utf8'), /agent-rules-lifecycle|lifecycle-hook|agent-rules-runtime|route-native/i);
+  assert.equal(fs.existsSync(path.join(runtimeTarget, 'agent-rules-runtime')), false);
+  assert.equal(fs.existsSync(path.join(home, '.agent-rules', 'runtime')), false);
+
+  const installedAgents = path.join(runtimeTarget, 'AGENTS.md');
+  const installedSkill = path.join(home, '.agents', 'skills', 'finish-to-completion', 'SKILL.md');
+  const agentsBytes = await fsp.readFile(installedAgents);
+  const skillBytes = await fsp.readFile(installedSkill);
+  const movedPackage = `${installedRoot}.moved`;
+  const stateRoot = path.join(home, '.agent-rules');
+  const movedState = `${stateRoot}.moved`;
+  await fsp.rename(installedRoot, movedPackage);
+  if (fs.existsSync(stateRoot)) await fsp.rename(stateRoot, movedState);
+  assert.ok((await fsp.readFile(installedAgents)).equals(agentsBytes));
+  assert.ok((await fsp.readFile(installedSkill)).equals(skillBytes));
+  if (fs.existsSync(movedState)) await fsp.rename(movedState, stateRoot);
+  await fsp.rename(movedPackage, installedRoot);
+  const coordinatorUrl = pathToFileURL(path.join(installedRoot, 'dist/runtime/installation-coordinator.js')).href;
+  run(process.execPath, ['--input-type=module', '--eval',
+    `import { createInstallationCoordinator } from ${JSON.stringify(coordinatorUrl)}; const r = await createInstallationCoordinator({enableMcp:false}).rollback('codex'); if (r.errors && Object.keys(r.errors).length) throw new Error(JSON.stringify(r.errors));`,
+  ], { cwd: app, env });
+  runCli(['uninstall', 'codex'], { cwd: app, env });
+  assert.equal(fs.existsSync(path.join(runtimeTarget, 'agent-rules-runtime')), false);
+  assert.equal(containsAgentDirectory(temp), false);
+
+  console.log('packed clean static install/route/update/doctor/source-state-independence/rollback/uninstall PASS');
 } finally {
   await fsp.rm(temp, { recursive: true, force: true });
 }

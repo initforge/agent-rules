@@ -1,0 +1,11 @@
+{
+  "policy": {
+    "immutable_resolution_required": true,
+    "hash_required_before_install": true,
+    "license_review_required": true,
+    "rollback_required": true,
+    "shell_strings_forbidden": true,
+    "selected_skill_score_minimum": 70,
+    "install_selected_set_to_all_detected_hosts": true
+  }
+}

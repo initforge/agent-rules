@@ -13,6 +13,7 @@ import {
   isCompatibleProviderOverride,
   parseHostConfig,
   sameServerDefinition,
+  sealConfigBackup,
   serverDefinitionBodies,
   type HostName,
 } from "./mcp-convergence.js";
@@ -26,6 +27,7 @@ export interface HostMcpRegistrationResult {
   status: "REGISTERED" | "NO_ADAPTER" | "NEEDS_USER" | "FAILED";
   registered: string[];
   conflicts: string[];
+  needsAction?: string[];
   backupPath?: string;
   backupReceipt?: string;
   error?: string;
@@ -73,21 +75,27 @@ async function selectedMcpDefinitions(
   profile: GlobalMcpProfile,
   integrationIds?: readonly string[],
   ignoreExplicitDisable = false,
-): Promise<Array<{ id: string; name: string; definition: string }>> {
+): Promise<{ definitions: Array<{ id: string; name: string; definition: string }>; unavailable: string[] }> {
   const inventory = await loadIntegrationInventory(repoRoot);
   const requested = integrationIds ? new Set(integrationIds) : null;
   const disabled = disabledRegistrationIds(env);
   const definitions: Array<{ id: string; name: string; definition: string }> = [];
+  const unavailable: string[] = [];
   for (const entry of selectGlobalAdapterEntries(inventory, profile)) {
     if ((requested && !requested.has(entry.id)) || (!ignoreExplicitDisable && disabled.has(entry.id))) continue;
     const adapter = findAdapterFile(repoRoot, entry.id, host);
     if (!adapter) continue;
     const raw = expandPlaceholders(host, fs.readFileSync(adapter, "utf8"), env);
+    const unresolved = [...raw.matchAll(/\$\{([A-Z0-9_]+)\}/g)].map((match) => match[1]!);
+    if (unresolved.length > 0) {
+      unavailable.push(`${entry.id}: missing ${[...new Set(unresolved)].join(', ')}`);
+      continue;
+    }
     for (const definition of serverDefinitionBodies(host, raw)) {
       definitions.push({ id: entry.id, name: definition.name, definition: definition.definition });
     }
   }
-  return definitions;
+  return { definitions, unavailable };
 }
 
 /** Reads host exposure only. A fresh session connection, tool visibility, and
@@ -133,15 +141,21 @@ export async function inspectHostMcpRegistration(
   const configPath = hostMcpConfigPath(host, env);
   if (profile === "none") return { host, configPath, status: "REGISTERED", entries: [] };
   try {
-    const definitions = await selectedMcpDefinitions(repoRoot, host, env, profile, undefined, true);
+    const selected = await selectedMcpDefinitions(repoRoot, host, env, profile, undefined, true);
+    const definitions = selected.definitions;
     const explicitlyDisabled = disabledRegistrationIds(env);
-    if (definitions.length === 0) return { host, configPath, status: "NO_ADAPTER", entries: [] };
+    if (definitions.length === 0 && selected.unavailable.length === 0) return { host, configPath, status: "NO_ADAPTER", entries: [] };
     if (!fs.existsSync(configPath)) {
-      return { host, configPath, status: "MISSING", entries: definitions.map((definition) => ({ id: definition.name, status: "MCP_MISSING", detail: `native config is absent: ${configPath}` })) };
+      return { host, configPath, status: selected.unavailable.length > 0 ? "NEEDS_USER" : "MISSING", entries: [
+        ...selected.unavailable.map((detail) => ({ id: detail.split(':')[0]!, status: "MCP_NEEDS_USER" as const, detail })),
+        ...definitions.map((definition) => ({ id: definition.name, status: "MCP_MISSING" as const, detail: `native config is absent: ${configPath}` })),
+      ] };
     }
     const content = fs.readFileSync(configPath, "utf8");
     const observed = new Map(parseHostConfig(host, content).serverEntries.map((entry) => [entry.id, entry]));
-    const entries = definitions.map((definition): HostMcpRegistrationInspection => {
+    const entries: HostMcpRegistrationInspection[] = [
+      ...selected.unavailable.map((detail) => ({ id: detail.split(':')[0]!, status: "MCP_NEEDS_USER" as const, detail })),
+      ...definitions.map((definition): HostMcpRegistrationInspection => {
       if (explicitlyDisabled.has(definition.id)) {
         return { id: definition.name, status: "MCP_DISABLED", detail: "disabled explicitly by the user through agent-rules integration settings" };
       }
@@ -153,7 +167,8 @@ export async function inspectHostMcpRegistration(
         return { id: definition.name, status: "MCP_REGISTERED", detail: `compatible user-owned provider override read back from ${configPath}; left unchanged` };
       }
       return { id: definition.name, status: "MCP_NEEDS_USER", detail: `same server name has user-modified definition in ${configPath}` };
-    });
+      }),
+    ];
     const status = entries.some((entry) => entry.status === "MCP_NEEDS_USER") ? "NEEDS_USER"
       : entries.some((entry) => entry.status === "MCP_MISSING" || entry.status === "MCP_DISABLED") ? "MISSING"
         : "REGISTERED";
@@ -179,9 +194,10 @@ export async function registerHostMcpAdapters(
   if (profile === "none") return { host, configPath: hostMcpConfigPath(host, env), status: "REGISTERED", registered: [], conflicts: [] };
   try {
     const model = await buildConvergenceModel(repoRoot, host, env, profile, options.integrationIds);
-    const definitions = await selectedMcpDefinitions(repoRoot, host, env, profile, options.integrationIds);
+    const selected = await selectedMcpDefinitions(repoRoot, host, env, profile, options.integrationIds);
+    const definitions = selected.definitions;
     const configPath = hostMcpConfigPath(host, env);
-    if (definitions.length === 0) return { host, configPath, status: "NO_ADAPTER", registered: [], conflicts: [] };
+    if (definitions.length === 0) return { host, configPath, status: selected.unavailable.length > 0 ? "NEEDS_USER" : "NO_ADAPTER", registered: [], conflicts: [], needsAction: selected.unavailable };
     const content = fs.existsSync(configPath) ? fs.readFileSync(configPath, "utf8") : "";
     const parsed = content.trim().length === 0 ? { serverEntries: [], disabled: false } : parseHostConfig(host, content);
     const current = new Map(parsed.serverEntries.map((entry) => [entry.id, entry]));
@@ -217,10 +233,11 @@ export async function registerHostMcpAdapters(
       return observed?.disabled === true || (observed !== undefined && isLegacyOmpCodebaseMemory(host, definition.name, observed.body));
     });
     if (applicableAdditions.length === 0 && refreshes.length === 0 && aliasesToRemove.length === 0) {
-      return { host, configPath, status: conflicts.length > 0 ? "NEEDS_USER" : "REGISTERED", registered: applicable.map((definition) => definition.name), conflicts };
+      return { host, configPath, status: conflicts.length > 0 || selected.unavailable.length > 0 ? "NEEDS_USER" : "REGISTERED", registered: applicable.map((definition) => definition.name), conflicts, needsAction: selected.unavailable };
     }
     fs.mkdirSync(path.dirname(configPath), { recursive: true });
-    const backup = fs.existsSync(configPath) ? backupConfig(configPath, path.dirname(configPath)) : undefined;
+    const stateHome = env.USERPROFILE || env.HOME;
+    const backup = backupConfig(configPath, host, stateHome ? path.join(stateHome, '.agent-rules') : undefined);
     if (host === "codex") {
       let next = content;
       const starts = [...next.matchAll(/^\s*\[mcp_servers\.([^\]]+)\]\s*$/gm)].map((match) => ({ name: match[1]!.trim(), index: match.index! }));
@@ -262,10 +279,11 @@ export async function registerHostMcpAdapters(
       config[key] = next;
       fs.writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`, "utf8");
     }
+    sealConfigBackup(backup.receiptPath, configPath);
     const readback = parseHostConfig(host, fs.readFileSync(configPath, "utf8"));
     const missing = applicable.filter((definition) => !readback.serverEntries.some((entry) => entry.id === definition.name));
     if (missing.length > 0) return { host, configPath, status: "FAILED", registered: definitions.map((definition) => definition.name), conflicts: [], error: `readback missing ${missing.map((definition) => definition.name).join(", ")}` };
-    return { host, configPath, status: conflicts.length > 0 ? "NEEDS_USER" : "REGISTERED", registered: applicable.map((definition) => definition.name), conflicts, ...(backup ? { backupPath: backup.backupPath, backupReceipt: backup.receiptPath } : {}) };
+    return { host, configPath, status: conflicts.length > 0 || selected.unavailable.length > 0 ? "NEEDS_USER" : "REGISTERED", registered: applicable.map((definition) => definition.name), conflicts, needsAction: selected.unavailable, backupPath: backup.backupPath, backupReceipt: backup.receiptPath };
   } catch (error) {
     return { host, configPath: hostMcpConfigPath(host, env), status: "FAILED", registered: [], conflicts: [], error: error instanceof Error ? error.message : String(error) };
   }
