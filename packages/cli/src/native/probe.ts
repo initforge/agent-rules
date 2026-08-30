@@ -9,6 +9,11 @@ import { resolveRuntimeStateRoot } from '../runtime/locator.js';
 
 const sha256 = (value: string): string => createHash('sha256').update(value).digest('hex');
 
+/** Expand only template markers, never a literal `~` in an already resolved host path. */
+export function expandNativePath(template: string, hostHome: string, userHome: string): string {
+  return template.replace(/^~(?=[\\/]|$)/, userHome).replace(/\$[A-Z_]+/, hostHome);
+}
+
 /** Native facts only: detect, inventory and plan without modifying a host. */
 export class NativeHostProbe {
   async detect(host: HostId): Promise<Detection> {
@@ -17,7 +22,7 @@ export class NativeHostProbe {
     const userHome = process.env.USERPROFILE || process.env.HOME || '';
     const homeDir = host === 'omp'
       ? resolveOmpAgentHome(process.env, userHome)
-      : process.env[contract.homeEnv] || contract.homeDefault.replace('~', userHome).replace(/\$[A-Z_]+/, userHome);
+      : process.env[contract.homeEnv] || expandNativePath(contract.homeDefault, userHome, userHome);
     const cli = contract.cliSignal.split(' ')[0].replace('.exe', '');
     const binaryPath = [...(process.env.PATH || '').split(path.delimiter), homeDir]
       .flatMap((folder) => process.platform === 'win32'
@@ -42,7 +47,7 @@ export class NativeHostProbe {
     const out: InventoryEntry[] = [];
     for (const configuredPath of [contract.paths.instructionPath, contract.paths.skillPath, contract.paths.mcpPath]) {
       if (!configuredPath) continue;
-      const resolved = configuredPath.replace(/\$[A-Z_]+/, detection.homeDir).replace('~', userHome);
+      const resolved = expandNativePath(configuredPath, detection.homeDir, userHome);
       if (resolved.includes('n/a') || resolved.includes('managed_profile') || resolved.includes('bundle') || resolved.includes('mods') || !fs.existsSync(resolved)) continue;
       try {
         if (fs.statSync(resolved).isDirectory()) {

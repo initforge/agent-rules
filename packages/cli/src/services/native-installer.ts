@@ -20,7 +20,7 @@ import {
   removeManagedCommandCodeMod,
 } from './command-code-native.js';
 import { resolveOmpAgentHome } from '../native/omp.js';
-import { NativeHostProbe } from '../native/probe.js';
+import { expandNativePath, NativeHostProbe } from '../native/probe.js';
 import type { CertificationReceipt, ClaimVerification, Detection, InstallPlan, InventoryEntry } from '../native/types.js';
 import { projectSkillsToGlobal, restoreSkillProjectionBackup, uninstallOwnedGlobalProjections } from '../runtime/composed-installer.js';
 import { inspectHostMcpRegistration } from '../runtime/mcp-registration.js';
@@ -179,7 +179,7 @@ function resolveNativeSkillRoot(host: HostId, detection: Detection): string | nu
   const raw = contract?.paths.skillPath;
   if (!raw) return null;
   const userHome = process.env.USERPROFILE || process.env.HOME || '';
-  const resolved = raw.replace(/\$[A-Z_]+/, detection.homeDir).replace('~', userHome);
+  const resolved = expandNativePath(raw, detection.homeDir, userHome);
   const root = resolved.replace(/[\\/]?<skill>[\\/]?SKILL\.md$/i, '').replace(/[\\/]?<skill>$/i, '');
   return root && !root.includes('n/a') ? root : null;
 }
@@ -380,7 +380,7 @@ export class NativeInstaller {
 
       // Backup existing files
       for (const ch of plan.changes) {
-        const src = ch.path.replace('~', userHome).replace(/\$[A-Z_]+/, detection.homeDir);
+        const src = expandNativePath(ch.path, detection.homeDir, userHome);
         if (fs.existsSync(src) && !src.includes('~/.agents/skills')) {
           try {
             const stat = fs.statSync(src);
@@ -399,7 +399,7 @@ export class NativeInstaller {
       const contract = getNativeContract(host);
       if (contract) {
         const rawInstr = contract.paths.instructionPath;
-        const instrPath = rawInstr.replace(/\$[A-Z_]+/, detection.homeDir).replace('~', userHome);
+        const instrPath = expandNativePath(rawInstr, detection.homeDir, userHome);
         // Every host's instruction surface is its OWN official native file or
         // directory (REQ-111); "activation managed" must not skip writing the
         // managed block for file-based surfaces (that would be claim-filling).
@@ -532,7 +532,7 @@ export class NativeInstaller {
           ? `self-contained static mod verified at ${native.modPath}`
           : `static managed mod missing or contains a runtime callback at ${native.modPath}`;
       } else if (contract) {
-        const instrPath = contract.paths.instructionPath.replace(/\$[A-Z_]+/, detection.homeDir).replace('~', userHome);
+        const instrPath = expandNativePath(contract.paths.instructionPath, detection.homeDir, userHome);
         if (fs.existsSync(instrPath)) {
           let stat: fs.Stats | null = null;
           try { stat = fs.statSync(instrPath); } catch {}
@@ -574,7 +574,7 @@ export class NativeInstaller {
       }
     }
     // 6. NATIVE_SKILLS
-    const skillPath = contract?.paths.skillPath.replace(/\$[A-Z_]+/, detection.homeDir).replace('~', userHome) ?? '';
+    const skillPath = contract ? expandNativePath(contract.paths.skillPath, detection.homeDir, userHome) : '';
     const skillRoot = skillPath.replace(/[\\/]?<skill>[\\/]?SKILL\.md$/i, '').replace(/[\\/]?<skill>$/i, '');
     const hostSkills = fs.existsSync(skillRoot)
       ? fs.readdirSync(skillRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory() && fs.existsSync(path.join(skillRoot, entry.name, 'SKILL.md'))).length
@@ -610,7 +610,7 @@ export class NativeInstaller {
         ? readCommandCodeNative(detection.homeDir).modPath
         : host === 'deepseek-harness'
           ? path.join(detection.homeDir, 'AGENTS.md')
-          : contract?.paths.instructionPath.replace(/\$[A-Z_]+/, detection.homeDir).replace('~', userHome) ?? '';
+          : contract ? expandNativePath(contract.paths.instructionPath, detection.homeDir, userHome) : '';
       if (instructionFile && fs.existsSync(instructionFile) && fs.statSync(instructionFile).isDirectory()) instructionFile = path.join(instructionFile, 'agent-rules.md');
       const instructionBody = instructionFile && fs.existsSync(instructionFile) && fs.statSync(instructionFile).isFile() ? fs.readFileSync(instructionFile, 'utf8') : '';
       const missingRules = selectedProfiles.filter((id) => !instructionBody.includes(`Explicit profile: ${id}`) && !instructionBody.includes(`agent-rules:profile:${id}`));
@@ -806,7 +806,7 @@ export class NativeInstaller {
     const detection = await this.detect(host);
     const userHome = process.env.USERPROFILE || process.env.HOME || '';
     const rawInstr = contract.paths.instructionPath;
-    let instrPath = rawInstr.replace(/\$[A-Z_]+/, detection.homeDir).replace('~', userHome);
+    let instrPath = expandNativePath(rawInstr, detection.homeDir, userHome);
     instrPath = instrPath.replace(/\.grok[\\/]\.grok/, '.grok');
     if (host === 'deepseek-harness') {
       const dsh = inspectDshNativeReadback(detection);
@@ -998,7 +998,7 @@ export class NativeInstaller {
 
       cleanupHostRuntimeCallbacks(host, detection.homeDir);
 
-      const instrPath = contract.paths.instructionPath.replace(/\$[A-Z_]+/, detection.homeDir).replace('~', userHome);
+      const instrPath = expandNativePath(contract.paths.instructionPath, detection.homeDir, userHome);
       if (instrPath && fs.existsSync(instrPath) && !instrPath.includes('~/.agents')) {
         let isFile = false;
         try { isFile = fs.statSync(instrPath).isFile(); } catch {}
@@ -1014,7 +1014,7 @@ export class NativeInstaller {
         }
       }
 
-      const mcpPath = contract.paths.mcpPath.replace(/\$[A-Z_]+/, detection.homeDir).replace('~', userHome);
+      const mcpPath = expandNativePath(contract.paths.mcpPath, detection.homeDir, userHome);
       if (mcpPath && fs.existsSync(mcpPath)) {
         if (mcpPath.includes('.json')) {
           try {

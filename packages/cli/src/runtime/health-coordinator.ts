@@ -8,6 +8,7 @@ import {
 } from '@initforge/agent-rules-kernel/northstar/index.js';
 import type { HostId } from '@initforge/agent-rules-kernel/northstar/host-adapters.js';
 import type { CertificationReceipt, ClaimVerification } from '../native/types.js';
+import { expandNativePath } from '../native/probe.js';
 import { COORDINATOR_HOSTS, createInstallationCoordinator, type StaticReadback } from './installation-coordinator.js';
 
 export interface ComponentDiagnostic {
@@ -82,7 +83,7 @@ function diagnosticsFor(host: string, statuses: Readonly<Record<HealthComponent,
   const discovery = native?.claims.NATIVE_DISCOVERED.evidence.find((entry) => entry && typeof entry === 'object') as { homeDir?: unknown } | undefined;
   const home = typeof discovery?.homeDir === 'string' ? discovery.homeDir : '';
   const userHome = process.env.USERPROFILE || process.env.HOME || '';
-  const resolvePath = (value?: string): string | undefined => value ? value.replace(/\$[A-Z_]+/, home).replace('~', userHome) : undefined;
+  const resolvePath = (value?: string): string | undefined => value ? expandNativePath(value, home, userHome) : undefined;
   const claims: Partial<Record<HealthComponent, ClaimVerification | undefined>> = {
     rules: native?.claims.NATIVE_INSTALLED, skills: native?.claims.NATIVE_SKILLS, mcp: native?.claims.NATIVE_MCP,
     permissions: native?.claims.NATIVE_POLICY, sandbox: native?.claims.NATIVE_POLICY, 'host-adapter': native?.claims.NATIVE_DISCOVERED,

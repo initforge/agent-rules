@@ -3,6 +3,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { NativeInstaller } from '../src/services/native-installer.js';
 import { resolveOmpAgentHome } from '../src/native/omp.js';
+import { expandNativePath } from '../src/native/probe.js';
 import { getHostIds, getNativeContract, getAllNativeContracts, getHostSupport } from '@initforge/agent-rules-kernel/northstar/host-registry.js';
 import type { HostId } from '@initforge/agent-rules-kernel/northstar/host-adapters.js';
 
@@ -34,6 +35,13 @@ describe('static host projector contracts', () => {
   it('preserves an explicit Windows OMP agent path', () => {
     const agentDir = 'C:\\Users\\runneradmin\\AppData\\Local\\Temp\\omp-agent';
     expect(resolveOmpAgentHome({ PI_CODING_AGENT_DIR: agentDir }, 'C:\\Users\\RUNNER')).toBe(agentDir);
+  });
+
+  it('expands only a leading home marker in native path templates', () => {
+    const home = 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\home';
+    const codexHome = 'C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\codex-home';
+    expect(expandNativePath('$CODEX_HOME/AGENTS.md', codexHome, home)).toBe(`${codexHome}/AGENTS.md`);
+    expect(expandNativePath('~/.agents/skills', codexHome, home)).toBe(`${home}/.agents/skills`);
   });
 
   it('installs OMP static AGENTS and skills without extension or runtime directories and rolls back byte-equally', async () => {
