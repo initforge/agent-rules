@@ -5,11 +5,11 @@
   "files": [
     {
       "path": "generated/context-graph.json",
-      "sha256": "ef02d16a37a94dac4d3e8dd469277ff5191bc996d4d68a5d070170ca84d14a34"
+      "sha256": "b989b8aacc7b55de1fc855f64826e49c018c5471b00a1feb4af1640cbcd10d25"
     },
     {
       "path": "generated/runtime-build/antigravity/manifest.json",
-      "sha256": "319c4db1f742ab2dad7ba0f8e6042a694c26983baaec2045c9fa97e2bc6248b4"
+      "sha256": "31f4794c8e340a56101fd69f1f5172566dae2ed560ba977243e09f818e64b8ea"
     },
     {
       "path": "generated/runtime-build/antigravity/rules/00-intent-scope-safety.md",
@@ -17,7 +17,7 @@
     },
     {
       "path": "generated/runtime-build/antigravity/rules/10-execution-planning-delegation.md",
-      "sha256": "eb807a6956e1f8450f28e2177d8a08e5dc1650311f0496632df025906b9287a5"
+      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
     },
     {
       "path": "generated/runtime-build/antigravity/rules/20-proof-outcome.md",
@@ -49,7 +49,7 @@
     },
     {
       "path": "generated/runtime-build/claude/manifest.json",
-      "sha256": "245a78228fbf02d7c4fcc5dba222b4546df71ce5b5c0323dffe88f1086e451de"
+      "sha256": "5c429ce41691f61bf851db0c1c6547eb5e4bca30230ced9dbf380b502f3020e4"
     },
     {
       "path": "generated/runtime-build/claude/rules/00-intent-scope-safety.md",
@@ -57,7 +57,7 @@
     },
     {
       "path": "generated/runtime-build/claude/rules/10-execution-planning-delegation.md",
-      "sha256": "eb807a6956e1f8450f28e2177d8a08e5dc1650311f0496632df025906b9287a5"
+      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
     },
     {
       "path": "generated/runtime-build/claude/rules/20-proof-outcome.md",
@@ -89,7 +89,7 @@
     },
     {
       "path": "generated/runtime-build/codex/manifest.json",
-      "sha256": "fb0b7cc1c5d61de87c275ce3b10bab4c388f1be5a700b2a47fe3b44a507c9850"
+      "sha256": "2c4206a7add7397c5df3c8ea6d95cd784a0905ab6b184f5f1a7c694829557f0e"
     },
     {
       "path": "generated/runtime-build/codex/rules/00-intent-scope-safety.md",
@@ -97,7 +97,7 @@
     },
     {
       "path": "generated/runtime-build/codex/rules/10-execution-planning-delegation.md",
-      "sha256": "eb807a6956e1f8450f28e2177d8a08e5dc1650311f0496632df025906b9287a5"
+      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
     },
     {
       "path": "generated/runtime-build/codex/rules/20-proof-outcome.md",
@@ -129,7 +129,7 @@
     },
     {
       "path": "generated/runtime-build/command-code/manifest.json",
-      "sha256": "30f8c407420203f31ed4896dd671462b7538e1fe091621f873d4d943405aa45d"
+      "sha256": "5bb64e973dd936523e610f4b2b101290960d9ca6a13cffecce880aead1bab064"
     },
     {
       "path": "generated/runtime-build/command-code/rules/00-intent-scope-safety.md",
@@ -137,7 +137,7 @@
     },
     {
       "path": "generated/runtime-build/command-code/rules/10-execution-planning-delegation.md",
-      "sha256": "eb807a6956e1f8450f28e2177d8a08e5dc1650311f0496632df025906b9287a5"
+      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
     },
     {
       "path": "generated/runtime-build/command-code/rules/20-proof-outcome.md",
@@ -165,7 +165,7 @@
     },
     {
       "path": "generated/runtime-build/cursor/manifest.json",
-      "sha256": "013f9c39c1ca92fcc994fb70014e613c8cb84dd05564e7d86a67319df083ea02"
+      "sha256": "378ee4e52a9170be1d96470e5eeba69a80ba463574ab201980a1686a314ca810"
     },
     {
       "path": "generated/runtime-build/cursor/rules/00-intent-scope-safety.md",
@@ -173,7 +173,7 @@
     },
     {
       "path": "generated/runtime-build/cursor/rules/10-execution-planning-delegation.md",
-      "sha256": "eb807a6956e1f8450f28e2177d8a08e5dc1650311f0496632df025906b9287a5"
+      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
     },
     {
       "path": "generated/runtime-build/cursor/rules/20-proof-outcome.md",
@@ -205,7 +205,7 @@
     },
     {
       "path": "generated/runtime-build/deepseek-harness/manifest.json",
-      "sha256": "57021736063545bef4ff0e0ea29504a37566031c76c1732f028500fd79ea1775"
+      "sha256": "150fd4ffb1a5f6afff20e0cbd9e3a3f3cf1b3a19d92c6326487f1c9ff3066fe2"
     },
     {
       "path": "generated/runtime-build/deepseek-harness/rules/00-intent-scope-safety.md",
@@ -213,7 +213,7 @@
     },
     {
       "path": "generated/runtime-build/deepseek-harness/rules/10-execution-planning-delegation.md",
-      "sha256": "eb807a6956e1f8450f28e2177d8a08e5dc1650311f0496632df025906b9287a5"
+      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
     },
     {
       "path": "generated/runtime-build/deepseek-harness/rules/20-proof-outcome.md",
@@ -241,7 +241,7 @@
     },
     {
       "path": "generated/runtime-build/grok/manifest.json",
-      "sha256": "0a409045c94e4d6de2c2dc02d3b42df0a24954292764799f0fb01a5af718632a"
+      "sha256": "10dcf7f5a0605d938a3f3d70cde0b604987ea338c5222799393f0c6fa7245d4d"
     },
     {
       "path": "generated/runtime-build/grok/rules/00-intent-scope-safety.md",
@@ -249,7 +249,7 @@
     },
     {
       "path": "generated/runtime-build/grok/rules/10-execution-planning-delegation.md",
-      "sha256": "eb807a6956e1f8450f28e2177d8a08e5dc1650311f0496632df025906b9287a5"
+      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
     },
     {
       "path": "generated/runtime-build/grok/rules/20-proof-outcome.md",
@@ -281,7 +281,7 @@
     },
     {
       "path": "generated/runtime-build/omp/manifest.json",
-      "sha256": "6d852d1bcc89d32c4cf04cc27a56dfcd831922d9153782df6b5a74e9a0031fc1"
+      "sha256": "15d9759a50de58732740df5cf86964458e13e1f0186f474940bec56a763c9dae"
     },
     {
       "path": "generated/runtime-build/omp/rules/00-intent-scope-safety.md",
@@ -289,7 +289,7 @@
     },
     {
       "path": "generated/runtime-build/omp/rules/10-execution-planning-delegation.md",
-      "sha256": "eb807a6956e1f8450f28e2177d8a08e5dc1650311f0496632df025906b9287a5"
+      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
     },
     {
       "path": "generated/runtime-build/omp/rules/20-proof-outcome.md",
@@ -321,7 +321,7 @@
     },
     {
       "path": "generated/runtime-build/opencode/manifest.json",
-      "sha256": "3ba6358a11591b8c426eb350b0c74ec61a62dc6a74f2ddf6d17e560a32695ca1"
+      "sha256": "046b0c55b138a5011e9748a476153333d50e9bbbdb7542b143316d5351d1773b"
     },
     {
       "path": "generated/runtime-build/opencode/rules/00-intent-scope-safety.md",
@@ -329,7 +329,7 @@
     },
     {
       "path": "generated/runtime-build/opencode/rules/10-execution-planning-delegation.md",
-      "sha256": "eb807a6956e1f8450f28e2177d8a08e5dc1650311f0496632df025906b9287a5"
+      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
     },
     {
       "path": "generated/runtime-build/opencode/rules/20-proof-outcome.md",
@@ -1105,7 +1105,7 @@
     },
     {
       "path": "profiles/5fedu/projects/AGENTS.md",
-      "sha256": "36a52dd040bfeabd8fa4b55084b05864394ac58f09088bc8036e8f49f9587c25"
+      "sha256": "6080d1f8e6e5cf6324945ba3a280e16aa653e14b462e2867eb36292cc97d9b58"
     },
     {
       "path": "profiles/5fedu/projects/context-template/AGENTS.md",
@@ -3189,7 +3189,7 @@
     },
     {
       "path": "rules/10-execution-planning-delegation.md",
-      "sha256": "eb807a6956e1f8450f28e2177d8a08e5dc1650311f0496632df025906b9287a5"
+      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
     },
     {
       "path": "rules/20-proof-outcome.md",
@@ -3329,7 +3329,7 @@
     },
     {
       "path": "skills/finish-to-completion/SKILL.md",
-      "sha256": "bba9cc857b50df3eb84bd174fe83e2e58a0ac5b79ea30c8af329e99950c644c7"
+      "sha256": "93cd1d7f64a9977731b13597ddc523313faad21776fe6187366d43948421f387"
     },
     {
       "path": "skills/frontend-architect/ROUTE.json",
@@ -3401,7 +3401,7 @@
     },
     {
       "path": "skills/plan-and-handoff/SKILL.md",
-      "sha256": "e9fa9d28f6f44b10683954ae1c55553df6bb797e79a0cf7bee4ca17562c58045"
+      "sha256": "9babe53961c6303e1f5c72c2a89f639daa42b0f981dc6ba8ba3eea0389baf295"
     },
     {
       "path": "skills/prisma-skills/ROUTE.json",
@@ -3600,5 +3600,5 @@
       "sha256": "336e477df4b82bb48c075ab491ad52008519ce7a56fd73e5d736627c5c8c5390"
     }
   ],
-  "manifest_sha256": "a7a95c1a772eda569343a69e7e600acebb6bfc5520f5b8453686e4bc51f9a04e"
+  "manifest_sha256": "72ec409c4636bdd03a49842434b690e62406fbc77b59f4842e36768582e0cad8"
 }

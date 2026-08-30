@@ -25,4 +25,16 @@ describe('native skill routing', () => {
     expect(routeSkills({ prompt: 'Audit 5fedu module parity' }, repoRoot).map((route) => route.id)).not.toContain('5fedu-module-parity');
     expect(routeSkills({ prompt: 'Audit 5fedu module parity', activeProjectScope: '5fedu' }, repoRoot).map((route) => route.id)).toContain('5fedu-module-parity');
   });
+
+  it('routes cold-start cross-host handoff planning to plan-and-handoff', () => {
+    const routes = routeSkills({ prompt: 'Create a cold-start portable cross-host handoff plan for another implementation session' }, repoRoot);
+    const ids = routes.map((route) => route.id);
+    expect(ids).toContain('plan-and-handoff');
+    expect(ids).not.toContain('finish-to-completion');
+  });
+
+  it('routes execution of a pasted portable plan to finish-to-completion', () => {
+    const routes = routeSkills({ prompt: 'Execute this pasted portable plan end to end without phase relay' }, repoRoot);
+    expect(routes.map((route) => route.id)).toContain('finish-to-completion');
+  });
 });

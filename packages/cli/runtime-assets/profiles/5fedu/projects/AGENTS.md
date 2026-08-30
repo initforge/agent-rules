@@ -22,7 +22,9 @@ Task tạo/sửa/refactor module ERP → `00-context-map.md` → chỉ mở `mod
 
 Khi user báo lệch/sai pattern: cùng flow trên + audit toàn surface.
 
-Task dài / module mới: **PAF** + phase execute — `skills/plan-and-handoff/references/plan-artifact-template.md` (tier routing: `references/capability-tier-routing.md`).
+Task dài / module mới: dùng skill `plan-and-handoff` và global portable-plan
+contract; plan phải đóng kín source, quyết định, target, reference, acceptance
+và proof trước khi execute, không dùng model tier hoặc template plan riêng.
 
 ## Cấu trúc (sau cài)
 

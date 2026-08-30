@@ -5,9 +5,10 @@ mirrors are projections; never edit them by hand.
 
 ## Product contract
 
-1. The model selected by the user owns planning and implementation end to end.
-   The harness never changes models, invents worker tiers, or requires role
-   handoffs.
+1. Same-session planning and implementation is the default. When the owner
+   explicitly hands a portable plan to another session or host, the receiving
+   user-selected model owns implementation end to end. The harness never
+   selects or changes models, invents worker tiers, or requires role handoffs.
 2. Use the host's native plan/progress surface. Do not create shadow plans,
    tickets, ledgers, PASS grants, or per-step evidence files.
 3. Resolve rules, skills, domain context, and integrations once for the current

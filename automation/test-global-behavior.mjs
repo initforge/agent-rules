@@ -24,13 +24,33 @@ try {
   const proof = await import(pathToFileURL(path.join(root, 'packages/kernel/dist/northstar/proof-router.js')).href);
   const materiality = await import(pathToFileURL(path.join(root, 'packages/kernel/dist/harness/review/materiality.js')).href);
 
-  await check('canonical rules have one owner and no worker/ticket theater', () => {
+  await check('canonical rules support explicit portable handoff without worker/ticket theater', () => {
     const execution = fs.readFileSync(path.join(root, 'rules/10-execution-planning-delegation.md'), 'utf8');
     const outcome = fs.readFileSync(path.join(root, 'rules/20-proof-outcome.md'), 'utf8');
+    const planSkill = fs.readFileSync(path.join(root, 'skills/plan-and-handoff/SKILL.md'), 'utf8');
+    const finishSkill = fs.readFileSync(path.join(root, 'skills/finish-to-completion/SKILL.md'), 'utf8');
     const agents = fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8');
-    assert.match(execution, /owner-selected session model owns planning and implementation/i);
+    const readme = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
+    const profileAgents = fs.readFileSync(path.join(root, 'profiles/5fedu/projects/AGENTS.md'), 'utf8');
+    assert.match(execution, /Same-session planning and implementation is the default/i);
+    assert.match(execution, /owner explicitly hands a plan to another session or host/i);
+    assert.match(execution, /cold-start executable/i);
+    assert.match(execution, /domain-appropriate target locators/i);
+    assert.match(execution, /never selects or switches models/i);
     assert.match(execution, /Do not create standalone ticket/i);
+    assert.match(planSkill, /Close the source/i);
+    assert.match(planSkill, /Close domain authority/i);
+    assert.match(planSkill, /Close references/i);
+    assert.match(planSkill, /Close targets/i);
+    assert.match(planSkill, /Close slices/i);
+    assert.match(planSkill, /Fresh-session audit/i);
+    assert.match(finishSkill, /Treat its outcome, scope,[\s\S]*as\s+authoritative/i);
+    assert.match(finishSkill, /instead of asking the owner for discoverable facts/i);
+    assert.match(finishSkill, /without phase-by-phase relay/i);
     assert.match(outcome, /Do not create a separate completion-grant ceremony/i);
+    assert.doesNotMatch(agents, /owns planning and implementation end to end/i);
+    assert.doesNotMatch(readme, /Let that same model implement the plan/i);
+    assert.doesNotMatch(profileAgents, /PAF|plan-artifact-template|capability-tier-routing|tier routing/i);
     assert.doesNotMatch(agents, /UNAUTHORIZED_WORKER_PASS|strong planners compile/i);
   });
 

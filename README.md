@@ -8,7 +8,8 @@ configuration, then leaves the normal host session path completely.
 
 1. Select the model you want in the host.
 2. Use the host's native Plan Mode for non-trivial work.
-3. Let that same model implement the plan.
+3. Let that model implement the plan, or explicitly hand a cold-start portable
+   plan to another user-selected model or host.
 4. The model resolves explicit skills and deterministic repository facts once
    through the host's native discovery; installed base rules remain the fallback.
 5. Focused proof validates changed behavior. Broad regression runs once at the
