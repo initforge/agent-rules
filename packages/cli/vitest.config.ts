@@ -3,8 +3,11 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     // Several installer tests deliberately override process-wide host and
-    // state-root variables. They must not run in parallel with each other.
+    // state-root variables. Keep all files in one process and run them
+    // serially so Windows environment state cannot leak between fixtures.
+    pool: 'forks',
     fileParallelism: false,
+    poolOptions: { forks: { singleFork: true } },
     include: [
       'test/host-adapters-contract.test.ts',
       'test/index.test.ts',

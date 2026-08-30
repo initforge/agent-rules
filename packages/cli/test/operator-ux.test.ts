@@ -17,10 +17,17 @@ afterEach(() => {
 
 function temp(prefix: string): string { const root = fs.mkdtempSync(path.join(os.tmpdir(), prefix)); roots.push(root); return root; }
 
+function installFakeOmp(agentDir: string): void {
+  const executable = path.join(agentDir, process.platform === 'win32' ? 'omp.cmd' : 'omp');
+  fs.writeFileSync(executable, process.platform === 'win32' ? '@exit /b 0\r\n' : '#!/bin/sh\nexit 0\n');
+  if (process.platform !== 'win32') fs.chmodSync(executable, 0o755);
+}
+
 describe('operator UX', () => {
   it('installs an explicit profile, clears it on update, then rolls back the previous profile generation', async () => {
     const agentDir = temp('agent-rules-ux-omp-');
     const stateRoot = temp('agent-rules-ux-state-');
+    installFakeOmp(agentDir);
     process.env.PI_CODING_AGENT_DIR = agentDir;
     process.env.AGENT_RULES_STATE_ROOT = stateRoot;
     process.env.AGENT_RULES_HOME = stateRoot;
@@ -48,6 +55,7 @@ describe('operator UX', () => {
   it('rejects update before install and rollback without a generation', async () => {
     const agentDir = temp('agent-rules-ux-empty-');
     const stateRoot = temp('agent-rules-ux-empty-state-');
+    installFakeOmp(agentDir);
     process.env.PI_CODING_AGENT_DIR = agentDir;
     process.env.AGENT_RULES_STATE_ROOT = stateRoot;
     process.env.AGENT_RULES_HOME = stateRoot;
@@ -61,6 +69,7 @@ describe('operator UX', () => {
   it('rejects an unknown explicit profile before writing host bytes', async () => {
     const agentDir = temp('agent-rules-ux-profile-');
     const stateRoot = temp('agent-rules-ux-profile-state-');
+    installFakeOmp(agentDir);
     process.env.PI_CODING_AGENT_DIR = agentDir;
     process.env.AGENT_RULES_STATE_ROOT = stateRoot;
     process.env.AGENT_RULES_HOME = stateRoot;

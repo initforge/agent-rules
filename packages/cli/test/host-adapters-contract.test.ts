@@ -36,6 +36,9 @@ describe('static host projector contracts', () => {
     const previousHarnessHome = process.env.AGENT_RULES_HOME;
     const agentDir = fs.mkdtempSync(path.join(os.tmpdir(), 'omp-static-install-'));
     const harnessHome = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-rules-static-home-'));
+    const fakeOmp = path.join(agentDir, process.platform === 'win32' ? 'omp.cmd' : 'omp');
+    fs.writeFileSync(fakeOmp, process.platform === 'win32' ? '@exit /b 0\r\n' : '#!/bin/sh\nexit 0\n');
+    if (process.platform !== 'win32') fs.chmodSync(fakeOmp, 0o755);
     process.env.PI_CODING_AGENT_DIR = agentDir; process.env.AGENT_RULES_HOME = harnessHome;
     try {
       const installer = new NativeInstaller();
