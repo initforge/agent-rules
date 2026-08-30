@@ -1,5 +1,4 @@
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -15,7 +14,7 @@ afterEach(() => {
   vi.resetModules();
 });
 
-function temp(prefix: string): string { const root = fs.mkdtempSync(path.join(os.tmpdir(), prefix)); roots.push(root); return root; }
+function temp(prefix: string): string { const root = fs.mkdtempSync(path.join(process.cwd(), `.${prefix}`)); roots.push(root); return root; }
 
 function installFakeOmp(agentDir: string): void {
   const executable = path.join(agentDir, process.platform === 'win32' ? 'omp.cmd' : 'omp');
@@ -28,7 +27,7 @@ describe('operator UX', () => {
     const agentDir = temp('agent-rules-ux-omp-');
     const stateRoot = temp('agent-rules-ux-state-');
     installFakeOmp(agentDir);
-    process.env.PI_CODING_AGENT_DIR = agentDir;
+    process.env.PI_CODING_AGENT_DIR = path.relative(process.cwd(), agentDir);
     process.env.AGENT_RULES_STATE_ROOT = stateRoot;
     process.env.AGENT_RULES_HOME = stateRoot;
     const { createInstallationCoordinator } = await import('../src/runtime/installation-coordinator.js');
@@ -56,7 +55,7 @@ describe('operator UX', () => {
     const agentDir = temp('agent-rules-ux-empty-');
     const stateRoot = temp('agent-rules-ux-empty-state-');
     installFakeOmp(agentDir);
-    process.env.PI_CODING_AGENT_DIR = agentDir;
+    process.env.PI_CODING_AGENT_DIR = path.relative(process.cwd(), agentDir);
     process.env.AGENT_RULES_STATE_ROOT = stateRoot;
     process.env.AGENT_RULES_HOME = stateRoot;
     const { createInstallationCoordinator } = await import('../src/runtime/installation-coordinator.js');
@@ -70,7 +69,7 @@ describe('operator UX', () => {
     const agentDir = temp('agent-rules-ux-profile-');
     const stateRoot = temp('agent-rules-ux-profile-state-');
     installFakeOmp(agentDir);
-    process.env.PI_CODING_AGENT_DIR = agentDir;
+    process.env.PI_CODING_AGENT_DIR = path.relative(process.cwd(), agentDir);
     process.env.AGENT_RULES_STATE_ROOT = stateRoot;
     process.env.AGENT_RULES_HOME = stateRoot;
     const { createInstallationCoordinator } = await import('../src/runtime/installation-coordinator.js');
