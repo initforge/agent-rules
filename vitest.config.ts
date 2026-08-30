@@ -14,6 +14,7 @@ export default defineConfig({
       'platforms/claude/adapter.test.ts',
       'platforms/codex/adapter.test.ts',
       'platforms/deepseek-harness/adapter.test.ts',
+      'platforms/omp/adapter.test.ts',
       'platforms/opencode/adapter.test.ts',
     ],
     // Workspaces are run separately; including them here would run them twice.

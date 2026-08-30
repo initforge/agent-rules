@@ -945,7 +945,7 @@
     },
     {
       "path": "platforms/omp/adapter.ts",
-      "sha256": "c01d9f67debd73207541bd261cb2c595ce454714ccb4a73b9564c80445ea7e28"
+      "sha256": "9f941f24a8748901c06e95ee2dceb873fc6cbf194c78a35b9b8b10545ae35263"
     },
     {
       "path": "platforms/omp/AGENTS.md",
@@ -3600,5 +3600,5 @@
       "sha256": "336e477df4b82bb48c075ab491ad52008519ce7a56fd73e5d736627c5c8c5390"
     }
   ],
-  "manifest_sha256": "72ec409c4636bdd03a49842434b690e62406fbc77b59f4842e36768582e0cad8"
+  "manifest_sha256": "13ebfd313c2624a0c116cb802dfa06d09dbad3e0b552054b756553e948aca3b7"
 }
