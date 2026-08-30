@@ -9,7 +9,7 @@ import { NativeInstaller, type CertificationReceipt } from '../services/native-i
 import { provisionMcps } from '../integration/provisioning.js';
 import { convergeHostMcpConfig, registerHostMcpAdapters, restoreHostMcpBackup } from './mcp-convergence.js';
 import { RUNTIME_PLATFORMS, type RuntimePlatform } from './contracts.js';
-import { packedRuntimeAvailable, resolvePackageRoot, resolveRuntimeAsset, resolveRuntimeAssetsRoot } from './locator.js';
+import { packedRuntimeAvailable, resolvePackageRoot, resolveRuntimeAsset, resolveRuntimeAssetsRoot, resolveRuntimeStateRoot } from './locator.js';
 import { cleanupOperationalState, writeCurrentOperationalState } from './state-lifecycle.js';
 import { cleanupCentralExecutableRuntime, cleanupHostRuntimeCallbacks, type LegacyCleanupResult } from './legacy-runtime-cleanup.js';
 
@@ -18,6 +18,7 @@ configureHostRegistryRoot(resolveRuntimeAssetsRoot());
 export interface InstallationCoordinatorOptions {
   dryRun?: boolean;
   enableMcp?: boolean;
+  profiles?: string[];
 }
 
 export interface StaticReadback {
@@ -25,6 +26,7 @@ export interface StaticReadback {
   static: boolean;
   mcp: boolean;
   authority_tier: 'NATIVE_ENFORCED' | 'NATIVE_ADVISORY' | 'MANAGED' | 'UNAVAILABLE';
+  profiles: string[];
   cleanup?: LegacyCleanupResult;
   error?: string;
 }
@@ -98,6 +100,7 @@ export class InstallationCoordinator {
     writeCurrentOperationalState('installation.json', receipt);
     for (const host of receipt.hosts) writeCurrentOperationalState(path.join('install-options', `${host}.json`), {
       schema: 'agent-rules/install-options/v1', host, integrations_enabled: receipt.integrations_enabled, candidate_id: receipt.candidate_id,
+      selected_profiles: receipt.readback?.[host]?.profiles ?? [],
     });
   }
 
@@ -115,30 +118,63 @@ export class InstallationCoordinator {
     this.provisioned = true;
   }
 
-  private async installOne(host: RuntimePlatform): Promise<{ native: CertificationReceipt; readback: StaticReadback }> {
+  private previousProfiles(host: string): string[] {
+    try {
+      const file = path.join(resolveRuntimeStateRoot(), 'current', 'install-options', `${host}.json`);
+      const value = JSON.parse(fs.readFileSync(file, 'utf8')) as { selected_profiles?: unknown };
+      return Array.isArray(value.selected_profiles) ? value.selected_profiles.filter((item): item is string => typeof item === 'string') : [];
+    } catch { return []; }
+  }
+
+  private installOptionsPath(host: string): string {
+    return path.join(resolveRuntimeStateRoot(), 'current', 'install-options', `${host}.json`);
+  }
+
+  private captureInstallOptions(host: string): { schema: string; host: string; content: string | null } {
+    const source = this.installOptionsPath(host);
+    return {
+      schema: 'agent-rules/install-options-backup/v1', host,
+      content: fs.existsSync(source) ? fs.readFileSync(source, 'utf8') : null,
+    };
+  }
+
+  private restoreInstallOptions(host: string, backup: { content: string | null }): void {
+    const target = this.installOptionsPath(host);
+    if (backup.content === null) fs.rmSync(target, { force: true });
+    else {
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, backup.content, 'utf8');
+    }
+  }
+
+  private async installOne(host: RuntimePlatform, event: 'INSTALL' | 'UPDATE'): Promise<{ native: CertificationReceipt; readback: StaticReadback }> {
+    if (event === 'UPDATE' && !fs.existsSync(this.installOptionsPath(host))) throw new Error(`${host} is not installed; run agent-rules install --host ${host} first`);
+    const profiles = this.options.profiles ?? (event === 'UPDATE' ? this.previousProfiles(host) : []);
     const detection = await this.native.detect(host as HostId);
     if (!detection.present) {
       const native = await this.native.certify(host as HostId, 'DRY_RUN');
-      return { native, readback: { native: false, static: false, mcp: false, authority_tier: 'UNAVAILABLE', error: 'host is not locally available; no files changed' } };
+      return { native, readback: { native: false, static: false, mcp: false, profiles, authority_tier: 'UNAVAILABLE', error: 'host is not locally available; no files changed' } };
     }
     const inventory = await this.native.inventory(detection);
     const plan = await this.native.planInstall(host as HostId, detection, inventory);
+    const optionsBackup = this.captureInstallOptions(host);
     let nativeApplied = false;
     let mcpApplied = false;
     try {
-      await this.native.install(host as HostId, { dryRun: this.options.dryRun, enableMcp: this.options.enableMcp !== false && ['deepseek-harness', 'command-code'].includes(host), backupDir: plan.backupDir });
+      await this.native.install(host as HostId, { dryRun: this.options.dryRun, enableMcp: this.options.enableMcp !== false && ['deepseek-harness', 'command-code'].includes(host), backupDir: plan.backupDir, profiles });
       nativeApplied = this.options.dryRun !== true;
+      if (!this.options.dryRun) fs.writeFileSync(path.join(plan.backupDir, '.install-options-backup.json'), JSON.stringify(optionsBackup, null, 2) + '\n', 'utf8');
       if (this.options.enableMcp !== false && this.options.dryRun !== true && !['deepseek-harness', 'command-code'].includes(host)) {
         const registration = await registerHostMcpAdapters(this.assetsRoot(), host as HostId);
         mcpApplied = Boolean(registration.backupReceipt);
       }
-      const native = await this.native.certify(host as HostId, this.options.dryRun ? 'DRY_RUN' : 'INSTALLED');
+      const native = await this.native.certify(host as HostId, this.options.dryRun ? 'DRY_RUN' : 'INSTALLED', profiles);
       if (!staticOk(native)) throw new Error(`required static readback failed for ${host}`);
       const cleanup = this.options.dryRun ? undefined : cleanupHostRuntimeCallbacks(host as HostId, detection.homeDir);
       return {
         native,
         readback: {
-          native: true, static: true, mcp: ['PASS', 'UNSUPPORTED', 'NEEDS_USER'].includes(native.claims.NATIVE_MCP.status),
+          native: true, static: true, mcp: ['PASS', 'UNSUPPORTED', 'NEEDS_USER'].includes(native.claims.NATIVE_MCP.status), profiles,
           authority_tier: native.authority_tier, ...(cleanup ? { cleanup } : {}),
           ...(cleanup?.needsUser.length ? { error: cleanup.needsUser.join('; ') } : {}),
         },
@@ -161,7 +197,7 @@ export class InstallationCoordinator {
     try { await this.provisionProvidersOnce(); } catch (error) { errors._integrations = error instanceof Error ? error.message : String(error); }
     for (const value of hosts) {
       try {
-        const result = await this.installOne(value as RuntimePlatform);
+        const result = await this.installOne(value as RuntimePlatform, event);
         native[value] = result.native; readback[value] = result.readback;
         if (result.readback.error) errors[`${value}:cleanup`] = result.readback.error;
       } catch (error) { errors[value] = error instanceof Error ? error.message : String(error); }
@@ -185,9 +221,10 @@ export class InstallationCoordinator {
     const errors: Record<string, string> = {};
     for (const value of hosts) {
       try {
-        const receipt = await this.native.certify(value as HostId, 'DRY_RUN');
+        const profiles = this.previousProfiles(value);
+        const receipt = await this.native.certify(value as HostId, 'DRY_RUN', profiles);
         native[value] = receipt;
-        readback[value] = { native: receipt.claims.NATIVE_DISCOVERED.status === 'PASS', static: staticOk(receipt), mcp: ['PASS', 'UNSUPPORTED', 'NEEDS_USER'].includes(receipt.claims.NATIVE_MCP.status), authority_tier: receipt.authority_tier };
+        readback[value] = { native: receipt.claims.NATIVE_DISCOVERED.status === 'PASS', static: staticOk(receipt), mcp: ['PASS', 'UNSUPPORTED', 'NEEDS_USER'].includes(receipt.claims.NATIVE_MCP.status), profiles, authority_tier: receipt.authority_tier };
       } catch (error) { errors[value] = error instanceof Error ? error.message : String(error); }
     }
     return this.receipt('DOCTOR', hosts, native, readback, errors);
@@ -202,11 +239,24 @@ export class InstallationCoordinator {
       const detection = await this.native.detect(host as HostId);
       const inventory = await this.native.inventory(detection);
       const plan = await this.native.planInstall(host as HostId, detection, inventory);
+      const optionsBackupPath = path.join(plan.backupDir, '.install-options-backup.json');
+      if (!fs.existsSync(optionsBackupPath)) throw new Error(`no rollback generation is available for ${host}`);
+      const optionsBackup = JSON.parse(fs.readFileSync(optionsBackupPath, 'utf8')) as { schema?: string; host?: string; content?: string | null };
+      if (optionsBackup.schema !== 'agent-rules/install-options-backup/v1' || optionsBackup.host !== host || (optionsBackup.content !== null && typeof optionsBackup.content !== 'string')) throw new Error(`invalid rollback options receipt for ${host}`);
+      if (this.options.dryRun) {
+        const profiles = optionsBackup.content ? (() => { try { const value = JSON.parse(optionsBackup.content!) as { selected_profiles?: unknown }; return Array.isArray(value.selected_profiles) ? value.selected_profiles.filter((item): item is string => typeof item === 'string') : []; } catch { return []; } })() : [];
+        const current = await this.native.certify(host as HostId, 'DRY_RUN', this.previousProfiles(host));
+        native[host] = current;
+        readback[host] = { native: true, static: staticOk(current), mcp: ['PASS', 'UNSUPPORTED', 'NEEDS_USER'].includes(current.claims.NATIVE_MCP.status), profiles, authority_tier: current.authority_tier };
+        return this.receipt('ROLLBACK', [host], native, readback, errors);
+      }
       const restored = await this.native.rollback(host as HostId, plan.backupDir);
       if (!restored.ok || !restored.byteEqual) throw new Error(`static rollback failed for ${host}`);
-      const receipt = await this.native.certify(host as HostId, 'READBACK');
+      this.restoreInstallOptions(host, { content: optionsBackup.content ?? null });
+      const profiles = optionsBackup.content ? (() => { try { const value = JSON.parse(optionsBackup.content!) as { selected_profiles?: unknown }; return Array.isArray(value.selected_profiles) ? value.selected_profiles.filter((item): item is string => typeof item === 'string') : []; } catch { return []; } })() : [];
+      const receipt = await this.native.certify(host as HostId, 'READBACK', profiles);
       native[host] = receipt;
-      readback[host] = { native: true, static: staticOk(receipt), mcp: ['PASS', 'UNSUPPORTED', 'NEEDS_USER'].includes(receipt.claims.NATIVE_MCP.status), authority_tier: receipt.authority_tier };
+      readback[host] = { native: true, static: staticOk(receipt), mcp: ['PASS', 'UNSUPPORTED', 'NEEDS_USER'].includes(receipt.claims.NATIVE_MCP.status), profiles, authority_tier: receipt.authority_tier };
     } catch (error) { errors[host] = error instanceof Error ? error.message : String(error); }
     const receipt = this.receipt('ROLLBACK', [host], native, readback, errors); this.persist(receipt); return receipt;
   }
@@ -223,7 +273,7 @@ export class InstallationCoordinator {
         if (!this.options.dryRun) cleanupHostRuntimeCallbacks(value as HostId, detection.homeDir);
         const receipt = await this.native.certify(value as HostId, 'DRY_RUN');
         native[value] = receipt;
-        readback[value] = { native: false, static: false, mcp: false, authority_tier: detection.present ? 'NATIVE_ADVISORY' : 'UNAVAILABLE' };
+        readback[value] = { native: false, static: false, mcp: false, profiles: [], authority_tier: detection.present ? 'NATIVE_ADVISORY' : 'UNAVAILABLE' };
       } catch (error) { errors[value] = error instanceof Error ? error.message : String(error); }
     }
     if (!this.options.dryRun) cleanupCentralExecutableRuntime();

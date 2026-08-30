@@ -4,7 +4,7 @@ import fsp from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'agent-rules-packed-'));
@@ -68,7 +68,7 @@ try {
   if (process.platform !== 'win32') await fsp.chmod(fakeCodex, 0o755);
   const env = { ...process.env, HOME: home, USERPROFILE: home, CODEX_HOME: runtimeTarget, PATH: `${bin}${path.delimiter}${process.env.PATH ?? ''}` };
   const help = runCli(['--help'], { cwd: app, env });
-  for (const command of ['install', 'uninstall', 'doctor', 'status', 'integration', 'reference', 'route-native']) assert.match(help, new RegExp(`\\b${command}\\b`));
+  for (const command of ['install', 'update', 'rollback', 'uninstall', 'doctor', 'status', 'integration', 'reference', 'route-native']) assert.match(help, new RegExp(`\\b${command}\\b`));
   for (const retired of ['run', 'init', 'plan', 'goal']) assert.doesNotMatch(help, new RegExp(`^\\s+${retired}\\s`, 'm'));
 
   const routed = runCli(['route-native', '--stdin'], {
@@ -83,7 +83,6 @@ try {
   assert.equal(capsule.model.requested, 'owner/model');
 
   const installedRoot = path.join(app, 'node_modules/@initforge/agent-rules');
-  runCli(['--json', 'install', 'codex', '--no-integrations'], { cwd: app, env });
   runCli(['--json', 'install', 'codex', '--no-integrations'], { cwd: app, env });
   const doctor = runResult(process.execPath, [cliEntry, '--json', 'doctor', 'codex'], { cwd: app, env });
   assert.equal(doctor.error, undefined);
@@ -109,10 +108,10 @@ try {
   assert.ok((await fsp.readFile(installedSkill)).equals(skillBytes));
   if (fs.existsSync(movedState)) await fsp.rename(movedState, stateRoot);
   await fsp.rename(movedPackage, installedRoot);
-  const coordinatorUrl = pathToFileURL(path.join(installedRoot, 'dist/runtime/installation-coordinator.js')).href;
-  run(process.execPath, ['--input-type=module', '--eval',
-    `import { createInstallationCoordinator } from ${JSON.stringify(coordinatorUrl)}; const r = await createInstallationCoordinator({enableMcp:false}).rollback('codex'); if (r.errors && Object.keys(r.errors).length) throw new Error(JSON.stringify(r.errors));`,
-  ], { cwd: app, env });
+  runCli(['--json', 'update', 'codex', '--no-integrations'], { cwd: app, env });
+  const doctorAfterUpdate = runResult(process.execPath, [cliEntry, '--json', 'doctor', 'codex'], { cwd: app, env });
+  assert.equal(doctorAfterUpdate.error, undefined);
+  runCli(['--json', 'rollback', 'codex'], { cwd: app, env });
   runCli(['uninstall', 'codex'], { cwd: app, env });
   assert.equal(fs.existsSync(path.join(runtimeTarget, 'agent-rules-runtime')), false);
   assert.equal(containsAgentDirectory(temp), false);

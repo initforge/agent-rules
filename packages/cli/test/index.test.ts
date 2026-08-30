@@ -11,13 +11,13 @@ describe('public CLI architecture', () => {
     const source = fs.readFileSync(path.join(root, 'packages/cli/src/index.ts'), 'utf8');
     const commands = [...source.matchAll(/\.command\("([^"]+)"\)/g)].map((match) => match[1]);
     expect(commands).toEqual([
-      'install', 'uninstall', 'doctor', 'status', 'integration', 'reference', 'route-native',
+      'install', 'update', 'rollback', 'uninstall', 'doctor', 'status', 'integration', 'reference', 'route-native',
     ]);
     expect(commands).not.toEqual(expect.arrayContaining(['init', 'run', 'plan', 'goal', 'close']));
   });
 
   it('uses canonical source modules and has no retired command facades', () => {
-    for (const file of ['install.ts', 'uninstall.ts', 'integration.ts', 'reference.ts']) {
+    for (const file of ['install.ts', 'update.ts', 'rollback.ts', 'uninstall.ts', 'integration.ts', 'reference.ts']) {
       expect(fs.existsSync(path.join(root, 'packages/cli/src/commands', file))).toBe(true);
     }
     for (const retired of ['doctor.ts', 'northstar-ux.ts']) {
@@ -27,6 +27,8 @@ describe('public CLI architecture', () => {
 
   it('exports the effectful command handlers', async () => {
     expect(typeof (await import('../src/commands/install.js')).installCmd).toBe('function');
+    expect(typeof (await import('../src/commands/update.js')).updateCmd).toBe('function');
+    expect(typeof (await import('../src/commands/rollback.js')).rollbackCmd).toBe('function');
     expect(typeof (await import('../src/commands/uninstall.js')).uninstallCmd).toBe('function');
     expect(typeof (await import('../src/commands/integration.js')).integrationCmd).toBe('function');
     expect(typeof (await import('../src/commands/reference.js')).readReference).toBe('function');

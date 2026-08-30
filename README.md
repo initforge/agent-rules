@@ -43,6 +43,23 @@ node packages/cli/dist/index.js install --all
 node packages/cli/dist/index.js doctor --all --json
 ```
 
+Operator lifecycle:
+
+```bash
+# First install, optionally with an explicit profile
+agent-rules install --all --profile 5fedu
+
+# Update current installs; omitted profiles are preserved
+agent-rules update --all
+
+# Replace or clear the profile set
+agent-rules update --all --profile 5fedu
+agent-rules update --all --clear-profiles
+
+# Restore the immediately previous owned generation
+agent-rules rollback codex
+```
+
 The installer changes only harness-owned or parity-proven files. Unowned
 collisions become `NEEDS_USER`; unavailable hosts remain `UNSUPPORTED` or
 `UNAVAILABLE` and are never reported as native PASS.
@@ -50,7 +67,7 @@ collisions become `NEEDS_USER`; unavailable hosts remain `UNSUPPORTED` or
 Public commands:
 
 ```text
-install  uninstall  doctor  status  integration  reference  route-native
+install  update  rollback  uninstall  doctor  status  integration  reference  route-native
 ```
 
 ## Develop

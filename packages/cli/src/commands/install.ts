@@ -7,7 +7,8 @@ import { COORDINATOR_HOSTS, createInstallationCoordinator } from "../runtime/ins
  */
 export async function installCmd(
   args: string[],
-  options: CliOptions
+  options: CliOptions,
+  command: { mode?: "install" | "update"; profiles?: string[] } = {},
 ): Promise<CommandResult> {
   const targetPlatforms = args.filter((a) => !a.startsWith("-"));
   const validPlatforms = [...COORDINATOR_HOSTS, "all"] as const;
@@ -26,10 +27,12 @@ export async function installCmd(
     : targetPlatforms;
 
   const installIntegrations = !args.includes("--no-integrations");
-  const coordinator = createInstallationCoordinator({ dryRun: options.dryRun, enableMcp: installIntegrations });
+  const mode = command.mode ?? "install";
+  const completedVerb = mode === "install" ? "installed" : "updated";
+  const coordinator = createInstallationCoordinator({ dryRun: options.dryRun, enableMcp: installIntegrations, ...(command.profiles ? { profiles: command.profiles } : {}) });
 
   try {
-    const receipt = await coordinator.install(platformsToInstall);
+    const receipt = mode === "update" ? await coordinator.update(platformsToInstall) : await coordinator.install(platformsToInstall);
     const results: Record<string, { ok: boolean; skipped: boolean; action: string; tier: string; candidate_id: string; reason?: string }> = {};
     for (const host of platformsToInstall) {
       const readback = receipt.readback?.[host];
@@ -49,7 +52,7 @@ export async function installCmd(
       results[host] = {
         ok,
         skipped,
-        action: skipped ? "host not locally available; no files changed" : ok && tier === "NATIVE_ENFORCED" ? "installed and native-enforced" : ok ? "installed with advisory authority" : "verification incomplete",
+        action: skipped ? "host not locally available; no files changed" : ok ? `${completedVerb} static capability` : "verification incomplete",
         tier,
         candidate_id: receipt.candidate_id,
         ...(ok || skipped ? {} : { reason }),
@@ -61,10 +64,10 @@ export async function installCmd(
     return {
       exitCode: failed.length > 0 ? ExitCode.LegacyFailed : ExitCode.Success,
       message: failed.length > 0
-        ? `${failed.length} host(s) installed without complete live verification`
+        ? `${failed.length} host(s) failed static ${mode}`
         : advisory.length > 0 || skipped.length > 0
-          ? `${Object.values(results).filter((result) => result.ok).length} present host(s) installed; ${advisory.length} advisory; ${skipped.length} unavailable skipped`
-          : platformsToInstall.length === 1 ? `${platformsToInstall[0]}: installed and native-enforced` : `All ${platformsToInstall.length} platforms native-enforced`,
+          ? `${Object.values(results).filter((result) => result.ok).length} present host(s) ${completedVerb}; ${advisory.length} advisory; ${skipped.length} unavailable skipped`
+          : platformsToInstall.length === 1 ? `${platformsToInstall[0]}: ${mode} complete` : `All ${platformsToInstall.length} platforms ${mode} complete`,
       data: { candidate_id: receipt.candidate_id, hosts: platformsToInstall, results, readback: receipt.readback ?? {}, errors: receipt.errors ?? {} },
     };
   } catch (error) {

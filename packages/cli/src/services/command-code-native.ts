@@ -225,7 +225,7 @@ function resolveCanonicalRepoRoot(start = process.cwd()): string {
   throw new Error(`canonical rules manifest missing above: ${start}`);
 }
 
-export function installCommandCodeMod(home = commandCodeHome(), repoRoot = process.cwd()): string {
+export function installCommandCodeMod(home = commandCodeHome(), repoRoot = process.cwd(), compiledRules?: string): string {
   repoRoot = resolveCanonicalRepoRoot(repoRoot);
   const source = commandCodeModSourcePath(repoRoot);
   if (!fs.existsSync(source)) throw new Error(`Command Code managed mod source is missing: ${source}`);
@@ -239,7 +239,7 @@ export function installCommandCodeMod(home = commandCodeHome(), repoRoot = proce
     .map((line) => line.match(/^\s*-\s+([\w.-]+\.md)\s*$/)?.[1])
     .filter((name): name is string => Boolean(name));
   if (names.length !== 5) throw new Error(`canonical rules manifest must name exactly five rules; found ${names.length}`);
-  const rules = names.map((name) => fs.readFileSync(path.join(repoRoot, "rules", name), "utf8").trim()).join("\n\n");
+  const rules = compiledRules ?? names.map((name) => fs.readFileSync(path.join(repoRoot, "rules", name), "utf8").trim()).join("\n\n");
   const template = fs.readFileSync(source, "utf8");
   if (!template.includes("__AGENT_RULES_RULES__")) {
     throw new Error(`Command Code static mod template lacks canonical rules placeholder: ${source}`);

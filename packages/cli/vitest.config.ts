@@ -6,6 +6,7 @@ export default defineConfig({
       'test/host-adapters-contract.test.ts',
       'test/index.test.ts',
       'test/install.test.ts',
+      'test/operator-ux.test.ts',
       'test/parity.test.ts',
       'test/route-native.test.ts',
       'test/static-candidate.test.ts',

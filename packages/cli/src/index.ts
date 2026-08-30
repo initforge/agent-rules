@@ -3,6 +3,8 @@
 import { Command } from "commander";
 import { ExitCode, type CliOptions } from "./types.js";
 import { installCmd } from "./commands/install.js";
+import { updateCmd } from "./commands/update.js";
+import { rollbackCmd } from "./commands/rollback.js";
 import { collectLiveHealth } from "./runtime/health-coordinator.js";
 import { uninstallCmd } from "./commands/uninstall.js";
 import { integrationCmd } from "./commands/integration.js";
@@ -42,13 +44,14 @@ function formatOutput(
 // 1. install
 program
   .command("install")
-  .description("Install agent-rules native runtime for one or all platforms")
+  .description("Install static agent-rules capability for one or all hosts")
   .argument("[platform]", "Platform name (e.g. codex, claude, grok, opencode, antigravity, cursor, deepseek-harness, command-code, omp, all)")
   .option("--host <id>", "Target host (repeatable)", collectValue, [])
   .option("--all", "Install all 9 supported native hosts")
-  .option("--no-integrations", "Install rules, skills and runtime without registering standard MCP integrations")
+  .option("--no-integrations", "Install rules and skills without registering standard MCP integrations")
+  .option("--profile <id>", "Materialize an explicit profile (repeatable)", collectValue, [])
   .option("--dry-run", "Show what would be done without executing")
-  .action(async (platformArg: string | undefined, cmdOpts: { host: string[]; all?: boolean; dryRun?: boolean; integrations?: boolean }) => {
+  .action(async (platformArg: string | undefined, cmdOpts: { host: string[]; all?: boolean; dryRun?: boolean; integrations?: boolean; profile?: string[] }) => {
     const opts = program.optsWithGlobals() as CliOptions;
     if (cmdOpts.dryRun) opts.dryRun = true;
     const targets = cmdOpts.all
@@ -59,14 +62,53 @@ program
       ? [platformArg]
       : ["all"];
     const args = [...targets, ...(cmdOpts.integrations === false ? ["--no-integrations"] : [])];
-    const result = await installCmd(args, opts);
+    const result = await installCmd(args, opts, { profiles: cmdOpts.profile ?? [] });
     formatOutput(result, opts);
   });
 
-// 2. uninstall
+// 2. update
+program
+  .command("update")
+  .description("Update already-installed hosts to the current static candidate")
+  .argument("[platform]", "Host name or all")
+  .option("--host <id>", "Target host (repeatable)", collectValue, [])
+  .option("--all", "Update all installed hosts")
+  .option("--profile <id>", "Replace the selected profile set (repeatable); omit to preserve it", collectValue)
+  .option("--clear-profiles", "Remove all previously selected profiles")
+  .option("--no-integrations", "Update static rules and skills without changing MCP registrations")
+  .option("--dry-run", "Preview without writing")
+  .action(async (platformArg: string | undefined, cmdOpts: { host: string[]; all?: boolean; dryRun?: boolean; integrations?: boolean; profile?: string[]; clearProfiles?: boolean }) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    if (cmdOpts.dryRun) opts.dryRun = true;
+    if (cmdOpts.clearProfiles && cmdOpts.profile?.length) {
+      formatOutput({ exitCode: ExitCode.InvalidArgument, message: "Use either --profile or --clear-profiles, not both." }, opts);
+      return;
+    }
+    const targets = cmdOpts.all ? ["all"] : cmdOpts.host?.length ? cmdOpts.host : platformArg ? [platformArg] : ["all"];
+    const args = [...targets, ...(cmdOpts.integrations === false ? ["--no-integrations"] : [])];
+    const result = await updateCmd(args, opts, cmdOpts.clearProfiles ? [] : cmdOpts.profile);
+    formatOutput(result, opts);
+  });
+
+// 3. rollback
+program
+  .command("rollback")
+  .description("Restore the previous agent-rules-owned generation")
+  .argument("[platform]", "Host name or all")
+  .option("--host <id>", "Target host (repeatable)", collectValue, [])
+  .option("--all", "Rollback all hosts with an available generation")
+  .option("--dry-run", "Preview without writing")
+  .action(async (platformArg: string | undefined, cmdOpts: { host: string[]; all?: boolean; dryRun?: boolean }) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    if (cmdOpts.dryRun) opts.dryRun = true;
+    const targets = cmdOpts.all ? ["all"] : cmdOpts.host?.length ? cmdOpts.host : platformArg ? [platformArg] : [];
+    formatOutput(await rollbackCmd(targets, opts), opts);
+  });
+
+// 4. uninstall
 program
   .command("uninstall")
-  .description("Uninstall agent-rules native runtime for one or all platforms")
+  .description("Remove agent-rules-owned static capability from one or all hosts")
   .argument("[platform]", "Platform name (e.g. codex, claude, grok, opencode, antigravity, cursor, deepseek-harness, command-code, omp, all)")
   .option("--host <id>", "Target host (repeatable)", collectValue, [])
   .option("--all", "Uninstall all 9 supported native hosts")
@@ -85,7 +127,7 @@ program
     formatOutput(result, opts);
   });
 
-// 3. doctor
+// 5. doctor
 program
   .command("doctor")
   .description("Run platform diagnostics and doctor checks")
@@ -99,7 +141,7 @@ program
     formatOutput({ exitCode: health.status === "HEALTHY" ? ExitCode.Success : ExitCode.LegacyFailed, message: `Live health: ${health.status}`, data: health as unknown as Record<string, unknown> }, opts);
   });
 
-// 4. status
+// 6. status
 program
   .command("status")
   .description("Show current host health")
@@ -114,7 +156,7 @@ program
     }
   });
 
-// 5. integration
+// 7. integration
 program
   .command("integration")
   .description("Integration commands (list, enable, disable, doctor)")
@@ -127,7 +169,7 @@ program
     formatOutput(result, opts);
   });
 
-// 6. reference
+// 8. reference
 program
   .command("reference")
   .description("Read or search a verified domain-pack reference without copying it into the project")

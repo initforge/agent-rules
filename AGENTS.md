@@ -46,5 +46,5 @@ source, run typecheck plus focused tests for the seam, then run
 `npm run verify:all` once for an integrated release candidate. Build and install
 through the CLI; do not copy files into host homes manually.
 
-Public operator commands are `install`, `uninstall`, `doctor`, `status`,
-`integration`, `reference`, and `route-native`.
+Public operator commands are `install`, `update`, `rollback`, `uninstall`,
+`doctor`, `status`, `integration`, `reference`, and `route-native`.

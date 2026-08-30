@@ -3,7 +3,9 @@ import { ExitCode } from "../src/types.js";
 
 const mockNativeInstall = vi.fn(async () => ({ status: "Ready" }));
 const mockCoordinatorInstall = vi.fn(async () => ({ candidate_id: "c".repeat(64), readback: Object.fromEntries(["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code", "omp"].map((host) => [host, { native: true, static: true, mcp: true, authority_tier: "NATIVE_ADVISORY" }])) }));
-const mockCreateCoordinator = vi.fn(() => ({ install: mockCoordinatorInstall }));
+const mockCoordinatorUpdate = vi.fn(async () => ({ candidate_id: "c".repeat(64), readback: { codex: { native: true, static: true, mcp: true, authority_tier: "NATIVE_ADVISORY" } } }));
+const mockCoordinatorRollback = vi.fn(async () => ({ candidate_id: "c".repeat(64), readback: { codex: { native: true, static: true, mcp: true, authority_tier: "NATIVE_ADVISORY", profiles: [] } } }));
+const mockCreateCoordinator = vi.fn(() => ({ install: mockCoordinatorInstall, update: mockCoordinatorUpdate, rollback: mockCoordinatorRollback }));
 
 vi.mock("../src/runtime/installation-coordinator.js", () => ({
   COORDINATOR_HOSTS: ["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code", "omp"],
@@ -48,6 +50,8 @@ describe("install wrapper", () => {
     mockCoordinatorInstall.mockReset();
     mockCoordinatorInstall.mockResolvedValue({ candidate_id: "c".repeat(64), readback: Object.fromEntries(["opencode", "codex", "claude", "grok", "antigravity", "cursor", "deepseek-harness", "command-code", "omp"].map((host) => [host, { native: true, static: true, mcp: true, authority_tier: "NATIVE_ADVISORY" }])) });
     mockCreateCoordinator.mockClear();
+    mockCoordinatorUpdate.mockClear();
+    mockCoordinatorRollback.mockClear();
     mockProvision.mockClear();
   });
 
@@ -71,6 +75,21 @@ describe("install wrapper", () => {
     const { installCmd } = await import("../src/commands/install.js");
     const result = await installCmd(["all"], { dryRun: false, verbose: false, json: false });
     expect(result.exitCode).toBe(ExitCode.LegacyFailed);
+  });
+
+  it("updates installed hosts and forwards explicit profiles", async () => {
+    const { updateCmd } = await import('../src/commands/update.js');
+    const result = await updateCmd(['codex'], { dryRun: false, verbose: false, json: false }, ['5fedu']);
+    expect(result.exitCode).toBe(ExitCode.Success);
+    expect(mockCreateCoordinator).toHaveBeenCalledWith({ dryRun: false, enableMcp: true, profiles: ['5fedu'] });
+    expect(mockCoordinatorUpdate).toHaveBeenCalledWith(['codex']);
+  });
+
+  it("requires an explicit rollback target", async () => {
+    const { rollbackCmd } = await import('../src/commands/rollback.js');
+    const result = await rollbackCmd([], { dryRun: false, verbose: false, json: false });
+    expect(result.exitCode).toBe(ExitCode.InvalidArgument);
+    expect(mockCoordinatorRollback).not.toHaveBeenCalled();
   });
 
   it("skips an unavailable host without treating absence as an install failure", async () => {

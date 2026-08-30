@@ -126,7 +126,7 @@ try {
   await check('public CLI has no shadow plan or execution command', () => {
     const source = fs.readFileSync(path.join(root, 'packages/cli/src/index.ts'), 'utf8');
     const commands = [...source.matchAll(/\.command\("([^"]+)"\)/g)].map((match) => match[1]);
-    assert.deepEqual(commands, ['install', 'uninstall', 'doctor', 'status', 'integration', 'reference', 'route-native']);
+    assert.deepEqual(commands, ['install', 'update', 'rollback', 'uninstall', 'doctor', 'status', 'integration', 'reference', 'route-native']);
   });
 } finally {
   fs.rmSync(temp, { recursive: true, force: true });

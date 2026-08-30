@@ -249,6 +249,14 @@ export async function projectSkillsToGlobal(
 
   const entries = await fs.readdir(sourceSkillsRoot, { withFileTypes: true });
   const skillNames = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+  const desiredNames = new Set(skillNames);
+  const targetRootSet = new Set(targetRoots.map((root) => path.resolve(root)));
+  const staleOwned = Object.entries(existingManifest.projections).filter(([, projection]) =>
+    projection.platform === platform
+    && projection.kind === 'skill'
+    && targetRootSet.has(path.dirname(path.resolve(projection.path)))
+    && !desiredNames.has(path.basename(projection.path)),
+  );
 
   // Preflight every destination before writing anything.  A partial sync that
   // silently leaves one user-owned/stale skill alongside fresh copies makes
@@ -267,6 +275,11 @@ export async function projectSkillsToGlobal(
           collisions.push(`${entry.name} @ ${skillTargetDir}`);
         }
       }
+    }
+  }
+  for (const [, projection] of staleOwned) {
+    if (await exists(projection.path) && await skillProjectionHash(projection.path) !== projection.sha256) {
+      collisions.push(`stale owned skill was user-modified @ ${projection.path}`);
     }
   }
   if (collisions.length > 0) return { projected, collisions, updatedManifest: existingManifest };
@@ -289,6 +302,16 @@ export async function projectSkillsToGlobal(
         entriesBackup.push({ target, backupDirectory });
       }
     }
+    for (const [, projection] of staleOwned) {
+      if (entriesBackup.some((entry) => path.resolve(entry.target) === path.resolve(projection.path))) continue;
+      let backupDirectory: string | null = null;
+      if (await exists(projection.path)) {
+        backupDirectory = path.join('skill-projections', String(index++), path.basename(projection.path));
+        await fs.mkdir(path.dirname(path.join(rollbackRoot, backupDirectory)), { recursive: true });
+        await fs.cp(projection.path, path.join(rollbackRoot, backupDirectory), { recursive: true, force: false, errorOnExist: true });
+      }
+      entriesBackup.push({ target: projection.path, backupDirectory });
+    }
     const backup: SkillProjectionBackupManifest = {
       schema: 'agent-rules/skill-projection-backup/v1',
       platform,
@@ -300,6 +323,10 @@ export async function projectSkillsToGlobal(
   }
 
   try {
+    for (const [key, projection] of staleOwned) {
+      await fs.rm(projection.path, { recursive: true, force: true });
+      delete existingManifest.projections[key];
+    }
     for (const targetRoot of targetRoots) {
       await fs.mkdir(targetRoot, { recursive: true });
       if (legacyManagedRoots.has(path.resolve(targetRoot))) {

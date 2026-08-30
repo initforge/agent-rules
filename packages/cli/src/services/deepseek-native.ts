@@ -361,7 +361,7 @@ export async function installDeepseekHarnessNative(
   detection: Detection,
   backupDir: string,
   certify: () => Promise<CertificationReceipt>,
-  options: { enableMcp?: boolean } = {},
+  options: { enableMcp?: boolean; compiledRules?: string; skillSourceRoot?: string } = {},
 ): Promise<CertificationReceipt> {
   const home = detection.homeDir;
   const profiles = discoverDshProfiles(home);
@@ -374,8 +374,8 @@ export async function installDeepseekHarnessNative(
     path.join(home, 'profiles', profile, 'pnpm-lock.yaml'),
     path.join(home, 'profiles', profile, 'pnpm-workspace.yaml'),
   ]);
-  const skillSources = dshNativeSkillFiles(repositoryRoot);
-  const sourceSkillsRoot = path.join(repositoryRoot, 'skills');
+  const sourceSkillsRoot = options.skillSourceRoot ?? path.join(repositoryRoot, 'skills');
+  const skillSources = dshNativeSkillFiles(path.dirname(sourceSkillsRoot));
   const skillTargets = skillSources.map((source) => path.join(home, 'skills', path.relative(sourceSkillsRoot, source)));
   const files = [agentsPath, ...patchPaths, ...profileMetadata, ...skillTargets];
   const before = new Map<string, Buffer | null>();
@@ -402,7 +402,7 @@ export async function installDeepseekHarnessNative(
     .map((line) => line.match(/^\s*-\s+([\w.-]+\.md)\s*$/)?.[1])
     .filter((name): name is string => Boolean(name));
   if (ruleNames.length !== 5) throw new Error(`canonical rules manifest must name exactly five rules; found ${ruleNames.length}`);
-  const canonicalRules = ruleNames.map((name) => fs.readFileSync(path.join(repositoryRoot, 'rules', name), 'utf8').trim()).join('\n\n');
+  const canonicalRules = options.compiledRules ?? ruleNames.map((name) => fs.readFileSync(path.join(repositoryRoot, 'rules', name), 'utf8').trim()).join('\n\n');
   const managedAgents = [
     '<!-- agent-rules:managed:deepseek-harness BEGIN (native DSH system prompt seam) -->',
     '# Agent Rules — DeepSeek Harness native',

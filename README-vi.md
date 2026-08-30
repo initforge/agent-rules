@@ -42,6 +42,23 @@ node packages/cli/dist/index.js install --all
 node packages/cli/dist/index.js doctor --all --json
 ```
 
+Luồng operator:
+
+```bash
+# Cài lần đầu, có thể chọn explicit profile
+agent-rules install --all --profile 5fedu
+
+# Update; nếu không truyền profile thì giữ lựa chọn hiện tại
+agent-rules update --all
+
+# Thay hoặc xóa profile selection
+agent-rules update --all --profile 5fedu
+agent-rules update --all --clear-profiles
+
+# Quay lại generation agent-rules sở hữu ngay trước đó
+agent-rules rollback codex
+```
+
 Installer chỉ thay đổi file do harness sở hữu hoặc đã chứng minh parity. Xung
 đột ownership trả `NEEDS_USER`; host không có mặt trả `UNSUPPORTED` hoặc
 `UNAVAILABLE`, không được báo native PASS giả.
@@ -49,7 +66,7 @@ Installer chỉ thay đổi file do harness sở hữu hoặc đã chứng minh 
 Các lệnh public:
 
 ```text
-install  uninstall  doctor  status  integration  reference  route-native
+install  update  rollback  uninstall  doctor  status  integration  reference  route-native
 ```
 
 ## Phát triển

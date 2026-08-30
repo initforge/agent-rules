@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
@@ -114,7 +115,17 @@ function findRepositoryRoot(): string {
 
 /** Render the canonical five rules into a self-contained native projection.
  * Installed hosts must never depend on a checkout or an abandoned worktree. */
-function renderCanonicalRules(repositoryRoot = findRepositoryRoot()): string {
+function normalizeProfiles(repositoryRoot: string, profileIds: readonly string[] = []): string[] {
+  const unique = [...new Set(profileIds.map((id) => id.trim()).filter(Boolean))].sort();
+  for (const id of unique) {
+    if (!/^[a-z0-9][a-z0-9._-]*$/i.test(id)) throw new Error(`invalid profile id: ${id}`);
+    const root = path.join(repositoryRoot, 'profiles', id);
+    if (!fs.existsSync(path.join(root, 'profile.yaml'))) throw new Error(`unknown profile: ${id}`);
+  }
+  return unique;
+}
+
+function renderCanonicalRules(repositoryRoot = findRepositoryRoot(), profileIds: readonly string[] = []): string {
   const manifest = path.join(repositoryRoot, 'rules', 'manifest.yaml');
   if (!fs.existsSync(manifest)) throw new Error(`canonical rules manifest missing: ${manifest}`);
   const raw = fs.readFileSync(manifest, 'utf8');
@@ -122,11 +133,44 @@ function renderCanonicalRules(repositoryRoot = findRepositoryRoot()): string {
   const names = matches.length > 0
     ? matches
     : ['00-intent-scope-safety.md', '10-execution-planning-delegation.md', '20-proof-outcome.md', '30-context-skill-mcp.md', '40-maintainer.md'];
-  return names.map((name) => {
+  const base = names.map((name) => {
     const source = path.join(repositoryRoot, 'rules', name);
     if (!fs.existsSync(source)) throw new Error(`canonical rule missing: ${name}`);
     return fs.readFileSync(source, 'utf8').trim();
-  }).join('\n\n');
+  });
+  const profiles = normalizeProfiles(repositoryRoot, profileIds).flatMap((id) => {
+    const root = path.join(repositoryRoot, 'profiles', id);
+    const files = [path.join(root, 'README.md')];
+    const rules = path.join(root, 'rules');
+    if (fs.existsSync(rules)) files.push(...fs.readdirSync(rules, { withFileTypes: true }).filter((entry) => entry.isFile() && entry.name.endsWith('.md')).map((entry) => path.join(rules, entry.name)).sort());
+    return [`# Explicit profile: ${id}`, ...files.filter((file) => fs.existsSync(file)).map((file) => fs.readFileSync(file, 'utf8').trim())];
+  });
+  return [...base, ...profiles].join('\n\n');
+}
+
+function compileSkillSource(repositoryRoot: string, profileIds: readonly string[]): { root: string; profiles: string[]; cleanup: () => void } {
+  const profiles = normalizeProfiles(repositoryRoot, profileIds);
+  if (profiles.length === 0) return { root: path.join(repositoryRoot, 'skills'), profiles, cleanup: () => undefined };
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-rules-profile-skills-'));
+  const root = path.join(temp, 'skills');
+  fs.mkdirSync(root, { recursive: true });
+  const copySkills = (source: string): void => {
+    if (!fs.existsSync(source)) return;
+    for (const entry of fs.readdirSync(source, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const target = path.join(root, entry.name);
+      if (fs.existsSync(target)) throw new Error(`profile skill conflicts with another selected skill: ${entry.name}`);
+      fs.cpSync(path.join(source, entry.name), target, { recursive: true, force: false, errorOnExist: true });
+    }
+  };
+  try {
+    copySkills(path.join(repositoryRoot, 'skills'));
+    for (const id of profiles) copySkills(path.join(repositoryRoot, 'profiles', id, 'skills'));
+    return { root, profiles, cleanup: () => fs.rmSync(temp, { recursive: true, force: true }) };
+  } catch (error) {
+    fs.rmSync(temp, { recursive: true, force: true });
+    throw error;
+  }
 }
 
 /** Resolve the one skill projection surface declared by the native contract. */
@@ -285,13 +329,16 @@ export class NativeInstaller {
     return this.probe.planInstall(host, d);
   }
 
-  async install(host: HostId, opts?: { dryRun?: boolean; enableMcp?: boolean; backupDir?: string }): Promise<CertificationReceipt> {
+  async install(host: HostId, opts?: { dryRun?: boolean; enableMcp?: boolean; backupDir?: string; profiles?: string[] }): Promise<CertificationReceipt> {
     if (opts?.dryRun) {
       const detection = await this.detect(host);
       const inventory = await this.inventory(detection);
       await this.planInstall(host, detection, inventory);
-      return this.certify(host, 'DRY_RUN');
+      return this.certify(host, 'DRY_RUN', opts.profiles ?? []);
     }
+    const repositoryRoot = findRepositoryRoot();
+    const compiledSkills = compileSkillSource(repositoryRoot, opts?.profiles ?? []);
+    const compiledRules = renderCanonicalRules(repositoryRoot, compiledSkills.profiles);
     const lease = acquireWorktreeWriterLease(host);
     let backupDir = opts?.backupDir ?? '';
     try {
@@ -304,7 +351,7 @@ export class NativeInstaller {
       // The native coordinator owns the complete host projection. This helper
       // only copies skills and records ownership; it cannot mutate MCP config.
       const skillRoot = resolveNativeSkillRoot(host, detection);
-      const skills = await projectSkillsToGlobal(path.join(findRepositoryRoot(), 'skills'), host as RuntimePlatform, {
+      const skills = await projectSkillsToGlobal(compiledSkills.root, host as RuntimePlatform, {
         ...(skillRoot ? { targetRoots: [skillRoot] } : {}),
         rollbackRoot: backupDir,
       });
@@ -313,17 +360,17 @@ export class NativeInstaller {
       }
 
       if (host === 'deepseek-harness') {
-        const receipt = await this.installDeepseekHarness(detection, backupDir, opts?.enableMcp === true);
+        const receipt = await this.installDeepseekHarness(detection, backupDir, opts?.enableMcp === true, compiledRules, compiledSkills.root, compiledSkills.profiles);
         this.assertInstalledReadback(receipt);
         return receipt;
       }
 
       if (host === 'command-code') {
         captureCommandCodeBackup(detection.homeDir, backupDir);
-        installCommandCodeMod(detection.homeDir, findRepositoryRoot());
+        installCommandCodeMod(detection.homeDir, repositoryRoot, compiledRules);
         if (opts?.enableMcp === true) writeCommandCodeMcpConfig(detection.homeDir);
         sealCommandCodeBackup(backupDir);
-        const receipt = await this.certify(host, 'INSTALLED');
+        const receipt = await this.certify(host, 'INSTALLED', compiledSkills.profiles);
         this.assertInstalledReadback(receipt);
         return receipt;
       }
@@ -358,7 +405,8 @@ export class NativeInstaller {
         // managed block for file-based surfaces (that would be claim-filling).
         const isNonFileInstruction = rawInstr.includes('bundle') || rawInstr.includes('mods') || rawInstr.includes('/rules') || rawInstr.endsWith('rules') || rawInstr.endsWith('rules/');
 
-        const managed = `<!-- agent-rules:managed:${host} BEGIN (do not edit manually) -->\n# Agent Rules — ${host} native (global)\nThis self-contained static projection is owned by agent-rules and is bound to candidate ${computeCandidateFingerprint().slice(0, 12)}.\n\n${renderCanonicalRules()}\n\nAt task intake, resolve explicit skill mentions and deterministic repository facts once through native skill discovery. If advanced routing is unavailable, continue with these base rules; never ask the user to run a router.\n<!-- agent-rules:managed:${host} END -->\n`;
+        const profileMarkers = compiledSkills.profiles.map((id) => `<!-- agent-rules:profile:${id} -->`).join('\n');
+        const managed = `<!-- agent-rules:managed:${host} BEGIN (do not edit manually) -->\n# Agent Rules — ${host} native (global)\nThis self-contained static projection is owned by agent-rules and is bound to candidate ${computeCandidateFingerprint().slice(0, 12)}.\n${profileMarkers}\n\n${compiledRules}\n\nAt task intake, resolve explicit skill mentions and deterministic repository facts once through native skill discovery. If advanced routing is unavailable, continue with these base rules; never ask the user to run a router.\n<!-- agent-rules:managed:${host} END -->\n`;
 
         if ((host === 'grok' || host === 'cursor') && instrPath) {
           fs.mkdirSync(instrPath, { recursive: true });
@@ -406,7 +454,7 @@ export class NativeInstaller {
 
       sealNativeBackupDirectory(backupDir);
 
-      const receipt = await this.certify(host, 'INSTALLED');
+      const receipt = await this.certify(host, 'INSTALLED', compiledSkills.profiles);
       this.assertInstalledReadback(receipt);
       return receipt;
     } catch (e) {
@@ -422,12 +470,13 @@ export class NativeInstaller {
       throw e;
     } finally {
       lease.release();
+      compiledSkills.cleanup();
     }
   }
 
   /** DSH uses native Cordis profiles, not the generic mcp.json projection. */
-  private async installDeepseekHarness(detection: Detection, backupDir: string, enableMcp: boolean): Promise<CertificationReceipt> {
-    return installDeepseekHarnessNative(detection, backupDir, () => this.certify('deepseek-harness', 'INSTALLED'), { enableMcp });
+  private async installDeepseekHarness(detection: Detection, backupDir: string, enableMcp: boolean, compiledRules: string, skillSourceRoot: string, profiles: string[]): Promise<CertificationReceipt> {
+    return installDeepseekHarnessNative(detection, backupDir, () => this.certify('deepseek-harness', 'INSTALLED', profiles), { enableMcp, compiledRules, skillSourceRoot });
   }
 
   private assertInstalledReadback(receipt: CertificationReceipt): void {
@@ -436,13 +485,14 @@ export class NativeInstaller {
     }
   }
 
-  async certify(host: HostId, mode: 'INSTALLED' | 'DRY_RUN' | 'READBACK' = 'READBACK'): Promise<CertificationReceipt> {
+  async certify(host: HostId, mode: 'INSTALLED' | 'DRY_RUN' | 'READBACK' = 'READBACK', profiles: readonly string[] = []): Promise<CertificationReceipt> {
     const detection = await this.detect(host);
     const gitHead = getGitHead();
     const candidateFingerprint = computeCandidateFingerprint();
     const now = new Date().toISOString();
     const contract = getNativeContract(host);
     const userHome = process.env.USERPROFILE || process.env.HOME || '';
+    const selectedProfiles = normalizeProfiles(findRepositoryRoot(), profiles);
     const readback = await this.readback(host);
 
     // Dynamic skill catalog count
@@ -552,6 +602,32 @@ export class NativeInstaller {
         skillsDetail = `Command Code shared skill hash parity incomplete: ${parity.count}/${parity.expected}`;
       } else {
         skillsDetail = `Command Code shared skill hash parity ${parity.sha256}`;
+      }
+    }
+
+    if (detection.present && selectedProfiles.length > 0) {
+      let instructionFile = host === 'command-code'
+        ? readCommandCodeNative(detection.homeDir).modPath
+        : host === 'deepseek-harness'
+          ? path.join(detection.homeDir, 'AGENTS.md')
+          : contract?.paths.instructionPath.replace(/\$[A-Z_]+/, detection.homeDir).replace('~', userHome) ?? '';
+      if (instructionFile && fs.existsSync(instructionFile) && fs.statSync(instructionFile).isDirectory()) instructionFile = path.join(instructionFile, 'agent-rules.md');
+      const instructionBody = instructionFile && fs.existsSync(instructionFile) && fs.statSync(instructionFile).isFile() ? fs.readFileSync(instructionFile, 'utf8') : '';
+      const missingRules = selectedProfiles.filter((id) => !instructionBody.includes(`Explicit profile: ${id}`) && !instructionBody.includes(`agent-rules:profile:${id}`));
+      const missingSkills = selectedProfiles.flatMap((id) => {
+        const source = path.join(findRepositoryRoot(), 'profiles', id, 'skills');
+        if (!fs.existsSync(source)) return [];
+        return fs.readdirSync(source, { withFileTypes: true }).filter((entry) => entry.isDirectory() && !fs.existsSync(path.join(skillRoot, entry.name, 'SKILL.md'))).map((entry) => `${id}:${entry.name}`);
+      });
+      if (missingRules.length > 0) {
+        installedStatus = 'FAIL';
+        installedDetail = `selected profile rules missing from native instructions: ${missingRules.join(', ')}`;
+      }
+      if (missingSkills.length > 0) {
+        skillsStatus = 'FAIL';
+        skillsDetail = `selected profile skills missing: ${missingSkills.join(', ')}`;
+      } else if (skillsStatus === 'PASS') {
+        skillsDetail = `${skillsDetail}; selected profiles: ${selectedProfiles.join(', ')}`;
       }
     }
 
