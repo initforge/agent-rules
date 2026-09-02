@@ -1,29 +1,43 @@
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { repositoryFactsText, type RepositoryFacts } from './repo-facts.js';
+import type { RepositoryFacts } from './repo-facts.js';
 
-export type SkillRole = 'DOMAIN_JUDGMENT' | 'PLANNING_PROCEDURE' | 'IMPLEMENTATION_GUIDANCE' | 'ARCHITECTURE_LENS' | 'QUALITY_LENS' | 'SECURITY_LENS' | 'VERIFIER' | 'BROWSER_OBSERVATION';
+export type SkillRole = 'process' | 'domain' | 'design' | 'auditor' | 'verifier';
 export interface SkillRoute { readonly id: string; readonly primary: boolean; readonly role: SkillRole; readonly reason: string; readonly source: string; readonly source_hash: string; readonly graph_hash: string }
 export interface CapabilityProvider { readonly id: string; readonly capability: string; readonly explicitOnly?: boolean; readonly available?: boolean; readonly priority?: number }
-export interface NativeRouteInput { readonly prompt: string; readonly explicitSkills?: readonly string[]; readonly explicitProviders?: readonly string[]; readonly activeProjectScope?: string | null; readonly repositoryFacts?: RepositoryFacts }
+export type RequestedMode = 'qa' | 'plan' | 'execute' | 'auto';
+
+/**
+ * Deterministic affected scope. Environment facts only *filter* compatibility;
+ * they never activate a skill by themselves. Explicit skill IDs always win.
+ */
+export interface AffectedScope {
+  readonly paths?: readonly string[];
+  readonly stacks?: readonly string[];
+  readonly runtime_surfaces?: readonly string[];
+}
+
+export interface NativeRouteInput {
+  readonly prompt: string;
+  readonly requestedMode?: RequestedMode;
+  readonly explicitSkills?: readonly string[];
+  readonly explicitProviders?: readonly string[];
+  readonly activeProjectScope?: string | null;
+  readonly affectedScope?: AffectedScope;
+  readonly repositoryFacts?: RepositoryFacts;
+}
 export interface RouteResult { readonly skills: readonly SkillRoute[]; readonly capabilities: readonly string[]; readonly providers: Readonly<Record<string, string | null>>; readonly suppressed: readonly { id: string; reason: string }[] }
 
 interface GraphNode {
   readonly id: string; readonly layer: string; readonly source: string; readonly source_hash: string; readonly routing_source?: string; readonly routing_hash?: string;
-  readonly routing: { readonly signals?: string[]; readonly excludes?: string[]; readonly priority?: number; readonly requires?: string[]; readonly supports?: string[]; readonly project_scope?: string; readonly default?: boolean };
+  readonly role?: SkillRole; readonly activation?: 'implicit' | 'explicit-only'; readonly conflicts?: readonly string[]; readonly exclusive_group?: string | null;
+  readonly routing: { readonly signals?: string[]; readonly excludes?: string[]; readonly priority?: number; readonly requires?: string[]; readonly supports?: string[]; readonly project_scope?: string; readonly default?: boolean; readonly compatibility?: Readonly<Record<string, string>> };
 }
 interface ContextGraph { readonly version: number; readonly nodes: GraphNode[] }
 interface IntegrationRegistry { readonly integrations: readonly { readonly id: string; readonly capabilities?: readonly string[]; readonly priority?: number; readonly activation?: 'automatic' | 'explicit-only' }[] }
 
 function sha256(bytes: string | Buffer): string { return createHash('sha256').update(bytes).digest('hex'); }
-function normalize(value: string): string { return value.toLowerCase().replace(/_/g, ' ').replace(/\s+/g, ' ').trim(); }
-function phraseHit(text: string, phrase: string): boolean {
-  const needle = normalize(phrase);
-  if (!needle) return false;
-  const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}([^\\p{L}\\p{N}]|$)`, 'iu').test(normalize(text));
-}
 
 export function findBundledHarnessRoot(): string | null {
   let cursor = path.resolve(import.meta.dirname);
@@ -58,50 +72,95 @@ function assertSource(root: string, node: GraphNode): void {
   }
 }
 
-export function inferSkillRole(slug: string): SkillRole {
-  if (slug.includes('browser') || slug.includes('playwright')) return 'BROWSER_OBSERVATION';
-  if (slug.includes('security') || slug.includes('auth')) return 'SECURITY_LENS';
-  if (slug === 'quality' || slug.includes('audit')) return 'QUALITY_LENS';
-  if (slug.includes('architect') || slug.includes('contract')) return 'ARCHITECTURE_LENS';
-  if (slug.includes('plan') || slug === 'finish-to-completion') return 'PLANNING_PROCEDURE';
-  if (slug.includes('verif') || slug.includes('parity')) return 'VERIFIER';
-  if (slug.includes('taste') || slug.includes('domain')) return 'DOMAIN_JUDGMENT';
-  return 'IMPLEMENTATION_GUIDANCE';
+/**
+ * Environment facts only filter compatibility; they never activate a skill.
+ * A non-explicit candidate is dropped when the affected scope provably
+ * contradicts its declared compatibility, and never added by it.
+ */
+function compatibilityFilter(node: GraphNode, input: NativeRouteInput): boolean {
+  const compat = node.routing.compatibility;
+  if (!compat || Object.keys(compat).length === 0) return true;
+  const scope = input.affectedScope;
+  if (!scope) return true;
+  const stacks = scope.stacks ?? [];
+  if (stacks.length > 0 && typeof compat.stacks === 'string' && compat.stacks !== 'all' && !compat.stacks.split(',').map((s) => s.trim()).some((s) => stacks.includes(s))) return false;
+  const surfaces = scope.runtime_surfaces ?? [];
+  if (surfaces.length > 0 && typeof compat.runtime_surfaces === 'string' && compat.runtime_surfaces !== 'all' && !compat.runtime_surfaces.split(',').map((s) => s.trim()).some((s) => surfaces.includes(s))) return false;
+  return true;
 }
 
+/** Deterministic canonical routing (Lock 1): never a runtime classifier. */
 export function routeSkills(input: NativeRouteInput, root: string): SkillRoute[] {
   const { graph, hash } = loadGraph(root);
   const requested = new Set(input.explicitSkills ?? []);
+  const mode = input.requestedMode ?? 'auto';
+  const modeSkill = mode === 'plan' ? 'plan-and-handoff' : mode === 'qa' ? 'verification-router' : null;
+
   const candidates = graph.nodes
     .filter((node) => node.layer === 'skills' && node.id.startsWith('skill:'))
     .map((node) => ({ node, slug: node.id.slice(6) }))
     .filter(({ node, slug }) => {
       const scope = node.routing.project_scope;
       if (scope && scope !== input.activeProjectScope) return false;
-      if (requested.has(slug)) return true;
-      const routingText = `${input.prompt} ${input.repositoryFacts ? repositoryFactsText(input.repositoryFacts) : ''}`;
-      if ((node.routing.excludes ?? []).some((signal) => phraseHit(routingText, signal))) return false;
-      return node.routing.default === true || (node.routing.signals ?? []).some((signal) => phraseHit(routingText, signal));
+      if (requested.has(slug)) return true; // explicit skill wins
+      if (modeSkill === slug) return true;  // requested mode is deterministic
+      if ((mode === 'plan' && slug === 'verification-router') || (mode === 'qa' && slug === 'plan-and-handoff')) return false;
+      // Deterministic signals only: project/profile compatibility and
+      // affected-scope compatibility. No natural-language implicit selection:
+      // implicit semantic activation belongs to the host-native model reading
+      // the exact skill name/description, never to a runtime phrase classifier.
+      const projectMatch = Boolean(node.routing.project_scope && node.routing.project_scope === input.activeProjectScope);
+      if (node.routing.project_scope && !projectMatch) return false;
+      if (projectMatch) return true;
+      return node.routing.default === true && compatibilityFilter(node, input);
     })
-    .sort((a, b) => Number(requested.has(b.slug)) - Number(requested.has(a.slug)) || (b.node.routing.priority ?? 0) - (a.node.routing.priority ?? 0) || a.slug.localeCompare(b.slug));
+    .sort((a, b) => Number(requested.has(b.slug)) - Number(requested.has(a.slug)) || Number(modeSkill === b.slug) - Number(modeSkill === a.slug) || (b.node.routing.priority ?? 0) - (a.node.routing.priority ?? 0) || a.slug.localeCompare(b.slug));
 
   const bySlug = new Map(graph.nodes.filter((node) => node.id.startsWith('skill:')).map((node) => [node.id.slice(6), node]));
   const selected = new Map<string, { node: GraphNode; reason: string }>();
-  for (const candidate of candidates) selected.set(candidate.slug, { node: candidate.node, reason: requested.has(candidate.slug) ? 'explicit skill request' : 'canonical skill signal match' });
+  const select = (slug: string, reason: string, visiting: readonly string[] = []): void => {
+    if (visiting.includes(slug)) throw new Error(`skill dependency cycle: ${[...visiting, slug].join(' -> ')}`);
+    if (selected.has(slug)) return;
+    const node = bySlug.get(slug);
+    if (!node) throw new Error(`skill dependency is missing: ${visiting.at(-1) ?? 'route'} requires ${slug}`);
+    for (const selectedSlug of selected.keys()) {
+      const selectedNode = bySlug.get(selectedSlug);
+      if ((node.conflicts ?? []).includes(selectedSlug) || (selectedNode?.conflicts ?? []).includes(slug)) {
+        throw new Error(`skill conflict: ${slug} conflicts with ${selectedSlug}`);
+      }
+      if (node.exclusive_group && selectedNode?.exclusive_group === node.exclusive_group) {
+        throw new Error(`skill exclusive group conflict (${node.exclusive_group}): ${slug}, ${selectedSlug}`);
+      }
+    }
+    selected.set(slug, { node, reason });
+    for (const dependency of node.routing.requires ?? []) {
+      select(dependency, `declared dependency of ${slug}`, [...visiting, slug]);
+    }
+  };
+  for (const candidate of candidates) {
+    const reason = requested.has(candidate.slug)
+      ? 'explicit skill request'
+      : modeSkill === candidate.slug
+        ? `requested ${mode} mode`
+        : candidate.node.routing.project_scope === input.activeProjectScope
+          ? `project/profile compatibility: ${input.activeProjectScope}`
+          : 'canonical default skill';
+    select(candidate.slug, reason);
+  }
   for (const [slug, entry] of [...selected]) {
     for (const dependency of entry.node.routing.requires ?? []) {
-      const node = bySlug.get(dependency);
-      if (node && !selected.has(dependency)) selected.set(dependency, { node, reason: `declared dependency of ${slug}` });
+      select(dependency, `declared dependency of ${slug}`, [slug]);
     }
   }
   return [...selected].map(([slug, entry], index) => {
     assertSource(root, entry.node);
-    return { id: slug, primary: index === 0, role: inferSkillRole(slug), reason: entry.reason, source: entry.node.source, source_hash: entry.node.source_hash, graph_hash: hash };
+    if (!entry.node.role) throw new Error(`routed skill has no registry role: ${slug}`);
+    return { id: slug, primary: index === 0, role: entry.node.role, reason: entry.reason, source: entry.node.source, source_hash: entry.node.source_hash, graph_hash: hash };
   });
 }
 
-export function inferCapabilities(prompt: string, facts?: RepositoryFacts): string[] {
-  const text = `${prompt} ${facts ? repositoryFactsText(facts) : ''}`;
+export function inferCapabilities(prompt: string, _facts?: RepositoryFacts, affectedScope?: AffectedScope): string[] {
+  const text = `${prompt} ${(affectedScope?.runtime_surfaces ?? []).join(' ')} ${(affectedScope?.stacks ?? []).join(' ')}`;
   const capabilities = ['filesystem.read', 'filesystem.write', 'code.search', 'shell.exec', 'git.read'];
   if (/\b(browser|playwright|e2e|visual|frontend|css|tsx|jsx|react|next|vue|svelte)\b/i.test(text)) capabilities.push('browser.verify');
   if (/\b(console|network|devtools|cdp|browser debug)\b/i.test(text)) capabilities.push('browser.debug');
@@ -123,7 +182,7 @@ export class CapabilityBroker {
     const knownProviders = new Set(this.providers.map((provider) => provider.id));
     const unknown = [...explicitProviders].filter((provider) => !knownProviders.has(provider));
     if (unknown.length) throw new Error(`unknown explicit capability provider(s): ${unknown.join(', ')}`);
-    const capabilities = inferCapabilities(input.prompt, input.repositoryFacts);
+    const capabilities = inferCapabilities(input.prompt, input.repositoryFacts, input.affectedScope);
     const providers: Record<string, string | null> = {};
     const suppressed: { id: string; reason: string }[] = [];
     for (const capability of capabilities) {

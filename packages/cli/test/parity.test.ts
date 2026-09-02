@@ -59,7 +59,7 @@ describe('canonical build projection', () => {
 describe('public CLI', () => {
   it('exposes only the compact operator surface', () => {
     const help = execFileSync(process.execPath, [path.join(root, 'packages/cli/dist/index.js'), '--help'], { encoding: 'utf8' });
-    for (const command of ['install', 'update', 'rollback', 'uninstall', 'doctor', 'status', 'integration', 'reference', 'route-native']) {
+    for (const command of ['install', 'update', 'rollback', 'uninstall', 'doctor', 'status', 'integration', 'reference', 'task', 'route-native']) {
       expect(help).toContain(`  ${command} `);
     }
     for (const retired of ['run', 'init', 'plan', 'goal', 'close']) expect(help).not.toContain(`  ${retired} `);

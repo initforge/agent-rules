@@ -12,10 +12,16 @@ configuration, then leaves the normal host session path completely.
    plan to another user-selected model or host.
 4. The model resolves explicit skills and deterministic repository facts once
    through the host's native discovery; installed base rules remain the fallback.
+   Global discovery contains only implicit Agent Rules skills; accepted tasks
+   project selected explicit skills into supported repository-local surfaces.
 5. Focused proof validates changed behavior. Broad regression runs once at the
    release gate.
+6. Large one-shot work stays in native plan slices: change and preservation
+   boundaries are locked, blockers are scoped, and completion follows current
+   acceptance coverage.
 
-Agent Rules never creates a repository `.agent` tree and never runs a callback,
+Agent Rules may create one owned, git-excluded `.agent/current` task state for
+the active implementation. It never keeps task history or runs a callback,
 launcher or daemon inside a host session. Native plan and progress remain host-owned.
 
 ## Components
@@ -23,14 +29,15 @@ launcher or daemon inside a host session. Native plan and progress remain host-o
 | Component | Canonical source | Responsibility |
 |---|---|---|
 | Rules | `rules/` | always-on safety, execution, proof, context behavior |
-| Skills | `skills/` | lazy task-specific workflows |
+| Skills | `skills/`, `registry/skills.yaml` | exact active skill folders plus provenance, role, lifecycle and conflict governance |
 | Diagnostic router | `packages/kernel/src/northstar/native-turn-router.ts` | build-time and explicit diagnostic selection tests only |
-| Proof | `packages/kernel/src/harness/evidence/` | cheapest sufficient proof, reuse, bounded recheck |
+| Proof | `packages/kernel/src/harness/evidence/` | cheapest sufficient proof, safe reuse, focused repair loop |
 | Health | `packages/kernel/src/northstar/health-contract.ts` | component status and fail-closed reduction |
 | Host contracts | `platforms/platform-contracts.json` | versioned native surfaces and limitations |
 | Compiler/installer | `automation/`, `packages/cli/src/` | immutable candidate plus transactional static projection/readback/rollback |
 | Domain packs | `profiles/` | explicit project knowledge such as `5fedu` |
 | Integrations | `integrations/` | automatic and explicit-only MCP/tool providers |
+| Active task state | `.agent/current/` | one owned, git-excluded plan/frontier; replaced by a new plan and removed on explicit close |
 
 Generated builds and installed mirrors are projections of these sources. Never
 edit them manually.
@@ -68,7 +75,7 @@ collisions become `NEEDS_USER`; unavailable hosts remain `UNSUPPORTED` or
 Public commands:
 
 ```text
-install  update  rollback  uninstall  doctor  status  integration  reference  route-native
+install  update  rollback  uninstall  doctor  status  integration  reference  task  route-native
 ```
 
 ## Develop

@@ -28,30 +28,74 @@ try {
     const execution = fs.readFileSync(path.join(root, 'rules/10-execution-planning-delegation.md'), 'utf8');
     const outcome = fs.readFileSync(path.join(root, 'rules/20-proof-outcome.md'), 'utf8');
     const planSkill = fs.readFileSync(path.join(root, 'skills/plan-and-handoff/SKILL.md'), 'utf8');
-    const finishSkill = fs.readFileSync(path.join(root, 'skills/finish-to-completion/SKILL.md'), 'utf8');
+    const verificationSkill = fs.readFileSync(path.join(root, 'skills/verification-router/SKILL.md'), 'utf8');
     const agents = fs.readFileSync(path.join(root, 'AGENTS.md'), 'utf8');
     const readme = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
     const profileAgents = fs.readFileSync(path.join(root, 'profiles/5fedu/projects/AGENTS.md'), 'utf8');
-    assert.match(execution, /Same-session planning and implementation is the default/i);
-    assert.match(execution, /owner explicitly hands a plan to another session or host/i);
-    assert.match(execution, /cold-start executable/i);
-    assert.match(execution, /domain-appropriate target locators/i);
-    assert.match(execution, /never selects or switches models/i);
-    assert.match(execution, /Do not create standalone ticket/i);
-    assert.match(planSkill, /Close the source/i);
-    assert.match(planSkill, /Close domain authority/i);
-    assert.match(planSkill, /Close references/i);
-    assert.match(planSkill, /Close targets/i);
-    assert.match(planSkill, /Close slices/i);
-    assert.match(planSkill, /Fresh-session audit/i);
-    assert.match(finishSkill, /Treat its outcome, scope,[\s\S]*as\s+authoritative/i);
-    assert.match(finishSkill, /instead of asking the owner for discoverable facts/i);
-    assert.match(finishSkill, /without phase-by-phase relay/i);
-    assert.match(outcome, /Do not create a separate completion-grant ceremony/i);
+    assert.match(execution, /accepted outcome, scope, contracts, preservation and acceptance/i);
+    assert.match(execution, /dependency-ready slice/i);
+    assert.match(execution, /constraint-complete/i);
+    assert.match(execution, /Model changes are handoffs/i);
+    assert.match(execution, /CREATE, MODIFY, REPLACE, RETIRE, MIGRATE or PRESERVE/i);
+    assert.match(execution, /preservation of public behavior, data\/contracts, consumers, operational capability and user-visible states/i);
+    assert.match(execution, /blocker affects only its dependency closure/i);
+    assert.match(execution, /Pending unblocked acceptance is PARTIAL/i);
+    assert.match(execution, /never selects a model/i);
+    assert.match(execution, /Subagents default to zero/i);
+    assert.match(planSkill, /Constraint-complete plan contract/i);
+    assert.match(planSkill, /Autonomy envelope/i);
+    assert.match(planSkill, /Five contracts/i);
+    assert.match(planSkill, /OWNER_DECISION/i);
+    assert.match(planSkill, /SOURCE_DISCOVERABLE/i);
+    assert.match(planSkill, /IMPLEMENTATION_LOCAL/i);
+    assert.match(planSkill, /EXTERNAL_BLOCKER/i);
+    assert.match(planSkill, /choose files and[\s\S]*symbols/i);
+    assert.match(planSkill, /internal design/i);
+    assert.match(planSkill, /necessary local refactors/i);
+    assert.match(planSkill, /equivalent command/i);
+    assert.match(planSkill, /Source identity/i);
+    assert.match(planSkill, /Domain closure/i);
+    assert.match(planSkill, /Reference closure/i);
+    assert.match(planSkill, /Slice delta/i);
+    assert.match(planSkill, /return `NEEDS_USER`/i);
+    assert.match(verificationSkill, /focused execution aid/i);
+    assert.match(verificationSkill, /Change-kind proof/i);
+    assert.match(verificationSkill, /active import, route, consumer or runtime/i);
+    assert.match(outcome, /Model prose never creates PASS/i);
+    assert.match(planSkill, /Explore → Distill → Commit/i);
+    assert.match(planSkill, /Active frontier and context quarantine/i);
+    assert.doesNotMatch(execution, /one focused recheck/i);
+    assert.doesNotMatch(planSkill, /exact proof command/i);
+    assert.doesNotMatch(verificationSkill, /machine-readable verification plan/i);
+    assert.doesNotMatch(verificationSkill, /Human residual packet/i);
+    assert.doesNotMatch(verificationSkill, /mandatory independent verifier/i);
+    // Retired aliases are gone (no duplicate authority, no wrapper reachability).
+    for (const retired of ['finish-to-completion', 'ui-taste', 'frontend-composition', 'database-stack', 'mobile-composition', 'infra-devops-composition', 'browser-qa', 'master-image-generation', 'qa-skills', 'quality']) {
+      assert.equal(fs.existsSync(path.join(root, 'skills', retired, 'SKILL.md')), false, `${retired} must be retired (no alias retained)`);
+    }
     assert.doesNotMatch(agents, /owns planning and implementation end to end/i);
     assert.doesNotMatch(readme, /Let that same model implement the plan/i);
+    assert.match(readme, /focused repair loop/i);
+    assert.doesNotMatch(readme, /bounded recheck/i);
     assert.doesNotMatch(profileAgents, /PAF|plan-artifact-template|capability-tier-routing|tier routing/i);
     assert.doesNotMatch(agents, /UNAUTHORIZED_WORKER_PASS|strong planners compile/i);
+    for (const entry of fs.readdirSync(path.join(root, 'skills'), { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const skill = path.join(root, 'skills', entry.name, 'SKILL.md');
+      if (!fs.existsSync(skill)) continue;
+      assert.doesNotMatch(fs.readFileSync(skill, 'utf8'), /source:\s*ROUTE\.json migrated/i, skill);
+      assert.equal(fs.existsSync(path.join(root, 'skills', entry.name, 'ROUTE.json')), false, `${entry.name} must not retain a global ROUTE.json`);
+    }
+    const graph = JSON.parse(fs.readFileSync(path.join(root, 'generated', 'context-graph.json'), 'utf8'));
+    for (const node of graph.nodes.filter((node) => node.layer === 'skills' && !node.source.startsWith('profiles/'))) assert.equal(node.routing_source, 'registry/skills.yaml', `${node.id} governance must come from registry/skills.yaml`);
+    for (const retired of ['anthropic-frontend-design', 'callstack-react-native-best-practices', 'expo-skills', 'hashicorp-agent-skills', 'prisma-skills', 'supabase-agent-skills', 'trail-of-bits-security', 'vercel-agent-skills', 'vercel-react-best-practices', 'vercel-web-design-guidelines', 'claim-test-strategy', 'frontend-architect']) {
+      assert.equal(fs.existsSync(path.join(root, 'skills', retired, 'SKILL.md')), false, `${retired} must not remain selectable`);
+    }
+    // 'impeccable' was a pack-level old registry record whose successor is
+    // materialized as the active skill itself — verify it is now selectable.
+    assert.equal(fs.existsSync(path.join(root, 'skills/impeccable/SKILL.md')), true, 'impeccable successor must be materialized');
+    for (const upstream of ['playwright-cli', 'expo-overview', 'systematic-debugging', 'design-taste-frontend', 'image-to-code']) assert.equal(fs.existsSync(path.join(root, 'skills', upstream, 'SKILL.md')), true, `${upstream} must be materialized under its exact upstream name`);
+    assert.equal(fs.existsSync(path.join(root, '.agent', 'history')), false, 'active task state must not create history');
   });
 
   await check('native routing preserves the owner-selected model', async () => {
@@ -73,14 +117,19 @@ try {
     assert.equal(routed.capsule.integrations.some((item) => /pencil/i.test(item.provider ?? '')), false);
   });
 
-  await check('unchanged focused proof is not executed twice', () => {
+  await check('fresh focused proof is reused without a duplicate execution plan', () => {
     const request = {
       task_id: 'seam', repository: root, trigger: { changed_files: ['rules/20-proof-outcome.md'] },
       claims: [{ id: 'C-1', claim: 'proof behavior remains valid' }], risks: [],
       binding: { source_hash: 'a'.repeat(64), environment_hash: 'b'.repeat(64), proof_contract_hash: 'c'.repeat(64) },
     };
     const first = proof.planProofRoute(request);
-    const replay = proof.planProofRoute({ ...request, prior_proof_plan_keys: [first.execution.proof_plan_key] });
+    const replay = proof.planProofRoute({
+      ...request,
+      existing_proofs: first.plan.selected.map((selected, index) => ({
+        id: `cached-${index}`, claim_id: selected.claim_id, category: selected.category, status: 'PASS', ...request.binding,
+      })),
+    });
     assert.ok(first.execution.selected_for_run.length > 0);
     assert.equal(replay.execution.selected_for_run.length, 0);
   });
@@ -90,8 +139,9 @@ try {
       task_id: 'release', repository: root, trigger: { changed_files: ['src/x.ts'] },
       claims: [{ id: 'C-1', claim: 'public behavior' }], risks: ['security'], force_full_suite: true,
     };
-    assert.equal(proof.planProofRoute(base).execution.full_suite_allowed, false);
+    assert.equal(proof.planProofRoute({ ...base, risks: [] }).execution.full_suite_allowed, false);
     assert.equal(proof.planProofRoute({ ...base, release_gate: true }).execution.full_suite_allowed, true);
+    assert.equal(proof.planProofRoute(base).execution.full_suite_allowed, true);
   });
 
   await check('P2 blocks only when materially acceptance-bound', () => {
@@ -143,10 +193,10 @@ try {
     }
   });
 
-  await check('public CLI has no shadow plan or execution command', () => {
+  await check('public CLI has no shadow planner/executor; active task state is allowed', () => {
     const source = fs.readFileSync(path.join(root, 'packages/cli/src/index.ts'), 'utf8');
     const commands = [...source.matchAll(/\.command\("([^"]+)"\)/g)].map((match) => match[1]);
-    assert.deepEqual(commands, ['install', 'update', 'rollback', 'uninstall', 'doctor', 'status', 'integration', 'reference', 'route-native']);
+    assert.deepEqual(commands, ['install', 'update', 'rollback', 'uninstall', 'doctor', 'status', 'integration', 'reference', 'task', 'route-native']);
   });
 } finally {
   fs.rmSync(temp, { recursive: true, force: true });

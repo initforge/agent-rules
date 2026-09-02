@@ -10,6 +10,7 @@ import { uninstallCmd } from "./commands/uninstall.js";
 import { integrationCmd } from "./commands/integration.js";
 import { handleRouteNativeCommand } from "./commands/route-native.js";
 import { readReference, searchReferences } from "./commands/reference.js";
+import { taskCommand } from "./commands/task.js";
 import { configureHostRegistryRoot } from "@initforge/agent-rules-kernel/northstar/host-registry.js";
 import { resolveRuntimeAssetsRoot } from "./runtime/locator.js";
 
@@ -210,7 +211,20 @@ program
     }
   });
 
-// 9. route-native
+// 9. task
+program
+  .command("task")
+  .description("Manage the current project-local Agent Rules task state")
+  .argument("<action>", "Action: start | status | update | rehydrate | export | close")
+  .option("--stdin", "Read start/update JSON from stdin")
+  .option("--task-id <id>", "Exact current task id required for close")
+  .option("--host <id>", "Host contract used for repository-local task skill projection")
+  .action(async (action: string, cmdOpts: { stdin?: boolean; taskId?: string; host?: string }) => {
+    const opts = program.optsWithGlobals() as CliOptions;
+    formatOutput(taskCommand(action, cmdOpts), opts);
+  });
+
+// 10. route-native
 program
   .command("route-native")
   .description("Route one native model turn via canonical SkillResolver / CapabilityBroker (REQ-005)")

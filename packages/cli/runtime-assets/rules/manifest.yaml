@@ -12,7 +12,7 @@ rule_contracts:
     owner: rules/00-intent-scope-safety.md
     enforcement: runtime-guard
   10-execution-planning-delegation.md:
-    trigger: execution
+    trigger: always-load
     owner: rules/10-execution-planning-delegation.md
     enforcement: native-plan-and-progress
   20-proof-outcome.md:
@@ -20,10 +20,10 @@ rule_contracts:
     owner: rules/20-proof-outcome.md
     enforcement: focused-proof-router
   30-context-skill-mcp.md:
-    trigger: context-selection
+    trigger: build-diagnostic
     owner: rules/30-context-skill-mcp.md
     enforcement: portable-compiler-and-native-static-readback
   40-maintainer.md:
-    trigger: harness-maintenance
+    trigger: repo-local
     owner: rules/40-maintainer.md
     enforcement: build-install-readback

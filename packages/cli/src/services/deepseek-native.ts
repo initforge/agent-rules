@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import type { CertificationReceipt, Detection } from './native-installer.js';
 import { getStandardMcpServers } from '../runtime/mcp-convergence.js';
+import YAML from 'yaml';
 
 export interface DshBackupEntry {
   relativePath: string;
@@ -225,8 +226,13 @@ export function inspectDshNativeReadback(detection: Pick<Detection, 'homeDir' | 
 
 export function dshSkillParity(home: string, repositoryRoot = findRepositoryRoot()): { ok: boolean; count: number; expected: number; sha256: string } {
   const sourceRoot = path.join(repositoryRoot, 'skills');
+  const registryFile = path.join(repositoryRoot, 'registry', 'skills.yaml');
+  const implicit = fs.existsSync(registryFile)
+    ? new Set(((YAML.parse(fs.readFileSync(registryFile, 'utf8'))?.skills ?? []) as Array<{ id?: string; lifecycle?: string; activation?: string }>).filter((entry) => entry.lifecycle === 'active' && entry.activation === 'implicit').map((entry) => String(entry.id)))
+    : null;
   const sourceDirs = fs.existsSync(sourceRoot)
     ? fs.readdirSync(sourceRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort()
+      .filter((name) => !implicit || implicit.has(name))
     : [];
   const hashes: string[] = [];
   let count = 0;

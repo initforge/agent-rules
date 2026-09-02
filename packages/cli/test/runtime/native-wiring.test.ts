@@ -47,6 +47,20 @@ describe('static dependency and state wiring', () => {
     fs.writeFileSync(path.join(target, 'sample', 'SKILL.md'), 'user changed');
     expect((await uninstallOwnedGlobalProjections('codex', state)).retained).toEqual([path.join(target, 'sample')]);
   });
+
+  it('retires stale owned skills but refuses to remove user-modified retired skills', async () => {
+    const root = tempRoot('agent-rules-retired-skill-'); const source = path.join(root, 'source'); const target = path.join(root, 'target'); const state = path.join(root, 'state');
+    fs.mkdirSync(path.join(source, 'retired'), { recursive: true }); fs.writeFileSync(path.join(source, 'retired', 'SKILL.md'), 'managed');
+    await projectSkillsToGlobal(source, 'codex', { targetRoots: [target], harnessHome: state });
+    fs.rmSync(path.join(source, 'retired'), { recursive: true, force: true });
+    expect((await projectSkillsToGlobal(source, 'codex', { targetRoots: [target], harnessHome: state })).collisions).toEqual([]);
+    expect(fs.existsSync(path.join(target, 'retired'))).toBe(false);
+
+    fs.mkdirSync(path.join(source, 'retired'), { recursive: true }); fs.writeFileSync(path.join(source, 'retired', 'SKILL.md'), 'managed');
+    await projectSkillsToGlobal(source, 'codex', { targetRoots: [target], harnessHome: state });
+    fs.writeFileSync(path.join(target, 'retired', 'SKILL.md'), 'user changed'); fs.rmSync(path.join(source, 'retired'), { recursive: true, force: true });
+    expect((await projectSkillsToGlobal(source, 'codex', { targetRoots: [target], harnessHome: state })).collisions).toEqual([`stale owned skill was user-modified @ ${path.join(target, 'retired')}`]);
+  });
 });
 
 describe('legacy callback retirement', () => {

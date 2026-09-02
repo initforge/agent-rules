@@ -3,6 +3,7 @@ import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import os from "node:os";
 import { getStandardMcpServers, sameServerDefinition } from "../runtime/mcp-convergence.js";
+import YAML from "yaml";
 
 const MANAGED_MOD_BEGIN = "// agent-rules:managed:command-code BEGIN";
 const MANAGED_MOD_END = "// agent-rules:managed:command-code END";
@@ -190,8 +191,13 @@ function listFiles(root: string): string[] {
 export function commandCodeSkillParity(userHome = os.homedir(), repositoryRoot = findRepositoryRoot()): { ok: boolean; count: number; expected: number; sha256: string } {
   const sourceRoot = path.join(repositoryRoot, "skills");
   const targetRoot = path.join(commandCodeHome(process.env, userHome), "skills");
+  const registryFile = path.join(repositoryRoot, 'registry', 'skills.yaml');
+  const implicit = fs.existsSync(registryFile)
+    ? new Set(((YAML.parse(fs.readFileSync(registryFile, 'utf8'))?.skills ?? []) as Array<{ id?: string; lifecycle?: string; activation?: string }>).filter((entry) => entry.lifecycle === 'active' && entry.activation === 'implicit').map((entry) => String(entry.id)))
+    : null;
   const sourceDirs = fs.existsSync(sourceRoot)
     ? fs.readdirSync(sourceRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name)
+      .filter((name) => !implicit || implicit.has(name))
     : [];
   const sourceFiles = sourceDirs.flatMap((name) => listFiles(path.join(sourceRoot, name)));
   const hashes: string[] = [];

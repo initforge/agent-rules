@@ -1,41 +1,39 @@
 ---
 name: security-review
-description: "Security review procedure from threat/change-surface claims: deterministic scans plus independent review; worker prose never creates a security PASS."
+description: "Security review for changed threat surfaces: auth/secret/data boundaries, deterministic scans."
 metadata:
   signals: "security claim, threat model, security review, vulnerability, auth boundary analysis, secret scanning"
   excludes: "prose-only, checklist-only"
   priority: "55"
+  requires: "verification-router"
   platform_scope: "all"
-  source: ROUTE.json migrated
 
 ---
 # security-review
 
-**Status:** materialized (skill-mcp-fabric-v1, AM-0002 full adoption)
-**Activation class:** ROUTED (deterministic RepoFacts/TaskFacts; never keyword-only)
+## Discovery
 
-## Use when
-- Deterministic repo/task facts for this domain are observed (see trigger facts).
-- The claim/task actually requires this capability; smallest sufficient proof.
+Inspect the changed trust boundary, entrypoints, authentication and
+authorization checks, secret/config handling, data classification, external
+calls, logs and direct consumers. State the concrete abuse case the review must
+rule out instead of applying a generic checklist.
 
-## Do NOT
-- Do not activate from generic keywords (frontend/database/design/test/UI).
-- Do not decide scope, completion, PASS or acceptance; kernel owns those.
-- Do not bypass or skip verifiers; missing providers are BLOCKED/NEEDS_USER.
+## Locked boundaries
 
-## Trigger facts (deterministic)
-- security claim; threat model; security review; vulnerability; auth boundary analysis; secret scanning.
+Do not weaken authorization, validation, rate limiting, auditability, secret
+handling, encryption, tenant isolation or data retention to make a change pass.
+Treat production credentials, penetration testing and destructive probes as
+owner-approved authority.
 
-## Capabilities
-- code.search, filesystem.read, security.scan
+## Review and repair
 
-## Provider mapping
-- Providers resolved by the CapabilityBroker (registry.json / integrations);
-  unavailable providers yield UNAVAILABLE/BLOCKED, never fabricated PASS.
+Use deterministic source scans, affected tests and boundary/contract proof
+first. Add runtime or independent specialist review only when risk, public
+exposure, data loss or a failed focused check requires it. Repair the smallest
+cause and preserve the accepted product behavior.
 
-## Rollback
-- Remove this skill directory and its catalog/fabric entries; restore the
-  previous route receipts.
+## Focused proof and stop
 
-## Eval status
-- Route precision: high; WITH/WITHOUT ablation corpus: pending (TASK-012).
+PASS requires current evidence for the stated threat surface, not prose. Stop
+or ask before changing security policy, permission model, public exposure,
+credentials, production data or acceptance.

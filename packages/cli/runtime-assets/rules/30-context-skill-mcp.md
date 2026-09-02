@@ -3,9 +3,13 @@
 Load the smallest matching capability and never infer domain authority from words alone.
 Keep living context cohesive, imperative, and useful to the current turn.
 
-SKILL.md is the single author source for name, description, activation boundary and metadata.
-Build generates catalog for check; generated catalog is not a second source.
-The native turn router resolves skills once from explicit request or deterministic project facts and materializes only that result. Skill routing never creates a ticket, worker role, or model choice.
+SKILL.md owns exact skill content, name and description. `registry/skills.yaml`
+owns provenance, role, activation, dependencies, conflicts and lifecycle.
+Global installation projects only active implicit skills. The complete library
+stays in runtime-assets; an accepted task may transactionally project selected
+explicit-only skills and true `requires` dependencies into a supported
+repository-local skill surface. `supports` never activates. Replacement/close
+removes only Agent Rules-owned task projections and preserves user files.
 
 Keep one IntegrationRegistry with capability, transport, auth requirement, side effects, approval policy, supported hosts and probe.
 Normal install registers the approved standard MCP providers in each supported native host. Registration is not a tool call and must preserve user-owned entries and an explicit user disable.
@@ -16,6 +20,10 @@ Explicit-only providers never auto-route. Provider needing login/key reports Nee
 Native installation consists only of self-contained rules, skills, explicitly selected profiles and native MCP registrations. Installed host configuration never calls agent-rules, a router, launcher or interpreter during startup or a model turn. Build-time and explicit diagnostic routing may test selection behavior, but it is not a production session dependency.
 Check the native static receipt before operator-driven install/update/doctor work; drift is never hidden by a prompt wrapper.
 
-At task intake, resolve explicit skill mentions and deterministic repository facts once through the host's native skill discovery. Pull `requires` dependencies; never activate `supports` by itself. Activate profiles only from an explicit owner selection or a structured project fact, never from keyword resemblance. When advanced routing is unavailable, continue with the installed base rules and native skills without asking the user to run a router or emitting a repeated startup error.
+At intake, resolve implicit skills through native description discovery and
+exact explicit skills from accepted task state. Repository facts only filter
+compatibility. If the host cannot expose repository-local task skills, report
+UNSUPPORTED/NEEDS_USER; never fall back to global explicit projection. Activate
+profiles only from explicit owner selection or structured project fact.
 
 Enforcement: portable compiler, generated context graph checks, native skill discovery, and static doctor readback.

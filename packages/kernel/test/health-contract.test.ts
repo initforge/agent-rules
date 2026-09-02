@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createHealthReceipt, reduceHealth, type HealthComponent } from '../src/northstar/health-contract.js';
+import { HEALTH_PROBE_REGISTRY, createHealthReceipt, reduceHealth, type HealthComponent } from '../src/northstar/health-contract.js';
 
 const base = (component: HealthComponent, status: 'HEALTHY' | 'UNKNOWN' | 'UNAVAILABLE' | 'DEGRADED' = 'HEALTHY') => createHealthReceipt({
   receipt_id: `r-${component}`, host: 'test', host_version: '1', component, status,
@@ -9,6 +9,9 @@ const base = (component: HealthComponent, status: 'HEALTHY' | 'UNKNOWN' | 'UNAVA
 });
 
 describe('canonical live health contract', () => {
+  it('names reducer proof honestly without claiming host-turn enforcement', () => {
+    expect(HEALTH_PROBE_REGISTRY['proof-outcome']).toMatchObject({ id: 'proof-reducer-fail-closed-v2', version: '2', live: true });
+  });
   it('fails closed when a required component has no receipt', () => {
     expect(reduceHealth([base('rules')], ['rules', 'hooks'])).toMatchObject({ status: 'UNKNOWN', missing: ['hooks'] });
   });

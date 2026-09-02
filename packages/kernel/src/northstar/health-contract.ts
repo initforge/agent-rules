@@ -15,7 +15,7 @@ export const HEALTH_PROBE_REGISTRY: Readonly<Record<HealthComponent, HealthProbe
   mcp: { id: 'mcp-registration-handshake-v1', component: 'mcp', owner: 'packages/cli/src/integration/provisioning.ts', required: false, live: true, version: '1' },
   plugins: { id: 'optional-static-plugin-v1', component: 'plugins', owner: 'platforms/platform-contracts.json', required: false, live: false, version: '1' },
   'plan-mode': { id: 'native-plan-roundtrip-v1', component: 'plan-mode', owner: 'rules/10-execution-planning-delegation.md', required: false, live: true, version: '1' },
-  'proof-outcome': { id: 'evidence-acceptance-reducer-v1', component: 'proof-outcome', owner: 'rules/20-proof-outcome.md', required: true, live: true, version: '1' },
+  'proof-outcome': { id: 'proof-reducer-fail-closed-v2', component: 'proof-outcome', owner: 'rules/20-proof-outcome.md', required: true, live: true, version: '2' },
   permissions: { id: 'permission-positive-negative-v1', component: 'permissions', owner: 'packages/kernel/src/northstar/rule-enforcement.ts', required: true, live: true, version: '1' },
   sandbox: { id: 'sandbox-boundary-v1', component: 'sandbox', owner: 'packages/kernel/src/northstar/rule-enforcement.ts', required: true, live: true, version: '1' },
   profiles: { id: 'profile-manifest-freshness-v1', component: 'profiles', owner: 'profiles/', required: false, live: true, version: '1' },

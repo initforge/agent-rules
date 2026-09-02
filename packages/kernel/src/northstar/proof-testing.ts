@@ -253,7 +253,13 @@ export function deriveProofTrigger(input: ProofTriggerInput): ProofTriggerResult
       if (s === 'desktop' || s === 'window' || s === 'focus' || s === 'virtual-desktop' || s === 'headed' || s === 'process-attribution' || s === 'window-attribution') surfaces.add('desktop');
       if (s === 'session-persistence' || s === 'reconnect' || s === 'resource-recreation' || s === 'host-integration') surfaces.add('session');
       if (s === 'auth' || s === 'permission' || s === 'security') surfaces.add('security');
-      if (s === 'network' || s === 'host-integration') surfaces.add('integration' as unknown as ProofSurface);
+      // Exact canonical mapping (never 'integration' cast as a ProofSurface):
+      // network → process; host-integration → process AND session. The
+      // integration/live candidate categories still flow through the canonical
+      // surface mapping (process/session carry integration+live), so runtime
+      // fidelity is never downgraded to static.
+      if (s === 'network') surfaces.add('process');
+      if (s === 'host-integration') { surfaces.add('process'); surfaces.add('session'); }
       // Pass through any runtime surface that is itself a canonical change
       // surface (release/qa/verification/parity/regression/...), so
       // scope-driven activation is complete and never keyword-only.
@@ -296,7 +302,10 @@ export function deriveProofTrigger(input: ProofTriggerInput): ProofTriggerResult
 
   // required fidelity: any live surface claim => live; else deterministic; a
   // pure static change (docs/formatting) can stay static.
-  const hasLive = surfacesList.some((s) => ['browser', 'frontend', 'accessibility', 'mcp', 'desktop', 'live', 'install', 'qa'].includes(s));
+  // process/session carry integration+live candidate categories through the
+  // canonical surface mapping (network → process; host-integration → process
+  // + session), so they keep live fidelity and are never downgraded to static.
+  const hasLive = surfacesList.some((s) => ['browser', 'frontend', 'accessibility', 'mcp', 'desktop', 'process', 'session', 'live', 'install', 'qa'].includes(s));
   const requiredFidelity: 'static' | 'deterministic' | 'live' = hasLive
     ? 'live'
     : input.required_fidelity ?? 'deterministic';
@@ -659,7 +668,8 @@ export function selectProofs(input: ProofSelectionInput): ProofPlan {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// 6. Proof receipt (owner §12) — the router's durable output.
+// 6. Proof receipt (owner §12) — transient router output; hosts persist only
+// the operational readback required for their own safety contract.
 // ────────────────────────────────────────────────────────────────────────────
 
 export interface ProofReceipt {
@@ -687,7 +697,17 @@ export interface ProofReceiptInput {
   escalation_decisions?: string[];
   environment?: string;
   evidence_refs?: string[];
+  acceptance_coverage?: AcceptanceCoverage;
 }
+
+export type AcceptanceImplementationStatus = 'COMPLETE' | 'PENDING' | 'BLOCKED' | 'NEEDS_USER' | 'PRE_EXISTING';
+export interface AcceptanceCoverageEntry {
+  acceptance_id: string;
+  implementation: AcceptanceImplementationStatus;
+  proof_status?: ProofStatus;
+  blocker?: string;
+}
+export interface AcceptanceCoverage { entries: AcceptanceCoverageEntry[] }
 
 export function finalStatusFromResults(results: Array<{ proof_id: string; status: ProofStatus }>, claimCount = 1): ProofStatus {
   if (claimCount === 0) return 'NEEDS_USER'; // no claim to prove — never PASS on empty claims
@@ -699,8 +719,44 @@ export function finalStatusFromResults(results: Array<{ proof_id: string; status
   return 'PARTIAL';
 }
 
+export function finalStatusFromAcceptanceCoverage(
+  coverage: AcceptanceCoverage,
+  results: Array<{ proof_id: string; status: ProofStatus }> = [],
+): ProofStatus {
+  if (coverage.entries.length === 0) return 'NEEDS_USER';
+  const ids = new Set<string>();
+  for (const entry of coverage.entries) {
+    if (!entry.acceptance_id.trim() || ids.has(entry.acceptance_id)) throw new Error(`acceptance coverage has duplicate or invalid id: ${entry.acceptance_id}`);
+    if (entry.implementation === 'BLOCKED' && !entry.blocker?.trim()) throw new Error(`blocked acceptance requires a blocker reason: ${entry.acceptance_id}`);
+    ids.add(entry.acceptance_id);
+  }
+
+  const resultStatuses = results.map((result) => result.status);
+  if (coverage.entries.some((entry) => entry.implementation === 'NEEDS_USER' || entry.proof_status === 'NEEDS_USER') || resultStatuses.includes('NEEDS_USER')) return 'NEEDS_USER';
+  if (coverage.entries.some((entry) => entry.implementation === 'PENDING')) return 'PARTIAL';
+
+  let partial = resultStatuses.includes('PARTIAL');
+  let blocked = resultStatuses.some((status) => status === 'BLOCKED' || status === 'UNSUPPORTED');
+  let preExisting = resultStatuses.includes('PRE-EXISTING');
+  for (const entry of coverage.entries) {
+    if (entry.implementation === 'BLOCKED') blocked = true;
+    else if (entry.implementation === 'PRE_EXISTING') preExisting = true;
+    else if (entry.implementation === 'COMPLETE') {
+      if (!entry.proof_status || entry.proof_status === 'PARTIAL') partial = true;
+      else if (entry.proof_status === 'BLOCKED' || entry.proof_status === 'UNSUPPORTED') blocked = true;
+      else if (entry.proof_status === 'PRE-EXISTING') preExisting = true;
+    }
+  }
+  if (partial) return 'PARTIAL';
+  if (blocked) return 'BLOCKED';
+  if (preExisting) return 'PRE-EXISTING';
+  return coverage.entries.every((entry) => entry.implementation === 'COMPLETE' && entry.proof_status === 'PASS') ? 'PASS' : 'PARTIAL';
+}
+
 export function buildProofReceipt(input: ProofReceiptInput): ProofReceipt {
-  const finalStatus = finalStatusFromResults(input.results, input.plan.claims.length);
+  const finalStatus = input.acceptance_coverage
+    ? finalStatusFromAcceptanceCoverage(input.acceptance_coverage, input.results)
+    : finalStatusFromResults(input.results, input.plan.claims.length);
   return {
     schema: 'agent-rules/proof-receipt/v1',
     version: 1,

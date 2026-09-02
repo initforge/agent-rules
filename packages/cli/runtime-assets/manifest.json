@@ -1,15 +1,15 @@
 {
-  "schema": "agent-rules/runtime-assets-manifest/v1",
+  "schema": "agent-rules/runtime-assets-manifest/v2",
   "package_id": "@initforge/agent-rules",
   "generated_by": "automation/package-runtime-assets.mjs",
   "files": [
     {
       "path": "generated/context-graph.json",
-      "sha256": "b989b8aacc7b55de1fc855f64826e49c018c5471b00a1feb4af1640cbcd10d25"
+      "sha256": "1021cfd80c54a455afe75645d0126cf6ff5289c9d55ef5d43346802ace7c2b71"
     },
     {
       "path": "generated/runtime-build/antigravity/manifest.json",
-      "sha256": "31f4794c8e340a56101fd69f1f5172566dae2ed560ba977243e09f818e64b8ea"
+      "sha256": "8ad599af6a733be5c7ea4e6b26a7de720f45518fb3beb8e1ae1607130b8711ca"
     },
     {
       "path": "generated/runtime-build/antigravity/rules/00-intent-scope-safety.md",
@@ -17,19 +17,19 @@
     },
     {
       "path": "generated/runtime-build/antigravity/rules/10-execution-planning-delegation.md",
-      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
+      "sha256": "e3e0992ef65171e008f8579382b0474d3634caf8732de30d896718b5f200cc01"
     },
     {
       "path": "generated/runtime-build/antigravity/rules/20-proof-outcome.md",
-      "sha256": "0cabde1982ec5c2e17611dade88582c33d8d0b6e0ce27cfaeda981f3dc5ce977"
+      "sha256": "df0abffd30d07db251f4fcebf8f52a49a8f98a4d24a14fc288d63e65f5e573fb"
     },
     {
       "path": "generated/runtime-build/antigravity/rules/30-context-skill-mcp.md",
-      "sha256": "b0cc0e4c365e857811106666fcbb49b1c8d58919cac22b3195b1ae1a428ecc40"
+      "sha256": "0e4c912821cd8949d7e26028eae91789de0869e6e2b86da67f17bb1fc8eb18f1"
     },
     {
       "path": "generated/runtime-build/antigravity/rules/40-maintainer.md",
-      "sha256": "a21136e89d7a8a9a81fd1567a777ad7af079a4dc168ec43b1c86d61c8061c20c"
+      "sha256": "ef9f19fcc2c7167cda4bbac8e2722a5dcbba133162860469d110dbf254d3be6a"
     },
     {
       "path": "generated/runtime-build/antigravity/rules/antigravity-overlay.md",
@@ -37,19 +37,19 @@
     },
     {
       "path": "generated/runtime-build/antigravity/rules/manifest.yaml",
-      "sha256": "99320a62bcae04b70c15722cde8c1ca15bb0ae6f975f7261324bddbba047d99d"
+      "sha256": "0d025032578e97e99a3001439ac3a893faad93a803996ba9370fc511a30b417e"
     },
     {
       "path": "generated/runtime-build/antigravity/runtime-contract.json",
-      "sha256": "b453ef94d3d2f42393a288dc6671d8510e1a6d644ee6212782b64c8252dccb0b"
+      "sha256": "7358bb85821da773428cb2e6f091c67b301050768c2513503c9e7018bb57cd80"
     },
     {
       "path": "generated/runtime-build/claude/AGENTS.md",
-      "sha256": "f0644b0d34d5acd770f9d061784520c086ba74be7f8cc5c5a5fa7f4bc7e1a6f2"
+      "sha256": "bb4009aa412c9ffd57813b043f2bbcf950c892cc1e1aa20047825d9b182440fc"
     },
     {
       "path": "generated/runtime-build/claude/manifest.json",
-      "sha256": "5c429ce41691f61bf851db0c1c6547eb5e4bca30230ced9dbf380b502f3020e4"
+      "sha256": "fdc10216afef29b3ba46fa7c8e77fd89bd0613502705fa5a5e7d0bbdf0f91337"
     },
     {
       "path": "generated/runtime-build/claude/rules/00-intent-scope-safety.md",
@@ -57,19 +57,19 @@
     },
     {
       "path": "generated/runtime-build/claude/rules/10-execution-planning-delegation.md",
-      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
+      "sha256": "e3e0992ef65171e008f8579382b0474d3634caf8732de30d896718b5f200cc01"
     },
     {
       "path": "generated/runtime-build/claude/rules/20-proof-outcome.md",
-      "sha256": "0cabde1982ec5c2e17611dade88582c33d8d0b6e0ce27cfaeda981f3dc5ce977"
+      "sha256": "df0abffd30d07db251f4fcebf8f52a49a8f98a4d24a14fc288d63e65f5e573fb"
     },
     {
       "path": "generated/runtime-build/claude/rules/30-context-skill-mcp.md",
-      "sha256": "b0cc0e4c365e857811106666fcbb49b1c8d58919cac22b3195b1ae1a428ecc40"
+      "sha256": "0e4c912821cd8949d7e26028eae91789de0869e6e2b86da67f17bb1fc8eb18f1"
     },
     {
       "path": "generated/runtime-build/claude/rules/40-maintainer.md",
-      "sha256": "a21136e89d7a8a9a81fd1567a777ad7af079a4dc168ec43b1c86d61c8061c20c"
+      "sha256": "ef9f19fcc2c7167cda4bbac8e2722a5dcbba133162860469d110dbf254d3be6a"
     },
     {
       "path": "generated/runtime-build/claude/rules/claude-overlay.md",
@@ -77,19 +77,19 @@
     },
     {
       "path": "generated/runtime-build/claude/rules/manifest.yaml",
-      "sha256": "99320a62bcae04b70c15722cde8c1ca15bb0ae6f975f7261324bddbba047d99d"
+      "sha256": "0d025032578e97e99a3001439ac3a893faad93a803996ba9370fc511a30b417e"
     },
     {
       "path": "generated/runtime-build/claude/runtime-contract.json",
-      "sha256": "26fd8a5b08e158a939be952b027642e04dbb96cc4d011c33a58452f00b6c173e"
+      "sha256": "8be639a795b817db4d7368862138c649ff28f1fbdef2a0a3dfd99df51ab26b18"
     },
     {
       "path": "generated/runtime-build/codex/AGENTS.md",
-      "sha256": "72951943cc8d1926cd8903cd95b7a2c72c9ab4c9d7af2e9a80f004c87a4839a7"
+      "sha256": "c646ffbb2f4103ff3c841e6f5daae37cd7e5b9bd3fa03ab05fbde7e0aa42ef0b"
     },
     {
       "path": "generated/runtime-build/codex/manifest.json",
-      "sha256": "2c4206a7add7397c5df3c8ea6d95cd784a0905ab6b184f5f1a7c694829557f0e"
+      "sha256": "aa648993250b7fdf951f82159f57c2068229da6e208ccb69f3045524b9e6215f"
     },
     {
       "path": "generated/runtime-build/codex/rules/00-intent-scope-safety.md",
@@ -97,19 +97,19 @@
     },
     {
       "path": "generated/runtime-build/codex/rules/10-execution-planning-delegation.md",
-      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
+      "sha256": "e3e0992ef65171e008f8579382b0474d3634caf8732de30d896718b5f200cc01"
     },
     {
       "path": "generated/runtime-build/codex/rules/20-proof-outcome.md",
-      "sha256": "0cabde1982ec5c2e17611dade88582c33d8d0b6e0ce27cfaeda981f3dc5ce977"
+      "sha256": "df0abffd30d07db251f4fcebf8f52a49a8f98a4d24a14fc288d63e65f5e573fb"
     },
     {
       "path": "generated/runtime-build/codex/rules/30-context-skill-mcp.md",
-      "sha256": "b0cc0e4c365e857811106666fcbb49b1c8d58919cac22b3195b1ae1a428ecc40"
+      "sha256": "0e4c912821cd8949d7e26028eae91789de0869e6e2b86da67f17bb1fc8eb18f1"
     },
     {
       "path": "generated/runtime-build/codex/rules/40-maintainer.md",
-      "sha256": "a21136e89d7a8a9a81fd1567a777ad7af079a4dc168ec43b1c86d61c8061c20c"
+      "sha256": "ef9f19fcc2c7167cda4bbac8e2722a5dcbba133162860469d110dbf254d3be6a"
     },
     {
       "path": "generated/runtime-build/codex/rules/codex-overlay.md",
@@ -117,11 +117,11 @@
     },
     {
       "path": "generated/runtime-build/codex/rules/manifest.yaml",
-      "sha256": "99320a62bcae04b70c15722cde8c1ca15bb0ae6f975f7261324bddbba047d99d"
+      "sha256": "0d025032578e97e99a3001439ac3a893faad93a803996ba9370fc511a30b417e"
     },
     {
       "path": "generated/runtime-build/codex/runtime-contract.json",
-      "sha256": "665b91a573e88eafa1b572d111484fc5b9391d4dcd2f4fca644ba28a7fb797b3"
+      "sha256": "37c678c26f07cea9e18f480e4f06ef07438fcd6b179d2b53fa517c9b47a300d2"
     },
     {
       "path": "generated/runtime-build/command-code/AGENTS.md",
@@ -129,7 +129,7 @@
     },
     {
       "path": "generated/runtime-build/command-code/manifest.json",
-      "sha256": "5bb64e973dd936523e610f4b2b101290960d9ca6a13cffecce880aead1bab064"
+      "sha256": "92954dd44a3b117aedbacd7cb55df69474cddadc26ba69889e3b184f6d5dca74"
     },
     {
       "path": "generated/runtime-build/command-code/rules/00-intent-scope-safety.md",
@@ -137,19 +137,19 @@
     },
     {
       "path": "generated/runtime-build/command-code/rules/10-execution-planning-delegation.md",
-      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
+      "sha256": "e3e0992ef65171e008f8579382b0474d3634caf8732de30d896718b5f200cc01"
     },
     {
       "path": "generated/runtime-build/command-code/rules/20-proof-outcome.md",
-      "sha256": "0cabde1982ec5c2e17611dade88582c33d8d0b6e0ce27cfaeda981f3dc5ce977"
+      "sha256": "df0abffd30d07db251f4fcebf8f52a49a8f98a4d24a14fc288d63e65f5e573fb"
     },
     {
       "path": "generated/runtime-build/command-code/rules/30-context-skill-mcp.md",
-      "sha256": "b0cc0e4c365e857811106666fcbb49b1c8d58919cac22b3195b1ae1a428ecc40"
+      "sha256": "0e4c912821cd8949d7e26028eae91789de0869e6e2b86da67f17bb1fc8eb18f1"
     },
     {
       "path": "generated/runtime-build/command-code/rules/40-maintainer.md",
-      "sha256": "a21136e89d7a8a9a81fd1567a777ad7af079a4dc168ec43b1c86d61c8061c20c"
+      "sha256": "ef9f19fcc2c7167cda4bbac8e2722a5dcbba133162860469d110dbf254d3be6a"
     },
     {
       "path": "generated/runtime-build/command-code/rules/command-code-overlay.md",
@@ -157,15 +157,15 @@
     },
     {
       "path": "generated/runtime-build/command-code/rules/manifest.yaml",
-      "sha256": "99320a62bcae04b70c15722cde8c1ca15bb0ae6f975f7261324bddbba047d99d"
+      "sha256": "0d025032578e97e99a3001439ac3a893faad93a803996ba9370fc511a30b417e"
     },
     {
       "path": "generated/runtime-build/command-code/runtime-contract.json",
-      "sha256": "a39d9155e23339e89924f6c335e05a7b8315ca694bae0c59f8458fd25d456b37"
+      "sha256": "478bc3435f260815e44039156f32c15ddc25e4c6a6dd4063080ad212011085ca"
     },
     {
       "path": "generated/runtime-build/cursor/manifest.json",
-      "sha256": "378ee4e52a9170be1d96470e5eeba69a80ba463574ab201980a1686a314ca810"
+      "sha256": "d284ba249ed128afcb940f38e712eca5f6a220b212da70c0d1129abbe0123312"
     },
     {
       "path": "generated/runtime-build/cursor/rules/00-intent-scope-safety.md",
@@ -173,19 +173,19 @@
     },
     {
       "path": "generated/runtime-build/cursor/rules/10-execution-planning-delegation.md",
-      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
+      "sha256": "e3e0992ef65171e008f8579382b0474d3634caf8732de30d896718b5f200cc01"
     },
     {
       "path": "generated/runtime-build/cursor/rules/20-proof-outcome.md",
-      "sha256": "0cabde1982ec5c2e17611dade88582c33d8d0b6e0ce27cfaeda981f3dc5ce977"
+      "sha256": "df0abffd30d07db251f4fcebf8f52a49a8f98a4d24a14fc288d63e65f5e573fb"
     },
     {
       "path": "generated/runtime-build/cursor/rules/30-context-skill-mcp.md",
-      "sha256": "b0cc0e4c365e857811106666fcbb49b1c8d58919cac22b3195b1ae1a428ecc40"
+      "sha256": "0e4c912821cd8949d7e26028eae91789de0869e6e2b86da67f17bb1fc8eb18f1"
     },
     {
       "path": "generated/runtime-build/cursor/rules/40-maintainer.md",
-      "sha256": "a21136e89d7a8a9a81fd1567a777ad7af079a4dc168ec43b1c86d61c8061c20c"
+      "sha256": "ef9f19fcc2c7167cda4bbac8e2722a5dcbba133162860469d110dbf254d3be6a"
     },
     {
       "path": "generated/runtime-build/cursor/rules/cursor-overlay.md",
@@ -193,11 +193,11 @@
     },
     {
       "path": "generated/runtime-build/cursor/rules/manifest.yaml",
-      "sha256": "99320a62bcae04b70c15722cde8c1ca15bb0ae6f975f7261324bddbba047d99d"
+      "sha256": "0d025032578e97e99a3001439ac3a893faad93a803996ba9370fc511a30b417e"
     },
     {
       "path": "generated/runtime-build/cursor/runtime-contract.json",
-      "sha256": "79668399fe0c527c976c5f0dacf1dc99c59682bd75edf3d029cd6c6c33312fcf"
+      "sha256": "6f695ec7e076fb1347ecff5f3c1e65dde95704e744a08c79de72a5e829d5e43a"
     },
     {
       "path": "generated/runtime-build/deepseek-harness/AGENTS.md",
@@ -205,7 +205,7 @@
     },
     {
       "path": "generated/runtime-build/deepseek-harness/manifest.json",
-      "sha256": "150fd4ffb1a5f6afff20e0cbd9e3a3f3cf1b3a19d92c6326487f1c9ff3066fe2"
+      "sha256": "f46e7e793bcc4960dec03390875578d96c6849c6d0a7e9bc5b441a8028569c4e"
     },
     {
       "path": "generated/runtime-build/deepseek-harness/rules/00-intent-scope-safety.md",
@@ -213,19 +213,19 @@
     },
     {
       "path": "generated/runtime-build/deepseek-harness/rules/10-execution-planning-delegation.md",
-      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
+      "sha256": "e3e0992ef65171e008f8579382b0474d3634caf8732de30d896718b5f200cc01"
     },
     {
       "path": "generated/runtime-build/deepseek-harness/rules/20-proof-outcome.md",
-      "sha256": "0cabde1982ec5c2e17611dade88582c33d8d0b6e0ce27cfaeda981f3dc5ce977"
+      "sha256": "df0abffd30d07db251f4fcebf8f52a49a8f98a4d24a14fc288d63e65f5e573fb"
     },
     {
       "path": "generated/runtime-build/deepseek-harness/rules/30-context-skill-mcp.md",
-      "sha256": "b0cc0e4c365e857811106666fcbb49b1c8d58919cac22b3195b1ae1a428ecc40"
+      "sha256": "0e4c912821cd8949d7e26028eae91789de0869e6e2b86da67f17bb1fc8eb18f1"
     },
     {
       "path": "generated/runtime-build/deepseek-harness/rules/40-maintainer.md",
-      "sha256": "a21136e89d7a8a9a81fd1567a777ad7af079a4dc168ec43b1c86d61c8061c20c"
+      "sha256": "ef9f19fcc2c7167cda4bbac8e2722a5dcbba133162860469d110dbf254d3be6a"
     },
     {
       "path": "generated/runtime-build/deepseek-harness/rules/deepseek-harness-overlay.md",
@@ -233,15 +233,15 @@
     },
     {
       "path": "generated/runtime-build/deepseek-harness/rules/manifest.yaml",
-      "sha256": "99320a62bcae04b70c15722cde8c1ca15bb0ae6f975f7261324bddbba047d99d"
+      "sha256": "0d025032578e97e99a3001439ac3a893faad93a803996ba9370fc511a30b417e"
     },
     {
       "path": "generated/runtime-build/deepseek-harness/runtime-contract.json",
-      "sha256": "dd6857e03ec2b7e2d1accf56d10d349abd58e83100c27bdb04e663f3b414ba6a"
+      "sha256": "e5d16ed6da33363e23dedd9f62690029283a5d04a2031c147fa12124b9f6696d"
     },
     {
       "path": "generated/runtime-build/grok/manifest.json",
-      "sha256": "10dcf7f5a0605d938a3f3d70cde0b604987ea338c5222799393f0c6fa7245d4d"
+      "sha256": "06c24afa5c12ed6ce70c0c3d7d457034458aeec1d5752b230e7f3259fb02e3bb"
     },
     {
       "path": "generated/runtime-build/grok/rules/00-intent-scope-safety.md",
@@ -249,19 +249,19 @@
     },
     {
       "path": "generated/runtime-build/grok/rules/10-execution-planning-delegation.md",
-      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
+      "sha256": "e3e0992ef65171e008f8579382b0474d3634caf8732de30d896718b5f200cc01"
     },
     {
       "path": "generated/runtime-build/grok/rules/20-proof-outcome.md",
-      "sha256": "0cabde1982ec5c2e17611dade88582c33d8d0b6e0ce27cfaeda981f3dc5ce977"
+      "sha256": "df0abffd30d07db251f4fcebf8f52a49a8f98a4d24a14fc288d63e65f5e573fb"
     },
     {
       "path": "generated/runtime-build/grok/rules/30-context-skill-mcp.md",
-      "sha256": "b0cc0e4c365e857811106666fcbb49b1c8d58919cac22b3195b1ae1a428ecc40"
+      "sha256": "0e4c912821cd8949d7e26028eae91789de0869e6e2b86da67f17bb1fc8eb18f1"
     },
     {
       "path": "generated/runtime-build/grok/rules/40-maintainer.md",
-      "sha256": "a21136e89d7a8a9a81fd1567a777ad7af079a4dc168ec43b1c86d61c8061c20c"
+      "sha256": "ef9f19fcc2c7167cda4bbac8e2722a5dcbba133162860469d110dbf254d3be6a"
     },
     {
       "path": "generated/runtime-build/grok/rules/grok-overlay.md",
@@ -269,11 +269,11 @@
     },
     {
       "path": "generated/runtime-build/grok/rules/manifest.yaml",
-      "sha256": "99320a62bcae04b70c15722cde8c1ca15bb0ae6f975f7261324bddbba047d99d"
+      "sha256": "0d025032578e97e99a3001439ac3a893faad93a803996ba9370fc511a30b417e"
     },
     {
       "path": "generated/runtime-build/grok/runtime-contract.json",
-      "sha256": "bc77eec684d6c356e86f5ae7af1ef3e6ff56e52d6ba3d8b2af72631f149f4b84"
+      "sha256": "14e918cda6ad1aa828d212048c7222d6b73a30ff368a6aaeabc8acfca35ac3b8"
     },
     {
       "path": "generated/runtime-build/omp/AGENTS.md",
@@ -281,7 +281,7 @@
     },
     {
       "path": "generated/runtime-build/omp/manifest.json",
-      "sha256": "15d9759a50de58732740df5cf86964458e13e1f0186f474940bec56a763c9dae"
+      "sha256": "328bbca315cf55b2fc59cf580d708ad5062f233db2a8e3f48f1c77096ceceb53"
     },
     {
       "path": "generated/runtime-build/omp/rules/00-intent-scope-safety.md",
@@ -289,23 +289,23 @@
     },
     {
       "path": "generated/runtime-build/omp/rules/10-execution-planning-delegation.md",
-      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
+      "sha256": "e3e0992ef65171e008f8579382b0474d3634caf8732de30d896718b5f200cc01"
     },
     {
       "path": "generated/runtime-build/omp/rules/20-proof-outcome.md",
-      "sha256": "0cabde1982ec5c2e17611dade88582c33d8d0b6e0ce27cfaeda981f3dc5ce977"
+      "sha256": "df0abffd30d07db251f4fcebf8f52a49a8f98a4d24a14fc288d63e65f5e573fb"
     },
     {
       "path": "generated/runtime-build/omp/rules/30-context-skill-mcp.md",
-      "sha256": "b0cc0e4c365e857811106666fcbb49b1c8d58919cac22b3195b1ae1a428ecc40"
+      "sha256": "0e4c912821cd8949d7e26028eae91789de0869e6e2b86da67f17bb1fc8eb18f1"
     },
     {
       "path": "generated/runtime-build/omp/rules/40-maintainer.md",
-      "sha256": "a21136e89d7a8a9a81fd1567a777ad7af079a4dc168ec43b1c86d61c8061c20c"
+      "sha256": "ef9f19fcc2c7167cda4bbac8e2722a5dcbba133162860469d110dbf254d3be6a"
     },
     {
       "path": "generated/runtime-build/omp/rules/manifest.yaml",
-      "sha256": "99320a62bcae04b70c15722cde8c1ca15bb0ae6f975f7261324bddbba047d99d"
+      "sha256": "0d025032578e97e99a3001439ac3a893faad93a803996ba9370fc511a30b417e"
     },
     {
       "path": "generated/runtime-build/omp/rules/omp-overlay.md",
@@ -313,7 +313,7 @@
     },
     {
       "path": "generated/runtime-build/omp/runtime-contract.json",
-      "sha256": "efca1d32610425df2117af9c1819d9ddb3e1d60260d4fa1c6161a24276d4f6f3"
+      "sha256": "770ca847e6dfec33bf2f0711471abf79911716eb911ae4df8efada5cff18a467"
     },
     {
       "path": "generated/runtime-build/opencode/AGENTS.md",
@@ -321,7 +321,7 @@
     },
     {
       "path": "generated/runtime-build/opencode/manifest.json",
-      "sha256": "046b0c55b138a5011e9748a476153333d50e9bbbdb7542b143316d5351d1773b"
+      "sha256": "0bf8e8f49038b2fe2ab7d01017794cfbebb399ba11c7470b0c4d59870ec1bd60"
     },
     {
       "path": "generated/runtime-build/opencode/rules/00-intent-scope-safety.md",
@@ -329,23 +329,23 @@
     },
     {
       "path": "generated/runtime-build/opencode/rules/10-execution-planning-delegation.md",
-      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
+      "sha256": "e3e0992ef65171e008f8579382b0474d3634caf8732de30d896718b5f200cc01"
     },
     {
       "path": "generated/runtime-build/opencode/rules/20-proof-outcome.md",
-      "sha256": "0cabde1982ec5c2e17611dade88582c33d8d0b6e0ce27cfaeda981f3dc5ce977"
+      "sha256": "df0abffd30d07db251f4fcebf8f52a49a8f98a4d24a14fc288d63e65f5e573fb"
     },
     {
       "path": "generated/runtime-build/opencode/rules/30-context-skill-mcp.md",
-      "sha256": "b0cc0e4c365e857811106666fcbb49b1c8d58919cac22b3195b1ae1a428ecc40"
+      "sha256": "0e4c912821cd8949d7e26028eae91789de0869e6e2b86da67f17bb1fc8eb18f1"
     },
     {
       "path": "generated/runtime-build/opencode/rules/40-maintainer.md",
-      "sha256": "a21136e89d7a8a9a81fd1567a777ad7af079a4dc168ec43b1c86d61c8061c20c"
+      "sha256": "ef9f19fcc2c7167cda4bbac8e2722a5dcbba133162860469d110dbf254d3be6a"
     },
     {
       "path": "generated/runtime-build/opencode/rules/manifest.yaml",
-      "sha256": "99320a62bcae04b70c15722cde8c1ca15bb0ae6f975f7261324bddbba047d99d"
+      "sha256": "0d025032578e97e99a3001439ac3a893faad93a803996ba9370fc511a30b417e"
     },
     {
       "path": "generated/runtime-build/opencode/rules/opencode-overlay.md",
@@ -353,7 +353,7 @@
     },
     {
       "path": "generated/runtime-build/opencode/runtime-contract.json",
-      "sha256": "0219f9e90500266ea6e4b3924820551cbd8783860a65c475b6d40f55f5d7e67f"
+      "sha256": "96c95d1ea5fa6c879e2bd63710a23f78a288e40dc2b81dbdac376449dea79132"
     },
     {
       "path": "integrations/optional/pencil-mcp/adapters/antigravity.json",
@@ -809,15 +809,19 @@
     },
     {
       "path": "packages/kernel/dist/harness/evidence/proof-policy.js",
-      "sha256": "29dfef05ae84e7a640d4de030231a165bfed7b1bcdba58e82bfb26aec0749096"
+      "sha256": "0d75959f4e5cb8ba7af421eb99286025044734d1dd3d3519f51e1d1058de6528"
     },
     {
       "path": "packages/kernel/dist/harness/evidence/proof-router.js",
-      "sha256": "422491bd8ea2a365df02437d501ef4d21137af9d6d681689ae2a3ec6beae4665"
+      "sha256": "caeef552b14e04fb3bb0653dd6c376485459a43ff27563a0a9103b9a27f077f0"
+    },
+    {
+      "path": "packages/kernel/dist/harness/planning/plan-contract.js",
+      "sha256": "71134c897281848b35ae7935f5e71550d2b2a89757ee1068a5dc9f6f07232643"
     },
     {
       "path": "packages/kernel/dist/harness/review/materiality.js",
-      "sha256": "a7c620d7dc22d75616f7a34b6e9a907e88d91739bfe017d4e06749e83abd6001"
+      "sha256": "073cb1e8d491f9536b4264c75d6c5140c823222e9059e59b6d0cf95571f6f73d"
     },
     {
       "path": "packages/kernel/dist/index.js",
@@ -829,7 +833,7 @@
     },
     {
       "path": "packages/kernel/dist/northstar/health-contract.js",
-      "sha256": "e5bc43b9c84f769767e2a427c34302519ee07aa73e2526eeafc14b9329d90da6"
+      "sha256": "5e51acb71825dda77d1683bad5deb3e9dcb739052d33cd52d25be6f9d8a5b89f"
     },
     {
       "path": "packages/kernel/dist/northstar/host-adapters.js",
@@ -841,11 +845,11 @@
     },
     {
       "path": "packages/kernel/dist/northstar/index.js",
-      "sha256": "a2ff625b2b070122a61cd4fb1b1d4ce0498d58d2393165d2e03e51780cd99e2b"
+      "sha256": "30070019f3c39c4439cab31c98c3f4ee6dcda491ba31640b6ce8aa7cde1ac7a9"
     },
     {
       "path": "packages/kernel/dist/northstar/native-turn-router.js",
-      "sha256": "8b405a3e2febef94f7c294a1fed8caabbe771c962172c43587f5d20858c23633"
+      "sha256": "7201d15186bbdbc77576acc00661fb65776b2e1151394b5b1183f198332d0a59"
     },
     {
       "path": "packages/kernel/dist/northstar/proof-router.js",
@@ -853,19 +857,27 @@
     },
     {
       "path": "packages/kernel/dist/northstar/proof-testing.js",
-      "sha256": "b1917daa91ba9b966533b867eb28eb0e6683bc0f1c1ea63880f2302dac45deab"
+      "sha256": "80f82a551b6c0f9ba603d98ec90c0aaea83d7fa4632173a6d818c9720496c664"
     },
     {
       "path": "packages/kernel/dist/northstar/repo-facts.js",
-      "sha256": "97a502c92f8c392adbec1c2f0552c5af292f7a5b7f0f4136f924438e5f6cc47c"
+      "sha256": "22cdec6aeb211304a02aa5284b215f16433bb1fa8622a11d2e65a0530cfa9bc6"
     },
     {
       "path": "packages/kernel/dist/northstar/routing.js",
-      "sha256": "9d74e7d3abd0240abb5126a132699c25ed093232f6f75330d5603d7bb33a43ef"
+      "sha256": "af8a06b700905d8d2d237337deea73f6adf9abb700ff0edfc875a8693b00a141"
     },
     {
       "path": "packages/kernel/dist/northstar/rule-enforcement.js",
       "sha256": "5e8d78a1651ff36bb52db9de3d4532d69850cd2b20498baee85345fe117ca207"
+    },
+    {
+      "path": "packages/kernel/dist/northstar/skill-registry.js",
+      "sha256": "9faf62d78945998898fcc7ea51bed8ad1113bc706a88a7dd84d24103c0e3fea0"
+    },
+    {
+      "path": "packages/kernel/dist/northstar/task-state.js",
+      "sha256": "c51df7c6614aa159d19d88270ab3406091135fd99da227996db0ce9f2daaa57f"
     },
     {
       "path": "platforms/antigravity/adapter.ts",
@@ -973,7 +985,7 @@
     },
     {
       "path": "platforms/platform-contracts.json",
-      "sha256": "717ce5e3e48b99a2b96e3b2ff4a4b6fe777f1c204935da925e5dd33e53823e81"
+      "sha256": "8af5cfd28dbe7ac10db4172a4263457865043095c2048ad2ee42f08d809b05a3"
     },
     {
       "path": "platforms/README.md",
@@ -1101,11 +1113,11 @@
     },
     {
       "path": "profiles/5fedu/projects/00-context-map.md",
-      "sha256": "1fbc5d5ebc34e06f37d4045a770e5a723a5c9998b51b639aa3bdaf89ac3c2b5b"
+      "sha256": "ff62f6f3b8c3bf08d11be329a9288088ffd18dd90baa96540d92d561fad1419a"
     },
     {
       "path": "profiles/5fedu/projects/AGENTS.md",
-      "sha256": "6080d1f8e6e5cf6324945ba3a280e16aa653e14b462e2867eb36292cc97d9b58"
+      "sha256": "c5e512edac3583e4861b020991a3bc05ddd5f23aabd3c8bd51caa2b4b7fbaad8"
     },
     {
       "path": "profiles/5fedu/projects/context-template/AGENTS.md",
@@ -3184,28 +3196,32 @@
       "sha256": "c6a255806a98b0f8f55cd242e3d3243cec152e23d44be0fa9e6659443c740052"
     },
     {
+      "path": "registry/skills.yaml",
+      "sha256": "f7b1d046323b906de1a9a13d1c959da3c36fbdbe2c3864dc14bc793b126ce066"
+    },
+    {
       "path": "rules/00-intent-scope-safety.md",
       "sha256": "353350bc8b6425cb70bf842ce2ea6ed40a14f13ba91ee46d97bc303c5d7fd066"
     },
     {
       "path": "rules/10-execution-planning-delegation.md",
-      "sha256": "b543d02ae01bf84fe6d1423c26a6dbd5539252854844fc33a7f6509596491efc"
+      "sha256": "e3e0992ef65171e008f8579382b0474d3634caf8732de30d896718b5f200cc01"
     },
     {
       "path": "rules/20-proof-outcome.md",
-      "sha256": "0cabde1982ec5c2e17611dade88582c33d8d0b6e0ce27cfaeda981f3dc5ce977"
+      "sha256": "df0abffd30d07db251f4fcebf8f52a49a8f98a4d24a14fc288d63e65f5e573fb"
     },
     {
       "path": "rules/30-context-skill-mcp.md",
-      "sha256": "b0cc0e4c365e857811106666fcbb49b1c8d58919cac22b3195b1ae1a428ecc40"
+      "sha256": "0e4c912821cd8949d7e26028eae91789de0869e6e2b86da67f17bb1fc8eb18f1"
     },
     {
       "path": "rules/40-maintainer.md",
-      "sha256": "a21136e89d7a8a9a81fd1567a777ad7af079a4dc168ec43b1c86d61c8061c20c"
+      "sha256": "ef9f19fcc2c7167cda4bbac8e2722a5dcbba133162860469d110dbf254d3be6a"
     },
     {
       "path": "rules/manifest.yaml",
-      "sha256": "99320a62bcae04b70c15722cde8c1ca15bb0ae6f975f7261324bddbba047d99d"
+      "sha256": "0d025032578e97e99a3001439ac3a893faad93a803996ba9370fc511a30b417e"
     },
     {
       "path": "rules/README.md",
@@ -3224,72 +3240,48 @@
       "sha256": "613569b779c94fd64c54278af6f453e8c4105431f3423606df3363710072728e"
     },
     {
-      "path": "skills/anthropic-frontend-design/ROUTE.json",
-      "sha256": "dd514c416c51cb45a00457a492dc3429a185fad9167c0679e74ad2d57218292d"
-    },
-    {
-      "path": "skills/anthropic-frontend-design/SKILL.md",
-      "sha256": "5536d656f619dc576b77eaed853f1ba5f2af7933819c7c337c32ca632824a832"
-    },
-    {
-      "path": "skills/backend-composition/ROUTE.json",
-      "sha256": "da6c2b0576c9a4922905f6a1d35d879e4a6519e8932cf461ad2c7cffe985e9d9"
-    },
-    {
-      "path": "skills/backend-composition/SKILL.md",
-      "sha256": "38ec1f3644764caf56c99b1f4b5f2e470d905003796763c9480c6ddac40f52a4"
-    },
-    {
-      "path": "skills/best-of-n/ROUTE.json",
-      "sha256": "c48d05f10d008d409cc47d492718fcdfde6d7ca786354e285a349a5f28d00853"
+      "path": "skills/backend-change-boundaries/SKILL.md",
+      "sha256": "597f8fd7fa0297e91c392a58601cc673da9fe23b485aedb3e4ea93997a8c62bc"
     },
     {
       "path": "skills/best-of-n/SKILL.md",
-      "sha256": "1346bc154db93b4b0f4aedfe8a2f3f044b8948f131f5fac904ccc70704a1ca75"
-    },
-    {
-      "path": "skills/browser-qa/references/playwright-cli.md",
-      "sha256": "0537337b410dae4fdce42030caa392351f51aed14d62657d7cedb624d343a0cf"
-    },
-    {
-      "path": "skills/browser-qa/ROUTE.json",
-      "sha256": "2e9f009b397f64f9e8f3d893702d57ae26982f533ea4c7cf9f9dfe4cebfb96d4"
-    },
-    {
-      "path": "skills/browser-qa/SKILL.md",
-      "sha256": "1a2feb514a4fc293aa8ad3e5844e72451a0096611b65c465b6570b512748e044"
-    },
-    {
-      "path": "skills/callstack-react-native-best-practices/ROUTE.json",
-      "sha256": "c1b61bd1400042acd7ec26254721c8a572e1c2249b6b0a8f80e19af46e610ac0"
-    },
-    {
-      "path": "skills/callstack-react-native-best-practices/SKILL.md",
-      "sha256": "3cbc084b5a542d04e7be6b0ad40a96ee93a4bf982a88fe9ba066a60e0ab1e847"
-    },
-    {
-      "path": "skills/claim-test-strategy/ROUTE.json",
-      "sha256": "dfb0134c81ee843d3e260cac60f14670439b34d902642a6209ffcb31b10554d4"
-    },
-    {
-      "path": "skills/claim-test-strategy/SKILL.md",
-      "sha256": "6a0b9ffd3533c713520bec4dcf4a4866e832700bf74a2adeffa5bec837a27e0f"
-    },
-    {
-      "path": "skills/context-evolution-protocol/ROUTE.json",
-      "sha256": "53364ac670cc7c8148d73ba7487eabcb1b83f2506aedb61001d506a7e07501c4"
+      "sha256": "73d940a808967e4e07e31b2cf00bcf2ddd38c6ddcfb8cdb24aef0849313fd0a9"
     },
     {
       "path": "skills/context-evolution-protocol/SKILL.md",
-      "sha256": "22f7a7d40e65bb20f1e6998e31226ebae02cf5072130ed51e761355914233b2a"
+      "sha256": "ea9127bd07acf4b84ac6cd2df010b1f244aba24a318d19c705c84d64c8f3808c"
     },
     {
-      "path": "skills/database-stack/ROUTE.json",
-      "sha256": "79ac133d36b7817cf4ec7e51e31bf74c1d70987f55d37dab66ebdb045c5d28a0"
+      "path": "skills/design-taste-frontend/SKILL.md",
+      "sha256": "aa194351b246b8b4799099d4ed7b033d29eab6e6e3d58d8d2172978be7b3ec89"
     },
     {
-      "path": "skills/database-stack/SKILL.md",
-      "sha256": "00af0be57097baccfdc687bc894fe5f1c144656a387ba5de2ca15174fbe4c12a"
+      "path": "skills/differential-review/adversarial.md",
+      "sha256": "3cb823f38c6e551cbcf5f72325d2bb219dacdad774072519c31d50d92db19800"
+    },
+    {
+      "path": "skills/differential-review/agents/openai.yaml",
+      "sha256": "11a851b1841f3e828e7609045d91e0632cac07dfc008b2740f487cee83a5efd1"
+    },
+    {
+      "path": "skills/differential-review/assets/trail-of-bits-mark.svg",
+      "sha256": "4bf74c789b38dcf6ad762c136b6832363d27ae19fbaa9a18ec18d66ecce6ca05"
+    },
+    {
+      "path": "skills/differential-review/methodology.md",
+      "sha256": "16b335d24cf2145e3dc4a37f50056550d29db2efa20e6df78fec95ec1e6fb0b4"
+    },
+    {
+      "path": "skills/differential-review/patterns.md",
+      "sha256": "52abb18abbc73502a3d3b2f36a7a035adc1db40fd812d1d5424cf065036a06e9"
+    },
+    {
+      "path": "skills/differential-review/reporting.md",
+      "sha256": "0016876dc6f158e926448bff1b6f634796757c7afe09dff177cfe30250724fc4"
+    },
+    {
+      "path": "skills/differential-review/SKILL.md",
+      "sha256": "1499d68ed4465fe89448f2bd90054b16a1a047f2e49a433623312f3b7a8a9742"
     },
     {
       "path": "skills/docs-style/agents/openai.yaml",
@@ -3300,305 +3292,1493 @@
       "sha256": "c2e9d88a4a0978aaa61ce55196bdfc43eee8aea73d0cb943a5c479eeea080985"
     },
     {
-      "path": "skills/docs-style/ROUTE.json",
-      "sha256": "3c79928c2a43424fe2d758d92d78f901b33996484674f0c65a11712ee73cd170"
-    },
-    {
       "path": "skills/docs-style/SKILL.md",
-      "sha256": "4cf62d5f08e17b770a62e2707ed362410d107a5c5ec733571a2680c475de96e1"
+      "sha256": "751ca9ac932b3eec02c7b8ae41c61d60ece07b96a3a45206cef67fc35bc68ea4"
     },
     {
-      "path": "skills/expo-skills/ROUTE.json",
-      "sha256": "b49b7eb54aa667ca8edff83f7d05aebb934233e829446d61355ee9c7df3955a5"
+      "path": "skills/exploratory-testing/references/heuristics-and-automation.md",
+      "sha256": "9bceb9dc1ee1844eac22c4fcc977a843afb38b651c36f57bb41ab8bd41a1682e"
     },
     {
-      "path": "skills/expo-skills/SKILL.md",
-      "sha256": "44a522c61e6911bbff746489c6c9802b6320462d1566bf05eafab580f36740ca"
+      "path": "skills/exploratory-testing/references/session-templates.md",
+      "sha256": "83c1c8111c9fabee15037ef99f41c63f059d750874507aef51596a03788842ef"
     },
     {
-      "path": "skills/external-skill-governance/ROUTE.json",
-      "sha256": "0eec294de257d69ffc74727ddecf66a2fff932fda281d706bde6f7cb1f47fc9d"
+      "path": "skills/exploratory-testing/SKILL.md",
+      "sha256": "c0dd7d003ef4f337369a57fa71dea1d2c7a08832706c9fba0526d6eac28ad2e8"
     },
     {
-      "path": "skills/external-skill-governance/SKILL.md",
-      "sha256": "2c437a17edcb726af9fc950afa4832324535a9e5c904cd5e6ea56c430542c965"
+      "path": "skills/expo-native-ui/agents/openai.yaml",
+      "sha256": "b7cecc5e5a81e98b386b06316bc175540a97806f6c8a1c714b52209980b88f7b"
     },
     {
-      "path": "skills/finish-to-completion/ROUTE.json",
-      "sha256": "f47670554569b17d944df97bc6c6bea91bbe49e7ff8eda0137ef1841ea656e77"
+      "path": "skills/expo-native-ui/references/animations.md",
+      "sha256": "4faacd3e2a4f58437d9eeb715336590b2d7ca0e130e59f7db885e2689a9d38b0"
     },
     {
-      "path": "skills/finish-to-completion/SKILL.md",
-      "sha256": "93cd1d7f64a9977731b13597ddc523313faad21776fe6187366d43948421f387"
+      "path": "skills/expo-native-ui/references/controls.md",
+      "sha256": "e63a7e92cac8a5d0ceb9ed5f05e19ea9cd4d865a8bea6ff8f8a82c74c77fa180"
     },
     {
-      "path": "skills/frontend-architect/ROUTE.json",
-      "sha256": "b1144129ad248b34928bd923706b1021602d10a35ca756dc901b97acca79a4da"
+      "path": "skills/expo-native-ui/references/gradients.md",
+      "sha256": "63ced0392f67c41bf90e726613d139a389db609799bfcb91124e6e69b9a66e70"
     },
     {
-      "path": "skills/frontend-architect/SKILL.md",
-      "sha256": "1b313e756fde9f596dc7e6db378aac60d9442d5328dddf0f625ce8d5cbe8e9c1"
+      "path": "skills/expo-native-ui/references/icons.md",
+      "sha256": "b6e6c1226e83f6e7345e185294872dc9f2b7c8fe21b2315524c69c16e2a8d360"
     },
     {
-      "path": "skills/frontend-design-contract/ROUTE.json",
-      "sha256": "83a507f54ddf760610149e6e066c336b1afa961a9277dff0a9fd0394b5953eae"
+      "path": "skills/expo-native-ui/references/media.md",
+      "sha256": "06f92362a4a28c2ad0f8826b9b113c4747b199585e8afd205b94e787fb15c564"
+    },
+    {
+      "path": "skills/expo-native-ui/references/storage.md",
+      "sha256": "265e8bc21adcd698062f18fa442e0e07e99e67868576f18aac2112e5381ffbf1"
+    },
+    {
+      "path": "skills/expo-native-ui/references/visual-effects.md",
+      "sha256": "3b7cfcff2a3eb9e63cef42a0dbbaa31f659fc2e4b527e0da5f7906a50191279d"
+    },
+    {
+      "path": "skills/expo-native-ui/references/webgpu-three.md",
+      "sha256": "3a247a7740e4bab4aea5dec8b81c7782a5918bb221838a05f6a94c669f145679"
+    },
+    {
+      "path": "skills/expo-native-ui/SKILL.md",
+      "sha256": "ed39bc3c516d7eae028dec4cb484bda0d825c2121cdeb80f72361c6fdf31f917"
+    },
+    {
+      "path": "skills/expo-overview/agents/openai.yaml",
+      "sha256": "a488fa6e5659f702b5e27d4bcc1ab601cc64c0fc001404d64fcdef1627f81494"
+    },
+    {
+      "path": "skills/expo-overview/SKILL.md",
+      "sha256": "f991966e9fad88cef9a2749e60eaca77db1ce40f2a94934e5dcd9bd7ac146309"
+    },
+    {
+      "path": "skills/expo-router/agents/openai.yaml",
+      "sha256": "7b76d9331a33e06e61504db9af069bccc8ab4a02e2f8be92727e8e0f9ad7941d"
+    },
+    {
+      "path": "skills/expo-router/references/form-sheet.md",
+      "sha256": "947de9cf35a15aacf3f02e96e45942b5e4826e536e529570886e5ddbb7ec8591"
+    },
+    {
+      "path": "skills/expo-router/references/route-structure.md",
+      "sha256": "4c3d70edeb7e36d965c4d96fa150f23ee57e01be5f6c57dd3e34c6309aab7e87"
+    },
+    {
+      "path": "skills/expo-router/references/search.md",
+      "sha256": "bb4785df4757d84f1aff09d34cdb84043e7099684b9731a24a1d79cc3c0df172"
+    },
+    {
+      "path": "skills/expo-router/references/tabs.md",
+      "sha256": "2793a7ac0a45cf65564bcf2f6f9282539d201a4b8bea620dc0b53de092454de4"
+    },
+    {
+      "path": "skills/expo-router/references/toolbar-and-headers.md",
+      "sha256": "14d9a71dd949bd2b28a5bd531f6b9c1b4f3fa847a86db8c5218fee67b5295769"
+    },
+    {
+      "path": "skills/expo-router/references/zoom-transitions.md",
+      "sha256": "cacc1665e9f3044762765d2cd55fd1ead9627f06478f12dfa2280c6f9ae88ede"
+    },
+    {
+      "path": "skills/expo-router/SKILL.md",
+      "sha256": "eeffbf9cd5271e9c742af3919741dc2bfbbf312e8898017204a523d1e2db811b"
+    },
+    {
+      "path": "skills/expo-upgrade/agents/openai.yaml",
+      "sha256": "c0695e6a721f721e4d27c44df7b5adbf7602bf798862c6674ee3002c993edc20"
+    },
+    {
+      "path": "skills/expo-upgrade/references/expo-av-to-audio.md",
+      "sha256": "b66df7e8722339e2b0ae5e22da225e313794744eb0648303ad6cfc43632cc6a1"
+    },
+    {
+      "path": "skills/expo-upgrade/references/expo-av-to-video.md",
+      "sha256": "e222bf0e767baee721f7e42ce68d2c26a8b844d723e830d81cdfecac805564a2"
+    },
+    {
+      "path": "skills/expo-upgrade/references/native-tabs.md",
+      "sha256": "bf945b38a970a556769d1c406f8089d8ece34b5f204fe32a0e10fbedc24fff83"
+    },
+    {
+      "path": "skills/expo-upgrade/references/new-architecture.md",
+      "sha256": "32479e9be069c5e4931dfdf3e475119ddc7a879bac8a475e259e5193bcf32cff"
+    },
+    {
+      "path": "skills/expo-upgrade/references/react-19.md",
+      "sha256": "bf600571e38dd7d114b58e0f6ace5a560792624dcfdc49c421134cd1669a0d77"
+    },
+    {
+      "path": "skills/expo-upgrade/references/react-compiler.md",
+      "sha256": "ad485033650cff963abdfd8a98d5bbe5f0825a853ffebd6cfe11a4c80b3c63db"
+    },
+    {
+      "path": "skills/expo-upgrade/references/react-navigation-to-expo-router.md",
+      "sha256": "083fb891adb87a1ab02aff92b1f322014ecb2427014e20194ff9e05f5d321ca9"
+    },
+    {
+      "path": "skills/expo-upgrade/SKILL.md",
+      "sha256": "a606ce06cf5a21c2438e721b4fea0542670120dd273a4648295dc6f6e0dc644f"
     },
     {
       "path": "skills/frontend-design-contract/SKILL.md",
-      "sha256": "a455e97ccfda27bf4709207c66e8019e91cc6582c6880a5a021bcf82ede5f182"
+      "sha256": "325edabde726e80005a96166a5438f6d03240f8137b06b26fa3731aea5796d07"
     },
     {
-      "path": "skills/hashicorp-agent-skills/ROUTE.json",
-      "sha256": "c3533f618680feba47bb385ba93340e8c3ce011f2b3802fa5e339c6f3cb9117d"
+      "path": "skills/frontend-design/LICENSE.txt",
+      "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
     },
     {
-      "path": "skills/hashicorp-agent-skills/SKILL.md",
-      "sha256": "0558b7af151854f0f1cb3f036ba1fccfa591bb0967efc6530b8275e62662270c"
+      "path": "skills/frontend-design/SKILL.md",
+      "sha256": "1608ea77fbb6fc30d13a97d12cfa8ebf31358d40f0dd97beed24829d6b3f45dd"
     },
     {
-      "path": "skills/impeccable/ROUTE.json",
-      "sha256": "d8e6266e0b8a86f46aad2fa61f0761659064f1863bdf7f19e1ac933fec2d5d4d"
+      "path": "skills/image-to-code/SKILL.md",
+      "sha256": "4c060a8064a8b13380bc2ef3d6e6a1d0b1e316aa093cd9807d0ce9e4eeb037fa"
+    },
+    {
+      "path": "skills/impeccable/agents/impeccable_asset_producer.toml",
+      "sha256": "ffed8defec848adaec259731cde9440be592b66322356a438dc4b4e5bce652f2"
+    },
+    {
+      "path": "skills/impeccable/agents/impeccable_documenter.toml",
+      "sha256": "d2b3e788ab96a1b7cb7a260c88dbd2fa4387d89f3dea07d835ef1707433e55d3"
+    },
+    {
+      "path": "skills/impeccable/agents/impeccable_finish_reviewer.toml",
+      "sha256": "8bacfe4544fd4c2785125af4dcb7b341e2684474af4f1e101b9c781ee5f7dca0"
+    },
+    {
+      "path": "skills/impeccable/agents/impeccable_manual_edit_applier.toml",
+      "sha256": "a9c86eedb0cb3381400b87f9bebd0319215247c6446c9f78a702800726b4f63d"
+    },
+    {
+      "path": "skills/impeccable/agents/openai.yaml",
+      "sha256": "aa8140ebe247f42686ee1e0b6f0ca4c391493703bfd499613e4a3d4685691619"
+    },
+    {
+      "path": "skills/impeccable/reference/adapt.md",
+      "sha256": "531f177d9b246960f6ea63d64f16dc73ee76899c2dcba9dd09236e1cf78f2ab6"
+    },
+    {
+      "path": "skills/impeccable/reference/adapt.native.md",
+      "sha256": "0abc89f44b1416f173cd2576b6a5ed5e54d4030348e8f5142017a29a7e19e688"
+    },
+    {
+      "path": "skills/impeccable/reference/android.md",
+      "sha256": "a3757686a0c2778ccbc0ea321f4460368f26bc0229d2b24c3c694a42ce40b1a0"
+    },
+    {
+      "path": "skills/impeccable/reference/animate.md",
+      "sha256": "9d6d186e5da3d4ebffb333f9b58209d847705d11d9b4e761bfb2529bf47b0d3a"
+    },
+    {
+      "path": "skills/impeccable/reference/audit.md",
+      "sha256": "88c92aa1a257eedd39d81477558199ee0f6b640d13d0cfbca0f90f459181d3a8"
+    },
+    {
+      "path": "skills/impeccable/reference/audit.native.md",
+      "sha256": "55299f6059ce8ecf01874b2dd4bb3a3f21d39f459e5ee6e8e786b2343494db5c"
+    },
+    {
+      "path": "skills/impeccable/reference/bolder.md",
+      "sha256": "51169d458d53e1fdb1bb682ab96c9817601e2bc1417c0a9f27aa48ff87249d6b"
+    },
+    {
+      "path": "skills/impeccable/reference/clarify.md",
+      "sha256": "cbbf5647e0e14f6b10c7fd43392ecc1d6924acfbf43994d1d147047d73497f42"
+    },
+    {
+      "path": "skills/impeccable/reference/colorize.md",
+      "sha256": "a3cd4b18154e8c06edfbf7e7316077e8dd500d9777ea723c09fc02fe32b3fba2"
+    },
+    {
+      "path": "skills/impeccable/reference/craft-floor.md",
+      "sha256": "55f012f96d30a9a756b66f4cec9810e64e039739248b1c211f1187341ecd77cb"
+    },
+    {
+      "path": "skills/impeccable/reference/craft.md",
+      "sha256": "39b5fefbf524ad156a4cab2fbc5b65f2358c213a30d59a4c7510704e8d9dd56b"
+    },
+    {
+      "path": "skills/impeccable/reference/critique.md",
+      "sha256": "789d4952f93ebda4beee9bdaa12d84159461e0f4349b6ff29d40e78beb86c453"
+    },
+    {
+      "path": "skills/impeccable/reference/degraded/asset-producer.md",
+      "sha256": "8ffa506b8dcb368d73e2113451c30a1df518d5c6db88517407ea2fa84f99e04c"
+    },
+    {
+      "path": "skills/impeccable/reference/degraded/documenter.md",
+      "sha256": "f625dc0b847beb703306686c94759294e1d68fce51faaf8076d60a7228105616"
+    },
+    {
+      "path": "skills/impeccable/reference/degraded/finish-reviewer.md",
+      "sha256": "58bf97161ac4f1a07e33ad7960a4daf7b1d6b8e52f545d0e17e9fe9850ef34b5"
+    },
+    {
+      "path": "skills/impeccable/reference/degraded/manual-edit-applier.md",
+      "sha256": "4e77216a6a95c756556e1ce382422dbdc157bcbf4672449ab9fa3b091f0cd1ce"
+    },
+    {
+      "path": "skills/impeccable/reference/delight.md",
+      "sha256": "14a5700220c44c9addf2bca02036969b4cede7ea51fd98fe290892942bb89d2c"
+    },
+    {
+      "path": "skills/impeccable/reference/distill.md",
+      "sha256": "591858c868281bfa65f76e8c8eb60bd32d614a22065c5a490a0dd82bb46c271d"
+    },
+    {
+      "path": "skills/impeccable/reference/doctor.md",
+      "sha256": "f31ae2079d7450ee7e6e00e47f23a6e317247b5bb1715f1b7f2d2ed5d6e2da4b"
+    },
+    {
+      "path": "skills/impeccable/reference/document.md",
+      "sha256": "b222f790f1809a5da91b82a7e4cd5b14402b3d9bb58a6fc83bcefa9efc768136"
+    },
+    {
+      "path": "skills/impeccable/reference/extract.md",
+      "sha256": "3b0b82a3f0c5f8d60b300503d5b75dd4785ebaf1c73ffe88a1c0dd4093e4f1a8"
+    },
+    {
+      "path": "skills/impeccable/reference/harden.md",
+      "sha256": "8e642328f112dba44fef18fff48350bd83c2df3f7affb2b9a0bee1b4ae38e85a"
+    },
+    {
+      "path": "skills/impeccable/reference/hooks.md",
+      "sha256": "0ff3bc40c2a01d9bb9304a1835c7f2eb890b34ef19cacf8b6500dc82da316ec1"
+    },
+    {
+      "path": "skills/impeccable/reference/init.md",
+      "sha256": "6ca223bbc41d05d52e72ef692358cd38e0ab74b866adaf3209d832f27a01d2a0"
+    },
+    {
+      "path": "skills/impeccable/reference/ios.md",
+      "sha256": "60ada207bfb419ad0a570b8319c29403713ca2ad3fb9a2f5bdffa62ab25611bb"
+    },
+    {
+      "path": "skills/impeccable/reference/layout.md",
+      "sha256": "35f1ead201a9b00656aa923105aa130490a2c0f0ce7e8ba9182daa8592779ad9"
+    },
+    {
+      "path": "skills/impeccable/reference/live-setup.md",
+      "sha256": "b9ac84f506265e3306462721bb8665b17e24bc5b1e7e63ac144ec94db8623ebd"
+    },
+    {
+      "path": "skills/impeccable/reference/live.md",
+      "sha256": "5041934d48ead39bf2abb04c01cee7d091fe3df204d671710bbbbf3ef46c207d"
+    },
+    {
+      "path": "skills/impeccable/reference/new-work.md",
+      "sha256": "97b0af865facb83b72990592052d56e95eb1f529dee9908606bbd541a695e3c4"
+    },
+    {
+      "path": "skills/impeccable/reference/onboard.md",
+      "sha256": "b149f0c1dc513cef5dd925d6a524d5df084f92e283d3e77718dde6e8e9572c21"
+    },
+    {
+      "path": "skills/impeccable/reference/operate.md",
+      "sha256": "c4b169ab7932329c833750971c53bc129d0385e16d0219b31f002792fce939e8"
+    },
+    {
+      "path": "skills/impeccable/reference/optimize.md",
+      "sha256": "226cba5d157bf282a7e3e2d6e674f4a473c44a95ba25503e42a606f53884f917"
+    },
+    {
+      "path": "skills/impeccable/reference/overdrive.md",
+      "sha256": "813d1f7570f3e02e97bf699e1e77447fad4210bb908c3ec9652c241bcbf8c94d"
+    },
+    {
+      "path": "skills/impeccable/reference/polish.md",
+      "sha256": "5d602fca9f6ecaf8200871ead537d6ef5d6178f5d3b18a63fddf778d38ce608f"
+    },
+    {
+      "path": "skills/impeccable/reference/quieter.md",
+      "sha256": "7ab134c0b7bed0a174c77dd44142e8f2dc94bbd18eb8d31d4f9eb669b25c3476"
+    },
+    {
+      "path": "skills/impeccable/reference/routing.md",
+      "sha256": "936c4957d8e6380a913d83ee7c6aba6cc50da78faebcfabb39a512e275305f80"
+    },
+    {
+      "path": "skills/impeccable/reference/shape.md",
+      "sha256": "51960b514f8437baf12484dd5be824e0c2d0ee8802e29e7f511e431493a6c417"
+    },
+    {
+      "path": "skills/impeccable/reference/typeset.md",
+      "sha256": "4e64fcb48f8718436f6825d34e267685378e6050cc71ca383eff5c5b06d7d3d3"
+    },
+    {
+      "path": "skills/impeccable/reference/visualize.md",
+      "sha256": "8ce806c832c6c2517577c3777d4397438b1740677ad012f1f9a494ae6916c017"
+    },
+    {
+      "path": "skills/impeccable/scripts/command-metadata.json",
+      "sha256": "f87af3eb3432d274d86080968d08cf299652ab0f66511cef9d867777d978de7a"
+    },
+    {
+      "path": "skills/impeccable/scripts/concept-seed.mjs",
+      "sha256": "9c4a5818987d4f5ab2fb74b76e9de795d2102df5e52411bde009f1c5995b6472"
+    },
+    {
+      "path": "skills/impeccable/scripts/context-signals.mjs",
+      "sha256": "7c446d5ec6907d15beef13f9dc130fe42216f10a8da518efb80052fef7f2e44a"
+    },
+    {
+      "path": "skills/impeccable/scripts/context.mjs",
+      "sha256": "16c4f49c1a3e2da94cf2a1c681aa8134561fb8d7c6f5529093e6d15b83b2b323"
+    },
+    {
+      "path": "skills/impeccable/scripts/critique-storage.mjs",
+      "sha256": "c75a999938056bfbf994bf9a2b86e1a30f1f27811f684226db7f079d6fffa828"
+    },
+    {
+      "path": "skills/impeccable/scripts/detect-csp.mjs",
+      "sha256": "459f264db8c7012a036a09f15b968183e12f6355531b2f89c05e8a8252fb69f6"
+    },
+    {
+      "path": "skills/impeccable/scripts/detect.mjs",
+      "sha256": "6a4a5bc7c01dfc3d85612f427762756e974040c82a48084d1aac9d61009c8bef"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/browser/injected/index.mjs",
+      "sha256": "b69651bdd753fb050afb3f2f4e9a2f4d0597ec5387c1c98bb1feacd05004c269"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/cli/main.mjs",
+      "sha256": "38d4046736b9f9744fdf5180221f4b4aa8debd78a478f12905d4ece8032e87df"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/design-system.mjs",
+      "sha256": "ece3b13b0f0e2c448a1590f50016c3cefb8a5e024f6dab0c3fbff2dbe67734ad"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/detect-antipatterns-browser.js",
+      "sha256": "b76c5387a53fb3416af42881d4a9b3ac6d731889689b997f73b97c407c93fc0b"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/detect-antipatterns.mjs",
+      "sha256": "5d19b57e5da1d7098b9166f2e5a08de97555cb59297f8cb92a02468e9f27f9b3"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/engines/browser/detect-url.mjs",
+      "sha256": "88db0789f36e2a4e2480609a90b9f199720e947438c0bb24fadaa19321f23a99"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/engines/regex/detect-text.mjs",
+      "sha256": "e241c1f38405f3297e63ac830457cd0152cd7d86a6711b349cff3763815f4093"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/engines/static-html/css-cascade.mjs",
+      "sha256": "e407e9590f18da340edf1a5fe71a95e1e465725b11925270498d2cf7332fcb86"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/engines/static-html/detect-html.mjs",
+      "sha256": "928f09f33352f600e7299664cd99f1af9cf08bdc3a4d23b194c1dc666afa8082"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/engines/visual/screenshot-contrast.mjs",
+      "sha256": "1f99510c7c72cf6384a2f2b47d115325f7dc670d78c0e253b1520093e286b069"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/findings.mjs",
+      "sha256": "57e0b8cad4913622d5bbf698c06f6864bacc485ff8b95f51ab34e7dd5ad792bf"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/node/file-system.mjs",
+      "sha256": "ff1ef4f9701cfd03178f0a002154fb27def5f939534d97b27c933987a81aa600"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/profile/profiler.mjs",
+      "sha256": "86c1c9e686497046fea6f5232efaa752e2452a8609f2b7deb99a5d3a290f014b"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/registry/antipatterns.mjs",
+      "sha256": "e7f1d87e400d2750d9d6657ba15c33c0bc4b4d7f082afebba147e68d5ef923af"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/rules/checks.mjs",
+      "sha256": "4a86b840665389fb37ab2c06a9b612d1a249edb1f641061dfb4eb5b055efa7a0"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/shared/color.mjs",
+      "sha256": "dcf95ecaf9b0040894a8e37672bbd1e11f7f802b211394f97adcfecdd4512262"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/shared/constants.mjs",
+      "sha256": "3812a9d78cd45b66d1310951d12b57814a1ac48e7496877f42a599a0f00a7ec2"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/shared/fonts.mjs",
+      "sha256": "e48673bd2732d70ca92c5bb326ba43500280c7ed761018d5cc26aa3998f6bb8f"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/shared/inline-ignores.mjs",
+      "sha256": "2ef17e8bd1f87db2de35cf0a6b8eae20c7d95afeed2f662eb02674f5c68dcf07"
+    },
+    {
+      "path": "skills/impeccable/scripts/detector/shared/page.mjs",
+      "sha256": "60134b2a1a793457ae4f269261681a0e9fec1a7dc82a6c38f65fa080e4686839"
+    },
+    {
+      "path": "skills/impeccable/scripts/doctor.mjs",
+      "sha256": "f5b0a3e43ade93159adb98f5f923ae90307acfbe6ec49785c8bb15dcf601ed07"
+    },
+    {
+      "path": "skills/impeccable/scripts/embed-prompt.mjs",
+      "sha256": "c30a80e37a1c4366315929a62d4818f51d9ef69393e9cd2f3fa5bdcc6ed04c27"
+    },
+    {
+      "path": "skills/impeccable/scripts/generate-image.mjs",
+      "sha256": "c80c422f6649baa74543ce61b8deab17cf43aa755e6bd818d69c995469bb2944"
+    },
+    {
+      "path": "skills/impeccable/scripts/hook-admin.mjs",
+      "sha256": "993d692f65ee16cbc7dc2cd82be04c80d4bad860e514465f1ed4a7e8618cee19"
+    },
+    {
+      "path": "skills/impeccable/scripts/hook-before-edit.mjs",
+      "sha256": "0e4bf4741dbd790cc5839663b14276a22147e3196782f98d28ac6b9022799c32"
+    },
+    {
+      "path": "skills/impeccable/scripts/hook-lib.mjs",
+      "sha256": "dccb67215ef928a5125a9ab2b7ee354da2282e852b8b979f66c1b6754a12f810"
+    },
+    {
+      "path": "skills/impeccable/scripts/hook.mjs",
+      "sha256": "2116060eb75157765b3a2b30c55b60a755263470f19af01d98524a6deee3fcbe"
+    },
+    {
+      "path": "skills/impeccable/scripts/lib/artifact-schema.mjs",
+      "sha256": "ee82eb9741aa41c2c1d8720ed5e7f598671addf2eeb7761a331a971ab1bbf90b"
+    },
+    {
+      "path": "skills/impeccable/scripts/lib/composition-catalog.mjs",
+      "sha256": "65b073a51e5a04d9224f53141109db3669da62abe72ea020fa4de9e646ffe637"
+    },
+    {
+      "path": "skills/impeccable/scripts/lib/concept-catalog.mjs",
+      "sha256": "28f8b5017248c76a38902bca973455fbff795fbef7a4603b2f301ee9f9182a68"
+    },
+    {
+      "path": "skills/impeccable/scripts/lib/design-parser.mjs",
+      "sha256": "ad9244bc6c00c0bc22920662a8c4460754879f179e64be75d38e445c1eb9a592"
+    },
+    {
+      "path": "skills/impeccable/scripts/lib/impeccable-config.mjs",
+      "sha256": "b3448ab00d301167432faabf7275cf9c10ae168163696a9175cb2710b175ee26"
+    },
+    {
+      "path": "skills/impeccable/scripts/lib/impeccable-paths.mjs",
+      "sha256": "48392d439761e2ac7aa4a8dbabfa4665c29d19f73b629b41286e4ff059f824e0"
+    },
+    {
+      "path": "skills/impeccable/scripts/lib/is-generated.mjs",
+      "sha256": "8dc77efdcd3ef8492ce7fa3577b91dd914bf0aea08a0d0196b94ad91f991c237"
+    },
+    {
+      "path": "skills/impeccable/scripts/lib/open-system-browser.mjs",
+      "sha256": "82c01b9eced21c149d30538c42f1906d0571cf4756b693d01d539493dea7e4b4"
+    },
+    {
+      "path": "skills/impeccable/scripts/lib/provider.mjs",
+      "sha256": "f1095c674c63f328a8cfbca2db7d9f9fa04c7916b437e49396823f61d0e21e2b"
+    },
+    {
+      "path": "skills/impeccable/scripts/lib/roll-selection.mjs",
+      "sha256": "c85ad39b9b4ed55f04d7ba5a21dc01f3c0dc7e392cbf3caba12031bd793de258"
+    },
+    {
+      "path": "skills/impeccable/scripts/lib/staleness-deep.mjs",
+      "sha256": "fea474288fd4f7cdf56b657bf3517c8c0844e53ce616670609d8b879c887709d"
+    },
+    {
+      "path": "skills/impeccable/scripts/lib/staleness-notice.mjs",
+      "sha256": "c5c26240f71b19c7d557e7a34c4a06c68d34d4253acacff17dae0487a595f1f2"
+    },
+    {
+      "path": "skills/impeccable/scripts/lib/staleness.mjs",
+      "sha256": "ac5f995ce8c2de9efae910e2cc854b63ca31ff61aa316945b5e2e925e6a13bf0"
+    },
+    {
+      "path": "skills/impeccable/scripts/lib/surface-briefs.mjs",
+      "sha256": "e659b1491d4f4a668b99bb2fea0e4cfd6ecbff6d9188c33ffff1eee0ad7aedd2"
+    },
+    {
+      "path": "skills/impeccable/scripts/lib/target-args.mjs",
+      "sha256": "958abf23d5be1cadfbd6137fead5e60a44ec40554bea20e9ba7d12bae64ef341"
+    },
+    {
+      "path": "skills/impeccable/scripts/lib/target-slug.mjs",
+      "sha256": "8f201e7a8325f9d1173d80c3c51cceda79240450770292ffd5457f4cf5b7d54c"
+    },
+    {
+      "path": "skills/impeccable/scripts/lib/template-extensions.mjs",
+      "sha256": "f09041fa5cdba45db7c3dfa7cf6786e082d883beae1d326468fc4a52babfd025"
+    },
+    {
+      "path": "skills/impeccable/scripts/live-accept.mjs",
+      "sha256": "de22cb671273213636d0d48ad0b3c35c63cf738595973bbdd6a81abf82144876"
+    },
+    {
+      "path": "skills/impeccable/scripts/live-browser-dom.js",
+      "sha256": "9cc250d69ef3f96bcb0421fac9d58262f8542e090ad27703cc10c8e00ca2d5c2"
+    },
+    {
+      "path": "skills/impeccable/scripts/live-browser-session.js",
+      "sha256": "f2edd9672e25e661043835bbe70c123f1c0ca5c62d1839f5e27d0dcdcc134f66"
+    },
+    {
+      "path": "skills/impeccable/scripts/live-browser.js",
+      "sha256": "e568c76b62c823471c930427b32fcb29aef7976f51477bfabcf543faedec3fd8"
+    },
+    {
+      "path": "skills/impeccable/scripts/live-commit-manual-edits.mjs",
+      "sha256": "8009ed56691cf9d8c80130617ea5e03d0a33a3541eefb16f60cdba682ba14f7a"
+    },
+    {
+      "path": "skills/impeccable/scripts/live-complete.mjs",
+      "sha256": "33bba10c3187d31f85fdfa13b68f717da57be85d61272a419e961b2d3fbff219"
+    },
+    {
+      "path": "skills/impeccable/scripts/live-copy-edit-agent.mjs",
+      "sha256": "654b4a52aaaf849c83fcbcb7d2ef4f3f23e01907fd5a67c1398fc9040a1a7e87"
+    },
+    {
+      "path": "skills/impeccable/scripts/live-discard-manual-edits.mjs",
+      "sha256": "92ed88fc36050a5f3570ed47417d510dc5e82b99e4a31a85b3f8a1d35523c53c"
+    },
+    {
+      "path": "skills/impeccable/scripts/live-inject.mjs",
+      "sha256": "774aa28e481011e424b91dfb2cd4cccbde8b0d56d99185862afae8aa30a0463f"
+    },
+    {
+      "path": "skills/impeccable/scripts/live-insert.mjs",
+      "sha256": "cc35dd47807e512d6b5384f6d069a1bb5e63a82b9c659534cf273b495b6ae64c"
+    },
+    {
+      "path": "skills/impeccable/scripts/live-manual-edit-evidence.mjs",
+      "sha256": "034bcece16dbead2e8eda326670e310f357ca8cb3f3fed9156d1cb3834cf4d8a"
+    },
+    {
+      "path": "skills/impeccable/scripts/live-poll.mjs",
+      "sha256": "364dd1450ff959e7615fc7dd4195c29ea389ae1135b90159409a05e1dce4c730"
+    },
+    {
+      "path": "skills/impeccable/scripts/live-resume.mjs",
+      "sha256": "bb5a628729a450738f46b27a09164de3a338309b2e10139a8dada8b9bb508eac"
+    },
+    {
+      "path": "skills/impeccable/scripts/live-server.mjs",
+      "sha256": "6a534997989577d06e3e8cf533f63e8e75b69f0e2de49fd5769b89a2cd2c5a7a"
+    },
+    {
+      "path": "skills/impeccable/scripts/live-status.mjs",
+      "sha256": "475130bb9be4d1636fe73b71642c8d06a7d08cdfafa59233a74461f7fa5347de"
+    },
+    {
+      "path": "skills/impeccable/scripts/live-target.mjs",
+      "sha256": "7ce53e2936908064898f4942eeb259ee59307470c944e0150356b8bc4dc3dda9"
+    },
+    {
+      "path": "skills/impeccable/scripts/live-wrap.mjs",
+      "sha256": "45617e26436f470d5cde7654c12317cfd26209a209fc710074ad72e23af438d5"
+    },
+    {
+      "path": "skills/impeccable/scripts/live.mjs",
+      "sha256": "4c3434aff3956ec2a779d48d08d15321e57eb3f5925ad80b801d1989b92f0e1d"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/accept-css.mjs",
+      "sha256": "d88d1c9894d73959ba45f61d7cb25ffa9055e77598192fcadfc4855151c7e17d"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/accept-verify.mjs",
+      "sha256": "60247fb7d80753ea6205a3551db8255324104257599a1ec4cee0cb9916fd3f0f"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/browser-script-parts.mjs",
+      "sha256": "18b542a555998d1146d6333c0160e4751b03b9369eb287e77451a3f511dd6e54"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/completion.mjs",
+      "sha256": "eb4b41e4b7969b29198dfaf15e16694807294c49aaa9a60afea1830a0cb377a7"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/event-validation.mjs",
+      "sha256": "124d8c292c0ad5c5f5d925aa4cd402efa0ba267d349fcfca36a9854657fec8a2"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/frameworks/astro.mjs",
+      "sha256": "a695859f25b228ff15af548de34a9f03084228c0a669de62ff79387d75b69521"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/frameworks/detect-utils.mjs",
+      "sha256": "4849132761d7639a2badcbba898e26974b1774f90e2f0a21f9712db706ad3c19"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/frameworks/index.mjs",
+      "sha256": "5225394c75b89e235c686f136119026bebbc0a1310d8c18e724f9eafa5109d41"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/frameworks/journal.mjs",
+      "sha256": "cf2d75d913db8a4fd664c82cc424282218cab7c23f64c77305fc7b8273deacaf"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/frameworks/nextjs.mjs",
+      "sha256": "a0fcd40157b8d84cf11dad1863566874a0a9eeeffaea8a242a9e5443ca4c9cb4"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/frameworks/nuxt.mjs",
+      "sha256": "79101c76e8145c21e90774f38aecb95228e5029bf60e58c806a357b8d1339516"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/frameworks/script-src.mjs",
+      "sha256": "50bc94d4e6451d70e9f5201c86c67256dcc8124ba2b3175dd274a3fc58ecf72e"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/frameworks/static-html.mjs",
+      "sha256": "680f0b2a47624542f0070945811a450b079293aac545222fabc445add156a413"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/frameworks/sveltekit.mjs",
+      "sha256": "2f4f0f0651da94868b57a2614c975e00f84d56f0f7c37bc90508aae3a095cd9a"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/frameworks/tag-strategy.mjs",
+      "sha256": "191c52a5a0944e6fb6182ffa28174043b9ea08e813d258e77b301fa478c4a7ce"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/frameworks/tanstack-start.mjs",
+      "sha256": "e579f7120cd0466a0317ec8ab3a72f2d7df0682abecc7c59e5423f5aee2ad81b"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/frameworks/vite-generic.mjs",
+      "sha256": "3d00df743703a9e592f8c4c741a9b31fe8282aa14d6441c9f6e38f17e88bbfb2"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/generation-preflight.mjs",
+      "sha256": "d274eb16da9681e9ad1b689ba8cf38bd27775c25b3c556192c399e5b2e469524"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/insert-ui.mjs",
+      "sha256": "bfb48789898a06d2f66adb62b01815f59aea6594041019e203818cd2a50814dd"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/instructions.mjs",
+      "sha256": "af95025bea82c1aa00e106d61e62ac5f778bc52fd68595b3cfbf6074d1e884a1"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/manual-apply.mjs",
+      "sha256": "dde8eaf9f693cea13b701758cf0834d6064dd9ea401fea945239bb8ccb3b756d"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/manual-edit-routes.mjs",
+      "sha256": "b1963d20ded3ab07b5c75ea6d4daba30c93c1b5fc2db0d4bcb6379ab2eda33d9"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/manual-edits-buffer.mjs",
+      "sha256": "527d666e67bfc4da9f16b8a43c97746857003ee27652e0030329359f4c48ca66"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/poll-lanes.mjs",
+      "sha256": "afb0e6973a18fc936158c9cbfbd4c2ee10f615710b192947a0b0a08d551f346a"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/roots.mjs",
+      "sha256": "34b9bb5453905a08b2c9ead319ed79b0c9d65209de8c035e7d39fa044dea83c8"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/session-store.mjs",
+      "sha256": "8a2f2fc8076f015d55c0eb488fbea4aeb671487c1a7a457e80fed7fcd8ec75b3"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/source-lock.mjs",
+      "sha256": "c814eb0874c147a4077177077c646df495a8d72be009241cd149730b84fcf6a9"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/source-search.mjs",
+      "sha256": "dbe62c3789e0aac0aded52c78a327c18f08c3d89c3142865b1868bcc48ebb2d6"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/svelte-ast.mjs",
+      "sha256": "e08d3a57eb3d55f4f797240dc771e342604b636df9e99246e673a2dc490259ad"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/svelte-component.mjs",
+      "sha256": "90288c21c03764820138b7f424a7cc764707b61eb577cf88ecbaf0a21b4c0040"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/sveltekit-adapter.mjs",
+      "sha256": "51c7c2cb83d1947bdba7edb2aab9408617c2b8a02be2cf8c9e1694d3b2db5e9c"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/tanstack-adapter.mjs",
+      "sha256": "7f9c7dc83518d2c39d5cde285e436b8c8fdb97db0d6336047924ba08fd9c3616"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/ui-surfaces.mjs",
+      "sha256": "49f1718cbb62226943fba5346a9932770a48152e4a2dba201eb34f85e20063c6"
+    },
+    {
+      "path": "skills/impeccable/scripts/live/vocabulary.mjs",
+      "sha256": "95d66b7c744c65f6847e068ec1bbe2ed8dfef8a5d5e81ff9a861046785599540"
+    },
+    {
+      "path": "skills/impeccable/scripts/modern-screenshot.umd.js",
+      "sha256": "9b0dc34415466edac6e6802574006608b5e5c0da9fdcb7b2651dbd1ea06713a6"
+    },
+    {
+      "path": "skills/impeccable/scripts/palette.mjs",
+      "sha256": "1749d3c77c9ebd2ae6f98664953c4a3d4bc7b54d4cd8bfe4ee1f13076848ac29"
+    },
+    {
+      "path": "skills/impeccable/scripts/pin.mjs",
+      "sha256": "637d8f554745d9623042ed4261e1ebbaafdceb6ac40f8c900d9d5cb3331d4f8e"
+    },
+    {
+      "path": "skills/impeccable/scripts/serve-question.mjs",
+      "sha256": "4e63b25736889ce35cbd4de55b60d81b34a18dc09d226be071ff6ca933d9c2fb"
+    },
+    {
+      "path": "skills/impeccable/scripts/surface-brief.mjs",
+      "sha256": "9eb83e4f08fa83ede734fb8294d504c8856b73ccc8e8c4ac9dc6f965b047c3bf"
     },
     {
       "path": "skills/impeccable/SKILL.md",
-      "sha256": "1b8b2ba99c1ea3ef5cc43c187ea539d8fbbcca35d82f1c03f94aff81287f245d"
-    },
-    {
-      "path": "skills/infra-devops-composition/ROUTE.json",
-      "sha256": "0319b937b7f5f9d02a783ba00e357f3e0603723498b631d53d615dd0fd39fc7c"
-    },
-    {
-      "path": "skills/infra-devops-composition/SKILL.md",
-      "sha256": "e244e826f3572f5d28ec57fe1c79d56a1f7d75722d2ad840c212b998eeab902b"
-    },
-    {
-      "path": "skills/master-image-generation/ROUTE.json",
-      "sha256": "db1ee323a2f67bf8a646eee89837aa83e40ee364cbf9be5b26977bbbf24f08c3"
-    },
-    {
-      "path": "skills/master-image-generation/SKILL.md",
-      "sha256": "2bfc7a91e65bc368bdc35e85b3b7315e0b853b2caa77163bb5dafdecde0fe4e7"
-    },
-    {
-      "path": "skills/mobile-composition/ROUTE.json",
-      "sha256": "7b4e66089656490e7e07deedaae9452ffbe90daef2d506b9ca4ebfea84ee4981"
-    },
-    {
-      "path": "skills/mobile-composition/SKILL.md",
-      "sha256": "505257a5339c22bb8cda23cea06a8197b71bd02e6f575757f54d0bbbf0bb397d"
-    },
-    {
-      "path": "skills/parity-verification/ROUTE.json",
-      "sha256": "06988eec021f01c99f7597895acba2074486c3f78151dc5d662597efa739f92e"
+      "sha256": "e9e6d2feee39e5903cc4e8a579bccc4f8cd1acc1b69704b13c7216b44392c7be"
     },
     {
       "path": "skills/parity-verification/SKILL.md",
-      "sha256": "a933d3a3c159ffd29cd1fe34c03e2feeeb0dcc2bb4277fff3019d3febbf091ce"
-    },
-    {
-      "path": "skills/plan-and-handoff/ROUTE.json",
-      "sha256": "3aceaacf92e55bd4eeeefb9867f7caa95bb381451a6ea0374e9086312a87f0ee"
+      "sha256": "994bab8ba52eb48bb73e88bf862ddb7711b4191cd149adc97df7d0aded3e019b"
     },
     {
       "path": "skills/plan-and-handoff/SKILL.md",
-      "sha256": "9babe53961c6303e1f5c72c2a89f639daa42b0f981dc6ba8ba3eea0389baf295"
+      "sha256": "8fe2d439146c8da6fd5cd4637676b39e0f57b0a3b333ede2205e06c6763572f8"
     },
     {
-      "path": "skills/prisma-skills/ROUTE.json",
-      "sha256": "65cc4144eb8343f1662ebb312014599014c34e25d4b1c2e2d0fb1a3974ce0254"
+      "path": "skills/playwright-cli/references/element-attributes.md",
+      "sha256": "bf19aa4671e0a50a0fefa9c790f39124e803060eefe395042b723c29fcb7faa2"
     },
     {
-      "path": "skills/prisma-skills/SKILL.md",
-      "sha256": "7175c241053bd9a0617105b6ac0609bd22626b43b5973eafa4c1c9957ae3b912"
+      "path": "skills/playwright-cli/references/playwright-tests.md",
+      "sha256": "c5b0719fef2cfdff50bd744051b2f9afc119775db4b48e9b2882c1cf3886797c"
     },
     {
-      "path": "skills/qa-skills/references/methodology.md",
-      "sha256": "11c6a598d402c7cbe2fc346e5ab2ff2780d30d19e4c3161a520b71dcaedf0bd0"
+      "path": "skills/playwright-cli/references/request-mocking.md",
+      "sha256": "54e801c9663fc2b6d68ceb058cb1c360724c2499f42acc7852a68e83e5b5f37c"
     },
     {
-      "path": "skills/qa-skills/ROUTE.json",
-      "sha256": "47cf64ee189afb00d031d7577538cd1062381abec9377230ec3162f078c9d180"
+      "path": "skills/playwright-cli/references/running-code.md",
+      "sha256": "d95c539a5990b71d02d8bdf1d9414df16191eb6cff95b0063820518b7a13dcb2"
     },
     {
-      "path": "skills/qa-skills/SKILL.md",
-      "sha256": "f365a7d917160b2d0aa234288f762f55e78ef0efac85c5144e6f00feb4b4f570"
+      "path": "skills/playwright-cli/references/session-management.md",
+      "sha256": "cd3e261b8763bf952f1e371b876cb78d054379afec85482f9250633e1b7e6c44"
     },
     {
-      "path": "skills/quality/references/clean-code-checklist.md",
-      "sha256": "33e951c8b221542645e0f45589c6bef3e120f1d6a0abbd478f54196665a67970"
+      "path": "skills/playwright-cli/references/storage-state.md",
+      "sha256": "9ac47f9ae4a1aedcd2077f8ac9ab1ba6bee1962cb83ff51adcd36fb6d83b5ec6"
     },
     {
-      "path": "skills/quality/ROUTE.json",
-      "sha256": "95ee04be280af071cc219dabeeb711a0fdff45c7663bb75c83227f2e98c8da21"
+      "path": "skills/playwright-cli/references/test-generation.md",
+      "sha256": "12f54cfa718d9e559bad918120a4ca4f11c933167713d1b9c5f99872eddaf749"
     },
     {
-      "path": "skills/quality/SKILL.md",
-      "sha256": "aeff1584e25f13b46b71ac24f70f7c2f66548026e9ff271f74f9aab80415f15b"
+      "path": "skills/playwright-cli/references/tracing.md",
+      "sha256": "ef73e71bee792e341df9cd4f60529c929ade48b538ac76e033f4f20843e8dbda"
+    },
+    {
+      "path": "skills/playwright-cli/references/video-recording.md",
+      "sha256": "8555ab5400df0d90e66318aacc0a8a4418fbf872e7463824d55d5c41615abd83"
+    },
+    {
+      "path": "skills/playwright-cli/SKILL.md",
+      "sha256": "1a609c93bff3eea9ab99fed93c0334c851fdc39fb6ac5335551bfb87c171d57c"
+    },
+    {
+      "path": "skills/prisma-cli/references/agent-safety.md",
+      "sha256": "66f06b408c2d4a7d0e950a4dd23565c0227f58acd80751f18d7dfbffc9685526"
+    },
+    {
+      "path": "skills/prisma-cli/references/complete.md",
+      "sha256": "75c24fbd44500c356998d57215ebdf4ba593a5cb90c2df6fea8c688a4901a056"
+    },
+    {
+      "path": "skills/prisma-cli/references/db-execute.md",
+      "sha256": "2cd76d47f204a71c635154400617bc94bf014e588e8ff506f2a095f9f6b0e253"
+    },
+    {
+      "path": "skills/prisma-cli/references/db-pull.md",
+      "sha256": "3c446ef9f3e76ee471ab2384cde7998fdaff86b8efa42378ef8cc585deddedd9"
+    },
+    {
+      "path": "skills/prisma-cli/references/db-push.md",
+      "sha256": "51d5b4afa8f79107e4e893c3de571d23645c8a4a012d78971cb16e316fb40db5"
+    },
+    {
+      "path": "skills/prisma-cli/references/db-seed.md",
+      "sha256": "c86060e141749e46a490b42f8bf6cb6f3abfb1394b71e72d1581b4735f0102bb"
+    },
+    {
+      "path": "skills/prisma-cli/references/debug.md",
+      "sha256": "14f7d956ebd86b874f9bea051c07f828bab8ac1020cd440eb8ec89cf64dffdd6"
+    },
+    {
+      "path": "skills/prisma-cli/references/dev.md",
+      "sha256": "dbb420492bbd8276ce21ce88cb080f05f9a6591dedbed3db0956e7f095710f96"
+    },
+    {
+      "path": "skills/prisma-cli/references/format.md",
+      "sha256": "9943b440cf4d576b552e1732e296482d761e2c0ae1e7456b97630add2918a05f"
+    },
+    {
+      "path": "skills/prisma-cli/references/generate.md",
+      "sha256": "85c801290339e9ad1aa110cc9879abbfab31e998536c14ae8c810ab4cfdf6b9b"
+    },
+    {
+      "path": "skills/prisma-cli/references/init.md",
+      "sha256": "edd87b6701170e55a62490418d0423104d0600af1ffd285d506ca68ae1549d7e"
+    },
+    {
+      "path": "skills/prisma-cli/references/mcp.md",
+      "sha256": "97e8339e7451bd62c5a0b69b3d4c04fbc46d3c2677be5a99577a3250aa55ef69"
+    },
+    {
+      "path": "skills/prisma-cli/references/migrate-deploy.md",
+      "sha256": "2d6d669383b0742ab2dc30c4aee1579856f908647ea8b5789a54c3c16ace713f"
+    },
+    {
+      "path": "skills/prisma-cli/references/migrate-dev.md",
+      "sha256": "804fe7e60e3b315376bf70293ef2fb0be46a250f6187fb3f19ed00a91dd28fb2"
+    },
+    {
+      "path": "skills/prisma-cli/references/migrate-diff.md",
+      "sha256": "daf77c34fdac2d578c0de12d385468255878fd7f0b473473de8ee0e4cff0991c"
+    },
+    {
+      "path": "skills/prisma-cli/references/migrate-reset.md",
+      "sha256": "ae05eff0b9ac4531af88a5e0d69bee81a1d9ffcd67d3fb49800d8491a8b93a24"
+    },
+    {
+      "path": "skills/prisma-cli/references/migrate-resolve.md",
+      "sha256": "9fc77c20ce9954ee7dfc9a2b4dc0c0c53d0bb6212b0d4c10e8f3f22c3ab0e9e1"
+    },
+    {
+      "path": "skills/prisma-cli/references/migrate-status.md",
+      "sha256": "bacd09ee8be1957e66c1d56c07f4eca4a08533bed9c37994ffd00ec6c5a88730"
+    },
+    {
+      "path": "skills/prisma-cli/references/studio.md",
+      "sha256": "2354f79d63c0734e13170ae3e59b47da1d8f5a363ff2af2194cda2da0b5b39d2"
+    },
+    {
+      "path": "skills/prisma-cli/references/validate.md",
+      "sha256": "27d9262345daad8c07293927a524c11bb0b9bf9dd58cd94728c7c38c65e7726f"
+    },
+    {
+      "path": "skills/prisma-cli/SKILL.md",
+      "sha256": "947f1767a903a36f378bd707fcaff2e43a53822099da5a5ff80c1d1eb4feccb3"
+    },
+    {
+      "path": "skills/prisma-client-api/references/client-methods.md",
+      "sha256": "2113d60e37017220395b59adbe244d6f157235041301ac47193eaa5a90881c7f"
+    },
+    {
+      "path": "skills/prisma-client-api/references/constructor.md",
+      "sha256": "90be727e5ec7142c2e9ee4c8d40d9683b6fc8ce29061bb52feb0058c944e1c61"
+    },
+    {
+      "path": "skills/prisma-client-api/references/filters.md",
+      "sha256": "da052f732cfb7cfdbaa4691809bb30d88e9f72115b4cfb6bb2f4d8113f38ff21"
+    },
+    {
+      "path": "skills/prisma-client-api/references/model-queries.md",
+      "sha256": "86c23f822803e6e250bd8c9de214fd1724d7847a9ee4f1798a6e253d7aadd63f"
+    },
+    {
+      "path": "skills/prisma-client-api/references/query-options.md",
+      "sha256": "18044ee8cc142f73dcfce4f667ff51acf678cb7584823dcc49e97e080c78d490"
+    },
+    {
+      "path": "skills/prisma-client-api/references/raw-queries.md",
+      "sha256": "23b394111cc79a08d2852622620a44e4e4b76815cf44b04ce92589dee7951dbd"
+    },
+    {
+      "path": "skills/prisma-client-api/references/relations.md",
+      "sha256": "f6a7b701d823b125e6208e4baadacc3209b068a5c770fbed3d7b60bb7a92df49"
+    },
+    {
+      "path": "skills/prisma-client-api/references/transactions.md",
+      "sha256": "d9b441e7113d2bba8a39e639d9560925b464aaa585322ba460e3f2fed00f398e"
+    },
+    {
+      "path": "skills/prisma-client-api/SKILL.md",
+      "sha256": "d033821313dc64b2b7dee120c6904b7d4457813e3b9c82d9584f7dee74baabe4"
+    },
+    {
+      "path": "skills/react-native-best-practices/agents/openai.yaml",
+      "sha256": "13d867840f5d10f87256653bc71da8de508ad13b10fd6931e1eb29cdd8ceb9e6"
+    },
+    {
+      "path": "skills/react-native-best-practices/POWER.md",
+      "sha256": "7e39898ec7b7e3335fbc8d290bd3b806020435fecfbc1c5e98ebfd31b2798999"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/bundle-analyze-app.md",
+      "sha256": "2c43a39bdad593091b2ec6f3fb0307096feb854bf11f4187f31f237a50cf76ca"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/bundle-analyze-js.md",
+      "sha256": "4e97a27c06ea91b49cacb18230f63bad392fc949e40d348787aab39755e8da41"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/bundle-barrel-exports.md",
+      "sha256": "187ac5a80822d22dbccdf3bb07f0fa60905b494285e735b30d97e79961fdfca5"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/bundle-code-splitting.md",
+      "sha256": "4cf3cae585f9ae7f64fc55af7af71d70e5ac3acb93fa6264a3186cc79d939cd7"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/bundle-hermes-mmap.md",
+      "sha256": "5eca09ae487bce41436461cc7d8d96fa8861b39815a2b930263807591778b757"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/bundle-library-size.md",
+      "sha256": "cb87a2d8a3cddd508b524b6b627ca775f5fc5a613f29d8a0f7e037ba054e4a7e"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/bundle-native-assets.md",
+      "sha256": "766fb2d22a3cb8b5f26969fd4afc3caf1dd32fd8f2da6bf9233aac48c2bbfd42"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/bundle-r8-android.md",
+      "sha256": "9f49269531e906e25f26eeb2a77b9af76bd562065d537c3cc0155301eb7bf9c0"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/bundle-tree-shaking.md",
+      "sha256": "3033f006a07a430ca4e2381b456774e59b3ace4fe0aee38740291cd0f305e9ca"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/images/bundle-treemap-source-map-explorer.png",
+      "sha256": "280495fc828cde33b0c1a83a02031d3ab484c0af240ab6fc408a313aa445fd3b"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/images/controlled-textinput-pingpong.png",
+      "sha256": "883cc345490473110ce93536a39c224f692229f691da1203b084488569f48781"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/images/devtools-flamegraph.png",
+      "sha256": "b257c6dbf4304aa6e2ca40ec357a13441cfa2f3cb84d5653af56484861a63c94"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/images/emerge-xray-ios.png",
+      "sha256": "41d00a6e90e89bcc941daa41ad2bfc742e3817e421b4cd6e42fb7f43d304c3b2"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/images/expo-atlas-treemap.png",
+      "sha256": "3e4ef5894d949f0e6a445329b33e3346dc8bded3855e18afe500584cd4c761a2"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/images/flashlight-flatlist-vs-flashlist.png",
+      "sha256": "a9e57f2673669bed947e57c121ad85088e237f462362382008b3bb46570c72ca"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/images/fps-drop-graph.png",
+      "sha256": "bb43718e87b140307e37d66dc2a5332e882881c4f8a14629b96072913b2ca580"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/images/memory-heap-snapshot.png",
+      "sha256": "0cd36795ce16814717cad712b744ad4e523e1acef95263a3b49a8bb24ede8bad"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/images/tti-warm-start-diagram.png",
+      "sha256": "6fc7cbf22a8ce657fe8d31978e7adfec24cd88a9a58c3d2a302f86fb64ff6a8e"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/images/view-hierarchy-flattening.png",
+      "sha256": "9edaac44f464730d3f5b6c2c0ccd19d2edf24fa358b4470c6ebc4a37b61753d7"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/images/xcode-instruments-templates.png",
+      "sha256": "5d864f068bb1dc5edf9586a557260aa0f27b2b6fc96e473d8d5a8b3c2c1e836b"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/images/xcode-thread-view.png",
+      "sha256": "f3e7b75b87ce445e36293fcac070eecdb0609557fffb98a8cd000bcbe3e1b921"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/js-animations-reanimated.md",
+      "sha256": "b0912deb98d8af8b8bf97d98789e39d467466be28cab9d96def7101b6e799b16"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/js-atomic-state.md",
+      "sha256": "6005f5ba3e46c120d3c3fa38d1ea077bbc026c8c707dea0075025c84a4ff8254"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/js-bottomsheet.md",
+      "sha256": "43eca23b45f2c100d506f51c21e56d72ae501147b5acec7b9fd1cbb92e2d08df"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/js-concurrent-react.md",
+      "sha256": "0b2bab623b62136745e34ce135148f79311c3c4487068b0b0f2fa0b1fab851f2"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/js-lists-flatlist-flashlist.md",
+      "sha256": "4d62b3a9d6325fc77cdc4fc18597d9e5d241e5afd37f9284babf0fc69ce0def7"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/js-measure-fps.md",
+      "sha256": "5efca75bfbe57ebf1ec1e38df8704909e0df2e41df856715bb425d438cb48a34"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/js-memory-leaks.md",
+      "sha256": "52d0f71f0addbd6b03e8a12e46fa7405a5ae68394f106081768e2625f1ffd838"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/js-profile-react.md",
+      "sha256": "c7a283f68320de85d84940871e58c0c40b71182d704202d49a115ba98fdca716"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/js-react-compiler.md",
+      "sha256": "70f873d84646260256e01b93f504468d645a4e57ad5f88eef5d090f63358aa1a"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/js-uncontrolled-components.md",
+      "sha256": "4c27d770d1818edcb193612f141efe62f1ec907aa3aa8fbc54d15e677ffa54e7"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/native-android-16kb-alignment.md",
+      "sha256": "d61c945db16abf89c03099138febb8be2f228187b94a534eab7c385290938806"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/native-measure-tti.md",
+      "sha256": "f27bc1de4d443a9e49d372806aea91bf793bb4c7125e693db7cae3442eff57a1"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/native-memory-leaks.md",
+      "sha256": "3b69f2545bcc541b81dde55c0e0d2803a87671dd7a64da848e041af43019b4f4"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/native-memory-patterns.md",
+      "sha256": "cecf5b6eea44e3de9544976a9077b1b88d11bf5a336bf25cd27e094988ffb17d"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/native-platform-setup.md",
+      "sha256": "767b2d7ee9889fb43eccaec15ef2601cc3e25706f85cef14f264ce052789572e"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/native-profiling.md",
+      "sha256": "7830d1fd35fc52979b34d09646b8d237e895a3894d464ad16d6fd8bb32fe80c9"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/native-sdks-over-polyfills.md",
+      "sha256": "ac9ca06c1f3a3646c4b75d2ca85039ed357cc117522d4d2de112dda5bd75cf2f"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/native-threading-model.md",
+      "sha256": "7543ae88d708a382f0ec4d8fba987e7e89d8f2d2c954586a77a26c449e246b66"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/native-turbo-modules.md",
+      "sha256": "39ca96ce0b787cbff25aa649508cb64ea8bbb1c07ddd08e10c1d6a6ac932ea41"
+    },
+    {
+      "path": "skills/react-native-best-practices/references/native-view-flattening.md",
+      "sha256": "483a25551f4d73199156599874d21d67731dbc4d1bc241ec672f064667265c24"
+    },
+    {
+      "path": "skills/react-native-best-practices/SKILL.md",
+      "sha256": "abdbb7fc34ad739420fe43632e0baa1d646a01d097c6905211aa8b5b41957bf1"
     },
     {
       "path": "skills/README.md",
-      "sha256": "bc1d21fb26da9d55af1de3194c9e85b87cee27488390af7ca0abd9863d553791"
+      "sha256": "7940778b6ab5d680a31c5a320b56c92248276d914553df037584b808ed93e7af"
     },
     {
       "path": "skills/researcher/agents/openai.yaml",
       "sha256": "5c079ab8a97f28ebd00326ca5dfb11260a54c41b77b10c601ac3e35c0a2508a9"
     },
     {
-      "path": "skills/researcher/ROUTE.json",
-      "sha256": "7ef808e126dbdd9de57f63818228a99459f68da9de0dc570cac7ae5285aa68c8"
-    },
-    {
       "path": "skills/researcher/SKILL.md",
-      "sha256": "f8e4463dedd8b5295a480e05d05f28630da6241cd8468f888bd8e9e85e328e71"
-    },
-    {
-      "path": "skills/schema-migration/ROUTE.json",
-      "sha256": "d69eaaad2931ab4ed4196fa8343a4d5996239c2d1e2bb2888236d7f4a09afe10"
+      "sha256": "5228b76d4d95a43ef18b7356a83d67e3fd35e9786a96f4f76d55ef1385f1f5f1"
     },
     {
       "path": "skills/schema-migration/SKILL.md",
-      "sha256": "ece76950e479c5576a50d6ff7631ddcc0d23be398a4dec278be378a2891ed0fa"
-    },
-    {
-      "path": "skills/security-review/ROUTE.json",
-      "sha256": "5c1b1db882f013b99c1a48a13b3271591b7aa169a9776c282c39fc30468542c7"
+      "sha256": "6f68e28437b0affbf64edfd8f369a043a7c355076dbfa7bbb7ae650b18182630"
     },
     {
       "path": "skills/security-review/SKILL.md",
-      "sha256": "88d032ae23b3670adf0a1ac80cdb8836b94d3345934fb378ccb2cb57971fe6f3"
+      "sha256": "dc22b67cc56a3f264332f7d51ad1022a7059e148c9b3f8b373f2bac71d2675e7"
+    },
+    {
+      "path": "skills/sharp-edges/agents/openai.yaml",
+      "sha256": "11a851b1841f3e828e7609045d91e0632cac07dfc008b2740f487cee83a5efd1"
+    },
+    {
+      "path": "skills/sharp-edges/assets/trail-of-bits-mark.svg",
+      "sha256": "4bf74c789b38dcf6ad762c136b6832363d27ae19fbaa9a18ec18d66ecce6ca05"
+    },
+    {
+      "path": "skills/sharp-edges/references/auth-patterns.md",
+      "sha256": "1fbf526ca1db7204f9ebb1bf4eb3c48c544676623d23e5d28e01f6f63c355be2"
+    },
+    {
+      "path": "skills/sharp-edges/references/case-studies.md",
+      "sha256": "2e81a320728b4597bf84c490176d5bf212f1e6ba6f87aafba61ad1734de35332"
+    },
+    {
+      "path": "skills/sharp-edges/references/config-patterns.md",
+      "sha256": "1d99f2716f7bef18efe71015ce0c56e0f4961c042faa503d796d6d4d1626fdc6"
+    },
+    {
+      "path": "skills/sharp-edges/references/crypto-apis.md",
+      "sha256": "8baddc83a1f964d6d8b15678d60a37c93029c18dc162bd7c00895e585ff1a825"
+    },
+    {
+      "path": "skills/sharp-edges/references/lang-c.md",
+      "sha256": "d077d711c73749c924eae81c06018b14bbf1ec9b93d71723c472b43df5d7d5ae"
+    },
+    {
+      "path": "skills/sharp-edges/references/lang-csharp.md",
+      "sha256": "8fa9e93d36c0e1397b7ca81307163370fc43cf700215b7c6d7aa1b09fdb91fb4"
+    },
+    {
+      "path": "skills/sharp-edges/references/lang-go.md",
+      "sha256": "839c0e7b4e3fa2f3b37c651e926aa59d69d20bfef5e67f569eedacf11354844d"
+    },
+    {
+      "path": "skills/sharp-edges/references/lang-java.md",
+      "sha256": "3b93b6049f7e0e356a1ffebc0b4642f3cef315d90be45b63e15c8c4814f9ebeb"
+    },
+    {
+      "path": "skills/sharp-edges/references/lang-javascript.md",
+      "sha256": "cf72f55d31318666942a8d1d64340befc3c4e7223afc2ca196e6a776ffa4c895"
+    },
+    {
+      "path": "skills/sharp-edges/references/lang-kotlin.md",
+      "sha256": "c891148c10a4941c3396416a10ac64512eb3a9e13ea5eeaec3902da4b51501dd"
+    },
+    {
+      "path": "skills/sharp-edges/references/lang-php.md",
+      "sha256": "7960d9773874cf06c5b470a5ca3ab406d896e66b71e713d809bc1ecfcab63485"
+    },
+    {
+      "path": "skills/sharp-edges/references/lang-python.md",
+      "sha256": "36543becc25b4e3f41eaedcab62e9b204657e6742b8ac95e405bcd040d33bf03"
+    },
+    {
+      "path": "skills/sharp-edges/references/lang-ruby.md",
+      "sha256": "d9ba749caaccb8a3bb39e2199b2062c0957cf48739218ba8022d49be5cba2088"
+    },
+    {
+      "path": "skills/sharp-edges/references/lang-rust.md",
+      "sha256": "3d14993ea70b2b2df3fc0f388cbd1631470895c27ccbd9d764296d1da8f5b6ee"
+    },
+    {
+      "path": "skills/sharp-edges/references/lang-swift.md",
+      "sha256": "a64ab8692db0f3e43526088c63c7fdcb7354d1b24e6fe7ca759aea3260890e04"
+    },
+    {
+      "path": "skills/sharp-edges/references/language-specific.md",
+      "sha256": "4522b4a37cfd7d3aa689209dfd4569f3b39074bd1f5987a36a6e819f501141b6"
+    },
+    {
+      "path": "skills/sharp-edges/SKILL.md",
+      "sha256": "3b69a709c2f8f0cfcf57d40a3186e166f307865cc8ed924be4098e549a121e9c"
+    },
+    {
+      "path": "skills/skill-source-governance/SKILL.md",
+      "sha256": "343df01f7be7667377f402cb0fff50c69c2dc209a84abd004eb2e2889bdb07e6"
     },
     {
       "path": "skills/source-lock-policy.json",
       "sha256": "d64213d18b3f6d0c4fedacdb913cb0a4fe2ea79d6f3a5850d47d93d0a54f36c8"
     },
     {
-      "path": "skills/supabase-agent-skills/ROUTE.json",
-      "sha256": "c29da852b404016ec8a3efdc10cd126c89ce922639a88274159dcc5a595ec4dc"
+      "path": "skills/supabase-postgres-best-practices/CHANGELOG.md",
+      "sha256": "751ad110037c85d400018c9894716a04fa46357ff55c22b1169b280752e19e88"
     },
     {
-      "path": "skills/supabase-agent-skills/SKILL.md",
-      "sha256": "834d65aaaf330aacd711a2cf423342b50f86c19a75e55fbb5e9e3311aa16924d"
+      "path": "skills/supabase-postgres-best-practices/references/_contributing.md",
+      "sha256": "191e039e7d94764e6073410b513b559f9a594e0fdf0252a30c2a2986df2ab3bc"
     },
     {
-      "path": "skills/trail-of-bits-security/ROUTE.json",
-      "sha256": "4a5b4ed02c9571ae6f23cf7b4918fe86d17132deed7b394214b7e37c00b67546"
+      "path": "skills/supabase-postgres-best-practices/references/_sections.md",
+      "sha256": "c9e992612b422c7122de0b7542ebc2450db283edaab08cfe86c6d657fcccccd5"
     },
     {
-      "path": "skills/trail-of-bits-security/SKILL.md",
-      "sha256": "75ae7848966ee1699149b4ca8d7a8c16520df1f9012ef3d03c29d2e3e5c06ad0"
+      "path": "skills/supabase-postgres-best-practices/references/_template.md",
+      "sha256": "6299954250f212caabe339d752c3e5313a8e07d1a182a4e4b425baee91df1bd2"
     },
     {
-      "path": "skills/ui-taste/references/LICENSE",
-      "sha256": "4575a543ab88dad12ccea7d97e563d0bce5b448b06072e65d3264497dad326df"
+      "path": "skills/supabase-postgres-best-practices/references/advanced-full-text-search.md",
+      "sha256": "40c2606bbb4c4dce31308f201b24cc7f58c7df05b1d9c6856fe2b888d3b7cf28"
     },
     {
-      "path": "skills/ui-taste/references/upstream-lock.json",
-      "sha256": "d87c4c26ca86da09415c7e374be1c02c5de1b86f642f93e2790d851a459031e3"
+      "path": "skills/supabase-postgres-best-practices/references/advanced-jsonb-indexing.md",
+      "sha256": "24cacf6a8bc35901dd566d24502ce8e57f810a5c196b897e61d52726e521d106"
     },
     {
-      "path": "skills/ui-taste/references/UPSTREAM.md",
-      "sha256": "9107d2cc0e26796240ecb1156e953644d4718ca6d3f76c7bac83eb02bf506aba"
+      "path": "skills/supabase-postgres-best-practices/references/conn-idle-timeout.md",
+      "sha256": "630588902c00fcec59a5988cc5d042f76dcf2c923a535abfd8c47dca205eaed5"
     },
     {
-      "path": "skills/ui-taste/references/upstream/brandkit/SKILL.md.source",
-      "sha256": "b0c4837e1bd140ca816ae54948754ddd2ac1e2a4d3619363777a80caf00b2ede"
+      "path": "skills/supabase-postgres-best-practices/references/conn-limits.md",
+      "sha256": "11b2a67a7c7679cbbc5d807bbb17e69c98484a581d0c8b929c03408f412b81b2"
     },
     {
-      "path": "skills/ui-taste/references/upstream/brutalist-skill/SKILL.md.source",
-      "sha256": "fffbaac8597f07679e9d87145533567658aedba3b5eca6f16a7075a333048caa"
+      "path": "skills/supabase-postgres-best-practices/references/conn-pooling.md",
+      "sha256": "88cf086bf98ba865d2e9d0579974e1366b14157619d6a93e7da77be91084e4a5"
     },
     {
-      "path": "skills/ui-taste/references/upstream/gpt-tasteskill/SKILL.md.source",
-      "sha256": "2e64c269953f2656c21bf5a0fa6b4568e82fe0c72b36e8f84758e090349966a5"
+      "path": "skills/supabase-postgres-best-practices/references/conn-prepared-statements.md",
+      "sha256": "174e9332fe3dda5c99b2b00159fb1915ae36c00bab3a7882c14e73e4344e946e"
     },
     {
-      "path": "skills/ui-taste/references/upstream/image-to-code-skill/SKILL.md.source",
-      "sha256": "4c060a8064a8b13380bc2ef3d6e6a1d0b1e316aa093cd9807d0ce9e4eeb037fa"
+      "path": "skills/supabase-postgres-best-practices/references/data-batch-inserts.md",
+      "sha256": "531933b82d6a622d0fae29e0ea80be6fe5d78655adf2804c271ea84a1930de37"
     },
     {
-      "path": "skills/ui-taste/references/upstream/imagegen-frontend-mobile/SKILL.md.source",
-      "sha256": "8a33389979f3074fa0926678e266ad2eb9234624472254469fc1ad916b9caa24"
+      "path": "skills/supabase-postgres-best-practices/references/data-n-plus-one.md",
+      "sha256": "21a44905e5b16a42741892ec34bb1bfef124d049b140a76934a9acd0f46f5fc2"
     },
     {
-      "path": "skills/ui-taste/references/upstream/imagegen-frontend-web/SKILL.md.source",
-      "sha256": "6b5c2256522fdba1e3313eafa3d743b960a7b13ec029d3e6586e04b23327c1f8"
+      "path": "skills/supabase-postgres-best-practices/references/data-pagination.md",
+      "sha256": "73c9fa10a3d439bedea0e11b640bd25bf30dd50f0d9006cf85baf7c3151543fa"
     },
     {
-      "path": "skills/ui-taste/references/upstream/llms.txt",
-      "sha256": "c34dc218fe2940a3944967add63e4220e43975f5b15b31b8a280e73055484301"
+      "path": "skills/supabase-postgres-best-practices/references/data-upsert.md",
+      "sha256": "2612af83b20a2701dde30ef1f8d7efd26b7e9eef84717226b8f038a2d2150ff7"
     },
     {
-      "path": "skills/ui-taste/references/upstream/minimalist-skill/SKILL.md.source",
-      "sha256": "36bc7328f085405f43b476938e62460fa573bf7e984e949e072bcf014831a44c"
+      "path": "skills/supabase-postgres-best-practices/references/lock-advisory.md",
+      "sha256": "c88d259dbf81c3771438f59a165f7eab8acd09999dd370bdf807521c73f35aab"
     },
     {
-      "path": "skills/ui-taste/references/upstream/output-skill/SKILL.md.source",
-      "sha256": "e5bf48b1ae561511439cf71672209a10a88cee0968cc925909ff861dfa0a96a7"
+      "path": "skills/supabase-postgres-best-practices/references/lock-deadlock-prevention.md",
+      "sha256": "09aee46f51d7178c8e55fe056cd5a94a64ba2c122fe418e6900cd99f297b2347"
     },
     {
-      "path": "skills/ui-taste/references/upstream/redesign-skill/SKILL.md.source",
-      "sha256": "98ad3e5b051bfb71b2795f7e8a6aa0d32b51ee095606c098a4b2822ac07926c9"
+      "path": "skills/supabase-postgres-best-practices/references/lock-short-transactions.md",
+      "sha256": "5aa7f61095916986d39644b446cdbcd2bacca7ef698a3bb50b3f82dd60207602"
     },
     {
-      "path": "skills/ui-taste/references/upstream/soft-skill/SKILL.md.source",
-      "sha256": "e1e32f5e2d420872c6c7332b53d5ff7721946766b78c4822b424c2d512c8fdbc"
+      "path": "skills/supabase-postgres-best-practices/references/lock-skip-locked.md",
+      "sha256": "6c45077f430f29cd9cd8f448c94d578e827e7bd023fcdaf717a756acb116fa4b"
     },
     {
-      "path": "skills/ui-taste/references/upstream/stitch-skill/DESIGN.md",
-      "sha256": "0ab6740c4ebb1966dbceddb823a66d4bf027e960efbd73faca56cbf8370ae2ad"
+      "path": "skills/supabase-postgres-best-practices/references/monitor-explain-analyze.md",
+      "sha256": "4cb67ffbf8e57f2e5b380b0beb4242528b513723ce314a2c2ffcf083bd4203d7"
     },
     {
-      "path": "skills/ui-taste/references/upstream/stitch-skill/SKILL.md.source",
-      "sha256": "46bdb08fee2dded38b6ba0a051230a502d6ac6e4044afd47592cb40c256028b5"
+      "path": "skills/supabase-postgres-best-practices/references/monitor-pg-stat-statements.md",
+      "sha256": "89dca99d4e894fcbdcac136be7ad9fbc03d1342904f065c1b198dc9cf495f098"
     },
     {
-      "path": "skills/ui-taste/references/upstream/taste-skill-v1/SKILL.md.source",
-      "sha256": "033d45af1ed23832730642f95f40ab49db7fb5222848489a6c5656144bfc6dae"
+      "path": "skills/supabase-postgres-best-practices/references/monitor-vacuum-analyze.md",
+      "sha256": "2892272011710eb49b3f185ec12f15ce9ce4c365792c672f6e2a9c90da426a1a"
     },
     {
-      "path": "skills/ui-taste/references/upstream/taste-skill/SKILL.md.source",
-      "sha256": "aa194351b246b8b4799099d4ed7b033d29eab6e6e3d58d8d2172978be7b3ec89"
+      "path": "skills/supabase-postgres-best-practices/references/query-composite-indexes.md",
+      "sha256": "73e42424e671f0266e74fdb220db3196790f69fb43e2b19c7b9483eb4971b554"
     },
     {
-      "path": "skills/ui-taste/ROUTE.json",
-      "sha256": "f20219cbbc62db7607d9025ce23899a8c0c1627edd8caef7fbc7bfe08e895c45"
+      "path": "skills/supabase-postgres-best-practices/references/query-covering-indexes.md",
+      "sha256": "daf2a7f0477fb7357b62b5fb5b185b1995a77a186347e45cb780e25e7a7589b6"
     },
     {
-      "path": "skills/ui-taste/SKILL.md",
-      "sha256": "8fcc57b2a648653f86c74fb378b0762086de1437130bb3cfd61d6c8431e12ea4"
+      "path": "skills/supabase-postgres-best-practices/references/query-index-types.md",
+      "sha256": "472a74f22c2df203bd0154999b3a5a0187cca2ab3d9a3978e305bb7c32f1a282"
     },
     {
-      "path": "skills/vercel-agent-skills/ROUTE.json",
-      "sha256": "f5cd298057c29c050d6d0e701fd0e8e7316c6d626719a415c89746bc69411927"
+      "path": "skills/supabase-postgres-best-practices/references/query-missing-indexes.md",
+      "sha256": "91ad8b0ff4365704b4830a7f077c6f140f7140fd5d3ce5cd0b92b160cf9e25f1"
     },
     {
-      "path": "skills/vercel-agent-skills/SKILL.md",
-      "sha256": "2f88175ab3e3425f53ea5dff790da9ccc6b5371f90abba6e1f42a75280a71fc1"
+      "path": "skills/supabase-postgres-best-practices/references/query-partial-indexes.md",
+      "sha256": "6448982bc8558c6555284958edc331b29239c6a0130e6b4501dd6d4da607a6dd"
     },
     {
-      "path": "skills/vercel-react-best-practices/ROUTE.json",
-      "sha256": "78821f0c37980c79bf3484d102133096f5af3d0d757204e30a78bce9e0423d21"
+      "path": "skills/supabase-postgres-best-practices/references/schema-constraints.md",
+      "sha256": "90e8efda3e9e81095e642911ad4aae2809d160f29414338fa997253238f510f8"
     },
     {
-      "path": "skills/vercel-react-best-practices/SKILL.md",
-      "sha256": "8b1245c1aa4881f46f2cf77d569c9b290be1093a1389ee3c1844b09e6d946df9"
+      "path": "skills/supabase-postgres-best-practices/references/schema-data-types.md",
+      "sha256": "e01b58c14c7f3f65d8ead580b9a4fcf70b83baaab0f9a5f83c569c9fd113e8c8"
     },
     {
-      "path": "skills/vercel-web-design-guidelines/ROUTE.json",
-      "sha256": "c8b122ca01b7a4658579a7b1aeed93baebc053ad866b872105459b24d6c7a411"
+      "path": "skills/supabase-postgres-best-practices/references/schema-foreign-key-indexes.md",
+      "sha256": "7587713d12a65a212365459b3d39e4717d8a79e4073b10bd62f1054d8192c0dd"
     },
     {
-      "path": "skills/vercel-web-design-guidelines/SKILL.md",
-      "sha256": "91ded457c18df0310f56d25ecb3b176d9ff2ea03a1d29ced911ed85f6b753666"
+      "path": "skills/supabase-postgres-best-practices/references/schema-lowercase-identifiers.md",
+      "sha256": "4bc80f70865f2390872591f326c8a6be6456a0aeb5a7e5a2475d7cd9d43059ab"
     },
     {
-      "path": "skills/verification-router/ROUTE.json",
-      "sha256": "68e5ade197cb4e0e3f784ac1cd9cbbb3ced9f9401f0cd08652742e49e7ec9fa1"
+      "path": "skills/supabase-postgres-best-practices/references/schema-partitioning.md",
+      "sha256": "541e13fbeaf4bb1485c9059d4c9417dbdb766cf16f4237cd63a04ada7ec45b90"
+    },
+    {
+      "path": "skills/supabase-postgres-best-practices/references/schema-primary-keys.md",
+      "sha256": "3c8beabef82066f9a0838b926da0885117fd2d9a263aaf84cb5ca9e5f0d400e9"
+    },
+    {
+      "path": "skills/supabase-postgres-best-practices/references/security-privileges.md",
+      "sha256": "095909274a4fb43df785d7144cf674eeb40284d2d45628f14af4108737b93663"
+    },
+    {
+      "path": "skills/supabase-postgres-best-practices/references/security-rls-basics.md",
+      "sha256": "e04dd1a3a382aafdaaa73fe9f7976352acdde6e90c2a2470d281b94d4f44b096"
+    },
+    {
+      "path": "skills/supabase-postgres-best-practices/references/security-rls-performance.md",
+      "sha256": "2e1faeca7d5746e246b1c78f9492fe2a9cfa41c4d7fa1e23c402d58fa18ea014"
+    },
+    {
+      "path": "skills/supabase-postgres-best-practices/SKILL.md",
+      "sha256": "ad65e776f45e761bafc609d3f506c77c1032225aa65e0c4c02f241b8071e5855"
+    },
+    {
+      "path": "skills/supply-chain-risk-auditor/agents/openai.yaml",
+      "sha256": "11a851b1841f3e828e7609045d91e0632cac07dfc008b2740f487cee83a5efd1"
+    },
+    {
+      "path": "skills/supply-chain-risk-auditor/assets/trail-of-bits-mark.svg",
+      "sha256": "4bf74c789b38dcf6ad762c136b6832363d27ae19fbaa9a18ec18d66ecce6ca05"
+    },
+    {
+      "path": "skills/supply-chain-risk-auditor/scripts/collect.py",
+      "sha256": "857a6632e716cdb96a4d5e204f6eeaeb9a970688a04ee27da44c7998da59c578"
+    },
+    {
+      "path": "skills/supply-chain-risk-auditor/scripts/model.py",
+      "sha256": "78a20954b76e81216991b57453ceddbdb867035a0d6993b98cfa05a7f8d008d3"
+    },
+    {
+      "path": "skills/supply-chain-risk-auditor/scripts/pyproject.toml",
+      "sha256": "a79ec30039ce3bc90544b9d833f7edc128232821575736f659d2b2ca0a601f3b"
+    },
+    {
+      "path": "skills/supply-chain-risk-auditor/scripts/render.py",
+      "sha256": "4216834d7610b39a6f4cbb8c15d2694ea6d266efe0299e6b44309ac29bc256c4"
+    },
+    {
+      "path": "skills/supply-chain-risk-auditor/scripts/sources.py",
+      "sha256": "18ef6be2ecb3aa594f8786b19a42543cf324cc2054293d3ef5f2449e875677d1"
+    },
+    {
+      "path": "skills/supply-chain-risk-auditor/scripts/test_collect.py",
+      "sha256": "3ff1daa90f34600cebefcdb9f470a41dce0179215d889380a4bc8626bd555774"
+    },
+    {
+      "path": "skills/supply-chain-risk-auditor/scripts/test_model.py",
+      "sha256": "92059fe937c50f1502d71df2ddc4f123e8e2647fc0f4f7b270727ef9a2004f5c"
+    },
+    {
+      "path": "skills/supply-chain-risk-auditor/scripts/test_render.py",
+      "sha256": "319970fd010d6bf5fbf79b595e8fc918c5e74645b718f495f2479aef3ea8cc16"
+    },
+    {
+      "path": "skills/supply-chain-risk-auditor/scripts/test_sources.py",
+      "sha256": "0357e6d61a4e8246340953b04133f7e958554326073f48c028b00f921120831c"
+    },
+    {
+      "path": "skills/supply-chain-risk-auditor/scripts/uv.lock",
+      "sha256": "99598cc397a42c945abbc9d839d1c61f1852f414660ce41e2e68bd9cdf664100"
+    },
+    {
+      "path": "skills/supply-chain-risk-auditor/SKILL.md",
+      "sha256": "a1254b7f8d3a1731a9a7e1f9cd6c67b59cf84ed6ef7c7fb455db9a14c528ceb4"
+    },
+    {
+      "path": "skills/systematic-debugging/condition-based-waiting-example.ts",
+      "sha256": "40ae5ebe497fdf310200e43fe986552546d0a22837c0d39e855db1cfd33eb88e"
+    },
+    {
+      "path": "skills/systematic-debugging/condition-based-waiting.md",
+      "sha256": "e89fec8400d6cd50f43407cec9fab50976ba4d55d0ec2eb51c0bd68036b54c26"
+    },
+    {
+      "path": "skills/systematic-debugging/CREATION-LOG.md",
+      "sha256": "c24733a5b1821bd6bed1fc950261f0b9f4e90097e0bbb96459d8179713730789"
+    },
+    {
+      "path": "skills/systematic-debugging/defense-in-depth.md",
+      "sha256": "1e175fb86fc357e58c6aebf5441e481e1b7868b4380c0456b63a17eefbd18ba7"
+    },
+    {
+      "path": "skills/systematic-debugging/find-polluter.sh",
+      "sha256": "dd7b8f13c4cc2a24b33ff87b18da9248f3e1c80a085c3316224f69ff0fa5c43c"
+    },
+    {
+      "path": "skills/systematic-debugging/root-cause-tracing.md",
+      "sha256": "6b0622269e098ca1399e123e553fd385f0b6412d88ef0e9c4f5a8ea9cf1cec7b"
+    },
+    {
+      "path": "skills/systematic-debugging/SKILL.md",
+      "sha256": "808fc5717aa88ad65efff312b11c186294d3e6ee301afb584e2f86599b137787"
+    },
+    {
+      "path": "skills/systematic-debugging/test-academic.md",
+      "sha256": "fe2ba480d78ac0d686dc025f41c2a32a43d642bf533f91b0c6053a04d35d6486"
+    },
+    {
+      "path": "skills/systematic-debugging/test-pressure-1.md",
+      "sha256": "0b6a915db0054577819834c79be9eb614e97bddba10d73768e1fbe91cfed048a"
+    },
+    {
+      "path": "skills/systematic-debugging/test-pressure-2.md",
+      "sha256": "b2030aeffba07050e8ad573ddf87486457c4a016a786bb326235bebd856f2016"
+    },
+    {
+      "path": "skills/systematic-debugging/test-pressure-3.md",
+      "sha256": "96b50a52e2c7989c9cf20fb752c47c1e9a3a70dc362f8f7989f8f5b64dac7708"
+    },
+    {
+      "path": "skills/terraform-style-guide/SECURITY.md",
+      "sha256": "3dc8ffa10139e9772c5c102fee6377f66f5167bd043a7c43e6e5df682dc75f92"
+    },
+    {
+      "path": "skills/terraform-style-guide/SKILL.md",
+      "sha256": "3a5c2e06a1daa07600d03f48328d1479284e7a9d59d66b2663693ca972080e22"
+    },
+    {
+      "path": "skills/terraform-test/references/CI_CD.md",
+      "sha256": "88fdffa4d3b8f361c570cb7c0df90a44380c70eb4471b3e27d552f32820179c8"
+    },
+    {
+      "path": "skills/terraform-test/references/EXAMPLES.md",
+      "sha256": "e57ef65b6c6545e00f7dc6106c71d44d29e819923ea8e0040efb38fbfbc60f50"
+    },
+    {
+      "path": "skills/terraform-test/references/MOCK_PROVIDERS.md",
+      "sha256": "788a9fcb988df8a207c1251fd971a11d1cd59b6b8e4023907b00a0fee976c001"
+    },
+    {
+      "path": "skills/terraform-test/SKILL.md",
+      "sha256": "bba613c50727af9a8e47e690b0e16a4093f0239afec495016e016b5152c9a598"
+    },
+    {
+      "path": "skills/test-strategy/references/diagrams-and-worksheets.md",
+      "sha256": "1215aef9e8d2e1f72468169f1eee6d235b7b57636f285b374664c5cff753cfa1"
+    },
+    {
+      "path": "skills/test-strategy/references/strategy-templates.md",
+      "sha256": "121fc2bf652045fc1e52622c7b07737a04c9ca4c3d16b288e2f4f942066ab7e9"
+    },
+    {
+      "path": "skills/test-strategy/SKILL.md",
+      "sha256": "523165a7262f2c48e60e0ff273aeb94d86290cbdd25d6d47390af102c9c6eddc"
     },
     {
       "path": "skills/verification-router/SKILL.md",
-      "sha256": "336e477df4b82bb48c075ab491ad52008519ce7a56fd73e5d736627c5c8c5390"
+      "sha256": "210afcf7f60e61278b83a3536f0c204b476ea296a67ed62422cae02be60b87e4"
     }
   ],
-  "manifest_sha256": "13ebfd313c2624a0c116cb802dfa06d09dbad3e0b552054b756553e948aca3b7"
+  "manifest_sha256": "2fa995d42f56b657d48795d94ab2a28dc6c5f2d781e883b8821345169b3515dc"
 }

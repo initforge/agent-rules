@@ -1,46 +1,33 @@
 ---
 name: frontend-design-contract
-description: "Frontend design-contract authoring and adherence: apply an approved project design contract or explicit design brief instead of generic UI defaults. Use when a design contract/brief exists; never from words like design/UI alone."
+description: "Author/adhere to an approved project design contract or explicit brief vs generic UI defaults."
 metadata:
   signals: "project design contract, design contract, design brief, brand identity direction, visual identity direction"
   excludes: "5fedu, ERP module, parity, drawer, listview, toolbar"
   priority: "35"
   platform_scope: "all"
-  source: ROUTE.json migrated
 
 ---
 # frontend-design-contract
 
-**Status:** materialized (skill-mcp-fabric-v1, AM-0002 full adoption)
-**Activation class:** ROUTED (deterministic RepoFacts/TaskFacts) + EXPLICIT brief
+## Discovery
 
-## Use when
-- A project design contract or explicit design brief exists in the workspace
-  (`project-design-contract.md`, design brief, brand/visual identity
-  direction).
-- A frontend task must follow an existing visual identity instead of generic
-  defaults.
-- Creating or reviewing a design contract for a project.
+Inspect the approved brief or design contract together with the active theme,
+tokens, components, typography, assets and representative product surfaces.
+Extract only constraints relevant to the requested seam: audience, hierarchy,
+brand rules, interaction expectations, accessibility and responsive behavior.
 
-## Do NOT
-- Do not activate from words such as "design", "UI", or "frontend" alone.
-- Do not act as a universal design-guru skill; the contract is the source.
-- Do not decide PASS; browser/runtime acceptance stays with the verifier.
+## Authority
 
-## Trigger facts (deterministic)
-- `repo_facts: frontend stack detected` AND `design contract file exists`
-- `task_facts: change_kinds contains design`
-- `explicit: design brief in TaskPacket`
+The approved contract overrides generic frontend or taste defaults. Existing
+product source is evidence of that contract, not a reason to invent a new
+visual world. If the brief conflicts with a public behavior, permission or
+accessibility requirement, surface the conflict before implementation.
 
-## Capabilities
-`design.inspect`, `design.compose`, `browser.verify`, `filesystem.read`
+## Implement and prove
 
-## Provider mapping
-- design contract authoring: harness-owned procedure
-- visual verification: Playwright CLI (`browser.verify`)
-
-## Conflict / removal
-- Overlaps `frontend-architect` and `ui-taste`;
-  precedence: an approved project design contract overrides generic
-  frontend/taste defaults.
-- Removal: only after design-contract routing and browser parity evidence.
+Materialize the applicable constraints in the active plan, then let the selected
+upstream implementation/design skill and repository source choose local structure. Use visual/browser
+proof only when acceptance claims a rendered state; otherwise run the narrowest
+repository-native proof. Stop or ask before changing the approved identity,
+public content, product behavior or acceptance.

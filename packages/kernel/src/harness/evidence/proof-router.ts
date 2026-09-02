@@ -3,6 +3,7 @@ import {
   deriveProofTrigger,
   selectProofs,
   type EvidenceCategory,
+  type AcceptanceCoverage,
   type ProofReceipt,
   type ProofReceiptInput,
   type ProofSelectionInput,
@@ -16,7 +17,6 @@ import {
   type FocusedRepairRecheck,
   type ProofBindingContext,
   type ProofExecutionPolicyResult,
-  type VerificationBudget,
 } from './proof-policy.js';
 
 export interface ProofRouteRequest {
@@ -33,15 +33,14 @@ export interface ProofRouteRequest {
   release_gate?: boolean;
   material_risk_trigger?: boolean;
   repair_recheck?: FocusedRepairRecheck;
-  prior_proof_plan_keys?: string[];
   binding?: ProofBindingContext;
-  verification_budget?: VerificationBudget;
   environment?: string;
+  acceptance_coverage?: AcceptanceCoverage;
 }
 
 export interface ProofRouteReceipt {
-  schema: 'agent-rules/proof-route-receipt/v1';
-  version: 1;
+  schema: 'agent-rules/proof-route-receipt/v2';
+  version: 2;
   task_id: string;
   trigger: ProofTriggerResult;
   plan: ReturnType<typeof selectProofs>;
@@ -77,8 +76,9 @@ export function planProofRoute(request: ProofRouteRequest): ProofRoutePlan {
     })),
     failure_history: request.failure_history,
     trigger,
-    force_full_suite: request.force_full_suite,
-    full_suite_reason: request.full_suite_reason,
+    // A caller's force request is a policy concern, not proof-selector
+    // evidence that the changed seam is materially broad.
+    force_full_suite: false,
   });
   const execution = applyProofExecutionPolicy({
     task_id: request.task_id,
@@ -91,8 +91,6 @@ export function planProofRoute(request: ProofRouteRequest): ProofRoutePlan {
     material_risk_trigger: request.material_risk_trigger,
     full_suite_reason: request.full_suite_reason,
     repair_recheck: request.repair_recheck,
-    prior_proof_plan_keys: request.prior_proof_plan_keys,
-    budget: request.verification_budget,
   });
   const plan = execution.full_suite_allowed === selectedPlan.full_suite_required
     ? selectedPlan
@@ -132,10 +130,11 @@ export function completeProofRoute(
       ...routePlan.execution.decisions.flatMap((decision) => decision.evidence_ref ? [decision.evidence_ref] : []),
       ...(opts.evidence_refs ?? []),
     ],
+    acceptance_coverage: request.acceptance_coverage,
   });
   return {
-    schema: 'agent-rules/proof-route-receipt/v1',
-    version: 1,
+    schema: 'agent-rules/proof-route-receipt/v2',
+    version: 2,
     task_id: request.task_id,
     trigger: routePlan.trigger,
     plan: routePlan.plan,
@@ -147,7 +146,6 @@ export function completeProofRoute(
       `fidelity: ${routePlan.plan.required_fidelity}`,
       `selected: ${routePlan.execution.selected_for_run.length}, reused: ${routePlan.execution.reused.length}, omitted: ${routePlan.plan.omitted.length}`,
       `full_suite: ${routePlan.execution.full_suite_allowed} (${routePlan.execution.full_suite_reason})`,
-      `proof_plan_key: ${routePlan.execution.proof_plan_key}`,
       `final_status: ${receipt.final_status}`,
     ],
   };
@@ -158,4 +156,4 @@ export function routeProofs(request: ProofRouteRequest, results: ProofReceiptInp
   return completeProofRoute(request, routePlan, results, opts);
 }
 
-export type { EvidenceCategory, ExistingProofBinding, ProofReceipt, ProofStatus };
+export type { AcceptanceCoverage, EvidenceCategory, ExistingProofBinding, ProofReceipt, ProofStatus };

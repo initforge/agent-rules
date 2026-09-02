@@ -42,6 +42,7 @@ fs.mkdirSync(target, { recursive: true });
 const files = [
   ...copyTree('rules'),
   ...copyTree('skills'),
+  ...copyTree('registry'),
   ...copyTree('schemas'),
   ...copyTree('platforms', (src) => {
     const rel = path.relative(path.join(root, 'platforms'), src).split(path.sep).join('/');
@@ -61,7 +62,7 @@ if (fs.existsSync(path.join(root, 'generated', 'runtime-build'))) {
 }
 files.sort((a, b) => a.path.localeCompare(b.path, 'en'));
 const body = {
-  schema: 'agent-rules/runtime-assets-manifest/v1',
+  schema: 'agent-rules/runtime-assets-manifest/v2',
   package_id: '@initforge/agent-rules',
   generated_by: 'automation/package-runtime-assets.mjs',
   files,

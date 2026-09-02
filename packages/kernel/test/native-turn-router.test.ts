@@ -36,10 +36,27 @@ describe('native turn router', () => {
     expect(next.route_id).not.toBe(first.route_id);
   });
 
-  it('routes matching skills exactly once through the broker', () => {
-    const capsule = routeNativeTurn(request({ prompt: 'Optimize a Postgres query using Prisma' })).capsule;
-    expect(capsule.skills.map((skill) => skill.id)).toContain('database-stack');
-    expect(capsule.context.rendered).toContain('## Skill: database-stack');
+  it('routes explicit skills exactly once through the broker', () => {
+    const capsule = routeNativeTurn(request({ prompt: 'Optimize a Prisma query', explicit: { skills: ['prisma-client-api'] } })).capsule;
+    expect(capsule.skills.map((skill) => skill.id)).toContain('prisma-client-api');
+    expect(capsule.context.rendered).toContain('## Skill: prisma-client-api');
+  });
+
+  it('forwards requested mode to skill routing', () => {
+    expect(routeNativeTurn(request({ prompt: 'Continue with the accepted task', requested_mode: 'plan' })).capsule.skills.map((skill) => skill.id)).toContain('plan-and-handoff');
+    // execute mode routes no generic skill (Lock 1); explicit skills still win
+    const execute = routeNativeTurn(request({ prompt: 'Continue with the accepted task', requested_mode: 'execute', explicit: { skills: ['schema-migration'] } })).capsule.skills.map((skill) => skill.id);
+    expect(execute).toContain('schema-migration');
+    expect(execute).not.toContain('finish-to-completion');
+    const qa = routeNativeTurn(request({ prompt: 'Continue with the accepted task', requested_mode: 'qa' })).capsule.skills.map((skill) => skill.id);
+    expect(qa[0]).toBe('verification-router');
+    expect(qa).not.toContain('finish-to-completion');
+    expect(qa).not.toContain('plan-and-handoff');
+  });
+
+  it('forwards affected scope without activating generic skills', () => {
+    const capsule = routeNativeTurn(request({ prompt: 'Prisma database work', explicit: { affected_scope: { stacks: ['prisma'] } } })).capsule;
+    expect(capsule.skills.map((skill) => skill.id)).not.toContain('prisma-client-api');
   });
 
   it('does not auto-route explicit-only integrations', () => {

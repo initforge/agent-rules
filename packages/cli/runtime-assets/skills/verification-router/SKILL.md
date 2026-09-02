@@ -1,49 +1,64 @@
 ---
 name: verification-router
-description: Use during implementation, review, or planning when proof must be selected by changed scope, claim, risk, affected dependencies, regression impact, evidence, browser, mobile, or runtime behavior. Start with deterministic proof and escalate fidelity only when required. Do not use for pure explanations with no verification decision.
+description: "Select proof by scope, claim, risk, deps, regression, browser/mobile/runtime. Deterministic first."
 metadata:
   signals: "verify, verification, proof, evidence, claim, risk, impact, affected, regression, acceptance"
   excludes: "pure Q&A, explain testing concept only"
   priority: "30"
   platform_scope: "all"
-  source: ROUTE.json migrated
 
 ---
 
 # Verification Router
 
 Select the smallest evidence set that proves the requested claims across every
-project. This is a routing workflow, not a universal testing agent.
+project. This is a focused execution aid, not a universal testing workflow.
 
-## Route
+## Flow
 
-1. Preserve requirement and claim IDs from the active plan.
-2. Inspect the diff, owned scope, symbols, direct consumers, dependency edges,
-   public boundaries, data/state surfaces, and previous failures.
-3. Classify risk with explainable factors: business impact, failure likelihood,
-   blast radius, reversibility, security/data risk, and proof difficulty.
-4. Compile a claim evidence profile. Choose only dimensions required by the
-   claim: static, affected tests, contract/boundary, runtime, visual,
-   accessibility, performance, security, observability, recovery, or semantic.
-5. Execute in this order unless the profile requires otherwise:
-   ```
-   scope/diff → static → affected deterministic tests → boundary/contract
-   → domain runtime → non-functional/security/recovery → semantic residual
-   ```
-6. Escalate when a required dimension is unproved, a verifier fails, impact is
-   broader than the affected graph, or the environment cannot provide truth.
-   Do not escalate merely because a deeper tool is available.
-7. Keep the funnel phases distinct: `VERIFICATION_PLAN` selects checks,
-   `VERIFICATION_RUN` records actual execution, and `ACCEPTANCE_REDUCTION`
-   evaluates freshness, applicability, required dimensions, and residual human
-   decisions. A plan status such as `RUNNABLE` is never run evidence.
-8. Persist exact commands, exit status, source/plan/environment hashes, raw
-   artifacts and verifier identity. A replay recipe must bind to the same
-   source, contract, fixture and environment class; stale bindings invalidate
-   it.
-9. Workers report results only. The independent verifier and acceptance reducer
-   derive PASS/PARTIAL/BLOCKED. Human review handles residual product, visual,
-   architectural, business or other semantic uncertainty.
+1. Inspect the changed seam, direct consumers, public boundaries, relevant
+   state and prior failures. Preserve claim IDs when the plan already has them;
+   do not invent IDs for ceremony.
+2. Choose only the evidence dimensions required by the claim: static, affected
+   deterministic test, contract, runtime, visual, accessibility, performance,
+   security, recovery or semantic review.
+3. Run the cheapest repository-native proof that covers the seam. A planned
+   command is preferred when stable; an equivalent command discovered from the
+   repository is valid when it proves the same claim.
+4. Repair and repeat the affected proof after material changes. Escalate only
+   when a required dimension is still unproved, the impact is broader than the
+   affected graph, the claim is live/security/data-loss/public-contract, or the
+   environment cannot provide truth.
+5. Return the actual result: PASS only from current proof or live readback;
+   otherwise report PARTIAL, BLOCKED or NEEDS_USER with the remaining reason.
+
+## Claim selection
+
+Map the accepted claim to the smallest proof that can falsify it. Preserve claim
+IDs when supplied; otherwise use the described behavior directly. Consider
+business impact, reversibility, public boundary, data/security risk and proof
+difficulty, then select static, affected test, contract, runtime or live proof
+only when that dimension is necessary.
+
+## Change-kind proof
+
+| Change kind | Required proof |
+|---|---|
+| `CREATE` | new behavior and direct contract |
+| `MODIFY` | expected delta and regression of preserved behavior |
+| `REPLACE` / refactor | active consumer/adoption proof, equivalent behavior and old-path retirement |
+| `RETIRE` / delete | negative proof the retired authority is gone and preservation proof outside its scope |
+| `MIGRATE` | upgrade, compatibility, rollback and data-loss contract |
+| `PRESERVE` | focused regression only when the seam is affected |
+
+A canonical component or service existing in source is not adoption proof; the
+active import, route, consumer or runtime must use it. Deletion proof includes
+operational capability and public/internal contracts, not only compile success.
+UI geometry or interaction acceptance requires browser/visual proof, but source
+checks remain required before a runtime gate. Bind blocker evidence to exact
+acceptance: runtime proof blocked while independent source work is pending is
+PARTIAL, not BLOCKED. Material-risk review may be required, but the harness does
+not choose the reviewer or model.
 
 ## Provider routing
 
@@ -61,25 +76,15 @@ project. This is a routing workflow, not a universal testing agent.
 - Do not require API, DB, UI, analytics, performance and security evidence for
   every claim; derive the profile from risk and boundary.
 - Do not treat a model narrative, screenshot alone, or stale replay as PASS.
-- Keep capability evals separate from regression evals and isolate trial state.
-- A discovered expensive flow may become a deterministic replay only after its
-  expected outcome and fixture state are independently accepted.
-
-## Output
-
-Return a machine-readable verification plan containing:
-`claim_ids`, `impact_summary`, `risk_factors`, `required_evidence_dimensions`,
-`ordered_verifiers`, `escalation_conditions`, `replay_binding`, and
-`human_residuals`.
+- Keep evidence or readback only when it protects a live, safety, rollback or
+  freshness claim. Do not create verification packets, phase artifacts, raw
+  artifact stores or evidence history by default.
 
 Missing source truth or an unavailable required environment is BLOCKED/NEEDS_USER,
 not an invented pass.
 
-## Human residual packet
-
-The terminal reducer should hand the operator a compact packet containing the
-changed surface, risk, actual automated statuses and artifact hashes, replay and
-freshness state, deterministic failures, blocked capabilities, and only the
-remaining semantic/product/design/business questions. Human review records one
-decision per residual. The operator verifies the critical journeys and packet,
-not every automated check a second time.
+For security/data/migration, major UI/refactor, repeated failures or another
+high-cost irreversible claim, an owner/accepted plan may require a fresh-context
+reviewer. Give that reviewer the outcome, baseline, locks, final diff,
+acceptance and actual proof—not the implementer's self-evaluation. Review is
+conditional and the owner selects the model; never create a mandatory worker.

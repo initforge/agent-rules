@@ -16,8 +16,9 @@ describe('skill resolver call count', () => {
         session_id: 'SES-CALL-COUNT-1',
         turn_id: 'TRN-CALL-COUNT-1',
         cwd: repoRoot,
-        prompt: 'Refactor postgres query and database tooling',
+        prompt: 'Optimize a Prisma query',
         protocol_version: '2.0',
+        explicit: { skills: ['prisma-client-api'] },
       };
 
       const initialCalls = resolveSkillsSpy.mock.calls.length;
@@ -30,7 +31,7 @@ describe('skill resolver call count', () => {
       // Must be called exactly ONCE for the executable packet generation
       expect(turnCalls).toBe(1);
       expect(result.capsule.skills.length).toBeGreaterThan(0);
-      expect(result.capsule.skills[0]?.id).toBe('database-stack');
+      expect(result.capsule.skills.map((s) => s.id)).toContain('prisma-client-api');
     } finally {
       resolveSkillsSpy.mockRestore();
     }
@@ -43,12 +44,12 @@ describe('skill resolver call count', () => {
       const broker = createStandardCapabilityBroker(repoRoot);
       const initialCalls = resolveSkillsSpy.mock.calls.length;
 
-      const routed = broker.route({ prompt: 'Perform security review and auth boundary analysis on token middleware' });
+      const routed = broker.route({ prompt: 'Security review of token middleware', explicitSkills: ['security-review'] });
 
       const finalCalls = resolveSkillsSpy.mock.calls.length;
       expect(finalCalls - initialCalls).toBe(1);
       expect(routed.skills.length).toBeGreaterThan(0);
-      expect(routed.skills[0]?.id).toBe('security-review');
+      expect(routed.skills.map((s) => s.id)).toContain('security-review');
     } finally {
       resolveSkillsSpy.mockRestore();
     }

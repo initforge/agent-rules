@@ -22,6 +22,10 @@ const MATERIAL_P2_DIMENSIONS = new Set([
   'security_auth_data_migration',
   'runtime_live_host_behavior',
   'recovery_install_rollback',
+  'subtractive_preservation',
+  'canonical_runtime_adoption',
+  'blocker_scope_completion',
+  'ui_geometry_behavior',
 ]);
 
 export function classifyReviewMateriality(finding: MaterialityFinding, context: MaterialityContext): MaterialityDecision {

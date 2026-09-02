@@ -16,6 +16,13 @@
     "test": "node node_modules/vitest/vitest.mjs run --config vitest.config.ts && npm run test --workspaces --if-present",
     "test:fast": "npm test",
     "check": "npm run typecheck --workspaces --if-present",
+    "plan:lint": "node automation/plan-lint.mjs",
+    "skills:audit": "node automation/skills-audit.mjs",
+    "skills:check-drift": "node automation/skills-check-updates.mjs --offline",
+    "skills:check-updates": "node automation/skills-check-updates.mjs",
+    "skills:sync": "node automation/skills-sync.mjs",
+    "skills:eval": "node automation/skill-eval.mjs",
+    "harness:audit": "node automation/context-integrity.mjs",
     "ci:quality": "npm run build && npm run check && npm run test",
     "verify:all": "node automation/verify-all.mjs",
     "verify:ci": "node automation/verify-all.mjs"

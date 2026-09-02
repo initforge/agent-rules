@@ -32,6 +32,11 @@ describe('static host projector contracts', () => {
     expect(getNativeContract('antigravity', repoRoot)?.id).toBe('antigravity');
   });
 
+  it('declares repository-local task skill support explicitly', () => {
+    for (const host of ['codex', 'claude', 'grok', 'opencode', 'antigravity', 'cursor']) expect(getNativeContract(host, repoRoot)?.paths.repositorySkillPath).toContain('<skill>');
+    for (const host of ['deepseek-harness', 'command-code', 'omp']) expect(getNativeContract(host, repoRoot)?.paths.repositorySkillPath).toBeUndefined();
+  });
+
   it('preserves an explicit Windows OMP agent path', () => {
     const agentDir = 'C:\\Users\\runneradmin\\AppData\\Local\\Temp\\omp-agent';
     expect(resolveOmpAgentHome({ PI_CODING_AGENT_DIR: agentDir }, 'C:\\Users\\RUNNER')).toBe(agentDir);
@@ -59,6 +64,8 @@ describe('static host projector contracts', () => {
       await installer.install('omp', { backupDir: first.backupDir });
       expect(fs.readFileSync(path.join(agentDir, 'AGENTS.md'), 'utf8')).toContain('agent-rules:managed:omp');
       expect(fs.existsSync(path.join(agentDir, 'skills'))).toBe(true);
+      expect(fs.existsSync(path.join(agentDir, 'skills', 'plan-and-handoff', 'SKILL.md'))).toBe(true);
+      expect(fs.existsSync(path.join(agentDir, 'skills', 'playwright-cli'))).toBe(false);
       expect(fs.existsSync(path.join(agentDir, 'extensions', 'agent-rules.ts'))).toBe(false);
       expect(fs.existsSync(path.join(agentDir, 'agent-rules-runtime'))).toBe(false);
       const before = fs.readFileSync(path.join(agentDir, 'AGENTS.md'));

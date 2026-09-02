@@ -1,6 +1,6 @@
 ---
 name: parity-verification
-description: Use when the user asks to prove visual, responsive, behavioral, accessibility, console, network, or data-state parity against a live reference. Do not use for unit/API-only checks or static source comparison alone.
+description: "Prove visual, responsive, behavioral, a11y, console, network or data-state parity vs a live reference."
 metadata:
   signals: "parity proof, parity verification, verify parity, visual parity, responsive parity, behavioral parity, cross-state parity"
   excludes: "unit/api-only, static source diff only"

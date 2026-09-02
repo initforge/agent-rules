@@ -1,41 +1,40 @@
 ---
 name: schema-migration
-description: "Bounded schema migration procedure: migration files and schema-change claims trigger upgrade/downgrade and rollback evidence; production migration stays owner-approved."
+description: "Bounded migration procedure: migration files/schema-change claims trigger upgrade/downgrade + rollback evidence."
 metadata:
-  signals: "migration files, schema-change claim, migration plan, upgrade/downgrade, rollback migration"
+  signals: "migration, migration files, schema change, schema-change claim, migration plan, upgrade/downgrade, rollback migration, database migration"
   excludes: "query-only, read-only"
   priority: "50"
+  requires: "verification-router"
   platform_scope: "all"
-  source: ROUTE.json migrated
 
 ---
 # schema-migration
 
-**Status:** materialized (skill-mcp-fabric-v1, AM-0002 full adoption)
-**Activation class:** ROUTED (deterministic RepoFacts/TaskFacts; never keyword-only)
+## Discovery
 
-## Use when
-- Deterministic repo/task facts for this domain are observed (see trigger facts).
-- The claim/task actually requires this capability; smallest sufficient proof.
+Inspect the schema owner, migration format, current migration head, generated
+client contract, deployment order, seed/fixture assumptions and direct readers
+of the changed data. Identify the upgrade path and the reversible alternative
+before editing migration files.
 
-## Do NOT
-- Do not activate from generic keywords (frontend/database/design/test/UI).
-- Do not decide scope, completion, PASS or acceptance; kernel owns those.
-- Do not bypass or skip verifiers; missing providers are BLOCKED/NEEDS_USER.
+## Locked boundaries
 
-## Trigger facts (deterministic)
-- migration files; schema-change claim; migration plan; upgrade/downgrade; rollback migration.
+Do not silently drop, rewrite, backfill or expose data in a way that changes
+retention, authorization, compatibility, availability or rollback guarantees.
+Production apply, destructive backfill and irreversible data loss remain
+owner-approved authority.
 
-## Capabilities
-- database.disposable, filesystem.write, owner.approval
+## Implement
 
-## Provider mapping
-- Providers resolved by the CapabilityBroker (registry.json / integrations);
-  unavailable providers yield UNAVAILABLE/BLOCKED, never fabricated PASS.
+Make the smallest compatible schema delta. Choose migration naming and local
+helpers from repository conventions. Preserve old readers during an expand/
+contract transition when deploy order requires it, and keep application code
+and generated client changes aligned with the migration contract.
 
-## Rollback
-- Remove this skill directory and its catalog/fabric entries; restore the
-  previous route receipts.
+## Focused proof and stop
 
-## Eval status
-- Route precision: high; WITH/WITHOUT ablation corpus: pending (TASK-012).
+Prove upgrade on disposable state, rollback or documented irreversibility,
+schema/client type compatibility and affected data behavior. Stop or ask before
+production execution, destructive transformation, credential use or a change
+to the accepted compatibility contract.

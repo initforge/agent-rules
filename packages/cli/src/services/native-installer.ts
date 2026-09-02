@@ -28,6 +28,7 @@ import type { RuntimePlatform } from '../runtime/contracts.js';
 import { resolveRuntimeAssetsRoot, resolveRuntimeStateRoot } from '../runtime/locator.js';
 import { writeCurrentOperationalState } from '../runtime/state-lifecycle.js';
 import { cleanupHostRuntimeCallbacks } from '../runtime/legacy-runtime-cleanup.js';
+import YAML from 'yaml';
 
 export type { CertificationReceipt, ClaimVerification, Detection, InstallPlan, InventoryEntry } from '../native/types.js';
 
@@ -150,21 +151,25 @@ function renderCanonicalRules(repositoryRoot = findRepositoryRoot(), profileIds:
 
 function compileSkillSource(repositoryRoot: string, profileIds: readonly string[]): { root: string; profiles: string[]; cleanup: () => void } {
   const profiles = normalizeProfiles(repositoryRoot, profileIds);
-  if (profiles.length === 0) return { root: path.join(repositoryRoot, 'skills'), profiles, cleanup: () => undefined };
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-rules-profile-skills-'));
   const root = path.join(temp, 'skills');
   fs.mkdirSync(root, { recursive: true });
-  const copySkills = (source: string): void => {
+  const registryFile = path.join(repositoryRoot, 'registry', 'skills.yaml');
+  if (!fs.existsSync(registryFile)) throw new Error('registry/skills.yaml is required to compile the global discovery catalog');
+  const registry = YAML.parse(fs.readFileSync(registryFile, 'utf8')) as { skills?: Array<{ id?: string; lifecycle?: string; activation?: string }> };
+  const implicit = new Set((registry.skills ?? []).filter((entry) => entry.lifecycle === 'active' && entry.activation === 'implicit').map((entry) => String(entry.id)));
+  const copySkills = (source: string, allowed?: ReadonlySet<string>): void => {
     if (!fs.existsSync(source)) return;
     for (const entry of fs.readdirSync(source, { withFileTypes: true })) {
       if (!entry.isDirectory()) continue;
+      if (allowed && !allowed.has(entry.name)) continue;
       const target = path.join(root, entry.name);
       if (fs.existsSync(target)) throw new Error(`profile skill conflicts with another selected skill: ${entry.name}`);
       fs.cpSync(path.join(source, entry.name), target, { recursive: true, force: false, errorOnExist: true });
     }
   };
   try {
-    copySkills(path.join(repositoryRoot, 'skills'));
+    copySkills(path.join(repositoryRoot, 'skills'), implicit);
     for (const id of profiles) copySkills(path.join(repositoryRoot, 'profiles', id, 'skills'));
     return { root, profiles, cleanup: () => fs.rmSync(temp, { recursive: true, force: true }) };
   } catch (error) {
@@ -496,13 +501,14 @@ export class NativeInstaller {
     const readback = await this.readback(host);
 
     // Dynamic skill catalog count
-    let skillCount = 36;
+    let skillCount = 0;
     try {
-      const skillsDir = path.join(findRepositoryRoot(), 'skills');
-      if (fs.existsSync(skillsDir)) {
-        const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
-        const valid = entries.filter(e => e.isDirectory() && fs.existsSync(path.join(skillsDir, e.name, 'SKILL.md')));
-        if (valid.length > 0) skillCount = valid.length;
+      const repo = findRepositoryRoot();
+      const doc = YAML.parse(fs.readFileSync(path.join(repo, 'registry', 'skills.yaml'), 'utf8')) as { skills?: Array<{ lifecycle?: string; activation?: string }> };
+      skillCount = (doc.skills ?? []).filter((entry) => entry.lifecycle === 'active' && entry.activation === 'implicit').length;
+      for (const id of selectedProfiles) {
+        const profileSkills = path.join(repo, 'profiles', id, 'skills');
+        if (fs.existsSync(profileSkills)) skillCount += fs.readdirSync(profileSkills, { withFileTypes: true }).filter((entry) => entry.isDirectory() && fs.existsSync(path.join(profileSkills, entry.name, 'SKILL.md'))).length;
       }
     } catch {}
 

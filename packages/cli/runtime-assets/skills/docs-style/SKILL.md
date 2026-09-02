@@ -1,15 +1,11 @@
 ---
 name: docs-style
-description: Use this skill when creating, reviewing, rewriting, or restructuring high-quality project documentation for README.md,
-  README-vi.md, technical specs, tech stack badges, screenshots, documentation cleanup, or /docs/**. Trigger for source-grounded
-  docs, repo documentation architecture, docs quality complaints, README style, Vietnamese/English README parity, current-vs-legacy
-  tech stack accuracy, or docs that must match or exceed a strong hand-written technical spec.
+description: "Create/review/rewrite high-quality project docs (README, specs, doc architecture)."
 metadata:
   signals: "README, README-vi, /docs/, documentation, tài liệu, docs cleanup, tech stack"
   excludes: "pure code implementation"
   priority: "50"
   platform_scope: "all"
-  source: ROUTE.json migrated
 
 ---
 
@@ -320,5 +316,4 @@ When reporting work, state:
 - whether CI/CD was skipped, avoided by branch/workflow rules, or impossible to guarantee.
 
 Do not claim "đã đọc full codebase" unless the source reading standard was actually completed.
-
 

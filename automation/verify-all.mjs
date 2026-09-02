@@ -12,6 +12,9 @@ const checks = [
   ['build', ...npmStep(['run', 'build'])],
   ['typecheck', ...npmStep(['run', 'check'])],
   ['repository tests', ...npmStep(['test'])],
+  ['skill catalog audit', ...npmStep(['run', 'skills:audit', '--', '--profile', '5fedu'])],
+  ['skill activation evaluation', ...npmStep(['run', 'skills:eval'])],
+  ['context integrity audit', ...npmStep(['run', 'harness:audit'])],
   ['global behavior', process.execPath, ['automation/test-global-behavior.mjs']],
   ['packed clean static lifecycle', ...npmStep(['run', 'test:package-smoke', '-w', 'packages/cli'])],
 ];

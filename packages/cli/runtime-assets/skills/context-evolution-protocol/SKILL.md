@@ -1,8 +1,8 @@
 ---
 name: context-evolution-protocol
-description: Use when modifying or auditing AGENTS.md, rules, skills, platform overlays, profiles, integrations, or harness behavior after repeated misunderstanding or context drift. Do not use for ordinary coding.
+description: "Modify/audit AGENTS.md, rules, skills, overlays, profiles, integrations after context drift."
 metadata:
-  signals: "ghi nhớ, bổ sung context, đừng lặp lại, đưa vào rule, dọn context, sync rule, context drift, agent-rules"
+  signals: "ghi nhớ, bổ sung context, đừng lặp lại, đưa vào rule, dọn context, sync rule, context drift, agent rules behavior"
   excludes: "ordinary implementation"
   priority: "60"
   platform_scope: "all"
@@ -36,7 +36,15 @@ into every host or creating another policy layer.
    the integrated release gate once when preparing a release candidate.
 7. Confirm no stale duplicate, dead path, or conflicting host overlay remains.
 
-Do not create shadow plans, context ledgers, raw-feedback archives, per-change
-receipts, or mirror-specific copies solely to prove that the rule changed.
+For explicit maintenance audits, check architecture drift, duplicated canonical
+logic, dead/stale documentation, stale skills, test health and generated
+artifact drift. Report advisory findings unless they affect acceptance,
+security, data or public correctness; never expand an implementation task into
+background cleanup.
+
+Do not create task history, raw-feedback archives, per-change receipts, or
+mirror-specific copies solely to prove that the rule changed. The single owned
+`.agent/current` active-task state is allowed; replacement/close removes the
+previous state instead of archiving it.
 
 Report only the behavior owner changed, the focused proof, and any real blocker.

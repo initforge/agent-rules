@@ -13,7 +13,8 @@ const app = path.join(temp, 'app');
 const home = path.join(temp, 'home');
 const runtimeTarget = path.join(temp, 'codex-home');
 const bin = path.join(temp, 'bin');
-await Promise.all([fsp.mkdir(packDir), fsp.mkdir(app), fsp.mkdir(home), fsp.mkdir(runtimeTarget), fsp.mkdir(bin)]);
+const npmCache = path.join(temp, 'npm-cache');
+await Promise.all([fsp.mkdir(packDir), fsp.mkdir(app), fsp.mkdir(home), fsp.mkdir(runtimeTarget), fsp.mkdir(bin), fsp.mkdir(npmCache)]);
 
 function runResult(executable, args, options = {}) {
   return spawnSync(executable, args, {
@@ -30,21 +31,44 @@ function run(executable, args, options = {}) {
 }
 
 function runNpm(args, options = {}) {
+  const { npmCache: selectedCache = npmCache, ...spawnOptions } = options;
+  const npmOptions = {
+    ...spawnOptions,
+    env: {
+      ...process.env,
+      npm_config_cache: selectedCache,
+      npm_config_logs_dir: path.join(temp, 'npm-logs'),
+      npm_config_update_notifier: 'false',
+      ...(spawnOptions.env ?? {}),
+    },
+  };
   if (process.env.npm_execpath) {
-    return run(process.execPath, [process.env.npm_execpath, ...args], options);
+    return run(process.execPath, [process.env.npm_execpath, ...args], npmOptions);
   }
   return run(process.platform === 'win32' ? 'npm.cmd' : 'npm', args, {
     shell: process.platform === 'win32',
-    ...options,
+    ...npmOptions,
   });
 }
 
 function pack(workspace) {
   const before = new Set(fs.readdirSync(packDir));
-  runNpm(['pack', '--silent', '--ignore-scripts', '--pack-destination', packDir], { cwd: path.join(root, workspace) });
+  runNpm(['pack', '--ignore-scripts', '--pack-destination', packDir], { cwd: path.join(root, workspace) });
   const created = fs.readdirSync(packDir).find((name) => !before.has(name));
   if (!created) throw new Error(`npm pack produced no tarball for ${workspace}`);
   return path.join(packDir, created);
+}
+
+function packageDirectoryName(packagePath) {
+  return packagePath.replace(/^node_modules[\\/]/, '');
+}
+
+function packRuntimeDependencies() {
+  const lock = JSON.parse(fs.readFileSync(path.join(root, 'package-lock.json'), 'utf8'));
+  const dependencies = Object.entries(lock.packages ?? {})
+    .filter(([packagePath, metadata]) => packagePath.startsWith('node_modules/') && metadata?.version && metadata.dev !== true && !packagePath.includes('@initforge/agent-rules'))
+    .map(([packagePath]) => packageDirectoryName(packagePath));
+  return dependencies.map((name) => pack(path.join('node_modules', name)));
 }
 
 function containsAgentDirectory(root) {
@@ -58,8 +82,9 @@ function containsAgentDirectory(root) {
 
 try {
   const tarballs = ['packages/kernel', 'packages/cli'].map(pack);
+  const dependencyTarballs = packRuntimeDependencies();
   await fsp.writeFile(path.join(app, 'package.json'), JSON.stringify({ name: 'packed-smoke', private: true }));
-  runNpm(['install', '--prefer-offline', '--ignore-scripts', '--no-audit', '--no-fund', ...tarballs], { cwd: app });
+  runNpm(['install', '--offline', '--ignore-scripts', '--no-audit', '--no-fund', ...tarballs, ...dependencyTarballs], { cwd: app });
 
   const cliEntry = path.join(app, 'node_modules/@initforge/agent-rules/dist/index.js');
   const runCli = (args, options = {}) => run(process.execPath, [cliEntry, ...args], options);
@@ -68,7 +93,7 @@ try {
   if (process.platform !== 'win32') await fsp.chmod(fakeCodex, 0o755);
   const env = { ...process.env, HOME: home, USERPROFILE: home, CODEX_HOME: runtimeTarget, PATH: `${bin}${path.delimiter}${process.env.PATH ?? ''}` };
   const help = runCli(['--help'], { cwd: app, env });
-  for (const command of ['install', 'update', 'rollback', 'uninstall', 'doctor', 'status', 'integration', 'reference', 'route-native']) assert.match(help, new RegExp(`\\b${command}\\b`));
+  for (const command of ['install', 'update', 'rollback', 'uninstall', 'doctor', 'status', 'integration', 'reference', 'task', 'route-native']) assert.match(help, new RegExp(`\\b${command}\\b`));
   for (const retired of ['run', 'init', 'plan', 'goal']) assert.doesNotMatch(help, new RegExp(`^\\s+${retired}\\s`, 'm'));
 
   const routed = runCli(['route-native', '--stdin'], {
@@ -96,7 +121,7 @@ try {
   assert.equal(fs.existsSync(path.join(home, '.agent-rules', 'runtime')), false);
 
   const installedAgents = path.join(runtimeTarget, 'AGENTS.md');
-  const installedSkill = path.join(home, '.agents', 'skills', 'finish-to-completion', 'SKILL.md');
+  const installedSkill = path.join(home, '.agents', 'skills', 'plan-and-handoff', 'SKILL.md');
   const agentsBytes = await fsp.readFile(installedAgents);
   const skillBytes = await fsp.readFile(installedSkill);
   const movedPackage = `${installedRoot}.moved`;

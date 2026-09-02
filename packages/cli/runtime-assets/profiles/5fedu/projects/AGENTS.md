@@ -18,7 +18,7 @@ Layout cũ (`00-index.md` ở root): hợp lệ nếu chưa migrate — đọc `
 
 ## Behavior mặc định (UI)
 
-Task tạo/sửa/refactor module ERP → `00-context-map.md` → chỉ mở `module-mapping.md` và `ui-delivery.md` khi trigger UI khớp; mở `ui-delivery-detail.md` khi surface cần detail/navigation/verify. Trước plan/code, discovery template cục bộ trong workspace theo `pattern-inventory.yaml`: chọn rõ một source, mở đúng anchors và ghi Git commit hoặc hash xác định. Không có/mơ hồ source → dừng slice parity và hỏi owner; không thay bằng remote, docs, screenshot hay memory. **[Mới] Tạo parity packet** tại `parity/<module>/` trước khi implement; workflow, schemas, examples, questions và worker contract chỉ load từ `skills/5fedu-module-parity/references/`. Sau đó mở module tham chiếu và route hiện tại trước khi code. **Cấm** `frontend-architect` / `master-image-generation` làm nguồn chính.
+Task tạo/sửa/refactor module ERP → `00-context-map.md` → chỉ mở `module-mapping.md` và `ui-delivery.md` khi trigger UI khớp; mở `ui-delivery-detail.md` khi surface cần detail/navigation/verify. Trước plan/code, discovery template cục bộ trong workspace theo `pattern-inventory.yaml`: chọn rõ một source, mở đúng anchors và ghi Git commit hoặc hash xác định. Không có/mơ hồ source → dừng slice parity và hỏi owner; không thay bằng remote, docs, screenshot hay memory. **[Mới] Tạo parity packet** tại `parity/<module>/` trước khi implement; workflow, schemas, examples, questions và worker contract chỉ load từ `skills/5fedu-module-parity/references/`. Sau đó mở module tham chiếu và route hiện tại trước khi code. **Cấm** `frontend-composition` / `master-image-generation` làm nguồn chính.
 
 Khi user báo lệch/sai pattern: cùng flow trên + audit toàn surface.
 

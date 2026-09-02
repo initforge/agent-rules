@@ -1,14 +1,10 @@
 ---
 name: best-of-n
-description: 'Implement a task N ways in parallel and pick the best. Spawns multiple subagents in isolated worktrees, evaluates
-  all candidates, and applies the winner. Use when asked to "best of n", "try multiple approaches", "parallel implementations",
-  "/best-of-n", or "/bon".
-
-  '
+description: "Implement a task N ways in parallel, evaluate all, apply the best. On best-of-N requests."
 metadata:
   short-description: Parallel implementation tournament
   signals: "best of n, try multiple approaches, parallel implementations, /best-of-n, /bon"
-  excludes: ""
+  excludes: "single implementation, sequential retry, review-only"
   priority: "60"
 
 ---
@@ -89,22 +85,12 @@ Evaluate each candidate on these axes, in order of importance:
   and better codebase integration.
 - If a candidate introduces unnecessary changes beyond the task scope, count
   that against it.
-- If all candidates are poor, still pick the least bad one.
+- A candidate is eligible only after its required proof passes. If no candidate
+  passes, reject all candidates and report the shared blocker; never apply the
+  least-bad failed implementation.
 
 ## Presenting Your Evaluation
 
-Before announcing your choice, present a structured comparison:
-
-| Dimension | Candidate 1 | Candidate 2 | ... |
-|-----------|-------------|-------------|-----|
-| Correctness | Short verdict | Short verdict | ... |
-| Code Quality | Short verdict | Short verdict | ... |
-| Safety | Short verdict | Short verdict | ... |
-
-Then list key findings:
-
-| Finding | Severity | Candidate 1 | Candidate 2 | ... |
-|---------|----------|-------------|-------------|-----|
-| Specific issue | High/Medium/Low | How handled | How handled | ... |
-
-State which candidate you chose and why.
+Keep the user report concise: name the passing candidate, the proof that made it
+eligible, and the material reason it beat any other passing candidate. Produce a
+comparison table only when the owner requests one.

@@ -1,0 +1,32 @@
+{
+  "schema": "agent-rules/skill-activation-eval/v1",
+  "cases": [
+    { "skill": "docs-style", "kind": "positive", "prompt": "Rewrite this repository README from the actual source and keep Vietnamese/English sections accurate." },
+    { "skill": "docs-style", "kind": "hard_negative", "prompt": "Fix the TypeScript implementation; do not edit documentation." },
+    { "skill": "frontend-design-contract", "kind": "positive", "prompt": "Implement this screen using the approved design brief and existing token contract." },
+    { "skill": "frontend-design-contract", "kind": "hard_negative", "prompt": "Make a new landing page with no approved product design contract." },
+    { "skill": "parity-verification", "kind": "positive", "prompt": "Prove responsive and behavioral parity against this live reference." },
+    { "skill": "parity-verification", "kind": "hard_negative", "prompt": "Run unit tests for this pure reducer; there is no reference product." },
+    { "skill": "plan-and-handoff", "kind": "positive", "prompt": "Create a portable cold-start plan for a multi-part cross-host handoff." },
+    { "skill": "plan-and-handoff", "kind": "hard_negative", "prompt": "Change one obvious constant and run its focused test." },
+    { "skill": "researcher", "kind": "positive", "prompt": "Research the latest official release behavior and resolve conflicting maintainer reports." },
+    { "skill": "researcher", "kind": "hard_negative", "prompt": "Read the local function and explain what it does; no external facts needed." },
+    { "skill": "schema-migration", "kind": "positive", "prompt": "Change this database schema while preserving upgrade, compatibility and rollback." },
+    { "skill": "schema-migration", "kind": "hard_negative", "prompt": "Optimize a read-only query without changing schema or data contracts." },
+    { "skill": "security-review", "kind": "positive", "prompt": "Review the changed authorization and tenant data boundary for bypasses." },
+    { "skill": "security-review", "kind": "hard_negative", "prompt": "Fix a local formatting issue with no changed threat surface." },
+    { "skill": "verification-router", "kind": "positive", "prompt": "Select the minimum proof for a refactor that changes source, API and browser behavior." },
+    { "skill": "verification-router", "kind": "hard_negative", "prompt": "Explain what unit testing means; no implementation or verification decision is requested." },
+    { "skill": "backend-change-boundaries", "kind": "positive", "prompt": "Change an authenticated payment webhook while preserving transaction and public error contracts." },
+    { "skill": "backend-change-boundaries", "kind": "hard_negative", "prompt": "Rename a private backend helper with no API, auth or transaction boundary change." }
+    ,{ "skill": "docs-style", "kind": "positive", "language": "vi", "prompt": "Viết lại README dựa trên source thật và giữ phần tiếng Việt, tiếng Anh nhất quán." }
+    ,{ "skill": "frontend-design-contract", "kind": "positive", "language": "vi", "prompt": "Áp dụng đúng design contract đã duyệt cho màn hình này, không tự đổi nhận diện." }
+    ,{ "skill": "parity-verification", "kind": "positive", "language": "vi", "prompt": "Chứng minh giao diện responsive và hành vi giống reference đang chạy." }
+    ,{ "skill": "plan-and-handoff", "kind": "positive", "language": "vi", "prompt": "Lập plan portable để model khác nhận vào làm tiếp không cần lịch sử chat." }
+    ,{ "skill": "researcher", "kind": "positive", "language": "vi", "prompt": "Nghiên cứu tài liệu mới nhất và giải thích vì sao hai nguồn chính thức mâu thuẫn." }
+    ,{ "skill": "schema-migration", "kind": "positive", "language": "vi", "prompt": "Đổi schema nhưng phải có upgrade, compatibility và rollback dữ liệu." }
+    ,{ "skill": "security-review", "kind": "positive", "language": "vi", "prompt": "Review boundary phân quyền và tenant data vừa thay đổi." }
+    ,{ "skill": "verification-router", "kind": "positive", "language": "vi", "prompt": "Chọn proof nhỏ nhất nhưng đủ cho refactor chạm API và browser." }
+    ,{ "skill": "backend-change-boundaries", "kind": "positive", "language": "vi", "prompt": "Sửa webhook thanh toán có auth, transaction và public error contract." }
+  ]
+}
