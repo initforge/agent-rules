@@ -5,7 +5,7 @@
       "args": [
         "start-mcp-server",
         "--context",
-        "omp",
+        "agent",
         "--project-from-cwd",
         "--enable-web-dashboard",
         "false",

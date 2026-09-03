@@ -445,7 +445,7 @@
     },
     {
       "path": "integrations/optional/serena/adapters/command-code.json",
-      "sha256": "a771bd55ad7973d164855315106b716c9afca2c9d5835e5ac65f779aa3fe0353"
+      "sha256": "a3127a58a86daddbcb37d7d3492dab01001e2dbca07b8758867bb2c3c8d4099d"
     },
     {
       "path": "integrations/optional/serena/adapters/cursor.json",
@@ -457,7 +457,7 @@
     },
     {
       "path": "integrations/optional/serena/adapters/omp.json",
-      "sha256": "2c503c873354f36d24b7c3fdc77ad40cdc630565cffb0f8448e111435f26ddef"
+      "sha256": "a3127a58a86daddbcb37d7d3492dab01001e2dbca07b8758867bb2c3c8d4099d"
     },
     {
       "path": "integrations/optional/serena/adapters/opencode.json",
@@ -5136,5 +5136,5 @@
       "sha256": "17e48da905f83a19c174079b50760a98c069527ba50079239b3c187236627c29"
     }
   ],
-  "manifest_sha256": "8c12f73d502eacc3ca97d957211ca484c9d48e93c9c087a6c655852d1bf6df46"
+  "manifest_sha256": "820d10ad14fcce883960cb79f896b7e99befd4b61db3a265ac49e284c2829b5f"
 }
