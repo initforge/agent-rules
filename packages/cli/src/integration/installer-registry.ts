@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { binaryInstall, binaryUninstall, binaryVerify } from "./handlers/binary.js";
 import { npmInstall, npmUninstall, npmVerify } from "./handlers/npm.js";
@@ -48,10 +49,29 @@ export function handlerForRegistryEntry(repoRoot: string, entry: RegistryEntry):
       return shellHandler(repoRoot, entry);
     case "builtin":
       return builtinHandler(repoRoot, entry);
+    case "host-native":
+    case "system":
+      return hostNativeHandler(entry);
     default:
       // Unknown/missing install type fails closed upstream (never silently skipped).
       return undefined;
   }
+}
+
+function hostNativeHandler(entry: RegistryEntry): IntegrationHandler {
+  const command = entry.source?.commandName ?? entry.id;
+  const verify = async (): Promise<HandlerResult> => {
+    const check = spawnSync(command, ['--version'], { encoding: 'utf8', windowsHide: true });
+    if (check.status === 0) {
+      return { ok: true, message: `${entry.displayName ?? entry.id} is available`, version: check.stdout.trim() };
+    }
+    return { ok: false, status: 'UNSUPPORTED', message: `${command} is not installed on PATH` };
+  };
+  return {
+    install: async () => verify(),
+    verify: async () => verify(),
+    uninstall: async () => ({ ok: true, message: 'host-native binary is managed outside agent-rules' }),
+  };
 }
 
 function builtinHandler(repoRoot: string, entry: RegistryEntry): IntegrationHandler {

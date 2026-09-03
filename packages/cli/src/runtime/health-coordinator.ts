@@ -222,7 +222,7 @@ export async function catalogFor(host: string, sourceRoot: string, taskRoot: str
   const observedGlobalChars = observedIds.reduce((sum, id) => sum + id.length + 1 + description(path.join(skillRoot, id, 'SKILL.md')).length + 1 + path.join(skillRoot, id, 'SKILL.md').length, 0);
   const observedTaskChars = taskObservedIds.reduce((sum, id) => sum + id.length + 1 + description(path.join(taskTargetRoot, id, 'SKILL.md')).length + 1 + path.join(taskTargetRoot, id, 'SKILL.md').length, 0);
   const hostObservedChars = observedIds.length || taskObservedIds.length ? observedGlobalChars + observedTaskChars : null;
-  const hostBudget = options.hostBudget ?? 8000;
+  const hostBudget = options.hostBudget ?? 16000;
   return {
     canonical_library_valid: canonicalLibraryValid,
     canonical_active_skills: active.length,

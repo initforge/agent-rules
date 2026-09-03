@@ -33,7 +33,7 @@ const registryFile = path.join(root, 'registry', 'skills.yaml');
 const RULES_TARGET_MIN = 800;
 const RULES_TARGET_MAX = 1200;
 const RULES_HARD_MAX = 1600;
-const SKILL_LIST_MAX_CHARS = 8000;
+const SKILL_LIST_MAX_CHARS = 16000;
 
 // One-to-one migration parity: every old registry record must have a v2
 // successor present in registry/skills.yaml (the old references/

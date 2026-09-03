@@ -5,7 +5,7 @@
   "files": [
     {
       "path": "generated/context-graph.json",
-      "sha256": "dbe2d2f054df0a86b8eca034862a6a26568009554eef36ff3d926d9eb1b7e098"
+      "sha256": "01a138ef563f669f80b7e880f74d231952140177f92e8fa341d79c79d44a3456"
     },
     {
       "path": "generated/runtime-build/antigravity/manifest.json",
@@ -368,12 +368,20 @@
       "sha256": "28145f38bd30b51522a05757e546ee203e4bcb1c438ce8b23b5eb3661c220faa"
     },
     {
+      "path": "integrations/optional/pencil-mcp/adapters/command-code.json",
+      "sha256": "e7230fd29def16497c64feebe3eb4e272ccd9354b5d2a9e9e56951216e8b5a84"
+    },
+    {
       "path": "integrations/optional/pencil-mcp/adapters/cursor.json",
       "sha256": "c91108ff6a0abbdaaeaed749bc9b863f9afba816df143fa5d39e19fefcbf9c70"
     },
     {
       "path": "integrations/optional/pencil-mcp/adapters/grok.json",
       "sha256": "d59ad258dfa2e9f885af5d75d48cb6f129fc3aa7afc59be1a98cbf0d713fc316"
+    },
+    {
+      "path": "integrations/optional/pencil-mcp/adapters/omp.json",
+      "sha256": "03be782ea4e21da6cdeabb1c035f3e4be0922636a65b0d29ad962d959ead5259"
     },
     {
       "path": "integrations/optional/pencil-mcp/adapters/opencode.json",
@@ -436,12 +444,20 @@
       "sha256": "8e627b9f123d5f2ff7792176ebc087cfdf0feaf901c69628057bbe1c2e18c390"
     },
     {
+      "path": "integrations/optional/serena/adapters/command-code.json",
+      "sha256": "a771bd55ad7973d164855315106b716c9afca2c9d5835e5ac65f779aa3fe0353"
+    },
+    {
       "path": "integrations/optional/serena/adapters/cursor.json",
       "sha256": "10d0d9e0e709e0ebd6a4c6d14085b1b21aaaa96df2b67c0f919d4c8baa931e7d"
     },
     {
       "path": "integrations/optional/serena/adapters/grok.json",
       "sha256": "10d0d9e0e709e0ebd6a4c6d14085b1b21aaaa96df2b67c0f919d4c8baa931e7d"
+    },
+    {
+      "path": "integrations/optional/serena/adapters/omp.json",
+      "sha256": "2c503c873354f36d24b7c3fdc77ad40cdc630565cffb0f8448e111435f26ddef"
     },
     {
       "path": "integrations/optional/serena/adapters/opencode.json",
@@ -692,6 +708,42 @@
       "sha256": "e87af035351c9f1ad5dd0d8240e0c8eee000b2e3c28d1a3a8bbcb159627cf8b8"
     },
     {
+      "path": "integrations/recommended/docker/adapters/antigravity.json",
+      "sha256": "78583a3ec67cb20898513bd20ef38b2a85a80f30c9fb4bbf0595360570997db9"
+    },
+    {
+      "path": "integrations/recommended/docker/adapters/claude.json",
+      "sha256": "78583a3ec67cb20898513bd20ef38b2a85a80f30c9fb4bbf0595360570997db9"
+    },
+    {
+      "path": "integrations/recommended/docker/adapters/codex.toml",
+      "sha256": "c30b4c87b7afe87a8352b67acca984d54c550637f451b32aa17e4e7875578a1d"
+    },
+    {
+      "path": "integrations/recommended/docker/adapters/command-code.json",
+      "sha256": "78583a3ec67cb20898513bd20ef38b2a85a80f30c9fb4bbf0595360570997db9"
+    },
+    {
+      "path": "integrations/recommended/docker/adapters/cursor.json",
+      "sha256": "78583a3ec67cb20898513bd20ef38b2a85a80f30c9fb4bbf0595360570997db9"
+    },
+    {
+      "path": "integrations/recommended/docker/adapters/grok.json",
+      "sha256": "78583a3ec67cb20898513bd20ef38b2a85a80f30c9fb4bbf0595360570997db9"
+    },
+    {
+      "path": "integrations/recommended/docker/adapters/omp.json",
+      "sha256": "78583a3ec67cb20898513bd20ef38b2a85a80f30c9fb4bbf0595360570997db9"
+    },
+    {
+      "path": "integrations/recommended/docker/adapters/opencode.json",
+      "sha256": "3b0013f06894f7da6d0ca71d8ccc99b61bf290a99a35d775837416ad97007743"
+    },
+    {
+      "path": "integrations/recommended/docker/manifest.json",
+      "sha256": "86f72fa2d43eab18a02f9e12706ca83f03fe4d45eb0d5d9962318d88d90e32df"
+    },
+    {
       "path": "integrations/recommended/playwright-cli/install.ps1",
       "sha256": "d41b295d64dd8b521e7bdfd129207f2ce90d9ccb32bccc341d6bbbd0d57fab36"
     },
@@ -801,7 +853,7 @@
     },
     {
       "path": "integrations/registry.json",
-      "sha256": "8c1630a11856c4c0763ddc5c5a5f1d30a74d418a1ef113b4493f0c608f4ec720"
+      "sha256": "d7f7590ec6fad8cd0ccca3f30cdca1a949df35433d423e0c74d8f43eb79fda13"
     },
     {
       "path": "packages/kernel/dist/contracts.js",
@@ -3197,7 +3249,7 @@
     },
     {
       "path": "registry/skills.yaml",
-      "sha256": "f7b1d046323b906de1a9a13d1c959da3c36fbdbe2c3864dc14bc793b126ce066"
+      "sha256": "8cc306cf2fc601c9f009878d9b76ed54d6bbd259b950ba48aeb8d54e19bc348b"
     },
     {
       "path": "rules/00-intent-scope-safety.md",
@@ -3246,6 +3298,62 @@
     {
       "path": "skills/best-of-n/SKILL.md",
       "sha256": "73d940a808967e4e07e31b2cf00bcf2ddd38c6ddcfb8cdb24aef0849313fd0a9"
+    },
+    {
+      "path": "skills/composition-patterns/AGENTS.md",
+      "sha256": "ad5b5de8eef5c67b7fa370ea8f9ca79e9e17e3c1727e71af612b699fc90c9c90"
+    },
+    {
+      "path": "skills/composition-patterns/metadata.json",
+      "sha256": "ace7d193472295f0f224948554406dfd6fe378b7f1f000d00020daa4d96f7ea5"
+    },
+    {
+      "path": "skills/composition-patterns/README.md",
+      "sha256": "d6dc98821fb02558c54faf6cd39e5af15837b808c25c0fb4f16e4ec66b9f595c"
+    },
+    {
+      "path": "skills/composition-patterns/rules/_sections.md",
+      "sha256": "738f4d5a8f96e939d5a2d38e59b53613074a173c2b9207ab813fd72f417f4f9f"
+    },
+    {
+      "path": "skills/composition-patterns/rules/_template.md",
+      "sha256": "d688f7c382511d1354bbaf05accdf0c93b5c2ce1d2ab60ab4cc217120fc29f8f"
+    },
+    {
+      "path": "skills/composition-patterns/rules/architecture-avoid-boolean-props.md",
+      "sha256": "bf497b4166c70efca0328558ff3b30cf16bccd94bdc321adf5fa690d759739cb"
+    },
+    {
+      "path": "skills/composition-patterns/rules/architecture-compound-components.md",
+      "sha256": "dfad1d28de90868a8b8311a3974f5b89648a2a8208caa316ff63ead0b6194914"
+    },
+    {
+      "path": "skills/composition-patterns/rules/patterns-children-over-render-props.md",
+      "sha256": "6e44da5931fcb09f2d631a462324035fb4d42d0a4ddbf4064ae1bddd2cbe387c"
+    },
+    {
+      "path": "skills/composition-patterns/rules/patterns-explicit-variants.md",
+      "sha256": "b741d51cefc5bad25ae725a3e8791b47198cdb576aa5f34e609e13b4e910d2d9"
+    },
+    {
+      "path": "skills/composition-patterns/rules/react19-no-forwardref.md",
+      "sha256": "10ab8f9b640133f371c327ebbdde0169d94fdf9684c6798f135d5f0f5efd2b21"
+    },
+    {
+      "path": "skills/composition-patterns/rules/state-context-interface.md",
+      "sha256": "1d6923baa2726aa2fd8f3d75b7e820e895f89efc4c42d9f71cff229cbe21cb41"
+    },
+    {
+      "path": "skills/composition-patterns/rules/state-decouple-implementation.md",
+      "sha256": "1b8757b07e62d869c4019f40cf75545516cc86386896b429090b2a54b13f301f"
+    },
+    {
+      "path": "skills/composition-patterns/rules/state-lift-state.md",
+      "sha256": "2c70589fc7c8e2104269d1fda424f005daa470d38e1efe3feef32e0dd01d2ead"
+    },
+    {
+      "path": "skills/composition-patterns/SKILL.md",
+      "sha256": "cef43337fa3f9c4aecec0866140ad7fc0b1261a157f42e00900ddc9a3578fa9b"
     },
     {
       "path": "skills/context-evolution-protocol/SKILL.md",
@@ -4220,6 +4328,310 @@
       "sha256": "d033821313dc64b2b7dee120c6904b7d4457813e3b9c82d9584f7dee74baabe4"
     },
     {
+      "path": "skills/react-best-practices/AGENTS.md",
+      "sha256": "5640053923e5f36448c53e50b74069ea7c1477101e645e852bc61a84db328855"
+    },
+    {
+      "path": "skills/react-best-practices/metadata.json",
+      "sha256": "1874ee16ee8ec9be9058dd31e0be60f9117ae1ac33986b258bac3923b5dd395f"
+    },
+    {
+      "path": "skills/react-best-practices/README.md",
+      "sha256": "2e7e6cbe3952689bf9c00b9a7032f1bffb263cde2d01635f0aa49d3375c33ff5"
+    },
+    {
+      "path": "skills/react-best-practices/rules/_sections.md",
+      "sha256": "f352f75b84d6c6ee644c3fade99eaf2186bdfdc1d9e5b598bae436f32b3bce4f"
+    },
+    {
+      "path": "skills/react-best-practices/rules/_template.md",
+      "sha256": "21231af1b4c70cfe6f07625830d982934295c735f91fddd9741b3a8e3688d735"
+    },
+    {
+      "path": "skills/react-best-practices/rules/advanced-effect-event-deps.md",
+      "sha256": "d6b0ca8ba2982602b736e931c9a8d7a11e0b22cd501ef17c732979fb9ceeb8b2"
+    },
+    {
+      "path": "skills/react-best-practices/rules/advanced-event-handler-refs.md",
+      "sha256": "029f0c929c665fb9263b8c72a44e50610caf94a6e22a8142821a84482eda825d"
+    },
+    {
+      "path": "skills/react-best-practices/rules/advanced-init-once.md",
+      "sha256": "3d209bc4b17c2a503fdbb53b39261bc5ee824703a8b387daef3f53bad1f32ce4"
+    },
+    {
+      "path": "skills/react-best-practices/rules/advanced-use-latest.md",
+      "sha256": "84b3504ef0dc85f171c6aa0c5d15ac6d252ba72e38fc4e87872c0a3b1728345f"
+    },
+    {
+      "path": "skills/react-best-practices/rules/async-api-routes.md",
+      "sha256": "adf38ea4f34fa74b275b908e49aa20de20af9d9935b4a656314a49217b182663"
+    },
+    {
+      "path": "skills/react-best-practices/rules/async-cheap-condition-before-await.md",
+      "sha256": "8677605b94a5ed704873d8013bda2b690ff09fe8757fd472d9047cc848cf4019"
+    },
+    {
+      "path": "skills/react-best-practices/rules/async-defer-await.md",
+      "sha256": "eaa4f64d04eac1023fb61ed27712a81397989d86c126b987fa90baf4da02cc33"
+    },
+    {
+      "path": "skills/react-best-practices/rules/async-dependencies.md",
+      "sha256": "4901341bd7f7b7036eb8d98b243515ce294e6e4079370b3187c1514c3e597ec6"
+    },
+    {
+      "path": "skills/react-best-practices/rules/async-parallel.md",
+      "sha256": "ff95abbb67b62a889d7ef71f1d06834238c47ecd3d49483f7823b4cd17d92680"
+    },
+    {
+      "path": "skills/react-best-practices/rules/async-suspense-boundaries.md",
+      "sha256": "8a6e88c6e5190e10d3e3ebca89a1bc4fefc4bdb0cbc9c6f406ce02452a5759df"
+    },
+    {
+      "path": "skills/react-best-practices/rules/bundle-analyzable-paths.md",
+      "sha256": "32260f587900a89d642b805a4824bf8e6a197c2c6f62aec76522775d0a2f41ab"
+    },
+    {
+      "path": "skills/react-best-practices/rules/bundle-barrel-imports.md",
+      "sha256": "ceae03eb1cfad7e82019aeb297f87dc895eca14221c66f724e0801393d4da21f"
+    },
+    {
+      "path": "skills/react-best-practices/rules/bundle-conditional.md",
+      "sha256": "16992beeaf9bdd1e7ff20989b8672cfffc8b918deb0783c058560c7a233dd37c"
+    },
+    {
+      "path": "skills/react-best-practices/rules/bundle-defer-third-party.md",
+      "sha256": "64de0f01dfe58b4d3a3865baa623f743ef1b8c363106c7dfaf2b2867f69b96d4"
+    },
+    {
+      "path": "skills/react-best-practices/rules/bundle-dynamic-imports.md",
+      "sha256": "0fb947cdfec5ce0e95a894c6b68220f88983eff73ce65b98e4f00c885ebd9b36"
+    },
+    {
+      "path": "skills/react-best-practices/rules/bundle-preload.md",
+      "sha256": "b673a49f4cf4bf385ddf6956ca704139ec2915802bade1925134f8cfabb2278c"
+    },
+    {
+      "path": "skills/react-best-practices/rules/client-event-listeners.md",
+      "sha256": "e2229c8e121dfdd6bad8063ba6c41213ff612e19e077f17ba805b70d48151775"
+    },
+    {
+      "path": "skills/react-best-practices/rules/client-localstorage-schema.md",
+      "sha256": "f9d177a557f4bd4bd1a81f30f841f75041821dd88f706a6b8c4eac86c7472e05"
+    },
+    {
+      "path": "skills/react-best-practices/rules/client-passive-event-listeners.md",
+      "sha256": "277118e32363381459bc7439fa942966da668d2c128d93968f9a289f0bb32861"
+    },
+    {
+      "path": "skills/react-best-practices/rules/client-swr-dedup.md",
+      "sha256": "866e6cc267f06df39129c44c68c5e6a2e62faa554bc8cdb6ada1f58afe4bcbbe"
+    },
+    {
+      "path": "skills/react-best-practices/rules/js-batch-dom-css.md",
+      "sha256": "d7343005afc6a9c7e86368e22318f49b88492973e673f7b0ba2eb65697597143"
+    },
+    {
+      "path": "skills/react-best-practices/rules/js-cache-function-results.md",
+      "sha256": "bbef6423ad250227e8c73a5d9be6fd687707dd187ef50236fd5b6883a41d49b6"
+    },
+    {
+      "path": "skills/react-best-practices/rules/js-cache-property-access.md",
+      "sha256": "bbecc553a5b51caab2ddc90423a23d4c3245669439ff91e5204e48d62aaf1c5e"
+    },
+    {
+      "path": "skills/react-best-practices/rules/js-cache-storage.md",
+      "sha256": "7710a2ceb421d9b6d3828d7f38ec8a093af4a372c2b3b4ea2299d5df2518f770"
+    },
+    {
+      "path": "skills/react-best-practices/rules/js-combine-iterations.md",
+      "sha256": "c43a02979586d39f341fa6da7fc61bdd6a6917fa0c4f9c926091fa540cdf8022"
+    },
+    {
+      "path": "skills/react-best-practices/rules/js-early-exit.md",
+      "sha256": "b6b967ab80d2a5fc19851d9db9464cf8e4d0e57dccb607a474b8f7818015951d"
+    },
+    {
+      "path": "skills/react-best-practices/rules/js-flatmap-filter.md",
+      "sha256": "acfa11d07d7982ec565e4d8cfb410d477ffb73a7b41a532b938bcdb15c6ba51f"
+    },
+    {
+      "path": "skills/react-best-practices/rules/js-hoist-regexp.md",
+      "sha256": "86f4772c5d732c1f5f0656412713c6dc919360f0f3ea32bb1a45937eaaa5866e"
+    },
+    {
+      "path": "skills/react-best-practices/rules/js-index-maps.md",
+      "sha256": "752dd0803a7394a70e8d437b7eb025d1e085566e30ad733e75b9d2e04cc6c4d9"
+    },
+    {
+      "path": "skills/react-best-practices/rules/js-length-check-first.md",
+      "sha256": "9e57362d76e57ea6a2ff8cd137cf2a87b094aaff152eac61758305acb450a25c"
+    },
+    {
+      "path": "skills/react-best-practices/rules/js-min-max-loop.md",
+      "sha256": "f0054bcd1c3168ea8a6474df33c398bc0066eb1e813d59ae57fe36806ec900b6"
+    },
+    {
+      "path": "skills/react-best-practices/rules/js-request-idle-callback.md",
+      "sha256": "cefb8938f833f4747546d8c4fbe2c8c9938a5bfe27e087636048adef3fd8d719"
+    },
+    {
+      "path": "skills/react-best-practices/rules/js-set-map-lookups.md",
+      "sha256": "7143f8d7b71cdbc77a171fc801bdcf5e7a209e0f471ff17bb669acc986a6b064"
+    },
+    {
+      "path": "skills/react-best-practices/rules/js-tosorted-immutable.md",
+      "sha256": "2722514cac46990f3361fa35ee20d499a12da2539362e7871b670978664d158a"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rendering-activity.md",
+      "sha256": "e23dd494d955db99d376b5bf62a59ce7df9f14576d94094f2e53cfdc388453a0"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rendering-animate-svg-wrapper.md",
+      "sha256": "dca7f0251244489b3bbb6f5aaf7d70f280d91dc13de8ebd24403286f382ec0f4"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rendering-conditional-render.md",
+      "sha256": "6db58f36c8b080c35e91f6504281f85ea2dbd133030610c860e60181d6d9556a"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rendering-content-visibility.md",
+      "sha256": "45437e9594857ee1066ee061e946ed129731cf2e80f7e08f3cc621fa0554c567"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rendering-hoist-jsx.md",
+      "sha256": "c5fa7274f067ce3760107196a9416df333a7b4187254ef66c547fad7c45cd8d3"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rendering-hydration-no-flicker.md",
+      "sha256": "bfedc3a73f9687c7836acf915165fb845880453b6dfcf2fa6475dfec96b23027"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rendering-hydration-suppress-warning.md",
+      "sha256": "7ec1623c69e1a82b09b8b5a6028005e3eb8485741898447af1bcaed8ff8c0139"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rendering-resource-hints.md",
+      "sha256": "03ffeb3c26ae514bd24ea8683621d67a4b8432926ef7ee8d3296f82ae5c1b6ab"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rendering-script-defer-async.md",
+      "sha256": "28ef87814467a4758645889dcbb0ccb9a9e2387c4cebbd8cd4dfa33435e3e5d8"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rendering-svg-precision.md",
+      "sha256": "d57cdfaaaf660a28a9a5d6d10e97202a5eb13e1bc1675e024cb1ccbfa8bb2c32"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rendering-usetransition-loading.md",
+      "sha256": "c2186f944b60630c67d42222f60ecb12b5a85395e7f31f193982f85983165720"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rerender-defer-reads.md",
+      "sha256": "bb98d9b7c7622641887df6407406a8c4f61510af9cc1bd275574ebee71bac8c8"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rerender-dependencies.md",
+      "sha256": "4f0a1806694c2391c0b5b79bb4dee89fdf2c02ee322acf308509c17542240446"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rerender-derived-state-no-effect.md",
+      "sha256": "1d50f7b1b86d24f987c557415590f79b06250e3ec1ca552da981e31a31f9edb9"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rerender-derived-state.md",
+      "sha256": "6a501211aa53036905df7531deaf25fdb8582697366fd071d4c2607828662dcb"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rerender-functional-setstate.md",
+      "sha256": "e46096d4c2c8fc89ab717bd7e56b8a884b612a88013a99b0c63e7dfc45d8cf25"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rerender-lazy-state-init.md",
+      "sha256": "b8b9e6b6001a1e94979776e744eb38a98432858dd2369995731c9a095ecd1d2e"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rerender-memo-with-default-value.md",
+      "sha256": "e69d637687b85967554df7d5fcfd83cc6fbb89237e9b80d10fbea7916244aa8b"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rerender-memo.md",
+      "sha256": "8cc2d062f22ae762f7f5f93baf2bfc374c917079131896559721f9dfbd402a7c"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rerender-move-effect-to-event.md",
+      "sha256": "00f5eaf8d4380c736c9177b67583f6b33f6b1f84addc252653cd6dea9551ad8d"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rerender-no-inline-components.md",
+      "sha256": "381ec0a4224c20c57545b6c44a65ffcaf0ed520fad97f3d0f8abcb7389de602f"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rerender-simple-expression-in-memo.md",
+      "sha256": "1e41299336d72ce42ffe0b4d397496e520eae13ea544b1412b83761555f4e631"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rerender-split-combined-hooks.md",
+      "sha256": "93543c1987b8bb639302a4598f1444bc9ed02d200ea7ad0e47e890ff3fa8cf21"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rerender-transitions.md",
+      "sha256": "b51a82fb6b223d13c585dfddaeb753c79d7da0524da87b708f61fd6939600ab6"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rerender-use-deferred-value.md",
+      "sha256": "2c393cc085e9ae6285ee9e71f4db86ddd0120a41b84c6a1d659f46e8c7684db5"
+    },
+    {
+      "path": "skills/react-best-practices/rules/rerender-use-ref-transient-values.md",
+      "sha256": "26ddded1d59cc04cddf7c1412ffb05315dd1f358510edcce3c3474d5acb63f32"
+    },
+    {
+      "path": "skills/react-best-practices/rules/server-after-nonblocking.md",
+      "sha256": "86c8670ad8e6285753645c2cebd164c56baf6f0fa74f914c0ca496d0a0156bcc"
+    },
+    {
+      "path": "skills/react-best-practices/rules/server-auth-actions.md",
+      "sha256": "a413aba63b73f7f82cf2482646c8c1598eaa75753c8f73f33055b8508de99fea"
+    },
+    {
+      "path": "skills/react-best-practices/rules/server-cache-lru.md",
+      "sha256": "19d844eebd1fb7ef5f43f4d1e85baf1fc0160547400ab838ba4d40226eb891b9"
+    },
+    {
+      "path": "skills/react-best-practices/rules/server-cache-react.md",
+      "sha256": "7448470adc9f0066455f9cf45b658f5c3f1884a7990c89f880fbb272a4028b05"
+    },
+    {
+      "path": "skills/react-best-practices/rules/server-dedup-props.md",
+      "sha256": "5c4d4c9930812d3ab98e28ad97ca2f5af778effbf9b50b6a7558c18abf2e98b5"
+    },
+    {
+      "path": "skills/react-best-practices/rules/server-hoist-static-io.md",
+      "sha256": "92665f53454156ccc59f115455cf3cbf9c3cbd88dcb5b84b14037f200ab990c5"
+    },
+    {
+      "path": "skills/react-best-practices/rules/server-no-shared-module-state.md",
+      "sha256": "9c2b6ee5b418c35f8b0ce466d0d1352e25c85e6b7ebbe4495b81791f10f915dc"
+    },
+    {
+      "path": "skills/react-best-practices/rules/server-parallel-fetching.md",
+      "sha256": "f8f275fea2378e7707a50f2df4af6a2f65fe1fa84edb3ffc4720af805ebabe42"
+    },
+    {
+      "path": "skills/react-best-practices/rules/server-parallel-nested-fetching.md",
+      "sha256": "1e59763bbec3d6d74b8457c3d82f1a319b483fe5497b665652d8cba69fdda002"
+    },
+    {
+      "path": "skills/react-best-practices/rules/server-serialization.md",
+      "sha256": "567ce457f775d4e03e2a6ef7bf67213fee35c6c3b9d1bcfa783007d1df414d4b"
+    },
+    {
+      "path": "skills/react-best-practices/SKILL.md",
+      "sha256": "399d8e969982a8eecf331d3de813e4f04957531ddb867ef118cbbde34408d906"
+    },
+    {
       "path": "skills/react-native-best-practices/agents/openai.yaml",
       "sha256": "13d867840f5d10f87256653bc71da8de508ad13b10fd6931e1eb29cdd8ceb9e6"
     },
@@ -4778,7 +5190,11 @@
     {
       "path": "skills/verification-router/SKILL.md",
       "sha256": "210afcf7f60e61278b83a3536f0c204b476ea296a67ed62422cae02be60b87e4"
+    },
+    {
+      "path": "skills/web-design-guidelines/SKILL.md",
+      "sha256": "17e48da905f83a19c174079b50760a98c069527ba50079239b3c187236627c29"
     }
   ],
-  "manifest_sha256": "74011b38cd500d21a4e4412a224deb4245cd7f1fb00fb3ee27efbf6942158cd9"
+  "manifest_sha256": "1615b8e1319ca66b458dfa6e22fbc192d3630a309e1d4610380a615ba4b92377"
 }

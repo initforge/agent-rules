@@ -1,0 +1,9 @@
+{
+  "name": "docker",
+  "capability": "container.runtime",
+  "upstream": "https://www.docker.com/",
+  "versionPolicy": "host-managed",
+  "installType": "host-native",
+  "healthCheck": "docker --version",
+  "version": "host-managed"
+}
