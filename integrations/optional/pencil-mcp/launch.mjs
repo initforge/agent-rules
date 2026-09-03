@@ -443,8 +443,8 @@ async function main() {
 
   const resolved = resolveServer(startupTimeoutMs);
   if (resolved.status !== 'ok') {
-    console.error(`Pencil MCP BLOCKED/NEEDS_USER: ${resolved.reason}`);
-    process.exit(2);
+    runStandbyServer(resolved.reason);
+    return;
   }
 
   // AM-0006: bind this serve session in the advisory instance lock so a
@@ -471,4 +471,66 @@ async function main() {
   });
 }
 
+
+function runStandbyServer(reason) {
+  import('node:readline').then(({ createInterface }) => {
+    const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: false });
+    rl.on('line', (line) => {
+      if (!line.trim()) return;
+      try {
+        const msg = JSON.parse(line);
+        if (msg.method === 'initialize') {
+          const response = {
+            jsonrpc: '2.0',
+            id: msg.id,
+            result: {
+              protocolVersion: '2024-11-05',
+              capabilities: { tools: {} },
+              serverInfo: { name: 'pencil-mcp', version: '1.0.0' }
+            }
+          };
+          process.stdout.write(JSON.stringify(response) + '\n');
+        } else if (msg.method === 'notifications/initialized') {
+          // ack
+        } else if (msg.method === 'tools/list') {
+          const response = {
+            jsonrpc: '2.0',
+            id: msg.id,
+            result: {
+              tools: [
+                {
+                  name: 'pencil_status',
+                  description: 'Pencil design canvas status. Launch the Pencil desktop application (pen.dev) to enable interactive canvas inspection and editing.',
+                  inputSchema: { type: 'object', properties: {} }
+                }
+              ]
+            }
+          };
+          process.stdout.write(JSON.stringify(response) + '\n');
+        } else if (msg.method === 'tools/call') {
+          const response = {
+            jsonrpc: '2.0',
+            id: msg.id,
+            result: {
+              content: [
+                {
+                  type: 'text',
+                  text: `Pencil desktop is currently in standby (${reason}). Please open the Pencil application to interact with your design canvas directly.`
+                }
+              ]
+            }
+          };
+          process.stdout.write(JSON.stringify(response) + '\n');
+        } else if (msg.id !== undefined) {
+          const response = {
+            jsonrpc: '2.0',
+            id: msg.id,
+            result: {}
+          };
+          process.stdout.write(JSON.stringify(response) + '\n');
+        }
+      } catch (e) {}
+    });
+  });
+}
 main();

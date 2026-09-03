@@ -85,7 +85,7 @@ async function selectedMcpDefinitions(
     if ((requested && !requested.has(entry.id)) || (!ignoreExplicitDisable && disabled.has(entry.id))) continue;
     const adapter = findAdapterFile(repoRoot, entry.id, host);
     if (!adapter) continue;
-    const raw = expandPlaceholders(host, fs.readFileSync(adapter, "utf8"), env);
+    const raw = expandPlaceholders(host, fs.readFileSync(adapter, "utf8"), env, repoRoot);
     const unresolved = [...raw.matchAll(/\$\{([A-Z0-9_]+)\}/g)].map((match) => match[1]!);
     if (unresolved.length > 0) {
       unavailable.push(`${entry.id}: missing ${[...new Set(unresolved)].join(', ')}`);
@@ -208,6 +208,7 @@ export async function registerHostMcpAdapters(
       if (!observed) additions.push(definition);
       else if (!sameServerDefinition(host, observed.body, definition.definition)) {
         const legacyOwned = isLegacyOmpCodebaseMemory(host, definition.name, observed.body)
+          || observed.body.includes('__AGENT_RULES_PENCIL_LAUNCHER__')
           || (observed.disabled
             && (model.fingerprints.some((known) => known.serverName === definition.name && sameServerDefinition(host, observed.body, known.body))
               || model.legacyCommandPatterns.some((pattern) => pattern.test(observed.body))));
@@ -230,7 +231,9 @@ export async function registerHostMcpAdapters(
     const applicableAdditions = additions.filter((definition) => !conflictSet.has(definition.name));
     const refreshes = applicable.filter((definition) => {
       const observed = current.get(definition.name);
-      return observed?.disabled === true || (observed !== undefined && isLegacyOmpCodebaseMemory(host, definition.name, observed.body));
+      return observed?.disabled === true
+        || (observed !== undefined && isLegacyOmpCodebaseMemory(host, definition.name, observed.body))
+        || (observed !== undefined && observed.body.includes('__AGENT_RULES_PENCIL_LAUNCHER__'));
     });
     if (applicableAdditions.length === 0 && refreshes.length === 0 && aliasesToRemove.length === 0) {
       return { host, configPath, status: conflicts.length > 0 || selected.unavailable.length > 0 ? "NEEDS_USER" : "REGISTERED", registered: applicable.map((definition) => definition.name), conflicts, needsAction: selected.unavailable };

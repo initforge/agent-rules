@@ -401,7 +401,7 @@
     },
     {
       "path": "integrations/optional/pencil-mcp/launch.mjs",
-      "sha256": "d8bcc2ac54a78ea230da668e7de27ee03ab489703abe8f0004e7d8535821ed25"
+      "sha256": "0d71a8a8ef4fff030af1b1dad57e77b56405482e6796259df1bafce6c8e560fd"
     },
     {
       "path": "integrations/optional/pencil-mcp/launch.sh",
@@ -5136,5 +5136,5 @@
       "sha256": "17e48da905f83a19c174079b50760a98c069527ba50079239b3c187236627c29"
     }
   ],
-  "manifest_sha256": "ed877f2bba730e00a47c870ed6e6a352320ec3024bd10233479534949c68f7f1"
+  "manifest_sha256": "8c12f73d502eacc3ca97d957211ca484c9d48e93c9c087a6c655852d1bf6df46"
 }

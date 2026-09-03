@@ -213,7 +213,7 @@ export function getStandardMcpServers(_home: string): Record<string, { command: 
   };
 }
 
-export function expandPlaceholders(host: HostName, body: string, env: NodeJS.ProcessEnv): string {
+export function expandPlaceholders(host: HostName, body: string, env: NodeJS.ProcessEnv, repoRoot?: string): string {
   const bin = resolveCodebaseMemoryBin(env);
   let expanded = bin
     ? body.replaceAll("${CODEBASE_MEMORY_MCP_BIN}", host === "codex" ? bin.replaceAll("\\", "/") : bin.replaceAll("\\", "\\\\"))
@@ -223,6 +223,9 @@ export function expandPlaceholders(host: HostName, body: string, env: NodeJS.Pro
     expanded = expanded
       .replaceAll("${COMMAND_CODE_CODEBASE_MEMORY_BIN}", codebaseBin.replaceAll("\\", "\\\\"));
   }
+  const root = repoRoot ?? path.resolve('P:/agent-rules');
+  const launcherPath = path.resolve(root, 'integrations', 'optional', 'pencil-mcp', 'launch.mjs');
+  expanded = expanded.replaceAll('__AGENT_RULES_PENCIL_LAUNCHER__', host === 'codex' ? launcherPath.replaceAll('\\', '/') : launcherPath.replaceAll('\\', '\\\\'));
   // Canonical adapter files remain portable (`npx …`) so they can be consumed
   // by Linux/macOS runners and headless task overlays. Windows native clients
   // need an explicit cmd wrapper because npm shims are not reliably spawnable
@@ -429,7 +432,7 @@ export async function buildConvergenceModel(
     const adapter = findAdapterFile(repoRoot, entry.id, host);
     if (!adapter) continue;
     const raw = fs.readFileSync(adapter, "utf8");
-    const expanded = expandPlaceholders(host, raw, env);
+    const expanded = expandPlaceholders(host, raw, env, repoRoot);
     const definitions = serverDefinitionBodies(host, expanded);
     for (const { name, definition } of definitions) {
       knownNames.add(name);
