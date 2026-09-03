@@ -1,4 +1,0 @@
-{
-  "mcpServers": {},
-  "_rtk_note": "RTK uses PreToolUse hook (native binary), not MCP. Run: rtk init -g"
-}

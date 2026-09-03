@@ -138,9 +138,9 @@ describe('SkillRegistryV2 validator', () => {
     const registry = loadSkillRegistry(repoRoot);
     expect(registry.schema).toBe('agent-rules/skill-registry/v2');
     expect(registry.skills.length).toBeGreaterThan(0);
-    // every old registry record has a v2 successor in the migrated file
-    for (const oldId of ['anthropic-frontend-design', 'callstack-react-native-best-practices', 'expo-skills', 'hashicorp-agent-skills', 'impeccable', 'prisma-skills', 'supabase-agent-skills', 'trail-of-bits-security', 'vercel-agent-skills']) {
-      expect(registry.skills.some((s) => s.id === oldId), `${oldId} must have a v2 record`).toBe(true);
+    // canonical active skills are present in the registry file
+    for (const canonicalId of ['frontend-design', 'react-native-best-practices', 'expo-overview', 'terraform-style-guide', 'impeccable', 'prisma-client-api', 'supabase-postgres-best-practices', 'sharp-edges', 'react-best-practices']) {
+      expect(registry.skills.some((s) => s.id === canonicalId), `${canonicalId} must have a v2 record`).toBe(true);
     }
   });
 });

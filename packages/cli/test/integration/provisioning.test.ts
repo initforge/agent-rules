@@ -19,7 +19,7 @@ import { selectInstallEntries, selectGlobalAdapterEntries } from "../../src/inte
  */
 
 const MCP_ID = "playwright-mcp";
-const CLI_ID = "rtk";
+const CLI_ID = "docker";
 
 async function tempRepo(entries: unknown): Promise<string> {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "prov-test-"));

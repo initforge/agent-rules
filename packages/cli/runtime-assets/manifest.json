@@ -5,7 +5,7 @@
   "files": [
     {
       "path": "generated/context-graph.json",
-      "sha256": "01a138ef563f669f80b7e880f74d231952140177f92e8fa341d79c79d44a3456"
+      "sha256": "745d5b1debcd348f06cdbb1be1c8f32d7b7647bf8b721a17606b2d706ce83b10"
     },
     {
       "path": "generated/runtime-build/antigravity/manifest.json",
@@ -484,26 +484,6 @@
       "sha256": "6d30ce0e9c4765f64807d5fb70f85286378f48bf2a6ab327bd6530f9f42dd1ba"
     },
     {
-      "path": "integrations/recommended/agent-device/install.sh",
-      "sha256": "5e2bcb31fc80a129c527ab111c009f8644aa76803ccc343df98d9615e9f1f506"
-    },
-    {
-      "path": "integrations/recommended/agent-device/manifest.json",
-      "sha256": "4a0a6266f8685fd861bb8bb106d162e1656a16e86984531051fd6fba2d7923fa"
-    },
-    {
-      "path": "integrations/recommended/agent-device/README.md",
-      "sha256": "e4b1f6ddd4a7e3214f79a1e2246977645d5a89bbad25cda88b9e527d2b575ad8"
-    },
-    {
-      "path": "integrations/recommended/agent-device/uninstall.sh",
-      "sha256": "34777f879e44a169726dbdf5f0b0654907ab0872950017ded791b24f73081fcf"
-    },
-    {
-      "path": "integrations/recommended/agent-device/verify.sh",
-      "sha256": "ebdb75c92f41c2623533f014864717392e18423965048d3a66712cc69474037f"
-    },
-    {
       "path": "integrations/recommended/chrome-devtools-mcp/adapters/antigravity.json",
       "sha256": "544d5f593ba76a018bd749e5a1236998ecdb712f84866810e15b7503290ad40e"
     },
@@ -812,48 +792,8 @@
       "sha256": "4762ff7aebbbec73bba37027c0e9728df4a7d11093abf2ae78646e071aea5984"
     },
     {
-      "path": "integrations/recommended/rtk/adapters/antigravity.json",
-      "sha256": "e2bf2cb9ccc3762bb31511a4ea1aaa7d9405bcd1b79e5db39dbb7f1d5c67d76d"
-    },
-    {
-      "path": "integrations/recommended/rtk/adapters/claude.json",
-      "sha256": "427ffa9183a963fb8a54a57f8c6750eed59f561599eba0e71fc6c4f464e17049"
-    },
-    {
-      "path": "integrations/recommended/rtk/adapters/codex.toml",
-      "sha256": "436ecd86805dd46acdd387e2b22e4784256a342423cde6dbc7e739a7ff1ea157"
-    },
-    {
-      "path": "integrations/recommended/rtk/adapters/cursor.json",
-      "sha256": "c74a36e9936908d889670edb2a7ed28d1dc5c8f19c095e4535c0c88db0bf8876"
-    },
-    {
-      "path": "integrations/recommended/rtk/adapters/grok.json",
-      "sha256": "715a8beddd7982e4d572bef1fa987e441ea95f151fa0557c56067405f3e686de"
-    },
-    {
-      "path": "integrations/recommended/rtk/adapters/opencode.json",
-      "sha256": "a880d5bfc72d9678fb3d58b048d820b1f1bfcad24fbc2fe01d527a3ffd1046da"
-    },
-    {
-      "path": "integrations/recommended/rtk/install.sh",
-      "sha256": "e2742d711bd53bfe8f62d55ed89e73dafa2a750348f558aee5603dbb296c84d9"
-    },
-    {
-      "path": "integrations/recommended/rtk/manifest.json",
-      "sha256": "9a88bc754dfba643de114a9d4ac1c4f688e643edc854fbfa76bb80f6d30509cb"
-    },
-    {
-      "path": "integrations/recommended/rtk/uninstall.sh",
-      "sha256": "4296b5c49bb2121cd7994504966cd0301c64bb425b9d17dee52b6a5e6d0dedae"
-    },
-    {
-      "path": "integrations/recommended/rtk/verify.sh",
-      "sha256": "b4b57633abc43e1b39c97e012bc818e9b01135801bc7e0aae35e04a2ada8b064"
-    },
-    {
       "path": "integrations/registry.json",
-      "sha256": "d7f7590ec6fad8cd0ccca3f30cdca1a949df35433d423e0c74d8f43eb79fda13"
+      "sha256": "a82c3866975594903206f8d0bbcc44eeb67c71756360b8e261a423e83460e16f"
     },
     {
       "path": "packages/kernel/dist/contracts.js",
@@ -3249,7 +3189,7 @@
     },
     {
       "path": "registry/skills.yaml",
-      "sha256": "8cc306cf2fc601c9f009878d9b76ed54d6bbd259b950ba48aeb8d54e19bc348b"
+      "sha256": "56842b5cb5b3dce6110a6ff02a62018ee002858074b927dda4d604168d158189"
     },
     {
       "path": "rules/00-intent-scope-safety.md",
@@ -5196,5 +5136,5 @@
       "sha256": "17e48da905f83a19c174079b50760a98c069527ba50079239b3c187236627c29"
     }
   ],
-  "manifest_sha256": "1615b8e1319ca66b458dfa6e22fbc192d3630a309e1d4610380a615ba4b92377"
+  "manifest_sha256": "ed877f2bba730e00a47c870ed6e6a352320ec3024bd10233479534949c68f7f1"
 }

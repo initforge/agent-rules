@@ -265,7 +265,7 @@ describe("host MCP config convergence", () => {
       ? process.cwd()
       : path.resolve(process.cwd(), "../..");
     const model = await buildConvergenceModel(workspaceRepo, "command-code", env);
-    expect(model.knownNames).toEqual(new Set(["chrome-devtools", "codebase-memory", "context7", "playwright"]));
+    expect(model.knownNames).toEqual(new Set(["chrome-devtools", "codebase-memory", "context7", "pencil", "playwright", "serena"]));
   });
 
   it("uses the active OMP profile directory and OMP-native mcpServers shape", async () => {

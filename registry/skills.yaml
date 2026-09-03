@@ -1,250 +1,5 @@
 schema: agent-rules/skill-registry/v2
 skills:
-- id: anthropic-frontend-design
-  origin: upstream
-  role: domain
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  status_reason: superseded by materialized successors (frontend-design)
-  superseded_by:
-  - frontend-design
-  upstream:
-    repository: https://github.com/anthropics/skills
-    source_path: anthropic-frontend-design
-    commit: f17010c9bb483898c1d9c9f42dde2b3a98889434
-    tree: 0fe4c0c8372b239b13062036d08d05f79d4055a1
-    license: Apache-2.0
-    license_evidence: references/external-skills/registry.json (owner-approved-plan)
-  trust_tier: reference-only
-  trust_basis: owner-approved audit owner-approved-plan at f17010c9
-  network: read
-  side_effects: []
-  update_policy: manual_review
-- id: callstack-react-native-best-practices
-  origin: upstream
-  role: domain
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  status_reason: superseded by materialized successors (react-native-best-practices)
-  superseded_by:
-  - react-native-best-practices
-  upstream:
-    repository: https://github.com/callstackincubator/agent-skills
-    source_path: callstack-react-native-best-practices
-    commit: 2766baa46ca0fe7c16cc5ab4d0077ccec2e95fb9
-    tree: 4fc1d02d24003c8120ae20b59dbd41ae5478753d
-    license: MIT
-    license_evidence: references/external-skills/registry.json (owner-approved-plan)
-  trust_tier: reference-only
-  trust_basis: owner-approved audit owner-approved-plan at 2766baa4
-  network: read
-  side_effects: []
-  update_policy: manual_review
-- id: expo-skills
-  origin: upstream
-  role: domain
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  status_reason: superseded by materialized successors (expo-overview, expo-router,
-    expo-native-ui, expo-upgrade)
-  superseded_by:
-  - expo-overview
-  - expo-router
-  - expo-native-ui
-  - expo-upgrade
-  upstream:
-    repository: https://github.com/expo/skills
-    source_path: expo-skills
-    commit: dcff9e7cd61f79ee821e18b5b215d5585eaac441
-    tree: d15f268235de3e9a4b6cc8aac963d0a423b6809c
-    license: MIT
-    license_evidence: references/external-skills/registry.json (owner-approved-plan)
-  trust_tier: reference-only
-  trust_basis: owner-approved audit owner-approved-plan at dcff9e7c
-  network: read
-  side_effects: []
-  update_policy: manual_review
-- id: hashicorp-agent-skills
-  origin: upstream
-  role: domain
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  status_reason: superseded by materialized successors (terraform-style-guide, terraform-test)
-  superseded_by:
-  - terraform-style-guide
-  - terraform-test
-  upstream:
-    repository: https://github.com/hashicorp/agent-skills
-    source_path: hashicorp-agent-skills
-    commit: 4451ceca5456e79cc776efee96a744f7ac96e5bf
-    tree: a277c9357d9ec39a1b554a83e778475f88588567
-    license: MPL-2.0
-    license_evidence: references/external-skills/registry.json (owner-approved-plan)
-  trust_tier: reference-only
-  trust_basis: owner-approved audit owner-approved-plan at 4451ceca
-  network: read
-  side_effects: []
-  update_policy: manual_review
-- id: prisma-skills
-  origin: upstream
-  role: domain
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  status_reason: superseded by materialized successors (prisma-client-api, prisma-cli)
-  superseded_by:
-  - prisma-client-api
-  - prisma-cli
-  upstream:
-    repository: https://github.com/prisma/skills
-    source_path: prisma-skills
-    commit: 808913c1dac11dc425631c2454f7fcb2d5ade5ca
-    tree: e0b9088f7d8a5f2613d67e5274aa1ed153f24a1c
-    license: MIT
-    license_evidence: references/external-skills/registry.json (owner-approved-plan)
-  trust_tier: reference-only
-  trust_basis: owner-approved audit owner-approved-plan at 808913c1
-  network: read
-  side_effects: []
-  update_policy: manual_review
-- id: supabase-agent-skills
-  origin: upstream
-  role: domain
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  status_reason: superseded by materialized successors (supabase-postgres-best-practices)
-  superseded_by:
-  - supabase-postgres-best-practices
-  upstream:
-    repository: https://github.com/supabase/agent-skills
-    source_path: supabase-agent-skills
-    commit: 8331f910845103c08d51f6ca1d86ebb7d1f745e3
-    tree: b375b04357d9046a6b56fe840ed8ca1e1be927b7
-    license: MIT
-    license_evidence: references/external-skills/registry.json (owner-approved-plan)
-  trust_tier: reference-only
-  trust_basis: owner-approved audit owner-approved-plan at 8331f910
-  network: read
-  side_effects: []
-  update_policy: manual_review
-- id: trail-of-bits-security
-  origin: upstream
-  role: domain
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  status_reason: superseded by materialized successors (sharp-edges, differential-review,
-    supply-chain-risk-auditor)
-  superseded_by:
-  - sharp-edges
-  - differential-review
-  - supply-chain-risk-auditor
-  upstream:
-    repository: https://github.com/trailofbits/skills
-    source_path: trail-of-bits-security
-    commit: 304c81a8cefb6e3c029ebd0d12940ccf0713eccb
-    tree: 3eafe5afe83163d3ca1d47e92cc168f570a07ff2
-    license: CC-BY-SA-4.0
-    license_evidence: references/external-skills/registry.json (owner-approved-plan)
-  trust_tier: reference-only
-  trust_basis: owner-approved audit owner-approved-plan at 304c81a8
-  network: read
-  side_effects: []
-  update_policy: manual_review
-- id: vercel-agent-skills
-  origin: upstream
-  role: domain
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  upstream:
-    repository: https://github.com/vercel-labs/agent-skills
-    source_path: vercel-agent-skills
-    commit: b8caa260a420a73042e35521de4b5c8baf6446cc
-    tree: 96a7470a8c0eb61db3438ec489da261b7b9eedf8
-  trust_tier: reference-only
-  trust_basis: owner license decision pending; old audit at b8caa260
-  network: read
-  side_effects: []
-  update_policy: manual_review
-  status_reason: superseded by materialized successors
-- id: vercel-react-best-practices
-  origin: upstream
-  role: domain
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  superseded_by:
-  - react-best-practices
-  upstream:
-    repository: https://github.com/vercel-labs/agent-skills
-    source_path: vercel-react-best-practices
-    commit: b8caa260a420a73042e35521de4b5c8baf6446cc
-    tree: 96a7470a8c0eb61db3438ec489da261b7b9eedf8
-  trust_tier: reference-only
-  trust_basis: owner license decision pending; old audit at b8caa260
-  network: read
-  side_effects: []
-  update_policy: manual_review
-  status_reason: superseded by materialized successor (react-best-practices)
-- id: vercel-web-design-guidelines
-  origin: upstream
-  role: domain
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  superseded_by:
-  - web-design-guidelines
-  upstream:
-    repository: https://github.com/vercel-labs/agent-skills
-    source_path: vercel-web-design-guidelines
-    commit: b8caa260a420a73042e35521de4b5c8baf6446cc
-    tree: 96a7470a8c0eb61db3438ec489da261b7b9eedf8
-  trust_tier: reference-only
-  trust_basis: owner license decision pending; old audit at b8caa260
-  network: read
-  side_effects: []
-  update_policy: manual_review
-  status_reason: superseded by materialized successor (web-design-guidelines)
-- id: taste-skill
-  origin: upstream
-  role: domain
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  status_reason: incorrect local alias retired; upstream name is design-taste-frontend
-  superseded_by:
-  - design-taste-frontend
-  upstream:
-    repository: https://github.com/Leonxlnx/taste-skill
-    source_path: skills/taste-skill
-  trust_tier: pinned-upstream
-  trust_basis: MIT source previously audited; exact sync pending
-  network: read
-  side_effects: []
-  update_policy: manual_review
-- id: image-to-code-skill
-  origin: upstream
-  role: domain
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  status_reason: incorrect local alias retired; upstream name is image-to-code
-  superseded_by:
-  - image-to-code
-  upstream:
-    repository: https://github.com/Leonxlnx/taste-skill
-    source_path: skills/image-to-code-skill
-  trust_tier: pinned-upstream
-  trust_basis: MIT source previously audited; exact sync pending
-  network: read
-  side_effects: []
-  update_policy: manual_review
 - id: best-of-n
   origin: internal
   role: process
@@ -423,139 +178,7 @@ skills:
     or public contract ownership
   removal_condition: remove when selected framework skills cover these boundaries
     without a generic wrapper
-- id: finish-to-completion
-  origin: internal
-  role: process
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  status_reason: composition wrapper retired; capability preserved through compact
-    core, true internal procedures, upstream skills and host-native system skills
-  trust_tier: owner-approved
-  trust_basis: owner-approved retirement
-  network: none
-  side_effects: []
-  update_policy: manual_review
-- id: frontend-composition
-  origin: internal
-  role: process
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  status_reason: composition wrapper retired; capability preserved through compact
-    core, true internal procedures, upstream skills and host-native system skills
-  trust_tier: owner-approved
-  trust_basis: owner-approved retirement
-  network: none
-  side_effects: []
-  update_policy: manual_review
-- id: database-stack
-  origin: internal
-  role: process
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  status_reason: composition wrapper retired; capability preserved through compact
-    core, true internal procedures, upstream skills and host-native system skills
-  trust_tier: owner-approved
-  trust_basis: owner-approved retirement
-  network: none
-  side_effects: []
-  update_policy: manual_review
-- id: mobile-composition
-  origin: internal
-  role: process
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  status_reason: composition wrapper retired; capability preserved through compact
-    core, true internal procedures, upstream skills and host-native system skills
-  trust_tier: owner-approved
-  trust_basis: owner-approved retirement
-  network: none
-  side_effects: []
-  update_policy: manual_review
-- id: infra-devops-composition
-  origin: internal
-  role: process
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  status_reason: composition wrapper retired; capability preserved through compact
-    core, true internal procedures, upstream skills and host-native system skills
-  trust_tier: owner-approved
-  trust_basis: owner-approved retirement
-  network: none
-  side_effects: []
-  update_policy: manual_review
-- id: browser-qa
-  origin: internal
-  role: process
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  status_reason: composition wrapper retired; capability preserved through compact
-    core, true internal procedures, upstream skills and host-native system skills
-  trust_tier: owner-approved
-  trust_basis: owner-approved retirement
-  network: none
-  side_effects: []
-  update_policy: manual_review
-- id: ui-taste
-  origin: internal
-  role: process
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  status_reason: composition wrapper retired; capability preserved through compact
-    core, true internal procedures, upstream skills and host-native system skills
-  trust_tier: owner-approved
-  trust_basis: owner-approved retirement
-  network: none
-  side_effects: []
-  update_policy: manual_review
-- id: master-image-generation
-  origin: internal
-  role: process
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  status_reason: composition wrapper retired; capability preserved through compact
-    core, true internal procedures, upstream skills and host-native system skills
-  trust_tier: owner-approved
-  trust_basis: owner-approved retirement
-  network: none
-  side_effects: []
-  update_policy: manual_review
-- id: qa-skills
-  origin: internal
-  role: process
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  status_reason: composition wrapper retired; capability preserved through compact
-    core, true internal procedures, upstream skills and host-native system skills
-  trust_tier: owner-approved
-  trust_basis: owner-approved retirement
-  network: none
-  side_effects: []
-  update_policy: manual_review
-- id: quality
-  origin: internal
-  role: process
-  activation: explicit-only
-  compatibility: {}
-  lifecycle: retired
-  status_reason: composition wrapper retired; capability preserved through compact
-    core, true internal procedures, upstream skills and host-native system skills
-  trust_tier: owner-approved
-  trust_basis: owner-approved retirement
-  network: none
-  side_effects: []
-  update_policy: manual_review
 - id: frontend-design
-  supersedes:
-  - anthropic-frontend-design
   origin: upstream
   role: design
   exclusive_group: frontend-art-direction
@@ -576,8 +199,6 @@ skills:
   side_effects: []
   update_policy: manual_review
 - id: expo-router
-  supersedes:
-  - expo-skills
   origin: upstream
   role: domain
   activation: explicit-only
@@ -597,8 +218,6 @@ skills:
   side_effects: []
   update_policy: manual_review
 - id: expo-native-ui
-  supersedes:
-  - expo-skills
   origin: upstream
   role: domain
   activation: explicit-only
@@ -618,8 +237,6 @@ skills:
   side_effects: []
   update_policy: manual_review
 - id: expo-upgrade
-  supersedes:
-  - expo-skills
   origin: upstream
   role: domain
   activation: explicit-only
@@ -639,8 +256,6 @@ skills:
   side_effects: []
   update_policy: manual_review
 - id: react-native-best-practices
-  supersedes:
-  - callstack-react-native-best-practices
   origin: upstream
   role: domain
   activation: explicit-only
@@ -660,8 +275,6 @@ skills:
   side_effects: []
   update_policy: manual_review
 - id: supabase-postgres-best-practices
-  supersedes:
-  - supabase-agent-skills
   origin: upstream
   role: domain
   activation: explicit-only
@@ -681,8 +294,6 @@ skills:
   side_effects: []
   update_policy: manual_review
 - id: prisma-client-api
-  supersedes:
-  - prisma-skills
   origin: upstream
   role: domain
   activation: explicit-only
@@ -702,8 +313,6 @@ skills:
   side_effects: []
   update_policy: manual_review
 - id: prisma-cli
-  supersedes:
-  - prisma-skills
   origin: upstream
   role: domain
   activation: explicit-only
@@ -723,8 +332,6 @@ skills:
   side_effects: []
   update_policy: manual_review
 - id: terraform-style-guide
-  supersedes:
-  - hashicorp-agent-skills
   origin: upstream
   role: domain
   activation: explicit-only
@@ -744,8 +351,6 @@ skills:
   side_effects: []
   update_policy: manual_review
 - id: terraform-test
-  supersedes:
-  - hashicorp-agent-skills
   origin: upstream
   role: domain
   activation: explicit-only
@@ -765,8 +370,6 @@ skills:
   side_effects: []
   update_policy: manual_review
 - id: sharp-edges
-  supersedes:
-  - trail-of-bits-security
   origin: upstream
   role: auditor
   activation: explicit-only
@@ -786,8 +389,6 @@ skills:
   side_effects: []
   update_policy: manual_review
 - id: differential-review
-  supersedes:
-  - trail-of-bits-security
   origin: upstream
   role: auditor
   activation: explicit-only
@@ -807,8 +408,6 @@ skills:
   side_effects: []
   update_policy: manual_review
 - id: supply-chain-risk-auditor
-  supersedes:
-  - trail-of-bits-security
   origin: upstream
   role: auditor
   activation: explicit-only
@@ -891,8 +490,6 @@ skills:
   activation: explicit-only
   compatibility: {}
   lifecycle: active
-  supersedes:
-  - image-to-code-skill
   upstream:
     repository: https://github.com/Leonxlnx/taste-skill
     source_path: skills/image-to-code-skill
@@ -926,8 +523,6 @@ skills:
   side_effects: []
   update_policy: manual_review
 - id: expo-overview
-  supersedes:
-  - expo-skills
   origin: upstream
   role: domain
   activation: explicit-only
@@ -972,8 +567,6 @@ skills:
   activation: implicit
   compatibility: {}
   lifecycle: active
-  supersedes:
-  - taste-skill
   upstream:
     repository: https://github.com/Leonxlnx/taste-skill
     source_path: skills/taste-skill
@@ -993,8 +586,6 @@ skills:
   activation: implicit
   compatibility: {}
   lifecycle: active
-  supersedes:
-  - vercel-react-best-practices
   upstream:
     repository: https://github.com/vercel-labs/agent-skills
     source_path: skills/react-best-practices
@@ -1033,8 +624,6 @@ skills:
   activation: implicit
   compatibility: {}
   lifecycle: active
-  supersedes:
-  - vercel-web-design-guidelines
   upstream:
     repository: https://github.com/vercel-labs/agent-skills
     source_path: skills/web-design-guidelines
