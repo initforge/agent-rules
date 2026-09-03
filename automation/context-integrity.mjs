@@ -20,9 +20,19 @@ if (fs.existsSync(graphFile)) {
   for (const id of activeIds) if (!graphIds.has(id)) issues.push(`active registry skill missing from context graph: ${id}`);
   for (const id of graphIds) if (!activeIds.has(id)) issues.push(`context graph exposes non-active skill: ${id}`);
 }
-for (const file of ['skills/frontend-design-contract/SKILL.md', 'README.md', 'skills/README.md']) {
-  const body = fs.readFileSync(path.join(root, file), 'utf8');
-  if (/`frontend-composition`|selectable `finish-to-completion`/.test(body)) issues.push(`${file} references a retired authority`);
+for (const file of [
+  'skills/frontend-design-contract/SKILL.md',
+  'README.md',
+  'skills/README.md',
+  'platforms/antigravity/antigravity-overlay.md',
+  'platforms/codex/codex-overlay.md',
+  'platforms/grok/grok-overlay.md',
+  'skills/parity-verification/SKILL.md',
+]) {
+  if (fs.existsSync(path.join(root, file))) {
+    const body = fs.readFileSync(path.join(root, file), 'utf8');
+    if (/`frontend-composition`|selectable `finish-to-completion`|`browser-qa`|`qa-skills`/.test(body)) issues.push(`${file} references a retired authority`);
+  }
 }
 const agent = path.join(root, '.agent');
 if (fs.existsSync(agent)) for (const forbiddenDir of ['history', 'runs', 'evidence', 'completed', 'archive']) if (fs.existsSync(path.join(agent, forbiddenDir))) issues.push(`.agent contains forbidden history directory: ${forbiddenDir}`);

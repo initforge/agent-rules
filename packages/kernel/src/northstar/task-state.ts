@@ -124,6 +124,7 @@ export interface TaskStateSeed extends Omit<AgentTaskState, 'schema' | 'task_id'
 export interface TaskStartInput {
   readonly schema: typeof TASK_START_SCHEMA;
   readonly plan_markdown: string;
+  readonly plan_contract?: unknown;
   readonly state: TaskStateSeed;
 }
 
@@ -146,6 +147,13 @@ export interface FailureProgress {
 const TASK_STATUSES = new Set<TaskStatus>(['ACTIVE', 'PARTIAL', 'BLOCKED', 'NEEDS_USER', 'PASS']);
 const SLICE_STATUSES = new Set<SliceStatus>(['PENDING', 'READY', 'IN_PROGRESS', 'PROVED', 'BLOCKED']);
 const PROOF_STRENGTHS = new Set<ProofStrength>(['STATIC', 'UNIT', 'INTEGRATION', 'LIVE', 'USER_VISIBLE_E2E']);
+const PROOF_STRENGTH_RANKS: Record<ProofStrength, number> = {
+  STATIC: 1,
+  UNIT: 2,
+  INTEGRATION: 3,
+  LIVE: 4,
+  USER_VISIBLE_E2E: 5,
+};
 
 const uniqueIds = (items: readonly { id: string }[], label: string, issues: string[]): Set<string> => {
   const ids = new Set<string>();
@@ -197,9 +205,63 @@ export function validateTaskState(value: unknown): TaskStateValidation {
       if (!PROOF_STRENGTHS.has(proof.strength)) issues.push(`slice ${slice.id} proof has invalid strength`);
     }
   }
-  for (const acceptance of state.acceptance) if (!PROOF_STRENGTHS.has(acceptance.required_strength)) issues.push(`acceptance ${acceptance.id} has invalid proof strength`);
+  // Detect dependency cycles in slices
+  const visiting = new Set<string>();
+  const visited = new Set<string>();
+  const visit = (id: string, trail: readonly string[]): void => {
+    if (visited.has(id)) return;
+    if (visiting.has(id)) { issues.push(`slice dependency cycle: ${[...trail, id].join(' -> ')}`); return; }
+    visiting.add(id);
+    const slice = state.slices.find((s) => s.id === id);
+    for (const dep of slice?.depends_on ?? []) visit(dep, [...trail, id]);
+    visiting.delete(id);
+    visited.add(id);
+  };
+  for (const slice of state.slices) visit(slice.id, []);
+
+  const proofByAcceptance = new Map<string, ProofSummary[]>();
+  for (const slice of state.slices) {
+    for (const proof of slice.proof_summary ?? []) {
+      const list = proofByAcceptance.get(proof.acceptance_id) ?? [];
+      list.push(proof);
+      proofByAcceptance.set(proof.acceptance_id, list);
+    }
+  }
+
+  for (const acceptance of state.acceptance) {
+    if (!PROOF_STRENGTHS.has(acceptance.required_strength)) issues.push(`acceptance ${acceptance.id} has invalid proof strength`);
+    if (acceptance.status === 'PROVED') {
+      const proofs = proofByAcceptance.get(acceptance.id) ?? [];
+      const requiredRank = PROOF_STRENGTH_RANKS[acceptance.required_strength as ProofStrength] ?? 0;
+      const hasPassingProof = proofs.some((p: ProofSummary) => p.status === 'PASS' && (PROOF_STRENGTH_RANKS[p.strength as ProofStrength] ?? 0) >= requiredRank);
+      if (!hasPassingProof) {
+        issues.push(`acceptance ${acceptance.id} is marked PROVED but has no passing proof with required strength ${acceptance.required_strength}`);
+      }
+    }
+  }
+
+  for (const slice of state.slices) {
+    if (slice.status === 'PROVED') {
+      const sliceProofs = slice.proof_summary ?? [];
+      for (const accId of slice.acceptance_ids ?? []) {
+        const hasPass = sliceProofs.some((p: ProofSummary) => p.acceptance_id === accId && p.status === 'PASS');
+        if (!hasPass) {
+          issues.push(`slice ${slice.id} is marked PROVED but has no passing proof for acceptance ${accId}`);
+        }
+      }
+    }
+  }
+
   if (state.current_slice !== null && !sliceIds.has(state.current_slice)) issues.push(`current_slice ${state.current_slice} does not exist`);
-  if (state.status === 'PASS' && state.acceptance.some((entry) => entry.status !== 'PROVED' && entry.status !== 'PRE-EXISTING')) issues.push('PASS requires every acceptance to be PROVED or PRE-EXISTING');
+  if (state.status === 'PASS') {
+    if (state.acceptance.length === 0) issues.push('PASS requires at least one acceptance criterion');
+    if (state.acceptance.some((entry) => entry.status !== 'PROVED' && entry.status !== 'PRE-EXISTING')) {
+      issues.push('PASS requires every acceptance to be PROVED or PRE-EXISTING');
+    }
+    if (state.slices.some((slice) => slice.status !== 'PROVED')) {
+      issues.push('PASS requires every slice to be PROVED');
+    }
+  }
   if (state.last_failure && state.last_failure.repeat_count < 1) issues.push('last_failure.repeat_count must be positive');
   return { ok: issues.length === 0, issues };
 }

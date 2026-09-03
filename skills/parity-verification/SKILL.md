@@ -4,7 +4,7 @@ description: "Prove visual, responsive, behavioral, a11y, console, network or da
 metadata:
   signals: "parity proof, parity verification, verify parity, visual parity, responsive parity, behavioral parity, cross-state parity"
   excludes: "unit/api-only, static source diff only"
-  supports: "browser-qa, qa-skills"
+  supports: "playwright-cli, exploratory-testing"
   priority: "85"
   platform_scope: "all"
 ---

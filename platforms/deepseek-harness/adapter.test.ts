@@ -55,7 +55,7 @@ describe('P3 — Command Code adapter', () => {
     // layer is unproven, the adapter must refuse with BLOCKED.
     if (receipt.result.includes('not found on PATH')) {
       expect(receipt.ok).toBe(false);
-    } else if (!facts.permission_layer_proven) {
+    } else if (!receipt.permission_layer_proven) {
       expect(receipt.ok).toBe(false);
       expect(receipt.result).toMatch(/BLOCKED/);
     } else {

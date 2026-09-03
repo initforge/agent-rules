@@ -263,6 +263,7 @@ export function validatePlanContract(input: unknown): PlanContractValidation {
     }
   }
   const acceptanceToSlice = new Map<string, string[]>();
+  const requirementToSlice = new Map<string, string[]>();
   const slicesWithProof = new Set<string>();
   for (const slice of slices) {
     const sliceId = str(slice.id);
@@ -272,6 +273,16 @@ export function validatePlanContract(input: unknown): PlanContractValidation {
       add('slices', `slice ${sliceId} source_proof and runtime_proof must be arrays`, sliceId);
     }
     if (sourceProof.length > 0 || runtimeProof.length > 0) slicesWithProof.add(sliceId);
+    for (const reqId of (slice.requirements ?? []) as unknown[]) {
+      const rId = str(reqId);
+      if (!requirementIds.has(rId)) {
+        add('slices', `slice ${sliceId} references unknown requirement ${rId}`, sliceId);
+      } else {
+        const owners = requirementToSlice.get(rId) ?? [];
+        owners.push(sliceId);
+        requirementToSlice.set(rId, owners);
+      }
+    }
     for (const acceptanceId of (slice.acceptance ?? []) as unknown[]) {
       if (!acceptanceIds.has(str(acceptanceId))) add('slices', `slice ${sliceId} maps to unknown acceptance ${str(acceptanceId)}`, sliceId);
       else {
@@ -283,6 +294,10 @@ export function validatePlanContract(input: unknown): PlanContractValidation {
     if (((slice.requirements ?? []) as unknown[]).length > 0 && ((slice.acceptance ?? []) as unknown[]).length === 0) {
       add('slices', `slice ${sliceId} implements requirements but maps to no acceptance`, sliceId);
     }
+  }
+  for (const id of requirementIds) {
+    const owners = requirementToSlice.get(id) ?? [];
+    if (owners.length === 0) add('requirements', `requirement ${id} is not mapped to any slice`, id);
   }
   for (const id of acceptanceIds) {
     const owners = acceptanceToSlice.get(id) ?? [];
@@ -301,7 +316,8 @@ export function validatePlanContract(input: unknown): PlanContractValidation {
   //    capability, user-visible states.
   const requiredPreservation = (slice: Record<string, unknown>): boolean => {
     const kind = str(slice.change_kind) as ChangeKind;
-    return DESTRUCTIVE_KINDS.has(kind) || /refactor|redesign/i.test(str(slice.change));
+    const opClass = str(slice.operation_class).toLowerCase();
+    return DESTRUCTIVE_KINDS.has(kind) || opClass === 'refactor' || opClass === 'redesign';
   };
   for (const slice of slices) {
     if (!requiredPreservation(slice)) continue;

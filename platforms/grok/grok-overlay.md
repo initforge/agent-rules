@@ -10,7 +10,7 @@ description: Grok-only runtime delta.
 - Legacy dual trees and cross-platform overlays in the inject path are invalid and archived during install.
 - Skills live at `$GROK_HOME/skills`; project `.grok/` contains config/pointers only.
 - Use Grok-native rules, skills, MCP and inspection inside Grok.
-- Live/manual UI proof loads `qa-skills` plus `browser-qa`.
+- Live/manual UI proof loads `playwright-cli` or `exploratory-testing`.
 - Restart or reload Grok after static rule installation.
 - Linux and Windows are separate host surfaces; never copy host-specific config paths across operating systems.
 - No agent-rules callback is installed.

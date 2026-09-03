@@ -45,6 +45,23 @@ describe('transient plan contract validator', () => {
     expect(broken.ok).toBe(false);
     expect(broken.issues.some((i) => /unknown acceptance/.test(i.message))).toBe(true);
   });
+  it('requires every slice requirement to reference a known requirement', () => {
+    const ghost = validatePlanContract({ ...base, slices: [{ ...base.slices[0], requirements: ['GHOST'] }] });
+    expect(ghost.ok).toBe(false);
+    expect(ghost.issues.some((i) => /unknown requirement GHOST/.test(i.message))).toBe(true);
+  });
+
+  it('requires every requirement to map to at least one slice', () => {
+    const unmapped = validatePlanContract({
+      ...base,
+      requirements: [
+        ...base.requirements,
+        { id: 'R2', change_kind: 'MODIFY', statement: 'unmapped', acceptance: ['A1'] },
+      ],
+    });
+    expect(unmapped.ok).toBe(false);
+    expect(unmapped.issues.some((i) => /requirement R2 is not mapped to any slice/.test(i.message))).toBe(true);
+  });
 
   it('requires every acceptance to map to a slice with proof', () => {
     const noProof = validatePlanContract({ ...base, slices: [{ ...base.slices[0], source_proof: [], runtime_proof: [] }] });

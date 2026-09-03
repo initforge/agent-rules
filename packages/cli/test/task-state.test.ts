@@ -71,6 +71,62 @@ describe('project-local task state', () => {
     expect(result.exitCode).toBe(0);
     expect(result.data?.action).toBe('CONTINUE');
   });
+  it('rehydrates modified dirty file to REPLAN_AFFECTED', () => {
+    const root = repo();
+    fs.writeFileSync(path.join(root, 'tracked.txt'), 'version 1', 'utf8');
+    spawnSync('git', ['add', 'tracked.txt'], { cwd: root });
+    spawnSync('git', ['-c', 'user.name=test', '-c', 'user.email=test@example.com', 'commit', '-m', 'initial'], { cwd: root });
+    fs.writeFileSync(path.join(root, 'tracked.txt'), 'version 2', 'utf8');
+    expect(taskCommand('start', { root, input: input() }).exitCode).toBe(0);
+    fs.writeFileSync(path.join(root, 'tracked.txt'), 'version 3', 'utf8');
+    const result = taskCommand('rehydrate', { root });
+    expect(result.exitCode).toBe(0);
+    expect(result.data?.action).toBe('REPLAN_AFFECTED');
+  });
+
+  it('validates plan_contract when provided and rejects invalid contract', () => {
+    const root = repo();
+    const baseInput = input();
+    const invalidContract = {
+      outcome: 'ship',
+      locked_contract: 'locked',
+      requirements: [{ id: 'R1', change_kind: 'MODIFY', statement: 'do', acceptance: ['GHOST'] }],
+      acceptance: [{ id: 'A1', claim: 'claim', proof: 'proof' }],
+      slices: [{ id: 'S1', change: 'c', change_kind: 'MODIFY', requirements: ['R1'], acceptance: ['A1'], source_proof: ['p'], runtime_proof: [] }],
+      escalation_boundary: ['stop'],
+    };
+    const bad = taskCommand('start', { root, input: { ...baseInput, plan_contract: invalidContract } });
+    expect(bad.exitCode).not.toBe(0);
+    expect(bad.message).toContain('Invalid plan contract');
+  });
+
+  it('git exclude excludes both .agent and .agents', () => {
+    const root = repo();
+    expect(taskCommand('start', { root, input: input() }).exitCode).toBe(0);
+    const exclude = fs.readFileSync(path.join(root, '.git', 'info', 'exclude'), 'utf8');
+    expect(exclude).toContain('/.agent/');
+    expect(exclude).toContain('/.agents/');
+  });
+
+  it('task update detects stall when failure repeats without evidence delta', () => {
+    const root = repo();
+    const start = taskCommand('start', { root, input: input() });
+    expect(start.exitCode).toBe(0);
+    const current = JSON.parse(fs.readFileSync(path.join(root, '.agent', 'current', 'state.json'), 'utf8'));
+    const failure = {
+      fingerprint: 'ERR-1',
+      category: 'IMPLEMENTATION' as const,
+      source_binding: 'commit-1',
+      repeat_count: 1,
+      evidence_delta: [],
+    };
+    const update1 = taskCommand('update', { root, input: { ...current, revision: 2, last_failure: failure } });
+    expect(update1.exitCode).toBe(0);
+    const stateAfter1 = JSON.parse(fs.readFileSync(path.join(root, '.agent', 'current', 'state.json'), 'utf8'));
+    const update2 = taskCommand('update', { root, input: { ...stateAfter1, revision: 3, last_failure: failure } });
+    expect(update2.exitCode).not.toBe(0);
+    expect(update2.message).toContain('Stall detected');
+  });
 
   it('projects only selected explicit skills to the repository-local host surface', () => {
     const root = repo();

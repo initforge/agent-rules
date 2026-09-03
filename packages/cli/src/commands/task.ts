@@ -9,12 +9,15 @@ import {
   validateTaskStartInput,
   validateTaskState,
   compactTaskFrontier,
+  advanceFailureState,
   type AgentTaskOwner,
   type AgentTaskState,
   type TaskStartInput,
+  type SourceIdentity,
 } from '@initforge/agent-rules-kernel/northstar/task-state.js';
+import { validatePlanContract } from '@initforge/agent-rules-kernel/harness/planning/plan-contract.js';
 import { ExitCode, type CommandResult } from '../types.js';
-import { removeTaskSkillProjection, replaceTaskSkillProjection } from '../runtime/task-skill-projection.js';
+import { removeTaskSkillProjection, replaceTaskSkillProjection, type TaskProjectionResult } from '../runtime/task-skill-projection.js';
 
 const sha256 = (value: string | Buffer): string => createHash('sha256').update(value).digest('hex');
 
@@ -25,7 +28,7 @@ function repositoryRoot(candidate = process.cwd()): string {
 
 function taskPaths(root: string) {
   const agent = path.join(root, '.agent');
-  return { agent, owner: path.join(agent, 'owner.json'), current: path.join(agent, 'current'), plan: path.join(agent, 'current', 'plan.md'), state: path.join(agent, 'current', 'state.json') };
+  return { agent, owner: path.join(agent, 'owner.json'), current: path.join(agent, 'current'), plan: path.join(agent, 'current', 'plan.md'), contract: path.join(agent, 'current', 'plan-contract.json'), state: path.join(agent, 'current', 'state.json') };
 }
 
 function repoIdentity(root: string): string { return sha256(fs.realpathSync(root).toLowerCase()); }
@@ -68,11 +71,11 @@ function ensureGitExclude(root: string, enabled: boolean): void {
   const gitDir = path.resolve(root, gitDirResult.stdout.trim());
   const exclude = path.join(gitDir, 'info', 'exclude');
   const marker = '# agent-rules active task state';
-  const rule = '/.agent/';
+  const rules = ['/.agent/', '/.agents/'];
   fs.mkdirSync(path.dirname(exclude), { recursive: true });
   const current = fs.existsSync(exclude) ? fs.readFileSync(exclude, 'utf8').replace(/\r\n?/g, '\n') : '';
-  const lines = current.split('\n').filter((line) => line !== marker && line !== rule);
-  if (enabled) lines.push(marker, rule);
+  const lines = current.split('\n').filter((line) => line !== marker && !rules.includes(line));
+  if (enabled) lines.push(marker, ...rules);
   fs.writeFileSync(exclude, `${lines.filter(Boolean).join('\n')}${lines.some(Boolean) ? '\n' : ''}`, 'utf8');
 }
 
@@ -113,6 +116,26 @@ function withProjectionOutcome(state: AgentTaskState, host: string, projection: 
 function startTask(root: string, input: TaskStartInput, host?: string): CommandResult {
   const inputCheck = validateTaskStartInput(input);
   if (!inputCheck.ok) return { exitCode: ExitCode.ValidationFailed, message: `Invalid task start input: ${inputCheck.issues.join('; ')}` };
+
+  let contractToValidate = input.plan_contract;
+  if (!contractToValidate && input.plan_markdown) {
+    const match = input.plan_markdown.match(/```(?:json\s+plan-contract|json:plan-contract|json)\s*\n([\s\S]*?)\n```/);
+    if (match) {
+      try {
+        const parsed = JSON.parse(match[1]);
+        if (typeof parsed === 'object' && parsed !== null && ('outcome' in parsed || 'requirements' in parsed)) {
+          contractToValidate = parsed;
+        }
+      } catch {}
+    }
+  }
+  if (contractToValidate) {
+    const contractCheck = validatePlanContract(contractToValidate);
+    if (!contractCheck.ok) {
+      return { exitCode: ExitCode.ValidationFailed, message: `Invalid plan contract: ${contractCheck.issues.map((i) => i.message).join('; ')}` };
+    }
+  }
+
   const planHash = sha256(input.plan_markdown);
   const now = new Date().toISOString();
   const taskId = input.state.task_id?.trim() || `TASK-${sha256(`${planHash}\0${now}`).slice(0, 20)}`;
@@ -122,7 +145,28 @@ function startTask(root: string, input: TaskStartInput, host?: string): CommandR
   const projectionHost = host ?? input.state.skill_projection?.host ?? priorState?.skill_projection?.host ?? process.env.AGENT_RULES_HOST;
   if (requested.length > 0 && !projectionHost) return { exitCode: ExitCode.ValidationFailed, message: 'task start with selected skills requires --host or AGENT_RULES_HOST' };
   const projection = replaceTaskSkillProjection(root, projectionHost ?? 'unsupported', requested, priorState?.skill_projection ?? null);
-  const state = withProjectionOutcome({ ...input.state, schema: TASK_STATE_SCHEMA, task_id: taskId, revision: 1, plan_sha256: planHash, selected_skill_ids: projection.selected, projected_skill_ids: projection.projected, skill_projection: projection.projection, updated_at: now }, projectionHost ?? 'unsupported', projection.projection, projection.selected);
+
+  const observed = sourceObservation(root);
+  const sourceIdentity: SourceIdentity = {
+    repository: observed.repository,
+    branch: observed.branch || undefined,
+    head: observed.head || undefined,
+    worktree_hash: observed.worktree_hash,
+    revalidate_when: input.state.source_identity?.revalidate_when ?? ['source changes'],
+  };
+
+  const state = withProjectionOutcome({
+    ...input.state,
+    schema: TASK_STATE_SCHEMA,
+    task_id: taskId,
+    revision: 1,
+    plan_sha256: planHash,
+    source_identity: sourceIdentity,
+    selected_skill_ids: projection.selected,
+    projected_skill_ids: projection.projected,
+    skill_projection: projection.projection,
+    updated_at: now,
+  }, projectionHost ?? 'unsupported', projection.projection, projection.selected);
   const stateCheck = validateTaskState(state);
   if (!stateCheck.ok) { projection.rollback(); return { exitCode: ExitCode.ValidationFailed, message: `Invalid task state: ${stateCheck.issues.join('; ')}` }; }
 
@@ -135,6 +179,9 @@ function startTask(root: string, input: TaskStartInput, host?: string): CommandR
     fs.mkdirSync(path.join(next, 'current'), { recursive: true });
     fs.writeFileSync(path.join(next, 'owner.json'), `${JSON.stringify(ownerFor(root), null, 2)}\n`, 'utf8');
     fs.writeFileSync(path.join(next, 'current', 'plan.md'), input.plan_markdown.endsWith('\n') ? input.plan_markdown : `${input.plan_markdown}\n`, 'utf8');
+    if (contractToValidate) {
+      fs.writeFileSync(path.join(next, 'current', 'plan-contract.json'), `${JSON.stringify(contractToValidate, null, 2)}\n`, 'utf8');
+    }
     fs.writeFileSync(path.join(next, 'current', 'state.json'), `${JSON.stringify(state, null, 2)}\n`, 'utf8');
     if (fs.existsSync(paths.agent)) fs.renameSync(paths.agent, previous);
     fs.renameSync(next, paths.agent);
@@ -168,11 +215,29 @@ function updateTask(root: string, next: AgentTaskState, host?: string): CommandR
       return { exitCode: ExitCode.ValidationFailed, message: `Proved slice ${prior.id} may regress only with explicit invalidation evidence` };
     }
   }
-  let projectionResult: ReturnType<typeof replaceTaskSkillProjection> | null = null;
+
+  let failureToRecord = next.last_failure;
+  if (failureToRecord) {
+    const progress = advanceFailureState(current.last_failure, failureToRecord);
+    failureToRecord = progress.failure;
+    if (progress.replan_required && next.status !== 'BLOCKED' && next.status !== 'NEEDS_USER') {
+      return {
+        exitCode: ExitCode.ValidationFailed,
+        message: `Stall detected: failure "${progress.failure.fingerprint}" repeated ${progress.failure.repeat_count} times without evidence delta; replan is required`,
+      };
+    }
+  }
+
+  let projectionResult: TaskProjectionResult | null = null;
   const selectionChanged = JSON.stringify(next.selected_skill_ids) !== JSON.stringify(current.selected_skill_ids)
     || (next.selected_skill_ids.length > 0 && current.skill_projection === null)
     || (current.skill_projection !== null && current.projected_skill_ids.length === 0 && (current.skill_projection.reused_skill_ids?.length ?? 0) === 0);
-  let normalized: AgentTaskState = { ...next, schema: TASK_STATE_SCHEMA, updated_at: new Date().toISOString() };
+  let normalized: AgentTaskState = {
+    ...next,
+    schema: TASK_STATE_SCHEMA,
+    last_failure: failureToRecord,
+    updated_at: new Date().toISOString(),
+  };
   if (selectionChanged) {
     const selectionDecision = next.decisions.find((decision) => /^SKILL-SELECTION-/i.test(decision.id) && decision.reason.trim().length > 0);
     if (!selectionDecision) return { exitCode: ExitCode.ValidationFailed, message: 'selected-skill update requires a SKILL-SELECTION-* decision with scope/source evidence' };
@@ -189,10 +254,15 @@ function updateTask(root: string, next: AgentTaskState, host?: string): CommandR
 }
 
 function sourceObservation(root: string) {
-  const branch = spawnSync('git', ['branch', '--show-current'], { cwd: root, encoding: 'utf8', windowsHide: true }).stdout.trim();
-  const head = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8', windowsHide: true }).stdout.trim();
-  const status = spawnSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8', windowsHide: true }).stdout.replace(/\r\n?/g, '\n');
-  return { repository: fs.realpathSync(root), branch, head, worktree_hash: sha256(status) };
+  const branch = spawnSync('git', ['branch', '--show-current'], { cwd: root, encoding: 'utf8', windowsHide: true }).stdout?.trim() ?? '';
+  const headResult = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8', windowsHide: true });
+  const head = headResult.status === 0 ? headResult.stdout.trim() : '';
+  const status = (spawnSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8', windowsHide: true }).stdout ?? '').replace(/\r\n?/g, '\n');
+  const diffArgs = head ? ['diff', 'HEAD'] : ['diff'];
+  const diff = (spawnSync('git', diffArgs, { cwd: root, encoding: 'utf8', windowsHide: true }).stdout ?? '').replace(/\r\n?/g, '\n');
+  const untracked = (spawnSync('git', ['ls-files', '--others', '--exclude-standard'], { cwd: root, encoding: 'utf8', windowsHide: true }).stdout ?? '').replace(/\r\n?/g, '\n');
+  const worktreePayload = `${head}\n---status---\n${status}\n---diff---\n${diff}\n---untracked---\n${untracked}`;
+  return { repository: fs.realpathSync(root), branch, head, worktree_hash: sha256(worktreePayload) };
 }
 
 export function taskCommand(action: string, options: { stdin?: boolean; taskId?: string; root?: string; input?: unknown; host?: string } = {}): CommandResult {

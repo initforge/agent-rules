@@ -20,6 +20,37 @@ const state = (): AgentTaskState => ({
 describe('active task state', () => {
   it('accepts a coherent active frontier', () => expect(validateTaskState(state()).ok).toBe(true));
   it('rejects PASS with pending acceptance', () => expect(validateTaskState({ ...state(), status: 'PASS' }).issues).toContain('PASS requires every acceptance to be PROVED or PRE-EXISTING'));
+  it('rejects dependency cycles in slices', () => {
+    const cyclic = state();
+    cyclic.slices = [
+      { ...cyclic.slices[0], id: 'S1', depends_on: ['S2'] },
+      { ...cyclic.slices[0], id: 'S2', depends_on: ['S1'] },
+    ];
+    const result = validateTaskState(cyclic);
+    expect(result.ok).toBe(false);
+    expect(result.issues.some((i) => /slice dependency cycle/.test(i))).toBe(true);
+  });
+  it('rejects fake PASS when acceptance is PROVED without proof', () => {
+    const fakePass = state();
+    fakePass.status = 'PASS';
+    fakePass.slices = [{ ...fakePass.slices[0], status: 'PROVED', proof_summary: [] }];
+    fakePass.acceptance = [{ ...fakePass.acceptance[0], status: 'PROVED' }];
+    const result = validateTaskState(fakePass);
+    expect(result.ok).toBe(false);
+    expect(result.issues.some((i) => /has no passing proof/.test(i))).toBe(true);
+  });
+  it('accepts genuine PASS backed by passing proof of required strength', () => {
+    const genuine = state();
+    genuine.status = 'PASS';
+    genuine.slices = [{
+      ...genuine.slices[0],
+      status: 'PROVED',
+      proof_summary: [{ acceptance_id: 'A1', strength: 'UNIT', status: 'PASS', evidence: 'tests pass' }],
+    }];
+    genuine.acceptance = [{ ...genuine.acceptance[0], status: 'PROVED' }];
+    const result = validateTaskState(genuine);
+    expect(result.ok).toBe(true);
+  });
   it('rejects unknown slice and acceptance references', () => {
     const invalid = state();
     const result = validateTaskState({ ...invalid, current_slice: 'missing', slices: [{ ...invalid.slices[0], acceptance_ids: ['missing'] }] });

@@ -5,11 +5,11 @@
   "files": [
     {
       "path": "generated/context-graph.json",
-      "sha256": "1021cfd80c54a455afe75645d0126cf6ff5289c9d55ef5d43346802ace7c2b71"
+      "sha256": "dbe2d2f054df0a86b8eca034862a6a26568009554eef36ff3d926d9eb1b7e098"
     },
     {
       "path": "generated/runtime-build/antigravity/manifest.json",
-      "sha256": "8ad599af6a733be5c7ea4e6b26a7de720f45518fb3beb8e1ae1607130b8711ca"
+      "sha256": "9fdec0c2804917ceb5f1a055b483789fa8eb355605f8f480c5e410059dcbcefb"
     },
     {
       "path": "generated/runtime-build/antigravity/rules/00-intent-scope-safety.md",
@@ -33,7 +33,7 @@
     },
     {
       "path": "generated/runtime-build/antigravity/rules/antigravity-overlay.md",
-      "sha256": "36fbc40920ac5d6f1bc2b90ab95628582a7530091f84047cd83b1b11c448dc2d"
+      "sha256": "4d22bf14558a3f4f91260607884cf16974c828f2547554f7307cea4b458a517d"
     },
     {
       "path": "generated/runtime-build/antigravity/rules/manifest.yaml",
@@ -89,7 +89,7 @@
     },
     {
       "path": "generated/runtime-build/codex/manifest.json",
-      "sha256": "aa648993250b7fdf951f82159f57c2068229da6e208ccb69f3045524b9e6215f"
+      "sha256": "b4722ee4d5fa23441cbdeb5ff4d2e72247e8a1e10b47d98c66479b8e9a4f5e9e"
     },
     {
       "path": "generated/runtime-build/codex/rules/00-intent-scope-safety.md",
@@ -113,7 +113,7 @@
     },
     {
       "path": "generated/runtime-build/codex/rules/codex-overlay.md",
-      "sha256": "33e488acfe2de2b0f360fb9dc8d16181967eaaa40921ca974c8cde3be7eb0345"
+      "sha256": "96ab2ad593612b333c02ca356f0cdd09435d13318b3f405818162099c1a6b2ab"
     },
     {
       "path": "generated/runtime-build/codex/rules/manifest.yaml",
@@ -241,7 +241,7 @@
     },
     {
       "path": "generated/runtime-build/grok/manifest.json",
-      "sha256": "06c24afa5c12ed6ce70c0c3d7d457034458aeec1d5752b230e7f3259fb02e3bb"
+      "sha256": "b367d57c065245c2707c7205823e7c671a5c3d626343f93a06cce2103e89f4f5"
     },
     {
       "path": "generated/runtime-build/grok/rules/00-intent-scope-safety.md",
@@ -265,7 +265,7 @@
     },
     {
       "path": "generated/runtime-build/grok/rules/grok-overlay.md",
-      "sha256": "7a02ff28a714c05e5526c4a02e59cd67dc610b5b73cedc4f01e2e57679001e95"
+      "sha256": "064fd280abc2a7f539a363a57bf3cc3752acccc9d02c66592134db3b2f652099"
     },
     {
       "path": "generated/runtime-build/grok/rules/manifest.yaml",
@@ -817,7 +817,7 @@
     },
     {
       "path": "packages/kernel/dist/harness/planning/plan-contract.js",
-      "sha256": "71134c897281848b35ae7935f5e71550d2b2a89757ee1068a5dc9f6f07232643"
+      "sha256": "415106f6883389f9b1393ba226511d60fb9db8f4aa2b9516007c732d017021a2"
     },
     {
       "path": "packages/kernel/dist/harness/review/materiality.js",
@@ -877,7 +877,7 @@
     },
     {
       "path": "packages/kernel/dist/northstar/task-state.js",
-      "sha256": "c51df7c6614aa159d19d88270ab3406091135fd99da227996db0ce9f2daaa57f"
+      "sha256": "4625bb6f51fe5f5ef360cf5ba237d94d1ce85ca9a0092604daba0f9a242e2c74"
     },
     {
       "path": "platforms/antigravity/adapter.ts",
@@ -885,7 +885,7 @@
     },
     {
       "path": "platforms/antigravity/antigravity-overlay.md",
-      "sha256": "36fbc40920ac5d6f1bc2b90ab95628582a7530091f84047cd83b1b11c448dc2d"
+      "sha256": "4d22bf14558a3f4f91260607884cf16974c828f2547554f7307cea4b458a517d"
     },
     {
       "path": "platforms/claude/adapter.ts",
@@ -909,7 +909,7 @@
     },
     {
       "path": "platforms/codex/codex-overlay.md",
-      "sha256": "33e488acfe2de2b0f360fb9dc8d16181967eaaa40921ca974c8cde3be7eb0345"
+      "sha256": "96ab2ad593612b333c02ca356f0cdd09435d13318b3f405818162099c1a6b2ab"
     },
     {
       "path": "platforms/command-code/adapter.ts",
@@ -953,7 +953,7 @@
     },
     {
       "path": "platforms/grok/grok-overlay.md",
-      "sha256": "7a02ff28a714c05e5526c4a02e59cd67dc610b5b73cedc4f01e2e57679001e95"
+      "sha256": "064fd280abc2a7f539a363a57bf3cc3752acccc9d02c66592134db3b2f652099"
     },
     {
       "path": "platforms/omp/adapter.ts",
@@ -4053,7 +4053,7 @@
     },
     {
       "path": "skills/parity-verification/SKILL.md",
-      "sha256": "994bab8ba52eb48bb73e88bf862ddb7711b4191cd149adc97df7d0aded3e019b"
+      "sha256": "1e4d4faaa5e87d38b2eed7c531a3806c7cbc34535760b94439126a49c090121d"
     },
     {
       "path": "skills/plan-and-handoff/SKILL.md",
@@ -4780,5 +4780,5 @@
       "sha256": "210afcf7f60e61278b83a3536f0c204b476ea296a67ed62422cae02be60b87e4"
     }
   ],
-  "manifest_sha256": "2fa995d42f56b657d48795d94ab2a28dc6c5f2d781e883b8821345169b3515dc"
+  "manifest_sha256": "74011b38cd500d21a4e4412a224deb4245cd7f1fb00fb3ee27efbf6942158cd9"
 }
