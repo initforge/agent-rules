@@ -20,6 +20,7 @@ codex.bak*/
 *.log
 .control-plane.pid
 
+.serena/
 # Python cache
 __pycache__/
 *.pyc

@@ -548,7 +548,13 @@ function classifyEntry(entry: { id: string; body: string; disabled: boolean }, m
   return strongLegacy ? "legacy-migrate" : "user-owned";
 }
 
-export function backupConfig(configPath: string, host: HostName, stateRoot = resolveRuntimeStateRoot()): { backupPath: string; receiptPath: string } {
+export function resolveRollbackStateRoot(env: NodeJS.ProcessEnv = process.env): string {
+  if (env.AGENT_RULES_STATE_ROOT) return path.resolve(env.AGENT_RULES_STATE_ROOT);
+  const home = env.USERPROFILE || env.HOME;
+  return home ? path.join(home, '.agent-rules') : resolveRuntimeStateRoot();
+}
+
+export function backupConfig(configPath: string, host: HostName, stateRoot = resolveRollbackStateRoot()): { backupPath: string; receiptPath: string } {
   const backupDir = path.join(stateRoot, "rollback", host, "mcp");
   const receiptPath = path.join(backupDir, "receipt.json");
   if (fs.existsSync(backupDir)) {
@@ -593,9 +599,9 @@ export function sealConfigBackup(receiptPath: string, configPath: string): void 
 }
 
 export function restoreHostMcpBackup(host: HostName, env: NodeJS.ProcessEnv = process.env): boolean {
-  const home = env.USERPROFILE || env.HOME || '';
-  const backupDir = path.join(home || resolveRuntimeStateRoot(), home ? '.agent-rules' : '', 'rollback', host, 'mcp');
-  const receiptPath = path.join(backupDir, 'receipt.json');
+  const stateRoot = resolveRollbackStateRoot(env);
+  const backupDir = path.join(stateRoot, "rollback", host, "mcp");
+  const receiptPath = path.join(backupDir, "receipt.json");
   if (!fs.existsSync(receiptPath)) return false;
   const receipt = JSON.parse(fs.readFileSync(receiptPath, 'utf8')) as {
     schema?: unknown;
@@ -810,8 +816,7 @@ export async function convergeHostMcpConfig(repoRoot: string, host: HostName, op
   if (needsUser) {
     // Still converge what is safely owned, but never touch user-modified entries.
   }
-  const stateHome = env.USERPROFILE || env.HOME;
-  const backup = backupConfig(configPath, host, stateHome ? path.join(stateHome, '.agent-rules') : resolveRuntimeStateRoot());
+  const backup = backupConfig(configPath, host, resolveRollbackStateRoot(env));
   let applied: { changed: boolean };
   try {
     applied = applyConvergence(host, configPath, parsed.serverEntries, dispositions);

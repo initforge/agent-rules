@@ -56,8 +56,11 @@ export function resolveRuntimeAssetsRoot(): string {
 }
 
 /** Writable lifecycle state is separate from immutable packed runtime assets. */
-export function resolveRuntimeStateRoot(): string {
-  if (process.env.NODE_ENV === "test") {
+export function resolveRuntimeStateRoot(env: NodeJS.ProcessEnv = process.env): string {
+  if (env.AGENT_RULES_STATE_ROOT) {
+    return path.resolve(env.AGENT_RULES_STATE_ROOT);
+  }
+  if (env.NODE_ENV === "test") {
     return TEST_STATE_ROOT ? path.resolve(TEST_STATE_ROOT) : path.join(os.tmpdir(), "agent-rules-tests", String(process.pid));
   }
   return path.join(os.homedir(), ".agent-rules");

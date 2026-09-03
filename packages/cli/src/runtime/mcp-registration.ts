@@ -2,8 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { loadIntegrationInventory } from "../integration/inventory.js";
 import { resolveGlobalMcpProfile, selectGlobalAdapterEntries, type GlobalMcpProfile } from "../integration/mcp-profile.js";
+import { resolveRuntimeStateRoot } from "./locator.js";
 import {
   backupConfig,
+  resolveRollbackStateRoot,
   buildConvergenceModel,
   disabledRegistrationIds,
   expandPlaceholders,
@@ -239,8 +241,7 @@ export async function registerHostMcpAdapters(
       return { host, configPath, status: conflicts.length > 0 || selected.unavailable.length > 0 ? "NEEDS_USER" : "REGISTERED", registered: applicable.map((definition) => definition.name), conflicts, needsAction: selected.unavailable };
     }
     fs.mkdirSync(path.dirname(configPath), { recursive: true });
-    const stateHome = env.USERPROFILE || env.HOME;
-    const backup = backupConfig(configPath, host, stateHome ? path.join(stateHome, '.agent-rules') : undefined);
+    const backup = backupConfig(configPath, host, resolveRollbackStateRoot(env));
     if (host === "codex") {
       let next = content;
       const starts = [...next.matchAll(/^\s*\[mcp_servers\.([^\]]+)\]\s*$/gm)].map((match) => ({ name: match[1]!.trim(), index: match.index! }));
