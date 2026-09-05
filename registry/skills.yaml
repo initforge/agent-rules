@@ -574,9 +574,9 @@ skills:
     tree: a6d128e53b4ec0238baee751dde33bf707adb5ec
     license: MIT
     license_evidence: LICENSE
-    content_hash: 32134157d57314d41e794e71014c853b24f16f20e396944e47ccc76f96fa01b0
+    content_hash: 7a6cee6a6679c84d9607bc68706cc76b44a26478325448b1c37a276edfb53611
   trust_tier: pinned-upstream
-  trust_basis: licensed MIT; exact-pinned by content hash 32134157d573
+  trust_basis: licensed MIT; exact-pinned by content hash 7a6cee6a6679
   network: read
   side_effects: []
   update_policy: manual_review

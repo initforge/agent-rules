@@ -10,10 +10,14 @@ import {
   validateTaskState,
   compactTaskFrontier,
   advanceFailureState,
+  deriveMinimalPlanContract,
+  proofSummaryIsFresh,
   type AgentTaskOwner,
   type AgentTaskState,
   type TaskStartInput,
   type SourceIdentity,
+  type ProofStrength,
+  type FailureCategory,
 } from '@initforge/agent-rules-kernel/northstar/task-state.js';
 import { validatePlanContract } from '@initforge/agent-rules-kernel/harness/planning/plan-contract.js';
 import { ExitCode, type CommandResult } from '../types.js';
@@ -56,6 +60,23 @@ function readState(root: string): AgentTaskState {
   const state = JSON.parse(fs.readFileSync(paths.state, 'utf8')) as AgentTaskState;
   const validation = validateTaskState(state);
   if (!validation.ok) throw new Error(`active task state is invalid: ${validation.issues.join('; ')}`);
+  if (!fs.existsSync(paths.plan)) {
+    throw new Error('active task plan is missing: plan.md has been removed');
+  }
+  const planHash = sha256(fs.readFileSync(paths.plan, 'utf8'));
+  if (planHash !== state.plan_sha256) {
+    throw new Error(`active task plan integrity failed: plan.md hash mismatch (expected ${state.plan_sha256.slice(0, 12)}, got ${planHash.slice(0, 12)})`);
+  }
+  if (state.plan_contract_sha256) {
+    if (!fs.existsSync(paths.contract)) {
+      throw new Error('active task contract is missing: plan-contract.json has been removed');
+    }
+    const contractContent = fs.readFileSync(paths.contract, 'utf8').trim();
+    const contractHash = sha256(contractContent);
+    if (contractHash !== state.plan_contract_sha256) {
+      throw new Error(`active task contract integrity failed: plan-contract.json hash mismatch (expected ${state.plan_contract_sha256.slice(0, 12)}, got ${contractHash.slice(0, 12)})`);
+    }
+  }
   return state;
 }
 
@@ -70,13 +91,42 @@ function ensureGitExclude(root: string, enabled: boolean): void {
   if (gitDirResult.status !== 0) return;
   const gitDir = path.resolve(root, gitDirResult.stdout.trim());
   const exclude = path.join(gitDir, 'info', 'exclude');
-  const marker = '# agent-rules active task state';
+  const beginMarker = '# BEGIN agent-rules active task state';
+  const endMarker = '# END agent-rules active task state';
+  const legacyMarker = '# agent-rules active task state';
   const rules = ['/.agent/', '/.agents/'];
   fs.mkdirSync(path.dirname(exclude), { recursive: true });
   const current = fs.existsSync(exclude) ? fs.readFileSync(exclude, 'utf8').replace(/\r\n?/g, '\n') : '';
-  const lines = current.split('\n').filter((line) => line !== marker && !rules.includes(line));
-  if (enabled) lines.push(marker, ...rules);
-  fs.writeFileSync(exclude, `${lines.filter(Boolean).join('\n')}${lines.some(Boolean) ? '\n' : ''}`, 'utf8');
+  const lines = current.split('\n');
+  const preserved: string[] = [];
+  let inManagedBlock = false;
+  let skipLegacyRules = 0;
+  for (const line of lines) {
+    if (line === beginMarker) {
+      inManagedBlock = true;
+      continue;
+    }
+    if (line === endMarker) {
+      inManagedBlock = false;
+      continue;
+    }
+    if (line === legacyMarker) {
+      skipLegacyRules = 2;
+      continue;
+    }
+    if (skipLegacyRules > 0 && rules.includes(line.trim())) {
+      skipLegacyRules--;
+      continue;
+    }
+    skipLegacyRules = 0;
+    if (!inManagedBlock) {
+      preserved.push(line);
+    }
+  }
+  if (enabled) {
+    preserved.push(beginMarker, ...rules, endMarker);
+  }
+  fs.writeFileSync(exclude, `${preserved.filter(Boolean).join('\n')}${preserved.some(Boolean) ? '\n' : ''}`, 'utf8');
 }
 
 function writeAtomic(file: string, value: string): void {
@@ -129,14 +179,44 @@ function startTask(root: string, input: TaskStartInput, host?: string): CommandR
       } catch {}
     }
   }
-  if (contractToValidate) {
-    const contractCheck = validatePlanContract(contractToValidate);
-    if (!contractCheck.ok) {
-      return { exitCode: ExitCode.ValidationFailed, message: `Invalid plan contract: ${contractCheck.issues.map((i) => i.message).join('; ')}` };
+  if (!contractToValidate) {
+    contractToValidate = deriveMinimalPlanContract(input.state);
+  }
+  const contractCheck = validatePlanContract(contractToValidate);
+  if (!contractCheck.ok) {
+    return { exitCode: ExitCode.ValidationFailed, message: `Invalid plan contract: ${contractCheck.issues.map((i) => i.message).join('; ')}` };
+  }
+  const contractObj = contractToValidate as {
+    outcome?: string;
+    acceptance?: Array<{ id: string; claim: string; required_strength?: ProofStrength }>;
+    slices?: Array<{ id: string; depends_on?: string[]; change?: string; requirements?: string[]; acceptance?: string[] }>;
+  };
+  if (contractObj.outcome && input.state.outcome && contractObj.outcome.trim() !== input.state.outcome.trim()) {
+    return { exitCode: ExitCode.ValidationFailed, message: `Task start split-brain detected: PlanContract outcome ("${contractObj.outcome}") contradicts state outcome ("${input.state.outcome}")` };
+  }
+  if (contractObj.acceptance && input.state.acceptance) {
+    const contractAccMap = new Map(contractObj.acceptance.map((a) => [a.id, a]));
+    const stateAccMap = new Map(input.state.acceptance.map((a) => [a.id, a]));
+    for (const [id, cAcc] of contractAccMap) {
+      const sAcc = stateAccMap.get(id);
+      if (!sAcc) {
+        return { exitCode: ExitCode.ValidationFailed, message: `Task start split-brain: acceptance ${id} in PlanContract is missing from task state` };
+      }
+      if (cAcc.claim && sAcc.claim && cAcc.claim.trim() !== sAcc.claim.trim()) {
+        return { exitCode: ExitCode.ValidationFailed, message: `Task start split-brain: acceptance ${id} claim in PlanContract ("${cAcc.claim}") contradicts state ("${sAcc.claim}")` };
+      }
+    }
+    for (const id of stateAccMap.keys()) {
+      if (!contractAccMap.has(id)) {
+        return { exitCode: ExitCode.ValidationFailed, message: `Task start split-brain: acceptance ${id} in task state is missing from PlanContract` };
+      }
     }
   }
+  const contractPayload = `${JSON.stringify(contractToValidate, null, 2)}\n`;
+  const contractHash = sha256(contractPayload.trim());
 
-  const planHash = sha256(input.plan_markdown);
+  const normalizedPlanMarkdown = input.plan_markdown.endsWith('\n') ? input.plan_markdown : `${input.plan_markdown}\n`;
+  const planHash = sha256(normalizedPlanMarkdown);
   const now = new Date().toISOString();
   const taskId = input.state.task_id?.trim() || `TASK-${sha256(`${planHash}\0${now}`).slice(0, 20)}`;
   let priorState: AgentTaskState | null = null;
@@ -161,7 +241,9 @@ function startTask(root: string, input: TaskStartInput, host?: string): CommandR
     task_id: taskId,
     revision: 1,
     plan_sha256: planHash,
+    plan_contract_sha256: contractHash,
     source_identity: sourceIdentity,
+    raw_user_intent: input.raw_user_intent ?? input.state.raw_user_intent,
     selected_skill_ids: projection.selected,
     projected_skill_ids: projection.projected,
     skill_projection: projection.projection,
@@ -178,10 +260,8 @@ function startTask(root: string, input: TaskStartInput, host?: string): CommandR
   try {
     fs.mkdirSync(path.join(next, 'current'), { recursive: true });
     fs.writeFileSync(path.join(next, 'owner.json'), `${JSON.stringify(ownerFor(root), null, 2)}\n`, 'utf8');
-    fs.writeFileSync(path.join(next, 'current', 'plan.md'), input.plan_markdown.endsWith('\n') ? input.plan_markdown : `${input.plan_markdown}\n`, 'utf8');
-    if (contractToValidate) {
-      fs.writeFileSync(path.join(next, 'current', 'plan-contract.json'), `${JSON.stringify(contractToValidate, null, 2)}\n`, 'utf8');
-    }
+    fs.writeFileSync(path.join(next, 'current', 'plan.md'), normalizedPlanMarkdown, 'utf8');
+    fs.writeFileSync(path.join(next, 'current', 'plan-contract.json'), contractPayload, 'utf8');
     fs.writeFileSync(path.join(next, 'current', 'state.json'), `${JSON.stringify(state, null, 2)}\n`, 'utf8');
     if (fs.existsSync(paths.agent)) fs.renameSync(paths.agent, previous);
     fs.renameSync(next, paths.agent);
@@ -204,11 +284,37 @@ function startTask(root: string, input: TaskStartInput, host?: string): CommandR
 
 function updateTask(root: string, next: AgentTaskState, host?: string): CommandResult {
   const current = readState(root);
+  const observed = sourceObservation(root);
   const immutableMismatch = next.task_id !== current.task_id || next.plan_sha256 !== current.plan_sha256 || next.outcome !== current.outcome || JSON.stringify(next.locked_constraints) !== JSON.stringify(current.locked_constraints);
   if (immutableMismatch) return { exitCode: ExitCode.ValidationFailed, message: 'Task update cannot change task id, plan hash, outcome, or locked constraints' };
   if (next.revision !== current.revision + 1) return { exitCode: ExitCode.ValidationFailed, message: `Task update revision must be ${current.revision + 1}` };
-  const existingAcceptance = new Set(current.acceptance.map((entry) => entry.id));
-  if (next.acceptance.some((entry) => !existingAcceptance.has(entry.id)) || next.acceptance.length !== current.acceptance.length) return { exitCode: ExitCode.ValidationFailed, message: 'Task update cannot add or lose acceptance ids; start a new plan instead' };
+  const existingAcceptanceMap = new Map(current.acceptance.map((entry) => [entry.id, entry]));
+  for (const acc of next.acceptance) {
+    const prior = existingAcceptanceMap.get(acc.id);
+    if (!prior) return { exitCode: ExitCode.ValidationFailed, message: 'Task update cannot add or lose acceptance ids; start a new plan instead' };
+    if (acc.claim !== prior.claim || acc.required_strength !== prior.required_strength) {
+      return { exitCode: ExitCode.ValidationFailed, message: `Task update cannot modify claim or required_strength for acceptance ${acc.id}; start a new plan or replan instead` };
+    }
+  }
+  if (next.acceptance.length !== current.acceptance.length) return { exitCode: ExitCode.ValidationFailed, message: 'Task update cannot add or lose acceptance ids; start a new plan instead' };
+  const existingSliceIds = new Set(current.slices.map((s) => s.id));
+  if (next.slices.some((s) => !existingSliceIds.has(s.id)) || next.slices.length !== current.slices.length) {
+    return { exitCode: ExitCode.ValidationFailed, message: 'Task update cannot add or lose slice ids; start a new plan instead' };
+  }
+  for (const slice of next.slices.filter((s) => s.status === 'PROVED')) {
+    for (const proof of slice.proof_summary ?? []) {
+      const isFresh = proofSummaryIsFresh(proof, {
+        source_binding: current.source_identity.worktree_hash,
+        environment_binding: current.source_identity.repository,
+      }) || (proof.source_binding === observed.worktree_hash && (proof.status === 'PASS' || proof.status === 'PRE-EXISTING'));
+      if (!isFresh && proof.status === 'PASS') {
+        return {
+          exitCode: ExitCode.ValidationFailed,
+          message: `Stale proof for acceptance ${proof.acceptance_id} in slice ${slice.id}: source code or environment has changed since proof was captured`,
+        };
+      }
+    }
+  }
   for (const prior of current.slices.filter((slice) => slice.status === 'PROVED')) {
     const changed = next.slices.find((slice) => slice.id === prior.id);
     if (changed && changed.status !== 'PROVED' && !next.assumptions.some((assumption) => assumption.status === 'INVALIDATED' && assumption.evidence.some((evidence) => evidence.includes(prior.id)))) {
@@ -232,9 +338,21 @@ function updateTask(root: string, next: AgentTaskState, host?: string): CommandR
   const selectionChanged = JSON.stringify(next.selected_skill_ids) !== JSON.stringify(current.selected_skill_ids)
     || (next.selected_skill_ids.length > 0 && current.skill_projection === null)
     || (current.skill_projection !== null && current.projected_skill_ids.length === 0 && (current.skill_projection.reused_skill_ids?.length ?? 0) === 0);
+  const verifiedSourceIdentity = (next.source_identity?.worktree_hash === observed.worktree_hash)
+    ? {
+        ...current.source_identity,
+        worktree_hash: observed.worktree_hash,
+        head: observed.head || current.source_identity.head,
+        branch: observed.branch || current.source_identity.branch,
+      }
+    : current.source_identity;
+
   let normalized: AgentTaskState = {
     ...next,
-    schema: TASK_STATE_SCHEMA,
+    source_identity: verifiedSourceIdentity,
+    plan_contract_sha256: current.plan_contract_sha256,
+    raw_user_intent: current.raw_user_intent,
+    intent_reconciliation: next.intent_reconciliation,
     last_failure: failureToRecord,
     updated_at: new Date().toISOString(),
   };
@@ -247,6 +365,35 @@ function updateTask(root: string, next: AgentTaskState, host?: string): CommandR
     normalized = withProjectionOutcome({ ...normalized, selected_skill_ids: projectionResult.selected, projected_skill_ids: projectionResult.projected, skill_projection: projectionResult.projection }, projectionHost ?? 'unsupported', projectionResult.projection, projectionResult.selected);
   }
   const check = validateTaskState(normalized);
+  if (normalized.status === 'PASS' && current.raw_user_intent) {
+    if (normalized.intent_reconciliation && normalized.intent_reconciliation.aligned === false && !normalized.intent_reconciliation.deviation_explanation?.trim()) {
+      return { exitCode: ExitCode.ValidationFailed, message: 'Task completion deviates from raw user intent without an explicit deviation explanation' };
+    }
+  }
+  if (normalized.status === 'PASS') {
+    const diffStat = spawnSync('git', ['diff', 'HEAD', '--name-status'], { cwd: root, encoding: 'utf8', windowsHide: true }).stdout ?? '';
+    const modifiedPreExistingTests = diffStat
+      .split(/\r?\n/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .filter((line) => {
+        const [status, ...parts] = line.split(/\s+/);
+        const filePath = parts.join(' ');
+        const isModifiedOrDeleted = status.startsWith('M') || status.startsWith('D');
+        const isTestFile = /(^|\/)(test|tests|__tests__)\/|\.(test|spec)\.[a-z]+$/i.test(filePath);
+        return isModifiedOrDeleted && isTestFile;
+      })
+      .map((line) => line.split(/\s+/).slice(1).join(' '));
+    if (modifiedPreExistingTests.length > 0) {
+      const hasTestDecision = normalized.decisions.some((d) => /^TEST-(?:MODIFICATION|REFACTOR)-/i.test(d.id) && d.reason.trim().length >= 20);
+      if (!hasTestDecision) {
+        return {
+          exitCode: ExitCode.ValidationFailed,
+          message: `Verifier integrity check failed: pre-existing test files were modified or deleted (${modifiedPreExistingTests.join(', ')}). A TEST-MODIFICATION decision explaining test changes is required before marking task PASS. (Adding new test files is always allowed).`,
+        };
+      }
+    }
+  }
   if (!check.ok) { projectionResult?.rollback(); return { exitCode: ExitCode.ValidationFailed, message: `Invalid task update: ${check.issues.join('; ')}` }; }
   try { writeAtomic(taskPaths(root).state, `${JSON.stringify(normalized, null, 2)}\n`); projectionResult?.commit(); }
   catch (error) { projectionResult?.rollback(); throw error; }
@@ -260,8 +407,27 @@ function sourceObservation(root: string) {
   const status = (spawnSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8', windowsHide: true }).stdout ?? '').replace(/\r\n?/g, '\n');
   const diffArgs = head ? ['diff', 'HEAD'] : ['diff'];
   const diff = (spawnSync('git', diffArgs, { cwd: root, encoding: 'utf8', windowsHide: true }).stdout ?? '').replace(/\r\n?/g, '\n');
-  const untracked = (spawnSync('git', ['ls-files', '--others', '--exclude-standard'], { cwd: root, encoding: 'utf8', windowsHide: true }).stdout ?? '').replace(/\r\n?/g, '\n');
-  const worktreePayload = `${head}\n---status---\n${status}\n---diff---\n${diff}\n---untracked---\n${untracked}`;
+  const untrackedFiles = (spawnSync('git', ['ls-files', '--others', '--exclude-standard'], { cwd: root, encoding: 'utf8', windowsHide: true }).stdout ?? '')
+    .split(/\r?\n/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .sort();
+  let untrackedPayloads = '';
+  if (untrackedFiles.length > 0) {
+    const hashResult = spawnSync('git', ['hash-object', '--stdin-paths'], {
+      cwd: root,
+      input: untrackedFiles.join('\n') + '\n',
+      encoding: 'utf8',
+      windowsHide: true,
+    });
+    if (hashResult.status === 0 && hashResult.stdout) {
+      const hashes = hashResult.stdout.trim().split(/\r?\n/);
+      untrackedPayloads = untrackedFiles.map((file, idx) => `${file}:${hashes[idx] || 'missing'}`).join('\n');
+    } else {
+      untrackedPayloads = untrackedFiles.join('\n');
+    }
+  }
+  const worktreePayload = `${head}\n---status---\n${status}\n---diff---\n${diff}\n---untracked---\n${untrackedPayloads}`;
   return { repository: fs.realpathSync(root), branch, head, worktree_hash: sha256(worktreePayload) };
 }
 
@@ -284,7 +450,8 @@ export function taskCommand(action: string, options: { stdin?: boolean; taskId?:
     if (action === 'export') {
       const state = readState(root);
       const plan = fs.readFileSync(taskPaths(root).plan, 'utf8');
-      return { exitCode: ExitCode.Success, message: `Portable checkpoint for ${state.task_id}`, data: { plan, state: { ...state, decisions: state.decisions, assumptions: state.assumptions, slices: state.slices.filter((slice) => slice.status !== 'PENDING' || slice.id === state.current_slice) } } };
+      const contract = fs.existsSync(taskPaths(root).contract) ? JSON.parse(fs.readFileSync(taskPaths(root).contract, 'utf8')) : null;
+      return { exitCode: ExitCode.Success, message: `Portable checkpoint for ${state.task_id}`, data: { plan, contract, state: { ...state, decisions: state.decisions, assumptions: state.assumptions, slices: state.slices.filter((slice) => slice.status !== 'PENDING' || slice.id === state.current_slice) } } };
     }
     if (action === 'close') {
       const state = readState(root);
@@ -295,7 +462,77 @@ export function taskCommand(action: string, options: { stdin?: boolean; taskId?:
       ensureGitExclude(root, false);
       return { exitCode: ExitCode.Success, message: `Task closed and active .agent state removed: ${state.task_id}` };
     }
-    return { exitCode: ExitCode.InvalidArgument, message: 'Task action must be start|status|update|rehydrate|export|close' };
+    if (action === 'advance-slice') {
+      const state = readState(root);
+      const input = (options.input ?? readStdinJson()) as { slice_id?: string; id?: string; proof?: string; acceptance_id?: string; strength?: ProofStrength };
+      const sliceId = input.slice_id || input.id;
+      if (!sliceId) return { exitCode: ExitCode.InvalidArgument, message: 'advance-slice requires slice_id or id' };
+      const proofText = input.proof?.trim() ?? '';
+      if (!proofText || proofText.length < 15 || /^(trust me|trust me bro|passed|it works|ok|done|verified|all good|tests pass)$/i.test(proofText)) {
+        return { exitCode: ExitCode.ValidationFailed, message: `advance-slice rejected self-certified PASS for ${sliceId}: model prose ("${proofText}") cannot self-certify PASS without verifiable execution details` };
+      }
+      const targetSlice = state.slices.find((s) => s.id === sliceId);
+      if (!targetSlice) return { exitCode: ExitCode.ValidationFailed, message: `Slice ${sliceId} not found` };
+      const observed = sourceObservation(root);
+      const updatedSlices = state.slices.map((s) => {
+        if (s.id !== sliceId) return s;
+        const proofList = [...(s.proof_summary ?? [])];
+        const accId = input.acceptance_id ?? s.acceptance_ids?.[0] ?? state.acceptance[0]?.id;
+        if (accId) {
+          const targetAcc = state.acceptance.find((a) => a.id === accId);
+          const derivedStrength = targetAcc?.required_strength ?? 'STATIC';
+          proofList.push({
+            acceptance_id: accId,
+            strength: derivedStrength,
+            status: 'PASS',
+            evidence: proofText,
+            source_binding: observed.worktree_hash,
+            verified_at: new Date().toISOString(),
+          });
+        }
+        return { ...s, status: 'PROVED' as const, proof_summary: proofList };
+      });
+      const nextSlice = updatedSlices.find((s) => s.status === 'READY' || s.status === 'PENDING')?.id ?? null;
+      const nextState: AgentTaskState = {
+        ...state,
+        revision: state.revision + 1,
+        slices: updatedSlices,
+        current_slice: nextSlice,
+        source_identity: {
+          ...state.source_identity,
+          worktree_hash: observed.worktree_hash,
+          head: observed.head || state.source_identity.head,
+          branch: observed.branch || state.source_identity.branch,
+        },
+        updated_at: new Date().toISOString(),
+      };
+      return updateTask(root, nextState, options.host);
+    }
+    if (action === 'record-failure') {
+      const state = readState(root);
+      const input = (options.input ?? readStdinJson()) as { fingerprint: string; category?: FailureCategory; reason: string; evidence_delta?: string[] };
+      if (!input.fingerprint || !input.reason) return { exitCode: ExitCode.InvalidArgument, message: 'record-failure requires fingerprint and reason' };
+      const observed = sourceObservation(root);
+      const samePriorFailure = state.last_failure?.fingerprint === input.fingerprint;
+      const explicitDelta = input.evidence_delta && input.evidence_delta.length > 0
+        ? input.evidence_delta
+        : (samePriorFailure ? [] : [input.reason]);
+      const candidate = {
+        fingerprint: input.fingerprint,
+        category: input.category ?? 'IMPLEMENTATION',
+        source_binding: observed.worktree_hash,
+        evidence_delta: explicitDelta,
+      };
+      const progress = advanceFailureState(state.last_failure, candidate);
+      const nextState: AgentTaskState = {
+        ...state,
+        revision: state.revision + 1,
+        last_failure: progress.failure,
+        updated_at: new Date().toISOString(),
+      };
+      return updateTask(root, nextState, options.host);
+    }
+    return { exitCode: ExitCode.InvalidArgument, message: 'Task action must be start|status|update|rehydrate|export|close|advance-slice|record-failure' };
   } catch (error) {
     return { exitCode: ExitCode.GeneralError, message: error instanceof Error ? error.message : String(error) };
   }

@@ -38,6 +38,8 @@ export interface ProofSummary {
   readonly strength: ProofStrength;
   readonly status: 'PASS' | 'PARTIAL' | 'BLOCKED' | 'NEEDS_USER' | 'PRE-EXISTING';
   readonly evidence: string;
+  readonly receipt_id?: string;
+  readonly verified_at?: string;
   readonly source_binding?: string;
   readonly environment_binding?: string;
   readonly proof_contract?: string;
@@ -97,8 +99,14 @@ export interface AgentTaskState {
   readonly task_id: string;
   readonly revision: number;
   readonly plan_sha256: string;
+  readonly plan_contract_sha256?: string;
   readonly source_identity: SourceIdentity;
   readonly status: TaskStatus;
+  readonly raw_user_intent?: string;
+  readonly intent_reconciliation?: {
+    readonly aligned: boolean;
+    readonly deviation_explanation?: string;
+  };
   readonly outcome: string;
   readonly locked_constraints: readonly string[];
   readonly decisions: readonly DecisionSnapshot[];
@@ -125,6 +133,7 @@ export interface TaskStartInput {
   readonly schema: typeof TASK_START_SCHEMA;
   readonly plan_markdown: string;
   readonly plan_contract?: unknown;
+  readonly raw_user_intent?: string;
   readonly state: TaskStateSeed;
 }
 
@@ -173,6 +182,7 @@ export function validateTaskState(value: unknown): TaskStateValidation {
   if (!state.task_id?.trim()) issues.push('task_id is required');
   if (!Number.isInteger(state.revision) || state.revision < 1) issues.push('revision must be a positive integer');
   if (!/^[a-f0-9]{64}$/i.test(state.plan_sha256 ?? '')) issues.push('plan_sha256 must be sha256 hex');
+  if (state.plan_contract_sha256 !== undefined && !/^[a-f0-9]{64}$/i.test(state.plan_contract_sha256)) issues.push('plan_contract_sha256 must be sha256 hex');
   if (!TASK_STATUSES.has(state.status)) issues.push('invalid task status');
   if (!state.outcome?.trim()) issues.push('outcome is required');
   if (!state.stop_condition?.trim()) issues.push('stop_condition is required');
@@ -198,7 +208,16 @@ export function validateTaskState(value: unknown): TaskStateValidation {
   for (const slice of state.slices) {
     if (!SLICE_STATUSES.has(slice.status)) issues.push(`slice ${slice.id} has invalid status`);
     if (!slice.expected_delta?.trim()) issues.push(`slice ${slice.id} has no expected_delta`);
-    for (const dep of slice.depends_on ?? []) if (!sliceIds.has(dep)) issues.push(`slice ${slice.id} depends on unknown slice ${dep}`);
+    for (const dep of slice.depends_on ?? []) {
+      if (!sliceIds.has(dep)) {
+        issues.push(`slice ${slice.id} depends on unknown slice ${dep}`);
+      } else if (slice.status === 'IN_PROGRESS' || slice.status === 'PROVED') {
+        const depSlice = state.slices.find((s) => s.id === dep);
+        if (depSlice && depSlice.status !== 'PROVED') {
+          issues.push(`slice ${slice.id} cannot be ${slice.status} before its dependency ${dep} is PROVED (currently ${depSlice.status})`);
+        }
+      }
+    }
     for (const id of slice.acceptance_ids ?? []) if (!acceptanceIds.has(id)) issues.push(`slice ${slice.id} references unknown acceptance ${id}`);
     for (const proof of slice.proof_summary ?? []) {
       if (!acceptanceIds.has(proof.acceptance_id)) issues.push(`slice ${slice.id} proof references unknown acceptance ${proof.acceptance_id}`);
@@ -308,8 +327,49 @@ export function compactTaskFrontier(state: AgentTaskState): Record<string, unkno
     projected_skill_ids: state.projected_skill_ids,
     skill_projection: state.skill_projection,
     open_assumptions: state.assumptions.filter((assumption) => assumption.status === 'OPEN'),
+    raw_user_intent: state.raw_user_intent,
+    intent_reconciliation: state.intent_reconciliation,
     do_not_repeat: state.do_not_repeat,
     next_action: state.next_action,
     stop_condition: state.stop_condition,
+  };
+}
+
+/** Derives a minimal valid PlanContract from task state when an explicit contract is omitted. */
+export interface MinimalPlanContractInputState {
+  readonly outcome?: string;
+  readonly stop_condition?: string;
+  readonly slices?: readonly { readonly id: string; readonly expected_delta?: string; readonly depends_on?: readonly string[]; readonly requirement_ids?: readonly string[]; readonly acceptance_ids?: readonly string[] }[];
+  readonly acceptance?: readonly { readonly id: string; readonly claim?: string; readonly required_strength?: ProofStrength }[];
+}
+
+/** Derives a minimal valid PlanContract from task state when an explicit contract is omitted. */
+export function deriveMinimalPlanContract(state: MinimalPlanContractInputState): Record<string, unknown> {
+  const accIds = state.acceptance && state.acceptance.length > 0 ? state.acceptance.map((a) => a.id) : ['A1'];
+  return {
+    outcome: state.outcome || 'Task execution',
+    locked_contract: state.stop_condition || 'Satisfy all acceptance criteria',
+    requirements: (state.slices && state.slices.length > 0 ? state.slices : [{ id: 'S1', expected_delta: 'Implement slice' }]).map((s, idx) => ({
+      id: `R${idx + 1}`,
+      statement: s.expected_delta || 'Implement slice',
+      change_kind: 'MODIFY',
+      acceptance: s.acceptance_ids && s.acceptance_ids.length > 0 ? [...s.acceptance_ids] : [accIds[0]],
+    })),
+    acceptance: (state.acceptance && state.acceptance.length > 0 ? state.acceptance : [{ id: 'A1', claim: 'feature works', required_strength: 'STATIC' }]).map((a) => ({
+      id: a.id,
+      claim: a.claim || 'acceptance claim',
+      proof: `${a.required_strength || 'STATIC'} evidence proving ${a.claim || 'acceptance claim'}`,
+    })),
+    slices: (state.slices && state.slices.length > 0 ? state.slices : [{ id: 'S1', expected_delta: 'Implement slice' }]).map((s, idx) => ({
+      id: s.id,
+      change: s.expected_delta || 'Implement slice',
+      change_kind: 'MODIFY',
+      depends_on: s.depends_on || [],
+      requirements: [`R${idx + 1}`],
+      acceptance: s.acceptance_ids && s.acceptance_ids.length > 0 ? [...s.acceptance_ids] : [accIds[0]],
+      source_proof: ['inspected code changes'],
+      runtime_proof: ['test suite execution'],
+    })),
+    escalation_boundary: ['scope change', 'violating locked constraints'],
   };
 }

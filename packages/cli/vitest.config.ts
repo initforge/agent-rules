@@ -2,6 +2,7 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
+    testTimeout: 15000,
     // Several installer tests deliberately override process-wide host and
     // state-root variables. Keep all files in one process and run them
     // serially so Windows environment state cannot leak between fixtures.

@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import { taskCommand } from '../src/commands/task.js';
 import { resolveRuntimeAssetsRoot } from '../src/runtime/locator.js';
-import { TASK_START_SCHEMA, type TaskStartInput } from '@initforge/agent-rules-kernel/northstar/task-state.js';
+import { TASK_START_SCHEMA, deriveMinimalPlanContract, type TaskStartInput, type ProofStrength } from '@initforge/agent-rules-kernel/northstar/task-state.js';
 
 function repo(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-rules-task-'));
@@ -152,7 +152,6 @@ describe('project-local task state', () => {
     expect(fs.existsSync(path.join(root, '.agents', 'skills', 'prisma-cli', 'SKILL.md'))).toBe(true);
     expect(fs.existsSync(path.join(root, '.agents', 'skills', 'playwright-cli'))).toBe(false);
   });
-
   it('task update replaces selected explicit skills transactionally', () => {
     const root = repo();
     expect(taskCommand('start', { root, host: 'codex', input: input('first', ['playwright-cli']) }).exitCode).toBe(0);
@@ -239,5 +238,196 @@ describe('project-local task state', () => {
     expect(state.blockers).toContainEqual(expect.objectContaining({ id: 'SKILL-PROJECTION-UNSUPPORTED', affected_slices: ['S1'] }));
     expect(state.blockers.find((entry) => entry.id === 'SKILL-PROJECTION-UNSUPPORTED')?.reason).toMatch(/no repository-local skill surface.*no global fallback/i);
     expect(fs.existsSync(path.join(root, '.agents', 'skills', 'playwright-cli'))).toBe(false);
+  });
+
+  it('rejects task update that alters acceptance claim or required strength', () => {
+    const root = repo();
+    expect(taskCommand('start', { root, input: input() }).exitCode).toBe(0);
+    const state = JSON.parse(fs.readFileSync(path.join(root, '.agent', 'current', 'state.json'), 'utf8'));
+    state.revision += 1;
+    state.acceptance[0].claim = 'tampered claim';
+    const result = taskCommand('update', { root, input: state });
+    expect(result.exitCode).not.toBe(0);
+    expect(result.message).toContain('cannot modify claim or required_strength');
+  });
+
+  it('detects changes to untracked file contents in worktree observation', () => {
+    const root = repo();
+    fs.writeFileSync(path.join(root, 'untracked-feature.ts'), 'export const a = 1;\n', 'utf8');
+    expect(taskCommand('start', { root, input: input() }).exitCode).toBe(0);
+    const before = taskCommand('rehydrate', { root });
+    expect(before.data?.action).toBe('CONTINUE');
+    fs.writeFileSync(path.join(root, 'untracked-feature.ts'), 'export const a = 2; // modified content\n', 'utf8');
+    const after = taskCommand('rehydrate', { root });
+    expect(after.data?.action).toBe('REPLAN_AFFECTED');
+  });
+
+  it('preserves pre-existing user rules in git exclude after task close', () => {
+    const root = repo();
+    const excludePath = path.join(root, '.git', 'info', 'exclude');
+    fs.mkdirSync(path.dirname(excludePath), { recursive: true });
+    fs.writeFileSync(excludePath, '/user-custom-rule/\n/.agent/\n', 'utf8');
+    const started = taskCommand('start', { root, input: input() });
+    expect(started.exitCode).toBe(0);
+    const id = String(started.data?.task_id);
+    expect(taskCommand('close', { root, taskId: id }).exitCode).toBe(0);
+    const afterClose = fs.readFileSync(excludePath, 'utf8');
+    expect(afterClose).toContain('/user-custom-rule/');
+    expect(afterClose).toContain('/.agent/');
+  });
+
+  it('rejects task update when proved slice has stale proof binding', () => {
+    const root = repo();
+    expect(taskCommand('start', { root, input: input() }).exitCode).toBe(0);
+    const state = JSON.parse(fs.readFileSync(path.join(root, '.agent', 'current', 'state.json'), 'utf8'));
+    state.revision += 1;
+    state.slices[0].status = 'PROVED';
+    state.slices[0].proof_summary = [{
+      acceptance_id: 'A1',
+      strength: 'STATIC',
+      status: 'PASS',
+      evidence: 'test passed',
+      source_binding: 'stale-sha256-does-not-match-current',
+    }];
+    const result = taskCommand('update', { root, input: state });
+    expect(result.exitCode).not.toBe(0);
+    expect(result.message).toContain('Stale proof for acceptance A1 in slice S1');
+  });
+
+  it('advances slice and records failure via worker FSM actions', () => {
+    const root = repo();
+    expect(taskCommand('start', { root, input: input() }).exitCode).toBe(0);
+    const adv = taskCommand('advance-slice', { root, input: { slice_id: 'S1', proof: 'vitest test/feature.test.ts exit code 0' } });
+    expect(adv.exitCode).toBe(0);
+    const state = JSON.parse(fs.readFileSync(path.join(root, '.agent', 'current', 'state.json'), 'utf8'));
+    expect(state.slices[0].status).toBe('PROVED');
+    expect(state.slices[0].proof_summary[0].evidence).toContain('vitest test/feature.test.ts');
+
+    const fail = taskCommand('record-failure', { root, input: { fingerprint: 'ERR-1', reason: 'type error' } });
+    expect(fail.exitCode).toBe(0);
+    const afterFail = JSON.parse(fs.readFileSync(path.join(root, '.agent', 'current', 'state.json'), 'utf8'));
+    expect(afterFail.last_failure?.fingerprint).toBe('ERR-1');
+  });
+
+  it('executes replan via atomic plan replacement', () => {
+    const root = repo();
+    expect(taskCommand('start', { root, input: input('v1') }).exitCode).toBe(0);
+    const replanInput = input('v2-replanned');
+    replanInput.state.acceptance[0].claim = 'updated realistic claim';
+    const replan = taskCommand('start', { root, input: replanInput });
+    expect(replan.exitCode).toBe(0);
+    const state = JSON.parse(fs.readFileSync(path.join(root, '.agent', 'current', 'state.json'), 'utf8'));
+    expect(state.acceptance[0].claim).toBe('updated realistic claim');
+    expect(state.outcome).toBe('v2-replanned');
+  });
+
+  it('verifier gate allows adding new tests without blocking PASS', () => {
+    const root = repo();
+    expect(taskCommand('start', { root, input: input() }).exitCode).toBe(0);
+    fs.writeFileSync(path.join(root, 'new-feature.test.ts'), 'test("ok", () => {});\n', 'utf8');
+    const state = JSON.parse(fs.readFileSync(path.join(root, '.agent', 'current', 'state.json'), 'utf8'));
+    state.revision += 1;
+    state.status = 'PASS';
+    state.acceptance[0].status = 'PROVED';
+    state.slices[0].status = 'PROVED';
+    const observed = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout.trim();
+    state.slices[0].proof_summary = [{
+      acceptance_id: 'A1',
+      strength: 'STATIC',
+      status: 'PASS',
+      evidence: 'pass',
+      source_binding: state.source_identity.worktree_hash,
+    }];
+    const result = taskCommand('update', { root, input: state });
+    // Adding new tests should NOT trigger verifier check rejection
+    expect(result.exitCode).toBe(0);
+  });
+
+  it('advance-slice rejects self-certification without proof evidence or with generic prose', () => {
+    const root = repo();
+    expect(taskCommand('start', { root, input: input() }).exitCode).toBe(0);
+    const noProof = taskCommand('advance-slice', { root, input: { slice_id: 'S1' } });
+    expect(noProof.exitCode).not.toBe(0);
+    expect(noProof.message).toContain('cannot self-certify PASS');
+
+    const fakeProof = taskCommand('advance-slice', { root, input: { slice_id: 'S1', proof: 'trust me bro' } });
+    expect(fakeProof.exitCode).not.toBe(0);
+    expect(fakeProof.message).toContain('cannot self-certify PASS');
+  });
+
+  it('record-failure triggers stall detection on repeated failure without evidence delta', () => {
+    const root = repo();
+    expect(taskCommand('start', { root, input: input() }).exitCode).toBe(0);
+    const fail1 = taskCommand('record-failure', { root, input: { fingerprint: 'ERR-STALL', reason: 'compiler failure' } });
+    expect(fail1.exitCode).toBe(0);
+    const fail2 = taskCommand('record-failure', { root, input: { fingerprint: 'ERR-STALL', reason: 'compiler failure' } });
+    expect(fail2.exitCode).not.toBe(0);
+    expect(fail2.message).toContain('Stall detected');
+  });
+
+  it('readState fails closed when plan.md or plan-contract.json is tampered with', () => {
+    const root = repo();
+    expect(taskCommand('start', { root, input: input() }).exitCode).toBe(0);
+    fs.writeFileSync(path.join(root, '.agent', 'current', 'plan.md'), '# tampered plan content\n', 'utf8');
+    const status = taskCommand('status', { root });
+    expect(status.exitCode).not.toBe(0);
+    expect(status.message).toContain('plan.md hash mismatch');
+  });
+
+  it('detects split-brain when PlanContract outcome contradicts state outcome', () => {
+    const root = repo();
+    const badInput = input();
+    const contract = { ...deriveMinimalPlanContract(badInput.state), outcome: 'DIFFERENT_CONTRACT_OUTCOME' };
+    const result = taskCommand('start', { root, input: { ...badInput, plan_contract: contract } });
+    expect(result.exitCode).not.toBe(0);
+    expect(result.message).toContain('Task start split-brain detected');
+  });
+
+  it('readState fails closed when plan.md is deleted', () => {
+    const root = repo();
+    expect(taskCommand('start', { root, input: input() }).exitCode).toBe(0);
+    fs.unlinkSync(path.join(root, '.agent', 'current', 'plan.md'));
+    const status = taskCommand('status', { root });
+    expect(status.exitCode).not.toBe(0);
+    expect(status.message).toContain('active task plan is missing');
+  });
+
+  it('rejects task update that drops planned slices', () => {
+    const root = repo();
+    const multiSliceInput = input();
+    multiSliceInput.state.slices = [
+      { id: 'S1', depends_on: [], status: 'READY', requirement_ids: ['R1'], acceptance_ids: ['A1'], expected_delta: 'delta 1', preserve: [], proof_summary: [] },
+      { id: 'S2', depends_on: ['S1'], status: 'PENDING', requirement_ids: ['R2'], acceptance_ids: ['A1'], expected_delta: 'delta 2', preserve: [], proof_summary: [] },
+    ];
+    expect(taskCommand('start', { root, input: multiSliceInput }).exitCode).toBe(0);
+    const state = JSON.parse(fs.readFileSync(path.join(root, '.agent', 'current', 'state.json'), 'utf8'));
+    state.revision += 1;
+    // Silently drop S2
+    state.slices = [state.slices[0]];
+    const update = taskCommand('update', { root, input: state });
+    expect(update.exitCode).not.toBe(0);
+    expect(update.message).toContain('Task update cannot add or lose slice ids');
+  });
+
+  it('advance-slice derives strength from contract acceptance requirement', () => {
+    const root = repo();
+    expect(taskCommand('start', { root, input: input() }).exitCode).toBe(0);
+    // Caller attempts to self-certify USER_VISIBLE_E2E when acceptance requires STATIC
+    const adv = taskCommand('advance-slice', { root, input: { slice_id: 'S1', proof: 'ran vitest feature.test.ts', strength: 'USER_VISIBLE_E2E' as ProofStrength } });
+    expect(adv.exitCode).toBe(0);
+    const state = JSON.parse(fs.readFileSync(path.join(root, '.agent', 'current', 'state.json'), 'utf8'));
+    // Must be derived as STATIC from acceptance, ignoring caller's claim
+    expect(state.slices[0].proof_summary[0].strength).toBe('STATIC');
+  });
+
+  it('detects split-brain when acceptance claim contradicts contract', () => {
+    const root = repo();
+    const badInput = input();
+    const contract = deriveMinimalPlanContract(badInput.state) as Record<string, unknown>;
+    (contract.acceptance as Array<{ id: string; claim: string }>)[0].claim = 'live e2e in real browser';
+    badInput.state.acceptance[0].claim = 'typechecks only';
+    const result = taskCommand('start', { root, input: { ...badInput, plan_contract: contract } });
+    expect(result.exitCode).not.toBe(0);
+    expect(result.message).toContain('claim in PlanContract ("live e2e in real browser") contradicts state ("typechecks only")');
   });
 });

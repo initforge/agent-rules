@@ -5,7 +5,7 @@
   "files": [
     {
       "path": "generated/context-graph.json",
-      "sha256": "745d5b1debcd348f06cdbb1be1c8f32d7b7647bf8b721a17606b2d706ce83b10"
+      "sha256": "afacec1133855cf442a5ec960d04e28ded5c140c91203ea98fd5ce97f71967f1"
     },
     {
       "path": "generated/runtime-build/antigravity/manifest.json",
@@ -869,7 +869,7 @@
     },
     {
       "path": "packages/kernel/dist/northstar/task-state.js",
-      "sha256": "4625bb6f51fe5f5ef360cf5ba237d94d1ce85ca9a0092604daba0f9a242e2c74"
+      "sha256": "13197466f6cee38a46a234ddd2758a5aa2fe4c547dd90c7d2b694318f5ca3e1b"
     },
     {
       "path": "platforms/antigravity/adapter.ts",
@@ -3189,7 +3189,7 @@
     },
     {
       "path": "registry/skills.yaml",
-      "sha256": "56842b5cb5b3dce6110a6ff02a62018ee002858074b927dda4d604168d158189"
+      "sha256": "21525fa79fcf1abbd4e645df1ce059a07f48c12d9982199eaec07db632a61c01"
     },
     {
       "path": "rules/00-intent-scope-safety.md",
@@ -3300,8 +3300,20 @@
       "sha256": "ea9127bd07acf4b84ac6cd2df010b1f244aba24a318d19c705c84d64c8f3808c"
     },
     {
+      "path": "skills/design-taste-frontend/references/design-engineering-directives.md",
+      "sha256": "bfd00724372f4888487f7710478a9fde3730b9b9cbb55ca560b12a4dde56fbbb"
+    },
+    {
+      "path": "skills/design-taste-frontend/references/patterns-and-blocks.md",
+      "sha256": "74c513b12aa47e537351f53e079bbf6b0e5d421ad884d22d40f8f904bc5f2555"
+    },
+    {
+      "path": "skills/design-taste-frontend/references/systems-and-appendices.md",
+      "sha256": "af747f1849b3d66c13eda1cfe746ac4553f8c4794253060d98e6a5cd178a1095"
+    },
+    {
       "path": "skills/design-taste-frontend/SKILL.md",
-      "sha256": "aa194351b246b8b4799099d4ed7b033d29eab6e6e3d58d8d2172978be7b3ec89"
+      "sha256": "275021752821a2dcefa470795d5e167ee8bab6780004bed1e9f7d5ec973e67e7"
     },
     {
       "path": "skills/differential-review/adversarial.md",
@@ -5136,5 +5148,5 @@
       "sha256": "17e48da905f83a19c174079b50760a98c069527ba50079239b3c187236627c29"
     }
   ],
-  "manifest_sha256": "820d10ad14fcce883960cb79f896b7e99befd4b61db3a265ac49e284c2829b5f"
+  "manifest_sha256": "ed8815956f4d139746467cbb449c44d58720c98308a057edeb83b35f1559d712"
 }
